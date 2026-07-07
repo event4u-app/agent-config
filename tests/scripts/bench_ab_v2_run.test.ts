@@ -21,16 +21,28 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { placebo_prose, status_bucket, trajectory_metrics, injected_text, hardened_blocks_text } from '../../src/scripts/bench_ab_v2_run.js';
+import {
+    placebo_prose,
+    status_bucket,
+    trajectory_metrics,
+    injected_text,
+    hardened_blocks_text,
+    checkpoint_key,
+    run_key,
+    freeze_result,
+    thaw_result,
+    load_checkpoint,
+    append_checkpoint,
+    collect_records,
+    PyFloat,
+    type CheckpointIO,
+} from '../../src/scripts/bench_ab_v2_run.js';
 import type { ScoreResultV2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
 const TS_SCRIPT = path.join(SCRIPTS, 'bench_ab_v2_run.ts');
-const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
-const CORPUS = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-const HAVE_CORPUS = fs.existsSync(CORPUS);
 
 interface RunOut {
     stdout: string;
@@ -133,5 +145,152 @@ describe('bench_ab_v2_run — --help', () => {
         const ts = runTs(['--help']);
         expect(ts.status).toBe(0);
         expect(ts.stdout.startsWith('usage: bench_ab_v2_run.py')).toBe(true);
+    });
+
+    it('accepts the checkpoint flags without an arg error', () => {
+        // dry-run returns before any checkpoint IO — this asserts parse only.
+        const ts = runTs(['--mode', 'dry-run', '--no-checkpoint', '--fresh', '--limit', '1']);
+        expect(ts.status).toBe(0);
+        expect(ts.stdout).toContain('DRY');
+    });
+});
+
+describe('bench_ab_v2_run — checkpoint / resume', () => {
+    const mkTmp = (): string => {
+        const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ab-v2-ckpt-'));
+        tmpDirs.push(d);
+        return d;
+    };
+
+    it('checkpoint_key is deterministic and sensitive to every config field', () => {
+        const cfg = {
+            corpus: 'ab-trackb-v2',
+            model: 'gpt-5-mini',
+            seeds: 3,
+            arms: ['vanilla', 'placebo'],
+            budget: 1.0,
+            timeout: 180,
+            host: 'codex',
+            task_ids: ['t1', 't2'],
+        };
+        const base = checkpoint_key(cfg);
+        expect(checkpoint_key({ ...cfg })).toBe(base);
+        expect(checkpoint_key({ ...cfg, model: 'other' })).not.toBe(base);
+        expect(checkpoint_key({ ...cfg, seeds: 2 })).not.toBe(base);
+        expect(checkpoint_key({ ...cfg, arms: ['vanilla'] })).not.toBe(base);
+        expect(checkpoint_key({ ...cfg, task_ids: ['t1'] })).not.toBe(base);
+        expect(checkpoint_key({ ...cfg, host: 'claude' })).not.toBe(base);
+    });
+
+    it('freeze/thaw round-trips PyFloat losslessly (the 1.0-vs-1 report parity)', () => {
+        const result: Record<string, unknown> = {
+            errored: false,
+            discipline_score: new PyFloat(1),
+            metrics: { wall_time_seconds: new PyFloat(0), ask_vs_act_ratio: 0, num_turns: 3 },
+            seed: 2,
+        };
+        const thawed = thaw_result(JSON.parse(JSON.stringify(freeze_result(result)))) as Record<string, unknown>;
+        expect(thawed['discipline_score']).toBeInstanceOf(PyFloat);
+        expect((thawed['discipline_score'] as PyFloat).value).toBe(1);
+        const metrics = thawed['metrics'] as Record<string, unknown>;
+        expect(metrics['wall_time_seconds']).toBeInstanceOf(PyFloat);
+        // the int-0 ask ratio must stay a plain number, NOT become a PyFloat
+        expect(metrics['ask_vs_act_ratio']).toBe(0);
+        expect(thawed['seed']).toBe(2);
+    });
+
+    it('load_checkpoint skips a truncated tail line and lets later duplicates win', () => {
+        const dir = mkTmp();
+        const file = path.join(dir, 'ckpt.jsonl');
+        append_checkpoint(file, run_key('t1', 'vanilla', 0), { errored: false, v: 1 });
+        append_checkpoint(file, run_key('t1', 'vanilla', 1), { errored: false, v: 2 });
+        append_checkpoint(file, run_key('t1', 'vanilla', 0), { errored: false, v: 3 }); // dup → wins
+        fs.appendFileSync(file, '{"key":"t1|vanilla|2","result":{"err'); // killed mid-write
+        const map = load_checkpoint(file);
+        expect(map.size).toBe(2);
+        expect((map.get('t1|vanilla|0') as Record<string, unknown>)['v']).toBe(3);
+        expect(map.has('t1|vanilla|2')).toBe(false);
+        // missing file → empty map, no throw
+        expect(load_checkpoint(path.join(dir, 'nope.jsonl')).size).toBe(0);
+    });
+
+    it('collect_records resumes: a killed sweep re-runs ONLY the missing runs', () => {
+        const dir = mkTmp();
+        const ckptPath = path.join(dir, 'ckpt.jsonl');
+        const tasks = [
+            { id: 't1', archetype: 'a', rule: 'r' },
+            { id: 't2', archetype: 'a', rule: 'r' },
+        ];
+        const arms = ['vanilla', 'placebo'];
+        const seeds = 2; // 2 tasks × 2 arms × 2 seeds = 8 runs
+        const mkResult = (task: Record<string, unknown>, arm: string, seed: number): Record<string, unknown> => ({
+            errored: false,
+            reason: null,
+            discipline_score: new PyFloat(1),
+            marker: `${String(task['id'])}-${arm}-${seed}`,
+        });
+
+        // First sweep: the run function dies on call #4 (simulated kill at 3/8).
+        let calls1 = 0;
+        const dying = (task: Record<string, unknown>, arm: string, seed: number): Record<string, unknown> => {
+            calls1 += 1;
+            if (calls1 > 3) {
+                throw new Error('killed');
+            }
+            return mkResult(task, arm, seed);
+        };
+        const ckpt1: CheckpointIO = { path: ckptPath, completed: new Map() };
+        expect(() => collect_records(tasks, arms, seeds, dying, ckpt1, () => {})).toThrow('killed');
+        expect(load_checkpoint(ckptPath).size).toBe(3); // 3 completed runs survived the kill
+
+        // Second sweep, same config: resume from the checkpoint.
+        let calls2 = 0;
+        const counting = (task: Record<string, unknown>, arm: string, seed: number): Record<string, unknown> => {
+            calls2 += 1;
+            return mkResult(task, arm, seed);
+        };
+        const ckpt2: CheckpointIO = { path: ckptPath, completed: load_checkpoint(ckptPath) };
+        const logs: string[] = [];
+        const { records, executed, reused } = collect_records(tasks, arms, seeds, counting, ckpt2, (m) => logs.push(m));
+        expect(reused).toBe(3);
+        expect(executed).toBe(5);
+        expect(calls2).toBe(5); // the 3 completed runs were NOT re-spent
+        // progress lines only for executed runs, with the GLOBAL run index
+        expect(logs).toHaveLength(5);
+        expect(logs[0]).toContain('[4/8]');
+
+        // The assembled report is complete and ordered as a fresh full run.
+        expect(records).toHaveLength(2);
+        for (const [ti, task] of tasks.entries()) {
+            const perArm = (records[ti] as Record<string, unknown>)['arms'] as Record<string, Record<string, unknown>[]>;
+            for (const arm of arms) {
+                expect(perArm[arm]).toHaveLength(seeds);
+                for (let seed = 0; seed < seeds; seed += 1) {
+                    const r = perArm[arm]![seed] as Record<string, unknown>;
+                    expect(r['marker']).toBe(`${task.id}-${arm}-${seed}`);
+                    expect(r['seed']).toBe(seed);
+                    // PyFloat survives the checkpoint round-trip on reused runs too
+                    expect(r['discipline_score']).toBeInstanceOf(PyFloat);
+                }
+            }
+        }
+    });
+
+    it('collect_records without a checkpoint keeps the pre-checkpoint semantics', () => {
+        const tasks = [{ id: 't1', archetype: 'a', rule: 'r' }];
+        const logs: string[] = [];
+        const { records, executed, reused } = collect_records(
+            tasks,
+            ['vanilla'],
+            2,
+            (_t, _a, seed) => ({ errored: false, s: seed }),
+            null,
+            (m) => logs.push(m),
+        );
+        expect(executed).toBe(2);
+        expect(reused).toBe(0);
+        expect(logs).toEqual(['[1/2] t1 · vanilla · seed 0\n', '[2/2] t1 · vanilla · seed 1\n']);
+        const perArm = (records[0] as Record<string, unknown>)['arms'] as Record<string, unknown[]>;
+        expect(perArm['vanilla']).toHaveLength(2);
     });
 });
