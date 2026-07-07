@@ -26,8 +26,7 @@ The dispatcher refuses to advance past `refine` without `state.ui_audit`;
 this rule refuses the write even when the agent acts outside the dispatcher.
 
 Body migrated to [`skill:existing-ui-audit`](../skills/existing-ui-audit/SKILL.md)
-(per P4 of `road-to-kernel-and-router.md`). Trigger-set above activates this
-routing under the `balanced` and `full` profiles.
+(per P4 of `road-to-kernel-and-router.md`). Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## The Iron Law
 

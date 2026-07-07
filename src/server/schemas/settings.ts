@@ -14,6 +14,7 @@
 import { z } from 'zod';
 
 const ruleLoadingTier = z.enum(['minimal', 'balanced', 'full', 'custom']);
+const disciplineProfile = z.enum(['auto', 'off', 'essential', 'full']);
 const enforcementMode = z.enum(['advisory', 'hard-stop']);
 const autonomyMode = z.enum(['on', 'off', 'auto']);
 const userType = z.enum(['', 'consultant', 'creator', 'developer', 'finance', 'founder', 'gtm', 'ops']);
@@ -50,7 +51,10 @@ export const settingsSchema = z.object({
         ),
     }).default({ mode: 'legacy-all' }),
     rule_loading_tier: ruleLoadingTier.default('balanced').describe(
-        'Master switch for which rule tiers load and how cautiously the agent spends tokens. minimal = only the 9 kernel rules (cheapest, fewest guardrails). balanced = kernel + tier-1 (recommended default). full = kernel + tier-1 + tier-2 (most guardrails, highest token cost). custom = roll your own in agents/overrides/.',
+        'Master switch for which rule tiers load and how cautiously the agent spends tokens. minimal = only the 9 kernel rules (cheapest, fewest guardrails). balanced = kernel + tier-1 (recommended default). full = kernel + tier-1 + tier-2 (most guardrails, highest token cost). custom = roll your own in agents/overrides/. LEGACY: superseded by discipline_profile — when that key is set it wins (mapping: minimal→off, balanced→essential, full→full).',
+    ),
+    discipline_profile: disciplineProfile.optional().describe(
+        'The ONE runtime knob for the discipline-rule tier (successor of rule_loading_tier; council 2026-07-07). off = kernel only (~1x tokens). essential = kernel + the measured lift-carrying rules (~3.3x, keeps the weak-host discipline lift). full = everything (~11.7x, EXPERIMENTAL — residual lift over essential not established). auto = resolve per session against the evidence-gated NULL-lift disable-list in src/config/host-capabilities.yml (measured-null host → off, otherwise → essential). Optional and opt-in until the P1/P2 evidence gates pass (agents/roadmaps/road-to-discipline-profile-tiering.md); absent = legacy rule_loading_tier applies.',
     ),
     lean_projection: z.object({
         mode: leanProjectionMode.default('eager-all').describe(

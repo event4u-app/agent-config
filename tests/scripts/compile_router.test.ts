@@ -38,9 +38,39 @@ describe('compile_router.build — shape', () => {
         expect(Array.isArray(out['tier_2'])).toBe(true);
         expect(out['profiles']).toEqual({
             minimal: ['__kernel__'],
-            balanced: ['__kernel__', '__tier_1__'],
+            essential: ['__kernel__', 'downstream-changes'],
             full: ['__kernel__', '__tier_1__', '__tier_2__'],
         });
+    });
+
+    it('the retired balanced profile never returns (NULL-lift lock)', () => {
+        // Council lock 2026-07-07: the size-cut balanced profile measured a
+        // NULL discipline lift and was deleted, not renamed. Legacy settings
+        // values map via resolve_discipline_profile(); the compiled router
+        // must not resurrect the cut.
+        const out = cr.build() as Record<string, unknown>;
+        expect(Object.keys(out['profiles'] as object)).not.toContain('balanced');
+    });
+
+    it('essential profile: every bare entry is a real compiled rule id', () => {
+        // The lift-carrying cut (weak-host-lift-tiering-verdict): non-`__`
+        // profile entries are individual rule ids and must exist in a tier —
+        // a typo here would silently ship an empty lift layer.
+        const out = cr.build() as Record<string, unknown>;
+        const profiles = out['profiles'] as Record<string, string[]>;
+        const known = new Set([
+            ...(out['kernel'] as string[]),
+            ...(out['tier_1'] as Array<Record<string, unknown>>).map((e) => e['id'] as string),
+            ...(out['tier_2'] as Array<Record<string, unknown>>).map((e) => e['id'] as string),
+        ]);
+        for (const [name, entries] of Object.entries(profiles)) {
+            for (const entry of entries) {
+                if (!entry.startsWith('__')) {
+                    expect(known.has(entry), `profile ${name}: unknown rule id ${entry}`).toBe(true);
+                }
+            }
+        }
+        expect(profiles['essential']).toContain('downstream-changes');
     });
 
     it('kernel is sorted and non-empty', () => {

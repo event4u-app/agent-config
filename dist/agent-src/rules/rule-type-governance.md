@@ -17,4 +17,4 @@ packs:
 **Iron Law.** Choose `always` vs `auto` per the governance table; over-broad `always` rules degrade the kernel budget.
 
 Body migrated to `guideline:agent-infra/rule-type-governance` (per P4 of `road-to-kernel-and-router.md`).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

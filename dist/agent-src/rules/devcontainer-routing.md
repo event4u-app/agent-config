@@ -20,4 +20,4 @@ packs:
 **Iron Law.** Wiring the dev environment itself (DevContainers, Codespaces, `devcontainer.json`, VS Code features) → load the `devcontainer` skill, not `copilot-config` (which tunes the Copilot AI on top).
 
 Body migrated to `skill:devcontainer`. Disambiguates the devcontainer ↔ copilot-config cluster head per [`adr-architectural-consensus-mechanism`](../docs/contracts/adr-architectural-consensus-mechanism.md).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

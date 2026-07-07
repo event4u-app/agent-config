@@ -46,6 +46,12 @@ const COMPARISONS: Array<[string, string, string]> = [
     // renders ONLY when a `package-recursive` arm is present — existing runs
     // (no such arm) are byte-identical, golden parity preserved.
     ['package-recursive', 'package', 'recursion novel lift (D₂ − D₁)'],
+    // Cost-factor sweep (2026-07): trimmed rule-subset arms vs vanilla — how
+    // much of the weak-host lift survives at a fraction of the loaded-context
+    // cost. Arm-guarded like the rows above: rendered only when present.
+    ['rules-kernel-dc', 'vanilla', 'kernel+downstream rules lift'],
+    ['rules-balanced', 'vanilla', 'balanced-profile rules lift'],
+    ['package', 'rules-kernel-dc', 'full package residual over kernel+downstream'],
 ];
 
 // ── CPython math.erf / math.comb ports ────────────────────────────────────

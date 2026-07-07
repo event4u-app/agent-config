@@ -140,4 +140,4 @@ Before sending any reply that landed roadmap work:
 Any "no" at step 2 → reply is incomplete. Do not send. A skipped step 3 regen is fine when cadence permits — checkbox truth lives in the markdown file. Skipping the deferred-resolution gate at step 4 is **never** acceptable; it is the canonical "lost-information" failure mode this rule exists to prevent.
 
 Long-form mechanics (failure-mode catalog, Copilot fallback, `[~]` vs `[ ]` semantics, hook + CI defence-in-depth) live in `guideline:agent-infra/roadmap-progress-mechanics`.
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
