@@ -918,6 +918,15 @@ cmd_doctor() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_doctor.ts" "$@"
 }
 
+# `agent-config conformance` — consumer conformance contract
+# (road-to-flow-learnings Phase 0). Doctor --ci semantics plus the five
+# consumer checks (txlog tail, router pointers, dispatcher smoke,
+# lean-projection consistency, host-capability manifest). Exit 0 green,
+# 1 any fail/drift, 2 environment error. See docs/contracts/conformance.md.
+cmd_conformance() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_conformance.ts" "$@"
+}
+
 # `agent-config versions` — list available @event4u/agent-config versions
 # on the npm registry. Marks the current pin (from .agent-settings.yml)
 # and the latest published version. Offline-tolerant. See
@@ -996,6 +1005,7 @@ main() {
     uninstall)               cmd_uninstall "$@" ;;
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;
+    conformance)             cmd_conformance "$@" ;;
     versions)                cmd_versions "$@" ;;
     explain)                 cmd_explain "$@" ;;
     analyze-session)         cmd_analyze_session "$@" ;;

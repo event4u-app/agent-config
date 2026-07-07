@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **8** open blockers
+> 7 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**81 / 128 steps done · 63%**
+**87 / 147 steps done · 59%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   63%
+████████████████████████░░░░░░░░░░░░░░░░   59%
 ```
 
 ## Open roadmaps
@@ -17,11 +17,12 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md) | 5 | 16 | 4 | 12 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering) | ████████░░ 75% |
-| 2 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 3 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
-| 4 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 6 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
+| 2 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
+| 3 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 9 | 9 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | █████░░░░░ 50% |
+| 4 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 9 | 16 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 64% |
+| 5 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 16 | 10 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ████░░░░░░ 38% |
+| 7 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
 
 ---
 
@@ -53,6 +54,34 @@
   - **Resolved when:** the harness completes a paired vanilla-vs-essential run on a non-Claude host with the deterministic scorer.
 
 _1 blocker resolved._
+
+### [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md)
+
+**Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater** — 17 / 19 done (89%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Install & conformance contract | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 1 | Fleet rollout (`init --fleet fleet.yaml`) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
+| 2 | Dispatch failure-policy clarification | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Bench matrix expansion + per-section render | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+
+<a id="blockers-road-to-flow-learnings"></a>
+**Blockers**
+
+- **org-fleet-run** (owner: maintainer) — blocks Phase 1 — Fleet rollout
+  - **What to do:**
+    1. After the fixture test is green, run the fleet init across ≥3 real
+    org repos (`fleet.yaml` listing the app/package repos) with one
+    intentionally mis-permissioned repo as the seeded failure.
+    2. Capture the aggregate JSON report.
+  - **Resolved when:** aggregate JSON is schema-valid; the seeded repo is red with its pre-flight finding; all siblings are green and conformance-passing.
+- **live-matrix-run** (owner: maintainer) — blocks Phase 3 — live matrix run (live API spend)
+  - **What to do:**
+    1. Invoke the matrix runner for ≥2 task families × 2 hosts from the
+    matrix YAML (paired arms per the existing ab-v2 discipline).
+    2. Pin the resulting report alongside the existing pinned reports.
+  - **Resolved when:** one schema-valid matrix report exists and the per-section render consumes it without manual edits.
 
 ### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
 

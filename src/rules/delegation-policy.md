@@ -67,6 +67,12 @@ primitive → run in-session (clean no-op).
    [`verify-budget`](../contexts/execution/verify-budget.md); the cross-model
    judge Iron Law and the N=3 budget ([`autonomous-execution`](autonomous-execution.md))
    are never lifted.
+5. **Respect the failure-type stop and the ordering gate** — two consecutive
+   verification-failed returns from one subagent type stop that type for the
+   session (an application of the N=3 budget, no new mechanism), and an
+   ordered slice never dispatches before its declared parent's return is
+   verified. Both per
+   [`subagent-steering`](../contexts/execution/subagent-steering.md).
 
 ## Scope — does NOT
 

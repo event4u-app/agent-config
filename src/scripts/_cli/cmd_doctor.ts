@@ -1888,6 +1888,10 @@ function _run_no_manifest(
         }
         return fail_check ? 1 : 0;
     }
+    if (opts.ci && bridge_present) {
+        // Same fold as the manifest path: check failures are red under --ci.
+        return fail_check ? 1 : 0;
+    }
     return bridge_present ? 0 : 2;
 }
 
@@ -1972,6 +1976,7 @@ function _emit_text(
 interface Options {
     project: string | null;
     json: boolean;
+    ci: boolean;
     check: string | null;
     trace_root: boolean;
     context: boolean;
@@ -1984,11 +1989,12 @@ const PROG = 'agent-config doctor';
 // per-flag `--help` BODY is a documented divergence — argparse re-wraps it to
 // terminal width; golden tests assert the `usage:` token + exit code only.
 const USAGE =
-    `usage: ${PROG} [-h] [--project PROJECT] [--json] [--check ID]\n` +
+    `usage: ${PROG} [-h] [--project PROJECT] [--json] [--ci] [--check ID]\n` +
     '                           [--trace-root] [--context] [--repair ID]\n';
 
 const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--json': 'json',
+    '--ci': 'ci',
     '--trace-root': 'trace_root',
     '--context': 'context',
 };
@@ -2009,6 +2015,7 @@ function _parse(argv: string[]): Options {
     const opts: Record<string, unknown> = {
         project: null,
         json: false,
+        ci: false,
         check: null,
         trace_root: false,
         context: false,
@@ -2178,6 +2185,12 @@ function _run_repair(opts: Options): number {
 
 function main(argv: string[] | null = null): number {
     const opts = _parse(argv !== null ? Array.from(argv) : process.argv.slice(2));
+    if (opts.ci) {
+        // `--ci` = machine-readable consumer-CI contract: JSON payload on
+        // stdout, zero interactive output, and check failures fold into the
+        // exit code (the default full run keys the exit off drift only).
+        opts.json = true;
+    }
     if (opts.repair !== null) {
         return _run_repair(opts);
     }
@@ -2232,7 +2245,15 @@ function main(argv: string[] | null = null): number {
     if (opts.check !== null) {
         return fail_check ? 1 : 0;
     }
-    return missing.length || modified.length || foreign.length || tag_drift.length ? 1 : 0;
+    const drift_present = Boolean(
+        missing.length || modified.length || foreign.length || tag_drift.length,
+    );
+    if (opts.ci) {
+        // Exit contract under --ci: 0 clean · 1 any drift OR any check fail
+        // · 2 unresolvable environment (handled above via ProjectRootError).
+        return drift_present || fail_check ? 1 : 0;
+    }
+    return drift_present ? 1 : 0;
 }
 
 // --- CLI entry ---
