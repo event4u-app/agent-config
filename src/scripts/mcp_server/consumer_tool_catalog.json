@@ -270,6 +270,81 @@
         "required": ["uri"],
         "additionalProperties": false
       }
+    },
+    {
+      "name": "roadmap_progress",
+      "description": "Regenerate `agents/roadmaps-progress.md` from the current checkbox state of every active roadmap. Use after landing roadmap work to keep the dashboard in sync without a shell round-trip. Writes the dashboard file inside the project tree. Set `dry_run: true` to compute counts without writing.",
+      "side_effect": "fs-write",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "dry_run": {"type": "boolean", "default": false, "description": "When true, return the computed dashboard without writing the file."}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "roadmap_archive",
+      "description": "Archive every roadmap that has reached `count_open == 0` and was touched on the current branch — `git mv` to `agents/roadmaps/archive/`, migrate inbound references, and regenerate the dashboard. Use as the PR-gate sweep before opening a pull request. Mutates the git index (moves tracked files) but never commits or pushes.",
+      "side_effect": "fs-write",
+      "implemented_on": [],
+      "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
+    },
+    {
+      "name": "capabilities_index",
+      "description": "Regenerate `CAPABILITIES.yaml`, the package's coverage index of skills, rules, commands, and guidelines. Use after adding or removing an artifact to keep the index current. Pass `check: true` to run in read-only CI mode (fails instead of writing on drift).",
+      "side_effect": "fs-write",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "check": {"type": "boolean", "default": false, "description": "When true, run in read-only drift-check mode instead of writing the index."}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "doctor_report",
+      "description": "Run the consumer-project doctor diagnostic and return a structured health report (install drift, hook wiring, settings schema, discovery manifest freshness). Use to triage a misbehaving install. Read-only.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
+    },
+    {
+      "name": "conformance_check",
+      "description": "Run the consumer conformance contract (`doctor --ci` plus installed-and-firing checks) and return pass/fail per check. Use to verify a consumer project's install is fully wired before relying on it. Read-only.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
+    },
+    {
+      "name": "telemetry_report",
+      "description": "Return the artefact-engagement telemetry report — essential / useful / retirement-candidate skills and rules ranked by recorded consult+apply signals over a rolling window. Use to see which artifacts are actually load-bearing. Read-only. No-op (empty report) when telemetry recording is disabled.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "window_days": {"type": "integer", "minimum": 1, "default": 30, "description": "Reporting window in days. Defaults to 30."}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "council_estimate",
+      "description": "Estimate the token cost of an AI-council debate over a given input (roadmap, diff, prompt, or file set) without spending — no network call, no billing. Use before deciding whether to authorize a real council run. Read-only.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "input_path": {"type": "string", "description": "Path to the roadmap, diff, or file to estimate council cost for."},
+          "depth": {"type": "string", "enum": ["shallow", "deep"], "description": "Council depth tier to estimate for. Defaults to the configured default depth."}
+        },
+        "required": ["input_path"],
+        "additionalProperties": false
+      }
     }
   ]
 }

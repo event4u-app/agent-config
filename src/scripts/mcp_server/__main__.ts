@@ -1,11 +1,9 @@
-// Entrypoint — TS twin of `scripts/mcp_server/__main__.py`
-// (`python -m scripts.mcp_server`).
-//
-// Required by Claude Desktop / Zed / Continue stdio-server config on the
-// Python side; the .py stays the runtime entry until a later phase (glama
-// still launches `python -m scripts.mcp_server`). This twin coexists and
-// forwards to `server.main()`; keep this file flat so crash stack traces
-// point at server.ts, not the bootstrap.
+// Entrypoint for the MCP stdio server (`node node_modules/.bin/tsx
+// src/scripts/mcp_server/__main__.ts`). glama launches this file directly
+// via `internal/glama/run`; Claude Desktop / Zed / Continue stdio-server
+// configs point at the same entry through `agent-config mcp:run`. Keep
+// this file flat so crash stack traces point at server.ts, not the
+// bootstrap.
 //
 // `node __main__.js` (or importing this module as the package main) runs
 // the server, mirroring the Python `if __name__ == "__main__": main()`
