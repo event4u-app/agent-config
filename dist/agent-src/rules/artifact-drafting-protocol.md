@@ -8,10 +8,14 @@ triggers:
   - intent: "create new rule"
   - intent: "create new command"
   - intent: "create new guideline"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+  - phrase: "new skill"
+  - phrase: "new rule"
+  - phrase: "new command"
+  - phrase: "new guideline"
+  - phrase: "neue Regel"
+  - phrase: "bau mir ein Skill"
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Artifact Drafting Protocol

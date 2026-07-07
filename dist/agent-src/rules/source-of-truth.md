@@ -9,10 +9,8 @@ triggers:
   - path_prefix: ".augment/"
   - path_prefix: ".claude/"
   - path_prefix: ".cursor/"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Source of Truth

@@ -22,6 +22,10 @@ parent_roadmap: token-saving
 > autonomous track) and has real verdicts. Open `[ ]` items are intentionally
 > retained — this track is parked whole, not cancelled.
 
+> **Program sequencing:** the token program's single critical path + tracking
+> table live in `road-to-token-proof-and-story.md` § Program tracking — this
+> roadmap links there, never copies the sequence.
+
 ## Why these are NOT autonomous (council ruling)
 
 The headline lever is the **thin projector flip (−46k tok/req)**, which the

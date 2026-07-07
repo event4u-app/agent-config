@@ -21,13 +21,27 @@ operator work. `label_status: stub` marks an unfilled task.
   rules: [<rule-id>, ...]          # ≥1 rule id (from dist/router.json); drives coverage
   scenario: single | multi-turn | conflicting-rule | corner-case
   prompt: "<task / turn(s) given to the agent>"   # multi-turn → one block, turns labelled
+  context_files: ["<path>", ...]   # OPTIONAL — satisfies path_prefix/file_pattern triggers
+  command: "/<slash-command>"      # OPTIONAL — satisfies command triggers
+  no_fire: true                    # OPTIONAL — corner-case testing NON-activation:
+                                   # the tagged rules must NOT fire (invalid on kernel)
   expected:                        # OPERATOR-FILLED
     rubric: "<one-line quality rubric the judge applies>"
     must_include: ["<anchor the good answer must satisfy>", ...]
     must_not: ["<anti-quality marker>", ...]
   label_status: stub | labelled    # stub ⇒ rubric is TODO / anchors empty
-  notes: "<why this task; which rules it stresses>"
+  notes: "<why this task; which rules it stresses — stubs carry the rule's Iron-Law line + the trigger the prompt exercises>"
 ```
+
+## Prompt↔trigger falsifiability (always on)
+
+"Covered" means **fires**, not mentioned: every tagged rule must have ≥1
+router trigger the task provably exercises — keyword/phrase = case-insensitive
+substring of the prompt; intent = every alpha word (>2 chars) present
+(`trigger_coverage.ts` semantics); path_prefix/file_pattern match against
+`context_files:`; command against `command:`. Kernel rules always fire.
+`no_fire: true` inverts the check (the rule must NOT fire). A violation is a
+structural error — nominal-only coverage cannot enter the corpus.
 
 A `labelled` task MUST have a non-TODO `rubric` and at least one `must_include`
 anchor. A `stub` task is structurally valid but excluded from a judge run.
@@ -48,7 +62,15 @@ anchor. A `stub` task is structurally valid but excluded from a judge run.
   rule is uncovered, or a required scenario type is absent. This is the gate the
   operator flips on once the golden set is filled (Phase 0 exit).
 
+## Scope-aware completion (road-to-golden-set-coverage Phase 0)
+
+`--scope consumer|maintainer|all` filters the coverage universe by the
+router's v2 `workspaces:` fields (consumer = kernel + every rule not
+exclusively `agent-config-maintainer`). **The consumer thin/scoped flips gate
+on `--require-complete --scope consumer`; a maintainer-side flip would gate
+on `--scope all`.** Default `all` keeps today's behaviour.
+
 ## Phase 0 exit composition
 
-~30 `labelled` tasks · every rule in `dist/router.json` covered ≥1× · all four
+~30 `labelled` tasks · every rule in the gated scope covered ≥1× · all four
 `scenario` types present (multi-turn, conflicting-rule, corner-case mandatory).

@@ -14,10 +14,8 @@ applies_to_user_types:
   - "creator"
   - "developer"
   - "maintainer"
-workspaces:
-  - engineering
-packs:
-  - brand
+workspaces: [engineering]
+packs: [brand]
 ---
 
 # Brand Consistency

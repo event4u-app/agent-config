@@ -7,10 +7,8 @@ triggers:
   - keyword: "low-impact-decisions"
   - keyword: "low-impact corpus"
   - keyword: "learn-low-impact"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Low-Impact Corpus — Privacy Floor

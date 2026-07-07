@@ -12,10 +12,8 @@ triggers:
   - keyword: "data exfil"
   - phrase: "fetch and send"
   - phrase: "read the file and post"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Lethal-Trifecta Guard

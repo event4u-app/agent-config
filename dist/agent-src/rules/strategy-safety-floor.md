@@ -28,10 +28,8 @@ routes_to:
   - "skill:market-entry-analysis"
   - "skill:build-buy-partner"
   - "skill:okr-tree-modeling"
-workspaces:
-  - founder
-packs:
-  - founder-strategy
+workspaces: [founder]
+packs: [founder-strategy]
 trust:
   level: advisory
   human_review_required: true

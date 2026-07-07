@@ -23,10 +23,8 @@ applies_to_user_types:
   - "creator"
   - "developer"
   - "maintainer"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering, gtm]
+packs: [ai-image, ai-video]
 ---
 
 # Provider Lifecycle Discipline

@@ -16,10 +16,8 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
     reason: "Rule contrasts the authoring tree with transient layers."
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # No Transient References from Stable Artifacts

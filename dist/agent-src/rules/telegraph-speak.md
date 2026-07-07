@@ -4,10 +4,8 @@ tier: "1"
 description: "telegraph.speak_scope != off — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable"
 triggers:
   - intent: "any reply"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Telegraph Speak

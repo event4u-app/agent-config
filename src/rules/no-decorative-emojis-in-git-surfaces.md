@@ -11,11 +11,8 @@ triggers:
   - intent: "post PR comment"
   - keyword: "gh pr create"
   - keyword: "git commit"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # No Decorative Emojis in Git Surfaces

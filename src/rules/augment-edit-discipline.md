@@ -15,10 +15,8 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
     reason: "Rule scopes the portability gate to the uncondensed authoring tree."
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Augment Edit Discipline

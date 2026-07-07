@@ -29,11 +29,8 @@ routes_to:
   - "skill:scenario-modeling"
   - "skill:unit-economics-modeling"
   - "skill:forecasting"
-workspaces:
-  - finance
-packs:
-  - finance-basic
-  - finance-advanced
+workspaces: [finance]
+packs: [finance-basic, finance-advanced]
 trust:
   level: advisory
   human_review_required: true

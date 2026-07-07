@@ -8,7 +8,13 @@ AI image generation — multi-provider, governed (image as a sibling of video).
 - **version**: `7.5.0`
 - **owner**: small-business
 - **requires**: —
-- **artefacts**: 6
+- **artefacts**: 9
+
+## Rules (3)
+
+- **`image-likeness-and-rights`** — AI image rights gate — real-person likeness, trademarked marks, named artists' styles need explicit rights/consent
+- **`media-governance-routing`** — Generating AI video/image/voice — surface the project-local media policies (likeness, style, voice-cloning, disclosure)
+- **`provider-lifecycle-discipline`** — Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable
 
 ## Skills (6)
 

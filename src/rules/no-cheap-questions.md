@@ -3,10 +3,8 @@ type: "always"
 tier: "3"
 description: "No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on)"
 alwaysApply: true
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
+packs: [meta]
 ---
 
 # No Cheap Questions
