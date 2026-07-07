@@ -68,7 +68,7 @@ function main(): number {
         return 1;
     }
 
-    console.log('✅  internal/glama/README.md matches build/run scripts — no drift.');
+    process.stdout.write('✅  internal/glama/README.md matches build/run scripts — no drift.\n');
     return 0;
 }
 
