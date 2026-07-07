@@ -181,6 +181,48 @@ does not introduce a new tool, resource type, or protocol surface.
   process per stdio session. Multi-tenancy lives with the future
   bridge, not the kernel.
 
+## Draft amendment — MCP Full Power (pending signoff)
+
+> **Status: DRAFT, not yet accepted.** Recorded by
+> `road-to-mcp-full-power.md` Phase 3 Step 1. Does not change the
+> in-force contract above until the `a0-amendment-signoff` blocker on
+> that roadmap resolves (user review + acceptance) and the council
+> debate in Phase 3 Step 3 has run. Existing Phase 1–6 sections above
+> also predate the TS migration (they still reference `scripts/mcp_server/*.py`
+> and a two-tool allowlist) and are known-stale beyond what this draft
+> amends; a full contract refresh is a separate follow-up, out of scope
+> for this draft.
+
+**Named consumer ask.** Operator, 2026-07-07: expose the CLI/script long
+tail (roadmap, telemetry, capabilities, doctor, council, memory, …) through
+MCP in safety tiers, not just the current 9-tool read-only/single-write set.
+
+**Safety-tier model** (full classification:
+[`agents/settings/contexts/mcp-tool-tier-map.md`](../../agents/settings/contexts/mcp-tool-tier-map.md)):
+
+| Tier | Contract treatment |
+|---|---|
+| `read-only` | May be implemented without further gate — same bar as the existing 9 tools. |
+| `fs-write-in-tree` | May be implemented once path-guarded via `_validateInTreePath` — same pattern as `chat_history_append`. |
+| `shell-exec` | Requires the safety envelope: fixed argv (no shell interpolation of caller-supplied strings), timeout, output truncation, no network access from the spawned process. Implementation requires the Phase 3 council verdict naming it in the cut list. |
+| `network` | Never silent-default. Every call surfaces cost/consequence before executing; billable calls (e.g. `council:run`) require the caller to pass an explicit confirmation flag echoed back in the tool result, not just be callable. |
+| `long-running` | Structurally excluded — not tool-call-shaped (blocks or starts a server). |
+| `hard-floor-never` | **Permanently excluded.** Secrets (`keys:install-*`), the global/outside-repo install (`upgrade`, `global`, `refresh`, `settings:migrate`), and bulk-destructive commands (`uninstall`, `prune`) are never reachable via any MCP tool, bridge, or allowlist entry, under any settings value. This list only grows, never shrinks, without a fresh A0 amendment of its own. |
+
+**Deny-by-default allowlist setting.** A new consumer-facing key,
+`mcp.tools.allow` in `.agent-settings.yml`, holds an explicit list of
+tool/subcommand names the operator has opted into beyond the shipped
+read-only default. Absent or empty → only the shipped read-only +
+path-guarded-write tools are reachable, exactly as today. The
+`hard-floor-never` tier is not a valid value in this list — the server
+rejects it at load time, not just at call time.
+
+**Bridge shape (Phase 5).** Either a single `agent_config_cli` tool whose
+`subcommand` argument is validated against the tier map and the
+`mcp.tools.allow` setting, or generated per-command tools sourced from
+`src/cli/registry.ts` metadata — final choice is a Phase 3 council
+question, not decided by this draft.
+
 ## Revision policy
 
 This contract is **experimental** — breaking changes are allowed in any
