@@ -452,6 +452,13 @@ one-off roadmaps.
       promoted to a committed phase when ready. Current candidates triaged; the
       tier-conditional rule-loading candidate above was added 2026-07-05 from the
       A6 strong-host honest-null. -->
+- [x] Triage: golden-set coverage for the 54 exclusively-maintainer rules
+      (~15–20 multi-rule-tagged tasks: roadmap mechanics, council flow,
+      artifact governance).
+      <!-- PARKED 2026-07-07: promote ONLY if a maintainer-side thin/tier flip
+      is ever scheduled — until then no consumer of this coverage exists.
+      Replaces the deleted golden-set-coverage maintainer track; verdict in
+      agents/settings/contexts/token-program-integration-verdict.md. -->
 
 **Exit:** each candidate is promoted to a phase or marked `[-]` with a reason; no
 stale candidates.

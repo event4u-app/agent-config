@@ -2,26 +2,72 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 2 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **2** open blockers
+> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers
 
 ## Overall
 
-**21 / 42 steps done · 50%**
+**22 / 112 steps done · 20%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   20%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | [1](#blockers-road-to-token-saving) | ██████░░░░ 64% |
+| 1 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ░░░░░░░░░░ 0% |
+| 2 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 25 | 0 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ░░░░░░░░░░ 0% |
+| 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 4 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 12 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ██████░░░░ 65% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
+
+**Road to golden-set coverage — make every flip verdict mean something** — 0 / 18 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Scope-aware coverage accounting | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Trigger-anchored stub drafting (consumer rules, autonomous) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Operator labelling sprint (the human gate) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Prompt↔trigger falsifiability linter | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-golden-set-coverage"></a>
+**Blockers**
+
+- **operator-labelling-capacity** (owner: maintainer) — blocks Phase 2 (and thus the consumer-scope `--require-complete` flip + the live judge run at full consumer coverage)
+  - **What to do:**
+    (est. 2–4 h focused work; stub `notes` carry each rule's Iron-Law line as
+    raw material). Batch with the operator sitting defined in
+    `road-to-token-proof-and-story` Phase 1.
+  - **Resolved when:** `check_token_quality_golden --require-complete --scope consumer` exits 0.
+- **paid-judge-run-sequencing (soft)** (owner: maintainer - **Note:** the live judge run is ~3× cheaper and more representative **after** `road-to-request-scoped-rule-load` Phase 1 shrinks the eager arm to the consumer set (est. US$8–12 today, ~US$3–4 after). Labelling proceeds in parallel; only the paid run waits.) — blocks (unspecified)
+  - **What to do:**
+  - **Resolved when:** (unspecified)
+
+### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
+
+**Road to request-scoped rule load — ship only what the request needs** — 0 / 25 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Workspace/pack fields into the router (schema, additive) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Consumer-scoped rule projection (the ~50k lever) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Host-native activation: populate globs (deterministic) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Pack hygiene (two confirmed misfits + one sweep) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-request-scoped-rule-load"></a>
+**Blockers**
+
+- **phase-0-golden-set (inherited)** (owner: user) — blocks the held-quality verification arm of Phase 1's default flip. Does **not** block Phases 0, 2, 3 or the opt-in build of Phase 1 (mechanical, CI-verified).
+  - **What to do:**
+  - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
@@ -46,9 +92,31 @@
     (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
   - **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines for the current month.
 
+### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
+
+**Road to token proof and story — orchestrate, prove, activate, adopt** — 0 / 26 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Harden the flip gate (small, verified, do first) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | One critical path for six tracks (the program table) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Field evidence: replay + session telemetry | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Public proof refresh (benchmark, claims, release story) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Spend the story: one named external pilot (N=1) | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-token-proof-and-story"></a>
+**Blockers**
+
+- **flip-gates-upstream (inherited)** (owner: user) — blocks Phase 2 post-flip arms and Phase 3 (need the flips landed); Phases 0, 1 and the Phase 2 corpus/tooling build are unblocked now.
+  - **What to do:**
+  - **Resolved when:** (unspecified)
+- **field-corpus-privacy** (owner: maintainer) — blocks Phase 2 replay arms (need the exported, privacy-reviewed corpus from Galawork/event4u sessions).
+  - **What to do:**
+  - **Resolved when:** a reviewed corpus file exists and the low-impact-corpus privacy floor checklist for it is signed off.
+
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 21 / 33 done (64%)
+**Road to token saving — measure, then cut, at constant quality** — 22 / 34 done (65%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -58,7 +126,7 @@
 | 3 | Deterministic RTK wrap hook + install verification | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Cache-aware ordering as a CI invariant (D5) | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 8 | Always-loaded budget linter (D6) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 7 | 5 | 0 | 0 | 42% |
+| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 7 | 6 | 0 | 0 | 46% |
 
 <a id="blockers-road-to-token-saving"></a>
 **Blockers**
