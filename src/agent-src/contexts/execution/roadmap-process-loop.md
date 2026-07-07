@@ -115,9 +115,14 @@ only: lines matching `commit:` / `git commit` / `Commit phase`.
 Read both keys from `.agent-settings.yml` once and cache for the whole
 run. Do **not** re-read inside the step loop.
 
-**`roadmap.quality_cadence`** — when to run the quality pipeline:
+**`roadmap.quality_cadence`** — when to run the quality pipeline.
+Only relevant when `quality.local_auto_run` is `true`; when it is
+`false` or missing (the default), local pipeline runs are suppressed at
+EVERY cadence — remote CI is the gate, and the run-end report states
+*"quality gates delegated to remote CI"* instead of a pass claim
+(new-gate carve-out steps still run once).
 
-| Value | Pipeline runs |
+| Value | Pipeline runs (`local_auto_run: true` only) |
 |---|---|
 | `end_of_roadmap` (default) | Once, before archival (§ 6) |
 | `per_phase` | At every phase boundary + § 6 |
@@ -125,7 +130,7 @@ run. Do **not** re-read inside the step loop.
 
 Missing / unreadable / unknown → fall back to `end_of_roadmap`.
 The Iron Law [`verify-before-complete`](../../rules/verify-before-complete.md)
-still mandates fresh quality output before any "complete" claim.
+still forbids claiming quality output that was not produced.
 
 **`roadmap.dashboard_regen_cadence`** — when to run the dashboard
 subprocess between steps:

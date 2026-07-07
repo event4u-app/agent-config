@@ -93,6 +93,15 @@ on the changed scope."* — not *"everything looks good"*.
 
 ## The end-of-work sequence
 
+**Gate zero:** when `quality.local_auto_run` is `false` or missing (the
+default), steps 2–3 below do NOT run — user runs quality tools
+manually, remote CI is the authoritative gate (see
+[`quality-tools` § Execution policy](../quality-tools/SKILL.md)). Run
+only the narrowest probe the claim needs (step 1, a `curl`, a syntax
+check on the edited file) and close with *"quality gates delegated to
+remote CI"* — never a pass claim for tools that did not run. Full
+sequence applies when `local_auto_run: true`.
+
 When all code changes are done and you are ready to report completion:
 
 1. **Targeted tests** — the test(s) covering the changed code pass.
@@ -176,7 +185,8 @@ When reporting completion to the user:
 * Do NOT suppress warnings or skip tests to pass the gate
 * Do NOT report only the last line of output — read the whole thing
 * Do NOT run the full quality pipeline between intermediate edits —
-  run it once at the end
+  and under `quality.local_auto_run: false` (the default) do NOT run
+  it at the end either; remote CI is the gate
 
 ## When to hand over to another skill
 
@@ -196,6 +206,8 @@ Before sending a completion message:
 * [ ] Output is quoted with numeric counts, not paraphrased
 * [ ] No warnings or skips are hidden
 * [ ] Targeted tests green → full suite green → quality pipeline clean
+      (`local_auto_run: true` only; under the default `false` state
+      "quality gates delegated to remote CI" instead)
 * [ ] `git status` reflects only the intended change set
 * [ ] If `git status --short` shows untracked files, the report lists
       them verbatim under "Untracked files"

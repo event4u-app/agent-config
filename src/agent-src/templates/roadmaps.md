@@ -161,15 +161,20 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
 
 ---
 
-## Quality Gates (always apply at completion)
+## Quality Gates (remote CI by default)
 
 Every roadmap must pass the project's quality pipeline before it is
-considered done. **When** the pipeline runs during
+considered done. **Where** that gate runs depends on
+`quality.local_auto_run`: when `false` or missing (the default), the
+agent does NOT run the pipeline locally — the user runs it manually and
+remote CI on the PR is the authoritative gate; the run-end report says
+*"quality gates delegated to remote CI"*, never that the tools passed.
+When `local_auto_run: true`, **when** the local pipeline runs during
 `/roadmap:process-step|phase|full` is governed by
 `roadmap.quality_cadence` in `.agent-settings.yml`
 (`end_of_roadmap` default → once before archival; `per_phase` → after
-every phase; `per_step` → after every step). Either way, a final fresh
-run is mandatory before "complete" per `verify-before-complete`.
+every phase; `per_step` → after every step), with a final fresh run
+before "complete" per `verify-before-complete`.
 
 Common commands:
 

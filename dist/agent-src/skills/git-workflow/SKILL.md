@@ -64,10 +64,9 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
 
 ## Procedure: Before opening a PR
 
-1. Run the project's quality pipeline (see `quality-tools` skill) — typically: type-checker → auto-fixer → linter → type-checker.
-2. Run the project's test command — detect from manifest: `php artisan test` / `vendor/bin/phpunit` (PHP), `npm test` / `pnpm test` / `vitest` / `jest` (JS-TS), `pytest` (Python), `cargo test` (Rust), `go test ./...` (Go).
-3. Rebase onto `main`.
-4. Fill in PR template completely.
+1. Quality pipeline + tests — only when `quality.local_auto_run: true` (see [`quality-tools` § Execution policy](../quality-tools/SKILL.md)): type-checker → auto-fixer → linter → type-checker, then the project's test command (detect from manifest: `php artisan test` / `vendor/bin/phpunit` (PHP), `npm test` / `pnpm test` / `vitest` / `jest` (JS-TS), `pytest` (Python), `cargo test` (Rust), `go test ./...` (Go)). Under the default (`false` / missing) skip both — remote CI on the PR is the gate; say so instead of claiming they passed.
+2. Rebase onto `main`.
+3. Fill in PR template completely.
 
 ## Procedure: Finish a branch
 
@@ -83,7 +82,7 @@ Work complete. What would you like to do?
 
 ### Option 1: Push and create PR
 
-1. Run quality pipeline + tests.
+1. Run quality pipeline + tests (only when `quality.local_auto_run: true`; default `false` → skip, remote CI is the gate).
 2. `git push -u origin <branch>`.
 3. `gh pr create` using PR template.
 

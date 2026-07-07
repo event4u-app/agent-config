@@ -53,7 +53,9 @@ with the **scope delta below**.
   security-sensitive, scope-out-of-roadmap, test/quality red).
 - **Phase boundary handling:** at every phase boundary, run the
   per-phase quality pipeline when `quality_cadence: per_phase` (or
-  `per_step`). On red → stop, surface, do **not** silently roll into
+  `per_step`) AND `quality.local_auto_run: true` — under the default
+  (`false` / missing) the pipeline never runs locally; remote CI is
+  the gate. On red → stop, surface, do **not** silently roll into
   the next phase. Under `mode: phase-checkpoints`, additionally emit
   the compact status + continue prompt at every boundary; under
   `autonomous`, boundaries are silent (quality pipeline aside).

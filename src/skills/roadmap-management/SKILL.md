@@ -156,11 +156,16 @@ Every roadmap follows this structure:
 ### Quality gates
 
 Every roadmap implicitly includes the project's quality pipeline
-(static analysis, autofixes, tests). What's configurable is **when**
-the pipeline runs during `/roadmap:process-step|phase|full`,
-controlled by `roadmap.quality_cadence` in `.agent-settings.yml`:
+(static analysis, autofixes, tests). Whether the agent runs it locally
+at all is gated by `quality.local_auto_run`: `false` or missing (the
+default) → the agent never runs the pipeline locally; the user runs it
+manually and remote CI on the PR is the authoritative gate (run-end
+report: *"quality gates delegated to remote CI"*; new-gate carve-out
+steps still run once). When `local_auto_run: true`, **when** the
+pipeline runs during `/roadmap:process-step|phase|full` is controlled
+by `roadmap.quality_cadence` in `.agent-settings.yml`:
 
-| Cadence | Pipeline runs | Trade-off |
+| Cadence | Pipeline runs (`local_auto_run: true` only) | Trade-off |
 |---|---|---|
 | `end_of_roadmap` (default) | Once before archiving | Fastest, fewest tokens; errors compound across phases |
 | `per_phase` | After every completed phase + final | Balanced; catches drift at phase boundaries |

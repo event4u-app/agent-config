@@ -45,7 +45,9 @@ with the **scope delta below**.
   [`roadmap-process-loop § 5`](../../contexts/execution/roadmap-process-loop.md#5-step-loop)
   (sub-steps 1–7). After the checkbox edit + dashboard regen, **stop**.
 - **Quality cadence:** run the per-step pipeline only when
-  `quality_cadence: per_step`. Skip otherwise.
+  `quality_cadence: per_step` AND `quality.local_auto_run: true`.
+  Skip otherwise — under the default (`false` / missing) remote CI
+  is the gate.
 - **Phase boundary:** if this single step happens to close the phase,
   do **not** advance. Report the phase as complete and stop.
 - **Roadmap boundary:** if this single step happens to close the

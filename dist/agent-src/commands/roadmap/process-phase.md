@@ -52,8 +52,10 @@ branching, halt conditions, and the archival check.
   phase. Use [`/roadmap:process-full`](process-full.md) for continuous
   execution across phases.
 - **Quality cadence at the boundary:** run the per-phase pipeline when
-  `quality_cadence: per_phase` (or `per_step`). Skip when
-  `end_of_roadmap`.
+  `quality_cadence: per_phase` (or `per_step`) AND
+  `quality.local_auto_run: true`. Skip when `end_of_roadmap` — and
+  always skip under the default (`local_auto_run` `false` / missing);
+  remote CI is the gate.
 
 ## Rules
 

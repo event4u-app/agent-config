@@ -66,7 +66,9 @@ On stop, report the last verified state so the user can resume.
 ### 5. Final verification
 
 After step N passes judgment, run `verify-completion-evidence` across the
-whole changeset — targeted tests + full suite + quality pipeline.
+whole changeset — targeted tests, plus full suite + quality pipeline only
+when `quality.local_auto_run: true` (default `false` → skip, remote CI is
+the gate; report "quality gates delegated to remote CI").
 Never declare the plan "done" without this gate.
 
 ### 6. Report
