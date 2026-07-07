@@ -55,6 +55,7 @@
  */
 
 import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -891,9 +892,36 @@ function _parseArgs(argv: readonly string[]): Args {
     return { check, repo_root };
 }
 
+/**
+ * When the default cwd carries no `agents/roadmaps/`, fall back to the git
+ * toplevel — hook and IDE invocations often run from a subdirectory, and a
+ * cwd-only resolution silently skipped the dashboard there. An explicit
+ * `--repo-root` always wins; a cwd that has the directory is used as-is
+ * (monorepo sub-project support).
+ */
+function _fallback_git_toplevel(repo_root: string): string {
+    try {
+        const r = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+            cwd: repo_root,
+            encoding: 'utf-8',
+            timeout: 10_000,
+        });
+        const top = (r.stdout || '').trim();
+        if (r.status === 0 && top !== '' && _isDir(path.join(top, 'agents', 'roadmaps'))) {
+            return top;
+        }
+    } catch {
+        /* not a git repo / git missing — keep the cwd default */
+    }
+    return repo_root;
+}
+
 function main(argv?: readonly string[]): number {
     const args = _parseArgs(argv ?? process.argv.slice(2));
-    const repo_root = args.repo_root;
+    let repo_root = args.repo_root;
+    if (repo_root === process.cwd() && !_isDir(path.join(repo_root, 'agents', 'roadmaps'))) {
+        repo_root = _fallback_git_toplevel(repo_root);
+    }
     const roadmap_root = path.join(repo_root, 'agents', 'roadmaps');
     const target = path.join(repo_root, 'agents', 'roadmaps-progress.md');
     if (!_isDir(roadmap_root)) {
