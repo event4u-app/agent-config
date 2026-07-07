@@ -238,6 +238,103 @@ function parseSyncSeam(raw: string): SyncSeamResult {
     };
 }
 
+// ---------------------------------------------------------------------------
+// Claude Code plugin refresh (hermetic CLAUDE_CONFIG_DIR + fake `claude` on
+// PATH). The plugin is OPTIONAL: no installed-plugins record → no plugin
+// step, no hint (the file projection is a full install on its own). An
+// installed plugin → marketplace update + plugin update run via the injected
+// runner, after the global step.
+// ---------------------------------------------------------------------------
+
+describe('upgrade — claude plugin refresh', () => {
+    let claudeHome: string;
+    let shimDir: string;
+    let syncHarnessPath: string;
+
+    function writeClaudeShim(): void {
+        const shim = path.join(shimDir, 'claude');
+        fs.writeFileSync(shim, '#!/bin/sh\nexit 0\n');
+        fs.chmodSync(shim, 0o755);
+        if (process.platform === 'win32') {
+            fs.writeFileSync(path.join(shimDir, 'claude.cmd'), '@exit /b 0\r\n');
+        }
+    }
+
+    function recordInstalledPlugin(): void {
+        const pluginsDir = path.join(claudeHome, 'plugins');
+        fs.mkdirSync(pluginsDir, { recursive: true });
+        fs.writeFileSync(
+            path.join(pluginsDir, 'installed_plugins.json'),
+            JSON.stringify({
+                version: 2,
+                plugins: { 'agent-config@event4u-agent-config': [{ scope: 'user' }] },
+            }),
+        );
+    }
+
+    function seamPlugin(args: string[]): SyncSeamResult {
+        const r = spawnSync(TSX_BIN, [syncHarnessPath, '0', '0', claudeHome, ...args], {
+            cwd: REPO_ROOT,
+            encoding: 'utf8',
+            env: {
+                ...process.env,
+                CLAUDE_CONFIG_DIR: claudeHome,
+                EVENT4U_CONFIG_HOME: claudeHome,
+                PATH: `${shimDir}${path.delimiter}${process.env['PATH'] ?? ''}`,
+            },
+        });
+        return parseSyncSeam(r.stdout ?? '');
+    }
+
+    beforeEach(() => {
+        claudeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-claude-'));
+        shimDir = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-shim-'));
+        syncHarnessPath = path.join(harnessDir, 'plugin-harness.mjs');
+        fs.writeFileSync(syncHarnessPath, TS_SYNC_HARNESS);
+        writeClaudeShim();
+    });
+    afterEach(() => {
+        fs.rmSync(claudeHome, { recursive: true, force: true });
+        fs.rmSync(shimDir, { recursive: true, force: true });
+    });
+
+    it('plugin not installed → no plugin step (file projection is a full install)', () => {
+        const r = seamPlugin([]);
+        expect(r.exit).toBe('0');
+        expect(r.calls.filter((c) => c.includes('plugin'))).toHaveLength(0);
+    });
+
+    it('plugin installed → marketplace update + plugin update run after the global step', () => {
+        recordInstalledPlugin();
+        const r = seamPlugin([]);
+        expect(r.exit).toBe('0');
+        const pluginCalls = r.calls.filter((c) => c.includes(' plugin '));
+        expect(pluginCalls).toHaveLength(2);
+        expect(pluginCalls[0]).toContain('plugin marketplace update event4u-agent-config');
+        expect(pluginCalls[1]).toContain('plugin update agent-config@event4u-agent-config');
+        const globalIdx = r.calls.findIndex((c) => c.includes(' global'));
+        const firstPluginIdx = r.calls.findIndex((c) => c.includes(' plugin '));
+        expect(globalIdx).toBeGreaterThanOrEqual(0);
+        expect(firstPluginIdx).toBeGreaterThan(globalIdx);
+    });
+
+    it('the global step runs with --no-ui (wizard never blocks an upgrade)', () => {
+        const r = seamPlugin([]);
+        expect(r.exit).toBe('0');
+        const globalCall = r.calls.find((c) => c.includes(' global'));
+        expect(globalCall).toContain(' global --no-ui');
+    });
+
+    it('--dry-run lists the plugin steps without executing anything', () => {
+        recordInstalledPlugin();
+        const r = seamPlugin(['--dry-run']);
+        expect(r.exit).toBe('0');
+        expect(r.out).toContain('plugin marketplace update event4u-agent-config');
+        expect(r.out).toContain('plugin update agent-config@event4u-agent-config');
+        expect(r.calls).toHaveLength(0);
+    });
+});
+
 describe('upgrade — post-upgrade settings sync', () => {
     let globalRoot: string;
     let projectRoot: string;
