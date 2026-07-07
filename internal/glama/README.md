@@ -1,29 +1,31 @@
 # glama.ai MCP-server integration
 
 [glama.ai](https://glama.ai/) indexes this package's read-only stdio MCP server
-(`src/scripts/mcp_server/`). It clones the repo, runs a **build** step, launches
-the server via **mcp-proxy**, and introspects it. glama's admin panel stores the
-build + launch commands; to keep those fields free of dotted tokens (glama
-truncates the last char of any token containing a dot — `3.11` → `3.1`), the
+(`src/scripts/mcp_server/` — TypeScript, run via `tsx`). It clones the repo,
+runs a **build** step, launches the server via **mcp-proxy**, and introspects
+it. glama's admin panel stores the build + launch commands; to keep those
+fields free of dotted tokens (glama truncates the last char of any token
+containing a dot — `3.11` → `3.1`, `node_modules/.bin/tsx` → `…/.bin/ts`), the
 real commands live in committed scripts:
 
 | File | glama field | What it does |
 |---|---|---|
-| `build` | Build steps → `bash /app/internal/glama/build` | `uv venv` + `uv pip install -r src/scripts/mcp_server/requirements.txt` |
-| `run` | CMD → `["mcp-proxy","--","bash","/app/internal/glama/run"]` | `PYTHONPATH=/app/src python -m scripts.mcp_server` |
+| `build` | Build steps → `bash /app/internal/glama/build` | `npm ci` |
+| `run` | CMD → `["mcp-proxy","--","bash","/app/internal/glama/run"]` | `node node_modules/.bin/tsx src/scripts/mcp_server/__main__.ts` |
 
 ## Local test — `task mcp:glama-test`
 
-`Dockerfile` + `smoke.py` reproduce glama's build/run environment locally and
+`Dockerfile` + `smoke.ts` reproduce glama's build/run environment locally and
 assert the server boots and speaks MCP (`initialize` + `prompts/list > 0`).
 
 ```bash
 task mcp:glama-test
 ```
 
-It builds a Debian image, runs `internal/glama/build`, then runs `smoke.py`
-(an MCP stdio client) against `internal/glama/run`. Green = the build/run
-scripts and the server's content roots work in a glama-like container.
+It builds a Debian image, runs `internal/glama/build`, then runs `smoke.ts`
+(an MCP stdio client, run via `tsx`) against `internal/glama/run`. Green =
+the build/run scripts and the server's content roots work in a glama-like
+container.
 
 ## Scope — what this does and does NOT prove
 
@@ -41,8 +43,8 @@ live on their side.
 
 **`Dockerfile` is a `COPY`-based local variant, not glama's Dockerfile.** It
 tests the working tree (incl. uncommitted changes), offline. The pinned
-toolchain (node 24, mcp-proxy 6.4.3, python 3.11, debian trixie) is a **dated
-snapshot** of glama's generated Dockerfile, not a live mirror.
+toolchain (node 24, mcp-proxy 6.4.3, debian trixie) is a **dated snapshot** of
+glama's generated Dockerfile, not a live mirror.
 
 ## Debugging a glama sync failure
 
@@ -54,5 +56,6 @@ snapshot** of glama's generated Dockerfile, not a live mirror.
    and **CMD** = `["mcp-proxy","--","bash","/app/internal/glama/run"]`.
 3. Run `task mcp:glama-test` to rule out a build/run regression on our side.
 
-_Last verified glama-parity build: 2026-06-09 — image built in ~14s, `run`
-booted the server (377 prompts / 189 resources / 20 tools), handshake OK._
+_Last verified glama-parity build: 2026-07-07 — image built in ~36s, `run`
+booted the server (430 prompts / 232 resources / 27 tools — 9 implemented,
+18 stubs), handshake OK._

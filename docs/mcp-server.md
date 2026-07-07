@@ -1,6 +1,6 @@
 # MCP Server
 
-> Status: **experimental** — Phase 1 + 2 + 3 shipped. No `tools/*` primitive yet (Phase 4, deferred behind a design call). Promotion to **beta** is gated on the six criteria in [`docs/contracts/mcp-beta-criteria.md`](contracts/mcp-beta-criteria.md); current gate status: `./agent-config doctor --check mcp-beta-readiness` (Phase 3 of `road-to-surface-discipline.md`).
+> Status: **experimental** — read-only prompts + resources plus a growing `tools/*` surface (stub-by-default: every catalogued tool name resolves, unimplemented ones return a structured `not_implemented` envelope). Tool coverage and the write/exec unlock path are governed by [`agents/settings/contexts/mcp-coverage-strategy.md`](../agents/settings/contexts/mcp-coverage-strategy.md). Promotion to **beta** is gated on the six criteria in [`docs/contracts/mcp-beta-criteria.md`](contracts/mcp-beta-criteria.md); current gate status: `./agent-config doctor --check mcp-beta-readiness`.
 
 `agent-config` ships a built-in [Model Context Protocol](https://modelcontextprotocol.io)
 server that exposes the package's read-only governance surface to MCP-aware
@@ -20,22 +20,30 @@ coexist:
   [`docs/contracts/mcp-cloud-scope.md`](contracts/mcp-cloud-scope.md).
   Wire-parity-checked against the local stdio kernel on every release.
 
-The MCP server **never executes engine code, never writes files, never spawns
-shells**. It is a read-only instructional surface — see
-[`docs/contracts/mcp-phase-1-scope.md`](contracts/mcp-phase-1-scope.md).
+Every implemented tool is either read-only or writes only inside the
+consumer's project tree via a path-guard (`_validateInTreePath`) —
+[`docs/contracts/mcp-phase-1-scope.md`](contracts/mcp-phase-1-scope.md)
+is the scope contract; exec-tier tools (shell-spawning) and network-tier
+tools (billable) are gated behind
+[`agents/settings/contexts/mcp-coverage-strategy.md`](../agents/settings/contexts/mcp-coverage-strategy.md).
 
 ## What the server exposes
 
-| Primitive | URIs | Source | Count (this package) |
-|---|---|---|---|
-| `prompts/list` + `prompts/get` | `skill.<name>`, `command.<name>` | `dist/agent-src/skills/`, `dist/agent-src/commands/` | 174 skills + 104 commands |
-| `resources/list` + `resources/read` | `rule://<stem>` | `dist/agent-src/rules/` | 60 rules |
-| ↳ | `guideline://<relpath>` | `docs/guidelines/` | 69 guidelines |
-| ↳ | `context://<relpath>` | `dist/agent-src/contexts/` | 31 contexts |
+| Primitive | URIs | Source |
+|---|---|---|
+| `prompts/list` + `prompts/get` | `skill.<name>`, `command.<name>` | `dist/agent-src/skills/`, `dist/agent-src/commands/` |
+| `resources/list` + `resources/read` | `rule://<stem>` | `dist/agent-src/rules/` |
+| ↳ | `guideline://<relpath>` | `docs/guidelines/` |
+| ↳ | `context://<relpath>` | `dist/agent-src/contexts/` |
+| `tools/list` + `tools/call` | see [`agents/settings/contexts/mcp-tool-tier-map.md`](../agents/settings/contexts/mcp-tool-tier-map.md) for the full candidate surface | `src/scripts/mcp_server/consumer_tool_catalog.json` |
 
 All resources are served with `mimeType: text/markdown`. Pagination is
 cursor-based (default page size: 100). Hot-reload triggers automatically on
 file mtime changes — edit a rule, reissue `resources/list`, see the update.
+Exact prompt/resource/tool counts drift with every content change — the smoke
+test below reports the live numbers rather than a number pinned in prose.
+_Last verified boot (`task mcp:glama-test`, 2026-07-07): 430 prompts / 232
+resources / 27 tools (9 implemented, 18 stubs)._
 
 ## Setup — one-line install
 
@@ -60,10 +68,9 @@ task mcp:run            # maintainer / dev repo
 ./agent-config mcp:run  # consumer projects
 ```
 
-Both forms launch the TypeScript MCP server over stdio via `tsx`. Use these for
-
-(Claude Desktop, Cursor, Zed, Continue) launch the server themselves via
-the config snippets below.
+Both forms launch the TypeScript MCP server over stdio via `tsx`. Use these
+for a manual smoke test — MCP clients (Claude Desktop, Cursor, Zed, Continue)
+launch the server themselves via the config snippets below.
 
 ## Client configuration
 
@@ -140,8 +147,9 @@ boots cleanly:
 
 ```bash
 ./agent-config mcp:run < /dev/null
-# Expect stderr: "mcp-server: loaded N prompts (0 warnings)" and
-#                "mcp-server: loaded 160 resources (0 warnings)"
+# Expect stderr: "mcp-server: loaded N prompts (0 warnings)",
+#                "mcp-server: loaded N resources (0 warnings)", and
+#                "mcp-server: registered N tools (N implemented, N stubs): [...]"
 ```
 
 ## Troubleshooting
@@ -155,9 +163,13 @@ boots cleanly:
 ## Scope
 
 - **In scope:** read-only prompts + resources, pagination, hot-reload, stdio
-  transport, free-tier client compatibility.
-- **Out of scope (Phase 4+):** `tools/*` primitive, SSE / HTTP transport,
-  cloud distribution, signed payloads. Tracked in
-  [`agents/roadmaps/road-to-mcp-server.md`](../agents/roadmaps/road-to-mcp-server.md).
+  transport, free-tier client compatibility, a growing read-only and
+  in-tree-write `tools/*` surface (see
+  [`agents/settings/contexts/mcp-tool-tier-map.md`](../agents/settings/contexts/mcp-tool-tier-map.md)).
+- **Out of scope:** SSE / native HTTP transport for this server (the
+  Cloudflare Worker above is the HTTP bridge instead), shell-exec and
+  network-tier tools until the safety envelope in
+  [`agents/settings/contexts/mcp-coverage-strategy.md`](../agents/settings/contexts/mcp-coverage-strategy.md)
+  ships, signed payloads.
 
 ← [Architecture](architecture.md) · [MCP config generation (consumer side)](mcp.md)

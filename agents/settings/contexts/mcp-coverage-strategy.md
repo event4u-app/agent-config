@@ -16,16 +16,25 @@ and reopen only under named triggers.
    transport, outcome`), not from internal preference lists. The Phase 1
    J6 healthcheck (`scripts/mcp_telemetry_health.py`) refuses to let the
    pipeline run silent.
-3. **Read-only MVP; write-tools and TS-port gated.** The shipped tool set
-   is read-only under the A0 contract (`mcp-phase-1-scope.md` §A0). Two
-   future expansions stay dormant under hard triggers:
-   - **Write-tools** — re-open only after a named consumer ask, ≥2 weeks
-     of RO telemetry, and an accepted A0 amendment.
-   - **TS-native port** — re-open only on a measured latency-budget
-     failure or a hosted-endpoint distribution requirement that the
-     Python-subprocess pattern cannot meet. Batched mass-ports are
-     forbidden; the N0 forcing function diverts any ≥3-tool batch into a
-     fresh, council-gated roadmap.
+3. **Read-only MVP; write/exec-tools gated behind a named unlock.** The
+   original shipped tool set was read-only under the A0 contract
+   (`mcp-phase-1-scope.md` §A0). The write-tools trigger — "a named
+   consumer ask, ≥2 weeks of RO telemetry (or an explicit operator
+   waiver), and an accepted A0 amendment" — **fired 2026-07-07** via
+   `road-to-mcp-full-power.md`: named ask (operator), waived telemetry
+   window (~24h, precedent: the 2026-05-12 cut's own 4-week waiver), and
+   an accepted A0 amendment (`mcp-phase-1-scope.md` § Amendment). The
+   council-gated cut list and bridge shape (build-time codegen, no
+   runtime allowlist) are recorded in
+   `agents/decisions/mcp-write-exec-cut-2026-07-07.md`. Any **further**
+   batch (≥3 tools) beyond that verdict still requires its own fresh
+   council-gated roadmap — the N0 forcing function is not spent by this
+   one unlock.
+   - **TS-native port** — moot: the kernel server (`src/scripts/mcp_server/`)
+     completed its Python → TypeScript migration; the "Python-subprocess
+     pattern cannot meet latency" trigger no longer applies to a runtime
+     that no longer exists. This context file's remaining Python-era
+     references are known-stale; a full refresh is a separate follow-up.
 
 ## Why this is durable
 
