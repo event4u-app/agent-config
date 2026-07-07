@@ -88,7 +88,7 @@ Cluster locked in
 |---|---|---|
 | `agents/reference/ghostwriter/<slug>.md` (consumer) | Real-person public-figure profiles | **No** — gitignored by default. `--shared` opt-in deferred to v2. |
 | `agents/reference/ghostwriter/README.md` (consumer) | Directory anchor + how-to | Yes |
-| `.agent-src.uncondensed/ghostwriter/*.md` (package) | `fictional: true` fixtures only | Yes — CI-enforced by `scripts/lint_ghostwriter_source.py` |
+| `.agent-src.uncondensed/ghostwriter/*.md` (package) | `fictional: true` fixtures only | Yes — CI-enforced by `scripts/lint_ghostwriter_source.ts` |
 
 Slug = full-name kebab-case with optional `-<discriminator>` suffix
 (`alice-walker` vs `alice-walker-novelist`). The package never

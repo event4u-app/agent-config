@@ -23,7 +23,7 @@ packs:
 # /chat-history
 
 Top-level orchestrator for the `/chat-history` family. Writes and overflow
-handling are driven entirely by platform hooks + `scripts/chat_history.py`
+handling are driven entirely by platform hooks + `scripts/chat_history.ts`
 internals (`road-to-chat-history-hook-only`); the surfaced sub-command is
 read-only on the cross-host log (`agents/runtime/.agent-chat-history`).
 Sessions coexist in one log file — each entry self-tags via the `s` field —

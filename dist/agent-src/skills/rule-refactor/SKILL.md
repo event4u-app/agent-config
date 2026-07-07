@@ -31,7 +31,7 @@ Do NOT use this skill for:
 
 **Threshold-lift is forbidden.** When the budget breaches, the
 content must shrink — not the gate. Loosening `FAIL_THRESHOLD` in
-`scripts/measure_augment_budget.py` to make CI pass is an explicit
+`scripts/measure_augment_budget.ts` to make CI pass is an explicit
 anti-pattern. The only valid budget-growth move is an ADR that
 raises `TOTAL_CAP`.
 

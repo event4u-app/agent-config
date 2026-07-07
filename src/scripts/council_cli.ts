@@ -96,6 +96,7 @@ import {
     type PriceTable,
     estimate_cost,
     load_prices,
+    prices_file_for,
 } from './ai_council/pricing.js';
 import { detect_project_context } from './ai_council/project_context.js';
 import {
@@ -1181,7 +1182,10 @@ function cmd_estimate(
         });
     }
     if (table === null) {
-        table = load_prices();
+        // Anchor to the PROJECT root — the module default writes into the
+        // installed package dir when run from a consumer (pollutes the npm
+        // prefix; EACCES on root-owned prefixes).
+        table = load_prices(prices_file_for(REPO_ROOT));
     }
     const [question] = build_question({
         input_path: args.question as string,
@@ -1680,7 +1684,10 @@ function cmd_run(
         _emit_shadow_slo_banner();
     }
     if (table === null) {
-        table = load_prices();
+        // Anchor to the PROJECT root — the module default writes into the
+        // installed package dir when run from a consumer (pollutes the npm
+        // prefix; EACCES on root-owned prefixes).
+        table = load_prices(prices_file_for(REPO_ROOT));
     }
     const [question, artefact] = build_question({
         input_path: args.question as string,
@@ -1986,7 +1993,10 @@ function cmd_debate(
         });
     }
     if (table === null) {
-        table = load_prices();
+        // Anchor to the PROJECT root — the module default writes into the
+        // installed package dir when run from a consumer (pollutes the npm
+        // prefix; EACCES on root-owned prefixes).
+        table = load_prices(prices_file_for(REPO_ROOT));
     }
     const [question, artefact] = build_question({
         input_path: args.question as string,
@@ -2792,11 +2802,29 @@ function main(argv: string[] | null = null): number {
 }
 
 // CLI entry.
-const _isCliEntry =
-    process.argv[1] !== undefined &&
-    import.meta.url === pathToFileURL(path.resolve(process.argv[1] as string)).href;
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
 
-if (_isCliEntry) {
+if (_isCliEntry()) {
     try {
         process.exitCode = main(process.argv.slice(2));
     } catch (err) {

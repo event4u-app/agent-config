@@ -25,7 +25,7 @@ that prefer one file per type.
 | Incident learnings | `agents/memory/incident-learnings.yml` | `agents/memory/incident-learnings/<hash>.yml` |
 | Product rules | `agents/memory/product-rules.yml` | `agents/memory/product-rules/<hash>.yml` |
 
-Choose one layout per type and stick with it. `scripts/check_memory.py`
+Choose one layout per type and stick with it. `scripts/check_memory.ts`
 warns if both exist for the same type.
 
 ## Shared frontmatter fields
@@ -59,7 +59,7 @@ for why a fourth `high` tier was rejected.
 | `low` | Background — only surface on explicit full load | Skipped by query-matched retrieval; visible only via `/memory:load --type` full sweep |
 
 **Tier-0 governance.**
-`scripts/check_memory.py` enforces two soft guards on `critical` entries:
+`scripts/check_memory.ts` enforces two soft guards on `critical` entries:
 
 - **Critical-stale warning** — a `priority: critical` entry whose
   `last_validated` is older than 90 days emits a `critical-stale` warning
@@ -119,7 +119,7 @@ templates for the full shape:
 
 ## Redaction rules (hard)
 
-Enforced by `scripts/check_memory.py`. Reject on match:
+Enforced by `scripts/check_memory.ts`. Reject on match:
 
 - **No secrets.** API keys, tokens, credentials, private URLs with
   credentials, internal hostnames that expose infrastructure.
@@ -139,7 +139,7 @@ path if the guardrail is absent.
 
 ## Staleness
 
-`check_memory.py` runs weekly (not per-PR). It reports entries where
+`check_memory.ts` runs weekly (not per-PR). It reports entries where
 `(today - last_validated) > review_after_days`. Stale entries stay
 active — the report is informational, not a gate.
 

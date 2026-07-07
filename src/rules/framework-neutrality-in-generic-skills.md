@@ -109,7 +109,7 @@ inlines stack-specific code.
 
 ## Enforcement
 
-`scripts/lint_framework_leakage.py` runs in the package CI pipeline.
+`scripts/lint_framework_leakage.ts` runs in the package CI pipeline.
 Exit codes:
 
 - `0` — no hits, or every hit is auto-detected as cross-stack, or

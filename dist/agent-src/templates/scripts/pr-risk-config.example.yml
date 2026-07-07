@@ -1,4 +1,4 @@
-# PR risk config — consumed by scripts/pr_risk_review.py
+# PR risk config — consumed by scripts/pr_risk_review.ts
 #
 # Copy this file to `.github/pr-risk-config.yml` and adapt the patterns to
 # your stack. Omitting the file entirely is fine — the script ships with

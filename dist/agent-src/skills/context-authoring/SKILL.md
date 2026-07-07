@@ -156,7 +156,7 @@ If the context file declares its own `load_context:` (chain reasoning),
 use logical names rooted at the source — `contexts/<area>/<file>.md`
 for package material or `agents/settings/contexts/<file>.md` for project-local
 material. The `.agent-src.uncondensed/` prefix is rejected by the
-schema regex and by `scripts/lint_load_context.py`. Body links to
+schema regex and by `scripts/lint_load_context.ts`. Body links to
 `docs/guidelines/...` use the verbatim `../../docs/...` relative form.
 Canonical reference: `rule-writing` § 3b and
 `docs/contracts/load-context-schema.md`.

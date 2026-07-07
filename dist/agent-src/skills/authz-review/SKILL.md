@@ -19,7 +19,7 @@ packs:
 > **Grounded corpus (Tier-1 consultation):** the threat corpus's
 > `authorization` + `tenancy` rows (IDOR, mass-assignment escalation,
 > unscoped queries, sealed job context — each with negative tests) come
-> from `ground.py ground --manifest
+> from `./scripts-run <skills-root>/corpus-grounding/scripts/ground ground --manifest
 > <skills-root>/threat-modeling/data/manifest.json "<check under review>"`.
 > Cite corpus rows in findings; surface the evidence gap when no row.
 

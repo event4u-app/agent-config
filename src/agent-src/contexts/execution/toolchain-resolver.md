@@ -17,15 +17,16 @@ tools and run the right one — instead of a per-stack command explosion.
 
 ## 1. The resolver
 
-`work_engine/stack/runner.py` is the engine. A command resolves the
-toolchain once and runs the returned commands:
+`work_engine/stack/runner.ts` (TypeScript, run via tsx) is the engine.
+A command resolves the toolchain once and runs the returned commands:
 
-```python
-from work_engine.stack.runner import resolve_toolchain, write_config
-result = resolve_toolchain(project_root, include_slow=False, include_e2e=False, php_only=False)
-write_config(project_root, result)   # caches agents/runtime/state/toolchain.json
-for r in result.selected:
-    run(r.command)                   # e.g. "vendor/bin/pest", "npx vitest run"
+```ts
+import { resolve_toolchain, write_config } from './work_engine/stack/runner.js';
+const result = resolve_toolchain(projectRoot, { include_slow: false, include_e2e: false, php_only: false });
+write_config(projectRoot, result); // caches agents/runtime/state/toolchain.json
+for (const r of result.selected) {
+    run(r.command);                // e.g. "vendor/bin/pest", "npx vitest run"
+}
 ```
 
 Resolution is filesystem-cheap (a handful of small manifest reads) and

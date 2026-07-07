@@ -15,9 +15,12 @@
 # This workflow is intentionally read-only — it never blocks a PR and
 # never modifies the repo. It only opens / updates a tracking issue.
 #
+# Runtime: Node/tsx (py2ts migration) — the report runs through the
+# repo's own tsx runner (`./scripts-run`); no Python required.
+#
 # Prerequisites:
-#   - `scripts/memory_report.py` present in the repo (ships with the
-#     package).
+#   - `dist/agent-src/templates/scripts/memory_report.ts` present in the
+#     repo (ships with the package).
 #   - Proposals live under `agents/proposals/` with the schema defined
 #     in `dist/agent-src/templates/agents/proposal.example.md`.
 
@@ -45,13 +48,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: "22"
 
-      - name: Install PyYAML
-        run: pip install pyyaml
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build quarterly report
         id: report
@@ -63,7 +66,7 @@ jobs:
             echo "Accepted vs. retired for the last quarter."
             echo
             echo '```'
-            python3 scripts/memory_report.py --quarterly --format text
+            ./scripts-run dist/agent-src/templates/scripts/memory_report --format text
             echo '```'
             echo
             echo "Open proposals by stage:"

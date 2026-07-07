@@ -289,24 +289,33 @@ function _isFile(p: string): boolean {
 /**
  * Resolve how to run the `.ts` regenerator: prefer the `tsx` binary from a
  * `node_modules/.bin` directory found by walking up from the regenerator's
- * directory; fall back to `npx tsx`. Mirrors
- * `dispatch_hook.ts::_resolve_tsx_invocation` so the regenerator runs as
- * TypeScript with no python3 dependency (the regenerator may live in a
- * consumer `.augment/scripts/` with the package's node_modules up the tree).
+ * directory, then from THIS module's own package tree; only then fall back
+ * to `npx tsx`. Mirrors `dispatch_hook.ts::_resolve_tsx_invocation` so the
+ * regenerator runs as TypeScript with no python3 dependency. The package-
+ * tree branch matters when the regenerator lives in a consumer
+ * `.augment/scripts/` whose tree carries no tsx — `npx tsx` there runs
+ * against the consumer's npm config and fails hard on e.g. devEngines pins
+ * (the 8.1.0 EBADDEVENGINES regression).
  */
 function _resolve_tsx_invocation(scriptPath: string): { command: string; args: string[] } {
   const binName = process.platform === "win32" ? "tsx.cmd" : "tsx";
-  let dir = path.dirname(scriptPath);
-  for (;;) {
-    const candidate = path.join(dir, "node_modules", ".bin", binName);
-    if (_isFile(candidate)) {
-      return { command: candidate, args: [scriptPath] };
+  const walkUp = (start: string): string | null => {
+    let dir = start;
+    for (;;) {
+      const candidate = path.join(dir, "node_modules", ".bin", binName);
+      if (_isFile(candidate)) {
+        return candidate;
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) {
+        return null;
+      }
+      dir = parent;
     }
-    const parent = path.dirname(dir);
-    if (parent === dir) {
-      break;
-    }
-    dir = parent;
+  };
+  const tsx = walkUp(path.dirname(scriptPath)) ?? walkUp(path.dirname(fileURLToPath(import.meta.url)));
+  if (tsx !== null) {
+    return { command: tsx, args: [scriptPath] };
   }
   return { command: "npx", args: ["tsx", scriptPath] };
 }
@@ -460,9 +469,30 @@ export function main(argv?: string[]): number {
   return run(_readStdin(), { consumer_root: root, verbose: args.verbose });
 }
 
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
 const isCliEntry =
-  process.argv[1] !== undefined &&
-  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+  _isCliEntry();
 if (isCliEntry) {
   process.exit(main(process.argv.slice(2)));
 }

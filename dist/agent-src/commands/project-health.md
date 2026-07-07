@@ -29,7 +29,7 @@ Run in parallel:
 - `git branch --show-current` → current branch
 - `git log --oneline -3` → recent activity
 - Count files in `agents/` (docs, features, roadmaps, contexts)
-- Resolve modules via `scripts/_lib/agent_settings.py::enumerate_modules()`
+- Resolve modules via `scripts/_lib/agent_settings.ts::enumerate_modules()`
 - For every module: count files in `{module_path}/{modules.agent_folder}/` (Laravel shape: `app/Modules/*/agents/`)
 - Module list comes from `enumerate_modules()` (Laravel shape: `app/Modules/`)
 - Count test files

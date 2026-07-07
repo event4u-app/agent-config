@@ -50,7 +50,7 @@ agent emits the block as the first and ONLY thing this turn
 
 ## Scoring breakdown
 
-Per match, `match.py` computes:
+Per match, `match.ts` computes:
 
 | Component | Weight | Source |
 |---|---|---|
@@ -60,7 +60,7 @@ Per match, `match.py` computes:
 | Structural bonus (ticket key, file path) | +0.05, sets `has_structural_bonus=True` | runtime |
 
 Phrase length matters — longer matched evidence wins ties. The score is
-clamped to `[0.0, 1.0]`. `rank.py` then enforces the floor and the
+clamped to `[0.0, 1.0]`. `rank.ts` then enforces the floor and the
 heuristics in
 [`adr-command-suggestion.md`](adr-command-suggestion.md#anti-noise-heuristics).
 
@@ -107,7 +107,7 @@ without the rule active.
 
 ## Anti-noise heuristics — when not to fire
 
-`rank.py` returns `[]` when:
+`rank.ts` returns `[]` when:
 
 - Top score is below `confidence_floor` (default `0.6`).
 - Single match within `floor + 0.1` and no structural bonus.
@@ -118,13 +118,14 @@ Structural bonuses (ticket key, file path) override every suppressor.
 
 ## Hardening tests — what we lock down
 
-`tests/test_command_suggester.py` covers 84 cases (matcher, rank,
-cooldown, sanitiser, render, settings, directive). The 9 GT-CS goldens
-(`tests/test_command_suggester_goldens.py`) lock end-to-end shape.
+`tests/scripts/command_suggester.test.ts` covers the matcher, rank,
+cooldown, sanitiser, render, settings, and directive cases. The GT-CS
+goldens (`tests/scripts/command_suggester_goldens.test.ts`) lock
+end-to-end shape.
 Together they enforce:
 
 - **No execution without user pick** — engine has no execute path.
-- **No echo-trigger** — `sanitize.py` strips the previous block's shape.
+- **No echo-trigger** — `sanitize.ts` strips the previous block's shape.
 - **No code-block triggers** — `/commit` inside ``` ``` ``` ``` stays inert.
 - **No conversation hijack** — `enabled: false` and senior gates → silent.
 - **No multi-question stack** — only a numbered-options block, no extra ask.

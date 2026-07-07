@@ -8,7 +8,7 @@ replaces: []
 tier: 0
 visibility: visible
 skills: [refine-ticket, feature-planning]
-description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
+description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git.
 suggestion:
   eligible: true
   trigger_description: "implement this ticket, setze ticket X um, build PROJ-123"
@@ -110,7 +110,7 @@ Run the engine with the state file on every iteration:
     [--ticket-file ticket.json --persona <name>]   # first call only
 ```
 
-The dispatcher wires `PYTHONPATH` and routes to the engine module
+The dispatcher resolves the engine module (TypeScript, run via tsx)
 internally. `./agent-config` is the only supported entry point in
 consumer repos — do not call the engine module directly.
 

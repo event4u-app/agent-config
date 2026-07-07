@@ -15,7 +15,7 @@ packs:
 
 ## When to use
 
-* Creating a new Python script in `scripts/{name}.py` (linters, checks, generators, measure tools)
+* Creating a new TypeScript script in `src/scripts/{name}.ts` (linters, checks, generators, measure tools — run via `./scripts-run src/scripts/{name}`)
 * Editing an existing script that prints progress or success lines
 * Wiring a script into `Taskfile.yml` or `taskfiles/*.yml`
 * Reviewing a PR that adds scripts and asking "why does this still print on minimal?"
@@ -48,38 +48,25 @@ family **must** go through Understand → Research → Draft from the
 
 * **Understand** — what failure does this script catch that no existing
   check catches? Is it a one-off (then archive it) or evergreen?
-* **Research** — `ls scripts/check_*.py scripts/lint_*.py`, grep for
-  overlap, skim 1–2 peer scripts (e.g. `lint_handoffs.py`,
-  `check_md_language.py`).
+* **Research** — `ls src/scripts/check_*.ts src/scripts/lint_*.ts`, grep for
+  overlap, skim 1–2 peer scripts (e.g. `lint_handoffs.ts`,
+  `check_md_language.ts`).
 * **Draft** — propose name + one-line purpose first. Only fill the body
   after the shape is confirmed.
 
-### 1. `--quiet` flag — argparse + sys.argv fallback
+### 1. `--quiet` flag — argv check
 
-Every `check_*.py` / `lint_*.py` script MUST accept `--quiet` so the
+Every `check_*.ts` / `lint_*.ts` script MUST accept `--quiet` so the
 silent Taskfile layer (§ 4) can suppress success-only output.
 
-**With argparse (preferred):**
+**Canonical pattern (see e.g. `lint_handoffs.ts`):**
 
-```python
-parser = argparse.ArgumentParser(...)
-parser.add_argument("--quiet", action="store_true",
-                    help="Only print on failure")
-args = parser.parse_args()
-...
-if not args.quiet:
-    print("✅ All clean")
-```
-
-**Plain script (no argparse) fallback:**
-
-```python
-import sys
-
-QUIET = "--quiet" in sys.argv
-...
-if not QUIET:
-    print("✅ All clean")
+```ts
+const QUIET = process.argv.slice(2).includes('--quiet');
+// ...
+if (!QUIET) {
+    console.log('✅ All clean');
+}
 ```
 
 Failure output (`❌`, non-zero exit) is **never** gated — failures must
@@ -90,15 +77,15 @@ always print regardless of `--quiet`.
 For anything richer than a single `✅`/`❌`, import the verbosity-aware
 router instead of raw `print()`:
 
-```python
-from _lib.script_output import info, success, warn, error, flush_summary
+```ts
+import { info, success, warn, error, flush_summary } from './_lib/script_output.js';
 
-info("Loading manifest")          # drops on silent + minimal
-success("Wrote 3 files")          # collected at minimal, printed at verbose
-warn("Skipping stale entry")      # stderr unless silent
-error("Manifest missing")         # stderr always
+info('Loading manifest');          // drops on silent + minimal
+success('Wrote 3 files');          // collected at minimal, printed at verbose
+warn('Skipping stale entry');      // stderr unless silent
+error('Manifest missing');         // stderr always
 
-flush_summary("Done — 3 entries") # one-line summary at minimal
+flush_summary('Done — 3 entries'); // one-line summary at minimal
 ```
 
 Resolution order (first wins, cached for the process):
@@ -110,7 +97,7 @@ Resolution order (first wins, cached for the process):
 
 The resolved level is exported back into `AGENT_SCRIPT_VERBOSITY` so
 child processes inherit it. Tests reset via `reset_level()` from the
-same module — see `tests/test_script_output.py`.
+same module — see `tests/lib/script_output.test.ts`.
 
 ### 3. Iron-Law carve-outs — never silenced
 
@@ -125,8 +112,8 @@ helpers, so verbosity settings cannot suppress them:
 * Any prompt that asks the user for confirmation per
   [`non-destructive-by-default`](../../rules/non-destructive-by-default.md) — Hard Floor cannot be silenced
 
-If unsure, check `scripts/ai_council/one_off_archive/2026-05/_one_off_silent_taskfiles.py`
-`CARVE_OUTS` for the canonical list.
+If unsure, check `src/scripts/ai_council/one_off_archive/2026-05/README.md`
+for the archived carve-out inventory.
 
 ### 4. Taskfile wiring — `silent: true` + `{{.QUIET_FLAG}}`
 
@@ -157,13 +144,13 @@ do **not** add `silent: true` and do **not** use `{{.QUIET_FLAG}}`.
 ### 5. Validate
 
 * Run `./scripts-run src/scripts/skill_linter src/skills/script-writing/SKILL.md` → 0 FAIL
-* Run `python3 scripts/{your-script}.py --quiet` and the verbose path — exit code 0 on clean, non-zero on failure regardless of flag
-* If the script uses `_lib/script_output`, add a test under `tests/` patterned on `tests/test_script_output.py` — assert `silent` / `minimal` / `verbose` behave per § 2
+* Run `./scripts-run src/scripts/{your-script} --quiet` and the verbose path — exit code 0 on clean, non-zero on failure regardless of flag
+* If the script uses `_lib/script_output`, add a test under `tests/` patterned on `tests/lib/script_output.test.ts` — assert `silent` / `minimal` / `verbose` behave per § 2
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for the script list) — must exit 0 except for tolerated warnings
 
 ## Output format
 
-1. Script file at `scripts/{name}.py` with `--quiet` accepted
+1. Script file at `src/scripts/{name}.ts` with `--quiet` accepted
 2. Taskfile wiring with `silent: true` + `{{.QUIET_FLAG}}` (unless carve-out)
 3. Test under `tests/` if `_lib/script_output` is used
 4. Linter output showing 0 FAIL
@@ -175,7 +162,7 @@ do **not** add `silent: true` and do **not** use `{{.QUIET_FLAG}}`.
 * Using raw `print()` for progress lines — drops on `minimal`, no inheritance
 * Adding `silent: true` to a release / install-keys task — bypasses the Hard Floor confirmation
 * Editing `Taskfile.yml`'s `QUIET_FLAG` var — single source of truth, do not duplicate
-* Forgetting that `from _lib.script_output import …` requires the script's resolution to walk up to `scripts/` — copy the `Path(__file__).resolve().parent` pattern from a peer
+* Forgetting that `import … from './_lib/script_output.js'` resolves relative to the script's own directory — copy the import path from a peer under `src/scripts/`
 
 ## Frugality Standards
 
@@ -217,7 +204,7 @@ applies — with prose-only validation:
 
 * Emit the full script + Taskfile snippet as copyable Markdown blocks. Do not attempt to write to disk.
 * Self-check: `--quiet` accepted, failures never gated, success lines gated, helper imports look syntactically right.
-* Tell the user to save under `scripts/{name}.py`, wire the Taskfile entry, and run `task lint-skills && task ci` locally before committing.
+* Tell the user to save under `src/scripts/{name}.ts`, wire the Taskfile entry, and run `task lint-skills && task ci` locally before committing.
 * Skip every reference to running the linter or `task` commands yourself — they only run on the user's machine.
 
 ## Examples

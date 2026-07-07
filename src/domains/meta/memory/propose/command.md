@@ -19,7 +19,7 @@ packs:
 
 # /memory propose
 Drops a **signal** into `agents/memory/intake/signals-YYYY-MM.jsonl` via
-`scripts/memory_signal.py`. Signals are append-only JSONL and merge-safe.
+`scripts/memory_signal.ts`. Signals are append-only JSONL and merge-safe.
 
 Unlike [`/memory-add`](memory-add.md) — which writes a **curated**
 entry the reviewer has validated — `/propose-memory` is cheap and

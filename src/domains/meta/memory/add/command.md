@@ -31,7 +31,7 @@ the first write and for every subsequent addition.
 ## Prerequisites
 
 - Consumer project has an `agents/` directory (package installed).
-- `scripts/check_memory.py` is available (shipped with the package).
+- `scripts/check_memory.ts` is available (shipped with the package).
 - User can name a concrete pattern — see the "when to reject" section.
 
 ## Steps
@@ -136,7 +136,7 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
   ```
   ✅  Added <type>/<id> (confidence: <high|medium|low>)
      Path: agents/memory/<type>.yml (or agents/memory/<type>/<hash>.yml)
-     Gate: scripts/check_memory.py → PASS
+     Gate: scripts/check_memory.ts → PASS
      Next: commit and link from the relevant skill/command.
   ```
 

@@ -69,10 +69,10 @@ Use when:
 
 The sync script ships in the installed package. Resolve in order:
 
-1. `./agent-config/scripts/sync_gitignore.py` — if the CLI wrapper
+1. `./agent-config/scripts/sync_gitignore.ts` — if the CLI wrapper
    directory exists at the project root.
-2. `vendor/event4u/agent-config/scripts/sync_gitignore.py` — Composer.
-3. `node_modules/@event4u/agent-config/scripts/sync_gitignore.py` — npm.
+2. `vendor/event4u/agent-config/scripts/sync_gitignore.ts` — Composer.
+3. `node_modules/@event4u/agent-config/scripts/sync_gitignore.ts` — npm.
 
 Target is always `<project_root>/.gitignore`. If no `.gitignore` exists,
 stop and tell the user — the package does not create one unilaterally:
@@ -136,6 +136,6 @@ root-level patterns (not user-added lines), prefer
 
 ## See also
 
-- [`scripts/sync_gitignore.py`](../../../scripts/sync_gitignore.py) — the helper
+- [`scripts/sync_gitignore.ts`](../../../scripts/sync_gitignore.ts) — the helper
 - [`config/gitignore-block.txt`](../../../config/gitignore-block.txt) — canonical block body
 - [`scripts/install.sh`](../../../scripts/install.sh) — installer integration (same source of truth, `--skip-gitignore` to opt out)

@@ -24,12 +24,12 @@ packs:
 ### 1. Resolve module roots
 
 Read the `modules:` block from `.agent-project-settings.yml` via the
-loader (`get_modules_config()` in `scripts/_lib/agent_settings.py`):
+loader (`get_modules_config()` in `scripts/_lib/agent_settings.ts`):
 
 - If `modules.enabled` is `true` and `modules.root_paths` is non-empty,
   use those paths verbatim. Skip the fallback table.
 - If the block is missing / disabled / empty, fall back to the
-  auto-detection table below — same shape `propose_modules_config.py`
+  auto-detection table below — same shape `propose_modules_config.ts`
   uses internally.
 
 **Auto-detection fallback table** (consulted only when `modules:` is
@@ -54,7 +54,7 @@ Stop.
 ### 2. List available modules
 
 Enumerate modules across every resolved root via `enumerate_modules()`
-(see `scripts/_lib/agent_settings.py`). Skip directories listed in
+(see `scripts/_lib/agent_settings.ts`). Skip directories listed in
 `modules.skip_dirs` (defaults: `.module-template`, `.example`) and
 hidden dirs. The "Agent Docs" column reflects the configured
 `modules.agent_folder` (default `agents/`):

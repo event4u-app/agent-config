@@ -24,7 +24,7 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 ## Frontmatter Contract
 
 Every skill's YAML frontmatter MUST validate against `scripts/schemas/skill.schema.json`.
-Violations are reported by `scripts/skill_linter.py` as `schema_<rule>` errors
+Violations are reported by `scripts/skill_linter.ts` as `schema_<rule>` errors
 and fail `./scripts-run src/scripts/validate_frontmatter` and the full CI pipeline.
 
 ### Omit fields equal to their schema default
@@ -39,7 +39,7 @@ A field that carries the schema `default` (e.g. `trust.level: core`,
 `command.disable-model-invocation: true`) is redundant:
 `validate_frontmatter.apply_schema_defaults` injects it transparently for
 every consumer (validator, discovery manifest, drift checksum). Writing it
-anyway is boilerplate that `scripts/lint_frontmatter_boilerplate.py` rejects
+anyway is boilerplate that `scripts/lint_frontmatter_boilerplate.ts` rejects
 (wired into `task ci-fast`). To strip it across the tree, run
 `./scripts-run src/scripts/migrate_frontmatter_defaults`. Background:
 `road-to-abstraction-reduction.md` +
@@ -49,7 +49,7 @@ anyway is boilerplate that `scripts/lint_frontmatter_boilerplate.py` rejects
 > contract: artefacts that omit the field inherit whatever the default *is at
 > read time*. Flipping a default value (e.g. `lifecycle: active → deprecated`)
 > silently re-defaults every artefact that omits the field — so a default
-> change must pair with a re-run of `migrate_frontmatter_defaults.py` and an
+> change must pair with a re-run of `migrate_frontmatter_defaults.ts` and an
 > explicit review of the affected artefacts.
 
 ## Description Triggering
@@ -106,7 +106,7 @@ blocks beyond the standard required sections:
 | 3 | Proactive Triggers | `## When the agent should load this` | 3–5 concrete user-prompt patterns (paraphrases users actually type), not abstract categories. |
 | 4 | Output Artifacts | `## Output` | 1–4 named artifacts with shape (file path, table, markdown structure) — orchestrator-citable identifier each. |
 
-**Forward-only.** `scripts/skill_linter.py` enforces these blocks for
+**Forward-only.** `scripts/skill_linter.ts` enforces these blocks for
 `tier: senior` skills only; mid-tier and untiered skills skip the
 check. No retrofit pass on existing Wing-1 skills.
 
@@ -117,7 +117,7 @@ bad pattern pairs, and the WHEN-NOT routing peer rules live in
 
 ## Structural Malice Floor
 
-`scripts/skill_linter.py` runs five regex patterns against every
+`scripts/skill_linter.ts` runs five regex patterns against every
 skill / rule / command body — credential exfiltration, remote
 execution, force-push to a protected ref, world-readable secret
 files, and shell-injection in subprocess calls. A match emits

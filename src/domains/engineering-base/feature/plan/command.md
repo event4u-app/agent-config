@@ -155,7 +155,7 @@ If no context exists, note this for step 8 (offer to create one after planning).
 
 ### 5b. Determine scope (module vs. project-wide)
 
-Resolve module roots via `scripts/_lib/agent_settings.py::enumerate_modules()`
+Resolve module roots via `scripts/_lib/agent_settings.ts::enumerate_modules()`
 (reads `modules.root_paths` + `modules.agent_folder` from
 `.agent-project-settings.yml`). If at least one module is discovered, ask:
 

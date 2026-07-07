@@ -66,8 +66,8 @@ skills,commands,contexts,templates,personas}/`, `agents/settings/contexts/`,
 `docs/customization.md`, `docs/getting-started.md`, `docs/catalog.md`,
 `AGENTS.md`, `README.md`, `copilot-instructions.md`.
 
-CI enforcement: `scripts/check_no_roadmap_refs.py` (roadmap layer)
-and `scripts/check_council_references.py` (council layer) — both
+CI enforcement: `scripts/check_no_roadmap_refs.ts` (roadmap layer)
+and `scripts/check_council_references.ts` (council layer) — both
 fail the build on any new violation.
 
 ## Allowed patterns
@@ -89,7 +89,7 @@ fail the build on any new violation.
 Two source/target shapes are exempt from the council-link ban
 because the target is **immutable input** or **decision provenance**,
 not transient drafting state. The linter implements these directly
-(`STRUCTURAL_CARVEOUTS` in `scripts/check_council_references.py`);
+(`STRUCTURAL_CARVEOUTS` in `scripts/check_council_references.ts`);
 they do **not** need an inline `<!-- council-ref-allowed: ... -->`
 pragma.
 

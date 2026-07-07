@@ -11,6 +11,7 @@ import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 /**
  * Subset of Python's `subprocess.CompletedProcess[str]` the hooks read:
@@ -56,21 +57,33 @@ export function _default_runner(cmd: string[]): CompletedProcess {
 export function _resolve_chat_history_invocation(script_path: string): string[] {
     const tsScript = script_path.replace(/\.py$/, '.ts');
     const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
-    let dir = path.dirname(path.resolve(tsScript));
-    for (;;) {
-        const candidate = path.join(dir, 'node_modules', '.bin', binName);
-        try {
-            if (fs.statSync(candidate).isFile()) {
-                return [candidate, tsScript];
+    const walkUp = (start: string): string | null => {
+        let dir = start;
+        for (;;) {
+            const candidate = path.join(dir, 'node_modules', '.bin', binName);
+            try {
+                if (fs.statSync(candidate).isFile()) {
+                    return candidate;
+                }
+            } catch {
+                // not here — keep walking up.
             }
-        } catch {
-            // not here — keep walking up.
+            const parent = path.dirname(dir);
+            if (parent === dir) {
+                return null;
+            }
+            dir = parent;
         }
-        const parent = path.dirname(dir);
-        if (parent === dir) {
-            break;
-        }
-        dir = parent;
+    };
+    // Script's tree first, then THIS module's package tree (the package
+    // ships tsx as a runtime dependency). `npx tsx` stays last-resort only:
+    // it runs against the consumer's npm config and fails hard on e.g.
+    // devEngines pins (the 8.1.0 EBADDEVENGINES regression).
+    const tsx =
+        walkUp(path.dirname(path.resolve(tsScript))) ??
+        walkUp(path.dirname(fileURLToPath(import.meta.url)));
+    if (tsx !== null) {
+        return [tsx, tsScript];
     }
     return ['npx', 'tsx', tsScript];
 }

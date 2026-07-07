@@ -21,7 +21,7 @@ packs:
 Moves an entry from the provisional layer (intake JSONL) into the
 curated layer (`agents/memory/<type>.yml` or sharded). Promotion is
 gated by
-[`scripts/check_memory_proposal.py`](../../../scripts/check_memory_proposal.py),
+[`scripts/check_memory_proposal.ts`](../../../scripts/check_memory_proposal.ts),
 which enforces the **pattern-vs-one-off** discipline: either ≥ 2
 distinct paths share the root-cause signature, or the submitter
 supplies ≥ 3 concrete future decisions that will be steered by the

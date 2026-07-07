@@ -37,7 +37,7 @@ Do NOT use when:
 
 ### 0. Inspect stack and input
 
-1. Read `state.stack.frontend` — set by `scripts/work_engine/stack/detect.py` (one of `blade-livewire-flux`, `react-shadcn`, `vue`, `plain`).
+1. Read `state.stack.frontend` — set by `scripts/work_engine/stack/detect.ts` (one of `blade-livewire-flux`, `react-shadcn`, `vue`, `plain`).
 2. Read `state.input` — the request being processed. The audit must answer: "what already exists that is similar to this request?"
 
 ### 1. Enumerate components and templates
@@ -207,7 +207,7 @@ so the import path is uniform.
 
 ## Gotcha
 
-- The model tends to skip the audit and start designing straight from the request — the dispatcher gate at `directives/ui/audit.py` enforces "no design without audit findings". Never treat this skill as optional for non-trivial UI.
+- The model tends to skip the audit and start designing straight from the request — the dispatcher gate at `directives/ui/audit.ts` enforces "no design without audit findings". Never treat this skill as optional for non-trivial UI.
 - The model tends to misidentify a single Tailwind utility as a "design token" — tokens come from the config or `:root`, not from class strings in templates.
 - Don't assume a Radix-only `package.json` means shadcn — shadcn requires `components.json` at repo root.
 - `state.ui_audit.shadcn_inventory.version` is often missing; the shadcn CLI does not always pin itself in `package.json`. Record `null` rather than guessing.
@@ -227,7 +227,7 @@ consistency) or introduce a corrective direction change.
 
 ## Do NOT
 
-- Do NOT advance to `directives/ui/design.py` or `apply.py` if `state.ui_audit` is empty.
+- Do NOT advance to `directives/ui/design.ts` or `apply.ts` if `state.ui_audit` is empty.
 - Do NOT advance to design or apply if `state.ui_audit.greenfield == true` and `state.ui_audit.greenfield_decision` is unset.
 - Do NOT silently skip the greenfield halt because "Tailwind has defaults" — the user picks the path explicitly.
 - Do NOT write paths outside the project root into the inventory.

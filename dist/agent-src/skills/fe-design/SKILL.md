@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: fe-design
-description: "Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.py."
+description: "Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.ts."
 personas:
   - frontend-engineer
 domain: engineering
@@ -21,11 +21,11 @@ own the flow.
 
 | Concern | Owner |
 |---|---|
-| Layout / states / microcopy lock | [`directives/ui/design.py`](../../templates/scripts/work_engine/directives/ui/design.py) |
-| Stack-dispatched implementation | [`directives/ui/apply.py`](../../templates/scripts/work_engine/directives/ui/apply.py) → `blade-ui` / `livewire` / `flux` / `react-shadcn-ui` |
+| Layout / states / microcopy lock | [`directives/ui/design.ts`](../../templates/scripts/work_engine/directives/ui/design.ts) |
+| Stack-dispatched implementation | [`directives/ui/apply.ts`](../../templates/scripts/work_engine/directives/ui/apply.ts) → `blade-ui` / `livewire` / `flux` / `react-shadcn-ui` |
 | Existing-component inventory + tokens | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) (mandatory pre-step) |
 | Grounded selection (style, color tokens, typography, pattern, anti-patterns) | [`design-intelligence`](../design-intelligence/SKILL.md) — corpus-grounded; this skill stays the heuristic layer and *invokes* it |
-| Design-review polish loop | [`directives/ui/review.py`](../../templates/scripts/work_engine/directives/ui/review.py) + [`directives/ui/polish.py`](../../templates/scripts/work_engine/directives/ui/polish.py) |
+| Design-review polish loop | [`directives/ui/review.ts`](../../templates/scripts/work_engine/directives/ui/review.ts) + [`directives/ui/polish.ts`](../../templates/scripts/work_engine/directives/ui/polish.ts) |
 
 ## When to use
 
@@ -45,7 +45,7 @@ Do NOT use this skill to:
 
 ## How the directive set cites this skill
 
-`directives/ui/design.py` produces the design brief (layout, components,
+`directives/ui/design.ts` produces the design brief (layout, components,
 states, microcopy, a11y). Selection decisions (style, semantic color
 tokens, typography pairing, layout pattern, anti-patterns) come **grounded**
 from [`design-intelligence`](../design-intelligence/SKILL.md) — run its
@@ -317,7 +317,7 @@ Surface the chosen direction in the design brief as a one-line statement (e.g. `
 
 ## Procedure
 
-When `directives/ui/design.py` (or any caller) cites this skill:
+When `directives/ui/design.ts` (or any caller) cites this skill:
 
 1. **Inspect `state.ui_audit` first** — review the audit produced by [`existing-ui-audit`](../existing-ui-audit/SKILL.md); it is mandatory. Stop and request the audit if missing.
 2. **Pick the smallest matching section** — Component Architecture, Form Design, Table Design, Responsive Strategy, Accessibility, or UX Principles. Cite by H2/H3 heading, never paste the whole skill.
@@ -364,4 +364,4 @@ approach or explicitly invoke the override condition in the design brief.
 - Do NOT skip mobile viewport testing.
 - Do NOT use fixed pixel widths for responsive layouts.
 - Do NOT ignore accessibility requirements.
-- Do NOT use this skill as an executor — it is a reference cited by `directives/ui/design.py`.
+- Do NOT use this skill as an executor — it is a reference cited by `directives/ui/design.ts`.

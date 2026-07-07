@@ -8,7 +8,7 @@ replaces: []
 tier: 0
 visibility: visible
 skills: [refine-prompt, command-routing]
-description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
+description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git.
 suggestion:
   eligible: true
   trigger_description: "build this, implement this, drive this end-to-end"
@@ -80,7 +80,7 @@ Run the engine with the state file on every iteration:
     [--prompt-file prompt.txt --persona <name>]   # first call only
 ```
 
-The dispatcher wires `PYTHONPATH` and routes to the engine module
+The dispatcher resolves the engine module (TypeScript, run via tsx)
 internally. `./agent-config` is the only supported entry point in
 consumer repos — do not call the engine module directly.
 
@@ -121,7 +121,7 @@ Once the gate releases, the rest of the loop is identical to
 `review-changes` directives flow through the same dispatch table. The
 `run-tests` directive resolves the consumer's runner via the
 [`toolchain-resolver`](../contexts/execution/toolchain-resolver.md)
-(`work_engine/stack/runner.py`) — pest / phpunit / vitest / jest /
+(`work_engine/stack/runner.ts`) — pest / phpunit / vitest / jest /
 pytest / go / cargo, fast suites by default — instead of assuming a
 single stack.
 

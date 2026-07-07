@@ -69,6 +69,69 @@ describe('wrapper_freshness — self-heal', () => {
     });
 });
 
+describe('wrapper_freshness — pre-commit hook self-heal', () => {
+    const STALE_HOOK =
+        '#!/usr/bin/env bash\n# installed from pre-commit-roadmap-progress template\npython3 old.py\n';
+    const TEMPLATE = path.join(
+        REPO_ROOT,
+        'dist',
+        'agent-src',
+        'templates',
+        'hooks',
+        'pre-commit-roadmap-progress',
+    );
+
+    function gitHooksDir(): string {
+        const dir = path.join(tmp, '.git', 'hooks');
+        fs.mkdirSync(dir, { recursive: true });
+        return dir;
+    }
+
+    it('re-stamps a stale marker-identified hook from the shipped template', () => {
+        fs.writeFileSync(path.join(tmp, 'package.json'), '{"name": "some-app"}');
+        const hook = path.join(gitHooksDir(), 'pre-commit');
+        fs.writeFileSync(hook, STALE_HOOK);
+        expect(main(['--root', tmp, '--platform', 'claude'])).toBe(0);
+        expect(fs.readFileSync(hook, 'utf8')).toBe(fs.readFileSync(TEMPLATE, 'utf8'));
+        expect(fs.statSync(hook).mode & 0o111).not.toBe(0);
+    });
+
+    it('never overwrites a foreign pre-commit hook', () => {
+        fs.writeFileSync(path.join(tmp, 'package.json'), '{"name": "some-app"}');
+        const hook = path.join(gitHooksDir(), 'pre-commit');
+        fs.writeFileSync(hook, '#!/bin/sh\nlint-staged\n');
+        expect(main(['--root', tmp, '--platform', 'claude'])).toBe(0);
+        expect(fs.readFileSync(hook, 'utf8')).toBe('#!/bin/sh\nlint-staged\n');
+    });
+
+    it('never creates a hook where none exists', () => {
+        fs.writeFileSync(path.join(tmp, 'package.json'), '{"name": "some-app"}');
+        gitHooksDir();
+        expect(main(['--root', tmp, '--platform', 'claude'])).toBe(0);
+        expect(fs.existsSync(path.join(tmp, '.git', 'hooks', 'pre-commit'))).toBe(false);
+    });
+
+    it('follows a worktree gitdir file', () => {
+        fs.writeFileSync(path.join(tmp, 'package.json'), '{"name": "some-app"}');
+        const realGit = path.join(tmp, 'real-gitdir');
+        fs.mkdirSync(path.join(realGit, 'hooks'), { recursive: true });
+        fs.writeFileSync(path.join(tmp, '.git'), `gitdir: ${realGit}\n`);
+        const hook = path.join(realGit, 'hooks', 'pre-commit');
+        fs.writeFileSync(hook, STALE_HOOK);
+        expect(main(['--root', tmp, '--platform', 'claude'])).toBe(0);
+        expect(fs.readFileSync(hook, 'utf8')).toBe(fs.readFileSync(TEMPLATE, 'utf8'));
+    });
+
+    it('no-op when the hook already matches the template', () => {
+        fs.writeFileSync(path.join(tmp, 'package.json'), '{"name": "some-app"}');
+        const hook = path.join(gitHooksDir(), 'pre-commit');
+        fs.copyFileSync(TEMPLATE, hook);
+        const before = fs.statSync(hook).mtimeMs;
+        expect(main(['--root', tmp, '--platform', 'claude'])).toBe(0);
+        expect(fs.statSync(hook).mtimeMs).toBe(before);
+    });
+});
+
 interface RunResult {
     status: number | null;
     stdout: string;

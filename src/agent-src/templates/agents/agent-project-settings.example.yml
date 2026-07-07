@@ -37,9 +37,9 @@ schema_version: 1
 # disables the pin (resolver picks the latest release; only safe for
 # greenfield projects). Ranges (^, ~, >=) are NOT supported.
 # CI guard: a release bump of `package.json` must update this value
-# in lockstep — see scripts/check_template_pin_drift.py (road-to-
+# in lockstep — see scripts/check_template_pin_drift.ts (road-to-
 # portable-runtime-and-update-check P3.3).
-agent_config_version: "8.1.0"
+agent_config_version: "8.2.0"
 
 # --- Project identity ---
 project:
@@ -65,7 +65,7 @@ project:
 # module-aware surface skips its module branch — the project is
 # treated as a flat repo.
 #
-# Populated automatically by `scripts/install.py` on a fresh install
+# Populated automatically by `scripts/install.ts` on a fresh install
 # when an `app/Modules/`, `src/modules/`, `packages/`, `internal/`, or
 # similar shape is detected. Set manually for custom layouts. Lockable
 # via `locked_keys: [modules.root_paths]` for compliance-critical

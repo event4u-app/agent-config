@@ -20,8 +20,18 @@
  *
  * 1. `npm install -g @event4u/agent-config@latest` — refresh the global binary
  *    on PATH (the binary the Claude plugin hook resolves).
- * 2. `agent-config global` (→ `install.py --global`) — refresh the global root
- *    (`~/.event4u/agent-config/`) + regenerate plugin hooks.
+ * 2. `agent-config global --no-ui` (→ `install --global`) — refresh the global
+ *    root (`~/.event4u/agent-config/`) + regenerate plugin hooks. `--no-ui`
+ *    suppresses the setup-wizard auto-launch: the wizard is an onboarding
+ *    surface, not an upgrade step, and a foreground wizard server would block
+ *    the remaining upgrade steps until Ctrl-C (which then failed the run).
+ * 2b. When the Claude Code plugin (`agent-config@event4u-agent-config`) is
+ *    installed, refresh it: `claude plugin marketplace update` +
+ *    `claude plugin update` — otherwise the plugin snapshot stays pinned to
+ *    its install-time git SHA and its command surface silently rots while
+ *    the file projection moves ahead. Non-fatal: a refresh failure warns and
+ *    names the manual commands. The plugin is OPTIONAL — the file projection
+ *    is a full install on its own; no plugin → no step, no nag.
  * 3. `agent-config settings:sync --path <file>` for every EXISTING settings
  *    file (global `~/.event4u/agent-config/settings/.agent-settings.yml`,
  *    then the project settings when run inside a consumer project) — additive
@@ -79,6 +89,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as update_check from '../_lib/update_check.js';
 import * as cli_wrapper from '../_lib/cli_wrapper.js';
+import * as claude_plugin from '../_lib/claude_plugin.js';
 import { event4u_root } from '../_lib/user_global_paths.js';
 import { project_settings_path } from '../_lib/agent_settings.js';
 import { _is_source_repo } from './cmd_refresh.js';
@@ -230,6 +241,50 @@ function _maybe_refresh_project_wrapper(project_root: string, out: OutSink, _err
 }
 
 /**
+ * Refresh the consumer's installed `.git/hooks/pre-commit` gate after a
+ * global upgrade — but only when the hook is OURS (identified by the
+ * `pre-commit-roadmap-progress` marker) and only when run from inside a
+ * project that has it. Without this, a hook installed under an older
+ * release keeps running the old template forever (`hooks:install` without
+ * `--force` short-circuits on the marker) — the py2ts-era hooks silently
+ * no-op'd for exactly this reason. Non-fatal: a failure warns and names
+ * the manual command.
+ */
+function _maybe_refresh_git_hook(
+    project_root: string,
+    runner: (cmd: string[]) => number,
+    out: OutSink,
+    err: OutSink,
+): void {
+    const hook = path.join(project_root, '.git', 'hooks', 'pre-commit');
+    let text: string;
+    try {
+        text = fs.readFileSync(hook, 'utf-8');
+    } catch {
+        return; // no hook installed (or worktree indirection) — nothing to refresh
+    }
+    if (!text.includes('pre-commit-roadmap-progress')) {
+        return; // not our hook — never overwrite a foreign pre-commit
+    }
+    const cmd = [_agent_config_bin(), 'hooks:install', '--force'];
+    _print(out, '→ ' + cmd.join(' '));
+    let rc: number;
+    try {
+        rc = runner(cmd);
+    } catch (exc) {
+        rc = 127;
+        _print(err, `cannot run ${cmd[0]}: ${osErrorStr(exc)}`);
+    }
+    if (rc !== 0) {
+        _print(
+            err,
+            `⚠️  agent-config upgrade: pre-commit hook refresh failed (exit ${rc}) — ` +
+                'run `agent-config hooks:install --force` manually.',
+        );
+    }
+}
+
+/**
  * Existing settings files the post-upgrade sync should bring up to the new
  * template (additive merge — user lines preserved verbatim, only missing
  * template keys inserted; see `sync_agent_settings.ts`).
@@ -289,6 +344,63 @@ function _sync_settings_files(
                     `${target} — run \`agent-config settings:sync --path ${target}\` manually.`,
             );
         }
+    }
+}
+
+/**
+ * Refresh steps for the OPTIONAL Claude Code plugin. Non-empty only when the
+ * `claude` CLI is on PATH AND the plugin is recorded as installed — the file
+ * projection is a complete install on its own, so a missing plugin is not a
+ * gap to nag about. When present, the plugin must be refreshed alongside the
+ * global install: Claude Code pins it to the install-time git SHA, so without
+ * this step its command surface silently lags every upgrade.
+ */
+function _claude_plugin_refresh_steps(): string[][] {
+    const claude = shutilWhich('claude');
+    if (claude === null) return [];
+    if (!claude_plugin.claude_plugin_installed()) return [];
+    return [
+        [claude, 'plugin', 'marketplace', 'update', claude_plugin.CLAUDE_MARKETPLACE_NAME],
+        [
+            claude,
+            'plugin',
+            'update',
+            `${claude_plugin.CLAUDE_PLUGIN_ID}@${claude_plugin.CLAUDE_MARKETPLACE_NAME}`,
+        ],
+    ];
+}
+
+/**
+ * Run the plugin-refresh steps. Non-fatal by design (same contract as the
+ * settings sync): the upgrade itself already succeeded; a failure surfaces a
+ * warning + the manual command instead of failing the run.
+ */
+function _refresh_claude_plugin(
+    steps: readonly string[][],
+    runner: (cmd: string[]) => number,
+    out: OutSink,
+    err: OutSink,
+): void {
+    for (const cmd of steps) {
+        _print(out, '→ ' + cmd.join(' '));
+        let rc: number;
+        try {
+            rc = runner(cmd);
+        } catch (exc) {
+            rc = 127;
+            _print(err, `cannot run ${cmd[0]}: ${osErrorStr(exc)}`);
+        }
+        if (rc !== 0) {
+            _print(
+                err,
+                `⚠️  agent-config upgrade: Claude Code plugin refresh failed (exit ${rc}) — ` +
+                    `run \`${cmd.join(' ')}\` manually.`,
+            );
+            return;
+        }
+    }
+    if (steps.length > 0) {
+        _print(out, 'ℹ️  Claude Code plugin refreshed — restart Claude Code to load it.');
     }
 }
 
@@ -394,15 +506,21 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     const target = `${PACKAGE_NAME}@latest`;
     const steps: string[][] = [
         ['npm', 'install', '-g', target],
-        [_agent_config_bin(), 'global'],
+        // --no-ui: the setup wizard is an onboarding surface, not an upgrade
+        // step — its foreground server used to block the upgrade until Ctrl-C.
+        [_agent_config_bin(), 'global', '--no-ui'],
     ];
 
     const project_root = options.project_root ?? process.cwd();
     const sync_targets = _settings_sync_targets(project_root);
+    const plugin_steps = _claude_plugin_refresh_steps();
 
     if (args.dry_run) {
         _print(out, 'agent-config upgrade — dry run, would execute:');
         for (const cmd of steps) {
+            _print(out, '  ' + cmd.join(' '));
+        }
+        for (const cmd of plugin_steps) {
             _print(out, '  ' + cmd.join(' '));
         }
         for (const target of sync_targets) {
@@ -423,11 +541,20 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         }
     }
 
+    // Refresh the OPTIONAL Claude Code plugin so its command surface tracks
+    // the upgrade (no-op when the plugin is not installed — the file
+    // projection is a full install on its own).
+    _refresh_claude_plugin(plugin_steps, runner, out, err);
+
     // Bring existing settings files up to the NEW template (additive; the
     // subprocess resolves the freshly installed binary + template).
     _sync_settings_files(sync_targets, runner, out, err);
 
     _maybe_refresh_project_wrapper(project_root, out, err);
+
+    // Re-stamp OUR installed .git/hooks/pre-commit from the new template
+    // (marker-guarded; foreign hooks are never touched).
+    _maybe_refresh_git_hook(project_root, runner, out, err);
 
     _print(
         out,
@@ -444,10 +571,29 @@ function installed_lock_is_newer(latest: string, installed: string): boolean {
 
 // --- CLI entry ---
 
-const _isCliEntry =
-    process.argv[1] !== undefined &&
-    import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
-if (_isCliEntry || process.argv[1] === _HERE) {
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
+if (_isCliEntry() || process.argv[1] === _HERE) {
     main(process.argv.slice(2))
         .then((code) => {
             process.exitCode = code;

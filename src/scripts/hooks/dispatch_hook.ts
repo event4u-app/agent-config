@@ -423,25 +423,37 @@ interface RunResult {
 /**
  * Resolve how to run a `.ts` concern: prefer the `tsx` binary from a
  * `node_modules/.bin` directory found by walking up from the script's
- * directory; fall back to `npx tsx`. Mirrors `run.ts::resolveTsxInvocation`
- * so concern scripts run as TypeScript with no python3 dependency.
+ * directory, then from THIS module's own package tree (the package ships
+ * tsx as a runtime dependency); only then fall back to `npx tsx`. Mirrors
+ * `run.ts::resolveTsxInvocation` so concern scripts run as TypeScript with
+ * no python3 dependency. `npx tsx` is last-resort only: it runs against the
+ * consumer's npm config and fails hard on e.g. devEngines pins (the 8.1.0
+ * EBADDEVENGINES regression).
  */
 function _resolve_tsx_invocation(
   scriptPath: string,
   scriptArgs: string[],
 ): { command: string; args: string[] } {
   const binName = process.platform === "win32" ? "tsx.cmd" : "tsx";
-  let dir = path.dirname(scriptPath);
-  for (;;) {
-    const candidate = path.join(dir, "node_modules", ".bin", binName);
-    if (_isFile(candidate)) {
-      return { command: candidate, args: [scriptPath, ...scriptArgs] };
+  const walkUp = (start: string): string | null => {
+    let dir = start;
+    for (;;) {
+      const candidate = path.join(dir, "node_modules", ".bin", binName);
+      if (_isFile(candidate)) {
+        return candidate;
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) {
+        return null;
+      }
+      dir = parent;
     }
-    const parent = path.dirname(dir);
-    if (parent === dir) {
-      break;
-    }
-    dir = parent;
+  };
+  const tsx =
+    walkUp(path.dirname(scriptPath)) ??
+    walkUp(path.dirname(fileURLToPath(import.meta.url)));
+  if (tsx !== null) {
+    return { command: tsx, args: [scriptPath, ...scriptArgs] };
   }
   return { command: "npx", args: ["tsx", scriptPath, ...scriptArgs] };
 }
@@ -861,9 +873,30 @@ function _readStdin(): string {
   }
 }
 
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
 const isCliEntry =
-  process.argv[1] !== undefined &&
-  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+  _isCliEntry();
 if (isCliEntry) {
   process.exit(main(process.argv.slice(2)));
 }

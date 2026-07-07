@@ -62,8 +62,9 @@ colorblind fallbacks (`--domain chart`), and mobile touch/a11y rules
 corpus row; the WCAG 2.2 AA *method* stays this skill's own checklists.
 Widget-pattern selection (dialog, combobox, tabs, toast, table, form
 errors, drag-reorder …) grounds in the ARIA-APG corpus:
-`ground.py search --manifest
-<skills-root>/accessibility-auditor/data/manifest.json "<component>"` →
+`./scripts-run <skills-root>/corpus-grounding/scripts/ground search
+--manifest <skills-root>/accessibility-auditor/data/manifest.json
+"<component>"` →
 pattern, implementation, WCAG refs, anti-patterns
 ([`data/aria-patterns.csv`](data/aria-patterns.csv)).
 

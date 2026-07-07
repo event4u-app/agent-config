@@ -31,7 +31,7 @@ Gather in parallel:
 - Check for: `artisan`, `Makefile`, `Taskfile.yml`, `docker-compose.yml`
 - Check for: `phpstan.neon`, `ecs.php`, `rector.php`, `config-dev/`
 - Check for: `.github/workflows/`, `CODEOWNERS`, `.editorconfig`
-- Check for module roots (resolve via `scripts/_lib/agent_settings.py::enumerate_modules()`; Laravel shape: `app/Modules/`), multi-tenant indicators (`customer_database`)
+- Check for module roots (resolve via `scripts/_lib/agent_settings.ts::enumerate_modules()`; Laravel shape: `app/Modules/`), multi-tenant indicators (`customer_database`)
 - Read: `AGENTS.md`, `.github/copilot-instructions.md` (if exist)
 
 Display:

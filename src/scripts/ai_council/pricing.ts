@@ -18,9 +18,19 @@ import { fileURLToPath } from 'node:url';
 import { DEFAULT_PRICES, LAST_UPDATED, as_rows, priceKey } from './_default_prices.js';
 
 const _HERE = fileURLToPath(import.meta.url);
-// src/scripts/ai_council/pricing.py → parents[3] == repo root.
+// src/scripts/ai_council/pricing.ts → parents[3] == PACKAGE root. Correct
+// only when the council runs inside the agent-config source repo; from an
+// installed package this points INTO the npm prefix — callers that operate
+// on a consumer project must anchor via `prices_file_for(<project root>)`
+// instead (writing into the installed package pollutes it and EACCES-crashes
+// on root-owned npm prefixes).
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
 export const PRICES_FILE = path.join(REPO_ROOT, 'agents', 'runtime', '.agent-prices.md');
+
+/** Prices file anchored to the PROJECT the council operates on. */
+export function prices_file_for(repo_root: string): string {
+    return path.join(repo_root, 'agents', 'runtime', '.agent-prices.md');
+}
 
 const _CHARS_PER_TOKEN = 4;
 

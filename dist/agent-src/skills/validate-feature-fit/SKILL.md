@@ -52,13 +52,11 @@ Verify the request doesn't conflict with:
   shared abstraction (see
   [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md)):
 
-  ```python
-  from scripts.memory_lookup import retrieve
-  matches = retrieve(
-      types=["product-rules", "domain-invariants"],
-      keys=[<affected domain>, <affected paths>],
-      limit=5,
-  )
+  ```bash
+  agent-config memory:lookup \
+    --types product-rules,domain-invariants \
+    --key <affected domain> --key <affected path> \
+    --limit 5
   ```
 
   A product rule is an intentional business constraint

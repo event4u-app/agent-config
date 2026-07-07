@@ -2,7 +2,7 @@
 #
 # Declares which sub-skills fire on which ticket-body signals.
 # Consumed by:
-#   - scripts/refine_ticket_detect.py  (deterministic helper, pytest-covered)
+#   - scripts/refine_ticket_detect.ts  (deterministic helper, vitest-covered)
 #   - the refine-ticket skill's Step 2  (cites this file, never re-derives)
 #
 # Schema:

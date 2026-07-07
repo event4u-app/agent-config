@@ -36,7 +36,7 @@ A BUNDLED SCRIPT RESOLVES EVERY SIBLING ASSET VIA ITS OWN FILE LOCATION
   cwd-implicit locations, except where a flag explicitly defaults to cwd.
 - Cross-skill references (one skill invoking another's bundled engine)
   resolve via the common skills root (e.g. `design-intelligence` passing
-  its `data/manifest.json` to `corpus-grounding/scripts/ground.py`).
+  its `data/manifest.json` to `corpus-grounding/scripts/ground.ts`).
   Sibling deployment is guaranteed by stage 4 (whole-directory copies of
   every installed skill into one root).
 - Bundled scripts are **pure stdlib** unless the skill's frontmatter
@@ -45,7 +45,7 @@ A BUNDLED SCRIPT RESOLVES EVERY SIBLING ASSET VIA ITS OWN FILE LOCATION
 
 ## What this contract does NOT cover
 
-- Repo-root `scripts/` (e.g. `council_cli.py`) — **maintainer-only**,
+- Repo-root `scripts/` (e.g. `council_cli.ts`) — **maintainer-only**,
   never shipped to consumers. Do not confuse the two layers.
 - `.md` files inside skills — they pass through condensation (prose is
   rewritten); do not put load-bearing machine-read data in skill `.md`.

@@ -79,7 +79,7 @@ regulations, workflows, and edge cases that the agent needs to understand the pr
 3. **List `agents/reference/docs/`** — read detail docs for the specific topic you're working on.
 4. **Check module docs** — if working in a module, resolve `{module_root}` from
    `modules.root_paths` and `{agent_folder}` from `modules.agent_folder` (see
-   `scripts/_lib/agent_settings.py::enumerate_modules()`), then check:
+   `scripts/_lib/agent_settings.ts::enumerate_modules()`), then check:
    - `{module_root}/{Module}/{agent_folder}/` — module-specific docs
    - `{module_root}/{Module}/{agent_folder}/settings/contexts/` — module-specific contexts (if exists)
    - `{module_root}/{Module}/{agent_folder}/settings/contexts/domain/` — module-specific domain knowledge (if exists)

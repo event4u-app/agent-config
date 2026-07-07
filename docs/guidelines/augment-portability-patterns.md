@@ -61,7 +61,7 @@ invocation.
 
 ## Enforcement
 
-`scripts/check_portability.py` scans `.augment/`, `.agent-src.uncondensed/`,
+`scripts/check_portability.ts` scans `.augment/`, `.agent-src.uncondensed/`,
 and the package repo's root `AGENTS.md` + `.github/copilot-instructions.md`
 for forbidden identifiers, for any `task <name>` invocation inside
 artefact files, and for direct script invocations that bypass the

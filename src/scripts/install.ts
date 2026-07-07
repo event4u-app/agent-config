@@ -62,7 +62,7 @@
  * - `signal.SIGTERM`/`SIGKILL` + `os.kill(pid, 0)` liveness → `process.kill`.
  */
 
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -3247,7 +3247,7 @@ function install_global(
 
     if (!state.QUIET) {
         process.stdout.write('\n');
-        success('Global install completed.');
+        success(`Global install completed (v${installed_version}).`);
         process.stdout.write('\n');
     }
     return 0;
@@ -3843,76 +3843,104 @@ function _wizard_spawn(project_root: string, pass_project_root: boolean = true):
     }
     const env = { ...process.env };
 
-    // The Python uses subprocess.Popen + a stderr-draining thread + a
-    // readline loop with progressive timeouts, then child.wait(). Node has no
-    // synchronous equivalent that also streams; we run the whole wizard
-    // handoff via a synchronous helper that mirrors the observable behaviour
-    // (URL banner, stderr tail, browser open, blocking wait). Implemented with
-    // spawnSync for the simple boot+wait, and a bounded readiness poll.
+    // The wizard child is a long-running local server — it must NOT keep the
+    // installer process in the foreground (a blocking wait here forced users
+    // to Ctrl-C out of `agent-config global` / `upgrade`, which then reported
+    // the step as failed). Spawn it detached, poll for the WIZARD_READY line,
+    // print the banner + open the browser, and return while the server keeps
+    // running in the background.
     return _wizard_run_sync(cmd, env, cli);
 }
 
 /**
- * Synchronous wizard run mirroring `_wizard_spawn` + `_wizard_await_ready`.
- * spawnSync blocks until the child exits and captures stdout/stderr; we then
- * scan the captured stdout for the WIZARD_READY line, print the banner / open
- * the browser, and return the child's exit code. A child that never prints
- * WIZARD_READY before exiting falls through to the timeout fallback message.
- *
- * Divergence note: the Python streams stdout line-by-line with a 150s
- * progressive-timeout budget and hands the terminal to a still-running child
- * (Ctrl-C forwarding). spawnSync cannot hand off an interactive child, so this
- * twin runs the child to completion under the same total budget and surfaces
- * the same banner/fallback text. This path is network/subprocess-bound and is
- * NOT exercised by the deterministic golden tests (guarded behind the TTY +
- * dist-present gates).
+ * Detached wizard launch mirroring `_wizard_spawn` + `_wizard_await_ready`.
+ * The child (a local server that keeps running until the wizard finishes) is
+ * spawned detached with its output redirected to a temp log; a bounded poll
+ * scans the log for the WIZARD_READY line, then prints the banner and opens
+ * the browser. The installer returns immediately after — it never blocks on
+ * the server's lifetime. A child that exits or stays silent past the budget
+ * falls through to the fallback message. This path is network/subprocess-
+ * bound and is NOT exercised by the deterministic golden tests (guarded
+ * behind the TTY + dist-present gates).
  */
 function _wizard_run_sync(cmd: string[], env: NodeJS.ProcessEnv, cli: string): number {
     const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
-    let res;
+    const log_path = path.join(
+        os.tmpdir(),
+        `agent-config-wizard-${process.pid}-${Date.now()}.log`,
+    );
+    let child: ChildProcess;
+    let log_fd: number | null = null;
     try {
-        res = spawnSync(cmd[0] as string, cmd.slice(1), {
+        log_fd = fs.openSync(log_path, 'w');
+        child = spawn(cmd[0] as string, cmd.slice(1), {
             env,
-            encoding: 'utf-8',
-            timeout: total * 1000,
-            maxBuffer: 64 * 1024 * 1024,
+            detached: true,
+            stdio: ['ignore', log_fd, log_fd],
         });
+        // ENOENT & friends surface as an async 'error' event on a detached
+        // spawn — swallow it here; the readiness poll below reports the
+        // failure via the fallback message instead of crashing the installer.
+        child.on('error', () => {});
+        child.unref();
     } catch (exc) {
         process.stdout.write(
             `(Wizard failed to start: ${String(exc)}; run 'node ${cli} install --no-open' manually.)\n`,
         );
         return 0;
-    }
-    if (res.error && (res.error as NodeJS.ErrnoException).code === 'ENOENT') {
-        process.stdout.write(
-            `(Wizard failed to start: ${String(res.error)}; run 'node ${cli} install --no-open' manually.)\n`,
-        );
-        return 0;
-    }
-    const stdout = res.stdout || '';
-    let matched_url: string | null = null;
-    for (const line of stdout.split('\n')) {
-        const m = _WIZARD_READY_RE.exec(line + '\n');
-        if (m) {
-            matched_url = m[1] as string;
-            break;
+    } finally {
+        if (log_fd !== null) {
+            try {
+                fs.closeSync(log_fd);
+            } catch {
+                /* already closed */
+            }
         }
     }
+
+    const read_log = (): string => {
+        try {
+            return readText(log_path);
+        } catch {
+            return '';
+        }
+    };
+    const deadline = Date.now() + total * 1000;
+    let matched_url: string | null = null;
+    for (;;) {
+        for (const line of read_log().split('\n')) {
+            const m = _WIZARD_READY_RE.exec(line + '\n');
+            if (m) {
+                matched_url = m[1] as string;
+                break;
+            }
+        }
+        if (matched_url !== null) break;
+        const pid = child.pid;
+        if (pid === undefined || !pidAlive(pid)) break; // child died before ready
+        if (Date.now() >= deadline) break;
+        sleepMs(200);
+    }
     if (matched_url === null) {
-        const stderrLines = (res.stderr || '').split('\n').filter((l) => l !== '');
-        const tail = stderrLines.length ? stderrLines.slice(-20).join('\n  ') : '(no stderr captured)';
+        const logLines = read_log()
+            .split('\n')
+            .filter((l) => l !== '');
+        const tail = logLines.length ? logLines.slice(-20).join('\n  ') : '(no output captured)';
         process.stdout.write(
-            `(Wizard server boot timed out after ${Math.trunc(total)}s; ` +
+            `(Wizard server did not report ready within ${Math.trunc(total)}s; ` +
                 `run 'node ${cli} install --no-open' manually.)\n` +
-                `  Last stderr:\n  ${tail}\n`,
+                `  Last output:\n  ${tail}\n`,
         );
         return 0;
     }
     process.stdout.write('\n');
     process.stdout.write(`Setup wizard ready: ${matched_url}\n`);
     _openBrowser(matched_url);
-    process.stdout.write('(Wizard runs in the background; close the tab or press Ctrl-C to stop.)\n');
-    return res.status ?? 0;
+    process.stdout.write(
+        '(Wizard server keeps running in the background — finish the wizard in the ' +
+            'browser tab; the next install run stops any stale server.)\n',
+    );
+    return 0;
 }
 
 /** `webbrowser.open` — best-effort platform open; never fatal. */

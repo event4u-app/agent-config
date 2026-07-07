@@ -58,7 +58,7 @@ surface changes.
 
 1. **Verify project root** — look for `composer.json`, `artisan`, or `package.json`.
 2. **Create directory structure** — `agents/{roadmaps,features,contexts}/.gitkeep` + `.augment/guidelines/php/.gitkeep`. Skip dirs that already exist with content.
-3. **Module support** — resolve module roots via `scripts/_lib/agent_settings.py::enumerate_modules()`. For every discovered module, mirror the layout: `{module_root}/{Module}/{agent_folder}/{roadmaps,features,contexts}/.gitkeep` (Laravel example: `app/Modules/{Module}/agents/{roadmaps,features,contexts}/.gitkeep`). Skip when `modules.enabled: false` or no roots configured.
+3. **Module support** — resolve module roots via `scripts/_lib/agent_settings.ts::enumerate_modules()`. For every discovered module, mirror the layout: `{module_root}/{Module}/{agent_folder}/{roadmaps,features,contexts}/.gitkeep` (Laravel example: `app/Modules/{Module}/agents/{roadmaps,features,contexts}/.gitkeep`). Skip when `modules.enabled: false` or no roots configured.
 4. **Verify templates** — confirm `.augment/templates/{features,roadmaps,contexts}.md` exist; warn on missing.
 5. **Clean up old templates** — offer to delete legacy `agents/features/template.md` etc. (now in `.augment/templates/`); ask before delete.
 6. **Show summary** — table with status per directory and template; flag missing as `⚠️`.

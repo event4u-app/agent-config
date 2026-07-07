@@ -13,11 +13,11 @@
  * file is an error unless --allow-missing is given (then warn + exit 0).
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { realpathSync, existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { parseArgs } from "node:util";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 export interface CoverageAggregate {
     linesCovered: number;
@@ -192,8 +192,30 @@ function main(): void {
     }
 }
 
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = realpathSync(fileURLToPath(import.meta.url));
+        const argv = realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
 const isCliEntry =
-    process.argv[1] !== undefined && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+    _isCliEntry();
 if (isCliEntry) {
     main();
 }

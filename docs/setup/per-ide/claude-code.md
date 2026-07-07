@@ -32,14 +32,20 @@ Either form populates:
 ## Plugin marketplace (Claude Code 2026+)
 
 Claude Code 2026 supports plugin marketplaces via
-`.claude-plugin/marketplace.json`. The package ships one — once
-listed at the Anthropic marketplace (Phase 7 / S34) you can also:
+`.claude-plugin/marketplace.json`. The package ships one, so as an
+**additional, optional** surface you can also install the plugin:
 
 ```bash
-claude plugin install event4u/agent-config
+claude plugin marketplace add event4u-app/agent-config
+claude plugin install agent-config@event4u-agent-config
 ```
 
-Today the npm/curl entrypoints above are the supported install path.
+The npm/curl entrypoints above are a full install on their own — the
+file projection carries the complete skill/command set; the plugin adds
+the namespaced `agent-config:*` surface on top. When the plugin is
+installed, `agent-config upgrade` refreshes it automatically (Claude
+Code otherwise pins it to the install-time git SHA); `agent-config
+doctor --check claude-plugin` reports a stale snapshot.
 
 ## CLAUDE.md
 

@@ -93,7 +93,7 @@ setting.
 `task lint-roadmap-ci-steps` (wired into `task ci-fast` /
 `lint-roadmap-complexity` cadence) scans `agents/roadmaps/*.md` and
 per-module roadmap dirs resolved via
-`scripts/_lib/agent_settings.py::enumerate_modules()`
+`scripts/_lib/agent_settings.ts::enumerate_modules()`
 (`{module_path}/{modules.agent_folder}/roadmaps/*.md`; Laravel shape:
 `app/Modules/*/agents/roadmaps/*.md`). Exit code:
 
@@ -137,7 +137,7 @@ saving skips for the archive commit is a rule violation.
   is reserved for **new** gates introduced by the same roadmap.
 - Hiding the literal inside a fenced bash block to dodge the linter —
   linter matches inside fenced blocks too (see
-  `scripts/lint_roadmap_ci_steps.py`).
+  `scripts/lint_roadmap_ci_steps.ts`).
 
 ## See also
 

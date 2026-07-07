@@ -48,7 +48,7 @@ gh pr view <number> --json number,title,body,headRefName,baseRefName,author,url
 
 Capture: title, body, head ref, base ref. The **PR title + body** is
 the user's `original_ask` for the handoff preamble — verbatim, after
-`_strip_host_identity()` cleansing in `prompts.py`. Do **not** add the
+`_strip_host_identity()` cleansing in `prompts.ts`. Do **not** add the
 agent's framing.
 
 ### 3. Fetch the diff range locally
@@ -68,7 +68,7 @@ Invoke `/council default diff:<base>..<head>` with:
 - `original_ask` = PR title + body (capped per
   `bundler.size_guard`; warn if truncated).
 - Pass `--prompt-mode pr` so the neutrality preamble uses the `pr`
-  mode addendum from `scripts/ai_council/prompts.py` — focuses
+  mode addendum from `scripts/ai_council/prompts.ts` — focuses
   members on PR-specific risks (shipping risk, reviewer fatigue,
   scope creep) on top of the generic diff focus (correctness,
   security, tests, maintainability).

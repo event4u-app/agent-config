@@ -36,7 +36,8 @@ frontend-hardcoded axis moved into the manifest. Full license obligations:
 - A skill needs **pre-action selection** grounded in curated knowledge
   ("which layout pattern / threat class / index strategy applies here").
 - You are authoring a **new domain corpus** — write a manifest + CSVs,
-  validate with `ground.py validate`, never fork the engine.
+  validate with the grounding CLI (`ground validate` via ./scripts-run),
+  never fork the engine.
 - You need stack-scoped Do/Don't guidance (`--stack react …`).
 
 ## Do NOT
@@ -92,7 +93,8 @@ Stable v1 surface:
    search_stack, evaluate_rules, ground, persist_grounding}`,
    `schema_validator.{load_manifest, validate_manifest, resolve_data_path,
    ManifestError, MANIFEST_VERSION, TIERS}`.
-2. **CLI** — `ground.py {search|ground|validate}` with the flags shown above.
+2. **CLI** — the grounding CLI (`ground {search|ground|validate}` via
+   ./scripts-run) with the flags shown above.
 3. **Result shape** — search: `{domain|stack, query, file, count, results,
    scores, filtered_from, confidence{label,score}, evidence_gap[]}`;
    ground: `{domain, query, category, rule, rules_evaluation{matched,
@@ -138,7 +140,7 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
     "priority_domain": "style",
     "name_columns": { "style": "Style Category" },
     "plan": { "style": 3, "color": 2 },
-    "rules_module": "rules.py"
+    "rules_module": "rules.ts"
   },
   "owner": "package-maintainer",
   "refresh_cadence": "quarterly",
@@ -151,8 +153,10 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
 - `owner`, `refresh_cadence`, `upstream{repo,sha,last_checked}` are
   **required** — provenance discipline per ADR-061 §6; an unowned corpus
   is not merged.
-- `rules_module` (optional Python escape hatch where JSON rules cap out)
-  must live beside the manifest — absolute paths and `..` are refused.
+- `rules_module` (optional TypeScript escape hatch where JSON rules cap
+  out — a module exposing `evaluate(rules, query, context)`; a legacy
+  `.py` name in a manifest is remapped to its `.ts`/`.js` twin) must live
+  beside the manifest — absolute paths and `..` are refused.
 - Decision rules are surfaced as `matched` **and** `unmatched` — the full
   rule space stays auditable, never a hidden gate.
 
@@ -162,7 +166,7 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
    row count; grounding must happen **before** action; "fits in 5 lines →
    it's a rule, not a corpus".
 2. Write `data/manifest.json` + CSVs in your domain skill; run
-   `ground.py validate`.
+   the grounding CLI (`ground validate` via ./scripts-run).
 3. Name an owner + refresh cadence in the manifest, pin the upstream SHA.
 4. Cite this skill from your domain skill; consult via the CLI (Tier-1
    consultation default — propose grounded options, human confirms).
@@ -189,9 +193,9 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
   under the caller-chosen `DIR`; nothing else writes.
 - **No network, no subprocess, no secrets** — pure stdlib; embeddings /
   remote retrievers are intentionally not implemented (ADR-061 §2).
-- `rules_module` executes manifest-adjacent Python — same trust domain as
-  the skill that ships the manifest; containment enforced by
-  `resolve_data_path`.
+- `rules_module` executes a manifest-adjacent TypeScript module (dynamic
+  `import()`) — same trust domain as the skill that ships the manifest;
+  containment enforced by `resolve_data_path`.
 
 ## See also
 
@@ -201,5 +205,6 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
   architecture, qualification rubric, fork resolutions.
 - [`docs/contracts/skill-bundled-assets.md`](../../../docs/contracts/skill-bundled-assets.md)
   — how bundled `scripts/` + `data/` reach consumer runtime.
-- Tests: `tests/test_corpus_grounding_engine.py`,
-  `tests/test_skill_bundled_assets.py`.
+- Tests: `tests/scripts/skills_corpus_grounding_ground.test.ts`,
+  `tests/scripts/skills_corpus_grounding_bm25_search.test.ts`,
+  `tests/scripts/skills_corpus_grounding_schema_validator.test.ts`.

@@ -124,9 +124,10 @@ An action without a closure criterion is a wish, not a plan.
 
 Per [`docs/contracts/analysis-memory-loop.md § 2`](../../docs/contracts/analysis-memory-loop.md):
 
-1. Run the dedup pre-check — call `find_duplicate(...)` from
-   `scripts.memory_lookup` over the same key-space (incident type,
-   affected paths, decision area).
+1. Run the dedup pre-check — `find_duplicate(...)` from
+   `scripts/memory_lookup.ts` over the same key-space (incident type,
+   affected paths, decision area); a `memory:lookup` query over the
+   same keys is the CLI equivalent.
 2. **Match found** — propose a `frequency` / `supersedes` update to
    the existing entry; do NOT create a new candidate.
 3. **No match** — draft a REDACTED `incident-learnings` candidate to
@@ -143,10 +144,10 @@ Per [`docs/contracts/analysis-memory-loop.md § 2`](../../docs/contracts/analysi
 
 4. NEVER auto-promote. The human drives promotion via `/memory
    promote`. If the candidate fails the admission gate
-   (`check_memory_proposal.py`), surface the gap to the user.
+   (`check_memory_proposal.ts`), surface the gap to the user.
 
-If `retrieve()` returns stale entries in `skipped`, surface them
-explicitly — never silently use stale data.
+If the lookup surfaces stale entries (past `review_after_days`),
+surface them explicitly — never silently use stale data.
 
 ## Output
 
@@ -181,8 +182,8 @@ The post-mortem produces, in order:
   Severity is `near-miss`; the extra two questions apply.
 - **Corrective actions without closure criteria** are non-actionable.
   Always require a specific, testable done condition.
-- **Stale memory entries** surface in `skipped`, not `results`. Never
-  silently reuse stale data.
+- **Stale memory entries** must be surfaced as stale, never merged
+  into the findings. Never silently reuse stale data.
 
 ## See also
 

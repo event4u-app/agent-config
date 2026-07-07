@@ -16,22 +16,23 @@
 set -e
 
 # Only act on commits that touch the source-of-truth artefact tree
-# (or the linter / vocabulary that govern it).
+# (or the linter / vocabulary that govern it). The runtime is Node/tsx
+# (py2ts migration) — the linter runs through the package tsx runner,
+# never python3.
 staged="$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)"
 case "$staged" in
-  *.agent-src.uncondensed/*.md*|*config/discovery/*.yml*|*scripts/lint_artefact_frontmatter.py*)
+  *.agent-src.uncondensed/*.md*|*src/agent-src/*.md*|*config/discovery/*.yml*|*scripts/lint_artefact_frontmatter.ts*)
     : ;;
   *)
     exit 0 ;;
 esac
 
-# Resolve the linter — prefer the consumer-shipped path, fall back to
-# the source-of-truth copy when run from inside the package itself.
+# Resolve the linter — a source-repo artefact (the frontmatter contract
+# governs the source tree; consumer repos have nothing to lint).
 script=""
 for cand in \
-  ".augment/scripts/lint_artefact_frontmatter.py" \
-  "dist/agent-src/scripts/lint_artefact_frontmatter.py" \
-  "scripts/lint_artefact_frontmatter.py"; do
+  "src/scripts/lint_artefact_frontmatter.ts" \
+  ".augment/scripts/lint_artefact_frontmatter.ts"; do
   if [ -f "$cand" ]; then
     script="$cand"
     break
@@ -39,17 +40,26 @@ for cand in \
 done
 
 if [ -z "$script" ]; then
-  echo "⚠️  pre-commit-frontmatter: lint_artefact_frontmatter.py not found." >&2
-  echo "    Run \`task install\` (or \`./agent-config install\`) and retry." >&2
+  echo "⚠️  pre-commit-frontmatter: lint_artefact_frontmatter.ts not found." >&2
   echo "    Skipping check — letting commit through." >&2
   exit 0
 fi
 
-if ! python3 "$script" --quiet >/dev/null 2>&1; then
+run_lint() {
+  if [ -x "./scripts-run" ]; then
+    ./scripts-run src/scripts/lint_artefact_frontmatter --quiet
+  elif [ -x "node_modules/.bin/tsx" ]; then
+    node_modules/.bin/tsx "$script" --quiet
+  else
+    npx tsx "$script" --quiet
+  fi
+}
+
+if ! run_lint >/dev/null 2>&1; then
   echo "❌  Artefact frontmatter lint failed (ADR-013 contract violation)." >&2
   echo "" >&2
   echo "    Re-run for details:" >&2
-  echo "      python3 $script" >&2
+  echo "      ./scripts-run src/scripts/lint_artefact_frontmatter" >&2
   echo "      task lint-artefact-frontmatter" >&2
   echo "" >&2
   echo "    Common fixes:" >&2

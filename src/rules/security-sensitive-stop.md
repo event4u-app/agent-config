@@ -57,15 +57,13 @@ STOP writing code. Run the matching analysis skill first:
 **Before running the analysis, consult memory for prior incidents** on
 this surface. Via [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
-```python
-from scripts.memory_lookup import retrieve_with_meta
-result = retrieve_with_meta(
-    types=["incident-learnings", "historical-patterns"],
-    keys=<touched file paths>,
-    limit=3,
-)
-priors = result["results"]
-# result["skipped"] lists stale or superseded entries — surface them to the user.
+```bash
+agent-config memory:lookup \
+  --types incident-learnings,historical-patterns \
+  --key <touched file path> \
+  --limit 3 --format json
+# Repeat --key per touched path. Hits are the priors; superseded intake
+# entries are filtered out automatically — surface anything stale to the user.
 ```
 
 A prior security incident on the same path is the cheapest possible

@@ -70,7 +70,7 @@ Ask: **"Does the model need this to do its job correctly?"**
 
 Skills in `.agent-src.uncondensed/skills/{name}/SKILL.md` AND commands in
 `.agent-src.uncondensed/commands/{name}.md` both project into
-`.claude/skills/` (see `scripts/condense.py` →
+`.claude/skills/` (see `scripts/condense.ts` →
 `generate_claude_skills` + `generate_claude_commands`). Claude treats
 the whole directory as native skills.
 
@@ -158,7 +158,7 @@ generic descriptions cause **undertriggering**. Normative source:
 
 Three rules: name 2+ triggers (domains, symptoms, user phrasing), end with
 `... even if they don't explicitly ask for \`<skill-name>\`.`, and stay
-**≤ 200 characters** (`skill_linter.py` warns `description_too_long` above
+**≤ 200 characters** (`skill_linter.ts` warns `description_too_long` above
 that). When trimming to fit, drop adjectives or the second example phrasing
 before you drop a trigger class or the `even if ...` tail.
 
@@ -336,7 +336,7 @@ rubric:
 via a fresh sub-agent reading the output against the criterion — keep
 each criterion to one falsifiable sentence.
 
-**Loop** (orchestrated by `scripts/run_skill_evals.py`):
+**Loop** (orchestrated by `scripts/run_skill_evals.ts`):
 
 1. **Scaffold** — `./scripts-run src/scripts/run_skill_evals scaffold {skill}`
    creates `runs/{timestamp}-{baseline,with-skill}/` and seeds each

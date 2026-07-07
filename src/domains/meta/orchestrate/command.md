@@ -28,7 +28,7 @@ personas, skills, commands, and sub-agents pinned by the
 contract.
 
 This command is the **runtime** side of the contract. The schema and
-the linter (`scripts/lint_orchestration_dsl.py`) live on the authoring
+the linter (`scripts/lint_orchestration_dsl.ts`) live on the authoring
 side; this command reads the same shape and dispatches each step.
 
 ### 1. Resolve the pipeline file
@@ -125,6 +125,6 @@ output body.
 ## See also
 
 - Contract: [`orchestration-dsl-v1.md`](../../docs/contracts/orchestration-dsl-v1.md)
-- Linter: `scripts/lint_orchestration_dsl.py`
+- Linter: `scripts/lint_orchestration_dsl.ts`
 - Subagent runtime: [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md)
 - Audit emission: [`audit-log-v1.md`](../../docs/contracts/audit-log-v1.md)

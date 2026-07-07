@@ -79,6 +79,6 @@ Overall: B (84/100)
 
 ## See also
 
-- [`lint_agent_security`](../../../src/scripts/lint_agent_security.py) — the self-audit (our own corpus) sibling.
+- [`lint_agent_security`](../../../src/scripts/lint_agent_security.ts) — the self-audit (our own corpus) sibling.
 - [`untrusted-input-defense`](../../rules/untrusted-input-defense.md), [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) — the always-on prevention rules.
 - [`/threat-model`](../threat-model/command.md), [`judge-security-auditor`](../skills/judge-security-auditor/SKILL.md) — deep-pass dispatch.
