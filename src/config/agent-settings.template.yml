@@ -394,8 +394,9 @@ roadmap:
   #   per_step       = after every completed step (legacy verbose; highest token cost)
   # Trade-off: end_of_roadmap saves tokens and time but lets errors compound
   # across phases. Pick per_phase if the work is risky or unfamiliar.
-  # Iron Law `verify-before-complete` still applies — fresh quality output
-  # is mandatory before any "roadmap complete" claim regardless of cadence.
+  # `quality.local_auto_run: false` (the default) suppresses local
+  # pipeline runs at EVERY cadence — remote CI is the gate; this knob
+  # only matters when `local_auto_run` is `true`.
   quality_cadence: end_of_roadmap
 
   # Dashboard regen cadence inside autonomous runs (process-step /
@@ -446,20 +447,31 @@ roadmap:
 # (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector,
 # test suites) and whether it waits on remote CI after pushing.
 # Iron Law `verify-before-complete` still applies — when these
-# toggles suppress automatic runs, the agent MUST surface that and
-# ask before claiming completion rather than silently skipping
-# verification.
+# toggles suppress automatic runs, the agent MUST surface the gap
+# in the completion message ("quality gates delegated to remote CI")
+# instead of claiming the tools passed. It never silently claims
+# verification it did not run.
 quality:
   # Run local quality / CI tasks and tests autonomously (true, false)
-  # true  = agent runs the quality pipeline whenever work is ready
-  #         for verification, without asking (default)
-  # false = agent asks before running quality tools / tests locally
+  # false = default. The agent NEVER runs quality tools or full test
+  #         suites proactively — and does not ask whether to run them.
+  #         Toolchains differ per language/project and are often
+  #         unknown to the agent; discovery + execution costs time and
+  #         tokens. The user runs quality tools manually; remote CI is
+  #         the authoritative gate. The agent runs a quality tool ONLY
+  #         when one of three triggers fires:
+  #           1. the user explicitly asks this turn (e.g. /quality-fix),
+  #           2. CI / the remote pipeline reports a concrete failure —
+  #              then run exactly that failing check to reproduce + fix,
+  #           3. the new-gate carve-out below.
+  # true  = opt-in legacy behaviour: agent runs the quality pipeline
+  #         whenever work is ready for verification, without asking.
   #
   # Carve-out (always runs regardless of this flag): when the change
   # introduces a NEW CI gate, smoke test, or test file, the agent
   # MUST execute it locally to prove the gate works. Without that
   # execution the new gate is unverified evidence.
-  local_auto_run: true
+  local_auto_run: false
 
   # Wait for remote CI to finish on the PR / pipeline (true, false)
   # true  = after push, poll GitHub check-runs / pipeline status and
