@@ -8,7 +8,7 @@ replaces: []
 tier: 0
 visibility: visible
 skills: [refine-prompt, command-routing]
-description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine (TypeScript, run via tsx), confidence-band gated, no auto-git.
+description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git.
 suggestion:
   eligible: true
   trigger_description: "build this, implement this, drive this end-to-end"
