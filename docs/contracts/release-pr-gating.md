@@ -10,7 +10,6 @@ keep-beta-until: 2026-09-04
 > Release PRs are opened by either entry point into `release.ts`: `task
 > release` (interactive, local) or `.github/workflows/release.yml` (the
 > `release`-labeled-PR CI path, author `github-actions[bot]`) — see
-> `agents/roadmaps/road-to-ci-native-release.md` and
 > [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md).
 > This contract's shape checks are author-agnostic by design; both entry
 > points produce the identical PR shape below.
@@ -121,6 +120,5 @@ name alone never bypasses the heavy matrix.
 - `src/scripts/check_release_pr_shape.ts` — the shape detector (Phase A).
 - `src/scripts/release.ts` § `_RELEASE_BRANCH_RE` — source of truth for the
   release-branch naming convention.
-- `agents/roadmaps/road-to-ci-native-release.md`,
-  [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md) — the
+- [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md) — the
   CI-native (`release`-label) entry point into the same script.

@@ -135,6 +135,5 @@ its own protection rules:
 - `src/scripts/check_release_pr_shape.ts` — the shape detector.
 - `src/scripts/release.ts` — emits release PRs (both entry points); release
   cadence stays driven by Conventional Commits, not CI cost.
-- `agents/roadmaps/road-to-ci-native-release.md`,
-  [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md) — the
+- [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md) — the
   CI-native (`release`-label) entry point and the bot-PR-approval finding.

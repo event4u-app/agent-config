@@ -192,8 +192,6 @@ maintainer approves the run once per release.
 
 ## References
 
-- `agents/roadmaps/road-to-ci-native-release.md` — the roadmap this ADR
-  unblocks (Phase 1).
 - `.github/workflows/release.yml` — the orchestration workflow.
 - `src/scripts/release.ts` — the shared pipeline (`--ci` mode).
 - `docs/contracts/release-pr-gating.md`,
