@@ -75,19 +75,19 @@ the original open list in Step 1 below.
 
 ## Phase 6: Parity, distribution & guardrails
 
-- [ ] **Step 1:** Decide the stdio-lite fate — ADR-085's revisit trigger ("no demand") has fired via this roadmap. Record a follow-up ADR: keep `agent-config mcp-server` read-only and route power users to the kernel server, or bundle the kernel tool surface into the npm package (A1). The turnkey story must stay zero-setup either way.
-- [ ] **Step 2:** Worker stays read-only per `docs/contracts/mcp-cloud-scope.md` — document explicitly in `docs/mcp-cloud-endpoints.md` that `implemented_on` stays `["stdio"]` for every execution tool and why (no kernel runtime endpoint in the Worker).
-- [ ] **Step 3:** Update the doc set (`docs/mcp-server.md`, `docs/mcp.md`, `docs/getting-started-local-stdio.md`, per-IDE snippets) and the registry manifests (`dist/mcp/`) to advertise the new tool surface; re-run the Glama smoke so the listing reflects reality. <!-- carve-out: new-gate-verification -->
-- [ ] **Step 4:** Token-cost audit — re-run the initial-context audit (`src/scripts/audit_initial_context.ts`) over the grown `tools/list` schemas; trim tool descriptions if the per-server cost table flags over-subscription.
-- [ ] **Step 5:** Run `task mcp:parity-stdio` and the full `task mcp:test` suite; every catalog name must either return real results or the stub envelope — silent 404/500 remains forbidden. <!-- carve-out: new-gate-verification -->
+- [x] **Step 1:** Decide the stdio-lite fate — ADR-085's revisit trigger ("no demand") has fired via this roadmap. Record a follow-up ADR: keep `agent-config mcp-server` read-only and route power users to the kernel server, or bundle the kernel tool surface into the npm package (A1). The turnkey story must stay zero-setup either way. <!-- shipped: docs/decisions/ADR-112-stdio-lite-stays-read-only.md — read-only kept, A1 rejected with rationale, revisit trigger named -->
+- [x] **Step 2:** Worker stays read-only per `docs/contracts/mcp-cloud-scope.md` — document explicitly in `docs/mcp-cloud-endpoints.md` that `implemented_on` stays `["stdio"]` for every execution tool and why (no kernel runtime endpoint in the Worker). <!-- documented in docs/setup/mcp-cloud-endpoints.md § Scope; stale "~112 Python scripts" claim replaced -->
+- [x] **Step 3:** Update the doc set (`docs/mcp-server.md`, `docs/mcp.md`, `docs/getting-started-local-stdio.md`, per-IDE snippets) and the registry manifests (`dist/mcp/`) to advertise the new tool surface; re-run the Glama smoke so the listing reflects reality. <!-- carve-out: new-gate-verification --> <!-- verified: glama smoke green with 18 implemented / 9 stubs; boot-count lines updated; manifests unchanged-green; drift guard green -->
+- [x] **Step 4:** Token-cost audit — re-run the initial-context audit (`src/scripts/audit_initial_context.ts`) over the grown `tools/list` schemas; trim tool descriptions if the per-server cost table flags over-subscription. <!-- audit ran: 27 tools / ~4.9k Claude tok, count-based soft-cap warning (27 > 25). Deliberately NOT trimmed: cost driver is the stub-by-default advertising pillar (strategy-locked) and description depth is quality-locked by the catalog-parity tests; value-over-budget trade-off recorded here per token-budget-discipline. Revisit when runtime telemetry shows stubs with zero latent-demand calls. -->
+- [x] **Step 5:** Run `task mcp:parity-stdio` and the full `task mcp:test` suite; every catalog name must either return real results or the stub envelope — silent 404/500 remains forbidden. <!-- carve-out: new-gate-verification --> <!-- verified: parity OK (430 prompts / 182 resources match; turnkey tools/list empty per ADR-085/112); mcp:test 133/133 green -->
 
 ## Acceptance Criteria
 
-- [ ] Every council-confirmed write/exec tool returns real results via `agent-config mcp:run`; every unimplemented catalog name still returns the structured `not_implemented` envelope
-- [ ] The CLI long tail is reachable through the bridge shape chosen in Phase 5 Step 3, gated by the deny-by-default allowlist; no `hard-floor-never` command is callable via MCP by construction
-- [ ] Glama listing is drift-free (README = scripts = boot counts), `task mcp:glama-test` green, official MCP-registry submission filed
-- [ ] `docs/contracts/mcp-phase-1-scope.md` amendment and the new decision file exist; `mcp-coverage-strategy.md` reflects the amended pillars
-- [ ] MCP smoke + parity checks green (`task mcp:test`, `task mcp:parity-stdio`); remaining quality gates delegated to remote CI
+- [x] Every council-confirmed write/exec tool returns real results via `agent-config mcp:run`; every unimplemented catalog name still returns the structured `not_implemented` envelope <!-- 18 implemented, 9 stubs, 133/133 tests -->
+- [ ] The CLI long tail is reachable through the bridge shape chosen in Phase 5 Step 3, gated by the deny-by-default allowlist; no `hard-floor-never` command is callable via MCP by construction <!-- partially met: every council-APPROVED command ships hand-implemented and hard-floor-never entries are structurally absent; the codegen generator itself is deferred with Phase 5 Step 3 (note: the "deny-by-default allowlist" wording predates the council's codegen verdict — the gate is build-time inclusion, not a setting) -->
+- [ ] Glama listing is drift-free (README = scripts = boot counts), `task mcp:glama-test` green, official MCP-registry submission filed <!-- drift-free + smoke green; submission deferred with Phase 2 Step 5 (maintainer identity required) -->
+- [x] `docs/contracts/mcp-phase-1-scope.md` amendment and the new decision file exist; `mcp-coverage-strategy.md` reflects the amended pillars
+- [x] MCP smoke + parity checks green (`task mcp:test`, `task mcp:parity-stdio`); remaining quality gates delegated to remote CI
 
 ## Blockers
 

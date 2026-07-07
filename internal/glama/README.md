@@ -57,5 +57,5 @@ glama's generated Dockerfile, not a live mirror.
 3. Run `task mcp:glama-test` to rule out a build/run regression on our side.
 
 _Last verified glama-parity build: 2026-07-07 — image built in ~36s, `run`
-booted the server (430 prompts / 232 resources / 27 tools — 9 implemented,
-18 stubs), handshake OK._
+booted the server (430 prompts / 232 resources / 27 tools — 18 implemented,
+9 stubs), handshake OK._

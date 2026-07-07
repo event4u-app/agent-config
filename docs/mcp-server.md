@@ -43,7 +43,7 @@ file mtime changes — edit a rule, reissue `resources/list`, see the update.
 Exact prompt/resource/tool counts drift with every content change — the smoke
 test below reports the live numbers rather than a number pinned in prose.
 _Last verified boot (`task mcp:glama-test`, 2026-07-07): 430 prompts / 232
-resources / 27 tools (9 implemented, 18 stubs)._
+resources / 27 tools (18 implemented, 9 stubs — post write/exec cut)._
 
 ## Setup — one-line install
 
