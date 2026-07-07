@@ -244,7 +244,7 @@ always-honoured surface, resolved at session start from `dist/router.json`
 | `off` (legacy `minimal`) | kernel only | ~1x (lowest) | Hosts with a MEASURED null discipline lift (`src/config/host-capabilities.yml`); cost-sensitive sessions |
 | `essential` | kernel + the lift-carrying rules (`downstream-changes`) | ~3.3x | Day-to-day work — keeps the measured weak-host discipline lift (+0.458, p=0.0135) |
 | `full` | kernel + tier-1 + tier-2 (everything) | ~11.7x (highest) | EXPERIMENTAL opt-in — residual lift over `essential` not established (p=0.37); agent-config development |
-| `auto` | resolved per session: measured-null host → `off`, otherwise → `essential` | varies | The evidence-gated default target |
+| `auto` | resolved per session: measured-null host → `off`; unmeasured Claude-family → `essential`; unmeasured non-Claude → `off` (P2 verdict, vendor-granular `unknown_defaults`) | varies | The balanced-preset default — lift only where measured |
 | `custom` (legacy) | profile ignored — every matrix value must be set explicitly | varies | Power users with bespoke rule sets |
 
 > **`balanced` was retired 2026-07-07** — the size cut (kernel + tier-1)

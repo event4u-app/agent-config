@@ -1131,17 +1131,35 @@ function _posix_join(a: string, b: string): string {
 
 export type DisciplineProfile = 'off' | 'essential' | 'full' | 'custom';
 
+export type LiftDefault = 'lift_enabled' | 'lift_disabled';
+
 export interface HostCapabilities {
     /** Models with a MEASURED null discipline lift (prefix-matched ids). */
     lift_disabled_models: string[];
-    /** Resolution for unmatched/unknown models. Fail-safe: lift_enabled. */
-    unknown_default: 'lift_enabled' | 'lift_disabled';
+    /**
+     * Resolution for UNMEASURED models, per vendor family (P2-verdict
+     * council 2026-07-07): keys are family names plus a required `default`.
+     * Evidence-structure granularity — anthropic keeps the fail-safe toward
+     * the one measured lift; everything else defaults off after the failed
+     * GPT-weak replication.
+     */
+    unknown_defaults: Record<string, LiftDefault> & { default: LiftDefault };
 }
 
 const _CAPABILITIES_FALLBACK: HostCapabilities = {
     lift_disabled_models: [],
-    unknown_default: 'lift_enabled',
+    // File missing/unreadable → mirror the SHIPPED yml (anthropic enabled,
+    // rest disabled) so a broken read never silently widens the lift.
+    unknown_defaults: { anthropic: 'lift_enabled', default: 'lift_disabled' },
 };
+
+/** Map a session model id onto a vendor family for unknown_defaults. */
+export function vendor_family(model_id: string | null): string {
+    if (!model_id) {
+        return 'default';
+    }
+    return model_id.trim().toLowerCase().startsWith('claude-') ? 'anthropic' : 'default';
+}
 
 /**
  * Load `host-capabilities.yml` — tolerant like every settings read: a
@@ -1167,8 +1185,22 @@ export function load_host_capabilities(p: string): HostCapabilities {
             }
         }
     }
-    const unknown = raw['unknown_default'] === 'lift_disabled' ? 'lift_disabled' : 'lift_enabled';
-    return { lift_disabled_models: ids, unknown_default: unknown };
+    const unknown_defaults: Record<string, 'lift_enabled' | 'lift_disabled'> & {
+        default: 'lift_enabled' | 'lift_disabled';
+    } = { ..._CAPABILITIES_FALLBACK.unknown_defaults };
+    const granular = raw['unknown_defaults'];
+    if (_is_plain_dict(granular)) {
+        for (const [family, value] of Object.entries(granular)) {
+            if (value === 'lift_enabled' || value === 'lift_disabled') {
+                unknown_defaults[family] = value;
+            }
+        }
+    } else if (raw['unknown_default'] === 'lift_disabled' || raw['unknown_default'] === 'lift_enabled') {
+        // Legacy single-value key (pre-P2 files) maps onto the blanket default.
+        unknown_defaults['default'] = raw['unknown_default'];
+        unknown_defaults['anthropic'] = raw['unknown_default'];
+    }
+    return { lift_disabled_models: ids, unknown_defaults };
 }
 
 /** Prefix match a session model id against the measured disable-list. */
@@ -1187,10 +1219,10 @@ export function is_lift_disabled_model(model_id: string | null, caps: HostCapabi
  * `rule_loading_tier` mapping (minimal→off, balanced→essential, full→full,
  * custom→custom); both absent → `essential` (the successor of the
  * documented `balanced` default). `auto` resolves against the capabilities:
- * measured NULL-lift model → `off`; anything else — including an unknown or
- * missing model id — → `essential` under `lift_enabled` (fail-safe: never
- * silently drop the measured lift on a possibly-weak host) or `off` under
- * `lift_disabled`.
+ * measured NULL-lift model → `off`; unmeasured models resolve per
+ * `unknown_defaults[vendor_family(model_id)]` (anthropic → essential, the
+ * one family with a measured lift; everything else — including a missing
+ * model id — → off, per the failed P2 replication).
  *
  * Pure function — callers pass the merged settings dict, the session model
  * id (null when the host does not expose one), and the loaded capabilities.
@@ -1208,7 +1240,9 @@ export function resolve_discipline_profile(
         if (is_lift_disabled_model(model_id, caps)) {
             return 'off';
         }
-        return caps.unknown_default === 'lift_disabled' ? 'off' : 'essential';
+        const family = vendor_family(model_id);
+        const fallback = caps.unknown_defaults[family] ?? caps.unknown_defaults['default'];
+        return fallback === 'lift_disabled' ? 'off' : 'essential';
     }
     const legacy = settings['rule_loading_tier'];
     if (legacy === 'minimal') {

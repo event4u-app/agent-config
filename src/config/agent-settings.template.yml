@@ -85,17 +85,19 @@ projection:
 #             package's residual over it is not significant (p=0.37).
 # full      = every rule tier (~11.7x tokens). EXPERIMENTAL opt-in only:
 #             residual lift over essential not established.
-# auto      = resolve per session against host-capabilities.yml — model on
-#             the measured NULL-lift list -> off, otherwise -> essential.
+# auto      = resolve per session against host-capabilities.yml — measured
+#             NULL-lift model -> off; unmeasured Claude-family -> essential;
+#             unmeasured non-Claude -> off (P2 verdict, vendor-granular).
 #
 # This key WINS over the legacy `rule_loading_tier` below (mapping when
 # absent: minimal->off, balanced->essential, full->full, custom->custom).
-# The installer fills the placeholder per preset with the value that
-# preserves each preset's prior behaviour (minimal->off,
-# balanced->essential, full->full) — same resolution as the legacy
-# mapping, no behaviour change. The flip of the shipped default to
-# `auto` is evidence-gated (P2 non-Claude replication, see
-# agents/roadmaps/road-to-discipline-profile-tiering.md).
+# The installer fills the placeholder per preset: minimal->off,
+# balanced->auto, full->full. `auto` is evidence-gated per the P2 verdict
+# (council 2026-07-07): the P2 non-Claude replication FAILED (gpt-5-mini,
+# n=90, docs/benchmark.md), so `auto` enables the lift only where measured
+# — unmeasured Claude-family hosts -> essential (the measured-lift class);
+# measured-null hosts and unmeasured non-Claude hosts -> off
+# (vendor-granular unknown_defaults in src/config/host-capabilities.yml).
 discipline_profile: __DISCIPLINE_PROFILE__
 
 # --- Cost profile (legacy knob — superseded by discipline_profile above) ---

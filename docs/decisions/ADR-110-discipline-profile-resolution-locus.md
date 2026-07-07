@@ -72,10 +72,15 @@ project is opened by Haiku one session and Fable the next, across vendors
    guarantee: trigger semantics are configuration-independent.
 4. **`discipline_profile` joins `MERGEABLE_KEYS`** (user-global cascade), as
    the successor of the already-mergeable `rule_loading_tier`.
-5. **Defaults are evidence-gated.** The template ships the key commented-out
-   (legacy mapping applies) until the P1 full-corpus + P2 non-Claude gates
-   pass (`agents/roadmaps/road-to-discipline-profile-tiering.md`); the flip
-   target is `auto`.
+5. **Defaults are evidence-gated.** *(Amended 2026-07-07 after both gates
+   ran — original wording: ship commented-out until P1 + P2 pass, flip
+   target `auto`.)* P1 passed family-scoped; P2 FAILED on the first
+   non-Claude weak host (`docs/benchmark.md § P2 gate`). Per the P2-verdict
+   council, the installer presets fill the key per profile (minimal→off,
+   balanced→`auto`, full→full) and `auto` resolves vendor-granularly
+   (measured-null → off; unmeasured Claude-family → essential; unmeasured
+   non-Claude → off) — the lift enables only where measured. Evidence trail:
+   `agents/roadmaps/archive/road-to-discipline-profile-tiering.md`.
 
 ## Consequences
 
