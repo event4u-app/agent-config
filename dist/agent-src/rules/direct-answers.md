@@ -3,17 +3,7 @@ type: "always"
 tier: "3"
 description: "Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default."
 alwaysApply: true
-workspaces:
-  - agent-config-maintainer
-  - construction
-  - engineering
-  - finance
-  - founder
-  - gtm
-  - legal-review-prep
-  - ops
-  - product
-  - small-business
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs:
   - meta
 ---
