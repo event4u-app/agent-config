@@ -39,6 +39,7 @@
         "docs/",
         "src/scripts/",
         "src/templates/",
+        "tests/fixtures/hooks/",
         "AGENTS.md",
         "CHANGELOG.md",
         "CONTRIBUTING.md",
