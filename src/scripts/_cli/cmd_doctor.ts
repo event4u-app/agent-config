@@ -81,6 +81,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as YAML from 'yaml';
 
 import * as claude_plugin from '../_lib/claude_plugin.js';
+import { _is_source_repo } from './cmd_refresh.js';
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as installed_tools from '../_lib/installed_tools.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
@@ -1247,6 +1248,20 @@ function _check_python_runtime(): Dict {
 }
 
 function _check_mcp_beta_readiness(project_root: string): Dict {
+    // Maintainer-scoped gate: the six artefacts live in the agent-config
+    // SOURCE repo. In a consumer project the paths can never exist, so the
+    // check used to emit a meaningless "6/6 gates pending" warning on every
+    // consumer doctor run — skip instead.
+    if (!_is_source_repo(project_root)) {
+        return {
+            id: 'mcp-beta-readiness',
+            status: 'skipped',
+            message:
+                'MCP beta promotion gates apply to the agent-config source repo, ' +
+                'not consumer projects',
+            remedy: '',
+        };
+    }
     const pending: string[] = [];
     for (const [gate_id, rel] of MCP_BETA_GATES) {
         if (!pathExists(path.join(project_root, rel))) {
@@ -2311,10 +2326,29 @@ function main(argv: string[] | null = null): number {
 
 // --- CLI entry ---
 
-const _isCliEntry =
-    process.argv[1] !== undefined &&
-    import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
-if (_isCliEntry || process.argv[1] === _HERE) {
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
+if (_isCliEntry() || process.argv[1] === _HERE) {
     try {
         process.exitCode = main(process.argv.slice(2));
     } catch (e) {

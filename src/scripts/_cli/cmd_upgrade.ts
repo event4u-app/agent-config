@@ -241,6 +241,50 @@ function _maybe_refresh_project_wrapper(project_root: string, out: OutSink, _err
 }
 
 /**
+ * Refresh the consumer's installed `.git/hooks/pre-commit` gate after a
+ * global upgrade — but only when the hook is OURS (identified by the
+ * `pre-commit-roadmap-progress` marker) and only when run from inside a
+ * project that has it. Without this, a hook installed under an older
+ * release keeps running the old template forever (`hooks:install` without
+ * `--force` short-circuits on the marker) — the py2ts-era hooks silently
+ * no-op'd for exactly this reason. Non-fatal: a failure warns and names
+ * the manual command.
+ */
+function _maybe_refresh_git_hook(
+    project_root: string,
+    runner: (cmd: string[]) => number,
+    out: OutSink,
+    err: OutSink,
+): void {
+    const hook = path.join(project_root, '.git', 'hooks', 'pre-commit');
+    let text: string;
+    try {
+        text = fs.readFileSync(hook, 'utf-8');
+    } catch {
+        return; // no hook installed (or worktree indirection) — nothing to refresh
+    }
+    if (!text.includes('pre-commit-roadmap-progress')) {
+        return; // not our hook — never overwrite a foreign pre-commit
+    }
+    const cmd = [_agent_config_bin(), 'hooks:install', '--force'];
+    _print(out, '→ ' + cmd.join(' '));
+    let rc: number;
+    try {
+        rc = runner(cmd);
+    } catch (exc) {
+        rc = 127;
+        _print(err, `cannot run ${cmd[0]}: ${osErrorStr(exc)}`);
+    }
+    if (rc !== 0) {
+        _print(
+            err,
+            `⚠️  agent-config upgrade: pre-commit hook refresh failed (exit ${rc}) — ` +
+                'run `agent-config hooks:install --force` manually.',
+        );
+    }
+}
+
+/**
  * Existing settings files the post-upgrade sync should bring up to the new
  * template (additive merge — user lines preserved verbatim, only missing
  * template keys inserted; see `sync_agent_settings.ts`).
@@ -508,6 +552,10 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
 
     _maybe_refresh_project_wrapper(project_root, out, err);
 
+    // Re-stamp OUR installed .git/hooks/pre-commit from the new template
+    // (marker-guarded; foreign hooks are never touched).
+    _maybe_refresh_git_hook(project_root, runner, out, err);
+
     _print(
         out,
         '✅  agent-config upgraded. Run `agent-config doctor` to verify ' +
@@ -523,10 +571,29 @@ function installed_lock_is_newer(latest: string, installed: string): boolean {
 
 // --- CLI entry ---
 
-const _isCliEntry =
-    process.argv[1] !== undefined &&
-    import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
-if (_isCliEntry || process.argv[1] === _HERE) {
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
+if (_isCliEntry() || process.argv[1] === _HERE) {
     main(process.argv.slice(2))
         .then((code) => {
             process.exitCode = code;

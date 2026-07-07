@@ -333,6 +333,27 @@ describe('upgrade — claude plugin refresh', () => {
         expect(r.out).toContain('plugin update agent-config@event4u-agent-config');
         expect(r.calls).toHaveLength(0);
     });
+
+    it('our installed pre-commit hook → hooks:install --force refresh runs', () => {
+        const hooksDir = path.join(claudeHome, '.git', 'hooks');
+        fs.mkdirSync(hooksDir, { recursive: true });
+        fs.writeFileSync(
+            path.join(hooksDir, 'pre-commit'),
+            '#!/bin/sh\n# installed from pre-commit-roadmap-progress template\n',
+        );
+        const r = seamPlugin([]);
+        expect(r.exit).toBe('0');
+        expect(r.calls.filter((c) => c.includes('hooks:install --force'))).toHaveLength(1);
+    });
+
+    it('foreign pre-commit hook → never touched', () => {
+        const hooksDir = path.join(claudeHome, '.git', 'hooks');
+        fs.mkdirSync(hooksDir, { recursive: true });
+        fs.writeFileSync(path.join(hooksDir, 'pre-commit'), '#!/bin/sh\nlint-staged\n');
+        const r = seamPlugin([]);
+        expect(r.exit).toBe('0');
+        expect(r.calls.filter((c) => c.includes('hooks:install'))).toHaveLength(0);
+    });
 });
 
 describe('upgrade — post-upgrade settings sync', () => {
