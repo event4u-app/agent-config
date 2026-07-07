@@ -9,6 +9,10 @@ tasks:
     desc: Install git hooks (pre-commit marketplace lint, pre-push sync check, chat-history bridges)
     cmd: bash src/scripts/install-hooks.sh
 
+  conformance:
+    desc: 'Consumer conformance contract: green = agent-config is installed AND firing here (docs/contracts/conformance.md)'
+    cmd: ./agent-config conformance {{.CLI_ARGS}}
+
   first-run:
     desc: Show the recommended first-run experience for new users
     cmd: bash src/scripts/first-run.sh

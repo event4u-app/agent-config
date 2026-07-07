@@ -1,0 +1,31 @@
+# Pin manifest for the curated composite `docs/benchmark.md`
+# (road-to-flow-learnings Phase 3).
+#
+# Each section renders INDEPENDENTLY from ITS pinned report via
+# `src/scripts/render_benchmark_composite.ts` — never from the single
+# latest report (the composite's in-file curation rationale stands).
+# Curated prose lives OUTSIDE the `<!-- pinned:<id> -->` markers and is
+# never touched by the renderer. Pinned reports are operator-local
+# (untracked); the renderer skips cleanly where they are absent.
+sections:
+  - id: honesty
+    mode: honesty-labels
+    report: internal/bench/reports/ab-v2/2026-06-15T03-52-35Z-ab-v2-paired.json
+  - id: weak-stats
+    mode: stats-body
+    report: internal/bench/reports/ab-v2/2026-06-15T03-52-35Z-ab-v2-paired.json
+  - id: cost-factor-table
+    mode: arm-cost-table
+    report: internal/bench/reports/ab-v2/2026-07-07T05-35-14Z-ab-v2-paired.json
+    arms:
+      - id: vanilla
+        label: none
+      - id: rules-balanced
+        label: kernel + tier 1 (shipped `balanced` profile)
+      - id: rules-kernel-dc
+        label: kernel (9 rules) + `downstream-changes`
+      - id: package
+        label: full plugin
+  - id: strong-table
+    mode: compact-table
+    report: internal/bench/reports/ab-v2/2026-07-05T07-00-31Z-ab-v2-paired.json

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MAX_ATTEMPTS_PER_TARGET, breachedGuardrails, budgetHalt, isLayerDisabled, readOrchestrationMetrics } from '../../src/scripts/_lib/subagent_steering.js';
+import { MAX_ATTEMPTS_PER_TARGET, MAX_CONSECUTIVE_TYPE_FAILURES, breachedGuardrails, budgetHalt, isLayerDisabled, readOrchestrationMetrics, sliceDispatchAllowed, typeStop } from '../../src/scripts/_lib/subagent_steering.js';
 
 describe('isLayerDisabled — kill-switch', () => {
     it('master switch off → disabled', () => {
@@ -111,5 +111,49 @@ describe('readOrchestrationMetrics — aggregate from JSONL lines', () => {
     it('malformed lines are silently skipped', () => {
         const m = readOrchestrationMetrics(['not-json', makeOrchLine()]);
         expect(m.token_ratio).toBeCloseTo(1.5); // only the valid line counted
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Failure-type stop + ordered-slice dependency gate
+// (road-to-flow-learnings Phase 2).
+// ---------------------------------------------------------------------------
+
+describe('typeStop — N=3 budget applied per subagent type', () => {
+    it('derives from the per-target cap (2 fails + escalation = 3 attempts)', () => {
+        expect(MAX_CONSECUTIVE_TYPE_FAILURES).toBe(MAX_ATTEMPTS_PER_TARGET - 1);
+    });
+
+    it('does not stop after a single verification failure', () => {
+        expect(typeStop(0)).toBe(false);
+        expect(typeStop(1)).toBe(false);
+    });
+
+    it('stops after two consecutive verification failures', () => {
+        expect(typeStop(2)).toBe(true);
+        expect(typeStop(3)).toBe(true);
+    });
+});
+
+describe('sliceDispatchAllowed — ordered-slice dependency gate', () => {
+    it('allows root / independent slices (no declared parent)', () => {
+        expect(sliceDispatchAllowed(null, new Set()).allowed).toBe(true);
+        expect(sliceDispatchAllowed('', new Set()).allowed).toBe(true);
+    });
+
+    it('refuses a slice whose declared parent lacks a verified return', () => {
+        const d = sliceDispatchAllowed('step-1', new Set());
+        expect(d.allowed).toBe(false);
+        expect(d.reason).toContain("parent 'step-1' has no verified return");
+    });
+
+    it('allows a slice once the parent return is verified', () => {
+        const d = sliceDispatchAllowed('step-1', new Set(['step-1']));
+        expect(d.allowed).toBe(true);
+        expect(d.reason).toContain('verified return');
+    });
+
+    it('is exact-match on the parent id (no prefix leniency)', () => {
+        expect(sliceDispatchAllowed('step-1', new Set(['step-10'])).allowed).toBe(false);
     });
 });
