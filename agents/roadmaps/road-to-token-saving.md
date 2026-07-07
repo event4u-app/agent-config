@@ -10,6 +10,11 @@ status: ready
 > ordering, RTK everywhere, and the dead-weight removals — each gated on real
 > evidence, never on a chars/4 estimate.
 
+
+> **Program sequencing:** the token program's single critical path + tracking
+> table live in `road-to-token-proof-and-story.md` § Program tracking — this
+> roadmap links there, never copies the sequence.
+
 ## Goal
 
 Reduce always-loaded + per-request tokens (today the package is a measured-by-

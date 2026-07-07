@@ -89,7 +89,7 @@ tests prove it.
 
 The single orchestration surface. Other roadmaps link here, never copy.
 
-- [ ] Write the critical path + tracking table (roadmap → phase → status →
+- [x] Write the critical path + tracking table (roadmap → phase → status →
       gate) into this file's § Program tracking below; cross-link from
       `road-to-token-saving`, HUMAN-MEASUREMENT,
       `road-to-request-scoped-rule-load`, `road-to-golden-set-coverage`,
@@ -108,7 +108,12 @@ The single orchestration surface. Other roadmaps link here, never copy.
          essential, re-swept).
       4. **After flips:** this Phase 2 (field arms) + Phase 3 re-benchmark
          → Phase 4 pilot.
-- [ ] **Activation end-state (doc + settings contract):** ONE runtime knob
+      <!-- done 2026-07-07: table + sequence live below (§ Program tracking);
+      cross-links added to road-to-token-saving + later/HUMAN-MEASUREMENT;
+      request-scoped + golden-set link from their "Covered elsewhere" blocks.
+      road-to-discipline-profile-tiering lives on the parallel PR branch
+      (#758 series) — add its link line on merge. -->
+- [x] **Activation end-state (doc + settings contract):** ONE runtime knob
       `discipline_profile: auto|off|essential|full`, shipped default `auto`
       (= ON) once its evidence gates pass; thin projection folds under
       `essential` as an implementation detail when un-deferred
@@ -116,11 +121,14 @@ The single orchestration surface. Other roadmaps link here, never copy.
       install-time (default scoped after its gate), not a runtime setting.
       Record this in the rule-router contract + settings template comments
       so no track ships a competing knob.
-- [ ] **Rollback SOP (gap closed per council):** one documented reversion
+      <!-- done: rule-router contract § Activation end-state + settings
+      template comments (projection.rule_workspaces/rule_packs). -->
+- [x] **Rollback SOP (gap closed per council):** one documented reversion
       path per flip — scoped→`legacy-all` (setting), `auto`→`off`/`full`
       (setting), thin→eager (setting + `task generate-tools`) — each with
       the verification command that proves the revert took effect.
-- [ ] Explicit non-goals restated to prevent re-litigation: thresholds,
+      <!-- done: § Rollback SOP below. -->
+- [x] Explicit non-goals restated to prevent re-litigation: thresholds,
       judge design, hand-labelling, council decisions D1–D7, weak-host-lift
       verdict locks — all upstream.
 
@@ -134,29 +142,46 @@ an order contradicting it; the activation end-state is written down once.
 |---|---|---|---|
 | road-to-token-saving (parent) | P10 backlog triage | open | — |
 | HUMAN-MEASUREMENT (later/) | H1 thin flip | parked | essential baseline + hardened flip gate |
-| road-to-request-scoped-rule-load | P0–P3 build | open | P1 default flip = human gate |
-| road-to-golden-set-coverage | P0, P1, P3 build | open | P2 = operator labelling |
+| road-to-request-scoped-rule-load | P1 default flip (P0–P3 built; P4 parked) | gate | P1 default flip = human gate |
+| road-to-golden-set-coverage | P2 labelling (P0/P1/P3 built) | gate | P2 = operator labelling |
 | road-to-discipline-profile-tiering | P1 inert build | open | default flip = evidence gates P1–P2 |
-| road-to-token-proof-and-story (this) | P0 gate hardening | open | P2+ = post-flip |
+| road-to-token-proof-and-story (this) | P2 arms (P0/P1 + P2-build done) | gate | corpus privacy + flips |
 
 (Update this table per the roadmap-progress-sync cadence; it is the single
 program-state surface.)
+
+## Rollback SOP — one documented reversion path per flip
+
+| Flip | Revert | Proof the revert took effect |
+|---|---|---|
+| Consumer scoping (`projection.rule_workspaces` / `rule_packs`) | Remove/empty the keys in `.agent-settings.yml`, run `task generate-tools` | `.claude/rules` count equals `dist/agent-src/rules` count; `npx vitest run tests/scripts/rule_workspace_scoping.test.ts` green |
+| `discipline_profile` default (`auto`) | Set `discipline_profile: full` (legacy surface) or `off` in `.agent-settings.yml` | resolution tests owned by `road-to-discipline-profile-tiering` |
+| Thin projection (`lean_projection.mode: thin`) | Set `eager-all`, run `task generate-tools` + `task sync` | rule BODIES present again in the tool trees; `project_thin_rules --measure` matches the eager reference |
+
+Every revert is a settings flip + regeneration — no code change (ADR-040).
 
 ## Phase 2 — Field evidence: replay + session telemetry
 
 Turn proxy math into "measured in our own production repos".
 
-- [ ] Build a corpus exporter: sample N≥100 real prompts (+ open-file paths
+- [x] Build a corpus exporter: sample N≥100 real prompts (+ open-file paths
       + invoked commands, which `path_prefix`/`file_pattern`/`command`
       matching needs) from Galawork and event4u agent sessions.
       **Operator/privacy gate:** export is reviewed; prompts with client or
       personal data are dropped or redacted per the low-impact-corpus
       privacy floor before the corpus is stored.
-- [ ] **Reconcile intent semantics first:** document which semantics
+      <!-- done (build): src/scripts/export_replay_corpus.ts + tests —
+      JSONL chat-history → redacted router_telemetry corpus (prompts/command),
+      .local.yaml gitignored so an unreviewed export cannot land. The export
+      RUN + privacy review is operator work (blocker field-corpus-privacy). -->
+- [x] **Reconcile intent semantics first:** document which semantics
       (`trigger_coverage.ts` word-set vs `router_telemetry.ts`
       informational-only) models host behaviour, align or justify the
       divergence in the rule-router contract, and state the chosen semantics
       in every replay report.
+      <!-- done: rule-router contract § Intent-trigger semantics — divergence
+      locked as justified (falsifiability floor vs field estimation); replay
+      undercount caveat mandatory on every published figure. -->
 - [ ] Run `router_telemetry` replays under **four arms**: today (eager, all
       95) / consumer-scoped eager (~32) / scoped + `essential` /
       scoped + essential + thin (when un-deferred; until then report the arm

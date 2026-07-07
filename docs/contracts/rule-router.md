@@ -161,6 +161,43 @@ The host agent reads `dist/router.json` once per session. Per turn:
 No runtime profile resolution — the profile is fixed at session
 start, the router lookup is keyword/phrase/path/intent matching only.
 
+### Intent-trigger semantics — two gates, two purposes (reconciled 2026-07-07)
+
+Two tools consume `intent:` triggers with deliberately different semantics.
+This divergence is **justified and locked**, not drift
+(`road-to-token-proof-and-story` Phase 2):
+
+| Tool | Intent semantics | Purpose |
+|---|---|---|
+| `trigger_coverage.ts` + the golden-set fires-check | word-set inclusion (every alpha word >2 chars of the intent appears in the prompt) | **Falsifiability floor** — a deliberately generous mechanical proxy proving a rule CAN fire on a phrasing; gates coverage claims. |
+| `router_telemetry.ts` (replay / field evidence) | informational-only — never auto-matches | **Field estimation** — real hosts resolve intents by model judgment, which cannot be replayed deterministically; pretending the word-set proxy models host behaviour would fabricate activation counts. |
+
+Consequence: **replay UNDERCOUNTS intent-triggered rule loads.** Every
+replay-derived figure (field-token-evidence report, benchmark refresh,
+release story) MUST state the chosen semantics and carry this caveat. Rules
+relying on intent triggers alone have no mechanical signal at all — hence
+the intent-only backstop audit (Phase 0 of
+`road-to-request-scoped-rule-load`: every intent-only rule gained
+keyword/phrase backstops or a written disposition).
+
+## Activation end-state — one runtime knob (token program, 2026-07-07)
+
+Locked by the token-program integration council
+(`agents/settings/contexts/token-program-integration-verdict.md`) so no
+track ships a competing setting:
+
+- **Runtime:** ONE knob — `discipline_profile: auto | off | essential |
+  full` (shipped default `auto` = ON once its evidence gates pass; owned by
+  `road-to-discipline-profile-tiering`). Thin projection, when un-deferred,
+  folds under `essential` as an implementation detail; `lean_projection.mode`
+  is then absorbed/retired. No new runtime toggles for this layer.
+- **Install-time (not a runtime setting):** consumer scoping via
+  `projection.rule_workspaces` / `projection.rule_packs` — default flips
+  `legacy-all` → scoped as a reviewed release decision after the
+  misclassification audit (done 2026-07-07) + measured before/after.
+- **Host-native (no setting):** Cursor/Windsurf glob auto-attach (§ above)
+  is always on — deterministic, no compliance risk.
+
 ## Kill-switch — thin-projection rollback (lean-initial-context Phase 2.3)
 
 Phase 3 of the lean-initial-context migration makes the per-tool projector

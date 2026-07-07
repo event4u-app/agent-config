@@ -6,10 +6,10 @@
 
 ## Overall
 
-**51 / 112 steps done · 46%**
+**57 / 112 steps done · 51%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
+████████████████████░░░░░░░░░░░░░░░░░░░░   51%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 9 | 9 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | █████░░░░░ 50% |
 | 2 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 9 | 16 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 64% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 4 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 22 | 4 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ██░░░░░░░░ 15% |
+| 4 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 16 | 10 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ████░░░░░░ 38% |
 | 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 12 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ██████░░░░ 65% |
 
 ---
@@ -94,13 +94,13 @@
 
 ### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
 
-**Road to token proof and story — orchestrate, prove, activate, adopt** — 4 / 26 done (15%)
+**Road to token proof and story — orchestrate, prove, activate, adopt** — 10 / 26 done (38%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Harden the flip gate (small, verified, do first) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | One critical path for six tracks (the program table) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Field evidence: replay + session telemetry | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | One critical path for six tracks (the program table) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Field evidence: replay + session telemetry | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
 | 3 | Public proof refresh (benchmark, claims, release story) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Spend the story: one named external pilot (N=1) | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
