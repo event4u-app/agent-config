@@ -151,6 +151,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   settings:check             Validate .agent-settings.yml against the YAML-subset contract
                              (docs/contracts/settings-sync-yaml-subset.md). Read-only.
                              Exit 0 clean, 1 finding(s), 2 file absent / unreadable.
+  settings:sync              Additively merge new template keys into an existing
+                             .agent-settings.yml (user lines preserved verbatim).
+                             Run automatically by `upgrade`. Flags: --path <file>
+                             | --dry-run | --check (exit 2 on drift) | --profile.
   settings:migrate           Lift project-local .agent-settings.yml / .agent-user.yml into
                              ~/.event4u/agent-config/ (the global-only consumer surface,
                              ADR-020). Idempotent; --force overwrites a non-empty global
@@ -884,6 +888,17 @@ cmd_settings_check() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_settings_check.ts" "$@"
 }
 
+# `agent-config settings:sync` — additive merge of the current
+# agent-settings template into an existing .agent-settings.yml. User lines
+# are preserved verbatim; only missing template keys are inserted.
+# Idempotent. Invoked automatically by `agent-config upgrade` for every
+# existing settings file (global + project) so nobody keeps stale settings
+# after a release. Flags: --path <file> | --dry-run | --check | --profile.
+# Exit 0 in-sync / updated, 2 drift under --check or bad input.
+cmd_settings_sync() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/sync_agent_settings.ts" "$@"
+}
+
 # `agent-config settings:migrate` — lift project-local
 # .agent-settings.yml / .agent-user.yml into ~/.event4u/agent-config/.
 # Phase 2.4 of road-to-global-only-install.md. Read-only on the source —
@@ -1001,6 +1016,7 @@ main() {
     sync)                    cmd_sync "$@" ;;
     validate)                cmd_validate "$@" ;;
     settings:check)          cmd_settings_check "$@" ;;
+    settings:sync)           cmd_settings_sync "$@" ;;
     settings:migrate)        cmd_settings_migrate "$@" ;;
     uninstall)               cmd_uninstall "$@" ;;
     prune)                   cmd_prune "$@" ;;
