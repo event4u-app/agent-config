@@ -186,9 +186,28 @@ export function main(): number {
     return 0;
 }
 
-const _isCliEntry =
-    process.argv[1] !== undefined &&
-    import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
-if (_isCliEntry || process.argv[1] === _HERE) {
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
+if (_isCliEntry() || process.argv[1] === _HERE) {
     process.exitCode = main();
 }

@@ -20,10 +20,10 @@
  * Exit 0 only when every check passes. Node builtins only.
  */
 
-import { readFileSync } from 'node:fs';
+import { realpathSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import process from 'node:process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     CATEGORY_ORDER,
@@ -262,9 +262,30 @@ function main(): void {
     process.exit(exitCode);
 }
 
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = realpathSync(fileURLToPath(import.meta.url));
+        const argv = realpathSync(resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
 const isCliEntry =
-    process.argv[1] !== undefined &&
-    import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+    _isCliEntry();
 if (isCliEntry) {
     main();
 }
