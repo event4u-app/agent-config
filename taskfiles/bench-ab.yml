@@ -150,6 +150,9 @@ tasks:
       Cost-bearing & quota-aware: pins sonnet, caps per-run spend (--budget).
       WARNING the full 15×4×3=180-run pilot is ~60-90M tokens — use --tasks /
       --seeds to bound it. See agents/roadmaps/road-to-discipline-axis-benchmark.md.
+      Crash-safe: every completed run is checkpointed (reports/ab-v2/checkpoints/);
+      a killed sweep restarted with the SAME flags resumes instead of re-spending
+      (--fresh discards the checkpoint, --no-checkpoint disables it).
       Pass flags through, e.g.:
         task bench:ab:v2 -- --tasks trapA-overeng-01,trapB-regress-01 --seeds 1 --budget 3.5
     cmd: ./scripts-run src/scripts/bench_ab_v2_run {{.CLI_ARGS}}
