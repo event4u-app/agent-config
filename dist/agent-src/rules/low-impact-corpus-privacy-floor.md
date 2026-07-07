@@ -21,7 +21,7 @@ NO SECRETS. NO EMAILS. NO PROJECT PATHS. NO CUSTOMER NAMES.
 NO INTERNAL HOSTNAMES. NO MONEY. NO BUSINESS SQL. NO LONG CODE.
 ```
 
-Redactor lives in `scripts/ai_council/redact_low_impact_entry.py`
+Redactor lives in `scripts/ai_council/redact_low_impact_entry.ts`
 and runs at **both** gates:
 
 1. **Write gate** — every intake append to
@@ -70,6 +70,6 @@ Then agent stops intake/upstream flow. No silent retry, no auto-rewrite.
 
 ## See also
 
-- `scripts/ai_council/redact_low_impact_entry.py` — the redactor.
-- `scripts/ai_council/low_impact_intake.py` — write-gate caller.
+- `scripts/ai_council/redact_low_impact_entry.ts` — the redactor.
+- `scripts/ai_council/low_impact_intake.ts` — write-gate caller.
 - `agents/decisions/low-impact-decisions.md` — corpus + Anti-Examples list.

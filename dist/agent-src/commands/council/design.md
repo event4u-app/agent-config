@@ -60,10 +60,10 @@ Invoke the matching `/council default` form:
 - `prompt:` → `/council default prompt:"<artefact text>"` with
   `--prompt-mode design`.
 
-`--prompt-mode` is the CLI flag (`scripts/council_cli.py`) that
+`--prompt-mode` is the CLI flag (`scripts/council_cli.ts`) that
 swaps the lens addendum after the bundler has run.
 
-The `design` mode addendum from `scripts/ai_council/prompts.py`
+The `design` mode addendum from `scripts/ai_council/prompts.ts`
 focuses council members on:
 
 - Trust-boundary and module-coupling risk.

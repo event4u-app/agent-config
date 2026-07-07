@@ -25,7 +25,7 @@ EVERY LOW-IMPACT COUNCIL FAST-PATH REPLY OPENS WITH THE EXACT MARKER.
 NEVER PARAPHRASE. NEVER SWALLOW. NEVER SUBSTITUTE THE AGENT'S OWN VERDICT.
 ```
 
-Markers (from `scripts/ai_council/low_impact.py`):
+Markers (from `scripts/ai_council/low_impact.ts`):
 
 - **Resolved** — `> Resolved via low-impact council fast-path: <verdict>.`
 - **Unavailable** — `> Low-impact council unavailable (no opted-in members) — escalating to user.`

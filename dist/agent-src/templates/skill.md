@@ -139,7 +139,7 @@ Do NOT use when:
 <!-- FRUGALITY STANDARDS (writer skills only — REQUIRED for skills whose
   name ends in `-writing`, `-authoring`, or `-create`, AND for any
   skill on the `FRUGALITY_WRITER_SKILLS` allowlist in
-  `scripts/skill_linter.py`. Mid-/untiered non-writer skills MUST
+  `scripts/skill_linter.ts`. Mid-/untiered non-writer skills MUST
   remove this section entirely.
 
   Layer-1 of the linter checks for:
@@ -173,7 +173,7 @@ Do NOT use when:
   blocks per `.agent-src.uncondensed/rules/skill-quality.md` §
   Senior-Tier Required Structure. Mid-tier and untiered skills MUST
   remove this section entirely. The four blocks are enforced by
-  `scripts/skill_linter.py` for `tier: senior` skills only.
+  `scripts/skill_linter.ts` for `tier: senior` skills only.
 
   ## Related Skills
 

@@ -26,4 +26,4 @@ an ADR but MUST match the schema enforced by `task lint-config-schema`.
 
 - [`docs/contracts/profile-system.md`](../../docs/contracts/profile-system.md) — schema and loader contract.
 - [`docs/contracts/config-presets.md`](../../docs/contracts/config-presets.md) — preset axis.
-- [`scripts/config/profiles.py`](../../scripts/config/profiles.py) — loader.
+- [`scripts/config/profiles.ts`](../../scripts/config/profiles.ts) — loader.

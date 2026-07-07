@@ -158,7 +158,7 @@ Per [`scope-control`](../../rules/scope-control.md), git operations are permissi
 
 ## Breaking-change catalog
 
-Knowledge source: `src/missions/upgrade/laravel-10-to-11.yaml`. Versionable, diffable, CI-tested via `lint_missions.py`. Each entry carries:
+Knowledge source: `src/missions/upgrade/laravel-10-to-11.yaml`. Versionable, diffable, CI-tested via `lint_missions.ts`. Each entry carries:
 
 - `id` — unique checkpoint key (used in `.work-state.json`)
 - `severity` — `critical` / `high` / `medium` / `low`

@@ -62,7 +62,7 @@ the catalog table AND the relevant tree leaf.
 
 ## Backstop
 
-The CI pipeline runs `scripts/check_token_optimizer_freshness.py`
+The CI pipeline runs `scripts/check_token_optimizer_freshness.ts`
 after the reference checker. The validator parses the catalog,
 verifies every cited path exists, and `grep`s the trigger keywords
 against each target. A failure is a **drift signal**, not a

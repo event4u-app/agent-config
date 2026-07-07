@@ -23,11 +23,12 @@ execution:
 # react-shadcn-ui
 
 > **Grounded stack guidance:** pull idiomatic Do/Don't + docs URLs via
-> `ground.py search --manifest <skills-root>/design-intelligence/data/manifest.json
+> `./scripts-run <skills-root>/corpus-grounding/scripts/ground search
+> --manifest <skills-root>/design-intelligence/data/manifest.json
 > --stack shadcn "<topic>"` (also `--stack react`, `--stack nextjs`). See
 > [`design-intelligence`](../design-intelligence/SKILL.md).
 
-## Component installer — `scripts/shadcn_add.py` (gated, assisted)
+## Component installer — `scripts/shadcn_add.ts` (gated, assisted)
 
 Bundled installer (Apache-2.0-derived, see header + `design-intelligence/ATTRIBUTION.md`)
 wraps `npx shadcn@latest add <components>` — **the only subprocess+network
@@ -47,14 +48,14 @@ block above:
 ## Compatibility
 
 - **Tested against:** `shadcn@2.1`, Tailwind CSS `3.x`, React `18+`.
-- The audit step (`directives/ui/audit.py`) reads the line above and
+- The audit step (`directives/ui/audit.ts`) reads the line above and
   compares it with `state.ui_audit.shadcn_inventory.version`; a major
   mismatch triggers a soft halt before this skill runs.
 
 ## When to use
 
-Use when `state.stack.frontend == "react-shadcn"` and `directives/ui/apply.py`,
-`review.py`, or `polish.py` dispatches to this skill, or when a React project
+Use when `state.stack.frontend == "react-shadcn"` and `directives/ui/apply.ts`,
+`review.ts`, or `polish.ts` dispatches to this skill, or when a React project
 clearly uses shadcn/ui (presence of `components.json`, `@radix-ui/*`
 dependencies, a `components/ui/` folder of generated primitives).
 
@@ -216,8 +217,8 @@ Default path = bundled `scripts/shadcn_add.ts` + `components.json`; works on mos
 
 ### Review pass — a11y findings + preview envelope
 
-When this skill is dispatched by `directives/ui/review.py` (test slot)
-or `directives/ui/polish.py` (verify slot) — i.e. a review/polish run,
+When this skill is dispatched by `directives/ui/review.ts` (test slot)
+or `directives/ui/polish.ts` (verify slot) — i.e. a review/polish run,
 not the initial apply — it also emits:
 
 - `state.ui_review.a11y` — `{violations: [{rule, selector, severity}, ...],

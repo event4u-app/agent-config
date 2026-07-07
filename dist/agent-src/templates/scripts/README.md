@@ -18,8 +18,8 @@ high-risk PRs.
 | File in package | Copy to | Purpose |
 |---|---|---|
 | `templates/github-workflows/pr-risk-review.yml` | `.github/workflows/pr-risk-review.yml` | GitHub Actions workflow |
-| `templates/scripts/pr_risk_review.ts` | `scripts/pr_risk_review.py` | Risk classifier (Python 3.10+, PyYAML) |
-| `templates/scripts/pr_review_routing.ts` | `scripts/pr_review_routing.py` | Routing classifier |
+| `templates/scripts/pr_risk_review.ts` | `scripts/pr_risk_review.ts` | Risk classifier (TypeScript, run via tsx) |
+| `templates/scripts/pr_review_routing.ts` | `scripts/pr_review_routing.ts` | Routing classifier |
 | `templates/scripts/pr-risk-config.example.yml` | `.github/pr-risk-config.yml` | Risk patterns (optional) |
 | `templates/scripts/ownership-map.example.yml` | `.github/ownership-map.yml` | Ownership entries (optional) |
 | `templates/scripts/historical-bug-patterns.example.yml` | `.github/historical-bug-patterns.yml` | Registered failure modes (optional) |
@@ -37,7 +37,7 @@ cp .augment/templates/scripts/historical-bug-patterns.example.yml .github/histor
 ```
 
 The routing step in the workflow is **conditional** — it only runs if
-`scripts/pr_review_routing.py` exists, so risk classification alone works
+`scripts/pr_review_routing.ts` exists, so risk classification alone works
 without routing being installed.
 
 Create the three labels once (or let them be auto-created on first run):
@@ -118,8 +118,8 @@ the full schema.
 
 ```bash
 rm .github/workflows/pr-risk-review.yml
-rm scripts/pr_risk_review.py
-rm scripts/pr_review_routing.py
+rm scripts/pr_risk_review.ts
+rm scripts/pr_review_routing.ts
 rm .github/pr-risk-config.yml .github/ownership-map.yml .github/historical-bug-patterns.yml
 gh label delete risk:low risk:medium risk:high
 ```
@@ -168,7 +168,7 @@ PRs.
 | File in package | Copy to | Purpose |
 |---|---|---|
 | `templates/github-workflows/memory-hygiene.yml` | `.github/workflows/memory-hygiene.yml` | Weekly staleness workflow |
-| `templates/scripts/check_memory.ts` | `scripts/check_memory.py` | YAML schema + staleness validator |
+| `templates/scripts/check_memory.ts` | `scripts/check_memory.ts` | YAML schema + staleness validator |
 
 ## Install
 

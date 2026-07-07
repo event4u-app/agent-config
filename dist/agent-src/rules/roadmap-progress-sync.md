@@ -39,7 +39,7 @@ The `command:` triggers in this rule's frontmatter ensure it loads the moment on
 
 **Step counts as done** when its code/doc change is written and saved AND the verification cited in the step has passed (fresh output in this reply or an earlier one).
 
-**Glyph semantics — single source of truth.** Keep aligned with the dashboard counter in `scripts/update_roadmap_progress.py` and the closure-table in [`roadmap-management`](../skills/roadmap-management/SKILL.md):
+**Glyph semantics — single source of truth.** Keep aligned with the dashboard counter in `scripts/update_roadmap_progress.ts` (regenerated via `./agent-config roadmap:progress`) and the closure-table in [`roadmap-management`](../skills/roadmap-management/SKILL.md):
 
 | Glyph | Meaning | Counts towards |
 |---|---|---|
@@ -101,7 +101,7 @@ NEVER MERGED-BUT-UNARCHIVED INTO THE TRUNK.
 NO merge-gated PLACEHOLDER ITEM. NO AGENT-SET ANNOTATION.
 ```
 
-The sweep — `scripts/archive_completed_roadmaps.py`, invoked by
+The sweep — `scripts/archive_completed_roadmaps.ts`, invoked by
 [`/create-pr` § 1c](../commands/pr/create.md) — archives every roadmap that is
 complete **and** touched in this branch (`git log origin/main..HEAD`), `git mv`s
 it to `archive/`, migrates inbound `agents/roadmaps/<x>.md` references to the
@@ -109,7 +109,7 @@ archive path in the **same branch** (so links never break — this was the only
 real reason the old design deferred archival), regenerates the dashboard, and
 stages it. Completion is read from the checkbox counts; no marker is required.
 
-**Backstop:** `update_roadmap_progress.py --check` hard-fails when a roadmap
+**Backstop:** `./agent-config roadmap:progress-check` (wrapping `update_roadmap_progress.ts --check`) hard-fails when a roadmap
 hits `count_open == 0` while still under `agents/roadmaps/`. Because
 `/create-pr` archives before the push, the PR branch is green; a push that
 bypasses the sweep red-flags in CI — the forcing function that makes

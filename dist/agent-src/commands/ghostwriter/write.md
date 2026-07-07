@@ -144,7 +144,7 @@ Non-blocking.
 - **Do NOT commit, push, or open a PR.** The user owns the git surface.
 - **Do NOT omit the disclosure footer.** It is mandatory on every
   invocation. Any flag that would suppress it is forbidden by design
-  and rejected by the package skill linter (`scripts/lint_skills.py`).
+  and rejected by the package skill linter (`scripts/skill_linter.ts`).
 - **Do NOT write the draft to disk.** This command prints only.
 - **Do NOT blend multiple ghostwriter voices.** One style source per
   invocation in v1.

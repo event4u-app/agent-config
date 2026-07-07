@@ -33,7 +33,7 @@ exists and is the source of truth.
 ## Template
 
 This block defines the personal and project-level settings that
-`scripts/install.py` (via `config/agent-settings.template.yml`)
+`scripts/install.ts` (via `config/agent-settings.template.yml`)
 writes to `.agent-settings.yml` on first install. Subsequent edits are
 made by the user directly or by the agent on request, following the
 [section-aware merge rules](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
@@ -165,9 +165,9 @@ eloquent:
 #
 # Persistent JSONL log at agents/runtime/.agent-chat-history (git-ignored under /agents/runtime/).
 # Keeps a durable record of the conversation so a crashed or switched
-# agent session can be resumed. See scripts/chat_history.py for the API.
+# agent session can be resumed. See scripts/chat_history.ts for the API.
 #
-# Defaults below are placeholders — scripts/install.py substitutes them
+# Defaults below are placeholders — scripts/install.ts substitutes them
 # per rule_loading_tier (see config/profiles/*.ini).
 chat_history:
   # Log chat events to disk (true, false)
@@ -226,9 +226,9 @@ hooks:
   chat_history:
     enabled: true
     # Override path to the chat-history CLI (defaults to
-    # scripts/chat_history.py). Only set this when the script lives
+    # scripts/chat_history.ts). Only set this when the script lives
     # outside the standard location.
-    # script: scripts/chat_history.py
+    # script: scripts/chat_history.ts
 
 # --- Optional pipelines ---
 pipelines:
@@ -445,9 +445,9 @@ verbosity:
   # it") in skill bodies. false = act and emit the result.
   intent_announcements: false
 
-  # Script stdout chatter from `scripts/*.py`, `scripts/*.sh`, and
+  # Script stdout chatter from `scripts/*.ts`, `scripts/*.sh`, and
   # `.augment/scripts/`. Read by the helper module
-  # `scripts/_lib/script_output.py`.
+  # `scripts/_lib/script_output.ts`.
   #   silent  = stderr only; success = no output
   #   minimal = one summary line per script (default)
   #   verbose = pre-Phase-10 behaviour (per-step prints)
@@ -524,7 +524,7 @@ linked_projects_max_files: 20000
 ## Settings Reference
 
 Personal and project-level settings (initial file written by
-`scripts/install.py`, edits follow the merge rules in
+`scripts/install.ts`, edits follow the merge rules in
 [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)).
 **Key paths use dot-notation** to denote nesting: `personal.user_name`
 lives under `personal:` in YAML.
@@ -553,14 +553,14 @@ the canonical narrative lives in
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
 | `chat_history.on_overflow` | `rotate`, `condense` | per profile | On overflow: `rotate` drops oldest entries; `condense` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`condense`. |
-| `chat_history.text_limits.{user,agent,tool,phase}` | integer (chars) | `user=0`, `agent=5000`, `tool=200`, `phase=200` | Per-entry-type text-length cap. `0` = verbatim, no slice. `N > 0` = collapse whitespace, slice to N chars, append `" … [+K chars]"` so the log self-reports truncation. Defaults match `DEFAULT_TEXT_LIMITS` in `scripts/chat_history.py`. |
+| `chat_history.text_limits.{user,agent,tool,phase}` | integer (chars) | `user=0`, `agent=5000`, `tool=200`, `phase=200` | Per-entry-type text-length cap. `0` = verbatim, no slice. `N > 0` = collapse whitespace, slice to N chars, append `" … [+K chars]"` so the log self-reports truncation. Defaults match `DEFAULT_TEXT_LIMITS` in `scripts/chat_history.ts`. |
 | `hooks.enabled` | `true`, `false` | `false` | Master switch for the work-engine hook layer. When `false` (default) the registry stays empty and golden replay is byte-stable. See [`agents/settings/contexts/work-engine-hooks.md`](../../../agents/settings/contexts/work-engine-hooks.md). |
 | `hooks.trace` | `true`, `false` | `false` | Emit per-event trace lines on stderr. Useful for debugging; off by default because it is noisy. |
 | `hooks.halt_surface_audit` | `true`, `false` | `true` | Defense-in-depth check that every halt surfaced by the dispatcher carries the expected shape. Cheap. |
 | `hooks.state_shape_validation` | `true`, `false` | `true` | Re-run the state schema validator on `AFTER_LOAD` and `BEFORE_SAVE`. Cheap, catches drift. |
 | `hooks.directive_set_guard` | `true`, `false` | `true` | Verify the dispatcher-resolved directive set matches the input envelope intent. Cheap, catches routing drift. |
 | `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the chat-history hooks (`append` on `after_step`, `halt_append` on `on_halt`). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. Schema v4: every entry self-identifies via a 16-char session fingerprint, no ownership/sidecar layer. |
-| `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
+| `hooks.chat_history.script` | path | `scripts/chat_history.ts` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `roadmap.skip_pre_run_gate` | `true`, `false` | `true` | When `true` (default): `/roadmap:process-step\|phase\|full` skips the interactive pre-run summary and starts the loop immediately — the resolved roadmap, cadence, and council are surfaced inline so an unwanted pick can still be aborted. When `false`: the loop shows the pre-run summary with numbered options (Go / Different roadmap / Different scope / Toggle council / Abort) and waits. The gate is always shown — regardless of this flag — when the roadmap is ambiguous (multiple active, none named) or a scope / cadence conflict has no sensible default. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline — only relevant when `quality.local_auto_run` is `true`; when it is `false` (the default) local pipeline runs are suppressed at every cadence and remote CI is the gate. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. |

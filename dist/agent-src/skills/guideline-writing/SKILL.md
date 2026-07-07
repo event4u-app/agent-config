@@ -123,7 +123,7 @@ Above the split signal, break by sub-topic into sibling files in the same folder
 
 1. Complete guideline at `docs/guidelines/{topic}/{name}.md`
 2. At least one skill or rule linking to it
-3. Linter + `check_references.py` clean
+3. Linter + `check_references.ts` clean
 4. `bash scripts/condense.sh --sync` confirmation
 
 ## Gotchas
@@ -167,7 +167,7 @@ to every guideline you author.
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) the package's
-`scripts/check_references.py`, `scripts/skill_linter.py`, and `task`
+`scripts/check_references.ts`, `scripts/skill_linter.ts`, and `task`
 runner are not reachable. The skill still applies — with prose-only
 validation:
 

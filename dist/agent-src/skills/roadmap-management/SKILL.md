@@ -88,7 +88,7 @@ Common shapes:
 - Symfony bundles — `src/Bundle/{Bundle}/agents/roadmaps/`
 - Node / Python / Go monorepo packages — `packages/{Pkg}/agents/roadmaps/`
 
-Use `scripts/_lib/agent_settings.py::enumerate_modules()` to discover the
+Use `scripts/_lib/agent_settings.ts::enumerate_modules()` to discover the
 actual paths in the current project; never assume `app/Modules/`.
 
 The file `.augment/templates/roadmaps.md` defines the canonical structure.

@@ -23,7 +23,7 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export class ShadcnInstaller {
     projectRoot: string;
@@ -226,7 +226,7 @@ function _calledProcessError(cmd: string[], status: number | null, signal: strin
     return `Command ${cmdRepr} returned non-zero exit status ${status}.`;
 }
 
-const PROG = 'shadcn_add.py';
+const PROG = 'shadcn_add';
 
 const HELP =
     `usage: ${PROG} [-h] [--all] [--overwrite] [--dry-run] [--list]\n` +
@@ -249,22 +249,22 @@ const HELP =
     '\n' +
     'Examples:\n' +
     '  # Add single component\n' +
-    '  python shadcn_add.py button\n' +
+    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button\n' +
     '\n' +
     '  # Add multiple components\n' +
-    '  python shadcn_add.py button card dialog\n' +
+    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button card dialog\n' +
     '\n' +
     '  # Add all components\n' +
-    '  python shadcn_add.py --all\n' +
+    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add --all\n' +
     '\n' +
     '  # Overwrite existing components\n' +
-    '  python shadcn_add.py button --overwrite\n' +
+    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button --overwrite\n' +
     '\n' +
     '  # Dry run (show what would be done)\n' +
-    '  python shadcn_add.py button card --dry-run\n' +
+    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button card --dry-run\n' +
     '\n' +
     '  # List installed components\n' +
-    '  python shadcn_add.py --list\n' +
+    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add --list\n' +
     '        \n';
 
 const USAGE =
@@ -380,9 +380,30 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     return success ? 0 : 1;
 }
 
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
 const _invokedDirectly =
-    process.argv[1] !== undefined &&
-    import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+    _isCliEntry();
 if (_invokedDirectly) {
     process.exitCode = main();
 }

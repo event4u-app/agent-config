@@ -17,7 +17,7 @@ No quote rule. No strategy limit. Goal: place well.
 
 **Match (football):** Poisson on market xG ≈ 1.7 : 0.8.
 
-**Script-verified** (`score_ev.py --lh 1.7 --la 0.8 --exact 4 --diff 3 --tendency 2`):
+**Script-verified** (`score_ev.ts --lh 1.7 --la 0.8 --exact 4 --diff 3 --tendency 2`):
 
 ```
 EV-max tip : 1:0  (EV 1.574)
@@ -65,7 +65,7 @@ Away 22%.
 
 **Reasoning:** N ≥ 100 and you behind → pure EV converges with the field, can't
 create the gap; target is **P(finish 1st)**, not E(points). Don't guess the
-variance: run `pool_winsim.py` with the pool's `N` and your `my_lead`. Shows
+variance: run `pool_winsim.ts` with the pool's `N` and your `my_lead`. Shows
 P(win) collapsing under EV-max-everywhere, returns the **specific flips**
 (higher-variance scorelines on high-consensus matches) that raise P(win) most
 per unit EV given up.
@@ -132,7 +132,7 @@ medium.) **Not** team B — the modal-player trap.
 
 **Rule:** kicktipp 2 / 3 / 5 — tendency = 2, goal-difference = 3, exact = 5.
 
-**Matches (script-verified, `score_ev.py … --tendency 2 --diff 3 --exact 5`):**
+**Matches (script-verified, `score_ev.ts … --tendency 2 --diff 3 --exact 5`):**
 
 | Match (λ) | EV-max | a high tip's EV | verdict |
 |---|---|---|---|
@@ -148,7 +148,7 @@ EV-max.** Adding goals — especially the underdog's — only shrinks the hit
 probability without protecting the diff/tendency points.
 
 **Known-good behaviour:** any 3:2 / 4:x / x:4 tip in the run → the grid wasn't
-run; `score_ev.py` is the gate. (Risk: low; correctness fixture, not strategy.)
+run; `score_ev.ts` is the gate. (Risk: low; correctness fixture, not strategy.)
 
 ---
 
@@ -156,7 +156,7 @@ run; `score_ev.py` is the gate. (Risk: low; correctness fixture, not strategy.)
 
 **Rule:** kicktipp 2 / 3 / 5 (as Fixture 7).
 
-**Matches (script-verified, `score_ev.py … --tendency 2 --diff 3 --exact 5`):**
+**Matches (script-verified, `score_ev.ts … --tendency 2 --diff 3 --exact 5`):**
 
 ```
 λ 1.0:1.0  ->  EV-max 0:0 (1.196), 1:1 tied (1.196)   # a draw IS the optimum
@@ -171,5 +171,5 @@ As λ rises past ~1.1 a one-goal win edges ahead, but the draw stays in the top
 tips. Grid surfaces this; intuition suppresses it.
 
 **Known-good behaviour:** a tip set with **near-zero draws across many
-low-scoring even matches** is a red flag — re-run `score_ev.py`, let the grid
+low-scoring even matches** is a red flag — re-run `score_ev.ts`, let the grid
 decide, don't default every close game to 1:0.

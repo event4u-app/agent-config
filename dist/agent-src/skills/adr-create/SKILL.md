@@ -44,7 +44,7 @@ Do NOT use when:
 - Standard template: Status, Context, Decision, Consequences,
   Alternatives, References.
 - Regenerated index so readers find the ADR by topic, not by ls.
-- Zero MCP-tool dependency — pure filesystem + Python.
+- Zero MCP-tool dependency — pure filesystem + TypeScript tooling (run via ./scripts-run).
 
 ## Preconditions
 
@@ -54,7 +54,7 @@ Do NOT use when:
     governance ADRs, 3-digit numbering (`ADR-NNN-<slug>.md`).
   - **Per-area** — `docs/adrs/<area>/`: sub-area ADRs, 4-digit
     numbering (`NNNN-<slug>.md`); `<area>` must match the canonical
-    inventory in [`scripts/audit_adr_coverage.py`](../../../scripts/audit_adr_coverage.py).
+    inventory in [`scripts/audit_adr_coverage.ts`](../../../scripts/audit_adr_coverage.ts).
 - The decision is **already made** — ADRs record outcomes, they do
   not run the decision process. For unresolved trade-offs, run the
   council or consult `adversarial-review` first.
@@ -75,7 +75,7 @@ Ask one question only if both are plausible:
    `NNNN-<slug>.md` (4-digit, no `ADR-` prefix).
 3. **Unknown area** — `<area>` not in the inventory: refuse with a
    hint to add the area to `AREAS` in
-   `scripts/audit_adr_coverage.py` in the same PR. Do not invent.
+   `scripts/audit_adr_coverage.ts` in the same PR. Do not invent.
 4. **In doubt** → per-area (cheaper to surface, easier to relocate).
 
 ### 2. Pick the next ADR number
@@ -139,7 +139,7 @@ phase: <roadmap> · <phase-id>
 ```
 
 Per-area ADRs use a quote-style header (no YAML frontmatter) so
-`audit_adr_coverage.py`'s permissive parser can index them. Cite
+`audit_adr_coverage.ts`'s permissive parser can index them. Cite
 the area's contract from the README in
 [`docs/adrs/<area>/README.md`](../../../docs/adrs/).
 
@@ -183,7 +183,7 @@ completeness check — not on every ADR by default.
 - **Per-area numbering is 4-digit** (`NNNN-<slug>.md`); the flat
   surface stays 3-digit (`ADR-NNN-<slug>.md`). Do not mix.
 - **Area inventory is closed** — `<area>` must already exist in
-  `AREAS` in `scripts/audit_adr_coverage.py`. Adding a new area is
+  `AREAS` in `scripts/audit_adr_coverage.ts`. Adding a new area is
   a separate PR with explicit reviewer sign-off.
 - Frontmatter `adr:` (flat) is the canonical number; the filename
   prefix must match. The flat regenerator fails on mismatch.

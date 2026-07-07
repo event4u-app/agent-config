@@ -127,7 +127,7 @@ schema's `EngagementSchemaError` cases.
 ### The four enforcement layers
 
 1. **Schema (write gate)** — `EngagementEvent.validate()` in
-   `telemetry/engagement.py` runs `check_id_redaction` over `task_id`
+   `telemetry/engagement.ts` runs `check_id_redaction` over `task_id`
    and every `consulted` / `applied` artefact id. The CLI exits `1`
    when this fires; nothing reaches the JSONL.
 2. **Aggregator (read gate)** — `aggregator._iter_events` calls

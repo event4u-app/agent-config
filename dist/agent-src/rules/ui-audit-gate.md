@@ -19,7 +19,7 @@ packs: [frontend-design]
 # UI Audit Gate
 
 Defense-in-depth twin of the dispatcher gate in
-[`directives/ui/audit.py`](../templates/scripts/work_engine/directives/ui/audit.py).
+[`directives/ui/audit.ts`](../templates/scripts/work_engine/directives/ui/audit.ts).
 The dispatcher refuses to advance past `refine` without `state.ui_audit`;
 this rule refuses the write even when the agent acts outside the dispatcher.
 

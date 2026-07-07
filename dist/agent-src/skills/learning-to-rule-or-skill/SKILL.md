@@ -29,7 +29,7 @@ Use this skill when:
 * Mining the audit log (`agents/runtime/state/audit/<YYYY-MM>.jsonl`,
   [`audit-log-v1`](../../../docs/contracts/audit-log-v1.md)) surfaced
   a repeated phase pattern via
-  [`extract_audit_patterns.py`](../../../scripts/extract_audit_patterns.py)
+  [`extract_audit_patterns.ts`](../../../scripts/extract_audit_patterns.ts)
   — the pattern's `count` ≥ 2 already satisfies the repetition gate
 
 Do not use this skill when:
@@ -334,7 +334,7 @@ the gap is documented in its skill body.
 ## Audit-derived learnings (optional source)
 
 When the input is a pattern surfaced by
-[`extract_audit_patterns.py`](../../../scripts/extract_audit_patterns.py)
+[`extract_audit_patterns.ts`](../../../scripts/extract_audit_patterns.ts)
 mining `agents/runtime/state/audit/<YYYY-MM>.jsonl`
 ([`audit-log-v1`](../../../docs/contracts/audit-log-v1.md)):
 
