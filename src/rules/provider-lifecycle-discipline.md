@@ -28,7 +28,8 @@ workspaces:
   - engineering
   - gtm
 packs:
-  - meta
+  - ai-image
+  - ai-video
 ---
 
 # Provider Lifecycle Discipline

@@ -19,7 +19,7 @@ workspaces:
   - engineering
   - gtm
 packs:
-  - meta
+  - ai-video
 ---
 
 # Media Sync — Ground Truth Is the Audio

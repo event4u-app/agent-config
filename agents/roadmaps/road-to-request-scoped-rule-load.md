@@ -176,16 +176,27 @@ context; projection-fidelity + snapshot tests green.
 
 ## Phase 3 — Pack hygiene (two confirmed misfits + one sweep)
 
-- [ ] Move `ui-audit-gate` (`meta` → `frontend-design`) and decide
+- [x] Move `ui-audit-gate` (`meta` → `frontend-design`) and decide
       `design-fidelity` (`engineering-base` → `frontend-design`?, keep
       genuinely stack-neutral discipline in base). These are the only two
       verified misfits — the external draft's five-rule claim was corrected
       2026-07-07.
-- [ ] With Phase 0+1 landed, verify end-to-end: a consumer install without
+      <!-- done: both moved to frontend-design. -->
+- [x] With Phase 0+1 landed, verify end-to-end: a consumer install without
       `frontend-design` contains neither the moved rule bodies nor their
       pointers.
-- [ ] Sweep the remaining packs for the same misfiling pattern (one audit
+      <!-- done via projection.rule_packs (second scoping axis, symmetric to
+      rule_workspaces): deselecting frontend-design drops ui-audit-gate +
+      design-fidelity bodies AND pointers — e2e-tested in
+      tests/scripts/rule_workspace_scoping.test.ts. -->
+- [x] Sweep the remaining packs for the same misfiling pattern (one audit
       pass, findings → follow-up commits or honest-null).
+      <!-- done 2026-07-07: 4 media rules moved out of `meta` to their packs
+      (image-likeness-and-rights→ai-image, media-sync-ground-truth→ai-video,
+      media-governance-routing + provider-lifecycle-discipline→ai-image+ai-video).
+      Honest finding: `meta` is a 60-rule catch-all for behavior rules — that is
+      a vocabulary shape, not per-rule misfiling; the workspace axis (P1) is the
+      consumer filter, pack membership is secondary. No further moves. -->
 
 **Exit:** deselecting `frontend-design` removes its rule cluster;
 pack-membership audit recorded.

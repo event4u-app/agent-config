@@ -116,11 +116,12 @@ export function id_in_scope(
 /** `workspaces:` list parsed straight from a rule file's frontmatter. */
 export function fm_workspaces(text: string): string[] {
     const [fm] = split_frontmatter(text);
-    const m = /^workspaces:\n((?:\s+-\s+.*\n)+)/m.exec(fm);
+    // Tolerate the list being the LAST frontmatter key (no trailing newline).
+    const m = /^workspaces:[ \t]*\n((?:[ \t]+-[ \t]+.*(?:\n|$))+)/m.exec(fm);
     if (!m) {
         return [];
     }
-    return [...(m[1] as string).matchAll(/-\s+(\S+)/g)].map((x) => x[1] as string);
+    return [...(m[1] as string).matchAll(/-[ \t]+(\S+)/g)].map((x) => x[1] as string);
 }
 
 /** Return [frontmatter_including_fences, body]. Empty fm if none. */

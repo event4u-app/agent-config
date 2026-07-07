@@ -93,6 +93,39 @@ describe("consumer-shaped scope (engineering) — projector filter", () => {
   });
 });
 
+describe("pack scope — frontend-design deselection (Phase 3 e2e)", () => {
+  // All pack ids except frontend-design → deselecting the pack.
+  const NO_FRONTEND = [
+    "engineering-base",
+    "meta",
+    "brand",
+    "ai-image",
+    "ai-video",
+    "finance-basic",
+    "founder-strategy",
+    "legal-review-prep",
+    "small-business",
+  ];
+
+  it("drops ui-audit-gate + design-fidelity, keeps engineering-base rules", () => {
+    for (const id of ["ui-audit-gate", "design-fidelity"]) {
+      const p = path.join(RULES_SOURCE, `${id}.md`);
+      expect(rule_in_scope(p, null, NO_FRONTEND), id).toBe(false);
+    }
+    for (const id of ["commit-policy", "architecture", "downstream-changes"]) {
+      const p = path.join(RULES_SOURCE, `${id}.md`);
+      expect(rule_in_scope(p, null, NO_FRONTEND), id).toBe(true);
+    }
+  });
+
+  it("selecting frontend-design keeps both", () => {
+    for (const id of ["ui-audit-gate", "design-fidelity"]) {
+      const p = path.join(RULES_SOURCE, `${id}.md`);
+      expect(rule_in_scope(p, null, [...NO_FRONTEND, "frontend-design"]), id).toBe(true);
+    }
+  });
+});
+
 describe("thin-pointer catalog honours the same scope", () => {
   it("scoped build_thin drops maintainer-only pointers AND bodies", () => {
     const scoped = build_thin(RULES_SOURCE, CONSUMER_SCOPE);

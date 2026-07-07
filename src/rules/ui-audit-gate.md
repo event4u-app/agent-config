@@ -16,7 +16,7 @@ workspaces:
   - agent-config-maintainer
   - engineering
 packs:
-  - meta
+  - frontend-design
 ---
 
 # UI Audit Gate

@@ -20,7 +20,7 @@ applies_to_user_types:
 workspaces:
   - engineering
 packs:
-  - engineering-base
+  - frontend-design
 ---
 
 # Design Fidelity

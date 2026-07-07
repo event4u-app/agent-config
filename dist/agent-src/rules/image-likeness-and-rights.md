@@ -20,7 +20,7 @@ workspaces:
   - engineering
   - gtm
 packs:
-  - meta
+  - ai-image
 ---
 
 # Image Likeness and Rights

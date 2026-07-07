@@ -941,12 +941,12 @@ export { _HRR_BANNER_MARKER };
 // (rule-router contract § Schema v2). Untagged rules fail safe: they ship.
 // ADR-040: projection-time filtering only, no runtime resolver.
 
-function _read_rule_workspaces(): string[] | null {
+function _read_projection_list(key: string): string[] | null {
     const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
     const proj = data['projection'];
     const value =
         typeof proj === 'object' && proj !== null && !Array.isArray(proj)
-            ? (proj as Record<string, unknown>)['rule_workspaces']
+            ? (proj as Record<string, unknown>)[key]
             : null;
     if (Array.isArray(value) && value.length > 0) {
         return value.map((v) => String(v));
@@ -954,30 +954,54 @@ function _read_rule_workspaces(): string[] | null {
     return null;
 }
 
-/** Whether a rule source file projects under the given workspace scope. */
-export function rule_in_scope(source_path: string, scope: readonly string[] | null): boolean {
-    if (scope === null) {
+function _read_rule_workspaces(): string[] | null {
+    return _read_projection_list('rule_workspaces');
+}
+
+function _read_rule_packs(): string[] | null {
+    return _read_projection_list('rule_packs');
+}
+
+/**
+ * Whether a rule source file projects under the given workspace + pack
+ * scopes. Both scopes are independent constraints: when configured, the
+ * rule's frontmatter list must intersect (installed workspaces AND
+ * installed packs). Kernel always projects; untagged axes fail safe.
+ */
+export function rule_in_scope(
+    source_path: string,
+    scope: readonly string[] | null,
+    pack_scope: readonly string[] | null = null,
+): boolean {
+    if (scope === null && pack_scope === null) {
         return true;
     }
     const [meta] = _parse_frontmatter(_readText(source_path));
     if (meta['type'] === 'always' || meta['alwaysApply'] === true) {
         return true; // kernel always projects
     }
-    const ws = Array.isArray(meta['workspaces'])
-        ? (meta['workspaces'] as unknown[]).map((w) => String(w))
-        : [];
-    if (ws.length === 0) {
-        return true; // untagged → fail safe: ship it
-    }
-    return ws.some((w) => scope.includes(w));
+    const axis = (key: string, configured: readonly string[] | null): boolean => {
+        if (configured === null) {
+            return true;
+        }
+        const values = Array.isArray(meta[key])
+            ? (meta[key] as unknown[]).map((w) => String(w))
+            : [];
+        if (values.length === 0) {
+            return true; // untagged → fail safe: ship it
+        }
+        return values.some((v) => configured.includes(v));
+    };
+    return axis('workspaces', scope) && axis('packs', pack_scope);
 }
 
-/** List rule basenames under RULES_SOURCE, workspace-scope applied. */
+/** List rule basenames under RULES_SOURCE, workspace/pack scope applied. */
 function _scoped_rule_basenames(): string[] {
     const scope = _read_rule_workspaces();
+    const pack_scope = _read_rule_packs();
     return _iterdirSorted(MODULE_STATE.RULES_SOURCE)
         .filter((p) => p.endsWith('.md') && _isFile(p))
-        .filter((p) => rule_in_scope(p, scope))
+        .filter((p) => rule_in_scope(p, scope, pack_scope))
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
@@ -1184,9 +1208,10 @@ function _clean_modern_dir(target_dir: string, valid_names: ReadonlySet<string>)
 
 export function generate_cursor_mdc_rules(): number {
     const scope = _read_rule_workspaces();
+    const pack_scope = _read_rule_packs();
     const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
         .filter((p) => _isFile(p))
-        .filter((p) => rule_in_scope(p, scope));
+        .filter((p) => rule_in_scope(p, scope, pack_scope));
     const stems = rules.map((r) => path.basename(r, '.md'));
     const valid = new Set([
         ...stems.map((s) => `${s}.mdc`),
@@ -1202,9 +1227,10 @@ export function generate_cursor_mdc_rules(): number {
 
 export function generate_windsurf_modern_rules(): number {
     const scope = _read_rule_workspaces();
+    const pack_scope = _read_rule_packs();
     const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
         .filter((p) => _isFile(p))
-        .filter((p) => rule_in_scope(p, scope));
+        .filter((p) => rule_in_scope(p, scope, pack_scope));
     const valid = new Set(rules.map((r) => path.basename(r)));
     _clean_modern_dir(_WINDSURF_RULES_DIR(), valid);
     for (const rule of rules) {

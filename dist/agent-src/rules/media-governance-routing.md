@@ -31,7 +31,8 @@ workspaces:
   - engineering
   - gtm
 packs:
-  - meta
+  - ai-image
+  - ai-video
 ---
 
 # Media Governance Routing
