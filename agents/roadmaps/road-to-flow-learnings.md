@@ -215,14 +215,14 @@ simulated execution). ab-v2's science (paired, placebo, honesty labels)
 is untouched; the deliberate curated two-host composite in
 `docs/benchmark.md` is **preserved**, not replaced.
 
-- [ ] Matrix YAML (task-family × host × arm) expanding to the existing
+- [x] Matrix YAML (task-family × host × arm) expanding to the existing
       `bench_ab_v2_run.ts` invocations; de-hardcode the `ARMS` record;
       reuse the existing `--host` adapter — no new runner.
-- [ ] Extend the existing `render_benchmark_md.ts`: render each pinned
+- [x] Extend the existing `render_benchmark_md.ts`: render each pinned
       section independently from its pinned report; never collapse to a
       single-latest render (the in-file curation rationale stands);
       honesty labels are part of the template, not re-typed prose.
-- [ ] Deterministic verification: matrix expansion snapshot-tested in
+- [x] Deterministic verification: matrix expansion snapshot-tested in
       dry-run; render byte-stable across two runs from the same pinned
       inputs; `docs/benchmark.md` regenerated with zero manual table
       edits while retaining the two-host composite structure.

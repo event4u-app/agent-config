@@ -6,10 +6,10 @@
 
 ## Overall
 
-**48 / 77 steps done · 62%**
+**51 / 77 steps done · 66%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   62%
+██████████████████████████░░░░░░░░░░░░░░   66%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md) | 5 | 16 | 4 | 12 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering) | ████████░░ 75% |
-| 2 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 5 | 14 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | ███████░░░ 74% |
+| 2 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 11 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 67% |
 
@@ -54,14 +54,14 @@ _1 blocker resolved._
 
 ### [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md)
 
-**Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater** — 14 / 19 done (74%)
+**Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater** — 17 / 19 done (89%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Install & conformance contract | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 1 | Fleet rollout (`init --fleet fleet.yaml`) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 2 | Dispatch failure-policy clarification | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Bench matrix expansion + per-section render | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Bench matrix expansion + per-section render | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 
 <a id="blockers-road-to-flow-learnings"></a>
 **Blockers**

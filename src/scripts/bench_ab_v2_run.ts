@@ -94,7 +94,7 @@ interface ArmSpec {
 // shipped `balanced` router profile (which does NOT include downstream-changes
 // — tier_2 — so this arm also tests whether that profile cut loses the lift).
 // Both are opt-in: NOT in the default arm list; existing runs unchanged.
-const ARMS: Record<string, ArmSpec> = {
+export const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
     'package-rdp': { setting_sources: null, inject: 'rdp' },
