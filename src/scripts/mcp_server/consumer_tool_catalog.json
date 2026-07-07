@@ -75,7 +75,7 @@
       "name": "memory_signal",
       "description": "Record an engineering-memory signal — a short, anchored observation such as a recurring bug pattern or an ownership note — to the monthly intake log `agents/memory/intake/signals-YYYY-MM.jsonl`. Use to capture a learning tied to a specific file so future `memory_lookup` calls surface it. Appends to the filesystem and is rate-limited per `(type, path)` within a rolling window. Returns the recorded signal.",
       "side_effect": "fs-write",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {
         "type": "object",
         "properties": {
@@ -275,7 +275,7 @@
       "name": "roadmap_progress",
       "description": "Regenerate `agents/roadmaps-progress.md` from the current checkbox state of every active roadmap. Use after landing roadmap work to keep the dashboard in sync without a shell round-trip. Writes the dashboard file inside the project tree. Set `dry_run: true` to compute counts without writing.",
       "side_effect": "fs-write",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {
         "type": "object",
         "properties": {
@@ -288,14 +288,14 @@
       "name": "roadmap_archive",
       "description": "Archive every roadmap that has reached `count_open == 0` and was touched on the current branch — `git mv` to `agents/roadmaps/archive/`, migrate inbound references, and regenerate the dashboard. Use as the PR-gate sweep before opening a pull request. Mutates the git index (moves tracked files) but never commits or pushes.",
       "side_effect": "fs-write",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
     },
     {
       "name": "capabilities_index",
       "description": "Regenerate `CAPABILITIES.yaml`, the package's coverage index of skills, rules, commands, and guidelines. Use after adding or removing an artifact to keep the index current. Pass `check: true` to run in read-only CI mode (fails instead of writing on drift).",
       "side_effect": "fs-write",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {
         "type": "object",
         "properties": {
@@ -308,21 +308,21 @@
       "name": "doctor_report",
       "description": "Run the consumer-project doctor diagnostic and return a structured health report (install drift, hook wiring, settings schema, discovery manifest freshness). Use to triage a misbehaving install. Read-only.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
     },
     {
       "name": "conformance_check",
       "description": "Run the consumer conformance contract (`doctor --ci` plus installed-and-firing checks) and return pass/fail per check. Use to verify a consumer project's install is fully wired before relying on it. Read-only.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
     },
     {
       "name": "telemetry_report",
       "description": "Return the artefact-engagement telemetry report — essential / useful / retirement-candidate skills and rules ranked by recorded consult+apply signals over a rolling window. Use to see which artifacts are actually load-bearing. Read-only. No-op (empty report) when telemetry recording is disabled.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {
         "type": "object",
         "properties": {
@@ -335,7 +335,7 @@
       "name": "council_estimate",
       "description": "Estimate the token cost of an AI-council debate over a given input (roadmap, diff, prompt, or file set) without spending — no network call, no billing. Use before deciding whether to authorize a real council run. Read-only.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {
         "type": "object",
         "properties": {

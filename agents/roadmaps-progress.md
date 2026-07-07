@@ -6,10 +6,10 @@
 
 ## Overall
 
-**101 / 201 steps done · 50%**
+**105 / 201 steps done · 52%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
 | 3 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 4 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 5 | [road-to-mcp-full-power.md](roadmaps/road-to-mcp-full-power.md) | 6 | 35 | 19 | 15 | 1 | 0 | 0 | ████░░░░░░ 44% |
+| 5 | [road-to-mcp-full-power.md](roadmaps/road-to-mcp-full-power.md) | 6 | 35 | 15 | 19 | 1 | 0 | 0 | ██████░░░░ 56% |
 | 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
 | 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
@@ -117,14 +117,14 @@
 
 ### [road-to-mcp-full-power.md](roadmaps/road-to-mcp-full-power.md)
 
-**MCP Full Power — Glama leverage, coverage expansion, execution bridge** — 15 / 34 done (44%)
+**MCP Full Power — Glama leverage, coverage expansion, execution bridge** — 19 / 34 done (56%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Grounding & hygiene | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | Glama & registry leverage | ✅ done | 0 | 5 | 1 | 0 | 100% |
 | 3 | Unlock gates — A0 amendment + council-gated cut | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Write-tier tools (fs-write in-tree) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Write-tier tools (fs-write in-tree) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Exec-tier tools & the full-power bridge | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 6 | Parity, distribution & guardrails | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
 
