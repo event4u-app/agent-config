@@ -10,6 +10,7 @@ routes_to:
   - "skill:upstream-contribute"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

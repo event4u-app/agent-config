@@ -16,6 +16,8 @@ triggers:
   - phrase: "lippen passend"
 workspaces:
   - agent-config-maintainer
+  - engineering
+  - gtm
 packs:
   - meta
 ---

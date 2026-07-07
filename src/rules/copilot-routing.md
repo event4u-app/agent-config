@@ -10,6 +10,7 @@ routes_to:
   - "skill:copilot-config"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

@@ -14,6 +14,7 @@ validator_ignore:
     reason: "Condenseor injects a back-pointer to the uncondensed source for full failure-modes detail."
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

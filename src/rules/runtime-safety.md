@@ -9,6 +9,7 @@ triggers:
   - keyword: "handler"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

@@ -11,6 +11,7 @@ triggers:
   - keyword: "convention"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

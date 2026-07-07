@@ -26,6 +26,7 @@ validator_ignore:
     reason: "Rule reads quality.local_auto_run from .agent-settings.yml; naming the file is the contract."
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

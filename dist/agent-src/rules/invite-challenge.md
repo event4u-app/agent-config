@@ -15,6 +15,7 @@ triggers:
   - keyword: "approach"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

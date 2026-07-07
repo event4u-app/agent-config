@@ -10,6 +10,7 @@ triggers:
   - intent: "structural decision"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

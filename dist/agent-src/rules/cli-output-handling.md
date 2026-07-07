@@ -30,6 +30,7 @@ routes_to:
   - "skill:rtk-output-filtering"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

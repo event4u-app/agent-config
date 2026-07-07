@@ -10,6 +10,7 @@ routes_to:
   - "skill:analysis-skill-router"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

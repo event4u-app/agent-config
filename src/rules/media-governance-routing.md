@@ -28,6 +28,8 @@ validator_ignore:
     reason: "Rule contrasts project-local placement with the .agent-src.uncondensed/rules/ alternative — mentioning the path is the argument."
 workspaces:
   - agent-config-maintainer
+  - engineering
+  - gtm
 packs:
   - meta
 ---

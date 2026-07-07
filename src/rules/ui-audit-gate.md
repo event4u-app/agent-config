@@ -14,6 +14,7 @@ routes_to:
   - "skill:typography-system"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

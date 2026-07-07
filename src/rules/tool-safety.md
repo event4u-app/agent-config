@@ -8,6 +8,7 @@ triggers:
   - intent: "external API"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

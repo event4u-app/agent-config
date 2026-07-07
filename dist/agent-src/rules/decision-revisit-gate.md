@@ -14,6 +14,7 @@ triggers:
   - keyword: "budget blocks"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

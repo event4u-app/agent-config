@@ -18,6 +18,7 @@ triggers:
   - phrase: "bau mir ein Skill"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

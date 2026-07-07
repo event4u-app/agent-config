@@ -25,6 +25,8 @@ applies_to_user_types:
   - "maintainer"
 workspaces:
   - agent-config-maintainer
+  - engineering
+  - gtm
 packs:
   - meta
 ---

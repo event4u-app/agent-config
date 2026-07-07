@@ -16,6 +16,7 @@ triggers:
   - phrase: "reference repo"
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---
