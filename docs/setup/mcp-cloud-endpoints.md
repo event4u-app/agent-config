@@ -19,8 +19,15 @@ resources. `tools/list` returns two **deprecated stubs**
 successors; `tools/call` against either returns `isError=true`. No
 script execution, no FS access, no shell.
 
-Full power — the ~112 Python scripts (linters, audits, `task ci`,
-work-engine hooks) — requires the local install. See
+Full power — the implemented tool surface (18 tools as of the 2026-07-07
+write/exec cut: memory, roadmap, capabilities, doctor/conformance,
+telemetry, council-estimate, and the vitest `run_tests` pilot) — requires
+the **local kernel server** (`agent-config mcp:run` on a repo checkout).
+`implemented_on` stays `["stdio"]` for every execution tool, permanently:
+the Worker has no kernel runtime endpoint — it serves a release-pinned
+content snapshot from R2, so there is no process that could run the
+handlers, and the A0-cloud contract's no-execution boundary is a design
+invariant, not a backlog item. See
 [`../contracts/mcp-cloud-scope.md`](../contracts/mcp-cloud-scope.md)
 for the execution-safety boundary and the Phase-7-DEFERRED gate that
 governs any future tool restoration.

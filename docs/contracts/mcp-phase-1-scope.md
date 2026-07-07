@@ -231,6 +231,31 @@ countervailing benefit. Shell-exec tools additionally compile in their
 safety envelope (fixed argv, timeout, output cap, no network) as
 constants, not configuration.
 
+**Shell-exec safety review (Phase 5, shipped pilot: `run_tests`).**
+Lethal-trifecta pass for the one approved exec-tier tool:
+
+- *Untrusted-content ingestion:* the tool's inputs (`filter`, `path`) come
+  from the MCP caller — the same principal that already holds the chat
+  surface; no fetched/external content selects what runs. Caller strings
+  become literal argv elements via
+  `src/scripts/mcp_exec/safety_envelope.ts` (`execFile`, no shell) — a
+  hostile string cannot become a second command.
+- *Private-data access:* the spawned vitest run sees the consumer tree,
+  same as every fs tool; no credential paths are added to its env.
+- *Egress:* the envelope adds no network I/O of its own. Arbitrary test
+  code MAY use the network — that is a property of the project's tests,
+  not of the tool; the envelope's guarantees are spawn-surface guarantees
+  (no shell, `SIGKILL` timeout, per-stream byte caps), stated as such and
+  never marketed as network isolation.
+- *Compiled constants:* 120s timeout, 64KB per-stream cap — code-review
+  events, not settings.
+
+**Long-running policy (Phase 5) — decided: synchronous truncation.** No
+async job/poll pattern ships: an exec call that exceeds its compiled
+timeout returns `timed_out: true` with the captured, capped output.
+Revisit only if a council-approved tool genuinely cannot fit a
+synchronous budget (e.g. a future `council:run`).
+
 ## Revision policy
 
 This contract is **experimental** — breaking changes are allowed in any

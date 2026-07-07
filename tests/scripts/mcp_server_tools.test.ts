@@ -47,7 +47,7 @@ function tmp(): string {
 // ----------------------------------------------------------------------
 
 describe('tools — allowlist + registry', () => {
-    it('allowlist holds the 9 implemented tools', () => {
+    it('allowlist holds the 18 implemented tools', () => {
         expect(new Set(Object.keys(ALLOWLIST))).toEqual(
             new Set([
                 'lint_skills',
@@ -59,8 +59,20 @@ describe('tools — allowlist + registry', () => {
                 'list_commands',
                 'list_rules',
                 'read_resource_body',
+                // Phase 4 write/exec cut (2026-07-07 council verdict).
+                'memory_signal',
+                'roadmap_progress',
+                'roadmap_archive',
+                'capabilities_index',
+                'doctor_report',
+                'conformance_check',
+                'telemetry_report',
+                'council_estimate',
+                // Phase 5 shell-exec pilot (same verdict, one tool only).
+                'run_tests',
             ]),
         );
+        expect(Object.keys(ALLOWLIST).length).toBe(18);
         for (const tool of Object.values(ALLOWLIST)) {
             expect(tool.description.trim()).toBeTruthy();
             expect(tool.input_schema.type).toBe('object');
@@ -132,14 +144,14 @@ describe('tools — dispatch', () => {
     });
 
     it('stub dispatch returns the not_implemented envelope', async () => {
+        // `run_quality_checks` is still a catalog stub after the Phase 5
+        // pilot cut (shell-exec tier — not in the 2026-07-07 council cut).
         const cache = new ToolCache();
-        const result = await cache.dispatch('memory_signal', {
-            type: 'ownership',
-            path: 'x',
-            body: 'y',
+        const result = await cache.dispatch('run_quality_checks', {
+            tool: 'x',
         });
         expect(result.code).toBe('not_implemented');
-        expect(result.tool).toBe('memory_signal');
+        expect(result.tool).toBe('run_quality_checks');
         expect(result.transport).toBe('stdio');
         expect(result.alternative).toBe('stdio');
         expect(result.install_hint).toBeTruthy();
@@ -316,13 +328,13 @@ describe('tools — dispatch telemetry', () => {
         const root = tmp();
         const cache = new ToolCache();
         await cache.dispatch(
-            'memory_signal',
-            { type: 'ownership', path: 'x', body: 'y' },
+            'skill_trigger_eval',
+            { message: 'hello' },
             root,
         );
         const records = readTelemetryJsonl(root);
         expect(records.length).toBe(1);
-        expect(records[0]!.tool_name).toBe('memory_signal');
+        expect(records[0]!.tool_name).toBe('skill_trigger_eval');
         expect(records[0]!.outcome).toBe('stub');
     });
 
@@ -340,8 +352,8 @@ describe('tools — dispatch telemetry', () => {
         const root = tmp();
         const cache = new ToolCache();
         await cache.dispatch(
-            'memory_signal',
-            { type: 'ownership', path: 'secret', body: 'secret' },
+            'skill_trigger_eval',
+            { message: 'secret', context: 'secret' },
             root,
         );
         const records = readTelemetryJsonl(root);
@@ -480,6 +492,324 @@ describe('tools — L3 handler shapes', () => {
 });
 
 // ----------------------------------------------------------------------
+// Phase 4 — write/exec cut handlers (2026-07-07 council verdict)
+// ----------------------------------------------------------------------
+
+const PHASE_4_NAMES = [
+    'memory_signal',
+    'roadmap_progress',
+    'roadmap_archive',
+    'capabilities_index',
+    'doctor_report',
+    'conformance_check',
+    'telemetry_report',
+    'council_estimate',
+] as const;
+
+describe('tools — Phase 4 registration', () => {
+    it('the 8 Phase 4 tools are implemented, not stubs', () => {
+        const cache = new ToolCache();
+        for (const name of PHASE_4_NAMES) {
+            expect(cache.is_stub(name)).toBe(false);
+            expect(cache.implemented_names()).toContain(name);
+        }
+    });
+
+    it('description + input_schema are verbatim catalog copies', async () => {
+        const { load_catalog } = await import('../../src/scripts/mcp_server/catalog.js');
+        const byName = new Map(load_catalog().map((e) => [e.name, e]));
+        for (const name of PHASE_4_NAMES) {
+            const entry = byName.get(name)!;
+            expect(entry).toBeTruthy();
+            expect(entry.implemented_on).toEqual(['stdio']);
+            const tool = ALLOWLIST[name]!;
+            expect(tool.description).toBe(entry.description);
+            expect(canonical(tool.input_schema)).toEqual(canonical(entry.input_schema));
+        }
+    });
+});
+
+describe('tools — memory_signal', () => {
+    it('happy path appends to the monthly intake JSONL', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        const result = await cache.dispatch(
+            'memory_signal',
+            { type: 'ownership', path: 'src/x.ts', body: 'billing owner is team-pay' },
+            root,
+        );
+        expect(result.recorded).toBe(true);
+        const signal = result.signal as Record<string, unknown>;
+        expect(signal.entry_type).toBe('ownership');
+        expect(signal.path).toBe('src/x.ts');
+        expect(signal.body).toBe('billing owner is team-pay');
+        expect(String(signal.id)).toMatch(/^sig-[0-9a-f]{12}$/);
+
+        const now = new Date();
+        const ym = `${now.getUTCFullYear().toString().padStart(4, '0')}-${(now.getUTCMonth() + 1)
+            .toString()
+            .padStart(2, '0')}`;
+        const target = path.join(
+            fs.realpathSync(root),
+            'agents',
+            'memory',
+            'intake',
+            `signals-${ym}.jsonl`,
+        );
+        expect(fs.existsSync(target)).toBe(true);
+        const lines = fs
+            .readFileSync(target, 'utf-8')
+            .split('\n')
+            .filter((l) => l.length > 0);
+        expect(lines.length).toBe(1);
+        const row = JSON.parse(lines[0]!) as Record<string, unknown>;
+        expect(row.entry_type).toBe('ownership');
+        expect(row.body).toBe('billing owner is team-pay');
+    });
+
+    it('rate-limited duplicate returns recorded: false without erroring', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        const argsIn = { type: 'ownership', path: 'src/x.ts', body: 'dup' };
+        const first = await cache.dispatch('memory_signal', { ...argsIn }, root);
+        expect(first.recorded).toBe(true);
+        const second = await cache.dispatch('memory_signal', { ...argsIn }, root);
+        expect(second.recorded).toBe(false);
+        expect(second.skipped).toBe(true);
+    });
+
+    it('rejects missing / empty args', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        await expect(
+            cache.dispatch('memory_signal', { type: 'ownership', path: 'x' }, root),
+        ).rejects.toThrow(/'body' must be a non-empty string/);
+        await expect(
+            cache.dispatch('memory_signal', { type: 'ownership', path: '  ', body: 'y' }, root),
+        ).rejects.toThrow(/'path' must be a non-empty string/);
+    });
+
+    it('rejects an unknown memory type', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        await expect(
+            cache.dispatch('memory_signal', { type: 'nope', path: 'x', body: 'y' }, root),
+        ).rejects.toThrow(/unknown memory type/);
+        // Nothing written on the refused call.
+        expect(fs.existsSync(path.join(root, 'agents', 'memory', 'intake'))).toBe(false);
+    });
+});
+
+function seedRoadmap(root: string): void {
+    const dir = path.join(root, 'agents', 'roadmaps');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+        path.join(dir, 'road-to-sample.md'),
+        [
+            '# Roadmap: Sample',
+            '',
+            '## Phase 1 — First',
+            '',
+            '- [x] step one',
+            '- [ ] step two',
+            '- [ ] step three',
+            '',
+        ].join('\n'),
+        'utf-8',
+    );
+}
+
+describe('tools — roadmap_progress', () => {
+    it('dry_run computes counts without writing', async () => {
+        const root = tmp();
+        seedRoadmap(root);
+        const cache = new ToolCache();
+        const result = await cache.dispatch('roadmap_progress', { dry_run: true }, root);
+        expect(result.written).toBe(false);
+        expect(result.roadmaps).toBe(1);
+        expect(result.steps_done).toBe(1);
+        expect(result.steps_total).toBe(3);
+        expect(fs.existsSync(path.join(root, 'agents', 'roadmaps-progress.md'))).toBe(false);
+    });
+
+    it('default run writes the dashboard file', async () => {
+        const root = tmp();
+        seedRoadmap(root);
+        const cache = new ToolCache();
+        const result = await cache.dispatch('roadmap_progress', {}, root);
+        expect(result.written).toBe(true);
+        const target = path.join(root, 'agents', 'roadmaps-progress.md');
+        expect(fs.existsSync(target)).toBe(true);
+        expect(fs.readFileSync(target, 'utf-8')).toContain('# Roadmap Progress');
+    });
+
+    it('no roadmaps directory is a clean no-op', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        const result = await cache.dispatch('roadmap_progress', {}, root);
+        expect(result.written).toBe(false);
+        expect(result.roadmaps).toBe(0);
+    });
+});
+
+describe('tools — roadmap_archive', () => {
+    it('returns an empty archive list on a root without roadmaps', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        const result = await cache.dispatch('roadmap_archive', {}, root);
+        expect(result.archived).toEqual([]);
+        expect(result.count).toBe(0);
+        expect(result.dashboard_regenerated).toBe(false);
+    });
+});
+
+describe('tools — capabilities_index', () => {
+    it('check mode is read-only and reports drift as a boolean', async () => {
+        const cache = new ToolCache();
+        const out = path.join(REPO_ROOT, 'CAPABILITIES.yaml');
+        const before = fs.existsSync(out) ? fs.readFileSync(out, 'utf-8') : null;
+        const result = await cache.dispatch('capabilities_index', { check: true }, REPO_ROOT);
+        expect(result.check).toBe(true);
+        expect(result.written).toBe(false);
+        expect(typeof result.drift).toBe('boolean');
+        expect(String(result.path).endsWith('CAPABILITIES.yaml')).toBe(true);
+        const after = fs.existsSync(out) ? fs.readFileSync(out, 'utf-8') : null;
+        expect(after).toBe(before);
+    });
+
+    it('refuses to write outside the consumer root', async () => {
+        const root = tmp(); // canonical CAPABILITIES.yaml is NOT under this tmp root
+        const cache = new ToolCache();
+        await expect(
+            cache.dispatch('capabilities_index', {}, root),
+        ).rejects.toThrow(/escapes consumer_root/);
+    });
+});
+
+describe('tools — doctor_report', () => {
+    it(
+        'returns the structured report shape against the repo root',
+        async () => {
+            const cache = new ToolCache();
+            const result = await cache.dispatch('doctor_report', {}, REPO_ROOT);
+            expect(typeof result.project_root).toBe('string');
+            expect(Array.isArray(result.checks)).toBe(true);
+            const checks = result.checks as Record<string, unknown>[];
+            expect(checks.length).toBeGreaterThan(0);
+            for (const check of checks) {
+                expect(typeof check.id).toBe('string');
+                expect(['ok', 'warn', 'fail', 'skipped']).toContain(check.status);
+            }
+            for (const key of ['missing', 'modified', 'foreign', 'tag_drift']) {
+                expect(Array.isArray(result[key])).toBe(true);
+            }
+            // Tolerate failing checks — assert shape, not pass.
+            expect(['ok', 'fail']).toContain(result.status);
+        },
+        120_000,
+    );
+});
+
+describe('tools — telemetry_report', () => {
+    it('returns the parsed empty-but-valid report on a bare root', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        const result = await cache.dispatch('telemetry_report', { window_days: 7 }, root);
+        expect(result.schema_version).toBe(1);
+        const summary = result.summary as Record<string, unknown>;
+        expect(summary.parsed_events).toBe(0);
+        expect(summary.since_label).toBe('last 7d');
+        expect(typeof result.buckets).toBe('object');
+        expect(typeof result.outcomes).toBe('object');
+    });
+
+    it('rejects a non-positive window', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        await expect(
+            cache.dispatch('telemetry_report', { window_days: 0 }, root),
+        ).rejects.toThrow(/'window_days' must be a positive integer/);
+    });
+});
+
+describe('tools — council_estimate', () => {
+    it(
+        'returns a cost-shaped object for a small temp file',
+        async () => {
+            const root = tmp();
+            fs.writeFileSync(
+                path.join(root, '.agent-settings.yml'),
+                [
+                    'ai_council:',
+                    '  enabled: true',
+                    '  min_rounds: 2',
+                    '  members:',
+                    '    anthropic:',
+                    '      enabled: true',
+                    '      mode: manual',
+                    '      model: manual-only',
+                    '',
+                ].join('\n'),
+                'utf-8',
+            );
+            fs.writeFileSync(
+                path.join(root, 'question.md'),
+                '# Question\n\nShould we ship the thing?\n',
+                'utf-8',
+            );
+            // Pin the council config resolution to a nonexistent path so the
+            // seeded project settings stay authoritative regardless of any
+            // user-global ~/.event4u council config on the host.
+            const prevEnv = process.env.AI_COUNCIL_CONFIG;
+            process.env.AI_COUNCIL_CONFIG = path.join(root, 'no-such-council.yml');
+            let result: Record<string, unknown>;
+            try {
+                const cache = new ToolCache();
+                result = await cache.dispatch(
+                    'council_estimate',
+                    { input_path: 'question.md' },
+                    root,
+                );
+            } finally {
+                if (prevEnv === undefined) {
+                    delete process.env.AI_COUNCIL_CONFIG;
+                } else {
+                    process.env.AI_COUNCIL_CONFIG = prevEnv;
+                }
+            }
+            expect(typeof result.mode).toBe('string');
+            expect(result.rounds).toBe(2);
+            for (const key of ['low_usd', 'expected_usd', 'high_usd']) {
+                expect(typeof result[key]).toBe('number');
+            }
+            expect(Array.isArray(result.per_member)).toBe(true);
+            expect(Array.isArray(result.subscription_members)).toBe(true);
+            // The manual member is subscription-tier (billable=false).
+            const subs = result.subscription_members as Record<string, unknown>[];
+            expect(subs.some((m) => m.name === 'anthropic')).toBe(true);
+        },
+        60_000,
+    );
+
+    it('rejects a missing input_path', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        await expect(
+            cache.dispatch('council_estimate', { input_path: 'nope.md' }, root),
+        ).rejects.toThrow(/input_path not found/);
+    });
+
+    it('rejects an invalid depth', async () => {
+        const root = tmp();
+        fs.writeFileSync(path.join(root, 'q.md'), 'x\n', 'utf-8');
+        const cache = new ToolCache();
+        await expect(
+            cache.dispatch('council_estimate', { input_path: 'q.md', depth: 'max' }, root),
+        ).rejects.toThrow(/'depth' must be 'shallow' or 'deep'/);
+    });
+});
+
+// ----------------------------------------------------------------------
 // Golden structure — the TS tools layer alone (python-free intent
 // conversion of the retired python3 parity block).
 // ----------------------------------------------------------------------
@@ -519,6 +849,78 @@ describe('golden structure — registry + envelopes', () => {
         ]);
         expect(first.code).toBe('not_implemented');
         expect(first.tool).toBe('compile_router');
+    });
+});
+
+// ----------------------------------------------------------------------
+// run_tests — Phase 5 shell-exec pilot (compiled safety envelope)
+// ----------------------------------------------------------------------
+
+describe('tools — run_tests (shell-exec pilot)', () => {
+    /** Seed a fake vitest entry in a tmp consumer root so the pilot's
+     * fixed argv (`node node_modules/vitest/vitest.mjs run …`) executes a
+     * hermetic script instead of a real (slow, nested) vitest run. */
+    function seedFakeVitest(root: string, body: string): void {
+        const dir = path.join(root, 'node_modules', 'vitest');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'vitest.mjs'), body, 'utf8');
+    }
+
+    it('runs the project vitest entry via fixed argv and reports success', async () => {
+        const root = tmp();
+        seedFakeVitest(
+            root,
+            'console.log("argv:", JSON.stringify(process.argv.slice(2)));\n' +
+                'process.exit(0);\n',
+        );
+        const cache = new ToolCache();
+        const result = await cache.dispatch('run_tests', { filter: 'my test' }, root);
+        expect(result.runner).toBe('vitest');
+        expect(result.passed).toBe(true);
+        expect(result.exit_code).toBe(0);
+        expect(result.timed_out).toBe(false);
+        // Caller strings arrive as literal argv elements — never shell-parsed.
+        expect(result.stdout as string).toContain('"run"');
+        expect(result.stdout as string).toContain('"--testNamePattern"');
+        expect(result.stdout as string).toContain('"my test"');
+    });
+
+    it('surfaces a failing suite as passed=false with the exit code', async () => {
+        const root = tmp();
+        seedFakeVitest(root, 'console.error("1 test failed");\nprocess.exit(1);\n');
+        const cache = new ToolCache();
+        const result = await cache.dispatch('run_tests', {}, root);
+        expect(result.passed).toBe(false);
+        expect(result.exit_code).toBe(1);
+        expect(result.stderr as string).toContain('1 test failed');
+    });
+
+    it('rejects a path escaping the consumer root', async () => {
+        const root = tmp();
+        seedFakeVitest(root, 'process.exit(0);\n');
+        const cache = new ToolCache();
+        await expect(
+            cache.dispatch('run_tests', { path: '../outside' }, root),
+        ).rejects.toThrow(/escapes consumer_root/);
+    });
+
+    it('refuses non-vitest projects with a structured error', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        await expect(cache.dispatch('run_tests', {}, root)).rejects.toThrow(
+            /vitest projects only/,
+        );
+    });
+
+    it('catalog entry is implemented on stdio and mirrors the allowlist description', async () => {
+        const { load_catalog } = await import('../../src/scripts/mcp_server/catalog.js');
+        const entry = load_catalog().find((e) => e.name === 'run_tests');
+        expect(entry).toBeDefined();
+        expect(entry!.implemented_on).toEqual(['stdio']);
+        expect(entry!.description).toBe(ALLOWLIST.run_tests!.description);
+        expect(canonical(entry!.input_schema)).toEqual(
+            canonical(ALLOWLIST.run_tests!.input_schema),
+        );
     });
 });
 

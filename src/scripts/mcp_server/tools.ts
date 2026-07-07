@@ -32,6 +32,7 @@
 //   CATALOG_STUBS, STUB_NAMES, REGISTRY, ToolCache, boot_log_line.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
     SCHEMA_VERSION as _CH_SCHEMA_VERSION,
@@ -451,6 +452,532 @@ async function _memoryStatusHandler(
     return result as unknown as Record<string, unknown>;
 }
 
+// ---------------------------------------------------------------------
+// Phase 4 handlers — council-approved write/exec cut (2026-07-07 verdict,
+// `agents/decisions/mcp-write-exec-cut-2026-07-07.md`). Every handler
+// lazy-imports its library implementation so the module-load import
+// surface stays clean (no child_process / network client reaches this
+// module's own imports; A0 `docs/contracts/mcp-phase-1-scope.md`).
+// ---------------------------------------------------------------------
+
+/** Package root — three levels above `src/scripts/mcp_server/`. */
+const _PACKAGE_ROOT = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '..',
+    '..',
+    '..',
+);
+
+/** Validate a required non-empty string argument. */
+function _requireString(args: Record<string, unknown>, key: string): string {
+    const value = args[key];
+    if (typeof value !== 'string' || !_strip(value)) {
+        throw new Error(`'${key}' must be a non-empty string`);
+    }
+    return value;
+}
+
+/** Run `fn` with CWD switched to `consumerRoot`, always restoring. */
+async function _withChdir<T>(consumerRoot: string, fn: () => T | Promise<T>): Promise<T> {
+    const prevCwd = process.cwd();
+    try {
+        process.chdir(consumerRoot);
+        return await fn();
+    } finally {
+        process.chdir(prevCwd);
+    }
+}
+
+/**
+ * Phase 4 — record one engineering-memory signal via
+ * `agent-src/templates/scripts/memory_signal.emit`.
+ *
+ * fs-write: appends to `agents/memory/intake/signals-YYYY-MM.jsonl`
+ * under the consumer root (the module resolves its intake dir relative
+ * to CWD — chdir-window scoped). Rate-limited per `(type, path)` inside
+ * `emit`; a rate-limited duplicate returns `recorded: false` instead of
+ * erroring, mirroring the CLI's silent-skip contract.
+ */
+async function _memorySignalHandler(
+    args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const entryType = _requireString(args, 'type');
+    const anchorPath = _requireString(args, 'path');
+    const body = _requireString(args, 'body');
+
+    const memorySignal = await import(
+        '../../agent-src/templates/scripts/memory_signal.js'
+    );
+    const record = await _withChdir(consumerRoot, () =>
+        memorySignal.emit(entryType, anchorPath, body),
+    );
+    if (record === null) {
+        return {
+            recorded: false,
+            skipped: true,
+            reason:
+                `already emitted within the ` +
+                `${memorySignal.RATE_LIMIT_WINDOW_DAYS}d rate-limit window`,
+            entry_type: entryType,
+            path: anchorPath,
+        };
+    }
+    return { recorded: true, signal: record };
+}
+
+/**
+ * Phase 4 — regenerate `agents/roadmaps-progress.md`.
+ *
+ * Calls `update_roadmap_progress`'s exported building blocks (`collect`,
+ * `render`, `collect_bundles`) directly instead of `main()` so nothing
+ * prints and no git fallback spawns. `dry_run: true` computes the counts
+ * without writing.
+ */
+async function _roadmapProgressHandler(
+    args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const dryRun = _pyTruthy(args.dry_run ?? false);
+    const root = _resolvePath(consumerRoot);
+    const roadmapRoot = path.join(root, 'agents', 'roadmaps');
+    const target = path.join(root, 'agents', 'roadmaps-progress.md');
+
+    const urp = await import('../../agent-src/scripts/update_roadmap_progress.js');
+    if (!fs.existsSync(roadmapRoot)) {
+        return {
+            written: false,
+            path: target,
+            roadmaps: 0,
+            steps_done: 0,
+            steps_total: 0,
+            note: `no roadmaps directory at ${roadmapRoot}`,
+        };
+    }
+    const roadmaps = urp.collect(roadmapRoot);
+    const content = urp.render(roadmaps, urp.collect_bundles(root));
+    const stepsDone = roadmaps.reduce((s, r) => s + r.done, 0);
+    const stepsTotal = roadmaps.reduce((s, r) => s + r.total_active, 0);
+    if (!dryRun) {
+        fs.writeFileSync(target, content, 'utf-8');
+    }
+    return {
+        written: !dryRun,
+        path: target,
+        roadmaps: roadmaps.length,
+        steps_done: stepsDone,
+        steps_total: stepsTotal,
+    };
+}
+
+/**
+ * Phase 4 — the PR-gate archival sweep (`archive_completed_roadmaps`).
+ *
+ * Mutates the git index (`git mv` + `git add` of migrated refs) but
+ * never commits or pushes. The library implementation shells out to git
+ * internally — an accepted transitive effect per the 2026-07-07 council
+ * verdict; this module itself imports no child_process (the A0 ban
+ * covers `scripts/mcp_server/*` module imports). The dashboard regen
+ * runs in-process afterwards (mirroring the CLI's `_regen_dashboard`
+ * without its tsx re-spawn); the regenerated dashboard is written but
+ * not staged.
+ */
+async function _roadmapArchiveHandler(
+    _args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const root = _resolvePath(consumerRoot);
+    const { archive_completed } = await import(
+        '../../agent-src/scripts/archive_completed_roadmaps.js'
+    );
+    const archived = archive_completed(root, {
+        changed_only: true,
+        base: 'origin/main',
+        dry_run: false,
+    });
+    let dashboardRegenerated = false;
+    if (archived.length > 0) {
+        const urp = await import(
+            '../../agent-src/scripts/update_roadmap_progress.js'
+        );
+        const roadmapRoot = path.join(root, 'agents', 'roadmaps');
+        if (fs.existsSync(roadmapRoot)) {
+            const roadmaps = urp.collect(roadmapRoot);
+            fs.writeFileSync(
+                path.join(root, 'agents', 'roadmaps-progress.md'),
+                urp.render(roadmaps, urp.collect_bundles(root)),
+                'utf-8',
+            );
+            dashboardRegenerated = true;
+        }
+    }
+    return {
+        archived: archived as unknown as Record<string, unknown>[],
+        count: archived.length,
+        dashboard_regenerated: dashboardRegenerated,
+    };
+}
+
+/**
+ * Phase 4 — regenerate (or drift-check) `CAPABILITIES.yaml`.
+ *
+ * `generate_capabilities_index.build()` derives everything from the
+ * package tree (its module-anchored root); the canonical output path is
+ * `<package root>/CAPABILITIES.yaml` (mirroring the module's `main()`).
+ * `check: true` compares without writing. A write is refused when the
+ * canonical output path is not under the consumer root (A0 in-tree
+ * write scoping).
+ */
+async function _capabilitiesIndexHandler(
+    args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const check = _pyTruthy(args.check ?? false);
+    const cap = await import('../generate_capabilities_index.js');
+    const out = path.join(_PACKAGE_ROOT, 'CAPABILITIES.yaml');
+    const content = cap.build();
+    const onDisk = fs.existsSync(out) ? fs.readFileSync(out, 'utf-8') : '';
+    const drift = onDisk !== content;
+    if (check) {
+        return { check: true, written: false, drift, path: out };
+    }
+    const root = _resolvePath(consumerRoot);
+    if (_relativeUnder(_resolvePath(out), root) === null) {
+        throw new Error(
+            `CAPABILITIES.yaml path escapes consumer_root: ${out} not under ${root}`,
+        );
+    }
+    fs.writeFileSync(out, content, 'utf-8');
+    return { check: false, written: true, drift, path: out };
+}
+
+/**
+ * Shared doctor leg — resolve the project root, load the manifest, and
+ * compute the drift groups + health checks the way `cmd_doctor.main()`
+ * does on its default (non-CI) path, without emitting to stdout and
+ * without `process.exit`.
+ */
+async function _runDoctorLeg(consumerRoot: string): Promise<{
+    project_root: string;
+    origin: string;
+    drift: Record<string, Record<string, unknown>[]>;
+    checks: Record<string, unknown>[];
+}> {
+    const doctor = await import('../_cli/cmd_doctor.js');
+    const installedTools = await import('../_lib/installed_tools.js');
+    const root = _resolvePath(consumerRoot);
+    return _withChdir(root, () => {
+        const [projectRoot, origin] = doctor._resolve_project_root(root);
+        const manifest = installedTools.read_manifest(
+            installedTools.manifest_path(projectRoot),
+        );
+        let missing: Record<string, unknown>[] = [];
+        let modified: Record<string, unknown>[] = [];
+        let foreign: Record<string, unknown>[] = [];
+        let tagDrift: Record<string, unknown>[] = [];
+        let checks: Record<string, unknown>[];
+        if (manifest === null) {
+            const bridgePresent = fs.existsSync(
+                path.join(projectRoot, doctor.BRIDGE_MARKER_RELATIVE),
+            );
+            checks = doctor._run_checks_no_manifest(projectRoot, bridgePresent, null);
+        } else {
+            const [records, known] = doctor._collect_manifest_entries(projectRoot, manifest);
+            [missing, modified, tagDrift] = doctor._classify(records);
+            foreign = doctor._foreign_records(
+                projectRoot,
+                doctor._scan_foreign(projectRoot, manifest, known),
+            );
+            checks = doctor._run_checks(
+                projectRoot,
+                manifest,
+                { missing, modified, foreign, tag_drift: tagDrift },
+                null,
+            );
+        }
+        return {
+            project_root: projectRoot,
+            origin,
+            drift: { missing, modified, foreign, tag_drift: tagDrift },
+            checks,
+        };
+    });
+}
+
+/**
+ * Phase 4 — structured doctor report (read-only).
+ *
+ * Mirrors the `_emit_json` payload of `cmd_doctor` (drift groups +
+ * checks + project-root origin) assembled in-process — no stdout, no
+ * `process.exit`.
+ */
+async function _doctorReportHandler(
+    _args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const leg = await _runDoctorLeg(consumerRoot);
+    const failCheck = leg.checks.some((c) => c.status === 'fail');
+    const driftCount =
+        leg.drift.missing!.length +
+        leg.drift.modified!.length +
+        leg.drift.foreign!.length +
+        leg.drift.tag_drift!.length;
+    return {
+        project_root: leg.project_root,
+        project_root_origin: leg.origin,
+        missing: leg.drift.missing,
+        modified: leg.drift.modified,
+        foreign: leg.drift.foreign,
+        tag_drift: leg.drift.tag_drift,
+        checks: leg.checks,
+        status: failCheck || driftCount > 0 ? 'fail' : 'ok',
+    };
+}
+
+/**
+ * Phase 4 — consumer conformance contract (read-only).
+ *
+ * Two legs, mirroring `cmd_conformance.main()`: the doctor `--ci`
+ * contract in-process, plus the five conformance checks
+ * (`runConformanceChecks`). The CLI's JSONL report append to the
+ * user-global `~/.event4u/...` log is intentionally skipped — the A0
+ * contract scopes writes to the consumer root and this tool is
+ * catalogued read-only.
+ */
+async function _conformanceCheckHandler(
+    _args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const conformance = await import('../_cli/cmd_conformance.js');
+    const leg = await _runDoctorLeg(consumerRoot);
+    const conformanceChecks = await _withChdir(leg.project_root, () =>
+        conformance.runConformanceChecks({ projectRoot: leg.project_root }),
+    );
+    const checks = [...leg.checks, ...conformanceChecks];
+    const driftCount =
+        leg.drift.missing!.length +
+        leg.drift.modified!.length +
+        leg.drift.foreign!.length +
+        leg.drift.tag_drift!.length;
+    const failed = checks.some((c) => c.status === 'fail') || driftCount > 0;
+    return {
+        project_root: leg.project_root,
+        drift: leg.drift,
+        doctor_checks: leg.checks,
+        conformance_checks: conformanceChecks,
+        checks,
+        pass: !failed,
+        status: failed ? 'fail' : 'ok',
+    };
+}
+
+/**
+ * Phase 4 — artefact-engagement telemetry report (read-only).
+ *
+ * Calls the report-building functions (`read_settings` → `aggregate` →
+ * `render_json`) directly — the same pipeline `telemetry_report.main()`
+ * runs for `--format json` — and returns the parsed payload. A missing
+ * or disabled log yields the empty-but-valid report.
+ */
+async function _telemetryReportHandler(
+    args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const windowRaw = args.window_days ?? 30;
+    if (
+        typeof windowRaw !== 'number' ||
+        !Number.isInteger(windowRaw) ||
+        typeof windowRaw === 'boolean' ||
+        windowRaw < 1
+    ) {
+        throw new Error("'window_days' must be a positive integer");
+    }
+    const { read_settings } = await import(
+        '../../agent-src/templates/scripts/telemetry/settings.js'
+    );
+    const { aggregate } = await import(
+        '../../agent-src/templates/scripts/telemetry/aggregator.js'
+    );
+    const { render_json } = await import(
+        '../../agent-src/templates/scripts/telemetry/report_renderer.js'
+    );
+    const rendered = await _withChdir(consumerRoot, () => {
+        const settings = read_settings('.agent-settings.yml');
+        const cutoff = Date.now() - windowRaw * 86_400_000;
+        const result = aggregate(settings.log_path, { since: cutoff });
+        return render_json(result, { top: 20, since_label: `last ${windowRaw}d` });
+    });
+    return JSON.parse(rendered) as Record<string, unknown>;
+}
+
+/**
+ * Phase 4 — pre-spend council cost estimate (read-only, NO network).
+ *
+ * Mirrors the `council:estimate` CLI wiring: settings via
+ * `council_cli.load_settings` (user-global-first council config),
+ * members via `build_members`, local price table via
+ * `load_prices(prices_file_for(root))` (bootstraps the gitignored
+ * in-tree `agents/runtime/.agent-prices.md` cache when absent — same as
+ * the CLI), then `estimate_debate_cost` — pure pricing math, no HTTP.
+ */
+async function _councilEstimateHandler(
+    args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const inputRaw = _requireString(args, 'input_path');
+    const depth = args.depth ?? null;
+    if (depth !== null && depth !== 'shallow' && depth !== 'deep') {
+        throw new Error("'depth' must be 'shallow' or 'deep' when provided");
+    }
+    const root = _resolvePath(consumerRoot);
+    const target = path.isAbsolute(inputRaw)
+        ? _resolvePath(inputRaw)
+        : _resolvePath(path.join(root, inputRaw));
+    if (_relativeUnder(target, root) === null) {
+        throw new Error(`path escapes consumer_root: ${target}`);
+    }
+    if (!fs.existsSync(target)) {
+        throw new Error(`input_path not found: ${target}`);
+    }
+
+    const cli = await import('../council_cli.js');
+    const orchestrator = await import('../ai_council/orchestrator.js');
+    const pricing = await import('../ai_council/pricing.js');
+    const councilConfig = await import('../ai_council/config.js');
+    const clients = await import('../ai_council/clients.js');
+    const { project_settings_path } = await import('../_lib/agent_settings.js');
+    const { detect_project_context } = await import('../ai_council/project_context.js');
+
+    return _withChdir(root, () => {
+        const settings = cli.load_settings(project_settings_path(root), {
+            ai_council_path: String(councilConfig.resolve_config_path(root)),
+        });
+        const aiCfg =
+            settings.ai_council !== null &&
+            typeof settings.ai_council === 'object' &&
+            !Array.isArray(settings.ai_council)
+                ? (settings.ai_council as Record<string, unknown>)
+                : {};
+        const skipped: Record<string, unknown>[] = [];
+        const members = cli.build_members(settings, { skipped });
+        const table = pricing.load_prices(pricing.prices_file_for(root));
+
+        let maxTokens =
+            'max_output_tokens' in aiCfg
+                ? _pyInt(aiCfg.max_output_tokens ?? 0)
+                : clients.DEFAULT_MAX_TOKENS;
+        if (maxTokens <= 0) {
+            maxTokens = clients.UNLIMITED_TOKENS_FALLBACK;
+        }
+        const [question] = cli.build_question({
+            input_path: target,
+            input_mode: 'prompt',
+            max_tokens: maxTokens,
+        });
+
+        const minRounds = Math.max(1, _pyInt(aiCfg.min_rounds ?? 2) || 2);
+        const rounds =
+            depth === 'deep'
+                ? Math.max(_pyInt(aiCfg.deep_min_rounds ?? minRounds) || minRounds, minRounds)
+                : minRounds;
+
+        const estimateResult = orchestrator.estimate_debate_cost(question, members, table, {
+            rounds,
+            project: detect_project_context(root),
+            original_ask: '',
+        });
+        return {
+            input_path: target,
+            mode: question.mode,
+            depth: depth ?? 'shallow',
+            rounds: estimateResult.rounds,
+            low_usd: estimateResult.low_usd,
+            expected_usd: estimateResult.expected_usd,
+            high_usd: estimateResult.high_usd,
+            per_member: estimateResult.per_member,
+            subscription_members: estimateResult.subscription_members,
+            skipped_members: skipped,
+        };
+    });
+}
+
+// Compiled envelope constants for the Phase 5 shell-exec pilot. Compiled
+// policy, not configuration (council Decision 2, 2026-07-07 verdict) —
+// changing them is a code-review event, never a settings edit.
+const _RUN_TESTS_TIMEOUT_MS = 120_000;
+const _RUN_TESTS_MAX_OUTPUT_BYTES = 64 * 1024;
+
+/**
+ * Phase 5 — shell-exec pilot: run the consumer's vitest suite under the
+ * compiled safety envelope (`src/scripts/mcp_exec/safety_envelope.ts`).
+ *
+ * The ONE approved exec-tier tool from the 2026-07-07 council verdict
+ * (`agents/decisions/mcp-write-exec-cut-2026-07-07.md`). vitest-only by
+ * design: argv is a fixed array (node + the project's own vitest entry +
+ * literal flags) — caller strings become argv elements, never a shell
+ * string. The envelope module lives outside `mcp_server/`, so this module
+ * still imports no child_process (same accepted transitive pattern as
+ * `roadmap_archive`'s git effects).
+ */
+async function _runTestsHandler(
+    args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const root = _resolvePath(consumerRoot);
+
+    const filter = args.filter ?? null;
+    if (filter !== null && (typeof filter !== 'string' || !_strip(filter))) {
+        throw new Error("'filter' must be a non-empty string when provided");
+    }
+
+    const relPathRaw = args.path ?? null;
+    let relArg: string | null = null;
+    if (relPathRaw !== null) {
+        if (typeof relPathRaw !== 'string' || !_strip(relPathRaw)) {
+            throw new Error("'path' must be a non-empty string when provided");
+        }
+        const resolved = path.isAbsolute(relPathRaw)
+            ? _resolvePath(relPathRaw)
+            : _resolvePath(path.join(root, relPathRaw));
+        const rel = _relativeUnder(resolved, root);
+        if (rel === null) {
+            throw new Error(`path escapes consumer_root: ${resolved}`);
+        }
+        if (!fs.existsSync(resolved)) {
+            throw new Error(`path not found: ${resolved}`);
+        }
+        relArg = rel;
+    }
+
+    const vitestEntry = path.join(root, 'node_modules', 'vitest', 'vitest.mjs');
+    if (!fs.existsSync(vitestEntry)) {
+        throw new Error(
+            'run_tests pilot supports vitest projects only — ' +
+                'node_modules/vitest/vitest.mjs not found under consumer_root',
+        );
+    }
+
+    const { run_enveloped } = await import('../mcp_exec/safety_envelope.js');
+    const argv = [
+        process.execPath,
+        vitestEntry,
+        'run',
+        ...(relArg !== null ? [relArg] : []),
+        ...(filter !== null ? ['--testNamePattern', filter as string] : []),
+    ];
+    const result = await run_enveloped({
+        argv,
+        cwd: root,
+        timeout_ms: _RUN_TESTS_TIMEOUT_MS,
+        max_output_bytes: _RUN_TESTS_MAX_OUTPUT_BYTES,
+    });
+    return {
+        runner: 'vitest',
+        passed: result.exit_code === 0 && !result.timed_out,
+        ...result,
+    } as Record<string, unknown>;
+}
+
 // Module-level prompt / resource caches reused across handler calls so
 // repeated `list_*` / `read_resource_body` calls share mtime tracking.
 const _PROMPT_CACHES = new Map<string, unknown>();
@@ -829,6 +1356,210 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             additionalProperties: false,
         },
         handler: _readResourceBodyHandler,
+    },
+    memory_signal: {
+        name: 'memory_signal',
+        description:
+            'Record an engineering-memory signal — a short, anchored ' +
+            'observation such as a recurring bug pattern or an ownership ' +
+            'note — to the monthly intake log ' +
+            '`agents/memory/intake/signals-YYYY-MM.jsonl`. Use to capture ' +
+            'a learning tied to a specific file so future `memory_lookup` ' +
+            'calls surface it. Appends to the filesystem and is ' +
+            'rate-limited per `(type, path)` within a rolling window. ' +
+            'Returns the recorded signal.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                type: {
+                    type: 'string',
+                    description:
+                        'Memory type the signal belongs to (e.g. ' +
+                        'historical-patterns, incident-learnings, ownership).',
+                },
+                path: {
+                    type: 'string',
+                    description: 'Repo-relative anchor path the signal is about.',
+                },
+                body: {
+                    type: 'string',
+                    description: 'Free-form signal body — the observation to record.',
+                },
+            },
+            required: ['type', 'path', 'body'],
+            additionalProperties: false,
+        },
+        handler: _memorySignalHandler,
+    },
+    roadmap_progress: {
+        name: 'roadmap_progress',
+        description:
+            'Regenerate `agents/roadmaps-progress.md` from the current ' +
+            'checkbox state of every active roadmap. Use after landing ' +
+            'roadmap work to keep the dashboard in sync without a shell ' +
+            'round-trip. Writes the dashboard file inside the project ' +
+            'tree. Set `dry_run: true` to compute counts without writing.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                dry_run: {
+                    type: 'boolean',
+                    default: false,
+                    description:
+                        'When true, return the computed dashboard without ' +
+                        'writing the file.',
+                },
+            },
+            additionalProperties: false,
+        },
+        handler: _roadmapProgressHandler,
+    },
+    roadmap_archive: {
+        name: 'roadmap_archive',
+        description:
+            'Archive every roadmap that has reached `count_open == 0` and ' +
+            'was touched on the current branch — `git mv` to ' +
+            '`agents/roadmaps/archive/`, migrate inbound references, and ' +
+            'regenerate the dashboard. Use as the PR-gate sweep before ' +
+            'opening a pull request. Mutates the git index (moves tracked ' +
+            'files) but never commits or pushes.',
+        input_schema: {
+            type: 'object',
+            properties: {},
+            additionalProperties: false,
+        },
+        handler: _roadmapArchiveHandler,
+    },
+    capabilities_index: {
+        name: 'capabilities_index',
+        description:
+            "Regenerate `CAPABILITIES.yaml`, the package's coverage index " +
+            'of skills, rules, commands, and guidelines. Use after adding ' +
+            'or removing an artifact to keep the index current. Pass ' +
+            '`check: true` to run in read-only CI mode (fails instead of ' +
+            'writing on drift).',
+        input_schema: {
+            type: 'object',
+            properties: {
+                check: {
+                    type: 'boolean',
+                    default: false,
+                    description:
+                        'When true, run in read-only drift-check mode ' +
+                        'instead of writing the index.',
+                },
+            },
+            additionalProperties: false,
+        },
+        handler: _capabilitiesIndexHandler,
+    },
+    doctor_report: {
+        name: 'doctor_report',
+        description:
+            'Run the consumer-project doctor diagnostic and return a ' +
+            'structured health report (install drift, hook wiring, ' +
+            'settings schema, discovery manifest freshness). Use to triage ' +
+            'a misbehaving install. Read-only.',
+        input_schema: {
+            type: 'object',
+            properties: {},
+            additionalProperties: false,
+        },
+        handler: _doctorReportHandler,
+    },
+    conformance_check: {
+        name: 'conformance_check',
+        description:
+            'Run the consumer conformance contract (`doctor --ci` plus ' +
+            'installed-and-firing checks) and return pass/fail per check. ' +
+            "Use to verify a consumer project's install is fully wired " +
+            'before relying on it. Read-only.',
+        input_schema: {
+            type: 'object',
+            properties: {},
+            additionalProperties: false,
+        },
+        handler: _conformanceCheckHandler,
+    },
+    telemetry_report: {
+        name: 'telemetry_report',
+        description:
+            'Return the artefact-engagement telemetry report — essential ' +
+            '/ useful / retirement-candidate skills and rules ranked by ' +
+            'recorded consult+apply signals over a rolling window. Use to ' +
+            'see which artifacts are actually load-bearing. Read-only. ' +
+            'No-op (empty report) when telemetry recording is disabled.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                window_days: {
+                    type: 'integer',
+                    minimum: 1,
+                    default: 30,
+                    description: 'Reporting window in days. Defaults to 30.',
+                },
+            },
+            additionalProperties: false,
+        },
+        handler: _telemetryReportHandler,
+    },
+    council_estimate: {
+        name: 'council_estimate',
+        description:
+            'Estimate the token cost of an AI-council debate over a given ' +
+            'input (roadmap, diff, prompt, or file set) without spending ' +
+            '— no network call, no billing. Use before deciding whether ' +
+            'to authorize a real council run. Read-only.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                input_path: {
+                    type: 'string',
+                    description:
+                        'Path to the roadmap, diff, or file to estimate ' +
+                        'council cost for.',
+                },
+                depth: {
+                    type: 'string',
+                    enum: ['shallow', 'deep'],
+                    description:
+                        'Council depth tier to estimate for. Defaults to ' +
+                        'the configured default depth.',
+                },
+            },
+            required: ['input_path'],
+            additionalProperties: false,
+        },
+        handler: _councilEstimateHandler,
+    },
+    run_tests: {
+        name: 'run_tests',
+        description:
+            "Run the consumer project's vitest test suite under a " +
+            'compiled safety envelope: fixed argv (no shell ' +
+            'interpolation), 120s timeout, 64KB output cap per stream. ' +
+            'Shell-exec pilot per the 2026-07-07 council cut — vitest ' +
+            'projects only; other runners (Pest / PHPUnit, pytest, Jest) ' +
+            'return an error until a future council round approves them. ' +
+            'Pass `filter` (vitest --testNamePattern) or `path` (in-tree ' +
+            'file or directory) to narrow the run. Returns runner, ' +
+            'passed, exit_code, timed_out, truncated stdout/stderr, and ' +
+            'duration_ms.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                filter: {
+                    type: 'string',
+                    description: 'Restrict to tests matching this name pattern.',
+                },
+                path: {
+                    type: 'string',
+                    description: 'Restrict to tests under this directory.',
+                },
+            },
+            additionalProperties: false,
+        },
+        handler: _runTestsHandler,
     },
 };
 
