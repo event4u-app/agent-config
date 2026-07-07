@@ -1,5 +1,11 @@
 #!/usr/bin/env tsx
+import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url);
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
 }) : x)(function(x) {
@@ -9,6 +15,22 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
 var __commonJS = (cb, mod) => function __require2() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 
 // node_modules/yaml/dist/nodes/identity.js
 var require_identity = __commonJS({
@@ -87,17 +109,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path11) {
-      const ctrl = callVisitor(key, node, visitor, path11);
+    function visit_(key, node, visitor, path12) {
+      const ctrl = callVisitor(key, node, visitor, path12);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path11, ctrl);
-        return visit_(key, ctrl, visitor, path11);
+        replaceNode(key, path12, ctrl);
+        return visit_(key, ctrl, visitor, path12);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path11 = Object.freeze(path11.concat(node));
+          path12 = Object.freeze(path12.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path11);
+            const ci = visit_(i, node.items[i], visitor, path12);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -108,13 +130,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path11 = Object.freeze(path11.concat(node));
-          const ck = visit_("key", node.key, visitor, path11);
+          path12 = Object.freeze(path12.concat(node));
+          const ck = visit_("key", node.key, visitor, path12);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path11);
+          const cv = visit_("value", node.value, visitor, path12);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -135,17 +157,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path11) {
-      const ctrl = await callVisitor(key, node, visitor, path11);
+    async function visitAsync_(key, node, visitor, path12) {
+      const ctrl = await callVisitor(key, node, visitor, path12);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path11, ctrl);
-        return visitAsync_(key, ctrl, visitor, path11);
+        replaceNode(key, path12, ctrl);
+        return visitAsync_(key, ctrl, visitor, path12);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path11 = Object.freeze(path11.concat(node));
+          path12 = Object.freeze(path12.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path11);
+            const ci = await visitAsync_(i, node.items[i], visitor, path12);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -156,13 +178,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path11 = Object.freeze(path11.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path11);
+          path12 = Object.freeze(path12.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path12);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path11);
+          const cv = await visitAsync_("value", node.value, visitor, path12);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -189,23 +211,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path11) {
+    function callVisitor(key, node, visitor, path12) {
       if (typeof visitor === "function")
-        return visitor(key, node, path11);
+        return visitor(key, node, path12);
       if (identity.isMap(node))
-        return visitor.Map?.(key, node, path11);
+        return visitor.Map?.(key, node, path12);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key, node, path11);
+        return visitor.Seq?.(key, node, path12);
       if (identity.isPair(node))
-        return visitor.Pair?.(key, node, path11);
+        return visitor.Pair?.(key, node, path12);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key, node, path11);
+        return visitor.Scalar?.(key, node, path12);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key, node, path11);
+        return visitor.Alias?.(key, node, path12);
       return void 0;
     }
-    function replaceNode(key, path11, node) {
-      const parent = path11[path11.length - 1];
+    function replaceNode(key, path12, node) {
+      const parent = path12[path12.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity.isPair(parent)) {
@@ -815,10 +837,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path11, value) {
+    function collectionFromPath(schema, path12, value) {
       let v = value;
-      for (let i = path11.length - 1; i >= 0; --i) {
-        const k = path11[i];
+      for (let i = path12.length - 1; i >= 0; --i) {
+        const k = path12[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -837,7 +859,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path11) => path11 == null || typeof path11 === "object" && !!path11[Symbol.iterator]().next().done;
+    var isEmptyPath = (path12) => path12 == null || typeof path12 === "object" && !!path12[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -867,11 +889,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path11, value) {
-        if (isEmptyPath(path11))
+      addIn(path12, value) {
+        if (isEmptyPath(path12))
           this.add(value);
         else {
-          const [key, ...rest] = path11;
+          const [key, ...rest] = path12;
           const node = this.get(key, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -885,8 +907,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path11) {
-        const [key, ...rest] = path11;
+      deleteIn(path12) {
+        const [key, ...rest] = path12;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -900,8 +922,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path11, keepScalar) {
-        const [key, ...rest] = path11;
+      getIn(path12, keepScalar) {
+        const [key, ...rest] = path12;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -919,8 +941,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path11) {
-        const [key, ...rest] = path11;
+      hasIn(path12) {
+        const [key, ...rest] = path12;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -930,8 +952,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path11, value) {
-        const [key, ...rest] = path11;
+      setIn(path12, value) {
+        const [key, ...rest] = path12;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -3446,9 +3468,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path11, value) {
+      addIn(path12, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path11, value);
+          this.contents.addIn(path12, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3523,14 +3545,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path11) {
-        if (Collection.isEmptyPath(path11)) {
+      deleteIn(path12) {
+        if (Collection.isEmptyPath(path12)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path11) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path12) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3545,10 +3567,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path11, keepScalar) {
-        if (Collection.isEmptyPath(path11))
+      getIn(path12, keepScalar) {
+        if (Collection.isEmptyPath(path12))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path11, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path12, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3559,10 +3581,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path11) {
-        if (Collection.isEmptyPath(path11))
+      hasIn(path12) {
+        if (Collection.isEmptyPath(path12))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path11) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path12) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3579,13 +3601,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path11, value) {
-        if (Collection.isEmptyPath(path11)) {
+      setIn(path12, value) {
+        if (Collection.isEmptyPath(path12)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path11), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path12), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path11, value);
+          this.contents.setIn(path12, value);
         }
       }
       /**
@@ -5545,9 +5567,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path11) => {
+    visit.itemAtPath = (cst, path12) => {
       let item = cst;
-      for (const [field, index] of path11) {
+      for (const [field, index] of path12) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5556,23 +5578,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path11) => {
-      const parent = visit.itemAtPath(cst, path11.slice(0, -1));
-      const field = path11[path11.length - 1][0];
+    visit.parentCollection = (cst, path12) => {
+      const parent = visit.itemAtPath(cst, path12.slice(0, -1));
+      const field = path12[path12.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path11, item, visitor) {
-      let ctrl = visitor(item, path11);
+    function _visit(path12, item, visitor) {
+      let ctrl = visitor(item, path12);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path11.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path12.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5583,10 +5605,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path11);
+            ctrl = ctrl(item, path12);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path11) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path12) : ctrl;
     }
     exports.visit = visit;
   }
@@ -6888,14 +6910,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs13 = this.flowScalar(this.type);
+              const fs14 = this.flowScalar(this.type);
               if (atNextItem || it.value) {
-                map.items.push({ start, key: fs13, sep: [] });
+                map.items.push({ start, key: fs14, sep: [] });
                 this.onKeyLine = true;
               } else if (it.sep) {
-                this.stack.push(fs13);
+                this.stack.push(fs14);
               } else {
-                Object.assign(it, { key: fs13, sep: [] });
+                Object.assign(it, { key: fs14, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7023,13 +7045,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs13 = this.flowScalar(this.type);
+              const fs14 = this.flowScalar(this.type);
               if (!it || it.value)
-                fc.items.push({ start: [], key: fs13, sep: [] });
+                fc.items.push({ start: [], key: fs14, sep: [] });
               else if (it.sep)
-                this.stack.push(fs13);
+                this.stack.push(fs14);
               else
-                Object.assign(it, { key: fs13, sep: [] });
+                Object.assign(it, { key: fs14, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -7237,7 +7259,7 @@ var require_public_api = __commonJS({
       }
       return doc;
     }
-    function parse(src, reviver, options) {
+    function parse2(src, reviver, options) {
       let _reviver = void 0;
       if (typeof reviver === "function") {
         _reviver = reviver;
@@ -7278,7 +7300,7 @@ var require_public_api = __commonJS({
         return value.toString(options);
       return new Document.Document(value, _replacer, options).toString(options);
     }
-    exports.parse = parse;
+    exports.parse = parse2;
     exports.parseAllDocuments = parseAllDocuments;
     exports.parseDocument = parseDocument;
     exports.stringify = stringify;
@@ -7340,9 +7362,9 @@ var require_dist = __commonJS({
 // src/scripts/install.ts
 import { spawn, spawnSync as spawnSync2 } from "node:child_process";
 import * as crypto2 from "node:crypto";
-import * as fs12 from "node:fs";
+import * as fs13 from "node:fs";
 import * as os6 from "node:os";
-import * as path10 from "node:path";
+import * as path11 from "node:path";
 import process3 from "node:process";
 import { fileURLToPath as fileURLToPath3, pathToFileURL as pathToFileURL2 } from "node:url";
 
@@ -7726,8 +7748,8 @@ function lockfile_write_path(env) {
   }
   return write_target("installed.lock", { env: env ?? null });
 }
-function read_lockfile(path11) {
-  const target = path11 ?? lockfile_path();
+function read_lockfile(path12) {
+  const target = path12 ?? lockfile_path();
   let text;
   try {
     text = fs2.readFileSync(target, { encoding: "utf-8" });
@@ -7970,8 +7992,8 @@ function load_lab_pack_ids(repo_root) {
   const vocab = path3.join(repo_root, "src", "config", "discovery", "packs.yml");
   const ids = /* @__PURE__ */ new Set();
   try {
-    const YAML = require_dist();
-    const data = YAML.parse(fs3.readFileSync(vocab, "utf-8"), { version: "1.1" });
+    const YAML2 = require_dist();
+    const data = YAML2.parse(fs3.readFileSync(vocab, "utf-8"), { version: "1.1" });
     for (const entry of data ?? []) {
       if (entry && typeof entry === "object" && !Array.isArray(entry)) {
         const rec = entry;
@@ -8595,18 +8617,18 @@ function manifest_path(project_root, env) {
 var _TOP_KEY_RE = /^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*"?([^"\n]*?)"?\s*$/;
 var _LIST_DASH_RE = /^\s*-\s*(.+?)\s*$/;
 var _INDENT_KEY_RE = /^\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*"?([^"\n]*?)"?\s*$/;
-function read_manifest(path11) {
+function read_manifest(path12) {
   let text;
   try {
-    text = require_read_text(path11);
+    text = require_read_text(path12);
   } catch {
     return null;
   }
   const data = _parse_manual(text);
   return _normalise_v2_shape(data);
 }
-function require_read_text(path11) {
-  return fs6.readFileSync(path11, { encoding: "utf-8" });
+function require_read_text(path12) {
+  return fs6.readFileSync(path12, { encoding: "utf-8" });
 }
 function _normalise_v2_shape(data) {
   if (data["tools"] === void 0 || data["tools"] === null) {
@@ -8787,9 +8809,9 @@ function stable_sort(items, key) {
     return a.index - b.index;
   }).map((entry) => entry.item);
 }
-function write_manifest(path11, version, tools, options = {}) {
+function write_manifest(path12, version, tools, options = {}) {
   const rendered = _render2(version, tools, { deploy_roots: options.deploy_roots ?? null });
-  return write_atomic(path11, rendered);
+  return write_atomic(path12, rendered);
 }
 var ScopeMismatchError = class extends Error {
   name_;
@@ -9151,11 +9173,167 @@ function build_command_bundles(package_root, dest_dir, force = false, curation =
   return written;
 }
 
+// src/scripts/_lib/claude_settings_hooks.ts
+var YAML = __toESM(require_dist(), 1);
+import * as fs8 from "node:fs";
+import * as path7 from "node:path";
+
+// src/install/atomic.ts
+import {
+  closeSync as closeSync3,
+  fsyncSync,
+  mkdirSync as mkdirSync5,
+  openSync as openSync3,
+  readFileSync as readFileSync6,
+  renameSync as renameSync5,
+  unlinkSync as unlinkSync4,
+  writeSync
+} from "node:fs";
+import { dirname as dirname4, join as join7 } from "node:path";
+function atomicWriteFile(target, data, options = {}) {
+  const mode = options.mode ?? 420;
+  const parent = dirname4(target);
+  mkdirSync5(parent, { recursive: true });
+  const tmp = join7(parent, `.tmp.${process.pid}.${randSuffix()}`);
+  let fd = null;
+  try {
+    fd = openSync3(tmp, "w", mode);
+    const buf = typeof data === "string" ? Buffer.from(data, "utf8") : data;
+    writeSync(fd, buf, 0, buf.length, 0);
+    fsyncSync(fd);
+    closeSync3(fd);
+    fd = null;
+    renameSync5(tmp, target);
+  } catch (err) {
+    if (fd !== null) {
+      try {
+        closeSync3(fd);
+      } catch {
+      }
+    }
+    try {
+      unlinkSync4(tmp);
+    } catch {
+    }
+    throw err;
+  }
+}
+function randSuffix() {
+  return Math.floor(Math.random() * 281474976710655).toString(16).padStart(12, "0");
+}
+
+// src/scripts/_lib/claude_settings_hooks.ts
+function _yaml_parse(text) {
+  return YAML.parse(text);
+}
+var MANAGED_SIGNATURE = "dispatch:hook --platform claude";
+var CorruptSettingsError = class extends Error {
+  constructor(file, cause) {
+    super(
+      `${file} exists but is not valid JSON (${cause}). Refusing to overwrite a user-owned settings file \u2014 fix or remove it, then re-run.`
+    );
+    this.name = "CorruptSettingsError";
+  }
+};
+var SettingsLockError = class extends Error {
+  constructor(lockPath) {
+    super(
+      `settings lock ${lockPath} is held by another process. Re-run when the concurrent install finishes (stale lock: delete the file).`
+    );
+    this.name = "SettingsLockError";
+  }
+};
+function build_claude_hook_matrix(manifest_path2) {
+  const raw = fs8.readFileSync(manifest_path2, "utf8");
+  const manifest = _yaml_parse(raw) ?? {};
+  const hook_spec = manifest["schema_version"] ?? 1;
+  const platforms = manifest["platforms"] ?? {};
+  const claude_events = (platforms["claude"] ?? {}) || {};
+  const aliasesAll = manifest["native_event_aliases"] ?? {};
+  const aliases = (aliasesAll["claude"] ?? {}) || {};
+  const ac_to_native = {};
+  for (const [native, ac] of Object.entries(aliases)) {
+    ac_to_native[String(ac)] = native;
+  }
+  const matrix = {};
+  for (const [ac_event, concerns] of Object.entries(claude_events)) {
+    if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
+    const native = ac_to_native[ac_event];
+    if (native === void 0) continue;
+    matrix[native] = `BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; "$BIN" dispatch:hook --platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
+  }
+  return matrix;
+}
+function _is_managed_group(group) {
+  if (typeof group !== "object" || group === null || Array.isArray(group)) return false;
+  const hooks = group.hooks;
+  if (!Array.isArray(hooks)) return false;
+  return hooks.some(
+    (h) => typeof h === "object" && h !== null && typeof h.command === "string" && h.command.includes(MANAGED_SIGNATURE)
+  );
+}
+function _read_settings(settings_path) {
+  if (!fs8.existsSync(settings_path)) return {};
+  const raw = fs8.readFileSync(settings_path, "utf8");
+  if (raw.trim() === "") return {};
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    throw new CorruptSettingsError(settings_path, e.message);
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new CorruptSettingsError(settings_path, "top level is not an object");
+  }
+  return parsed;
+}
+function _with_lock(settings_path, fn) {
+  const lockPath = settings_path + ".agent-config.lock";
+  fs8.mkdirSync(path7.dirname(lockPath), { recursive: true });
+  let fd;
+  try {
+    fd = fs8.openSync(lockPath, "wx");
+  } catch {
+    throw new SettingsLockError(lockPath);
+  }
+  try {
+    return fn();
+  } finally {
+    fs8.closeSync(fd);
+    fs8.rmSync(lockPath, { force: true });
+  }
+}
+function ensure_managed_hooks(settings_path, matrix) {
+  return _with_lock(settings_path, () => {
+    const settings = _read_settings(settings_path);
+    const before = JSON.stringify(settings);
+    const hooks = (settings["hooks"] ?? {}) || {};
+    const touched = [];
+    for (const [native, command] of Object.entries(matrix)) {
+      const existing = Array.isArray(hooks[native]) ? hooks[native] : [];
+      const user_groups = existing.filter((g) => !_is_managed_group(g));
+      const managed_group = {
+        hooks: [{ type: "command", command }]
+      };
+      const next = [...user_groups, managed_group];
+      if (JSON.stringify(next) !== JSON.stringify(existing)) touched.push(native);
+      hooks[native] = next;
+    }
+    settings["hooks"] = hooks;
+    const after = JSON.stringify(settings);
+    if (after === before) {
+      return { changed: false, events: [] };
+    }
+    atomicWriteFile(settings_path, JSON.stringify(settings, null, 2) + "\n");
+    return { changed: true, events: touched };
+  });
+}
+
 // src/scripts/_lib/agent_settings.ts
 import { createRequire } from "node:module";
-import * as fs8 from "node:fs";
+import * as fs9 from "node:fs";
 import * as os5 from "node:os";
-import * as path7 from "node:path";
+import * as path8 from "node:path";
 var _require = createRequire(import.meta.url);
 var Logger = class {
   name = "scripts._lib.agent_settings";
@@ -9195,10 +9373,10 @@ var DEFAULT_PROJECT_FILE = ".agent-settings.yml";
 var LOCAL_PROJECT_FILE = ".agent-settings.local.yml";
 var LOCAL_PROJECT_SUBDIR = ["agents", "settings"];
 function _local_settings_path(project_root) {
-  return path7.join(project_root, ...LOCAL_PROJECT_SUBDIR, LOCAL_PROJECT_FILE);
+  return path8.join(project_root, ...LOCAL_PROJECT_SUBDIR, LOCAL_PROJECT_FILE);
 }
 function _canonical_settings_path(project_root) {
-  return path7.join(project_root, ...LOCAL_PROJECT_SUBDIR, DEFAULT_PROJECT_FILE);
+  return path8.join(project_root, ...LOCAL_PROJECT_SUBDIR, DEFAULT_PROJECT_FILE);
 }
 var USER_GLOBAL_FILENAME = "agent-settings.yml";
 function DEFAULT_USER_GLOBAL_FILE() {
@@ -9243,8 +9421,8 @@ var _AGENTS_DIR_MARKERS = [
 var _LEGACY_ANCHOR_ENV = "AGENT_CONFIG_LEGACY_ANCHOR";
 function _exists(p) {
   try {
-    fs8.lstatSync(p);
-    fs8.statSync(p);
+    fs9.lstatSync(p);
+    fs9.statSync(p);
     return true;
   } catch {
     return false;
@@ -9252,22 +9430,22 @@ function _exists(p) {
 }
 function _is_dir2(p) {
   try {
-    return fs8.statSync(p).isDirectory();
+    return fs9.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
 function _is_file(p) {
   try {
-    return fs8.statSync(p).isFile();
+    return fs9.statSync(p).isFile();
   } catch {
     return false;
   }
 }
 function _resolve(p) {
-  const absolute = path7.resolve(p);
+  const absolute = path8.resolve(p);
   try {
-    return fs8.realpathSync(absolute);
+    return fs9.realpathSync(absolute);
   } catch {
     return absolute;
   }
@@ -9277,7 +9455,7 @@ function _ancestor_chain(start) {
   let cursor = start;
   for (; ; ) {
     chain.push(cursor);
-    const parent = path7.dirname(cursor);
+    const parent = path8.dirname(cursor);
     if (parent === cursor) {
       break;
     }
@@ -9286,15 +9464,15 @@ function _ancestor_chain(start) {
   return chain;
 }
 function _boundary_anchor_at(dir) {
-  const agents_dir = path7.join(dir, "agents");
+  const agents_dir = path8.join(dir, "agents");
   if (_is_dir2(agents_dir)) {
     for (const marker of _AGENTS_DIR_MARKERS) {
-      if (_exists(path7.join(agents_dir, marker))) {
+      if (_exists(path8.join(agents_dir, marker))) {
         return ANCHOR_AGENTS_DIR;
       }
     }
   }
-  if (_exists(path7.join(dir, ".git"))) {
+  if (_exists(path8.join(dir, ".git"))) {
     return ANCHOR_GIT;
   }
   return null;
@@ -9305,7 +9483,7 @@ function find_project_root_with_anchor(start) {
   const chain = _ancestor_chain(current);
   if (legacy) {
     for (const candidate of chain) {
-      if (_exists(path7.join(candidate, ".git"))) {
+      if (_exists(path8.join(candidate, ".git"))) {
         return [candidate, ANCHOR_GIT];
       }
     }
@@ -9319,7 +9497,7 @@ function find_project_root_with_anchor(start) {
   }
   let outermost = null;
   for (const candidate of chain) {
-    if (_exists(path7.join(candidate, DEFAULT_PROJECT_FILE))) {
+    if (_exists(path8.join(candidate, DEFAULT_PROJECT_FILE))) {
       outermost = candidate;
     }
   }
@@ -9363,7 +9541,7 @@ function _expanduser(p) {
     return os5.homedir();
   }
   if (p.startsWith("~/") || process.platform === "win32" && p.startsWith("~\\")) {
-    return path7.join(os5.homedir(), p.slice(2));
+    return path8.join(os5.homedir(), p.slice(2));
   }
   return p;
 }
@@ -9392,13 +9570,13 @@ function resolve_project_root(arg, options = {}) {
 function _resolve_cascade_paths(cwd, project_path) {
   if (cwd === null) {
     const legacy = project_path ? project_path : DEFAULT_PROJECT_FILE;
-    const parent = path7.dirname(legacy);
+    const parent = path8.dirname(legacy);
     return [legacy, _canonical_settings_path(parent), _local_settings_path(parent)];
   }
   const root = find_project_root(cwd);
   if (root === null) {
     const legacy = project_path ? project_path : DEFAULT_PROJECT_FILE;
-    const parent = path7.dirname(legacy);
+    const parent = path8.dirname(legacy);
     return [legacy, _canonical_settings_path(parent), _local_settings_path(parent)];
   }
   const cwd_resolved = _resolve(cwd);
@@ -9409,7 +9587,7 @@ function _resolve_cascade_paths(cwd, project_path) {
     if (cursor === root) {
       break;
     }
-    const parent = path7.dirname(cursor);
+    const parent = path8.dirname(cursor);
     if (parent === cursor) {
       break;
     }
@@ -9417,7 +9595,7 @@ function _resolve_cascade_paths(cwd, project_path) {
   }
   chain.reverse();
   return [
-    ...chain.map((d) => path7.join(d, DEFAULT_PROJECT_FILE)),
+    ...chain.map((d) => path8.join(d, DEFAULT_PROJECT_FILE)),
     _canonical_settings_path(root),
     _local_settings_path(root)
   ];
@@ -9450,16 +9628,16 @@ function _read_yaml(p) {
   if (!_is_file(p)) {
     return null;
   }
-  let YAML;
+  let YAML2;
   try {
-    YAML = _require("yaml");
+    YAML2 = _require("yaml");
   } catch {
     return null;
   }
   let data;
   try {
-    const text = fs8.readFileSync(p, "utf-8");
-    data = YAML.parse(text, { version: "1.1" });
+    const text = fs9.readFileSync(p, "utf-8");
+    data = YAML2.parse(text, { version: "1.1" });
     if (data === null || data === void 0) {
       data = {};
     }
@@ -9550,8 +9728,8 @@ function _is_plain_dict(value) {
 }
 
 // src/scripts/_lib/module_detection.ts
-import * as fs9 from "node:fs";
-import * as path8 from "node:path";
+import * as fs10 from "node:fs";
+import * as path9 from "node:path";
 var _SKIP_DIRS = /* @__PURE__ */ new Set([".module-template", ".example"]);
 var _RULES = [
   ["app/Modules", "laravel-hmvc", "App\\Modules\\{ModuleName}"],
@@ -9565,14 +9743,14 @@ var _RULES = [
 ];
 function _isDir(p) {
   try {
-    return fs9.statSync(p).isDirectory();
+    return fs10.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
 function _isFile(p) {
   try {
-    return fs9.statSync(p).isFile();
+    return fs10.statSync(p).isFile();
   } catch {
     return false;
   }
@@ -9586,13 +9764,13 @@ function _isUpperChar(ch) {
 function _list_module_subdirs(root) {
   let entries;
   try {
-    entries = fs9.readdirSync(root).sort();
+    entries = fs10.readdirSync(root).sort();
   } catch {
     return [];
   }
   const out = [];
   for (const name of entries) {
-    if (!_isDir(path8.join(root, name))) {
+    if (!_isDir(path9.join(root, name))) {
       continue;
     }
     if (name.startsWith(".")) {
@@ -9614,11 +9792,11 @@ function _score_confidence(stack, root, subdirs) {
     return capitalized.length > 0 ? "high" : "medium";
   }
   if (stack === "node-monorepo") {
-    const withPkgJson = subdirs.filter((name) => _isFile(path8.join(root, name, "package.json")));
+    const withPkgJson = subdirs.filter((name) => _isFile(path9.join(root, name, "package.json")));
     return withPkgJson.length > 0 ? "high" : "medium";
   }
   if (stack === "python-src") {
-    const withInit = subdirs.filter((name) => _isFile(path8.join(root, name, "__init__.py")));
+    const withInit = subdirs.filter((name) => _isFile(path9.join(root, name, "__init__.py")));
     return withInit.length > 0 ? "high" : "medium";
   }
   if (stack === "go-internal") {
@@ -9630,7 +9808,7 @@ function detect_module_roots(project_root) {
   const high = [];
   const medium = [];
   for (const [rel_path, stack, namespace_template] of _RULES) {
-    const abs_path = path8.join(project_root, rel_path);
+    const abs_path = path9.join(project_root, rel_path);
     if (!_isDir(abs_path)) {
       continue;
     }
@@ -9652,7 +9830,7 @@ function detect_module_roots(project_root) {
 }
 
 // src/scripts/_lib/model_tier.ts
-import fs10 from "node:fs";
+import fs11 from "node:fs";
 var TIER_TO_CLAUDE_MODEL = {
   high: "opus",
   medium: "sonnet",
@@ -9660,8 +9838,8 @@ var TIER_TO_CLAUDE_MODEL = {
 };
 var MODEL_TIER_RE = /^model_tier:\s*"?([a-z]+)"?\s*$/m;
 function read_model_tier(skill_md) {
-  if (!fs10.existsSync(skill_md)) return null;
-  const text = fs10.readFileSync(skill_md).toString("utf-8");
+  if (!fs11.existsSync(skill_md)) return null;
+  const text = fs11.readFileSync(skill_md).toString("utf-8");
   if (!text.startsWith("---\n")) return null;
   const end = text.indexOf("\n---\n", 4);
   if (end === -1) return null;
@@ -9678,8 +9856,8 @@ function render_native_model_md(text, tier) {
 
 // src/scripts/_cli/cmd_migrate.ts
 import { spawnSync } from "node:child_process";
-import * as fs11 from "node:fs";
-import * as path9 from "node:path";
+import * as fs12 from "node:fs";
+import * as path10 from "node:path";
 import process2 from "node:process";
 import { fileURLToPath as fileURLToPath2, pathToFileURL } from "node:url";
 var PACKAGE_NAME_NPM = "@event4u/agent-config";
@@ -9699,7 +9877,7 @@ var LEGACY_SETTINGS_FILES = [".agent-settings.yml", ".agent-user.yml"];
 var LEGACY_STATE_FILENAME = ".implement-ticket-state.json";
 var LEGACY_STATE_V1_FILENAME = ".work-state.json";
 var LEGACY_AGENT_CONFIG_SHELL = "agent-config";
-var _HERE_DIR = path9.dirname(fileURLToPath2(import.meta.url));
+var _HERE_DIR = path10.dirname(fileURLToPath2(import.meta.url));
 var ArgparseExit = class extends Error {
   code;
   constructor(code) {
@@ -9798,38 +9976,38 @@ function _jsonDumpsIndentAscii(value, indent) {
 }
 function _isFile2(p) {
   try {
-    return fs11.statSync(p).isFile();
+    return fs12.statSync(p).isFile();
   } catch {
     return false;
   }
 }
 function _isDir2(p) {
   try {
-    return fs11.statSync(p).isDirectory();
+    return fs12.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
 function _isSymlink(p) {
   try {
-    return fs11.lstatSync(p).isSymbolicLink();
+    return fs12.lstatSync(p).isSymbolicLink();
   } catch {
     return false;
   }
 }
 function _exists2(p) {
   try {
-    fs11.lstatSync(p);
+    fs12.lstatSync(p);
     return true;
   } catch {
     return false;
   }
 }
 function _readText(p) {
-  return fs11.readFileSync(p, { encoding: "utf-8" });
+  return fs12.readFileSync(p, { encoding: "utf-8" });
 }
 function _writeText(p, text) {
-  fs11.writeFileSync(p, text, { encoding: "utf-8" });
+  fs12.writeFileSync(p, text, { encoding: "utf-8" });
 }
 function _jsonLoadFile(p) {
   return JSON.parse(_readText(p));
@@ -9885,7 +10063,7 @@ function _classify_symlink(link) {
   }
   let target;
   try {
-    target = fs11.readlinkSync(link);
+    target = fs12.readlinkSync(link);
   } catch {
     return null;
   }
@@ -9896,16 +10074,16 @@ function _classify_symlink(link) {
   return "user";
 }
 function _detect_legacy_state(project) {
-  return _isFile2(path9.join(project, LEGACY_STATE_FILENAME));
+  return _isFile2(path10.join(project, LEGACY_STATE_FILENAME));
 }
 function _detect_legacy_settings(project) {
   const found = [];
   for (const name of LEGACY_SETTINGS_FILES) {
-    const flat = path9.join(project, name);
+    const flat = path10.join(project, name);
     if (_isFile2(flat)) {
       found.push(flat);
     }
-    const typed = path9.join(project, "settings", name);
+    const typed = path10.join(project, "settings", name);
     if (_isFile2(typed)) {
       found.push(typed);
     }
@@ -9913,25 +10091,25 @@ function _detect_legacy_settings(project) {
   return found;
 }
 function _detect_empty_shell(project) {
-  const shell = path9.join(project, LEGACY_AGENT_CONFIG_SHELL);
+  const shell = path10.join(project, LEGACY_AGENT_CONFIG_SHELL);
   if (!_isDir2(shell) || _isSymlink(shell)) {
     return false;
   }
   try {
-    return fs11.readdirSync(shell).length === 0;
+    return fs12.readdirSync(shell).length === 0;
   } catch {
     return false;
   }
 }
 function _detect_already_migrated(project) {
-  if (_detect_npm(path9.join(project, "package.json"))) {
+  if (_detect_npm(path10.join(project, "package.json"))) {
     return false;
   }
-  if (_detect_composer(path9.join(project, "composer.json"))) {
+  if (_detect_composer(path10.join(project, "composer.json"))) {
     return false;
   }
   for (const name of MANAGED_SYMLINKS) {
-    if (_classify_symlink(path9.join(project, name)) === "legacy") {
+    if (_classify_symlink(path10.join(project, name)) === "legacy") {
       return false;
     }
   }
@@ -10002,11 +10180,11 @@ function _purge_legacy_symlinks(project) {
   const removed = [];
   const preserved = [];
   for (const name of MANAGED_SYMLINKS) {
-    const link = path9.join(project, name);
+    const link = path10.join(project, name);
     const kind = _classify_symlink(link);
     if (kind === "legacy") {
       try {
-        fs11.unlinkSync(link);
+        fs12.unlinkSync(link);
         removed.push(name);
       } catch {
         preserved.push(name);
@@ -10018,14 +10196,14 @@ function _purge_legacy_symlinks(project) {
   return [removed, preserved];
 }
 function _migrate_state_file(project) {
-  const source = path9.join(project, LEGACY_STATE_FILENAME);
+  const source = path10.join(project, LEGACY_STATE_FILENAME);
   if (!_isFile2(source)) {
     return null;
   }
-  const target = path9.join(project, LEGACY_STATE_V1_FILENAME);
+  const target = path10.join(project, LEGACY_STATE_V1_FILENAME);
   if (_exists2(target)) {
     try {
-      fs11.unlinkSync(source);
+      fs12.unlinkSync(source);
       return `removed stale ${LEGACY_STATE_FILENAME} (v1 already present)`;
     } catch {
       return null;
@@ -10039,8 +10217,8 @@ function _migrate_state_file(project) {
   return `migrated ${LEGACY_STATE_FILENAME} \u2192 ${LEGACY_STATE_V1_FILENAME}`;
 }
 function _load_state_migrator() {
-  const pkg_root = path9.resolve(_HERE_DIR, "..", "..", "..");
-  const rel = path9.join(
+  const pkg_root = path10.resolve(_HERE_DIR, "..", "..", "..");
+  const rel = path10.join(
     "agent-src",
     "templates",
     "scripts",
@@ -10048,8 +10226,8 @@ function _load_state_migrator() {
     "migration",
     "v0_to_v1.ts"
   );
-  const driver = [path9.join(pkg_root, "dist", rel), path9.join(pkg_root, "src", rel)].find(
-    (p) => fs11.existsSync(p)
+  const driver = [path10.join(pkg_root, "dist", rel), path10.join(pkg_root, "src", rel)].find(
+    (p) => fs12.existsSync(p)
   ) ?? null;
   if (driver === null) {
     return null;
@@ -10057,12 +10235,12 @@ function _load_state_migrator() {
   const binName = process2.platform === "win32" ? "tsx.cmd" : "tsx";
   let tsxBin = null;
   for (let dir = pkg_root; ; ) {
-    const cand = path9.join(dir, "node_modules", ".bin", binName);
-    if (fs11.existsSync(cand)) {
+    const cand = path10.join(dir, "node_modules", ".bin", binName);
+    if (fs12.existsSync(cand)) {
       tsxBin = cand;
       break;
     }
-    const parent = path9.dirname(dir);
+    const parent = path10.dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
@@ -10089,17 +10267,17 @@ function _delete_legacy_settings(project) {
   const removed = [];
   for (const p of _detect_legacy_settings(project)) {
     try {
-      fs11.unlinkSync(p);
-      removed.push(path9.relative(project, p));
+      fs12.unlinkSync(p);
+      removed.push(path10.relative(project, p));
     } catch {
       continue;
     }
   }
-  const settings_dir = path9.join(project, "settings");
+  const settings_dir = path10.join(project, "settings");
   if (_isDir2(settings_dir) && !_isSymlink(settings_dir)) {
     try {
-      if (fs11.readdirSync(settings_dir).length === 0) {
-        fs11.rmdirSync(settings_dir);
+      if (fs12.readdirSync(settings_dir).length === 0) {
+        fs12.rmdirSync(settings_dir);
         removed.push("settings/");
       }
     } catch {
@@ -10108,12 +10286,12 @@ function _delete_legacy_settings(project) {
   return removed;
 }
 function _remove_empty_shell(project) {
-  const shell = path9.join(project, LEGACY_AGENT_CONFIG_SHELL);
+  const shell = path10.join(project, LEGACY_AGENT_CONFIG_SHELL);
   if (!_detect_empty_shell(project)) {
     return false;
   }
   try {
-    fs11.rmdirSync(shell);
+    fs12.rmdirSync(shell);
   } catch {
     return false;
   }
@@ -10123,7 +10301,7 @@ function _reEscape(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function _update_gitignore(project) {
-  const gitignore = path9.join(project, ".gitignore");
+  const gitignore = path10.join(project, ".gitignore");
   const block = `${GITIGNORE_BLOCK_START}
 ${GITIGNORE_NEW_BODY}${GITIGNORE_BLOCK_END}
 `;
@@ -10154,16 +10332,16 @@ ${GITIGNORE_NEW_BODY}${GITIGNORE_BLOCK_END}
 }
 function _build_plan(project) {
   return {
-    npm: _detect_npm(path9.join(project, "package.json")),
-    composer: _detect_composer(path9.join(project, "composer.json")),
+    npm: _detect_npm(path10.join(project, "package.json")),
+    composer: _detect_composer(path10.join(project, "composer.json")),
     symlinks_legacy: MANAGED_SYMLINKS.filter(
-      (name) => _classify_symlink(path9.join(project, name)) === "legacy"
+      (name) => _classify_symlink(path10.join(project, name)) === "legacy"
     ),
     symlinks_user: MANAGED_SYMLINKS.filter(
-      (name) => _classify_symlink(path9.join(project, name)) === "user"
+      (name) => _classify_symlink(path10.join(project, name)) === "user"
     ),
-    state_file: _isFile2(path9.join(project, LEGACY_STATE_FILENAME)),
-    settings_files: _detect_legacy_settings(project).map((p) => path9.relative(project, p)),
+    state_file: _isFile2(path10.join(project, LEGACY_STATE_FILENAME)),
+    settings_files: _detect_legacy_settings(project).map((p) => path10.relative(project, p)),
     empty_shell: _detect_empty_shell(project)
   };
 }
@@ -10227,10 +10405,10 @@ function _warn_on_major_mismatch(from_major, plan, out) {
 }
 function _apply(project, out, err) {
   const summary = [];
-  if (_strip_npm_entry(path9.join(project, "package.json"))) {
+  if (_strip_npm_entry(path10.join(project, "package.json"))) {
     summary.push(`removed ${PACKAGE_NAME_NPM} from package.json`);
   }
-  if (_strip_composer_entry(path9.join(project, "composer.json"))) {
+  if (_strip_composer_entry(path10.join(project, "composer.json"))) {
     summary.push(`removed ${PACKAGE_NAME_COMPOSER} from composer.json`);
   }
   const [removed_links, preserved_links] = _purge_legacy_symlinks(project);
@@ -10356,13 +10534,13 @@ function _isCliEntry() {
   if (process2.argv[1] === void 0) {
     return false;
   }
-  const argvUrl = pathToFileURL(path9.resolve(process2.argv[1])).href;
+  const argvUrl = pathToFileURL(path10.resolve(process2.argv[1])).href;
   if (import.meta.url === argvUrl) {
     return true;
   }
   try {
-    const here = fs11.realpathSync(fileURLToPath2(import.meta.url));
-    const argv = fs11.realpathSync(path9.resolve(process2.argv[1]));
+    const here = fs12.realpathSync(fileURLToPath2(import.meta.url));
+    const argv = fs12.realpathSync(path10.resolve(process2.argv[1]));
     return here === argv;
   } catch {
     return false;
@@ -10399,34 +10577,34 @@ var ArgparseExit2 = class extends Error {
 function expanduser5(p) {
   if (p === "~") return os6.homedir();
   if (p.startsWith("~/") || p.startsWith("~\\")) {
-    return path10.join(os6.homedir(), p.slice(2));
+    return path11.join(os6.homedir(), p.slice(2));
   }
   return p;
 }
 function resolvePath(p) {
   try {
-    return fs12.realpathSync(path10.resolve(p));
+    return fs13.realpathSync(path11.resolve(p));
   } catch {
-    return path10.resolve(p);
+    return path11.resolve(p);
   }
 }
 function isFile(p) {
   try {
-    return fs12.statSync(p).isFile();
+    return fs13.statSync(p).isFile();
   } catch {
     return false;
   }
 }
 function isDir(p) {
   try {
-    return fs12.statSync(p).isDirectory();
+    return fs13.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
 function pathExists(p) {
   try {
-    fs12.statSync(p);
+    fs13.statSync(p);
     return true;
   } catch {
     return false;
@@ -10434,24 +10612,24 @@ function pathExists(p) {
 }
 function isSymlink(p) {
   try {
-    return fs12.lstatSync(p).isSymbolicLink();
+    return fs13.lstatSync(p).isSymbolicLink();
   } catch {
     return false;
   }
 }
 function readText(p) {
-  return fs12.readFileSync(p, "utf-8");
+  return fs13.readFileSync(p, "utf-8");
 }
 function writeText(p, content) {
-  fs12.writeFileSync(p, content, "utf-8");
+  fs13.writeFileSync(p, content, "utf-8");
 }
 function mkdirp(p) {
-  fs12.mkdirSync(p, { recursive: true });
+  fs13.mkdirSync(p, { recursive: true });
 }
 function sortedGlobStems(directory, suffix) {
   let entries;
   try {
-    entries = fs12.readdirSync(directory);
+    entries = fs13.readdirSync(directory);
   } catch {
     return [];
   }
@@ -10471,7 +10649,7 @@ function sortedGlobStems(directory, suffix) {
 function countZips(directory) {
   if (!isDir(directory)) return 0;
   let n = 0;
-  for (const name of fs12.readdirSync(directory)) {
+  for (const name of fs13.readdirSync(directory)) {
     if (name.endsWith(".zip")) n += 1;
   }
   return n;
@@ -10479,35 +10657,35 @@ function countZips(directory) {
 function sha256OfFile(p) {
   let data;
   try {
-    data = fs12.readFileSync(p);
+    data = fs13.readFileSync(p);
   } catch {
     return null;
   }
   return crypto2.createHash("sha256").update(data).digest("hex");
 }
 function atomicWrite0644(target, body, prefix) {
-  const dir = path10.dirname(target);
-  const tmpName = path10.join(
+  const dir = path11.dirname(target);
+  const tmpName = path11.join(
     dir,
     `${prefix}${process3.pid}.${crypto2.randomBytes(6).toString("hex")}.yml.tmp`
   );
   let fd = null;
   try {
-    fd = fs12.openSync(tmpName, "wx", 420);
-    fs12.writeFileSync(fd, body, "utf-8");
-    fs12.closeSync(fd);
+    fd = fs13.openSync(tmpName, "wx", 420);
+    fs13.writeFileSync(fd, body, "utf-8");
+    fs13.closeSync(fd);
     fd = null;
-    fs12.chmodSync(tmpName, 420);
-    fs12.renameSync(tmpName, target);
+    fs13.chmodSync(tmpName, 420);
+    fs13.renameSync(tmpName, target);
   } catch (err) {
     if (fd !== null) {
       try {
-        fs12.closeSync(fd);
+        fs13.closeSync(fd);
       } catch {
       }
     }
     try {
-      fs12.unlinkSync(tmpName);
+      fs13.unlinkSync(tmpName);
     } catch {
     }
     throw err;
@@ -10617,12 +10795,12 @@ var LEGACY_SETTINGS_FILE = ".agent-settings";
 var LEGACY_BACKUP_FILE = ".agent-settings.backup.key-value";
 var SETTINGS_SUBDIR = ["agents", "settings"];
 function _canonical_settings_target(project_root) {
-  return path10.join(project_root, ...SETTINGS_SUBDIR, SETTINGS_FILE);
+  return path11.join(project_root, ...SETTINGS_SUBDIR, SETTINGS_FILE);
 }
 function _resolve_settings_read(project_root) {
   const canonical = _canonical_settings_target(project_root);
   if (pathExists(canonical)) return canonical;
-  const legacy = path10.join(project_root, SETTINGS_FILE);
+  const legacy = path11.join(project_root, SETTINGS_FILE);
   if (pathExists(legacy)) return legacy;
   return canonical;
 }
@@ -10686,9 +10864,9 @@ function fail(msg) {
   throw new SystemExitError(1);
 }
 function detect_package_root(project_root) {
-  const npm_path = path10.join(project_root, "node_modules", "@event4u", "agent-config");
+  const npm_path = path11.join(project_root, "node_modules", "@event4u", "agent-config");
   if (isDir(npm_path)) return resolvePath(npm_path);
-  if (pathExists(path10.join(project_root, "src", "config", "profiles", "minimal.ini"))) {
+  if (pathExists(path11.join(project_root, "src", "config", "profiles", "minimal.ini"))) {
     return project_root;
   }
   fail(
@@ -10696,12 +10874,12 @@ function detect_package_root(project_root) {
   );
 }
 function detect_package_type(package_root) {
-  if (package_root.split(path10.sep).includes("node_modules")) return "npm";
+  if (package_root.split(path11.sep).includes("node_modules")) return "npm";
   return "local";
 }
 function detect_package_type_for_project(project_root, package_root) {
   const npm_path = resolvePath(
-    path10.join(project_root, "node_modules", "@event4u", "agent-config")
+    path11.join(project_root, "node_modules", "@event4u", "agent-config")
   );
   const package_resolved = resolvePath(package_root);
   if (package_resolved === npm_path) return "npm";
@@ -10721,7 +10899,7 @@ function ensure_directory(p) {
   mkdirp(p);
 }
 function write_file(p, content) {
-  ensure_directory(path10.dirname(p));
+  ensure_directory(path11.dirname(p));
   writeText(p, content);
 }
 function read_json_file(p) {
@@ -10892,7 +11070,7 @@ function _append_unknown_legacy(rendered, legacy_values, unknown_keys) {
   return rendered + "\n" + suffix;
 }
 function _migrate_legacy_if_present(project_root, template_body) {
-  const legacy_target = path10.join(project_root, LEGACY_SETTINGS_FILE);
+  const legacy_target = path11.join(project_root, LEGACY_SETTINGS_FILE);
   if (!isFile(legacy_target)) return null;
   const legacy_text = readText(legacy_target);
   const [values, unknown] = _parse_legacy_settings(legacy_text);
@@ -10907,9 +11085,9 @@ function _migrate_legacy_if_present(project_root, template_body) {
     }
   }
   rendered = _append_unknown_legacy(rendered, values, unknown);
-  const backup_target = path10.join(project_root, LEGACY_BACKUP_FILE);
+  const backup_target = path11.join(project_root, LEGACY_BACKUP_FILE);
   writeText(backup_target, legacy_text);
-  fs12.unlinkSync(legacy_target);
+  fs13.unlinkSync(legacy_target);
   info(`Migrated legacy ${LEGACY_SETTINGS_FILE} \u2192 ${SETTINGS_FILE}`);
   info(`Backup saved to ${LEGACY_BACKUP_FILE}`);
   if (unknown.length > 0) {
@@ -10944,7 +11122,7 @@ function _render_template(template, profile_values) {
   return body;
 }
 function _load_valid_user_types(package_root) {
-  const directory = path10.join(package_root, USER_TYPES_DIR);
+  const directory = path11.join(package_root, USER_TYPES_DIR);
   if (!isDir(directory)) return [];
   return sortedGlobStems(directory, ".yml");
 }
@@ -11001,8 +11179,8 @@ function splitlinesKeepends(text) {
 }
 function ensure_agent_settings(project_root, package_root, profile, force, user_type = "", packs = null) {
   const target = _canonical_settings_target(project_root);
-  const profile_source = path10.join(package_root, "src", "config", "profiles", `${profile}.ini`);
-  const template_source = path10.join(package_root, "src", "config", "agent-settings.template.yml");
+  const profile_source = path11.join(package_root, "src", "config", "profiles", `${profile}.ini`);
+  const template_source = path11.join(package_root, "src", "config", "agent-settings.template.yml");
   if (!pathExists(profile_source)) fail(`Missing profile preset: ${profile_source}`);
   if (!pathExists(template_source)) fail(`Missing settings template: ${template_source}`);
   const template = readText(template_source);
@@ -11016,21 +11194,21 @@ function ensure_agent_settings(project_root, package_root, profile, force, user_
   if (profile_values["rule_loading_tier"] !== profile) {
     const got = "rule_loading_tier" in profile_values ? `'${profile_values["rule_loading_tier"]}'` : "None";
     fail(
-      `Profile preset ${path10.basename(profile_source)} has rule_loading_tier=${got} but --profile=${profile}`
+      `Profile preset ${path11.basename(profile_source)} has rule_loading_tier=${got} but --profile=${profile}`
     );
   }
   profile_values["user_type"] = _validate_user_type(package_root, user_type);
   let template_body = _render_template(template, profile_values);
   template_body = _inject_packs(template_body, packs ?? []);
-  const legacy_root = path10.join(project_root, SETTINGS_FILE);
+  const legacy_root = path11.join(project_root, SETTINGS_FILE);
   if (isFile(legacy_root) && !pathExists(target)) {
-    mkdirp(path10.dirname(target));
+    mkdirp(path11.dirname(target));
     writeText(target, readText(legacy_root));
-    fs12.unlinkSync(legacy_root);
+    fs13.unlinkSync(legacy_root);
     success(`Migrated ${SETTINGS_FILE} \u2192 agents/settings/${SETTINGS_FILE} (ADR-038)`);
     return;
   }
-  const legacy_target = path10.join(project_root, LEGACY_SETTINGS_FILE);
+  const legacy_target = path11.join(project_root, LEGACY_SETTINGS_FILE);
   if (isFile(legacy_target) && pathExists(target)) {
     warn(
       `Both ${SETTINGS_FILE} and legacy ${LEGACY_SETTINGS_FILE} exist. Skipping migration to avoid overwriting ${SETTINGS_FILE}. Delete one of them manually and re-run.`
@@ -11047,7 +11225,7 @@ function ensure_agent_settings(project_root, package_root, profile, force, user_
     skip(`${SETTINGS_FILE} already exists`);
     return;
   }
-  mkdirp(path10.dirname(target));
+  mkdirp(path11.dirname(target));
   write_file(target, template_body);
   const user_type_value = profile_values["user_type"] ?? "";
   const suffix = user_type_value ? `, user_type=${user_type_value}` : "";
@@ -11060,7 +11238,7 @@ function ensure_vscode_bridge(project_root, package_type, force) {
   const plugin_path = plugin_paths[package_type] ?? "./plugin/agent-config";
   const bridge = { "chat.pluginLocations": { [plugin_path]: true } };
   merge_json_file(
-    path10.join(project_root, ".vscode", "settings.json"),
+    path11.join(project_root, ".vscode", "settings.json"),
     bridge,
     force,
     ".vscode/settings.json"
@@ -11069,14 +11247,14 @@ function ensure_vscode_bridge(project_root, package_type, force) {
 function ensure_augment_bridge(project_root, force) {
   const bridge = { enabledPlugins: { "agent-config@event4u": true } };
   return merge_json_file(
-    path10.join(project_root, ".augment", "settings.json"),
+    path11.join(project_root, ".augment", "settings.json"),
     bridge,
     force,
     ".augment/settings.json"
   );
 }
-var AUGMENT_USER_DIR = path10.join(os6.homedir(), ".augment");
-var AUGMENT_USER_HOOKS_DIR = path10.join(AUGMENT_USER_DIR, "hooks");
+var AUGMENT_USER_DIR = path11.join(os6.homedir(), ".augment");
+var AUGMENT_USER_HOOKS_DIR = path11.join(AUGMENT_USER_DIR, "hooks");
 var AUGMENT_DISPATCHER_TRAMPOLINE = "augment-dispatcher.sh";
 var AUGMENT_LEGACY_TRAMPOLINES = [
   "augment-chat-history.sh",
@@ -11092,29 +11270,29 @@ var AUGMENT_DISPATCHER_BINDINGS = [
   ["post_tool_use", "PostToolUse"]
 ];
 function _deploy_augment_trampoline(package_root, name, force) {
-  const src = path10.join(package_root, "scripts", "hooks", name);
+  const src = path11.join(package_root, "scripts", "hooks", name);
   if (!pathExists(src)) {
     skip(`augment trampoline missing in package: ${src}`);
     return null;
   }
   mkdirp(AUGMENT_USER_HOOKS_DIR);
-  const dst = path10.join(AUGMENT_USER_HOOKS_DIR, name);
+  const dst = path11.join(AUGMENT_USER_HOOKS_DIR, name);
   const src_text = readText(src);
   if (pathExists(dst) && readText(dst) === src_text && !force) {
     skip(`~/.augment/hooks/${name} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs12.chmodSync(dst, 493);
+    fs13.chmodSync(dst, 493);
     success(`~/.augment/hooks/${name} installed`);
   }
   return dst;
 }
 function _remove_legacy_augment_trampolines() {
   for (const name of AUGMENT_LEGACY_TRAMPOLINES) {
-    const legacy = path10.join(AUGMENT_USER_HOOKS_DIR, name);
+    const legacy = path11.join(AUGMENT_USER_HOOKS_DIR, name);
     try {
       if (isFile(legacy)) {
-        fs12.unlinkSync(legacy);
+        fs13.unlinkSync(legacy);
         skip(`removed legacy ~/.augment/hooks/${name}`);
       }
     } catch {
@@ -11133,7 +11311,7 @@ function ensure_augment_user_hooks(package_root, force) {
   }
   const settings_patch = { hooks: per_event };
   return merge_json_file(
-    path10.join(AUGMENT_USER_DIR, "settings.json"),
+    path11.join(AUGMENT_USER_DIR, "settings.json"),
     settings_patch,
     force,
     "~/.augment/settings.json"
@@ -11158,7 +11336,7 @@ function _heal_legacy_claude_plugin_ids(p) {
   return removed;
 }
 function ensure_claude_bridge(project_root, force) {
-  const target = path10.join(project_root, ".claude", "settings.json");
+  const target = path11.join(project_root, ".claude", "settings.json");
   const healed = _heal_legacy_claude_plugin_ids(target);
   for (const pid of healed) {
     success(`.claude/settings.json: removed stale plugin id \`${pid}\``);
@@ -11183,29 +11361,29 @@ function ensure_cursor_bridge(project_root, force) {
   }
   const bridge = { version: 1, hooks };
   return merge_json_file(
-    path10.join(project_root, ".cursor", "hooks.json"),
+    path11.join(project_root, ".cursor", "hooks.json"),
     bridge,
     force,
     ".cursor/hooks.json"
   );
 }
-var CURSOR_USER_DIR = path10.join(os6.homedir(), ".cursor");
-var CURSOR_USER_HOOKS_DIR = path10.join(CURSOR_USER_DIR, "hooks");
+var CURSOR_USER_DIR = path11.join(os6.homedir(), ".cursor");
+var CURSOR_USER_HOOKS_DIR = path11.join(CURSOR_USER_DIR, "hooks");
 var CURSOR_DISPATCHER_TRAMPOLINE = "cursor-dispatcher.sh";
 function ensure_cursor_user_hooks(package_root, force) {
-  const src = path10.join(package_root, "scripts", "hooks", CURSOR_DISPATCHER_TRAMPOLINE);
+  const src = path11.join(package_root, "scripts", "hooks", CURSOR_DISPATCHER_TRAMPOLINE);
   if (!pathExists(src)) {
     skip(`cursor trampoline missing in package: ${src}`);
     return [];
   }
   mkdirp(CURSOR_USER_HOOKS_DIR);
-  const dst = path10.join(CURSOR_USER_HOOKS_DIR, CURSOR_DISPATCHER_TRAMPOLINE);
+  const dst = path11.join(CURSOR_USER_HOOKS_DIR, CURSOR_DISPATCHER_TRAMPOLINE);
   const src_text = readText(src);
   if (pathExists(dst) && readText(dst) === src_text && !force) {
     skip(`~/.cursor/hooks/${CURSOR_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs12.chmodSync(dst, 493);
+    fs13.chmodSync(dst, 493);
     success(`~/.cursor/hooks/${CURSOR_DISPATCHER_TRAMPOLINE} installed`);
   }
   const hooks = {};
@@ -11214,7 +11392,7 @@ function ensure_cursor_user_hooks(package_root, force) {
   }
   const settings_patch = { version: 1, hooks };
   return merge_json_file(
-    path10.join(CURSOR_USER_DIR, "hooks.json"),
+    path11.join(CURSOR_USER_DIR, "hooks.json"),
     settings_patch,
     force,
     "~/.cursor/hooks.json"
@@ -11257,12 +11435,12 @@ exit 0
 `;
 }
 function ensure_cline_bridge(project_root, force) {
-  const hooks_dir = path10.join(project_root, ".clinerules", "hooks");
+  const hooks_dir = path11.join(project_root, ".clinerules", "hooks");
   mkdirp(hooks_dir);
   const workspace_quoted = shlexQuote(resolvePath(project_root));
   let written = 0;
   for (const [ac_event, native_event] of CLINE_DISPATCHER_BINDINGS) {
-    const target = path10.join(hooks_dir, native_event);
+    const target = path11.join(hooks_dir, native_event);
     const body = clineProjectHookBody(native_event, ac_event, workspace_quoted);
     if (pathExists(target) && readText(target) === body && !force) {
       continue;
@@ -11272,7 +11450,7 @@ function ensure_cline_bridge(project_root, force) {
       continue;
     }
     writeText(target, body);
-    fs12.chmodSync(target, 493);
+    fs13.chmodSync(target, 493);
     written += 1;
   }
   if (written) {
@@ -11281,27 +11459,27 @@ function ensure_cline_bridge(project_root, force) {
     skip(".clinerules/hooks/ already up to date");
   }
 }
-var CLINE_USER_DIR = path10.join(os6.homedir(), "Documents", "Cline", "Hooks");
+var CLINE_USER_DIR = path11.join(os6.homedir(), "Documents", "Cline", "Hooks");
 var CLINE_DISPATCHER_TRAMPOLINE = "cline-dispatcher.sh";
 function ensure_cline_user_hooks(package_root, force) {
-  const src = path10.join(package_root, "scripts", "hooks", CLINE_DISPATCHER_TRAMPOLINE);
+  const src = path11.join(package_root, "scripts", "hooks", CLINE_DISPATCHER_TRAMPOLINE);
   if (!pathExists(src)) {
     skip(`cline trampoline missing in package: ${src}`);
     return;
   }
   mkdirp(CLINE_USER_DIR);
-  const trampoline = path10.join(CLINE_USER_DIR, CLINE_DISPATCHER_TRAMPOLINE);
+  const trampoline = path11.join(CLINE_USER_DIR, CLINE_DISPATCHER_TRAMPOLINE);
   const src_text = readText(src);
   if (pathExists(trampoline) && readText(trampoline) === src_text && !force) {
     skip(`~/Documents/Cline/Hooks/${CLINE_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(trampoline, src_text);
-    fs12.chmodSync(trampoline, 493);
+    fs13.chmodSync(trampoline, 493);
     success(`~/Documents/Cline/Hooks/${CLINE_DISPATCHER_TRAMPOLINE} installed`);
   }
   const trampoline_quoted = shlexQuote(trampoline);
   for (const [ac_event, native_event] of CLINE_DISPATCHER_BINDINGS) {
-    const wrapper = path10.join(CLINE_USER_DIR, native_event);
+    const wrapper = path11.join(CLINE_USER_DIR, native_event);
     const body = `#!/usr/bin/env bash
 # Generated by event4u/agent-config install.py \u2014 DO NOT EDIT.
 # User-scope Cline hook for ${native_event} \u2192 agent-config ${ac_event}.
@@ -11311,7 +11489,7 @@ exec ${trampoline_quoted} ${ac_event} ${native_event}
       continue;
     }
     writeText(wrapper, body);
-    fs12.chmodSync(wrapper, 493);
+    fs13.chmodSync(wrapper, 493);
   }
 }
 var WINDSURF_DISPATCHER_BINDINGS = [
@@ -11332,29 +11510,29 @@ function ensure_windsurf_bridge(project_root, force) {
   }
   const bridge = { hooks };
   return merge_json_file(
-    path10.join(project_root, ".windsurf", "hooks.json"),
+    path11.join(project_root, ".windsurf", "hooks.json"),
     bridge,
     force,
     ".windsurf/hooks.json"
   );
 }
-var WINDSURF_USER_DIR = path10.join(os6.homedir(), ".codeium", "windsurf");
-var WINDSURF_USER_HOOKS_DIR = path10.join(WINDSURF_USER_DIR, "hooks");
+var WINDSURF_USER_DIR = path11.join(os6.homedir(), ".codeium", "windsurf");
+var WINDSURF_USER_HOOKS_DIR = path11.join(WINDSURF_USER_DIR, "hooks");
 var WINDSURF_DISPATCHER_TRAMPOLINE = "windsurf-dispatcher.sh";
 function ensure_windsurf_user_hooks(package_root, force) {
-  const src = path10.join(package_root, "scripts", "hooks", WINDSURF_DISPATCHER_TRAMPOLINE);
+  const src = path11.join(package_root, "scripts", "hooks", WINDSURF_DISPATCHER_TRAMPOLINE);
   if (!pathExists(src)) {
     skip(`windsurf trampoline missing in package: ${src}`);
     return [];
   }
   mkdirp(WINDSURF_USER_HOOKS_DIR);
-  const dst = path10.join(WINDSURF_USER_HOOKS_DIR, WINDSURF_DISPATCHER_TRAMPOLINE);
+  const dst = path11.join(WINDSURF_USER_HOOKS_DIR, WINDSURF_DISPATCHER_TRAMPOLINE);
   const src_text = readText(src);
   if (pathExists(dst) && readText(dst) === src_text && !force) {
     skip(`~/.codeium/windsurf/hooks/${WINDSURF_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs12.chmodSync(dst, 493);
+    fs13.chmodSync(dst, 493);
     success(`~/.codeium/windsurf/hooks/${WINDSURF_DISPATCHER_TRAMPOLINE} installed`);
   }
   const hooks = {};
@@ -11366,7 +11544,7 @@ function ensure_windsurf_user_hooks(package_root, force) {
   }
   const settings_patch = { hooks };
   return merge_json_file(
-    path10.join(WINDSURF_USER_DIR, "hooks.json"),
+    path11.join(WINDSURF_USER_DIR, "hooks.json"),
     settings_patch,
     force,
     "~/.codeium/windsurf/hooks.json"
@@ -11395,43 +11573,43 @@ function _gemini_hooks_dict(command_factory) {
 function ensure_gemini_bridge(project_root, force) {
   const bridge = { hooks: _gemini_hooks_dict(_gemini_dispatch_command) };
   return merge_json_file(
-    path10.join(project_root, ".gemini", "settings.json"),
+    path11.join(project_root, ".gemini", "settings.json"),
     bridge,
     force,
     ".gemini/settings.json"
   );
 }
-var GEMINI_USER_DIR = path10.join(os6.homedir(), ".gemini");
-var GEMINI_USER_HOOKS_DIR = path10.join(GEMINI_USER_DIR, "hooks");
+var GEMINI_USER_DIR = path11.join(os6.homedir(), ".gemini");
+var GEMINI_USER_HOOKS_DIR = path11.join(GEMINI_USER_DIR, "hooks");
 var GEMINI_DISPATCHER_TRAMPOLINE = "gemini-dispatcher.sh";
 function ensure_gemini_user_hooks(package_root, force) {
-  const src = path10.join(package_root, "scripts", "hooks", GEMINI_DISPATCHER_TRAMPOLINE);
+  const src = path11.join(package_root, "scripts", "hooks", GEMINI_DISPATCHER_TRAMPOLINE);
   if (!pathExists(src)) {
     skip(`gemini trampoline missing in package: ${src}`);
     return [];
   }
   mkdirp(GEMINI_USER_HOOKS_DIR);
-  const dst = path10.join(GEMINI_USER_HOOKS_DIR, GEMINI_DISPATCHER_TRAMPOLINE);
+  const dst = path11.join(GEMINI_USER_HOOKS_DIR, GEMINI_DISPATCHER_TRAMPOLINE);
   const src_text = readText(src);
   if (pathExists(dst) && readText(dst) === src_text && !force) {
     skip(`~/.gemini/hooks/${GEMINI_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs12.chmodSync(dst, 493);
+    fs13.chmodSync(dst, 493);
     success(`~/.gemini/hooks/${GEMINI_DISPATCHER_TRAMPOLINE} installed`);
   }
   const settings_patch = {
     hooks: _gemini_hooks_dict((ac_event, native) => `${dst} ${ac_event} ${native}`)
   };
   return merge_json_file(
-    path10.join(GEMINI_USER_DIR, "settings.json"),
+    path11.join(GEMINI_USER_DIR, "settings.json"),
     settings_patch,
     force,
     "~/.gemini/settings.json"
   );
 }
 function ensure_copilot_bridge(project_root, force) {
-  const target = path10.join(project_root, ".github", "plugin", "marketplace.json");
+  const target = path11.join(project_root, ".github", "plugin", "marketplace.json");
   const bridge = {
     marketplace: {
       name: "event4u-agent-marketplace",
@@ -11474,7 +11652,7 @@ See \`docs/setup/per-ide/roocode.md\` for the full activation guide.
 Run \`./agent-config --help\` for available commands.
 `;
 function ensure_roocode_bridge(project_root, force) {
-  const target = path10.join(project_root, ".roo", "rules", "agent-config.md");
+  const target = path11.join(project_root, ".roo", "rules", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".roo/rules/agent-config.md already exists");
     return;
@@ -11496,7 +11674,7 @@ To wire Claude Desktop to this project's rules, run:
 Canonical rule and skill source: \`.augment/\` (see \`AGENTS.md\`).
 `;
 function ensure_claude_desktop_bridge(project_root, force) {
-  const target = path10.join(project_root, ".claude-desktop", "agent-config.md");
+  const target = path11.join(project_root, ".claude-desktop", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".claude-desktop/agent-config.md already exists");
     return;
@@ -11521,7 +11699,7 @@ Or pass \`--read .aider/agent-config.md\` on the command line.
 Canonical rule and skill source: \`.augment/\` (see \`AGENTS.md\`).
 `;
 function ensure_aider_bridge(project_root, force) {
-  const target = path10.join(project_root, ".aider", "agent-config.md");
+  const target = path11.join(project_root, ".aider", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".aider/agent-config.md already exists");
     return;
@@ -11540,7 +11718,7 @@ developers where the rules and skills live.
 Canonical rule and skill source: \`.augment/\` (see project \`AGENTS.md\`).
 `;
 function ensure_codex_bridge(project_root, force) {
-  const target = path10.join(project_root, ".codex", "agent-config.md");
+  const target = path11.join(project_root, ".codex", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".codex/agent-config.md already exists");
     return;
@@ -11558,7 +11736,7 @@ rules per session. The canonical rule and skill source lives under
 orientation).
 `;
 function ensure_continue_bridge(project_root, force) {
-  const target = path10.join(project_root, ".continue", "rules", "agent-config.md");
+  const target = path11.join(project_root, ".continue", "rules", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".continue/rules/agent-config.md already exists");
     return;
@@ -11589,7 +11767,7 @@ orientation).
 See \`docs/setup/per-ide/kilocode.md\` for the full activation guide.
 `;
 function ensure_kilocode_bridge(project_root, force) {
-  const target = path10.join(project_root, ".kilocode", "rules", "agent-config.md");
+  const target = path11.join(project_root, ".kilocode", "rules", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".kilocode/rules/agent-config.md already exists");
     return;
@@ -11616,7 +11794,7 @@ canonical source (or symlink it):
 Canonical rule and skill source: \`.augment/\` (see \`AGENTS.md\`).
 `;
 function ensure_zed_bridge(project_root, force) {
-  const target = path10.join(project_root, ".zed", "agent-config.md");
+  const target = path11.join(project_root, ".zed", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".zed/agent-config.md already exists");
     return;
@@ -11637,7 +11815,7 @@ rules into your JetBrains profile.
 Canonical rule and skill source: \`.augment/\` (see \`AGENTS.md\`).
 `;
 function ensure_jetbrains_bridge(project_root, force) {
-  const target = path10.join(project_root, ".jetbrains", "agent-config.md");
+  const target = path11.join(project_root, ".jetbrains", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".jetbrains/agent-config.md already exists");
     return;
@@ -11668,7 +11846,7 @@ session. The canonical rule and skill source lives under \`.augment/\`
 See \`docs/setup/per-ide/kiro.md\` for the full activation guide.
 `;
 function ensure_kiro_bridge(project_root, force) {
-  const target = path10.join(project_root, ".kiro", "steering", "agent-config.md");
+  const target = path11.join(project_root, ".kiro", "steering", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".kiro/steering/agent-config.md already exists");
     return;
@@ -11694,35 +11872,35 @@ var SMOKE_BRIDGE_PATHS = {
 };
 function dirHasEntries(p) {
   try {
-    return fs12.readdirSync(p).length > 0;
+    return fs13.readdirSync(p).length > 0;
   } catch {
     return false;
   }
 }
 function _resolve_tsx_invocation(scriptPath, scriptArgs) {
   const binName = process3.platform === "win32" ? "tsx.cmd" : "tsx";
-  let dir = path10.dirname(scriptPath);
+  let dir = path11.dirname(scriptPath);
   for (; ; ) {
-    const candidate = path10.join(dir, "node_modules", ".bin", binName);
+    const candidate = path11.join(dir, "node_modules", ".bin", binName);
     if (isFile(candidate)) {
       return { command: candidate, args: [scriptPath, ...scriptArgs] };
     }
-    const parent = path10.dirname(dir);
+    const parent = path11.dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
   return { command: "npx", args: ["tsx", scriptPath, ...scriptArgs] };
 }
 function _smoke_test_hooks(project_root, package_root) {
-  const dispatcher = path10.join(package_root, "scripts", "hooks", "dispatch_hook.ts");
-  const manifest = path10.join(package_root, "scripts", "hook_manifest.yaml");
+  const dispatcher = path11.join(package_root, "scripts", "hooks", "dispatch_hook.ts");
+  const manifest = path11.join(package_root, "scripts", "hook_manifest.yaml");
   if (!isFile(dispatcher) || !isFile(manifest)) return 0;
   const failed = [];
   const skipped = [];
   const passed = [];
   for (const [platform, native] of SMOKE_PROBE_EVENTS) {
     const rel_bridge = SMOKE_BRIDGE_PATHS[platform] ?? "";
-    const bridge_path = rel_bridge ? path10.join(project_root, rel_bridge) : null;
+    const bridge_path = rel_bridge ? path11.join(project_root, rel_bridge) : null;
     const bridge_present = Boolean(
       bridge_path && (isFile(bridge_path) || isDir(bridge_path) && dirHasEntries(bridge_path))
     );
@@ -11922,9 +12100,9 @@ To remove this marker, delete this file.
 `;
 }
 var _CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles";
-var GLOBAL_ROOT = path10.join(os6.homedir(), ".event4u", "agent-config");
-var GLOBAL_USER_SETTINGS_PATH = path10.join(GLOBAL_ROOT, ".agent-user.yml");
-var GLOBAL_AGENT_SETTINGS_PATH = path10.join(GLOBAL_ROOT, ".agent-settings.yml");
+var GLOBAL_ROOT = path11.join(os6.homedir(), ".event4u", "agent-config");
+var GLOBAL_USER_SETTINGS_PATH = path11.join(GLOBAL_ROOT, ".agent-user.yml");
+var GLOBAL_AGENT_SETTINGS_PATH = path11.join(GLOBAL_ROOT, ".agent-settings.yml");
 function _bridge_marker(tool_id, scope) {
   if (scope === "global") return USER_SCOPE_PATHS[tool_id] ?? "";
   return PROJECT_BRIDGE_MARKERS[tool_id] ?? "";
@@ -12037,9 +12215,9 @@ function detect_scope(cwd) {
   if (pathExists(_resolve_settings_read(cwd))) {
     return ["project", `existing ${SETTINGS_FILE}`];
   }
-  const has_manifest = SCOPE_DETECT_MANIFESTS.find((m) => pathExists(path10.join(cwd, m))) ?? null;
-  const has_ai_dir = SCOPE_DETECT_AI_DIRS.find((d) => isDir(path10.join(cwd, d))) ?? null;
-  const has_ai_file = SCOPE_DETECT_AI_FILES.find((f) => pathExists(path10.join(cwd, f))) ?? null;
+  const has_manifest = SCOPE_DETECT_MANIFESTS.find((m) => pathExists(path11.join(cwd, m))) ?? null;
+  const has_ai_dir = SCOPE_DETECT_AI_DIRS.find((d) => isDir(path11.join(cwd, d))) ?? null;
+  const has_ai_file = SCOPE_DETECT_AI_FILES.find((f) => pathExists(path11.join(cwd, f))) ?? null;
   if (has_manifest && (has_ai_dir || has_ai_file)) {
     const marker = has_ai_dir || has_ai_file;
     return ["prompt", `manifest (${has_manifest}) + AI-tool config (${marker})`];
@@ -12060,7 +12238,7 @@ function readLineSyncRaw(promptText) {
   for (; ; ) {
     let n;
     try {
-      n = fs12.readSync(0, buf, 0, 1, null);
+      n = fs13.readSync(0, buf, 0, 1, null);
     } catch (err) {
       const code = err.code;
       if (code === "EAGAIN") {
@@ -12135,8 +12313,8 @@ function _files_by_tool_from_bridges(tools, project_root, scope) {
     const marker = _bridge_marker(tool_id, scope);
     if (!marker) continue;
     let marker_path = marker;
-    if (!path10.isAbsolute(marker_path)) {
-      marker_path = path10.join(project_root, marker_path);
+    if (!path11.isAbsolute(marker_path)) {
+      marker_path = path11.join(project_root, marker_path);
     }
     out[tool_id] = [_file_entry(marker_path, "bridge", false)];
   }
@@ -12175,26 +12353,26 @@ function _update_installed_tools_manifest(project_root, tools, scope, force, fil
   }
   write_manifest(target, version, entries);
   if (!state.QUIET) {
-    const rel = isRelativeTo(target, project_root) ? path10.relative(project_root, target) : target;
+    const rel = isRelativeTo(target, project_root) ? path11.relative(project_root, target) : target;
     info(`Manifest updated: ${rel}`);
   }
   return 0;
 }
 function isRelativeTo(child, parent) {
-  const rel = path10.relative(parent, child);
-  return rel === "" || !rel.startsWith("..") && !path10.isAbsolute(rel);
+  const rel = path11.relative(parent, child);
+  return rel === "" || !rel.startsWith("..") && !path11.isAbsolute(rel);
 }
 function _resolve_package_root_for_global() {
   const here = resolvePath(_HERE2);
-  const candidate = path10.dirname(path10.dirname(path10.dirname(here)));
-  if (!pathExists(path10.join(candidate, "src", "config", "profiles", "minimal.ini"))) {
+  const candidate = path11.dirname(path11.dirname(path11.dirname(here)));
+  if (!pathExists(path11.join(candidate, "src", "config", "profiles", "minimal.ini"))) {
     fail(
       `Could not locate agent-config package root from ${here}. Expected src/config/profiles/minimal.ini at the parent directory.`
     );
   }
   return candidate;
 }
-var CONSUMER_BRIDGE_MARKER_RELPATH = path10.join("agents", ".event4u-bridge.yml");
+var CONSUMER_BRIDGE_MARKER_RELPATH = path11.join("agents", ".event4u-bridge.yml");
 var MIGRATE_LEGACY_YAML_FILES = [".agent-settings.yml", ".agent-user.yml"];
 var MIGRATE_LEGACY_TOOL_DIRS = [".augment", ".claude", ".cursor"];
 var AGENT_CONFIG_PACKAGE_NAME = "@event4u/agent-config";
@@ -12202,7 +12380,7 @@ function _is_agent_config_source_repo(project_root) {
   if (process3.env["AGENT_CONFIG_CONSUMER_MODE"] === "1") {
     return [false, "consumer-mode-override"];
   }
-  const pkg_json = path10.join(project_root, "package.json");
+  const pkg_json = path11.join(project_root, "package.json");
   if (isFile(pkg_json)) {
     let data = {};
     try {
@@ -12214,18 +12392,18 @@ function _is_agent_config_source_repo(project_root) {
       return [true, "package.json:name"];
     }
   }
-  if (isDir(path10.join(project_root, ".agent-src.uncondensed"))) {
+  if (isDir(path11.join(project_root, ".agent-src.uncondensed"))) {
     return [true, ".agent-src.uncondensed/"];
   }
-  const packages_dir = path10.join(project_root, "packages");
+  const packages_dir = path11.join(project_root, "packages");
   if (isDir(packages_dir)) {
-    for (const child of fs12.readdirSync(packages_dir)) {
-      if (isDir(path10.join(packages_dir, child, ".agent-src.uncondensed"))) {
+    for (const child of fs13.readdirSync(packages_dir)) {
+      if (isDir(path11.join(packages_dir, child, ".agent-src.uncondensed"))) {
         return [true, `packages/${child}/.agent-src.uncondensed/`];
       }
     }
   }
-  const installer_self = path10.join(project_root, "scripts", "install.py");
+  const installer_self = path11.join(project_root, "scripts", "install.py");
   try {
     if (isFile(installer_self) && resolvePath(installer_self) === resolvePath(_HERE2)) {
       return [true, "src/scripts/install.py (self)"];
@@ -12245,17 +12423,17 @@ function _detect_legacy_for_migration(project_root) {
     }
     return [];
   }
-  if (isFile(path10.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH))) return [];
+  if (isFile(path11.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH))) return [];
   const found = [];
   for (const name of MIGRATE_LEGACY_YAML_FILES) {
-    if (isFile(path10.join(project_root, name))) {
+    if (isFile(path11.join(project_root, name))) {
       found.push(name);
-    } else if (isFile(path10.join(project_root, "settings", name))) {
+    } else if (isFile(path11.join(project_root, "settings", name))) {
       found.push(`settings/${name}`);
     }
   }
   for (const name of MIGRATE_LEGACY_TOOL_DIRS) {
-    const p = path10.join(project_root, name);
+    const p = path11.join(project_root, name);
     if (isDir(p) && !isSymlink(p)) {
       found.push(`${name}/`);
     }
@@ -12267,7 +12445,7 @@ function _prompt_migrate_to_global(project_root, artefacts) {
     process3.stdout.write("\n");
     warn("Legacy project-local artefacts detected \u2014 pre-ADR-020 layout:");
     for (const rel of artefacts) {
-      info(`  ${path10.join(project_root, rel)}`);
+      info(`  ${path11.join(project_root, rel)}`);
     }
     info("The unified `agent-config migrate` sweeps these in one pass.");
     info("The wizard recreates fresh config afterwards.");
@@ -12298,16 +12476,16 @@ function _run_migrate_to_global(project_root) {
 function _format_global_root_for_marker(global_root) {
   const home = resolvePath(os6.homedir());
   const resolved = resolvePath(global_root);
-  const rel = path10.relative(home, resolved);
-  if (rel === "" || rel.startsWith("..") || path10.isAbsolute(rel)) {
+  const rel = path11.relative(home, resolved);
+  if (rel === "" || rel.startsWith("..") || path11.isAbsolute(rel)) {
     return global_root;
   }
-  return `~/${rel.split(path10.sep).join("/")}`;
+  return `~/${rel.split(path11.sep).join("/")}`;
 }
 function _write_consumer_bridge_marker(project_root, installer_version, env = null, now = null) {
   const env_map = env ?? process3.env;
   if (env_map["AGENT_CONFIG_DEV_MODE"] === "1") return null;
-  if (isDir(path10.join(project_root, ".agent-src.uncondensed"))) return null;
+  if (isDir(path11.join(project_root, ".agent-src.uncondensed"))) return null;
   const global_root_str = _format_global_root_for_marker(
     event4u_root(env_map)
   );
@@ -12321,8 +12499,8 @@ global_root: ${global_root_str}
 installed_at: ${stamp}
 installer_version: ${installer_version}
 `;
-  const target = path10.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
-  mkdirp(path10.dirname(target));
+  const target = path11.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
+  mkdirp(path11.dirname(target));
   atomicWrite0644(target, body, ".event4u-bridge.");
   return target;
 }
@@ -12334,7 +12512,7 @@ var PROJECT_ANCHOR_TOOLS = {
 function _write_per_tool_project_anchors(project_root, tools, env = null, now = null) {
   const env_map = env ?? process3.env;
   if (env_map["AGENT_CONFIG_DEV_MODE"] === "1") return [];
-  if (isDir(path10.join(project_root, ".agent-src.uncondensed"))) return [];
+  if (isDir(path11.join(project_root, ".agent-src.uncondensed"))) return [];
   const global_root_str = _format_global_root_for_marker(
     event4u_root(env_map)
   );
@@ -12343,10 +12521,10 @@ function _write_per_tool_project_anchors(project_root, tools, env = null, now = 
   for (const tool_id of Object.keys(PROJECT_ANCHOR_TOOLS).sort()) {
     const rel_path = PROJECT_ANCHOR_TOOLS[tool_id];
     if (!tools.has(tool_id)) continue;
-    const target = path10.join(project_root, rel_path);
-    mkdirp(path10.dirname(target));
-    const bridge_abs = path10.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
-    const bridge_rel = path10.relative(path10.dirname(target), bridge_abs);
+    const target = path11.join(project_root, rel_path);
+    mkdirp(path11.dirname(target));
+    const bridge_abs = path11.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
+    const bridge_rel = path11.relative(path11.dirname(target), bridge_abs);
     const body = `# event4u/agent-config \u2014 per-tool project anchor (auto-written).
 # Spec: docs/contracts/consumer-bridge.md \xA7 Per-tool anchor strategy.
 # Tool: ${tool_id}. Bridge marker: agents/.event4u-bridge.yml.
@@ -12363,7 +12541,7 @@ installed_at: ${stamp}
 }
 var PACKAGE_TAG_ID = "event4u/agent-config";
 function _inject_package_tag(target, source, package_root) {
-  if (path10.extname(target) !== ".md") return;
+  if (path11.extname(target) !== ".md") return;
   let text;
   try {
     text = readText(target);
@@ -12391,8 +12569,8 @@ function _inject_package_tag(target, source, package_root) {
       resolved_src = source;
     }
     if (package_root !== null) {
-      const rel = path10.relative(resolvePath(package_root), resolved_src);
-      if (rel !== "" && !rel.startsWith("..") && !path10.isAbsolute(rel)) {
+      const rel = path11.relative(resolvePath(package_root), resolved_src);
+      if (rel !== "" && !rel.startsWith("..") && !path11.isAbsolute(rel)) {
         source_value = rel;
       } else {
         source_value = resolved_src;
@@ -12429,10 +12607,10 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null)
   const written_paths = [];
   if (!pathExists(src)) return [0, 0, written_paths];
   if (!isDir(src)) {
-    mkdirp(path10.dirname(dest));
+    mkdirp(path11.dirname(dest));
     const decision = _resolve_file_conflict(dest, force);
     if (decision === "skip") return [0, 1, written_paths];
-    fs12.copyFileSync(src, dest);
+    fs13.copyFileSync(src, dest);
     _inject_package_tag(dest, src, package_root);
     written_paths.push(dest);
     return [1, 0, written_paths];
@@ -12440,11 +12618,11 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null)
   mkdirp(dest);
   const walk = (node) => {
     const acc = [];
-    const names = fs12.readdirSync(node).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const names = fs13.readdirSync(node).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
     for (const name of names) {
-      const entry = path10.join(node, name);
+      const entry = path11.join(node, name);
       acc.push(entry);
-      const lst = fs12.lstatSync(entry);
+      const lst = fs13.lstatSync(entry);
       if (lst.isDirectory() && !lst.isSymbolicLink()) {
         acc.push(...walk(entry));
       }
@@ -12452,9 +12630,9 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null)
     return acc;
   };
   for (const entry of walk(src)) {
-    const rel = path10.relative(src, entry);
-    const target = path10.join(dest, rel);
-    const lst = fs12.lstatSync(entry);
+    const rel = path11.relative(src, entry);
+    const target = path11.join(dest, rel);
+    const lst = fs13.lstatSync(entry);
     if (lst.isDirectory() && !lst.isSymbolicLink()) {
       mkdirp(target);
       continue;
@@ -12462,8 +12640,8 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null)
     let resolvedIsDir = false;
     let resolved = entry;
     try {
-      resolved = fs12.realpathSync(entry);
-      resolvedIsDir = fs12.statSync(entry).isDirectory();
+      resolved = fs13.realpathSync(entry);
+      resolvedIsDir = fs13.statSync(entry).isDirectory();
     } catch {
       resolvedIsDir = false;
     }
@@ -12485,8 +12663,8 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null)
       skipped += 1;
       continue;
     }
-    mkdirp(path10.dirname(target));
-    fs12.copyFileSync(resolved, target);
+    mkdirp(path11.dirname(target));
+    fs13.copyFileSync(resolved, target);
     _inject_package_tag(target, resolved, package_root);
     written += 1;
     written_paths.push(target);
@@ -12498,7 +12676,7 @@ function _claude_desktop_bundles_dir() {
 }
 function _write_claude_desktop_marker(_force, lockfile_path2, bundles_dir, bundle_count) {
   const anchor = expanduser5(USER_SCOPE_PATHS["claude-desktop"]);
-  const target = path10.join(anchor, "agent-config.md");
+  const target = path11.join(anchor, "agent-config.md");
   mkdirp(anchor);
   const body = claudeDesktopMarkerBody(lockfile_path2, anchor, bundles_dir, bundle_count);
   writeText(target, body);
@@ -12541,8 +12719,8 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     const written_paths = [];
     let current_files = /* @__PURE__ */ new Set();
     for (const [src_rel, dest_sub] of plan) {
-      const src = path10.join(package_root, src_rel);
-      const dest = dest_sub ? path10.join(anchor, dest_sub) : anchor;
+      const src = path11.join(package_root, src_rel);
+      const dest = dest_sub ? path11.join(anchor, dest_sub) : anchor;
       const [w, s, paths] = _copy_dir_dereferencing_symlinks(src, dest, force, package_root);
       written_total += w;
       skipped_total += s;
@@ -12590,6 +12768,28 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     }
     _emit_progress({ type: "reaped", tool: tool_id, count: reaped.length });
     results[tool_id] = [written_total, skipped_total, "deployed", written_paths];
+    if (tool_id === "claude-code") {
+      try {
+        const manifest = path11.join(package_root, "src", "scripts", "hook_manifest.yaml");
+        const matrix = build_claude_hook_matrix(manifest);
+        const res = ensure_managed_hooks(
+          path11.join(anchor, "settings.json"),
+          matrix
+        );
+        if (!state.QUIET) {
+          if (res.changed) {
+            success(
+              `claude-code: managed hooks registered in ~/.claude/settings.json (${res.events.length} event(s))`
+            );
+          } else {
+            skip("claude-code: managed hooks already registered");
+          }
+        }
+      } catch (e) {
+        warn(`claude-code: managed-hook registration failed \u2014 ${String(e)}`);
+        _emit_progress({ type: "hooks_failed", tool: tool_id, error: String(e) });
+      }
+    }
   }
   return results;
 }
@@ -12609,7 +12809,7 @@ function _preview_global_reap(tools, package_root) {
     const anchor = expanduser5(anchor_raw);
     let current_files = /* @__PURE__ */ new Set();
     for (const [src_rel, dest_sub] of plan) {
-      const src = path10.join(package_root, src_rel);
+      const src = path11.join(package_root, src_rel);
       current_files = setUnion(
         current_files,
         expected_deploy_files(src, dest_sub ? dest_sub : "")
@@ -12639,14 +12839,14 @@ function _preview_global_reap(tools, package_root) {
 function _verify_deploy_targets(anchor, plan) {
   const missing = [];
   for (const [, dest_sub] of plan) {
-    const target = dest_sub ? path10.join(anchor, dest_sub) : anchor;
+    const target = dest_sub ? path11.join(anchor, dest_sub) : anchor;
     const label = dest_sub || ".";
     if (!isDir(target)) {
       missing.push(label);
       continue;
     }
     try {
-      const entries = fs12.readdirSync(target);
+      const entries = fs13.readdirSync(target);
       if (entries.length === 0) missing.push(label);
     } catch {
       missing.push(label);
@@ -12661,13 +12861,13 @@ function _prune_lab_modules(deploy_results, lab_ids) {
     const [written, skipped, status, paths] = deploy_results[tool_id];
     const lab_skill_dirs = /* @__PURE__ */ new Set();
     for (const p of paths) {
-      const parts = p.split(path10.sep);
+      const parts = p.split(path11.sep);
       if (parts.includes("skills")) {
         const i = parts.indexOf("skills");
         if (i + 1 < parts.length) {
-          const skill_root = parts.slice(0, i + 2).join(path10.sep);
+          const skill_root = parts.slice(0, i + 2).join(path11.sep);
           if (!lab_skill_dirs.has(skill_root)) {
-            const skillmd = path10.join(skill_root, "SKILL.md");
+            const skillmd = path11.join(skill_root, "SKILL.md");
             if (pathExists(skillmd) && is_lab_artefact(skillmd, lab_ids)) {
               lab_skill_dirs.add(skill_root);
             }
@@ -12678,25 +12878,25 @@ function _prune_lab_modules(deploy_results, lab_ids) {
     const keep = [];
     const delete_files = [];
     for (const p of paths) {
-      const parts = p.split(path10.sep);
+      const parts = p.split(path11.sep);
       let is_lab = false;
       if (parts.includes("skills")) {
         const i = parts.indexOf("skills");
-        if (i + 1 < parts.length && lab_skill_dirs.has(parts.slice(0, i + 2).join(path10.sep))) {
+        if (i + 1 < parts.length && lab_skill_dirs.has(parts.slice(0, i + 2).join(path11.sep))) {
           is_lab = true;
         }
-      } else if (parts.includes("commands") && path10.extname(p) === ".md" && is_lab_artefact(p, lab_ids)) {
+      } else if (parts.includes("commands") && path11.extname(p) === ".md" && is_lab_artefact(p, lab_ids)) {
         is_lab = true;
       }
       (is_lab ? delete_files : keep).push(p);
     }
     for (const d of lab_skill_dirs) {
-      fs12.rmSync(d, { recursive: true, force: true });
+      fs13.rmSync(d, { recursive: true, force: true });
     }
     for (const p of delete_files) {
-      if (p.split(path10.sep).includes("commands") && pathExists(p)) {
+      if (p.split(path11.sep).includes("commands") && pathExists(p)) {
         try {
-          fs12.unlinkSync(p);
+          fs13.unlinkSync(p);
         } catch {
         }
       }
@@ -12833,19 +13033,19 @@ function install_global(tools, force, project_root = null, core_only = false) {
       }
     }
   }
-  if (project_root !== null && pathExists(_resolve_settings_read(project_root)) && !isDir(path10.join(project_root, ".agent-src.uncondensed"))) {
+  if (project_root !== null && pathExists(_resolve_settings_read(project_root)) && !isDir(path11.join(project_root, ".agent-src.uncondensed"))) {
     const files_by_tool = _files_by_tool_from_deploy(deploy_results);
     const rc = _update_installed_tools_manifest(project_root, tools, "global", force, files_by_tool);
     if (rc !== 0) return rc;
     const marker_path = _write_consumer_bridge_marker(project_root, installed_version);
     if (marker_path !== null && !state.QUIET) {
-      const rel = isRelativeTo(marker_path, project_root) ? path10.relative(project_root, marker_path) : marker_path;
+      const rel = isRelativeTo(marker_path, project_root) ? path11.relative(project_root, marker_path) : marker_path;
       info(`Bridge marker written: ${rel}`);
     }
     const anchor_paths = _write_per_tool_project_anchors(project_root, tools);
     if (anchor_paths.length > 0 && !state.QUIET) {
       for (const p of anchor_paths) {
-        const rel = isRelativeTo(p, project_root) ? path10.relative(project_root, p) : p;
+        const rel = isRelativeTo(p, project_root) ? path11.relative(project_root, p) : p;
         info(`Project anchor written: ${rel}`);
       }
     }
@@ -13066,13 +13266,13 @@ function _minimal_templates_root() {
   const chain = [start];
   let cur = start;
   for (; ; ) {
-    const parent = path10.dirname(cur);
+    const parent = path11.dirname(cur);
     if (parent === cur) break;
     chain.push(parent);
     cur = parent;
   }
   for (const ancestor of chain) {
-    const candidate = path10.join(ancestor, "src", "templates", "minimal");
+    const candidate = path11.join(ancestor, "src", "templates", "minimal");
     if (isDir(candidate)) return candidate;
   }
   fail("Could not locate src/templates/minimal/ \u2014 package install is corrupt.");
@@ -13080,9 +13280,9 @@ function _minimal_templates_root() {
 var INSTALL_MODE_MARKER_REL = "agents/.agent-state/install-mode.txt";
 function _write_install_mode_marker(project_root, mode) {
   if (mode !== "minimal" && mode !== "full") return;
-  const marker = path10.join(project_root, INSTALL_MODE_MARKER_REL);
+  const marker = path11.join(project_root, INSTALL_MODE_MARKER_REL);
   try {
-    mkdirp(path10.dirname(marker));
+    mkdirp(path11.dirname(marker));
     writeText(marker, `${mode}
 `);
   } catch {
@@ -13091,7 +13291,7 @@ function _write_install_mode_marker(project_root, mode) {
 function install_minimal(target_root_in, force, user_type = "") {
   let target_root = resolvePath(target_root_in);
   mkdirp(target_root);
-  const parent = path10.dirname(target_root);
+  const parent = path11.dirname(target_root);
   if (parent !== target_root) {
     const existing = find_project_root_with_anchor(parent);
     if (existing !== null && existing[0] !== target_root) {
@@ -13102,21 +13302,21 @@ function install_minimal(target_root_in, force, user_type = "") {
     }
   }
   const templates = _minimal_templates_root();
-  const settings_src = path10.join(templates, SETTINGS_FILE);
-  const overrides_gitkeep_src = path10.join(templates, "overrides-gitkeep");
-  const overrides_readme_src = path10.join(templates, "agents-overrides-readme.md");
+  const settings_src = path11.join(templates, SETTINGS_FILE);
+  const overrides_gitkeep_src = path11.join(templates, "overrides-gitkeep");
+  const overrides_readme_src = path11.join(templates, "agents-overrides-readme.md");
   if (!isFile(settings_src)) fail(`Bundled minimal settings template missing under ${templates}`);
   if (!isFile(overrides_gitkeep_src) || !isFile(overrides_readme_src)) {
     fail(`Bundled overrides scaffold templates missing under ${templates}`);
   }
   info(`Minimal init \u2192 ${target_root}`);
-  const overrides_root = path10.join(target_root, "agents", "overrides");
+  const overrides_root = path11.join(target_root, "agents", "overrides");
   mkdirp(overrides_root);
   const gitkeep_body = readText(overrides_gitkeep_src);
   for (const sub of ["rules", "skills", "commands"]) {
-    const sub_dir = path10.join(overrides_root, sub);
+    const sub_dir = path11.join(overrides_root, sub);
     mkdirp(sub_dir);
-    const gitkeep_dst = path10.join(sub_dir, ".gitkeep");
+    const gitkeep_dst = path11.join(sub_dir, ".gitkeep");
     if (pathExists(gitkeep_dst) && !force) {
       skip(`agents/overrides/${sub}/.gitkeep already exists (use --force to overwrite)`);
     } else {
@@ -13124,7 +13324,7 @@ function install_minimal(target_root_in, force, user_type = "") {
       success(`Wrote agents/overrides/${sub}/.gitkeep`);
     }
   }
-  const readme_dst = path10.join(overrides_root, "README.md");
+  const readme_dst = path11.join(overrides_root, "README.md");
   if (pathExists(readme_dst) && !force) {
     skip("agents/overrides/README.md already exists (use --force to overwrite)");
   } else {
@@ -13142,7 +13342,7 @@ function install_minimal(target_root_in, force, user_type = "") {
 personal:
   user_type: ${user_type}
 `;
-      mkdirp(path10.dirname(settings_dst));
+      mkdirp(path11.dirname(settings_dst));
       writeText(settings_dst, body);
       success(`Wrote ${SETTINGS_FILE} (user_type=${user_type})`);
     }
@@ -13150,7 +13350,7 @@ personal:
   const installed_version = current_package_version();
   const marker_path = _write_consumer_bridge_marker(target_root, installed_version);
   if (marker_path !== null) {
-    const rel = isRelativeTo(marker_path, target_root) ? path10.relative(target_root, marker_path) : marker_path;
+    const rel = isRelativeTo(marker_path, target_root) ? path11.relative(target_root, marker_path) : marker_path;
     success(`Wrote ${rel}`);
   }
   _write_install_mode_marker(target_root, "minimal");
@@ -13224,7 +13424,7 @@ function run_interactive_init(project_root, force) {
     );
     return 0;
   }
-  const target = path10.join(project_root, _LOCAL_CONFIG_FILE);
+  const target = path11.join(project_root, _LOCAL_CONFIG_FILE);
   if (pathExists(target) && !force) {
     warn(
       `${_LOCAL_CONFIG_FILE} already exists; re-run with --force to overwrite. Skipping interactive init.`
@@ -13251,7 +13451,7 @@ function run_interactive_init(project_root, force) {
     warn(`Could not write ${target}: ${String(exc)}`);
     return 1;
   }
-  success(`Wrote ${path10.relative(project_root, target)} (${user_type} / ${stack} / ${verbosity})`);
+  success(`Wrote ${path11.relative(project_root, target)} (${user_type} / ${stack} / ${verbosity})`);
   return 0;
 }
 var _WIZARD_READY_RE = /^WIZARD_READY (http:\/\/(?:127\.0\.0\.1|localhost):\d+\/\S*)\r?$/;
@@ -13269,12 +13469,12 @@ function _wizard_should_launch(opts) {
   return [true, ""];
 }
 function _wizard_cli_dist(_project_root) {
-  const package_root = path10.dirname(path10.dirname(path10.dirname(resolvePath(_HERE2))));
-  const cli = path10.join(package_root, "dist", "cli", "agent-config.js");
+  const package_root = path11.dirname(path11.dirname(path11.dirname(resolvePath(_HERE2))));
+  const cli = path11.join(package_root, "dist", "cli", "agent-config.js");
   return pathExists(cli) ? cli : null;
 }
 function _server_info_path() {
-  return path10.join(os6.homedir(), ".event4u", "agent-config", "local-server.json");
+  return path11.join(os6.homedir(), ".event4u", "agent-config", "local-server.json");
 }
 function _pid_is_agent_config(pid) {
   let res;
@@ -13291,7 +13491,7 @@ function _pid_is_agent_config(pid) {
 }
 function unlinkMissingOk(p) {
   try {
-    fs12.unlinkSync(p);
+    fs13.unlinkSync(p);
   } catch {
   }
 }
@@ -13369,14 +13569,14 @@ function _wizard_spawn(project_root, pass_project_root = true) {
 }
 function _wizard_run_sync(cmd, env, cli) {
   const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
-  const log_path = path10.join(
+  const log_path = path11.join(
     os6.tmpdir(),
     `agent-config-wizard-${process3.pid}-${Date.now()}.log`
   );
   let child;
   let log_fd = null;
   try {
-    log_fd = fs12.openSync(log_path, "w");
+    log_fd = fs13.openSync(log_path, "w");
     child = spawn(cmd[0], cmd.slice(1), {
       env,
       detached: true,
@@ -13394,7 +13594,7 @@ function _wizard_run_sync(cmd, env, cli) {
   } finally {
     if (log_fd !== null) {
       try {
-        fs12.closeSync(log_fd);
+        fs13.closeSync(log_fd);
       } catch {
       }
     }
@@ -13644,8 +13844,8 @@ function main2(argv) {
     const target_root = resolvePath(
       opts.custom_path || opts.project || process3.env["PROJECT_ROOT"] || process3.cwd()
     );
-    const minimal_package_root = path10.dirname(
-      path10.dirname(path10.dirname(_minimal_templates_root()))
+    const minimal_package_root = path11.dirname(
+      path11.dirname(path11.dirname(_minimal_templates_root()))
     );
     const validated_user_type = _validate_user_type(minimal_package_root, opts.user_type);
     return install_minimal(target_root, opts.force, validated_user_type);
@@ -13674,7 +13874,7 @@ function main2(argv) {
     return rc2;
   }
   const project_root = custom_path || resolvePath(opts.project || process3.env["PROJECT_ROOT"] || process3.cwd());
-  const is_first_run = !pathExists(path10.join(project_root, SETTINGS_FILE));
+  const is_first_run = !pathExists(path11.join(project_root, SETTINGS_FILE));
   const rc = _main_project_install(opts, project_root, parsed_tools, is_first_run);
   if (rc === 0 && opts.interactive) {
     run_interactive_init(project_root, opts.force);
@@ -13725,16 +13925,16 @@ function _read_consumer_auto_switch(project_root) {
   return "suggest";
 }
 function finalize_claude_model_tiers(project_root) {
-  const claude_skills = path10.join(project_root, ".claude", "skills");
-  const augment_skills = path10.join(project_root, ".augment", "skills");
+  const claude_skills = path11.join(project_root, ".claude", "skills");
+  const augment_skills = path11.join(project_root, ".augment", "skills");
   if (!isDir(claude_skills) || !isDir(augment_skills)) return 0;
   if (_read_consumer_auto_switch(project_root) !== "auto") return 0;
   let rendered = 0;
-  const entries = fs12.readdirSync(claude_skills).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+  const entries = fs13.readdirSync(claude_skills).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   for (const name of entries) {
-    const entry = path10.join(claude_skills, name);
-    const src_dir = path10.join(augment_skills, name);
-    const src_md = path10.join(src_dir, "SKILL.md");
+    const entry = path11.join(claude_skills, name);
+    const src_dir = path11.join(augment_skills, name);
+    const src_md = path11.join(src_dir, "SKILL.md");
     let tier;
     try {
       tier = read_model_tier(src_md);
@@ -13743,22 +13943,22 @@ function finalize_claude_model_tiers(project_root) {
     }
     if (tier === null || !(tier in TIER_TO_CLAUDE_MODEL) || !isDir(src_dir)) continue;
     if (isSymlink(entry) || isFile(entry)) {
-      fs12.unlinkSync(entry);
+      fs13.unlinkSync(entry);
     } else if (isDir(entry)) {
-      fs12.rmSync(entry, { recursive: true, force: true });
+      fs13.rmSync(entry, { recursive: true, force: true });
     }
     mkdirp(entry);
-    const srcFiles = fs12.readdirSync(src_dir).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const srcFiles = fs13.readdirSync(src_dir).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
     for (const fname of srcFiles) {
       if (fname === "SKILL.md") {
         writeText(
-          path10.join(entry, "SKILL.md"),
+          path11.join(entry, "SKILL.md"),
           render_native_model_md(readText(src_md), tier)
         );
       } else {
-        fs12.symlinkSync(
-          path10.join("../../../.augment/skills", name, fname),
-          path10.join(entry, fname)
+        fs13.symlinkSync(
+          path11.join("../../../.augment/skills", name, fname),
+          path11.join(entry, fname)
         );
       }
     }
@@ -13776,7 +13976,7 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
   let package_type;
   if (opts.package) {
     package_root = resolvePath(opts.package);
-    if (!pathExists(path10.join(package_root, "src", "config", "profiles", "minimal.ini"))) {
+    if (!pathExists(path11.join(package_root, "src", "config", "profiles", "minimal.ini"))) {
       fail(`Invalid --package path (missing src/config/profiles/minimal.ini): ${package_root}`);
     }
     package_type = detect_package_type_for_project(project_root, package_root);
@@ -13904,9 +14104,9 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
 function _resolvedArgv1() {
   if (process3.argv[1] === void 0) return void 0;
   try {
-    return fs12.realpathSync(path10.resolve(process3.argv[1]));
+    return fs13.realpathSync(path11.resolve(process3.argv[1]));
   } catch {
-    return path10.resolve(process3.argv[1]);
+    return path11.resolve(process3.argv[1]);
   }
 }
 var _argv1 = _resolvedArgv1();

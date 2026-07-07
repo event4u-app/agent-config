@@ -1,3 +1,21 @@
+# Migrating off the Claude Code marketplace plugin (single-surface model)
+
+The marketplace plugin for Claude Code is deprecated. The npx/npm global
+install is the single surface: it deploys content to `~/.claude/` and
+registers the deterministic hooks in a managed `~/.claude/settings.json`
+block. If you installed the plugin in the past:
+
+```bash
+agent-config upgrade                                        # wires the managed hooks
+claude plugin uninstall agent-config@event4u-agent-config   # removes the duplicate surface
+```
+
+Then start a new Claude Code session. Nothing else changes: hooks keep
+firing (now from `settings.json`), skills/commands stop listing twice, and
+`agent-config doctor` verifies the end state (`hook-wiring` ok,
+`claude-plugin` no longer reporting a duplicate surface). Augment CLI and
+Copilot CLI plugins are unaffected.
+
 # Migrating to 6.0
 
 > Upgrading an existing install to the **6.0 experience-first** layout.

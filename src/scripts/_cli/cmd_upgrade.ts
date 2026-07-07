@@ -504,12 +504,11 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     }
 
     const target = `${PACKAGE_NAME}@latest`;
-    const steps: string[][] = [
-        ['npm', 'install', '-g', target],
-        // --no-ui: the setup wizard is an onboarding surface, not an upgrade
-        // step — its foreground server used to block the upgrade until Ctrl-C.
-        [_agent_config_bin(), 'global', '--no-ui'],
-    ];
+    const npm_cmd: string[] = ['npm', 'install', '-g', target];
+    // --no-ui: the setup wizard is an onboarding surface, not an upgrade
+    // step — its foreground server used to block the upgrade until Ctrl-C.
+    const global_cmd: string[] = [_agent_config_bin(), 'global', '--no-ui'];
+    const steps: string[][] = [npm_cmd, global_cmd];
 
     const project_root = options.project_root ?? process.cwd();
     const sync_targets = _settings_sync_targets(project_root);
@@ -529,22 +528,57 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         return 0;
     }
 
-    for (const cmd of steps) {
+    // Step 1 — the new package version. Nothing after makes sense without
+    // it, so this is the only hard-abort step.
+    _print(out, '→ ' + npm_cmd.join(' '));
+    const npm_rc = runner(npm_cmd);
+    if (npm_rc !== 0) {
+        _print(
+            err,
+            `❌  agent-config upgrade: step failed (exit ${npm_rc}): ` + `${npm_cmd.join(' ')}`,
+        );
+        return 1;
+    }
+
+    // Steps 2..N — independent. A failing step no longer skips the rest:
+    // the 8.2.0 failure class (aborted `global` step silently skipping the
+    // plugin refresh + settings sync) is closed by running every remaining
+    // step and reporting per-step outcomes in the summary. A failed
+    // essential step (global deploy) still exits 1 — after the others ran.
+    const failed_essential: string[] = [];
+    for (const cmd of steps.slice(1)) {
         _print(out, '→ ' + cmd.join(' '));
         const rc = runner(cmd);
         if (rc !== 0) {
+            failed_essential.push(cmd.join(' '));
             _print(
                 err,
-                `❌  agent-config upgrade: step failed (exit ${rc}): ` + `${cmd.join(' ')}`,
+                `❌  agent-config upgrade: step failed (exit ${rc}): ${cmd.join(' ')} — ` +
+                    'continuing with the remaining steps.',
             );
-            return 1;
         }
     }
 
     // Refresh the OPTIONAL Claude Code plugin so its command surface tracks
-    // the upgrade (no-op when the plugin is not installed — the file
-    // projection is a full install on its own).
+    // the upgrade — gated on the plugin actually being installed (empty step
+    // list otherwise). Deprecation window of the single-surface model: once
+    // the plugin is retired this block disappears with it.
     _refresh_claude_plugin(plugin_steps, runner, out, err);
+
+    // Migration prompt (single-surface model): hooks were wired into
+    // ~/.claude/settings.json by the `global` step above, so an installed
+    // plugin is now a duplicate surface. Surface the one-line removal —
+    // NEVER uninstall autonomously (the plugin is a user-owned surface).
+    if (plugin_steps.length > 0) {
+        _print(
+            out,
+            'ℹ️  Claude Code marketplace plugin detected — deprecated surface. Hooks now ' +
+                'live in ~/.claude/settings.json (wired by the global step above), so the ' +
+                'plugin only duplicates skills/commands. Remove it with:\n' +
+                '    claude plugin uninstall ' +
+                `${claude_plugin.CLAUDE_PLUGIN_ID}@${claude_plugin.CLAUDE_MARKETPLACE_NAME}`,
+        );
+    }
 
     // Bring existing settings files up to the NEW template (additive; the
     // subprocess resolves the freshly installed binary + template).
@@ -556,10 +590,37 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // (marker-guarded; foreign hooks are never touched).
     _maybe_refresh_git_hook(project_root, runner, out, err);
 
+    // Doctor runs LAST, every time, non-fatal: its duplicate-surface and
+    // hook-wiring findings ARE the upgrade summary's health section — a
+    // mixed state (stale plugin, missing hooks) is named in the same run
+    // instead of waiting for the user to think of running doctor.
+    const doctor_cmd = [_agent_config_bin(), 'doctor'];
+    _print(out, '→ ' + doctor_cmd.join(' '));
+    const doctor_rc = runner(doctor_cmd);
+    if (doctor_rc !== 0) {
+        _print(
+            err,
+            `⚠️  agent-config doctor reported findings (exit ${doctor_rc}) — ` +
+                'see the check output above for per-item fixes.',
+        );
+    }
+
+    if (failed_essential.length > 0) {
+        _print(
+            err,
+            `❌  agent-config upgrade finished with ${failed_essential.length} failed ` +
+                `step(s):\n` +
+                failed_essential.map((c) => `    · ${c}`).join('\n') +
+                '\n   Re-run `agent-config upgrade`, or run the failed step directly. ' +
+                '`agent-config doctor` names anything left in a mixed state.',
+        );
+        return 1;
+    }
+
     _print(
         out,
-        '✅  agent-config upgraded. Run `agent-config doctor` to verify ' +
-            'PATH + plugin parity.',
+        '✅  agent-config upgraded' +
+            (doctor_rc === 0 ? ' — doctor green.' : ' — review the doctor findings above.'),
     );
     return 0;
 }

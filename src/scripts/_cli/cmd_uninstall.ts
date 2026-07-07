@@ -55,6 +55,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -62,6 +63,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as fs_atomic from '../_lib/fs_atomic.js';
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as installed_tools from '../_lib/installed_tools.js';
+import { remove_managed_hooks } from '../_lib/claude_settings_hooks.js';
 import { resolve_project_root } from '../_lib/agent_settings.js';
 import { subtract_pointers } from '../_lib/json_pointers.js';
 import { PROJECT_BRIDGE_MARKERS, USER_SCOPE_PATHS } from '../install.js';
@@ -769,6 +771,26 @@ function _uninstall_global(opts: Options): number {
         _print(_stdout, `  · ${line}`);
         if (removed && !opts.dry_run) {
             removed_names.push(tool);
+        }
+    }
+    // Managed Claude hooks live in ~/.claude/settings.json (single-surface
+    // model) — remove exactly our entries, never user-owned ones.
+    if (tools.includes('claude-code')) {
+        const settings_path = path.join(os.homedir(), '.claude', 'settings.json');
+        if (opts.dry_run) {
+            _print(_stdout, `  · claude-code: would remove managed hooks from ${settings_path}`);
+        } else {
+            try {
+                const res = remove_managed_hooks(settings_path);
+                if (res.changed) {
+                    _print(
+                        _stdout,
+                        `  · claude-code: removed managed hooks (${res.events.join(', ')})`,
+                    );
+                }
+            } catch (e) {
+                _print(_stderr, `⚠️  claude-code: managed-hook removal skipped — ${String(e)}`);
+            }
         }
     }
     if (lock !== null && !opts.dry_run) {
