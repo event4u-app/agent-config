@@ -480,7 +480,7 @@
     {
       "file": ".agent-src.uncondensed/rules/architecture.md",
       "lines": [
-        71
+        69
       ],
       "reason": "Multi-framework module-system enumeration (Laravel, Turborepo, NestJS, Go) — comparative example, no project mandate"
     },
@@ -515,14 +515,14 @@
     {
       "file": ".agent-src.uncondensed/rules/architecture.md",
       "lines": [
-        76
+        74
       ],
       "reason": "Single Laravel-shape example showing how `{module_root}/*/{agent_folder}/` resolves on a Laravel HMVC project (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
       "lines": [
-        101
+        99
       ],
       "reason": "Single Laravel-shape example showing module-scoped roadmap path (road-to-configurable-modules Phase D)"
     },

@@ -8,10 +8,8 @@ triggers:
   - keyword: "pipeline"
 routes_to:
   - "skill:skill-improvement-pipeline"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Skill Improvement Trigger

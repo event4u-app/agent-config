@@ -82,13 +82,13 @@ whose body is fully covered by an existing architectural contract.
 
 ## Compiled output — `router.json`
 
-`scripts/compile_router.py` reads every rule frontmatter and emits
+`src/scripts/compile_router.ts` reads every rule frontmatter and emits
 `dist/router.json` (tracked in git), used by host agents at session
 start. Deterministic key order, sorted lists, stable across runs.
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "kernel": ["agent-authority", "ask-when-uncertain", "commit-policy",
              "direct-answers", "language-and-tone", "no-cheap-questions",
              "non-destructive-by-default", "scope-control",
@@ -96,7 +96,9 @@ start. Deterministic key order, sorted lists, stable across runs.
   "tier_1": [{"id": "source-of-truth",
               "triggers": [{"path_prefix": "agents/"},
                            {"path_prefix": "dist/agent-src/"}],
-              "routes_to": ["skill:agent-docs-writing"]}],
+              "routes_to": ["skill:agent-docs-writing"],
+              "workspaces": ["agent-config-maintainer"],
+              "packs": ["meta"]}],
   "tier_2": [/* same shape as tier_1 */],
   "profiles": {
     "minimal":   ["__kernel__"],
@@ -107,6 +109,42 @@ start. Deterministic key order, sorted lists, stable across runs.
 ```
 
 Generated alongside `marketplace.json` during `task generate-tools`.
+
+### Schema v2 — installation-scoping fields (2026-07-07)
+
+Every **non-kernel** entry carries `workspaces:` and `packs:`, copied
+verbatim (sorted) from the rule's frontmatter. They let projection- and
+install-time tooling filter rule bodies AND thin-projection pointer lines
+by the installed workspace/pack set (`road-to-request-scoped-rule-load`
+Phase 1) — per ADR-040 the filtering happens at projection time; there is
+no runtime resolver.
+
+- **Additive only.** v1 readers ignore unknown keys; nothing else in the
+  shape changed. Readers MUST NOT hard-fail on `schema_version: 2`.
+- **Kernel entries stay bare id strings.** The kernel is unconditional
+  and workspace-independent by definition — it never carries scoping
+  fields and is never filtered by installation.
+- **Source of the values:** `src/rules/*.md` frontmatter.
+  `lint_artefact_frontmatter` (wired into `task ci`) enforces that every
+  rule declares non-empty `workspaces:` + `packs:` lists whose ids exist
+  in `src/config/discovery/{workspaces,packs}.yml` — unknown ids fail
+  lint before they can reach the router.
+
+## Host-native glob activation (Cursor / Windsurf)
+
+Since 2026-07-07 (`road-to-request-scoped-rule-load` Phase 2) the
+Cursor/Windsurf projectors derive `globs:` from the rule's path-shaped
+triggers: `file_pattern` maps verbatim, `path_prefix` maps as
+`<prefix>**`. Rules with ≥1 path-shaped trigger auto-attach host-natively
+(Cursor auto-attach / Windsurf `trigger: glob`) — deterministic, no
+model-compliance dependency. Keyword/phrase/intent-only rules keep
+description-based activation (Agent-Requested / `model_decision`).
+
+**No-double-fire invariant:** when thin projection lands on those hosts, a
+glob-attached rule must NOT also ship an eager inline body there — the
+host-native attach IS its conditional load. The thin projector treats
+glob-capable rules on glob-capable hosts as already-conditional; the
+pointer mechanism is for hosts without a native equivalent (Claude Code).
 
 ### Profiles — the always-honoured surface (ADR-110)
 
@@ -141,6 +179,43 @@ The host agent reads `dist/router.json` once per session. Per turn:
 
 No runtime profile resolution — the profile is fixed at session
 start, the router lookup is keyword/phrase/path/intent matching only.
+
+### Intent-trigger semantics — two gates, two purposes (reconciled 2026-07-07)
+
+Two tools consume `intent:` triggers with deliberately different semantics.
+This divergence is **justified and locked**, not drift
+(`road-to-token-proof-and-story` Phase 2):
+
+| Tool | Intent semantics | Purpose |
+|---|---|---|
+| `trigger_coverage.ts` + the golden-set fires-check | word-set inclusion (every alpha word >2 chars of the intent appears in the prompt) | **Falsifiability floor** — a deliberately generous mechanical proxy proving a rule CAN fire on a phrasing; gates coverage claims. |
+| `router_telemetry.ts` (replay / field evidence) | informational-only — never auto-matches | **Field estimation** — real hosts resolve intents by model judgment, which cannot be replayed deterministically; pretending the word-set proxy models host behaviour would fabricate activation counts. |
+
+Consequence: **replay UNDERCOUNTS intent-triggered rule loads.** Every
+replay-derived figure (field-token-evidence report, benchmark refresh,
+release story) MUST state the chosen semantics and carry this caveat. Rules
+relying on intent triggers alone have no mechanical signal at all — hence
+the intent-only backstop audit (Phase 0 of
+`road-to-request-scoped-rule-load`: every intent-only rule gained
+keyword/phrase backstops or a written disposition).
+
+## Activation end-state — one runtime knob (token program, 2026-07-07)
+
+Locked by the token-program integration council
+(`agents/settings/contexts/token-program-integration-verdict.md`) so no
+track ships a competing setting:
+
+- **Runtime:** ONE knob — `discipline_profile: auto | off | essential |
+  full` (shipped default `auto` = ON once its evidence gates pass; owned by
+  `road-to-discipline-profile-tiering`). Thin projection, when un-deferred,
+  folds under `essential` as an implementation detail; `lean_projection.mode`
+  is then absorbed/retired. No new runtime toggles for this layer.
+- **Install-time (not a runtime setting):** consumer scoping via
+  `projection.rule_workspaces` / `projection.rule_packs` — default flips
+  `legacy-all` → scoped as a reviewed release decision after the
+  misclassification audit (done 2026-07-07) + measured before/after.
+- **Host-native (no setting):** Cursor/Windsurf glob auto-attach (§ above)
+  is always on — deterministic, no compliance risk.
 
 ## Kill-switch — thin-projection rollback (lean-initial-context Phase 2.3)
 

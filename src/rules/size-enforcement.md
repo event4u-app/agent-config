@@ -8,10 +8,8 @@ triggers:
   - intent: "create skill"
   - intent: "create command"
   - intent: "create guideline"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # size-enforcement

@@ -9,10 +9,12 @@ triggers:
   - intent: "ask user a question"
   - intent: "numbered options"
   - intent: "summarizing progress"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+  - keyword: "option"
+  - keyword: "recommendation"
+  - phrase: "what do you recommend"
+  - phrase: "was empfiehlst du"
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
+packs: [meta]
 ---
 
 # User Interaction

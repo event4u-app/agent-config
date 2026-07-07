@@ -13,10 +13,8 @@ triggers:
   - phrase: "treat as instructions"
   - phrase: "from the web"
   - phrase: "scraped"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 <!-- security-lint: allow instruction-smuggling "defense rule: quotes role-takeover phrases (ignore previous instructions, you are now, <IMPORTANT>) to teach refusal" -->

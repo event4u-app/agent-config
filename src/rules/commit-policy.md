@@ -5,10 +5,8 @@ description: "Commit policy — never commit and never ask about committing unle
 alwaysApply: true
 load_context:
   - contexts/authority/commit-mechanics.md
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Commit Policy

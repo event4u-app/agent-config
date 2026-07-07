@@ -9,10 +9,13 @@ triggers:
   - intent: "before coding"
   - intent: "before debugging"
   - intent: "before modifying"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+  - keyword: "implement"
+  - keyword: "debug"
+  - keyword: "refactor"
+  - keyword: "fix"
+  - keyword: "optimize"
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # think-before-action

@@ -12,10 +12,8 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
     reason: "Rule references the authoring tree as the operand of condensation/preservation."
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Preservation Guard

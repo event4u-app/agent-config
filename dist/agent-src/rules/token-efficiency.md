@@ -9,10 +9,8 @@ triggers:
   - intent: "verbose CLI output"
   - intent: "fetching logs"
   - keyword: "minimize tool calls"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
+packs: [meta]
 ---
 
 # Token Efficiency

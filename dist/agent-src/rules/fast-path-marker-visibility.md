@@ -12,10 +12,8 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
     reason: "Condenseor injects a back-pointer to the uncondensed source for full failure-modes detail."
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Fast-Path Marker Visibility

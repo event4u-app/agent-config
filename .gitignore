@@ -280,3 +280,5 @@ agents/runtime/council/sessions/
 /site/src/content/docs/catalog.md
 # Media assets copied from docs/media/ by sync-docs.mjs (source lives in docs/media/).
 /site/public/media/
+# Field replay corpora await operator privacy review before any commit
+internal/bench/corpora/*.local.yaml

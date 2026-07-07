@@ -8,10 +8,9 @@ triggers:
   - keyword: "callers"
   - keyword: "imports"
   - keyword: "downstream"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+  - phrase: "api changed"
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Downstream Changes

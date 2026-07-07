@@ -6,10 +6,8 @@ alwaysApply: true
 load_context:
   - contexts/authority/scope-mechanics.md
   - contexts/authority/kernel-rule-edits.md
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Scope Control

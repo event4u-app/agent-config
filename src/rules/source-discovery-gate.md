@@ -17,10 +17,8 @@ triggers:
   - phrase: "which fields"
 routes_to:
   - "skill:source-discovery"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Source Discovery — evidence before structure

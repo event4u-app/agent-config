@@ -930,11 +930,84 @@ export function _rewrite_paths(content: string, source_relative_path: string): s
 // Expose the HRR marker for tests (mirrors condense._HRR_BANNER_MARKER access).
 export { _HRR_BANNER_MARKER };
 
-export function generate_rule_symlinks(): number {
-    const rules = _iterdirSorted(MODULE_STATE.RULES_SOURCE)
+// ── Consumer-scoped rule projection (road-to-request-scoped-rule-load P1) ──
+//
+// Opt-in via `projection.rule_workspaces: [<workspace-id>, …]` in
+// `.agent-settings.yml`. Absent / empty = legacy-all (every rule projects —
+// today's behaviour, non-breaking). When set, a non-kernel rule projects
+// only if its `workspaces:` frontmatter intersects the configured set.
+// Kernel rules (`type: always` / `alwaysApply: true`) ALWAYS project —
+// the kernel is unconditional and workspace-independent by definition
+// (rule-router contract § Schema v2). Untagged rules fail safe: they ship.
+// ADR-040: projection-time filtering only, no runtime resolver.
+
+function _read_projection_list(key: string): string[] | null {
+    const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
+    const proj = data['projection'];
+    const value =
+        typeof proj === 'object' && proj !== null && !Array.isArray(proj)
+            ? (proj as Record<string, unknown>)[key]
+            : null;
+    if (Array.isArray(value) && value.length > 0) {
+        return value.map((v) => String(v));
+    }
+    return null;
+}
+
+function _read_rule_workspaces(): string[] | null {
+    return _read_projection_list('rule_workspaces');
+}
+
+function _read_rule_packs(): string[] | null {
+    return _read_projection_list('rule_packs');
+}
+
+/**
+ * Whether a rule source file projects under the given workspace + pack
+ * scopes. Both scopes are independent constraints: when configured, the
+ * rule's frontmatter list must intersect (installed workspaces AND
+ * installed packs). Kernel always projects; untagged axes fail safe.
+ */
+export function rule_in_scope(
+    source_path: string,
+    scope: readonly string[] | null,
+    pack_scope: readonly string[] | null = null,
+): boolean {
+    if (scope === null && pack_scope === null) {
+        return true;
+    }
+    const [meta] = _parse_frontmatter(_readText(source_path));
+    if (meta['type'] === 'always' || meta['alwaysApply'] === true) {
+        return true; // kernel always projects
+    }
+    const axis = (key: string, configured: readonly string[] | null): boolean => {
+        if (configured === null) {
+            return true;
+        }
+        const values = Array.isArray(meta[key])
+            ? (meta[key] as unknown[]).map((w) => String(w))
+            : [];
+        if (values.length === 0) {
+            return true; // untagged → fail safe: ship it
+        }
+        return values.some((v) => configured.includes(v));
+    };
+    return axis('workspaces', scope) && axis('packs', pack_scope);
+}
+
+/** List rule basenames under RULES_SOURCE, workspace/pack scope applied. */
+function _scoped_rule_basenames(): string[] {
+    const scope = _read_rule_workspaces();
+    const pack_scope = _read_rule_packs();
+    return _iterdirSorted(MODULE_STATE.RULES_SOURCE)
         .filter((p) => p.endsWith('.md') && _isFile(p))
+        .filter((p) => rule_in_scope(p, scope, pack_scope))
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+export function generate_rule_symlinks(): number {
+    const rules = _scoped_rule_basenames();
     const tool_dirs = _filter_tool_dirs(TOOL_DIRS);
 
     let thin_files: Record<string, string> | null = null;
@@ -988,10 +1061,7 @@ export function generate_rule_symlinks(): number {
 }
 
 export function generate_windsurfrules(): number {
-    const rules = _iterdirSorted(MODULE_STATE.RULES_SOURCE)
-        .filter((p) => p.endsWith('.md') && _isFile(p))
-        .map((p) => path.basename(p))
-        .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    const rules = _scoped_rule_basenames();
     const parts = ['# Auto-generated from dist/agent-src/rules/ — do not edit directly\n'];
     for (const rule of rules) {
         const p = path.join(MODULE_STATE.RULES_SOURCE, rule);
@@ -1044,14 +1114,44 @@ function _yaml_scalar(value: string): string {
     return JSON.stringify(value);
 }
 
-function _emit_cursor_mdc(source: string, target: string): void {
+/**
+ * Derive host-native activation globs from a rule's `triggers:` frontmatter
+ * (road-to-request-scoped-rule-load Phase 2). `file_pattern` triggers map
+ * verbatim; `path_prefix` triggers map to `<prefix>**`. Keyword / phrase /
+ * intent / command triggers produce no glob — those rules stay
+ * description-activated (Cursor Agent-Requested / Windsurf model_decision).
+ */
+export function derive_trigger_globs(meta: Record<string, unknown>): string[] {
+    const triggers = meta['triggers'];
+    if (!Array.isArray(triggers)) {
+        return [];
+    }
+    const globs: string[] = [];
+    for (const t of triggers) {
+        if (t === null || typeof t !== 'object' || Array.isArray(t)) continue;
+        const obj = t as Record<string, unknown>;
+        if (typeof obj['file_pattern'] === 'string' && obj['file_pattern']) {
+            globs.push(obj['file_pattern']);
+        } else if (typeof obj['path_prefix'] === 'string' && obj['path_prefix']) {
+            const prefix = obj['path_prefix'] as string;
+            globs.push(prefix.endsWith('/') ? `${prefix}**` : `${prefix}**`);
+        }
+    }
+    // De-dup, keep declaration order (deterministic output).
+    return [...new Set(globs)];
+}
+
+export function _emit_cursor_mdc(source: string, target: string): void {
     const [meta, body] = _parse_frontmatter(_readText(source));
     const description = _strip(String(meta['description'] ?? '').replace(/\n/g, ' '));
     const always_apply = Boolean(meta['alwaysApply'] || meta['type'] === 'always');
+    // Path-shaped triggers become Cursor auto-attach globs; rules without
+    // them keep `globs: ` empty and stay Agent-Requested via description.
+    const globs = always_apply ? [] : derive_trigger_globs(meta);
     const lines = [
         '---',
         `description: ${_yaml_scalar(description)}`,
-        'globs: ',
+        `globs: ${globs.join(',')}`,
         `alwaysApply: ${always_apply ? 'true' : 'false'}`,
         '---',
         '',
@@ -1061,16 +1161,19 @@ function _emit_cursor_mdc(source: string, target: string): void {
     _writeText(target, lines.join('\n'));
 }
 
-function _emit_windsurf_rule(source: string, target: string): void {
+export function _emit_windsurf_rule(source: string, target: string): void {
     const [meta, body] = _parse_frontmatter(_readText(source));
     const description = _strip(String(meta['description'] ?? '').replace(/\n/g, ' '));
     const always_apply = Boolean(meta['alwaysApply'] || meta['type'] === 'always');
-    const trigger = always_apply ? 'always_on' : 'model_decision';
+    // Path-shaped triggers activate host-natively via Windsurf's `glob`
+    // trigger; keyword/intent-only rules keep `model_decision`.
+    const globs = always_apply ? [] : derive_trigger_globs(meta);
+    const trigger = always_apply ? 'always_on' : globs.length > 0 ? 'glob' : 'model_decision';
     const lines = [
         '---',
         `trigger: ${trigger}`,
         `description: ${_yaml_scalar(description)}`,
-        'globs: ',
+        `globs: ${globs.join(',')}`,
         '---',
         '',
         _pyRstrip(body) + '\n',
@@ -1104,7 +1207,11 @@ function _clean_modern_dir(target_dir: string, valid_names: ReadonlySet<string>)
 }
 
 export function generate_cursor_mdc_rules(): number {
-    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md').filter((p) => _isFile(p));
+    const scope = _read_rule_workspaces();
+    const pack_scope = _read_rule_packs();
+    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
+        .filter((p) => _isFile(p))
+        .filter((p) => rule_in_scope(p, scope, pack_scope));
     const stems = rules.map((r) => path.basename(r, '.md'));
     const valid = new Set([
         ...stems.map((s) => `${s}.mdc`),
@@ -1119,7 +1226,11 @@ export function generate_cursor_mdc_rules(): number {
 }
 
 export function generate_windsurf_modern_rules(): number {
-    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md').filter((p) => _isFile(p));
+    const scope = _read_rule_workspaces();
+    const pack_scope = _read_rule_packs();
+    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
+        .filter((p) => _isFile(p))
+        .filter((p) => rule_in_scope(p, scope, pack_scope));
     const valid = new Set(rules.map((r) => path.basename(r)));
     _clean_modern_dir(_WINDSURF_RULES_DIR(), valid);
     for (const rule of rules) {

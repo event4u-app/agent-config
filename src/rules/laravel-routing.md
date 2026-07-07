@@ -9,10 +9,8 @@ triggers:
   - keyword: "FormRequest"
 routes_to:
   - "skill:laravel"
-workspaces:
-  - engineering
-packs:
-  - laravel
+workspaces: [engineering]
+packs: [laravel]
 trust:
   level: professional
 install:
