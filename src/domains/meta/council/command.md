@@ -44,7 +44,7 @@ Each wrapper resolves its lens-specific input (PR target, design artefact,
 optimization target + metric), captures a wrapper-specific `original_ask`,
 then delegates to `/council default` with `mode_override=<lens>`. The
 lens-specific neutrality addendums live in **one** place —
-[`scripts/ai_council/prompts.py:_MODE_TABLE`](../../scripts/ai_council/prompts.py) —
+[`scripts/ai_council/prompts.ts:_MODE_TABLE`](../../scripts/ai_council/prompts.ts) —
 and are selected by the `mode_override` value. Wrappers never re-implement
 cost-gate, CLI invocation, render, or the host-verdict pass; those flow
 through the master verbatim.

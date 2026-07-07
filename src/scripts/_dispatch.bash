@@ -13,7 +13,7 @@
 #   * CWD on entry is the consumer's repo root — we keep it that way
 #     so underlying scripts resolve paths correctly.
 #   * PACKAGE_ROOT is derived from this script's location, used only to
-#     locate the package-internal Python scripts (mcp_render.py, …).
+#     locate the package-internal TypeScript scripts (mcp_render.ts, …).
 #   * Unknown arguments are forwarded verbatim to the underlying script.
 
 set -euo pipefail
@@ -138,7 +138,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   mcp:render                 Render mcp.json → .cursor/mcp.json, .windsurf/mcp.json
                              (pass --claude-desktop to also write user-scope config)
   mcp:check                  Dry-run mcp:render; exit non-zero if targets are stale
-  mcp:setup                  Create .venv-mcp/ and install the mcp SDK
+  mcp:setup                  Verify the tsx runtime + MCP server module and
+                             print the client config snippet
                              (one-line MCP server onboarding; idempotent)
   mcp:run                    Run the built-in MCP server over stdio
                              (requires `mcp:setup` first; see docs/mcp-server.md)
@@ -356,7 +357,7 @@ exec_hook() {
 
 # Locate a script. First argument is relative to PACKAGE_ROOT, second is
 # an optional fallback relative to CONSUMER_ROOT (for scripts that ship
-# to the consumer via .augment/, e.g. update_roadmap_progress.py).
+# to the consumer via .augment/, e.g. update_roadmap_progress.ts).
 resolve_script() {
   local pkg_rel="$1"
   local consumer_rel="${2-}"
@@ -622,7 +623,7 @@ Three modes, picked by flag combination:
                       at the consumer root. Idempotent.
 
   --regen             Provision the roadmap-progress regenerator at
-                      .augment/scripts/update_roadmap_progress.py
+                      .augment/scripts/update_roadmap_progress.ts
                       (canonical path per docs/contracts/hook-architecture-v1.md
                       § Regenerator location). Idempotent.
 
@@ -822,7 +823,7 @@ cmd_keys_install_openai() {
 
 # Council CLI — non-interactive wrapper around scripts.ai_council.orchestrator.
 # Three subcommands share one Python entry point; we forward the subcommand
-# verb so `./agent-config council:run --confirm` lands on `council_cli.py run`.
+# verb so `./agent-config council:run --confirm` lands on `council_cli.ts run`.
 cmd_council() {
   local sub="$1"; shift || true
   local script
@@ -840,7 +841,7 @@ cmd_use() {
 }
 
 # `agent-config update` — flip the agent_config_version pin in
-# .agent-settings.yml. See scripts/_cli/cmd_update.py (P3.1 of
+# .agent-settings.yml. See scripts/_cli/cmd_update.ts (P3.1 of
 # road-to-portable-runtime-and-update-check.md).
 cmd_update() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_update.ts" "$@"
@@ -855,7 +856,7 @@ cmd_refresh() {
 }
 
 # `agent-config migrate` — one-shot migration off legacy composer / npm
-# install paths onto the npx-only runtime. See scripts/_cli/cmd_migrate.py
+# install paths onto the npx-only runtime. See scripts/_cli/cmd_migrate.ts
 # (P3.5 of road-to-portable-runtime-and-update-check.md).
 cmd_migrate() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_migrate.ts" "$@"
@@ -874,7 +875,7 @@ cmd_init() {
 # `agent-config global` — user-scope install entry point. Forwards to the
 # bash installer with `--global` set (ADR-007). Phase 1.2 of
 # road-to-global-first-install.md. The bash wrapper handles option parsing
-# and forwards to `scripts/install.py --global`, where `install_global()`
+# and forwards to `scripts/install.ts --global`, where `install_global()`
 # currently scaffolds the per-tool anchor paths from USER_SCOPE_PATHS.
 # Concrete writes land in Phase 1.5 (export) and Phase 1.6 (lockfile).
 cmd_global() {
@@ -886,7 +887,7 @@ cmd_global() {
 # `agent-config export` — write a tool's canonical content into a
 # user-chosen path. ADR-007 D3 / Phase 1.5 of
 # road-to-global-first-install.md. Replaces the rejected symlink-bridge.
-# See scripts/_cli/cmd_export.py for the registry and idempotency logic.
+# See scripts/_cli/cmd_export.ts for the registry and idempotency logic.
 cmd_export() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_export.ts" "$@"
 }
@@ -937,7 +938,7 @@ cmd_settings_migrate() {
 # `agent-config uninstall` — remove bridge markers (project) or lockfile
 # entries (global). Idempotent. Pass `--purge` to also delete deployed
 # content directories under user-scope anchors (destructive). See
-# scripts/_cli/cmd_uninstall.py.
+# scripts/_cli/cmd_uninstall.ts.
 cmd_uninstall() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_uninstall.ts" "$@"
 }
@@ -946,14 +947,14 @@ cmd_uninstall() {
 # Drift-cleanup sibling to `uninstall`: compares on-disk markers
 # against agents/installed-tools.lock and unlinks anything not
 # declared. Hard-floors when lockfile is absent. See
-# scripts/_cli/cmd_prune.py.
+# scripts/_cli/cmd_prune.ts.
 cmd_prune() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_prune.ts" "$@"
 }
 
 # `agent-config doctor` — read-only drift report against the manifest.
 # Surfaces missing / modified / foreign files. Exit 0 clean, 1 drift,
-# 2 manifest-absent. See scripts/_cli/cmd_doctor.py.
+# 2 manifest-absent. See scripts/_cli/cmd_doctor.ts.
 cmd_doctor() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_doctor.ts" "$@"
 }
@@ -970,14 +971,14 @@ cmd_conformance() {
 # `agent-config versions` — list available @event4u/agent-config versions
 # on the npm registry. Marks the current pin (from .agent-settings.yml)
 # and the latest published version. Offline-tolerant. See
-# scripts/_cli/cmd_versions.py.
+# scripts/_cli/cmd_versions.ts.
 cmd_versions() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_versions.ts" "$@"
 }
 
 # `agent-config explain <config|rule|route>` — print the decision chain
 # behind a configuration or routing outcome. Read-only diagnostic; never
-# edits state. See scripts/_cli/cmd_explain.py.
+# edits state. See scripts/_cli/cmd_explain.ts.
 cmd_explain() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_explain.ts" "$@"
 }

@@ -33,7 +33,7 @@ facts (a smell-test, not a hard gate). Three buckets:
 - **Gaps** — missing evidence the decision needs (negative facts in the making).
 
 It feeds the plan. It is **not** a forensic log and is **not** hard enforcement.
-Produce it cheaply via `evidence_report.py` (template automation) so it never
+Produce it cheaply via `evidence_report.ts` (template automation) so it never
 gets skipped.
 
 ## Provenance and freshness
@@ -49,7 +49,7 @@ gets skipped.
   `rebase-apply` directory present), do **not** read an intermediate tree — stop
   and surface it (R4 P6, hole-3). *(`.git/REBASE_HEAD` is excluded — it lingers as
   a stale ref after a completed rebase and is not a live-op marker.)* The
-  `evidence_report.py git-state` subcommand is the deterministic check.
+  `evidence_report.ts git-state` subcommand is the deterministic check.
 - **Across sessions:** always re-read. No file hashing, no content-hash theater.
 
 ## Two-file split

@@ -1,4 +1,4 @@
-# Historical bug patterns — consumed by scripts/pr_review_routing.py
+# Historical bug patterns — consumed by scripts/pr_review_routing.ts
 #
 # Copy this file to `.github/historical-bug-patterns.yml` (preferred) or
 # `agents/historical-bug-patterns.yml` and curate the patterns from your

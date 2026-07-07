@@ -167,7 +167,7 @@ Confirm:
   reasoning blocks, system reminders) before pattern matching. If the
   miner under-counts, audit the adapter's redact list, not the regex.
 - Date-discipline: relative phrases (`yesterday`, `last week`) in the
-  observation field are rejected by `scripts/check_memory.py` unless
+  observation field are rejected by `scripts/check_memory.ts` unless
   re-anchored with `YYYY-MM-DD` within ±20 chars. The miner re-anchors
   automatically using the turn's `ts`; verify before commit.
 

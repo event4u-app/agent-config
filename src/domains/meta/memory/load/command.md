@@ -81,7 +81,7 @@ for (const f of glob("agents/memory").sort()) {
 The Tier-0 slice is surfaced once per `/memory:load` invocation, even
 when the user picks a type with no critical entries — the slice spans
 types deliberately. Token cost is bounded by the soft cap of 10
-critical entries per type (warned by `scripts/check_memory.py`).
+critical entries per type (warned by `scripts/check_memory.ts`).
 
 ### 2. Warn about volume
 

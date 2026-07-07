@@ -187,4 +187,4 @@ It does **NOT**:
 - [`/roadmap`](../roadmap.md) — cluster orchestrator
 - [`/council default`](../council/default.md) — base flow this command wraps
 - [`ai-council`](../../skills/ai-council/SKILL.md) — neutrality, redaction, deep tier
-- [`scripts/council_cli.py`](../../../scripts/council_cli.py) — CLI entry point
+- [`scripts/council_cli.ts`](../../../scripts/council_cli.ts) — CLI entry point

@@ -64,6 +64,6 @@ source: package
 
 ## Linter enforcement
 
-The skill linter (`scripts/skill_linter.py`) warns on:
+The skill linter (`scripts/skill_linter.ts`) warns on:
 - **Bare-noun names** — single word without qualifier (e.g., `jira` instead of `jira-integration`)
 - **Layer collisions** — same name used for both a rule and a skill

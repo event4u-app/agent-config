@@ -22,9 +22,9 @@ consumer's `.augment/`.
 
 Use **logical names** rooted at the source — never the
 `.agent-src.uncondensed/` prefix. The condense-time rewriter
-(`scripts/condense.py::_rewrite_paths`) resolves logical names to
+(`scripts/condense.ts::_rewrite_paths`) resolves logical names to
 deployment-correct relative paths; the schema regex
-(`scripts/schemas/rule.schema.json`) and `scripts/lint_load_context.py`
+(`scripts/schemas/rule.schema.json`) and `scripts/lint_load_context.ts`
 both reject the legacy prefix.
 
 | Write this (logical) | Forbidden (legacy) |
@@ -121,7 +121,7 @@ for full detail; rules are pointers, not playbooks.}
 | `tier` | yes | `kernel` (Iron Law floor), `tier-1` (default), `tier-2` (full profile only). Legacy values still accepted. |
 | `description` | yes | One sentence, ≤ 500 chars. Trigger-clarity wins over poetry. |
 | `source` | yes | `package` (this repo) or `project` (consumer override). |
-| `load_context` | no | Lazy context list — logical names only. Budget enforced by `lint_load_context.py`. |
+| `load_context` | no | Lazy context list — logical names only. Budget enforced by `lint_load_context.ts`. |
 | `load_context_eager` | no | Eager context list — counts against per-rule char budget. |
 | `triggers` | no | Required on non-kernel rules per `rule-router.md`. |
 | `routes_to` | no | `skill:`, `guideline:`, `command:`, `contract:` targets. Forbidden on kernel rules. |

@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: flux
-description: "Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`. Covers Flux components, slots, variants, and form primitives."
+description: "Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers Flux components, slots, variants, and form primitives."
 domain: engineering
 workspaces:
   - engineering
@@ -17,7 +17,8 @@ install:
 # flux
 
 > **Grounded stack guidance:** Tailwind-layer Do/Don't + docs URLs via
-> `ground.py search --manifest <skills-root>/design-intelligence/data/manifest.json
+> `./scripts-run <skills-root>/corpus-grounding/scripts/ground search
+> --manifest <skills-root>/design-intelligence/data/manifest.json
 > --stack html-tailwind "<topic>"`. See
 > [`design-intelligence`](../design-intelligence/SKILL.md).
 
@@ -25,15 +26,15 @@ install:
 
 `flux` is the **primitive-library executor** for projects on the
 Livewire + Flux stack. It is invoked by
-[`directives/ui/apply.py`](../../templates/scripts/work_engine/directives/ui/apply.py)
-once the design brief is locked, and revisited by `review.py` /
-`polish.py` during the design-review loop. It does **not** own the
+[`directives/ui/apply.ts`](../../templates/scripts/work_engine/directives/ui/apply.ts)
+once the design brief is locked, and revisited by `review.ts` /
+`polish.ts` during the design-review loop. It does **not** own the
 flow, does **not** drive the audit, and does **not** lock the design.
 
 | Concern | Owner |
 |---|---|
 | Audit + token inventory (mandatory pre-step) | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) |
-| Design brief (layout / states / microcopy) | [`directives/ui/design.py`](../../templates/scripts/work_engine/directives/ui/design.py) |
+| Design brief (layout / states / microcopy) | [`directives/ui/design.ts`](../../templates/scripts/work_engine/directives/ui/design.ts) |
 | Universal design heuristics | [`fe-design`](../fe-design/SKILL.md) |
 | Component logic / state / actions | [`livewire`](../livewire/SKILL.md) |
 | Static Blade partials | [`blade-ui`](../blade-ui/SKILL.md) |
@@ -42,7 +43,7 @@ flow, does **not** drive the audit, and does **not** lock the design.
 
 Cite this skill when:
 
-- The project depends on `livewire/flux` and `directives/ui/apply.py` dispatches Flux primitives
+- The project depends on `livewire/flux` and `directives/ui/apply.ts` dispatches Flux primitives
 - Building forms, modals, dropdowns, toasts, or other standard UI elements that Flux already provides
 
 Do NOT use when:
@@ -84,8 +85,8 @@ Do NOT use when:
 
 ### Review pass — a11y findings + preview envelope
 
-When this skill is dispatched by `directives/ui/review.py` (test slot)
-or `directives/ui/polish.py` (verify slot) — i.e. a review/polish run,
+When this skill is dispatched by `directives/ui/review.ts` (test slot)
+or `directives/ui/polish.ts` (verify slot) — i.e. a review/polish run,
 not the initial apply — it also emits:
 
 - `state.ui_review.a11y` — `{violations: [{rule, selector, severity}, ...],

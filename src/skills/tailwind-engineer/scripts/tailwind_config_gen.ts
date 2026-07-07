@@ -25,7 +25,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const PROG = 'tailwind_config_gen.py';
+const PROG = 'tailwind_config_gen';
 
 // Mirror argparse's wrapped usage block (80-col default; non-tty). Used for
 // the invalid-choice / unrecognized-argument error paths.

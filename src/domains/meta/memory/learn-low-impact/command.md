@@ -52,7 +52,7 @@ for the eight forbidden-content classes.
 ### 1. Build the preview plan
 
 Call
-`scripts/ai_council/learn_low_impact_preview.py::build_preview` with
+`scripts/ai_council/learn_low_impact_preview.ts::build_preview` with
 the project-local corpus and the package seed:
 
 ```python

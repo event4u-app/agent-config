@@ -57,7 +57,7 @@ Post-rewrite validator runs on every reply when `speak_scope != off`:
 The rule documents the algorithm; agents apply it inline before
 sending. The mechanism is the rule, not a hidden script.
 
-- Optional CI-side regression lock: [`scripts/validate_telegraph_carveouts.py`](../../scripts/validate_telegraph_carveouts.py) — pre/post reply pair, byte-identical preservation across all seven carve-out categories; runtime mechanism stays algorithmic, script is the offline check.
+- Optional CI-side regression lock: [`scripts/validate_telegraph_carveouts.ts`](../../scripts/validate_telegraph_carveouts.ts) — pre/post reply pair, byte-identical preservation across all seven carve-out categories; runtime mechanism stays algorithmic, script is the offline check.
 
 ## Telegraph grammar
 

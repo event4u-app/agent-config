@@ -4,21 +4,22 @@ How a skill or command reads engineering memory. Memory is entirely
 **file-backed** (`agents/memory/`); there is no external backend.
 
 Single entry point: the shared `retrieve(types, keys, limit)`
-abstraction backed by `scripts/memory_lookup.py`. It reads curated YAML
-under `agents/memory/<type>/` and the agent-written `agents/memory/intake/
-*.jsonl` signal log.
+abstraction backed by `scripts/memory_lookup.ts` (TypeScript, run via
+tsx). It reads curated YAML under `agents/memory/<type>/` and the
+agent-written `agents/memory/intake/*.jsonl` signal log.
 
 ## The contract
 
-```python
-from scripts.memory_status import status
-from scripts.memory_lookup import retrieve as retrieve_file
+Consumers reach it via the CLI (`agent-config memory:lookup`) or the
+MCP `memory_lookup` tool — never by ad-hoc file reads:
 
-hits = retrieve_file(
-    types=["ownership", "historical-patterns"],
-    keys=["app/Http/Controllers/Billing/Checkout.php"],
-    limit=3,
-)
+```bash
+agent-config memory:lookup \
+  --types ownership,historical-patterns \
+  --key "app/Http/Controllers/Billing/Checkout.php" \
+  --limit 3
+# --key is repeatable; add --format json for the raw hits,
+# --envelope v1 for the retrieval-contract envelope.
 ```
 
 Every backend MUST return a list of `Hit` with:
@@ -43,14 +44,14 @@ intake (low-confidence tier); it just never reaches the team repo unpromoted.
 
 ## The status helper
 
-`scripts/memory_status.py` reports the (constant) file backend so
-consumers — including the MCP `memory_status` tool and the v1 health
-envelope — read a stable shape:
+`scripts/memory_status.ts` exports `status()`, reporting the (constant)
+file backend so consumers — including the MCP `memory_status` tool and
+the v1 health envelope — read a stable shape:
 
-```python
-from scripts.memory_status import status
-r = status()          # constant; file-backed, never raises
-assert r.status == "file" and r.backend == "file"
+```ts
+import { status } from './memory_status.js';
+const r = status(); // constant; file-backed, never raises
+// r.status === 'file' && r.backend === 'file'
 ```
 
 Contract guarantees:

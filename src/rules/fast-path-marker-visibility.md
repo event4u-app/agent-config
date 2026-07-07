@@ -38,7 +38,7 @@ Applies to **every** fast-path outcome:
 - **Split** — `> Low-impact council split — escalating to user (<m1>: X / <m2>: Y):`
 - **Aborted** — `> Low-impact council aborted (token cap) — escalating to user:`
 
-Markers from `scripts/ai_council/low_impact.py`. Wording is normative —
+Markers from `scripts/ai_council/low_impact.ts`. Wording is normative —
 case, punctuation, and the leading `> ` blockquote prefix all matter so
 that downstream agents and tooling can pattern-match.
 
@@ -80,4 +80,4 @@ this rule does not constrain their output.
 
 - [`ai-council-config § Low-impact council opt-in`](../../docs/contracts/ai-council-config.md#low-impact-council-opt-in)
 - [`direct-answers`](direct-answers.md) — invented-facts Iron Law (provenance kin).
-- `scripts/ai_council/low_impact.py` — marker source.
+- `scripts/ai_council/low_impact.ts` — marker source.

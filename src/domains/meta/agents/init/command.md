@@ -127,13 +127,13 @@ Before writing, scan the generated content for forbidden identifiers:
 - Any project name from `agents/` module docs except the one chosen in 3.1
 - Any reference to vendor-specific internal tools not in the user's stack
 - Any identifier listed in `FORBIDDEN_IDENTIFIERS` in
-  `scripts/check_portability.py` (the package ships a blocklist of
+  `scripts/check_portability.ts` (the package ships a blocklist of
   legacy/adjacent project names that must never leak into consumer files)
 - The package's own name (e.g. the shared-config package itself), unless
   the consumer project explicitly depends on it
 
 If any hit is found, flag it and ask for a replacement. This mirrors what
-`scripts/check_portability.py` enforces for package files.
+`scripts/check_portability.ts` enforces for package files.
 
 ### 6. Write files
 

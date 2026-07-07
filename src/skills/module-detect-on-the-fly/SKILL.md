@@ -32,14 +32,14 @@ the config — once, without nagging.
 1. `modules.enabled` is `true` (already configured — use `module-management`).
 2. `modules.detection_acknowledged` is `true` (user already answered).
 3. The path matches a `_NOISE_SEGMENTS` entry (`vendor`, `node_modules`,
-   `dist`, `build`, etc.) — see `scripts/_lib/module_detection.py`.
+   `dist`, `build`, etc.) — see `scripts/_lib/module_detection.ts`.
 
 Confirm both flags via `get_modules_config()` before running detection.
 
 ## Procedure
 
 1. **Detect** — call `detect_module_roots(project_root)` from
-   `scripts/_lib/module_detection.py`. Returns a list of
+   `scripts/_lib/module_detection.ts`. Returns a list of
    `ModuleCandidate` ordered `high → medium` confidence.
 2. **Bail early** — if the list is empty OR every candidate has
    `confidence: "medium"` AND no candidate matches the path the agent
@@ -65,7 +65,7 @@ Confirm both flags via `get_modules_config()` before running detection.
 
 4. **Persist the choice**:
 
-   - **Option 1** — build the payload (matches `propose_modules_config.py
+   - **Option 1** — build the payload (matches `propose_modules_config.ts
      --json` shape, includes `detection_acknowledged: true`), pipe into
      `./scripts-run src/scripts/apply_modules_config --project <root>`.
    - **Option 2** — run `./scripts-run src/scripts/apply_modules_config
@@ -122,9 +122,9 @@ Confirm both flags via `get_modules_config()` before running detection.
 ## See also
 
 - `module-management` — the active skill once modules are configured.
-- `scripts/_lib/module_detection.py` — `detect_module_roots()` +
+- `scripts/_lib/module_detection.ts` — `detect_module_roots()` +
   `is_module_like_path()` helpers.
-- `scripts/apply_modules_config.py` — persistence with
+- `scripts/apply_modules_config.ts` — persistence with
   `--acknowledge-only` for option 2.
 - `commands/agents/init.md` — the explicit re-entry point if the user
   wants to revisit detection later.

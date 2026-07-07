@@ -10,7 +10,7 @@ _Origin: migrated from `.agent-src.uncondensed/rules/roadmap-progress-sync.md` p
 # Roadmap Progress Sync
 
 > **Enforced by (defence in depth):**
-> 1. [`scripts/roadmap_progress_hook.py`](../../src/scripts/roadmap_progress_hook.py)
+> 1. [`scripts/roadmap_progress_hook.ts`](../../src/scripts/roadmap_progress_hook.ts)
 >    on Augment + Claude Code (`PostToolUse`) — auto-regen on write.
 > 2. `.git/hooks/pre-commit` (installed by `scripts/install-hooks.sh`) —
 >    blocks any commit whose staged set touches `agents/roadmaps/` or
@@ -44,7 +44,7 @@ without regenerating? The dashboard claims it does not exist. Marked
 EVERY ACTIVE ROADMAP MUST CONTAIN AT LEAST ONE TRACKABLE CHECKBOX
 (`- [ ]`) PER NON-INTRO PHASE. ROADMAPS WITHOUT EXECUTABLE STEPS
 EITHER GET A CHECKLIST OR THE `status: draft` FLAG.
-CI-ENFORCED: `scripts/check_roadmap_trackable.py` (CANNOT BE DEFERRED).
+CI-ENFORCED: `scripts/check_roadmap_trackable.ts` (CANNOT BE DEFERRED).
 ```
 
 **Active roadmap =** any file in `agents/roadmaps/` (root, not
@@ -61,7 +61,7 @@ Headings such as `## Phase steps`, `### Sequencing — Phase 1 …`,
 `### P0 #1 — …`, or `## Block A` do **not** count — only the
 canonical `Phase <id>` form parsed by the dashboard.
 
-**CI backstop.** `scripts/check_roadmap_trackable.py` (package-shipped,
+**CI backstop.** `scripts/check_roadmap_trackable.ts` (package-shipped,
 wire into the consumer's pre-commit / pre-push / Actions gate) fails
 when an active roadmap has zero canonical `Phase` headings or when
 any parsed phase has zero checkboxes. Last line of defence — real-time
@@ -103,7 +103,7 @@ skipped decision table.
 
 ```
 A FILE THE AGENT DROPS INTO agents/roadmaps/ MUST EITHER
-(a) PASS check_roadmap_trackable.py AND LAND IN THE DASHBOARD, OR
+(a) PASS check_roadmap_trackable.ts AND LAND IN THE DASHBOARD, OR
 (b) NOT BE IN agents/roadmaps/ AT ALL.
 NO "DECISION MATRIX" / "DESIGN NOTE" SHORTCUT.
 ```
@@ -173,7 +173,7 @@ surface; the mechanics file is the lookup material.
 ## Copilot fallback
 
 GitHub Copilot has no `PostToolUse` hook surface, so
-`scripts/roadmap_progress_hook.py` cannot detect roadmap-file writes
+`scripts/roadmap_progress_hook.ts` cannot detect roadmap-file writes
 structurally. The dashboard at `agents/roadmaps-progress.md` will
 not regenerate on its own.
 

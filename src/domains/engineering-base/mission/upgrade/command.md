@@ -178,7 +178,7 @@ them.
 ## Breaking-change catalog
 
 The knowledge source is `src/missions/upgrade/laravel-10-to-11.yaml`. It is
-versionable, diffable, and CI-tested via `lint_missions.py`. Each entry carries:
+versionable, diffable, and CI-tested via `lint_missions.ts`. Each entry carries:
 
 - `id` — unique checkpoint key (used in `.work-state.json`)
 - `severity` — `critical` / `high` / `medium` / `low`
@@ -192,7 +192,7 @@ versionable, diffable, and CI-tested via `lint_missions.py`. Each entry carries:
 - [`dependency-upgrade`](../../skills/dependency-upgrade/SKILL.md) — the stack-agnostic upgrade skill this mission specialises
 - `src/missions/upgrade/mission.yaml` — the mission manifest
 - `src/missions/upgrade/laravel-10-to-11.yaml` — the breaking-change catalog
-- `src/scripts/lint_missions.py` — validates the manifest and catalog
+- `src/scripts/lint_missions.ts` — validates the manifest and catalog
 
 ## Examples
 

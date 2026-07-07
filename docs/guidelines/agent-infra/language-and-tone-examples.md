@@ -116,7 +116,7 @@ block (the only allowed German location).
 ## Generated `.md` — fix the generator, never the page
 
 When a `.md` page is produced by a generator (e.g. `docs/value.md` from
-`scripts/render_value_md.py`, the catalogs from the index/catalog
+`scripts/render_value_md.ts`, the catalogs from the index/catalog
 generators), German lives in the **generator's source strings** or the
 data it reads — fix it there so the page regenerates English. Hand-edits
 to a generated page are overwritten on the next regen. If a generated
@@ -138,4 +138,4 @@ Two — and only two — escapes are allowed when a line must carry German:
 
 The marker is line-scoped and auditable. Never scatter it through a
 generated file to silence the linter — fix the generator instead. Both
-escapes are recognized by `scripts/check_md_language.py`.
+escapes are recognized by `scripts/check_md_language.ts`.

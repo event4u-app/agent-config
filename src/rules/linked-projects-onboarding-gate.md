@@ -13,7 +13,7 @@ triggers:
   - path_prefix: ".idea/vcs.xml"
 validator_ignore:
   - type: "substring"
-    pattern: "scripts/_lib/linked_projects.py"
+    pattern: "scripts/_lib/linked_projects.ts"
     reason: "Rule names the detector module as the runtime detection entrypoint."
 routes_to:
   - "guideline:agent-infra/linked-projects-onboarding-gate"

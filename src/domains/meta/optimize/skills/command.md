@@ -129,5 +129,5 @@ If any check fails: do NOT suggest the change.
 - **No quality judgments** — the skill linter and `skill-reviewer` handle that
 - **No auto-fixes** — all changes require explicit user approval
 - **No "make it shorter"** — condensation is done by Telegraph Condensation, not here
-- **No Killer checks** — replaced by the skill linter (`scripts/skill_linter.py`)
+- **No Killer checks** — replaced by the skill linter (`scripts/skill_linter.ts`)
 - **No edits to `dist/agent-src/` or `.augment/`** — always edit `.agent-src.uncondensed/`, then sync

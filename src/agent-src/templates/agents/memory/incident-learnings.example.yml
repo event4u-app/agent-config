@@ -10,7 +10,7 @@
 # REDACTION IS MANDATORY — see road-to-engineering-memory.md.
 # Every entry is a PATTERN + CONSEQUENCE + GUARDRAIL.
 # Every entry that contains a customer name, internal URL, PII, or
-# secret is rejected by `scripts/check_memory.py`. No opt-out.
+# secret is rejected by `scripts/check_memory.ts`. No opt-out.
 #
 # BAD entry (auto-rejected):
 #   "On 2026-03-14 customer ACME hit a rate limit and Redis died."

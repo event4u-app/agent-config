@@ -29,7 +29,7 @@ Ask the user (in their language) where the roadmap should be created:
 > 2. In a module (`{module_root}/{Name}/{agent_folder}/roadmaps/`)
 
 If the user picks a module → resolve module roots via
-`scripts/_lib/agent_settings.py::enumerate_modules()`, list available
+`scripts/_lib/agent_settings.ts::enumerate_modules()`, list available
 modules from `modules.root_paths`, and ask which one. The target
 directory is `{module_path}/{modules.agent_folder}/roadmaps/`
 (default `agent_folder` = `agents`).
@@ -185,7 +185,7 @@ If the user picks **1**:
 
 - Run `/council roadmap:<path>` with the user's original ask captured
   in step 1 as `original_ask` (the handoff preamble carries it
-  verbatim, see `scripts/ai_council/prompts.py`).
+  verbatim, see `scripts/ai_council/prompts.ts`).
 - Append the council findings as a `## Council review (<UTC date>)`
   section at the bottom of the roadmap. Include the trace path to
   `agents/runtime/council/sessions/<timestamp>/raw-text.md` so future readers

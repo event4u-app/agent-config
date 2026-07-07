@@ -24,7 +24,7 @@ Use when:
 - Editing `packages/core/.agent-src.uncondensed/templates/AGENTS.md` (consumer-shipped template).
 - Reviewing a PR that changes either file.
 - Running `/optimize/agents`.
-- A budget meter (`scripts/measure_augment_budget.py`) flags the package-root AGENTS.md as the dominant cost.
+- A budget meter (`scripts/measure_augment_budget.ts`) flags the package-root AGENTS.md as the dominant cost.
 
 ## Do NOT
 
@@ -49,7 +49,7 @@ Every entry describes **what** the project does or **where** to learn more — n
 | `AGENTS.md` (package root) | 3,000 chars | 2,800 chars | ≤ 2,800 |
 | `packages/core/.agent-src.uncondensed/templates/AGENTS.md` (consumer) | 2,500 chars | 2,300 chars | ≤ 2,300 |
 
-Char-count is raw file size (`wc -c`), frontmatter included. Enforcement: `scripts/lint_agents_md.py` (Phase 7), wired into the package's CI pipeline via the `lint-agents-md` task. WARN is a soft signal in CI; FAIL blocks merge.
+Char-count is raw file size (`wc -c`), frontmatter included. Enforcement: `scripts/lint_agents_md.ts` (Phase 7), wired into the package's CI pipeline via the `lint-agents-md` task. WARN is a soft signal in CI; FAIL blocks merge.
 
 The R2 council originally proposed 2,500 / 2,000 caps. Phase 6.4 empirical refactor demonstrated that the mandatory emergency-triage block (≈ 700 chars) plus operational must-haves (source-of-truth disclaimer, `task` quickstart, six substantive pointers) raise the achievable floor by ≈ 500 chars. The caps above are the post-refactor baseline; the previous numbers stayed unattainable without dropping mandatory content.
 
