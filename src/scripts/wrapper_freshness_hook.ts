@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * session_start concern — keep the project-local `./agent-config` fresh.
+ * session_start concern — keep the project-local `./agent-config` wrapper
+ * AND the installed `.git/hooks/pre-commit` gate fresh.
  *
  * TypeScript twin of `src/scripts/wrapper_freshness_hook.py` (ADR-200 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
@@ -10,7 +11,12 @@
  * `refresh --project`). On every session_start the dispatcher runs this in
  * the consumer workspace; if a `./agent-config` wrapper exists there and
  * differs from the canonical template, it is re-stamped so an outdated,
- * fallback-less copy cannot keep breaking the hooks.
+ * fallback-less copy cannot keep breaking the hooks. The same self-heal
+ * covers `.git/hooks/pre-commit` when it is OURS (identified by the
+ * `pre-commit-roadmap-progress` marker) and differs from the shipped
+ * template — a hook installed under an older release otherwise keeps its
+ * stale body forever (the py2ts-era hooks silently no-op'd exactly this
+ * way; `agent-config upgrade` only reaches projects it is run from).
  *
  * Bootstrapping note: this can only heal a wrapper functional enough to
  * invoke the dispatcher in the first place (the current template's global +
@@ -18,9 +24,10 @@
  * this concern — that recovery path is `agent-config upgrade` /
  * `refresh --project`.
  *
- * Contract: never creates a wrapper where none exists (that is an install
- * action); never touches the agent-config source repo; always fail-open
- * (exit 0) — hook self-heal must not block a session.
+ * Contract: never creates a wrapper or hook where none exists (that is an
+ * install action); never overwrites a foreign pre-commit hook; never touches
+ * the agent-config source repo; always fail-open (exit 0) — hook self-heal
+ * must not block a session.
  */
 
 import fs from "node:fs";
@@ -127,6 +134,71 @@ function _parseRoot(argv: string[]): string | null {
   return null;
 }
 
+/** Marker that identifies OUR installed pre-commit hook (never foreign ones). */
+const _PRECOMMIT_MARKER = "pre-commit-roadmap-progress";
+
+/** Resolve `<root>/.git/hooks` — plain dir or worktree/submodule gitdir file. */
+function _git_hooks_dir(root: string): string | null {
+  const dotGit = path.join(root, ".git");
+  if (_isDir(dotGit)) {
+    return path.join(dotGit, "hooks");
+  }
+  if (_isFile(dotGit)) {
+    try {
+      const m = /^gitdir:\s*(.+)\s*$/m.exec(fs.readFileSync(dotGit, "utf-8"));
+      if (m && m[1] !== undefined) {
+        const gitDir = path.isAbsolute(m[1]) ? m[1] : path.join(root, m[1]);
+        return path.join(gitDir, "hooks");
+      }
+    } catch {
+      /* fail-open */
+    }
+  }
+  return null;
+}
+
+/**
+ * Re-stamp a marker-identified, stale `.git/hooks/pre-commit` from the
+ * shipped template. Returns the hook path when re-stamped, else null.
+ * Never creates a hook, never touches foreign hooks, never throws.
+ */
+export function refresh_precommit_hook(root: string): string | null {
+  try {
+    const template = path.join(
+      path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".."),
+      "dist",
+      "agent-src",
+      "templates",
+      "hooks",
+      "pre-commit-roadmap-progress",
+    );
+    if (!_isFile(template)) {
+      return null;
+    }
+    const hooksDir = _git_hooks_dir(root);
+    if (hooksDir === null) {
+      return null;
+    }
+    const target = path.join(hooksDir, "pre-commit");
+    if (!_isFile(target)) {
+      return null; // no hook installed — never create one
+    }
+    const current = fs.readFileSync(target, "utf-8");
+    if (!current.includes(_PRECOMMIT_MARKER)) {
+      return null; // foreign hook — never overwrite
+    }
+    const canonical = fs.readFileSync(template, "utf-8");
+    if (current === canonical) {
+      return null; // already fresh
+    }
+    fs.writeFileSync(target, canonical);
+    fs.chmodSync(target, 0o755);
+    return target;
+  } catch {
+    return null; // fail-open — never block the session
+  }
+}
+
 export function main(argv?: string[]): number {
   const args = argv ?? process.argv.slice(2);
   const rootArg = _parseRoot(args);
@@ -139,6 +211,12 @@ export function main(argv?: string[]): number {
   try {
     if (_is_source_repo(root)) {
       return EXIT_ALLOW;
+    }
+    const hook = refresh_precommit_hook(root);
+    if (hook !== null) {
+      process.stderr.write(
+        `[wrapper] re-stamped stale .git/hooks/pre-commit at ${hook}\n`,
+      );
     }
     if (!_isFile(path.join(root, "agent-config"))) {
       return EXIT_ALLOW; // no wrapper here — never create one
