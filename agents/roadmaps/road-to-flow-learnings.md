@@ -190,17 +190,17 @@ Coordinate with the active subagent telemetry follow-up roadmap: text
 plus one check only, no new telemetry fields, no change to
 `subagents.auto` (orchestration-default-flip verdict stands).
 
-- [ ] Extend `delegation-policy` / `subagent-steering` text: two
+- [x] Extend `delegation-policy` / `subagent-steering` text: two
       consecutive verification-failed returns from the same subagent
       type in one session = an **application of the existing per-target
       N=3 budget** (2 failures + 1 escalation) — stop dispatching that
       type, surface the failures to the human, run the remaining slices
       in-session. NO new mechanism, NO automatic cohort-disable; the
       subagent-steering Iron Law is restated, not amended.
-- [ ] Make the `do-in-steps` dependency contract explicit and lintable:
+- [x] Make the `do-in-steps` dependency contract explicit and lintable:
       an ordered slice declares its parent; no slice dispatches before
       its parent's return is verified.
-- [ ] One deterministic check in the work-engine dispatch directive:
+- [x] One deterministic check in the work-engine dispatch directive:
       refuse a slice whose declared parent lacks a verified return in
       session state; unit tests both ways (parent unverified → refused;
       verified → allowed).
