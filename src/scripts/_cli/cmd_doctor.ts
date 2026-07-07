@@ -26,10 +26,10 @@
  *   here; files without frontmatter are skipped (P5.1 contract).
  *
  * Health checks (see `CHECK_IDS`):
- * scope · stale-orphans · manifest-integrity · lockfile-freshness · bridge-drift ·
- * mcp-mode · mcp-beta-readiness · offline-readiness · python-runtime ·
- * tier-usage-readiness · council-cli · unsupported-combos ·
- * wizard-state.
+ * scope · global-binary · claude-plugin · stale-orphans · manifest-integrity ·
+ * lockfile-freshness · bridge-drift · mcp-mode · mcp-beta-readiness ·
+ * offline-readiness · python-runtime · tier-usage-readiness · council-cli ·
+ * unsupported-combos · wizard-state.
  * Each emits a structured `{id, status, message, remedy}` record with
  * `status` ∈ `ok` / `warn` / `fail` / `skipped` (rendered
  * `✅` / `⚠️` / `❌` / `⏭️`). `--check <id>` runs a single check.
@@ -80,6 +80,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as YAML from 'yaml';
 
+import * as claude_plugin from '../_lib/claude_plugin.js';
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as installed_tools from '../_lib/installed_tools.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
@@ -727,6 +728,7 @@ function relativeTo(p: string, base: string): string | null {
 const CHECK_IDS = [
     'scope',
     'global-binary',
+    'claude-plugin',
     'stale-orphans',
     'manifest-integrity',
     'lockfile-freshness',
@@ -745,6 +747,7 @@ const CHECK_IDS = [
 const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'scope',
     'global-binary',
+    'claude-plugin',
     'stale-orphans',
     'mcp-mode',
     'mcp-beta-readiness',
@@ -998,6 +1001,54 @@ function lstripV(s: string): string {
         out = out.slice(1);
     }
     return out;
+}
+
+/**
+ * Claude Code plugin state. The plugin is OPTIONAL — the `~/.claude/` file
+ * projection is a full install on its own — so a missing plugin is `ok`,
+ * never a warning. What DOES warn is a stale installed plugin: Claude Code
+ * pins the plugin to its install-time git SHA, so its command surface
+ * silently lags every upgrade until `claude plugin update` runs
+ * (`agent-config upgrade` now does that automatically).
+ */
+function _check_claude_plugin(): Dict {
+    const claude = shutilWhich('claude');
+    if (claude === null) {
+        return {
+            id: 'claude-plugin',
+            status: 'skipped',
+            message: 'Claude Code CLI not on PATH — plugin check not applicable',
+            remedy: '',
+        };
+    }
+    if (!claude_plugin.claude_plugin_installed()) {
+        return {
+            id: 'claude-plugin',
+            status: 'ok',
+            message:
+                'plugin not installed (optional — the ~/.claude/ file projection ' +
+                'already carries the full skill/command set)',
+            remedy: '',
+        };
+    }
+    const snapshot_v = lstripV(claude_plugin.claude_plugin_snapshot_version() || '');
+    const binary_v = lstripV(_current_package_version() || '');
+    if (snapshot_v && binary_v && snapshot_v !== binary_v) {
+        return {
+            id: 'claude-plugin',
+            status: 'warn',
+            message: `plugin snapshot ${snapshot_v} lags binary ${binary_v} — its command surface is stale`,
+            remedy:
+                'agent-config upgrade (refreshes the plugin), or ' +
+                `claude plugin update ${claude_plugin.CLAUDE_PLUGIN_ID}@${claude_plugin.CLAUDE_MARKETPLACE_NAME}`,
+        };
+    }
+    return {
+        id: 'claude-plugin',
+        status: 'ok',
+        message: `plugin installed${snapshot_v ? ` (snapshot ${snapshot_v})` : ''}`,
+        remedy: '',
+    };
 }
 
 function _check_bridge_drift(
@@ -1751,6 +1802,7 @@ function _run_checks(
     const runners: Record<string, CheckRunner> = {
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
+        'claude-plugin': _check_claude_plugin,
         'stale-orphans': _check_stale_orphans,
         'manifest-integrity': () => _check_manifest_integrity(manifest),
         'lockfile-freshness': () => _check_lockfile_freshness(manifest),
@@ -1822,6 +1874,7 @@ function _run_checks_no_manifest(
     const runners: Record<string, CheckRunner> = {
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
+        'claude-plugin': _check_claude_plugin,
         'stale-orphans': _check_stale_orphans,
         'manifest-integrity': () => _skipped_manifest_check('manifest-integrity'),
         'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness'),
@@ -2290,6 +2343,7 @@ export {
     _check_manifest_integrity,
     _check_lockfile_freshness,
     _check_global_binary,
+    _check_claude_plugin,
     _check_bridge_drift,
     _check_mcp_mode,
     _check_offline_readiness,

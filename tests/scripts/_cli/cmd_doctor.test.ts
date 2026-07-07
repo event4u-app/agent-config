@@ -289,6 +289,7 @@ describe('doctor — individual checks', () => {
     const allChecks = [
         'scope',
         'global-binary',
+        'claude-plugin',
         'stale-orphans',
         'manifest-integrity',
         'lockfile-freshness',
