@@ -276,6 +276,36 @@ test_source_repo_guard_override_env_bypasses() {
     teardown
 }
 
+# --- `agent-config upgrade` contract (--no-ui) ---
+
+# `agent-config upgrade` runs `agent-config global --no-ui` as its refresh
+# step (the browser setup wizard is an onboarding surface, not an upgrade
+# step — its foreground server made `npx @event4u/agent-config upgrade` hang
+# until Ctrl-C). The orchestrator MUST accept the flag: an unknown-arg error
+# here fails every published upgrade at step 2.
+test_global_no_ui_flag_accepted() {
+    setup
+    local out exit_code
+    out="$(AGENT_CONFIG_INSTALLED_LOCK="$TEST_TARGET/installed.lock" \
+        bash "$INSTALL" --target "$TEST_TARGET" --global --no-ui --tools=claude-code --quiet 2>&1)"; exit_code=$?
+    assert_true "--no-ui: exit 0 on global install (rc=$exit_code)" test "$exit_code" -eq 0
+    assert_false "--no-ui: no 'Unknown argument' error" grep -q "Unknown argument: --no-ui" <<<"$out"
+    assert_true "--no-ui: lockfile written (install actually ran)" test -f "$TEST_TARGET/installed.lock"
+    teardown
+}
+
+# --no-ui documents itself: the help text must name the flag so the contract
+# between cmd_upgrade.ts and this orchestrator stays discoverable.
+test_global_no_ui_flag_documented_in_help() {
+    local out
+    out="$(bash "$INSTALL" --help 2>&1)"
+    if echo "$out" | grep -q -- "--no-ui"; then
+        pass "--help documents --no-ui"
+    else
+        fail "--help output missing --no-ui"
+    fi
+}
+
 test_source_repo_guard_package_json_marker() {
     setup
     # No .agent-src.uncondensed/, but package.json declares the source name.
@@ -312,6 +342,8 @@ TESTS=(
     test_source_repo_guard_allows_global_install
     test_source_repo_guard_override_env_bypasses
     test_source_repo_guard_package_json_marker
+    test_global_no_ui_flag_accepted
+    test_global_no_ui_flag_documented_in_help
 )
 
 # SHARD=N/M env var: keep only Nth slice of M (1-indexed) before dispatch.
