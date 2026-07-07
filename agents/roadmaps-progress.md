@@ -6,54 +6,43 @@
 
 ## Overall
 
-**87 / 147 steps done · 59%**
+**86 / 134 steps done · 64%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   59%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md) | 5 | 16 | 4 | 12 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering) | ████████░░ 75% |
+| 1 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
 | 2 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 3 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 9 | 9 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | █████░░░░░ 50% |
-| 4 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 9 | 16 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 64% |
+| 3 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
+| 4 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
 | 5 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 16 | 10 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ████░░░░░░ 38% |
+| 6 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
 | 7 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
 
 ---
 
 ## Per-roadmap phase breakdown
 
-### [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md)
+### [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md)
 
-**Road to discipline-profile tiering — the ~3x lift as the default shape, host-gated** — 12 / 16 done (75%)
+**Follow-up to discipline-profile tiering — full-tier disposition** — 0 / 3 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Tier mechanism, built inert (no default change) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Retire the measured-dead `balanced` cut | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Evidence gate P1: essential on the full corpus (weak host) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | Evidence gate P2 + default flip | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
-| 5 | Full-tier disposition (open-source hypothesis, gated) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Full-tier disposition (carried from parent Phase 5) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
-<a id="blockers-road-to-discipline-profile-tiering"></a>
+<a id="blockers-road-to-discipline-profile-tiering-followup"></a>
 **Blockers**
 
-- **non-claude-host-adapter** (owner: maintainer) — blocks Phase 4 (P2 replication run + default flip), Phase 5
+- **legacy** (owner: user) — blocks entire roadmap
   - **What to do:**
-    run needs one of: (a) a fresh interactive `codex login` (stored ChatGPT
-    token expired), or (b) approving non-interactive codex runs for the agent
-    session (the auto-mode permission classifier blocks `codex exec` variants),
-    using the isolated API-key home (`CODEX_BENCH_HOME`). Then:
-    `CODEX_BENCH_HOME=<home> npx tsx src/scripts/bench_ab_v2_run.ts --host codex
-    --arms vanilla,rules-kernel-dc --seeds 3 --model gpt-5-nano --budget 3.5`.
-  - **Resolved when:** the harness completes a paired vanilla-vs-essential run on a non-Claude host with the deterministic scorer.
-
-_1 blocker resolved._
+    an open-source-host adapter exists AND the maintainer wants
+  - **Resolved when:** condition described above clears
 
 ### [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md)
 

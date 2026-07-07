@@ -34,10 +34,10 @@ import { PACKAGE_ROOT } from '../../cli/paths.js';
 // the merged defaults will reject the first save.
 const TEMPLATE_PLACEHOLDER_DEFAULTS: Readonly<Record<string, string>> = {
     __RULE_LOADING_TIER__: 'balanced',
-    // Successor knob (ADR-110); `essential` mirrors what the legacy
-    // `balanced` default resolves to — behaviour-preserving until the
-    // evidence-gated flip to `auto` (roadmap Phase 4).
-    __DISCIPLINE_PROFILE__: 'essential',
+    // Successor knob (ADR-110). P2-verdict council 2026-07-07: the
+    // balanced-heritage default is `auto` — lift only where measured
+    // (vendor-granular unknown_defaults in src/config/host-capabilities.yml).
+    __DISCIPLINE_PROFILE__: 'auto',
     __USER_TYPE__: '',
     __CHAT_HISTORY_FREQUENCY__: 'per_turn',
     __CHAT_HISTORY_MAX_SIZE_KB__: '2048',

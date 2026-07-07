@@ -64,9 +64,9 @@
 - last_verified: 2026-07-05
 
 ### claim: essential-tier-cost-factor
-- claim: The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY-SCOPED — full-corpus P1 gate (n=90 pairs): scope/downstream family 0.533→1.000 (7/7 discordant favour essential), other families flat at ceiling, corpus-wide 1.71x tokens; the full load's residual over essential is not significant (p=0.37, n=24). Non-claim on the flip side — the balanced router profile (kernel + tier-1 by size) was removed after measuring a NULL lift (p=0.81, n=24, claude-haiku-4-5, 2026-07-07), and no full-tier recommendation exists anywhere until its own evidence gate passes.
+- claim: The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed.
 - kind: quant
-- evidence: docs/benchmark.md#Full-corpus P1 gate
+- evidence: docs/benchmark.md#REPLICATION FAILED
 - status: backed
 - last_verified: 2026-07-07
 

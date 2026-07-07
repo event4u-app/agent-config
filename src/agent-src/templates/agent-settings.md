@@ -54,15 +54,16 @@ made by the user directly or by the agent on request, following the
 # essential = kernel + the lift-carrying rules (~3.3x, keeps the weak-host
 #             discipline lift; the full load's residual is not significant).
 # full      = every rule tier (~11.7x). EXPERIMENTAL opt-in only.
-# auto      = resolve per session against host-capabilities.yml
-#             (measured-null model -> off, otherwise -> essential).
+# auto      = resolve per session against host-capabilities.yml — measured
+#             NULL-lift model -> off; unmeasured Claude-family -> essential;
+#             unmeasured non-Claude -> off (P2 verdict, vendor-granular).
 #
 # When set, this key WINS over the legacy rule_loading_tier below
 # (mapping when absent: minimal->off, balanced->essential, full->full).
-# The installer fills it per preset (minimal->off, balanced->essential,
-# full->full — behaviour-preserving); `auto` is the evidence-gated flip
-# target (roadmap Phase 4).
-discipline_profile: essential
+# The installer fills it per preset: minimal->off, balanced->auto,
+# full->full (P2-verdict council 2026-07-07 — the non-Claude replication
+# failed, so auto enables the lift only where measured).
+discipline_profile: auto
 
 # --- Cost profile (legacy knob — superseded by discipline_profile) ---
 #
