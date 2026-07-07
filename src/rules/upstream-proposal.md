@@ -19,4 +19,4 @@ packs:
 **Iron Law.** After creating or significantly improving a skill / rule / guideline / command, ask whether to upstream it.
 
 Body migrated to `skill:upstream-contribute` (per P4 of `road-to-kernel-and-router.md`).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

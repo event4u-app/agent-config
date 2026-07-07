@@ -20,4 +20,4 @@ packs:
 
 Cloud surfaces without settings file stay inert: rule does not fire when `.agent-settings.yml` absent → headless / read-only contexts (Cloudflare MCP, doc preview, CI) never see prompt.
 
-Trigger-set above activates routing under `balanced` and `full` profiles.
+Trigger-set above activates routing on demand, independent of the discipline profile (ADR-110).

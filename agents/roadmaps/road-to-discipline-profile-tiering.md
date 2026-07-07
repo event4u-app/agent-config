@@ -87,16 +87,22 @@ covered by tests; shipped behaviour unchanged (default still full surface).
 
 ## Phase 2 — Retire the measured-dead `balanced` cut
 
-- [ ] Inventory every consumer of the `balanced` profile name: rule bodies
+- [x] Inventory every consumer of the `balanced` profile name:
+      <!-- done 2026-07-07: 24 rule bodies (23 one-line + ui-audit-gate wrapped),
+      compile_router.ts profiles map + test, docs/contracts/rule-router.md,
+      docs/customization.md. Settings VALUE surfaces (schema enum, presets .ini,
+      wizard, install.ts SUPPORTED_PROFILES) keep accepting the legacy value —
+      mapped to essential by resolve_discipline_profile(); their rename rides
+      the Phase-4 default flip. --> rule bodies
       ("activates this routing under the `balanced` and `full` profiles"),
       `dist/router.json` profile map, docs/contracts (`rule-router.md`),
       linters. Targeted greps, list in an inline note.
-- [ ] Replace the shipped `balanced` profile with the function-named tiers
+- [x] Replace the shipped `balanced` profile with the function-named tiers
       (council: delete, don't rename — `essential` is not a re-badged
       balanced, it is a different cut). Migrate the rule-body boilerplate and
       contract text; regenerate router + condensation + per-tool projections
       via `task sync` + `task generate-tools`.
-- [ ] Update `docs/contracts/rule-router.md` + `docs/CLAIMS.md` non-claim:
+- [x] Update `docs/contracts/rule-router.md` + `docs/CLAIMS.md` non-claim:
       "balanced profile removed after NULL-lift measurement (p=0.81, n=24,
       Haiku 4-5, 2026-07-07)."
 

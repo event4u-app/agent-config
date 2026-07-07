@@ -29,10 +29,10 @@ are preserved. New / formalized fields:
 | Key | Required | Values | Purpose |
 |---|---|---|---|
 | `type` | yes | `always` \| `auto` | Existing. Kernel = `always`; everything else = `auto`. |
-| `tier` | yes | `kernel` \| `tier-1` \| `tier-2` | New names. Kernel = always-loaded; tier-1 = balanced + full; tier-2 = full only. |
+| `tier` | yes | `kernel` \| `tier-1` \| `tier-2` | New names. Kernel = always-loaded; tier-1 / tier-2 = trigger-routed on demand, in every discipline profile (ADR-040 / ADR-110). |
 | `triggers` | yes for non-kernel | list of objects | When the rule activates. **Forbidden** on kernel rules. |
 | `routes_to` | yes for non-kernel | list of strings | Skills / guidelines whose body fulfils the rule. **Forbidden** on kernel rules. |
-| `profile` | no | `minimal` \| `balanced` \| `full` | Override the tier-derived default profile. Rare; used only when a tier-2 rule must ship in `balanced`. |
+| `profile` | no | `minimal` \| `essential` \| `full` | Override the tier-derived default profile. Rare; currently unused by any shipped rule. |
 | `triggered_by` | back-ref, on routed artifact | list of strings | Skill / guideline frontmatter declares which rule(s) route to it. Bidirectional check (P3.3). |
 
 ### `triggers:` shape
@@ -99,14 +99,33 @@ start. Deterministic key order, sorted lists, stable across runs.
               "routes_to": ["skill:agent-docs-writing"]}],
   "tier_2": [/* same shape as tier_1 */],
   "profiles": {
-    "minimal":  ["__kernel__"],
-    "balanced": ["__kernel__", "__tier_1__"],
-    "full":     ["__kernel__", "__tier_1__", "__tier_2__"]
+    "minimal":   ["__kernel__"],
+    "essential": ["__kernel__", "downstream-changes"],
+    "full":      ["__kernel__", "__tier_1__", "__tier_2__"]
   }
 }
 ```
 
 Generated alongside `marketplace.json` during `task generate-tools`.
+
+### Profiles — the always-honoured surface (ADR-110)
+
+Profiles name the **always-honoured** rule surface per discipline tier;
+entries without the `__` wrapper are individual rule ids. Trigger routing of
+tier-1/tier-2 stays active under **every** profile — trigger semantics are
+configuration-independent (ADR-040). The runtime knob is
+`discipline_profile: auto | off | essential | full` (`off` → `minimal`
+surface); resolution semantics (including the legacy `rule_loading_tier`
+mapping and the `auto` host-capability check against
+`src/config/host-capabilities.yml`) live in `resolve_discipline_profile()`
+in the work-engine settings lib.
+
+**`balanced` was retired 2026-07-07** (deleted, not renamed): the size cut
+(kernel + tier_1) measured a NULL discipline lift (p=0.81, n=24 —
+`docs/benchmark.md § Cost-factor sweep`) because it missed the lift-carrying
+`downstream-changes`. Its successor `essential` is cut by measured content
+(kernel + the lift-carrying rules; +0.458 lift at ~3.3x tokens, p=0.0135).
+Legacy `rule_loading_tier: balanced` values map to `essential`.
 
 ## Activation semantics
 

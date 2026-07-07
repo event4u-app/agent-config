@@ -25,4 +25,4 @@ install:
 **Iron Law.** Use `__()`/`trans()` with language keys for every user-visible string; mirror keys across `lang/<locale>/` files.
 
 Body migrated to `skill:laravel` (per P4 of `road-to-kernel-and-router.md`).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

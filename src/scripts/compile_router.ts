@@ -245,16 +245,20 @@ export function build(): JsonObject {
         kernel: collected['kernel'],
         tier_1: collected['tier_1'],
         tier_2: collected['tier_2'],
+        // Profiles name the ALWAYS-HONOURED rule surface per discipline tier
+        // (ADR-110). Trigger routing of tier_1/tier_2 stays active under every
+        // profile — configuration-independent per ADR-040. Entries without the
+        // `__` wrapper are individual rule ids.
+        //
+        // `balanced` (kernel + tier_1 by SIZE) was RETIRED 2026-07-07: it
+        // measured a NULL discipline lift (p=0.81, docs/benchmark.md
+        // § Cost-factor sweep) because the size cut missed the lift-carrying
+        // `downstream-changes`. Its successor `essential` is cut by measured
+        // content (council: weak-host-lift-tiering-verdict). Legacy
+        // `rule_loading_tier: balanced` settings map to `essential` via
+        // resolve_discipline_profile().
         profiles: {
             minimal: ['__kernel__'],
-            balanced: ['__kernel__', '__tier_1__'],
-            // `essential` — the lift-carrying cut (council 2026-07-07,
-            // agents/settings/contexts/weak-host-lift-tiering-verdict.md):
-            // kernel + the measured lift-carrying rules. Entries without the
-            // `__` wrapper are individual rule ids. Cut by measured content,
-            // never by tier size — the size-cut `balanced` profile measured a
-            // NULL lift (docs/benchmark.md § Cost-factor sweep) and is
-            // scheduled for retirement.
             essential: ['__kernel__', 'downstream-changes'],
             full: ['__kernel__', '__tier_1__', '__tier_2__'],
         },

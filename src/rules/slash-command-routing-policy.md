@@ -20,4 +20,4 @@ packs:
 **Iron Law.** On a slash-command invocation or pasted command body, route to the matching command file; never improvise.
 
 Body migrated to `skill:command-routing` (per P4 of `road-to-kernel-and-router.md`).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

@@ -38,10 +38,18 @@ describe('compile_router.build — shape', () => {
         expect(Array.isArray(out['tier_2'])).toBe(true);
         expect(out['profiles']).toEqual({
             minimal: ['__kernel__'],
-            balanced: ['__kernel__', '__tier_1__'],
             essential: ['__kernel__', 'downstream-changes'],
             full: ['__kernel__', '__tier_1__', '__tier_2__'],
         });
+    });
+
+    it('the retired balanced profile never returns (NULL-lift lock)', () => {
+        // Council lock 2026-07-07: the size-cut balanced profile measured a
+        // NULL discipline lift and was deleted, not renamed. Legacy settings
+        // values map via resolve_discipline_profile(); the compiled router
+        // must not resurrect the cut.
+        const out = cr.build() as Record<string, unknown>;
+        expect(Object.keys(out['profiles'] as object)).not.toContain('balanced');
     });
 
     it('essential profile: every bare entry is a real compiled rule id', () => {

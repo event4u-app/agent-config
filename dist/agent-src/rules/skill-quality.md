@@ -17,4 +17,4 @@ packs:
 **Iron Law.** Every skill must be executable, validated, and self-contained — full checklist in the guideline.
 
 Body migrated to `guideline:agent-infra/skill-quality-checklist` (per P4 of `road-to-kernel-and-router.md`).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

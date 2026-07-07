@@ -229,17 +229,28 @@ the sourced rationale lives in the design dossier
 > a budget is tight, reach for the **model** lever first — lowering the rule
 > tier saves little and drops guardrails.
 
-`rule_loading_tier` is the master switch for rule-tier loading. The kernel
-(always-loaded Iron-Law floor, ≤ 26k chars across 9 rules) ships in every
-profile. Tier-1 and tier-2 rules are gated by profile and resolved at
-session start from `dist/router.json` (compiled by `scripts/compile_router.py`).
+`rule_loading_tier` is the **legacy** master switch for rule-tier loading; its
+successor is the single runtime knob `discipline_profile: auto | off |
+essential | full` (ADR-110 — when set, it wins; legacy values map
+minimal→off, balanced→essential, full→full). The kernel (always-loaded
+Iron-Law floor, ≤ 26k chars across 9 rules) ships in every profile. Tier-1
+and tier-2 trigger routing stays active under every profile (trigger
+semantics are configuration-independent, ADR-040); the profile names the
+always-honoured surface, resolved at session start from `dist/router.json`
+(compiled by `scripts/compile_router.ts`).
 
-| Profile | Rule tiers loaded | Token footprint | Best for |
+| Profile | Always-honoured surface | Token footprint | Best for |
 |---|---|---|---|
-| `minimal` | kernel only (no router, no auto-rules) | lowest | Cost-sensitive sessions; trivial Q&A; CI runs |
-| `balanced` | kernel + tier-1 auto-rules (default) | medium | Day-to-day work — current behaviour superset |
-| `full` | kernel + tier-1 + tier-2 (everything) | highest | Agent-config development; full rule fidelity |
-| `custom` | profile ignored — every matrix value must be set explicitly | varies | Power users with bespoke rule sets |
+| `off` (legacy `minimal`) | kernel only | ~1x (lowest) | Hosts with a MEASURED null discipline lift (`src/config/host-capabilities.yml`); cost-sensitive sessions |
+| `essential` | kernel + the lift-carrying rules (`downstream-changes`) | ~3.3x | Day-to-day work — keeps the measured weak-host discipline lift (+0.458, p=0.0135) |
+| `full` | kernel + tier-1 + tier-2 (everything) | ~11.7x (highest) | EXPERIMENTAL opt-in — residual lift over `essential` not established (p=0.37); agent-config development |
+| `auto` | resolved per session: measured-null host → `off`, otherwise → `essential` | varies | The evidence-gated default target |
+| `custom` (legacy) | profile ignored — every matrix value must be set explicitly | varies | Power users with bespoke rule sets |
+
+> **`balanced` was retired 2026-07-07** — the size cut (kernel + tier-1)
+> measured a NULL discipline lift (p=0.81, `docs/benchmark.md § Cost-factor
+> sweep`) because it missed the lift-carrying `downstream-changes`. Existing
+> `rule_loading_tier: balanced` settings keep working and map to `essential`.
 
 The kernel-and-router architecture is documented in
 [`docs/contracts/rule-router.md`](contracts/rule-router.md) and
