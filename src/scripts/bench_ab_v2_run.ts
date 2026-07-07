@@ -49,6 +49,8 @@ const _HERE = fileURLToPath(import.meta.url);
 // export it, so resolve the identical value here (parents[2] of the script —
 // src/scripts/bench_ab_v2_run.ts → repo root). Same path, single derivation.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+const ROUTER_PATH = path.join(REPO_ROOT, 'dist', 'router.json');
+const RULES_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
 const CORPUS_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
 const FIXTURES_ROOT = path.join(REPO_ROOT, 'internal', 'bench', 'ab');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
@@ -81,6 +83,16 @@ interface ArmSpec {
 // config PLUS the compile-time HARD CONSTRAINT blocks injected via sysprompt;
 // `hardened-placebo` = `package` + inert prose of the SAME length, so the
 // hardened Δ is length-controlled (measures emphasis, not verbosity).
+// `rules-kernel-dc` / `rules-balanced` (cost-factor sweep, 2026-07): plugin OFF
+// + ONLY a rule subset injected via sysprompt, to measure how much of the
+// weak-host discipline lift survives at a fraction of the full package's
+// loaded-context cost. `rules-kernel-dc` = the router kernel (9 Iron-Law rules)
+// + `downstream-changes` (one of the two lift-carrying rules; the other,
+// `scope-control`, is already in the kernel) — the cheapest configuration that
+// contains both. `rules-balanced` = kernel + tier_1 rule bodies, i.e. the
+// shipped `balanced` router profile (which does NOT include downstream-changes
+// — tier_2 — so this arm also tests whether that profile cut loses the lift).
+// Both are opt-in: NOT in the default arm list; existing runs unchanged.
 const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
@@ -89,6 +101,8 @@ const ARMS: Record<string, ArmSpec> = {
     'package-recursive': { setting_sources: null, inject: null, recursive: true },
     hardened: { setting_sources: null, inject: 'hardened' },
     'hardened-placebo': { setting_sources: null, inject: 'hardened-placebo' },
+    'rules-kernel-dc': { setting_sources: 'project,local', inject: 'rules-kernel-dc' },
+    'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
 };
 
 /**
@@ -139,6 +153,30 @@ export function hardened_blocks_text(): string {
     ].join('\n');
 }
 
+/**
+ * Rule-subset injection bodies for the cost-factor sweep arms.
+ *
+ * Reads the tier membership from `dist/router.json` and the rule bodies from
+ * `dist/agent-src/rules/` — deterministic per checkout, so the injected text is
+ * exactly what the shipped profiles would always-load:
+ * - 'rules-kernel-dc'  → kernel (9 rules) + `downstream-changes`.
+ * - 'rules-balanced'   → kernel + tier_1 (the shipped `balanced` profile).
+ */
+export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'): string {
+    const router = JSON.parse(fs.readFileSync(ROUTER_PATH, 'utf-8')) as {
+        kernel: string[];
+        tier_1: { id: string }[];
+    };
+    const ids = [...router.kernel];
+    if (subset === 'rules-kernel-dc') {
+        ids.push('downstream-changes');
+    } else {
+        ids.push(...router.tier_1.map((t) => t.id));
+    }
+    const bodies = ids.map((id) => fs.readFileSync(path.join(RULES_DIR, `${id}.md`), 'utf-8').trim());
+    return bodies.join('\n\n---\n\n');
+}
+
 export function injected_text(inject: string | null, placebo_chars: number): string | null {
     if (inject === 'rdp') {
         return v1.system_prompt_for('with-rdp');
@@ -152,6 +190,9 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     if (inject === 'hardened-placebo') {
         // Length-matched control: inert prose the SAME length as the hardened blocks.
         return placebo_prose(hardened_blocks_text().length);
+    }
+    if (inject === 'rules-kernel-dc' || inject === 'rules-balanced') {
+        return rules_subset_text(inject);
     }
     return null;
 }
