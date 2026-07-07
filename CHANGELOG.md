@@ -980,6 +980,16 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.1.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.1.0](https://github.com/event4u-app/agent-config/compare/8.0.0...8.1.0) (2026-07-07)
+
+### Features
+
+* **commit-policy:** one-shot authorization is not a standing license ([259bb1b](https://github.com/event4u-app/agent-config/commit/259bb1b249063e055774c3159be8c584a2db54d3))
+
+### Chores
+
+* **changelog:** split era 7.0.x → pre-8.0.0 ([7aea9be](https://github.com/event4u-app/agent-config/commit/7aea9be499768f7fd76949d607a6503b3324f8c0))
+
 ## [8.0.0](https://github.com/event4u-app/agent-config/compare/7.5.0...8.0.0) (2026-07-07)
 
 ### BREAKING CHANGES
