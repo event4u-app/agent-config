@@ -18,9 +18,9 @@ tasks:
       - ./agent-config mcp:run
 
   mcp:test:
-    desc: "Run the MCP server test suite (handler logic + end-to-end stdio serving)"
+    desc: "Run the MCP server test suite (handler logic + end-to-end stdio serving + exec safety envelope)"
     cmds:
-      - node node_modules/vitest/vitest.mjs run tests/scripts/mcp_server_foundation.test.ts tests/scripts/mcp_server_server.test.ts tests/scripts/mcp_server_tools.test.ts tests/scripts/mcp_server_serve.test.ts
+      - node node_modules/vitest/vitest.mjs run tests/scripts/mcp_server_foundation.test.ts tests/scripts/mcp_server_server.test.ts tests/scripts/mcp_server_tools.test.ts tests/scripts/mcp_server_serve.test.ts tests/scripts/mcp_exec_envelope.test.ts
 
   mcp:health:
     desc: "Phase 1 J6 telemetry healthcheck — exits non-zero if no tools/call logged in past 24h"

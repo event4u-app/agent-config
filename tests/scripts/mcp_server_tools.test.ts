@@ -47,7 +47,7 @@ function tmp(): string {
 // ----------------------------------------------------------------------
 
 describe('tools — allowlist + registry', () => {
-    it('allowlist holds the 17 implemented tools', () => {
+    it('allowlist holds the 18 implemented tools', () => {
         expect(new Set(Object.keys(ALLOWLIST))).toEqual(
             new Set([
                 'lint_skills',
@@ -68,9 +68,11 @@ describe('tools — allowlist + registry', () => {
                 'conformance_check',
                 'telemetry_report',
                 'council_estimate',
+                // Phase 5 shell-exec pilot (same verdict, one tool only).
+                'run_tests',
             ]),
         );
-        expect(Object.keys(ALLOWLIST).length).toBe(17);
+        expect(Object.keys(ALLOWLIST).length).toBe(18);
         for (const tool of Object.values(ALLOWLIST)) {
             expect(tool.description.trim()).toBeTruthy();
             expect(tool.input_schema.type).toBe('object');
@@ -142,14 +144,14 @@ describe('tools — dispatch', () => {
     });
 
     it('stub dispatch returns the not_implemented envelope', async () => {
-        // `run_tests` is still a catalog stub after the Phase 4 cut
-        // (shell-exec tier — deferred to Phase 5).
+        // `run_quality_checks` is still a catalog stub after the Phase 5
+        // pilot cut (shell-exec tier — not in the 2026-07-07 council cut).
         const cache = new ToolCache();
-        const result = await cache.dispatch('run_tests', {
-            filter: 'x',
+        const result = await cache.dispatch('run_quality_checks', {
+            tool: 'x',
         });
         expect(result.code).toBe('not_implemented');
-        expect(result.tool).toBe('run_tests');
+        expect(result.tool).toBe('run_quality_checks');
         expect(result.transport).toBe('stdio');
         expect(result.alternative).toBe('stdio');
         expect(result.install_hint).toBeTruthy();
@@ -847,6 +849,78 @@ describe('golden structure — registry + envelopes', () => {
         ]);
         expect(first.code).toBe('not_implemented');
         expect(first.tool).toBe('compile_router');
+    });
+});
+
+// ----------------------------------------------------------------------
+// run_tests — Phase 5 shell-exec pilot (compiled safety envelope)
+// ----------------------------------------------------------------------
+
+describe('tools — run_tests (shell-exec pilot)', () => {
+    /** Seed a fake vitest entry in a tmp consumer root so the pilot's
+     * fixed argv (`node node_modules/vitest/vitest.mjs run …`) executes a
+     * hermetic script instead of a real (slow, nested) vitest run. */
+    function seedFakeVitest(root: string, body: string): void {
+        const dir = path.join(root, 'node_modules', 'vitest');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'vitest.mjs'), body, 'utf8');
+    }
+
+    it('runs the project vitest entry via fixed argv and reports success', async () => {
+        const root = tmp();
+        seedFakeVitest(
+            root,
+            'console.log("argv:", JSON.stringify(process.argv.slice(2)));\n' +
+                'process.exit(0);\n',
+        );
+        const cache = new ToolCache();
+        const result = await cache.dispatch('run_tests', { filter: 'my test' }, root);
+        expect(result.runner).toBe('vitest');
+        expect(result.passed).toBe(true);
+        expect(result.exit_code).toBe(0);
+        expect(result.timed_out).toBe(false);
+        // Caller strings arrive as literal argv elements — never shell-parsed.
+        expect(result.stdout as string).toContain('"run"');
+        expect(result.stdout as string).toContain('"--testNamePattern"');
+        expect(result.stdout as string).toContain('"my test"');
+    });
+
+    it('surfaces a failing suite as passed=false with the exit code', async () => {
+        const root = tmp();
+        seedFakeVitest(root, 'console.error("1 test failed");\nprocess.exit(1);\n');
+        const cache = new ToolCache();
+        const result = await cache.dispatch('run_tests', {}, root);
+        expect(result.passed).toBe(false);
+        expect(result.exit_code).toBe(1);
+        expect(result.stderr as string).toContain('1 test failed');
+    });
+
+    it('rejects a path escaping the consumer root', async () => {
+        const root = tmp();
+        seedFakeVitest(root, 'process.exit(0);\n');
+        const cache = new ToolCache();
+        await expect(
+            cache.dispatch('run_tests', { path: '../outside' }, root),
+        ).rejects.toThrow(/escapes consumer_root/);
+    });
+
+    it('refuses non-vitest projects with a structured error', async () => {
+        const root = tmp();
+        const cache = new ToolCache();
+        await expect(cache.dispatch('run_tests', {}, root)).rejects.toThrow(
+            /vitest projects only/,
+        );
+    });
+
+    it('catalog entry is implemented on stdio and mirrors the allowlist description', async () => {
+        const { load_catalog } = await import('../../src/scripts/mcp_server/catalog.js');
+        const entry = load_catalog().find((e) => e.name === 'run_tests');
+        expect(entry).toBeDefined();
+        expect(entry!.implemented_on).toEqual(['stdio']);
+        expect(entry!.description).toBe(ALLOWLIST.run_tests!.description);
+        expect(canonical(entry!.input_schema)).toEqual(
+            canonical(ALLOWLIST.run_tests!.input_schema),
+        );
     });
 });
 

@@ -198,9 +198,9 @@
     },
     {
       "name": "run_tests",
-      "description": "Run the consumer project's test suite via its auto-detected runner (Pest / PHPUnit, Jest / Vitest, pytest, …). Use to verify a change before claiming it works. Shell-bound. Returns the exit code, the runner name, and a structured tail of the output. Pass `filter` or `path` to narrow the run.",
+      "description": "Run the consumer project's vitest test suite under a compiled safety envelope: fixed argv (no shell interpolation), 120s timeout, 64KB output cap per stream. Shell-exec pilot per the 2026-07-07 council cut — vitest projects only; other runners (Pest / PHPUnit, pytest, Jest) return an error until a future council round approves them. Pass `filter` (vitest --testNamePattern) or `path` (in-tree file or directory) to narrow the run. Returns runner, passed, exit_code, timed_out, truncated stdout/stderr, and duration_ms.",
       "side_effect": "shell",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {
         "type": "object",
         "properties": {

@@ -901,6 +901,83 @@ async function _councilEstimateHandler(
     });
 }
 
+// Compiled envelope constants for the Phase 5 shell-exec pilot. Compiled
+// policy, not configuration (council Decision 2, 2026-07-07 verdict) —
+// changing them is a code-review event, never a settings edit.
+const _RUN_TESTS_TIMEOUT_MS = 120_000;
+const _RUN_TESTS_MAX_OUTPUT_BYTES = 64 * 1024;
+
+/**
+ * Phase 5 — shell-exec pilot: run the consumer's vitest suite under the
+ * compiled safety envelope (`src/scripts/mcp_exec/safety_envelope.ts`).
+ *
+ * The ONE approved exec-tier tool from the 2026-07-07 council verdict
+ * (`agents/decisions/mcp-write-exec-cut-2026-07-07.md`). vitest-only by
+ * design: argv is a fixed array (node + the project's own vitest entry +
+ * literal flags) — caller strings become argv elements, never a shell
+ * string. The envelope module lives outside `mcp_server/`, so this module
+ * still imports no child_process (same accepted transitive pattern as
+ * `roadmap_archive`'s git effects).
+ */
+async function _runTestsHandler(
+    args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const root = _resolvePath(consumerRoot);
+
+    const filter = args.filter ?? null;
+    if (filter !== null && (typeof filter !== 'string' || !_strip(filter))) {
+        throw new Error("'filter' must be a non-empty string when provided");
+    }
+
+    const relPathRaw = args.path ?? null;
+    let relArg: string | null = null;
+    if (relPathRaw !== null) {
+        if (typeof relPathRaw !== 'string' || !_strip(relPathRaw)) {
+            throw new Error("'path' must be a non-empty string when provided");
+        }
+        const resolved = path.isAbsolute(relPathRaw)
+            ? _resolvePath(relPathRaw)
+            : _resolvePath(path.join(root, relPathRaw));
+        const rel = _relativeUnder(resolved, root);
+        if (rel === null) {
+            throw new Error(`path escapes consumer_root: ${resolved}`);
+        }
+        if (!fs.existsSync(resolved)) {
+            throw new Error(`path not found: ${resolved}`);
+        }
+        relArg = rel;
+    }
+
+    const vitestEntry = path.join(root, 'node_modules', 'vitest', 'vitest.mjs');
+    if (!fs.existsSync(vitestEntry)) {
+        throw new Error(
+            'run_tests pilot supports vitest projects only — ' +
+                'node_modules/vitest/vitest.mjs not found under consumer_root',
+        );
+    }
+
+    const { run_enveloped } = await import('../mcp_exec/safety_envelope.js');
+    const argv = [
+        process.execPath,
+        vitestEntry,
+        'run',
+        ...(relArg !== null ? [relArg] : []),
+        ...(filter !== null ? ['--testNamePattern', filter as string] : []),
+    ];
+    const result = await run_enveloped({
+        argv,
+        cwd: root,
+        timeout_ms: _RUN_TESTS_TIMEOUT_MS,
+        max_output_bytes: _RUN_TESTS_MAX_OUTPUT_BYTES,
+    });
+    return {
+        runner: 'vitest',
+        passed: result.exit_code === 0 && !result.timed_out,
+        ...result,
+    } as Record<string, unknown>;
+}
+
 // Module-level prompt / resource caches reused across handler calls so
 // repeated `list_*` / `read_resource_body` calls share mtime tracking.
 const _PROMPT_CACHES = new Map<string, unknown>();
@@ -1454,6 +1531,35 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             additionalProperties: false,
         },
         handler: _councilEstimateHandler,
+    },
+    run_tests: {
+        name: 'run_tests',
+        description:
+            "Run the consumer project's vitest test suite under a " +
+            'compiled safety envelope: fixed argv (no shell ' +
+            'interpolation), 120s timeout, 64KB output cap per stream. ' +
+            'Shell-exec pilot per the 2026-07-07 council cut — vitest ' +
+            'projects only; other runners (Pest / PHPUnit, pytest, Jest) ' +
+            'return an error until a future council round approves them. ' +
+            'Pass `filter` (vitest --testNamePattern) or `path` (in-tree ' +
+            'file or directory) to narrow the run. Returns runner, ' +
+            'passed, exit_code, timed_out, truncated stdout/stderr, and ' +
+            'duration_ms.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                filter: {
+                    type: 'string',
+                    description: 'Restrict to tests matching this name pattern.',
+                },
+                path: {
+                    type: 'string',
+                    description: 'Restrict to tests under this directory.',
+                },
+            },
+            additionalProperties: false,
+        },
+        handler: _runTestsHandler,
     },
 };
 
