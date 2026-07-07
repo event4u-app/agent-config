@@ -42,7 +42,13 @@ export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const RULES_DIR = path.join(ROOT, '.agent-src.uncondensed', 'rules');
 export const OUT_PATH = path.join(ROOT, 'dist', 'router.json');
 const SETTINGS_PATH = project_settings_path(ROOT);
-export const SCHEMA_VERSION = 1;
+// v2 (2026-07-07, road-to-request-scoped-rule-load Phase 0): every non-kernel
+// entry additionally carries `workspaces:` and `packs:` copied verbatim from
+// rule frontmatter, so projection/install-time consumer scoping can filter
+// rule pointers by installation. Additive only — v1 readers ignore unknown
+// keys. Kernel entries stay bare id strings: the kernel is unconditional and
+// workspace-independent by definition.
+export const SCHEMA_VERSION = 2;
 
 // Compile-time rule toggles. Maps rule-id → settings predicate.
 // Rule omitted from router.json when predicate returns False.
@@ -223,7 +229,16 @@ function _collect(): JsonObject {
         const routes_to = ((fm['routes_to'] as Json[] | null | undefined) ?? [])
             .map((x) => String(x))
             .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-        const entry: JsonObject = { id: rule_id, triggers, routes_to };
+        // v2: scoping fields, verbatim from frontmatter (sorted for
+        // determinism). `lint_artefact_frontmatter` guarantees both keys are
+        // non-empty lists of known ids on every rule source file.
+        const workspaces = ((fm['workspaces'] as Json[] | null | undefined) ?? [])
+            .map((x) => String(x))
+            .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+        const packs = ((fm['packs'] as Json[] | null | undefined) ?? [])
+            .map((x) => String(x))
+            .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+        const entry: JsonObject = { id: rule_id, triggers, routes_to, workspaces, packs };
         (tiered[tier] as JsonObject[]).push(entry);
     }
     for (const k of Object.keys(tiered)) {

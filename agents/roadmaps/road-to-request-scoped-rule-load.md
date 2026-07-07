@@ -86,18 +86,18 @@ tracking table; this roadmap links, never copies).
 The router is the only artifact both the thin projector and a compliant host
 read; scoping data must live there before anything can filter on it.
 
-- [ ] Extend `docs/contracts/rule-router.md`: each non-kernel router entry
+- [x] Extend `docs/contracts/rule-router.md`: each non-kernel router entry
       gains `workspaces: []` and `packs: []` copied verbatim from rule
       frontmatter. Kernel entries stay bare (kernel is unconditional and
       workspace-independent — assert this in the linter).
-- [ ] `compile_router.ts`: emit the new fields, deterministic sort preserved
+- [x] `compile_router.ts`: emit the new fields, deterministic sort preserved
       (`check-router` must stay byte-stable across two clean builds).
-- [ ] Linter: every non-kernel rule must declare ≥1 workspace; unknown
+- [x] Linter: every non-kernel rule must declare ≥1 workspace; unknown
       workspace/pack ids (vs `src/config/discovery/{workspaces,packs}.yml`)
       fail lint.
-- [ ] Bump `schema_version` → 2 with a reader that accepts v1 (additive
+- [x] Bump `schema_version` → 2 with a reader that accepts v1 (additive
       fields only; downstream readers ignore unknown keys).
-- [ ] **Intent-only backstop audit:** for `user-interaction`,
+- [x] **Intent-only backstop audit:** for `user-interaction`,
       `think-before-action`, `artifact-drafting-protocol` (skip
       `telegraph-speak`): add ≥1 keyword/phrase backstop trigger, or argue
       kernel promotion, or record why intent-only is acceptable — no rule

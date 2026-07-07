@@ -6,9 +6,16 @@ alwaysApply: false
 load_context:
   - ../contexts/communication/rules-auto/think-before-action-mechanics.md
 triggers:
+  # Intent-only backstop audit (road-to-request-scoped-rule-load Phase 0):
+  # broad keyword backstops chosen deliberately — this discipline rule should
+  # fire on virtually every implementation/debugging prompt.
   - intent: "before coding"
   - intent: "before debugging"
   - intent: "before modifying"
+  - keyword: "implement"
+  - keyword: "debug"
+  - keyword: "refactor"
+  - keyword: "fix"
 workspaces:
   - engineering
 packs:

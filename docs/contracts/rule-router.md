@@ -82,13 +82,13 @@ whose body is fully covered by an existing architectural contract.
 
 ## Compiled output — `router.json`
 
-`scripts/compile_router.py` reads every rule frontmatter and emits
+`src/scripts/compile_router.ts` reads every rule frontmatter and emits
 `dist/router.json` (tracked in git), used by host agents at session
 start. Deterministic key order, sorted lists, stable across runs.
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "kernel": ["agent-authority", "ask-when-uncertain", "commit-policy",
              "direct-answers", "language-and-tone", "no-cheap-questions",
              "non-destructive-by-default", "scope-control",
@@ -96,7 +96,9 @@ start. Deterministic key order, sorted lists, stable across runs.
   "tier_1": [{"id": "source-of-truth",
               "triggers": [{"path_prefix": "agents/"},
                            {"path_prefix": "dist/agent-src/"}],
-              "routes_to": ["skill:agent-docs-writing"]}],
+              "routes_to": ["skill:agent-docs-writing"],
+              "workspaces": ["agent-config-maintainer"],
+              "packs": ["meta"]}],
   "tier_2": [/* same shape as tier_1 */],
   "profiles": {
     "minimal":  ["__kernel__"],
@@ -107,6 +109,26 @@ start. Deterministic key order, sorted lists, stable across runs.
 ```
 
 Generated alongside `marketplace.json` during `task generate-tools`.
+
+### Schema v2 — installation-scoping fields (2026-07-07)
+
+Every **non-kernel** entry carries `workspaces:` and `packs:`, copied
+verbatim (sorted) from the rule's frontmatter. They let projection- and
+install-time tooling filter rule bodies AND thin-projection pointer lines
+by the installed workspace/pack set (`road-to-request-scoped-rule-load`
+Phase 1) — per ADR-040 the filtering happens at projection time; there is
+no runtime resolver.
+
+- **Additive only.** v1 readers ignore unknown keys; nothing else in the
+  shape changed. Readers MUST NOT hard-fail on `schema_version: 2`.
+- **Kernel entries stay bare id strings.** The kernel is unconditional
+  and workspace-independent by definition — it never carries scoping
+  fields and is never filtered by installation.
+- **Source of the values:** `src/rules/*.md` frontmatter.
+  `lint_artefact_frontmatter` (wired into `task ci`) enforces that every
+  rule declares non-empty `workspaces:` + `packs:` lists whose ids exist
+  in `src/config/discovery/{workspaces,packs}.yml` — unknown ids fail
+  lint before they can reach the router.
 
 ## Activation semantics
 
