@@ -2,9 +2,13 @@
 
 Safety-tier classification of every CLI subcommand in `src/cli/registry.ts`,
 built for [`road-to-mcp-full-power.md`](../../roadmaps/road-to-mcp-full-power.md)
-Phase 1 Step 5. Feeds the Phase 3 council debate (write/exec cut list) and the
-Phase 5 bridge-tool allowlist. Not itself a policy — the tier is a starting
-classification for council review, not a final grant.
+Phase 1 Step 5. Fed the Phase 3 council debate (write/exec cut list); verdict
+recorded in
+[`agents/decisions/mcp-write-exec-cut-2026-07-07.md`](../../decisions/mcp-write-exec-cut-2026-07-07.md).
+Bridge shape for Phase 5 is **decided: build-time codegen, no runtime
+allowlist setting** — a per-command MCP tool is generated for every tier-map
+entry the council (or a future council round) approves; a tool not generated
+into the build does not exist in `tools/list`, regardless of settings.
 
 ## Tiers
 

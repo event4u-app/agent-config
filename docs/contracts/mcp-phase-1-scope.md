@@ -181,17 +181,16 @@ does not introduce a new tool, resource type, or protocol surface.
   process per stdio session. Multi-tenancy lives with the future
   bridge, not the kernel.
 
-## Draft amendment — MCP Full Power (pending signoff)
+## Amendment — MCP Full Power (accepted 2026-07-07)
 
-> **Status: DRAFT, not yet accepted.** Recorded by
-> `road-to-mcp-full-power.md` Phase 3 Step 1. Does not change the
-> in-force contract above until the `a0-amendment-signoff` blocker on
-> that roadmap resolves (user review + acceptance) and the council
-> debate in Phase 3 Step 3 has run. Existing Phase 1–6 sections above
-> also predate the TS migration (they still reference `scripts/mcp_server/*.py`
-> and a two-tool allowlist) and are known-stale beyond what this draft
-> amends; a full contract refresh is a separate follow-up, out of scope
-> for this draft.
+> **Status: Accepted.** Recorded by `road-to-mcp-full-power.md` Phase 3.
+> User signoff on the `a0-amendment-signoff` blocker plus the council
+> verdict in `agents/decisions/mcp-write-exec-cut-2026-07-07.md` both
+> landed 2026-07-07. Existing Phase 1–6 sections above predate the TS
+> migration (they still reference `scripts/mcp_server/*.py` and a
+> two-tool allowlist) and are known-stale beyond what this amendment
+> covers; a full contract refresh is a separate follow-up, out of scope
+> here.
 
 **Named consumer ask.** Operator, 2026-07-07: expose the CLI/script long
 tail (roadmap, telemetry, capabilities, doctor, council, memory, …) through
@@ -209,19 +208,28 @@ MCP in safety tiers, not just the current 9-tool read-only/single-write set.
 | `long-running` | Structurally excluded — not tool-call-shaped (blocks or starts a server). |
 | `hard-floor-never` | **Permanently excluded.** Secrets (`keys:install-*`), the global/outside-repo install (`upgrade`, `global`, `refresh`, `settings:migrate`), and bulk-destructive commands (`uninstall`, `prune`) are never reachable via any MCP tool, bridge, or allowlist entry, under any settings value. This list only grows, never shrinks, without a fresh A0 amendment of its own. |
 
-**Deny-by-default allowlist setting.** A new consumer-facing key,
-`mcp.tools.allow` in `.agent-settings.yml`, holds an explicit list of
-tool/subcommand names the operator has opted into beyond the shipped
-read-only default. Absent or empty → only the shipped read-only +
-path-guarded-write tools are reachable, exactly as today. The
-`hard-floor-never` tier is not a valid value in this list — the server
-rejects it at load time, not just at call time.
+**Deny-by-default, build-time only.** No consumer-settings allowlist ships
+(a `mcp.tools.allow` runtime setting was considered and **rejected** by
+the Phase 3 council — see below). A tool is reachable if and only if it
+was generated into the build from an approved tier-map entry. Enabling a
+new tool is a code change (add the entry, rebuild), never a settings
+edit. `hard-floor-never` tier entries are never generated — the
+exclusion is structural (the tool does not exist in `tools/list`), not a
+runtime rejection.
 
-**Bridge shape (Phase 5).** Either a single `agent_config_cli` tool whose
-`subcommand` argument is validated against the tier map and the
-`mcp.tools.allow` setting, or generated per-command tools sourced from
-`src/cli/registry.ts` metadata — final choice is a Phase 3 council
-question, not decided by this draft.
+**Bridge shape (Phase 5) — decided: pure build-time codegen.** Every
+approved tool, in every tier including `shell-exec`, is generated at
+build time from `src/cli/registry.ts` metadata plus the tier map — one
+MCP tool per approved command, each with its own JSON Schema. A generic
+`agent_config_cli` tool with a runtime-validated `subcommand` argument
+was considered and rejected: the package's existing `chat_history_append`
+pattern is already a compiled tool with a hardcoded path guard, not a
+generic bridge gated by an editable setting, and the council verdict
+(`agents/decisions/mcp-write-exec-cut-2026-07-07.md`) found the
+runtime-allowlist approach strictly weaker on security grounds for no
+countervailing benefit. Shell-exec tools additionally compile in their
+safety envelope (fixed argv, timeout, output cap, no network) as
+constants, not configuration.
 
 ## Revision policy
 

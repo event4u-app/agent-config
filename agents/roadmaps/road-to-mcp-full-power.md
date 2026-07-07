@@ -8,8 +8,8 @@ complexity: lightweight
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, `docs/mcp-server.md`, `docs/contracts/mcp-phase-1-scope.md`, `agents/settings/contexts/mcp-coverage-strategy.md`
-- [ ] Node toolchain working (`node node_modules/.bin/tsx` boots); Docker available for the Glama smoke
+- [x] Read `AGENTS.md`, `docs/mcp-server.md`, `docs/contracts/mcp-phase-1-scope.md`, `agents/settings/contexts/mcp-coverage-strategy.md`
+- [x] Node toolchain working (`node node_modules/.bin/tsx` boots); Docker available for the Glama smoke
 
 ## Context
 
@@ -51,14 +51,17 @@ The CLI (`src/cli/registry.ts`) exposes ~60 subcommands (roadmap, telemetry, cap
 ## Phase 3: Unlock gates — A0 amendment + council-gated cut
 
 - [x] **Step 1:** Draft the A0 amendment to `docs/contracts/mcp-phase-1-scope.md`: record the named consumer ask (operator, 2026-07-07), define the safety-tier model from the Phase 1 tier map, the deny-by-default allowlist setting (`mcp.tools.allow` in `.agent-settings.yml`), and the permanent Hard-Floor exclusion list. <!-- blocked-by: a0-amendment-signoff -->
-- [ ] **Step 2:** Verify the RO-telemetry window (≥2 weeks of read-only telemetry per the coverage strategy) or record an explicit operator waiver in the decision file — precedent: the 2026-05-12 cut waived the 4-week window by operator decision.
-- [ ] **Step 3:** Run the AI council on two questions: (a) the concrete write/exec tool cut list from the tier map, and (b) generic `agent_config_cli` bridge tool vs per-command tools (see Phase 5 Step 3). `npx tsx src/scripts/council_cli.ts debate <question.md> --output agents/runtime/council/responses/mcp-full-power.json --confirm --auto-continue`.
-- [ ] **Step 4:** Record the verdict as `agents/decisions/mcp-write-exec-cut-<date>.md` (cut list, rejections, envelope requirements) and update `agents/settings/contexts/mcp-coverage-strategy.md` so the pillars reflect the amended state instead of silently drifting.
+- [x] **Step 2:** Verify the RO-telemetry window (≥2 weeks of read-only telemetry per the coverage strategy) or record an explicit operator waiver in the decision file — precedent: the 2026-05-12 cut waived the 4-week window by operator decision. <!-- waived: operator confirmed 2026-07-07 ("jetzt freigeben"); ~24h dataset used, recorded in agents/decisions/mcp-write-exec-cut-2026-07-07.md -->
+- [x] **Step 3:** Run the AI council on two questions: (a) the concrete write/exec tool cut list from the tier map, and (b) generic `agent_config_cli` bridge tool vs per-command tools (see Phase 5 Step 3). `npx tsx src/scripts/council_cli.ts debate <question.md> --output agents/runtime/council/responses/mcp-full-power.json --confirm --auto-continue`. <!-- ran: 2 rounds, anthropic+openai, actual cost $0.1202 -->
+- [x] **Step 4:** Record the verdict as `agents/decisions/mcp-write-exec-cut-<date>.md` (cut list, rejections, envelope requirements) and update `agents/settings/contexts/mcp-coverage-strategy.md` so the pillars reflect the amended state instead of silently drifting. <!-- shipped: agents/decisions/mcp-write-exec-cut-2026-07-07.md; mcp-coverage-strategy.md pillar 3 updated; mcp-phase-1-scope.md amendment flipped from draft to accepted -->
 
 ## Phase 4: Write-tier tools (fs-write in-tree)
 
-- [ ] **Step 1:** Implement the parked fs-write tools in `src/scripts/mcp_server/tools.ts`, each path-guarded via the `_validateInTreePath` pattern (`tools.ts:149`): `memory_signal`, `mine_session`, `sync_agent_settings`, `sync_gitignore`, `update_form_request_messages` — subject to the Phase 3 cut (implement only what the council confirmed; flip the rest to explicit rejection in the catalog).
-- [ ] **Step 2:** Add a `roadmap_progress` tool wrapping the dashboard regen (`./agent-config roadmap:progress`) — highest-frequency background script in real sessions.
+Cut list per `agents/decisions/mcp-write-exec-cut-2026-07-07.md` — supersedes
+the original open list in Step 1 below.
+
+- [ ] **Step 1:** Implement the council-confirmed tools in `src/scripts/mcp_server/tools.ts`, each path-guarded via the `_validateInTreePath` pattern (`tools.ts:149`): `memory_signal`, `roadmap_archive`, `capabilities_index` (fs-write, path-guarded) plus `doctor_report`, `conformance_check`, `telemetry_report`, `council_estimate` (read-only, no path-guard needed — reclassified from the council's initial "fs-write" framing, see the decision file's correction). `mine_session`, `sync_agent_settings`, `sync_gitignore`, `update_form_request_messages` were NOT in the council's cut list — leave stubbed pending a future round.
+- [ ] **Step 2:** Add a `roadmap_progress` tool wrapping the dashboard regen (`./agent-config roadmap:progress`) — highest-frequency background script in real sessions. <!-- confirmed unanimous ship in agents/decisions/mcp-write-exec-cut-2026-07-07.md; catalog stub already shipped Phase 1 Step 6; TS handler implementation still open -->
 - [ ] **Step 3:** Flip `implemented_on` in `consumer_tool_catalog.json` for each shipped tool (stdio only — never the Worker, per the 2026-05-12 decision) and wire per-tool telemetry via the existing `telemetry.ts` recorder.
 - [ ] **Step 4:** Add per-tool smoke tests to the `task mcp:test` suite covering: happy path, out-of-tree path rejection, and the stub envelope for still-unimplemented names. <!-- carve-out: new-gate-verification -->
 
@@ -66,7 +69,7 @@ The CLI (`src/cli/registry.ts`) exposes ~60 subcommands (roadmap, telemetry, cap
 
 - [ ] **Step 1:** Safety review per exec tool (lethal-trifecta pass): shell-spawning tools must not combine private-data access + untrusted input + egress on one autonomous path. Exec tools get: fixed argv (no shell interpolation of caller strings), timeout, output truncation, and no network. Document in the A0 amendment.
 - [ ] **Step 2:** Implement the parked shell-spawning tools: `run_quality_checks`, `run_tests`, `compile_router` — with the Step 1 envelope.
-- [ ] **Step 3:** Implement the council-chosen bridge shape for the long tail: either (a) a generic `agent_config_cli` tool whose `subcommand` argument is validated against the Phase 1 tier map (deny-by-default; `hard-floor-never` and `network` tiers structurally unlistable), or (b) generated per-command tools from `src/cli/registry.ts` metadata. Either shape gives MCP clients the CLI surface — roadmap, capabilities:index, doctor, conformance, memory, telemetry, council:estimate — without hand-writing 60 tools.
+- [ ] **Step 3:** Implement the council-decided bridge shape: build-time codegen, NOT a generic `agent_config_cli` tool (rejected — see `agents/decisions/mcp-write-exec-cut-2026-07-07.md` Decision 2). A build step generates one MCP tool per approved tier-map entry from `src/cli/registry.ts` metadata; `hard-floor-never` entries are never generated, making them structurally absent from `tools/list` rather than runtime-rejected. Gives MCP clients the CLI surface — roadmap, capabilities:index, doctor, conformance, memory, telemetry, council:estimate — without hand-writing 60 tools individually.
 - [ ] **Step 4:** Long-running command envelope — commands exceeding the MCP call budget (council runs, full doctor) get an async pattern: submit → job id → poll tool, or documented synchronous truncation. Pick one, implement once, reuse for all exec tools.
 - [ ] **Step 5:** Expose the read-mostly high-value commands through the bridge and verify each against the tier map: `capabilities:index`, `doctor`, `conformance`, `telemetry:report`, `council:estimate`.
 
@@ -89,13 +92,18 @@ The CLI (`src/cli/registry.ts`) exposes ~60 subcommands (roadmap, telemetry, cap
 ## Blockers
 
 ### blocker: a0-amendment-signoff
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 3 — Unlock gates
 - **What to do:**
   1. Review the drafted A0 amendment to `docs/contracts/mcp-phase-1-scope.md` (safety tiers, allowlist, Hard-Floor exclusions).
   2. Approve or adjust the telemetry-window waiver (Phase 3 Step 2) and authorize the billable council run (Phase 3 Step 3).
-- **Resolved when:** the amendment is accepted in-tree and the council verdict file exists under `agents/decisions/`.
+- **Resolved when:** the amendment is accepted in-tree and the council verdict file exists under `agents/decisions/`. <!-- resolved 2026-07-07: user picked "jetzt freigeben und weiterlaufen lassen"; amendment accepted, council ran, verdict in agents/decisions/mcp-write-exec-cut-2026-07-07.md -->
+
+Note on the amendment's own `mcp.tools.allow` proposal: the council verdict
+**rejected** the runtime-allowlist idea in favor of build-time codegen —
+`docs/contracts/mcp-phase-1-scope.md` has been updated accordingly, so no
+such setting ships.
 
 ## Notes
 
