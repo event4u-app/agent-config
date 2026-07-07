@@ -14,10 +14,8 @@ triggers:
   - keyword: "refactor"
   - keyword: "fix"
   - keyword: "optimize"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # think-before-action

@@ -26,13 +26,8 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
     reason: "Rule contrasts project-local placement with the .agent-src.uncondensed/rules/ alternative — mentioning the path is the argument."
-workspaces:
-  - agent-config-maintainer
-  - engineering
-  - gtm
-packs:
-  - ai-image
-  - ai-video
+workspaces: [agent-config-maintainer, engineering, gtm]
+packs: [ai-image, ai-video]
 ---
 
 # Media Governance Routing

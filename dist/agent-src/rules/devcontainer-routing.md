@@ -9,11 +9,8 @@ triggers:
   - phrase: "devcontainer.json"
 routes_to:
   - "skill:devcontainer"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Devcontainer Routing

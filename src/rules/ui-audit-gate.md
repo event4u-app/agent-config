@@ -12,11 +12,8 @@ routes_to:
   - "skill:existing-ui-audit"
   - "skill:iconography"
   - "skill:typography-system"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - frontend-design
+workspaces: [agent-config-maintainer, engineering]
+packs: [frontend-design]
 ---
 
 # UI Audit Gate

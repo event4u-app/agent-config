@@ -8,11 +8,8 @@ triggers:
   - keyword: "service"
   - keyword: "module"
   - intent: "structural decision"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Architecture Rules

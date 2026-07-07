@@ -18,10 +18,8 @@ load_context:
   - "contexts/execution/auto-dispatch-classification.md"
 routes_to:
   - "skill:subagent-orchestration"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Delegation Policy

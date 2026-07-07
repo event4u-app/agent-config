@@ -9,11 +9,8 @@ triggers:
   - command: "/roadmap:process-full"
 routes_to:
   - "guideline:agent-infra/roadmap-progress-mechanics"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Roadmap Progress Sync

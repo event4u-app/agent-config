@@ -17,11 +17,8 @@ validator_ignore:
     reason: "Rule names the detector module as the runtime detection entrypoint."
 routes_to:
   - "guideline:agent-infra/linked-projects-onboarding-gate"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - engineering-base
+workspaces: [agent-config-maintainer, engineering]
+packs: [engineering-base]
 lifecycle: experimental
 trust:
   level: experimental

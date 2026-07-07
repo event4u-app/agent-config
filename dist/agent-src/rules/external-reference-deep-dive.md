@@ -14,11 +14,8 @@ triggers:
   - keyword: "github.com/"
   - keyword: "source of truth"
   - phrase: "reference repo"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # external-reference-deep-dive

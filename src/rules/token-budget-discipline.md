@@ -6,10 +6,8 @@ triggers:
   - keyword: "token_budget_class"
   - keyword: "rich skill"
   - intent: "editing a rich-tagged skill"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Token Budget Discipline

@@ -9,10 +9,8 @@ triggers:
   - keyword: "messenger"
 routes_to:
   - "skill:symfony-workflow"
-workspaces:
-  - engineering
-packs:
-  - symfony
+workspaces: [engineering]
+packs: [symfony]
 trust:
   level: professional
 install:

@@ -9,10 +9,8 @@ triggers:
   - keyword: "drive-by"
   - keyword: "rewrite"
   - keyword: "fix"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Minimal Safe Diff

@@ -14,11 +14,8 @@ triggers:
   - phrase: "new guideline"
   - phrase: "neue Regel"
   - phrase: "bau mir ein Skill"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Artifact Drafting Protocol

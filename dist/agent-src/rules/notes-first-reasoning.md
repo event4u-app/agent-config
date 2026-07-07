@@ -13,11 +13,8 @@ load_context:
   - ../contexts/execution/rdp-gate.md
 routes_to:
   - "skill:memory-consolidation"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Notes-First Reasoning

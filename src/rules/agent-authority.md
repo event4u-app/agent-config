@@ -4,8 +4,7 @@ tier: "3"
 description: "Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule"
 alwaysApply: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
-packs:
-  - meta
+packs: [meta]
 ---
 
 # Agent Authority — Priority Index

@@ -10,11 +10,8 @@ triggers:
   - phrase: "review this pr"
 routes_to:
   - "skill:review-routing"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Reviewer Awareness

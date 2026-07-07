@@ -11,11 +11,8 @@ routes_to:
   - "contract:artifact-engagement-flow"
 load_context:
   - "../contexts/contracts/artifact-engagement-flow.md"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 <!-- cloud_safe: noop -->

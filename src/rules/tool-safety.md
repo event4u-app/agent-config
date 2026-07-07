@@ -6,11 +6,8 @@ triggers:
   - keyword: "allowed_tools"
   - keyword: "tool registry"
   - intent: "external API"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Tool Safety

@@ -9,10 +9,8 @@ triggers:
   - phrase: "inside the container"
 routes_to:
   - "skill:docker"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Docker Commands

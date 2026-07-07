@@ -24,11 +24,8 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-settings.yml"
     reason: "Rule reads quality.local_auto_run from .agent-settings.yml; naming the file is the contract."
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Roadmap CI-Steps Policy

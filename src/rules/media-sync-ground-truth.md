@@ -14,12 +14,8 @@ triggers:
   - phrase: "sing the"
   - phrase: "mit den lippen"
   - phrase: "lippen passend"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-  - gtm
-packs:
-  - ai-video
+workspaces: [agent-config-maintainer, engineering, gtm]
+packs: [ai-video]
 ---
 
 # Media Sync — Ground Truth Is the Audio

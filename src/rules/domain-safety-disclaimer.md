@@ -37,19 +37,8 @@ applies_to_user_types:
   - "founder"
   - "consultant"
   - "creator"
-workspaces:
-  - agent-config-maintainer
-  - construction
-  - engineering
-  - finance
-  - founder
-  - gtm
-  - legal-review-prep
-  - ops
-  - product
-  - small-business
-packs:
-  - meta
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
+packs: [meta]
 ---
 
 # Domain Safety — Advisory Disclaimer

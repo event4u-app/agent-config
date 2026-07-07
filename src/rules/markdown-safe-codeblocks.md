@@ -7,19 +7,8 @@ triggers:
   - intent: "markdown with code blocks"
   - keyword: "triple backticks"
   - file_pattern: "*.md"
-workspaces:
-  - agent-config-maintainer
-  - construction
-  - engineering
-  - finance
-  - founder
-  - gtm
-  - legal-review-prep
-  - ops
-  - product
-  - small-business
-packs:
-  - meta
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
+packs: [meta]
 ---
 
 # Markdown Safe Codeblocks

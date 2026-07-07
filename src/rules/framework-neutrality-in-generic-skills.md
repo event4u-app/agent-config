@@ -28,10 +28,8 @@ validator_ignore:
   - type: "substring"
     pattern: "scripts/lint_framework_leakage"
     reason: "Rule cites the enforcing linter script by name in body and enforcement section."
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # framework-neutrality-in-generic-skills

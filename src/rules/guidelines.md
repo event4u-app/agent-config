@@ -9,11 +9,8 @@ triggers:
   - intent: "writing code"
   - intent: "reviewing code"
   - keyword: "convention"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Guidelines

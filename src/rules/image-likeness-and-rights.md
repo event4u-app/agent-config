@@ -15,12 +15,8 @@ applies_to_user_types:
   - "creator"
   - "developer"
   - "maintainer"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-  - gtm
-packs:
-  - ai-image
+workspaces: [agent-config-maintainer, engineering, gtm]
+packs: [ai-image]
 ---
 
 # Image Likeness and Rights

@@ -9,19 +9,8 @@ routes_to:
   - "contract:command-suggestion-flow"
 load_context:
   - "../contexts/contracts/command-suggestion-flow.md"
-workspaces:
-  - agent-config-maintainer
-  - construction
-  - engineering
-  - finance
-  - founder
-  - gtm
-  - legal-review-prep
-  - ops
-  - product
-  - small-business
-packs:
-  - meta
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
+packs: [meta]
 ---
 
 # Command Suggestion Policy

@@ -28,11 +28,8 @@ triggers:
   - phrase: "go build"
 routes_to:
   - "skill:rtk-output-filtering"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Cli Output Handling

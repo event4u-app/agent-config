@@ -11,19 +11,8 @@ triggers:
   - intent: "trivial workflow question"
   - intent: "autonomy mode"
   - keyword: "personal.autonomy"
-workspaces:
-  - agent-config-maintainer
-  - construction
-  - engineering
-  - finance
-  - founder
-  - gtm
-  - legal-review-prep
-  - ops
-  - product
-  - small-business
-packs:
-  - meta
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
+packs: [meta]
 ---
 
 # Autonomous Execution

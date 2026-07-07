@@ -8,10 +8,8 @@ triggers:
   - phrase: "before pr"
 routes_to:
   - "skill:lint-skills"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Package Ci Checks

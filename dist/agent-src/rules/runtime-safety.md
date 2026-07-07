@@ -7,11 +7,8 @@ triggers:
   - keyword: "automated"
   - keyword: "assisted"
   - keyword: "handler"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Runtime Safety

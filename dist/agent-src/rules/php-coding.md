@@ -8,10 +8,8 @@ triggers:
   - keyword: "ecs"
 routes_to:
   - "guideline:php/php-coding-patterns"
-workspaces:
-  - engineering
-packs:
-  - php
+workspaces: [engineering]
+packs: [php]
 trust:
   level: professional
 install:

@@ -26,10 +26,8 @@ triggers:
   - phrase: "commits I did not create"
 routes_to:
   - "skill:git-workflow"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Git History Discipline
