@@ -2,8 +2,8 @@
 /**
  * Build `dist/mcp/registry-manifest.json` + the two rendered payloads.
  *
- * TypeScript twin of `src/scripts/build_mcp_registry_manifest.py` (ADR-200,
- * Phase 5). The CLI contract is mirrored EXACTLY — every flag (`--write`,
+ * Ported from the retired Python `src/scripts/build_mcp_registry_manifest.py` (ADR-200,
+ * Phase 5). The CLI contract is pinned — every flag (`--write`,
  * `--strict`, `--quiet`), exit codes (0 = ok; 2 = `--strict` drift without
  * `--write`; 1 = missing discovery prereq via SystemExit), the stdout/stderr
  * split, byte-identical messages, AND byte-identical generated output:
@@ -16,7 +16,7 @@
  * (`status`, `submitted_at`, `pr_url`, `last_verified`) is preserved from the
  * previous manifest.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Schema: `docs/contracts/mcp-registry-manifest.schema.json`
  */

@@ -2,15 +2,15 @@
 /**
  * WARN-ONLY mission manifest and catalog linter.
  *
- * TypeScript twin of `src/scripts/lint_missions.py` (ADR-200, Python→TypeScript
- * migration). The CLI contract is mirrored EXACTLY — argparse flags
+ * Ported from the retired Python `src/scripts/lint_missions.py` (ADR-200, Python→TypeScript
+ * migration). The CLI contract is pinned — argparse flags
  * (`--strict` / `--quiet` / `--check-precondition MISSION REPO`, `-h`/`--help`
  * exit 0, unknown arg → exit 2), the scan order (`sorted(MISSIONS_ROOT.iterdir())`
  * minus dot-dirs), byte-identical finding lines, the missing-schema short-circuit
  * (exit 2 strict / 0 otherwise), the stdout/stderr split, and exit codes
  * (0 warn-only / 1 strict+ERROR). snake_case kept.
  *
- * The Python original uses the `jsonschema` Draft7Validator; this twin
+ * the retired Python implementation uses the `jsonschema` Draft7Validator; this twin
  * hand-rolls a Draft-07 validator covering exactly the keyword set the two
  * mission schemas use (type, required, additionalProperties [false | schema],
  * properties, $ref [#/definitions], pattern, enum, minLength, maxLength,

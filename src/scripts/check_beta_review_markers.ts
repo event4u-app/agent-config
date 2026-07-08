@@ -2,12 +2,12 @@
 /**
  * Beta-review-marker checker for `docs/contracts/`.
  *
- * TypeScript twin of `src/scripts/check_beta_review_markers.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--json`
+ * Ported from the retired Python `src/scripts/check_beta_review_markers.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — `--json`
  * flag, exit codes (0 clean, 1 violations, 3 internal error), stdout/stderr
  * split, byte-identical messages, the same scan order and the same date
  * arithmetic (`keep-beta-until` ≤ today + 90 days). No behaviour changes —
- * latent bugs replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Every contract whose frontmatter declares `stability: beta` MUST carry
  * exactly one of `promote-to: stable` | `keep-beta-until: YYYY-MM-DD` |

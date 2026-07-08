@@ -2,12 +2,12 @@
 /**
  * Vocabulary linter for `src/config/discovery/{workspaces,packs}.yml`.
  *
- * TypeScript twin of `src/scripts/lint_discovery_vocabulary.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/lint_discovery_vocabulary.py` (ADR-200,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract exactly: `--quiet`
  * flag, same scan scope, finding messages, stdout/stderr split (errors to
  * stderr, OK line to stdout), and exit codes (0 clean, 1 on failure, 2 if
  * YAML loader is unavailable — N/A here, `yaml` is bundled). No behaviour
- * changes — latent quirks replicated.
+ * changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Source-of-truth check: the YAML files MUST mirror the closed vocabulary in
  * ADR-013 exactly. Cross-reference + bidirectional integrity + non-overlap

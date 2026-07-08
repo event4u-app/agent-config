@@ -2,7 +2,7 @@
 /**
  * CI-time / local-edit-time ratio (council file 07, Phase 2.3).
  *
- * TypeScript twin of `ci_time_ratio.py` (Phase 8 / Wave 8e).
+ * Ported from the retired Python `ci_time_ratio.py` (Phase 8 / Wave 8e).
  *
  * Samples the last N commits on a branch, classifies each by touched
  * paths (doc / skill / test / meta / mixed), and computes:

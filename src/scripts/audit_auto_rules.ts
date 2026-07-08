@@ -3,7 +3,7 @@
  * Audit auto-rules for the Rule-Governance pass (Phase 5.1 of
  * road-to-augment-limit-fit).
  *
- * TypeScript twin of `src/scripts/audit_auto_rules.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/audit_auto_rules.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the Python CLI
  * contract EXACTLY — no flags, exit codes (0 ok / 1 no source rules),
  * the stdout/stderr split, byte-identical stdout messages, and
@@ -12,7 +12,7 @@
  *
  * Imports the `_lib/agent_src` twin (the SAME surface the Python
  * original imports `artefact_roots` from). No behaviour changes —
- * latent Python quirks replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Walk every artefact root's `rules/*.md`, collect per-rule
  * frontmatter (`description`, `triggers`, `routes_to`, `tier`),

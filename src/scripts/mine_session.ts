@@ -2,8 +2,8 @@
 /**
  * Mine a session for memory signals — the engine behind `/memory mine`.
  *
- * TypeScript twin of `src/scripts/mine_session.py` (ADR-200 — Python→TS
- * migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY —
+ * Ported from the retired Python `src/scripts/mine_session.py` (ADR-200 — Python→TS
+ * migration, Phase 8 / Wave 8g). The CLI contract is pinned —
  * every flag, exit code (0), the stdout/stderr split, byte-identical
  * messages, byte-identical preview Markdown, and byte-identical
  * `json.dumps(..., ensure_ascii=False)` intake JSONL lines.
@@ -26,7 +26,7 @@
  *
  * Auto-resolved transcript discovery (`rglob` sorted by mtime) is
  * intrinsically non-deterministic; golden parity supplies a fixed
- * `--transcript`. No behaviour changes — latent Python quirks replicated.
+ * `--transcript`. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';

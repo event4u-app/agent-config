@@ -2,8 +2,8 @@
 /**
  * File-backed memory status (no external backend).
  *
- * TypeScript twin of `src/scripts/memory_status.py` (ADR-200). The public
- * API and CLI contract mirror the Python original EXACTLY — same exported
+ * Ported from the retired Python `src/scripts/memory_status.py` (ADR-200). The public
+ * API and CLI contract mirror the retired Python implementation EXACTLY — same exported
  * names (snake_case kept deliberately), same exit codes, stdout/stderr
  * split, byte-identical messages and JSON shape. No behaviour changes.
  *

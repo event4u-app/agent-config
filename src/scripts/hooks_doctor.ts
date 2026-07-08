@@ -2,7 +2,7 @@
 /**
  * Hook doctor — read-only diagnostic over the hook runtime.
  *
- * TypeScript twin of `src/scripts/hooks_doctor.py` (ADR-200 — Python→TS
+ * Ported from the retired Python `src/scripts/hooks_doctor.py` (ADR-200 — Python→TS
  * migration, Phase 6 / hooks). Public API mirrors the Python module
  * exactly (snake_case kept deliberately — fidelity over TS idiom).
  *

@@ -2,7 +2,7 @@
 /**
  * Snapshot the agent-config build outputs for byte-identity verification.
  *
- * TypeScript twin of `src/scripts/snapshot_agent_outputs.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/snapshot_agent_outputs.py` (ADR-200,
  * Phase 8 / Wave 8b). Mirrors the CLI contract EXACTLY — the `--out` flag,
  * exit codes, the stdout/stderr split, byte-identical stdout AND the
  * byte-identical written snapshot JSON (`json.dumps(indent=2,
@@ -22,7 +22,7 @@
  * `_SKIP_NAMES`) for `verify_physical_move.ts`, mirroring the Python
  * `from snapshot_agent_outputs import (...)`.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';

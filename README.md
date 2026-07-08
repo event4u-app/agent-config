@@ -10,13 +10,13 @@
 
 **Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
-**258 skills, 162 commands, 93 governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
+**264 skills, 172 commands, 95 governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
 ### What's different
 
 It is both deep **and** disciplined — and honest about what it deliberately is not:
 
-- **Depth that routes itself** — 258 skills + 162 commands, with a capability router that loads the right one on intent, not a 500-artefact context dump.
+- **Depth that routes itself** — 264 skills + 172 commands, with a capability router that loads the right one on intent, not a 500-artefact context dump.
 - **Governance on every host** — rules compiled into each tool's native format at projection time; deterministic runtime hooks added on hook-capable hosts. This config-space, host-agnostic governance is the moat ([the governance advantage](docs/governance-advantage.md) · [enforcement by host](docs/enforcement-by-host.md)).
 - **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.<!-- claim:surgical-uninstall -->
 - **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
@@ -65,7 +65,7 @@ what is *not* loaded · examples):
 
 ### Workflows, not raw commands
 
-You don't memorize 150 commands — you run a **work journey**. Four flows span the
+You don't memorize 172 commands — you run a **work journey**. Four flows span the
 developer story end-to-end; each names the command you TYPE to start and the
 skills it composes:
 

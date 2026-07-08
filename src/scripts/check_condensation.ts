@@ -2,7 +2,7 @@
 /**
  * Condensation quality checker for agent-config packages.
  *
- * TypeScript twin of `src/scripts/check_condensation.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/check_condensation.py` (ADR-200 —
  * Python→TS migration, Phase 4 / Wave 4a). Mirrors the Python CLI
  * contract exactly: flags (`--format text|json`, `--summary`, `--root`),
  * exit codes (0 = clean, 1 = issues found, 3 = internal error),
@@ -19,7 +19,7 @@
  *   Iron Laws / numbered) preserved per `preservation-guard`: heading
  *   verbatim at original level, structural-unit survival.
  *
- * The Python original imports `_rewrite_paths` from `condense.py` to
+ * the retired Python implementation imports `_rewrite_paths` from `condense.py` to
  * normalise the source side through the same path transformations the
  * condenseor applies. `condense.py` is not yet ported (later phase), so
  * that path-rewriter chain is replicated faithfully below as a private

@@ -15,7 +15,7 @@
 //
 // Phase 2 K2 (`scripts/mcp_telemetry_query.ts`) reads from this store.
 //
-// TS twin of mcp_telemetry_store.py (py2ts). Mirrors the full public
+// TS port of the retired Python mcp_telemetry_store.py (ADR-200). Mirrors the full public
 // surface: IngestReport, resolve_source, resolve_db, ingest, main.
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
@@ -176,8 +176,8 @@ export function resolve_db(consumer_root?: string | null): string {
 // Python's stdlib sqlite3 emits nothing on stderr; node:sqlite is flagged
 // experimental on node 22 and prints an `ExperimentalWarning: SQLite …` line
 // to stderr on first import (stable / silent on node >= 23). Drop only that
-// specific warning so the twin's stderr stays byte-identical to the Python
-// original across node versions. Installed once, narrowly matched.
+// specific warning so stderr stays byte-stable across node versions (tests
+// pin the exact bytes). Installed once, narrowly matched.
 let _sqliteWarningSilenced = false;
 function _silenceSqliteExperimentalWarning(): void {
     if (_sqliteWarningSilenced) return;

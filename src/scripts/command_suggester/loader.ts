@@ -1,7 +1,7 @@
 /**
  * Read command frontmatter into `CommandSpec` instances.
  *
- * TypeScript twin of `src/scripts/command_suggester/loader.py`
+ * Ported from the retired Python `src/scripts/command_suggester/loader.py`
  * (ADR-200 py2ts).
  *
  * Reuses the package's `validate_frontmatter.parse_frontmatter` twin

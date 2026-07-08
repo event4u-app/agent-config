@@ -6,7 +6,7 @@
 // read-only, lazy-PyYAML; they layer on top of `scripts/_lib/agent_settings`
 // for project-root anchoring.
 //
-// Twin of `src/scripts/config/__init__.py`. The Python package's
+// Ported from the retired Python `src/scripts/config/__init__.py` (ADR-200). The Python package's
 // `__init__.py` declares no public symbols (only the module docstring), so
 // this barrel intentionally re-exports nothing — importers reach into the
 // individual twins (`./presets.js`, `./profiles.js`, `./packs.js`,

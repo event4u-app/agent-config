@@ -2,8 +2,8 @@
 /**
  * Commit-subject linter.
  *
- * TypeScript twin of `src/scripts/lint_commit_subjects.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--base`
+ * Ported from the retired Python `src/scripts/lint_commit_subjects.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--base`
  * / `--head` / `--quiet` flags, exit codes (0 clean / advisory, 1
  * violations), stdout/stderr split, byte-identical finding messages
  * (the issue strings are grepped by tests), and the same git invocation

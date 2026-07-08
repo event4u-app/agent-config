@@ -2,7 +2,7 @@
 /**
  * Compile rule frontmatter into `router.json`.
  *
- * TypeScript twin of `src/scripts/compile_router.py` (ADR-200, Phase 5). The
+ * Ported from the retired Python `src/scripts/compile_router.py` (ADR-200). The
  * CLI contract is mirrored EXACTLY — the positional argv flags (`--pretty`,
  * `--check`), exit codes (0 = wrote / up-to-date; 1 = stale under --check), the
  * stdout/stderr split, byte-identical messages, AND byte-identical generated
@@ -12,9 +12,9 @@
  *
  * Imports the `_lib/agent_settings` (`project_settings_path`,
  * `load_agent_settings`) and `_lib/agent_src` (`artefact_roots`) twins — the
- * SAME modules the Python original imports.
+ * SAME modules the retired Python implementation imports.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Reads `.agent-src.uncondensed/rules/*.md`; produces deterministic JSON
  * mapping kernel + tier-1 + tier-2 rules to their triggers and routed
@@ -33,7 +33,7 @@ type Json = unknown;
 type JsonObject = Record<string, Json>;
 
 const _HERE = fileURLToPath(import.meta.url);
-// _HERE === <repo>/src/scripts/compile_router.ts ; the Python original derives
+// _HERE === <repo>/src/scripts/compile_router.ts ; the retired Python implementation derives
 // ROOT = <file>.parent.parent.parent — two dirs up from src/scripts.
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 // ADR-017: rules now live across multiple source roots. Legacy

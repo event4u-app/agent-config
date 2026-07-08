@@ -1,0 +1,197 @@
+#!/usr/bin/env tsx
+/**
+ * Artefact-count messaging gate (road-to-truth-and-reference-hygiene Phase 1).
+ *
+ * Generalises `check_command_count_messaging.ts` (which stays wired as
+ * `task check-command-count` — its badge/browse anchors are required-check
+ * contract surface and are NOT removed here) from commands-only to every
+ * artefact kind: any count-shaped prose mention of skills / commands /
+ * governed rules / guidelines / personas on a flagship public surface must
+ * equal the canonical source count, and no surface may carry two DIFFERENT
+ * numbers for the same kind (the 150-vs-162-vs-166 failure mode that
+ * motivated this gate).
+ *
+ * Ownership split:
+ *   - `update_counts.ts` GENERATES the numbers into anchored positions
+ *     (badges + prose) and `--check`s those exact anchors.
+ *   - THIS gate SCANS the flagship surfaces for any count-shaped phrase —
+ *     anchored or not — so a hand-typed new sentence with a stale number
+ *     fails CI even though no anchor covers it yet.
+ *   - `check_command_count_messaging.ts` keeps the command-specific
+ *     active-vs-shim split checks.
+ *
+ * Scope: flagship surfaces only (SURFACES below). Dated census / analysis
+ * snapshots (SKILL_CENSUS, skills-taxonomy, positioning-evidence, …) carry
+ * point-in-time counts by design and are deliberately out of scope — the
+ * gate's charter is the surfaces a fresh reader treats as current.
+ *
+ * Exit codes: 0 clean · 1 drift or internal inconsistency.
+ */
+
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { canonical_counts } from './check_command_count_messaging.js';
+import { count } from './update_counts.js';
+
+const _HERE = fileURLToPath(import.meta.url);
+export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+
+/** Flagship public prose surfaces (repo-relative). Missing files are skipped
+ * with a warning so a doc rename does not hard-break the gate. */
+export const SURFACES: readonly string[] = [
+    'README.md',
+    'AGENTS.md',
+    'llms.txt',
+    'docs/CLAIMS.md',
+    'docs/getting-started.md',
+    'docs/getting-started-by-role.md',
+    'docs/architecture.md',
+    'docs/command-flows.md',
+    'docs/governance-advantage.md',
+    'docs/featured-skills.md',
+    'docs/featured-commands.md',
+    'docs/proof.md',
+    'site/src/content/docs/index.mdx',
+    'site/src/content/docs/claims.md',
+];
+
+/** kind → canonical-count resolver. "governed rules" is the canonical total
+ * phrasing for rules; bare "N rules" is NOT matched (too many legitimate
+ * subset scopes: kernel rules, router rules, maintainer-only rules …). */
+const KIND_PATTERNS: ReadonlyArray<[string, RegExp]> = [
+    ['skills', /(~?)(\d+)\+?\s+skills\b/g],
+    ['commands', /(~?)(\d+)\+?\s+commands\b/g],
+    ['rules', /(~?)(\d+)\+?\s+governed rules\b/g],
+    ['guidelines', /(~?)(\d+)\+?\s+guidelines\b/g],
+    ['personas', /(~?)(\d+)\+?\s+personas\b/g],
+];
+
+export interface Finding {
+    file: string;
+    line: number;
+    kind: string;
+    found: number;
+    expected: number;
+    approx: boolean;
+}
+
+export function canonical_for(kind: string): number {
+    if (kind === 'commands') {
+        // Prose command mentions carry the ACTIVE count (total − shims),
+        // matching the hero badge owned by check_command_count_messaging.
+        const [, , active] = canonical_counts();
+        return active;
+    }
+    return count(kind);
+}
+
+/** Scan one text body; returns findings + the per-kind numbers seen. */
+export function scan_text(
+    rel: string,
+    text: string,
+    expected: Readonly<Record<string, number>>,
+): { findings: Finding[]; seen: Record<string, Set<number>> } {
+    const findings: Finding[] = [];
+    const seen: Record<string, Set<number>> = {};
+    const lines = text.split('\n');
+    for (const [kind, pattern] of KIND_PATTERNS) {
+        for (let i = 0; i < lines.length; i++) {
+            const re = new RegExp(pattern.source, pattern.flags);
+            for (const m of lines[i]!.matchAll(re)) {
+                const found = Number.parseInt(m[2]!, 10);
+                (seen[kind] ??= new Set()).add(found);
+                const exp = expected[kind]!;
+                const approx = m[1] === '~';
+                if (found !== exp || approx) {
+                    findings.push({ file: rel, line: i + 1, kind, found, expected: exp, approx });
+                }
+            }
+        }
+    }
+    return { findings, seen };
+}
+
+export function main(argv: readonly string[] = process.argv.slice(2)): number {
+    const QUIET = argv.includes('--quiet');
+    const expected: Record<string, number> = {};
+    for (const [kind] of KIND_PATTERNS) {
+        expected[kind] = canonical_for(kind);
+    }
+    process.stdout.write(
+        `Canonical: skills=${expected['skills']} commands=${expected['commands']} ` +
+            `rules=${expected['rules']} guidelines=${expected['guidelines']} ` +
+            `personas=${expected['personas']}\n`,
+    );
+
+    const allFindings: Finding[] = [];
+    const global_seen: Record<string, Set<number>> = {};
+    for (const rel of SURFACES) {
+        const p = path.join(ROOT, rel);
+        if (!fs.existsSync(p)) {
+            process.stderr.write(`  ⚠️  surface missing (skipped): ${rel}\n`);
+            continue;
+        }
+        const { findings, seen } = scan_text(rel, fs.readFileSync(p, 'utf-8'), expected);
+        allFindings.push(...findings);
+        for (const [kind, nums] of Object.entries(seen)) {
+            for (const n of nums) (global_seen[kind] ??= new Set()).add(n);
+        }
+    }
+
+    // Internal-inconsistency check — the regression case this gate exists
+    // for: multiple DIFFERENT numbers for one kind across the surfaces.
+    const inconsistent: string[] = [];
+    for (const [kind, nums] of Object.entries(global_seen)) {
+        if (nums.size > 1) {
+            inconsistent.push(`${kind}: {${[...nums].sort((a, b) => a - b).join(', ')}}`);
+        }
+    }
+
+    if (allFindings.length === 0 && inconsistent.length === 0) {
+        if (!QUIET) {
+            process.stdout.write('✅  All artefact-count prose in sync with source.\n');
+        }
+        return 0;
+    }
+
+    process.stdout.write(
+        `❌  Artefact-count messaging drift — ${allFindings.length} mismatch(es):\n`,
+    );
+    for (const f of allFindings) {
+        const tag = f.approx ? ' (approximation "~" not allowed on flagship surfaces)' : '';
+        process.stdout.write(
+            `    ${f.file}:${f.line}: ${f.kind} says ${f.found}, expected ${f.expected}${tag}\n`,
+        );
+    }
+    for (const line of inconsistent) {
+        process.stdout.write(`    internal inconsistency — ${line}\n`);
+    }
+    process.stdout.write(
+        '\nFix: run `./scripts-run src/scripts/update_counts` for anchored positions,\n' +
+            'or correct the prose to the canonical number (never hand-type a new one).\n',
+    );
+    return 1;
+}
+
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
+if (_isCliEntry() || process.argv[1] === _HERE) {
+    process.exit(main(process.argv.slice(2)));
+}

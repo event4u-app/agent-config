@@ -1,7 +1,7 @@
 /**
  * Probation promote-and-prune for `agents/decisions/low-impact-decisions.md`.
  *
- * TypeScript twin of `src/scripts/ai_council/probation_gate.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/ai_council/probation_gate.py` (ADR-200 —
  * Python→TS migration, Phase 1; ai_council FOUNDATION wave). Public surface
  * mirrors the Python module exactly (snake_case kept deliberately):
  * `WINDOW_DAYS`, `PROMOTION_THRESHOLD`, `GateRun`, `run_gate`.
@@ -20,7 +20,7 @@
  *
  * PARITY NOTES
  * - The line regex uses U+2014 (em-dash) and U+00B7 (middle dot) literals,
- *   byte-identical to the Python `re` pattern; matched with the `u` flag so
+ *   matching the historical `re` pattern byte-for-byte; the `u` flag keeps
  *   `\s` / `\d` align with Python's defaults (no MULTILINE).
  * - `splitlines()` is mirrored by `_splitlines` (full CPython boundary set).
  * - Date math is done on tz-aware UTC epoch-millis; `d >= cutoff` matches

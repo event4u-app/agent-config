@@ -2,8 +2,8 @@
 /**
  * Lint Phase-4 discovery frontmatter on every artefact.
  *
- * TypeScript twin of `src/scripts/lint_artefact_frontmatter.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/lint_artefact_frontmatter.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--quiet`
  * flag, exit codes (0 clean, 1 violation), stdout/stderr split,
  * byte-identical finding messages (including Python-shaped list repr),
  * same scan trees and order, same `validate_frontmatter.parse_frontmatter`

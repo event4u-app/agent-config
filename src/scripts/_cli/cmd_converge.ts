@@ -250,6 +250,37 @@ export interface MainOptions {
     err?: OutSink;
 }
 
+/**
+ * Live-session notice for reaped Claude Code plugin caches — or null when no
+ * reap touched `~/.claude/plugins/`.
+ *
+ * Removing an installed plugin's cache does NOT reach into Claude Code
+ * sessions that are already running: they registered the plugin's hooks at
+ * session start and keep firing them, so every subsequent event logs
+ * `Failed to run: Plugin directory does not exist: …/plugins/cache/… — run
+ * /plugin to reinstall` until the session restarts. Claude Code's own
+ * `/plugin to reinstall` hint would recreate exactly the duplicate surface
+ * converge just removed — the correct remedy is a restart, so converge says
+ * so explicitly (road-to-truth-and-reference-hygiene follow-up, 2026-07-08).
+ */
+export function live_session_notice(executed_reaps: readonly string[]): string | null {
+    const hit = executed_reaps.some((r) => r.startsWith('~/.claude/plugins/'));
+    if (!hit) {
+        return null;
+    }
+    return (
+        '⚠️  Live-session note: Claude Code sessions that were ALREADY RUNNING still\n' +
+        '    hold the removed plugin\'s hook registrations. Until you restart them,\n' +
+        '    every event logs a non-blocking\n' +
+        '      "Failed to run: Plugin directory does not exist: …/plugins/cache/…"\n' +
+        '    error. This is cosmetic for new sessions but means the affected LIVE\n' +
+        '    session\'s plugin-sourced hooks no longer run — restart Claude Code\n' +
+        '    sessions to clear it. Do NOT follow the error\'s "/plugin to reinstall"\n' +
+        '    hint: reinstalling recreates the duplicate surface converge just removed\n' +
+        '    (the ~/.claude/ file projection already carries content AND hooks).'
+    );
+}
+
 export function main(argv: string[] | null = null, opts: MainOptions = {}): number {
     let args: Args;
     try {
@@ -329,6 +360,7 @@ export function main(argv: string[] | null = null, opts: MainOptions = {}): numb
     // Perform the cleanup — matrix-declared actions ONLY.
     let failures = 0;
     const report: string[] = [];
+    const executed_reaps: string[] = [];
     for (const f of findings) {
         if (f.command) {
             _print(out, `→ ${f.command}`);
@@ -351,6 +383,7 @@ export function main(argv: string[] | null = null, opts: MainOptions = {}): numb
             try {
                 fs.rmSync(abs, { recursive: true, force: true });
                 report.push(`${f.tool}: reaped package-tagged orphan \`${reap}\``);
+                executed_reaps.push(reap);
                 _print(out, `→ reaped ${reap}`);
             } catch (e) {
                 failures += 1;
@@ -366,6 +399,11 @@ export function main(argv: string[] | null = null, opts: MainOptions = {}): numb
     }
     if (report.length === 0) {
         _print(out, '  (no actions completed)');
+    }
+    const notice = live_session_notice(executed_reaps);
+    if (notice !== null) {
+        _print(out);
+        _print(out, notice);
     }
     _print(
         out,

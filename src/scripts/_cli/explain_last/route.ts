@@ -1,8 +1,8 @@
 /**
  * Resolve the `route` why-slot for the trace.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/route.py` (ADR-200).
- * Behaviour mirrors the Python original EXACTLY — same router lookup, same
+ * Ported from the retired Python `src/scripts/_cli/explain_last/route.py` (ADR-200).
+ * Behaviour pins the historical contract exactly — same router lookup, same
  * `None`-on-missing-router branch, same scrub passes, same key shape. No
  * behaviour changes.
  *

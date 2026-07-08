@@ -2,7 +2,7 @@
 /**
  * Lint `src/scripts/hook_manifest.yaml`.
  *
- * TypeScript twin of `src/scripts/lint_hook_manifest.py` (ADR-200, Phase 4 /
+ * Ported from the retired Python `src/scripts/lint_hook_manifest.py` (ADR-200, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: same manifest default,
  * finding messages, finding order, stdout/stderr split, and exit codes.
  *
@@ -97,7 +97,7 @@ function _isDir(p: string): boolean {
 }
 
 /**
- * Load the manifest. The Python original reuses dispatch_hook._load_yaml
+ * Load the manifest. the retired Python implementation reuses dispatch_hook._load_yaml
  * which prefers PyYAML (with a narrow fallback parser when PyYAML is absent).
  * The TS runtime always has the `yaml` package, so this mirrors the
  * PyYAML-present path (`yaml.safe_load(text) or {}`).

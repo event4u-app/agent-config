@@ -2,8 +2,8 @@
  * `agent-config settings:migrate` — lift project-local settings into the
  * global store (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/_cli/cmd_settings_migrate.py` (ADR-200,
- * py2ts migration). The CLI contract mirrors the Python original EXACTLY —
+ * Ported from the retired Python `src/scripts/_cli/cmd_settings_migrate.py` (ADR-200,
+ * py2ts migration). The CLI contract pins the historical contract exactly —
  * same flags, same exit codes, same stdout/stderr split, byte-identical
  * emitted output, same filesystem effects. No behaviour changes; latent quirks
  * are replicated and flagged inline, not fixed.

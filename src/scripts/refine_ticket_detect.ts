@@ -2,7 +2,7 @@
 /**
  * Deterministic detection helper for the refine-ticket skill.
  *
- * TypeScript twin of `refine_ticket_detect.py` (Phase 8 / Wave 8g).
+ * Ported from the retired Python `refine_ticket_detect.py` (Phase 8 / Wave 8g).
  *
  * Reads the detection-map.yml from
  * .agent-src.uncondensed/skills/refine-ticket/ (or the projected copy),

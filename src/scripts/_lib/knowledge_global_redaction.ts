@@ -2,9 +2,9 @@
 /**
  * Write-time redaction + tier gate for global knowledge-card sharing.
  *
- * TypeScript twin of `src/scripts/_lib/knowledge_global_redaction.py`
+ * Ported from the retired Python `src/scripts/_lib/knowledge_global_redaction.py`
  * (ADR-200). Security-sensitive: the redaction patterns + replacements and
- * the tier gate are matched byte-for-byte against the Python original. The
+ * the tier gate are matched byte-for-byte against the retired Python implementation. The
  * public API and CLI contract mirror Python exactly — same exported
  * snake_case names, same `GateResult` shape + `summary()` text, same exit
  * codes and stdout. No behaviour changes.

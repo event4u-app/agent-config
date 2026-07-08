@@ -367,6 +367,16 @@ tasks:
     desc: "Claims-Ledger gate — every <!-- claim:ID --> marker in README/docs binds to a backed, resolvable entry in docs/CLAIMS.md (road-to-final-state-and-market-readiness B1)"
     cmd: ./scripts-run src/scripts/check_claims {{.QUIET_FLAG}}
 
+  check-artefact-counts:
+    silent: true
+    desc: "Artefact-count messaging gate — every count-shaped prose mention of skills/commands/governed rules/guidelines/personas on a flagship surface matches the source count; internal inconsistency (two different numbers for one kind) fails (road-to-truth-and-reference-hygiene Phase 1)"
+    cmd: ./scripts-run src/scripts/check_artefact_count_messaging {{.QUIET_FLAG}}
+
+  lint-no-python-twin-rationale:
+    silent: true
+    desc: "Python-twin rationale guard — comments in src/scripts may not rationalise behaviour by fidelity to the deleted Python originals (twin of / latent quirks replicated / byte-identical to the Python); cite the live consumer instead (road-to-truth-and-reference-hygiene Phase 2)"
+    cmd: ./scripts-run src/scripts/lint_no_python_twin_rationale {{.QUIET_FLAG}}
+
   check-skill-gaps:
     silent: true
     desc: "Skill honest-null gaps lock (B6) — every src/skills/*/SKILL.md gaps[].witness points at a test file that exists; keeps the proof-page 'Known Limits' from citing a phantom witness"

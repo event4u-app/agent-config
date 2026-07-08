@@ -83,6 +83,8 @@ tasks:
       - task: check-refs
       - task: check-no-conflict-markers
       - task: check-claims
+      - task: check-artefact-counts
+      - task: lint-no-python-twin-rationale
       - task: check-skill-gaps
       - task: check-comparison
       - task: check-structural-breaking
@@ -247,6 +249,8 @@ tasks:
       - task: check-refs
       - task: check-no-conflict-markers
       - task: check-claims
+      - task: check-artefact-counts
+      - task: lint-no-python-twin-rationale
       - task: check-skill-gaps
       - task: check-comparison
       - task: check-structural-breaking

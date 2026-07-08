@@ -2,7 +2,7 @@
 /**
  * Surface-tier boundary guard (road-to-install-contract-stability Phase 2).
  *
- * TypeScript twin of `src/scripts/check_surface_tiers.py` (ADR-200). The CLI
+ * Ported from the retired Python `src/scripts/check_surface_tiers.py` (ADR-200). The CLI
  * contract is mirrored EXACTLY — the `--skip-imports` flag + the
  * `AGENT_CONFIG_SKIP_SURFACE_TIER_CHECK` env kill-switch, exit codes (0 clean,
  * 1 violation(s), 2 argparse usage error), byte-identical finding + summary
@@ -10,7 +10,7 @@
  * same core→lab import boundary check. No behaviour changes — latent bugs
  * replicated.
  *
- * The Python original parses each `.py` under `src/scripts/` with the stdlib
+ * the retired Python implementation parses each `.py` under `src/scripts/` with the stdlib
  * `ast` module to find imports and the line numbers of imports lexically inside
  * a guarding `try/except`. This twin replicates that with a focused Python
  * import + try/except line scanner: it tracks each statement's START line (the

@@ -2,8 +2,8 @@
 /**
  * Lint `.agent-config/orchestrations/*.yaml` pipeline files.
  *
- * TypeScript twin of `src/scripts/lint_orchestration_dsl.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--dir` /
+ * Ported from the retired Python `src/scripts/lint_orchestration_dsl.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--dir` /
  * `--file` flags, exit codes (0 clean, 1 hard failure, 2 file/schema-load
  * error), stdout/stderr split (all findings on stderr), byte-identical
  * finding messages, same scan order, same `resolve_logical` ref resolution,
@@ -51,7 +51,7 @@ const SUBAGENT_MODES = new Set([
 
 /**
  * Reuse the dispatcher's loader so the linter sees what the runtime sees.
- * The Python original calls `hooks.dispatch_hook._load_yaml`, which prefers
+ * the retired Python implementation calls `hooks.dispatch_hook._load_yaml`, which prefers
  * PyYAML (present in this environment) and falls back to a flat mini-parser
  * only when PyYAML is unavailable. Orchestration files use full nested YAML,
  * so the PyYAML path is the live one — `yaml` (npm) reproduces it.

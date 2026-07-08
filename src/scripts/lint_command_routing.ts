@@ -2,12 +2,12 @@
 /**
  * Routing-metadata + routing-eval linter for visible commands.
  *
- * TypeScript twin of `src/scripts/lint_command_routing.py` (ADR-200, Phase 4 /
+ * Ported from the retired Python `src/scripts/lint_command_routing.py` (ADR-200, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: same `--quiet` flag,
  * scan scope (src/domains/**\/command.md, legacy packages fallback), file
  * ordering, frontmatter parsing, finding messages, stdout/stderr split, and
  * exit codes (0 clean, 1 violations, 3 internal error). No behaviour changes —
- * latent bugs replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Every VISIBLE command (tier 0/1) must carry:
  *   - `intent`     — non-empty one-line existence justification

@@ -2,12 +2,12 @@
 /**
  * Structural breaking-change detector (road-to-contract-integrity F3).
  *
- * TypeScript twin of `src/scripts/check_structural_breaking.py` (ADR-200). The
+ * Ported from the retired Python `src/scripts/check_structural_breaking.py` (ADR-200). The
  * CLI contract is mirrored EXACTLY — the `--quiet` flag, exit codes (0 clean /
  * cleared, 1 break without annotation), the stdout/stderr split (the ✅ summary
  * on stdout, the ❌ block on stderr), byte-identical finding + remediation
  * messages, the same `git diff --name-status` / `git log` shell-outs, and the
- * same regex set. No behaviour changes — latent bugs replicated.
+ * same regex set. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * `release.py` infers the version bump from the commit annotation
  * (`feat!` / `BREAKING CHANGE`). This detector inspects the diff against the

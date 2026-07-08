@@ -2,15 +2,15 @@
 /**
  * Pretty-print the `stats` block from the committed discovery manifest.
  *
- * TypeScript twin of `src/scripts/discovery_stats.py` (ADR-200, Phase 8 /
- * Wave 8a). The CLI contract is mirrored EXACTLY — the single `--manifest`
+ * Ported from the retired Python `src/scripts/discovery_stats.py` (ADR-200, Phase 8 /
+ * Wave 8a). The CLI contract is pinned — the single `--manifest`
  * flag (default `dist/discovery/discovery-manifest.json`), exit codes
  * (0 printed · 1 manifest missing or malformed), the stdout/stderr split,
  * and byte-identical messages. Cheap sanity surface for developers: counts
  * by category, lifecycle, and trust level. Reads only the committed
  * manifest; no scan, no generation. See ADR-015.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

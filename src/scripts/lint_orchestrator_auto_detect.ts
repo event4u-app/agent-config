@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // Auto-detection contract linter for command orchestrators (6.1.0 Step 1).
 //
-// TypeScript twin of src/scripts/lint_orchestrator_auto_detect.py. Every
+// TypeScript port of the retired Python src/scripts/lint_orchestrator_auto_detect.py. Every
 // command source under src/domains/**/command.md that opts into auto-detection
 // (front-matter `auto_detect: true`) MUST honor the non-interactive contract:
 // a body link to the contract doc + the `## Non-interactive & auto-detection`

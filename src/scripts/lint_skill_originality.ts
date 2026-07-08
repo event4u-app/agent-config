@@ -2,7 +2,7 @@
 /**
  * Anti-duplicate originality gate (road-to-competitive-borrow P1.1).
  *
- * TypeScript twin of `src/scripts/lint_skill_originality.py` (ADR-096). The CLI
+ * Ported from the retired Python `src/scripts/lint_skill_originality.py` (ADR-096). The CLI
  * contract is mirrored EXACTLY — the `--strict` / `--json` / `--quiet` flags
  * (argparse; `-h`/`--help` exit 0, an unrecognized arg exits 2), exit codes
  * (0 = warn-only or strict-clean, 1 = strict + same-domain violation OR no

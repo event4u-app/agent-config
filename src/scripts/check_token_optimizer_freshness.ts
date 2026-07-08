@@ -2,12 +2,12 @@
 /**
  * Token-Optimizer freshness validator.
  *
- * TypeScript twin of `src/scripts/check_token_optimizer_freshness.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags,
+ * Ported from the retired Python `src/scripts/check_token_optimizer_freshness.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — no flags,
  * exit codes (0 clean, 1 drift / missing skill / unparseable), stdout/stderr
  * split, byte-identical messages, the same catalog-row parsing, the same
  * `resolve()` / `is_external()` logic and the same `_lib/agent_src`
- * resolution. No behaviour changes — latent bugs replicated.
+ * resolution. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Parses the catalog table inside the token-optimizer SKILL.md, verifies
  * every cited internal asset exists, and checks the trigger keywords against

@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // Lint generic skills/rules/commands for framework/language leakage.
 //
-// TypeScript twin of src/scripts/lint_framework_leakage.py. Exits 1 on hit
+// TypeScript port of the retired Python src/scripts/lint_framework_leakage.py. Exits 1 on hit
 // (CI-blocking). Enforces the framework-neutrality rule. Replicates the
 // carve-out filename exemption, inventory exemption, framework-frontmatter
 // exemption, the auto cross-stack ±10-line window heuristic, the allowlist

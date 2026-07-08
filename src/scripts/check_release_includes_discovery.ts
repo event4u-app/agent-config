@@ -2,8 +2,8 @@
 /**
  * Assert dist/discovery/discovery-manifest.json ships with the package.
  *
- * TypeScript twin of `src/scripts/check_release_includes_discovery.py`
- * (ADR-200, Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY —
+ * Ported from the retired Python `src/scripts/check_release_includes_discovery.py`
+ * (ADR-200, Phase 4 / Wave 4c). The CLI contract is pinned —
  * no flags, exit codes (0 OK, 1 die), stdout/stderr split, byte-identical
  * finding messages (paths relative to ROOT), same checks in the same order.
  * No behaviour changes.

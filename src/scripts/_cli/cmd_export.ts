@@ -2,8 +2,8 @@
  * `agent-config export` — eject a tool's canonical content into the project
  * (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/_cli/cmd_export.py` (ADR-200, py2ts
- * migration). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/_cli/cmd_export.py` (ADR-200, py2ts
+ * migration). The CLI contract pins the historical contract exactly — same
  * flags, same exit codes, same stdout/stderr split, byte-identical emitted
  * output, same filesystem effects. No behaviour changes; latent quirks are
  * replicated and flagged inline, not fixed.
@@ -19,7 +19,7 @@
  *   and never calls `process.exit()`. argparse usage errors throw
  *   `ArgparseExit(2)`; `-h`/`--help` throws `ArgparseExit(0)`.
  * - The 9 marker constants and templates resolve to the same byte content as
- *   the Python originals: marker constants are re-exported from the
+ *   the retired Python implementations: marker constants are re-exported from the
  *   `install.ts` twin (single source of truth); templates are read from
  *   `dist/agent-src/templates` via `_from_template` exactly as Python does.
  * - `hashlib.sha256(content.encode("utf-8")).hexdigest()` →

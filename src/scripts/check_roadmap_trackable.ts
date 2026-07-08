@@ -2,12 +2,12 @@
 /**
  * CI guard for the `roadmap-progress-sync` rule's trackability Iron Law.
  *
- * TypeScript twin of `src/scripts/check_roadmap_trackable.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/check_roadmap_trackable.py` (ADR-200,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--quiet` flag,
  * exit codes (0 all trackable, 1 violation, 1 missing roadmap dir),
  * byte-identical messages, stdout/stderr split, same scan order.
  *
- * The Python original imports `CHECKBOX_RE`, `PHASE_RE`, `is_draft`,
+ * the retired Python implementation imports `CHECKBOX_RE`, `PHASE_RE`, `is_draft`,
  * `is_roadmap_candidate`, `parse_frontmatter` from
  * `.augment/scripts/update_roadmap_progress.py` (the dashboard) as the
  * single source of truth so the linter cannot drift from what the

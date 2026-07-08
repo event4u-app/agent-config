@@ -2,8 +2,8 @@
 /**
  * Linter for `agents/roles/<slug>/` role experiences.
  *
- * TypeScript twin of `src/scripts/lint_role_experiences.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY —
+ * Ported from the retired Python `src/scripts/lint_role_experiences.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned —
  * `--plain-language` flag, exit codes (0 pass / roles-dir-absent,
  * 1 failures), stdout/stderr split (all output on stdout), byte-identical
  * finding messages (including Python `sorted(set)` list repr), same scan

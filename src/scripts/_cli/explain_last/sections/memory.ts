@@ -1,8 +1,8 @@
 /**
  * Render the `Memory hits influencing this run` section.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/sections/memory.py`
- * (ADR-200). Byte-identical to the Python original — same `:.2f` score
+ * Ported from the retired Python `src/scripts/_cli/explain_last/sections/memory.py`
+ * (ADR-200). byte-stable — downstream consumers and checksum gates pin these bytes — same `:.2f` score
  * formatting, same `score n/a` fallback for non-numeric scores. No
  * behaviour changes.
  *

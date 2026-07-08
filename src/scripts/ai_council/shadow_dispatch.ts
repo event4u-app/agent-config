@@ -1,7 +1,7 @@
 /**
  * Shadow-mode dispatch for low-impact solo-member decisions (step-9 P10).
  *
- * TypeScript twin of `src/scripts/ai_council/shadow_dispatch.py`
+ * Ported from the retired Python `src/scripts/ai_council/shadow_dispatch.py`
  * (ADR-200 — Python→TS migration, Phase 1).
  *
  * When `low_impact.dispatch: single` is active, a Bernoulli-sampled subset

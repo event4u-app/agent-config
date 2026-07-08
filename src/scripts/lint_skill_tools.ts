@@ -2,14 +2,14 @@
 /**
  * Block D · D1 meta-linter for `scripts/skill_tools/*.py`.
  *
- * TypeScript twin of `src/scripts/lint_skill_tools.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--json`
+ * Ported from the retired Python `src/scripts/lint_skill_tools.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--json`
  * / `--quiet` / `--tools-dir` flags, exit codes (0 clean, 1 violations,
  * 2 usage / missing-dir), stdout split (JSON or human), byte-identical
  * violation strings, same glob + sort order, same `_SAMPLE`/`__main__`
  * detection.
  *
- * The Python original parses each tool with `ast` to find imports and
+ * the retired Python implementation parses each tool with `ast` to find imports and
  * syntax errors. We replicate the import discovery with a focused
  * Python-import line scanner (handles `import a, b.c`, `from x.y import z`,
  * relative `from . import x`). It covers the real tools and the test

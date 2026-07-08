@@ -2,8 +2,8 @@
 /**
  * Command surface for the file-first global knowledge-card store (ADR-100).
  *
- * TypeScript twin of `src/scripts/knowledge_global_cli.py` (ADR-200). The CLI
- * contract mirrors the Python original EXACTLY — same subcommands, flags,
+ * Ported from the retired Python `src/scripts/knowledge_global_cli.py` (ADR-200). The CLI
+ * contract pins the historical contract exactly — same subcommands, flags,
  * exit codes, stdout/stderr split, byte-identical messages, table layout,
  * provenance write, and kill-switch no-op behavior. No behaviour changes.
  *
@@ -392,7 +392,7 @@ function cmd_validate(args: { check_urls: boolean }): number {
         return 0;
     }
 
-    // The Python original spawns `python3 check_knowledge_cards.py --global
+    // the retired Python implementation spawns `python3 check_knowledge_cards.py --global
     // --strict`. The TS twin spawns the sibling `check_knowledge_cards.ts`
     // via the same tsx runtime (process spawn, not an import).
     const tsxBin = path.join(

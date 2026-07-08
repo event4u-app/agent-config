@@ -1,14 +1,14 @@
 /**
  * Runtime pricing layer for the AI Council.
  *
- * TypeScript twin of `src/scripts/ai_council/pricing.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/ai_council/pricing.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8g; ported as a prerequisite of
  * `update_prices.ts`). Mirrors the Python public surface used by the
  * caller: `PRICES_FILE`, `load_prices`, `is_stale`, `_render_markdown`,
  * plus `bootstrap_from_defaults` / `last_monday_utc` for completeness.
  *
  * Reads `agents/runtime/.agent-prices.md`, parses YAML frontmatter + the
- * Markdown table. No behaviour changes — latent Python quirks replicated,
+ * Markdown table. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.,
  * including the byte-identical `{x:>6.2f}` row formatting.
  */
 import * as fs from 'node:fs';

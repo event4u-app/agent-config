@@ -2,8 +2,8 @@
 /**
  * File-first usage signal + hybrid promotion for global knowledge cards.
  *
- * TypeScript twin of `src/scripts/_lib/knowledge_global_promote.py` (ADR-200).
- * The public API and CLI contract mirror the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/_lib/knowledge_global_promote.py` (ADR-200).
+ * The public API and CLI contract mirror the retired Python implementation EXACTLY — same
  * exported snake_case names, same repo-slug / card-id derivation, same usage
  * sidecar shape (sorted-key JSON), same suggestion decision, same exit codes
  * and byte-identical stdout. No behaviour changes.

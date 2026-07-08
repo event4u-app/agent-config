@@ -2,10 +2,10 @@
 /**
  * Move a single artefact between packs via `git mv` (history-preserving).
  *
- * TypeScript twin of `src/scripts/move_artefact.py` (ADR-200, Phase 8 /
+ * Ported from the retired Python `src/scripts/move_artefact.py` (ADR-200, Phase 8 /
  * Wave 8b). The public surface, CLI contract, exit codes, stdout/stderr
- * split, byte-for-byte messages, and the `git mv` semantics mirror the
- * Python original EXACTLY. The frontmatter rewrite reproduces PyYAML's
+ * split, byte-for-byte messages, and the `git mv` semantics are pinned by
+ * tests. The frontmatter rewrite reproduces PyYAML's
  * `safe_dump(..., sort_keys=False, allow_unicode=True)` output through a
  * faithful port of the PyYAML emitter (scalar-style resolution, plain /
  * single-quoted / double-quoted writers with the same best-width=80

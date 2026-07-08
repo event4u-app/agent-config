@@ -2,7 +2,7 @@
 /**
  * Validate condensed-output paths in `dist/agent-src/rules/*.md`.
  *
- * TypeScript twin of `src/scripts/check_condensed_paths.py` (ADR-200). Mirrors
+ * Ported from the retired Python `src/scripts/check_condensed_paths.py` (ADR-200). Mirrors
  * the Python CLI contract EXACTLY — same `--quiet` flag, same exit codes
  * (0 clean, 1 violations, 3 internal error), same stdout/stderr split, same
  * finding text, same forbidden-substring set, same frontmatter parsing, same
@@ -49,14 +49,14 @@ import type * as YamlModule from 'yaml';
 
 // ESM-standard `require` shim. The bare `require` global is present when this
 // module is *imported* (tsx injects it) but absent when the module is the
-// directly-executed CLI entry, so resolve it explicitly here to mirror the
-// Python original's lazy `import yaml` in both execution modes.
+// directly-executed CLI entry, so resolve it explicitly here to preserve the
+// historical lazy `import yaml` semantics in both execution modes.
 const _require = createRequire(import.meta.url);
 
 const QUIET = process.argv.includes('--quiet');
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
-// _HERE === <repo>/src/scripts ; the Python original derives ROOT from
+// _HERE === <repo>/src/scripts ; the retired Python implementation derives ROOT from
 // Path(__file__).resolve().parent.parent.parent which is the repo root
 // (src/scripts/check_condensed_paths.py → up three dirs).
 const ROOT = path.resolve(_HERE, '..', '..');
@@ -160,8 +160,8 @@ function _split_frontmatter(text: string): [Frontmatter | null, string] {
     }
     let fm: unknown;
     try {
-        // version '1.1' matches PyYAML's safe_load semantics used by the
-        // Python original (yaml.safe_load).
+        // version '1.1' matches the PyYAML safe_load semantics the frontmatter
+        // corpus was authored against (yaml.safe_load).
         fm = YAML.parse(fmText, { version: '1.1' });
     } catch {
         return [null, text];

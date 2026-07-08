@@ -2,8 +2,8 @@
 /**
  * Engineering Memory validator.
  *
- * TypeScript twin of `src/scripts/check_memory.py` (ADR-200, Phase 4 /
- * Wave 4a). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/check_memory.py` (ADR-200, Phase 4 /
+ * Wave 4a). The CLI contract pins the historical contract exactly — same
  * flags (`--path`, `--format`, `--append-only`, `--base`), same exit
  * codes, same stdout/stderr split,
  * byte-identical finding messages, same scan scope and ordering. No
@@ -36,7 +36,7 @@
  *     check_memory --append-only       # CI: diff vs origin/main
  *     check_memory --append-only --base HEAD~1
  *
- * Note on YAML date typing: the Python original relies on PyYAML's
+ * Note on YAML date typing: the retired Python implementation relies on PyYAML's
  * `safe_load` converting unquoted `YYYY-MM-DD` scalars to `datetime.date`
  * (and `YYYY-MM-DD HH:MM:SS` to `datetime.datetime`). The `yaml` npm
  * package parses every scalar to a string, so this twin re-implements

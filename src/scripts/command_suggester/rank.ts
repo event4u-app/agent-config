@@ -1,7 +1,7 @@
 /**
  * Rank scored matches into the final candidate list.
  *
- * TypeScript twin of `src/scripts/command_suggester/rank.py`
+ * Ported from the retired Python `src/scripts/command_suggester/rank.py`
  * (ADR-200 py2ts).
  *
  * Pipeline:

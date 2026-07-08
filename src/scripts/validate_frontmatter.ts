@@ -2,10 +2,10 @@
 /**
  * validate_frontmatter.ts — frontmatter validator (Draft-07 subset).
  *
- * TypeScript twin of `src/scripts/validate_frontmatter.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/validate_frontmatter.py` (ADR-200 —
  * Python→TS migration, Phase 4 / Wave 4a). The public surface, CLI flags,
- * exit codes, stdout/stderr split, and finding-message strings mirror the
- * Python original byte-for-byte. The Python original is deleted in the same
+ * exit codes, stdout/stderr split, and finding-message strings are pinned
+ * byte-for-byte by tests. The retired Python implementation was deleted in the same
  * PR; the dispatcher resolves this `.ts`.
  *
  * Validates the YAML frontmatter of an agent artefact (skill, rule, command,
@@ -19,7 +19,7 @@
  *   - apply_schema_defaults(data, schema) -> data (in place)
  *   - validate(data, schema) -> SchemaError[]
  *
- * No behaviour changes — latent Python quirks replicated. The lenient subset
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour. The lenient subset
  * parser (used for schema validation) supports scalar / boolean / integer /
  * inline-list / block-list / one-level-nested-block. The `strict_yaml_error`
  * gate uses the `yaml` package as the source of truth (same parser real
@@ -835,7 +835,7 @@ export function _iter_artefacts(root: string): Array<[string, string]> {
     return targets;
 }
 
-// argparse parity. `prog` matches the Python original's `sys.argv[0]` basename
+// argparse parity. `prog` matches the retired Python implementation's `sys.argv[0]` basename
 // (`validate_frontmatter.py`) so the usage/error text is byte-identical to the
 // pre-migration CLI the golden corpus captured.
 const _PROG = 'validate_frontmatter.py';

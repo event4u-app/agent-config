@@ -1,8 +1,8 @@
 /**
  * Render the `Why halted?` section.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/sections/halt.py`
- * (ADR-200). Byte-identical to the Python original — note the surface
+ * Ported from the retired Python `src/scripts/_cli/explain_last/sections/halt.py`
+ * (ADR-200). byte-stable — downstream consumers and checksum gates pin these bytes — note the surface
  * lines are indented by exactly two spaces (`f"  {line}"`). No behaviour
  * changes.
  *

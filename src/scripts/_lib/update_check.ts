@@ -1,14 +1,14 @@
 /**
  * Daily update-check banner for the `agent-config` dispatcher.
  *
- * TypeScript twin of `src/scripts/_lib/update_check.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/_lib/update_check.py` (ADR-200,
  * Phase 2 / Wave 1 batch B). Pure functions: `check_for_update()`
  * decides whether a banner should be emitted and returns the banner
  * string (or `null`). The dispatcher prints the returned string to
  * `stderr` after the subcommand finishes — never delaying the work,
  * never prompting.
  *
- * Design constraints (mirrored from the Python original):
+ * Design constraints (mirrored from the retired Python implementation):
  *
  * - Node builtins only (global `fetch` on Node >= 20).
  * - 1 s hard timeout on the registry call; network failure is silent.

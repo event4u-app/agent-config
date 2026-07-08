@@ -2,7 +2,7 @@
 /**
  * `agent-config linked-projects:list` — list opted-in IDE-attached siblings.
  *
- * TypeScript twin of `linked_projects_list.py` (Phase 8 / Wave 8e).
+ * Ported from the retired Python `linked_projects_list.py` (Phase 8 / Wave 8e).
  *
  * Phase 4 of `road-to-leaner-core-and-discovery`; closes the ADR-032 follow-up
  * "expose the detector as a CLI subcommand for consumer reach". Pure wrapper over

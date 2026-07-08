@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /** Phase 6.6 platform spot-check via AI council.
  *
- * TypeScript twin of `src/scripts/spotcheck_thin_root.py` (ADR-200, Phase 8 /
+ * Ported from the retired Python `src/scripts/spotcheck_thin_root.py` (ADR-200, Phase 8 /
  * Wave 8h). Mirrors the Python contract — no flags, exit 0, the two
  * `Running … / ✅  Wrote …` stderr lines, and byte-identical written
  * `thin-root-platform-spotcheck.md` / `.json`. No behaviour changes.
@@ -73,7 +73,7 @@ interface ResponseRow {
 
 /**
  * Run the live council in-process via the `ai_council` TS twins. Returns the
- * council responses as plain rows. Mirrors the Python original's
+ * council responses as plain rows. Mirrors the retired Python implementation's
  * `consult(members, question, budget, table=table, rounds=1)` call exactly
  * (same members, prompt, max_tokens, budget). `table` + `rounds` ride in the
  * twin's `opts` argument.

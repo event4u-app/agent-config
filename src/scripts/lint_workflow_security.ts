@@ -2,15 +2,15 @@
 /**
  * WARN-ONLY GitHub Actions workflow security linter.
  *
- * TypeScript twin of `src/scripts/lint_workflow_security.py` (ADR-200,
- * Python→TypeScript migration). The CLI contract is mirrored EXACTLY —
+ * Ported from the retired Python `src/scripts/lint_workflow_security.py` (ADR-200,
+ * Python→TypeScript migration). The CLI contract is pinned —
  * argparse flags (`--strict` / `--quiet` / `--json PATH`, `-h`/`--help`
  * exit 0, unknown arg → exit 2), the scan order (`sorted(glob("*.yml"))`
  * then `sorted(glob("*.yaml"))`), byte-identical finding lines, the
  * `json.dumps(..., indent=2)` (ensure_ascii) `--json` write, the allowlist
  * cap (exit 2 over 20 entries), the stdout/stderr split, and exit codes
  * (0 advisory / 1 strict+HIGH). snake_case kept; PyYAML `on:`→boolean-True
- * key quirk replicated. No behaviour changes — latent quirks replicated.
+ * key quirk replicated. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Severity model (council-locked 2026-06-13):
  *   HIGH  — pull_request_target / workflow_run + checkout of untrusted ref;

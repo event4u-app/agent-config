@@ -2,8 +2,8 @@
 /**
  * End-to-end release automation for `event4u/agent-config` (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/release.py` (ADR-200, py2ts migration).
- * The CLI contract mirrors the Python original EXACTLY — same flags, same
+ * Ported from the retired Python `src/scripts/release.py` (ADR-200).
+ * The CLI contract pins the historical contract exactly — same flags, same
  * exit codes, same stdout/stderr split, byte-identical emitted output, same
  * subprocess argv/cwd/env. No behaviour changes — latent quirks are
  * replicated and flagged inline, not fixed.
@@ -145,7 +145,7 @@ class ArgparseExit extends Error {
 
 /**
  * Mirror of `subprocess.CalledProcessError`. Thrown by `run()` when a command
- * fails with `check=True` and output is NOT captured — the Python original
+ * fails with `check=True` and output is NOT captured — the retired Python implementation
  * lets `CalledProcessError` propagate in that path. The CLI entry guard does
  * NOT catch this, so it surfaces (non-zero exit + traceback), matching Python.
  */
@@ -680,7 +680,7 @@ function latest_tag(): string | null {
  *
  * `test_trend_line` — optional pre-computed `Tests: N (+M …)` footer
  * (road-to-feedback-followups P3.2). Computed by the caller so tests don't
- * trigger a recursive pytest collection.
+ * trigger a recursive vitest collection.
  */
 function render_changelog_entry(
     version: string,
@@ -770,32 +770,40 @@ function _changelog_line(c: Commit): string {
 // ─── test-count trend (road-to-feedback-followups P3.2) ───────────────────────
 
 const _TEST_COUNT_LINE_RE = /^Tests:\s+(\d+)/m;
-const _PYTEST_COLLECTED_RE = /^(\d+)\s+tests?\s+collected/m;
 
 /**
- * Return the count from `pytest --collect-only -q` on the current tree.
- * Returns null when pytest isn't available or collection fails — the trend
- * line is informational, never a release blocker.
+ * Return the collected vitest test-case count on the current tree
+ * (`npx vitest list`, one line per case; ~14s wall). Returns null when
+ * collection fails — the trend line is informational, never a release
+ * blocker. (Replaced the dead `pytest --collect-only` probe on 2026-07-08,
+ * road-to-truth-and-reference-hygiene Phase 3: the Python suite was retired
+ * with ADR-200, so the old probe always degraded to null and the `Tests:`
+ * footer silently vanished from release notes.)
  */
 function _count_tests_current(): number | null {
-    // Release-time pytest-collection probe: python-test-tooling, not package
-    // runtime — there is no tsx equivalent of pytest collection. Degrades to
-    // null (informational trend line dropped) when python3/pytest is absent.
-    const res = spawnSync('python3', ['-m', 'pytest', '--collect-only', '-q'], {
+    // Recursion/cost guard: `npx vitest list` inside a vitest-driven release
+    // test would collect the whole suite from within the suite (the child
+    // inherits VITEST=… from the runner) — the exact recursion the caller
+    // comment warns about. Degrade to null there, same as any other
+    // collection failure.
+    if (process.env['VITEST'] !== undefined) {
+        return null;
+    }
+    const res = spawnSync('npx', ['vitest', 'list'], {
         cwd: REPO_ROOT,
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
-        timeout: 120_000,
+        timeout: 180_000,
     });
     if (res.error) {
-        // FileNotFoundError (ENOENT) or TimeoutExpired (ETIMEDOUT) → None.
+        // ENOENT or ETIMEDOUT → null (informational line dropped).
         return null;
     }
     if ((res.status ?? 1) !== 0) {
         return null;
     }
-    const match = _PYTEST_COLLECTED_RE.exec(res.stdout ?? '');
-    return match ? Number.parseInt(match[1] as string, 10) : null;
+    const lines = (res.stdout ?? '').split('\n').filter((l) => l.trim().length > 0);
+    return lines.length > 0 ? lines.length : null;
 }
 
 /**
@@ -1833,7 +1841,10 @@ function main(argv: readonly string[] | null = null): number {
     }
 
     const today = todayIso();
-    const test_trend_line = _render_test_trend_line(prev);
+    // Dry-run stays fast: the trend line costs a full vitest collection
+    // (~15s+), which `--dry-run exits 0 without needing …` contracts (and
+    // the release test) assume never runs. Real releases compute it.
+    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev);
     const [full, body] = render_changelog_entry(target, prev, commits, today, {
         test_trend_line,
     });
@@ -1922,8 +1933,8 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
     try {
         // main() can return an int directly OR throw SystemExitError via die();
         // both flow into process.exitCode. CalledProcessError is intentionally
-        // NOT caught here, so it propagates (non-zero + traceback), matching the
-        // Python original letting subprocess.CalledProcessError raise.
+        // NOT caught here, so it propagates (non-zero + traceback) — the historical
+        // contract let subprocess errors raise.
         process.exitCode = main(process.argv.slice(2));
     } catch (e) {
         if (e instanceof SystemExitError || e instanceof ArgparseExit) {

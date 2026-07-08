@@ -2,13 +2,13 @@
 /**
  * PreToolUse guard: block git --no-verify and hook-bypass patterns.
  *
- * TypeScript twin of `src/scripts/hooks/block_no_verify.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/hooks/block_no_verify.py` (ADR-200,
  * Python→TypeScript migration). The CLI/stdin contract is mirrored EXACTLY —
  * `--command` / `--platform` argparse flags, the JSON-envelope-on-stdin shape,
  * shlex tokenisation (POSIX, no comments), the subcommand split on shell
  * separators, the fail-closed-on-parse-error-for-git behaviour, byte-identical
  * stderr block message, and exit codes (0 allow · 1 block; 2 = argparse error).
- * snake_case kept. No behaviour changes — latent quirks replicated.
+ * snake_case kept. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Intercepts the agent's Bash tool calls BEFORE git runs so that
  * `git --no-verify` / `git -n` / `git -c core.hooksPath=` cannot silently

@@ -2,8 +2,8 @@
 /**
  * Agent Config — Project Bridge Installer (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/install.py` (ADR-200, py2ts migration).
- * The CLI contract mirrors the Python original EXACTLY — same flags, same
+ * Ported from the retired Python `src/scripts/install.py` (ADR-200).
+ * The CLI contract pins the historical contract exactly — same flags, same
  * exit codes, same stdout/stderr split, byte-identical emitted output,
  * same filesystem effects, same subprocess argv/cwd/env. No behaviour
  * changes — latent quirks are replicated and flagged inline, not fixed.
@@ -51,7 +51,7 @@
  *   import-resolution detail with no observable effect.
  * - `scripts._cli.cmd_migrate` now has a `.ts` twin, so `_run_migrate_to_global`
  *   calls `cmd_migrate.main([], { cwd })` directly in-process — exactly as the
- *   Python original ran it via `sys.stdout`. The migrator's `out`/`err` sinks
+ *   retired Python implementation ran it via `sys.stdout`. The migrator's `out`/`err` sinks
  *   default to `process.stdout`/`process.stderr`, preserving the prior
  *   `stdio:['ignore','inherit','pipe']` observable contract (stdout text + exit
  *   code). Inline reason at the call site.

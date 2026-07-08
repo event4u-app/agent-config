@@ -2,8 +2,8 @@
 /**
  * Command-count messaging gate (road-to-pr-34-followups 1.2).
  *
- * TypeScript twin of `src/scripts/check_command_count_messaging.py`
- * (ADR-200, Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY —
+ * Ported from the retired Python `src/scripts/check_command_count_messaging.py`
+ * (ADR-200, Phase 4 / Wave 4c). The CLI contract is pinned —
  * `--quiet` flag (positional anywhere in argv), exit codes (0 clean,
  * 1 drift, 1 no-commands-dir via stderr), stdout/stderr split,
  * byte-identical messages, same canonical-count derivation

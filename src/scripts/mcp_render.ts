@@ -2,7 +2,7 @@
 /**
  * MCP config renderer — one `mcp.json` → per-tool output files.
  *
- * TypeScript twin of `mcp_render.py` (Phase 8 / Wave 8g).
+ * Ported from the retired Python `mcp_render.py` (Phase 8 / Wave 8g).
  *
  * Reads `mcp.json` at repo root (`{ "servers": { <name>: { command, args,
  * env, cwd } } }`), substitutes `${env:VAR}` placeholders from the

@@ -3,8 +3,8 @@
  * `agent-config refresh` — idempotent re-install, no version change
  * (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/_cli/cmd_refresh.py` (ADR-200, py2ts
- * migration). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/_cli/cmd_refresh.py` (ADR-200, py2ts
+ * migration). The CLI contract pins the historical contract exactly — same
  * flags, same exit codes, same stdout/stderr split, byte-identical emitted
  * output, same filesystem effects, same subprocess argv/cwd/env. No behaviour
  * changes — latent quirks are replicated and flagged inline, not fixed.
@@ -145,7 +145,7 @@ const CONSUMER_BRIDGE_MARKER_RELPATH = path.join('agents', '.event4u-bridge.yml'
  * agent-config package source tree. Shared by the bridge-marker writer guard
  * and the `_is_source_repo` monorepo probe so the literal lives in one place
  * (the only other textual mention is the `_is_source_repo` docstring, matching
- * the Python original's two occurrences for the ADR-051 path-count parity).
+ * the retired Python implementation's two occurrences for the ADR-051 path-count parity).
  */
 const SRC_MARKER_DIR = '.agent-src.uncondensed';
 
@@ -215,7 +215,7 @@ function atomicWrite0644(target: string, body: string, prefix: string): void {
 }
 
 /**
- * Twin of `install._write_consumer_bridge_marker` (module-private). Returns the
+ * Mirrors `install._write_consumer_bridge_marker` (module-private). Returns the
  * written path, or `null` when skipped (dev mode / source repo).
  */
 function _write_consumer_bridge_marker(

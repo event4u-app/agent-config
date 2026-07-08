@@ -2,13 +2,13 @@
 /**
  * Trigger-eval freshness + structural smoke gate (road-to-contract-integrity F4).
  *
- * TypeScript twin of `src/scripts/check_trigger_evals.py` (ADR-200). The CLI
+ * Ported from the retired Python `src/scripts/check_trigger_evals.py` (ADR-200). The CLI
  * contract is mirrored EXACTLY — `--today YYYY-MM-DD` / `--quiet` flags, exit
  * codes (0 fresh+valid, 1 regression(s), 2 bad --today / usage), the
  * stdout/stderr split (the ✅ summary on stdout, every ❌ on stderr),
  * byte-identical finding messages, the same glob (sorted), the same two
  * supported shapes, and the same ISO-date / age logic. No behaviour changes —
- * latent bugs replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  *
  * `triggers.json` files encode each skill's behavioural intent; the surrounding
  * repo context drifts, so trigger sets need regression-locking. This gate is

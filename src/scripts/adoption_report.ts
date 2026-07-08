@@ -2,15 +2,15 @@
 /**
  * Roll up `adoption-snapshots.jsonl` into a Markdown trend report.
  *
- * TypeScript twin of `src/scripts/adoption_report.py` (ADR-200, Phase 8 /
- * Wave 8a). The CLI contract is mirrored EXACTLY — the flags `--in` /
+ * Ported from the retired Python `src/scripts/adoption_report.py` (ADR-200, Phase 8 /
+ * Wave 8a). The CLI contract is pinned — the flags `--in` /
  * `--out` / `--weeks`, exit codes (0 written · 1 IO failure on read/write),
  * the stdout/stderr split, byte-identical messages, AND byte-identical
  * generated Markdown (the report is a write target). Mirrors the shape of
  * `skill_usage_report.py`: a single file, no external deps. The report is
  * regenerated on every invocation (idempotent for a given JSONL state).
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

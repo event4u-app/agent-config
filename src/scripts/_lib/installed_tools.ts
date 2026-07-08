@@ -1,7 +1,7 @@
 /**
  * Project-scope installed-tools manifest at `agents/installed-tools.lock`.
  *
- * TypeScript twin of `src/scripts/_lib/installed_tools.py` (ADR-200 — Python→TS
+ * Ported from the retired Python `src/scripts/_lib/installed_tools.py` (ADR-200 — Python→TS
  * migration, Phase 2 / Wave 2a). Public API mirrors the Python module exactly
  * (snake_case kept deliberately — fidelity over TS idiom), including the
  * byte-exact YAML wire format the `_render` golden tests pin.

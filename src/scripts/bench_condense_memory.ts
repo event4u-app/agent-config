@@ -2,9 +2,9 @@
 /**
  * Offline bench for input-side memory condensation (Phase 2 / Step 11).
  *
- * TypeScript twin of `src/scripts/bench_condense_memory.py` (ADR-200,
- * Phase 7 / dev-side memory). The public API and CLI contract mirror the
- * Python original EXACTLY — same exit code, stdout/stderr, byte-identical
+ * Ported from the retired Python `src/scripts/bench_condense_memory.py` (ADR-200,
+ * Phase 7 / dev-side memory). The public API and CLI contract are pinned
+ * — same exit code, stdout/stderr, byte-identical
  * generated reports (`internal/bench/reports/telegraph-v2.{json,md}`,
  * matching json.dumps(indent=2) + the Markdown layout / number formats).
  * No behaviour changes — latent Python bugs are replicated and flagged as
@@ -16,7 +16,7 @@
  * (no API calls).
  *
  * The condense step is run as a subprocess against the `condense_memory`
- * twin in this repo (via the tsx runner), mirroring the Python original's
+ * twin in this repo (via the tsx runner), mirroring the retired Python implementation's
  * `subprocess.run([sys.executable, CONDENSE_SCRIPT, ...])`.
  */
 

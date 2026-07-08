@@ -2,7 +2,7 @@
 /**
  * Sync `.agent-settings.yml` against the template + profile (additive merge).
  *
- * TypeScript twin of `src/scripts/sync_agent_settings.py` (ADR-200).
+ * Ported from the retired Python `src/scripts/sync_agent_settings.py` (ADR-200).
  * Applies the section-aware merge rules documented in
  * `docs/guidelines/agent-infra/layered-settings.md`:
  *
@@ -32,7 +32,7 @@
  *     0 — already in sync, or changes applied (or --dry-run ran cleanly)
  *     2 — drift detected under --check, or invalid arguments / missing files
  *
- * No behaviour changes vs. the Python original — latent bugs replicated.
+ * No behaviour changes vs. the retired Python implementation — historical quirks preserved (consumers pin the exact behaviour).
  */
 
 import * as fs from 'node:fs';

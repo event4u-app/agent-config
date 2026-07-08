@@ -1,7 +1,7 @@
 /**
  * Assemble `value-v1` JSON from on-disk raw bench reports.
  *
- * TypeScript twin of `src/scripts/_lib/value_report.py` (ADR-200 py2ts
+ * Ported from the retired Python `src/scripts/_lib/value_report.py` (ADR-200 py2ts
  * Phase 2 / Wave 2a). Phase 1 Step 3 of the readable-value-dashboard roadmap.
  *
  * Reads:

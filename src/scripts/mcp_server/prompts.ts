@@ -16,7 +16,7 @@
 // are skipped and surfaced in the second tuple element of `scan_*`
 // helpers (caller decides whether to log).
 //
-// TS twin of prompts.py (py2ts Phase 8). Mirrors the full public surface:
+// TS port of the retired Python prompts.py (ADR-200). Preserves the full public surface:
 //   PHASE_1_SKILLS, PromptKind, UserTypeMatch, SkillPrompt, load_skill,
 //   load_phase_1_prompts, scan_skills, scan_commands, load_all_prompts,
 //   to_mcp_prompt_meta, PromptCache. The leading-underscore helpers

@@ -2,12 +2,12 @@
 /**
  * Generate the role-experience catalog (road-to-competitive-borrow P1.0).
  *
- * TypeScript twin of `src/scripts/generate_role_experiences_catalog.py`
- * (ADR-200). Mirrors the Python CLI contract EXACTLY — the `--check` /
+ * Ported from the retired Python `src/scripts/generate_role_experiences_catalog.py`
+ * (ADR-200). The CLI contract is pinned — the `--check` /
  * `--quiet` flags, exit codes (0 / 1 / 2), stdout/stderr split, and the
  * byte-identical generated `docs/role-experiences.md` (heading prose, the
  * `| Role | Tagline | Status |` table, the `sorted(glob)` ordering over the
- * and the trailing newline). No behaviour changes — latent Python quirks
+ * and the trailing newline). No behaviour changes — historical quirks preserved
  * (regex frontmatter parse, sequential `.strip('"').strip("'")`, the
  * pathlib-component-wise glob sort) are replicated.
  *

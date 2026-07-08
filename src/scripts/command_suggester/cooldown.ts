@@ -1,7 +1,7 @@
 /**
  * Suppress recently-shown suggestions per conversation.
  *
- * TypeScript twin of `src/scripts/command_suggester/cooldown.py`
+ * Ported from the retired Python `src/scripts/command_suggester/cooldown.py`
  * (ADR-200 py2ts).
  *
  * Cooldown key is `(command_name, evidence)` so two distinct triggers

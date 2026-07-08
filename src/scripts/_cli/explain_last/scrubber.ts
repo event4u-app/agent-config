@@ -1,8 +1,8 @@
 /**
  * PII / cost-metadata scrubber for the `explain last` trace.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/scrubber.py` (ADR-200).
- * Behaviour mirrors the Python original EXACTLY — same regex sources, same
+ * Ported from the retired Python `src/scripts/_cli/explain_last/scrubber.py` (ADR-200).
+ * Behaviour pins the historical contract exactly — same regex sources, same
  * resolution order, same idempotence, same long-string threshold and
  * summary text. No behaviour changes — latent bugs are replicated, not
  * fixed.

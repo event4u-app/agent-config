@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 /** Structural smoke-test for the README Quickstart path.
  *
- * TypeScript twin of `src/scripts/smoke_quickstart.py` (ADR-200, Phase 8 /
- * Wave 8h). Mirrors the Python CLI contract EXACTLY — no flags, exit codes
+ * Ported from the retired Python `src/scripts/smoke_quickstart.py` (ADR-200, Phase 8 /
+ * Wave 8h). The CLI contract is pinned — no flags, exit codes
  * (0 green, 1 one or more checks failed, 2 setup error), byte-identical
  * stdout/stderr (`::error::…` GitHub-annotation lines, the ✅/❌ summary). No
  * behaviour changes.
@@ -79,7 +79,7 @@ function _checkInstallerRuns(tmpdir: string): [number, string | null] {
     // ADR-020: --project is reserved for maintainers; CI is a maintainer context.
     const env = { ...process.env, AGENT_CONFIG_DEV_MODE: '1' };
     // Run the installer's `.ts` twin via the repo-local tsx binary (was
-    // `python3 install.py`; the Python original is deleted).
+    // `python3 install.py`; the retired Python implementation is deleted).
     const result = spawnSync(TSX_BIN, cmd, {
         encoding: 'utf-8',
         timeout: 60000,
@@ -128,7 +128,7 @@ function _checkDefaultProfile(settings: string): number {
  * the same parse the runtime uses: extract the `decision_engine` block from the
  * settings YAML, feed it to `parse()`, and assert the result is a
  * `DecisionEngineSettings`. A parser rejection is reported via `_fail` so the
- * `::error::` annotation matches the Python original's failure shape.
+ * `::error::` annotation matches the retired Python implementation's failure shape.
  */
 function _checkDecisionEngineBlock(settings: string): number {
     const parsed: unknown = parseYaml(fs.readFileSync(settings, 'utf-8'), { version: '1.1' });
