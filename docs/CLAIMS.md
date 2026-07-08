@@ -91,6 +91,13 @@
 - status: backed
 - last_verified: 2026-07-08
 
+### claim: bus-factor-tracked
+- claim: The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more.
+- kind: qual
+- evidence: docs/succession.md#trailing 90 days
+- status: backed
+- last_verified: 2026-07-09
+
 ### claim: second-brain-unproven
 - claim: The second-brain substrate ships as continuity convenience; its cross-session task lift is unmeasured. A deterministic recall scorer + corpus exist (the rig), but no paired run has measured a lift, so no "second brain" capability claim is made until a backed lift entry exists.
 - kind: qual
