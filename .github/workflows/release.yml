@@ -133,6 +133,15 @@ jobs:
       - name: Install Node deps
         run: npm ci
 
+      # release.ts step [2/10] shells out to `task release-prepare`
+      # (sync + build-discovery + generate-tools). Without this the CI-native
+      # path dies with `spawnSync task ENOENT` — the local `task release`
+      # path never hits this because task is on the maintainer's PATH.
+      - name: Set up Task
+        uses: ./.github/actions/setup-task
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run release pipeline (--ci)
         # --resume from a fresh `main` checkout inherits the same narrow
         # limitation `task release -- --resume` has when run from main
