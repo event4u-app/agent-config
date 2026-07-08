@@ -240,6 +240,11 @@ tasks:
     desc: Validate scripts/hook_manifest.yaml — concern scripts exist, platform/event names are known, no orphan trampolines
     cmd: ./scripts-run src/scripts/lint_hook_manifest
 
+  lint-surface-matrix:
+    silent: true
+    desc: Validate src/config/surface-matrix.yml — every USER_SCOPE_PATHS tool has an entry, scope paths match, duplicate classes carry converge actions (docs/contracts/surface-matrix.md)
+    cmd: ./scripts-run src/scripts/lint_surface_matrix
+
   lint-marketplace-install:
     silent: true
     desc: |

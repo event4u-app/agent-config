@@ -181,6 +181,7 @@ tasks:
       - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-marketplace-install
+      - task: lint-surface-matrix
       - task: lint-hook-concern-budget
       - task: lint-showcase-sessions
       - task: lint-marketplace
@@ -344,6 +345,7 @@ tasks:
       - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-marketplace-install
+      - task: lint-surface-matrix
       - task: lint-hook-concern-budget
       - task: lint-showcase-sessions
       - task: lint-marketplace
