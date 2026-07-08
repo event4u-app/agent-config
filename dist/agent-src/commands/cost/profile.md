@@ -4,7 +4,7 @@ name: cost-profile
 pack: meta
 tier: 2
 visibility: internal
-replaces: set-cost-profile
+replaces: [set-cost-profile]
 sub: profile
 cluster: cost
 description: Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection

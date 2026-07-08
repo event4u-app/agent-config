@@ -4,7 +4,7 @@ name: tests-e2e-heal
 pack: engineering-base
 tier: 2
 visibility: internal
-replaces: e2e-heal
+replaces: [e2e-heal]
 sub: e2e-heal
 cluster: tests
 skills: [playwright-testing]

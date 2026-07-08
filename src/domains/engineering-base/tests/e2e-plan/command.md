@@ -4,7 +4,7 @@ name: tests-e2e-plan
 pack: engineering-base
 tier: 2
 visibility: internal
-replaces: e2e-plan
+replaces: [e2e-plan]
 sub: e2e-plan
 cluster: tests
 skills: [playwright-testing]

@@ -4,7 +4,7 @@ name: fix-quality
 pack: engineering-base
 tier: 2
 visibility: internal
-replaces: quality-fix
+replaces: [quality-fix]
 sub: quality
 cluster: fix
 skills: [quality-tools]

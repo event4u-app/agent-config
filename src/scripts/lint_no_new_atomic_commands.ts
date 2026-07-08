@@ -24,8 +24,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/lint_no_new_atomic_commands.ts → parent.parent.parent is repo root.
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-// Repointed 2026-07-08 (ADR-115): the legacy `.agent-src.uncondensed/commands`
-// dir no longer exists — command sources live at src/domains/**/command.md.
+// Repointed 2026-07-08 (ADR-115): the legacy uncondensed commands dir no
+// longer exists — command sources live at src/domains/**/command.md.
 // Only files named `command.md` are commands; pack READMEs etc. are skipped.
 const COMMANDS_DIR = 'src/domains';
 const CLUSTER_CONTRACT = 'docs/contracts/command-clusters.md';
