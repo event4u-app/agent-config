@@ -1,4 +1,10 @@
-# Orchestration default-flip — verdict: keep `ask`, re-gate on real telemetry
+# Orchestration default-flip — verdict history
+
+> **Current state (2026-07-09): the shipped default is `on`** on subagent-capable
+> hosts. The 2026-06-26 "keep `ask`" decision below is preserved **verbatim** for
+> the record — it is superseded by the re-evaluation in
+> [§ Superseding decision (2026-07-09)](#superseding-decision-2026-07-09--flip-to-on-on-bounded-downside-re-evaluation)
+> at the end of this file (ADR-117).
 
 **Decision (2026-06-26).** The shipped default `subagents.auto` stays **`ask`**.
 It is NOT flipped to `on`. The flip is re-gated on accumulated real-world
@@ -48,6 +54,54 @@ Accumulated `orchestration-telemetry` from real `ask`-mode delegations showing a
 net token-or-time win at held quality on a meaningful sample — fed through the
 existing `gateVerdict`. Until then, `ask` is correct: `on` is the destination,
 reached by realized evidence, never assumed.
+
+## Superseding decision (2026-07-09) — flip to `on` on bounded-downside re-evaluation
+
+**Decision (2026-07-09).** The shipped default `subagents.auto` is flipped to
+**`on`** on subagent-capable hosts (`off` elsewhere). This supersedes the
+2026-06-26 "keep `ask`" decision above. Recorded in ADR-117.
+
+**Why revisited (not relitigation).** Per `decision-revisit-gate`, the
+2026-06-26 verdict was settled-under-conditions, and three conditions changed:
+
+1. **New mechanism.** The 2026-06-26 branch answered a *quality* question. The
+   open question here is *cost*: on reasoning-mass ≪ execution-mass slices,
+   cost-routing to a cheaper tier is a large token saving the quality-null never
+   addressed.
+2. **Cost-routing already shipped.** `road-to-cost-aware-model-routing`
+   (2026-07-08) landed `inferSliceTier` — delegable slices already run on the
+   cheapest capable tier. The system is **not** cost-blind; only the shipped
+   default was conservative. This structurally bounds the downside of `on`.
+3. **The deadlock.** The 2026-06-26 re-gate ("flip on realized telemetry") was
+   self-locking: telemetry needs `on`, `on` was withheld pending telemetry.
+
+**Basis — honest.** This is a **bounded-downside** decision, NOT a passed
+benchmark. A rigorous paired bench:ab remains non-producible here (no runtime
+executing model `Task`/`Agent` calls). The evidence is:
+
+- **Directional probe (N=2, real).** Two live read-only-fan-out delegations this
+  session consumed ~70k and ~86k Sonnet tokens on genuinely-occurring work;
+  inline-Opus counterfactual ≈ same token mass at ~5× the rate → ~80% saving per
+  task, outputs verified usable. Small N, single task-type, arithmetic
+  counterfactual — directional, not rigorous.
+- **Bounded downside.** `on` auto-dispatches only structurally-signalled,
+  cost-routed, verified slices — it cannot delegate unstructured, tiny, or
+  frontier-priced work. Anthropic's "reversible ≠ costless" catastrophe
+  (deep council 2026-07-08) assumed a cost-blind system; the real system is
+  cost-routed, so the worst case is far smaller.
+- **Reversible + monitored.** `resolveShippedDefault()` is now the demotion gate:
+  a measured telemetry regression flips the default back to `ask`.
+
+**AI-council (inline per `no-roadmap-references`).** Deep council
+(claude-sonnet-4-5 + gpt-4o, 2026-07-08, 4 rounds): split — Anthropic argued
+validate-before-flip (strongest single argument), gpt-4o argued bounded
+incremental rollout suffices. The flip follows gpt-4o's path, strengthened by
+the post-council finding that the classifier is cost-routed (which defuses
+Anthropic's core catastrophe premise).
+
+**revisit-if / demotion trigger.** Accumulated real-world orchestration
+telemetry showing a net token-or-time *loss* or a quality regression on the
+delegable subset → demote to `ask` via `gateVerdict`/`resolveShippedDefault`.
 
 ## See also
 
