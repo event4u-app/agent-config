@@ -781,6 +781,14 @@ const _TEST_COUNT_LINE_RE = /^Tests:\s+(\d+)/m;
  * footer silently vanished from release notes.)
  */
 function _count_tests_current(): number | null {
+    // Recursion/cost guard: `npx vitest list` inside a vitest-driven release
+    // test would collect the whole suite from within the suite (the child
+    // inherits VITEST=… from the runner) — the exact recursion the caller
+    // comment warns about. Degrade to null there, same as any other
+    // collection failure.
+    if (process.env['VITEST'] !== undefined) {
+        return null;
+    }
     const res = spawnSync('npx', ['vitest', 'list'], {
         cwd: REPO_ROOT,
         encoding: 'utf-8',
@@ -1833,7 +1841,10 @@ function main(argv: readonly string[] | null = null): number {
     }
 
     const today = todayIso();
-    const test_trend_line = _render_test_trend_line(prev);
+    // Dry-run stays fast: the trend line costs a full vitest collection
+    // (~15s+), which `--dry-run exits 0 without needing …` contracts (and
+    // the release test) assume never runs. Real releases compute it.
+    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev);
     const [full, body] = render_changelog_entry(target, prev, commits, today, {
         test_trend_line,
     });
