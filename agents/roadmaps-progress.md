@@ -6,10 +6,10 @@
 
 ## Overall
 
-**113 / 336 steps done · 34%**
+**121 / 336 steps done · 36%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
 ```
 
 ## Open roadmaps
@@ -31,7 +31,7 @@
 | 13 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 27 | 23 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 15% |
 | 14 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
-| 16 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 13 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 61% |
+| 16 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
 | 17 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
 | 18 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ░░░░░░░░░░ 0% |
 | 19 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
@@ -336,16 +336,16 @@
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
-**Road to request-scoped rule load — ship only what the request needs** — 20 / 33 done (61%)
+**Road to request-scoped rule load — ship only what the request needs** — 28 / 33 done (85%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Workspace/pack fields into the router (schema, additive) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1 | Consumer-scoped rule projection (the ~50k lever) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
-| 1b | Pipeline B: make scoping reach actual consumer installs | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1b | Pipeline B: make scoping reach actual consumer installs | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | 🟡 in progress | 7 | 4 | 0 | 0 | 36% |
+| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | 🟡 in progress | 4 | 7 | 0 | 0 | 64% |
 
 <a id="blockers-road-to-request-scoped-rule-load"></a>
 **Blockers**

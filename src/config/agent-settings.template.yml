@@ -64,12 +64,14 @@ projection:
   #   rule_workspaces: [engineering]
   # Default flip to a scoped value is a human release gate — see
   # agents/settings/contexts/consumer-scoping-audit-2026-07-07.md.
-  # rule_workspaces: []
+  # An EMPTY list is inactive (= legacy-all); only a non-empty list scopes.
+  rule_workspaces: []
   #
   # Optional second axis, same semantics per pack ids (packs.yml). When set,
   # a non-kernel rule also needs a `packs:` intersection to project — e.g.
   # deselecting `frontend-design` removes ui-audit-gate + design-fidelity.
-  # rule_packs: []
+  # Empty = inactive, same as rule_workspaces.
+  rule_packs: []
 
 # --- Discipline profile (successor knob, opt-in until the evidence gates pass) ---
 #

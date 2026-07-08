@@ -23,6 +23,7 @@ import { isAbsolute, join, resolve } from 'node:path';
 
 import type { ConflictPolicy, InstallPlan, InstallTarget } from './types.js';
 import { buildInstallPlan, type PlanSource } from './plan.js';
+import { ruleFileArrives, LEGACY_ALL, type RuleScope } from './rule_scope.js';
 
 /**
  * Per-tool user-scope anchor directory, mirrored 1:1 from
@@ -152,6 +153,14 @@ export interface WizardExpandInputs {
     readonly packageRoot: string;
     /** Override for the user's home directory (tests only). */
     readonly home?: string;
+    /**
+     * Workspace/pack scope applied to `rules` sources
+     * (road-to-request-scoped-rule-load Phase 1b). Absent = LEGACY_ALL,
+     * which still applies the compat exclusion (`source-of-truth.md`) so
+     * the global path finally matches the project path — the recorded
+     * decision in `rule_scope.ts`.
+     */
+    readonly ruleScope?: RuleScope;
 }
 
 /**
@@ -172,6 +181,8 @@ export interface WizardExpandInputs {
  */
 export function expandWizardSources(inputs: WizardExpandInputs): PlanSource[] {
     const { toolIds, packageRoot, home } = inputs;
+    const scope = inputs.ruleScope ?? LEGACY_ALL;
+    const ruleFilter = (srcFile: string): boolean => ruleFileArrives(srcFile, scope);
     const out: PlanSource[] = [];
     for (const toolId of toolIds) {
         const deploy = GLOBAL_DEPLOY_SOURCES[toolId];
@@ -181,7 +192,17 @@ export function expandWizardSources(inputs: WizardExpandInputs): PlanSource[] {
         for (const [srcRel, destSub] of deploy) {
             const srcDir = join(packageRoot, srcRel);
             const destDir = destSub.length === 0 ? destRoot : join(destRoot, destSub);
-            out.push({ toolId, srcDir, destDir, kind: 'deployed' });
+            // Rule sources get the install-time scoping filter — the same
+            // predicate the projection path uses (Phase 1b: Pipeline B may
+            // never drift from Pipeline A).
+            const isRuleSource = srcRel === 'dist/agent-src/rules';
+            out.push({
+                toolId,
+                srcDir,
+                destDir,
+                kind: 'deployed',
+                ...(isRuleSource ? { fileFilter: ruleFilter } : {}),
+            });
         }
     }
     return out;
