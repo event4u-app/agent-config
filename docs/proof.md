@@ -26,6 +26,7 @@ evidence pointer, or `task check-claims` fails the build.
 
 | Claim | Kind | Evidence | Resolves |
 |---|---|---|---|
+| The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. | qual | `docs/succession.md#trailing 90 days` | ✅ |
 | 172 commands. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
 | The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted. | qual | `src/scripts/domain_soundness_status.ts#checkRatchet` | ✅ |
@@ -38,7 +39,7 @@ evidence pointer, or `task check-claims` fails the build.
 | 264 skills (README hero + feature list). | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 
-**11 backed claim(s)** — all evidence pointers resolve in CI.
+**12 backed claim(s)** — all evidence pointers resolve in CI.
 
 Artefact counts in public prose (skills, commands, governed rules,
 guidelines, personas) are **generated from source and CI-drift-checked**:
