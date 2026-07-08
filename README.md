@@ -380,6 +380,18 @@ flags a missing-from-`PATH` binary or broken hook wiring. See
 [getting-started § Keeping current](docs/getting-started.md#keeping-current) ·
 [Troubleshooting](#troubleshooting).
 
+### The command surface at a glance
+
+| Command | What it does |
+|---|---|
+| `agent-config init` | One-shot install — opens the browser wizard (recommended path or step-by-step) |
+| `agent-config init --project` | Initialize a project: minimal `agents/` bridge + managed `.gitignore` block |
+| `agent-config config` | Open the configuration GUI — global settings hub (simple + advanced tiers, search, reset-to-default) |
+| `agent-config config --project` | Open the project configuration surface |
+| `agent-config setup` | Re-run the guided onboarding wizard (prefilled from your current state) |
+| `agent-config upgrade` | Update the global install to the latest release + additively sync settings |
+| `agent-config doctor` | Read-only health/drift report |
+
 ### Cloud / Hosted-agent surfaces
 
 For platforms where the package's scripts cannot run, artefacts are built for paste-in or upload:

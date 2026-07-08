@@ -731,6 +731,7 @@ const CHECK_IDS = [
     'scope',
     'global-binary',
     'claude-plugin',
+    'claude-command-wrappers',
     'surface-state',
     'hook-wiring',
     'stale-orphans',
@@ -745,6 +746,7 @@ const CHECK_IDS = [
     'council-cli',
     'unsupported-combos',
     'wizard-state',
+    'settings-review-pending',
 ] as const;
 
 /** Checks that need only the project root and run regardless of a lockfile. */
@@ -752,6 +754,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'scope',
     'global-binary',
     'claude-plugin',
+    'claude-command-wrappers',
     'surface-state',
     'hook-wiring',
     'stale-orphans',
@@ -762,6 +765,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'tier-usage-readiness',
     'council-cli',
     'wizard-state',
+    'settings-review-pending',
 ]);
 
 /** Checks that genuinely cannot run without the project manifest. */
@@ -1078,6 +1082,69 @@ function _check_claude_plugin(): Dict {
 }
 
 /**
+ * Claude Code flat-command discovery mitigation (council 2026-07-08,
+ * cc-user-command-discovery): Claude Code ≤ 2.1.204 does not register FLAT
+ * user-scope command files (`~/.claude/commands/<name>.md`) — nested
+ * commands and user-scope skills do. The installer therefore projects
+ * tier-0/1 visible flat commands as skill wrappers. This check flags the
+ * silent-failure state: a projection deployed by an OLDER release that
+ * still carries visible flat commands without wrappers (users see
+ * "Unknown command" for /commit etc. with zero error anywhere).
+ * Probe = `commit` (the canonical always-shipped visible flat command);
+ * static file checks only — never a live model call.
+ */
+function _check_claude_command_wrappers(): Dict {
+    const claude = shutilWhich('claude');
+    if (claude === null) {
+        return {
+            id: 'claude-command-wrappers',
+            status: 'skipped',
+            message: 'Claude Code CLI not on PATH — wrapper check not applicable',
+            remedy: '',
+        };
+    }
+    const anchor = path.join(os.homedir(), '.claude');
+    const commands_dir = path.join(anchor, 'commands');
+    if (!isDir(commands_dir)) {
+        return {
+            id: 'claude-command-wrappers',
+            status: 'skipped',
+            message: 'no ~/.claude/commands projection — nothing to check',
+            remedy: '',
+        };
+    }
+    const flat_probe = fs.existsSync(path.join(commands_dir, 'commit.md'));
+    const wrapper_probe = fs.existsSync(path.join(anchor, 'skills', 'commit', 'SKILL.md'));
+    if (wrapper_probe) {
+        return {
+            id: 'claude-command-wrappers',
+            status: 'ok',
+            message:
+                'flat-command skill wrappers present (Claude Code flat-command ' +
+                'discovery workaround active)',
+            remedy: '',
+        };
+    }
+    if (flat_probe) {
+        return {
+            id: 'claude-command-wrappers',
+            status: 'warn',
+            message:
+                'visible flat commands deployed WITHOUT skill wrappers — Claude Code ' +
+                '\u2264 2.1.204 does not register flat user-scope command files, so ' +
+                '/commit and other visible commands appear as "Unknown command"',
+            remedy: 'agent-config refresh --global (re-deploys with the wrapper projection)',
+        };
+    }
+    return {
+        id: 'claude-command-wrappers',
+        status: 'skipped',
+        message: 'no visible flat commands in the projection — nothing to wrap',
+        remedy: '',
+    };
+}
+
+/**
  * Matrix-driven duplicate-surface check (road-to-install-path-convergence
  * Phase 2): reads src/config/surface-matrix.yml and flags every tool whose
  * declared duplicate-class detect paths ALL exist on this machine.
@@ -1166,6 +1233,7 @@ function pathExistsAny(p: string): boolean {
         return false;
     }
 }
+
 
 /**
  * Managed hook wiring (single-surface model): the deterministic hook matrix
@@ -1900,6 +1968,43 @@ function _check_wizard_state(): Dict {
     };
 }
 
+/**
+ * Pending settings-surface review (road-to-settings-change-review): the
+ * installer writes `state/settings-delta.json` when an upgrade changed
+ * defaults / enum vocabularies / added settings. The flag persists until
+ * the user resolves the review form (`agent-config config` → Settings →
+ * banner) — this check keeps it visible in every doctor run.
+ */
+function _check_settings_review_pending(): Dict {
+    const delta_pth = path.join(user_global_paths.event4u_root(), 'state', 'settings-delta.json');
+    if (!pathExists(delta_pth)) {
+        return {
+            id: 'settings-review-pending',
+            status: 'ok',
+            message: 'no pending settings-surface changes',
+            remedy: '',
+        };
+    }
+    let summary = '';
+    try {
+        const data = JSON.parse(readText0(delta_pth)) as {
+            oldVersion?: string;
+            newVersion?: string;
+            changes?: unknown[];
+        };
+        const n = Array.isArray(data.changes) ? data.changes.length : 0;
+        summary = `${n} change${n === 1 ? '' : 's'} (${data.oldVersion ?? '?'} → ${data.newVersion ?? '?'})`;
+    } catch {
+        summary = 'unreadable delta file';
+    }
+    return {
+        id: 'settings-review-pending',
+        status: 'warn',
+        message: `settings surface changed on upgrade — ${summary} awaiting review`,
+        remedy: 'agent-config config (Settings → “Review changes” banner)',
+    };
+}
+
 interface JsonDecodeError {
     msg: string;
     lineno: number;
@@ -2008,6 +2113,7 @@ function _run_checks(
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
         'claude-plugin': _check_claude_plugin,
+        'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
@@ -2028,6 +2134,7 @@ function _run_checks(
         'council-cli': () => _check_council_cli(project_root),
         'unsupported-combos': () => _check_unsupported_combos(manifest),
         'wizard-state': _check_wizard_state,
+        'settings-review-pending': _check_settings_review_pending,
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
@@ -2082,6 +2189,7 @@ function _run_checks_no_manifest(
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
         'claude-plugin': _check_claude_plugin,
+        'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
@@ -2096,6 +2204,7 @@ function _run_checks_no_manifest(
         'council-cli': () => _check_council_cli(project_root),
         'unsupported-combos': () => _skipped_manifest_check('unsupported-combos'),
         'wizard-state': _check_wizard_state,
+        'settings-review-pending': _check_settings_review_pending,
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
@@ -2572,6 +2681,7 @@ export {
     _check_lockfile_freshness,
     _check_global_binary,
     _check_claude_plugin,
+    _check_claude_command_wrappers,
     _check_bridge_drift,
     _check_mcp_mode,
     _check_offline_readiness,
@@ -2582,6 +2692,7 @@ export {
     _check_council_cli,
     _check_unsupported_combos,
     _check_wizard_state,
+    _check_settings_review_pending,
     _run_checks,
     _skipped_manifest_check,
     _check_bridge_drift_no_manifest,

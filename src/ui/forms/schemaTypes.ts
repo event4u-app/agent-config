@@ -48,6 +48,8 @@ export interface FlatField {
     options?: Array<string | number> | undefined;
     min?: number | undefined;
     max?: number | undefined;
+    /** Schema default — drives the modified indicator + reset-to-default. */
+    defaultValue?: JsonValue | undefined;
 }
 
 export interface Section {
@@ -84,6 +86,7 @@ function toField(path: string[], leaf: JsonSchemaLeaf): FlatField {
         options: leaf.enum,
         min: leaf.minimum,
         max: leaf.maximum,
+        defaultValue: leaf.default,
     };
 }
 

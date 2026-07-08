@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-10-06
+---
+
 # Surface Matrix — per-tool canonical-surface contract
 
 > Machine-checked inventory of which install surface is canonical per tool,

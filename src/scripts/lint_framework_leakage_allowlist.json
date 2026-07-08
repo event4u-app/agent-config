@@ -581,7 +581,7 @@
     {
       "file": "src/skills/code-review/SKILL.md",
       "lines": [
-        214
+        222
       ],
       "reason": "Cross-stack formatter enumeration (ECS, Prettier, Ruff, gofmt) — multi-ecosystem documentation"
     },
@@ -618,9 +618,17 @@
     {
       "file": "src/skills/verify-completion-evidence/SKILL.md",
       "lines": [
-        183
+        191
       ],
       "reason": "Carve-out pointer to the quality-tools skill (the sanctioned one-line handoff shape from framework-neutrality-in-generic-skills)"
+    },
+    {
+      "file": "src/skills/api-endpoint/SKILL.md",
+      "lines": [
+        52,
+        69
+      ],
+      "reason": "Cross-stack validation primitive enumeration and pointer to laravel-api-endpoint carve-out"
     }
   ]
 }

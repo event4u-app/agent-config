@@ -14,7 +14,7 @@ vi.mock('../../src/cli/commands/uiServe.js', () => ({
     runUiServe: vi.fn(),
 }));
 
-import { shouldInitLaunchGui, buildInitGuiOptions } from '../../src/cli/initRouting.js';
+import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation } from '../../src/cli/initRouting.js';
 import { isHeadless } from '../../src/cli/commands/uiServe.js';
 
 const headlessMock = vi.mocked(isHeadless);
@@ -88,6 +88,7 @@ describe('shouldInitLaunchGui', () => {
         ['--minimal'],
         ['--settings-only'],
         ['--list-tools'],
+        ['--project'],
     ])('falls back to CLI when a CLI-mode flag is present: %s', (...flags) => {
         expect(shouldInitLaunchGui(flags)).toBe(false);
     });
@@ -124,5 +125,22 @@ describe('buildInitGuiOptions', () => {
         const opts = buildInitGuiOptions(['--project-root', '/tmp/proj', '--allow-headless']);
         expect(opts.projectRoot).toBe('/tmp/proj');
         expect(opts.allowHeadless).toBe(true);
+    });
+});
+
+describe('buildProjectInitDelegation', () => {
+    it('returns null without --project', () => {
+        expect(buildProjectInitDelegation([])).toBeNull();
+        expect(buildProjectInitDelegation(['--no-open'])).toBeNull();
+    });
+
+    it('routes --project to refresh --project', () => {
+        expect(buildProjectInitDelegation(['--project'])).toEqual(['refresh', '--project']);
+    });
+
+    it('forwards remaining args after stripping --project', () => {
+        expect(buildProjectInitDelegation(['--project', '--dry-run'])).toEqual([
+            'refresh', '--project', '--dry-run',
+        ]);
     });
 });

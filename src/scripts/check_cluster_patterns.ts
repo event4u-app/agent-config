@@ -13,7 +13,7 @@
  * Compares each cluster dispatcher against the Phase 1 reference patterns
  * (`fix`, `optimize`, `feature`).
  *
- * Phase 4 additions (ADR-114): every `routes_to:` entry on a dispatcher must
+ * Phase 4 additions (ADR-115): every `routes_to:` entry on a dispatcher must
  * resolve to a real src/domains command slug, and the `## Dispatch` section
  * must document the bare-invocation behaviour (menu / default route /
  * detection fallback) per command-clusters.md § Bare invocation.
@@ -218,7 +218,7 @@ export function check_dispatcher(cluster: string, slug_map: Map<string, string>)
         rep.errors.push('Sub-commands table header must be `| Sub-command | Routes to | Purpose |`');
     }
 
-    // routes_to entries must resolve to real commands (Phase 4 / ADR-114).
+    // routes_to entries must resolve to real commands (Phase 4 / ADR-115).
     const routesRaw = fm['routes_to'];
     if (routesRaw !== undefined) {
         const m = /^\[(.*)\]$/.exec(routesRaw.trim());
@@ -241,7 +241,7 @@ export function check_dispatcher(cluster: string, slug_map: Map<string, string>)
         }
     }
 
-    // Bare-invocation story (Phase 4 / ADR-114): the Dispatch section must say
+    // Bare-invocation story (Phase 4 / ADR-115): the Dispatch section must say
     // what a bare `/<cluster>` does — a menu, a default route, or detection.
     const dispatchIdx = body.indexOf('## Dispatch');
     if (dispatchIdx !== -1) {

@@ -48,6 +48,13 @@ export interface UserMdRouteOptions {
      * no `Last-Modified` bump.
      */
     dryRun?: boolean;
+    /**
+     * Read-only user-global config root (package-sandbox mode) — a local
+     * test run prefills identity (name, language, roles) from the real
+     * `~/.event4u` `.agent-user.yml`. Never written (road-to-setup-
+     * experience follow-up).
+     */
+    userGlobalReadRoot?: string | null;
 }
 
 /** New canonical on-disk path, relative to writeRoot. */
@@ -82,11 +89,17 @@ async function readFromPath(path: string, legacy: boolean): Promise<ReadState | 
 async function readUserMd(
     writeRoot: string,
     legacyReadRoot: string | null | undefined,
+    userGlobalReadRoot?: string | null,
 ): Promise<ReadState | null> {
     const candidates: Array<{ path: string; legacy: boolean }> = [
         { path: join(writeRoot, USER_IDENTITY_RELATIVE), legacy: false },
         { path: join(writeRoot, LEGACY_USER_MD_RELATIVE), legacy: true },
     ];
+    // Package-sandbox read fallback: the real user-global identity seeds
+    // the wizard when the sandbox has none (read-only).
+    if (userGlobalReadRoot && userGlobalReadRoot !== writeRoot) {
+        candidates.push({ path: join(userGlobalReadRoot, USER_IDENTITY_RELATIVE), legacy: false });
+    }
     if (legacyReadRoot && legacyReadRoot !== writeRoot) {
         candidates.push({ path: join(legacyReadRoot, LEGACY_USER_MD_RELATIVE), legacy: true });
     }
@@ -112,7 +125,7 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
 
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
         app.get('/api/v1/user-md', async () => {
-            const state = await readUserMd(opts.writeRoot, opts.legacyReadRoot);
+            const state = await readUserMd(opts.writeRoot, opts.legacyReadRoot, opts.userGlobalReadRoot);
             if (state === null) {
                 return { identity: null, exists: false, lastModified: null };
             }

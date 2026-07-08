@@ -81,10 +81,10 @@ Cross-cutting convergence: (a) cluster subs MUST co-locate with the head in one 
 ### Phase 5 — Deferred follow-ups (recorded, not executed here)
 
 - [~] `ticket` cluster (implement/estimate/refine/jira) — deferred per council; revisit with usage telemetry. <!-- deferred: tier-0 slug change + cross-pack move rejected by both council members -->
-- [-] `security` cluster — rejected; keep `security-audit-config` + `threat-model` flat. <!-- cancelled: unanimous council REJECT, recorded in ADR-114 -->
+- [-] `security` cluster — rejected; keep `security-audit-config` + `threat-model` flat. <!-- cancelled: unanimous council REJECT, recorded in ADR-115 -->
 - [~] Demote `check-current-md` / `update-form-request-messages` — needs skill-coverage + pack-boundary audit. <!-- deferred: verify md-language-check coverage; laravel pack boundary ADR -->
 - [ ] Resolve the two deferred items above with the maintainer (spawn follow-up roadmap vs drop) — decision deliberately left open until the restructuring PR is reviewed.
-- [-] `prepare-for-review` → `review/prepare` — rejected slug change; keep flat. <!-- cancelled: council-rejected for pre-commit muscle memory, recorded in ADR-114 -->
+- [-] `prepare-for-review` → `review/prepare` — rejected slug change; keep flat. <!-- cancelled: council-rejected for pre-commit muscle memory, recorded in ADR-115 -->
 
 ## Acceptance criteria
 

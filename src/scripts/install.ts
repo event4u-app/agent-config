@@ -80,6 +80,9 @@ import * as user_global_paths from './_lib/user_global_paths.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
+import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
+import { settingsSchema } from '../server/schemas/settings.js';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { detect_module_roots } from './_lib/module_detection.js';
 import {
     TIER_TO_CLAUDE_MODEL,
@@ -2832,6 +2835,66 @@ function _deploy_claude_desktop(
     return [bundle_count, 0, 'deployed', [bundles_dir, ...marker_paths]];
 }
 
+/**
+ * Claude Code flat-command mitigation (council 2026-07-08,
+ * cc-user-command-discovery). Claude Code ≤ 2.1.204 does not register FLAT
+ * user-scope command files (`~/.claude/commands/<name>.md`) — probed and
+ * confirmed: nested commands (`/cluster:sub`) and user-scope skills DO
+ * register. Until upstream fixes discovery, tier-0/1 VISIBLE flat commands
+ * are re-projected as skill wrappers (`~/.claude/skills/<name>/SKILL.md`)
+ * and their flat command file is dropped from the claude-code anchor —
+ * single source, so no duplicate `/name` appears once upstream fixes flat
+ * discovery (revert = one package release, no per-machine gating).
+ * Tier-2/internal flat commands stay command files. A command whose name
+ * collides with a real skill is skipped (the skill already owns `/name`).
+ */
+const _CLAUDE_FLAT_WRAPPER_EXTRA = new Set(['commit']); // essential; absent from the manifest
+export function _apply_claude_flat_command_wrappers(
+    anchor: string,
+    package_root: string,
+    current_files: Set<string>,
+): { wrapped: string[]; collisions: string[] } {
+    const wrapped: string[] = [];
+    const collisions: string[] = [];
+    // Tier-0/1 visible command slugs from the locked discovery manifest.
+    const eligible = new Set<string>(_CLAUDE_FLAT_WRAPPER_EXTRA);
+    try {
+        const manifest = JSON.parse(
+            fs.readFileSync(path.join(package_root, 'dist', 'discovery', 'discovery-manifest.json'), 'utf8'),
+        ) as { artefacts?: Array<{ category?: string; slug?: string; tier?: number; visibility?: string }> };
+        for (const a of manifest.artefacts ?? []) {
+            if (a.category !== 'command' || typeof a.slug !== 'string') continue;
+            if ((a.tier ?? 2) <= 1 && a.visibility !== 'internal') eligible.add(a.slug);
+        }
+    } catch {
+        // No manifest → wrap only the hardcoded essentials.
+    }
+    for (const slug of [...eligible].sort()) {
+        const flat_rel = `commands/${slug}.md`;
+        const flat_abs = path.join(anchor, 'commands', `${slug}.md`);
+        if (!fs.existsSync(flat_abs)) continue;
+        const skill_dir = path.join(anchor, 'skills', slug);
+        if (fs.existsSync(skill_dir)) {
+            // A real skill owns /<slug> — never overwrite it.
+            collisions.push(slug);
+            continue;
+        }
+        let body = fs.readFileSync(flat_abs, 'utf8');
+        // SKILL.md requires a `name:` — inject it into the existing
+        // frontmatter when absent (command frontmatter carries description).
+        if (body.startsWith('---\n') && !/^name:/m.test(body.split('\n---')[0] ?? '')) {
+            body = body.replace('---\n', `---\nname: ${slug}\n`);
+        }
+        fs.mkdirSync(skill_dir, { recursive: true });
+        fs.writeFileSync(path.join(skill_dir, 'SKILL.md'), body, 'utf8');
+        fs.rmSync(flat_abs, { force: true });
+        current_files.delete(flat_rel);
+        current_files.add(`skills/${slug}/SKILL.md`);
+        wrapped.push(slug);
+    }
+    return { wrapped, collisions };
+}
+
 function _deploy_global_content(
     tools: Set<string>,
     force: boolean,
@@ -2874,6 +2937,20 @@ function _deploy_global_content(
                 global_deploy_inventory.expected_deploy_files(src, dest_sub ? dest_sub : ''),
             );
         }
+        // Flat-command → skill-wrapper re-projection for Claude Code
+        // (discovery regression mitigation; see the helper's doc block).
+        // Runs before the postcheck + inventory record so `current_files`
+        // reflects the transformed tree and reaping stays consistent.
+        if (tool_id === 'claude-code') {
+            const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files);
+            if (res.wrapped.length > 0 && !state.QUIET) {
+                info(
+                    `  claude-code: ${res.wrapped.length} visible flat command(s) projected as ` +
+                        'skill wrappers (Claude Code flat-command discovery workaround)',
+                );
+            }
+        }
+
         const missing_targets = _verify_deploy_targets(anchor, plan);
         if (missing_targets.length > 0) {
             if (!state.QUIET) {
@@ -3275,12 +3352,75 @@ function install_global(
         }
     }
 
+    // Settings-surface snapshot + upgrade delta (road-to-settings-change-
+    // review; council 2026-07-08, 2/2 converged on snapshot-at-install).
+    // Every global install persists the flattened settings surface; when a
+    // PREVIOUS snapshot from a different version exists, the semantic delta
+    // (added / default_changed / enum_added / enum_removed / type_changed)
+    // is written to state/settings-delta.json — the pending-review flag the
+    // GUI banner, the review page, and doctor consume. Never fatal: a
+    // snapshot failure must not sink the install.
+    try {
+        _write_settings_surface_snapshot(installed_version);
+    } catch (e) {
+        if (!state.QUIET) warn(`settings-surface snapshot failed — ${String(e)}`);
+    }
+
     if (!state.QUIET) {
         process.stdout.write('\n');
         success(`Global install completed (v${installed_version}).`);
         process.stdout.write('\n');
     }
     return 0;
+}
+
+const SETTINGS_SURFACE_REL = path.join('state', 'settings-surface.json');
+const SETTINGS_DELTA_REL = path.join('state', 'settings-delta.json');
+
+function _current_settings_surface(version: string): SettingsSurface {
+    const jsonSchema = zodToJsonSchema(settingsSchema, {
+        name: 'AgentSettings',
+        $refStrategy: 'none',
+        target: 'jsonSchema7',
+    }) as Parameters<typeof flattenSurface>[0];
+    return flattenSurface(jsonSchema, version);
+}
+
+function _write_settings_surface_snapshot(installed_version: string): void {
+    const root = user_global_paths.event4u_root();
+    const surface_path = path.join(root, SETTINGS_SURFACE_REL);
+    const delta_path = path.join(root, SETTINGS_DELTA_REL);
+    const next = _current_settings_surface(installed_version);
+
+    let previous: SettingsSurface | null = null;
+    try {
+        const parsed = JSON.parse(fs.readFileSync(surface_path, 'utf8')) as SettingsSurface;
+        if (parsed !== null && typeof parsed === 'object' && parsed.entries !== undefined) previous = parsed;
+    } catch {
+        // First run after this feature ships — seed-only (council Q1:
+        // no template fallback; the transition cost is paid once).
+    }
+
+    if (previous !== null && previous.version !== next.version) {
+        const delta = computeSurfaceDelta(previous, next);
+        if (delta.changes.length > 0) {
+            fs.mkdirSync(path.dirname(delta_path), { recursive: true, mode: 0o700 });
+            fs.writeFileSync(delta_path, `${JSON.stringify(delta, null, 2)}\n`, { mode: 0o600 });
+            if (!state.QUIET) {
+                const counts: Record<string, number> = {};
+                for (const c of delta.changes) counts[c.kind] = (counts[c.kind] ?? 0) + 1;
+                const parts = Object.entries(counts).map(([k, v]) => `${v} ${k.replace('_', ' ')}`);
+                info(
+                    `Settings surface changed ${delta.oldVersion} → ${delta.newVersion}: ` +
+                        `${parts.join(', ')}. Review with \`agent-config config\` ` +
+                        '(Settings → banner) — nothing was changed automatically.',
+                );
+            }
+        }
+    }
+
+    fs.mkdirSync(path.dirname(surface_path), { recursive: true, mode: 0o700 });
+    fs.writeFileSync(surface_path, `${JSON.stringify(next, null, 2)}\n`, { mode: 0o600 });
 }
 
 function arrayStrEqual(a: string[], b: string[]): boolean {
@@ -4531,6 +4671,8 @@ export {
     _wizard_should_launch,
     _dry_run_summary,
     _apply_payload_preview,
+    _write_settings_surface_snapshot,
+    _current_settings_surface,
     jsonDumpsIndent,
     jsonDumpsCompact,
     _canonical_settings_target,

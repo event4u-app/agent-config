@@ -17,9 +17,21 @@ keep-beta-until: 2026-08-19
 ## Source of truth
 
 The GUI is a Fastify server (`src/server/`) serving a Preact SPA
-(`src/ui/`), booted by the `install` / `setup` / `ui:serve` CLI
-subcommands. The legacy `packages/core/installer/src/gui/*` tree was
-retired; the single real installer is `scripts/install.py`.
+(`src/ui/`), booted by the `install` / `setup` / `config` (alias
+`settings`) / `ui:serve` CLI subcommands. The legacy
+`packages/core/installer/src/gui/*` tree was retired; the single real
+installer is `scripts/install.py`.
+
+Entry-point map (road-to-setup-experience § Phase 1):
+
+- `init` — install front-end; opens the wizard in install mode (start
+  screen: recommended path vs customize). `init --project` never boots
+  the GUI — it writes the minimal project surface via the
+  `refresh --project` writer.
+- `setup` — re-runs the guided onboarding wizard (prefilled).
+- `config` — opens the standalone settings hub (`#/settings`; global
+  scope). `config --project` lands on the project surface
+  (`#/project`). `settings` stays as a compatible alias.
 
 - Server app + security hooks: [`src/server/app.ts`](../../src/server/app.ts) (Host allow-list, Origin allow-list, CSRF token — `onRequest` hooks)
 - Wizard routes (incl. the real-apply bridge): [`src/server/routes/wizard.ts`](../../src/server/routes/wizard.ts)
@@ -63,7 +75,7 @@ Finish drives the **whole** install through `POST /api/v1/wizard/apply` →
 `AGENT_CONFIG_NO_UI` set, stdin/stdout not a TTY, a headless host (SSH / Linux
 without `DISPLAY`), or a CLI-mode flag (`--no-ui` / `--tools` / `--ai` /
 `--yes` / `--quiet` / `--dry-run` / `--minimal` / `--settings-only` /
-`--list-tools`). `install.py`'s own tail-launch (`_wizard_spawn`, matching the
+`--list-tools` / `--project`). `install.py`'s own tail-launch (`_wizard_spawn`, matching the
 `WIZARD_READY <url>` handshake) remains for direct CLI install runs.
 
 ### `WIZARD_READY` stdout contract

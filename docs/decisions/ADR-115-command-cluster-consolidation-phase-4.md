@@ -1,5 +1,5 @@
 ---
-adr: 114
+adr: 115
 status: accepted
 date: 2026-07-08
 decision: command-cluster-consolidation-phase-4
@@ -8,7 +8,7 @@ superseded_by: —
 phase: road-to-command-structure-optimization · Phase 0
 ---
 
-# ADR-114 — Command-cluster consolidation Phase 4 (flat dash commands → nested clusters)
+# ADR-115 — Command-cluster consolidation Phase 4 (flat dash commands → nested clusters)
 
 - **Deciders:** maintainer + AI council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2-round debate, 2026-07-08)
 

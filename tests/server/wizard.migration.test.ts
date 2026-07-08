@@ -55,6 +55,9 @@ async function bootMigrationApp(opts: {
         writeRoot,
         legacyReadRoot,
         mode: 'package-sandbox',
+        // Hermetic: sandbox mode would otherwise read the developer's REAL
+        // ~/.event4u config as the base layer (prefill feature).
+        userGlobalReadRoot: null,
         uiDistDir: uiDir,
         token,
         expectedPort: PORT,

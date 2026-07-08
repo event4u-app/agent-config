@@ -39,8 +39,11 @@ project sees the new skills, rules, and hooks at once, no per-repo bump:
 ```bash
 agent-config upgrade            # fetch + install the latest globally (content + hooks)
 agent-config refresh --global   # idempotent re-install, same version
-agent-config refresh --project  # refresh a project's minimal surface — bridge
+agent-config init --project     # initialize a project's minimal surface — bridge
                                 # marker, agents/overrides/, .gitignore (no wizard)
+agent-config refresh --project  # refresh that surface (same writer, idempotent)
+agent-config config             # open the configuration GUI (global settings hub)
+agent-config config --project   # open the project configuration surface
 agent-config doctor             # PATH, hook wiring, duplicate surfaces, bridge presence
 ```
 

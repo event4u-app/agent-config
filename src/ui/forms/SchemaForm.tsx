@@ -24,12 +24,27 @@ import {
     type Section,
 } from './schemaTypes.js';
 
+export interface FieldDecoration {
+    /** Value differs from the schema default — renders the left-edge indicator. */
+    modified: boolean;
+    /** Reset-to-default action; rendered as a small per-field button when set. */
+    onReset?: (() => void) | undefined;
+    /** Layer provenance badge, e.g. "project" when a project file sets the value. */
+    sourceLabel?: string | undefined;
+}
+
 export interface SchemaFormProps {
     schema: JsonSchemaLeaf;
     values: Record<string, JsonValue>;
     errors?: Record<string, string>;
     onChange: (next: Record<string, JsonValue>) => void;
     actions?: ComponentChildren;
+    /**
+     * Optional per-field chrome (road-to-setup-experience § Phase 5.3):
+     * modified indicator + reset-to-default. Callers that omit it (the
+     * wizard) render fields exactly as before.
+     */
+    decorate?: (id: string, field: FlatField) => FieldDecoration | undefined;
 }
 
 function pathKey(path: string[]): string {
@@ -152,16 +167,63 @@ function renderField(
     }
 }
 
-function SectionBlock({
+function FieldRow({
+    field,
+    values,
+    errors,
+    onChange,
+    decorate,
+}: {
+    field: FlatField;
+    values: Record<string, JsonValue>;
+    errors: Record<string, string>;
+    onChange: (next: Record<string, JsonValue>) => void;
+    decorate?: SchemaFormProps['decorate'];
+}): preact.JSX.Element {
+    const id = pathKey(field.path);
+    const deco = decorate?.(id, field);
+    if (deco === undefined) {
+        return <div key={id}>{renderField(field, values, errors, onChange)}</div>;
+    }
+    return (
+        <div class={`ac-field-row${deco.modified ? ' ac-field-row--modified' : ''}`}>
+            <div class="ac-field-row__body">{renderField(field, values, errors, onChange)}</div>
+            <div class="ac-field-row__meta">
+                {deco.sourceLabel !== undefined ? (
+                    <span class="ac-badge ac-badge--source" title={`Value set in the ${deco.sourceLabel} layer`}>
+                        {deco.sourceLabel}
+                    </span>
+                ) : null}
+                {deco.modified && deco.onReset !== undefined ? (
+                    <button
+                        type="button"
+                        class="ac-field-row__reset"
+                        title="Reset to default"
+                        onClick={deco.onReset}
+                    >
+                        Reset
+                    </button>
+                ) : null}
+            </div>
+        </div>
+    );
+}
+
+export function SectionBlock({
     section,
     values,
     errors,
     onChange,
+    decorate,
+    footer,
 }: {
     section: Section;
     values: Record<string, JsonValue>;
     errors: Record<string, string>;
     onChange: (next: Record<string, JsonValue>) => void;
+    decorate?: SchemaFormProps['decorate'];
+    /** Optional trailing content (e.g. the advanced-disclosure button). */
+    footer?: ComponentChildren;
 }): preact.JSX.Element {
     return (
         <section class="ac-section" aria-labelledby={`section-${pathKey(section.path)}`}>
@@ -173,9 +235,17 @@ function SectionBlock({
             ) : null}
             <div class="ac-section__fields">
                 {section.fields.map((f) => (
-                    <div key={pathKey(f.path)}>{renderField(f, values, errors, onChange)}</div>
+                    <FieldRow
+                        key={pathKey(f.path)}
+                        field={f}
+                        values={values}
+                        errors={errors}
+                        onChange={onChange}
+                        decorate={decorate}
+                    />
                 ))}
             </div>
+            {footer}
         </section>
     );
 }
@@ -192,6 +262,7 @@ export function SchemaForm(props: SchemaFormProps): preact.JSX.Element {
                     values={props.values}
                     errors={errors}
                     onChange={props.onChange}
+                    decorate={props.decorate}
                 />
             ))}
             {props.actions !== undefined ? <div class="ac-form__actions">{props.actions}</div> : null}
