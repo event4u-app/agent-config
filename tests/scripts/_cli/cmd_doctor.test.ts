@@ -44,7 +44,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { _parse, main } from '../../../src/scripts/_cli/cmd_doctor.js';
+import { _parse, main, _check_settings_review_pending } from '../../../src/scripts/_cli/cmd_doctor.js';
 import { runInProc } from '../../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
@@ -510,6 +510,70 @@ describe('doctor — wizard-state check', () => {
     });
     it('totalSteps is zero → fail', () => {
         parityWithState('{"step":1,"partial":{},"totalSteps":0}');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// settings-review-pending check (road-to-settings-change-review) — direct
+// unit calls in a hermetic EVENT4U_CONFIG_HOME.
+// ---------------------------------------------------------------------------
+
+describe('doctor — settings-review-pending check', () => {
+    function withDelta(content: string | null, fn: () => void): void {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-srp-'));
+        const prev = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = home;
+        try {
+            if (content !== null) {
+                const stateDir = path.join(home, 'state');
+                fs.mkdirSync(stateDir, { recursive: true });
+                fs.writeFileSync(path.join(stateDir, 'settings-delta.json'), content);
+            }
+            fn();
+        } finally {
+            if (prev === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = prev;
+            fs.rmSync(home, { recursive: true, force: true });
+        }
+    }
+
+    it('absent delta → ok', () => {
+        withDelta(null, () => {
+            const res = _check_settings_review_pending();
+            expect(res['status']).toBe('ok');
+        });
+    });
+
+    it('pending delta → warn with change count + version span + remedy', () => {
+        withDelta(
+            JSON.stringify({ oldVersion: '8.3.0', newVersion: '8.4.0', changes: [{}, {}, {}] }),
+            () => {
+                const res = _check_settings_review_pending();
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain('3 changes');
+                expect(res['message']).toContain('8.3.0 → 8.4.0');
+                expect(res['remedy']).toContain('agent-config config');
+            },
+        );
+    });
+
+    it('unreadable delta → warn (never throws)', () => {
+        withDelta('{corrupt', () => {
+            const res = _check_settings_review_pending();
+            expect(res['status']).toBe('warn');
+            expect(res['message']).toContain('unreadable delta file');
+        });
+    });
+
+    it('runs stable via --check settings-review-pending', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-srp-cli-'));
+        try {
+            expectStable(['--check', 'settings-review-pending'], tmp, [home, tmp], {
+                EVENT4U_CONFIG_HOME: home,
+            });
+        } finally {
+            fs.rmSync(home, { recursive: true, force: true });
+        }
     });
 });
 
