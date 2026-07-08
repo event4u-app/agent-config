@@ -118,6 +118,29 @@ interface LayeredState {
     values: Record<string, unknown>;
     mtimeMs: number;
     hasRealFile: boolean;
+    /**
+     * Per-layer provenance (road-to-setup-experience § Phase 5.4): dotted
+     * leaf paths present in the global / project layer files. The UI shows
+     * which layer a value comes from (project overrides global).
+     */
+    sources: { global: string[]; project: string[] };
+}
+
+/**
+ * Flatten a parsed YAML tree into dotted leaf paths — arrays and scalars
+ * are leaves; nested objects recurse. Used for the layer-provenance map.
+ */
+function dottedLeafPaths(values: Record<string, unknown>, prefix = ''): string[] {
+    const out: string[] = [];
+    for (const [key, value] of Object.entries(values)) {
+        const dotted = prefix === '' ? key : `${prefix}.${key}`;
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            out.push(...dottedLeafPaths(value as Record<string, unknown>, dotted));
+        } else {
+            out.push(dotted);
+        }
+    }
+    return out;
 }
 
 /**
@@ -229,6 +252,10 @@ async function readLayeredSettings(
         values: merged,
         mtimeMs,
         hasRealFile: scaffold !== null,
+        sources: {
+            global: globalLayer !== null ? dottedLeafPaths(globalLayer.values) : [],
+            project: projectLayer !== null ? dottedLeafPaths(projectLayer.values) : [],
+        },
     };
 }
 
@@ -270,6 +297,9 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     path: SETTINGS_RELATIVE,
                     schema: SETTINGS_JSON_SCHEMA,
                     legacyHints,
+                    // Phase 5.4 — per-layer provenance for the settings hub's
+                    // "set globally / in this project" source badges.
+                    sources: state.sources,
                 };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'YAML parse failed';

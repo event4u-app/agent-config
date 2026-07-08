@@ -366,6 +366,69 @@ code {
 .ac-council__section:disabled { opacity: 0.55; }
 .ac-council__h { margin: var(--space-2) 0 0; font-size: var(--font-size-sm); color: var(--color-text-muted); }
 
+/* Settings hub (Phase 5) — search toolbar, tier disclosure, modified rows. */
+.ac-settings-hub__toolbar { display: flex; gap: var(--space-2); align-items: center; }
+.ac-settings-hub__search { flex: 1; }
+.ac-chip-toggle {
+    appearance: none;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: var(--space-1) var(--space-3);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--duration-fast) var(--easing-standard),
+                color var(--duration-fast) var(--easing-standard);
+}
+.ac-chip-toggle:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.ac-chip-toggle--active {
+    background: var(--color-accent-soft);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+.ac-settings-hub__empty { color: var(--color-text-muted); }
+.ac-settings-hub__disclosure {
+    appearance: none;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    background: transparent;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-3);
+    margin-top: var(--space-4);
+    width: 100%;
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--easing-standard),
+                border-color var(--duration-fast) var(--easing-standard);
+}
+.ac-settings-hub__disclosure:hover { color: var(--color-text); border-color: var(--color-accent); }
+
+/* Field rows with modified indicator + reset (Phase 5.3). */
+.ac-field-row { display: flex; gap: var(--space-2); align-items: flex-start; padding-left: var(--space-2); margin-left: calc(-1 * var(--space-2)); border-left: 3px solid transparent; }
+.ac-field-row--modified { border-left-color: var(--color-accent); }
+.ac-field-row__body { flex: 1; min-width: 0; }
+.ac-field-row__meta { display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-end; }
+.ac-badge--source { background: var(--color-surface-alt); color: var(--color-text-subtle); border: 1px solid var(--color-border); }
+.ac-field-row__reset {
+    appearance: none;
+    font: inherit;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 2px var(--space-2);
+    margin-top: var(--space-1);
+    cursor: pointer;
+    white-space: nowrap;
+}
+.ac-field-row__reset:hover { color: var(--color-danger); border-color: var(--color-danger); }
+
 /* Install-mode start screen (Phase 3.2) — Recommended vs Customize. */
 .ac-start { display: grid; grid-template-columns: 3fr 2fr; gap: var(--space-4); }
 @media (max-width: 700px) { .ac-start { grid-template-columns: 1fr; } }

@@ -5,7 +5,9 @@
  *   - `/`                → redirects to `/setup`
  *   - `/setup`           → Setup tab; alias for `/wizard`
  *   - `/wizard*`         → Setup tab; WizardPage
- *   - `/settings*`       → Setup tab; legacy deep links redirect to `/setup`
+ *   - `/settings*`       → Settings tab; SettingsHubPage (simple/advanced
+ *                          tiers, search, modified indicators —
+ *                          road-to-setup-experience § Phase 5)
  *   - `/tasks`           → Tasks tab; legacy surface (port to Preact in Phase 5)
  *   - `/council`         → Council tab; legacy surface
  *   - `/memory`          → Memory tab; legacy surface
@@ -14,25 +16,25 @@
  *   - anything else      → NotFound
  *
  * Per ADR-014 the dispatcher stays a flat switch — no router library.
- * The six top-level surfaces preserve the legacy installer GUI nav
+ * The top-level surfaces preserve the legacy installer GUI nav
  * (Option 2, road-to-unified-setup) so users keep the install/runtime
  * areas they know while the visual shell stays the modern Preact one.
  *
- * Settings ist kein eigenständiger Surface mehr — alle Einstellungen
- * (`.agent-settings.yml` + `.agent-user.yml`) leben als Steps 4–10 im
- * Setup-Wizard. Init + späteres Editieren teilen denselben Flow.
+ * The wizard remains the guided first-run flow (`init` / `setup`);
+ * the Settings hub is the edit-later surface (`agent-config config`).
  */
 
 import { useEffect } from 'preact/hooks';
 import { route, initRouter, navigate } from './router.js';
 import { WizardPage } from './pages/WizardPage.js';
+import { SettingsHubPage } from './pages/SettingsHubPage.js';
 import { ProjectSettingsPage } from './pages/ProjectSettingsPage.js';
 import { WorkspacePage } from './pages/WorkspacePage.js';
 import { serverStatus, fetchServerStatus } from './serverStatus.js';
 import { theme, toggleTheme } from './theme.js';
 
 interface Surface {
-    readonly id: 'setup' | 'project' | 'tasks' | 'council' | 'memory' | 'explain' | 'workspace';
+    readonly id: 'setup' | 'settings' | 'project' | 'tasks' | 'council' | 'memory' | 'explain' | 'workspace';
     readonly label: string;
     readonly hashPath: string;
     /** Hash-path prefixes that should mark this surface active. */
@@ -41,6 +43,7 @@ interface Surface {
 
 const SURFACES: readonly Surface[] = [
     { id: 'setup',     label: 'Setup',     hashPath: '/setup',     matches: ['/setup', '/wizard'] },
+    { id: 'settings',  label: 'Settings',  hashPath: '/settings',  matches: ['/settings'] },
     { id: 'project',   label: 'Projekt',   hashPath: '/project',   matches: ['/project'] },
     { id: 'tasks',     label: 'Tasks',     hashPath: '/tasks',     matches: ['/tasks'] },
     { id: 'council',   label: 'Council',   hashPath: '/council',   matches: ['/council'] },
@@ -142,9 +145,11 @@ function DryRunBanner(): preact.JSX.Element | null {
 function dispatch(path: string): preact.JSX.Element {
     if (path === '/' || path === '/setup' || path.startsWith('/setup/')) return <WizardPage path={path} />;
     if (path.startsWith('/wizard')) return <WizardPage path={path} />;
-    // Legacy `/settings*` deep links resolve through the Wizard — Settings
-    // ist ein Bereich des Setup-Flows, kein eigenständiger Surface.
-    if (path === '/settings' || path.startsWith('/settings/')) return <WizardPage path="/setup" />;
+    // road-to-setup-experience § Phase 5.2 — Settings is a standalone hub
+    // again (simple/advanced tiers, search, modified indicators). The
+    // wizard stays the guided first-run flow; `agent-config config` and
+    // the Settings tab land here.
+    if (path === '/settings' || path.startsWith('/settings/')) return <SettingsHubPage />;
     if (path === '/project' || path.startsWith('/project/')) return <ProjectSettingsPage />;
     if (path === '/tasks')     return <ComingSoon name="Tasks" />;
     if (path === '/council')   return <ComingSoon name="Council" />;
@@ -158,9 +163,6 @@ export function App(): preact.JSX.Element {
     useEffect(() => {
         initRouter();
         if (route.value === '/') navigate('/setup');
-        // Legacy `/settings*` deep links — Adressleiste angleichen, damit
-        // der aktive Surface in der URL sichtbar bleibt.
-        else if (route.value === '/settings' || route.value.startsWith('/settings/')) navigate('/setup');
         void fetchServerStatus();
     }, []);
     return (
