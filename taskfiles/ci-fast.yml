@@ -397,6 +397,11 @@ tasks:
     desc: "Regression-lock skill trigger sets — every src/skills/*/evals/triggers.json carries a fresh (<=90d) last_eval and passes the offline structural smoke (road-to-contract-integrity F4)"
     cmd: ./scripts-run src/scripts/check_trigger_evals {{.QUIET_FLAG}}
 
+  check-trigger-eval-presence:
+    silent: true
+    desc: "Presence ratchet — every skill outside the shrink-only grandfather allowlist ships evals/triggers.json (road-to-composition-ratchet)"
+    cmd: ./scripts-run src/scripts/check_trigger_eval_presence {{.QUIET_FLAG}}
+
   lint-workflow-security:
     silent: true
     desc: "Warn-only audit of .github/workflows/* for high-risk patterns (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts, unpinned third-party actions) — road-to-security-hardening P2"
