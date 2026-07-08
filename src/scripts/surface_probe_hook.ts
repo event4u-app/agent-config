@@ -27,6 +27,8 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { is_replay_mode } from './hooks/state_io.js';
+
 const CHECK_WINDOW_MS = 24 * 60 * 60 * 1000;
 const STATE_REL = ['agents', 'runtime', 'state', 'surface-probe.json'] as const;
 
@@ -166,6 +168,12 @@ function _detect(pkg_root: string, home: string): Finding[] {
 export function main(argv?: string[], opts: ProbeOptions = {}): number {
     void argv;
     _readStdinIfNotTty();
+
+    // Replay contract (state_io): fixture re-execution must not mutate
+    // state or emit nudges — the probe is a live-session UX concern only.
+    if (is_replay_mode()) {
+        return 0;
+    }
 
     try {
         const project_root = opts.project_root ?? _project_root();

@@ -6,7 +6,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { main } from '../../../src/scripts/surface_probe_hook.js';
 
@@ -39,7 +39,7 @@ describe('surface_probe_hook', () => {
     let pkgRoot: string;
     let projectRoot: string;
     let settingsPath: string;
-    let stderrSpy: ReturnType<typeof vi.spyOn>;
+    let stderrSpy: MockInstance<typeof process.stderr.write>;
 
     const statePath = (): string =>
         path.join(projectRoot, 'agents', 'runtime', 'state', 'surface-probe.json');
