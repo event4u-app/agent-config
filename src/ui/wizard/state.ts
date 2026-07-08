@@ -261,6 +261,15 @@ export const discoveryLoading = signal(false);
 export const discoveryLoadError = signal<string | null>(null);
 export const discoveryPacks = signal<DiscoveryPack[]>([]);
 export const detectedPackIds = signal<string[]>([]);
+/**
+ * Installed packs from the settings `packs:` manifest, surfaced by
+ * `GET /api/v1/wizard/manifest` (road-to-setup-experience § Phase 2).
+ * Pre-checked on the packs step with an "installed" badge; removals are
+ * flagged on the review step and gated behind an explicit confirm.
+ */
+export const installedPackIds = signal<string[]>([]);
+/** Explicit user confirmation for pending installed-pack removals. */
+export const packRemovalsConfirmed = signal(false);
 /** Role/domain workspaces from the manifest, rendered as Step-2 checkboxes. */
 export const discoveryWorkspaces = signal<DiscoveryWorkspace[]>([]);
 
@@ -476,6 +485,15 @@ export const wizardMode = signal<'install' | 'setup' | null>(null);
  * back-navigation through Step 3. Reset on a fresh page load.
  */
 export const continueAcknowledged = signal(false);
+
+/**
+ * Local flag: user has picked a path on the install-mode start screen
+ * (road-to-setup-experience § Phase 3.2) — either "Recommended setup"
+ * (seed detections + jump to review) or "Customize" (walk the steps).
+ * Reset on a fresh page load; a resumed run (step > 0) never shows the
+ * start screen.
+ */
+export const startAcknowledged = signal(false);
 
 export function getActiveSteps(): readonly WizardStep[] {
     return getWizardSteps({ extended: extendedSteps.value });
