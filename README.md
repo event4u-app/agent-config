@@ -8,6 +8,8 @@
 
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
+**Try it in 30 seconds** — drop one read-only subagent into any repo and watch it gate "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Full docs: **[event4u-app.github.io/agent-config](https://event4u-app.github.io/agent-config)**.
+
 **Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
 **264 skills, 172 commands, 95 governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
@@ -118,7 +120,8 @@ is generated from source: a claim→evidence table (every public claim binds to 
 resolvable pointer, or CI fails), honest-null benchmarks *including the runs where
 the package changed nothing*, and a "verify it yourself" block you run on a fresh
 checkout. The proof page fails CI if it drifts from its sources — reproducibility
-is the proof.
+is the proof. Browse it on the deployed docs site:
+[event4u-app.github.io/agent-config](https://event4u-app.github.io/agent-config).
 
 Audit-disciplined by construction — every memory consult, decision
 key, and hook concern lands in `agents/runtime/state/` so you can replay it.
