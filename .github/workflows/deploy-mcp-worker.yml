@@ -67,6 +67,13 @@ jobs:
         run: npm ci
         working-directory: internal/workers/mcp
 
+      # scripts-run resolves the REPO-ROOT node_modules/.bin/tsx — the
+      # worker-scoped install above does not provide it. Missing root deps
+      # broke every release-triggered deploy since the scripts moved to tsx
+      # (8.2.0 … 8.6.0 all failed at "Pack content blob" with exit 127).
+      - name: Install repo deps (scripts-run needs root tsx)
+        run: npm ci
+
       - name: Pack content blob
         id: pack
         run: |

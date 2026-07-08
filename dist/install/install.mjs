@@ -13877,6 +13877,12 @@ var settingsSchema = external_exports.object({
   projection: external_exports.object({
     mode: projectionMode.default("legacy-all").describe(
       "Whether the per-tool projector writes EVERY artefact into the host-tool trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs' artefacts (ADR-040, docs/contracts/capability-packs.md). legacy-all = (default, non-breaking) project the full surface exactly as 5.x did. scoped = project only the active profile's packs unioned with the runtime.active_packs overlay, expanded over the requires graph \u2014 opt in with `agent-config use --profile=<id>`. A failed scoped projection restores the full tree."
+    ),
+    rule_workspaces: external_exports.array(external_exports.string()).default([]).describe(
+      "Workspace scope for the RULE layer only (road-to-request-scoped-rule-load P1/P1b, opt-in). Absent or empty = legacy-all: every rule projects AND installs. Non-empty = only rules whose workspaces frontmatter intersects this list are projected (condense) and installed (install.sh + global wizard payload). Kernel rules always ship; untagged rules fail safe. The default flip to a scoped value is a HUMAN release gate \u2014 do not set this from automation."
+    ),
+    rule_packs: external_exports.array(external_exports.string()).default([]).describe(
+      "Optional second scoping axis for the RULE layer, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship \u2014 e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Same opt-in / human-gate semantics as rule_workspaces."
     )
   }).default({ mode: "legacy-all" }),
   rule_loading_tier: ruleLoadingTier.default("balanced").describe(

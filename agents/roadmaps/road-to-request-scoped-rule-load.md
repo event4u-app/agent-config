@@ -203,7 +203,7 @@ The projection filter (Phase 1) never runs on the install path. Wire it in,
 red-test first, and fix the consumer host emitters that currently destroy the
 Phase-2 trigger signal. Fully autonomous except the inherited human gate above.
 
-- [ ] **Installer integration test (red first):** run `install.sh` (project
+- [x] **Installer integration test (red first):** run `install.sh` (project
       shape) and the global install (`install_global` /
       `src/install/wizard-plan.ts` payload) against fixture targets and
       COUNT the arrived rule files per scope. Assert: consumer project scope
@@ -213,7 +213,13 @@ Phase-2 trigger signal. Fully autonomous except the inherited human gate above.
       is a measured fact (extend `tests/test_install.sh` /
       `tests/test_install_orchestrator.sh` or add a sibling; existing tests
       only assert file existence, never counts).
-- [ ] **Wire the filter into the install path:** have the install pipeline
+      <!-- done 2026-07-08: tests/test_install_rule_scoping.sh (bash, project
+      path — router-derived maintainer-only set, kernel guard, scoped<legacy
+      count) + tests/install/rule_scoping_plan.test.ts (global plan path,
+      6 tests incl. the source-of-truth.md contradiction case). Landed red
+      (12 maintainer-only rules arrived scoped; scoped==legacy 94==94),
+      now green post-wiring: legacy-all 94, scoped(engineering) 76. -->
+- [x] **Wire the filter into the install path:** have the install pipeline
       consume `dist/router.json` v2 workspace/pack fields (or call
       `rule_in_scope()` from the payload-sync path —
       `_copy_dir_dereferencing_symlinks` for the `rules` entry in
@@ -223,23 +229,65 @@ Phase-2 trigger signal. Fully autonomous except the inherited human gate above.
       `install.sh:287-300`) with frontmatter/router truth. Resolve the
       global-vs-project contradiction on `source-of-truth.md` explicitly
       (one documented decision, same treatment both paths).
-- [ ] **Consumer host emitters:** switch consumer Windsurf emission off the
+      <!-- done 2026-07-08: src/install/rule_scope.ts re-uses the projection
+      predicate rule_in_scope (semantics can never drift) + rule_scope_cli.ts
+      for bash; install.sh resolve_excluded_rules() replaces the dead
+      3-name EXCLUDE_RULES (static compat fallback stays as the
+      no-node fail-safe, over-ship never under-ship; child TMPDIR pinned —
+      the macOS tsx-cache-into-target trap); global path filters via
+      PlanSource.fileFilter in buildInstallPlan, wired in
+      expandWizardSources + the install route (global settings cascade).
+      source-of-truth.md decision recorded in rule_scope.ts: excluded from
+      BOTH consumer paths always — its Iron Law forbids edits a consumer
+      legitimately makes; global shipping it was the bug. -->
+- [x] **Consumer host emitters:** switch consumer Windsurf emission off the
       frontmatter-stripping concatenator (`install.sh:594-630`) onto the
       condense-path emitter output (or ship pre-built artifacts in `dist/`),
       so `glob`/`model_decision` triggers survive; ship the `.mdc` glob
       files to consumer Cursor instead of (or alongside) the raw-`.md`
       symlink farm (`install.sh:485`). Decide build-time-artifact vs
       install-time-generation once, record why.
-- [ ] **Settings plumbing:** declare `projection.rule_workspaces` /
+      <!-- done 2026-07-08: DECISION = install-time emission (recorded in
+      src/install/emit_host_rules_cli.ts): a dist/hosts tree would cascade
+      through manifest/checksums/budget gates for derived data, and
+      install-time runs AFTER the Phase-1b filter so scoped installs get
+      scoped host files for free; re-uses the exported condense emitters
+      verbatim (consumer output byte-identical to the projection).
+      install.sh emit_host_rules(): cursor gets native .mdc (94 legacy / 76
+      scoped, real globs verified), windsurf gets .windsurf/rules + a
+      frontmatter-aware .windsurfrules; the raw-md symlink farm and the
+      bash frontmatter-stripper remain ONLY as no-node fallbacks. Old
+      symlink expectation in test_install.sh updated to the new contract
+      (100/100). -->
+- [x] **Settings plumbing:** declare `projection.rule_workspaces` /
       `rule_packs` in the Zod settings schema
       (`src/server/schemas/settings.ts`) so they validate and surface in the
       settings UI; have the wizard write them from the chosen
       workspaces/packs at install time (default remains `legacy-all` until
       the human gate flips it).
-- [ ] Snapshot/regression: re-run the Phase 1b installer test green; full
+      <!-- done 2026-07-08 (adapted — presence-activation nuance): the Zod
+      schema declares both keys with .default([]) (validated + visible in
+      the settings surface; empty = inactive everywhere by the shared
+      length>0 semantics), the template renders them actively as [] so
+      every new install and settings:sync carries them INACTIVE — wiring
+      is complete end-to-end and the human flip is now a pure settings
+      edit (fill the list), not a code change. The wizard deliberately
+      does NOT write live values: a non-empty list IS the activation, and
+      that is the Phase-1 human gate. .optional() would have broken the
+      settings-diff contract (to:undefined dropped over HTTP) — default([])
+      keeps both sides of the diff populated (22/22 settings tests). -->
+- [x] Snapshot/regression: re-run the Phase 1b installer test green; full
       `dist` determinism gates stay green; record the consumer-install
       before/after (rule count + tokens via `token_count.ts`) as the
       evidence the human gate consumes.
+      <!-- done 2026-07-08: install suite 100/100, scoping suite 12/12,
+      plan+projection vitest 15/15, tsc green; dist untouched this run
+      (install-time emission decision means zero dist delta). Evidence
+      pinned: internal/bench/reports/2026-07-08-consumer-install-rule-scope.json
+      — ACTUAL install.sh fixture installs, cl100k_base: legacy-all 94
+      rules / 77,632 tok vs scoped(engineering) 76 rules / 59,368 tok =
+      −18,264 tok (−23.5%) per consumer install. The human gate can now
+      judge real consumer-surface numbers. -->
 
 **Exit:** an actual consumer fixture install (project AND global) ships only
 scope-matched rules with intact host-native triggers; the installer test
@@ -320,15 +368,23 @@ evidence.
       <!-- verified: only telegraph-speak stays intent-only (council-decided retirement) -->
 - [ ] Consumer installs ship only workspace-matched rules; measured
       before/after recorded; misclassification audit trail exists (Phase 1).
-- [ ] The installer-level scoping test (Phase 1b Step 1) is green on both
+- [x] The installer-level scoping test (Phase 1b Step 1) is green on both
       project and global fixture installs; the dead `EXCLUDE_RULES` list is
       gone; the `source-of-truth.md` global/project contradiction is
       resolved with a recorded decision.
-- [ ] Consumer Windsurf/Cursor surfaces carry the host-native trigger signal
+      <!-- verified 2026-07-08: 12/12 bash + 6/6 plan tests; decision in
+      src/install/rule_scope.ts (excluded from BOTH paths always). -->
+- [x] Consumer Windsurf/Cursor surfaces carry the host-native trigger signal
       (no frontmatter-stripping concatenation; `.mdc` files reach consumer
       Cursor).
-- [ ] `projection.rule_workspaces`/`rule_packs` validate in the settings
+      <!-- verified 2026-07-08: native .mdc with real globs + .windsurf/rules
+      with trigger frontmatter + frontmatter-aware .windsurfrules; legacy
+      surfaces demoted to no-node fallbacks. -->
+- [x] `projection.rule_workspaces`/`rule_packs` validate in the settings
       schema and are written by the wizard.
+      <!-- verified 2026-07-08 (adapted): Zod default([]) + template renders
+      both keys INACTIVE on every install/sync; live values deliberately
+      stay the human flip (presence-activation) — see the Step-4 note. -->
 - [x] Path-triggered rules auto-attach natively on Cursor/Windsurf
       (Phase 2).
       <!-- verified live: ui-audit-gate.mdc globs=resources/views/**,resources/js/**; windsurf trigger: glob; 9 emitter tests green -->

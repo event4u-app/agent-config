@@ -49,6 +49,12 @@ export const settingsSchema = z.object({
         mode: projectionMode.default('legacy-all').describe(
             'Whether the per-tool projector writes EVERY artefact into the host-tool trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs\' artefacts (ADR-040, docs/contracts/capability-packs.md). legacy-all = (default, non-breaking) project the full surface exactly as 5.x did. scoped = project only the active profile\'s packs unioned with the runtime.active_packs overlay, expanded over the requires graph — opt in with `agent-config use --profile=<id>`. A failed scoped projection restores the full tree.',
         ),
+        rule_workspaces: z.array(z.string()).default([]).describe(
+            'Workspace scope for the RULE layer only (road-to-request-scoped-rule-load P1/P1b, opt-in). Absent or empty = legacy-all: every rule projects AND installs. Non-empty = only rules whose workspaces frontmatter intersects this list are projected (condense) and installed (install.sh + global wizard payload). Kernel rules always ship; untagged rules fail safe. The default flip to a scoped value is a HUMAN release gate — do not set this from automation.',
+        ),
+        rule_packs: z.array(z.string()).default([]).describe(
+            'Optional second scoping axis for the RULE layer, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship — e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Same opt-in / human-gate semantics as rule_workspaces.',
+        ),
     }).default({ mode: 'legacy-all' }),
     rule_loading_tier: ruleLoadingTier.default('balanced').describe(
         'Master switch for which rule tiers load and how cautiously the agent spends tokens. minimal = only the 9 kernel rules (cheapest, fewest guardrails). balanced = kernel + tier-1 (recommended default). full = kernel + tier-1 + tier-2 (most guardrails, highest token cost). custom = roll your own in agents/overrides/. LEGACY: superseded by discipline_profile — when that key is set it wins (mapping: minimal→off, balanced→essential, full→full).',

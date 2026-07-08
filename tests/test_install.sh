@@ -253,7 +253,11 @@ test_tool_symlinks_created() {
     assert_true ".cursor/rules/ exists" test -d "$TMPDIR/.cursor/rules"
     assert_true ".clinerules/ exists" test -d "$TMPDIR/.clinerules"
     assert_true ".claude/rules/php-coding.md is symlink" test -L "$TMPDIR/.claude/rules/php-coding.md"
-    assert_true ".cursor/rules/php-coding.md is symlink" test -L "$TMPDIR/.cursor/rules/php-coding.md"
+    # Phase 1b Step 3: cursor is host-NATIVE now — .mdc files with globs
+    # replace the raw-md symlink farm (which remains only as the no-node
+    # fallback; see emit_host_rules in install.sh).
+    assert_true ".cursor/rules/php-coding.mdc is native file" test -f "$TMPDIR/.cursor/rules/php-coding.mdc"
+    assert_false ".cursor/rules raw-md symlink farm retired" test -L "$TMPDIR/.cursor/rules/php-coding.md"
     assert_true ".clinerules/php-coding.md is symlink" test -L "$TMPDIR/.clinerules/php-coding.md"
     teardown
 }
