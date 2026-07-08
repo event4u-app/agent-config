@@ -9,6 +9,8 @@ The CFO / fractional finance / FP&A lead — build a DCF, stress-test the plan,
 frame the runway call. Every output carries the finance safety floor (no final
 invest/raise verdict; assumptions + sensitivity + confidence band).
 
+> **Domain-soundness status (honest).** These skills are forged on TS/PHP; their embedded domain heuristics are **not independently validated**. Until a skill passes a sourced `evals/domain-truth.json` fixture (`./scripts-run src/scripts/domain_soundness_status`), treat its domain correctness as a general-purpose scaffold, not proven practice. The safety floor bounds *liability*, not *correctness*.
+
 ## First three tasks
 
 1. **Value it** — `dcf-modeling` walks WACC / terminal-value / 5-year-hold reasoning.

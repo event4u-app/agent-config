@@ -1,0 +1,4 @@
+{
+  "_comment": "Domain-soundness ratchet floor (road-to-domain-soundness Phase 3). domain_soundness_status --check fails if the validated count drops below this. Regenerate with --write-floor ONLY after a domain-truth fixture lands and passes.",
+  "validated": 0
+}

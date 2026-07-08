@@ -28,6 +28,7 @@ evidence pointer, or `task check-claims` fails the build.
 |---|---|---|---|
 | 172 commands. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
+| The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted. | qual | `src/scripts/domain_soundness_status.ts#checkRatchet` | ✅ |
 | On the READ-ONLY FAN-OUT slice family, tier-downshifted subagent dispatch (lite/haiku vs session-tier-proxy sonnet) nets a ≥30% USD-weighted token-cost reduction at held quality — measured 2026-07-08 (n=10 paired live dispatches, 20 telemetry lines): 10/10 exact-match on BOTH arms, 29.4% fewer raw tokens, 76.5% USD-weighted cost reduction at the 3x haiku↔sonnet price ratio. FAMILY-SCOPED — the mechanical-edit family is unmeasured and its downshift (incl. the deferred tier downgrades of existing units) stays gated. Negative control held: an open-ended synthesis/unknown slice never resolves below the session tier (inferSliceTier → medium/inherit, never lite). | quant | `internal/bench/routing-downshift/results-2026-07-08.md#FAMILY-SCOPED PROVE` | ✅ |
 | The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed. | quant | `docs/benchmark.md#REPLICATION FAILED` | ✅ |
 | Behavioural-eval coverage is measured per tier and CI-ratcheted so it can only rise; the current coverage and its gap are published, never implied as "264 evaluated skills". | qual | `src/scripts/skill_eval_coverage.ts#checkRatchet` | ✅ |
@@ -36,7 +37,7 @@ evidence pointer, or `task check-claims` fails the build.
 | 264 skills (README hero + feature list). | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 
-**9 backed claim(s)** — all evidence pointers resolve in CI.
+**10 backed claim(s)** — all evidence pointers resolve in CI.
 
 Artefact counts in public prose (skills, commands, governed rules,
 guidelines, personas) are **generated from source and CI-drift-checked**:
@@ -65,6 +66,19 @@ only rise** — a merged change can never lower it. Authoring the priority-tier
 evals is gated on per-case human ratification (a generated assertion that
 checks the wrong property is worse than none), so the number grows
 deliberately, not overnight.
+
+**Non-coding domain soundness — scoped, not proven.** The `finance` /
+`founder` / `ops` / `content` profiles sell concrete domain value (DCF,
+runway, RICE, incident command, messaging), but the skills are forged on
+TS/PHP — "promising, not proven" off those stacks. A disclaimer floor
+bounds *liability*, not *correctness*: a skill can be format-correct,
+disclaimered, and still embed a wrong domain assumption. Today **0 of 20**
+default-surface domain skills carry a sourced `domain-truth` fixture
+(`./scripts-run src/scripts/domain_soundness_status`); all are labeled
+`unvalidated` and the validated count is CI-ratcheted. Authoring the
+answer keys needs domain competence (a cited method, not the skill's own
+output), so validation lands deliberately — the gap is published, never
+implied away.
 
 ## 3. Known limits (published, witness-tested)
 

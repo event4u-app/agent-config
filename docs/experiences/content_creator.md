@@ -8,6 +8,8 @@
 Writers, ghostwriters, marketers — draft in someone else's voice, plan a quarter
 of content, ship a launch, render a cinematic AI video.
 
+> **Domain-soundness status (honest).** These skills are forged on TS/PHP; their embedded domain heuristics are **not independently validated**. Until a skill passes a sourced `evals/domain-truth.json` fixture (`./scripts-run src/scripts/domain_soundness_status`), treat its domain correctness as a general-purpose scaffold, not proven practice. The safety floor bounds *liability*, not *correctness*.
+
 ## First three tasks
 
 1. **Write in a voice** — `/ghostwriter` against a public-figure voice profile, or `/post-as` for your own (`.agent-user.md`).

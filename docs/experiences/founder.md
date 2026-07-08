@@ -8,6 +8,8 @@
 The solo / early-stage founder — sharpen a fuzzy idea, rank what to build, write
 the why-now slide, get a neutral second opinion.
 
+> **Domain-soundness status (honest).** These skills are forged on TS/PHP; their embedded domain heuristics are **not independently validated**. Until a skill passes a sourced `evals/domain-truth.json` fixture (`./scripts-run src/scripts/domain_soundness_status`), treat its domain correctness as a general-purpose scaffold, not proven practice. The safety floor bounds *liability*, not *correctness*.
+
 ## First three tasks
 
 1. **Sharpen the idea** — `/challenge-me` runs a grill-style interview that turns a vague plan into a copyable pitch.

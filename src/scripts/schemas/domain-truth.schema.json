@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/domain-truth.schema.json",
+  "x-schemaVersion": "1.0.0",
+  "title": "Domain-truth fixtures (domain-truth.json)",
+  "$comment": "Domain-SOUNDNESS fixtures for non-coding default-surface skills (road-to-domain-soundness Phase 1). DISTINCT from evals.json (behavioural output quality) and triggers.json (activation): a domain-truth case asserts the embedded domain heuristic is actually CORRECT off the forged TS/PHP stacks. Every case's answer key must be traceable to a CITED external method/standard — never the skill's own output (that validates nothing). A skill lacking this file is `unvalidated`; presence + a passing run makes it `validated`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["skill", "domain", "cases"],
+  "properties": {
+    "skill": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Skill slug; must match the parent skill directory name."
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["finance", "founder", "ops", "content"],
+      "description": "The non-coding domain whose ground truth this fixture checks."
+    },
+    "_note": {
+      "type": "string",
+      "description": "Optional free-text note (calibration / provenance status). Advisory."
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One or more domain-truth cases: a scenario + a domain-correct answer key with a SOURCED rationale.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "scenario", "check", "source"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "description": "Stable case slug, unique within this file."
+          },
+          "scenario": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The input scenario handed to the skill under test."
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The CITED external method/standard the answer key is traceable to (a finance text, an IC framework, a named practice). A case whose key cannot cite an external basis is not a domain-truth case — it is rejected. NEVER the skill's own output."
+          },
+          "check": {
+            "description": "How soundness is judged. Deterministic where the domain has a right number; rubric where it does not (the rubric criterion must name the cited practice, graded by a pinned judge, recorded as a known-limit — never a hidden LLM-judge).",
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "expected"],
+                "properties": {
+                  "kind": { "const": "deterministic" },
+                  "expected": {
+                    "type": ["number", "string"],
+                    "description": "The computed-correct answer (e.g. a runway in months, an NPV) with the working shown in `rationale`."
+                  },
+                  "tolerance": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Absolute tolerance for a numeric expected value (0 = exact)."
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The working that derives `expected` from the cited method, so a maintainer without the domain can check the key against the source, not against the skill."
+                  }
+                },
+                "required": ["kind", "expected", "rationale"]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "criterion"],
+                "properties": {
+                  "kind": { "const": "rubric" },
+                  "criterion": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Pass criterion phrased as \"matches <named practice>\", graded by a pinned judge. NON-deterministic — recorded as a known-limit with a witness."
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

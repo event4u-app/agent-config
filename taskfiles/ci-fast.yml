@@ -382,6 +382,11 @@ tasks:
     desc: "Behavioural-eval coverage ratchet — overall + per-tier coverage may not drop below the pinned floor (internal/evals/coverage-floor.json); the floor only rises via --write-floor after authoring evals (road-to-skill-eval-coverage Phase 3)"
     cmd: ./scripts-run src/scripts/skill_eval_coverage --check
 
+  check-domain-soundness:
+    silent: true
+    desc: "Domain-soundness ratchet — the count of non-coding domain skills with a passing domain-truth fixture may not drop below the pinned floor (internal/evals/domain-soundness-floor.json); enforced honesty for the finance/founder/ops/content provenance claim (road-to-domain-soundness Phase 3)"
+    cmd: ./scripts-run src/scripts/domain_soundness_status --check
+
   lint-behavioural-eval-freshness:
     silent: true
     desc: "Behavioural-eval freshness — a skill whose evals.json pins skill_body_sha must still match its SKILL.md body, or the eval is stale (deterministic, no token spend; unpinned evals out of scope; road-to-skill-eval-coverage Phase 3)"

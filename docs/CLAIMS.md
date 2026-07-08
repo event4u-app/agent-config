@@ -84,6 +84,13 @@
 - status: backed
 - last_verified: 2026-07-08
 
+### claim: domain-soundness-scoped
+- claim: The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted.
+- kind: qual
+- evidence: src/scripts/domain_soundness_status.ts#checkRatchet
+- status: backed
+- last_verified: 2026-07-08
+
 ---
 
 ## Unbacked inventory (documented debt — not yet markered in prose)
