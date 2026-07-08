@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **23** open blockers
+> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **23** open blockers
 
 ## Overall
 
-**94 / 263 steps done · 36%**
+**86 / 246 steps done · 35%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
 ```
 
 ## Open roadmaps
@@ -32,7 +32,6 @@
 | 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
 | 16 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
-| 17 | [road-to-truth-and-reference-hygiene.md](roadmaps/road-to-truth-and-reference-hygiene.md) | 3 | 17 | 9 | 8 | 0 | 0 | 0 | █████░░░░░ 47% |
 
 ---
 
@@ -412,16 +411,6 @@
     3. Verify the paired judge output has the expected shape (model A vs model B, per-task scores, aggregate win rate).
     4. The hardened gate is the unlock — once it exits 0 on the real report, Phase 1 Step 1 + Phase 8 Step 2 can proceed.
   - **Resolved when:** `./scripts-run src/scripts/check_quality_regression --as-flip-gate` exits 0 AND `npx tsx tests/scripts/bench_ab_integrity.test.ts` exits 0. (Hardened 2026-07-07 per `road-to-token-proof-and-story` Phase 0 — a dry-run mock or an inconclusive report is NOT an unlock; the old "file exists" criterion was fakeable.)
-
-### [road-to-truth-and-reference-hygiene.md](roadmaps/road-to-truth-and-reference-hygiene.md)
-
-**Road to truth-and-reference hygiene — make the "machine-checked" headline true of its own artefacts** — 8 / 17 done (47%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Artefact counts: one generator, one gate, fixed prose | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | py2ts comment teardown (re-baselined): rewrite, don't just delete | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Stale references, claims triage, release-notes nits | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
 ---
 

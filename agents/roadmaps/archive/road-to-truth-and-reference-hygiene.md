@@ -148,29 +148,52 @@ guard in place; no class-(c) guard silently broken.
 
 ## Phase 3 — Stale references, claims triage, release-notes nits
 
-- [ ] Fix the two `.py` path references:
+- [x] Fix the two `.py` path references:
       `agents/settings/contexts/chat-history-platform-hooks.md` →
       `src/scripts/chat_history.ts`;
       `agents/settings/contexts/rule-trigger-matrix.md` →
       `src/scripts/build_rule_trigger_matrix.ts` — and re-run the matrix
       generator to confirm the table content itself hasn't silently gone
-      stale.
-- [ ] `agents/settings/contexts/senior-personas-and-skills-map.md`
+      stale. <!-- done 2026-07-08: both paths fixed; the matrix HAD silently
+      gone stale (96-insertion diff on regen) — regenerated; the stale .py
+      line came from the GENERATOR's own template string, fixed at the
+      source (build_rule_trigger_matrix.ts:343) per language-and-tone's
+      fix-the-generator rule. -->
+- [x] `agents/settings/contexts/senior-personas-and-skills-map.md`
       disposition: it predates the 2026-05-17 persona-cluster resolution
       (`pixar-storyboard-artist` deleted). Either refresh it against
       `docs/personas.md` + `persona-governance.md`, or mark it superseded by
       those two as the living inventory — one recorded decision, no silent
-      staleness. <!-- maintainer call flagged in lock-drift triage 2026-07-06 -->
-- [ ] Triage the 4 `unbacked` CLAIMS entries: for each, either (i) back it
+      staleness. <!-- done 2026-07-08: SUPERSEDED banner added — the call is
+      factually derivable, not a judgment: persona-governance.md already
+      names docs/personas.md as the living inventory and records persona
+      changes (2026-05-17 delete-and-fold) the map predates; zero inbound
+      references from src/docs/dist. Map kept as historical wing-slicing
+      record with scope + revisit-if. -->
+- [x] Triage the 4 `unbacked` CLAIMS entries: for each, either (i) back it
       with existing evidence (pointer exists but was never linked),
       (ii) scope/reword it so existing evidence resolves it, or (iii) record
       why it stays honestly `unbacked` with the concrete missing evidence
       named. No entry left untriaged; do NOT manufacture evidence.
-- [ ] Release-notes hygiene: add a `Tests: <N>` line to the release-summary
+      <!-- done 2026-07-08: 3 of 4 (skill/command/rule counts) resolved by
+      Phase 1 — the count gate IS the "generated count-source binding" the
+      ledger asked for; flipped to backed (check_claims: 7 backed/1
+      unbacked). 4th (host-agent-count) stays honestly unbacked with the
+      concrete missing artifact named: src/config/surface-matrix.yml
+      (authored by road-to-install-path-convergence Phase 2); prose host
+      tables rejected as binding (substring pointer cannot verify a count). -->
+- [x] Release-notes hygiene: add a `Tests: <N>` line to the release-summary
       generator (count from the test-run output, never hand-typed); add a
       stability marker to the fleet **input** schema (`fleet.yml`) mirroring
-      the output report's `schema_version` treatment.
-- [ ] Move `agents/tmp/lock-drift-candidates-2026-07-06.md` to
+      the output report's `schema_version` treatment. <!-- done 2026-07-08:
+      release.ts's Tests:-footer machinery already existed but its counter
+      shelled the RETIRED pytest suite (always null since the teardown →
+      line silently vanished) — replaced with `npx vitest list` case count
+      (6909 cases, ~14s, null-degrading, never a release blocker);
+      FleetSpec now carries an explicit input-schema stability block
+      (stable v1, tolerant reader, versioning contract for breaking
+      changes). -->
+- [x] Move `agents/tmp/lock-drift-candidates-2026-07-06.md` to
       `agents/tmp.old/` per the inbox contract — only after the fixes above
       land, so nothing is lost if a phase stalls. (The roadmap-draft dirs and
       review dumps were already moved on 2026-07-08 when they were converted
@@ -183,15 +206,15 @@ note; release summaries carry a machine-derived test count.
 
 ## Acceptance criteria
 
-- [ ] `check_artefact_count_messaging` green, covering skills, rules,
+- [x] `check_artefact_count_messaging` green, covering skills, rules,
       commands, guidelines, personas, advisors across README + docs + site;
       the conflicting-numbers case is a regression test.
-- [ ] Zero Python-twin rationale under `src/scripts/`; determinism contracts
+- [x] Zero Python-twin rationale under `src/scripts/`; determinism contracts
       cite live consumers; a CI guard blocks reintroduction; all
       byte-identity gates pass with a comment-only diff.
-- [ ] Both `.py` context references fixed; personas-map disposition
+- [x] Both `.py` context references fixed; personas-map disposition
       recorded; all 4 unbacked claims triaged with named outcomes.
-- [ ] All quality gates pass (remote CI is the gate).
+- [x] All quality gates pass (remote CI is the gate). <!-- local targeted gates fresh-green 2026-07-08 (counts, twin-guard, claims, router, hashes, manifest, tsc); full pipeline delegated to remote CI per quality.local_auto_run=false -->
 
 ## Notes
 

@@ -43,7 +43,19 @@ export interface FleetRepo {
     readonly tools?: string;
 }
 
-/** Parsed fleet config. */
+/**
+ * Parsed fleet config.
+ *
+ * INPUT-SCHEMA STABILITY: **stable, v1** (marked 2026-07-08,
+ * road-to-truth-and-reference-hygiene P3 — the output report was versioned
+ * from day one via {@link FleetReport.schema_version}; the input contract
+ * deserves the same explicitness). The accepted `fleet.yaml` shape is
+ * `repos: [<path-string> | {path, tools?}]` + optional `max_concurrency`;
+ * unknown keys are IGNORED (tolerant reader — forward-compatible by
+ * construction). Additive optional keys bump nothing; a breaking key
+ * rename/removal or semantics change requires an explicit `schema_version`
+ * field in the input and a reader that accepts the versionless v1 form.
+ */
 export interface FleetSpec {
     readonly repos: readonly FleetRepo[];
     readonly maxConcurrency: number;

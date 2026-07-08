@@ -680,7 +680,7 @@ function latest_tag(): string | null {
  *
  * `test_trend_line` — optional pre-computed `Tests: N (+M …)` footer
  * (road-to-feedback-followups P3.2). Computed by the caller so tests don't
- * trigger a recursive pytest collection.
+ * trigger a recursive vitest collection.
  */
 function render_changelog_entry(
     version: string,
@@ -770,32 +770,32 @@ function _changelog_line(c: Commit): string {
 // ─── test-count trend (road-to-feedback-followups P3.2) ───────────────────────
 
 const _TEST_COUNT_LINE_RE = /^Tests:\s+(\d+)/m;
-const _PYTEST_COLLECTED_RE = /^(\d+)\s+tests?\s+collected/m;
 
 /**
- * Return the count from `pytest --collect-only -q` on the current tree.
- * Returns null when pytest isn't available or collection fails — the trend
- * line is informational, never a release blocker.
+ * Return the collected vitest test-case count on the current tree
+ * (`npx vitest list`, one line per case; ~14s wall). Returns null when
+ * collection fails — the trend line is informational, never a release
+ * blocker. (Replaced the dead `pytest --collect-only` probe on 2026-07-08,
+ * road-to-truth-and-reference-hygiene Phase 3: the Python suite was retired
+ * with ADR-200, so the old probe always degraded to null and the `Tests:`
+ * footer silently vanished from release notes.)
  */
 function _count_tests_current(): number | null {
-    // Release-time pytest-collection probe: python-test-tooling, not package
-    // runtime — there is no tsx equivalent of pytest collection. Degrades to
-    // null (informational trend line dropped) when python3/pytest is absent.
-    const res = spawnSync('python3', ['-m', 'pytest', '--collect-only', '-q'], {
+    const res = spawnSync('npx', ['vitest', 'list'], {
         cwd: REPO_ROOT,
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
-        timeout: 120_000,
+        timeout: 180_000,
     });
     if (res.error) {
-        // FileNotFoundError (ENOENT) or TimeoutExpired (ETIMEDOUT) → None.
+        // ENOENT or ETIMEDOUT → null (informational line dropped).
         return null;
     }
     if ((res.status ?? 1) !== 0) {
         return null;
     }
-    const match = _PYTEST_COLLECTED_RE.exec(res.stdout ?? '');
-    return match ? Number.parseInt(match[1] as string, 10) : null;
+    const lines = (res.stdout ?? '').split('\n').filter((l) => l.trim().length > 0);
+    return lines.length > 0 ? lines.length : null;
 }
 
 /**
