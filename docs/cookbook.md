@@ -11,7 +11,7 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 
 *You have a diff and want a real review, not a rubber-stamp.*
 
-- **Commands:** `/review-changes` → `/judge` → `/quality-fix`
+- **Commands:** `/review:changes` → `/judge` → `/fix:quality`
 - **Skills:** `code-review`, `adversarial-review`
 
 ### Fix a red CI run
@@ -60,7 +60,7 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 
 *Something is broken and you want root cause before the patch.*
 
-- **Commands:** `/bug-investigate` → `/bug-fix`
+- **Commands:** `/bug:investigate` → `/bug:fix`
 - **Skills:** `systematic-debugging`, `bug-analyzer`
 
 ### Get a second opinion from the AI council
@@ -81,7 +81,7 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 
 *You want to restructure code without changing behaviour.*
 
-- **Commands:** `/feature:refactor` → `/review-changes` → `/judge`
+- **Commands:** `/feature:refactor` → `/review:changes` → `/judge`
 - **Skills:** `code-refactoring`, `test-driven-development`
 
 ### Commit in logical chunks
@@ -95,7 +95,7 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 
 *You just opened a repo and want a fast structural read.*
 
-- **Commands:** `/project-analyze` → `/project-health`
+- **Commands:** `/project:analyze` → `/project:health`
 - **Skills:** `project-analyzer`
 
 ### Estimate a ticket
@@ -134,14 +134,14 @@ Explore, plan, estimate, refine, and investigate before building. The "what shou
 
 Build it. The core "make the change" front — drive a prompt, ticket, or feature end-to-end through plan → implement → verify.
 
-- **Path:** `/work` → `/review-changes` → `/quality-fix` → `/commit`
+- **Path:** `/work` → `/review:changes` → `/fix:quality` → `/commit`
 - **Skills:** `test-driven-development`, `code-review`, `systematic-debugging`, `git-workflow`
 
 ### Review flow
 
-Check it. Self-review, judge, quality-fix, and threat-model a change before it ships.
+Check it. Self-review, judge, fix/quality, and threat-model a change before it ships.
 
-- **Path:** `/review-changes` → `/judge` → `/quality-fix` → `/threat-model`
+- **Path:** `/review:changes` → `/judge` → `/fix:quality` → `/threat-model`
 - **Skills:** `code-review`, `adversarial-review`, `quality-tools`, `threat-modeling`, `receiving-code-review`
 
 ### Delivery flow

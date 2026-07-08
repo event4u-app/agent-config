@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **611 public artefacts** shipped by
+Consumer-facing catalog of all **617 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -29,7 +29,7 @@ are excluded.
 | skill | [`async-python-patterns`](../dist/agent-src/skills/async-python-patterns/SKILL.md) |  | Use when writing Python asyncio code — picking between gather / TaskGroup / wait, structured concurrency, timeouts, cancellation, sync-bridging — decision framework only, cookbook externalized. |
 | skill | [`authz-review`](../dist/agent-src/skills/authz-review/SKILL.md) |  | Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows. |
 | skill | [`aws-infrastructure`](../dist/agent-src/skills/aws-infrastructure/SKILL.md) |  | Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS. |
-| skill | [`blade-ui`](../dist/agent-src/skills/blade-ui/SKILL.md) |  | Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic. |
+| skill | [`blade-ui`](../dist/agent-src/skills/blade-ui/SKILL.md) |  | Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers views, components, partials, layouts, and view logic. |
 | skill | [`blameless-post-mortem`](../dist/agent-src/skills/blameless-post-mortem/SKILL.md) |  | Use after an incident or outage is resolved — blame-free facilitation, root cause, corrective actions, memory write-back — even for a near-miss. Consumes the incident-commander skeleton. |
 | skill | [`blast-radius-analyzer`](../dist/agent-src/skills/blast-radius-analyzer/SKILL.md) |  | Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency. |
 | skill | [`brand`](../dist/agent-src/skills/brand/SKILL.md) |  | Grounded brand decisions from a curated corpus — archetype, voice, naming, colour psychology, logo-style fit, messaging frameworks, archetype→type mapping. Use to ground brand strategy and identity. |
@@ -94,11 +94,11 @@ are excluded.
 | skill | [`estimate-ticket`](../dist/agent-src/skills/estimate-ticket/SKILL.md) |  | Estimate a Jira/Linear ticket — 'estimate PROJ-123', 'wie groß ist das?', 'should we split this?' — size + risk + split + uncertainty, sibling of /refine-ticket, close-prompt. |
 | skill | [`existing-ui-audit`](../dist/agent-src/skills/existing-ui-audit/SKILL.md) |  | Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set. |
 | skill | [`expansion-playbook`](../dist/agent-src/skills/expansion-playbook/SKILL.md) |  | Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognition. Triggers on 'lift NRR', 'when do we upsell vs cross-sell'. |
-| skill | [`fe-design`](../dist/agent-src/skills/fe-design/SKILL.md) |  | Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.py. |
+| skill | [`fe-design`](../dist/agent-src/skills/fe-design/SKILL.md) |  | Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.ts. |
 | skill | [`feature-planning`](../dist/agent-src/skills/feature-planning/SKILL.md) |  | Use when the user says \"plan a feature\", \"brainstorm\", \"explore this idea\", or wants to go from idea to structured plan and roadmap. |
 | skill | [`file-editor`](../dist/agent-src/skills/file-editor/SKILL.md) |  | Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled. |
 | skill | [`finishing-a-development-branch`](../dist/agent-src/skills/finishing-a-development-branch/SKILL.md) |  | Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'. |
-| skill | [`flux`](../dist/agent-src/skills/flux/SKILL.md) |  | Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`. Covers Flux components, slots, variants, and form primitives. |
+| skill | [`flux`](../dist/agent-src/skills/flux/SKILL.md) |  | Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers Flux components, slots, variants, and form primitives. |
 | skill | [`forecast-accuracy`](../dist/agent-src/skills/forecast-accuracy/SKILL.md) |  | Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence test, accuracy retro-loop. Triggers on 'build the forecast', 'why does our commit miss'. |
 | skill | [`forecasting`](../dist/agent-src/skills/forecasting/SKILL.md) |  | Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'. |
 | skill | [`form-handler`](../dist/agent-src/skills/form-handler/SKILL.md) |  | Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'. |
@@ -146,7 +146,7 @@ are excluded.
 | skill | [`legal-intake-triage`](../dist/agent-src/skills/legal-intake-triage/SKILL.md) |  | Use when triaging the quick legal-question channel + intake; classifies and ROUTES, never reviews. Triggers on 'is this a legal problem', 'do we need a lawyer for this', 'quick legal question'. |
 | skill | [`legal-practice-profile`](../dist/agent-src/skills/legal-practice-profile/SKILL.md) |  | Use when setting up the legal pack — captures jurisdiction, role, escalation, and playbook into a plain-prose profile every legal skill reads. Triggers on \"set up legal\", \"legal profile\". |
 | skill | [`lint-skills`](../dist/agent-src/skills/lint-skills/SKILL.md) |  | Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata. |
-| skill | [`livewire`](../dist/agent-src/skills/livewire/SKILL.md) |  | Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation. |
+| skill | [`livewire`](../dist/agent-src/skills/livewire/SKILL.md) |  | Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers reactive state, events, lifecycle hooks, and component/view separation. |
 | skill | [`livewire-architect`](../dist/agent-src/skills/livewire-architect/SKILL.md) |  | Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'. |
 | skill | [`logging-monitoring`](../dist/agent-src/skills/logging-monitoring/SKILL.md) |  | Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers. |
 | skill | [`logo-generation`](../dist/agent-src/skills/logo-generation/SKILL.md) |  | Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path (vector-native provider or LLM-authored SVG). Use for logo or brand mark generation. |
@@ -375,7 +375,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (166)
+## Commands (172)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -394,21 +394,22 @@ are excluded.
 | command | [`analytics`](../dist/agent-src/commands/analytics.md) | cluster: analytics | Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`. |
 | command | [`analytics-prune`](../dist/agent-src/commands/analytics/prune.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |
 | command | [`analytics-show`](../dist/agent-src/commands/analytics/show.md) | cluster: analytics | Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log. |
-| command | [`analyze-reference-repo`](../dist/agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
-| command | [`analyze`](../dist/agent-src/commands/analyze.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, or incident frameworks. |
+| command | [`analyze`](../dist/agent-src/commands/analyze.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, or reference-repo analysis. |
 | command | [`analyze-decision`](../dist/agent-src/commands/analyze/decision.md) | cluster: analyze | Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded). |
 | command | [`analyze-incident`](../dist/agent-src/commands/analyze/incident.md) | cluster: analyze | Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate. |
 | command | [`analyze-near-miss`](../dist/agent-src/commands/analyze/near-miss.md) | cluster: analyze | Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident. |
 | command | [`analyze-postmortem`](../dist/agent-src/commands/analyze/postmortem.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |
 | command | [`analyze-premortem`](../dist/agent-src/commands/analyze/premortem.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
+| command | [`analyze-reference-repo`](../dist/agent-src/commands/analyze/reference-repo.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`brand`](../dist/agent-src/commands/brand.md) | cluster: brand | Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer. |
 | command | [`brand-identity`](../dist/agent-src/commands/brand/identity.md) | cluster: brand | Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes. |
 | command | [`brand-review`](../dist/agent-src/commands/brand/review.md) | cluster: brand | Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule. |
 | command | [`brand-strategy`](../dist/agent-src/commands/brand/strategy.md) | cluster: brand | Define brand positioning, archetype, voice, tone, and messaging over the brand-grounding corpus — the strategy that bounds identity and UI. |
 | command | [`brand-tokens`](../dist/agent-src/commands/brand/tokens.md) | cluster: brand | Derive a DTCG .tokens.json source of truth from brand decisions, then emit CSS vars + Tailwind via the no-Node token generator. |
 | command | [`brand-voice`](../dist/agent-src/commands/brand/voice.md) | cluster: brand | Define the brand voice-and-tone profile — register, do/don't lexicon, and tone shifts by context — the profile the brand-consistency gate checks copy against. |
-| command | [`bug-fix`](../dist/agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
-| command | [`bug-investigate`](../dist/agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
+| command | [`bug`](../dist/agent-src/commands/bug.md) | cluster: bug | Bug orchestrator — routes to investigate (root cause) and fix (plan + implement) |
+| command | [`bug-fix`](../dist/agent-src/commands/bug/fix.md) | cluster: bug | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
+| command | [`bug-investigate`](../dist/agent-src/commands/bug/investigate.md) | cluster: bug | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
 | command | [`challenge-me`](../dist/agent-src/commands/challenge-me.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
 | command | [`challenge-me-vision`](../dist/agent-src/commands/challenge-me/vision.md) | cluster: challenge-me | Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff. |
 | command | [`challenge-me-with-docs`](../dist/agent-src/commands/challenge-me/with-docs.md) | cluster: challenge-me | Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch. |
@@ -421,7 +422,9 @@ are excluded.
 | command | [`context`](../dist/agent-src/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
 | command | [`context-create`](../dist/agent-src/commands/context/create.md) | cluster: context | Analyze a codebase area and create a structured context document |
 | command | [`context-refactor`](../dist/agent-src/commands/context/refactor.md) | cluster: context | Analyze, update, and extend an existing context document |
-| command | [`cost-report`](../dist/agent-src/commands/cost-report.md) |  | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
+| command | [`cost`](../dist/agent-src/commands/cost.md) | cluster: cost | Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_loading_tier) |
+| command | [`cost-profile`](../dist/agent-src/commands/cost/profile.md) | cluster: cost | Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection |
+| command | [`cost-report`](../dist/agent-src/commands/cost/report.md) | cluster: cost | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
 | command | [`council`](../dist/agent-src/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize, analysis, debate |
 | command | [`council-analysis`](../dist/agent-src/commands/council/analysis.md) | cluster: council | Run the council on a local analysis output (project-analyze, audit script, codebase scan) — critiques the analysis itself for dedup, evidence quality, and roadmap-readiness. |
 | command | [`council-debate`](../dist/agent-src/commands/council/debate.md) | cluster: council | Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds. |
@@ -429,8 +432,6 @@ are excluded.
 | command | [`council-design`](../dist/agent-src/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council-optimize`](../dist/agent-src/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council-pr`](../dist/agent-src/commands/council/pr.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
-| command | [`e2e-heal`](../dist/agent-src/commands/e2e-heal.md) |  | Find, debug, and fix failing Playwright E2E tests |
-| command | [`e2e-plan`](../dist/agent-src/commands/e2e-plan.md) |  | Explore the application and create a structured E2E test plan in Markdown |
 | command | [`estimate-ticket`](../dist/agent-src/commands/estimate-ticket.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
 | command | [`feature`](../dist/agent-src/commands/feature.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |
 | command | [`feature-dev`](../dist/agent-src/commands/feature/dev.md) | cluster: feature | Full 7-phase feature development workflow for complex features. |
@@ -438,11 +439,12 @@ are excluded.
 | command | [`feature-plan`](../dist/agent-src/commands/feature/plan.md) | cluster: feature | Interactively plan a feature — research, discuss, and create a structured feature document |
 | command | [`feature-refactor`](../dist/agent-src/commands/feature/refactor.md) | cluster: feature | Refine and update an existing feature plan through interactive discussion |
 | command | [`feature-roadmap`](../dist/agent-src/commands/feature/roadmap.md) | cluster: feature | Generate implementation roadmap(s) from a feature plan and link them |
-| command | [`fix`](../dist/agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments |
+| command | [`fix`](../dist/agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, comments, quality |
 | command | [`fix-ci`](../dist/agent-src/commands/fix/ci.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix-comments`](../dist/agent-src/commands/fix/comments.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
 | command | [`fix-portability`](../dist/agent-src/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
 | command | [`fix-pr-comments`](../dist/agent-src/commands/fix/pr-comments.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR |
+| command | [`fix-quality`](../dist/agent-src/commands/fix/quality.md) | cluster: fix | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`fix-refs`](../dist/agent-src/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
 | command | [`fix-seeder`](../dist/agent-src/commands/fix/seeder.md) | cluster: fix | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
 | command | [`ghostwriter`](../dist/agent-src/commands/ghostwriter.md) | cluster: ghostwriter | Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md). |
@@ -456,7 +458,7 @@ are excluded.
 | command | [`image-analyse`](../dist/agent-src/commands/image/analyse.md) | cluster: image | Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report. |
 | command | [`image-create`](../dist/agent-src/commands/image/create.md) | cluster: image | Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default. |
 | command | [`image-verify`](../dist/agent-src/commands/image/verify.md) | cluster: image | Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass. |
-| command | [`implement-ticket`](../dist/agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
+| command | [`implement-ticket`](../dist/agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git. |
 | command | [`jira-ticket`](../dist/agent-src/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
 | command | [`judge`](../dist/agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
 | command | [`judge-on-diff`](../dist/agent-src/commands/judge/on-diff.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
@@ -479,19 +481,20 @@ are excluded.
 | command | [`module`](../dist/agent-src/commands/module.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`module-create`](../dist/agent-src/commands/module/create.md) | cluster: module | Create a new module from .module-template with interactive setup |
 | command | [`module-explore`](../dist/agent-src/commands/module/explore.md) | cluster: module | Explore a module — load its structure, docs, and context into the current conversation |
-| command | [`optimize-project`](../dist/agent-src/commands/optimize-project.md) |  | Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'. |
-| command | [`optimize-prompt`](../dist/agent-src/commands/optimize-prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
-| command | [`optimize`](../dist/agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters |
+| command | [`optimize`](../dist/agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish) |
 | command | [`optimize-agents-dir`](../dist/agent-src/commands/optimize/agents-dir.md) | cluster: optimize | Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard. |
 | command | [`optimize-augmentignore`](../dist/agent-src/commands/optimize/augmentignore.md) | cluster: optimize | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
+| command | [`optimize-project`](../dist/agent-src/commands/optimize/project.md) | cluster: optimize | Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'. |
+| command | [`optimize-prompt`](../dist/agent-src/commands/optimize/prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize-rtk`](../dist/agent-src/commands/optimize/rtk.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |
 | command | [`optimize-skills`](../dist/agent-src/commands/optimize/skills.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
 | command | [`orchestrate`](../dist/agent-src/commands/orchestrate.md) | cluster: orchestrate | Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract |
 | command | [`override`](../dist/agent-src/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |
 | command | [`override-create`](../dist/agent-src/commands/override/create.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
 | command | [`override-manage`](../dist/agent-src/commands/override/manage.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
-| command | [`package-reset`](../dist/agent-src/commands/package-reset.md) |  | /package-reset |
-| command | [`package-test`](../dist/agent-src/commands/package-test.md) |  | /package-test |
+| command | [`package`](../dist/agent-src/commands/package.md) | cluster: package | Package orchestrator — routes to test (verify the package install) and reset (restore installed state) |
+| command | [`package-reset`](../dist/agent-src/commands/package/reset.md) | cluster: package | /package-reset |
+| command | [`package-test`](../dist/agent-src/commands/package/test.md) | cluster: package | /package-test |
 | command | [`post-as`](../dist/agent-src/commands/post-as.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`post-as-ghostwriter`](../dist/agent-src/commands/post-as/ghostwriter.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
 | command | [`post-as-me`](../dist/agent-src/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
@@ -503,15 +506,16 @@ are excluded.
 | command | [`profile-activate`](../dist/agent-src/commands/profile/activate.md) | cluster: profile | Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence |
 | command | [`profile-deactivate`](../dist/agent-src/commands/profile/deactivate.md) | cluster: profile | Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns |
 | command | [`profile-show`](../dist/agent-src/commands/profile/show.md) | cluster: profile | Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface) |
-| command | [`project-analyze`](../dist/agent-src/commands/project-analyze.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
-| command | [`project-health`](../dist/agent-src/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
-| command | [`quality-fix`](../dist/agent-src/commands/quality-fix.md) |  | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
+| command | [`project`](../dist/agent-src/commands/project.md) | cluster: project | Project orchestrator — routes to analyze (full audit) and health (read-only status check) |
+| command | [`project-analyze`](../dist/agent-src/commands/project/analyze.md) | cluster: project | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
+| command | [`project-health`](../dist/agent-src/commands/project/health.md) | cluster: project | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
 | command | [`refine-ticket`](../dist/agent-src/commands/refine-ticket.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
 | command | [`research`](../dist/agent-src/commands/research.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
 | command | [`research-deep`](../dist/agent-src/commands/research/deep.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
 | command | [`research-report`](../dist/agent-src/commands/research/report.md) | cluster: research | Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime. |
-| command | [`review-changes`](../dist/agent-src/commands/review-changes.md) |  | Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts |
-| command | [`review-routing`](../dist/agent-src/commands/review-routing.md) |  | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
+| command | [`review`](../dist/agent-src/commands/review.md) | cluster: review | Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns) |
+| command | [`review-changes`](../dist/agent-src/commands/review/changes.md) | cluster: review | Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts |
+| command | [`review-routing`](../dist/agent-src/commands/review/routing.md) | cluster: review | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
 | command | [`roadmap`](../dist/agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution). |
 | command | [`roadmap-ai-council`](../dist/agent-src/commands/roadmap/ai-council.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
 | command | [`roadmap-create`](../dist/agent-src/commands/roadmap/create.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
@@ -521,19 +525,21 @@ are excluded.
 | command | [`roadmap-process-step`](../dist/agent-src/commands/roadmap/process-step.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
 | command | [`rule-compliance-audit`](../dist/agent-src/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
 | command | [`security-audit-config`](../dist/agent-src/commands/security-audit-config.md) |  | Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injection / supply-chain risk — A–F score per category, mapped to OWASP Agentic Top 10 |
-| command | [`set-cost-profile`](../dist/agent-src/commands/set-cost-profile.md) |  | Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`skill`](../dist/agent-src/commands/skill.md) | cluster: skill | Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it. |
 | command | [`skill-preview`](../dist/agent-src/commands/skill/preview.md) | cluster: skill | Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution. |
 | command | [`skills`](../dist/agent-src/commands/skills.md) | cluster: skills | Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics. |
 | command | [`skills-discover`](../dist/agent-src/commands/skills/discover.md) | cluster: skills | Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why. |
-| command | [`sync-agent-settings`](../dist/agent-src/commands/sync-agent-settings.md) |  | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
-| command | [`sync-gitignore`](../dist/agent-src/commands/sync-gitignore.md) | cluster: sync-gitignore | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
-| command | [`sync-gitignore-fix`](../dist/agent-src/commands/sync-gitignore/fix.md) | cluster: sync-gitignore | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
+| command | [`sync`](../dist/agent-src/commands/sync.md) | cluster: sync | Sync orchestrator — routes to agent-settings (template sync) and gitignore (managed block sync, plus legacy-cleanup fix) |
+| command | [`sync-agent-settings`](../dist/agent-src/commands/sync/agent-settings.md) | cluster: sync | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
+| command | [`sync-gitignore`](../dist/agent-src/commands/sync/gitignore.md) | cluster: sync | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
+| command | [`sync-gitignore-fix`](../dist/agent-src/commands/sync/gitignore/fix.md) | cluster: sync | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
 | command | [`team-knowledge`](../dist/agent-src/commands/team-knowledge.md) | cluster: team-knowledge | Team-knowledge orchestrator — routes to consolidate and bootstrap |
 | command | [`team-knowledge-bootstrap`](../dist/agent-src/commands/team-knowledge/bootstrap.md) | cluster: team-knowledge | One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit. |
 | command | [`team-knowledge-consolidate`](../dist/agent-src/commands/team-knowledge/consolidate.md) | cluster: team-knowledge | Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval. |
-| command | [`tests`](../dist/agent-src/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute |
+| command | [`tests`](../dist/agent-src/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal |
 | command | [`tests-create`](../dist/agent-src/commands/tests/create.md) | cluster: tests | Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
+| command | [`tests-e2e-heal`](../dist/agent-src/commands/tests/e2e-heal.md) | cluster: tests | Find, debug, and fix failing Playwright E2E tests |
+| command | [`tests-e2e-plan`](../dist/agent-src/commands/tests/e2e-plan.md) | cluster: tests | Explore the application and create a structured E2E test plan in Markdown |
 | command | [`tests-execute`](../dist/agent-src/commands/tests/execute.md) | cluster: tests | Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
 | command | [`threat-model`](../dist/agent-src/commands/threat-model.md) |  | Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written |
 | command | [`update-form-request-messages`](../dist/agent-src/commands/update-form-request-messages.md) |  | Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones. |
@@ -544,7 +550,7 @@ are excluded.
 | command | [`video-scene`](../dist/agent-src/commands/video/scene.md) | cluster: video | Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate. |
 | command | [`video-stitch`](../dist/agent-src/commands/video/stitch.md) | cluster: video | Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json. |
 | command | [`video-storyboard`](../dist/agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
-| command | [`work`](../dist/agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
+| command | [`work`](../dist/agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git. |
 
 ## Guidelines (87)
 

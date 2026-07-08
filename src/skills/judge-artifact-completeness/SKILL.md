@@ -175,7 +175,7 @@ high-weight dimensions). A correct judge scores
   [`judge-test-coverage`](../judge-test-coverage/SKILL.md).
 - Dispatchers: [`/refine-ticket`](../../commands/refine-ticket.md),
   [`/adr-create`](../../commands/adr-create.md),
-  [`/review-changes`](../../commands/review-changes.md).
+  [`/review-changes`](../../commands/review/changes.md).
 - Rubric schemas: `rubrics/roadmap-score.json`,
   `rubrics/pr-review-score.json`, `rubrics/architecture-score.json`,
   `rubrics/ticket-quality-score.json`.

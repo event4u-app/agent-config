@@ -17,7 +17,7 @@ packs:
 
 - The user pastes a rough prompt and asks for it to be optimized, rewritten, sharpened, or "made better".
 - The user mentions a target AI (ChatGPT, Claude, Gemini, Perplexity, Copilot) and wants their prompt tuned for it.
-- The user invokes [`/optimize-prompt`](../../commands/optimize-prompt.md).
+- The user invokes [`/optimize-prompt`](../../commands/optimize/prompt.md).
 - The user describes a goal ("I need a marketing-email prompt for ChatGPT") and the deliverable is a prompt, not the email itself.
 
 ## When NOT to use (near-misses)
@@ -27,7 +27,7 @@ packs:
 | "refine this ticket / prompt for the engine" | [`refine-prompt`](../refine-prompt/SKILL.md) |
 | "make this skill description pushier" | [`description-assist`](../description-assist/SKILL.md) |
 | "write the marketing email itself" | direct execution — the user wants the artifact, not a prompt |
-| "review my code / commit" | [`review-changes`](../../commands/review-changes.md) and friends |
+| "review my code / commit" | [`review-changes`](../../commands/review/changes.md) and friends |
 
 ## The 4-D Methodology
 

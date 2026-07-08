@@ -99,7 +99,7 @@ the two pairs explicitly listed in Phase 3.1 were merged.
 
 ### Negative / risks
 
-- **Cross-references** in `commands/review-routing.md`,
+- **Cross-references** in `commands/review/routing.md`,
   `skills/{review-routing,ai-council,adr-create}/SKILL.md`,
   `templates/scripts/`, `docs/contracts/`, `tests/`, and
   `taskfiles/ci-fast.yml` need updating to drop

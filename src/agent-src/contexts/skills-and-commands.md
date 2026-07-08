@@ -60,7 +60,7 @@ Commands often chain together. Here are the main workflows:
 ### Quality & PR
 
 ```
-/quality-fix → /review-changes → /create-pr → /fix-pr-comments
+/fix quality → /review changes → /create-pr → /fix pr-comments
       ↓              ↓                ↓              ↓
   PHPStan/Rector  Self-review     Open PR       Address feedback
 ```
@@ -137,7 +137,7 @@ Commands often chain together. Here are the main workflows:
 | "Fix this issue" | `/bug-fix` |
 | "Create a PR" | `/create-pr` |
 | "CI is failing" | `/fix-ci` |
-| "Run quality checks" | `/quality-fix` |
+| "Run quality checks" | `/fix quality` |
 | "What's the status of this module?" | `/module-explore` |
 | "Document this area" | `/context-create` |
 | "Where was I?" | `/agent-handoff` (start fresh chat with context) |

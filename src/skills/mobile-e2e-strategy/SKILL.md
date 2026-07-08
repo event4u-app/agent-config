@@ -18,7 +18,7 @@ packs:
 - Planning iOS Simulator / Android Emulator coverage in CI (cost, runner type, parallelism).
 - Triaging flaky mobile tests that span the simulator/emulator boundary.
 - Bridging mobile E2E results into the same review surface as web E2E
-  (`playwright-testing`, `e2e-plan`, `e2e-heal`).
+  (`playwright-testing`, `/tests e2e-plan`, `/tests e2e-heal`).
 
 **This skill selects and plans — it does not generate test code.** For the chosen framework, apply its own conventions; for the host environment, see the cross-links below.
 
@@ -27,8 +27,8 @@ packs:
 - `react-native-setup` — RN/Expo environment, Xcode/Android Studio, EAS Build.
 - `docs/guidelines/agent-infra/ios-simulator-guide.md` — `simctl` / `idb` / accessibility-driven testing on iOS.
 - `playwright-testing` — web E2E baseline (do **not** reuse for native mobile).
-- `e2e-plan` — explore an app and produce an E2E plan in Markdown.
-- `e2e-heal` — debug and fix failing E2E tests.
+- `/tests e2e-plan` — explore an app and produce an E2E plan in Markdown.
+- `/tests e2e-heal` — debug and fix failing E2E tests.
 
 ## Procedure
 
@@ -115,8 +115,8 @@ without leaving the review.
 ## Bridging to the existing E2E surface
 
 - **Web + mobile in one repo:** keep Playwright for web, add a separate `mobile/` suite using Detox or Maestro. Do **not** force-fit Playwright onto native UI.
-- **Plan reuse:** the planning patterns in `e2e-plan` (user journeys, test pyramid placement, stable selectors) apply unchanged. The implementation lives in the mobile framework.
-- **Heal reuse:** the diagnostic loop in `e2e-heal` (reproduce → isolate → minimal fix → verify) applies. Replace browser-specific tooling with mobile-framework equivalents (Detox `--loglevel verbose`, Maestro Studio replays, Appium Inspector).
+- **Plan reuse:** the planning patterns in `/tests e2e-plan` (user journeys, test pyramid placement, stable selectors) apply unchanged. The implementation lives in the mobile framework.
+- **Heal reuse:** the diagnostic loop in `/tests e2e-heal` (reproduce → isolate → minimal fix → verify) applies. Replace browser-specific tooling with mobile-framework equivalents (Detox `--loglevel verbose`, Maestro Studio replays, Appium Inspector).
 - **Selectors:** prefer accessibility identifiers (`accessibilityIdentifier` on iOS, `contentDescription` on Android) over coordinate taps — see `ios-simulator-guide.md` Module 1.
 
 ## Output format

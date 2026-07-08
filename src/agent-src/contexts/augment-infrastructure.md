@@ -104,13 +104,13 @@ Commands organized by workflow:
 | **Contexts** | `context-create`, `context-refactor` |
 | **Modules** | `module-create`, `module-explore` |
 | **Roadmaps** | `roadmap:create`, `roadmap:process-step`, `roadmap:process-phase`, `roadmap:process-full` |
-| **Quality** | `quality-fix`, `review-changes`, `prepare-for-review`, `update-form-request-messages`, `fix-seeder` |
+| **Quality** | `fix-quality`, `review-changes`, `prepare-for-review`, `update-form-request-messages`, `fix-seeder` |
 | **CI/PR** | `fix-ci`, `create-pr`, `create-pr-description`, `fix-pr-comments` |
 | **Testing** | `tests-create`, `tests-execute` |
-| **E2E** | `e2e-plan`, `e2e-heal` |
+| **E2E** | `tests-e2e-plan`, `tests-e2e-heal` |
 | **Agents** | `agents-prepare`, `agents-audit`, `agents-cleanup`, `copilot-agents-optimize`, `agent-handoff`, `agent-status`, `optimize-agents`, `optimize-augmentignore`, `optimize-skills`, `optimize-rtk-filters` |
 | **Overrides** | `override-create`, `override-manage` |
-| **Config** | `onboard`, `set-cost-profile`, `commit` |
+| **Config** | `onboard`, `cost-profile`, `commit` |
 | **Packages** | `package-test`, `package-reset` |
 | **Project** | `project-analyze`, `project-health`, `jira-ticket` |
 

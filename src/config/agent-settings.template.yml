@@ -460,7 +460,7 @@ quality:
   #         tokens. The user runs quality tools manually; remote CI is
   #         the authoritative gate. The agent runs a quality tool ONLY
   #         when one of three triggers fires:
-  #           1. the user explicitly asks this turn (e.g. /quality-fix),
+  #           1. the user explicitly asks this turn (e.g. /fix quality),
   #           2. CI / the remote pipeline reports a concrete failure —
   #              then run exactly that failing check to reproduce + fix,
   #           3. the new-gate carve-out below.

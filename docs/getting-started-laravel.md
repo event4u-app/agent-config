@@ -30,7 +30,7 @@ The Laravel quality pipeline runs PHPStan + Rector + ECS, with Pest as the test 
 
 - [`quality-tools`](../dist/agent-src/skills/quality-tools/SKILL.md) — PHPStan output triage, Rector apply, ECS fix.
 - [`pest-testing`](../dist/agent-src/skills/pest-testing/SKILL.md) — Pest test authoring patterns.
-- [`/quality-fix`](../dist/agent-src/commands/quality-fix.md) — runs the full pipeline and fixes reported errors.
+- [`/fix quality`](../dist/agent-src/commands/fix/quality.md) — runs the full pipeline and fixes reported errors.
 
 ## Docker and dev environment
 

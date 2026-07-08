@@ -10,7 +10,7 @@ the **Reference-Guideline Sunset Policy** (see frontmatter `upstream` /
   — L1 Quick analysis depth.
 - [`refine-ticket`](../../../.agent-src.uncondensed/skills/refine-ticket/SKILL.md)
   — completeness check on a Jira / Linear ticket before estimation.
-- [`bug-investigate`](../../../.agent-src.uncondensed/commands/bug-investigate.md)
+- [`bug-investigate`](../../../.agent-src.uncondensed/commands/bug/investigate.md)
   — gap analysis on an incident report before forming a hypothesis.
 
 > **Core principle:** "Quality of decisions equals quality of questions

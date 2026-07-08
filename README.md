@@ -4,7 +4,7 @@
 
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config)
 
-[![Skills](https://img.shields.io/badge/Skills-264-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-95-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-166-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-87-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+[![Skills](https://img.shields.io/badge/Skills-264-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-95-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-172-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-87-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
 
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
@@ -447,7 +447,7 @@ When a prompt matches a command's purpose ("setze ticket ABC-123 um" → `/imple
 | [**Migration**](docs/MIGRATION.md) | Per-version upgrade steps |
 | [**Showcase**](docs/showcase.md) | More examples & expected behavior |
 
-Browse content: [all 166 commands](dist/agent-src/commands/) · [skills catalog](docs/skills-catalog.md) · [full catalog](docs/catalog.md) · [`llms.txt`](llms.txt).
+Browse content: [all 172 commands](dist/agent-src/commands/) · [skills catalog](docs/skills-catalog.md) · [full catalog](docs/catalog.md) · [`llms.txt`](llms.txt).
 
 ---
 

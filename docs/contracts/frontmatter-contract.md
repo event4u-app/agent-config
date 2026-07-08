@@ -83,7 +83,7 @@ install:
 ---
 ```
 
-### Command — `commands/cost-report.md`
+### Command — `commands/cost/report.md`
 
 ```yaml
 ---
