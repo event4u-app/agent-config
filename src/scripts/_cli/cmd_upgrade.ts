@@ -620,7 +620,8 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     _print(
         out,
         '✅  agent-config upgraded' +
-            (doctor_rc === 0 ? ' — doctor green.' : ' — review the doctor findings above.'),
+            (doctor_rc === 0 ? ' — doctor green.' : ' — review the doctor findings above.') +
+            ' Tune settings any time with `agent-config config`.',
     );
     return 0;
 }

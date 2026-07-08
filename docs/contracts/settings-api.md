@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-18
 # Settings GUI — REST API Contract (v1)
 
 > Local-only HTTP API exposed by `agent-config ui:serve` and reused by
-> `agent-config settings` / `agent-config setup`. Listens on `127.0.0.1`
+> `agent-config config` (alias `settings`) / `agent-config setup`. Listens on `127.0.0.1`
 > only; no auth, no cross-origin. The browser SPA is the sole client —
 > the legacy `/onboard` chat skill has been retired.
 >
@@ -72,9 +72,15 @@ Response (200):
     "values":       { "rule_loading_tier": "balanced", "...": "..." },
     "lastModified": 1747749791842,
     "path":         "settings/.agent-settings.yml",
-    "legacyHints":  { "user_name": "Matze" }
+    "legacyHints":  { "user_name": "Matze" },
+    "sources":      { "global": ["rule_loading_tier", "personal.ide"], "project": [] }
 }
 ```
+
+`sources` (road-to-setup-experience § Phase 5.4) carries the dotted
+leaf paths present in each layer FILE (not the merged tree) so the
+settings hub can badge which layer supplies a value — a `project`
+entry overrides a `global` one per the merge order above.
 
 `legacyHints` is an out-of-band sidecar carrying values that have moved
 out of `settingsSchema` but still live in a pre-v2 file on disk. Keys
