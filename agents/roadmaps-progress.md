@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**86 / 143 steps done · 60%**
+**109 / 167 steps done · 65%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   60%
+██████████████████████████░░░░░░░░░░░░░░   65%
 ```
 
 ## Open roadmaps
@@ -17,14 +17,15 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | [1](#blockers-road-to-ci-native-release-first-run) | ░░░░░░░░░░ 0% |
-| 2 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
-| 3 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 4 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 5 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
-| 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 8 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 9 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
+| 2 | [road-to-command-structure-optimization.md](roadmaps/road-to-command-structure-optimization.md) | 6 | 28 | 1 | 23 | 2 | 2 | 0 | ██████████ 96% |
+| 3 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
+| 4 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
+| 5 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
+| 6 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
+| 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 10 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
 
 ---
 
@@ -46,6 +47,19 @@
   - **What to do:**
     PR #780 merges (Phase 1) and, separately, until a
   - **Resolved when:** condition described above clears
+
+### [road-to-command-structure-optimization.md](roadmaps/road-to-command-structure-optimization.md)
+
+**Road to Command Structure Optimization** — 23 / 24 done (96%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Contract + ADR | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 1 | Slug-neutral nestings | ✅ done | 0 | 9 | 0 | 0 | 100% |
+| 2 | Slug-changing reorders (`replaces:`) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Bare-invocation standardization + lint | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | Regen + downstream surfaces | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 5 | Deferred follow-ups (recorded, not executed here) | ⬜ not started | 1 | 0 | 2 | 2 | 0% |
 
 ### [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md)
 

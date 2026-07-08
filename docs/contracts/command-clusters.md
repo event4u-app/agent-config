@@ -28,15 +28,15 @@ column 1 of this table.
 
 | Cluster | Phase | Sub-commands | Replaces |
 |---|:-:|---|---|
-| `fix` | 1 | `ci` · `pr-comments` · `pr-bot-comments` · `pr-developer-comments` · `portability` · `refs` · `seeder` · `comments` | `fix-ci` · `fix-pr-comments` · `fix-pr-bot-comments` · `fix-pr-developer-comments` · `fix-portability` · `fix-references` · `fix-seeder`; `comments` added 2026-06-22 — audits the **code comments** in the current branch's diff (simplify / shorten / remove), distinct from the PR-review-thread `pr-comments` sub |
-| `optimize` | 1 | `agents-dir` · `augmentignore` · `rtk` · `skills` | `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` · former `/optimize agents` and `/optimize agents-md` moved to the `/agents` file-family cluster 2026-05-09; `/agents prepare/audit/cleanup` collapsed into the single `/optimize agents-dir` (flags or wizard) per the agent-doc consolidation |
+| `fix` | 1 | `ci` · `pr-comments` · `pr-bot-comments` · `pr-developer-comments` · `portability` · `refs` · `seeder` · `comments` · `quality` | `fix-ci` · `fix-pr-comments` · `fix-pr-bot-comments` · `fix-pr-developer-comments` · `fix-portability` · `fix-references` · `fix-seeder`; `comments` added 2026-06-22 — audits the **code comments** in the current branch's diff (simplify / shorten / remove), distinct from the PR-review-thread `pr-comments` sub; `quality` added 2026-07-08 — replaces `quality-fix` (slug reorder, `replaces:` alias) |
+| `optimize` | 1 | `agents-dir` · `augmentignore` · `rtk` · `skills` · `project` · `prompt` | `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` · former `/optimize agents` and `/optimize agents-md` moved to the `/agents` file-family cluster 2026-05-09; `/agents prepare/audit/cleanup` collapsed into the single `/optimize agents-dir` (flags or wizard) per the agent-doc consolidation; `project` (slug-neutral nest of `optimize-project`, pack move engineering-base → meta) + `prompt` (slug-neutral nest of `optimize-prompt`) added 2026-07-08 — the head now spans agent-layer / project-wide / prompt scopes with a disambiguating menu |
 | `feature` | 1 | `explore` · `plan` · `refactor` · `roadmap` · `dev` | `feature-explore` · `feature-plan` · `feature-refactor` · `feature-roadmap` · `feature-dev` |
 | `chat-history` | 2 | `show` · `import` · `learn` | `chat-history` (legacy status) — `resume` / `clear` / `checkpoint` removed in `road-to-chat-history-hook-only` (auto-adopt + structural hooks); `import` (verbatim cross-session render) and `learn` (project-improving learning extraction) added in the v4 stateless schema |
 | `agents` | 2 | `init` · `optimize` · `audit` · `user` | AGENTS.md file family (high-frequency) — repurposed 2026-05-09: `init` (was `/copilot-agents init`) · `optimize` (merger of `/optimize agents-md` + `/copilot-agents optimize`) · `audit` (was `/optimize agents`, collapses old `audit` + `check` verbs); legacy folder ops (`prepare` / `cleanup` / folder-`audit`) moved to `/optimize agents-dir`; `user` sub-cluster added 2026-05-15 — manages the project-root `.agent-user.md` persona file (sub-sub-commands: `init` · `show` · `review` · `accept` · `update`) per [`agent-user-schema`](agent-user-schema.md) |
 | `memory` | 2 | `add` · `load` · `promote` · `propose` · `mine-session` · `learn-low-impact` | `memory-add` · `memory-full` · `memory-promote` · `propose-memory`; `mine-session` added 2026-05-10 — manual transcript-mining sub-command from an internal roadmap (local-only), opt-in via `--confirm-transcript-access` per invocation; `learn-low-impact` added 2026-05-15 — upstreams `## Validated` entries from `agents/decisions/low-impact-decisions.md` to the package seed via a DRAFT PR (re-runs the privacy-floor redactor as a second gate per `low-impact-corpus-privacy-floor`) |
 | `roadmap` | 2 | `create` · `ai-council` · `process-step` · `process-phase` · `process-full` | `roadmap-create` · `roadmap-execute` (replaced — autonomous, no per-step gate; `process-phase` is the default execution scope); `ai-council` added 2026-05-07 — wraps `/council default` with `--input-mode roadmap --depth deep` |
 | `module` | 2 | `create` · `explore` | `module-create` · `module-explore` |
-| `tests` | 2 | `create` · `execute` | `tests-create` · `tests-execute` |
+| `tests` | 2 | `create` · `execute` · `e2e-plan` · `e2e-heal` | `tests-create` · `tests-execute`; `e2e-plan` / `e2e-heal` added 2026-07-08 — replace the flat `e2e-plan` / `e2e-heal` (slug reorders, `replaces:` aliases; composite sub-names per ADR-003 §2) |
 | `context` | 2 | `create` · `refactor` | `context-create` · `context-refactor` |
 | `override` | 2 | `create` · `manage` | `override-create` · `override-manage` |
 | `judge` | 2 | `solo` · `on-diff` · `steps` | `judge` (legacy standalone) · `do-and-judge` · `do-in-steps` |
@@ -46,7 +46,7 @@ column 1 of this table.
 | `challenge-me` | — | `vision` · `with-docs` | new — Pocock-inspired one-question-at-a-time interview; `vision` is the standard 95%-confidence variant, `with-docs` adds doc/glossary awareness with a session-scoped glossary and load-bearing claim-vs-code verification |
 | `research` | 2 | `deep` · `report` | preliminary-research scaffolder ported from `Weizhena/Deep-Research-skills` (cluster head emits `outline.yaml` + `fields.yaml` against the `research-schema` contract). `:deep` populates per-item JSON in batches with native web-search + JSON-Schema self-validation (no Python runtime); `:report` renders `report.md` directly + optionally emits a `jq` template for deterministic regeneration. `add-items` / `add-fields` intentionally **not** ported — re-run `/research <topic>` to extend the field framework. |
 | `orchestrate` | — | _(none yet — cluster head only)_ | new — runtime executor for YAML pipelines under `.agent-config/orchestrations/` per the [`orchestration-dsl-v1`](orchestration-dsl-v1.md) contract; chains personas / skills / commands / sub-agents deterministically. Single cluster head; sub-commands deferred until a second verb is needed. |
-| `sync-gitignore` | — | `fix` | new sub-command 2026-05-11 — cluster head retains the existing append-only sync as its default flow; `:fix` adds `--cleanup-legacy` semantics, scrubbing pre-`/agents/` runtime patterns wherever they appear in the consumer's `.gitignore` (inside or outside the managed block) and re-syncing the canonical entries. |
+| `sync` | 4 | `agent-settings` · `gitignore` · `gitignore-fix` | new cluster 2026-07-08 — absorbs the former single-sub `sync-gitignore` cluster (slug-neutral nests: `sync-agent-settings`, `sync-gitignore`, `sync-gitignore-fix` keep their slugs; the gitignore node keeps its own `fix` sub-dir, mirroring the `agents/user` deep-nest precedent). Bare `/sync` shows the menu. |
 | `ghostwriter` | — | `fetch` · `write` · `list` · `show` · `delete` | new cluster 2026-05-15 — third voice primitive for AI-assisted writing in the public voice of a public figure. Hybrid storage: real-person profiles live consumer-side under `agents/reference/ghostwriter/<slug>.md` (gitignored by default); package source ships only `fictional: true` fixtures. Zero network code in the package — `:fetch` delegates web-fetch / web-search to the host agent. Mandatory disclosure footer on every `:write` output (no opt-out). Schema: [`ghostwriter-schema`](ghostwriter-schema.md). |
 | `post-as` | — | `me` · `ghostwriter` | new cluster 2026-05-15 — consumer-facing write entry points. `:me` reads `.agent-user.md.voice_sample` and drafts in the maintainer's own voice (no disclosure footer — the user is the author); `:ghostwriter` is a thin alias for `/ghostwriter:write` with the mandatory disclosure footer. Both share the procedural [`write-engine`](write-engine.md) contract — style source and footer are the only axes of variation. |
 | `video` | — | `from-script` · `from-song` · `scene` · `storyboard` · `stitch` | new cluster 2026-05-17 — AI video generation pipeline. Cluster head orchestrates the full flow; `:scene` runs a single scene end-to-end (script → blueprint → still → motion → clip); `:storyboard` expands a script into per-scene blueprints + reference stills with character-lock JSON; `:from-script` walks a multi-scene script through storyboard + per-scene generation; `:from-song` builds a music-video from a song + reference images — derived/briefed timed script (via the `song-to-script` skill + `probe-audio.sh` hybrid segmentation), optional character-lock, then stitch with the song muxed as the master track and a mandatory AI-generation disclosure; `:stitch` concatenates scene clips with `ffmpeg` against a scene manifest. Provider-agnostic via the adapter contract under `scripts/media/lib/adapter-contract.md`; cost-gated with mandatory `AIV_DRYRUN=true` default and explicit confirmation before live provider calls. |
@@ -58,13 +58,43 @@ column 1 of this table.
 
 | `team-knowledge` | — | `consolidate` · `bootstrap` | new cluster 2026-07-05 (`road-to-knowledge-system` Phases 5-6) — the repo-tracked team-knowledge layer under `agents/knowledge/{sessions,concepts,procedures,decisions}/`. Distinct from the pre-existing [`knowledge`](#locked-clusters) cluster (arbitrary local-file ingestion into `agents/memory/knowledge/`) — different namespace, different concern. `:consolidate` reads pending typed-observation events (`consolidate_knowledge_events.ts`), finds the nearest existing page per topic (mechanical similarity), and presents a NEW/EXTEND/CONFIRM/CONFLICT batch for human approval — never writes a page automatically. `:bootstrap` (`bootstrap_knowledge.ts`) stages a one-shot deterministic seed (detected package manifest, top-level directories, known config filenames — never file content, never an LLM-invented claim) to a gitignored staging dir for review-then-commit. |
 | `profile` | — | `activate` · `deactivate` · `show` | new cluster 2026-06-02 (`road-to-session-profile-activation`) — session-profile activation: an ephemeral `runtime.active_packs` overlay that biases the surfaced command/skill set to the active pack closure, with no persistence and no execution-gating (recommendation-bias MVP). `:activate <name…>` resolves an alias (`src/config/discovery/session-profiles.yml`) or a raw pack id, fails fast on a not-installed pack, expands the `requires_hint` closure, and writes the overlay atomically to `agents/settings/.agent-settings.local.yml`; `:deactivate [name…]` clears it (or drops named packs, keeping deps a still-active pack needs); `:show` is the observability surface (active packs + surfaced/hidden counts). Overlay = runtime modulation of the existing `pack` axis, not a fifth axis (ADR-010 addendum). Library: `scripts/config/session_profiles.py`; schema in [`session-profile-overlay`](session-profile-overlay.md). |
+| `analyze` | 4 | `postmortem` · `premortem` · `decision` · `near-miss` · `incident` · `reference-repo` | analysis-workbench cluster, registered in this table 2026-07-08 (pre-existing head + five framework subs); `reference-repo` added 2026-07-08 — slug-neutral nest + pack move of `analyze-reference-repo` (engineering-base → analysis-workbench, co-locating with its head) |
+| `bug` | 4 | `fix` · `investigate` | new cluster 2026-07-08 — slug-neutral nests of `bug-fix` + `bug-investigate`; triage entry point (investigate = root cause, fix = plan + implement). Bare `/bug` shows the menu. |
+| `project` | 4 | `analyze` · `health` | new cluster 2026-07-08 — slug-neutral nests of `project-analyze` + `project-health`; project-wide inspection (analyze = full audit, health = read-only). Bare `/project` shows the menu. |
+| `review` | 4 | `changes` · `routing` | new cluster 2026-07-08 — slug-neutral nests of `review-changes` (tier moved to the head: sub is internal, head is the advanced surface) + `review-routing` (pack move meta → engineering-base). `prepare-for-review` deliberately stays flat (council-rejected slug change). Bare `/review` shows the menu. |
+| `package` | 4 | `test` · `reset` | new cluster 2026-07-08 — slug-neutral nests of `package-test` (pack move engineering-base → meta) + `package-reset`; package-install maintenance. Bare `/package` shows the menu. |
+| `cost` | 4 | `report` · `profile` | new cluster 2026-07-08 — slug-neutral nest of `cost-report` + `profile` replacing `set-cost-profile` (slug reorder, `replaces:` alias). Bare `/cost` shows the menu. |
 
 **Net change:** Phase 1 collapsed 15 atomics → 3 clusters; Phase 2
-collapses 26 atomics → 11 sub-command clusters. Sub-commands use
-colon syntax (`/cluster:sub`) so Claude Code's command palette can
-autocomplete them. The standalone `/review` surface that mirrors
-`judge solo` lives at
-[`commands/review-changes.md`](../../.agent-src.uncondensed/commands/review-changes.md).
+collapses 26 atomics → 11 sub-command clusters. Phase 4 (2026-07-08,
+`road-to-command-structure-optimization`) nests 19 more flat commands
+into 6 new + 4 extended clusters — 15 of them slug-neutral (path
+hyphen-joining keeps the invoked name), 4 slug reorders carried by
+`replaces:` aliases (`fix-quality`, `tests-e2e-plan`, `tests-e2e-heal`,
+`cost-profile`). The five-judge self-review formerly at
+`review-changes` is now the `changes` sub of the `review` cluster.
+
+## Bare invocation — deterministic, never guessed
+
+Locked with Phase 4 (2026-07-08). Every cluster head defines what a
+bare `/<cluster>` (no sub-command, no auto-detect signal) does:
+
+1. **Multi-sub head → numbered menu.** Print the sub-command menu and
+   ask; never guess a sub-command. Heads with `auto_detect: true` run
+   their detection table first, but LOW confidence still ends in the
+   menu (interactive) or `ambiguous_routing` (CI) — never a guess.
+2. **Single-sub head → default-route.** Route to the only sub and say
+   so (e.g. `/chat-history` → `import`).
+3. **Documented default-flow exceptions.** A head whose bare
+   invocation runs a real default flow declares it in its `## Dispatch`
+   section (e.g. `/council` → `default` lens, `/sync gitignore` bare →
+   its own `## Default flow`). The exception lives in the head file —
+   not in tribal knowledge.
+
+`scripts/check_cluster_patterns.ts` enforces the structural side:
+every phase-numbered cluster head carries `## Sub-commands` (with the
+locked table header), `## Dispatch`, and `## Rules`, and every
+`routes_to:` entry must resolve to a real command.
 
 ## Cluster depth and sub-command naming
 
