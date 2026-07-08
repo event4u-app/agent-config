@@ -19,7 +19,12 @@ v1 forward-compat rule on unknown fields).
   "wall_clock_ms": 0,
   "outcome": "DONE",
   "verify_mode": "deterministic",
-  "verdict_changed_outcome": null
+  "verdict_changed_outcome": null,
+  "task_class": null,
+  "tier_chosen": null,
+  "tier_source": null,
+  "escalated_from": null,
+  "verify_result_by_tier": null
 }
 ```
 
@@ -36,6 +41,15 @@ v1 forward-compat rule on unknown fields).
 | `outcome` | enum | One of `DONE` · `DONE_WITH_CONCERNS` · `NEEDS_CONTEXT` · `BLOCKED` · `killed`. |
 | `verify_mode` | enum | How the dispatch's output was verified: `deterministic` · `judge` · `none`. |
 | `verdict_changed_outcome` | bool \| null | **A3 extension (ADR-109 Track A).** For a review/verdict subagent (e.g. `production-validator`): did the subagent's verdict actually change the outcome versus the in-session baseline? `true` = it caught a real issue the baseline missed or flipped a false `READY`→`NOT READY`; `false` = same outcome as baseline (no lift); `null` = not a verdict dispatch / not measured. **Negative-control tasks (a clean single-file task) MUST record `false`** — a subagent that reports `true` on a control is producing spurious findings and fails Gate A. This is an additive field on THIS object, not a second schema. Counts/boolean only, no bodies. |
+| `task_class` | string \| null | **Routing extension (road-to-cost-aware-model-routing Phase 0).** Category id of the dispatched slice (e.g. `read-only-fanout`, `mechanical-edit`, `implementation`, `review-synthesis`). Enum-style id only, never free-form task text. `null` = pre-extension line / unclassified. |
+| `tier_chosen` | string \| null | Tier the slice was dispatched on (`lite` \| `medium` \| `high`). `null` = pre-extension line. |
+| `tier_source` | enum \| null | Where `tier_chosen` came from: `static` (frontmatter/category pin) · `inferred` (deterministic per-slice inference) · `inherit` (session tier — no downshift decision). Lets the evidence gate score inferred routing separately from static pinning. |
+| `escalated_from` | string \| null | When the slice was re-dispatched after a verification failure: the tier of the FAILED attempt (e.g. `lite` when a lite return failed verify and the slice re-ran on `medium`). `null` = no escalation. |
+| `verify_result_by_tier` | object \| null | Map of tier → verification result for every attempt of this slice (e.g. `{"lite":"fail","medium":"pass"}`). Values: `pass` \| `fail` \| `skipped`. Feeds the per-tier verify-pass-rate tripwire. Enums only, no verdict bodies. |
+
+All five routing fields are additive and optional — a line without them is
+still a valid orchestration line; readers ignore unknown fields per the v1
+forward-compat rule.
 
 ## Privacy floor
 

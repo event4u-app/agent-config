@@ -25,6 +25,14 @@ If the session runs on **opus**, judge stays on opus (no higher tier
 available). If the session runs on **sonnet**, judge defaults to opus.
 If the session runs on **haiku**, judge defaults to sonnet.
 
+**Downshift never touches the judge.** When cost-aware routing runs an
+implementer on a downshifted tier (per the category → tier defaults in
+[`model-recommendations § Subagent Category → Tier Defaults`](model-recommendations.md)),
+the judge still resolves one tier above the IMPLEMENTER's resolved tier —
+a `lite` implementer gets at least a `medium` judge. Downshifting an
+implementer never downshifts its judge below what the verify contract
+requires; a judge is never `lite`.
+
 ## Resolution order
 
 For both implementer and judge:
