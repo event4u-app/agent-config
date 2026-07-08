@@ -25,6 +25,7 @@ import { useEffect } from 'preact/hooks';
 import { route, initRouter, navigate } from './router.js';
 import { WizardPage } from './pages/WizardPage.js';
 import { SettingsHubPage } from './pages/SettingsHubPage.js';
+import { SettingsChangesPage } from './pages/SettingsChangesPage.js';
 import { ProjectSettingsPage } from './pages/ProjectSettingsPage.js';
 import { WorkspacePage } from './pages/WorkspacePage.js';
 import { serverStatus, fetchServerStatus } from './serverStatus.js';
@@ -138,6 +139,9 @@ function dispatch(path: string): preact.JSX.Element {
     // again (simple/advanced tiers, search, modified indicators). The
     // wizard stays the guided first-run flow; `agent-config config` and
     // the Settings tab land here.
+    // Upgrade-time review form (road-to-settings-change-review) — must
+    // dispatch BEFORE the /settings prefix match.
+    if (path === '/settings/changes') return <SettingsChangesPage />;
     if (path === '/settings' || path.startsWith('/settings/')) return <SettingsHubPage />;
     if (path === '/project' || path.startsWith('/project/')) return <ProjectSettingsPage />;
     // Placeholder surfaces (Tasks / Council / Memory / Explain) were removed

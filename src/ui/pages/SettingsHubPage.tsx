@@ -29,6 +29,7 @@ import {
 } from '../forms/schemaTypes.js';
 import { isBasicPath } from '../settings/basicPaths.js';
 import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
+import { SettingsChangesBanner } from './SettingsChangesPage.js';
 
 interface SettingsGetResponse {
     values: Record<string, JsonValue>;
@@ -297,6 +298,7 @@ export function SettingsHubPage(): preact.JSX.Element {
                     <a href="#/settings/user">Edit .agent-user.yml →</a>
                 </nav>
             </header>
+            <SettingsChangesBanner />
             <div class="ac-settings-hub__toolbar" role="search">
                 <input
                     class="ac-input ac-settings-hub__search"
