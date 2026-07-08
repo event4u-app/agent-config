@@ -4,11 +4,11 @@ name: analyze
 disable-model-invocation: true
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
-routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident]
+routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference-repo]
 replaces: []
 tier: 1
 visibility: advanced
-description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, or incident frameworks.
+description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, or reference-repo analysis.
 cluster: analyze
 type: orchestrator
 suggestion:
@@ -37,6 +37,7 @@ to the chosen sub-command. Never auto-selects silently.
 | `/analyze:decision` | `analyze/decision/command.md` | Audit a past architectural decision (did it hold?) |
 | `/analyze:near-miss` | `analyze/near-miss/command.md` | Post-mortem for a near-miss (same flow, lighter severity framing) |
 | `/analyze:incident` | `analyze/incident/command.md` | Full incident flow: commander → RCA → post-mortem → memory candidate |
+| `/analyze:reference-repo` | `analyze/reference-repo/command.md` | Deep-dive an external reference repo (competitor, inspiration, peer) → structured comparison + adoption plan |
 
 ## Dispatch
 
@@ -60,6 +61,7 @@ match:
 | "pre-mortem", "what could go wrong", "imagine failure", "vor dem Start" | `premortem` |
 | "decision review", "ADR", "did this hold up", "rückblick Architektur" | `decision` |
 | "production is down", "active incident", "Vorfall", "Prod ist down" | `incident` |
+| external repo URL / `owner/repo`, "how does X do this", "compare with that repo", "competitor" | `reference-repo` |
 
 Assign a confidence level (high / medium / low) per framework based on
 signal count. A framework with zero signals gets `low`.
@@ -77,7 +79,8 @@ escape:
 > 3. [low] Pre-mortem (`/analyze:premortem`) — imagined-failure analysis before committing
 > 4. [low] Decision review (`/analyze:decision`) — did a past architectural decision hold up?
 > 5. [low] Incident (`/analyze:incident`) — full live-incident coordination + RCA + post-mortem
-> 6. Describe in your own words — I'll re-classify
+> 6. [low] Reference repo (`/analyze:reference-repo`) — deep-dive an external repo → comparison + adoption plan
+> 7. Describe in your own words — I'll re-classify
 
 **Empfehlung:** 1
 
@@ -91,7 +94,7 @@ Ask one question (per `ask-when-uncertain`):
 > What happened or what are you trying to analyse?
 
 Re-run Step 2 with the answer. Present the menu again. Do not loop
-more than twice — on the third attempt, show all five options unranked
+more than twice — on the third attempt, show all six options unranked
 and let the user pick.
 
 ### 5. Unknown sub-command

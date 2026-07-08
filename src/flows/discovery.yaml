@@ -13,7 +13,7 @@ summary: >-
   should we build and how" front of the developer journey.
 entry_points:          # commands that START the flow (daily front doors)
   - feature/plan
-  - bug-investigate
+  - bug/investigate
   - research
 default_path:          # canonical command sequence
   - feature/explore
@@ -28,8 +28,8 @@ skills:                # skills the flow composes end-to-end
   - validate-feature-fit
 commands:              # seed from worksheet ·_flow:discovery_ tags
   - feature/plan
-  - bug-investigate
-  - project-analyze
-  - project-health
+  - bug/investigate
+  - project/analyze
+  - project/health
   - estimate-ticket
   - refine-ticket

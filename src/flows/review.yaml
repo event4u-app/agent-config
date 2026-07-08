@@ -8,15 +8,15 @@
 id: review
 title: Review
 summary: >-
-  Check it. Self-review, judge, quality-fix, and threat-model a change before
+  Check it. Self-review, judge, fix/quality, and threat-model a change before
   it ships.
 entry_points:          # commands that START the flow (daily front doors)
-  - review-changes
+  - review/changes
   - judge
 default_path:          # canonical command sequence
-  - review-changes
+  - review/changes
   - judge
-  - quality-fix
+  - fix/quality
   - threat-model
 skills:                # skills the flow composes end-to-end
   - code-review
@@ -25,8 +25,8 @@ skills:                # skills the flow composes end-to-end
   - threat-modeling
   - receiving-code-review
 commands:              # seed from worksheet ·_flow:review_ tags
-  - review-changes
+  - review/changes
   - judge
-  - quality-fix
+  - fix/quality
   - fix/ci
   - threat-model

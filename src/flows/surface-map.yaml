@@ -35,28 +35,30 @@ platform_surfaces: [product, agent-admin, session, media, marketing, fun]
 commands:
   discovery:
     - analyze
-    - analyze-reference-repo
+    - analyze/reference-repo
     - analyze/decision
     - analyze/incident
     - analyze/near-miss
     - analyze/postmortem
     - analyze/premortem
-    - bug-investigate
+    - bug
+    - bug/investigate
     - estimate-ticket
     - feature
     - feature/explore
     - feature/plan
     - feature/refactor
     - feature/roadmap
-    - optimize-project
-    - project-analyze
-    - project-health
+    - optimize/project
+    - project
+    - project/analyze
+    - project/health
     - refine-ticket
 
   implementation:
-    - bug-fix
-    - e2e-heal
-    - e2e-plan
+    - bug/fix
+    - tests/e2e-heal
+    - tests/e2e-plan
     - feature/dev
     - implement-ticket
     - jira-ticket
@@ -74,8 +76,9 @@ commands:
     - judge/on-diff
     - judge/solo
     - judge/steps
-    - quality-fix
-    - review-changes
+    - fix/quality
+    - review
+    - review/changes
     - security-audit-config
     - threat-model
 
@@ -140,7 +143,8 @@ commands:
     - context
     - context/create
     - context/refactor
-    - cost-report
+    - cost
+    - cost/report
     - knowledge
     - knowledge/cross-repo
     - knowledge/forget
@@ -156,7 +160,7 @@ commands:
     - module
     - module/explore
     - optimize
-    - optimize-prompt
+    - optimize/prompt
     - optimize/agents-dir
     - optimize/augmentignore
     - optimize/rtk
@@ -165,22 +169,24 @@ commands:
     - override
     - override/create
     - override/manage
-    - package-reset
-    - package-test
+    - package
+    - package/reset
+    - package/test
     - profile
     - profile/activate
     - profile/deactivate
     - profile/show
-    - review-routing
+    - review/routing
     - rule-compliance-audit
-    - set-cost-profile
+    - cost/profile
     - skill
     - skill/preview
     - skills
     - skills/discover
-    - sync-agent-settings
-    - sync-gitignore
-    - sync-gitignore/fix
+    - sync
+    - sync/agent-settings
+    - sync/gitignore
+    - sync/gitignore/fix
     - team-knowledge
     - team-knowledge/bootstrap
     - team-knowledge/consolidate

@@ -16,7 +16,7 @@ version: 1
 recipes:
   - title: "Review a change before it ships"
     when: "You have a diff and want a real review, not a rubber-stamp."
-    commands: [review-changes, judge, quality-fix]
+    commands: [review/changes, judge, fix/quality]
     skills: [code-review, adversarial-review]
 
   - title: "Fix a red CI run"
@@ -51,7 +51,7 @@ recipes:
 
   - title: "Investigate and fix a bug"
     when: "Something is broken and you want root cause before the patch."
-    commands: [bug-investigate, bug-fix]
+    commands: [bug/investigate, bug/fix]
     skills: [systematic-debugging, bug-analyzer]
 
   - title: "Get a second opinion from the AI council"
@@ -66,7 +66,7 @@ recipes:
 
   - title: "Refactor with a safety net"
     when: "You want to restructure code without changing behaviour."
-    commands: [feature/refactor, review-changes, judge]
+    commands: [feature/refactor, review/changes, judge]
     skills: [code-refactoring, test-driven-development]
 
   - title: "Commit in logical chunks"
@@ -76,7 +76,7 @@ recipes:
 
   - title: "Analyze an unfamiliar project"
     when: "You just opened a repo and want a fast structural read."
-    commands: [project-analyze, project-health]
+    commands: [project/analyze, project/health]
     skills: [project-analyzer]
 
   - title: "Estimate a ticket"
