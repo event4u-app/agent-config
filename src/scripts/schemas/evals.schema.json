@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/evals.schema.json",
+  "x-schemaVersion": "1.0.0",
+  "title": "Skill behavioural evals (evals.json)",
+  "$comment": "Behavioural-eval spec consumed by run_skill_evals.ts (scaffold/aggregate/report) and counted by skill_eval_coverage.ts. Distinct from triggers.json (activation/routing axis). Roadmap: road-to-skill-eval-coverage Phase 1. Assertion kinds mirror _grade_assertions() in run_skill_evals.ts exactly — add a kind there before adding it here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["skill", "scenarios"],
+  "properties": {
+    "skill": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Skill slug; must match the parent skill directory name (evals/ lives under src/skills/<skill>/)."
+    },
+    "_calibration": {
+      "type": "string",
+      "description": "Optional free-text note recording calibration status / provenance (e.g. uncalibrated finding_floor placeholders). Advisory; ignored by the grader."
+    },
+    "skill_body_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Optional SHA-256 of the skill's SKILL.md body at the time these evals were authored/last verified. When present, lint_behavioural_eval_freshness flags the eval stale if the current SKILL.md sha differs — the body changed, so the eval may no longer exercise it. Absent = unpinned (out of scope for the staleness gate), mirroring lint_eval_freshness's upstream:null handling."
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One or more behavioural cases. Each pairs a prompt fixture with deterministic pass/fail assertions on the produced output.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "prompt", "assertions"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "description": "Stable scenario slug, unique within this file (run directories are named by it)."
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The input fixture handed to the skill under test."
+          },
+          "assertions": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Pass/fail checks on the output. Prefer deterministic kinds (contains/file_exists/finding_floor); use rubric only where a deterministic check is impossible, and pin the judge as a known limit.",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "value"],
+                  "properties": {
+                    "kind": { "const": "contains" },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Substring the output must contain (deterministic)."
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "path"],
+                  "properties": {
+                    "kind": { "const": "file_exists" },
+                    "path": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Path (run-relative or absolute) the skill must have produced (deterministic)."
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "n"],
+                  "properties": {
+                    "kind": { "const": "finding_floor" },
+                    "n": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Minimum number of findings the output must carry (counted deterministically). 0 is a trivially-passing floor (the grader passes when count >= n) — used where the case only guards against over-reporting."
+                    },
+                    "pattern": {
+                      "type": "string",
+                      "description": "Optional regex counted globally; without it, markdown list-item lines are counted (see _count_findings)."
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "criterion"],
+                  "properties": {
+                    "kind": { "const": "rubric" },
+                    "criterion": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Natural-language pass criterion graded by a sub-agent. NON-deterministic — the grader returns pass:null until a pinned judge fills it. Use only where no deterministic check exists; record the judge as a known limit."
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "_comment": "Behavioural-eval coverage ratchet floor (road-to-skill-eval-coverage Phase 3). skill_eval_coverage --check fails if coverage drops below these counts. Regenerate with `--write-floor` ONLY after authoring evals — the floor only rises.",
+  "overall": 2,
+  "tiers": {
+    "rich": 0,
+    "default-surface": 0,
+    "router": 0,
+    "priority": 0,
+    "other": 2
+  }
+}
