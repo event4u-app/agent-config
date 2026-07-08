@@ -35,6 +35,7 @@ clusters:
   ai_council: lab         # multi-model council orchestration, external API deps
   command_suggester: lab # context-aware command suggestion engine, pilot
   cost: lab              # cost tracking / budget gate (observability, Node .mjs)
+  mcp_exec: lab          # compiled safety envelope for MCP exec-tier tools (run_tests pilot)
   mcp_server: lab        # MCP stdio server, separate runtime, pilot distribution
   media: lab             # shared adapter substrate for ai-video / ai-image
   parity: lab            # py2ts parity rigs (compare / coverage-diff), migration tooling
