@@ -5,7 +5,7 @@
 React framework patterns.
 
 - **id**: `react`
-- **version**: `8.6.0`
+- **version**: `8.7.0`
 - **owner**: engineering
 - **requires**: javascript, engineering-base
 - **artefacts**: 3
