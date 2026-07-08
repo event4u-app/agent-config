@@ -86,6 +86,8 @@ tasks:
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay
+      - task: check-eval-coverage
+      - task: lint-behavioural-eval-freshness
       - task: check-skill-gaps
       - task: check-comparison
       - task: check-structural-breaking
@@ -254,6 +256,8 @@ tasks:
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay
+      - task: check-eval-coverage
+      - task: lint-behavioural-eval-freshness
       - task: check-skill-gaps
       - task: check-comparison
       - task: check-structural-breaking
