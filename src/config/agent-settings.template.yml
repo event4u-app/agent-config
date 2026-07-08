@@ -695,6 +695,17 @@ memory:
   # Example: ["api[_-]?key", "/Users/[a-z]+/Library"]
   redact_patterns: []
 
+  # Opt-in compact memory index at session start
+  # (road-to-memory-retrieval-economy Phase 5). When `on`, session_start
+  # injects a compact index of curated entries — id + title + ~tokens,
+  # hard cap 30 rows — through the hot-context hook surface. Bodies are
+  # never injected; the model fetches full entries via memory_get on
+  # demand. Default OFF: the ship-criterion (measured hit-rate gain at
+  # bounded fixed cost) is unproven — off unless proven.
+  #   off = (default) no session-start index.
+  #   on  = inject the compact index (spotlighted as DATA).
+  session_index: "off"
+
 # --- Knowledge cards: global cross-project sharing (ADR-100) ---
 #
 # Structure-grounding v2. Promote *expensive* (remote) knowledge cards from

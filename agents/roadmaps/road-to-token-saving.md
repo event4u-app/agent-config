@@ -471,6 +471,20 @@ one-off roadmaps.
       is ever scheduled — until then no consumer of this coverage exists.
       Replaces the deleted golden-set-coverage maintainer track; verdict in
       agents/settings/contexts/token-program-integration-verdict.md. -->
+- [x] Triage: AST-folded code reading (`smart_search`/`smart_unfold`-class —
+      tree-sitter folding with per-symbol token counts, unfold on demand).
+      <!-- CANDIDATE recorded 2026-07-08 (road-to-memory-retrieval-economy P7),
+      NOT promoted. Ship-criterion: build ONLY if a measured replay of real
+      code-reading tasks shows ≥30% token cut vs the host's NATIVE read/grep
+      at equal task success (paired, real tokenizer per D2 of that roadmap) —
+      AND no host-native folding surface covers it first. KILL criterion:
+      Claude Code's Read tool already does targeted offset/limit reads and
+      hosts are actively growing code-navigation surfaces (LSP/outline) —
+      overlap risk is HIGH; if a host-native surface lands first, kill
+      without measurement. Context: the memory-retrieval P1b honest null
+      showed two-phase fetch only pays on LARGE payloads; whole-file code
+      reads are that class, which is why this stays a candidate instead of
+      being dropped outright. -->
 
 **Exit:** each candidate is promoted to a phase or marked `[-]` with a reason; no
 stale candidates.

@@ -27,7 +27,7 @@ apart:
 1. `agents/settings/contexts/second-brain-delta-verdict.md` Q4
    (2026-07-07): "file-first in-memory BM25 (minisearch-class, re-index at
    session-start, no persistence)".
-2. `agents/roadmaps/road-to-memory-retrieval-economy.md` Phase 6
+2. `agents/roadmaps/archive/road-to-memory-retrieval-economy.md` Phase 6
    (2026-07-07/08): "SQLite FTS5 over the memory files … replacing
    `_score()`'s substring pass".
 3. `docs/decisions/ADR-061-corpus-grounding-layer.md`: "a new domain ships
@@ -115,7 +115,7 @@ new debate; in this state, firing would have required one.
 
 ## References
 
-- `agents/roadmaps/road-to-memory-retrieval-economy.md` § Phase 6 (engine
+- `agents/roadmaps/archive/road-to-memory-retrieval-economy.md` § Phase 6 (engine
   note + measurement-at-activation clause).
 - `agents/settings/contexts/second-brain-delta-verdict.md` Q4 (amended
   wording + tripwire table).

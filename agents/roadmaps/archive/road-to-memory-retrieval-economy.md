@@ -332,14 +332,28 @@ MCP server is connected; per-host rendering verified.
 claude-mem injects a 50-row compact index at SessionStart. Our `memory-load`
 is deliberately opt-in-full ("never auto-triggered") — that stance holds.
 
-- [ ] Add an opt-in consumer setting (`memory.session_index: off|on`, default
+- [x] Add an opt-in consumer setting (`memory.session_index: off|on`, default
       **off**) that, when on, emits a compact index of curated entries
       (titles + IDs + `~tokens`, hard cap ~30 rows / measured token ceiling)
       at session start via the existing hook surface.
-- [ ] Measure on the replay set: does the index improve memory HIT RATE
+      <!-- done 2026-07-08: src/scripts/session_memory_index.ts (rows via
+      retrieve_v1 detail:index over CURATED_TYPES, cap 30, spotlighted
+      <memory-index> DATA block, bodies never injected) wired into
+      hot_context_hook.ts session_start (lazy createRequire — the
+      default-off path pays nothing); setting documented in
+      agent-settings.template.yml; YAML-1.1 `on`→true handled. 6 tests. -->
+- [x] Measure on the replay set: does the index improve memory HIT RATE
       (model fetches a relevant entry it otherwise missed) enough to justify
       its fixed cost? Ship-criterion: hit-rate gain at ≤N tok fixed cost, N
       set from the Phase-0 baseline. Miss → stays off, honest-null.
+      <!-- measured 2026-07-08 (deterministic arm): fixed cost = 486 tok for
+      23 rows on the replay fixture corpus (real tokenizer; ~6.9% of the
+      7,092-tok Phase-0 full baseline; session_index_cost() +
+      regression-capped <1500 tok in tests). The HIT-RATE arm needs a live
+      paired model run (same class as the P1b judge arm — out-of-band);
+      it has NOT been run → per ship-criterion the default STAYS OFF.
+      Outcome: mechanism shipped opt-in, default off, honest. Re-open
+      together with the P1b flip trigger. -->
 
 **Exit:** evidence-backed default (off unless proven), setting documented.
 **Rollback:** setting removal; default was off throughout.
@@ -386,13 +400,17 @@ referenced; firing the tripwire needs measurement, not debate.
 
 ## Phase 7 — Candidate ledger: AST-folded code reading (documentation only)
 
-- [ ] Add claude-mem's `smart_search`/`smart_unfold` (tree-sitter folding with
+- [x] Add claude-mem's `smart_search`/`smart_unfold` (tree-sitter folding with
       per-symbol token counts, unfold on demand) to the token-program backlog
       as a CANDIDATE with a kill criterion: build only if a measured replay of
       real code-reading tasks shows ≥X% token cut vs the host's native
       read/grep at equal task success — and only if no host-native folding
       surface covers it first. Note the overlap risk with host tooling
       explicitly.
+      <!-- done 2026-07-08: recorded in road-to-token-saving.md Phase 10
+      (backlog umbrella) — X pinned to 30%, kill criterion = host-native
+      folding/navigation surface lands first (overlap risk named HIGH);
+      zero build, per the phase's documentation-only scope. -->
 
 **Exit:** candidate recorded with falsifiable ship/kill criteria; zero build.
 

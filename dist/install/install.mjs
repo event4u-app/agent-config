@@ -14153,6 +14153,9 @@ var settingsSchema = external_exports.object({
     ),
     redact_patterns: external_exports.array(external_exports.string()).default([]).describe(
       "Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive."
+    ),
+    session_index: external_exports.enum(["on", "off"]).default("off").describe(
+      "Opt-in compact memory index at session start (road-to-memory-retrieval-economy P5). on = inject a compact id + title + ~tokens index of curated entries (hard cap 30 rows, bodies never included) through the hot-context hook; the agent fetches full entries via memory_get on demand. off (default) = no injection \u2014 the ship-criterion (measured hit-rate gain) is unproven, so off unless proven."
     )
   }),
   knowledge: external_exports.object({
