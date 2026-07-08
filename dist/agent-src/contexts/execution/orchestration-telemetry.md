@@ -87,6 +87,21 @@ capture path (decided 2026-06-30, maintainer decision; see
    response length (chars / 4 ≈ tokens). Set `token_delta_provenance:
    "estimated"`. Lossy; measured always preferred.
 
+## Savings report
+
+Aggregate accumulated telemetry into a token-savings report:
+
+```bash
+./scripts-run src/scripts/orchestration_savings_report [--dir <path>] [--format text|json]
+```
+
+Sums `token_delta` across dispatches (negative = net saved); splits by
+provenance (measured vs estimated), `tier_chosen`, `task_class`. Reports
+**ABSOLUTE net tokens saved, never a percentage**: telemetry records net delta,
+not the absolute in-session baseline → "% of session saved" not derivable. A
+percentage needs an additive absolute-baseline field (deferred follow-up).
+Reader: [`src/scripts/_lib/orchestration_savings.ts`](../../../../src/scripts/_lib/orchestration_savings.ts).
+
 ## Related
 
 - [`audit-log-v1`](../../../../docs/contracts/audit-log-v1.md) — the frozen

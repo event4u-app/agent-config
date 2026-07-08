@@ -88,6 +88,22 @@ see `road-to-subagent-value-realization.md § Council notes`).
    response length (chars / 4 ≈ tokens). Set `token_delta_provenance:
    "estimated"`. This estimate is lossy; measured is always preferred.
 
+## Savings report
+
+Aggregate the accumulated telemetry into a token-savings report:
+
+```bash
+./scripts-run src/scripts/orchestration_savings_report [--dir <path>] [--format text|json]
+```
+
+It sums `token_delta` across dispatches (negative = net saved) and splits by
+provenance (measured vs estimated), `tier_chosen`, and `task_class`. It reports
+**ABSOLUTE net tokens saved, never a percentage**: the telemetry records net
+delta, not the absolute in-session baseline, so a "% of session saved" is not
+derivable from this data. A percentage would require an additive
+absolute-baseline field on this object (deferred follow-up). Reader:
+[`src/scripts/_lib/orchestration_savings.ts`](../../../../src/scripts/_lib/orchestration_savings.ts).
+
 ## Related
 
 - [`audit-log-v1`](../../../../docs/contracts/audit-log-v1.md) — the frozen
