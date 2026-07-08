@@ -39,6 +39,19 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
 **Exit criteria:** `gateVerdict()` run on real telemetry; flip decision recorded with evidence either way.
 **Rollback:** none (decision is evidence-gated; `ask` is the safe default if evidence is insufficient).
 
+## Notes (added 2026-07-08)
+
+- **`skills:` preload field is unused package-wide** (verified: only
+  `src/subagents/production-validator.md` exists, deliberately skill-isolated
+  per ADR-109). When any second specialist subagent is authored, list its
+  curated governance/convention skills in `skills:` frontmatter so they are
+  guaranteed in startup context instead of left to description-matching. No
+  roadmap work now — this note is the finding's home (council 2026-07-08).
+- The PUBLIC prove-or-drop decision on the orchestration front lives in the
+  standalone child `road-to-orchestration-scope-decision.md` (council
+  2026-07-08: adoption claim, kept separate from this internal telemetry
+  work). Its Phase 2 inherits this roadmap's telemetry blocker.
+
 ## Acceptance Criteria
 
 - [ ] A real orchestrated dispatch emits a captured, reportable telemetry line with a sourced `token_delta`; `breachedGuardrails` reads live telemetry.
