@@ -68,7 +68,8 @@ Tier 0 — daily-driver (init → sync → validate → work):
 TS-shell native (run via the installed `agent-config` binary):
   setup                      Open the onboarding wizard in the browser (UI server)
   install                    Open the install wizard (UI server, Step 1 / AI tools)
-  settings                   Open the local Settings GUI
+  config                     Open the configuration GUI (global default; --project for the project surface)
+  settings                   Open the local Settings GUI (alias of config)
   ui:serve                   Start the local UI server (127.0.0.1, auto-picked port)
   workspaces ls              List workspaces from the discovery manifest
   packs ls                   List packs from the discovery manifest
