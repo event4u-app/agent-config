@@ -52,9 +52,17 @@ of the verdict.
    Deterministic tripwire replaces any measurement gate: lint warns when any
    single memory/knowledge type >200 files or total corpus >500 files. The
    activation path is **pre-decided** so the tripwire firing needs no new
-   debate: file-first in-memory BM25 (minisearch-class, re-index at
-   session-start, no persistence, no service, no vectors — Layer-2 sunset
-   stands).
+   debate: SQLite FTS5 via Node's built-in `node:sqlite` (persisted,
+   gitignored index under `agents/runtime/state/`; batch/lazy re-index, no
+   inline per-write indexing; no npm dependency, no service, no vectors —
+   Layer-2 sunset stands). Engine unified with
+   `road-to-memory-retrieval-economy.md` Phase 6 by ADR-116 (tie-break
+   council claude-sonnet-4-5 + gpt-4o, 2026-07-08 — converged after the
+   in-repo `node:sqlite` precedent was surfaced; supersedes this verdict's
+   original "minisearch-class" wording). Activation additionally carries a
+   measurement-at-activation clause: on fire, reuse the retrieval-economy
+   Phase-0 replay set to measure grep vs FTS5 BEFORE building; ship only on
+   measured lift.
 
 5. **Q5 — Contradiction surfacing in `/memory promote`: ADOPT.** Durable
    types only (`incident-learnings`, `product-rules`, `domain-invariants`):
@@ -80,7 +88,7 @@ of the verdict.
 |---|---|---|
 | Intake scale | >2000 events | wire `fold_intake.ts` into post-session/CI |
 | Sessions scale | >50 pages | fold via consolidate gate (design then) |
-| Type scale | >200 files in one memory/knowledge type | build the pre-decided BM25 CLI |
+| Type scale | >200 files in one memory/knowledge type | measure, then build the pre-decided FTS5 path (ADR-116) |
 | Corpus scale | >500 files total | same |
 | Hot-context budget | >600 tokens parsed | trim schema / fix writer |
 
