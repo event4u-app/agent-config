@@ -91,6 +91,13 @@
 - status: backed
 - last_verified: 2026-07-08
 
+### claim: second-brain-unproven
+- claim: The second-brain substrate ships as continuity convenience; its cross-session task lift is unmeasured. A deterministic recall scorer + corpus exist (the rig), but no paired run has measured a lift, so no "second brain" capability claim is made until a backed lift entry exists.
+- kind: qual
+- evidence: docs/second-brain-scope.md#no measured task-lift
+- status: backed
+- last_verified: 2026-07-08
+
 ---
 
 ## Unbacked inventory (documented debt — not yet markered in prose)

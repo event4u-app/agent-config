@@ -34,10 +34,11 @@ evidence pointer, or `task check-claims` fails the build.
 | Behavioural-eval coverage is measured per tier and CI-ratcheted so it can only rise; the current coverage and its gap are published, never implied as "264 evaluated skills". | qual | `src/scripts/skill_eval_coverage.ts#checkRatchet` | ✅ |
 | The whole layer is compiled into host agents with zero runtime daemon. | qual | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` | ✅ |
 | 95 governed rules. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
+| The second-brain substrate ships as continuity convenience; its cross-session task lift is unmeasured. A deterministic recall scorer + corpus exist (the rig), but no paired run has measured a lift, so no "second brain" capability claim is made until a backed lift entry exists. | qual | `docs/second-brain-scope.md#no measured task-lift` | ✅ |
 | 264 skills (README hero + feature list). | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 
-**10 backed claim(s)** — all evidence pointers resolve in CI.
+**11 backed claim(s)** — all evidence pointers resolve in CI.
 
 Artefact counts in public prose (skills, commands, governed rules,
 guidelines, personas) are **generated from source and CI-drift-checked**:
@@ -79,6 +80,18 @@ default-surface domain skills carry a sourced `domain-truth` fixture
 answer keys needs domain competence (a cited method, not the skill's own
 output), so validation lands deliberately — the gap is published, never
 implied away.
+
+**Second-brain substrate — continuity convenience, task-lift unmeasured.**
+The memory substrate is built (working-memory continuity across
+compaction, promotable knowledge cards, contradiction surfacing), but
+whether it beats a no-memory baseline on a reproducible task is **not yet
+measured**. The measurement rig exists — a deterministic multi-session
+recall corpus + scorer (`./scripts-run src/scripts/second_brain_score
+--dry-run`, no model-in-the-loop grading) — but the paired
+`memory-on`/`off`/`placebo` run is spend-bearing and pending. So no
+"second brain" capability claim is made anywhere; the substrate ships as
+continuity convenience until a paired run backs a lift. Boundary vs a
+human PKM is stated in [`docs/second-brain-scope.md`](second-brain-scope.md).
 
 ## 3. Known limits (published, witness-tested)
 
