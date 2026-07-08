@@ -6,10 +6,10 @@
 
 ## Overall
 
-**118 / 437 steps done · 27%**
+**126 / 437 steps done · 29%**
 
 ```text
-███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
 ```
 
 ## Open roadmaps
@@ -34,7 +34,7 @@
 | 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
 | 17 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
 | 18 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
-| 19 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ░░░░░░░░░░ 0% |
+| 19 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ███████░░░ 73% |
 | 20 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 21 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
 | 22 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
@@ -417,14 +417,14 @@
 
 ### [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md)
 
-**Road to skill eval coverage — close the 2-of-264 behavioural-eval gap, tier-prioritised, ratcheted** — 0 / 11 done (0%)
+**Road to skill eval coverage — close the 2-of-264 behavioural-eval gap, tier-prioritised, ratcheted** — 8 / 11 done (73%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Lock the eval schema + a coverage metric | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Lock the eval schema + a coverage metric | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Cover the highest-traffic / highest-cost skills first | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Ratchet: a floor that only rises | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Honest disposition of the long tail | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Ratchet: a floor that only rises | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 4 | Honest disposition of the long tail | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-skill-eval-coverage"></a>
 **Blockers**
