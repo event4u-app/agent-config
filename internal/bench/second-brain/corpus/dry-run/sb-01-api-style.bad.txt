@@ -1,0 +1,1 @@
+I don't have that in context, but typically teams default to GraphQL, so we probably chose GraphQL for flexibility.

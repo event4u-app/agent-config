@@ -1,0 +1,1 @@
+Our strategy is short-lived JWT access tokens plus a rotating refresh token stored httpOnly.

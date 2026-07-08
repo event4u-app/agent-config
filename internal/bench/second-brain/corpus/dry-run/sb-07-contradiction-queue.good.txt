@@ -1,0 +1,1 @@
+Adding Kafka would contradict our earlier decision to reject Kafka and keep Postgres-backed jobs. Flagging the conflict before you proceed.

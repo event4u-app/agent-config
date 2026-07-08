@@ -49,22 +49,33 @@ ships labeled "continuity convenience, no measured task lift."
 
 - [x] Substrate Phases 1–6 landed (`road-to-second-brain.md`).
 - [x] Delta framed as open (`second-brain-delta-verdict.md`).
-- [ ] A deterministic memory-task scorer (this roadmap, Phase 1).
+- [x] A deterministic memory-task scorer (this roadmap, Phase 1).
 
 ## Phase 1 — Define the task + deterministic scorer (no LLM judge)
 
-- [ ] Author a **multi-session recall corpus** under
+- [x] Author a **multi-session recall corpus** under
       `internal/bench/second-brain/corpus/`: N tasks where session *k+1* needs
       a fact/decision established in session *k* (e.g. "the API contract we
       chose", "the constraint we rejected and why"). Each task carries a
       deterministic answer key.
-- [ ] Define the metric set, all deterministic: (a) retrieval accuracy — did
+      <!-- done 2026-07-08: internal/bench/second-brain/corpus/corpus.yml — 9
+      constructed session-k/k+1 tasks with deterministic must_contain/
+      must_not_contain keys (synthetic, deterministic-by-construction; provenance
+      header mirrors the memory-replay Option-A precedent). -->
+- [x] Define the metric set, all deterministic: (a) retrieval accuracy — did
       the agent surface the correct prior fact; (b) contradiction-catch rate —
       seed a session-*k+1* prompt that contradicts session *k*; does
       contradiction-surfacing fire; (c) repair rate — after an injected wrong
       memory, does `fold_intake`/promote correct it.
-- [ ] Scorer emits pass/fail per task, no model-in-the-loop grading (mirror
+      <!-- done 2026-07-08: all three metrics present (5 retrieval-accuracy,
+      2 contradiction-catch, 2 repair); each is a deterministic key, never a
+      model judgement. -->
+- [x] Scorer emits pass/fail per task, no model-in-the-loop grading (mirror
       `bench_ab_scoring_v2.py` discipline).
+      <!-- done 2026-07-08: src/scripts/second_brain_score.ts — pure substring
+      must_contain/must_not_contain, NO LLM judge. --dry-run: 9 good→PASS,
+      3 bad→FAIL (correct + discriminating); wired as check-second-brain-scorer.
+      Satisfies Phase 1 Exit (dry run scores hand-written transcripts). -->
 
 **Exit:** corpus + deterministic scorer exist; a dry run scores a hand-written
 transcript correctly.
@@ -77,11 +88,16 @@ transcript correctly.
       "notes" injected, no retrieval logic) — the placebo isolates *retrieval
       mechanism* from *mere extra context*, exactly as the discipline benchmark
       isolates content from length.
+      <!-- OPEN — blocked on `measurement-spend`: the 3-arm paired run is
+      spend-bearing. The scorer + corpus are ready to run it once authorized. -->
 - [ ] Run on ≥1 host × ≥3 seeds; keep the host fixed (wrapper-delta, not
       model comparison). Record cost/run — a memory substrate that wins on
       accuracy but costs 5× context is a different claim than one that wins cheaply.
+      <!-- OPEN — same `measurement-spend` block. -->
 - [ ] Stats: sign/Wilcoxon on the paired per-task scores; report effect size +
       cost factor.
+      <!-- OPEN — same `measurement-spend` block; stats run on the paired scores
+      once the run lands. -->
 
 **Exit:** pinned report with per-metric deltas + cost; PASS (substrate beats
 BOTH off and placebo) / NULL recorded.
@@ -89,17 +105,30 @@ BOTH off and placebo) / NULL recorded.
 
 ## Phase 3 — Honest positioning vs human-PKM
 
-- [ ] Write `docs/second-brain-scope.md`: a claim→evidence table stating what
+- [x] Write `docs/second-brain-scope.md`: a claim→evidence table stating what
       the substrate IS (agent recall/continuity/contradiction-repair, measured)
       and explicitly what it is NOT (a human-browsable knowledge graph; no
       link-density thesis; not an Obsidian replacement). Category column
       describes human-PKM only by what is publicly observable — never a
       counter-claim to a named project (mirror `docs/proof.md` § 4 discipline).
-- [ ] Add the CLAIMS entry: PASS → `backed` "cross-session recall lift (metric,
+      <!-- done 2026-07-08: docs/second-brain-scope.md — IS (continuity / cards /
+      contradiction-surfacing, task-lift UNMEASURED — corrected from the item's
+      "measured", which pre-supposed Phase 2) vs IS NOT (no editable vault, no
+      link-density thesis, not an Obsidian replacement); category by public
+      observation only. -->
+- [x] Add the CLAIMS entry: PASS → `backed` "cross-session recall lift (metric,
       N, p, cost)"; NULL → an `unbacked`/honest-null ledger line + the substrate
       is documented as "continuity convenience, no measured task lift."
-- [ ] Gate any "second brain" wording in README/site behind the CLAIMS marker;
+      <!-- done 2026-07-08 (pre-run form): CLAIMS `claim: second-brain-unproven`
+      (backed — the lift is UNMEASURED + the rig exists; evidence
+      docs/second-brain-scope.md). The PASS/NULL lift entry lands when the
+      Phase-2 paired run is authorized. -->
+- [x] Gate any "second brain" wording in README/site behind the CLAIMS marker;
       `check-claims` fails the build if the marker outruns the evidence.
+      <!-- done 2026-07-08: no "second brain" capability marker exists in live
+      public prose (only archive/ADR mentions); check_claims already fails any
+      markered claim without a backing, so a future "second brain" marker is
+      gated by construction. Honest status published (proof § 2 + scope doc). -->
 
 **Exit:** the scope doc + CLAIMS entry exist; no capability claim outruns its
 evidence pointer.
@@ -112,9 +141,13 @@ evidence pointer.
       wikilinks, so the agent-facing memory can *feed* a human PKM rather than
       pretend to replace it. Positions agent-config as the writer, Obsidian as
       the reader — complementary, not competitive.
+      <!-- OPEN — conditional on a Phase-2 PASS. Per the delta verdict, no
+      exporter is built absent a measured lift; the honest default is not to
+      build it. -->
 - [ ] Witness test: an exported card round-trips into a vault folder and renders
       (headless Markdown lint), documented as a known-limit if link fidelity is
       partial.
+      <!-- OPEN — conditional on the Phase-4 exporter above. -->
 
 **Exit:** export path + witness test, OR a recorded decision not to build it.
 **Rollback:** drop the exporter; core substrate unaffected.
@@ -128,6 +161,16 @@ evidence pointer.
   evidence pointer; the human-PKM boundary is stated, not blurred.
 - If PASS: an honest interop story (export to Obsidian) exists or is explicitly
   declined; the package never claims to *replace* a human PKM.
+
+> **Status (2026-07-08).** Criteria 1 and 3 are MET — the deterministic corpus +
+> scorer exist and are pinned (`check-second-brain-scorer` dry-run), and no
+> "second brain" capability claim appears in public prose (the human-PKM
+> boundary is stated in `docs/second-brain-scope.md`; the honest-null CLAIMS
+> entry + proof § 2 publish the unmeasured status). Criterion 2 (measured
+> against baseline + placebo) remains OPEN — the 3-arm paired run is Phase 2,
+> blocked on `measurement-spend`. Criterion 4 is conditional on a Phase-2 PASS.
+> The measurement rig is complete; the delta lands when spend is authorized. The
+> roadmap stays open on Phase 2, not archived.
 
 ## Blockers
 

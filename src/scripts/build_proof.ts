@@ -131,6 +131,18 @@ function render(): string {
     L.push('output), so validation lands deliberately — the gap is published, never');
     L.push('implied away.');
     L.push('');
+    L.push('**Second-brain substrate — continuity convenience, task-lift unmeasured.**');
+    L.push('The memory substrate is built (working-memory continuity across');
+    L.push('compaction, promotable knowledge cards, contradiction surfacing), but');
+    L.push('whether it beats a no-memory baseline on a reproducible task is **not yet');
+    L.push('measured**. The measurement rig exists — a deterministic multi-session');
+    L.push('recall corpus + scorer (`./scripts-run src/scripts/second_brain_score');
+    L.push('--dry-run`, no model-in-the-loop grading) — but the paired');
+    L.push('`memory-on`/`off`/`placebo` run is spend-bearing and pending. So no');
+    L.push('"second brain" capability claim is made anywhere; the substrate ships as');
+    L.push('continuity convenience until a paired run backs a lift. Boundary vs a');
+    L.push('human PKM is stated in [`docs/second-brain-scope.md`](second-brain-scope.md).');
+    L.push('');
     L.push('## 3. Known limits (published, witness-tested)');
     L.push('');
     const skillGaps = collectSkillGaps();

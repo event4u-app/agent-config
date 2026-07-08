@@ -1,0 +1,1 @@
+Tenant scoping is enforced at the schema level: tenant_id is the first column of each composite primary key on tenant-scoped tables.
