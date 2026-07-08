@@ -1,0 +1,139 @@
+# Replay queries for the memory-retrieval economy gate
+# (road-to-request-scoped-rule-load sibling: road-to-memory-retrieval-economy
+# Phase 0).
+#
+# PROVENANCE (council 2026-07-08, claude-sonnet-4-5 + gpt-4o, 2 rounds —
+# Option A verdict): the roadmap asked for queries "harvested from recent
+# maintainer sessions", but no such data exists — MCP telemetry records tool
+# names only (PII-excluded by construction; 7 stub calls total) and session
+# transcripts contain memory:lookup almost exclusively as documentation text.
+# These queries are therefore CORPUS-DERIVED: each is phrased the way a
+# session would ask for a real repo fact, against fixture entries seeded from
+# real repo content (realistic sizes). `needed` labels are deterministic BY
+# CONSTRUCTION (the entry the query targets), never LLM-labelled — satisfying
+# the roadmap's guard intent (no self-generated ground truth from the
+# evaluated model). Every claim from this rig is scoped to "corpus-derived
+# replay queries"; the token-economy arm is arithmetic over real payload
+# sizes and transfers; the query-DISTRIBUTION realism does not.
+version: 1
+queries:
+  - id: q-01-owner-router
+    types: [ownership]
+    keys: [compile_router]
+    limit: 5
+    needed: [own-router-compiler]
+  - id: q-02-owner-install
+    types: [ownership]
+    keys: ["src/install"]
+    limit: 5
+    needed: [own-install-pipeline]
+  - id: q-03-owner-claims
+    types: [ownership]
+    keys: [CLAIMS]
+    limit: 5
+    needed: [own-claims-ledger]
+  - id: q-04-owner-mcp
+    types: [ownership]
+    keys: [mcp_server]
+    limit: 5
+    needed: [own-mcp-server]
+  - id: q-05-bench-frozen-worktree
+    types: [ownership, historical-patterns]
+    keys: [bench, worktree]
+    limit: 8
+    needed: [own-bench-harness, hp-parallel-worktree-clobber]
+  - id: q-06-tmpdir-leak
+    types: [historical-patterns]
+    keys: [TMPDIR, tsx]
+    limit: 5
+    needed: [hp-tmpdir-tsx-cache]
+  - id: q-07-stale-generated
+    types: [historical-patterns]
+    keys: [generated, stale]
+    limit: 5
+    needed: [hp-generated-vs-source]
+  - id: q-08-overclaimed-checkbox
+    types: [historical-patterns]
+    keys: [checkbox]
+    limit: 5
+    needed: [hp-checkbox-overclaim]
+  - id: q-09-pr-head-lag
+    types: [historical-patterns]
+    keys: [headRefOid]
+    limit: 5
+    needed: [hp-pr-head-lag]
+  - id: q-10-phantom-ci
+    types: [historical-patterns]
+    keys: [workflow_dispatch, phantom]
+    limit: 5
+    needed: [hp-phantom-workflow-failure]
+  - id: q-11-no-runtime
+    types: [domain-invariants]
+    keys: [daemon]
+    limit: 5
+    needed: [di-no-runtime]
+  - id: q-12-kernel-scoping
+    types: [domain-invariants]
+    keys: [kernel]
+    limit: 5
+    needed: [di-kernel-unconditional]
+  - id: q-13-claims-invariant
+    types: [domain-invariants, product-rules]
+    keys: [evidence, claims]
+    limit: 8
+    needed: [di-evidence-before-claim]
+  - id: q-14-pipeline-parity
+    types: [domain-invariants]
+    keys: [rule_in_scope, parity]
+    limit: 5
+    needed: [di-projection-install-parity]
+  - id: q-15-tokenizer
+    types: [domain-invariants]
+    keys: [tokenizer, cl100k]
+    limit: 5
+    needed: [di-real-tokenizer]
+  - id: q-16-worktree-wipe-incident
+    types: [incident-learnings]
+    keys: [uncommitted, wiped]
+    limit: 5
+    needed: [il-783-worktree-wipe]
+  - id: q-17-plugin-cache-incident
+    types: [incident-learnings]
+    keys: [plugins/cache]
+    limit: 5
+    needed: [il-plugin-cache-reap-live-session]
+  - id: q-18-vitest-recursion
+    types: [incident-learnings]
+    keys: [exit 143, vitest]
+    limit: 5
+    needed: [il-vitest-recursion-143]
+  - id: q-19-count-drift
+    types: [incident-learnings]
+    keys: [count drift]
+    limit: 5
+    needed: [il-count-drift-158]
+  - id: q-20-flip-gate-rule
+    types: [product-rules]
+    keys: [default flip]
+    limit: 5
+    needed: [pr-flip-needs-gate]
+  - id: q-21-incident-and-pattern
+    types: [incident-learnings, historical-patterns]
+    keys: [live session, hooks]
+    limit: 8
+    needed: [il-plugin-cache-reap-live-session]
+  - id: q-22-knowledge-removal-safety
+    types: [knowledge]
+    keys: [removal, JSON pointer]
+    limit: 5
+    needed: ["install-contract:chunk-000"]
+  - id: q-23-knowledge-router-schema
+    types: [knowledge]
+    keys: [schema v2, workspaces]
+    limit: 5
+    needed: ["router-contract:chunk-000"]
+  - id: q-24-knowledge-bench
+    types: [knowledge]
+    keys: [paired, deterministic]
+    limit: 5
+    needed: ["bench-methodology:chunk-000"]

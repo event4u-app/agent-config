@@ -1,0 +1,34 @@
+version: 1
+entries:
+  - id: own-router-compiler
+    key: src/scripts/compile_router.ts
+    body: |
+      Owner: maintainer (matze4u). Kernel membership and tier routing are governed
+      surfaces — changes require the kernel-rule-edits slow-rollout (own PR, 24h soak).
+      The compiled dist/router.json is byte-stable; check-router gates every PR.
+  - id: own-install-pipeline
+    key: src/install/
+    body: |
+      Owner: maintainer. The TS installer (plan/apply/txlog) and install.sh are the
+      two consumer pipelines; both must stay behaviourally aligned. Conformance
+      contract: docs/contracts/install-layout.md. Removal safety: JSON-pointer +
+      SHA-256 matched removals only, never neighbour-tool entries.
+  - id: own-claims-ledger
+    key: docs/CLAIMS.md
+    body: |
+      Owner: maintainer. Every public number binds here; check_claims fails the
+      build when a marker outruns its evidence. Count claims are generated from
+      source via update_counts + check_artefact_count_messaging.
+  - id: own-mcp-server
+    key: src/scripts/mcp_server/
+    body: |
+      Owner: maintainer. Fully TS-served since the py2ts teardown. Tool surface is
+      tiered per agents/settings/contexts/mcp-tool-tier-map.md; telemetry is
+      PII-excluded by construction (tool names + hashes only, never arguments).
+  - id: own-bench-harness
+    key: src/scripts/bench_ab_v2_run.ts
+    body: |
+      Owner: maintainer. Paired A/B benchmark harness with codex host adapter.
+      Sweeps against per-run-read dist/ files must run from a FROZEN worktree —
+      mid-run edits contaminate injection. Reports pin under
+      internal/bench/reports/ab-v2/ and are cited by docs/benchmark.md.

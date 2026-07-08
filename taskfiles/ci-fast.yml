@@ -372,6 +372,11 @@ tasks:
     desc: "Artefact-count messaging gate — every count-shaped prose mention of skills/commands/governed rules/guidelines/personas on a flagship surface matches the source count; internal inconsistency (two different numbers for one kind) fails (road-to-truth-and-reference-hygiene Phase 1)"
     cmd: ./scripts-run src/scripts/check_artefact_count_messaging {{.QUIET_FLAG}}
 
+  check-memory-replay:
+    silent: true
+    desc: "Memory-retrieval replay regression — the corpus-derived replay set's payload must stay within +5% of the pinned baseline (inert until internal/bench/reports/memory-retrieval-baseline.json exists; road-to-memory-retrieval-economy Phase 0)"
+    cmd: ./scripts-run src/scripts/memory_replay --check
+
   lint-no-python-twin-rationale:
     silent: true
     desc: "Python-twin rationale guard — comments in src/scripts may not rationalise behaviour by fidelity to the deleted Python originals (twin of / latent quirks replicated / byte-identical to the Python); cite the live consumer instead (road-to-truth-and-reference-hygiene Phase 2)"

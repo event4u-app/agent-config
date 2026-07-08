@@ -6,10 +6,10 @@
 
 ## Overall
 
-**121 / 463 steps done · 26%**
+**125 / 463 steps done · 27%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
 ```
 
 ## Open roadmaps
@@ -30,7 +30,7 @@
 | 12 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 13 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
 | 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 27 | 23 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 15% |
+| 15 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 27 | 19 | 8 | 0 | 0 | 0 | ███░░░░░░░ 30% |
 | 16 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
 | 18 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
@@ -339,11 +339,11 @@
 
 ### [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md)
 
-**Road to memory-retrieval economy — index first, fetch by ID, price every row** — 4 / 27 done (15%)
+**Road to memory-retrieval economy — index first, fetch by ID, price every row** — 8 / 27 done (30%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Retrieval replay substrate (prerequisite to every cut) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Retrieval replay substrate (prerequisite to every cut) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | Index/detail split: `memory_lookup(detail=)` + `memory_get(ids)` | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 1b | Default flip (HUMAN GATE) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Discipline in the tool catalog (the `__IMPORTANT` pattern) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |

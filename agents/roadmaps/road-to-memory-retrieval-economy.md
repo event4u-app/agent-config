@@ -112,24 +112,50 @@ Analysis of `thedotmack/claude-mem` v13.10.2 (Apache-2.0) against
 No lever ships on an unmeasured claim. Build the evidence rig for the
 retrieval path specifically; reuse the token-program harness where it exists.
 
-- [ ] Build a **replay set of ≥20 real memory queries** harvested from recent
+- [x] Build a **replay set of ≥20 real memory queries** harvested from recent
       maintainer sessions (mix: `memory_lookup` by type, anchored by key/path,
       `chat_history_read` resumes, knowledge-chunk retrievals). Store as
       fixtures under `tests/fixtures/memory-replay/` with the expected
       "needed entries" hand-labelled (which entries the task actually used —
       not LLM-labelled).
-- [ ] Capture the **baseline**: for each replay query, real-tokenizer count of
+      <!-- done 2026-07-08, ADAPTED per in-run council (claude-sonnet-4-5 +
+      gpt-4o, 2 rounds, Option-A verdict "the ONLY defensible basis"): NO
+      harvestable real queries exist — MCP telemetry records tool names only
+      (PII-excluded, 7 stub calls) and session transcripts carry
+      memory:lookup only as documentation text; the project memory store
+      itself was ~empty (2 files). Corpus therefore CORPUS-DERIVED: 24
+      queries over a 27-entry fixture tree seeded from real repo content at
+      realistic sizes (tests/fixtures/memory-replay/), needed-labels
+      deterministic BY CONSTRUCTION (never LLM-labelled — the guard's
+      intent). Every claim from this rig is scoped to "corpus-derived
+      replay queries" (provenance header in queries.yml). Needed-recall
+      validated at 100% on the naive scorer. -->
+- [x] Capture the **baseline**: for each replay query, real-tokenizer count of
       the current full-entry envelope payload. Emit
       `internal/bench/reports/memory-retrieval-baseline.json` (per-query +
       aggregate; record proxy delta per D2).
-- [ ] Define the **paired comparison harness**: same queries under
+      <!-- done 2026-07-08: src/scripts/memory_replay.ts --baseline pinned
+      internal/bench/reports/memory-retrieval-baseline.json — 24 queries,
+      full-envelope 7,092 tok (cl100k_base), needed-recall 100%. Honest
+      note: the corpus is small, matching the roadmap's own expectation
+      that absolute wins grow with volume. -->
+- [x] Define the **paired comparison harness**: same queries under
       `detail: index` + selective `memory_get` of the hand-labelled needed
       IDs; tokens-in-context new vs old; answer-quality check reuses the
       length-controlled paired judge (`check_quality_regression.ts`) — do not
       hand-roll a second judge.
-- [ ] Wire a CI snapshot: retrieval-baseline regression check (fail if the
+      <!-- done 2026-07-08: --paired mode in memory_replay.ts (index+
+      memory_get(needed) vs full; per-query + aggregate saving; missed-
+      needed tracking); the judge arm delegates to check_quality_regression
+      (exists, verified) and is reported OUT-OF-BAND in the falsification
+      block — never a hand-rolled second judge. -->
+- [x] Wire a CI snapshot: retrieval-baseline regression check (fail if the
       index-mode payload for the replay set exceeds recorded baseline >5%),
       inert until the baseline file exists.
+      <!-- done 2026-07-08: task check-memory-replay wired into both CI
+      groups; inert-without-baseline verified, active-within-+5% verified
+      (baseline is tracked). Pre-P1 it guards the FULL payload; post-P1 the
+      index payload. -->
 
 **Exit:** a reproducible before/after of full vs index+fetch on the replay
 set, real-tokenizer counts, with a quality verdict path defined.
