@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "consumer-install-rule-scope-before-after",
+  "date": "2026-07-08",
+  "roadmap": "road-to-request-scoped-rule-load Phase 1b",
+  "tokenizer": "cl100k_base (tiktoken)",
+  "scope_example": {
+    "rule_workspaces": [
+      "engineering"
+    ]
+  },
+  "legacy_all": {
+    "rules": 94,
+    "gpt_tokens": 77632
+  },
+  "scoped": {
+    "rules": 76,
+    "gpt_tokens": 59368
+  },
+  "delta": {
+    "rules": 18,
+    "gpt_tokens": 18264,
+    "tokens_pct": 23.5
+  },
+  "note": "Measured on ACTUAL install.sh fixture installs (Pipeline B), not condense output — the reformulated human-gate evidence."
+}

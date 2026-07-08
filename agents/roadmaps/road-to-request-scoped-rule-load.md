@@ -276,10 +276,18 @@ Phase-2 trigger signal. Fully autonomous except the inherited human gate above.
       that is the Phase-1 human gate. .optional() would have broken the
       settings-diff contract (to:undefined dropped over HTTP) — default([])
       keeps both sides of the diff populated (22/22 settings tests). -->
-- [ ] Snapshot/regression: re-run the Phase 1b installer test green; full
+- [x] Snapshot/regression: re-run the Phase 1b installer test green; full
       `dist` determinism gates stay green; record the consumer-install
       before/after (rule count + tokens via `token_count.ts`) as the
       evidence the human gate consumes.
+      <!-- done 2026-07-08: install suite 100/100, scoping suite 12/12,
+      plan+projection vitest 15/15, tsc green; dist untouched this run
+      (install-time emission decision means zero dist delta). Evidence
+      pinned: internal/bench/reports/2026-07-08-consumer-install-rule-scope.json
+      — ACTUAL install.sh fixture installs, cl100k_base: legacy-all 94
+      rules / 77,632 tok vs scoped(engineering) 76 rules / 59,368 tok =
+      −18,264 tok (−23.5%) per consumer install. The human gate can now
+      judge real consumer-surface numbers. -->
 
 **Exit:** an actual consumer fixture install (project AND global) ships only
 scope-matched rules with intact host-native triggers; the installer test
@@ -360,15 +368,23 @@ evidence.
       <!-- verified: only telegraph-speak stays intent-only (council-decided retirement) -->
 - [ ] Consumer installs ship only workspace-matched rules; measured
       before/after recorded; misclassification audit trail exists (Phase 1).
-- [ ] The installer-level scoping test (Phase 1b Step 1) is green on both
+- [x] The installer-level scoping test (Phase 1b Step 1) is green on both
       project and global fixture installs; the dead `EXCLUDE_RULES` list is
       gone; the `source-of-truth.md` global/project contradiction is
       resolved with a recorded decision.
-- [ ] Consumer Windsurf/Cursor surfaces carry the host-native trigger signal
+      <!-- verified 2026-07-08: 12/12 bash + 6/6 plan tests; decision in
+      src/install/rule_scope.ts (excluded from BOTH paths always). -->
+- [x] Consumer Windsurf/Cursor surfaces carry the host-native trigger signal
       (no frontmatter-stripping concatenation; `.mdc` files reach consumer
       Cursor).
-- [ ] `projection.rule_workspaces`/`rule_packs` validate in the settings
+      <!-- verified 2026-07-08: native .mdc with real globs + .windsurf/rules
+      with trigger frontmatter + frontmatter-aware .windsurfrules; legacy
+      surfaces demoted to no-node fallbacks. -->
+- [x] `projection.rule_workspaces`/`rule_packs` validate in the settings
       schema and are written by the wizard.
+      <!-- verified 2026-07-08 (adapted): Zod default([]) + template renders
+      both keys INACTIVE on every install/sync; live values deliberately
+      stay the human flip (presence-activation) — see the Step-4 note. -->
 - [x] Path-triggered rules auto-attach natively on Cursor/Windsurf
       (Phase 2).
       <!-- verified live: ui-audit-gate.mdc globs=resources/views/**,resources/js/**; windsurf trigger: glob; 9 emitter tests green -->
