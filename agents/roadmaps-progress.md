@@ -6,7 +6,7 @@
 
 ## Overall
 
-**145 / 437 steps done · 33%**
+**146 / 437 steps done · 33%**
 
 ```text
 █████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%
@@ -16,7 +16,7 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 15 | 0 | 0 | 0 | [3](#blockers-road-to-adoption-without-narrative-debt) | ░░░░░░░░░░ 0% |
+| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 14 | 1 | 0 | 0 | [3](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 7% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | [1](#blockers-road-to-ci-native-release-first-run) | ░░░░░░░░░░ 0% |
 | 3 | [road-to-command-structure-optimization.md](roadmaps/road-to-command-structure-optimization.md) | 6 | 28 | 1 | 23 | 2 | 2 | 0 | ██████████ 96% |
 | 4 | [road-to-design-artifact-fidelity.md](roadmaps/road-to-design-artifact-fidelity.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-design-artifact-fidelity) | ░░░░░░░░░░ 0% |
@@ -46,11 +46,11 @@
 
 ### [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md)
 
-**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 0 / 15 done (0%)
+**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 1 / 15 done (7%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Quick wins already verified missing (autonomous, hours not weeks) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 0 | Quick wins already verified missing (autonomous, hours not weeks) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 1 | One 30-second wedge, not the whole platform | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Discoverability where the category is browsed | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Turn the proof surface into the differentiator narrative | ⬜ not started | 3 | 0 | 0 | 0 | 0% |

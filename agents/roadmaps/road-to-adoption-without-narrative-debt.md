@@ -61,14 +61,29 @@ nothing downstream. All verified open on 2026-07-08.
       links today (`grep github.io README.md docs/ package.json` → empty).
       Add it to README (top), `package.json` `homepage`, GitHub repo About +
       topics, and the Glama listing description.
+      <!-- PARTIAL 2026-07-09: README (top "Try it in 30 seconds" + a docs-site
+      link in "Prove it") and `package.json` `homepage` → the Starlight site are
+      DONE (the zero-inbound-links gap is closed on the two autonomous surfaces).
+      GitHub About (`.github/about.yml` homepage → deliberately event4u.app, a
+      branding call) + the Glama listing description are DEFERRED — maintainer
+      positioning/external. Item stays open until those land. -->
 - [ ] **README aha-moment pass (maintainer's own standing ask):** restructure
       the README opening to lead with the felt value + the 30-second install,
       before the governance/proof framing — WITHOUT introducing any number
       that lacks a CLAIMS pointer. The proof identity stays; it moves from
       lede to substantiation. Keep the honest-provenance note intact.
-- [ ] **Release-notes discoverability:** verify the site's proof/benchmark
+      <!-- PARTIAL 2026-07-09: an ADDITIVE "Try it in 30 seconds" teaser now sits
+      directly under the profile picker, ABOVE the proof-identity line — surfacing
+      the felt value + the one-command wedge + the docs site, with no new unbacked
+      number (check-claims green), honest-provenance note intact. A deeper
+      destructive restructure of the maintainer's proof-identity lede is a
+      voice/positioning call left to the maintainer, so this stays open. -->
+- [x] **Release-notes discoverability:** verify the site's proof/benchmark
       pages are linked from the README claims section (one hop from "every
       claim machine-checked" to the evidence).
+      <!-- done 2026-07-09: the README "Prove it" section links docs/proof.md AND
+      the deployed docs site; the claims-machine-checked line is one hop from the
+      evidence. -->
 
 **Exit:** the site is reachable from README/package/topics; README leads with
 value + install; no unbacked number introduced (`check-claims` green).
@@ -155,6 +170,19 @@ recorded decision to keep the wedge standalone).
 - Any telemetry is opt-in, default-off, aggregate — adoption instrumentation
   does not contradict the no-runtime / privacy posture.
 - The positioning claims are themselves falsifiable, not superlatives.
+
+> **Status (2026-07-09).** Only the verified-missing Phase-0 discoverability
+> quick-win is landed autonomously: the deployed docs site is now linked from
+> the README (top teaser + "Prove it") and `package.json` `homepage`, closing
+> the zero-inbound-links gap on the two code-owned surfaces; no unbacked number
+> was introduced (`check-claims` green). The bulk of the roadmap remains open
+> and is NOT autonomously completable: the wedge scope-cut, the README
+> aha-moment restructure, and the GitHub-About/Glama listing are maintainer
+> positioning/branding calls; running B9 and winning real adopters need a real
+> external participant (`real-external-participant`, owner: user). A pre-existing
+> `lint-positioning` drift (package.json/about.yml descriptions vs the README
+> canonical anchor + the `ai-agent` topic absent from the README) is unrelated
+> to this slice and is itself a branding-anchor decision for the maintainer.
 
 ## Blockers
 
