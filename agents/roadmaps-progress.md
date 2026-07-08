@@ -6,10 +6,10 @@
 
 ## Overall
 
-**109 / 270 steps done · 40%**
+**113 / 272 steps done · 42%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
 ```
 
 ## Open roadmaps
@@ -25,7 +25,7 @@
 | 7 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
 | 8 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ░░░░░░░░░░ 0% |
-| 10 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 25 | 25 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 10 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 27 | 23 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 15% |
 | 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
 | 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 13 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 61% |
 | 13 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
@@ -245,7 +245,7 @@
 
 ### [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md)
 
-**Road to memory-retrieval economy — index first, fetch by ID, price every row** — 0 / 25 done (0%)
+**Road to memory-retrieval economy — index first, fetch by ID, price every row** — 4 / 27 done (15%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -256,7 +256,7 @@
 | 3 | `chat_history_read` timeline anchor | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 4 | Knowledge-chunk index mode (`memory_retrieve`) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Compact session-start memory index (opt-in) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 6 | FTS5 pre-decided activation path (write, don't build) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 6 | FTS5 pre-decided activation path (write, don't build) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 7 | Candidate ledger: AST-folded code reading (documentation only) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)

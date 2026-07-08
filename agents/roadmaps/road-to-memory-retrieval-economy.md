@@ -242,15 +242,42 @@ is deliberately opt-in-full ("never auto-triggered") — that stance holds.
 
 ## Phase 6 — FTS5 pre-decided activation path (write, don't build)
 
-- [ ] Extend the `lint_knowledge_scale` tripwire doc: when intake/curated
+> Engine conflict resolved 2026-07-08 (tie-break council claude-sonnet-4-5 +
+> gpt-4o, converged): the pre-decided engine is SQLite FTS5 via Node's
+> built-in `node:sqlite` (in-repo precedent: `mcp_telemetry_store.ts` —
+> lazy import + runtime guard for Node < 22.5, zero npm deps), NOT
+> `better-sqlite3`, NOT a minisearch dependency, NOT a per-domain fork of
+> `corpus-grounding/bm25_search.ts` (ADR-061 engine-fork ban; memory lookup
+> is a Reference operation, never a grounding corpus). The
+> `second-brain-delta-verdict.md` Q4 "minisearch-class" wording is
+> superseded — see ADR-116.
+
+- [x] Extend the `lint_knowledge_scale` tripwire doc: when intake/curated
       volume crosses the threshold, the named path is SQLite FTS5 over the
       memory files (claude-mem's trigger-maintained shadow-table pattern,
       `SessionSearch.ts:78ff`, is the reference), replacing `_score()`'s
-      substring pass — NOT a worker, NOT Chroma (D3, D5).
-- [ ] Record the decision + reference in `docs/decisions/` so activation is a
+      substring pass — NOT a worker, NOT Chroma (D3, D5). Engine pinned to
+      `node:sqlite` per the note above; index persisted gitignored under
+      `agents/runtime/state/`; re-index is batch/lazy (post-session or
+      first-lookup), never inline per write during active sessions.
+- [x] Write the measurement-at-activation clause into the pre-decided path
+      (do NOT pre-build the harness — the honest lift at today's corpus is
+      zero by construction): when the tripwire fires, reuse the Phase-0
+      replay set to compare the grep/substring baseline vs the FTS5
+      candidate on the then-current corpus BEFORE building; ship only on
+      measured retrieval lift, else record the honest-null and keep grep.
+      Clause recorded here, in ADR-116, and in the verdict Q4 amendment;
+      its execution belongs to fire time, not to this roadmap.
+- [x] Record the decision + reference in `docs/decisions/` so activation is a
       wiring task, not a design debate.
+      (`docs/decisions/ADR-116-memory-tripwire-activation-path.md`)
+- [x] Migrate any remaining "pre-decided BM25 CLI" / "minisearch" wording in
+      stable artifacts to the unified FTS5 path — swept `src/ docs/ agents/
+      dist/` for both terms 2026-07-08: verdict Q4 + tripwire table and
+      `road-to-flow-learnings.md` non-goals amended; zero stragglers remain.
 
-**Exit:** the scale escape hatch is pre-decided and referenced.
+**Exit:** the scale escape hatch is pre-decided, single-engine, and
+referenced; firing the tripwire needs measurement, not debate.
 **Rollback:** n/a — documentation.
 
 ## Phase 7 — Candidate ledger: AST-folded code reading (documentation only)
