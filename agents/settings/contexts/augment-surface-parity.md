@@ -30,10 +30,10 @@
    **unverifiable**: the feature gate blocks reproduction, so no
    duplication has been observed on a real setup.
 4. **Project-level bridge exists but is inert without the feature.**
-   `install.ts::ensure_augment_bridge()` writes
-   `.augment/settings.json` with `enabledPlugins:
-   {'agent-config@event4u': true}` in consumer projects; with the
-   marketplace feature disabled this key has no observable effect.
+   `install.ts::ensure_augment_bridge()` writes a `settings.json` bridge
+   into the consumer project's `.augment/` dir with `enabledPlugins:
+   {'agent-config@event4u': true}`; with the marketplace feature disabled
+   this key has no observable effect.
 
 ## Gate outcome
 
