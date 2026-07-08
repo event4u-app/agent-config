@@ -989,6 +989,35 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.7.0](https://github.com/event4u-app/agent-config/compare/8.6.0...8.7.0) (2026-07-08)
+
+### Features
+
+* **settings:** validate + surface projection.rule_workspaces/rule_packs ([a27bbf5](https://github.com/event4u-app/agent-config/commit/a27bbf53c7fca206176ed6ddd38b1ec5ee11e357))
+* **install:** consumer Cursor/Windsurf get host-native rule surfaces ([8b68ff5](https://github.com/event4u-app/agent-config/commit/8b68ff58e9c240e41acce1f25faa51bc47f3564b))
+* **install:** consumer rule scoping reaches both install pipelines ([88248e4](https://github.com/event4u-app/agent-config/commit/88248e4d39bd056db133021acc0cc2b0782e78cc))
+* **ci:** trigger-eval presence ratchet with shrink-only grandfather allowlist ([d8f0c0d](https://github.com/event4u-app/agent-config/commit/d8f0c0dd04b3388205becf2cce30c6e0ea09197b))
+
+### Bug Fixes
+
+* **ci:** install repo-root deps in the MCP deploy workflow ([9183c4e](https://github.com/event4u-app/agent-config/commit/9183c4e358e76b344058eb01d7f945f246a44828))
+
+### Documentation
+
+* add frontier quality roadmaps ([bfa9315](https://github.com/event4u-app/agent-config/commit/bfa93157848bf13020a6cb3dcd06381c013fb035))
+* **skills:** skill-writing names the CI-enforced trigger-eval presence gate ([464722e](https://github.com/event4u-app/agent-config/commit/464722efe83243e3ae480411d59850dac92ca1ac))
+
+### Chores
+
+* **roadmaps:** regenerate progress dashboard ([a8f4178](https://github.com/event4u-app/agent-config/commit/a8f4178a84ef8c66408afe3d5af195ce19ccf5d0))
+* **gitignore:** ignore Codex CLI interop output (.agents/, .codex/) ([8756d52](https://github.com/event4u-app/agent-config/commit/8756d5226e8760c72d6205e98b9822620d303418))
+* **dist:** rebuild install bundle after settings-schema extension ([44818d4](https://github.com/event4u-app/agent-config/commit/44818d4c8ad69ec545e99820e3292f0346bb2f20))
+* **roadmap:** close Phase 1b with pinned consumer-install evidence ([3a2455f](https://github.com/event4u-app/agent-config/commit/3a2455f236279390eb5a8cfe986e6b911493391c))
+* **condense:** refresh stale hash for commands/upstream-contribute ([c668370](https://github.com/event4u-app/agent-config/commit/c668370663bf7272932c33b5a7874dca4b08a9db))
+* **roadmaps:** composition-ratchet roadmap executed + archived; adoption roadmap sequenced next ([1bde2ea](https://github.com/event4u-app/agent-config/commit/1bde2ea00478bd1e46c4e9596c8c0cd5962b9ee1))
+
+Tests: 6949 (+6 since 8.6.0)
+
 ## [8.6.0](https://github.com/event4u-app/agent-config/compare/8.5.0...8.6.0) (2026-07-08)
 
 ### Features
