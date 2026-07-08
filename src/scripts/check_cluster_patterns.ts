@@ -13,6 +13,11 @@
  * Compares each cluster dispatcher against the Phase 1 reference patterns
  * (`fix`, `optimize`, `feature`).
  *
+ * Phase 4 additions (ADR-114): every `routes_to:` entry on a dispatcher must
+ * resolve to a real src/domains command slug, and the `## Dispatch` section
+ * must document the bare-invocation behaviour (menu / default route /
+ * detection fallback) per command-clusters.md § Bare invocation.
+ *
  * Exit codes: 0 = clean, 1 = pattern violations, 3 = internal error.
  */
 
@@ -211,6 +216,45 @@ export function check_dispatcher(cluster: string, slug_map: Map<string, string>)
     // Sub-commands table header (only meaningful if Sub-commands section exists).
     if (body.includes('## Sub-commands') && !TABLE_HEADER_RE.test(body)) {
         rep.errors.push('Sub-commands table header must be `| Sub-command | Routes to | Purpose |`');
+    }
+
+    // routes_to entries must resolve to real commands (Phase 4 / ADR-114).
+    const routesRaw = fm['routes_to'];
+    if (routesRaw !== undefined) {
+        const m = /^\[(.*)\]$/.exec(routesRaw.trim());
+        const entries = m
+            ? (m[1] as string)
+                  .split(',')
+                  .map((s) => s.trim().replace(/^['"]|['"]$/g, ''))
+                  .filter((s) => s.length > 0)
+            : [];
+        for (const entry of entries) {
+            // routes_to entries name either a command slug or a skill
+            // (e.g. `git-commit` routes to the `git-workflow` skill).
+            const skillPath = path.join(ROOT, 'src', 'skills', entry, 'SKILL.md');
+            if (!slug_map.has(entry) && !_isFile(skillPath)) {
+                rep.errors.push(
+                    `routes_to entry \`${entry}\` resolves to no src/domains command slug ` +
+                        'and no src/skills skill',
+                );
+            }
+        }
+    }
+
+    // Bare-invocation story (Phase 4 / ADR-114): the Dispatch section must say
+    // what a bare `/<cluster>` does — a menu, a default route, or detection.
+    const dispatchIdx = body.indexOf('## Dispatch');
+    if (dispatchIdx !== -1) {
+        const rest = body.slice(dispatchIdx + '## Dispatch'.length);
+        const nextSection = rest.search(/\n## /);
+        const section = nextSection === -1 ? rest : rest.slice(0, nextSection);
+        if (!/menu|bare|no argument|unknown or missing|detection|default/i.test(section)) {
+            rep.errors.push(
+                '`## Dispatch` must document the bare-invocation behaviour ' +
+                    '(menu, default route, or detection fallback) per ' +
+                    'command-clusters.md § Bare invocation',
+            );
+        }
     }
     return rep;
 }
