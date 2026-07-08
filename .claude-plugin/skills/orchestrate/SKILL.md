@@ -1,1 +1,0 @@
-../../../src/domains/meta/orchestrate/command.md

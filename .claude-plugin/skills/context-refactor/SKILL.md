@@ -1,1 +1,0 @@
-../../../src/domains/meta/context/refactor/command.md

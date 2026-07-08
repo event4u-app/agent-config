@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/implement-ticket/command.md

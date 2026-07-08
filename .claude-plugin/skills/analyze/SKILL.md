@@ -1,1 +1,0 @@
-../../../src/domains/analysis-workbench/analyze/command.md

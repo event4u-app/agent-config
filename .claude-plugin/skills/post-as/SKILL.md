@@ -1,1 +1,0 @@
-../../../src/domains/gtm-marketing/post-as/command.md

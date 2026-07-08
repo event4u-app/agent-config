@@ -1,1 +1,0 @@
-../../../src/domains/meta/agents/user/update/command.md

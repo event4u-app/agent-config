@@ -1810,65 +1810,96 @@ export function generate_subagent_host_contexts(): number {
     return count;
 }
 
+// Bootstrap shim (road-to-install-path-convergence): the Claude Code plugin
+// ships ZERO content skills. It carries only hooks/hooks.json (byte-identical
+// to the managed settings block, so Claude Code dedupes) plus this single
+// pointer skill whose description names the canonical install command.
+export const PLUGIN_POINTER_SLUG = 'install-agent-config';
+export const PLUGIN_POINTER_SKILL_BODY = `---
+name: install-agent-config
+description: >-
+  Install or upgrade the event4u agent-config suite. This marketplace plugin
+  is a bootstrap shim — it ships hooks plus this pointer only; ALL skills,
+  rules, and commands are installed via \`npx -y @event4u/agent-config init\`.
+  Use when the user asks to install, set up, or upgrade agent-config, or
+  wonders why this plugin contains no other skills.
+---
+
+# Install agent-config
+
+This plugin is a **bootstrap shim**. It exists so the marketplace listing
+stays discoverable and existing plugin installs keep working hooks — the
+content surface (skills, rules, commands, personas) is distributed as a
+file projection, not through this plugin.
+
+## Install (canonical, one command)
+
+\`\`\`bash
+npx -y @event4u/agent-config init
+\`\`\`
+
+The installer writes the full content projection, registers the dispatcher
+hooks as a managed block in \`~/.claude/settings.json\` (byte-identical to
+this plugin's hooks, so nothing double-fires), and keeps everything
+upgradeable via \`agent-config upgrade\`.
+
+## Already installed both?
+
+Run \`agent-config doctor\` to check for duplicate surfaces, and
+\`agent-config converge\` to clean up consented duplicates.
+`;
+
 export function generate_plugin_command_skills(): number {
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         return 0;
     }
     _mkdirp(MODULE_STATE.PLUGIN_SKILLS_DIR);
 
-    let skill_names = new Set<string>();
-    if (_exists(MODULE_STATE.SKILLS_SOURCE)) {
-        skill_names = new Set(
-            _iterdirSorted(MODULE_STATE.SKILLS_SOURCE)
-                .filter((p) => _isDir(p))
-                .map((p) => path.basename(p)),
-        );
+    // 1. Materialize the pointer skill (idempotent overwrite-on-drift).
+    const pointer_dir = path.join(MODULE_STATE.PLUGIN_SKILLS_DIR, PLUGIN_POINTER_SLUG);
+    _mkdirp(pointer_dir);
+    const pointer_file = path.join(pointer_dir, 'SKILL.md');
+    if (_isSymlink(pointer_file)) {
+        fs.unlinkSync(pointer_file);
+    }
+    if (!_isFile(pointer_file) || fs.readFileSync(pointer_file, 'utf-8') !== PLUGIN_POINTER_SKILL_BODY) {
+        fs.writeFileSync(pointer_file, PLUGIN_POINTER_SKILL_BODY);
     }
 
-    const current_slugs = new Set<string>();
-    let count = 0;
-    for (const [source_file, slug] of iterCommands()) {
-        if (skill_names.has(slug)) {
-            continue;
-        }
-        current_slugs.add(slug);
-        const skill_dir = path.join(MODULE_STATE.PLUGIN_SKILLS_DIR, slug);
-        _mkdirp(skill_dir);
-        const skill_file = path.join(skill_dir, 'SKILL.md');
-        if (_existsOrSymlink(skill_file)) {
-            fs.unlinkSync(skill_file);
-        }
-        const rel_path = _relativeToPosix(source_file, MODULE_STATE.PROJECT_ROOT);
-        const rel_target = path.join('../../..', rel_path);
-        fs.symlinkSync(rel_target, skill_file);
-        count += 1;
-    }
-
+    // 2. Prune every other skill dir so the tree converges to shim shape
+    //    from any prior state. Removable = every entry is a symlink (the
+    //    generated projection shape — SKILL.md and optional evals links into
+    //    src/), or the dir holds only a single SKILL.md file (the old sweep's
+    //    rule). Dirs with real extra files are never touched.
     let removed_dirs = 0;
     for (const item of _iterdirSorted(MODULE_STATE.PLUGIN_SKILLS_DIR)) {
         if (!_isDirNoFollow(item) || _isSymlink(item)) {
             continue;
         }
-        if (current_slugs.has(path.basename(item))) {
+        if (path.basename(item) === PLUGIN_POINTER_SLUG) {
             continue;
         }
-        const skill_md = path.join(item, 'SKILL.md');
-        if (_isSymlink(skill_md) || _isFile(skill_md)) {
-            const entries = _iterdirSorted(item);
-            if (entries.length === 1 && path.basename(entries[0] as string) === 'SKILL.md') {
-                fs.unlinkSync(skill_md);
-                fs.rmdirSync(item);
-                removed_dirs += 1;
+        const entries = _iterdirSorted(item);
+        const all_symlinks = entries.length > 0 && entries.every((e) => _isSymlink(e));
+        const single_skill_md =
+            entries.length === 1 &&
+            path.basename(entries[0] as string) === 'SKILL.md' &&
+            _isFile(entries[0] as string);
+        if (all_symlinks || single_skill_md) {
+            for (const e of entries) {
+                fs.unlinkSync(e);
             }
+            fs.rmdirSync(item);
+            removed_dirs += 1;
         }
     }
 
-    let msg = `  ✅  Created ${count} command entries in .claude-plugin/skills/`;
+    let msg = '  ✅  Plugin skills: bootstrap shim (1 pointer skill) in .claude-plugin/skills/';
     if (removed_dirs) {
-        msg += ` (${removed_dirs} stale dirs removed)`;
+        msg += ` (${removed_dirs} content entries pruned)`;
     }
     info(msg);
-    return count;
+    return 1;
 }
 
 export function generate_persona_symlinks(): number {

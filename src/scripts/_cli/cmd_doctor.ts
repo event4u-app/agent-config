@@ -731,6 +731,7 @@ const CHECK_IDS = [
     'scope',
     'global-binary',
     'claude-plugin',
+    'surface-state',
     'hook-wiring',
     'stale-orphans',
     'manifest-integrity',
@@ -751,6 +752,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'scope',
     'global-binary',
     'claude-plugin',
+    'surface-state',
     'hook-wiring',
     'stale-orphans',
     'mcp-mode',
@@ -1073,6 +1075,96 @@ function _check_claude_plugin(): Dict {
             'file projection — deprecated surface; the projection is the supported path',
         remedy: 'agent-config global (then uninstall the plugin per the printed hint)',
     };
+}
+
+/**
+ * Matrix-driven duplicate-surface check (road-to-install-path-convergence
+ * Phase 2): reads src/config/surface-matrix.yml and flags every tool whose
+ * declared duplicate-class detect paths ALL exist on this machine.
+ * Generalizes the `claude-plugin` check — which stays as the named first
+ * consumer — to every tool with a defined duplicate class; tools marked
+ * `pending_evidence` are documented but never acted on.
+ */
+function _check_surface_state(): Dict {
+    const matrix_path = path.join(_package_root(), 'src', 'config', 'surface-matrix.yml');
+    if (!isFile(matrix_path)) {
+        return {
+            id: 'surface-state',
+            status: 'skipped',
+            message: 'surface-matrix.yml not found in this package',
+            remedy: '',
+        };
+    }
+    let tools: Dict = {};
+    try {
+        const raw = YAML.parse(readText(matrix_path), { version: '1.1' }) as Dict;
+        const t = raw['tools'];
+        if (t && typeof t === 'object' && !Array.isArray(t)) {
+            tools = t as Dict;
+        }
+    } catch {
+        return {
+            id: 'surface-state',
+            status: 'warn',
+            message: 'surface-matrix.yml unreadable — duplicate-surface state unknown',
+            remedy: 'agent-config upgrade (reinstalls the package data files)',
+        };
+    }
+
+    const _expand = (p: string): string =>
+        p.startsWith('~/') ? path.join(os.homedir(), p.slice(2)) : path.join(_package_root(), p);
+
+    const violations: string[] = [];
+    const remedies: string[] = [];
+    let checked = 0;
+    for (const [tool_id, entry] of Object.entries(tools)) {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+            continue;
+        }
+        const dup = (entry as Dict)['duplicate'] as Dict | undefined;
+        const detect = dup ? (dup['detect'] as Dict | undefined) : undefined;
+        const all_of = detect ? (detect['all_of'] as unknown) : undefined;
+        if (!Array.isArray(all_of) || all_of.length === 0) {
+            continue;
+        }
+        checked += 1;
+        const present = all_of.every((p) => typeof p === 'string' && pathExistsAny(_expand(p)));
+        if (present) {
+            violations.push(tool_id);
+            const conv = (entry as Dict)['converge'] as Dict | undefined;
+            const cmd = conv ? String(conv['command'] ?? '') : '';
+            if (cmd) {
+                remedies.push(cmd);
+            }
+        }
+    }
+
+    if (violations.length > 0) {
+        return {
+            id: 'surface-state',
+            status: 'fail',
+            message:
+                `duplicate surface on ${violations.length} tool(s): ${violations.join(', ')} — ` +
+                'canonical + secondary install surfaces are both present',
+            remedy: `${remedies.join(' · ')}${remedies.length ? ' — or: ' : ''}agent-config converge`,
+        };
+    }
+    return {
+        id: 'surface-state',
+        status: 'ok',
+        message: `${checked} declared duplicate class(es) checked, none present`,
+        remedy: '',
+    };
+}
+
+/** exists() that is true for files AND directories (surface detect paths). */
+function pathExistsAny(p: string): boolean {
+    try {
+        fs.statSync(p);
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -1916,6 +2008,7 @@ function _run_checks(
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
         'claude-plugin': _check_claude_plugin,
+        'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
         'manifest-integrity': () => _check_manifest_integrity(manifest),
@@ -1989,6 +2082,7 @@ function _run_checks_no_manifest(
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
         'claude-plugin': _check_claude_plugin,
+        'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
         'manifest-integrity': () => _skipped_manifest_check('manifest-integrity'),

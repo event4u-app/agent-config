@@ -1,1 +1,0 @@
-../../../src/domains/meta/sync-agent-settings/command.md

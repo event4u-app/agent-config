@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/prepare-for-review/command.md

@@ -1,1 +1,0 @@
-../../../src/domains/meta/memory/promote/command.md

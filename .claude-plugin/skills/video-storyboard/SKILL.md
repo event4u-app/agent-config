@@ -1,1 +1,0 @@
-../../../src/domains/ai-video/video/storyboard/command.md

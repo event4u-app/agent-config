@@ -1,1 +1,0 @@
-../../../src/domains/ai-video/image/create/command.md

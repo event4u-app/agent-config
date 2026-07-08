@@ -1,1 +1,0 @@
-../../../src/domains/meta/check-current-md/command.md

@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/sync-gitignore/fix/command.md

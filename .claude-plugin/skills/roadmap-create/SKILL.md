@@ -1,1 +1,0 @@
-../../../src/domains/product-basic/roadmap/create/command.md
