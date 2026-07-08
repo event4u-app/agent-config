@@ -1,0 +1,44 @@
+# Code owners — sensitive-surface review routing (road-to-maintainer-bus-factor Phase 2).
+#
+# Today this maps every sensitive surface to the sole maintainer; as
+# co-maintainers appear, add them per surface (a realistic on-ramp — e.g. a
+# single pack or docs/claims first, not the kernel on day one). Pairing this
+# with branch protection ("require review from Code Owners" on these paths)
+# routes even a solo merge THROUGH the gate, not around it — the point of a
+# governance standard. Branch-protection enablement is a repo-admin action
+# done in GitHub → Settings → Rules; see docs/contracts/branch-protection-policy.md.
+
+# Default owner for everything not matched more specifically.
+*                                   @matze4u
+
+# --- Kernel + rule governance (always-loaded behaviour floors) ---
+/src/rules/                         @matze4u
+/docs/contracts/kernel-membership.md @matze4u
+/docs/contracts/rule-router.md      @matze4u
+
+# --- Router compiler + projection (the compile-time core) ---
+/src/scripts/compile_router.ts      @matze4u
+/src/scripts/generate_index.ts      @matze4u
+
+# --- Install / uninstall / host projection ---
+/src/scripts/install.ts             @matze4u
+/scripts/install.sh                 @matze4u
+/dist/install/                      @matze4u
+
+# --- Hooks (run inside the host agent loop) ---
+/src/scripts/hooks/                 @matze4u
+
+# --- Claims / proof falsifiability surface ---
+/src/scripts/check_claims.ts        @matze4u
+/src/scripts/build_proof.ts         @matze4u
+/docs/CLAIMS.md                     @matze4u
+/docs/proof.md                      @matze4u
+
+# --- Release pipeline + gates ---
+/src/scripts/release.ts             @matze4u
+/.github/workflows/                 @matze4u
+/docs/contracts/release-pr-gating.md @matze4u
+/docs/contracts/branch-protection-policy.md @matze4u
+
+# --- Schemas (frontmatter + artifact contracts) ---
+/src/scripts/schemas/               @matze4u

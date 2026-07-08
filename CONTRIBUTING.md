@@ -93,6 +93,25 @@ task lint-skills      # ./scripts-run src/scripts/skill_linter --all
 - Open the PR against `main` with a short description of the change,
   motivation, and any notes for reviewers.
 
+## Reviewability and the self-imposed gate
+
+This is a governance standard, so the maintainer holds themselves to the same
+gate as any contributor — the point is that even a solo merge goes **through**
+the review floor, not around it.
+
+- [`.github/CODEOWNERS`](.github/CODEOWNERS) routes review on the sensitive
+  surfaces (kernel rules, router compiler, install, hooks, claims/proof
+  generators, release pipeline, schemas). Branch protection is configured to
+  require Code-Owner review on those paths (maintainer, in GitHub → Settings →
+  Rules; source of truth: [`docs/contracts/branch-protection-policy.md`](docs/contracts/branch-protection-policy.md)).
+- **Honest bound:** an AI adversarial-review / security gate (when enabled)
+  raises the floor and catches regressions and claim-drift, but it is **not**
+  independent human review. The bus-factor is tracked truthfully in
+  [`docs/succession.md`](docs/succession.md) — a bus-factor of 1 stated plainly
+  beats one implied to be more.
+- A realistic second-reviewer on-ramp starts small (docs/claims or a single
+  pack), never "co-maintain the kernel on day one".
+
 ## Adding or editing skills, rules, and commands
 
 - Skills and rules live in `src/skills/` and `src/rules/`; commands in
@@ -275,6 +294,12 @@ settled minor) before committing. This does not apply to `devDependencies`,
 which never reach a consumer.
 
 ### Release process
+
+> **Inheritable runbook:** the exact, reproducible steps a second maintainer
+> can follow cold — both entry points, the manual approval checkpoint, and
+> recovery — live in [`docs/release-runbook.md`](docs/release-runbook.md), with
+> the secret/operator-gated dependencies in [`docs/succession.md`](docs/succession.md).
+> The summary below is orientation; the runbook is the source of truth.
 
 Releases are driven by a single command that owns the entire pipeline from
 version bump to npm publish:
