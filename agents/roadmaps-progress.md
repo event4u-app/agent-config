@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **26** open blockers
+> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
 
 ## Overall
 
-**126 / 437 steps done · 29%**
+**134 / 437 steps done · 31%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   31%
 ```
 
 ## Open roadmaps
@@ -22,7 +22,7 @@
 | 4 | [road-to-design-artifact-fidelity.md](roadmaps/road-to-design-artifact-fidelity.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-design-artifact-fidelity) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-design-mechanism-harvest.md](roadmaps/road-to-design-mechanism-harvest.md) | 6 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 12 | 0 | 0 | 0 | [2](#blockers-road-to-domain-soundness) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 4 | 8 | 0 | 0 | 0 | ███████░░░ 67% |
 | 8 | [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md) | 6 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 10 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 49 | 0 | 0 | 0 | [1](#blockers-road-to-frontier-quality-operating-system) | ░░░░░░░░░░ 0% |
@@ -163,30 +163,14 @@
 
 ### [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md)
 
-**Road to domain soundness — prove or honestly scope the non-forged, non-coding domains** — 0 / 12 done (0%)
+**Road to domain soundness — prove or honestly scope the non-forged, non-coding domains** — 8 / 12 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Scope to the default surface + define domain-truth fixtures | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Author domain-truth fixtures with domain competence (not output taste) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Run + gate the provenance claim | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Honest disposition of the long tail | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-domain-soundness"></a>
-**Blockers**
-
-- **domain-competence-for-answer-keys** (owner: maintainer) — blocks Phase 2 (fixture authoring)
-  - **What to do:**
-    sourced correct DCF/runway/IC answer key. Options: (a) the maintainer authors
-    keys strictly from citable methods (finance texts, IC frameworks) with the
-    working shown; (b) recruit one domain reviewer per area for key ratification
-    (couples to the bus-factor roadmap's second-reviewer on-ramp). Do NOT let the
-    skill's own output become the answer key — that validates nothing.
-  - **Resolved when:** each default-surface domain skill has ≥1 fixture with a key traceable to a cited external method, ratified by someone with the domain competence to check it.
-- **measurement-spend** (owner: maintainer) — blocks Phase 3 (fixture runs)
-  - **What to do:**
-    fixed host.
-  - **Resolved when:** a pinned domain-truth result set exists and the provenance CLAIMS gate is green.
+| 1 | Scope to the default surface + define domain-truth fixtures | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Author domain-truth fixtures with domain competence (not output taste) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 3 | Run + gate the provenance claim | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 4 | Honest disposition of the long tail | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 
 ### [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md)
 
