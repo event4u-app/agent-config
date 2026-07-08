@@ -2,7 +2,7 @@
 /**
  * Sync package-content counts (skills/rules/commands/guidelines) across docs.
  *
- * TypeScript twin of `src/scripts/update_counts.py` (ADR-200, Phase 5). The
+ * Ported from the retired Python `src/scripts/update_counts.py` (ADR-200). The
  * CLI contract is mirrored EXACTLY — the single `--check` flag, exit codes
  * (0 = synced / updated; 1 = stale under --check, missing target), the
  * stdout/stderr split, and byte-identical messages AND byte-identical rewritten
@@ -11,9 +11,9 @@
  * call them 1:1.
  *
  * Imports the `_lib/agent_src` twin (`artefact_roots`, `iter_commands`) — the
- * SAME functions the Python original imports.
+ * SAME functions the retired Python implementation imports.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Source of truth: `.agent-src.uncondensed/`.
  *
@@ -28,7 +28,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { artefact_roots, iter_commands } from './_lib/agent_src.js';
 
 const _HERE = fileURLToPath(import.meta.url);
-// _HERE === <repo>/src/scripts/update_counts.ts ; the Python original derives
+// _HERE === <repo>/src/scripts/update_counts.ts ; the retired Python implementation derives
 // REPO_ROOT = <file>.parent.parent.parent — two dirs up from src/scripts.
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -78,6 +78,23 @@ function _exists(p: string): boolean {
 }
 
 export function count(kind: string): number {
+    if (kind === 'router_rules') {
+        // Routed rule entries in the compiled router (kernel + tier_1 +
+        // tier_2). Read from dist/router.json — the artifact hosts consume —
+        // so prose citing "the router routes N rules" tracks the compiled
+        // truth, not a hand-typed snapshot.
+        const routerPath = path.join(REPO_ROOT, 'dist', 'router.json');
+        const router = JSON.parse(fs.readFileSync(routerPath, 'utf-8')) as {
+            kernel?: unknown[];
+            tier_1?: unknown[];
+            tier_2?: unknown[];
+        };
+        return (
+            (router.kernel?.length ?? 0) +
+            (router.tier_1?.length ?? 0) +
+            (router.tier_2?.length ?? 0)
+        );
+    }
     if (kind === 'guidelines') {
         // Guidelines live under docs/guidelines/{topic}/ — they are reference
         // material, not packaged artefacts. Recursive walk to count every .md.
@@ -150,6 +167,51 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
             ['(/badge/Rules-)(\\d+)(-)', 'rules'],
             ['(/badge/Guidelines-)(\\d+)(-)', 'guidelines'],
             ['(/badge/Personas-)(\\d+)(-)', 'personas'],
+            // Hero prose sentence: `**N skills, N commands, N governed rules**`
+            // (road-to-truth-and-reference-hygiene Phase 1: prose counts are
+            // generated, never hand-typed).
+            ['(\\*\\*)(\\d+)( skills, )', 'skills'],
+            ['( skills, )(\\d+)( commands, )', 'commands'],
+            ['( commands, )(\\d+)( governed rules\\*\\*)', 'rules'],
+            // Feature-list line: `— N skills + N commands, with a capability router`
+            ['(— )(\\d+)( skills \\+ )', 'skills'],
+            ['( skills \\+ )(\\d+)( commands,)', 'commands'],
+            // Work-journey line: `You don't memorize N commands`
+            ['(memorize )(\\d+)( commands)', 'commands'],
+        ],
+    ],
+    [
+        'docs/CLAIMS.md',
+        [
+            // The three count claims — their numbers are generated from the
+            // same source the gate checks, closing the ledger's own
+            // "count-source binding" debt (B1.2).
+            ['(- claim: )(\\d+)( skills \\(README hero)', 'skills'],
+            ['(- claim: )(\\d+)( commands\\.)', 'commands'],
+            ['(- claim: )(\\d+)( governed rules\\.)', 'rules'],
+        ],
+    ],
+    [
+        'docs/getting-started-by-role.md',
+        [
+            ['(ships )(\\d+)( skills, )', 'skills'],
+            ['( skills, )(\\d+)( governed rules, and )', 'rules'],
+            ['( governed rules, and )(\\d+)( commands\\.)', 'commands'],
+        ],
+    ],
+    [
+        'docs/featured-skills.md',
+        [
+            ['(subset of the )(\\d+)( skills)', 'skills'],
+            ['(Browse all )(\\d+)( skills)', 'skills'],
+            ['(all )(\\d+)( commands: \\[)', 'commands'],
+        ],
+    ],
+    [
+        'docs/governance-advantage.md',
+        [
+            ['(load all )(\\d+)( skills)', 'skills'],
+            ['(\\()(\\d+)( routed rules,)', 'router_rules'],
         ],
     ],
     [
@@ -204,7 +266,7 @@ export function apply_to_text(
     return [new_text, drifts];
 }
 
-const KINDS = ['skills', 'rules', 'commands', 'guidelines', 'personas'] as const;
+const KINDS = ['skills', 'rules', 'commands', 'guidelines', 'personas', 'router_rules'] as const;
 
 function parse_args(argv: readonly string[]): { check: boolean } {
     const args = { check: false };
@@ -234,7 +296,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     process.stdout.write(
         `📊  Truth: skills=${counts['skills']} rules=${counts['rules']} ` +
             `commands=${counts['commands']} guidelines=${counts['guidelines']} ` +
-            `personas=${counts['personas']}\n`,
+            `personas=${counts['personas']} router_rules=${counts['router_rules']}\n`,
     );
 
     let any_drift = false;

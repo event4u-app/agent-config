@@ -1,9 +1,9 @@
 /**
  * Render the `Assumptions` section.
  *
- * TypeScript twin of
+ * Ported from the retired Python
  * `src/scripts/_cli/explain_last/sections/assumptions.py` (ADR-200).
- * Byte-identical to the Python original — note the DOUBLE space before the
+ * byte-stable — downstream consumers and checksum gates pin these bytes — note the DOUBLE space before the
  * em-dash in the item line (`{ident}  — recorded`). No behaviour changes.
  */
 

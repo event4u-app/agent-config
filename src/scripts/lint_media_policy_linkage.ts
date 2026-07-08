@@ -2,12 +2,12 @@
 /**
  * Lint structural reachability of media governance policies.
  *
- * TypeScript twin of `src/scripts/lint_media_policy_linkage.py` (ADR-200,
- * Phase 4 / Wave 4b). Mirrors the Python CLI contract EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/lint_media_policy_linkage.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--quiet`
  * flag read from argv at module load, scan roots + policy ordering (policies
  * sorted; scan files via rglob), finding messages, output channel (all on
  * stdout except the final orphan summary on stderr), exit codes. No
- * behaviour changes — latent bugs replicated (note: `POLICY_DIR` /
+ * behaviour changes — historical quirks preserved (consumers pin the exact behaviour). (note: `POLICY_DIR` /
  * `SCAN_ROOTS` point at `agents/policies/media`, matching the .py).
  *
  * Every policy file under `agents/policies/media/` (except README) must be

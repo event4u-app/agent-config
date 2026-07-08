@@ -12,7 +12,7 @@
 // invocation. stdlib-only; reads (never writes) the DB via Node's
 // built-in `node:sqlite`, imported lazily.
 //
-// TS twin of mcp_telemetry_query.py (py2ts). Mirrors the full public
+// TS port of the retired Python mcp_telemetry_query.py (ADR-200). Mirrors the full public
 // surface: ToolRow, summarise, main.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -51,8 +51,8 @@ class FileNotFoundLikeError extends Error {}
 // Python's stdlib sqlite3 emits nothing on stderr; node:sqlite is flagged
 // experimental on node 22 and prints an `ExperimentalWarning: SQLite …` line
 // to stderr on first import (stable / silent on node >= 23). Drop only that
-// specific warning so the twin's stderr stays byte-identical to the Python
-// original across node versions. Installed once, narrowly matched.
+// specific warning so stderr stays byte-stable across node versions (tests
+// pin the exact bytes). Installed once, narrowly matched.
 let _sqliteWarningSilenced = false;
 function _silenceSqliteExperimentalWarning(): void {
     if (_sqliteWarningSilenced) return;

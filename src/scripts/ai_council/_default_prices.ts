@@ -1,10 +1,9 @@
 /**
  * Shipped baseline prices for the AI Council.
  *
- * TypeScript twin of `src/scripts/ai_council/_default_prices.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/ai_council/_default_prices.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8g; ported as a prerequisite of
- * `update_prices.ts`). Values + ordering + `as_rows()` semantics mirror the
- * Python original EXACTLY.
+ * `update_prices.ts`). Values + ordering + `as_rows()` semantics are pinned by tests.
  *
  * This module is the bootstrap source for `agents/runtime/.agent-prices.md`
  * when the runtime file is missing, and the network-fallback source for

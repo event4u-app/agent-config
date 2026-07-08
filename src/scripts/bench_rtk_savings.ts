@@ -2,8 +2,8 @@
 /**
  * Measure rtk's token savings on a fixed corpus of verbose CLI invocations.
  *
- * TypeScript twin of `src/scripts/bench_rtk_savings.py` (ADR-200 py2ts
- * Phase 8 / Wave 8d). The CLI contract mirrors the Python original
+ * Ported from the retired Python `src/scripts/bench_rtk_savings.py` (ADR-200 py2ts
+ * Phase 8 / Wave 8d). The CLI contract mirrors the retired Python implementation
  * EXACTLY — `--corpus`, `--out`, `--quiet`, exit codes, stdout/stderr
  * split, the one-line headline summary, and byte-identical written
  * reports (`json.dumps(indent=2, ensure_ascii=False)` + trailing
@@ -53,7 +53,7 @@ type Dict = Record<string, unknown>;
  * Marker for a value that is a Python `float`. CPython's `json.dumps`
  * renders a float `0.0` as `0.0` (not `0`); JS numbers lose that
  * distinction. Wrapping the report's float fields keeps the written
- * JSON byte-identical with the Python original.
+ * JSON byte-identical with the retired Python implementation.
  */
 class PyFloat {
     constructor(readonly value: number) {}
@@ -366,7 +366,7 @@ export function run(corpus_path: string = DEFAULT_CORPUS, out_dir: string = DEFA
 
 /**
  * Mirror Path.relative_to(REPO_ROOT) — raises (ValueError-equivalent) when
- * the path is not under REPO_ROOT, matching the Python original's behaviour.
+ * the path is not under REPO_ROOT, matching the retired Python implementation's behaviour.
  */
 function _relativeToRepo(p: string): string {
     const resolvedRoot = path.resolve(REPO_ROOT);

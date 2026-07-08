@@ -2,7 +2,7 @@
 /**
  * Initial-context token audit (roadmap `road-to-lean-initial-context`).
  *
- * TypeScript twin of `src/scripts/audit_initial_context.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/audit_initial_context.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8b). The CLI contract is mirrored
  * EXACTLY — the `--json` / `--write` / `--fail-if-over-budget` flags,
  * exit codes (0 ok / advisory · 1 over-budget), the stdout/stderr split,
@@ -10,13 +10,14 @@
  * (`json.dumps(indent=2, sort_keys=True)`).
  *
  * Imports the `_lib/token_count` and `_lib/agent_src` twins (the SAME
- * surfaces the Python original imports). `thin_projection()` mirrors the
- * Python original exactly: the Python `import`s `project_thin_rules.measure`
+ * surfaces the retired Python implementation imports). `thin_projection()` preserves the
+ * historical behaviour exactly: the retired implementation imported
+ * `project_thin_rules.measure`
  * and swallows any failure to `{}`; this twin imports the `measure()` of the
  * `project_thin_rules.ts` twin and falls back to `{}` on any error in the same
  * best-effort try/catch. The default JSON stays byte-identical.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * NOTE (divergence-free by construction): the `generated` field carries a
  * UTC timestamp, so the default/`--json`/`--write` outputs are inherently
@@ -324,7 +325,7 @@ export function longest_rules(top = 10): LongestRule[] {
 
 // --- thin_projection: delegate to the project_thin_rules twin ----------------
 //
-// The Python original does `from project_thin_rules import measure as _measure`
+// the retired Python implementation does `from project_thin_rules import measure as _measure`
 // inside a try/except that returns `{}` on any failure. This twin mirrors that
 // exactly: import the same-named `measure()` from the TS twin and swallow any
 // error to `{}`. The thin-entry pointer's legacy-path literal now lives ONLY

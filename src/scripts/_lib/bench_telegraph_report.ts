@@ -5,9 +5,9 @@
 // blocks are disjoint: telegraph has no `selection`/`quality`, and the
 // selection bench has no three-arm condensation metrics.
 //
-// TypeScript twin of `src/scripts/_lib/bench_telegraph_report.py`
+// Ported from the retired Python `src/scripts/_lib/bench_telegraph_report.py`
 // (ADR-200 py2ts Phase 2 / Wave 2a). Markdown rendering is byte-exact
-// with the Python original; the `_fmt_pct` / `:.0f` helpers replicate
+// with the retired Python implementation; the `_fmt_pct` / `:.0f` helpers replicate
 // Python's round-half-to-even formatting.
 import {
     ARMS,
@@ -137,8 +137,8 @@ function _prompt_block(r: PromptResult): PromptBlock {
 //
 // Python's f"{x:.2%}" and f"{m:.0f}" both round half-to-even (banker's
 // rounding) on the decimal representation. JS `toFixed` rounds half away
-// from zero, so we reimplement the formatting to stay byte-exact with the
-// Python original.
+// from zero, so we reimplement the formatting to keep the report bytes
+// stable (goldens pin them).
 
 /** Replicate Python `format(x, f".{ndigits}%")` — value × 100, banker-rounded, '%' suffix. */
 function _py_format_pct(x: number, ndigits: number): string {

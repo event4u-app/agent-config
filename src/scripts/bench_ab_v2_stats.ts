@@ -2,7 +2,7 @@
 /**
  * bench:ab v2 — paired statistics (Phase 3).
  *
- * TypeScript twin of `src/scripts/bench_ab_v2_stats.py` (ADR-200 Python→TS
+ * Ported from the retired Python `src/scripts/bench_ab_v2_stats.py` (ADR-200 Python→TS
  * migration). Mirrors the CLI contract EXACTLY: positional `report` arg, the
  * `--json` / `--markdown PATH` flags, exit codes (0 ok / 1 no report found),
  * byte-identical stdout/stderr, byte-identical analysis JSON, and byte-identical
@@ -22,7 +22,7 @@
  *
  * Float parity: `math.erf` is ported from CPython's `m_erf` series and `math.comb`
  * from an exact BigInt computation, so every `round(p, 4)` / `round(h, 4)` output
- * is byte-identical to the Python original.
+ * is byte-stable — downstream consumers and checksum gates pin these bytes.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

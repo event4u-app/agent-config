@@ -1,8 +1,8 @@
 /**
  * Render the `Active pack` section (Phase 4-discovery aware).
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/sections/pack.py`
- * (ADR-200). Byte-identical to the Python original. No behaviour changes.
+ * Ported from the retired Python `src/scripts/_cli/explain_last/sections/pack.py`
+ * (ADR-200). byte-stable — downstream consumers and checksum gates pin these bytes. No behaviour changes.
  */
 
 function _pyTruthy(value: unknown): boolean {

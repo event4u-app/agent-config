@@ -2,8 +2,8 @@
 /**
  * Phase 0 baseline harness for road-to-trim-frugality-canon.
  *
- * TypeScript twin of `src/scripts/measure_frugality_savings.py` (ADR-200,
- * Phase 8 Wave 8a). Mirrors the Python CLI contract EXACTLY — exit code 0,
+ * Ported from the retired Python `src/scripts/measure_frugality_savings.py` (ADR-200,
+ * Phase 8 Wave 8a). The CLI contract is pinned — exit code 0,
  * byte-identical stdout (`json.dumps(record, indent=2, ensure_ascii=False)`
  * + the `appended → …` line), and the byte-identical JSONL baseline row
  * (`json.dumps(record, ensure_ascii=False)`).
@@ -337,7 +337,7 @@ export function main(): number {
 
     const out = path.join(root, 'agents', 'runtime', 'frugality', 'baseline.jsonl');
     // with out.open("a") — does NOT mkdir parents; mirror that (will throw if
-    // the directory is missing, exactly like the Python original).
+    // the directory is missing, exactly like the retired Python implementation).
     fs.appendFileSync(out, pyJsonDumps(record, null) + '\n');
     process.stdout.write(pyJsonDumps(record, 2) + '\n');
     const rel = path.relative(root, out).split(path.sep).join('/');

@@ -2,7 +2,7 @@
 /**
  * Trigger-coverage suite (roadmap Phase 2.1 / 2.2).
  *
- * TypeScript twin of `src/scripts/trigger_coverage.py` (ADR-200, Phase 8 /
+ * Ported from the retired Python `src/scripts/trigger_coverage.py` (ADR-200, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--json` flag, exit codes
  * (0 pass / 1 miss / 2 missing-router-or-PyYAML), the stdout/stderr split,
  * byte-identical human + JSON report.
@@ -25,7 +25,7 @@
  * A case fails when an expected rule is NOT in the fired set. Exit 1 on any
  * miss → the merge that would have shrunk the rule is blocked (2.2).
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

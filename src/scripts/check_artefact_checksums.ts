@@ -2,14 +2,14 @@
 /**
  * Phase-6 checksum-stability gate (monorepo Phase 2, ADR-015).
  *
- * TypeScript twin of `src/scripts/check_artefact_checksums.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--manifest`
+ * Ported from the retired Python `src/scripts/check_artefact_checksums.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — `--manifest`
  * / `--quiet` flags, exit codes (0 match, 1 drift / malformed / missing),
  * stdout/stderr split, byte-identical messages, the same per-artefact
  * checksum recomputation and the same error truncation (first 20 + "… and N
- * more"). No behaviour changes — latent bugs replicated.
+ * more"). Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
- * The Python original imports `_artefact_checksum` + `_CATEGORY_SCHEMA` from
+ * the retired Python implementation imports `_artefact_checksum` + `_CATEGORY_SCHEMA` from
  * `build_discovery_manifest.py` (which has no TS twin yet). To keep the TS
  * twin self-contained AND in lockstep, the checksum primitive is ported
  * inline here from `build_discovery_manifest._artefact_checksum` /

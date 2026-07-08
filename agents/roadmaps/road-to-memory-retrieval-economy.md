@@ -1,0 +1,275 @@
+---
+complexity: structural
+status: ready
+execution:
+  mode: autonomous
+---
+
+# Road to memory-retrieval economy — index first, fetch by ID, price every row
+
+> Adapt the verified retrieval mechanics from `thedotmack/claude-mem` (two-phase
+> index→detail fetch, per-row token price tags, tool-description-encoded
+> discipline) into the file-backed `agents/memory/` surface — behind a replay
+> measurement gate, with the current full-entry behaviour preserved until the
+> default flip is falsified per host. No SQLite worker, no Chroma, no new
+> backend.
+
+> **Program sequencing:** this roadmap ranks BEHIND the thin-projection flip in
+> the token program's critical path (`road-to-token-proof-and-story.md`
+> § Program tracking). Thin projection is a proxy-measured −46k tok/request
+> lever; this roadmap's total addressable surface is the retrieval path only
+> (`memory_lookup`, `memory_get`, `memory_retrieve`, `chat_history_read`).
+> Expected absolute win is smaller today and grows with memory volume. Do not
+> let this displace the thin flip; it slots in after Phase 4 of the token
+> roadmap or runs in parallel where phases are mechanical.
+
+## Goal
+
+Cut context-window tokens spent on memory retrieval at held-constant answer
+quality, by never shipping a full entry body the model did not explicitly
+request. Concretely: `memory_lookup` (and `memory_retrieve` for knowledge
+chunks) gains an `index` detail mode returning `id / type / title / score /
+~tokens` rows; a new `memory_get(ids)` batch tool fetches full bodies; the
+"index first" discipline is encoded in the MCP tool descriptions themselves so
+it survives hosts that drop rules. Every lever lands behind a falsification
+gate on the Phase-0 replay set, measured with the real tokenizer
+(`src/scripts/_lib/token_count.ts`, cl100k_base) — never chars/4.
+
+## Context — source-repo findings (verified 2026-07-07, fresh clone)
+
+Analysis of `thedotmack/claude-mem` v13.10.2 (Apache-2.0) against
+`agent-config` v8.1.0:
+
+- **The transferable mechanism is the two-phase fetch, not the stack.**
+  claude-mem's `search` returns a compact table (`| #ID | time | icon | title |
+  ~tokens |`, `SearchManager.ts:236`); full bodies only via
+  `get_observations(ids)` batch. SessionStart injects 50 compact rows and
+  **zero** full bodies by default (`CLAUDE_MEM_CONTEXT_FULL_COUNT: '0'`,
+  `SettingsDefaultsManager.ts:118`).
+- **The per-row `~tokens` price tag is behaviour-shaping.** The model sees
+  fetch cost BEFORE fetching. Cheap to adapt; we already own a real tokenizer.
+- **Discipline lives in the tool catalog.** A pseudo-tool named `__IMPORTANT`
+  (`mcp-server.ts:439`) carries the 3-layer workflow as its description —
+  host-natively in context whenever the MCP server is connected. This
+  sidesteps the exact `alwaysApply: false` host-compliance gap our own token
+  roadmap documents.
+- **The "up to 90% savings" claim is baseline-relative marketing.**
+  `TokenCalculator.ts` computes `savings = discovery_tokens − read_tokens`:
+  reading the observation vs REDOING the original work. It is memory-vs-no-
+  memory, not a design comparison; it uses a chars/4 estimate
+  (`CHARS_PER_TOKEN_ESTIMATE`); and the LLM cost of GENERATING observations
+  (dedicated provider pipeline, `src/server/generation/providers/`) is absent
+  from the ledger. Do not adopt the number as a target; adopt the mechanism
+  and measure our own delta.
+- **Our gap (verified):** `memory_lookup` always returns full entries (`Hit`
+  carries `entry: this.entry`, `memory_lookup.ts`); scoring is naive
+  substring/fnmatch at fixed 0.6/0.8 (`_score()`, line 448); no per-row token
+  estimate; `chat_history_read` filters by `last`/`session`/`entry_type` but
+  has no timeline anchor; `memory_retrieve` ships full 2 KB knowledge chunks.
+- **What we deliberately do NOT adopt:** the HTTP worker layer, Chroma, the
+  Postgres server runtime, and the write-time LLM observation generator. Our
+  `memory_status` contract is `backend: file`, curation is human-gated by
+  design (admission gate, `/memory promote`), and current volumes do not
+  justify an always-on service. FTS5 gets a pre-decided activation path
+  behind the existing `lint_knowledge_scale` tripwire (Phase 6), not a build.
+
+## Decisions (baked in — do not re-litigate)
+
+- **D1 — Envelope compatibility over purity.** The v1 retrieval envelope
+  (`status` + per-type `slices`) is a published contract. `detail: index|full`
+  ships as an additive parameter with **default `full`** (current behaviour).
+  The default flip to `index` is a separate, falsification-gated step — the
+  thin-projection pattern, replayed.
+- **D2 — Real tokenizer only.** Every measurement in this roadmap uses
+  `token_count.ts` (cl100k_base, with the recorded-proxy-delta option). A
+  chars/4 number is not evidence anywhere in this file.
+- **D3 — No new backend, no service.** File-backed scan + rank stays. FTS5 is
+  a written-down activation path, triggered by scale, not built speculatively.
+- **D4 — Discipline is encoded twice:** in the tool descriptions (host-native,
+  survives rule-dropping hosts) AND in the `memory` pack rules (for hosts
+  without MCP). Descriptions are the primary carrier.
+- **D5 — Naive scoring stays until the tripwire.** Substring/fnmatch is
+  adequate at current curated volumes; replacing it before scale is
+  complexity without evidence.
+
+## Automation & human gates
+
+- **Fully autonomous:** Phases 0, 1, 2, 3, 4, 5 (mechanism + measurement;
+  everything ships default-off or behaviour-preserving, verified by unit tests
+  + the Phase-0 replay rig in CI).
+- **Human gates (two, and only two):**
+  1. **Phase 1b default flip** (`detail` default `full` → `index`): changes
+     the envelope's effective payload for every consumer → explicit sign-off
+     once the falsification script is green, mirroring the thin-projection
+     rollout gate.
+  2. **Phase 6 tripwire wiring** when `lint_knowledge_scale` fires: choosing
+     the FTS5 activation moment is an operator call.
+- **Phase 7 is documentation-only** (AST-folding candidate ledger entry) —
+  unblocked, parallel, zero dependencies.
+
+## Phase 0 — Retrieval replay substrate (prerequisite to every cut)
+
+No lever ships on an unmeasured claim. Build the evidence rig for the
+retrieval path specifically; reuse the token-program harness where it exists.
+
+- [ ] Build a **replay set of ≥20 real memory queries** harvested from recent
+      maintainer sessions (mix: `memory_lookup` by type, anchored by key/path,
+      `chat_history_read` resumes, knowledge-chunk retrievals). Store as
+      fixtures under `tests/fixtures/memory-replay/` with the expected
+      "needed entries" hand-labelled (which entries the task actually used —
+      not LLM-labelled).
+- [ ] Capture the **baseline**: for each replay query, real-tokenizer count of
+      the current full-entry envelope payload. Emit
+      `internal/bench/reports/memory-retrieval-baseline.json` (per-query +
+      aggregate; record proxy delta per D2).
+- [ ] Define the **paired comparison harness**: same queries under
+      `detail: index` + selective `memory_get` of the hand-labelled needed
+      IDs; tokens-in-context new vs old; answer-quality check reuses the
+      length-controlled paired judge (`check_quality_regression.ts`) — do not
+      hand-roll a second judge.
+- [ ] Wire a CI snapshot: retrieval-baseline regression check (fail if the
+      index-mode payload for the replay set exceeds recorded baseline >5%),
+      inert until the baseline file exists.
+
+**Exit:** a reproducible before/after of full vs index+fetch on the replay
+set, real-tokenizer counts, with a quality verdict path defined.
+**Rollback:** none — measurement only, additive.
+
+## Phase 1 — Index/detail split: `memory_lookup(detail=)` + `memory_get(ids)`
+
+The core adaptation. Mechanism first, behaviour-preserving.
+
+- [ ] Add `detail: 'index' | 'full'` to the `memory_lookup` input schema
+      (`src/scripts/mcp_server/tools.ts`), **default `full`** (D1). CLI twin
+      (`memory_lookup.ts`) gains `--detail`; envelope docs updated.
+- [ ] Implement the index row: `id / type / title-or-key / score / ~tokens`
+      where `~tokens` is `token_count.ts` over the serialized full entry
+      (computed at read time; no stored denormalization — file backend stays
+      dumb).
+- [ ] Add `memory_get` MCP tool: `ids` (required array), batch fetch of full
+      entries across types, same v1 envelope, read-only. Reject unknown IDs
+      with a per-ID `status` rather than a hard error (batch semantics match
+      claude-mem's `get_observations`).
+- [ ] Entry IDs: content-addressed entries already have stable hashes; for
+      `entries:`-list layouts, derive a deterministic ID
+      (`<type>:<file>:<index>` or the entry's `id` field when present) and
+      document the precedence. IDs must be stable across a re-run on an
+      unchanged tree (test).
+- [ ] Unit tests: index row shape, token estimate presence, batch fetch,
+      unknown-ID handling, default-`full` unchanged-envelope snapshot
+      (byte-stable vs current output — the compatibility proof).
+
+**Exit:** both modes callable; default behaviour byte-identical; replay rig
+can exercise index+fetch end-to-end.
+**Rollback:** remove the parameter + tool; default path untouched throughout.
+
+## Phase 1b — Default flip (HUMAN GATE)
+
+- [ ] Run the Phase-0 paired comparison; produce
+      `internal/bench/reports/memory-retrieval-run.json` (token delta +
+      quality verdict).
+- [ ] Falsification checklist (script, not vibes): (a) index mode saves ≥30%
+      tokens on the replay set aggregate, (b) quality judge win-rate ≥48% for
+      index+fetch vs full, (c) no replay query where the model failed to fetch
+      a hand-labelled needed entry. Any red → default stays `full`, findings
+      documented as honest-null.
+- [ ] On green + sign-off: flip default to `index`, bump envelope docs,
+      BREAKING_CHANGES entry.
+
+**Exit:** default flipped with evidence, or an honest-null report.
+**Rollback:** one-line default revert; both modes remain supported.
+
+## Phase 2 — Discipline in the tool catalog (the `__IMPORTANT` pattern)
+
+- [ ] Rewrite `memory_lookup` / `memory_get` / `memory_retrieve` descriptions
+      to carry the workflow inline: "call with detail=index first; fetch full
+      bodies via memory_get ONLY for IDs you will use; batch multiple IDs".
+      Keep under the host description budget; lint via existing description
+      checks.
+- [ ] Evaluate (do not blindly copy) a catalog-level workflow carrier: either
+      a `memory_workflow` MCP **prompt/resource** (we already ship
+      `prompts.ts`/`resources.ts` — more idiomatic than a fake tool) or a
+      pseudo-tool. Decide by which surface the supported hosts actually
+      render; record the per-host finding.
+- [ ] Mirror the discipline into the `memory` pack rule text for MCP-less
+      hosts (D4).
+
+**Exit:** the index-first instruction is host-natively present whenever the
+MCP server is connected; per-host rendering verified.
+**Rollback:** description text revert.
+
+## Phase 3 — `chat_history_read` timeline anchor
+
+- [ ] Add `around: <entry-ref>` + `depth_before`/`depth_after` (defaults 3/3)
+      to `chat_history_read`; JSONL is chronological, so this is slicing, not
+      indexing. Entry ref = session id + line offset or the entry's existing
+      id field.
+- [ ] Index-mode rows for history too: timestamp + `t` tag + first ~100 chars
+      + `~tokens`, full entries on explicit request (same `detail` parameter,
+      same default-preserving rollout).
+
+**Exit:** anchored context recovery without loading a whole session.
+**Rollback:** parameter removal.
+
+## Phase 4 — Knowledge-chunk index mode (`memory_retrieve`)
+
+- [ ] Index rows for knowledge chunks: `ingest-id/chunk-n`, first line,
+      pinned flag, `~tokens` (2 KB chunks ≈ ~500 tok each — exactly the size
+      class where price tags change fetch behaviour).
+- [ ] `memory_get` accepts chunk refs; redaction guarantees unchanged (index
+      rows are derived from already-redacted chunk files, never the source).
+- [ ] Add the replay set's knowledge queries to the Phase-0 rig; measure.
+
+**Exit:** chunk retrieval follows the same two-phase economy, measured.
+**Rollback:** as Phase 1.
+
+## Phase 5 — Compact session-start memory index (opt-in)
+
+claude-mem injects a 50-row compact index at SessionStart. Our `memory-load`
+is deliberately opt-in-full ("never auto-triggered") — that stance holds.
+
+- [ ] Add an opt-in consumer setting (`memory.session_index: off|on`, default
+      **off**) that, when on, emits a compact index of curated entries
+      (titles + IDs + `~tokens`, hard cap ~30 rows / measured token ceiling)
+      at session start via the existing hook surface.
+- [ ] Measure on the replay set: does the index improve memory HIT RATE
+      (model fetches a relevant entry it otherwise missed) enough to justify
+      its fixed cost? Ship-criterion: hit-rate gain at ≤N tok fixed cost, N
+      set from the Phase-0 baseline. Miss → stays off, honest-null.
+
+**Exit:** evidence-backed default (off unless proven), setting documented.
+**Rollback:** setting removal; default was off throughout.
+
+## Phase 6 — FTS5 pre-decided activation path (write, don't build)
+
+- [ ] Extend the `lint_knowledge_scale` tripwire doc: when intake/curated
+      volume crosses the threshold, the named path is SQLite FTS5 over the
+      memory files (claude-mem's trigger-maintained shadow-table pattern,
+      `SessionSearch.ts:78ff`, is the reference), replacing `_score()`'s
+      substring pass — NOT a worker, NOT Chroma (D3, D5).
+- [ ] Record the decision + reference in `docs/decisions/` so activation is a
+      wiring task, not a design debate.
+
+**Exit:** the scale escape hatch is pre-decided and referenced.
+**Rollback:** n/a — documentation.
+
+## Phase 7 — Candidate ledger: AST-folded code reading (documentation only)
+
+- [ ] Add claude-mem's `smart_search`/`smart_unfold` (tree-sitter folding with
+      per-symbol token counts, unfold on demand) to the token-program backlog
+      as a CANDIDATE with a kill criterion: build only if a measured replay of
+      real code-reading tasks shows ≥X% token cut vs the host's native
+      read/grep at equal task success — and only if no host-native folding
+      surface covers it first. Note the overlap risk with host tooling
+      explicitly.
+
+**Exit:** candidate recorded with falsifiable ship/kill criteria; zero build.
+
+## Non-goals
+
+- Write-time LLM observation generation (claude-mem's provider pipeline) —
+  our curation is human-gated by design; auto-generation would bypass the
+  admission gate and add unmetered LLM cost.
+- Any always-on worker/service, Chroma, Postgres runtime.
+- Adopting the "90%" framing in our own docs — our claims cite the Phase-0
+  replay numbers or nothing.

@@ -2,8 +2,8 @@
 /**
  * Release-time discovery scanner — produces discovery-manifest.json.
  *
- * TypeScript twin of `src/scripts/build_discovery_manifest.py` (ADR-200,
- * Phase 5). The CLI contract is mirrored EXACTLY — every flag (`--write`,
+ * Ported from the retired Python `src/scripts/build_discovery_manifest.py` (ADR-200,
+ * Phase 5). The CLI contract is pinned — every flag (`--write`,
  * `--out`, `--summary`, `--deprecation-report`, `--trust-report`,
  * `--orphan-report`, `--workspaces-json`, `--packs-json`, `--strict`,
  * `--quiet`), the CI-strict env override, exit codes, the stdout/stderr
@@ -20,18 +20,17 @@
  *
  * Imports the `_lib/agent_src` twin for the artefact walk and the
  * `validate_frontmatter` twin for frontmatter parse + schema-default
- * injection (the SAME functions the Python original imports). The checksum
+ * injection (the SAME functions the retired Python implementation imports). The checksum
  * primitive `_artefact_checksum` / `_CATEGORY_SCHEMA` / `_FRONTMATTER_RE` are
  * replicated here EXACTLY and kept in agreement with the inline copy in
  * `check_artefact_checksums.ts`.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * DIVERGENCE CANDIDATE (documented under the ADR-200 process):
- * `_scanner_version()` in the Python original hashes the scanner file's OWN
- * bytes (`Path(__file__).read_bytes()`). For the TS-built manifest to remain
- * byte-identical to the Python-built one — and to keep passing the
- * Python-rebuild diff in `validate_discovery_manifest.py` — this twin hashes
+ * `_scanner_version()` in the retired Python implementation hashes the scanner file's OWN
+ * bytes (`Path(__file__).read_bytes()`). During the migration the TS-built
+ * manifest had to match the Python-built one byte-for-byte, so this port hashes
  * the SIBLING `build_discovery_manifest.py` bytes (falling back to its own
  * `.ts` bytes only when the `.py` is absent, e.g. after the same-PR deletion).
  * Until the `.py` is deleted the manifest is byte-identical; after deletion
@@ -68,7 +67,7 @@ const _HERE = fileURLToPath(import.meta.url);
 
 // --- Module-level path config (mutable to mirror Python monkeypatch seam) ----
 //
-// The Python original derives ROOT / SRC / VOCAB_DIR / DEFAULT_* as
+// the retired Python implementation derives ROOT / SRC / VOCAB_DIR / DEFAULT_* as
 // module-level constants and `tests/test_build_discovery_manifest.py`
 // reassigns `mod.ROOT`, `mod.SRC`, `mod.VOCAB_DIR`, `mod.artefact_roots`, and
 // `mod.resolve_logical` via monkeypatch. To preserve that injection surface,
@@ -314,11 +313,10 @@ function _vocab(): [VocabEntry[], VocabEntry[], Record<string, string>] {
 }
 
 function _scanner_version(): string {
-    // DIVERGENCE CANDIDATE: hash the SIBLING build_discovery_manifest.py bytes
-    // so the manifest stays byte-identical to the Python-built one (and keeps
-    // passing the Python-rebuild diff in validate_discovery_manifest.py). Fall
-    // back to this twin's own bytes once the .py is deleted (same-PR; the
-    // manifest is regenerated then anyway).
+    // Scanner version = hash of this file's own bytes (the .py-sibling branch
+    // below is inert since the teardown — no sibling exists; kept because the
+    // manifest checksum gates pin the current output and removing the branch
+    // is a behaviour-neutral cleanup for its own change).
     const pyPath = path.join(path.dirname(_HERE), 'build_discovery_manifest.py');
     const target = _isFile(pyPath) ? pyPath : _HERE;
     const h = crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex');
@@ -827,7 +825,7 @@ function _cmpStr(a: string, b: string): number {
  * 0, "" and the EMPTY array/object — distinct from JS, where `[]`/`{}` are
  * truthy. Used at the optional-field emission sites in `_build` so an empty
  * `optional_packs` / `example_roles` / `suggests` is omitted exactly as the
- * Python original omits it.
+ * retired Python implementation omitted it.
  */
 function _pyTruthy(v: Json): boolean {
     if (v === undefined || v === null || v === false || v === '' || v === 0) {

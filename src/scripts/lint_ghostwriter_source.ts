@@ -2,12 +2,12 @@
 /**
  * Lint ghostwriter profile sources.
  *
- * TypeScript twin of `src/scripts/lint_ghostwriter_source.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/lint_ghostwriter_source.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--quiet`
  * detected by argv membership, exit codes (0 / 1), stdout/stderr split,
  * byte-identical messages, same scan scope (`*.md` sorted in each tier),
  * same package- then consumer-side ordering. No behaviour changes —
- * latent bugs replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Two storage tiers (docs/contracts/ghostwriter-schema.md):
  *   * src/agent-src/ghostwriter/  — package source, fictional fixtures only.

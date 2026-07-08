@@ -2,12 +2,12 @@
 /**
  * Release-trunk-sync CI gate (road-to-productization P1.3).
  *
- * TypeScript twin of `src/scripts/check_release_trunk_sync.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags,
+ * Ported from the retired Python `src/scripts/check_release_trunk_sync.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — no flags,
  * exit codes (0 pass/no-op, 1 main too far behind, 3 internal error),
  * stdout, byte-identical `::warning::` / `::error::` messages, the same
  * git plumbing and the same env-var override. No behaviour changes —
- * latent bugs replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Fails if `main` is more than one tagged release behind the current
  * release-prep branch's target version. No-ops on every other branch

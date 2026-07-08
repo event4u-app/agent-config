@@ -2,7 +2,7 @@
 /**
  * Lint ticket bundles for build-readiness.
  *
- * TypeScript twin of `src/scripts/lint_ticket_buildable.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/lint_ticket_buildable.py` (ADR-200,
  * Python→TypeScript migration). The behaviour is mirrored EXACTLY — NO argparse
  * (the entry point is `lint()`, which ignores argv entirely; an unknown flag is
  * silently ignored and the lint runs), the scan order
@@ -26,7 +26,7 @@
  * Exit codes: 0 = clean, 1 = lint failures, 3 = IO/setup error. Failures print as
  * ``path:reason``.
  *
- * The Python original uses `jsonschema.Draft7Validator`; this twin hand-rolls a
+ * the retired Python implementation uses `jsonschema.Draft7Validator`; this twin hand-rolls a
  * Draft-07 validator covering exactly the keyword set the two ticket schemas use
  * (type [string | array], required, additionalProperties [false], properties,
  * patternProperties, anyOf, pattern, enum, minLength, minItems, items, minimum,

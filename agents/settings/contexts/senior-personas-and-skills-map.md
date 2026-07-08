@@ -1,6 +1,18 @@
 # Senior Personas and Skills Map
 
-**Status:** v3.1 — post-suite-closure-council, four-wings alignment applied (no Wing-5 prose, four owner-roadmaps, IO1 identity anchored in `AGENTS.md`)
+> **SUPERSEDED as the living inventory (2026-07-08).** This map is the
+> historical planning record for the wing-slicing decisions (v1–v3.1,
+> council traces below). The LIVING persona inventory + ownership +
+> citation map is [`docs/personas.md`](../../../docs/personas.md), governed
+> by `persona-governance.md` — which already recorded persona changes this
+> map predates (e.g. the 2026-05-17 `pixar-storyboard-artist` delete-and-fold).
+> Consult this file for the *why* of the original slicing, never for the
+> current persona universe.
+> **Scope:** the wing-slicing rationale and skill-ownership decisions as of
+> 2026-05-05. **Revisit-if:** a fifth wing is proposed, or the persona
+> universe is re-sliced across roadmap owners.
+
+**Status:** v3.1 (historical) — post-suite-closure-council, four-wings alignment applied (no Wing-5 prose, four owner-roadmaps, IO1 identity anchored in `AGENTS.md`)
 **Owner:** maintainer (matze4u)
 **Last updated:** 2026-05-05
 **Council sessions:**

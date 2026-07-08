@@ -1,7 +1,7 @@
 // Council orchestrator — fan out one question to multiple members.
 //
-// py2ts twin of orchestrator.py (ADR-200). Byte-for-byte parity with the
-// Python original: member dispatch order, sequential cost gating, the overrun
+// Port of the retired Python orchestrator.py (ADR-200). The historical contract
+// is pinned byte-for-byte by tests: member dispatch order, sequential cost gating, the overrun
 // callback contract, multi-round debate / peer-review / consensus passes, and
 // the Markdown render assembly are all mirrored exactly.
 //
@@ -69,7 +69,7 @@ import {
 // The orchestrator formats USD / scores / strengths via Python f-string
 // specs (`:.4f`, `:.2f`, `:.1f`) which round half-to-even on the decimal
 // representation. JS `toFixed` rounds half away from zero, so the spec
-// formatting is reimplemented to stay byte-exact with the Python original.
+// formatting is reimplemented to stay byte-exact with the retired Python implementation.
 
 /**
  * Format `x` to `ndigits` decimals using round-half-to-even, matching

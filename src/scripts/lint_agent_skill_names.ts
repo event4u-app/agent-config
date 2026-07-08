@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // Agent-Skills name-compliance linter (2026-06 Zed fix).
 //
-// TypeScript twin of src/scripts/lint_agent_skill_names.py — same two
+// TypeScript port of the retired Python src/scripts/lint_agent_skill_names.py — same two
 // blocking checks (command name == path-derived slug; skill name == dir),
 // same Agent-Skills name pattern, same stdout/stderr split, same exit codes
 // (0 clean / 1 violations / 3 internal error), same `--quiet` flag.

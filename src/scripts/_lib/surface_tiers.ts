@@ -1,7 +1,7 @@
 /**
  * Surface-tier (core vs lab) resolution for the install split.
  *
- * TypeScript twin of `src/scripts/_lib/surface_tiers.py` (ADR-200 — Python→TS
+ * Ported from the retired Python `src/scripts/_lib/surface_tiers.py` (ADR-200 — Python→TS
  * migration). Public API mirrors the Python module exactly (snake_case kept
  * deliberately — fidelity over TS idiom).
  *

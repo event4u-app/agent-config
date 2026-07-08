@@ -13,7 +13,7 @@
 // Stability: experimental. Contract: `docs/contracts/mcp-phase-1-scope.md`.
 // Promotion to beta gated on `docs/contracts/mcp-beta-criteria.md`.
 //
-// TS twin of __init__.py (py2ts Phase 8). The Python package barrel exposes
+// TS port of the retired Python __init__.py (ADR-200). The Python package barrel exposes
 // exactly two module-level names: `__version__` and `SERVER_NAME`. Mirrored
 // here as `__version__` (Python wire-surface SemVer name preserved) and
 // SERVER_NAME.

@@ -2,8 +2,8 @@
 /**
  * Refresh `agents/runtime/.agent-prices.md` from the LiteLLM model-prices feed.
  *
- * TypeScript twin of `src/scripts/update_prices.py` (ADR-200 — Python→TS
- * migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY —
+ * Ported from the retired Python `src/scripts/update_prices.py` (ADR-200 — Python→TS
+ * migration, Phase 8 / Wave 8g). The CLI contract is pinned —
  * the `--check` / `--path` flags, exit codes (0 ok / 1 stale-or-missing in
  * --check), the stdout/stderr split, byte-identical messages, and the
  * byte-identical written `agents/runtime/.agent-prices.md`.
@@ -15,7 +15,7 @@
  * Network fetch + `today` (UTC date) are non-deterministic; golden parity
  * exercises `--check` (no network, fixed fixture) and the no-network write
  * path with `--path` to a temp file (timestamp line excluded). No behaviour
- * changes — latent Python quirks replicated.
+ * changes — historical quirks preserved (consumers pin the exact behaviour).
  */
 import * as fs from 'node:fs';
 import * as https from 'node:https';

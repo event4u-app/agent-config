@@ -1,7 +1,7 @@
 /**
  * Thinking-style advisors — replace-mode call planning (Phase 6).
  *
- * TypeScript twin of `src/scripts/ai_council/advisors.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/ai_council/advisors.py` (ADR-200 —
  * Python→TS migration, Phase 1). When the user-global
  * `~/.event4u/agent-config/settings/.ai-council.yml` (always global —
  * ADR-104) enables an advisor (e.g. `contrarian` bound to

@@ -3,14 +3,14 @@
  * Activation-likelihood heuristic for the Rule-Governance pass
  * (Phase 5.3 of road-to-augment-limit-fit).
  *
- * TypeScript twin of `src/scripts/audit_likelihood.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/audit_likelihood.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the Python CLI
  * contract EXACTLY — no flags, exit codes (0 ok / 1 missing audit
  * JSON), the stdout/stderr split, byte-identical stdout messages, and
  * byte-identical written artefacts (`json.dumps(..., indent=2)` for the
  * likelihood dump + the exact appended Markdown section).
  *
- * No `_lib` imports — the Python original has none; it reads the audit
+ * No `_lib` imports — the retired Python implementation has none; it reads the audit
  * JSON written by `audit_auto_rules.py` and globs a fixed corpus.
  *
  * For every auto-rule from `agents/reports/auto-rules-audit.json`:
@@ -22,7 +22,7 @@
  * 3. Score `corpus_hits = sum(1 for token in tokens if token in corpus)`.
  * 4. Flag rules with `< 2` corpus hits as "low-likelihood".
  *
- * No behaviour changes — latent Python quirks replicated, including the
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour., including the
  * `dict(sorted(...)[:8])` top-8 hit truncation and the corpus-keyword
  * heuristic.
  */
@@ -92,7 +92,7 @@ function pyLen(s: string): number {
  * Recursive glob for the four fixed patterns. Each pattern is anchored at
  * REPO_ROOT. `**` matches any depth; the trailing component is a basename or
  * `*.md` suffix. Returns SORTED absolute paths (Python `Path.glob` yields
- * unsorted; the Python original does NOT sort, but iterates corpus globs in
+ * unsorted; the retired Python implementation does NOT sort, but iterates corpus globs in
  * list order and merely counts tokens into a Counter, so token membership is
  * order-independent — we still walk deterministically).
  */
@@ -219,7 +219,7 @@ export function score(rule: Json, corpus: Map<string, number>): Score {
     // dict(sorted(hits.items(), key=lambda x: -x[1])[:8]) — top-8 by volume desc.
     // Python's sort is stable; ties keep the iteration order of `hits`. Since
     // `hits` here is sorted by token, ties resolve token-ascending — but the
-    // CPython original's `hits` dict ordering is hash-based, so ties COULD differ.
+    // retired CPython implementation's `hits` dict ordering was hash-based, so ties COULD differ.
     // This is a latent non-determinism candidate (see report). We canonicalise to
     // token-ascending tie-break, which the differential test pins.
     const topHits = stableSortByVolumeDesc(hits).slice(0, 8);

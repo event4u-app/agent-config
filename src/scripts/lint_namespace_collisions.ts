@@ -2,8 +2,8 @@
 /**
  * Single-namespace collision lint (road-to-6.0.0-D Phase 0 Step 4).
  *
- * TypeScript twin of `src/scripts/lint_namespace_collisions.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — exit codes
+ * Ported from the retired Python `src/scripts/lint_namespace_collisions.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — exit codes
  * (0 no collisions, 1 collision, 3 internal error), stdout/stderr split,
  * byte-identical finding messages, same `iter_all_sources()` scan order,
  * same normalization, same frontmatter `name:` extraction.

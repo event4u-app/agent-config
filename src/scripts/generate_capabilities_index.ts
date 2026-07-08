@@ -2,8 +2,8 @@
 /**
  * Generate `CAPABILITIES.yaml` — the package's capability-coverage index.
  *
- * TypeScript twin of `src/scripts/generate_capabilities_index.py` (ADR-200).
- * Mirrors the Python CLI contract EXACTLY — the `--check` flag, exit codes
+ * Ported from the retired Python `src/scripts/generate_capabilities_index.py` (ADR-200).
+ * The CLI contract is pinned — the `--check` flag, exit codes
  * (0 / 1 / 2), stdout/stderr split, and the byte-identical generated
  * `CAPABILITIES.yaml` (header comment block, `meta:` block, `capability_areas:`
  * by domain, `gaps:` block, the `json.dumps(..., ensure_ascii=False)` scalar

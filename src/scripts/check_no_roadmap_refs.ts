@@ -2,12 +2,12 @@
 /**
  * No-roadmap-references checker.
  *
- * TypeScript twin of `src/scripts/check_no_roadmap_refs.py` (ADR-200,
- * Phase 4 / Wave 4a). The CLI contract is mirrored EXACTLY — `--format`
+ * Ported from the retired Python `src/scripts/check_no_roadmap_refs.py` (ADR-200,
+ * Phase 4 / Wave 4a). The CLI contract is pinned — `--format`
  * / `--root` flags, exit codes (0 clean, 1 violations, 3 internal error),
  * stdout/stderr split, byte-identical finding messages, same scan trees
  * and order, same fenced-code-block skipping, same self-documenting
- * allowlist. No behaviour changes — latent bugs replicated.
+ * allowlist. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Stable artifacts (rules, skills, commands, contexts, guidelines, AGENTS.md,
  * README, copilot-instructions) must NOT cite a specific roadmap file in

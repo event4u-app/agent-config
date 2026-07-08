@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 /** Generate agents/evidence/notes/discovery-baseline.md for Phase 0.1.
  *
- * TypeScript twin of `src/scripts/gen_discovery_baseline.py` (ADR-200, Phase 8
- * / Wave 8h). Mirrors the Python CLI contract EXACTLY — no flags, exit 0,
+ * Ported from the retired Python `src/scripts/gen_discovery_baseline.py` (ADR-200, Phase 8
+ * / Wave 8h). The CLI contract is pinned — no flags, exit 0,
  * byte-identical stdout (`wrote {dest} — {n} lines`) and byte-identical written
  * `discovery-baseline.md` (except the generated UTC timestamp, which is
  * non-deterministic and excluded from golden parity). No behaviour changes:

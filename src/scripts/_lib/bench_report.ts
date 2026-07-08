@@ -4,9 +4,9 @@
 // docs/contracts/benchmark-report-schema.md. Filename format:
 // `internal/bench/reports/<UTC ISO-8601 with : -> ->-<corpus_id>.{json,md}`.
 //
-// TypeScript twin of `src/scripts/_lib/bench_report.py` (ADR-200 py2ts
-// Phase 2 / Wave 2a). Markdown / JSON rendering is byte-exact with the
-// Python original; the inline `:.2%` formatting replicates Python's
+// Ported from the retired Python `src/scripts/_lib/bench_report.py` (ADR-200 py2ts
+// Phase 2 / Wave 2a). Markdown / JSON rendering is byte-stable (goldens pin
+// it); the inline `:.2%` formatting replicates Python's
 // round-half-to-even semantics.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -52,7 +52,7 @@ export function write_json(filePath: string, report: unknown): void {
 //
 // Python's f"{x:.2%}" rounds half-to-even on the decimal representation.
 // JS `toFixed` rounds half away from zero, so we reimplement to stay
-// byte-exact with the Python original.
+// byte-exact with the retired Python implementation.
 
 /** Replicate Python `format(x, ".2%")` — value × 100, banker-rounded, '%' suffix. */
 function _fmt_pct2(x: number): string {

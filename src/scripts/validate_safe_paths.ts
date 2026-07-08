@@ -2,12 +2,12 @@
 /**
  * Sensitive-path denylist — refuses files that almost certainly hold secrets or PII.
  *
- * TypeScript twin of `src/scripts/validate_safe_paths.py` (ADR-200, Phase 4 /
+ * Ported from the retired Python `src/scripts/validate_safe_paths.py` (ADR-200, Phase 4 /
  * Wave 4c). The public API and CLI contract are mirrored EXACTLY — same
  * exported snake_case names (`is_sensitive`, `assert_safe`,
  * `SensitivePathError`), same denylist regex / component set / token list,
  * same CLI exit codes (0 safe, 2 sensitive / usage), stdout/stderr split, and
- * byte-identical messages. No behaviour changes — latent bugs replicated.
+ * byte-identical messages. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Phase 0 of step-16-telegraph-substance. Gates Phase 2 (`scripts/condense_memory.py`):
  * any consumer-supplied path must pass `assert_safe()` before bytes are read or

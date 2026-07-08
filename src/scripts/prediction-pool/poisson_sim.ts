@@ -2,8 +2,8 @@
 /**
  * Poisson tournament simulator for prediction-pool-optimizer.
  *
- * TypeScript twin of `src/scripts/prediction-pool/poisson_sim.py` (ADR-200).
- * The CLI contract is mirrored EXACTLY — the positional `config` JSON file,
+ * Ported from the retired Python `src/scripts/prediction-pool/poisson_sim.py` (ADR-200).
+ * The CLI contract is pinned — the positional `config` JSON file,
  * `--runs` / `--seed`, exit codes, the stdout/stderr split, and byte-identical
  * output. No behaviour changes.
  *

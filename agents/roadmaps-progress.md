@@ -2,34 +2,75 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **23** open blockers
 
 ## Overall
 
-**109 / 167 steps done · 65%**
+**109 / 270 steps done · 40%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   65%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | [1](#blockers-road-to-ci-native-release-first-run) | ░░░░░░░░░░ 0% |
-| 2 | [road-to-command-structure-optimization.md](roadmaps/road-to-command-structure-optimization.md) | 6 | 28 | 1 | 23 | 2 | 2 | 0 | ██████████ 96% |
-| 3 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
-| 4 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 5 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 6 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
-| 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 10 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
+| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 15 | 0 | 0 | 0 | [3](#blockers-road-to-adoption-without-narrative-debt) | ░░░░░░░░░░ 0% |
+| 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | [1](#blockers-road-to-ci-native-release-first-run) | ░░░░░░░░░░ 0% |
+| 3 | [road-to-command-structure-optimization.md](roadmaps/road-to-command-structure-optimization.md) | 6 | 28 | 1 | 23 | 2 | 2 | 0 | ██████████ 96% |
+| 4 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 12 | 0 | 0 | 0 | [2](#blockers-road-to-domain-soundness) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
+| 7 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
+| 8 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 25 | 25 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 13 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 61% |
+| 13 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
+| 14 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ░░░░░░░░░░ 0% |
+| 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 16 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 17 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md)
+
+**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 0 / 15 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Quick wins already verified missing (autonomous, hours not weeks) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | One 30-second wedge, not the whole platform | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Discoverability where the category is browsed | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Turn the proof surface into the differentiator narrative | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Convert the wedge to the platform (measured, not assumed) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-adoption-without-narrative-debt"></a>
+**Blockers**
+
+- **wedge-scope-cut** (owner: maintainer) — blocks Phase 1
+  - **What to do:**
+    one command, one backed promise. The discipline is saying no to 263 skills on
+    the first screen.
+  - **Resolved when:** a single-install wedge exists that a stranger can succeed with in under a minute, with no profile/pack choice required.
+- **activation-instrumentation-posture** (owner: maintainer) — blocks Phases 1, 4 (the measured funnel)
+  - **What to do:**
+    default-off, aggregate — reconcile with the maintainer-telemetry posture
+    before shipping any counter. If it cannot be done without default-on
+    collection, ship the funnel un-instrumented and say so.
+  - **Resolved when:** an activation signal exists that a privacy-conscious installer would leave enabled.
+- **real-external-participant** (owner: user) — blocks Phase 1 (B9 real session) and thereby the Phase 2 launch story's install-friction evidence
+  - **What to do:**
+    an agent) for a ~30-minute wedge-install session per
+    `agents/recruit-sessions/_install-friction-runbook.md`. This cannot be
+    produced by the repo itself — it is the single most-repeated open ask across
+    all external reviews of 8.0.0.
+  - **Resolved when:** ≥1 completed session record exists under `agents/recruit-sessions/` with findings distributed per `_findings-distribution.md`.
 
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
@@ -76,6 +117,33 @@
   - **What to do:**
     an open-source-host adapter exists AND the maintainer wants
   - **Resolved when:** condition described above clears
+
+### [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md)
+
+**Road to domain soundness — prove or honestly scope the non-forged, non-coding domains** — 0 / 12 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Scope to the default surface + define domain-truth fixtures | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Author domain-truth fixtures with domain competence (not output taste) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Run + gate the provenance claim | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Honest disposition of the long tail | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-domain-soundness"></a>
+**Blockers**
+
+- **domain-competence-for-answer-keys** (owner: maintainer) — blocks Phase 2 (fixture authoring)
+  - **What to do:**
+    sourced correct DCF/runway/IC answer key. Options: (a) the maintainer authors
+    keys strictly from citable methods (finance texts, IC frameworks) with the
+    working shown; (b) recruit one domain reviewer per area for key ratification
+    (couples to the bus-factor roadmap's second-reviewer on-ramp). Do NOT let the
+    skill's own output become the answer key — that validates nothing.
+  - **Resolved when:** each default-surface domain skill has ≥1 fixture with a key traceable to a cited external method, ratified by someone with the domain competence to check it.
+- **measurement-spend** (owner: maintainer) — blocks Phase 3 (fixture runs)
+  - **What to do:**
+    fixed host.
+  - **Resolved when:** a pinned domain-truth result set exists and the provenance CLAIMS gate is green.
 
 ### [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md)
 
@@ -148,17 +216,82 @@
     the bootstrap shim has shipped and a monitoring window
   - **Resolved when:** condition described above clears
 
+### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
+
+**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 0 / 11 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Dogfood the review machinery as a pre-merge gate | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | CODEOWNERS + branch protection | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Make a release inheritable (the runbook) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Lower bus-factor toward >1 (opportunistic, honest) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-maintainer-bus-factor"></a>
+**Blockers**
+
+- **self-review-gate-cost** (owner: maintainer) — blocks Phase 1
+  - **What to do:**
+    `adversarial-review` + `agent-security-review` on all non-trivial PRs (cheap),
+    full `ai-council` only on large or claim-affecting diffs. Tune the trigger so
+    the gate is not a tax on typo fixes.
+  - **Resolved when:** the gate runs within an acceptable per-PR budget and blocks on security/claim findings.
+- **second-reviewer-availability** (owner: maintainer) — blocks Phase 4 (the >1 target only)
+  - **What to do:**
+    opportunistic and gated on real external interest (couples to the adoption
+    roadmap). Phases 1–3 do NOT depend on it — reviewability and inheritability are
+    achievable solo.
+  - **Resolved when:** ≥1 non-maintainer has reviewed a merged PR, or the phase is explicitly deferred pending adoption.
+
+### [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md)
+
+**Road to memory-retrieval economy — index first, fetch by ID, price every row** — 0 / 25 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Retrieval replay substrate (prerequisite to every cut) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Index/detail split: `memory_lookup(detail=)` + `memory_get(ids)` | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1b | Default flip (HUMAN GATE) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Discipline in the tool catalog (the `__IMPORTANT` pattern) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | `chat_history_read` timeline anchor | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | Knowledge-chunk index mode (`memory_retrieve`) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Compact session-start memory index (opt-in) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 6 | FTS5 pre-decided activation path (write, don't build) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 7 | Candidate ledger: AST-folded code reading (documentation only) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
+### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
+
+**Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front** — 0 / 10 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Pre-commit the falsifiable minimal claim | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Accumulate real telemetry (inherits parent followup) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Gate the claim: prove or drop | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Position the minimalism (only after Phase 3 resolves) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-orchestration-scope-decision"></a>
+**Blockers**
+
+- **real-orchestration-usage** (owner: user) — blocks Phase 2 (and thereby Phase 3's decision)
+  - **What to do:**
+    telemetry. Use the agent on genuinely parallel/ordered multi-file tasks with
+    `subagents.auto: ask`, then check
+    `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
+  - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
+
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
-**Road to request-scoped rule load — ship only what the request needs** — 20 / 25 done (80%)
+**Road to request-scoped rule load — ship only what the request needs** — 20 / 33 done (61%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Workspace/pack fields into the router (schema, additive) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1 | Consumer-scoped rule projection (the ~50k lever) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
+| 1b | Pipeline B: make scoping reach actual consumer installs | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | 🟡 in progress | 4 | 4 | 0 | 0 | 50% |
+| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | 🟡 in progress | 7 | 4 | 0 | 0 | 36% |
 
 <a id="blockers-road-to-request-scoped-rule-load"></a>
 **Blockers**
@@ -168,6 +301,51 @@
     § Program tracking step 2 — label the golden stubs, run the live judge
     at `--scope consumer`, tick the live canary on 3 hosts.
   - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0.
+
+### [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md)
+
+**Road to second-brain delta proof — measure the memory substrate against a no-memory baseline, and scope it honestly against human-PKM** — 0 / 11 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Define the task + deterministic scorer (no LLM judge) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Paired measurement: substrate on vs off vs placebo | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Honest positioning vs human-PKM | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Interop instead of competition (optional, gated on Phase 2 PASS) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-second-brain-delta-proof"></a>
+**Blockers**
+
+- **memory-corpus-authoring** (owner: maintainer) — blocks Phase 1 — corpus + scorer
+  - **What to do:**
+    keys; the hard part is designing session-*k*/*k+1* dependencies a headless
+    harness can replay. Reuse the audit-log replay path from the orchestration
+    corpus for session chaining.
+  - **Resolved when:** `internal/bench/second-brain/corpus/` holds a scorable corpus and the scorer passes a dry run.
+- **measurement-spend** (owner: maintainer) — blocks Phase 2
+  - **What to do:**
+  - **Resolved when:** a pinned second-brain delta report exists under `internal/bench/reports/`.
+
+### [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md)
+
+**Road to skill eval coverage — close the 2-of-264 behavioural-eval gap, tier-prioritised, ratcheted** — 0 / 11 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Lock the eval schema + a coverage metric | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Cover the highest-traffic / highest-cost skills first | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Ratchet: a floor that only rises | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Honest disposition of the long tail | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-skill-eval-coverage"></a>
+**Blockers**
+
+- **eval-authoring-throughput** (owner: maintainer) — blocks Phase 2 (bulk authoring)
+  - **What to do:**
+    package's own `skill-creator` / eval-scaffold tooling to draft cases, but each
+    case's pass/fail assertion needs human ratification — a generated eval that
+    asserts the wrong property is worse than none.
+  - **Resolved when:** the default-surface + rich tiers reach 100% passing coverage.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 

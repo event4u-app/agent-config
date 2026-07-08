@@ -2,8 +2,8 @@
 /**
  * audit_cloud_compatibility.ts — tier each artefact for cloud distribution.
  *
- * TypeScript twin of `src/scripts/audit_cloud_compatibility.py` (ADR-200,
- * Phase 8 / Wave 8a). The CLI contract is mirrored EXACTLY — the flags
+ * Ported from the retired Python `src/scripts/audit_cloud_compatibility.py` (ADR-200,
+ * Phase 8 / Wave 8a). The CLI contract is pinned — the flags
  * `--details` / `--tier` / `--cloud-action` / `--format` / `--iron-law`,
  * exit codes, the stdout/stderr split, byte-identical messages, AND
  * byte-identical JSON output (`json.dumps(indent=2)` — insertion-order keys,
@@ -14,7 +14,7 @@
  * `<!-- cloud_safe: noop|degrade -->` markers, and emits a JSON summary
  * (or `--details` rows, or the `--iron-law` bypass scan).
  *
- * No behaviour changes — latent Python quirks replicated (including the
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour. (including the
  * Counter.most_common tie-ordering and the regex-findall set dedup).
  */
 import * as fs from 'node:fs';

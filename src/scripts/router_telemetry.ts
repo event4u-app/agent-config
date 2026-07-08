@@ -2,7 +2,7 @@
 /**
  * Local replay of the router against a corpus — pure, no API spend.
  *
- * TypeScript twin of `src/scripts/router_telemetry.py` (ADR-089 —
+ * Ported from the retired Python `src/scripts/router_telemetry.py` (ADR-089 —
  * Python→TS migration, Phase 7). Mirrors the Python CLI contract
  * exactly: flags (`--corpus`, `--sample-cap`, `--profile`, `--out`,
  * `--quiet`), exit codes, stdout/stderr split, byte-identical messages,

@@ -2,8 +2,8 @@
 /**
  * Generate the file-ownership matrix.
  *
- * TypeScript twin of `src/scripts/generate_ownership_matrix.py` (ADR-200,
- * Phase 8 Wave 8a). Mirrors the Python CLI contract EXACTLY — flag
+ * Ported from the retired Python `src/scripts/generate_ownership_matrix.py` (ADR-200,
+ * Phase 8 Wave 8a). The CLI contract is pinned — flag
  * (`--check`), exit codes (0 / 1 / 2 / 3), stdout/stderr split, and the
  * byte-identical generated outputs (`json.dumps(payload, indent=2,
  * sort_keys=False)` + trailing newline, and the markdown render).

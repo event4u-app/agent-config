@@ -2,8 +2,8 @@
 /**
  * Project-analysis freshness loop — a cheap *heuristic* staleness signal.
  *
- * TypeScript twin of `src/scripts/analysis_freshness.py` (ADR-200,
- * Python→TypeScript migration). The CLI contract is mirrored EXACTLY — the
+ * Ported from the retired Python `src/scripts/analysis_freshness.py` (ADR-200,
+ * Python→TypeScript migration). The CLI contract is pinned — the
  * required mutually-exclusive group (`--stamp FILE | --stamp-all | --check FILE
  * | --check-all`), the argparse usage banner + error text (missing required
  * group → exit 2, conflicting args → exit 2, missing value → exit 2,

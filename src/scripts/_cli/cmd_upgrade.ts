@@ -3,8 +3,8 @@
  * `agent-config upgrade` — fetch + install the latest global binary + refresh
  * (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/_cli/cmd_upgrade.py` (ADR-200, py2ts
- * migration). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/_cli/cmd_upgrade.py` (ADR-200, py2ts
+ * migration). The CLI contract pins the historical contract exactly — same
  * flags, same exit codes, same stdout/stderr split, byte-identical emitted
  * output, same filesystem effects, same subprocess argv/cwd/env. No behaviour
  * changes — latent quirks are replicated and flagged inline, not fixed.

@@ -2,7 +2,7 @@
 /**
  * Sync the `event4u/agent-config` block in a project's `.gitignore`.
  *
- * TypeScript twin of `src/scripts/sync_gitignore.py` (ADR-200, Phase 5). The
+ * Ported from the retired Python `src/scripts/sync_gitignore.py` (ADR-200). The
  * CLI contract is mirrored EXACTLY — every flag (`--path`, `--template`,
  * `--dry-run`, `--replace`, `--cleanup-legacy`, `--quiet`), exit codes
  * (0 = no change / changed / dry-run; 2 = invalid args / template missing),
@@ -11,7 +11,7 @@
  * unified-diff format). Exported helpers keep their Python snake_case names so
  * the ported pytest suite can call them 1:1.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Reads the canonical block body from `src/config/gitignore-block.txt` and
  * ensures every managed entry is present in `.gitignore` between the
@@ -37,7 +37,7 @@ export const DEFAULT_GITIGNORE = '.gitignore';
 
 const _HERE = fileURLToPath(import.meta.url);
 // _HERE === <repo>/src/scripts/sync_gitignore.ts ; parents[2] of the .py file
-// is the repo root — two dirs up from src/scripts. The Python original derives
+// is the repo root — two dirs up from src/scripts. the retired Python implementation derives
 // DEFAULT_TEMPLATE = <file>.parent.parent.parent / "src" / "config" /
 // "gitignore-block.txt".
 export const DEFAULT_TEMPLATE = path.join(

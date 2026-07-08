@@ -2,15 +2,15 @@
 /**
  * Lint a generated discovery-manifest.json against schema + checksum.
  *
- * TypeScript twin of `src/scripts/lint_discovery_manifest.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--manifest`
+ * Ported from the retired Python `src/scripts/lint_discovery_manifest.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--manifest`
  * / `--quiet` flags, exit codes (0 / 1), stdout/stderr split, byte-identical
  * SUCCESS + vocab + determinism + checksum messages, same check order, and
  * a byte-identical checksum recomputation (recursive key-sort + indent-2,
- * `ensure_ascii=False`). No behaviour changes — latent bugs replicated.
+ * `ensure_ascii=False`). Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * DIVERGENCE CANDIDATES:
- *  1. The Python original imports `jsonschema` and exits 1 with the message
+ *  1. the retired Python implementation imports `jsonschema` and exits 1 with the message
  *     `error: jsonschema not installed (...)` when it is absent. The TS twin
  *     has no such dependency, so that exit-1 path never fires — the schema
  *     check always runs.

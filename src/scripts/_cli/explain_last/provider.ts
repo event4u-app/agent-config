@@ -1,8 +1,8 @@
 /**
  * Builder for the `trace.provider` slot.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/provider.py` (ADR-200).
- * Behaviour mirrors the Python original EXACTLY — same video-only gate,
+ * Ported from the retired Python `src/scripts/_cli/explain_last/provider.py` (ADR-200).
+ * Behaviour pins the historical contract exactly — same video-only gate,
  * same `video_provider` / `contract.video_provider` extraction order, same
  * `None` branches, same scrub passes. No behaviour changes.
  *

@@ -2,8 +2,8 @@
 /**
  * Emit `cost-summary/v1` JSON per `docs/contracts/cost-summary-schema.md`.
  *
- * TypeScript twin of `src/scripts/cost_summary.py` (ADR-200 — Python→TS
- * migration, Phase 8 / Wave 8e). The CLI contract is mirrored EXACTLY:
+ * Ported from the retired Python `src/scripts/cost_summary.py` (ADR-200 — Python→TS
+ * migration, Phase 8 / Wave 8e). The CLI contract is pinned:
  * same flags (`--input`, `--format json`), same exit code (0), same
  * byte-identical JSON output (json.dumps indent=2; PyFloat-aware so
  * `total_cost_usd` renders with a trailing `.0` like Python). The

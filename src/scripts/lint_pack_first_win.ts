@@ -2,8 +2,8 @@
 /**
  * Pack first-win linter.
  *
- * TypeScript twin of `src/scripts/lint_pack_first_win.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `main()`
+ * Ported from the retired Python `src/scripts/lint_pack_first_win.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `main()`
  * IGNORES argv entirely (any flag, including the `--quiet` the Taskfile
  * passes, is silently accepted), exit codes (0 clean, 1 violations),
  * stdout/stderr split, byte-identical finding messages.

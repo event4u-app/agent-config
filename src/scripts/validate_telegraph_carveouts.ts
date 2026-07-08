@@ -2,12 +2,12 @@
 /**
  * Mechanical carve-out validator for telegraph-condensed replies.
  *
- * TypeScript twin of `src/scripts/validate_telegraph_carveouts.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — two positional
+ * Ported from the retired Python `src/scripts/validate_telegraph_carveouts.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — two positional
  * `pre` / `post` file args, exit codes (0 preserved, 1 drift, 2 missing
  * file), stdout/stderr split, byte-identical messages, the same carve-out
  * extractors and the same `difflib.unified_diff` rendering. No behaviour
- * changes — latent bugs replicated.
+ * changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Given a pre-condensation reply and a post-condensation reply, assert that
  * every carve-out region from `.agent-src.uncondensed/rules/telegraph-speak.md`

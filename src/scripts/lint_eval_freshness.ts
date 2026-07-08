@@ -4,8 +4,8 @@
  * `upstream.last_eval` (the corpus-refresh DoD, ADR-061 §6 + road-to-image-brand-
  * typography Phase D).
  *
- * TypeScript twin of `src/scripts/lint_eval_freshness.py` (ADR-200,
- * Python→TypeScript migration). The CLI contract is mirrored EXACTLY — the
+ * Ported from the retired Python `src/scripts/lint_eval_freshness.py` (ADR-200,
+ * Python→TypeScript migration). The CLI contract is pinned — the
  * `--quiet` flag, the `argparse` usage / error text (`-h`/`--help` → exit 0,
  * unknown arg → exit 2), the scan order (`sorted(SKILLS_DIR.glob(
  * "<skill>/data/manifest.json"))` — pathlib component-wise sort), byte-identical

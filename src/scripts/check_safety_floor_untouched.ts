@@ -2,12 +2,12 @@
 /**
  * Safety-floor exclusion linter (Phase 2A.0 of road-to-structural-optimization).
  *
- * TypeScript twin of `src/scripts/check_safety_floor_untouched.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--baseline`
+ * Ported from the retired Python `src/scripts/check_safety_floor_untouched.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — `--baseline`
  * / `--skip-if-no-baseline` flags, exit codes (0 clean/skipped, 1 floor
  * file modified, 3 internal error), stdout/stderr split, byte-identical
  * messages, the same git plumbing and the same `origin/main` → `main`
- * fallback. No behaviour changes — latent bugs replicated.
+ * fallback. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Per Q3=A locked decision (council Round 3, 2026-05-03), the four
  * safety-floor always-rules are out of scope for Phase 2A slimming:

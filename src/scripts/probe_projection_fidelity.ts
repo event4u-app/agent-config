@@ -2,13 +2,13 @@
 /**
  * Phase 4.2 — Probe per-tool projection fidelity against the fixture.
  *
- * TypeScript twin of `src/scripts/probe_projection_fidelity.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/probe_projection_fidelity.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract
  * EXACTLY: flags (`--fixture`, `--report`), exit codes (0 when no fail, 1
  * when any check fails, 2 when the YAML dependency is missing — replicated
  * via a try/catch import), byte-identical stdout, and the byte-identical
  * written report (`json.dumps(report, indent=2) + "\n"`). No behaviour
- * changes — latent quirks replicated.
+ * changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Reads tests/fixtures/projection_fidelity/fixtures.yml, walks the
  * projected trees (.augment/, .claude/, .cursor/, .clinerules/,

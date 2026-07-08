@@ -2,8 +2,8 @@
 /**
  * CI guard for the `later/` roadmap disposition.
  *
- * TypeScript twin of `src/scripts/lint_roadmap_later_disposition.py` (ADR-200,
- * Python→TypeScript migration). The CLI contract is mirrored EXACTLY — the
+ * Ported from the retired Python `src/scripts/lint_roadmap_later_disposition.py` (ADR-200,
+ * Python→TypeScript migration). The CLI contract is pinned — the
  * `--json` flag, the argparse usage / error text (`-h`/`--help` → exit 0,
  * unknown arg → exit 2), the scan order (`sorted(root.rglob("*.md"))` —
  * pathlib component-wise), byte-identical human + `--json` output

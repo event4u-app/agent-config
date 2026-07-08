@@ -2,8 +2,8 @@
 /**
  * Validate the A/B bench corpora + `docs/benchmark.md` shape.
  *
- * TypeScript twin of `src/scripts/lint_bench_ab.py` (ADR-200, Phase 4 /
- * Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet` flag, exit
+ * Ported from the retired Python `src/scripts/lint_bench_ab.py` (ADR-200, Phase 4 /
+ * Wave 4b). The CLI contract is pinned — `--quiet` flag, exit
  * codes (0 success, 1 first violation), stdout/stderr split, byte-identical
  * finding messages (including the `lint_bench_ab: <relpath>: <msg>` prefix
  * and the Python `repr()`-shaped value formatting), same check order, same

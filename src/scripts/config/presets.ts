@@ -18,7 +18,7 @@
 // `developer` vs `block_on_risk.financial_paths` for `founder`) read the
 // merged knob bag returned by `resolve_preset`.
 //
-// Twin of `src/scripts/config/presets.py`.
+// Ported from the retired Python `src/scripts/config/presets.py` (ADR-200).
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';

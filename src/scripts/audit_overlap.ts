@@ -3,13 +3,13 @@
  * Trigger-overlap analysis for the Rule-Governance pass (Phase 5.2 of
  * road-to-augment-limit-fit).
  *
- * TypeScript twin of `src/scripts/audit_overlap.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/audit_overlap.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract
  * EXACTLY: no flags, exit codes (0 normal, 1 when the input audit JSON
  * is missing), byte-identical stdout/stderr split, and byte-identical
  * written output (`auto-rules-overlap.json` via json.dumps(indent=2)
  * and the appended `auto-rules-audit.md` section). No behaviour changes
- * — latent bugs replicated.
+ * — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Reads `agents/reports/auto-rules-audit.json` (produced by
  * `audit_auto_rules.py`) and computes:

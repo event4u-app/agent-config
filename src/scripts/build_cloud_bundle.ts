@@ -2,7 +2,7 @@
 /**
  * build_cloud_bundle.ts — package skills as Anthropic Skills ZIP bundles.
  *
- * TypeScript twin of `src/scripts/build_cloud_bundle.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/build_cloud_bundle.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8b). The CLI contract is mirrored
  * EXACTLY — the mutually-exclusive `--skill` / `--all` / `--check` flags,
  * `--out` / `--strict-budget` / `--clean`, exit codes, the stdout/stderr
@@ -12,7 +12,7 @@
  * CONTENTS written into each ZIP are byte-identical.
  *
  * Imports the `audit_cloud_compatibility` twin (the SAME `scan` /
- * `detect_cloud_marker` surfaces the Python original imports) for tier
+ * `detect_cloud_marker` surfaces the retired Python implementation imports) for tier
  * classification.
  *
  * DIVERGENCE CANDIDATE (documented under the ADR-200 process):
@@ -25,7 +25,7 @@
  * compares decompressed entry maps (name → bytes), the manifest JSON, and the
  * console output — not the raw archive bytes.
  *
- * Note on error semantics: the Python original raises bare
+ * Note on error semantics: the retired Python implementation raises bare
  * `SystemExit("❌  …")` for budget / source / T3-H failures. A string
  * SystemExit prints the message to stderr and exits with code 1 (NOT the
  * 2/3/4/5 codes named in the docstring, which never fire). This twin

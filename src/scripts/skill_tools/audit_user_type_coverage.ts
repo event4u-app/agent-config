@@ -2,8 +2,8 @@
 /**
  * Block D · D3 — audit_user_type_coverage.
  *
- * TypeScript twin of `src/scripts/skill_tools/audit_user_type_coverage.py`
- * (ADR-200, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
+ * Ported from the retired Python `src/scripts/skill_tools/audit_user_type_coverage.py`
+ * (ADR-200, Phase 8 Wave 8h). The CLI contract is pinned —
  * flags (`--user-types-dir`, `--search-root`, `--json`), exit code (0
  * always), stdout split, byte-identical human table AND byte-identical JSON
  * (`json.dump(..., indent=2)`, ensure_ascii default).
@@ -27,7 +27,7 @@
  * Output: per-user-type reference count + status (ok / never-referenced /
  * orphan). Exit code: 0 always (advisory, not a CI gate).
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

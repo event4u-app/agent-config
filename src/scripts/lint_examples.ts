@@ -2,13 +2,13 @@
 /**
  * Phase 3.4 demo-shape linter — wrong / right / why per demo.
  *
- * TypeScript twin of `src/scripts/lint_examples.py` (ADR-200, Phase 4 /
+ * Ported from the retired Python `src/scripts/lint_examples.py` (ADR-200, Phase 4 /
  * Wave 4b). Mirrors the CLI contract EXACTLY — the `--quiet` flag is a
  * bare `sys.argv` membership check (NOT argparse, so there is no real
  * `-h`/`--help`), the same `glob` (non-recursive) over
  * `docs/guidelines/agent-infra/*-demos.md`, byte-identical finding
  * messages, stdout/stderr split, exit codes, and file ordering
- * (sorted glob). No behaviour changes — latent quirks replicated.
+ * (sorted glob). Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Validates every `docs/guidelines/agent-infra/*-demos.md`: frontmatter
  * keys (`demo_for:`, `layer: pattern-memory`, `prose_delta:` with

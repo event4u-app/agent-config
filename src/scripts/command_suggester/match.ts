@@ -1,7 +1,7 @@
 /**
  * Score eligible commands against a user message + recent context.
  *
- * TypeScript twin of `src/scripts/command_suggester/match.py`
+ * Ported from the retired Python `src/scripts/command_suggester/match.py`
  * (ADR-200 py2ts).
  *
  * Deterministic, no ML, no third-party deps. Two signals combine into

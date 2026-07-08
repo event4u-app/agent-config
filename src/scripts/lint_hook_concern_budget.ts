@@ -2,7 +2,7 @@
 /**
  * Lint the hook concern budget against `src/scripts/hook_manifest.yaml`.
  *
- * TypeScript twin of `src/scripts/lint_hook_concern_budget.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/lint_hook_concern_budget.py` (ADR-200,
  * Phase 4 / Wave 4b). Mirrors the CLI contract EXACTLY — `--manifest` /
  * `--settings` / `--strict` argparse flags, exit codes (0 clean or warn-only,
  * 1 schema load failed, 2 hard-fail with violations), byte-identical
@@ -10,7 +10,7 @@
  * `.agent-settings.yml` `hooks.concern_budget.*` line walker, and the same
  * defaults. No behaviour changes.
  *
- * The Python original imports `hooks.dispatch_hook._load_yaml` (which is
+ * the retired Python implementation imports `hooks.dispatch_hook._load_yaml` (which is
  * `yaml.safe_load(text) or {}` when PyYAML is present). That hook module is
  * not yet ported, so this twin inlines the equivalent `yaml`-package load
  * (version 1.1 → PyYAML safe_load parity). When the dispatch_hook twin

@@ -1,8 +1,8 @@
 /**
  * Builder for the `trace.halt` slot.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/halt.py` (ADR-200).
- * Behaviour mirrors the Python original EXACTLY — same `halts[-1]` pick,
+ * Ported from the retired Python `src/scripts/_cli/explain_last/halt.py` (ADR-200).
+ * Behaviour pins the historical contract exactly — same `halts[-1]` pick,
  * same `None` branches, same scrub passes, same `step` empty-string
  * fallback. No behaviour changes.
  *

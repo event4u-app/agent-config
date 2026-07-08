@@ -2,7 +2,7 @@
 /**
  * Cross-repo retrieval — read-only, targeted, opt-in (ADR-032 Option A).
  *
- * TypeScript twin of `src/scripts/cross_repo_retrieve.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/cross_repo_retrieve.py` (ADR-200,
  * Phase 8 / Wave 8g). Mirrors the Python contract EXACTLY — positional
  * `query` + `--path-scope` / `--max-chunks` / `--format` / `--root` flags,
  * the retrieval envelope shape, the text-table render, opt-in / large-sibling
@@ -18,7 +18,7 @@
  * pulls in `workspace_secrets`). Those modules are not yet ported to
  * TypeScript and a `.ts` cannot import a `.py`, so the redaction + chunking
  * primitives are ported faithfully inline here and verified byte-identical
- * against the Python originals (differential-tested, no behavior divergence).
+ * against the retired Python implementations (differential-tested, no behavior divergence).
  * They carry no legacy-source-path literal, matching the `.py`.
  *
  * Scope guards (Option A):

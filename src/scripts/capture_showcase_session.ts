@@ -2,7 +2,7 @@
 /**
  * capture_showcase_session.ts — wrap and measure showcase sessions.
  *
- * TypeScript twin of `src/scripts/capture_showcase_session.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/capture_showcase_session.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract
  * EXACTLY — the `capture` / `metrics` subcommands, every flag, exit codes
  * (0 success / 1 user error / 2 metric-gate pending), the stdout/stderr
@@ -24,8 +24,8 @@
  *
  * `commit_sha` (git HEAD) and `started`/`ended` (now) are non-deterministic;
  * golden parity supplies fixed timestamps via `--started`/`--ended` and
- * excludes `commit_sha`. No behaviour changes — latent Python quirks
- * replicated.
+ * excludes `commit_sha`. No behaviour changes — historical quirks
+ * preserved.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';

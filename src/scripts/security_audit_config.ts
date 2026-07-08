@@ -1,6 +1,6 @@
 // P3.1 — consumer-facing agent-config security audit (road-to-security-pillar.md).
 //
-// TypeScript twin of `src/scripts/security_audit_config.py` (ADR-200 —
+// Ported from the retired Python `src/scripts/security_audit_config.py` (ADR-200 —
 // Python→TS migration). Behaviour mirrors the Python module byte-for-byte.
 //
 // Points the Phase-1 detection logic at a *consumer's assembled* agent config —
@@ -101,7 +101,7 @@ function _category(f: sl.Finding): string {
  * traversal *structure* (component recursion, `**` self-then-subdirs depth-first,
  * `is_file` filter, first-seen dedup) is replicated faithfully; intra-directory
  * entry order follows `fs.readdirSync`. Multi-file-per-pattern consumer trees can
- * therefore differ in finding order from the Python original on platforms where
+ * therefore differ in finding order from the retired Python implementation on platforms where
  * scandir != readdir. The golden test pins one-file-per-pattern fixtures so the
  * order is unambiguous; the clean real-`src/` path emits no findings.
  */

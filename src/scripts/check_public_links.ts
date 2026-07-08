@@ -2,8 +2,8 @@
 /**
  * Public-link checker for the agent-config public surface.
  *
- * TypeScript twin of `src/scripts/check_public_links.py` (ADR-200, Phase 4 /
- * Wave 4c). The CLI contract is mirrored EXACTLY — `--list` / `--json` /
+ * Ported from the retired Python `src/scripts/check_public_links.py` (ADR-200, Phase 4 /
+ * Wave 4c). The CLI contract is pinned — `--list` / `--json` /
  * `--strict` flags, exit codes (0 clean, 1 violations, 3 internal error),
  * stdout split, byte-identical finding messages, the same scan order and
  * the same `resolve()` semantics (including its latent quirks: the

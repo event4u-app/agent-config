@@ -2,8 +2,8 @@
 /**
  * CI guard for the council clause of the `no-roadmap-references` rule.
  *
- * TypeScript twin of `src/scripts/check_council_references.py` (ADR-200,
- * Phase 4 / Wave 4a). The CLI contract is mirrored EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/check_council_references.py` (ADR-200,
+ * Phase 4 / Wave 4a). The CLI contract is pinned — `--quiet`
  * flag, exit codes (0 clean, 1 forbidden refs), stdout/stderr split,
  * byte-identical finding + footer text, same scan roots / order, and the
  * same STRUCTURAL_CARVEOUTS logic. No behaviour changes — latent bugs

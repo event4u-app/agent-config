@@ -2,7 +2,7 @@
 /**
  * Universal hook dispatcher — single entry point for every platform.
  *
- * TypeScript twin of `src/scripts/hooks/dispatch_hook.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/hooks/dispatch_hook.py` (ADR-200 —
  * Python→TS migration, Phase 6 / hooks core). Mirrors the Python CLI
  * contract exactly: same manifest default, event vocabulary, envelope
  * shape, concern invocation, exit-code reduction, feedback-dir writes,
@@ -135,7 +135,7 @@ export function _parse_concern_stdout(stdout_text: string): JsonObject {
 }
 
 /**
- * Minimal manifest loader — the Python original prefers PyYAML and falls
+ * Minimal manifest loader — the retired Python implementation prefers PyYAML and falls
  * back to `_fallback_yaml` only when PyYAML is absent. The TS runtime
  * always ships the `yaml` package, so this mirrors the PyYAML-present
  * path (`yaml.safe_load(text) or {}`); version 1.1 matches PyYAML.safe_load.

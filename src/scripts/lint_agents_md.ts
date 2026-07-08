@@ -2,11 +2,11 @@
 /**
  * Thin-Root contract linter for AGENTS.md files (Phase 7).
  *
- * TypeScript twin of `src/scripts/lint_agents_md.py` (ADR-200, Phase 4 /
- * Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet` detected by
+ * Ported from the retired Python `src/scripts/lint_agents_md.py` (ADR-200, Phase 4 /
+ * Wave 4b). The CLI contract is pinned — `--quiet` detected by
  * argv membership (no argparse), exit codes (0 / 1), stdout-only output,
  * byte-identical messages, same target order. No behaviour changes —
- * latent bugs replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Enforces caps + pointer-ratio + pointer-anatomy + emergency-triage
  * contract from `.agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md`.

@@ -2,8 +2,8 @@
 /**
  * Runtime Registry — discovers skills with execution metadata.
  *
- * TypeScript twin of `src/scripts/runtime_registry.py` (ADR-200, Phase 8 /
- * Wave 8h). Mirrors the Python CLI contract EXACTLY — `--root`, `--format`
+ * Ported from the retired Python `src/scripts/runtime_registry.py` (ADR-200, Phase 8 /
+ * Wave 8h). The CLI contract is pinned — `--root`, `--format`
  * (text|json), `--validate` flags, exit codes (0 ok / valid, 1 invalid),
  * byte-identical stdout/stderr, and byte-identical `json.dumps(indent=2)`
  * output. No behaviour changes.
@@ -18,7 +18,7 @@
  *     tsx scripts/runtime_registry.ts [--root ROOT] [--format text|json]
  *
  * Library role: `runtime_dispatcher.py` imports `SkillRuntime` and
- * `build_registry` from the Python original — the `.py` stays in place so the
+ * `build_registry` from the retired Python implementation — the `.py` stays in place so the
  * still-Python dispatcher keeps importing it. This `.ts` twin sits beside it.
  *
  * Imports the SAME primitives the `.py` imports from `skill_linter`:

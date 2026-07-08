@@ -1,7 +1,7 @@
 /**
  * Pure normaliser: raw bench reports → `value-v1` rung dicts.
  *
- * TypeScript twin of `src/scripts/_lib/value_ladder.py` (ADR-200 py2ts
+ * Ported from the retired Python `src/scripts/_lib/value_ladder.py` (ADR-200 py2ts
  * Phase 2 / Wave 2a). Phase 1 Step 2 of the readable-value-dashboard roadmap.
  *
  * This module is **pure** — no I/O, no file reads, no clock. Inputs are

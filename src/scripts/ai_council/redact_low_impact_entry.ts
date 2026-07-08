@@ -1,10 +1,10 @@
 /**
  * Privacy floor for `agents/decisions/low-impact-decisions.md` (Phase 12).
  *
- * TypeScript twin of `src/scripts/ai_council/redact_low_impact_entry.py`
+ * Ported from the retired Python `src/scripts/ai_council/redact_low_impact_entry.py`
  * (ADR-200 — Python→TS migration, Phase 1). Security-sensitive: the
  * redaction regexes and refusal markers are matched byte-for-byte against
- * the Python original.
+ * the retired Python implementation.
  *
  * Non-bypassable redactor invoked on intake (write-side) AND on
  * upstream (`/learn-low-impact`, leave-the-repo side). Both gates call
