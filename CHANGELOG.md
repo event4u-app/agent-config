@@ -989,6 +989,12 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.4.1](https://github.com/event4u-app/agent-config/compare/8.4.0...8.4.1) (2026-07-08)
+
+### Bug Fixes
+
+* **package:** ship src/install + agent-src script trees; gate imports at prepack ([77d53bc](https://github.com/event4u-app/agent-config/commit/77d53bcb2e14da1cff308cd0a8dd5d11d8783d5b))
+
 ## [8.4.0](https://github.com/event4u-app/agent-config/compare/8.3.0...8.4.0) (2026-07-08)
 
 ### Features
