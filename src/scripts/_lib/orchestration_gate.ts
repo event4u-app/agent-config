@@ -1,15 +1,19 @@
 /**
- * Default-flip decision gate (Phase 6).
+ * Default-flip / demotion decision gate (Phase 6 → telemetry-demotion).
  *
- * Pure, no-I/O. Encodes the Phase-6 falsification gate: the SHIPPED default for
- * `subagents.auto` flips toward `on` ONLY when a real benchmark shows a net
- * token-or-time win at held quality, and only on hosts with a subagent
- * primitive. Honest-null exit (no win, or quality regressed) keeps the
- * conservative default. Contract:
+ * Pure, no-I/O. Originally the Phase-6 falsification gate: the SHIPPED default
+ * for `subagents.auto` was to flip toward `on` ONLY on a passed benchmark.
+ *
+ * As of 2026-07-09 the shipped default IS `on` on subagent-capable hosts
+ * (ADR-117; agents/settings/contexts/orchestration-default-flip-verdict.md
+ * § 2026-07-09) — flipped on a bounded-downside re-evaluation, not a passed
+ * benchmark. This helper is therefore now the telemetry-driven DEMOTION gate:
+ * a `fail` verdict from accumulated real-world orchestration telemetry demotes
+ * the default back to `ask` (conservative). Contract:
  * `src/agent-src/contexts/execution/orchestration-benchmark-gate.md`.
  *
- * This helper decides; it never runs the benchmark. The measurement is the
- * empirical bench:ab step, authorised + run out of band.
+ * This helper decides; it never runs the measurement. The signal is realized
+ * orchestration telemetry, aggregated + evaluated out of band.
  */
 
 export interface BenchmarkResult {
