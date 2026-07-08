@@ -259,12 +259,23 @@ Phase-2 trigger signal. Fully autonomous except the inherited human gate above.
       bash frontmatter-stripper remain ONLY as no-node fallbacks. Old
       symlink expectation in test_install.sh updated to the new contract
       (100/100). -->
-- [ ] **Settings plumbing:** declare `projection.rule_workspaces` /
+- [x] **Settings plumbing:** declare `projection.rule_workspaces` /
       `rule_packs` in the Zod settings schema
       (`src/server/schemas/settings.ts`) so they validate and surface in the
       settings UI; have the wizard write them from the chosen
       workspaces/packs at install time (default remains `legacy-all` until
       the human gate flips it).
+      <!-- done 2026-07-08 (adapted — presence-activation nuance): the Zod
+      schema declares both keys with .default([]) (validated + visible in
+      the settings surface; empty = inactive everywhere by the shared
+      length>0 semantics), the template renders them actively as [] so
+      every new install and settings:sync carries them INACTIVE — wiring
+      is complete end-to-end and the human flip is now a pure settings
+      edit (fill the list), not a code change. The wizard deliberately
+      does NOT write live values: a non-empty list IS the activation, and
+      that is the Phase-1 human gate. .optional() would have broken the
+      settings-diff contract (to:undefined dropped over HTTP) — default([])
+      keeps both sides of the diff populated (22/22 settings tests). -->
 - [ ] Snapshot/regression: re-run the Phase 1b installer test green; full
       `dist` determinism gates stay green; record the consumer-install
       before/after (rule count + tokens via `token_count.ts`) as the
