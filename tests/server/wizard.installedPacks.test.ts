@@ -7,8 +7,9 @@
  * `settings/.agent-settings.yml`. Absent key → EMPTY list (never the whole
  * vocabulary, unlike the projection-side `installed_packs` semantics).
  */
-import { afterEach, describe, expect, it } from 'vitest';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { bootTestApp, authHeaders, type TestApp } from './helpers.js';
 
@@ -25,7 +26,22 @@ function appendPacksBlock(projectRoot: string, packs: string[]): void {
 
 describe('wizard manifest installedPacks', () => {
     let ctx: TestApp;
-    afterEach(async () => { if (ctx) await ctx.cleanup(); });
+    let lockDir: string;
+    const prevLockEnv = process.env['AGENT_CONFIG_WIZARD_TOOLS'];
+
+    beforeEach(() => {
+        // Point the wizard lockfile at a per-test temp path so the suite
+        // never reads the developer's real ~/.event4u selection.
+        lockDir = mkdtempSync(join(tmpdir(), 'agent-config-packslock-'));
+        process.env['AGENT_CONFIG_WIZARD_TOOLS'] = join(lockDir, 'wizard-tools.json');
+    });
+
+    afterEach(async () => {
+        if (ctx) await ctx.cleanup();
+        rmSync(lockDir, { recursive: true, force: true });
+        if (prevLockEnv === undefined) delete process.env['AGENT_CONFIG_WIZARD_TOOLS'];
+        else process.env['AGENT_CONFIG_WIZARD_TOOLS'] = prevLockEnv;
+    });
 
     it('returns the packs: manifest sorted', async () => {
         ctx = await bootTestApp({ port: PORT, extendedSteps: true });
@@ -53,5 +69,37 @@ describe('wizard manifest installedPacks', () => {
         });
         expect(res.statusCode).toBe(200);
         expect((res.json() as ManifestBody).installedPacks).toEqual([]);
+    });
+
+    it('unions the wizard-lockfile packs with the settings manifest', async () => {
+        // Existing settings files never get the `packs:` block injected —
+        // the lockfile is the persistence path for those machines
+        // (council 2026-07-08 Q3, lockfile extension).
+        writeFileSync(
+            process.env['AGENT_CONFIG_WIZARD_TOOLS'] as string,
+            JSON.stringify({ tools: ['claude-code'], packs: ['php', 'laravel'] }),
+            { mode: 0o600 },
+        );
+        ctx = await bootTestApp({ port: PORT + 3, extendedSteps: true });
+        appendPacksBlock(ctx.projectRoot, ['git']);
+        const res = await ctx.app.inject({
+            method: 'GET', url: '/api/v1/wizard/manifest', headers: authHeaders(ctx.token, ctx.host),
+        });
+        expect(res.statusCode).toBe(200);
+        expect((res.json() as ManifestBody).installedPacks).toEqual(['git', 'laravel', 'php']);
+    });
+
+    it('reads lockfile packs alone when settings carry no packs: key', async () => {
+        writeFileSync(
+            process.env['AGENT_CONFIG_WIZARD_TOOLS'] as string,
+            JSON.stringify({ tools: ['claude-code'], packs: ['finance-basic'] }),
+            { mode: 0o600 },
+        );
+        ctx = await bootTestApp({ port: PORT + 4, extendedSteps: true });
+        const res = await ctx.app.inject({
+            method: 'GET', url: '/api/v1/wizard/manifest', headers: authHeaders(ctx.token, ctx.host),
+        });
+        expect(res.statusCode).toBe(200);
+        expect((res.json() as ManifestBody).installedPacks).toEqual(['finance-basic']);
     });
 });

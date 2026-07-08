@@ -279,6 +279,13 @@ export const discoveryWorkspaces = signal<DiscoveryWorkspace[]>([]);
  * `agent-config-maintainer` is intentionally excluded from the UI list.
  */
 export const selectedRoles = signal<Record<string, boolean>>({});
+/**
+ * True once the user manually toggled a role. Until then the roles step
+ * seeds from the existing `.agent-user.yml` `role[]` on entry
+ * (road-to-setup-experience follow-up: a repeat run must not ask the user
+ * to re-pick roles they already recorded).
+ */
+export const rolesTouched = signal(false);
 
 /**
  * AI-tool native presence on the machine (road-to-wizard-ux-improvements

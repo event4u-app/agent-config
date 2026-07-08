@@ -31,7 +31,7 @@ import { mergeIntoTemplate, parseYaml, replaceScalar } from '../io/yamlIO.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { detectInstalledTools, isBinaryOnPath, knownToolIds } from '../../install/toolDetection.js';
-import { readSelectedTools, writeSelectedTools } from '../../install/selectedTools.js';
+import { readSelectedTools, readSelectedPacks, writeSelectedTools } from '../../install/selectedTools.js';
 
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
@@ -874,7 +874,11 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 // road-to-setup-experience § Phase 2 — surface the installed
                 // packs so the packs step pre-checks a prior installation
                 // instead of re-deriving from roles/auto-detect alone.
-                const installedPacks = await readInstalledPacks(opts.writeRoot, legacyReadRoot);
+                // Union of the settings `packs:` manifest (fresh installs)
+                // and the wizard lockfile (existing settings files never get
+                // the block injected — council 2026-07-08, Q3).
+                const fromSettings = await readInstalledPacks(opts.writeRoot, legacyReadRoot);
+                const installedPacks = [...new Set([...fromSettings, ...readSelectedPacks()])].sort();
                 return { ...manifest, installedPacks };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'manifest read failed';
@@ -1100,11 +1104,12 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             };
             reply.raw.on('close', onClose);
 
-            // Record the user's tool selection so the next wizard run
-            // pre-selects exactly these (detect-tools `configured`). Written
-            // on the real-apply path only — a dry-run preview must not.
+            // Record the user's tool + pack selection so the next wizard run
+            // pre-selects exactly these (detect-tools `configured` + the
+            // manifest's `installedPacks`). Written on the real-apply path
+            // only — a dry-run preview must not.
             if (payload.schema_version === 'wizard-v2') {
-                writeSelectedTools(payload.tools);
+                writeSelectedTools(payload.tools, payload.packs ?? []);
             }
 
             let written = 0;

@@ -59,6 +59,7 @@ import {
     recoveryDismissed,
     recoveryStatus,
     reviewChanges,
+    rolesTouched,
     rtkDetectionLoaded,
     rtkInstallCommand,
     rtkInstalled,
@@ -276,6 +277,9 @@ async function loadAll(): Promise<void> {
         }
         if (resumed.kind === 'roles' || resumed.kind === 'aiTools' || resumed.kind === 'packs') {
             void loadDiscoveryOnce();
+        }
+        if (resumed.kind === 'roles') {
+            void seedRolesFromIdentityOnce();
         }
         if (resumed.kind === 'aiTools') {
             void loadToolDetectionOnce();
@@ -590,6 +594,9 @@ async function goTo(nextIndex: number): Promise<void> {
     if (next.kind === 'roles' || next.kind === 'aiTools' || next.kind === 'packs') {
         void loadDiscoveryOnce();
     }
+    if (next.kind === 'roles') {
+        void seedRolesFromIdentityOnce();
+    }
     if (next.kind === 'packs') {
         seedPacksFromRoles();
     }
@@ -645,6 +652,31 @@ function resolveSelectedPacks(): string[] {
     };
     for (const id of seed) visit(id);
     return [...out].sort();
+}
+
+/**
+ * Seed the roles step from the existing `.agent-user.yml` `role[]`
+ * (road-to-setup-experience follow-up) — a repeat run pre-checks the
+ * roles the user already recorded instead of starting blank. Only ids
+ * that exist as workspaces in the current manifest are seeded; the seed
+ * stops the moment the user toggles a role manually.
+ */
+async function seedRolesFromIdentityOnce(): Promise<void> {
+    await Promise.all([loadDiscoveryOnce(), loadUserMdOnce()]);
+    if (rolesTouched.value) return;
+    if (Object.values(selectedRoles.value).some(Boolean)) return;
+    const recorded = userMdBody.value?.role ?? [];
+    if (recorded.length === 0) return;
+    const known = new Set(discoveryWorkspaces.value.map((w) => w.id));
+    const seed: Record<string, boolean> = {};
+    for (const id of recorded) {
+        if (known.has(id)) seed[id] = true;
+    }
+    if (Object.keys(seed).length === 0) return;
+    selectedRoles.value = seed;
+    // Roles landed → refresh the pack recommendation (no-op once packs
+    // were touched manually).
+    seedPacksFromRoles();
 }
 
 /**
@@ -846,8 +878,9 @@ async function finish(): Promise<void> {
 async function startRecommended(): Promise<void> {
     startAcknowledged.value = true;
     await Promise.all([loadDiscoveryOnce(), loadToolDetectionOnce()]);
-    // Seed packs from installed + auto-detected (roles are empty on the
-    // recommended path; the helper unions whatever is known).
+    // Recorded roles seed first (repeat run), then packs union installed +
+    // role-recommended + auto-detected.
+    await seedRolesFromIdentityOnce();
     seedPacksFromRoles();
     await goTo(activeTotalSteps() - 1);
 }
@@ -1071,6 +1104,7 @@ function RolesStepBody(): preact.JSX.Element {
     const sel = selectedRoles.value;
     const workspaces = discoveryWorkspaces.value;
     const setRole = (id: string, checked: boolean): void => {
+        rolesTouched.value = true;
         selectedRoles.value = { ...selectedRoles.value, [id]: checked };
         // Roles changed → refresh the pack recommendation (no-op once the user
         // has manually edited packs on Step 3).
