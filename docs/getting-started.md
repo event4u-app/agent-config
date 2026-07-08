@@ -171,10 +171,10 @@ Your agent now understands slash commands:
 | `/fix ci` | Fetch and fix GitHub Actions failures |
 | `/optimize skills` | Audit skills, find duplicates, run linter |
 | `/feature plan` | Interactively plan a feature |
-| `/quality-fix` | Run and fix all quality checks |
+| `/fix quality` | Run and fix all quality checks |
 | `/chat-history import` | Pull a prior session into the current chat (resume) |
 
-→ [Browse all 166 active commands](../dist/agent-src/commands/)
+→ [Browse all 172 active commands](../dist/agent-src/commands/)
 
 ---
 

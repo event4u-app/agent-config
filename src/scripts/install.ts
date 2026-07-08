@@ -80,6 +80,9 @@ import * as user_global_paths from './_lib/user_global_paths.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
+import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
+import { settingsSchema } from '../server/schemas/settings.js';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { detect_module_roots } from './_lib/module_detection.js';
 import {
     TIER_TO_CLAUDE_MODEL,
@@ -3349,12 +3352,75 @@ function install_global(
         }
     }
 
+    // Settings-surface snapshot + upgrade delta (road-to-settings-change-
+    // review; council 2026-07-08, 2/2 converged on snapshot-at-install).
+    // Every global install persists the flattened settings surface; when a
+    // PREVIOUS snapshot from a different version exists, the semantic delta
+    // (added / default_changed / enum_added / enum_removed / type_changed)
+    // is written to state/settings-delta.json — the pending-review flag the
+    // GUI banner, the review page, and doctor consume. Never fatal: a
+    // snapshot failure must not sink the install.
+    try {
+        _write_settings_surface_snapshot(installed_version);
+    } catch (e) {
+        if (!state.QUIET) warn(`settings-surface snapshot failed — ${String(e)}`);
+    }
+
     if (!state.QUIET) {
         process.stdout.write('\n');
         success(`Global install completed (v${installed_version}).`);
         process.stdout.write('\n');
     }
     return 0;
+}
+
+const SETTINGS_SURFACE_REL = path.join('state', 'settings-surface.json');
+const SETTINGS_DELTA_REL = path.join('state', 'settings-delta.json');
+
+function _current_settings_surface(version: string): SettingsSurface {
+    const jsonSchema = zodToJsonSchema(settingsSchema, {
+        name: 'AgentSettings',
+        $refStrategy: 'none',
+        target: 'jsonSchema7',
+    }) as Parameters<typeof flattenSurface>[0];
+    return flattenSurface(jsonSchema, version);
+}
+
+function _write_settings_surface_snapshot(installed_version: string): void {
+    const root = user_global_paths.event4u_root();
+    const surface_path = path.join(root, SETTINGS_SURFACE_REL);
+    const delta_path = path.join(root, SETTINGS_DELTA_REL);
+    const next = _current_settings_surface(installed_version);
+
+    let previous: SettingsSurface | null = null;
+    try {
+        const parsed = JSON.parse(fs.readFileSync(surface_path, 'utf8')) as SettingsSurface;
+        if (parsed !== null && typeof parsed === 'object' && parsed.entries !== undefined) previous = parsed;
+    } catch {
+        // First run after this feature ships — seed-only (council Q1:
+        // no template fallback; the transition cost is paid once).
+    }
+
+    if (previous !== null && previous.version !== next.version) {
+        const delta = computeSurfaceDelta(previous, next);
+        if (delta.changes.length > 0) {
+            fs.mkdirSync(path.dirname(delta_path), { recursive: true, mode: 0o700 });
+            fs.writeFileSync(delta_path, `${JSON.stringify(delta, null, 2)}\n`, { mode: 0o600 });
+            if (!state.QUIET) {
+                const counts: Record<string, number> = {};
+                for (const c of delta.changes) counts[c.kind] = (counts[c.kind] ?? 0) + 1;
+                const parts = Object.entries(counts).map(([k, v]) => `${v} ${k.replace('_', ' ')}`);
+                info(
+                    `Settings surface changed ${delta.oldVersion} → ${delta.newVersion}: ` +
+                        `${parts.join(', ')}. Review with \`agent-config config\` ` +
+                        '(Settings → banner) — nothing was changed automatically.',
+                );
+            }
+        }
+    }
+
+    fs.mkdirSync(path.dirname(surface_path), { recursive: true, mode: 0o700 });
+    fs.writeFileSync(surface_path, `${JSON.stringify(next, null, 2)}\n`, { mode: 0o600 });
 }
 
 function arrayStrEqual(a: string[], b: string[]): boolean {
@@ -4605,6 +4671,8 @@ export {
     _wizard_should_launch,
     _dry_run_summary,
     _apply_payload_preview,
+    _write_settings_surface_snapshot,
+    _current_settings_surface,
     jsonDumpsIndent,
     jsonDumpsCompact,
     _canonical_settings_target,

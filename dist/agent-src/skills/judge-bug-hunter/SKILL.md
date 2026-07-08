@@ -159,4 +159,4 @@ the endpoint with an empty body") — the judge does not execute tools.
 - [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
   [`judge-test-coverage`](../judge-test-coverage/SKILL.md),
   [`judge-code-quality`](../judge-code-quality/SKILL.md) — sibling
-  judges dispatched together by [`/review-changes`](../../commands/review-changes.md).
+  judges dispatched together by [`/review-changes`](../../commands/review/changes.md).

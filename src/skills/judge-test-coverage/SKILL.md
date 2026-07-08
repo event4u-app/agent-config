@@ -159,4 +159,4 @@ as a follow-up for the implementer — the judge does not execute tools.
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),
   [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
   [`judge-code-quality`](../judge-code-quality/SKILL.md) — dispatched
-  together by [`/review-changes`](../../commands/review-changes.md).
+  together by [`/review-changes`](../../commands/review/changes.md).

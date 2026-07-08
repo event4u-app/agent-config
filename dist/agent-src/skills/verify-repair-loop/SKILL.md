@@ -34,7 +34,7 @@ Do NOT use when:
   [`subagent-orchestration`](../subagent-orchestration/SKILL.md) (judge reads the
   diff, sovereign).
 * Only a **one-shot** multi-judge review of a finished diff →
-  [`/review-changes`](../../commands/review-changes.md).
+  [`/review-changes`](../../commands/review/changes.md).
 * Verdict must come from a **live app** (Playwright vs running services) →
   **deferred** (see Scope); use test/quality verdicts until that trigger fires.
 
@@ -200,7 +200,7 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
 
 * [`subagent-orchestration`](../subagent-orchestration/SKILL.md) — `do-and-judge`
   (judge-sovereign, diff-read) is the sibling; this skill is test-verdict-gated.
-* [`/review-changes`](../../commands/review-changes.md) — one-shot multi-judge
+* [`/review-changes`](../../commands/review/changes.md) — one-shot multi-judge
   review; wires this loop as an opt-in step.
 * [`playwright-testing`](../playwright-testing/SKILL.md),
   [`quality-tools`](../quality-tools/SKILL.md) — verdict sources.

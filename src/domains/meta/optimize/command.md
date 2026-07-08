@@ -3,18 +3,18 @@ model_tier: medium
 name: optimize
 disable-model-invocation: true
 pack: meta
-intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir"
-routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agents-dir]
+intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir, project sweep, prompt"
+routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agents-dir, optimize-project, optimize-prompt]
 replaces: []
 tier: 1
 visibility: advanced
-description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
+description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish)
 cluster: optimize
 type: orchestrator
 suggestion:
   eligible: true
-  trigger_description: "optimize my skills, manage agents directory, tune augmentignore, optimize rtk filters"
-  trigger_context: "maintainer auditing or trimming the agent layer (NOT AGENTS.md — that's /agents)"
+  trigger_description: "optimize my skills, manage agents directory, tune augmentignore, optimize rtk filters, optimize this project, optimize this prompt"
+  trigger_context: "maintainer auditing/trimming the agent layer, running a project-wide optimization sweep, or polishing an AI prompt (NOT AGENTS.md — that's /agents)"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -23,15 +23,13 @@ packs:
 
 # /optimize
 
-Top-level orchestrator for the `/optimize` family.
+Top-level orchestrator for the `/optimize` family — spanning three scopes:
+the **agent layer** (skills, agents-dir, augmentignore, rtk), the **project**
+(`project` — challenge-and-roadmap sweep over roadmaps/ADRs/decisions), and a
+**single prompt** (`prompt`).
 
 > Looking for `AGENTS.md` operations (init, refactor, audit)? Those
 > live under [`/agents`](agents.md) (`init / optimize / audit`).
->
-> Looking for **project-wide** optimization (roadmaps, ADRs, decisions,
-> structures — challenge-and-roadmap loop)? That is the standalone
-> [`/optimize-project`](optimize-project.md)
-> — this cluster only covers the agent layer.
 
 ## Sub-commands
 
@@ -41,6 +39,8 @@ Top-level orchestrator for the `/optimize` family.
 | `/optimize agents-dir` | `commands/optimize/agents-dir.md` | Manage the `agents/` directory — `--scaffold` / `--audit` / `--fix` (interactive wizard if no flag) |
 | `/optimize augmentignore` | `commands/optimize/augmentignore.md` | Create or refine `.augmentignore` based on actual stack |
 | `/optimize rtk` | `commands/optimize/rtk.md` | Create or refine project-local rtk filters |
+| `/optimize project` | `commands/optimize/project.md` | Project-wide optimization sweep — inventory roadmaps/ADRs/agent folders, challenge stale decisions, emit new roadmap(s) |
+| `/optimize prompt` | `commands/optimize/prompt.md` | Optimize a raw prompt for ChatGPT/Claude/Gemini via the 4-D methodology |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -57,11 +57,16 @@ Sub-command names match the locked contract in
    > 2. agents-dir — scaffold / audit / fix the `agents/` tree
    > 3. augmentignore — create or refine `.augmentignore`
    > 4. rtk — create or refine project-local rtk filters
+   > 5. project — project-wide sweep (roadmaps, ADRs, decisions → new roadmaps)
+   > 6. prompt — polish a raw AI prompt (4-D methodology)
 
 ## Rules
 
 - **Suggest only — never auto-apply.** All `/optimize` sub-commands are
   audit-grade: they report and propose, but the user approves every change.
+- **Scope check before routing.** Agent-layer subs (1–4) never touch project
+  code or roadmaps; `project` never rewrites the agent layer; `prompt` only
+  returns a rewritten prompt.
 - **Do NOT chain sub-commands.** One `/optimize <sub>` per turn.
 - If the user invokes `/optimize` with no argument, **show the menu** — do
   not guess which sub-command they meant.

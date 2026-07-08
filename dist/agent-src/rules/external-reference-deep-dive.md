@@ -64,7 +64,7 @@ User explicitly fences the scope (*"quick scan only"*, *"just glance at the READ
 
 ## See also
 
-- Command [`/analyze-reference-repo`](../commands/analyze-reference-repo.md) — canonical deep-dive flow.
+- Command [`/analyze-reference-repo`](../commands/analyze/reference-repo.md) — canonical deep-dive flow.
 - Rule [`think-before-action`](think-before-action.md) — sibling Iron Law for code paths in **this** repo; this rule is its mirror for **external** artifacts.
 - Rule [`ask-when-uncertain`](ask-when-uncertain.md) — when a fetch budget caps, ask which subtree to expand instead of guessing.
 - Skill [`markitdown`](../skills/markitdown/SKILL.md) — convert binary office formats before analysis.

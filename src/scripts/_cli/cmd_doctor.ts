@@ -746,6 +746,7 @@ const CHECK_IDS = [
     'council-cli',
     'unsupported-combos',
     'wizard-state',
+    'settings-review-pending',
 ] as const;
 
 /** Checks that need only the project root and run regardless of a lockfile. */
@@ -764,6 +765,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'tier-usage-readiness',
     'council-cli',
     'wizard-state',
+    'settings-review-pending',
 ]);
 
 /** Checks that genuinely cannot run without the project manifest. */
@@ -1966,6 +1968,43 @@ function _check_wizard_state(): Dict {
     };
 }
 
+/**
+ * Pending settings-surface review (road-to-settings-change-review): the
+ * installer writes `state/settings-delta.json` when an upgrade changed
+ * defaults / enum vocabularies / added settings. The flag persists until
+ * the user resolves the review form (`agent-config config` → Settings →
+ * banner) — this check keeps it visible in every doctor run.
+ */
+function _check_settings_review_pending(): Dict {
+    const delta_pth = path.join(user_global_paths.event4u_root(), 'state', 'settings-delta.json');
+    if (!pathExists(delta_pth)) {
+        return {
+            id: 'settings-review-pending',
+            status: 'ok',
+            message: 'no pending settings-surface changes',
+            remedy: '',
+        };
+    }
+    let summary = '';
+    try {
+        const data = JSON.parse(readText0(delta_pth)) as {
+            oldVersion?: string;
+            newVersion?: string;
+            changes?: unknown[];
+        };
+        const n = Array.isArray(data.changes) ? data.changes.length : 0;
+        summary = `${n} change${n === 1 ? '' : 's'} (${data.oldVersion ?? '?'} → ${data.newVersion ?? '?'})`;
+    } catch {
+        summary = 'unreadable delta file';
+    }
+    return {
+        id: 'settings-review-pending',
+        status: 'warn',
+        message: `settings surface changed on upgrade — ${summary} awaiting review`,
+        remedy: 'agent-config config (Settings → “Review changes” banner)',
+    };
+}
+
 interface JsonDecodeError {
     msg: string;
     lineno: number;
@@ -2095,6 +2134,7 @@ function _run_checks(
         'council-cli': () => _check_council_cli(project_root),
         'unsupported-combos': () => _check_unsupported_combos(manifest),
         'wizard-state': _check_wizard_state,
+        'settings-review-pending': _check_settings_review_pending,
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
@@ -2164,6 +2204,7 @@ function _run_checks_no_manifest(
         'council-cli': () => _check_council_cli(project_root),
         'unsupported-combos': () => _skipped_manifest_check('unsupported-combos'),
         'wizard-state': _check_wizard_state,
+        'settings-review-pending': _check_settings_review_pending,
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
@@ -2651,6 +2692,7 @@ export {
     _check_council_cli,
     _check_unsupported_combos,
     _check_wizard_state,
+    _check_settings_review_pending,
     _run_checks,
     _skipped_manifest_check,
     _check_bridge_drift_no_manifest,

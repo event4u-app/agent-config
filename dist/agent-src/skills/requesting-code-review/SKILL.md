@@ -64,7 +64,7 @@ Before asking anyone else:
 * If you find issues → fix them, do **not** ship them and hope the
   reviewer flags them
 
-Use the [`review-changes`](../../commands/review-changes.md) command
+Use the [`review-changes`](../../commands/review/changes.md) command
 as the structured walk-through.
 
 ### 2. Establish the diff baseline
@@ -185,7 +185,7 @@ When handing the review request to the reviewer (PR body, Slack, email):
 
 ## When to hand over to another skill / command
 
-* Self-review walkthrough → [`review-changes`](../../commands/review-changes.md)
+* Self-review walkthrough → [`review-changes`](../../commands/review/changes.md)
 * Bringing a stacked branch up to date first →
   [`prepare-for-review`](../../commands/prepare-for-review.md)
 * Writing the PR description → [`create-pr-description`](../../commands/create-pr-description.md)

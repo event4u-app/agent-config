@@ -172,4 +172,4 @@ Runtime boundary: the judge does not execute tools.
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),
   [`judge-test-coverage`](../judge-test-coverage/SKILL.md),
   [`judge-code-quality`](../judge-code-quality/SKILL.md) — dispatched
-  together by [`/review-changes`](../../commands/review-changes.md).
+  together by [`/review-changes`](../../commands/review/changes.md).

@@ -12,7 +12,7 @@ RCA, post-mortem, premortem, and decision-review as an integrated learning loop.
 
 ## Commands (6)
 
-- **`analyze`** — Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, or incident frameworks.
+- **`analyze`** — Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, or reference-repo analysis.
 - **`analyze-decision`** — Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded).
 - **`analyze-incident`** — Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate.
 - **`analyze-near-miss`** — Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident.

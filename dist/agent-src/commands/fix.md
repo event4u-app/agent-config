@@ -3,12 +3,12 @@ model_tier: medium
 name: fix
 disable-model-invocation: true
 pack: engineering-base
-intent: "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability, comments"
-routes_to: [fix-ci, fix-pr-comments, fix-refs, fix-seeder, fix-portability, fix-comments]
+intent: "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability, comments, quality"
+routes_to: [fix-ci, fix-pr-comments, fix-refs, fix-seeder, fix-portability, fix-comments, fix-quality]
 replaces: []
 tier: 1
 visibility: advanced
-description: Fix orchestrator — routes to ci, references, portability, seeder, pr-comments
+description: Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, comments, quality
 cluster: fix
 type: orchestrator
 auto_detect: true
@@ -37,9 +37,10 @@ with a single entry point + sub-command dispatch.
 | `/fix seeder` | `commands/fix/seeder.md` | Scan seeder data files for broken FK references |
 | `/fix pr-comments` | `commands/fix/pr-comments.md` | Fix and reply to all open review comments — **bot + human, classified per comment**; dedupes by comment id + reply marker |
 | `/fix comments` | `commands/fix/comments.md` | Review the **code comments** in the current branch's diff and simplify, shorten, or remove each one (≠ `pr-comments`, which targets GitHub review threads) |
+| `/fix quality` | `commands/fix/quality.md` | Run the quality pipeline (type-checker / linter / formatter, PHP and/or JS/TS) and fix every error — auto-detects language from changed files |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 ## Non-interactive & auto-detection
 
@@ -55,6 +56,7 @@ the `auto_detect` kill-switch, rollback). Detection table:
 | PR review comments are the target (any "address review", PR # in context) | `fix/pr-comments` (it then resolves bot/human/both) | HIGH |
 | Source-code comments are the target ("simplify/clean up the comments in my branch", "trim comment noise") | `fix/comments` | HIGH |
 | Seeder / FK breakage named | `fix/seeder` | HIGH |
+| Type-checker / linter / formatter errors in context ("fix the quality errors", PHPStan/tsc/eslint output) | `fix/quality` | HIGH |
 | Project-specific leakage in shared package named | `fix/portability` | MEDIUM |
 | No clear signal, or ≥ 2 conflict | — | LOW → menu (interactive) / `ambiguous_routing` (CI) |
 
@@ -80,6 +82,7 @@ into it and removed.
    > 4. seeder — scan seeders for broken FK references
    > 5. pr-comments — address open review comments (bot / human / both)
    > 6. comments — simplify / shorten / remove code comments in the branch diff
+   > 7. quality — run the quality pipeline and fix every error
 
 ## Rules
 

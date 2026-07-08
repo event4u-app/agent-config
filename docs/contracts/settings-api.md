@@ -131,6 +131,56 @@ Errors: **412 Precondition Required** when the header is absent;
 **422 Unprocessable Entity** with per-field errors on validation
 failure; **500** with `code=ATOMIC_WRITE` if the temp-rename loop fails.
 
+### `GET /api/v1/settings/changes`
+
+Pending upgrade-time settings-surface delta
+(road-to-settings-change-review). The installer persists the flattened
+settings surface (`state/settings-surface.json`: per dotted leaf its
+type / default / enum / description + package version) on every global
+install; when a previous snapshot from a different version exists it
+computes the semantic delta and writes `state/settings-delta.json` —
+that file is what this route serves. Classification against the user's
+current values happens client-side via the shared
+`src/shared/settingsSurface.ts` module (`must_fix` / `adopt` /
+`review` / `info`).
+
+Response (200):
+
+```json
+{
+    "delta": {
+        "oldVersion": "8.3.0",
+        "newVersion": "8.4.0",
+        "changes": [
+            { "key": "personal.autonomy", "kind": "default_changed", "old": { "...": "..." }, "new": { "...": "..." } },
+            { "key": "discipline_profile", "kind": "added", "new": { "...": "..." } }
+        ]
+    },
+    "source": "writeRoot"
+}
+```
+
+`kind` &isin; `added | removed | default_changed | enum_added |
+enum_removed | type_changed`. `source` is `userGlobal` when the delta
+was found via the package-sandbox read fallback.
+
+Errors: **404** with `code=NO_PENDING_CHANGES` when no (parseable)
+delta file exists.
+
+### `POST /api/v1/settings/changes/ack`
+
+Clears the pending delta after the review form is resolved (or
+dismissed). Deletes only `<writeRoot>/state/settings-delta.json` —
+never the real machine's file when running in a sandbox. Idempotent.
+
+Response (200): `{ "ok": true, "cleared": true }` (`cleared: false`
+when nothing was pending; `dryRun: true` and no deletion in dry-run
+mode).
+
+A matching `settings-review-pending` doctor check warns while the
+delta file exists; the settings hub renders a review banner linking to
+`#/settings/changes`.
+
 ### `GET /api/v1/user-md`
 
 Reads `<projectRoot>/.agent-user.md`. Returns `{ body: '', exists: false, lastModified: null }`

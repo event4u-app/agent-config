@@ -42,7 +42,7 @@ For full details see [augment-infrastructure.md](contexts/augment-infrastructure
 |---|---|
 | `/agent-handoff` | Generate context summary for a fresh chat |
 | `/fix-pr-comments` | Fix all open PR review comments |
-| `/quality-fix` | Run PHPStan + Rector and fix errors |
+| `/fix quality` | Run PHPStan + Rector and fix errors |
 | `/create-pr` | Create a GitHub PR with description |
 | `/bug-investigate` | Investigate a bug from Jira/Sentry |
 | `/tests-create` | Write tests for current changes |
