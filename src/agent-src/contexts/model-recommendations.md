@@ -39,6 +39,25 @@ tier is the reasoning band; `context: large` is the context-window need.
 | **Implementation after a `high`-tier plan** | `medium` | Plan is done, execution is mechanical |
 | **Trivial mechanical** (formatting, one-line config, rote rename) | `lite` | No reasoning required; fastest tier suffices |
 
+## Subagent Category → Tier Defaults (dispatch-time downshift)
+
+Normative defaults for DISPATCHED subagent slices (road-to-cost-aware-model-routing,
+council 2026-07-08). The orchestrator's own session model is never switched;
+these tiers apply to the sub-task the orchestrator spawns. Category-keyed —
+immune to per-instance misrouting; unknown/ambiguous category → `inherit`.
+
+| Subagent category | Tier | Why |
+|---|---|---|
+| Read-only fan-out (grep / inventory / file discovery) | `lite` | Returns get deterministic verification; quality risk ~0 by construction |
+| Mechanical single-file regen / template-driven transform | `lite`→`medium` fallback | Pattern application, no open-ended reasoning; verify-fail escalates one tier |
+| Implementation (bounded, planned slice) | `medium` | Plan exists; execution is pattern work |
+| Review / judge / synthesis / architecture | `medium`\|`high` | Reasoning depth is the product |
+
+**Judge asymmetry invariant:** the cross-model judge always runs one tier
+ABOVE the implementer tier (ladder in
+[`subagent-configuration`](subagent-configuration.md)). Downshifting an
+implementer never downshifts its judge.
+
 ## Detection Heuristics
 
 | Signal | Task Type | Tier |

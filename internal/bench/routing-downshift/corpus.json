@@ -1,0 +1,28 @@
+{
+  "family": "routing-downshift",
+  "claim": "downshift-cost-reduction (docs/CLAIMS.md)",
+  "task_class": "read-only-fanout",
+  "arms": {
+    "downshift": { "tier": "lite", "model": "haiku" },
+    "baseline": { "tier": "medium", "model": "sonnet", "note": "session-tier proxy; the orchestrator's typical session tier" }
+  },
+  "held_quality": "exact-match accuracy of the downshift arm >= baseline arm (deterministic verify; non-inferiority analog of the check_quality_regression.ts 0.48 win-rate threshold)",
+  "cost_metric": "USD-weighted tokens: haiku 4.5 and sonnet share a 3x per-token price ratio (input $1 vs $3, output $5 vs $15 per MTok, 2026-07 Anthropic pricing) — cost_reduction = 1 - haiku_tokens / (3 * sonnet_tokens); claim passes at >= 0.30",
+  "slices": [
+    { "id": "rd-01", "prompt": "Count the lines that start exactly with '- [x]' in agents/roadmaps/road-to-cost-aware-model-routing.md. Answer with only the integer.", "ground_truth": "20" },
+    { "id": "rd-02", "prompt": "Count the directories directly inside src/skills/. Answer with only the integer.", "ground_truth": "264" },
+    { "id": "rd-03", "prompt": "What is the value of the 'model_tier:' frontmatter key in src/skills/file-editor/SKILL.md? Answer with only the value.", "ground_truth": "lite" },
+    { "id": "rd-04", "prompt": "Count the lines that start exactly with '## ' in docs/CLAIMS.md. Answer with only the integer.", "ground_truth": "4" },
+    { "id": "rd-05", "prompt": "In src/scripts/_lib/model_tier.ts, what model does the TIER_TO_CLAUDE_MODEL map assign to the 'lite' tier? Answer with only the model name.", "ground_truth": "haiku" },
+    { "id": "rd-06", "prompt": "Count the lines that start exactly with 'export function' in src/scripts/_lib/subagent_steering.ts. Answer with only the integer.", "ground_truth": "11" },
+    { "id": "rd-07", "prompt": "Name the single file inside src/subagents/. Answer with only the filename.", "ground_truth": "production-validator.md" },
+    { "id": "rd-08", "prompt": "How many lines does src/scripts/_lib/subagent_routing.ts have (wc -l)? Answer with only the integer.", "ground_truth": "105" },
+    { "id": "rd-09", "prompt": "Count the directories directly inside src/skills/ whose name starts with 'judge-'. Answer with only the integer.", "ground_truth": "7" },
+    { "id": "rd-10", "prompt": "What is the exact text of the first line (the '# ' heading) of src/agent-src/contexts/execution/subagent-steering.md, without the leading '# '? Answer with only that text.", "ground_truth": "Subagent Steering & Guardrails (Phase 5)" }
+  ],
+  "negative_control": {
+    "id": "rd-nc-01",
+    "description": "Open-ended synthesis slice ('propose an architecture restructuring of the orchestration layer') classified via inferSliceTier — must NOT resolve to lite; a control routed below the session tier fails the claim regardless of savings.",
+    "check": "inferSliceTier({slice_type:'synthesis'}) => medium (never lite); inferSliceTier({slice_type:'unknown'}) => inherit"
+  }
+}

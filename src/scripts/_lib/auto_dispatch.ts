@@ -93,3 +93,66 @@ export function classifyTask(signals: TaskSignals, activation: ActivationInputs)
     const action: DispatchAction = activation.auto === 'on' ? 'dispatch' : 'ask';
     return { delegable: true, action, mode, reason };
 }
+
+// ── Per-slice tier inference (v1.5 — road-to-cost-aware-model-routing) ──
+
+/**
+ * Task-TYPE outputs the tier inference keys on. NEVER raw size metrics —
+ * size enters only as the negative guard below. Contract:
+ * `auto-dispatch-classification.md § Per-slice tier inference`.
+ */
+export type SliceType =
+    | 'read-only-fanout' // grep / inventory / discovery targets
+    | 'mechanical-covered' // template-driven transform WITH test coverage
+    | 'mutating-uncovered' // mutation without test coverage
+    | 'synthesis' // review / analysis / judgment slice
+    | 'unknown';
+
+export interface SliceTierSignals {
+    slice_type: SliceType;
+    /**
+     * Negative size guard: slice scope exceeds the mechanical envelope
+     * (multi-file mutation / beyond single responsibility). Revokes a `lite`
+     * candidacy — never creates one.
+     */
+    exceeds_mechanical_envelope?: boolean;
+}
+
+export type InferredTier = 'lite' | 'medium' | 'inherit';
+
+export interface TierInference {
+    tier: InferredTier;
+    /** 'inferred' for a real downshift decision; 'inherit' when no inference fired. */
+    tier_source: 'inferred' | 'inherit';
+    reason: string;
+}
+
+/**
+ * Infer a delegable slice's model tier from its task TYPE. Deterministic,
+ * no LLM meta-call. Unknown/ambiguous → inherit (session tier) — never
+ * guess down.
+ */
+export function inferSliceTier(signals: SliceTierSignals): TierInference {
+    const guard = signals.exceeds_mechanical_envelope === true;
+
+    switch (signals.slice_type) {
+        case 'read-only-fanout':
+        case 'mechanical-covered': {
+            if (guard) {
+                return {
+                    tier: 'medium',
+                    tier_source: 'inferred',
+                    reason: `${signals.slice_type} slice, but scope exceeds the mechanical envelope — lite candidacy revoked`,
+                };
+            }
+            const cascade = signals.slice_type === 'mechanical-covered' ? ' (verify-fail escalates to medium)' : '';
+            return { tier: 'lite', tier_source: 'inferred', reason: `${signals.slice_type} slice${cascade}` };
+        }
+        case 'mutating-uncovered':
+            return { tier: 'medium', tier_source: 'inferred', reason: 'mutating slice without test coverage' };
+        case 'synthesis':
+            return { tier: 'medium', tier_source: 'inferred', reason: 'synthesis/judgment slice — judge one tier up' };
+        default:
+            return { tier: 'inherit', tier_source: 'inherit', reason: 'unknown/ambiguous slice type — session tier, never guess down' };
+    }
+}
