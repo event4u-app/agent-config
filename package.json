@@ -38,6 +38,8 @@
         "dist/",
         "docs/",
         "src/scripts/",
+        "src/server/schemas/",
+        "src/shared/",
         "src/install/",
         "src/agent-src/scripts/",
         "src/agent-src/templates/scripts/",
