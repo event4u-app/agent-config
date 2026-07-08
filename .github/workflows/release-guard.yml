@@ -4,12 +4,24 @@ name: Release Guard
 # tag name. Prevents npm publishes on tags whose tarball still carries a
 # stale version (the class of bug that kept npm pinned at 1.4.0 while
 # git tags moved to 1.8.0).
+#
+# A tag pushed under the default GITHUB_TOKEN (release.yml's --ci path,
+# when no RELEASE_PR_TOKEN is configured) does not trigger the `push:
+# tags:` event below — release.ts dispatches this workflow explicitly
+# instead (`workflow_dispatch` with `inputs.tag`), same pattern as
+# publish-npm.yml / cloud-release.yml.
 
 on:
   push:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
       - '[0-9]+.[0-9]+.[0-9]+-*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to assert (e.g. 1.10.0). Used by release.ts --ci to cover the GITHUB_TOKEN tag-push recursion guard.'
+        required: true
+        type: string
 
 concurrency:
   group: release-guard-${{ github.ref }}
@@ -21,12 +33,23 @@ jobs:
     name: package.json.version == tag
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check out tagged commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.name }}
 
       - name: Compare versions
         run: |
-          tag="${GITHUB_REF_NAME}"
+          tag="${{ steps.tag.outputs.name }}"
           pkg="$(jq -r '.version' package.json)"
           mp="$(jq -r '.metadata.version' .claude-plugin/marketplace.json)"
           echo "tag:                   $tag"
@@ -42,8 +65,9 @@ jobs:
             fail=1
           fi
           if [ "$fail" = "1" ]; then
-            echo "Releases are driven by src/scripts/release.py — do not tag by hand."
+            echo "Releases are driven by src/scripts/release.ts — do not tag by hand."
             echo "From main, run:  task release"
+            echo "Or merge a PR labeled 'release' — see .github/workflows/release.yml"
             exit 1
           fi
           echo "✅  package.json, marketplace.json, and tag agree on $tag"

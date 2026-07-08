@@ -5,7 +5,14 @@ keep-beta-until: 2026-09-04
 
 # Release-PR Gating Contract
 
-> **Status:** active · **Owner:** maintainer (`scripts/release.py`) · **Opened:** 2026-05-26
+> **Status:** active · **Owner:** maintainer (`src/scripts/release.ts`) · **Opened:** 2026-05-26
+>
+> Release PRs are opened by either entry point into `release.ts`: `task
+> release` (interactive, local) or `.github/workflows/release.yml` (the
+> `release`-labeled-PR CI path, author `github-actions[bot]`) — see
+> [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md).
+> This contract's shape checks are author-agnostic by design; both entry
+> points produce the identical PR shape below.
 >
 > Source: `road-to-optimized-ci-and-release-gates.md` Phase A Step 1. Measured
 > baseline (`gh run list --branch main --limit 50`): `Public Install Smoke`
@@ -22,21 +29,23 @@ A pull request qualifies as a **release PR** when **both** of the following
 hold:
 
 1. **Head branch matches** `^release/\d+\.\d+\.\d+$` — same regex as
-   `scripts/release.py` § `_RELEASE_BRANCH_RE`.
+   `src/scripts/release.ts` § `_RELEASE_BRANCH_RE`.
 2. **Diff file set is a subset of the version-bump allowlist:**
    - `package.json`
    - `CHANGELOG.md`
    - `.claude-plugin/marketplace.json`
    - `packages/*/pack.yaml`
    - `packages/*/README.md`
-   - `docs/archive/CHANGELOG-pre-*.md` — emitted by `scripts/release.py`'s
+   - `docs/archive/CHANGELOG-pre-*.md` — emitted by `release.ts`'s
      automatic CHANGELOG era split (see `docs/contracts/CHANGELOG-conventions.md`
      § Era splits) when the current era crosses its line cap on an
      era-boundary release.
 
-Both predicates are enforced by `scripts/check_release_pr_shape.py`
-(stdlib-only, ≤ 150 LOC). The script exits 0 when both hold; non-zero with
-a per-file diff naming any out-of-allowlist entry otherwise.
+Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
+The script exits 0 when both hold; non-zero with a per-file diff naming any
+out-of-allowlist entry otherwise. It reads the diff shape only — it does
+not check the PR author, so it passes identically for a `task
+release`-opened PR and a `release.yml`-opened one.
 
 ## Cut surface — heavy jobs that skip on release PRs
 
@@ -76,10 +85,10 @@ the feature-PR floor by adding:
 
 The optimisation is **opt-in by shape, not by branch name**. A release-PR
 whose diff contains a stray file outside the allowlist (e.g. a last-minute
-CHANGELOG fixup that also touches `scripts/release.py`) trips the shape
+CHANGELOG fixup that also touches `src/scripts/release.ts`) trips the shape
 detector:
 
-1. `check_release_pr_shape.py` exits non-zero with a per-file diff.
+1. `check_release_pr_shape.ts` exits non-zero with a per-file diff.
 2. The CI dashboard surfaces "release-shape" red.
 3. The maintainer either narrows the diff (move the script edit to a
    separate PR) or accepts the heavy matrix re-running on the next push.
@@ -95,7 +104,7 @@ name alone never bypasses the heavy matrix.
 - **Not a coverage-reduction contract.** The release-validation jobs are
   additive, not substitutive.
 - **Not a release-velocity contract.** Release cadence is driven by
-  Conventional Commits in `scripts/release.py`, not by CI cost.
+  Conventional Commits in `src/scripts/release.ts`, not by CI cost.
 - **Not a Hard-Floor lift.** No security check is removed.
   `release-guard.yml`'s `assert-version-matches-tag` job is independent of
   `Tests` / `Public Install Smoke` and stays mandatory on every tag.
@@ -108,6 +117,8 @@ name alone never bypasses the heavy matrix.
   cadence (Phase C).
 - `.github/workflows/release-validation.yml` — the tight release-shape
   validation workflow (Phase B).
-- `scripts/check_release_pr_shape.py` — the shape detector (Phase A).
-- `scripts/release.py` § `_RELEASE_BRANCH_RE` — source of truth for the
+- `src/scripts/check_release_pr_shape.ts` — the shape detector (Phase A).
+- `src/scripts/release.ts` § `_RELEASE_BRANCH_RE` — source of truth for the
   release-branch naming convention.
+- [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md) — the
+  CI-native (`release`-label) entry point into the same script.

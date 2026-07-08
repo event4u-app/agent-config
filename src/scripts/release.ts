@@ -8,16 +8,27 @@
  * subprocess argv/cwd/env. No behaviour changes — latent quirks are
  * replicated and flagged inline, not fixed.
  *
- * Invoked via `task release`. The bump level (major/minor/patch) is
- * auto-detected from Conventional Commits since the last tag; pass
- * `--as {major,minor,patch}` to force, or `--version X.Y.Z` to pin.
+ * Invoked via `task release` (interactive, local) OR
+ * `.github/workflows/release.yml` (unattended, triggered by merging a PR
+ * labeled `release` / `release:major` / `release:minor` / `release:patch`
+ * — pass `--ci`). Both entry points share this one pipeline; `--ci` only
+ * changes the gh-auth probe (GITHUB_TOKEN, not a user token), adds a
+ * nothing-to-release short-circuit (see `nothing_to_release_ci`) so firing
+ * the label path twice is a clean no-op, and dispatch-chains
+ * release-guard.yml + publish-npm.yml + cloud-release.yml after the
+ * release (a bot-pushed tag does not trigger them — GitHub's GITHUB_TOKEN
+ * recursion guard). The bump
+ * level (major/minor/patch) is auto-detected from Conventional Commits
+ * since the last tag; pass `--as {major,minor,patch}` to force, or
+ * `--version X.Y.Z` to pin.
  *
  * Pipeline:
  *     1. Preflight         — on main, clean tree, origin in sync, gh available,
  *                            target tag doesn't exist yet.
  *     2. Plan              — compute new version, parse Conventional Commits
  *                            since the last tag, render CHANGELOG section.
- *     3. Confirm           — show preview, ask once (skippable with --yes).
+ *     3. Confirm           — show preview, ask once (skippable with --yes;
+ *                            `--ci` always needs --yes — CI has no terminal).
  *     4. Branch + bump     — create `release/X.Y.Z`, update package.json,
  *                            .claude-plugin/marketplace.json, CHANGELOG.md,
  *                            then run `task release-prepare` so pack
@@ -27,15 +38,22 @@
  *     5. Commit + push     — `release: X.Y.Z`, push branch, open PR.
  *     6. Wait for CI       — `gh pr checks --watch` (skippable with --no-wait).
  *     7. Merge             — `gh pr merge --merge --delete-branch`.
- *     8. Tag main          — fast-forward main, tag the merge commit,
- *                            push the tag (this triggers publish-npm.yml).
- *     9. GitHub Release     — `gh release create X.Y.Z --notes <changelog>`.
+ *     8. Tag main          — fast-forward main, tag the merge commit, push
+ *                            the tag (triggers publish-npm.yml — except
+ *                            under `--ci`, see step 9).
+ *     9. GitHub Release     — `gh release create X.Y.Z --notes <changelog>`;
+ *                            under `--ci`, also dispatches
+ *                            release-guard.yml + publish-npm.yml +
+ *                            cloud-release.yml explicitly.
  *
  * Idempotency: pass `--resume` to recover from a partial failure. Each
  * step then probes existing state (branch, commit, PR, tag, GitHub
  * Release) and skips work that is already done, instead of erroring out.
  * Without `--resume` the pipeline still mutates git/network state, so
- * re-running on a dirty tree needs `--resume` (or a manual cleanup).
+ * re-running on a dirty tree needs `--resume` (or a manual cleanup). The
+ * two entry points guard against colliding with each other via these same
+ * probes plus the CI workflow's concurrency group — whichever starts
+ * second sees the other's in-progress state and skips or refuses cleanly.
  * Each step prints what it's about to do before doing it, so a crash
  * leaves a recoverable trail.
  *
@@ -931,9 +949,13 @@ function set_template_pin(p: string, version: string): void {
  * Tree cleanliness, gh auth, and `main` in-sync with origin are still
  * enforced, so resuming has the same starting posture as a fresh run; only
  * step-level outcomes differ.
+ *
+ * `opts.ci` swaps the gh-auth probe (see below) for the CI-mode variant —
+ * everything else is identical between the two entry points.
  */
-function preflight(target: string, opts: { resume?: boolean } = {}): void {
+function preflight(target: string, opts: { resume?: boolean; ci?: boolean } = {}): void {
     const resume = opts.resume ?? false;
+    const ci = opts.ci ?? false;
     for (const b of ['git', 'gh']) {
         if (!have(b)) {
             die(`'${b}' not found on PATH`);
@@ -944,9 +966,22 @@ function preflight(target: string, opts: { resume?: boolean } = {}): void {
     // status` returns non-zero if *any* account in the keyring is broken, even
     // when the active one is fine — so we'd rather ask "does the token the
     // release will actually use work?" than parse multi-account status output.
-    const r = run(['gh', 'api', 'user', '--jq', '.login'], { check: false, capture: true });
+    //
+    // `--ci` runs under the GitHub Actions default GITHUB_TOKEN, which is an
+    // installation token, not a user token — `gh api user` returns 403
+    // ("Resource not accessible by integration") for it even when the token
+    // is perfectly valid for everything the release actually needs (repo
+    // read/write). Probe repo access instead, which the token always has.
+    const authCmd = ci
+        ? ['gh', 'api', `repos/${REPO_SLUG}`, '--jq', '.id']
+        : ['gh', 'api', 'user', '--jq', '.login'];
+    const r = run(authCmd, { check: false, capture: true });
     if (r.returncode !== 0) {
-        die('gh is not authenticated; run `gh auth login` first');
+        die(
+            ci
+                ? 'gh is not authenticated for this repo (GITHUB_TOKEN missing or invalid)'
+                : 'gh is not authenticated; run `gh auth login` first',
+        );
     }
 
     const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true });
@@ -1160,11 +1195,12 @@ function _step(n: number, total: number, msg: string): void {
 
 function execute(
     plan: Plan,
-    opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean },
+    opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean },
 ): void {
     const wait_for_checks = opts.wait_for_checks;
     const dry_run = opts.dry_run;
     const resume = opts.resume ?? false;
+    const ci = opts.ci ?? false;
 
     const branch = `release/${plan.target}`;
     const total = 10;
@@ -1372,7 +1408,13 @@ function execute(
     if (_release_exists(plan.target)) {
         _step(9, total, `GitHub Release ${plan.target} already exists — skip`);
     } else {
-        _step(9, total, 'Create GitHub Release (triggers publish-npm on the tag)');
+        _step(
+            9,
+            total,
+            ci
+                ? 'Create GitHub Release (tag push under GITHUB_TOKEN triggers nothing — dispatching next)'
+                : 'Create GitHub Release (triggers publish-npm on the tag)',
+        );
         const notes = _cap_body(
             plan.changelog_body || `Release ${plan.target}`,
             GH_RELEASE_NOTES_LIMIT,
@@ -1388,6 +1430,23 @@ function execute(
             '--notes',
             notes,
         ]);
+
+        // ─── 9b. dispatch-chain the tag-triggered workflows (--ci only) ──────
+        // release-guard.yml, publish-npm.yml, and cloud-release.yml all
+        // trigger on `push: tags: [0-9]+.[0-9]+.[0-9]+`, but a tag pushed
+        // with the default GITHUB_TOKEN does NOT fire other workflows
+        // (GitHub's recursion guard). All three already accept a `tag`
+        // input for exactly this recovery case, so dispatch them
+        // explicitly instead of relying on an event that will never
+        // arrive. Only reached here (not in the `_release_exists` skip
+        // branch above), so a --resume re-run never re-dispatches a
+        // publish that already happened.
+        if (ci) {
+            _step(9, total, 'Dispatch release-guard.yml + publish-npm.yml + cloud-release.yml for the tag');
+            run(['gh', 'workflow', 'run', 'release-guard.yml', '--ref', MAIN_BRANCH, '-f', `tag=${plan.target}`]);
+            run(['gh', 'workflow', 'run', 'publish-npm.yml', '--ref', MAIN_BRANCH, '-f', `tag=${plan.target}`]);
+            run(['gh', 'workflow', 'run', 'cloud-release.yml', '--ref', MAIN_BRANCH, '-f', `tag=${plan.target}`]);
+        }
     }
 
     // ─── 10. delete the merged release branch (local + remote) ───────────────
@@ -1431,6 +1490,7 @@ interface Args {
     no_wait: boolean;
     resume: boolean;
     check_confirm: boolean;
+    ci: boolean;
 }
 
 const PROG = 'release.py';
@@ -1438,9 +1498,15 @@ const PROG = 'release.py';
 // (per-flag descriptions) is a documented divergence — argparse re-wraps it to
 // the live terminal width; the tests assert the `usage:` token + exit code,
 // not the body prose.
+//
+// `--ci` (added for the label-triggered GitHub Actions release path, see
+// `.github/workflows/release.yml`) is NOT part of the original argparse
+// contract this file mirrors byte-for-byte — it postdates the py2ts
+// migration (ADR-200) and has no Python counterpart. It is additive only:
+// every existing flag/behaviour is unchanged when `--ci` is absent.
 const USAGE =
     `usage: ${PROG} [-h] [--as {major,minor,patch}] [--version EXPLICIT] [--yes]\n` +
-    '                  [--dry-run] [--no-wait] [--resume] [--check-confirm]\n';
+    '                  [--dry-run] [--no-wait] [--resume] [--check-confirm] [--ci]\n';
 
 function _argError(msg: string): never {
     process.stderr.write(USAGE);
@@ -1457,6 +1523,7 @@ function _parse_args(argv: readonly string[]): Args {
         no_wait: false,
         resume: false,
         check_confirm: false,
+        ci: false,
     };
 
     const positionals: string[] = [];
@@ -1538,6 +1605,12 @@ function _parse_args(argv: readonly string[]): Args {
             i += 1;
             continue;
         }
+        if (flag === '--ci') {
+            if (inlineVal !== null) _argError(`argument --ci: ignored explicit argument '${inlineVal}'`);
+            args.ci = true;
+            i += 1;
+            continue;
+        }
         if (a.startsWith('-') && a !== '-') {
             _argError(`unrecognized arguments: ${a}`);
         }
@@ -1556,6 +1629,26 @@ function resolve_bump(override: string | null, commits: readonly Commit[]): stri
         return override;
     }
     return infer_bump(commits);
+}
+
+/**
+ * Should a `--ci` run stop early with no release? Empty commits + no
+ * explicit override + no bump override means `infer_bump` would fall back
+ * to a hollow 'patch' bump — fine for a deliberate interactive `task
+ * release`, but the label-triggered CI path (`.github/workflows/release.yml`)
+ * can fire on a merged `release`-labeled PR whose commits were already
+ * shipped by an earlier run in the same batch (the double-fire case). This
+ * is the guard that makes firing the CI path twice a clean no-op instead of
+ * a spurious empty release. The interactive path is unaffected — this only
+ * ever returns true when `ci` is true.
+ */
+export function nothing_to_release_ci(
+    ci: boolean,
+    explicit: string | null,
+    bump_override: string | null,
+    commits: readonly Commit[],
+): boolean {
+    return ci && explicit === null && bump_override === null && commits.length === 0;
 }
 
 const _RELEASE_BRANCH_RE = /^release\/(\d+\.\d+\.\d+)$/;
@@ -1708,6 +1801,14 @@ function main(argv: readonly string[] | null = null): number {
 
     const prev = latest_tag();
     const commits = commits_since(prev);
+
+    if (nothing_to_release_ci(args.ci, args.explicit, args.bump_override, commits)) {
+        process.stdout.write(
+            `nothing to release — no commits since ${prev ?? 'the start of history'}; exiting cleanly.\n`,
+        );
+        return 0;
+    }
+
     const bump = resolve_bump(args.bump_override, commits);
 
     // Resume mode: prefer an existing `release/X.Y.Z` over computed bump,
@@ -1728,7 +1829,7 @@ function main(argv: readonly string[] | null = null): number {
     parse_version(target);
 
     if (!args.dry_run) {
-        preflight(target, { resume: args.resume });
+        preflight(target, { resume: args.resume, ci: args.ci });
     }
 
     const today = todayIso();
@@ -1788,6 +1889,7 @@ function main(argv: readonly string[] | null = null): number {
         wait_for_checks: !args.no_wait,
         dry_run: false,
         resume: args.resume,
+        ci: args.ci,
     });
     return 0;
 }

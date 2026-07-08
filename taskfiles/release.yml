@@ -3,13 +3,15 @@ version: '3'
 tasks:
   release:
     desc: |
-      Release a new version end-to-end with auto-detected bump.
-      Auto-detects major/minor/patch from Conventional Commits since the
-      last tag (feat!: → major, feat: → minor, fix:/perf: → patch). Runs
-      scripts/release.py, which bumps package.json + marketplace.json +
-      CHANGELOG, opens a release PR, waits for checks, merges, tags
-      main, and creates a GitHub Release. The tag push triggers
-      publish-npm.yml. Pass --yes to skip the confirmation prompt,
+      Release a new version end-to-end with auto-detected bump (the
+      interactive/local entry point — for the unattended alternative, label
+      a PR `release` and merge it; see .github/workflows/release.yml and
+      ADR-113). Auto-detects major/minor/patch from Conventional Commits
+      since the last tag (feat!: → major, feat: → minor, fix:/perf: →
+      patch). Runs src/scripts/release.ts, which bumps package.json +
+      marketplace.json + CHANGELOG, opens a release PR, waits for checks,
+      merges, tags main, and creates a GitHub Release. The tag push
+      triggers publish-npm.yml. Pass --yes to skip the confirmation prompt,
       --no-wait to merge without waiting for CI, or --dry-run to preview
       without touching git/gh. Usage:
       task release                     # interactive, auto-detect

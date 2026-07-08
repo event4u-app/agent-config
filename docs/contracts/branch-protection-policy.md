@@ -54,7 +54,14 @@ per branch name.
 - **Feature PR** — head branch does not match `release/X.Y.Z` (the default).
 - **Release PR** — head branch matches `^release/\d+\.\d+\.\d+$` AND the
   diff stays within the version-bump allowlist (see `release-pr-gating.md`).
-  Either condition failing falls the PR back to feature-PR mode.
+  Either condition failing falls the PR back to feature-PR mode. Author is
+  either a maintainer (`task release`) or `github-actions[bot]` (the
+  `release`-labeled-PR CI path, `.github/workflows/release.yml`) — the
+  shape checks are author-agnostic. Verified live: this repo's branch
+  protection requires zero approving reviews and exactly one status check
+  (`Sync + Generate Tools Consistency`); the bot path's real friction is
+  GitHub's separate bot-created-PR approval gate, not a review requirement
+  — see [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md).
 - **Docs-only PR** — diff is entirely inside `docs/**` or matches only
   top-level Markdown (`README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`,
   `AGENTS.md`). No code, tests, workflows, or scripts. This shape is
@@ -65,7 +72,7 @@ per branch name.
 ## Failure mode — the cut never silently lifts
 
 If a release-PR's diff exits the allowlist mid-stream (e.g. a last-minute
-CHANGELOG fixup that also touches `scripts/release.py`):
+CHANGELOG fixup that also touches `src/scripts/release.ts`):
 
 1. `Release Validation / release-shape` exits non-zero.
 2. The required-check set for the PR effectively flips back to the
@@ -125,6 +132,8 @@ its own protection rules:
 - [`ci-cost-budget.md`](ci-cost-budget.md) — measured baseline durations
   per job + quarterly review cadence (Phase C).
 - `.github/workflows/release-validation.yml` — the three release-PR jobs.
-- `scripts/check_release_pr_shape.py` — the shape detector.
-- `scripts/release.py` — emits release PRs; release cadence stays driven
-  by Conventional Commits, not CI cost.
+- `src/scripts/check_release_pr_shape.ts` — the shape detector.
+- `src/scripts/release.ts` — emits release PRs (both entry points); release
+  cadence stays driven by Conventional Commits, not CI cost.
+- [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md) — the
+  CI-native (`release`-label) entry point and the bot-PR-approval finding.

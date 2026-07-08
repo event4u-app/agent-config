@@ -110,17 +110,20 @@ pre-X.Y.x` commit — never bundled with a feature release.
 
 ### Gate-vs-script contract
 
-- **Canonical splitter** — `scripts/release.py`. When a release crosses
-  a minor/major boundary and the current era body is at or over the
-  250-line cap, the release pipeline writes the
+- **Canonical splitter** — `src/scripts/release.ts`, run via `task release`
+  or the `release`-labeled-PR CI path
+  (`.github/workflows/release.yml`, see
+  [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md)).
+  When a release crosses a minor/major boundary and the current era body
+  is at or over the 250-line cap, the release pipeline writes the
   `chore(changelog): split era …` commit **first**, then the
   `release: X.Y.Z` commit. The maintainer does not run the split by
   hand for the release path.
-- **Backstop** — `tests/test_changelog_eras.py::test_current_era_body_under_cap`
+- **Backstop** — `tests/lib/changelog_eras.test.ts` (`test_current_era_body_under_cap`)
   catches entries written **outside** the release script (hand-edited
   Unreleased section, agent-authored hotfix entries, doc patches). The
   failure message names `task release` as the auto-split path.
-- **Shared cap constant** — `scripts/_lib/changelog_eras.py` owns
+- **Shared cap constant** — `src/scripts/_lib/changelog_eras.ts` owns
   `CURRENT_ERA_BODY_CAP` and the era-header regex. Both the test and
   the release script import from there; no parallel copies.
 - **Patch-release overflow** — a `patch` bump cannot cross an era

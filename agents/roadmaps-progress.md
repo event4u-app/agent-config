@@ -2,21 +2,21 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **11** open blockers
 
 ## Overall
 
-**86 / 189 steps done · 46%**
+**86 / 164 steps done · 52%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-ci-native-release.md](roadmaps/road-to-ci-native-release.md) | 7 | 33 | 33 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | [1](#blockers-road-to-ci-native-release-first-run) | ░░░░░░░░░░ 0% |
 | 2 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
 | 3 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 4 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
@@ -30,19 +30,22 @@
 
 ## Per-roadmap phase breakdown
 
-### [road-to-ci-native-release.md](roadmaps/road-to-ci-native-release.md)
+### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
-**CI-native release path alongside `task release`** — 0 / 33 done (0%)
+**Follow-up to CI-native release — first live run + drills** — 0 / 8 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Design lock + ADR | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Refactor release.ts into a CI entry point | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | `release.yml` orchestration workflow | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-| 4 | Failure handling + guard folding | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Guards, backstops, contracts | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 6 | Dual-path documentation sweep | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 7 | End-to-end validation + rollback safety | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-ci-native-release-first-run"></a>
+**Blockers**
+
+- **legacy** (owner: user) — blocks entire roadmap
+  - **What to do:**
+    PR #780 merges (Phase 1) and, separately, until a
+  - **Resolved when:** condition described above clears
 
 ### [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md)
 

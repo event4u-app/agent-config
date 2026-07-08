@@ -87,7 +87,7 @@ jobs:
             exit 1
           fi
           # Look for a CHANGELOG header line containing the exact version.
-          # The release.py-generated entries use `## X.Y.Z (...)` shape; we
+          # The release.ts-generated entries use `## X.Y.Z (...)` shape; we
           # match the version anywhere in a heading line to stay tolerant
           # of date suffixes, status labels, etc.
           if ! grep -E "^#+ .*\b${version//./\\.}\b" CHANGELOG.md > /tmp/cl-match.txt; then
@@ -165,7 +165,7 @@ jobs:
             echo "::error::package.json ($pkg) and marketplace.json ($mp) disagree."
             fail=1
           fi
-          # Each pack manifest declares its own version that release.py keeps in lockstep.
+          # Each pack manifest declares its own version that release.ts keeps in lockstep.
           while IFS= read -r f; do
             pack_ver=$(node -e "const yaml=require('yaml'),fs=require('node:fs');const d=yaml.parse(fs.readFileSync(process.argv[1],'utf8'))||{};console.log(d.version??'<missing>')" "$f")
             if [ "$pack_ver" != "$pkg" ]; then
