@@ -87,6 +87,7 @@ tasks:
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay
       - task: check-eval-coverage
+      - task: check-domain-soundness
       - task: lint-behavioural-eval-freshness
       - task: check-skill-gaps
       - task: check-comparison
@@ -257,6 +258,7 @@ tasks:
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay
       - task: check-eval-coverage
+      - task: check-domain-soundness
       - task: lint-behavioural-eval-freshness
       - task: check-skill-gaps
       - task: check-comparison
