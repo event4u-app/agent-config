@@ -2,7 +2,7 @@
 /**
  * Skill discovery recommender — local-only, explained, no network.
  *
- * TypeScript twin of `skill_discovery.py` (Phase 8 / Wave 8e).
+ * Ported from the retired Python `skill_discovery.py` (Phase 8 / Wave 8e).
  *
  * Phase 3 of `road-to-leaner-core-and-discovery`. Turns existing local signals
  * (skill catalog frontmatter, role shortlists, optional local-analytics JSONL)

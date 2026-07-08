@@ -21,7 +21,7 @@
 // `build_server` still accepts a plain `SkillPrompt[]` so the Phase-1
 // contract tests keep passing without touching their fixtures.
 //
-// TS twin of server.py (py2ts Phase 8). The Python module builds on the
+// TS port of the retired Python server.py (ADR-200). The Python module builds on the
 // `mcp` Python SDK (`mcp.server.Server`) and registers handlers via the
 // SDK decorators; the tests poke `server.request_handlers[...]`. There is
 // no `mcp` Python SDK in the TS runtime and the npm

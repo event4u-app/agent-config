@@ -2,13 +2,13 @@
 /**
  * Forward gate for NEW skills (6.0.0-C Phase 4 Step 8b).
  *
- * TypeScript twin of `src/scripts/lint_new_skill_gate.py` (ADR-200, Phase 4 /
+ * Ported from the retired Python `src/scripts/lint_new_skill_gate.py` (ADR-200, Phase 4 /
  * Wave 4b — PORT). Mirrors the CLI contract EXACTLY — the `--baseline` (default
  * `main`) and `--quiet` argparse flags, the git diff/status forward-only skill
  * detection, byte-identical violation messages, stdout-only output (no
  * stderr split except the git-failure exit-3 path), and exit codes
  * (0 clean · 1 violations · 3 internal/git error). snake_case kept. No
- * behaviour changes — latent quirks replicated.
+ * behaviour changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * A newly added skill must clear two gates before it joins the surface:
  *
@@ -19,7 +19,7 @@
  *
  * FORWARD-ONLY: only SKILL.md files added since `--baseline` are gated.
  *
- * The Python original imports `_parse`, `_cosine`, `collect`, `Skill` from
+ * the retired Python implementation imports `_parse`, `_cosine`, `collect`, `Skill` from
  * `audit_skill_overlap`. That module has no TS twin in this batch, so the four
  * needed symbols are ported privately below (faithful 1:1 of the originals);
  * when `audit_skill_overlap` is ported in its own phase these can be

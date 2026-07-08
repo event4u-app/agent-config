@@ -18,7 +18,7 @@
 //   tsx src/scripts/config/packs.ts --packs laravel,finance-basic
 //   tsx src/scripts/config/packs.ts --legacy-all
 //
-// Twin of `src/scripts/config/packs.py`.
+// Ported from the retired Python `src/scripts/config/packs.py` (ADR-200).
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';

@@ -2,8 +2,8 @@
 /**
  * Block D · D5 — eval gate runner.
  *
- * TypeScript twin of `src/scripts/skill_tools/run_block_d_eval.py`
- * (ADR-200, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
+ * Ported from the retired Python `src/scripts/skill_tools/run_block_d_eval.py`
+ * (ADR-200, Phase 8 Wave 8h). The CLI contract is pinned —
  * flags (`--skills-dir`, `--personas-dir`, `--corpus-dir`, `--json`), exit
  * codes (0 pass / 1 fail), stdout split, byte-identical human summary AND
  * byte-identical JSON (`json.dump(..., indent=2)`, ensure_ascii default).
@@ -21,7 +21,7 @@
  *
  * Pilot pass = ≥ 2 / 3 tools pass. Anything less → kill switch.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

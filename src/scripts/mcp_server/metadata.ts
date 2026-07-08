@@ -19,7 +19,7 @@
 // Stderr is the canonical surface in Phase 6; a wire-surface lift can
 // follow once the SDK supports it.
 //
-// TS twin of metadata.py (py2ts Phase 8). Mirrors the full public surface:
+// TS port of the retired Python metadata.py (ADR-200). Preserves the full public surface:
 //   - Signature type, read_package_version, compute_skill_set_signature,
 //     boot_log_line.
 import * as crypto from 'node:crypto';

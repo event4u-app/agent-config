@@ -2,7 +2,7 @@
 /**
  * Generate `pack.yaml` + `README.md` for every pack home.
  *
- * TypeScript twin of `src/scripts/generate_pack_manifests.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/generate_pack_manifests.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8a). The CLI contract is mirrored
  * EXACTLY: same flag (`--check`), same exit codes, same stdout/stderr
  * split, same byte-identical generated `pack.yaml` + `README.md`. WRITER
@@ -10,7 +10,7 @@
  * PyYAML `safe_dump(meta, sort_keys=True, allow_unicode=True)` block-style
  * emission (`_py_safe_dump` below reproduces PyYAML's scalar-quoting +
  * block-collection layout for the value shapes this script emits). No
- * behaviour changes — latent bugs replicated.
+ * behaviour changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Phase 4.4 of the monorepo migration (ADR-017). The manifests are
  * *derived* from frontmatter + `src/config/discovery/packs.yml`; they are

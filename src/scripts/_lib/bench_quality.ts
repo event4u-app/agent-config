@@ -6,7 +6,7 @@
 // assertions against actual output. Without it, we emit `not_collected`
 // per docs/contracts/benchmark-report-schema.md § quality invariants.
 //
-// TypeScript twin of `src/scripts/_lib/bench_quality.py` (ADR-200 py2ts
+// Ported from the retired Python `src/scripts/_lib/bench_quality.py` (ADR-200 py2ts
 // Phase 2 / Wave 2a). Scoring math, rubric/regex semantics, and the
 // `not_collected` shape are mirrored exactly; `quality_score` uses
 // Python's round-half-to-even on `round(passing/total, 4)`.
@@ -194,8 +194,8 @@ function _pyRound(value: number, ndigits: number): number {
 /**
  * Translate a Python `re` pattern + `re.MULTILINE` flag into a JS RegExp.
  * The corpus assertions use simple patterns; we surface a thrown error for
- * patterns JS cannot compile so `_eval_regex` reports `bad_regex` like the
- * Python original (which catches `re.error`).
+ * patterns JS cannot compile so `_eval_regex` reports `bad_regex` — the
+ * historical contract (the retired implementation caught `re.error`).
  */
 function _pyCompile(pattern: string): RegExp {
     // re.MULTILINE → 'm'. Python `.search` is unanchored; RegExp.test is too.

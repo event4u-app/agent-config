@@ -5,15 +5,15 @@
  * symlinks for the rest; opt into rule symlinks via
  * augment.rules_use_symlinks in .agent-settings.yml).
  *
- * TypeScript twin of `src/scripts/condense.py` (ADR-200 — Python→TS
+ * Ported from the retired Python `src/scripts/condense.py` (ADR-200 — Python→TS
  * migration, Phase 5). Mirrors the Python CLI surface EXACTLY — every
  * subcommand (`--sync`, `--list`, `--changed`, `--check`, `--check-hashes`,
  * `--clean-hashes`, `--mark-done <path>`, `--mark-all-done`,
  * `--generate-tools`, `--clean-tools`, `--project-augment`) — same flags,
  * exit codes, stdout/stderr split, byte-identical messages. No behaviour
- * changes; latent Python bugs replicated and flagged.
+ * changes; historical quirks preserved and flagged.
  *
- * Path handling note: the Python original uses `pathlib.Path` objects.
+ * Path handling note: the retired Python implementation uses `pathlib.Path` objects.
  * This twin uses absolute path strings (the host filesystem on the
  * supported platforms is POSIX). Logical relative paths are always POSIX
  * (forward-slash) strings, matching the Python `.as_posix()` keys.

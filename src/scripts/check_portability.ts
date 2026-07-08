@@ -2,7 +2,7 @@
 /**
  * Portability checker for agent-config packages.
  *
- * TypeScript twin of `src/scripts/check_portability.py` (ADR-200). Mirrors the
+ * Ported from the retired Python `src/scripts/check_portability.py` (ADR-200). Mirrors the
  * Python CLI contract EXACTLY — same flags (`--format`, `--root`), same exit
  * codes (0 clean, 1 violations, 3 internal error), same stdout/stderr split,
  * same finding text, same scan scope and file-walk order. No behaviour
@@ -187,7 +187,7 @@ function _detect_project_identifiers(root: string): Set<string> {
     // 4. Directory name (parent directories of dist/agent-src/)
     const augmentDir = path.join(root, 'dist/agent-src');
     if (_exists(augmentDir)) {
-        // The Python original uses the UNRESOLVED `root` (a `pathlib.Path`):
+        // the retired Python implementation uses the UNRESOLVED `root` (a `pathlib.Path`):
         // `root.name` and `root.parent.name`. For the default `--root .` that
         // yields empty strings (Path('.').name == '' and Path('.').parent.name
         // == ''), so neither identifier is added. Replicate that exactly — do
@@ -231,7 +231,7 @@ function _build_patterns(root: string): { patterns: PatternSpec[]; detected: str
     const patterns: PatternSpec[] = [];
     const detected: string[] = [...identifiers].sort();
 
-    // Iterate in sorted order for deterministic output. The Python original
+    // Iterate in sorted order for deterministic output. the retired Python implementation
     // iterates over a `set` whose order is unspecified; on the real repo
     // `scan_all` finds zero violations so order is moot, but a controlled tree
     // with multiple identifiers could surface a per-line ordering difference.

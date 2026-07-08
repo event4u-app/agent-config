@@ -2,8 +2,8 @@
 /**
  * Track A — behavioural eval runner for the package-impact A/B bench.
  *
- * TypeScript twin of `src/scripts/bench_ab_tracka_run.py` (ADR-200, Phase 8 /
- * Wave 8d). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/bench_ab_tracka_run.py` (ADR-200, Phase 8 /
+ * Wave 8d). The CLI contract pins the historical contract exactly — same
  * `--variant {with,without,both}` flag, same exit codes, stdout/stderr split,
  * byte-identical messages, and byte-identical written report JSON
  * (`json.dumps(indent=2) + "\n"`) + Markdown. No behaviour changes — latent

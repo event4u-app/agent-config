@@ -1,7 +1,7 @@
 /**
  * Intake trigger + dedup for `agents/decisions/low-impact-decisions.md` (Phase 12).
  *
- * TypeScript twin of `src/scripts/ai_council/low_impact_intake.py`
+ * Ported from the retired Python `src/scripts/ai_council/low_impact_intake.py`
  * (ADR-200 — Python→TS migration, Phase 1). Pure-text, deterministic.
  *
  * User signals "leichte Frage" / "low-impact question" / equivalents

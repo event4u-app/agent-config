@@ -2,10 +2,10 @@
 /**
  * Hard-Gate linter: no empty roadmap files under `agents/roadmaps/`.
  *
- * TypeScript twin of `src/scripts/lint_empty_roadmaps.py` (ADR-200 migration).
+ * Ported from the retired Python `src/scripts/lint_empty_roadmaps.py` (ADR-200).
  * Byte-identical CLI contract: same stdout, same exit codes (0 = clean,
  * 1 = at least one empty roadmap). `--quiet` is a bare argv membership check
- * (computed at import, NOT argparse), mirroring the Python original.
+ * (computed at import, NOT argparse), mirroring the retired Python implementation.
  *
  * A roadmap `.md` that is 0 bytes (or only whitespace) is never valid — it
  * carries no goal, no phases, no content. Scope: every `*.md` under
@@ -85,7 +85,7 @@ function _rglobMdSorted(base: string): string[] {
 // Python `str.strip()` (no args) strips every character for which
 // `str.isspace()` is true: ASCII whitespace + the C0 separators \x1c-\x1f +
 // NEL \x85 + the Unicode whitespace set. Match that exact class so a
-// "whitespace-only" file is detected identically to the Python original.
+// "whitespace-only" file is detected identically to the retired Python implementation.
 const _PY_WS = /[\t\n\v\f\r \u001c\u001d\u001e\u001f\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/g;
 
 function _toPosix(target: string, root: string): string {

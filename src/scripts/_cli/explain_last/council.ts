@@ -1,8 +1,8 @@
 /**
  * Resolve the `council` why-slot for the trace.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/council.py` (ADR-200).
- * Behaviour mirrors the Python original EXACTLY — same candidate glob,
+ * Ported from the retired Python `src/scripts/_cli/explain_last/council.py` (ADR-200).
+ * Behaviour pins the historical contract exactly — same candidate glob,
  * same ±1h run window, same most-recent pick, same member extraction
  * (first stripped line, 200-code-point slice), and the same deliberate
  * omission of cost-metadata fields. No behaviour changes.

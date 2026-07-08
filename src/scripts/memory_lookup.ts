@@ -2,8 +2,8 @@
 /**
  * File-first memory retrieval.
  *
- * TypeScript twin of `src/scripts/memory_lookup.py` (ADR-200). The public
- * API and CLI contract mirror the Python original EXACTLY — same exported
+ * Ported from the retired Python `src/scripts/memory_lookup.py` (ADR-200). The public
+ * API and CLI contract mirror the retired Python implementation EXACTLY — same exported
  * names (snake_case kept deliberately, especially `retrieve(...)` whose
  * signature/return shape is cited by rules), same exit codes, stdout/stderr
  * split, byte-identical messages, same memory-file scan + ranking + JSON
@@ -40,7 +40,7 @@ import YAML, { parseDocument } from 'yaml';
 // timestamp into a `datetime.datetime`. The `yaml` npm parses both to JS Date
 // objects whose String()/JSON form differs, so `json.dumps(..., default=str)`
 // in the CLI would not match. This marker preserves PyYAML's str() form so
-// JSON output and as_dict() are byte-identical to the Python original.
+// JSON output and as_dict() are byte-stable — downstream consumers and checksum gates pin these bytes.
 const PYYAML_DATE_ONLY_RE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const PYYAML_TIMESTAMP_RE =
     /^(?:[0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}(?:[Tt]|[ \t]+)[0-9]{1,2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]*)?(?:[ \t]*(?:Z|[-+][0-9]{1,2}(?::[0-9]{2})?))?)$/;
@@ -191,7 +191,7 @@ function _load_yaml(p: string): unknown {
             const raw = text.slice(node.range[0], node.range[1]);
             // Under YAML 1.1 the `yaml` lib resolves plain timestamp scalars to
             // JS Date objects. Recover PyYAML's str() form from the original
-            // source so JSON output / as_dict() match the Python original.
+            // source so JSON output / as_dict() match the retired Python implementation.
             if (node.value instanceof Date) {
                 if (PYYAML_DATE_ONLY_RE.test(raw)) {
                     (node as { value: unknown }).value = new PyTimestamp(raw);
@@ -476,10 +476,10 @@ export function _score(entry: Record<string, unknown>, keys: string[]): number {
 /**
  * Project cross-repo matches into discounted, tagged Hits.
  *
- * Lazy + guarded: the Python original imports `cross_repo_retrieve` on
+ * Lazy + guarded: the retired Python implementation imports `cross_repo_retrieve` on
  * demand and swallows any failure (script absent, no opted-in siblings) so
  * the cross-repo type degrades to zero hits rather than breaking retrieval.
- * The TypeScript twin of `cross_repo_retrieve` is unported in this phase, so
+ * The Ported from the retired Python `cross_repo_retrieve` is unported in this phase, so
  * this always degrades to zero hits — flagged as a divergence candidate.
  * Scores sit below curated/knowledge (0.85× floor, then a small per-rank
  * decrement) so cross-repo context never outranks the project's own truth.

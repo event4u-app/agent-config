@@ -1,7 +1,7 @@
 /**
  * Detect module root directories from a project tree.
  *
- * TypeScript twin of `src/scripts/_lib/module_detection.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/_lib/module_detection.py` (ADR-200,
  * Phase 2 Wave 1 batch C). Public API mirrors the Python module exactly —
  * same exported snake_case names, same return shapes, same confidence
  * ladder, same read-only / tolerant contract.
@@ -126,7 +126,7 @@ export function is_module_like_path(rel_path: string): boolean {
  * Fields mirror the JSON shape callers ultimately persist into
  * `modules.root_paths` (the `path` field) plus metadata used by the
  * installer to phrase the numbered-options prompt. Mirrors the frozen
- * `ModuleCandidate` dataclass of the Python original.
+ * `ModuleCandidate` dataclass of the retired Python implementation.
  */
 export interface ModuleCandidate {
     /** Repo-relative POSIX path of the module root (e.g. `app/Modules`). */

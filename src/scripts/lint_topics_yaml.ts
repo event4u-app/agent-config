@@ -2,11 +2,11 @@
 /**
  * Linter for `.github/topics.yml`.
  *
- * TypeScript twin of `src/scripts/lint_topics_yaml.py` (ADR-200, Phase 4 /
- * Wave 4b). Mirrors the Python CLI contract EXACTLY — same scan target,
+ * Ported from the retired Python `src/scripts/lint_topics_yaml.py` (ADR-200, Phase 4 /
+ * Wave 4b). The CLI contract is pinned — same scan target,
  * finding messages (incl. Python `repr()` rendering of offending values),
  * stdout/stderr split, exit codes, and the `--quiet` flag read directly
- * from argv at module load. No behaviour changes — latent bugs replicated.
+ * from argv at module load. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Asserts:
  *   * file exists and parses as YAML

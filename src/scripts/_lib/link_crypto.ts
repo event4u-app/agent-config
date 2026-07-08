@@ -2,12 +2,12 @@
 /**
  * link_crypto — encrypt/decrypt stored third-party package links.
  *
- * TypeScript twin of `src/scripts/_lib/link_crypto.py` (ADR-200). The public
+ * Ported from the retired Python `src/scripts/_lib/link_crypto.py` (ADR-200). The public
  * API is mirrored EXACTLY — `encrypt`, `decrypt`, `is_token`, `project_key`,
  * `global_key`, `resolve_keys`, plus the CLI (`encrypt` / `decrypt` / `keygen`
- * / `keystatus`). The crypto scheme is replicated byte-for-byte against the
- * Python original so that a token produced by either runtime round-trips
- * identically under the other: PBKDF2-HMAC-SHA256 (200 000 iters, dklen 64) key
+ * / `keystatus`). The crypto scheme matches the retired Python implementation byte-for-byte
+ * so that ENC1 tokens minted before the migration still round-trip
+ * identically: PBKDF2-HMAC-SHA256 (200 000 iters, dklen 64) key
  * derivation, an HMAC-SHA256 counter-mode keystream, encrypt-then-MAC with
  * HMAC-SHA256, standard base64, constant-time tag compare. Every primitive has
  * an identical `node:crypto` counterpart, so encrypt-then-decrypt and the token

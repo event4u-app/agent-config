@@ -2,7 +2,7 @@
 /**
  * Redact captured hook payloads for the verified-platforms roadmap.
  *
- * TypeScript twin of `redact_hook_capture.py` (Phase 8 / Wave 8g).
+ * Ported from the retired Python `redact_hook_capture.py` (Phase 8 / Wave 8g).
  *
  * Reads JSON capture files written by `dispatch_hook.py` (when
  * `AGENT_HOOK_CAPTURE_DIR` is set) and produces a redacted version
@@ -299,7 +299,7 @@ export function main(argv: string[] | null = null): number {
             return 2;
         }
         // Mirror `sorted(src.glob("*.json"))` — glob matches any entry whose
-        // name ends in `.json`; no is_file() filter in the Python original.
+        // name ends in `.json`; no is_file() filter in the retired Python implementation.
         const files = fs
             .readdirSync(src)
             .filter((name) => name.endsWith('.json') && !name.endsWith('.redacted.json'))

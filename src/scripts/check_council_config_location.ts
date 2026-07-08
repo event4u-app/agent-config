@@ -2,12 +2,12 @@
 /**
  * CI guard: council config lives in `.ai-council.yml`, never `.agent-settings.yml`.
  *
- * TypeScript twin of `src/scripts/check_council_config_location.py` (ADR-200).
- * The CLI contract is mirrored EXACTLY — `--quiet` flag, exit codes (0 clean,
+ * Ported from the retired Python `src/scripts/check_council_config_location.py` (ADR-200).
+ * The CLI contract is pinned — `--quiet` flag, exit codes (0 clean,
  * 1 at least one violation), byte-identical finding messages, same scan globs
  * (sorted), same fence tracking, same negation / `ai_council:` block detection,
  * and the same `<!-- council-config-allowed -->` escape pragma. No behaviour
- * changes — latent bugs replicated.
+ * changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Per ADR-104 (superseding ADR-093) the council reads a dedicated
  * `.ai-council.yml` resolved ALWAYS from the user-global location

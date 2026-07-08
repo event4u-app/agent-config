@@ -2,8 +2,8 @@
 /**
  * End-to-end release automation for `event4u/agent-config` (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/release.py` (ADR-200, py2ts migration).
- * The CLI contract mirrors the Python original EXACTLY — same flags, same
+ * Ported from the retired Python `src/scripts/release.py` (ADR-200).
+ * The CLI contract pins the historical contract exactly — same flags, same
  * exit codes, same stdout/stderr split, byte-identical emitted output, same
  * subprocess argv/cwd/env. No behaviour changes — latent quirks are
  * replicated and flagged inline, not fixed.
@@ -145,7 +145,7 @@ class ArgparseExit extends Error {
 
 /**
  * Mirror of `subprocess.CalledProcessError`. Thrown by `run()` when a command
- * fails with `check=True` and output is NOT captured — the Python original
+ * fails with `check=True` and output is NOT captured — the retired Python implementation
  * lets `CalledProcessError` propagate in that path. The CLI entry guard does
  * NOT catch this, so it surfaces (non-zero exit + traceback), matching Python.
  */
@@ -1922,8 +1922,8 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
     try {
         // main() can return an int directly OR throw SystemExitError via die();
         // both flow into process.exitCode. CalledProcessError is intentionally
-        // NOT caught here, so it propagates (non-zero + traceback), matching the
-        // Python original letting subprocess.CalledProcessError raise.
+        // NOT caught here, so it propagates (non-zero + traceback) — the historical
+        // contract let subprocess errors raise.
         process.exitCode = main(process.argv.slice(2));
     } catch (e) {
         if (e instanceof SystemExitError || e instanceof ArgparseExit) {

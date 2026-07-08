@@ -2,8 +2,8 @@
 /**
  * Workspace-boundary drift check — import-edge enforcement.
  *
- * TypeScript twin of `src/scripts/lint_workspace_boundary.py` (ADR-200,
- * Python→TypeScript migration). The CLI contract is mirrored EXACTLY — the
+ * Ported from the retired Python `src/scripts/lint_workspace_boundary.py` (ADR-200,
+ * Python→TypeScript migration). The CLI contract is pinned — the
  * `--quiet` flag, the `sorted(repo.glob(WORKSPACE_GLOB))` scan order (pathlib
  * component-wise), the FORBIDDEN-pattern set (Python `re` → JS `RegExp`, all
  * ASCII so a 1:1 translation), the `# boundary-exception:` pragma skip, the

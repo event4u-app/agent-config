@@ -2,8 +2,8 @@
 /**
  * `agent-config doctor` — install + manifest health report (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/_cli/cmd_doctor.py` (ADR-200, py2ts
- * migration). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/_cli/cmd_doctor.py` (ADR-200, py2ts
+ * migration). The CLI contract pins the historical contract exactly — same
  * flags, same exit codes, same stdout/stderr split, byte-identical emitted
  * report lines (✅/❌/⚠️/⏭️ glyphs, ordering, fix hints), same filesystem
  * semantics. No behaviour changes — latent quirks are replicated, not fixed.

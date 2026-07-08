@@ -1,5 +1,5 @@
-// External-AI clients for the council — byte-identical TypeScript twin of
-// `src/scripts/ai_council/clients.py` (py2ts migration, ADR-200).
+// External-AI clients for the council — ported from the retired Python
+// `src/scripts/ai_council/clients.py` (ADR-200).
 //
 // Mirrors the contract from `scripts/skill_trigger_eval.py`:
 // - Tokens come exclusively from `~/.event4u/agent-config/<provider>.key`
@@ -31,7 +31,7 @@
 // `cli_call_budget.max_calls_per_day.<provider>` quota with state persisted at
 // `~/.event4u/agent-config/cli-calls.json` (daily UTC reset).
 //
-// TRANSPORT SEAM (TS-only, for tests): the Python original calls
+// TRANSPORT SEAM (TS-only, for tests): the retired Python implementation calls
 // `subprocess.run` directly inside `CliClient.ask`. The twin routes that one
 // call through the protected `_runSubprocess(cmd, stdinPayload)` instance
 // method so a test subclass can stub the transport without live processes —
@@ -154,7 +154,7 @@ export class CouncilResponse {
 // Python uses `time.monotonic()`. latency_ms is non-deterministic; tests
 // normalise it. Exposed so tests can pin it if they choose.
 let _monotonicSource: () => number = () => {
-    // performance.now() is monotonic milliseconds; the Python original is
+    // performance.now() is monotonic milliseconds; the retired Python implementation is
     // seconds, but we only ever compute `int((now - t0) * 1000)`, so feeding
     // milliseconds here and dropping the *1000 keeps the same arithmetic.
     return performance.now();
@@ -967,7 +967,7 @@ export abstract class CliClient extends ExternalAIClient {
      * `subprocess.run(cmd, input=..., capture_output=True, text=True,
      * timeout=..., check=False)`. Throws `SubprocessError` for the timeout /
      * ENOENT / OSError branches so `ask()` can classify them exactly as the
-     * Python original does. Tests override this to inject canned output without
+     * historical contract requires. Tests override this to inject canned output without
      * spawning a process.
      */
     protected _runSubprocess(cmd: string[], stdinPayload: string | null): SubprocessResult {

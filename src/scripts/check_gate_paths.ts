@@ -2,13 +2,13 @@
 /**
  * Gate path-integrity check (R2 of road-to-test-and-gate-integrity).
  *
- * TypeScript twin of `src/scripts/check_gate_paths.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/check_gate_paths.py` (ADR-200,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — no flags, exit
  * codes (0 all resolve, 1 missing / out-of-tree, 2 a gate failed to
  * import / lacks GATE_CORE_PATHS), byte-identical messages, stdout/stderr
  * split, same gate list / source-tree roots.
  *
- * The Python original read each gate's ACTUAL enforced paths via that
+ * the retired Python implementation read each gate's ACTUAL enforced paths via that
  * module's `GATE_CORE_PATHS` attribute (`importlib.import_module`) — it
  * did NOT re-declare a copy of the path strings. The gate `.py` modules are
  * gone (ADR-200); the ported `.ts` twins each export `GATE_CORE_PATHS`, so
@@ -72,7 +72,7 @@ function _is_under_source_tree(p: string): boolean {
  * missing-or-empty GATE_CORE_PATHS — surfaced as exit 2 by `main`.
  *
  * The gate `.py` modules are gone (ADR-200); the `.ts` twins each export a
- * module-level `GATE_CORE_PATHS`. The Python original read the gate's REAL
+ * module-level `GATE_CORE_PATHS`. the retired Python implementation read the gate's REAL
  * paths via `importlib` + `getattr` and never copied them — this keeps that
  * property by importing the twin and reading its exported constant. A `tsx`
  * subprocess (not an in-process dynamic `import()`) is used so this function
@@ -147,7 +147,7 @@ function collect_gate_paths(gate_modules: readonly string[]): Map<string, string
     if ((typeof proc.status === 'number' ? proc.status : 1) !== 0) {
         // tsx unavailable or crashed before producing JSON — treat as an
         // import failure (exit 2 path), matching the "a gate failed to import"
-        // semantics of the Python original.
+        // semantics of the retired Python implementation.
         const err = new Error(
             (proc.stderr ?? '').trim() || 'gate introspection failed',
         ) as Error & { kind: string };

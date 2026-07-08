@@ -1,6 +1,7 @@
 /**
- * Golden-replay runner — proves a TypeScript port behaves identically to its
- * Python original.
+ * Golden-replay runner — proves a TypeScript port behaves identically to the
+ * retired Python implementation it replaced (golden transcripts were captured
+ * before the teardown).
  *
  * CLI:
  *   tsx src/scripts/parity/replay.ts \

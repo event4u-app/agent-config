@@ -2,8 +2,8 @@
 /**
  * Diff two A/B reports (one per variant) into a comparison artefact.
  *
- * TypeScript twin of `src/scripts/bench_ab_diff.py` (ADR-200 py2ts
- * Phase 8 / Wave 8d). The CLI contract mirrors the Python original
+ * Ported from the retired Python `src/scripts/bench_ab_diff.py` (ADR-200 py2ts
+ * Phase 8 / Wave 8d). The CLI contract mirrors the retired Python implementation
  * EXACTLY — positional args, `--out-dir`, exit codes, stdout/stderr
  * split, and byte-identical written JSON (`json.dumps(indent=2)` +
  * trailing newline) / Markdown artefacts. No behaviour changes; latent
@@ -44,7 +44,7 @@ type Dict = Record<string, unknown>;
  * Marker for a value that is a Python `float`. CPython's `json.dumps`
  * renders a float `2.0` as `2.0` (not `2`); JS numbers lose that
  * distinction. The `take()` / `mean()` / `round()` helpers in the
- * Python original all return floats, so the diff's numeric fields must
+ * retired Python implementation all returned floats, so the diff's numeric fields must
  * carry the `.0` to stay byte-identical.
  */
 export class PyFloat {

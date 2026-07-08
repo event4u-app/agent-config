@@ -1,8 +1,8 @@
 /**
  * `agent-config explain last` — execution-trace builder.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/__init__.py` (ADR-200).
- * Behaviour mirrors the Python original EXACTLY — same subject derivation,
+ * Ported from the retired Python `src/scripts/_cli/explain_last/__init__.py` (ADR-200).
+ * Behaviour pins the historical contract exactly — same subject derivation,
  * same run-id derivation (with the UTC-mtime ISO fallback), same slot
  * aggregation order and key shape, same scrub pass on the run id. No
  * behaviour changes.

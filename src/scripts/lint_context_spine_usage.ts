@@ -2,11 +2,11 @@
 /**
  * Context-spine usage linter.
  *
- * TypeScript twin of `src/scripts/lint_context_spine_usage.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/lint_context_spine_usage.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--quiet`
  * detected by argv membership (no argparse), exit codes (0 clean,
  * 1 violations / no files), stdout/stderr split, byte-identical messages,
- * same glob scan order. No behaviour changes — latent bugs replicated.
+ * same glob scan order. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * For every slot declared in frontmatter (`context_spine: [...]`), the skill
  * body MUST cite the slot at least once (link, bold, or inline-code form).

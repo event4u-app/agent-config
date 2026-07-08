@@ -2,19 +2,19 @@
 /**
  * Validate-on-load linter for the first-class flow layer (`src/flows/*.yaml`).
  *
- * TypeScript twin of `src/scripts/lint_flows.py` (ADR-200, Phase 4 / Wave 4b
+ * Ported from the retired Python `src/scripts/lint_flows.py` (ADR-200, Phase 4 / Wave 4b
  * — PORT). Mirrors the CLI contract EXACTLY — the `--quiet` flag (argparse,
  * so `-h`/`--help` exit 0 with a usage line), the same two-check-per-file
  * shape-vs-resolution split, byte-identical violation messages, the same
  * stdout/stderr split (success on stdout, violations on stderr), exit codes
  * (0 clean · 1 violations · 3 internal error), scan scope (`src/flows/*.yaml`
  * minus `surface-map.yaml`), and ordering (sorted glob). snake_case kept.
- * No behaviour changes — latent quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * road-to-6.1.0 Step 8b (ADR-055). Two checks per flow file:
  *
  *   1. Shape — validates against `src/scripts/schemas/flow.schema.json`
- *      (Draft-07). The Python original uses the `jsonschema` library; this
+ *      (Draft-07). the retired Python implementation uses the `jsonschema` library; this
  *      twin hand-rolls a Draft-07 validator covering exactly the keyword set
  *      this schema uses (type, required, additionalProperties:false,
  *      properties, $ref, pattern, minLength, minItems, items) and reproduces
@@ -28,7 +28,7 @@
  * Plus the layer-level invariants: closed-set id == filename stem, and
  * completeness (every closed-set flow has exactly one file).
  *
- * The Python original imports `jsonschema` and exits 3 with
+ * the retired Python implementation imports `jsonschema` and exits 3 with
  * `lint_flows: jsonschema not installed` when it is absent. The TS twin has
  * no such dependency, so that exit-3 path never fires — the schema check is
  * always available, matching the installed-library case.
@@ -466,7 +466,7 @@ function _isFile(p: string): boolean {
 
 function _rel(p: string): string {
     // Path.relative_to(ROOT) raises ValueError when p is outside ROOT; the
-    // Python original then returns str(path). Mirror with the absolute path.
+    // historical behaviour returns str(path) — keep the absolute path then.
     const r = path.relative(ROOT, p);
     if (r === '' || r.startsWith('..') || path.isAbsolute(r)) {
         return p;

@@ -1,7 +1,7 @@
 /**
  * Context-aware command suggestion engine.
  *
- * TypeScript twin of `src/scripts/command_suggester/__init__.py`
+ * Ported from the retired Python `src/scripts/command_suggester/__init__.py`
  * (ADR-200 py2ts).
  *
  * Public API exposed for the always-on `command-suggestion` rule and for

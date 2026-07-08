@@ -2,7 +2,7 @@
 /**
  * Prototype contradiction linter (P1.1 of road-to-package-optimization).
  *
- * TypeScript twin of `src/scripts/prototype_lint_contradictions.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/prototype_lint_contradictions.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract
  * EXACTLY — no flags, exit codes (0 clean / 1 contradictions found), the
  * stdout JSON shape (`json.dump(report, indent=2)`, insertion order, NO
@@ -17,7 +17,7 @@
  *
  * Heuristic family — two deterministic checks (routing + imperative conflict)
  * across rules, skills, commands, and contexts. No behaviour changes —
- * latent Python quirks replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

@@ -1,7 +1,7 @@
 /**
  * Detect IDE-attached sibling projects (linked-projects scope, Option A).
  *
- * TypeScript twin of `src/scripts/_lib/linked_projects.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/_lib/linked_projects.py` (ADR-200,
  * Phase 2 Wave 1 batch C). Public API mirrors the Python module exactly —
  * same exported snake_case names, same entry dict shape (`path` /
  * `detected_via` / `large`, JSON-identical), same parsing tolerances.
@@ -33,7 +33,7 @@
  * sibling files in context and does NOT persist anything. Opt-in +
  * persistence is the caller's job.
  *
- * Note on logging: the Python original emits `logger.info(...)` diagnostics
+ * Note on logging: the retired Python implementation emits `logger.info(...)` diagnostics
  * which are silent under the default logging configuration. The TS twin
  * omits them — observable behavior (return value) is identical.
  */
@@ -261,7 +261,7 @@ function _resolve_idea_url(raw: string, root: string): string | null {
         return null;
     }
     // path.resolve handles both the absolute and the root-relative branch
-    // of the Python original; _resolve_path never throws (the Python
+    // of the retired Python implementation; _resolve_path never throws (the Python
     // OSError → None branch maps to the lexical fallback inside it).
     return _resolve_path(path.resolve(root, value));
 }
@@ -363,7 +363,7 @@ function _read_jsonc(filePath: string): unknown {
 /* ------------------------------------------------------------------ */
 /* Minimal well-formed-XML attribute scanner.                          */
 /*                                                                     */
-/* The Python original parses with xml.etree.ElementTree and treats    */
+/* the retired Python implementation parses with xml.etree.ElementTree and treats    */
 /* any ParseError as "no entries". Rather than pull in an XML          */
 /* dependency, this scanner tokenizes the document, enforces the       */
 /* well-formedness rules ET relies on for the IDE-config input domain  */

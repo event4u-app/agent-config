@@ -2,13 +2,13 @@
 /**
  * Detect lint regressions between the current branch and a baseline.
  *
- * TypeScript twin of `src/scripts/lint_regression.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--baseline`
+ * Ported from the retired Python `src/scripts/lint_regression.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--baseline`
  * / `--format` / `--repo-root` flags, exit codes (0 clean, 1 regressions /
  * new-files, 2 bad baseline / disjoint-result guard), stdout/stderr split,
  * byte-identical report text (text / json / markdown), the same disjoint
  * sanity guard, and the same worktree-based baseline strategy. snake_case
- * kept. No behaviour changes — latent bugs replicated.
+ * kept. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Runs skill_linter --all --format json on both the baseline (via a temp
  * `git worktree`) and the working tree, then compares results to find new

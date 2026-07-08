@@ -2,8 +2,8 @@
 /**
  * Evidence Report template automation.
  *
- * TypeScript twin of `src/scripts/evidence_report.py` (ADR-200). The CLI
- * contract mirrors the Python original EXACTLY — same subcommands
+ * Ported from the retired Python `src/scripts/evidence_report.py` (ADR-200). The CLI
+ * contract pins the historical contract exactly — same subcommands
  * (`init`, `add`, `git-state`), same flags, same exit codes (0 / 1 / 3),
  * same stdout/stderr split, byte-identical messages, the same
  * skeleton/provenance text, the same heading-insertion logic, and the
@@ -29,7 +29,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-// argparse `prog` is hardcoded to "evidence_report.py" in the Python original,
+// argparse `prog` is hardcoded to "evidence_report.py" in the retired Python implementation,
 // so usage strings stay byte-identical regardless of the `.py`/`.ts` filename.
 const PROG = 'evidence_report.py';
 // First line of the module docstring — argparse `description`.
@@ -182,7 +182,7 @@ function cmd_add(args: ParsedArgs, root: string): number {
             insert_at = i;
             break;
         }
-        // NOTE: dead branch in the Python original (in_target is false here);
+        // NOTE: dead branch in the retired Python implementation (in_target is false here);
         // replicated faithfully — never reached.
         if (in_target && line.startsWith('## ')) {
             insert_at = i;

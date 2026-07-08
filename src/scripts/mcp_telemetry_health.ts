@@ -18,7 +18,7 @@
 //   ./scripts-run src/scripts/mcp_telemetry_health --allow-missing  # CI mode
 //   ./scripts-run src/scripts/mcp_telemetry_health --json           # machine-readable
 //
-// TS twin of mcp_telemetry_health.py (py2ts). Mirrors the full public
+// TS port of the retired Python mcp_telemetry_health.py (ADR-200). Mirrors the full public
 // surface: HealthReport, resolve_log_path, evaluate, main.
 import * as fs from 'node:fs';
 import * as path from 'node:path';

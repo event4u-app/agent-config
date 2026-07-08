@@ -2,8 +2,8 @@
 /**
  * Block D · D4 — suggest_skill_for_task.
  *
- * TypeScript twin of `src/scripts/skill_tools/suggest_skill_for_task.py`
- * (ADR-200, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
+ * Ported from the retired Python `src/scripts/skill_tools/suggest_skill_for_task.py`
+ * (ADR-200, Phase 8 Wave 8h). The CLI contract is pinned —
  * flags (`--task`, `--skills-dir`, `--personas-dir`, `--top`, `--json`,
  * `--sample`), exit codes (0 / 2), stdout/stderr split, byte-identical
  * human output AND byte-identical JSON (`json.dump(..., indent=2)`,
@@ -22,7 +22,7 @@
  *
  * Output: ranked combos with `skill`, `score`, `personas[]`, and `why`.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as path from 'node:path';
 import * as fs from 'node:fs';

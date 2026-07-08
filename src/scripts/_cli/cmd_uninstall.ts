@@ -1,8 +1,8 @@
 /**
  * `agent-config uninstall` — remove bridge markers (Phase 4.1) (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/_cli/cmd_uninstall.py` (ADR-200, py2ts
- * migration). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/_cli/cmd_uninstall.py` (ADR-200, py2ts
+ * migration). The CLI contract pins the historical contract exactly — same
  * flags, same exit codes, same stdout/stderr split, byte-identical emitted
  * output, same filesystem effects. No behaviour changes — latent quirks are
  * replicated and flagged inline, not fixed.

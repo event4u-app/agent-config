@@ -2,7 +2,7 @@
 /**
  * Sync package-content counts (skills/rules/commands/guidelines) across docs.
  *
- * TypeScript twin of `src/scripts/update_counts.py` (ADR-200, Phase 5). The
+ * Ported from the retired Python `src/scripts/update_counts.py` (ADR-200). The
  * CLI contract is mirrored EXACTLY — the single `--check` flag, exit codes
  * (0 = synced / updated; 1 = stale under --check, missing target), the
  * stdout/stderr split, and byte-identical messages AND byte-identical rewritten
@@ -11,9 +11,9 @@
  * call them 1:1.
  *
  * Imports the `_lib/agent_src` twin (`artefact_roots`, `iter_commands`) — the
- * SAME functions the Python original imports.
+ * SAME functions the retired Python implementation imports.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Source of truth: `.agent-src.uncondensed/`.
  *
@@ -28,7 +28,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { artefact_roots, iter_commands } from './_lib/agent_src.js';
 
 const _HERE = fileURLToPath(import.meta.url);
-// _HERE === <repo>/src/scripts/update_counts.ts ; the Python original derives
+// _HERE === <repo>/src/scripts/update_counts.ts ; the retired Python implementation derives
 // REPO_ROOT = <file>.parent.parent.parent — two dirs up from src/scripts.
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 

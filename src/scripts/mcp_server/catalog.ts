@@ -10,7 +10,7 @@
 // `not_implemented` envelope contract live in
 // `docs/contracts/mcp-tool-stub-envelope.md`.
 //
-// TS twin of catalog.py (py2ts Phase 8). Mirrors the full public surface:
+// TS port of the retired Python catalog.py (ADR-200). Preserves the full public surface:
 //   - NOT_IMPLEMENTED_CODE, CatalogEntry, load_catalog, load_raw,
 //     install_hint, not_implemented_envelope.
 import * as fs from 'node:fs';

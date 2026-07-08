@@ -3,8 +3,8 @@
  * `agent-config validate` — drift detection for the installed-tools manifest
  * (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/_cli/cmd_validate.py` (ADR-200, py2ts
- * migration). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/_cli/cmd_validate.py` (ADR-200, py2ts
+ * migration). The CLI contract pins the historical contract exactly — same
  * flags, same exit codes, same stdout/stderr split, byte-identical emitted
  * output, same filesystem semantics. No behaviour changes — latent quirks are
  * replicated, not fixed.
@@ -77,7 +77,7 @@ class ArgparseExit extends Error {
 /**
  * `pathlib.Path(p)` string form — collapse repeated separators and strip a
  * trailing separator (Python `str(Path("~/.cursor/"))` → `~/.cursor`), keeping
- * a lone root `/`. Mirrors how the Python original wraps every marker/anchor in
+ * a lone root `/`. Mirrors how the retired Python implementation wraps every marker/anchor in
  * `Path(...)` before `str()`-ing it into a message.
  */
 function pyPathStr(p: string): string {

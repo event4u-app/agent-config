@@ -6,10 +6,10 @@
 
 ## Overall
 
-**90 / 263 steps done · 34%**
+**94 / 263 steps done · 36%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
 ```
 
 ## Open roadmaps
@@ -32,7 +32,7 @@
 | 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
 | 16 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
-| 17 | [road-to-truth-and-reference-hygiene.md](roadmaps/road-to-truth-and-reference-hygiene.md) | 3 | 17 | 13 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 24% |
+| 17 | [road-to-truth-and-reference-hygiene.md](roadmaps/road-to-truth-and-reference-hygiene.md) | 3 | 17 | 9 | 8 | 0 | 0 | 0 | █████░░░░░ 47% |
 
 ---
 
@@ -415,12 +415,12 @@
 
 ### [road-to-truth-and-reference-hygiene.md](roadmaps/road-to-truth-and-reference-hygiene.md)
 
-**Road to truth-and-reference hygiene — make the "machine-checked" headline true of its own artefacts** — 4 / 17 done (24%)
+**Road to truth-and-reference hygiene — make the "machine-checked" headline true of its own artefacts** — 8 / 17 done (47%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Artefact counts: one generator, one gate, fixed prose | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | py2ts comment teardown (re-baselined): rewrite, don't just delete | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | py2ts comment teardown (re-baselined): rewrite, don't just delete | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Stale references, claims triage, release-notes nits | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
 ---

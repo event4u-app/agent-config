@@ -2,8 +2,8 @@
 /**
  * README quality linter for agent-config repositories.
  *
- * TypeScript twin of `src/scripts/readme_linter.py` (ADR-200 — Python→TS
- * migration, Phase 8 / Wave 8b). The CLI contract is mirrored EXACTLY —
+ * Ported from the retired Python `src/scripts/readme_linter.py` (ADR-200 — Python→TS
+ * migration, Phase 8 / Wave 8b). The CLI contract is pinned —
  * the positional `readme` arg, the `--root` / `--format` / `--strict`
  * flags, exit codes (0 pass · 1 warnings · 2 errors / strict-warnings ·
  * 3 README-not-found / internal error), the stdout/stderr split, and
@@ -14,7 +14,7 @@
  * Detects weak, misleading, or incomplete READMEs by cross-checking
  * against actual repository files (Taskfile.yml, package.json, etc.).
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -46,7 +46,7 @@ const BUILTIN_COMMANDS = new Set<string>([
     'php artisan', 'cargo build', 'cargo test', 'go build', 'go test',
     'git clone', 'git submodule',
 ]);
-// Referenced to mirror the module-level constant in the Python original
+// Referenced to mirror the module-level constant in the retired Python implementation
 // (it is defined but unused there); keeps the symbol "live" for the linter.
 void BUILTIN_COMMANDS;
 

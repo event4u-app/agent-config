@@ -2,12 +2,12 @@
 /**
  * Measure structural density across the artifact corpus.
  *
- * TypeScript twin of `src/scripts/measure_density.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/measure_density.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract
  * EXACTLY: flags (`--json`, `--snapshot`), exit code 0, byte-identical
  * stdout (report or `json.dumps(sort_keys=True, indent=2)`), and the same
  * snapshot JSONL (`json.dumps(sort_keys=True)` per line). No behaviour
- * changes — latent quirks replicated.
+ * changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Phase 1.1 of `agents/roadmaps/road-to-structural-linter-reform.md`.
  *

@@ -2,8 +2,8 @@
 /**
  * Cross-reference checker for agent-config repositories.
  *
- * TypeScript twin of `src/scripts/check_references.py` (ADR-200, Phase 4 /
- * Wave 4a). The CLI contract is mirrored EXACTLY — same `--format` /
+ * Ported from the retired Python `src/scripts/check_references.py` (ADR-200, Phase 4 /
+ * Wave 4a). The CLI contract is pinned — same `--format` /
  * `--root` flags, same exit codes (0 clean, 1 broken refs, 3 internal
  * error), same stdout/stderr split, byte-identical finding messages,
  * same scan scope and order, same example/allowlist/skip logic. No
@@ -16,7 +16,7 @@
  *
  * NOTE: the forbidden-substring detector `.agent-src.uncondensed/`
  * appears verbatim in the suggestion / resolution prefixes below — it is
- * a faithful twin of the Python original (legacy-path guard auto-exempts
+ * port of the retired Python implementation (legacy-path guard auto-exempts
  * faithful twins).
  */
 

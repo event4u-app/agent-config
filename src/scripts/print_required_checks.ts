@@ -2,8 +2,8 @@
 /**
  * Print the expected required-check set for the current branch.
  *
- * TypeScript twin of `src/scripts/print_required_checks.py` (ADR-200,
- * Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY — `--branch`
+ * Ported from the retired Python `src/scripts/print_required_checks.py` (ADR-200,
+ * Phase 8 / Wave 8g). The CLI contract is pinned — `--branch`
  * / `--base` flags, PR-shape classification (release / docs-only / feature),
  * exit codes (0 ok, 1 release-shape OUT-OF-SHAPE fallback-to-feature, 2 usage),
  * stdout/stderr split, byte-identical messages. Reuses the release-shape

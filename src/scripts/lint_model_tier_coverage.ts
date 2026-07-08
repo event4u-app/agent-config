@@ -2,11 +2,11 @@
 /**
  * Fail when a skill or command lacks a `model_tier` value.
  *
- * TypeScript twin of `src/scripts/lint_model_tier_coverage.py` (ADR-200,
- * Phase 4 / Wave 4b). Mirrors the Python CLI contract EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/lint_model_tier_coverage.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--quiet`
  * flag, target enumeration + ordering (skills via artefact_roots, then
  * commands via iter_commands), finding messages, stdout/stderr split,
- * exit codes. No behaviour changes — latent bugs replicated.
+ * exit codes. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Phase 5 coverage gate of `road-to-model-capability-tiers.md` (ADR-035):
  * every skill and command MUST declare an explicit `model_tier`

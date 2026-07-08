@@ -1,8 +1,8 @@
 /**
  * Read and validate the persisted `.work-state.json` envelope.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/state_loader.py`
- * (ADR-200). Behaviour mirrors the Python original EXACTLY — the same
+ * Ported from the retired Python `src/scripts/_cli/explain_last/state_loader.py`
+ * (ADR-200). Behaviour pins the historical contract exactly — the same
  * three raising failure modes, the same exit codes (1 / 2 / 0), and the
  * same byte-identical messages (including the `version={value!r}` Python
  * repr). No behaviour changes.

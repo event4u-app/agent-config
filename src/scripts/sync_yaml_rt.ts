@@ -1,7 +1,7 @@
 /**
  * Round-trip YAML layer for `.agent-settings.yml` syncs.
  *
- * TypeScript twin of `src/scripts/sync_yaml_rt.py` (ADR-200). Self-
+ * Ported from the retired Python `src/scripts/sync_yaml_rt.py` (ADR-200). Self-
  * contained, zero-dependency. Implements a narrow YAML subset with the
  * property *user-line preservation*: every line in the user input that
  * `parse` attaches to a `Node` is reproduced character-for-character by
@@ -35,7 +35,7 @@
  *  - `heal_user_block(user, template) -> Node`
  *  - `sync(user_text, template_text) -> string`
  *
- * No behaviour changes vs. the Python original — latent bugs replicated.
+ * No behaviour changes vs. the retired Python implementation — historical quirks preserved (consumers pin the exact behaviour).
  */
 
 // --- Public node ----------------------------------------------------

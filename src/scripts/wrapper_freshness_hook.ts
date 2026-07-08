@@ -3,11 +3,11 @@
  * session_start concern — keep the project-local `./agent-config` wrapper
  * AND the installed `.git/hooks/pre-commit` gate fresh.
  *
- * TypeScript twin of `src/scripts/wrapper_freshness_hook.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/wrapper_freshness_hook.py` (ADR-200 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *
- * Defense-in-depth twin of the update-command refresh (`upgrade` /
+ * Defense-in-depth companion of the update-command refresh (`upgrade` /
  * `refresh --project`). On every session_start the dispatcher runs this in
  * the consumer workspace; if a `./agent-config` wrapper exists there and
  * differs from the canonical template, it is re-stamped so an outdated,
@@ -70,7 +70,7 @@ function _isFile(p: string): boolean {
 /**
  * True when project_root is the agent-config package itself.
  *
- * TypeScript twin of `src/scripts/_cli/cmd_refresh.py::_is_source_repo`
+ * Ported from the retired Python `src/scripts/_cli/cmd_refresh.py::_is_source_repo`
  * (unported standalone — inlined here so the hook stays dependency-free
  * and crash-safe). The broader check (condensed output, packaged source,
  * or the package's own `package.json` name) makes the freshness self-heal

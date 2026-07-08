@@ -2,8 +2,8 @@
 /**
  * Interactive scaffolder for new skills under the packages/ layout.
  *
- * TypeScript twin of `src/scripts/new_skill.py` (ADR-200 — Python→TS
- * migration, Phase 8 / Wave 8b). The CLI contract is mirrored EXACTLY —
+ * Ported from the retired Python `src/scripts/new_skill.py` (ADR-200 — Python→TS
+ * migration, Phase 8 / Wave 8b). The CLI contract is pinned —
  * the `--pack` / `--type` / `--name` / `--description` / `--workspace`
  * (repeatable) / `--force` flags, exit codes (0 ok · 1 file exists · 2
  * usage / validation), the stdout/stderr split, byte-identical messages,
@@ -15,7 +15,7 @@
  *   - rule     → rules/<name>.md
  *   - command  → commands/<name>.md
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

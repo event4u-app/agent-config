@@ -2,8 +2,8 @@
 /**
  * Propose a `modules:` block for `.agent-project-settings.yml`.
  *
- * TypeScript twin of `src/scripts/propose_modules_config.py` (ADR-200,
- * Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY — `--project`
+ * Ported from the retired Python `src/scripts/propose_modules_config.py` (ADR-200,
+ * Phase 8 / Wave 8g). The CLI contract is pinned — `--project`
  * / `--json` flags, the interactive numbered-options TTY block, the
  * machine-readable JSON envelope (byte-identical to `json.dump(indent=2)`),
  * exit codes (0 always on success, 2 unreachable path), stdout/stderr split.

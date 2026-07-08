@@ -2,12 +2,12 @@
 /**
  * Skill trigger evaluation runner.
  *
- * TypeScript twin of `src/scripts/skill_trigger_eval.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/skill_trigger_eval.py` (ADR-200,
  * Phase 8 / Wave 8b). The public surface, CLI contract, exit codes,
  * stdout/stderr split, byte-for-byte messages, the on-disk key gate
  * (0600 + `sk-ant-` prefix), the controlling-terminal confirmation gate,
  * and the written JSON (Python `json.dumps(asdict(result), indent=2)` +
- * trailing newline) mirror the Python original EXACTLY. No behaviour
+ * trailing newline) mirror the retired Python implementation EXACTLY. No behaviour
  * changes.
  *
  * Design notes preserved:

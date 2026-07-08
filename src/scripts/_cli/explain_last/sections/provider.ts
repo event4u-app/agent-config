@@ -1,8 +1,8 @@
 /**
  * Render the `Why this provider?` section.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/sections/provider.py`
- * (ADR-200). Byte-identical to the Python original. No behaviour changes.
+ * Ported from the retired Python `src/scripts/_cli/explain_last/sections/provider.py`
+ * (ADR-200). byte-stable — downstream consumers and checksum gates pin these bytes. No behaviour changes.
  *
  * Only emitted when `trace.provider` is non-null (the v1 schema bounds this
  * to `subject == "video"` runs where the engine wrote a provider selection

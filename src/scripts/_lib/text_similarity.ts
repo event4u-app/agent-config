@@ -9,7 +9,7 @@
  *   below WARN_THRESHOLD → no conflict, proceed to create
  *
  * Deliberately does NOT touch `memory_signal.ts` — that script is a
- * byte-faithful parity twin of its retired Python original ("no
+ * byte-faithful parity port of the retired Python implementation ("no
  * behaviour changes" is a load-bearing contract of that file). This
  * module is consumed as an ADDITIONAL, advisory check layered on top,
  * from `check_memory_similarity.ts` and later the knowledge-page

@@ -2,12 +2,12 @@
 /**
  * Generate `docs/command-flows.md` — the Flows primary view (road-to-6.1.0 Step 9).
  *
- * TypeScript twin of `src/scripts/generate_command_flows.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/generate_command_flows.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8a). The CLI contract is mirrored
  * EXACTLY: same flag (`--check`), same exit codes, same stdout/stderr
  * split, same byte-identical generated `docs/command-flows.md`. WRITER —
  * the rendered markdown matches the Python output byte-for-byte. No
- * behaviour changes — latent bugs replicated.
+ * behaviour changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Turns the flat command list into a FLOW-organized view from two
  * validated sources:

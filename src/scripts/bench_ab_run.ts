@@ -2,13 +2,13 @@
 /**
  * Top-level orchestrator for the package-impact A/B bench.
  *
- * TypeScript twin of `src/scripts/bench_ab_run.py` (ADR-200, Phase 8 /
- * Wave 8d). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/bench_ab_run.py` (ADR-200, Phase 8 /
+ * Wave 8d). The CLI contract pins the historical contract exactly — same
  * `--variant {with,without}` / `--corpus` / `--non-interactive` /
  * `--reuse-cache` flags, same exit codes, stdout-only messages, and
  * byte-identical written report JSON (`json.dumps(indent=2) + "\n"`) and the
- * Markdown layout. No behaviour changes — latent Python quirks are
- * replicated and flagged as divergence candidates.
+ * Markdown layout. No behaviour changes — historical quirks are
+ * preserved and flagged as divergence candidates.
  *
  * NON-DETERMINISM: this script stamps reports with `utc_stamp()` (current
  * UTC) and a `duration_seconds` from a monotonic clock. Those fields are

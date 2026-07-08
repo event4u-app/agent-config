@@ -2,7 +2,7 @@
 /**
  * Mine repeated phase patterns from `agents/runtime/state/audit/*.jsonl`.
  *
- * TypeScript twin of `src/scripts/extract_audit_patterns.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/extract_audit_patterns.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract
  * EXACTLY — the `--audit-dir` / `--month` / `--min-count` / `--json` flags,
  * exit codes (0 ok / 2 min-count below floor), the stdout/stderr split,
@@ -16,7 +16,7 @@
  *
  * Read-only: never mutates the JSONL, never writes outside stdout.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

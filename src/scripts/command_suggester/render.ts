@@ -1,7 +1,7 @@
 /**
  * Render ranked matches as a numbered-options block.
  *
- * TypeScript twin of `src/scripts/command_suggester/render.py`
+ * Ported from the retired Python `src/scripts/command_suggester/render.py`
  * (ADR-200 py2ts).
  *
  * Output strictly conforms to `user-interaction` Iron Law:

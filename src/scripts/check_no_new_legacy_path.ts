@@ -2,12 +2,12 @@
 /**
  * Regression guard: no NEW `.agent-src.uncondensed/` references in `src/`.
  *
- * TypeScript twin of `src/scripts/check_no_new_legacy_path.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--base`
+ * Ported from the retired Python `src/scripts/check_no_new_legacy_path.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — `--base`
  * / `--stdin` flags, exit codes (0 no new references, 1 a new reference,
  * 2 internal error), stdout split, byte-identical finding messages,
  * same diff parsing, same EXEMPT set, and the same faithful-twin rule.
- * No behaviour changes — latent bugs replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * NOTE (faithful-twin rule): this guard's `.py` original is in its own
  * EXEMPT set and legitimately contains the literal `.agent-src.uncondensed`

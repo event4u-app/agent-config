@@ -1,7 +1,7 @@
 /**
  * Concern envelope helpers — read the dispatcher's stdin contract.
  *
- * TypeScript twin of `src/scripts/hooks/envelope.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/hooks/envelope.py` (ADR-200 —
  * Python→TS migration, Phase 6 / hooks core). Public API mirrors the
  * Python module exactly (snake_case kept deliberately — fidelity over
  * TS idiom).

@@ -104,7 +104,7 @@ and every prose surface; internal inconsistency is a tested failure mode.
 
 ## Phase 2 — py2ts comment teardown (re-baselined): rewrite, don't just delete
 
-- [ ] **Inventory + classify (no edits):**
+- [x] **Inventory + classify (no edits):**
       `grep -rn "twin of\|latent Python quirks\|byte-identical to the Python\|Python original" src/scripts --include='*.ts'`
       → classify every hit: (a) pure obsolete parity prose → delete;
       (b) a real, still-true determinism contract wrongly attributed to
@@ -112,15 +112,31 @@ and every prose surface; internal inconsistency is a tested failure mode.
       gate pins the bytes and why); (c) a literal that other tooling keys on
       (legacy-path guards, ADR-051 twin-parity exemptions) → migrate the
       guard first, then the comment, same change. Record class counts
-      inline; (c) is the trap.
-- [ ] Execute the rewrite per class across the full hit list (407 files
+      inline; (c) is the trap. <!-- done 2026-07-08 — inventory: class a
+      (twin/provenance sentences) 417+13 hits; class b (contract
+      re-attribution: quirks/byte-identity/mirrors-EXACTLY/Python-original)
+      368+26 hits; class c = check_no_new_legacy_path.ts's live
+      faithful-twin exemption CODE (comments reworded, code untouched;
+      verified: NO lint greps the literals as patterns) +
+      build_discovery_manifest.ts scanner-version self-hash (py-sibling
+      branch inert, documented). -->
+- [x] Execute the rewrite per class across the full hit list (407 files
       under `src/scripts`, remainder repo-wide). Comment-only diff — zero
-      behaviour change by construction.
-- [ ] Prove nothing changed: `compile_router --check`,
+      behaviour change by construction. <!-- done 2026-07-08: 3-pass
+      codemod (comment-lines only) + 37-site targeted second pass +
+      39-site guard-driven third pass; 450 files, zero pattern residuals;
+      TS-internal "Twin of `private helper`" docs reworded to "Mirrors";
+      provenance kept as "Ported from the retired Python `x.py` (ADR-200)". -->
+- [x] Prove nothing changed: `compile_router --check`,
       `build_discovery_manifest --strict`, `check_discovery_determinism`,
       `check_artefact_checksums`, condensation-hash checks, `task test`,
-      typecheck, `lint:ts` all green.
-- [ ] Add a CI guard that rejects reintroduced Python-twin rationale
+      typecheck, `lint:ts` all green. <!-- done 2026-07-08: tsc --noEmit
+      green; compile_router --check green; condensation hashes clean;
+      discovery manifest regenerated (--write; scanner-version = own-bytes
+      hash changed by design), validate + determinism + 527 artefact
+      checksums green. Full test suite + lint:ts delegated to remote CI
+      per quality.local_auto_run=false (roadmap-ci-steps-policy). -->
+- [x] Add a CI guard that rejects reintroduced Python-twin rationale
       (grep-based lint or extension of an existing docs-hygiene lint), tuned
       to the actually-current comment shapes ("TypeScript twin of `…py`",
       "latent Python quirks") — not the stale draft phrase.

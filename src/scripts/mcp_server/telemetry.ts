@@ -19,7 +19,7 @@
 // `record_call` helper swallows OSError + ValueError and emits a single
 // warning to stderr.
 //
-// TS twin of telemetry.py (py2ts Phase 8). Mirrors the full public surface:
+// TS port of the retired Python telemetry.py (ADR-200). Preserves the full public surface:
 //   - Outcome type, TELEMETRY_REL_DIR, TELEMETRY_FILENAME, hash_client_id,
 //     build_record, record_call.
 import * as crypto from 'node:crypto';

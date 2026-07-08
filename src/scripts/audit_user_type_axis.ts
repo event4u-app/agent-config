@@ -2,8 +2,8 @@
 /**
  * Audit the user-type axis frontmatter coverage (step-9 Phase 4).
  *
- * TypeScript twin of `src/scripts/audit_user_type_axis.py` (ADR-200,
- * Phase 8 / Wave 8a). The CLI contract is mirrored EXACTLY — the single
+ * Ported from the retired Python `src/scripts/audit_user_type_axis.py` (ADR-200,
+ * Phase 8 / Wave 8a). The CLI contract is pinned — the single
  * `--quiet` flag, exit code (1 when orphans exist, else 0), the stdout
  * split, byte-identical stdout summary, AND byte-identical generated
  * Markdown report. Stdlib-only — no YAML dependency.
@@ -15,14 +15,14 @@
  *   2. Unused configs — every `user-types/*.yml` should be consumed by at
  *      least one skill. Unused configs are WARN-only (exit 0).
  *
- * NOTE: the Python original scans only the LEGACY `.agent-src.uncondensed/
+ * NOTE: the retired Python implementation scans only the LEGACY `.agent-src.uncondensed/
  * skills/` root (not the 6.0.0-D `src/skills/` library). This twin replicates
  * that exact root for byte-identical parity. The report path is
  * `agents/reports/user-type-axis-audit.md` (matching the Python constant,
  * which differs from the docstring's `agents/runtime/reports/` mention —
  * latent bug replicated).
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
