@@ -240,13 +240,25 @@ Phase-2 trigger signal. Fully autonomous except the inherited human gate above.
       source-of-truth.md decision recorded in rule_scope.ts: excluded from
       BOTH consumer paths always — its Iron Law forbids edits a consumer
       legitimately makes; global shipping it was the bug. -->
-- [ ] **Consumer host emitters:** switch consumer Windsurf emission off the
+- [x] **Consumer host emitters:** switch consumer Windsurf emission off the
       frontmatter-stripping concatenator (`install.sh:594-630`) onto the
       condense-path emitter output (or ship pre-built artifacts in `dist/`),
       so `glob`/`model_decision` triggers survive; ship the `.mdc` glob
       files to consumer Cursor instead of (or alongside) the raw-`.md`
       symlink farm (`install.sh:485`). Decide build-time-artifact vs
       install-time-generation once, record why.
+      <!-- done 2026-07-08: DECISION = install-time emission (recorded in
+      src/install/emit_host_rules_cli.ts): a dist/hosts tree would cascade
+      through manifest/checksums/budget gates for derived data, and
+      install-time runs AFTER the Phase-1b filter so scoped installs get
+      scoped host files for free; re-uses the exported condense emitters
+      verbatim (consumer output byte-identical to the projection).
+      install.sh emit_host_rules(): cursor gets native .mdc (94 legacy / 76
+      scoped, real globs verified), windsurf gets .windsurf/rules + a
+      frontmatter-aware .windsurfrules; the raw-md symlink farm and the
+      bash frontmatter-stripper remain ONLY as no-node fallbacks. Old
+      symlink expectation in test_install.sh updated to the new contract
+      (100/100). -->
 - [ ] **Settings plumbing:** declare `projection.rule_workspaces` /
       `rule_packs` in the Zod settings schema
       (`src/server/schemas/settings.ts`) so they validate and surface in the

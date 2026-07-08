@@ -517,6 +517,60 @@ clean_stale() {
 }
 
 
+# Emit host-NATIVE rule surfaces for consumer Cursor (.mdc with globs) and
+# Windsurf (.windsurf/rules + .windsurfrules) via the exported condense
+# emitters — so consumer installs carry the same trigger signal as the
+# maintainer projection (road-to-request-scoped-rule-load Phase 1b Step 3;
+# the recorded install-time-vs-dist decision lives in
+# src/install/emit_host_rules_cli.ts). Sets CURSOR_NATIVE_EMITTED /
+# WINDSURF_NATIVE_EMITTED so the legacy surfaces (raw-md symlink farm,
+# bash frontmatter-stripping concatenator) run only as no-node fallbacks.
+CURSOR_NATIVE_EMITTED=false
+WINDSURF_NATIVE_EMITTED=false
+emit_host_rules() {
+    local project_root="$1"
+    local rules_dir="$project_root/.augment/rules"
+    local cli="$SOURCE_DIR/src/install/emit_host_rules_cli.ts"
+    [[ -d "$rules_dir" && -f "$cli" ]] || return 0
+
+    local -a tools=()
+    is_tool_enabled "cursor" && tools+=("cursor")
+    is_tool_enabled "windsurf" && tools+=("windsurf")
+    [[ ${#tools[@]} -gt 0 ]] || return 0
+
+    if $DRY_RUN; then
+        log_verbose "emit host-native rules (${tools[*]})"
+        return 0
+    fi
+
+    local tsx_bin=""
+    if [[ -x "$SOURCE_DIR/node_modules/.bin/tsx" ]]; then
+        tsx_bin="$SOURCE_DIR/node_modules/.bin/tsx"
+    elif command -v npx >/dev/null 2>&1; then
+        tsx_bin="npx --yes tsx"
+    else
+        log_verbose "no tsx/npx runtime — legacy host-rule surfaces"
+        return 0
+    fi
+
+    local tools_csv
+    tools_csv="$(IFS=,; echo "${tools[*]}")"
+    # TMPDIR pinned: tsx cache must never land in the install target.
+    # shellcheck disable=SC2086
+    if TMPDIR=/tmp $tsx_bin "$cli" --rules-dir "$rules_dir" \
+        --project-root "$project_root" --tools "$tools_csv" >/dev/null 2>&1; then
+        for tool in "${tools[@]}"; do
+            case "$tool" in
+                cursor)   CURSOR_NATIVE_EMITTED=true;   log_info "Emitted native .cursor/rules/*.mdc" ;;
+                windsurf) WINDSURF_NATIVE_EMITTED=true; log_info "Emitted native .windsurf/rules + .windsurfrules" ;;
+            esac
+        done
+    else
+        log_verbose "host-rule emission failed — legacy fallback surfaces"
+    fi
+    return 0
+}
+
 # Create tool-specific rule symlinks (filtered by --tools selection).
 # Map: tool ID → (target dir, relative prefix from target → .augment/rules).
 create_tool_symlinks() {
@@ -529,7 +583,11 @@ create_tool_symlinks() {
     local -a tool_dirs=()
     local -a rel_prefixes=()
     is_tool_enabled "claude-code" && { tool_ids+=("claude-code"); tool_dirs+=(".claude/rules");  rel_prefixes+=("../../.augment/rules"); }
-    is_tool_enabled "cursor"      && { tool_ids+=("cursor");      tool_dirs+=(".cursor/rules");  rel_prefixes+=("../../.augment/rules"); }
+    # Cursor gets NATIVE .mdc files when emit_host_rules succeeded — the
+    # raw-md symlink farm is the no-node fallback only (Phase 1b Step 3).
+    if ! $CURSOR_NATIVE_EMITTED; then
+        is_tool_enabled "cursor"  && { tool_ids+=("cursor");      tool_dirs+=(".cursor/rules");  rel_prefixes+=("../../.augment/rules"); }
+    fi
     is_tool_enabled "cline"       && { tool_ids+=("cline");       tool_dirs+=(".clinerules");    rel_prefixes+=("../.augment/rules"); }
 
     if [[ ${#tool_dirs[@]} -eq 0 ]]; then
@@ -643,6 +701,9 @@ generate_windsurfrules() {
     local project_root="$1"
     local rules_dir="$project_root/.augment/rules"
 
+    # Native emission (frontmatter-aware, trigger-preserving) already wrote
+    # .windsurfrules — this bash concatenator is the no-node fallback only.
+    $WINDSURF_NATIVE_EMITTED && { log_verbose "skip bash .windsurfrules (native emitted)"; return 0; }
     [[ -d "$rules_dir" ]] || return 0
     is_tool_enabled "windsurf" || { log_verbose "skip .windsurfrules (windsurf not selected)"; return 0; }
 
@@ -1181,7 +1242,9 @@ main() {
         log_verbose "skip .github/copilot-instructions.md (copilot not selected)"
     fi
 
-    # 3. Create tool-specific symlinks
+    # 3. Emit host-native rule surfaces (cursor .mdc / windsurf), then
+    #    create tool-specific symlinks for the remaining tools.
+    emit_host_rules "$TARGET_DIR"
     create_tool_symlinks "$TARGET_DIR"
     create_skill_symlinks "$TARGET_DIR"
 

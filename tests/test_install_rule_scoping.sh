@@ -181,12 +181,42 @@ EOF
     teardown
 }
 
+test_host_native_surfaces_scoped() {
+    setup
+    cat > "$TMPDIR/.agent-settings.yml" <<'EOF'
+projection:
+  rule_workspaces:
+    - engineering
+EOF
+    mkdir -p "$TMPDIR/home"
+    HOME="$TMPDIR/home" EVENT4U_CONFIG_HOME="$TMPDIR/home/.event4u/agent-config" \
+        bash "$INSTALL_SH" --target "$TMPDIR" --quiet --tools cursor,windsurf,augment >/dev/null 2>&1
+    local installed mdc_count ws_count
+    installed="$(installed_rule_count)"
+    mdc_count="$(find "$TMPDIR/.cursor/rules" -maxdepth 1 -name '*.mdc' 2>/dev/null | wc -l | tr -d ' ')"
+    ws_count="$(find "$TMPDIR/.windsurf/rules" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')"
+    # Host-native surfaces are emitted from the ALREADY-SCOPED rules dir —
+    # counts must match the scoped install, not the full source (Phase 1b
+    # Step 3: no trigger-signal loss, no unscoped leakage).
+    assert_eq "consumer .mdc count matches scoped rules" "$mdc_count" "$installed"
+    assert_eq "consumer .windsurf/rules count matches scoped rules" "$ws_count" "$installed"
+    assert_true ".mdc carries auto-attach globs (ui-audit-gate)" \
+        grep -q "globs: resources/views" "$TMPDIR/.cursor/rules/ui-audit-gate.mdc"
+    assert_true ".windsurf rule carries trigger frontmatter" \
+        grep -q "^trigger:" "$TMPDIR/.windsurf/rules/ui-audit-gate.md"
+    assert_true ".windsurfrules generated" test -f "$TMPDIR/.windsurfrules"
+    assert_false "cursor raw-md symlink farm replaced by .mdc" \
+        test -L "$TMPDIR/.cursor/rules/php-coding.md"
+    teardown
+}
+
 # --- Run ---
 echo "=== install.sh rule-scoping tests (Phase 1b) ==="
 test_legacy_all_counts_and_compat_exclusion
 test_scoped_project_excludes_maintainer_only
 test_scoped_project_keeps_kernel
 test_scoped_install_is_smaller_than_legacy
+test_host_native_surfaces_scoped
 
 echo ""
 echo "PASS: $PASS  FAIL: $FAIL"
