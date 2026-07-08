@@ -97,6 +97,12 @@ export interface CreateAppOptions {
      */
     dryRun?: boolean;
     /**
+     * Explicit project intent from the CLI (`config --project`) — the UI
+     * shows the Project nav tab only when set. Distinct from the
+     * cwd-inferred `projectScopeRoot` (road-to-setup-experience follow-up).
+     */
+    projectSurface?: boolean;
+    /**
      * Enable the extended 13-step wizard endpoints (auto-detect, manifest,
      * apply). road-to-global-only-install § Phase 1.5.
      */
@@ -251,7 +257,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     const projectScopeRoot = opts.projectScopeRoot ?? null;
     const mode: StorageMode = opts.mode ?? 'global';
 
-    await app.register(pingRoute({ writeRoot, projectScopeRoot, mode, dryRun }));
+    await app.register(pingRoute({ writeRoot, projectScopeRoot, mode, dryRun, projectSurface: opts.projectSurface === true }));
     await app.register(
         discoveryRoute(opts.discoveryManifestPath ? { manifestPath: opts.discoveryManifestPath } : {}),
     );

@@ -37,6 +37,9 @@ export interface ConfigCommandOptions {
 export async function runConfig(opts: ConfigCommandOptions): Promise<number> {
     const forwarded: UiServeOptions = {
         initialRoute: opts.project === true ? '/project' : '/settings',
+        // Explicit project intent surfaces the Project nav tab in the UI —
+        // without the flag the tab stays hidden (council 2026-07-08 Q4).
+        projectSurface: opts.project === true,
     };
     if (opts.port !== undefined) forwarded.port = opts.port;
     if (opts.open !== undefined) forwarded.open = opts.open;

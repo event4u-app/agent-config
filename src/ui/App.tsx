@@ -8,17 +8,14 @@
  *   - `/settings*`       → Settings tab; SettingsHubPage (simple/advanced
  *                          tiers, search, modified indicators —
  *                          road-to-setup-experience § Phase 5)
- *   - `/tasks`           → Tasks tab; legacy surface (port to Preact in Phase 5)
- *   - `/council`         → Council tab; legacy surface
- *   - `/memory`          → Memory tab; legacy surface
- *   - `/explain`         → Explain tab; legacy surface
- *   - `/workspace`       → Workspace tab; legacy surface
+ *   - `/project*`        → Project tab (visible only under `config
+ *                          --project` / while open); ProjectSettingsPage
+ *   - `/workspace`       → Workspace (dev-mode-only tab; deep link works)
  *   - anything else      → NotFound
  *
  * Per ADR-014 the dispatcher stays a flat switch — no router library.
- * The top-level surfaces preserve the legacy installer GUI nav
- * (Option 2, road-to-unified-setup) so users keep the install/runtime
- * areas they know while the visual shell stays the modern Preact one.
+ * The placeholder surfaces (Tasks / Council / Memory / Explain) were
+ * removed entirely (council 2026-07-08 Q1 — no half-finished stubs).
  *
  * The wizard remains the guided first-run flow (`init` / `setup`);
  * the Settings hub is the edit-later surface (`agent-config config`).
@@ -34,21 +31,25 @@ import { serverStatus, fetchServerStatus } from './serverStatus.js';
 import { theme, toggleTheme } from './theme.js';
 
 interface Surface {
-    readonly id: 'setup' | 'settings' | 'project' | 'tasks' | 'council' | 'memory' | 'explain' | 'workspace';
+    readonly id: 'setup' | 'settings' | 'project' | 'workspace';
     readonly label: string;
     readonly hashPath: string;
     /** Hash-path prefixes that should mark this surface active. */
     readonly matches: readonly string[];
 }
 
+/**
+ * Nav surfaces (council 2026-07-08): the placeholder tabs (Tasks, Council,
+ * Memory, Explain) were removed — no half-finished stubs in the nav. The
+ * Project tab renders only under explicit project intent (`config
+ * --project` → `projectSurface`) or while the route is open; Workspace
+ * (beta-internal employee product) renders only with
+ * AGENT_CONFIG_DEV_MODE=1 (`devSurfaces`). Both stay deep-linkable.
+ */
 const SURFACES: readonly Surface[] = [
     { id: 'setup',     label: 'Setup',     hashPath: '/setup',     matches: ['/setup', '/wizard'] },
     { id: 'settings',  label: 'Settings',  hashPath: '/settings',  matches: ['/settings'] },
-    { id: 'project',   label: 'Projekt',   hashPath: '/project',   matches: ['/project'] },
-    { id: 'tasks',     label: 'Tasks',     hashPath: '/tasks',     matches: ['/tasks'] },
-    { id: 'council',   label: 'Council',   hashPath: '/council',   matches: ['/council'] },
-    { id: 'memory',    label: 'Memory',    hashPath: '/memory',    matches: ['/memory'] },
-    { id: 'explain',   label: 'Explain',   hashPath: '/explain',   matches: ['/explain'] },
+    { id: 'project',   label: 'Project',   hashPath: '/project',   matches: ['/project'] },
     { id: 'workspace', label: 'Workspace', hashPath: '/workspace', matches: ['/workspace'] },
 ];
 
@@ -59,6 +60,16 @@ function activeSurface(path: string): Surface['id'] | null {
         }
     }
     return null;
+}
+
+function visibleSurfaces(activePath: string): readonly Surface[] {
+    const status = serverStatus.value;
+    const active = activeSurface(activePath);
+    return SURFACES.filter((s) => {
+        if (s.id === 'project') return status?.projectSurface === true || active === 'project';
+        if (s.id === 'workspace') return status?.devSurfaces === true || active === 'workspace';
+        return true;
+    });
 }
 
 function TopNav(): preact.JSX.Element {
@@ -72,7 +83,7 @@ function TopNav(): preact.JSX.Element {
                     <p class="ac-topnav__subtitle">Browser Wizard</p>
                 </div>
                 <nav class="ac-topnav__tabs" aria-label="Surfaces">
-                    {SURFACES.map((s) => (
+                    {visibleSurfaces(path).map((s) => (
                         <button
                             key={s.id}
                             type="button"
@@ -95,28 +106,6 @@ function TopNav(): preact.JSX.Element {
                 </button>
             </div>
         </header>
-    );
-}
-
-function ComingSoon({ name }: { name: string }): preact.JSX.Element {
-    return (
-        <div class="ac-page">
-            <header class="ac-page__header">
-                <h1>{name}</h1>
-            </header>
-            <section class="ac-section">
-                <p class="ac-section__description">
-                    The <strong>{name}</strong> surface is currently served by the
-                    legacy installer GUI on port <code>41100</code>. It is being
-                    ported to the modern shell in a follow-up phase
-                    (road-to-unified-setup § Phase 5).
-                </p>
-                <p class="ac-section__description">
-                    For now the legacy surface remains reachable via
-                    {' '}<code>installer gui</code>.
-                </p>
-            </section>
-        </div>
     );
 }
 
@@ -151,10 +140,8 @@ function dispatch(path: string): preact.JSX.Element {
     // the Settings tab land here.
     if (path === '/settings' || path.startsWith('/settings/')) return <SettingsHubPage />;
     if (path === '/project' || path.startsWith('/project/')) return <ProjectSettingsPage />;
-    if (path === '/tasks')     return <ComingSoon name="Tasks" />;
-    if (path === '/council')   return <ComingSoon name="Council" />;
-    if (path === '/memory')    return <ComingSoon name="Memory" />;
-    if (path === '/explain')   return <ComingSoon name="Explain" />;
+    // Placeholder surfaces (Tasks / Council / Memory / Explain) were removed
+    // from the nav AND the dispatcher — council 2026-07-08 Q1: no stubs.
     if (path === '/workspace') return <WorkspacePage />;
     return <NotFound path={path} />;
 }

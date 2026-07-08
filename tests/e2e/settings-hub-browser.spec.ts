@@ -121,6 +121,47 @@ test.describe('settings hub — browser', () => {
         await expect(page.getByText('Autonomy', { exact: true }).first()).toBeVisible();
     });
 
+    test('default nav shows Setup + Settings only — no stubs, no Project, no Workspace', async ({ page }) => {
+        await page.goto(`${baseURL}/?token=test-token#/settings`);
+        await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
+        const tabs = page.locator('.ac-topnav__tab');
+        await expect(tabs).toHaveText(['Setup', 'Settings']);
+        // Placeholder routes are gone from the dispatcher too.
+        await page.goto(`${baseURL}/?token=test-token#/council`);
+        await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
+        // Deep links to gated surfaces still work — and surface their tab.
+        await page.goto(`${baseURL}/?token=test-token#/project`);
+        await expect(page.getByRole('heading', { name: /Project settings/ })).toBeVisible();
+        await expect(page.locator('.ac-topnav__tab', { hasText: 'Project' })).toBeVisible();
+    });
+
+    test('config --project surfaces the Project tab (projectSurface flag)', async ({ page }) => {
+        // Boot a second app with the explicit project intent the CLI sets.
+        const port = await findFreePort();
+        const projTmp = mkdtempSync(join(tmpdir(), 'settings-hub-proj-'));
+        const { createApp } = await import('../../src/server/app.js');
+        const app = await createApp({
+            writeRoot: projTmp,
+            packageRoot: REPO_ROOT,
+            projectRoot: projTmp,
+            dryRun: true,
+            skipReplay: true,
+            projectSurface: true,
+            token: 'test-token',
+            expectedPort: port,
+            uiDistDir: join(REPO_ROOT, 'dist', 'ui'),
+        });
+        await app.listen({ host: '127.0.0.1', port });
+        try {
+            await page.goto(`http://127.0.0.1:${port}/?token=test-token#/settings`);
+            await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
+            await expect(page.locator('.ac-topnav__tab')).toHaveText(['Setup', 'Settings', 'Project']);
+        } finally {
+            await app.close();
+            rmSync(projTmp, { recursive: true, force: true });
+        }
+    });
+
     test('theme toggle flips data-theme, persists, and dark mode renders', async ({ page }, testInfo) => {
         await page.goto(`${baseURL}/?token=test-token#/settings`);
         await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();

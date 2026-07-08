@@ -28,6 +28,10 @@ export interface ServerStatus {
     projectScopeAvailable: boolean;
     /** Best-effort OS account name, used to pre-fill the welcome step. */
     systemUser?: string;
+    /** Explicit project intent (`config --project`) — shows the Project tab. */
+    projectSurface: boolean;
+    /** Dev-mode surfaces (Workspace tab) — AGENT_CONFIG_DEV_MODE=1 only. */
+    devSurfaces: boolean;
 }
 
 export const serverStatus = signal<ServerStatus | null>(null);
@@ -43,6 +47,8 @@ export async function fetchServerStatus(): Promise<void> {
         serverStatus.value = {
             ...res,
             projectScopeAvailable: res.projectScopeAvailable === true,
+            projectSurface: res.projectSurface === true,
+            devSurfaces: res.devSurfaces === true,
         };
     } catch {
         // Banner stays hidden on transport errors — the page will surface
