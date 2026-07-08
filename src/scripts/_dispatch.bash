@@ -105,6 +105,11 @@ Tier 1 — power-user (release shape, audit, migration):
                              Lists missing, modified, and foreign files.
                              Exits 1 on drift, 2 on missing lockfile.
                              Flags: --json | --project=<path>
+  converge                   Consented cleanup of duplicate install surfaces
+                             (surface-matrix driven). Never touches
+                             user-authored files; persists standing consent
+                             (install.auto_converge) on first use.
+                             Flags: --dry-run | --yes
   explain                    Read-only decision-chain trace.
                              Usage: explain config | explain rule <name>
                                   | explain route "<text>"
@@ -959,6 +964,13 @@ cmd_doctor() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_doctor.ts" "$@"
 }
 
+# `agent-config converge` — consented duplicate-surface cleanup.
+# Exit codes: 0 converged/nothing-to-do/dry-run · 1 refused/failed · 2 usage.
+# See scripts/_cli/cmd_converge.ts.
+cmd_converge() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_converge.ts" "$@"
+}
+
 # `agent-config conformance` — consumer conformance contract
 # (road-to-flow-learnings Phase 0). Doctor --ci semantics plus the five
 # consumer checks (txlog tail, router pointers, dispatcher smoke,
@@ -1048,6 +1060,7 @@ main() {
     uninstall)               cmd_uninstall "$@" ;;
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;
+    converge)                cmd_converge "$@" ;;
     conformance)             cmd_conformance "$@" ;;
     versions)                cmd_versions "$@" ;;
     explain)                 cmd_explain "$@" ;;

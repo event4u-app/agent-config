@@ -37,6 +37,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'uninstall', disposition: 'delegate' },
     { name: 'prune', disposition: 'delegate' },
     { name: 'doctor', disposition: 'delegate' },
+    { name: 'converge', disposition: 'delegate', synopsis: 'Consented cleanup of duplicate install surfaces (surface-matrix driven).' },
     { name: 'conformance', disposition: 'delegate', synopsis: 'Consumer conformance contract: doctor --ci + installed-and-firing checks.' },
     { name: 'doctor-shell', disposition: 'native', synopsis: 'Native TS-shell environment probe.' },
     { name: 'ui:serve', disposition: 'native', synopsis: 'Start the local UI server.' },

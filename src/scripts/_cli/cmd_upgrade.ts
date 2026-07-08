@@ -90,7 +90,7 @@ import * as installed_lock from '../_lib/installed_lock.js';
 import * as update_check from '../_lib/update_check.js';
 import * as cli_wrapper from '../_lib/cli_wrapper.js';
 import * as claude_plugin from '../_lib/claude_plugin.js';
-import { event4u_root } from '../_lib/user_global_paths.js';
+import { event4u_root, write_target } from '../_lib/user_global_paths.js';
 import { project_settings_path } from '../_lib/agent_settings.js';
 import { _is_source_repo } from './cmd_refresh.js';
 
@@ -407,10 +407,11 @@ function _refresh_claude_plugin(
 interface Args {
     check: boolean;
     dry_run: boolean;
+    converge: boolean;
 }
 
 const PROG = 'agent-config upgrade';
-const USAGE = `usage: ${PROG} [-h] [--check] [--dry-run]\n`;
+const USAGE = `usage: ${PROG} [-h] [--check] [--dry-run] [--converge]\n`;
 
 function _argError(msg: string): never {
     _stderr.write(USAGE);
@@ -419,7 +420,7 @@ function _argError(msg: string): never {
 }
 
 function _parse(argv: string[]): Args {
-    const args: Args = { check: false, dry_run: false };
+    const args: Args = { check: false, dry_run: false, converge: false };
     const positionals: string[] = [];
     let i = 0;
     while (i < argv.length) {
@@ -444,6 +445,14 @@ function _parse(argv: string[]): Args {
                 _argError(`argument --dry-run: ignored explicit argument '${inlineVal}'`);
             }
             args.dry_run = true;
+            i += 1;
+            continue;
+        }
+        if (flag === '--converge') {
+            if (inlineVal !== null) {
+                _argError(`argument --converge: ignored explicit argument '${inlineVal}'`);
+            }
+            args.converge = true;
             i += 1;
             continue;
         }
@@ -565,19 +574,34 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // the plugin is retired this block disappears with it.
     _refresh_claude_plugin(plugin_steps, runner, out, err);
 
-    // Migration prompt (single-surface model): hooks were wired into
-    // ~/.claude/settings.json by the `global` step above, so an installed
-    // plugin is now a duplicate surface. Surface the one-line removal —
-    // NEVER uninstall autonomously (the plugin is a user-owned surface).
-    if (plugin_steps.length > 0) {
-        _print(
-            out,
-            'ℹ️  Claude Code marketplace plugin detected — deprecated surface. Hooks now ' +
-                'live in ~/.claude/settings.json (wired by the global step above), so the ' +
-                'plugin only duplicates skills/commands. Remove it with:\n' +
-                '    claude plugin uninstall ' +
-                `${claude_plugin.CLAUDE_PLUGIN_ID}@${claude_plugin.CLAUDE_MARKETPLACE_NAME}`,
-        );
+    // Duplicate-surface convergence (road-to-install-path-convergence
+    // Phase 3). Consent model (council Q2, 2026-07-07):
+    //   --converge          → explicit consent for this run; persists
+    //                         install.auto_converge: true as standing consent.
+    //   standing key true   → auto-converge (the user opted in earlier).
+    //   no key + TTY        → converge asks ONE y/N when duplicates exist.
+    //   no key + non-TTY    → today's print-only prompt; NEVER a silent
+    //                         mutation of a user-owned surface.
+    {
+        const converge_mod = await import('./cmd_converge.js');
+        const consent = converge_mod.read_consent(write_target('agent-settings.yml'));
+        const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY);
+        if (args.converge || consent || tty) {
+            const rc = converge_mod.main(args.converge ? ['--yes'] : [], { out, err });
+            if (rc !== 0 && (args.converge || consent)) {
+                failed_essential.push('agent-config converge');
+            }
+        } else if (plugin_steps.length > 0) {
+            _print(
+                out,
+                'ℹ️  Claude Code marketplace plugin detected — deprecated surface. Hooks now ' +
+                    'live in ~/.claude/settings.json (wired by the global step above), so the ' +
+                    'plugin only duplicates skills/commands. Remove it with:\n' +
+                    '    claude plugin uninstall ' +
+                    `${claude_plugin.CLAUDE_PLUGIN_ID}@${claude_plugin.CLAUDE_MARKETPLACE_NAME}\n` +
+                    '    (or: agent-config converge)',
+            );
+        }
     }
 
     // Bring existing settings files up to the NEW template (additive; the
