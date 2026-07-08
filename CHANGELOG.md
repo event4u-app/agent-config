@@ -989,6 +989,31 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.6.0](https://github.com/event4u-app/agent-config/compare/8.5.0...8.6.0) (2026-07-08)
+
+### Features
+
+* **cost-routing:** tier-downshift layer — telemetry fields, category defaults, tripwires, slice inference, verify-fail escalation ([e9839f5](https://github.com/event4u-app/agent-config/commit/e9839f5a034c3a0882e8956a2a3f580b3978056a))
+
+### Bug Fixes
+
+* **ci:** install task in the release workflow ([19072d9](https://github.com/event4u-app/agent-config/commit/19072d9bcbb6d30cd943804f287dd79c9c709167))
+
+### Documentation
+
+* **roadmaps:** add four frontier-prompt-harvest roadmaps ([e232e34](https://github.com/event4u-app/agent-config/commit/e232e342401bd6edafda79cd64ce8ed4ff6ddd93))
+* **proof:** regenerate proof.md with the backed downshift-cost-reduction claim ([6f28604](https://github.com/event4u-app/agent-config/commit/6f286048b609442be81ac60a8c64df544a369df0))
+* **roadmaps:** unify tripwire engine wording on the ADR-116 path ([f4ee375](https://github.com/event4u-app/agent-config/commit/f4ee37540ea6f9724014c63be05617e4abcdaa1b))
+* **adr:** pin the memory scale-tripwire activation path (ADR-116) ([7efe88a](https://github.com/event4u-app/agent-config/commit/7efe88a7cda064e659a830a2d6a70e506ab21408))
+* **claims:** back downshift-cost-reduction with the routing-downshift bench run ([38f3194](https://github.com/event4u-app/agent-config/commit/38f31942b16474fcc5977f0560da435ce84a81dd))
+
+### Chores
+
+* **condense:** recondense cost-routing context/command edits into dist ([33fe1a3](https://github.com/event4u-app/agent-config/commit/33fe1a353a3eef52d024079016b32b9fe02b0531))
+* **contexts:** durable verdict note for cost-aware model routing ([cbff1bd](https://github.com/event4u-app/agent-config/commit/cbff1bdc7f2b0b87843283443de534c48f5ddd54))
+
+Tests: 6943 (+7 since 8.5.0)
+
 ## [8.5.0](https://github.com/event4u-app/agent-config/compare/8.4.1...8.5.0) (2026-07-08)
 
 ### Features
