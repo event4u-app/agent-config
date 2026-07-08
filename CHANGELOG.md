@@ -989,6 +989,73 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.5.0](https://github.com/event4u-app/agent-config/compare/8.4.1...8.5.0) (2026-07-08)
+
+### Features
+
+* **counts:** single-source every public artefact count + drift gate ([34204ed](https://github.com/event4u-app/agent-config/commit/34204ed9b1048704cf3ebb917e2abc7f952ee62a))
+* **doctor:** settings-review-pending check ([f2e5198](https://github.com/event4u-app/agent-config/commit/f2e51984cc32a44792660e1ef0ad5c66ed2b859f))
+* **ui:** upgrade settings-review page + pending banner ([6272721](https://github.com/event4u-app/agent-config/commit/6272721f34f0a1f01d6ef3bccd08f468448ea8f0))
+* **server:** pending settings-changes routes + API contract ([bddd2c5](https://github.com/event4u-app/agent-config/commit/bddd2c5a01c8ff04a69a786de8e3f076e9788217))
+* **install:** snapshot the settings surface + write the upgrade delta ([21b2ddd](https://github.com/event4u-app/agent-config/commit/21b2ddd2e05eecc9996d43ab0a380c7ec45ec105))
+* **settings:** shared settings-surface flatten/delta/classify engine ([c73adb8](https://github.com/event4u-app/agent-config/commit/c73adb859eb25562e382c735fea696d10f6657c3))
+* **lint:** validate routes_to + bare-invocation story; repoint atomic-command linter ([8f5a5eb](https://github.com/event4u-app/agent-config/commit/8f5a5eb56b71c2451e510948dbbdc5d1d5d2737f))
+* **server:** prefill local/dry-run tests from the real user-global config ([08c3a01](https://github.com/event4u-app/agent-config/commit/08c3a01a9c022709953cf4fb68e5e1a45792687e))
+* **ui:** prune nav to real surfaces; gate Project and Workspace tabs ([4b437b9](https://github.com/event4u-app/agent-config/commit/4b437b95afbaee3765c87d93defc1065d779dcfe))
+* **wizard:** remember roles and pack selection across runs ([befb5aa](https://github.com/event4u-app/agent-config/commit/befb5aaf14ea7b5b76db2600e9554375f5204340))
+* **settings:** standalone hub with simple/advanced tiers, search, modified badges ([6138089](https://github.com/event4u-app/agent-config/commit/613808968a63dd5ceeda26245e2d055fdd0fd86c))
+* **ui:** dark-first visual system v2 with theme toggle ([6204194](https://github.com/event4u-app/agent-config/commit/6204194b4c8777260fd68bc4087500af2be44b4a))
+* **wizard:** consolidate flow, add start screen, review summary, finish checklist ([d58d4a4](https://github.com/event4u-app/agent-config/commit/d58d4a4f0a063bc051573d7df95bd35344432b66))
+* **wizard:** prefill installed packs and flag removals ([8cad9d3](https://github.com/event4u-app/agent-config/commit/8cad9d367ce27c4393486349ed2d1428dd2834b9))
+* **cli:** add config command and init --project routing ([7a4f26a](https://github.com/event4u-app/agent-config/commit/7a4f26ad6deada4567a8fc7f04df0bc3d460760b))
+
+### Bug Fixes
+
+* **release:** guard the Tests: footer counter against vitest recursion ([6538636](https://github.com/event4u-app/agent-config/commit/653863666e7376280046a9570a2f9c65e6ee2f12))
+* **converge:** surface the live-session remedy after a plugin-cache reap ([0c84dbc](https://github.com/event4u-app/agent-config/commit/0c84dbc9923916a00f4fd4738c2089997614fe82))
+* **ci:** replaces arrays, legacy-path literal, cookbook test fixture ([a300ba0](https://github.com/event4u-app/agent-config/commit/a300ba03a4a17424ac5b24bf7713e7311c47a051))
+* **pack:** ship src/shared + src/server/schemas with the tarball ([39f6b66](https://github.com/event4u-app/agent-config/commit/39f6b668f14f26d8dc9e768bb8b400aa35e36039))
+* **cli:** list config in the Bash help output ([72f168e](https://github.com/event4u-app/agent-config/commit/72f168ec370671a0116ed7ff1ce76e4488b52390))
+* **install:** work around Claude Code flat user-command discovery regression ([af00db9](https://github.com/event4u-app/agent-config/commit/af00db98e7bf26a47a525f59a272647f5342a7e4))
+* **cli:** list every dispatched command in help output ([3e366d6](https://github.com/event4u-app/agent-config/commit/3e366d63dcced166ecfe54a184baf38def2c504c))
+* **wizard:** review chip overflow + dry-run apply hard floor; add browser E2E ([d5b0977](https://github.com/event4u-app/agent-config/commit/d5b09775cf1276d22624236cf49818f6d77afb04))
+
+### Documentation
+
+* update cross-references to nested command paths ([6ca8b56](https://github.com/event4u-app/agent-config/commit/6ca8b564f44c3631d5b4d29272679e4e65eb8c95))
+* **contracts:** register Phase-4 command clusters + bare-invocation rule (ADR-114) ([9e9f3c2](https://github.com/event4u-app/agent-config/commit/9e9f3c2fc437bce9066b0f4e3259c358ee80ada4))
+* document config command, init --project, wizard flow and settings hub ([d4a5df1](https://github.com/event4u-app/agent-config/commit/d4a5df1c050831f29d655775a2ad8a38b037f4bb))
+
+### Refactoring
+
+* **scripts:** retire py2ts parity rationale from all src/scripts comments ([4ec6f07](https://github.com/event4u-app/agent-config/commit/4ec6f07c5e36240c572426ff8e17ae857efc2ba4))
+* **commands:** nest 19 flat commands into Phase-4 clusters ([fa918c2](https://github.com/event4u-app/agent-config/commit/fa918c23d99f1b1100210be6757906bbcc68153f))
+
+### Tests
+
+* **budget:** align fixtures with the re-anchored mcp_schemas cap ([fa3c93f](https://github.com/event4u-app/agent-config/commit/fa3c93f637e751dc31bd6cc2b3b71a740fca33f1))
+
+### Chores
+
+* **counts:** re-sync prose counts after the main merge (172 commands) ([1042fad](https://github.com/event4u-app/agent-config/commit/1042fad691a0c2c3aa01079ef21654e816565863))
+* **hygiene:** fix stale references, triage claims debt, revive Tests: footer ([2379d4b](https://github.com/event4u-app/agent-config/commit/2379d4bf1821c0cbcb11d1ca919677a65bce86bf))
+* **roadmaps:** land the inbox-consolidation roadmap set (council 2026-07-08) ([f25b3bb](https://github.com/event4u-app/agent-config/commit/f25b3bb4a6fa68444e79e0cca80b2c3813bd3484))
+* regenerate dist, projections, catalogs, and pack manifests ([fa45778](https://github.com/event4u-app/agent-config/commit/fa45778ada09381701222a12be064932bb572c7d))
+* **bench:** re-anchor kernel-prefix snapshot after main's commit-policy edit ([98ee05a](https://github.com/event4u-app/agent-config/commit/98ee05a18736d016361d7dab88373b819ff1922e))
+* **bench:** refresh token baseline after run_tests exec pilot ([140697e](https://github.com/event4u-app/agent-config/commit/140697e177672805319fe2425c7e641d266c0843))
+* **budget:** re-anchor mcp_schemas.gpt cap after run_tests exec pilot ([0b49bd4](https://github.com/event4u-app/agent-config/commit/0b49bd4bd389ead796a59eb61c29b5fcc584d520))
+* **kernel:** ADR-114 — commit-policy Iron-Law override ([edabc87](https://github.com/event4u-app/agent-config/commit/edabc8753c218ed1661ccd664a7ce513b7f0b34b))
+* **matrix:** regenerate file-ownership matrix (new files from branch + main merge) ([8a88564](https://github.com/event4u-app/agent-config/commit/8a88564c7f01d2bfe5e35287e55ad0b1fca655f8))
+* **roadmap:** allow-pragma for historical council output path ([67076a4](https://github.com/event4u-app/agent-config/commit/67076a46c3228752bea11a050fb193e695e5b04c))
+* **docs:** add required stability frontmatter to surface-matrix contract ([e16a998](https://github.com/event4u-app/agent-config/commit/e16a998b499a8cdcdfc1a5f2f20d66c5031fe5b5))
+* **tiers:** register mcp_exec cluster (lab) in surface-tiers.yml ([55c3eda](https://github.com/event4u-app/agent-config/commit/55c3eda9c3fd148bae3b620c7214cfaa69ec9eb3))
+* **lint:** re-bump leakage allowlist lines after main's content sweep ([c2843ae](https://github.com/event4u-app/agent-config/commit/c2843ae9943305915ddf57ddad971f4e5aaf7799))
+* **index:** regenerate agents/index.md + docs/catalog.md after main merge ([2b85d9c](https://github.com/event4u-app/agent-config/commit/2b85d9c9aeb53b84f1be5473c835dd54ba73bb16))
+* **build:** regenerate install bundle (flat-command wrappers + packs lockfile) ([9952ae1](https://github.com/event4u-app/agent-config/commit/9952ae1512a1b4a0c76151b26fdf5a12632e1344))
+* **roadmap:** add + archive road-to-setup-experience (all phases shipped) ([54f01e5](https://github.com/event4u-app/agent-config/commit/54f01e5ad8ae37e277103973f93abd38c46e476e))
+
+Tests: 6936
+
 ## [8.4.1](https://github.com/event4u-app/agent-config/compare/8.4.0...8.4.1) (2026-07-08)
 
 ### Bug Fixes

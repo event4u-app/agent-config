@@ -5,7 +5,7 @@
 Framework-neutral engineering hygiene — git, tests, reviews.
 
 - **id**: `engineering-base`
-- **version**: `8.4.1`
+- **version**: `8.5.0`
 - **owner**: engineering
 - **requires**: —
 - **artefacts**: 95
