@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { SIZE_FLOOR, classifyTask } from '../../src/scripts/_lib/auto_dispatch.js';
+import { SIZE_FLOOR, classifyTask, inferSliceTier } from '../../src/scripts/_lib/auto_dispatch.js';
 import type { ActivationInputs } from '../../src/scripts/_lib/auto_dispatch.js';
 
 const ON: ActivationInputs = { enabled: true, auto: 'on', subagent_spawn: true };
@@ -75,5 +75,38 @@ describe('classifyTask — ask vs on, ambiguity', () => {
     it('no signal under on → in-session, never speculative spawn', () => {
         const r = classifyTask({ size_estimate: BIG }, ON);
         expect(r.action).toBe('in-session');
+    });
+});
+
+describe('inferSliceTier — deterministic task-TYPE-keyed tier inference (v1.5)', () => {
+    const rows: Array<[Parameters<typeof inferSliceTier>[0], string, string]> = [
+        [{ slice_type: 'read-only-fanout' }, 'lite', 'inferred'],
+        [{ slice_type: 'mechanical-covered' }, 'lite', 'inferred'],
+        [{ slice_type: 'mutating-uncovered' }, 'medium', 'inferred'],
+        [{ slice_type: 'synthesis' }, 'medium', 'inferred'],
+        [{ slice_type: 'unknown' }, 'inherit', 'inherit'],
+    ];
+
+    it.each(rows)('maps %o → tier %s / source %s', (signals, tier, source) => {
+        const r = inferSliceTier(signals);
+        expect(r.tier).toBe(tier);
+        expect(r.tier_source).toBe(source);
+    });
+
+    it('negative size guard revokes lite candidacy (read-only-fanout → medium)', () => {
+        const r = inferSliceTier({ slice_type: 'read-only-fanout', exceeds_mechanical_envelope: true });
+        expect(r.tier).toBe('medium');
+        expect(r.tier_source).toBe('inferred');
+    });
+
+    it('negative size guard revokes lite candidacy (mechanical-covered → medium)', () => {
+        const r = inferSliceTier({ slice_type: 'mechanical-covered', exceeds_mechanical_envelope: true });
+        expect(r.tier).toBe('medium');
+    });
+
+    it('guard never creates a downshift: unknown stays inherit even when flagged small', () => {
+        const r = inferSliceTier({ slice_type: 'unknown', exceeds_mechanical_envelope: false });
+        expect(r.tier).toBe('inherit');
+        expect(r.tier_source).toBe('inherit');
     });
 });

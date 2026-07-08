@@ -61,3 +61,25 @@ describe('resolveSubagentRouting — quota arbitrage (bonus, never load-bearing)
         expect(r.quota_pool).toBe('shared');
     });
 });
+
+describe('resolveSubagentRouting — tier_source telemetry provenance', () => {
+    it('applied downshift without origin defaults to static', () => {
+        const r = resolveSubagentRouting(base);
+        expect(r.tier_source).toBe('static');
+    });
+
+    it('applied downshift with inferred origin reports inferred', () => {
+        const r = resolveSubagentRouting({ ...base, task_tier_origin: 'inferred' });
+        expect(r.tier_source).toBe('inferred');
+    });
+
+    it('inherit task → tier_source inherit (no downshift decision)', () => {
+        const r = resolveSubagentRouting({ ...base, task_tier: 'inherit', task_tier_origin: 'inferred' });
+        expect(r.tier_source).toBe('inherit');
+    });
+
+    it('downshift off → tier_source inherit even for a declared tier', () => {
+        const r = resolveSubagentRouting({ ...base, downshift: false });
+        expect(r.tier_source).toBe('inherit');
+    });
+});
