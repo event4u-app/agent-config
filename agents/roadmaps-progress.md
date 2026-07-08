@@ -203,6 +203,31 @@
     2. Pin the resulting report alongside the existing pinned reports.
   - **Resolved when:** one schema-valid matrix report exists and the per-section render consumes it without manual edits.
 
+### [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md)
+
+**Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage** — 0 / 49 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Scope, provenance, metrics, and execution gates | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Prompt-mechanism inventory, dependency graph, and disposition matrix | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 2 | Eval harness and baseline before behavior changes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Currentness, research-routing, and source-quality pilot | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Memory, preference, and prior-context safety | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 5 | Artifact, visual, and connected-tool routing protocol | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 6 | Citation, quoting, domain overlays, and claim self-check | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 7 | Quality eval expansion and default-flip gates | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 8 | Runtime rollout, monitoring, rollback, and re-harvest loop | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-frontier-quality-operating-system"></a>
+**Blockers**
+
+- **source-anonymous-provenance-decision** (owner: maintainer) — blocks Phase 0 checkpoint only
+  - **What to do:**
+    local-only notes, or encrypted `ENC1:` link retention. If encrypted links
+    are required, run the repo's link crypto helper with the maintainer key.
+  - **Resolved when:** Phase 0 records the accepted provenance method without raw source links or external source names in tracked files.
+
 ### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
 
 **Road to golden-set coverage — make every flip verdict mean something** — 14 / 18 done (78%)
@@ -423,6 +448,30 @@
     3. Once the count reaches ≥ 20, resume this roadmap
     (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
   - **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines for the current month.
+
+### [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md)
+
+**Road to surface-specific agent contracts — stop making one generic agent do every medium badly** — 0 / 39 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Capability matrix, surface detection, and eval baseline | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Surface taxonomy and invariant ledger | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Spreadsheet truth floor | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Deck/document export contracts | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Browser and connector contract | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | Mobile/chat interaction contract | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Code-agent operating contract refresh | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 7 | Cross-surface handoff protocol | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-surface-specific-agent-contracts"></a>
+**Blockers**
+
+- **plugin-surface-capability-confirmation** (owner: maintainer) — blocks Phase 0 checkpoint only
+  - **What to do:**
+    plugin capabilities are reliably present in supported hosts and which must
+    degrade to local file parsing or user-visible limitation.
+  - **Resolved when:** `surface-agent-contracts` has a capability/degrade table or links to the canonical host-capability manifest.
 
 ### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
 
