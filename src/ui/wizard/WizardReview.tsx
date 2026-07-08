@@ -141,14 +141,18 @@ export function WizardReview(props: WizardReviewProps): preact.JSX.Element {
                         ) : null}
                         {tools.length > 0 ? (
                             <li>
-                                Config is installed for
-                                {' '}{tools.map((t) => <code key={t} class="ac-review-summary__chip">{t}</code>)}
+                                Config is installed for {tools.length} tool{tools.length === 1 ? '' : 's'}:
+                                <span class="ac-review-summary__chips">
+                                    {tools.map((t) => <code key={t} class="ac-review-summary__chip">{t}</code>)}
+                                </span>
                             </li>
                         ) : null}
                         {additions.length > 0 ? (
                             <li>
                                 New pack{additions.length === 1 ? '' : 's'}:
-                                {' '}{additions.map((p) => <code key={p} class="ac-review-summary__chip">{p}</code>)}
+                                <span class="ac-review-summary__chips">
+                                    {additions.map((p) => <code key={p} class="ac-review-summary__chip">{p}</code>)}
+                                </span>
                             </li>
                         ) : null}
                     </ul>

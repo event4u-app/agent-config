@@ -1048,7 +1048,13 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 });
                 return reply;
             }
-            const isDryRun = parsed.data.dry_run === true;
+            // Server-level dry-run is a hard floor: a server booted with
+            // --dry-run must NEVER spawn the real installer, regardless of
+            // what the client payload says. Before this guard a dry-run
+            // wizard's Finish click ran a REAL apply (the client never sent
+            // `dry_run`), writing to the live global root + tool anchors —
+            // caught by the browser E2E (road-to-setup-experience follow-up).
+            const isDryRun = parsed.data.dry_run === true || opts.dryRun === true;
             const payload = parsed.data;
             const tmpPath = join(tmpdir(), `agent-config-apply-${randomBytes(8).toString('hex')}.json`);
             const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'install.ts');

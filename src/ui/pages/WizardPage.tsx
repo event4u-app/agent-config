@@ -692,6 +692,7 @@ function buildApplyPayload(): {
     packs: string[];
     settings: Record<string, JsonValue>;
     scope_to_project_only?: boolean;
+    dry_run?: boolean;
 } | null {
     const tools = Object.entries(selectedTools.value)
         .filter(([, v]) => v === true)
@@ -704,12 +705,17 @@ function buildApplyPayload(): {
         packs: string[];
         settings: Record<string, JsonValue>;
         scope_to_project_only?: boolean;
+        dry_run?: boolean;
     } = {
         schema_version: 'wizard-v2',
         tools,
         packs,
         settings: values.value,
     };
+    // Dry-run server → dry-run apply, explicitly on the wire. The server
+    // enforces the same floor (opts.dryRun trumps the payload), this flag
+    // keeps older server bundles safe too.
+    if (serverStatus.value?.dryRun === true) payload.dry_run = true;
     // Global-only install: tool files always land in the global tree. The
     // project-scoped surface (modules) is handled by the dedicated Projekt
     // page, not the wizard apply.
@@ -775,7 +781,18 @@ async function finish(): Promise<void> {
         // persisted, so the error surfaces as a warning, not a red rollback.
         const applyPayload = extendedSteps.value ? buildApplyPayload() : null;
         let applyCopy = '';
-        if (applyPayload !== null) {
+        if (applyPayload !== null && applyPayload.dry_run === true) {
+            // Dry-run apply is buffered JSON, not SSE — plain fetch.
+            try {
+                await apiFetch('/api/v1/wizard/apply', { method: 'POST', body: applyPayload });
+                applyCopy = ' Installer preview OK (dry-run) — no files written.';
+            } catch (err) {
+                const message = err instanceof ApiCallError
+                    ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
+                    : err instanceof Error ? err.message : String(err);
+                applyCopy = ` Installer preview failed: ${message}.`;
+            }
+        } else if (applyPayload !== null) {
             try {
                 let streamError: string | null = null;
                 await apiStream('/api/v1/wizard/apply', applyPayload, (frame) => {

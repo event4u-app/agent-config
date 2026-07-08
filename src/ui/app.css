@@ -454,10 +454,23 @@ code {
     border-radius: var(--radius-md);
     padding: var(--space-3) var(--space-4);
     background: var(--color-surface);
+    /* Long unbreakable content (paths, ids) must never escape the box. */
+    overflow-wrap: anywhere;
+    min-width: 0;
 }
 .ac-review-summary__title { margin: 0 0 var(--space-2); font-size: var(--font-size-base); }
 .ac-review-summary__list { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--font-size-sm); }
-.ac-review-summary__chip { margin-right: var(--space-1); }
+/* Chip runs wrap as a flex row — adjacent inline <code> elements carry no
+ * soft-wrap opportunity, so without this a 23-tool run renders as one
+ * unbreakable line and overflows the card (the Phase 3.3 regression). */
+.ac-review-summary__chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-left: var(--space-1);
+    vertical-align: top;
+}
+.ac-review-summary__chip { white-space: nowrap; }
 
 /* Post-finish getting-started checklist (Phase 3.4). */
 .ac-checklist { display: flex; flex-direction: column; gap: var(--space-5); }
