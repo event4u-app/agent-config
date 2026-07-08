@@ -32,6 +32,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 import YAML, { parseDocument } from 'yaml';
 
 
@@ -578,6 +579,77 @@ function _isStale(entry: Record<string, unknown>, today: Date): boolean {
  * active, non-stale entries flow through `_iter_curated_entries` in the
  * normal path.
  */
+/**
+ * Deterministic entry ID (road-to-memory-retrieval-economy Phase 1).
+ *
+ * Precedence: the entry's own `id` field when present and non-empty;
+ * otherwise `<type>:<file-basename>:<ordinal>` where `ordinal` is the
+ * entry's 0-based position within its source file (iteration order is
+ * sorted and therefore stable across re-runs on an unchanged tree).
+ * `memory_get_v1` derives ids with the SAME function, so lookup and batch
+ * fetch can never disagree.
+ */
+export function _entry_id(
+    mtype: string,
+    file: string,
+    entry: Record<string, unknown>,
+    ordinals: Map<string, number>,
+): string {
+    const ordinal = ordinals.get(file) ?? 0;
+    ordinals.set(file, ordinal + 1);
+    const own = entry['id'];
+    if (typeof own === 'string' && own.trim() !== '') {
+        return own;
+    }
+    if (own !== undefined && own !== null && String(own).trim() !== '') {
+        return String(own);
+    }
+    return `${mtype}:${path.basename(file)}:${ordinal}`;
+}
+
+/** Human-scannable title for an index row: title > key > path > first body line > id. */
+export function _entry_title(entry: Record<string, unknown>, id: string): string {
+    for (const field of ['title', 'key', 'path']) {
+        const v = entry[field];
+        if (typeof v === 'string' && v.trim() !== '') {
+            return v.trim().slice(0, 120);
+        }
+    }
+    const body = entry['body'];
+    if (typeof body === 'string' && body.trim() !== '') {
+        const first = body.trim().split('\n')[0] as string;
+        return first.trim().slice(0, 120);
+    }
+    return id;
+}
+
+// Lazy tokenizer handle — the index mode is the ONLY consumer; the default
+// full path must not pay the tiktoken load (hot MCP import path).
+let _tokenizer: { gpt_tokens: (t: string) => { tokens: number }; TIKTOKEN_AVAILABLE: boolean } | null | undefined;
+function _lazy_tokenizer(): typeof _tokenizer {
+    if (_tokenizer === undefined) {
+        try {
+            const req = createRequire(import.meta.url);
+            _tokenizer = req('./_lib/token_count.js');
+        } catch {
+            _tokenizer = null;
+        }
+    }
+    return _tokenizer;
+}
+
+/** Real-tokenizer estimate of what fetching this entry's full envelope row costs. */
+export function _entry_tokens_estimate(envelope_entry: Record<string, unknown>): number {
+    const serialized = JSON.stringify(envelope_entry);
+    const tok = _lazy_tokenizer();
+    if (tok !== null && tok !== undefined && tok.TIKTOKEN_AVAILABLE) {
+        return tok.gpt_tokens(serialized).tokens;
+    }
+    // Proxy fallback — a UI hint only; measurements go through the replay
+    // rig which records tokenizer provenance (D2).
+    return Math.ceil(serialized.length / 4);
+}
+
 function _retrieve_internal(types: string[], keys: string[], limit: number, today: Date): [Hit[], SkippedEntry[]] {
     const repo_hits: Hit[] = [];
     const skipped: SkippedEntry[] = [];
@@ -616,20 +688,24 @@ function _retrieve_internal(types: string[], keys: string[], limit: number, toda
         }
         // Curated entries: status filtering happens inside _iter_curated_entries.
         // We additionally filter stale entries here and track them in skipped.
+        const _cur_ordinals = new Map<string, number>();
         for (const [p, entry] of _iter_curated_entries(mtype)) {
-            void p;
+            // ID derivation runs for EVERY yielded entry (before any
+            // filtering) so ordinals stay consistent across all consumers
+            // of the same iterator (retrieve vs memory_get_v1).
+            const eid = _entry_id(mtype, String(p), entry, _cur_ordinals);
             if (_isStale(entry, today)) {
                 const lv = 'last_validated' in entry ? _pyStrDateLike(entry['last_validated']) : 'unknown';
                 const rad = 'review_after_days' in entry ? _pyStr(entry['review_after_days']) : '?';
                 skipped.push({
-                    id: String(entry['id'] ?? ''),
+                    id: eid,
                     type: mtype,
                     reason: 'stale',
                     details: `last_validated=${lv}, review_after_days=${rad}`,
                 });
                 continue;
             }
-            repo_hits.push(new Hit(String(entry['id'] ?? ''), mtype, 'curated', String(p), _score(entry, keys), entry));
+            repo_hits.push(new Hit(eid, mtype, 'curated', String(p), _score(entry, keys), entry));
         }
         // Capture superseded/deprecated entries in skipped (for retrieve_with_meta).
         for (const [p, entry] of _iter_curated_entries_all(mtype)) {
@@ -762,7 +838,19 @@ const _KNOWN_TYPES: ReadonlySet<string> = new Set([...CURATED_TYPES, KNOWLEDGE_T
  * types are reported as `status: unknown_type` for that slice only, rather
  * than failing the whole call. All entries are file-backed (`source: "repo"`).
  */
-export function retrieve_v1(types: string[], keys: string[], limit = 20): Record<string, unknown> {
+export function retrieve_v1(
+    types: string[],
+    keys: string[],
+    limit = 20,
+    options: { detail?: 'index' | 'full' } = {},
+): Record<string, unknown> {
+    // ADDITIVE detail parameter (road-to-memory-retrieval-economy Phase 1,
+    // D1): default 'full' keeps the published v1 envelope byte-identical.
+    // 'index' replaces each entry's `body` with a compact row —
+    // `title` + `tokens_estimate` (the cost `memory_get` would incur) — so
+    // a host can rank before fetching. The default flip to 'index' is a
+    // separate, falsification-gated human decision (Phase 1b).
+    const detail = options.detail ?? 'full';
     const known = types.filter((t) => _KNOWN_TYPES.has(t));
     const unknown = types.filter((t) => !_KNOWN_TYPES.has(t));
 
@@ -785,7 +873,22 @@ export function retrieve_v1(types: string[], keys: string[], limit = 20): Record
         if (h.type in slice_counts) {
             slice_counts[h.type] = (slice_counts[h.type] as number) + 1;
         }
-        entries.push(envelope_entry);
+        if (detail === 'index') {
+            entries.push({
+                id: h.id,
+                type: h.type,
+                source: 'repo',
+                confidence: new PyFloat(_round4(h.score)),
+                title: _entry_title(h.entry, h.id),
+                tokens_estimate: _entry_tokens_estimate(envelope_entry),
+                // Knowledge chunks carry their pinned flag in the index row
+                // (roadmap Phase 4) — pinned entries rank higher, so the
+                // caller should see why before fetching.
+                ...(h.type === KNOWLEDGE_TYPE ? { pinned: Boolean(h.entry['pinned'] ?? false) } : {}),
+            });
+        } else {
+            entries.push(envelope_entry);
+        }
     }
 
     const slices: Record<string, Record<string, unknown>> = {};
@@ -819,6 +922,73 @@ export function retrieve_v1(types: string[], keys: string[], limit = 20): Record
     return envelope;
 }
 
+/**
+ * Batch full-entry fetch by ID — the second half of the two-phase retrieval
+ * economy (road-to-memory-retrieval-economy Phase 1). Scans the same
+ * iterators as {@link retrieve} with the same ID derivation
+ * ({@link _entry_id}), so an ID returned by `detail: 'index'` always
+ * resolves here. Unknown IDs are reported per-ID (`ids[<id>] = 'unknown'`)
+ * rather than failing the batch — matching batch-fetch semantics.
+ *
+ * Envelope: `{contract_version, status, entries, ids}` where `entries`
+ * carry FULL bodies (shape identical to `retrieve_v1` full entries minus
+ * `confidence` — an explicit fetch has no relevance score) and `status` is
+ * `ok` (all found) / `partial` (some) / `error` (none).
+ */
+export function memory_get_v1(ids: string[]): Record<string, unknown> {
+    const wanted = new Set(ids);
+    const found = new Map<string, Record<string, unknown>>();
+
+    const record = (id: string, mtype: string, entry: Record<string, unknown>): void => {
+        if (wanted.has(id) && !found.has(id)) {
+            found.set(id, {
+                id,
+                type: mtype,
+                source: 'repo',
+                body: _isPlainObject(entry) ? { ...entry } : {},
+            });
+        }
+    };
+
+    for (const mtype of CURATED_TYPES) {
+        const ordinals = new Map<string, number>();
+        for (const [p, entry] of _iter_curated_entries(mtype)) {
+            record(_entry_id(mtype, String(p), entry, ordinals), mtype, entry);
+        }
+        for (const [p, entry] of _iter_intake_entries(mtype)) {
+            void p;
+            const own = entry['id'];
+            if (typeof own === 'string' && own.trim() !== '') {
+                record(own, mtype, entry);
+            }
+        }
+    }
+    for (const [p, entry] of _iter_knowledge_entries()) {
+        void p;
+        record(String(entry['id'] ?? ''), KNOWLEDGE_TYPE, entry);
+    }
+
+    const entries: Record<string, unknown>[] = [];
+    const idStatus: Record<string, string> = {};
+    for (const id of ids) {
+        const e = found.get(id);
+        if (e !== undefined) {
+            entries.push(e);
+            idStatus[id] = 'ok';
+        } else {
+            idStatus[id] = 'unknown';
+        }
+    }
+    const okCount = entries.length;
+    const status = okCount === ids.length ? 'ok' : okCount === 0 ? 'error' : 'partial';
+    return {
+        contract_version: _CONTRACT_VERSION,
+        status,
+        entries,
+        ids: idStatus,
+    };
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -829,6 +999,7 @@ interface ParsedArgs {
     limit: number;
     format: 'text' | 'json';
     envelope: 'legacy' | 'v1';
+    detail: 'index' | 'full';
 }
 
 function _parseArgs(argv: string[]): ParsedArgs {
@@ -838,6 +1009,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         limit: 5,
         format: 'text',
         envelope: 'legacy',
+        detail: 'full',
     };
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
@@ -863,6 +1035,12 @@ function _parseArgs(argv: string[]): ParsedArgs {
             args.envelope = _checkChoice(a.slice('--envelope='.length), ['legacy', 'v1'], '--envelope') as
                 | 'legacy'
                 | 'v1';
+        } else if (a === '--detail') {
+            args.detail = _checkChoice(argv[++i], ['index', 'full'], '--detail') as 'index' | 'full';
+        } else if (a.startsWith('--detail=')) {
+            args.detail = _checkChoice(a.slice('--detail='.length), ['index', 'full'], '--detail') as
+                | 'index'
+                | 'full';
         } else if (a === '-h' || a === '--help') {
             _printUsage();
             process.exit(0);
@@ -915,7 +1093,7 @@ export function main(): number {
         return 2;
     }
     if (args.envelope === 'v1') {
-        const envelope = retrieve_v1(types, args.key, args.limit);
+        const envelope = retrieve_v1(types, args.key, args.limit, { detail: args.detail });
         process.stdout.write(`${pyJsonDumps(envelope, 2)}\n`);
         return 0;
     }

@@ -1,0 +1,54 @@
+version: 1
+entries:
+  - id: il-783-worktree-wipe
+    key: 2026-07-08 #783 sync wiped sibling edits
+    body: |
+      During the setup-experience merge (#783) the working tree was synced to the
+      new main while a sibling session held approved-but-uncommitted edits to
+      tracked files (roadmap Phase-1b extension, cross-model residuals, stubs
+      README). All unstaged edits to tracked files were lost; untracked new files
+      survived and were later staged. Recovery: the sibling session re-applied
+      every edit from its context and committed immediately. Lessons: (1)
+      uncommitted work in a shared checkout is a liability the moment any session
+      merges; (2) restorations should be flagged in the PR body for explicit
+      review; (3) prefer worktrees per task. The pattern entry
+      hp-parallel-worktree-clobber generalises this incident.
+  - id: il-plugin-cache-reap-live-session
+    key: 2026-07-08 plugin cache reaped under live session
+    body: |
+      agent-config upgrade (8.4.x) converged the pre-shim Claude Code plugin:
+      claude plugin uninstall ran, then the cache directory
+      ~/.claude/plugins/cache/event4u-agent-config was reaped. A LIVE Claude Code
+      session had registered that plugin's hooks at session start and kept firing
+      them: every subsequent event logged a non-blocking "Plugin directory does
+      not exist … run /plugin to reinstall" error. Claude Code's own hint was
+      actively wrong — reinstalling would recreate the duplicate surface converge
+      had just removed. Fix shipped: converge prints a live-session notice
+      (restart sessions, do NOT reinstall) whenever a reap touches
+      ~/.claude/plugins/. The error class is cosmetic for new sessions but means
+      the live session's plugin-sourced hooks silently stop running.
+  - id: il-vitest-recursion-143
+    key: 2026-07-08 vitest-in-vitest exit 143
+    body: |
+      The release-notes Tests: footer counter was moved from the retired pytest
+      probe to npx vitest list. The release test suite runs release --ci
+      --dry-run as a child process; the child inherited VITEST env and collected
+      the whole suite from within the suite — killed at the test timeout with
+      exit 143 on all four CI shards. Fix: return null under VITEST env
+      (degrade like any collection failure) and skip the collection entirely on
+      --dry-run, which contracts a fast short-circuit. General lesson: any
+      subprocess probe that can recurse into the harness that spawned it needs an
+      env guard, and dry-run paths must never pay collection costs.
+  - id: il-count-drift-158
+    key: public count drift across prose surfaces
+    body: |
+      README prose carried three different command counts (150/162/166) and stale
+      skill/rule counts while badges were machine-correct. Root cause: prose
+      numbers were hand-typed with no gate covering them; the existing
+      command-count check matched only anchored badge/browse positions. Fix
+      shipped: update_counts generates every prose count from source (anchored
+      regex positions incl. docs/CLAIMS.md claim lines) and
+      check_artefact_count_messaging scans flagship surfaces for ANY count-shaped
+      mention, failing on drift or internal inconsistency. The 150-vs-162-vs-166
+      case is a dedicated regression test. Three count claims flipped to backed
+      with the gate as evidence.

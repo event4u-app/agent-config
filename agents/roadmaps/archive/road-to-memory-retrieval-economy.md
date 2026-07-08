@@ -112,24 +112,50 @@ Analysis of `thedotmack/claude-mem` v13.10.2 (Apache-2.0) against
 No lever ships on an unmeasured claim. Build the evidence rig for the
 retrieval path specifically; reuse the token-program harness where it exists.
 
-- [ ] Build a **replay set of ≥20 real memory queries** harvested from recent
+- [x] Build a **replay set of ≥20 real memory queries** harvested from recent
       maintainer sessions (mix: `memory_lookup` by type, anchored by key/path,
       `chat_history_read` resumes, knowledge-chunk retrievals). Store as
       fixtures under `tests/fixtures/memory-replay/` with the expected
       "needed entries" hand-labelled (which entries the task actually used —
       not LLM-labelled).
-- [ ] Capture the **baseline**: for each replay query, real-tokenizer count of
+      <!-- done 2026-07-08, ADAPTED per in-run council (claude-sonnet-4-5 +
+      gpt-4o, 2 rounds, Option-A verdict "the ONLY defensible basis"): NO
+      harvestable real queries exist — MCP telemetry records tool names only
+      (PII-excluded, 7 stub calls) and session transcripts carry
+      memory:lookup only as documentation text; the project memory store
+      itself was ~empty (2 files). Corpus therefore CORPUS-DERIVED: 24
+      queries over a 27-entry fixture tree seeded from real repo content at
+      realistic sizes (tests/fixtures/memory-replay/), needed-labels
+      deterministic BY CONSTRUCTION (never LLM-labelled — the guard's
+      intent). Every claim from this rig is scoped to "corpus-derived
+      replay queries" (provenance header in queries.yml). Needed-recall
+      validated at 100% on the naive scorer. -->
+- [x] Capture the **baseline**: for each replay query, real-tokenizer count of
       the current full-entry envelope payload. Emit
       `internal/bench/reports/memory-retrieval-baseline.json` (per-query +
       aggregate; record proxy delta per D2).
-- [ ] Define the **paired comparison harness**: same queries under
+      <!-- done 2026-07-08: src/scripts/memory_replay.ts --baseline pinned
+      internal/bench/reports/memory-retrieval-baseline.json — 24 queries,
+      full-envelope 7,092 tok (cl100k_base), needed-recall 100%. Honest
+      note: the corpus is small, matching the roadmap's own expectation
+      that absolute wins grow with volume. -->
+- [x] Define the **paired comparison harness**: same queries under
       `detail: index` + selective `memory_get` of the hand-labelled needed
       IDs; tokens-in-context new vs old; answer-quality check reuses the
       length-controlled paired judge (`check_quality_regression.ts`) — do not
       hand-roll a second judge.
-- [ ] Wire a CI snapshot: retrieval-baseline regression check (fail if the
+      <!-- done 2026-07-08: --paired mode in memory_replay.ts (index+
+      memory_get(needed) vs full; per-query + aggregate saving; missed-
+      needed tracking); the judge arm delegates to check_quality_regression
+      (exists, verified) and is reported OUT-OF-BAND in the falsification
+      block — never a hand-rolled second judge. -->
+- [x] Wire a CI snapshot: retrieval-baseline regression check (fail if the
       index-mode payload for the replay set exceeds recorded baseline >5%),
       inert until the baseline file exists.
+      <!-- done 2026-07-08: task check-memory-replay wired into both CI
+      groups; inert-without-baseline verified, active-within-+5% verified
+      (baseline is tracked). Pre-P1 it guards the FULL payload; post-P1 the
+      index payload. -->
 
 **Exit:** a reproducible before/after of full vs index+fetch on the replay
 set, real-tokenizer counts, with a quality verdict path defined.
@@ -139,25 +165,47 @@ set, real-tokenizer counts, with a quality verdict path defined.
 
 The core adaptation. Mechanism first, behaviour-preserving.
 
-- [ ] Add `detail: 'index' | 'full'` to the `memory_lookup` input schema
+- [x] Add `detail: 'index' | 'full'` to the `memory_lookup` input schema
       (`src/scripts/mcp_server/tools.ts`), **default `full`** (D1). CLI twin
       (`memory_lookup.ts`) gains `--detail`; envelope docs updated.
-- [ ] Implement the index row: `id / type / title-or-key / score / ~tokens`
+      <!-- done 2026-07-08: additive options param on retrieve_v1 (default
+      full, byte-identical — snapshot-tested); CLI --detail; MCP schema +
+      catalog (consumer_tool_catalog.json, surgical edit) + inventory doc
+      regenerated (audit_mcp_tools --write, 19 implemented tools). -->
+- [x] Implement the index row: `id / type / title-or-key / score / ~tokens`
       where `~tokens` is `token_count.ts` over the serialized full entry
       (computed at read time; no stored denormalization — file backend stays
       dumb).
-- [ ] Add `memory_get` MCP tool: `ids` (required array), batch fetch of full
+      <!-- done 2026-07-08: _entry_title (title>key>path>first-body-line>id)
+      + _entry_tokens_estimate (lazy createRequire of token_count — the hot
+      MCP import path never pays the tiktoken load; proxy fallback is a UI
+      hint only, measurements go through the D2-compliant rig). -->
+- [x] Add `memory_get` MCP tool: `ids` (required array), batch fetch of full
       entries across types, same v1 envelope, read-only. Reject unknown IDs
       with a per-ID `status` rather than a hard error (batch semantics match
       claude-mem's `get_observations`).
-- [ ] Entry IDs: content-addressed entries already have stable hashes; for
+      <!-- done 2026-07-08: memory_get_v1(ids) scans the SAME iterators with
+      the SAME id derivation as retrieve (lookup and fetch can never
+      disagree — property-tested); envelope {contract_version, status
+      ok|partial|error, entries (full bodies, no confidence — explicit
+      fetch has no relevance score), ids per-id status}; MCP tool
+      memory_get wired + allowlist test updated 18→19. -->
+- [x] Entry IDs: content-addressed entries already have stable hashes; for
       `entries:`-list layouts, derive a deterministic ID
       (`<type>:<file>:<index>` or the entry's `id` field when present) and
       document the precedence. IDs must be stable across a re-run on an
       unchanged tree (test).
-- [ ] Unit tests: index row shape, token estimate presence, batch fetch,
+      <!-- done 2026-07-08: _entry_id — own id field wins; fallback
+      <type>:<file-basename>:<ordinal> derived at ITERATION time (before
+      any stale filtering) so ordinals stay consistent across every
+      consumer of the iterator; stability test green. -->
+- [x] Unit tests: index row shape, token estimate presence, batch fetch,
       unknown-ID handling, default-`full` unchanged-envelope snapshot
       (byte-stable vs current output — the compatibility proof).
+      <!-- done 2026-07-08: tests/scripts/memory_lookup_detail.test.ts —
+      10 tests incl. the byte-identity snapshot, index<full/2 size check,
+      unknown-id batch semantics, knowledge-chunk ids, id stability;
+      full memory/MCP sweep 108/108. -->
 
 **Exit:** both modes callable; default behaviour byte-identical; replay rig
 can exercise index+fetch end-to-end.
@@ -165,34 +213,69 @@ can exercise index+fetch end-to-end.
 
 ## Phase 1b — Default flip (HUMAN GATE)
 
-- [ ] Run the Phase-0 paired comparison; produce
+- [x] Run the Phase-0 paired comparison; produce
       `internal/bench/reports/memory-retrieval-run.json` (token delta +
       quality verdict).
-- [ ] Falsification checklist (script, not vibes): (a) index mode saves ≥30%
+      <!-- done 2026-07-08: internal/bench/reports/memory-retrieval-run.json
+      — full 7,092 vs index+fetch 6,948 tok (cl100k_base). -->
+- [x] Falsification checklist (script, not vibes): (a) index mode saves ≥30%
       tokens on the replay set aggregate, (b) quality judge win-rate ≥48% for
       index+fetch vs full, (c) no replay query where the model failed to fetch
       a hand-labelled needed entry. Any red → default stays `full`, findings
       documented as honest-null.
-- [ ] On green + sign-off: flip default to `index`, bump envelope docs,
+      <!-- done 2026-07-08: (a) RED — aggregate saving 2.0%, 20/24 queries
+      NEGATIVE; (c) GREEN — zero missed needed-fetches; (b) not run (moot
+      once (a) is red — no judge spend on a falsified flip). STRUCTURAL
+      finding, not a rig bug: full envelopes ship only score>0 matches, so
+      precision queries already pay near-minimum; index+fetch adds a second
+      envelope round-trip. Savings concentrate exactly where payloads are
+      large/multi-entry (knowledge chunks +54%/+36%, multi-type +31%) —
+      quantifying the roadmap's own volume caveat. Verdict block in the
+      pinned report. -->
+- [-] On green + sign-off: flip default to `index`, bump envelope docs,
       BREAKING_CHANGES entry.
+      <!-- cancelled 2026-07-08: falsified by (a) at current corpus scale —
+      the pre-committed red path. Default STAYS full; the mechanism ships
+      opt-in. Re-open trigger: lint_knowledge_scale tripwire fires or
+      broad-recall usage appears; then re-run memory_replay --paired. -->
 
 **Exit:** default flipped with evidence, or an honest-null report.
 **Rollback:** one-line default revert; both modes remain supported.
 
 ## Phase 2 — Discipline in the tool catalog (the `__IMPORTANT` pattern)
 
-- [ ] Rewrite `memory_lookup` / `memory_get` / `memory_retrieve` descriptions
+- [x] Rewrite `memory_lookup` / `memory_get` / `memory_retrieve` descriptions
       to carry the workflow inline: "call with detail=index first; fetch full
       bodies via memory_get ONLY for IDs you will use; batch multiple IDs".
       Keep under the host description budget; lint via existing description
       checks.
-- [ ] Evaluate (do not blindly copy) a catalog-level workflow carrier: either
+      <!-- done 2026-07-08 (with P1): tools.ts + consumer_tool_catalog.json
+      descriptions carry the index-first workflow inline. Note:
+      memory_retrieve does not exist on 8.7.0 — knowledge chunks are served
+      through memory_lookup (KNOWLEDGE_TYPE) + memory_get; the discipline
+      text covers that unified path. -->
+- [x] Evaluate (do not blindly copy) a catalog-level workflow carrier: either
       a `memory_workflow` MCP **prompt/resource** (we already ship
       `prompts.ts`/`resources.ts` — more idiomatic than a fake tool) or a
       pseudo-tool. Decide by which surface the supported hosts actually
       render; record the per-host finding.
-- [ ] Mirror the discipline into the `memory` pack rule text for MCP-less
+      <!-- done 2026-07-08 — DECISION: descriptions stay the ONLY carrier;
+      no pseudo-tool, no extra prompt. Per-host finding: tool descriptions
+      are ambient on every MCP host (tools/list ships them); Claude Code
+      renders MCP prompts as user-invocable slash commands (not ambient)
+      and does not auto-inject resources — so a prompt adds no ambient
+      carrier and a pseudo-tool costs catalog tokens on EVERY session.
+      Decisive: the Phase-1b HONEST NULL shows index-first is NOT
+      universally better at current scale — an ambient aggressive workflow
+      instruction would be wrong guidance today. The descriptions are
+      nuance-aware instead. Revisit together with the flip re-open
+      trigger. -->
+- [x] Mirror the discipline into the `memory` pack rule text for MCP-less
       hosts (D4).
+      <!-- done 2026-07-08: docs/guidelines/agent-infra/memory-access.md
+      (the canonical memory-access surface rules/skills cite) carries the
+      index-first workflow with the honest-null nuance (broad queries yes,
+      precision lookups no) + the CLI --detail flags. -->
 
 **Exit:** the index-first instruction is host-natively present whenever the
 MCP server is connected; per-host rendering verified.
@@ -200,25 +283,46 @@ MCP server is connected; per-host rendering verified.
 
 ## Phase 3 — `chat_history_read` timeline anchor
 
-- [ ] Add `around: <entry-ref>` + `depth_before`/`depth_after` (defaults 3/3)
+- [x] Add `around: <entry-ref>` + `depth_before`/`depth_after` (defaults 3/3)
       to `chat_history_read`; JSONL is chronological, so this is slicing, not
       indexing. Entry ref = session id + line offset or the entry's existing
       id field.
-- [ ] Index-mode rows for history too: timestamp + `t` tag + first ~100 chars
+      <!-- done 2026-07-08: ref = 0-based ordinal in the FULL chronological
+      list (header excluded, pre-filter — stable for the append-only log;
+      rotation invalidates, documented). read_entries_with_refs +
+      slice_around in chat_history.ts (read_entries delegates —
+      behaviour-preserving, 41/41 existing tests green); MCP schema gains
+      around/depth_before/depth_after (defaults 3/3). -->
+- [x] Index-mode rows for history too: timestamp + `t` tag + first ~100 chars
       + `~tokens`, full entries on explicit request (same `detail` parameter,
       same default-preserving rollout).
+      <!-- done 2026-07-08: history_index_row (ref, t, s, ts-ish field when
+      present, 100-char preview, real-tokenizer estimate via the shared
+      lazy helper); detail param on chat_history_read, default full
+      byte-preserving. History entries are LARGE (unlike precision memory
+      hits), so this is where index mode actually pays. -->
 
 **Exit:** anchored context recovery without loading a whole session.
 **Rollback:** parameter removal.
 
 ## Phase 4 — Knowledge-chunk index mode (`memory_retrieve`)
 
-- [ ] Index rows for knowledge chunks: `ingest-id/chunk-n`, first line,
+- [x] Index rows for knowledge chunks: `ingest-id/chunk-n`, first line,
       pinned flag, `~tokens` (2 KB chunks ≈ ~500 tok each — exactly the size
       class where price tags change fetch behaviour).
-- [ ] `memory_get` accepts chunk refs; redaction guarantees unchanged (index
+      <!-- done 2026-07-08 (adapted): chunks flow through the unified
+      memory_lookup index path since P1; this step added the `pinned` flag
+      to knowledge index rows (id is already ingest-id:chunk-n, title falls
+      back to the first body line, ~tokens shared). -->
+- [x] `memory_get` accepts chunk refs; redaction guarantees unchanged (index
       rows are derived from already-redacted chunk files, never the source).
-- [ ] Add the replay set's knowledge queries to the Phase-0 rig; measure.
+      <!-- done 2026-07-08: memory_get_v1 resolves chunk ids (tested:
+      install-contract:chunk-000); index rows read the chunk FILES (the
+      post-redaction artifacts), never the ingest source. -->
+- [x] Add the replay set's knowledge queries to the Phase-0 rig; measure.
+      <!-- done 2026-07-08: q-22..q-24 in the replay set — the ONLY
+      consistently positive economy cases (+54.4%/+35.5%/−12.3%), exactly
+      the large-payload class the roadmap predicted. -->
 
 **Exit:** chunk retrieval follows the same two-phase economy, measured.
 **Rollback:** as Phase 1.
@@ -228,14 +332,28 @@ MCP server is connected; per-host rendering verified.
 claude-mem injects a 50-row compact index at SessionStart. Our `memory-load`
 is deliberately opt-in-full ("never auto-triggered") — that stance holds.
 
-- [ ] Add an opt-in consumer setting (`memory.session_index: off|on`, default
+- [x] Add an opt-in consumer setting (`memory.session_index: off|on`, default
       **off**) that, when on, emits a compact index of curated entries
       (titles + IDs + `~tokens`, hard cap ~30 rows / measured token ceiling)
       at session start via the existing hook surface.
-- [ ] Measure on the replay set: does the index improve memory HIT RATE
+      <!-- done 2026-07-08: src/scripts/session_memory_index.ts (rows via
+      retrieve_v1 detail:index over CURATED_TYPES, cap 30, spotlighted
+      <memory-index> DATA block, bodies never injected) wired into
+      hot_context_hook.ts session_start (lazy createRequire — the
+      default-off path pays nothing); setting documented in
+      agent-settings.template.yml; YAML-1.1 `on`→true handled. 6 tests. -->
+- [x] Measure on the replay set: does the index improve memory HIT RATE
       (model fetches a relevant entry it otherwise missed) enough to justify
       its fixed cost? Ship-criterion: hit-rate gain at ≤N tok fixed cost, N
       set from the Phase-0 baseline. Miss → stays off, honest-null.
+      <!-- measured 2026-07-08 (deterministic arm): fixed cost = 486 tok for
+      23 rows on the replay fixture corpus (real tokenizer; ~6.9% of the
+      7,092-tok Phase-0 full baseline; session_index_cost() +
+      regression-capped <1500 tok in tests). The HIT-RATE arm needs a live
+      paired model run (same class as the P1b judge arm — out-of-band);
+      it has NOT been run → per ship-criterion the default STAYS OFF.
+      Outcome: mechanism shipped opt-in, default off, honest. Re-open
+      together with the P1b flip trigger. -->
 
 **Exit:** evidence-backed default (off unless proven), setting documented.
 **Rollback:** setting removal; default was off throughout.
@@ -282,13 +400,17 @@ referenced; firing the tripwire needs measurement, not debate.
 
 ## Phase 7 — Candidate ledger: AST-folded code reading (documentation only)
 
-- [ ] Add claude-mem's `smart_search`/`smart_unfold` (tree-sitter folding with
+- [x] Add claude-mem's `smart_search`/`smart_unfold` (tree-sitter folding with
       per-symbol token counts, unfold on demand) to the token-program backlog
       as a CANDIDATE with a kill criterion: build only if a measured replay of
       real code-reading tasks shows ≥X% token cut vs the host's native
       read/grep at equal task success — and only if no host-native folding
       surface covers it first. Note the overlap risk with host tooling
       explicitly.
+      <!-- done 2026-07-08: recorded in road-to-token-saving.md Phase 10
+      (backlog umbrella) — X pinned to 30%, kill criterion = host-native
+      folding/navigation surface lands first (overlap risk named HIGH);
+      zero build, per the phase's documentation-only scope. -->
 
 **Exit:** candidate recorded with falsifiable ship/kill criteria; zero build.
 

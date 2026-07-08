@@ -1,0 +1,55 @@
+version: 1
+entries:
+  - id: hp-tmpdir-tsx-cache
+    key: TMPDIR tsx cache leak
+    body: |
+      Recurring on macOS: TMPDIR is exported per-user, and test harnesses that
+      reassign TMPDIR to a fixture directory make any child tsx process write its
+      transform cache INTO the fixture tree — breaking zero-file guarantees
+      (dry-run tests) and polluting consumer installs. Fix pattern: pin
+      TMPDIR=/tmp for tsx children spawned by installers/tests. First seen in the
+      py2ts bundle work, resurfaced in the Phase-1b installer scope resolver.
+      Detection: a dry-run or fixture test suddenly counts unexpected files whose
+      paths contain tsx-<number>.
+  - id: hp-generated-vs-source
+    key: stale generated projection
+    body: |
+      Recurring: hand-editing a generated projection (dist/agent-src, .claude/,
+      .windsurfrules, docs/proof.md, site mirrors) instead of the generator or
+      source. The next regeneration silently reverts the edit, or CI hash gates
+      go red (condensation hashes, check-router, build_proof --check). Fix: edit
+      src/ or the generator template string, then regenerate. The rule-trigger
+      matrix went stale for weeks this way because its generator template carried
+      a deleted .py path.
+  - id: hp-checkbox-overclaim
+    key: roadmap checkbox over-claim
+    body: |
+      Recurring: a roadmap step is flipped [x] on the strength of a test that
+      exercises only PART of the claimed surface (e.g. filter functions tested
+      against dist data while the step text claims the installer is covered).
+      The gap stays invisible until an end-to-end count is measured. Fix pattern:
+      red-first integration tests that COUNT what actually arrives; scope-correct
+      the inline note instead of silently keeping the [x].
+  - id: hp-pr-head-lag
+    key: GitHub PR head sync lag
+    body: |
+      Recurring: right after a push, gh pr create / merge tooling sees a blank or
+      lagged headRefOid ("Head sha can not be blank", "No commits between").
+      CI may run on the stale head, or merges land without the last commit.
+      Fix: verify gh pr view headRefOid equals the local tip before multi-commit
+      merges; retry PR creation after the ref settles.
+  - id: hp-parallel-worktree-clobber
+    key: parallel session working-tree clobber
+    body: |
+      Recurring: two sessions sharing one checkout — a merge/sync in one wipes the
+      other's uncommitted edits to tracked files (untracked files survive).
+      Fix pattern: per-task git worktrees; commit each batch before any sibling
+      session may sync; never leave approved-but-uncommitted work in a shared
+      checkout.
+  - id: hp-phantom-workflow-failure
+    key: workflow_dispatch phantom failures
+    body: |
+      Known GitHub Actions anomaly: workflow_dispatch-only workflows register
+      phantom failure runs on pushes (0 jobs, empty logs, 0s duration). Treat any
+      run with 0 jobs as a phantom; real runs always have their named job. The
+      sync-visibility workflow documents this in its own header.

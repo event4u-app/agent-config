@@ -30,6 +30,7 @@
 
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -310,6 +311,39 @@ export function restore_hot_context(
 }
 
 // ---------------------------------------------------------------------
+// opt-in memory session index (road-to-memory-retrieval-economy P5)
+// ---------------------------------------------------------------------
+
+/**
+ * Build the compact memory index when `memory.session_index: on`; `null`
+ * on the default-off path, empty corpus, or any failure (never blocks).
+ * Memory roots are cwd-relative (same contract as the MCP tool handlers),
+ * so the build runs chdir-wrapped to the workspace root.
+ */
+function _session_index_block_or_null(root: string): string | null {
+    try {
+        // Lazy require (ESM-safe via createRequire) keeps the default-off
+        // fast path free of the memory_lookup + settings-cascade import cost.
+        const req = createRequire(import.meta.url);
+        const mod = req('./session_memory_index.js') as {
+            session_index_enabled: (root: string) => boolean;
+            build_session_index_block: () => string | null;
+        };
+        if (!mod.session_index_enabled(root)) return null;
+        const prev = process.cwd();
+        try {
+            process.chdir(root);
+            return mod.build_session_index_block();
+        } finally {
+            process.chdir(prev);
+        }
+    } catch (exc) {
+        process.stderr.write(`hot-context-hook: session index skipped: ${String(exc)}\n`);
+        return null;
+    }
+}
+
+// ---------------------------------------------------------------------
 // CLI — dispatcher concern entry point
 // ---------------------------------------------------------------------
 
@@ -351,12 +385,23 @@ export function main(): number {
         } else if (event === 'session_start') {
             const source = String(payload.source ?? '');
             const decision = restore_hot_context(root, source);
+            const blocks: string[] = [];
             if (decision.action === 'inject' && decision.context) {
+                blocks.push(decision.context);
+            }
+            // Opt-in compact memory index (road-to-memory-retrieval-economy
+            // P5) — default OFF; rides the same injection surface. Memory
+            // roots are cwd-relative, so resolve from the workspace root.
+            const indexBlock = _session_index_block_or_null(root);
+            if (indexBlock !== null) {
+                blocks.push(indexBlock);
+            }
+            if (blocks.length > 0) {
                 process.stdout.write(
                     JSON.stringify({
                         decision: 'allow',
-                        reason: decision.reason,
-                        context: decision.context,
+                        reason: decision.action === 'inject' ? decision.reason : 'memory session index',
+                        context: blocks.join('\n\n'),
                     }) + '\n',
                 );
             }

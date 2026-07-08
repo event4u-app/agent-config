@@ -1,0 +1,39 @@
+version: 1
+entries:
+  - id: di-no-runtime
+    key: no runtime daemon
+    body: |
+      The package is compile-time governance: no background daemon, no state DB,
+      no self-rewriting memory. docs/contracts/no-runtime-boundary.md is the lock;
+      README states it as a capability boundary. Any feature needing an always-on
+      process is out of scope by decision, not by omission.
+  - id: di-kernel-unconditional
+    key: kernel rules unconditional
+    body: |
+      The 9 kernel rules are always-loaded and workspace-independent by
+      definition (rule-router contract, schema v2). Every scoping mechanism —
+      projection, install filtering, thin pointers — must pass kernel rules
+      through unconditionally. A scoped surface missing a kernel rule is a
+      correctness bug, not a tuning choice.
+  - id: di-evidence-before-claim
+    key: no public number without CLAIMS pointer
+    body: |
+      Every public number resolves to a docs/CLAIMS.md entry with a resolving
+      evidence pointer or it does not ship; check-claims fails the build
+      otherwise. Honest nulls are published, never deleted. This is the
+      package's identity claim and is CI-enforced, not aspirational.
+  - id: di-projection-install-parity
+    key: pipeline A/B semantic parity
+    body: |
+      The projection path (condense.ts) and the install path (install.sh +
+      src/install) must apply IDENTICAL scoping semantics. The install side
+      re-uses rule_in_scope rather than reimplementing it, so drift is
+      structurally impossible. Any new filter axis lands in the shared
+      predicate first.
+  - id: di-real-tokenizer
+    key: measurements use the real tokenizer
+    body: |
+      Token measurements cite token_count.ts (cl100k_base via tiktoken) — a
+      chars/4 proxy is not evidence anywhere. Reports record when the proxy
+      fallback was active. Locked as D2 in the memory-retrieval roadmap and
+      enforced by the D0 measurement rig of the token program.

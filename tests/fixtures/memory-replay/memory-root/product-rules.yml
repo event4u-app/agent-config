@@ -1,0 +1,23 @@
+version: 1
+entries:
+  - id: pr-flip-needs-gate
+    key: default flips are human gates
+    body: |
+      Any default flip that changes an existing consumer surface (projection
+      mode, rule scoping, discipline profile) ships opt-in first and flips only
+      through an explicit human release gate with measured before/after evidence
+      on the REAL consumer surface — never on projection-path numbers alone.
+  - id: pr-honest-null
+    key: honest nulls ship
+    body: |
+      A measured null (no lift, no effect) is published in docs/benchmark.md and
+      the claims ledger rather than deleted or re-run until green. Enforcement
+      mechanisms that measure zero delta are torn down, with the teardown
+      pre-committed before the measurement.
+  - id: pr-disclaimered-not-validated
+    key: disclaimered is not validated
+    body: |
+      Domain packs (finance/legal/strategy) carry disclaimer floors that bound
+      liability; they do NOT establish domain correctness. Catalog surfaces must
+      show disclaimer status and validation status separately so one is never
+      read as the other.

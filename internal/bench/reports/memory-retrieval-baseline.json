@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "kind": "memory-retrieval-baseline",
+  "roadmap": "road-to-memory-retrieval-economy",
+  "corpus_provenance": "corpus-derived (council 2026-07-08 Option A) — see tests/fixtures/memory-replay/queries.yml header; claims scoped to corpus-derived replay queries",
+  "tokenizer": "cl100k_base (tiktoken)",
+  "aggregate": {
+    "queries": 24,
+    "full_tokens": 7092,
+    "needed_recall": 1,
+    "index_plus_fetch_tokens": null,
+    "saving_pct": null
+  },
+  "per_query": [
+    {
+      "id": "q-01-owner-router",
+      "full_tokens": 127,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-02-owner-install",
+      "full_tokens": 135,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-03-owner-claims",
+      "full_tokens": 117,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-04-owner-mcp",
+      "full_tokens": 125,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-05-bench-frozen-worktree",
+      "full_tokens": 282,
+      "needed_found": 2,
+      "needed_total": 2
+    },
+    {
+      "id": "q-06-tmpdir-leak",
+      "full_tokens": 208,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-07-stale-generated",
+      "full_tokens": 324,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-08-overclaimed-checkbox",
+      "full_tokens": 168,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-09-pr-head-lag",
+      "full_tokens": 167,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-10-phantom-ci",
+      "full_tokens": 145,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-11-no-runtime",
+      "full_tokens": 133,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-12-kernel-scoping",
+      "full_tokens": 142,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-13-claims-invariant",
+      "full_tokens": 474,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-14-pipeline-parity",
+      "full_tokens": 144,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-15-tokenizer",
+      "full_tokens": 138,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-16-worktree-wipe-incident",
+      "full_tokens": 246,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-17-plugin-cache-incident",
+      "full_tokens": 254,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-18-vitest-recursion",
+      "full_tokens": 233,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-19-count-drift",
+      "full_tokens": 224,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-20-flip-gate-rule",
+      "full_tokens": 135,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-21-incident-and-pattern",
+      "full_tokens": 267,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-22-knowledge-removal-safety",
+      "full_tokens": 977,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-23-knowledge-router-schema",
+      "full_tokens": 472,
+      "needed_found": 1,
+      "needed_total": 1
+    },
+    {
+      "id": "q-24-knowledge-bench",
+      "full_tokens": 1455,
+      "needed_found": 1,
+      "needed_total": 1
+    }
+  ]
+}

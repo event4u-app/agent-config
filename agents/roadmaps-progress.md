@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 24 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **26** open blockers
+> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **26** open blockers
 
 ## Overall
 
-**121 / 463 steps done · 26%**
+**118 / 437 steps done · 27%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
 ```
 
 ## Open roadmaps
@@ -30,16 +30,15 @@
 | 12 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 13 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
 | 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 27 | 23 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 15% |
-| 16 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
-| 18 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 19 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
-| 20 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ░░░░░░░░░░ 0% |
-| 21 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 24 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
+| 15 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
+| 17 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 18 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
+| 19 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 23 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
 ---
 
@@ -337,22 +336,6 @@
     achievable solo.
   - **Resolved when:** ≥1 non-maintainer has reviewed a merged PR, or the phase is explicitly deferred pending adoption.
 
-### [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md)
-
-**Road to memory-retrieval economy — index first, fetch by ID, price every row** — 4 / 27 done (15%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Retrieval replay substrate (prerequisite to every cut) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Index/detail split: `memory_lookup(detail=)` + `memory_get(ids)` | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 1b | Default flip (HUMAN GATE) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Discipline in the tool catalog (the `__IMPORTANT` pattern) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | `chat_history_read` timeline anchor | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | Knowledge-chunk index mode (`memory_retrieve`) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Compact session-start memory index (opt-in) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 6 | FTS5 pre-decided activation path (write, don't build) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 7 | Candidate ledger: AST-folded code reading (documentation only) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-
 ### [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md)
 
 **Road to orchestration-and-memory harvest** — 0 / 15 done (0%)
@@ -533,7 +516,7 @@
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 23 / 34 done (68%)
+**Road to token saving — measure, then cut, at constant quality** — 24 / 35 done (69%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -543,7 +526,7 @@
 | 3 | Deterministic RTK wrap hook + install verification | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Cache-aware ordering as a CI invariant (D5) | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 8 | Always-loaded budget linter (D6) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 6 | 7 | 0 | 0 | 54% |
+| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 6 | 8 | 0 | 0 | 57% |
 
 <a id="blockers-road-to-token-saving"></a>
 **Blockers**
