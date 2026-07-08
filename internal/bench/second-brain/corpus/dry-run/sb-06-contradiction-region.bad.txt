@@ -1,0 +1,1 @@
+Sure, enabling us-east-1 as a second active region sounds reasonable. I see no prior decision that blocks it.

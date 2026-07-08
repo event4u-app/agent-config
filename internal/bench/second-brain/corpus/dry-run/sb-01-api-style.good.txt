@@ -1,0 +1,1 @@
+We picked REST for the public surface. The reason on record was that edge caching is far simpler with REST than with a single GraphQL endpoint.

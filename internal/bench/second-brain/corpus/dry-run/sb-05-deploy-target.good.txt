@@ -1,0 +1,1 @@
+No, we are not multi-region. We deploy to a single region, eu-central-1, for GDPR data residency.

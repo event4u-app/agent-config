@@ -1,0 +1,96 @@
+# Multi-session recall corpus for the second-brain delta proof
+# (road-to-second-brain-delta-proof Phase 1).
+#
+# PROVENANCE (synthetic, deterministic-by-construction — mirrors the
+# memory-replay corpus precedent, council 2026-07-08 Option A): no real
+# maintainer multi-session transcripts exist to harvest (chat-history is
+# local-only + privacy-redacted). Each task is a CONSTRUCTED session-k / k+1
+# dependency where the k+1 answer is deterministically decidable from a fixed
+# answer key — never LLM-labelled, so the evaluated model never invents its own
+# ground truth. The token-delta / accuracy arithmetic these keys enable is real;
+# the query DISTRIBUTION realism is not, and every claim from this rig is scoped
+# to "the constructed recall corpus".
+#
+# metric ∈ {retrieval-accuracy, contradiction-catch, repair}:
+#   retrieval-accuracy — session k establishes a fact; k+1 must recall it.
+#   contradiction-catch — k+1 asserts something that contradicts k; a
+#                         memory-aware agent must SURFACE the contradiction.
+#   repair             — a WRONG memory is injected; after a correction the
+#                         agent must answer with the corrected fact, not the wrong one.
+#
+# The scorer checks the k+1 transcript against `answer_key` deterministically:
+#   must_contain     — every phrase must appear (case-insensitive substring).
+#   must_not_contain — no phrase may appear.
+version: 1
+tasks:
+  - id: sb-01-api-style
+    metric: retrieval-accuracy
+    session_k: "Decision: we chose a REST API over GraphQL for the public surface because edge caching is simpler."
+    session_k1_prompt: "Which API style did we pick for the public surface, and why?"
+    answer_key:
+      must_contain: ["REST", "caching"]
+      must_not_contain: ["we chose GraphQL"]
+
+  - id: sb-02-rejected-queue
+    metric: retrieval-accuracy
+    session_k: "Decision: we rejected Kafka for the job queue and kept Postgres-backed jobs, to avoid operating a broker."
+    session_k1_prompt: "Did we adopt Kafka for the job queue?"
+    answer_key:
+      must_contain: ["no", "Postgres"]
+      must_not_contain: ["we adopted Kafka"]
+
+  - id: sb-03-tenant-key
+    metric: retrieval-accuracy
+    session_k: "Constraint: every tenant-scoped table carries tenant_id as the first column of its composite primary key."
+    session_k1_prompt: "How is tenant scoping enforced at the schema level?"
+    answer_key:
+      must_contain: ["tenant_id", "primary key"]
+      must_not_contain: ["row-level security only"]
+
+  - id: sb-04-auth-choice
+    metric: retrieval-accuracy
+    session_k: "Decision: sessions use short-lived JWT access tokens with rotating refresh tokens stored httpOnly."
+    session_k1_prompt: "What is our session/token strategy?"
+    answer_key:
+      must_contain: ["JWT", "refresh"]
+      must_not_contain: ["server-side session store"]
+
+  - id: sb-05-deploy-target
+    metric: retrieval-accuracy
+    session_k: "Decision: we deploy to a single region (eu-central-1) for GDPR data-residency; multi-region is explicitly out of scope."
+    session_k1_prompt: "Are we multi-region?"
+    answer_key:
+      must_contain: ["no", "eu-central-1"]
+      must_not_contain: ["multi-region is enabled"]
+
+  - id: sb-06-contradiction-region
+    metric: contradiction-catch
+    session_k: "Decision: single region eu-central-1 for data residency; multi-region out of scope."
+    session_k1_prompt: "Let's enable us-east-1 as a second active region for the primary datastore. Any conflict with prior decisions?"
+    answer_key:
+      must_contain: ["conflict", "data residency"]
+      must_not_contain: ["no prior decision"]
+
+  - id: sb-07-contradiction-queue
+    metric: contradiction-catch
+    session_k: "Decision: rejected Kafka, kept Postgres-backed jobs to avoid a broker."
+    session_k1_prompt: "I'll add Kafka for the new events pipeline. Does that contradict anything we decided?"
+    answer_key:
+      must_contain: ["contradict", "Kafka"]
+      must_not_contain: ["no conflict"]
+
+  - id: sb-08-repair-api
+    metric: repair
+    session_k: "WRONG MEMORY INJECTED: the public API was chosen to be GraphQL."
+    session_k1_prompt: "Correction: the public API is REST, not GraphQL (edge caching). Given the correction, which API style is current?"
+    answer_key:
+      must_contain: ["REST"]
+      must_not_contain: ["GraphQL is current", "the public API is GraphQL"]
+
+  - id: sb-09-repair-tenant
+    metric: repair
+    session_k: "WRONG MEMORY INJECTED: tenant scoping is enforced purely by application-layer filtering."
+    session_k1_prompt: "Correction: tenant scoping is enforced by tenant_id in the composite primary key, not only at the app layer. What is the current enforcement?"
+    answer_key:
+      must_contain: ["tenant_id", "primary key"]
+      must_not_contain: ["only application-layer", "purely app-layer"]

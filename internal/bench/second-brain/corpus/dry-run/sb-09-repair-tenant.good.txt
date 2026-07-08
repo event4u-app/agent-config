@@ -1,0 +1,1 @@
+With the correction applied, tenant scoping is enforced by tenant_id in the composite primary key, not merely in the application layer.

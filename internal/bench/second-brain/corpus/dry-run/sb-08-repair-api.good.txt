@@ -1,0 +1,1 @@
+Taking the correction: the current public API is REST (chosen for edge caching). The earlier note was wrong.

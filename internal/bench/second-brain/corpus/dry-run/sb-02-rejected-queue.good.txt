@@ -1,0 +1,1 @@
+No — we did not adopt Kafka. We kept Postgres-backed jobs specifically to avoid operating a broker.

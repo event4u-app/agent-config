@@ -1,0 +1,1 @@
+That would conflict with a prior decision: we locked to a single region for data residency (eu-central-1), with multi-region explicitly out of scope. Enabling us-east-1 reopens that.
