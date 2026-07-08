@@ -65,5 +65,34 @@ describe('golden smoke — fresh global install is single-surface complete', () 
         for (const ev of Object.keys(matrix)) {
             expect(JSON.stringify(hooks[ev])).toContain(MANAGED_SIGNATURE);
         }
+
+        // Shim invariant (road-to-install-path-convergence Phase 1): a direct
+        // `claude plugin install` NEXT TO this projection cannot recreate the
+        // duplicate content surface — the marketplace plugin lists exactly one
+        // pointer skill, that pointer collides with nothing in the projection,
+        // and every plugin hook command is byte-identical to a managed settings
+        // entry (Claude Code dedupes identical commands, so nothing double-fires).
+        const marketplace = JSON.parse(
+            fs.readFileSync(path.join(REPO_ROOT, '.claude-plugin', 'marketplace.json'), 'utf8'),
+        ) as { plugins: Array<{ skills: string[] }> };
+        const pluginSkills = marketplace.plugins.flatMap((p) => p.skills ?? []);
+        expect(pluginSkills).toEqual(['./.claude-plugin/skills/install-agent-config']);
+
+        const projectedSkillNames = fs.readdirSync(path.join(home, '.claude', 'skills'));
+        expect(projectedSkillNames).not.toContain('install-agent-config');
+
+        const pluginHooks = JSON.parse(
+            fs.readFileSync(path.join(REPO_ROOT, 'hooks', 'hooks.json'), 'utf8'),
+        ) as { hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>> };
+        for (const [ev, groups] of Object.entries(pluginHooks.hooks)) {
+            const managed = JSON.stringify(hooks[ev] ?? []);
+            for (const group of groups) {
+                for (const h of group.hooks) {
+                    expect(managed, `plugin hook for ${ev} not deduped by managed block`).toContain(
+                        JSON.stringify(h.command).slice(1, -1),
+                    );
+                }
+            }
+        }
     }, 200_000);
 });

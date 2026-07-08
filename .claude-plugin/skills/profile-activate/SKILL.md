@@ -1,1 +1,0 @@
-../../../src/domains/meta/profile/activate/command.md

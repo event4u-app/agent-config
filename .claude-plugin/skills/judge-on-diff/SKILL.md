@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/judge/on-diff/command.md

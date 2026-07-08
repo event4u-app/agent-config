@@ -1,1 +1,0 @@
-../../../src/domains/meta/agent-status/command.md

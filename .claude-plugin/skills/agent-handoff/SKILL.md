@@ -1,1 +1,0 @@
-../../../src/domains/meta/agent-handoff/command.md

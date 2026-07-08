@@ -1,1 +1,0 @@
-../../../src/domains/meta/skills/discover/command.md

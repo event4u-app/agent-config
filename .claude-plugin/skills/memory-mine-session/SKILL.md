@@ -1,1 +1,0 @@
-../../../src/domains/meta/memory/mine-session/command.md

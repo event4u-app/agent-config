@@ -1,1 +1,0 @@
-../../../src/domains/product-discovery/knowledge/cross-repo/command.md

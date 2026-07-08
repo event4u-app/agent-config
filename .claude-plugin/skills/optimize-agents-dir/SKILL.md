@@ -1,1 +1,0 @@
-../../../src/domains/meta/optimize/agents-dir/command.md

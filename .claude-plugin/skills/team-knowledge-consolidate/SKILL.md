@@ -1,1 +1,0 @@
-../../../src/domains/meta/team-knowledge/consolidate/command.md

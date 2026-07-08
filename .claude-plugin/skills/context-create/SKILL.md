@@ -1,1 +1,0 @@
-../../../src/domains/meta/context/create/command.md

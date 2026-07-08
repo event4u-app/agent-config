@@ -1,1 +1,0 @@
-../../../src/domains/meta/memory/propose/command.md

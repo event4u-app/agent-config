@@ -1,1 +1,0 @@
-../../../src/domains/meta/rule-compliance-audit/command.md

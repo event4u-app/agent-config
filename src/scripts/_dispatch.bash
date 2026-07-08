@@ -64,6 +64,18 @@ Tier 0 — daily-driver (init → sync → validate → work):
                              (Option-A loop; called by the /implement-ticket command)
   help                       Show this help (default Tier-0; --tier=1|all expands)
   --version, -V              Print package version
+
+TS-shell native (run via the installed `agent-config` binary):
+  setup                      Open the onboarding wizard in the browser (UI server)
+  install                    Open the install wizard (UI server, Step 1 / AI tools)
+  settings                   Open the local Settings GUI
+  ui:serve                   Start the local UI server (127.0.0.1, auto-picked port)
+  workspaces ls              List workspaces from the discovery manifest
+  packs ls                   List packs from the discovery manifest
+  commands [ls|explain]      List/explain the command surface from the discovery manifest
+  mcp-server                 Turnkey read-only stdio MCP server (no repo clone; ADR-085)
+  doctor-shell               Probe the TS-shell environment
+  eval:record                Record a live trigger-eval result into a corpus manifest
 EOF
 
   if [[ "$tier" == "1" || "$tier" == "all" ]]; then
@@ -105,6 +117,16 @@ Tier 1 — power-user (release shape, audit, migration):
                              Lists missing, modified, and foreign files.
                              Exits 1 on drift, 2 on missing lockfile.
                              Flags: --json | --project=<path>
+  converge                   Consented cleanup of duplicate install surfaces
+                             (surface-matrix driven). Never touches
+                             user-authored files; persists standing consent
+                             (install.auto_converge) on first use.
+                             Flags: --dry-run | --yes
+  conformance                Consumer conformance contract: doctor --ci +
+                             installed-and-firing checks. Exits non-zero on
+                             a failed check.
+  use                        Switch the active experience/profile
+                             (writes profile.id). Usage: use <profile-id>
   explain                    Read-only decision-chain trace.
                              Usage: explain config | explain rule <name>
                                   | explain route "<text>"
@@ -201,13 +223,14 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   telemetry:record           Append one artefact-engagement event (default-off)
   telemetry:status           Print artefact-engagement telemetry status (read-only)
   telemetry:report           Aggregate the engagement log into a quartile report
+  analyze-session            Read-only post-session report from on-disk runtime state
 EOF
   fi
 
   if [[ "$tier" == "0" ]]; then
     cat <<'EOF'
 
-(Hidden: 15 Tier-1 + 24 Tier-2 commands. Run `./agent-config --help --tier=1`
+(Hidden: Tier-1 and Tier-2 commands. Run `./agent-config --help --tier=1`
 or `--tier=all` to see them. Tier criteria: docs/contracts/command-surface-tiers.md.)
 EOF
   fi
@@ -959,6 +982,13 @@ cmd_doctor() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_doctor.ts" "$@"
 }
 
+# `agent-config converge` — consented duplicate-surface cleanup.
+# Exit codes: 0 converged/nothing-to-do/dry-run · 1 refused/failed · 2 usage.
+# See scripts/_cli/cmd_converge.ts.
+cmd_converge() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_converge.ts" "$@"
+}
+
 # `agent-config conformance` — consumer conformance contract
 # (road-to-flow-learnings Phase 0). Doctor --ci semantics plus the five
 # consumer checks (txlog tail, router pointers, dispatcher smoke,
@@ -1048,6 +1078,7 @@ main() {
     uninstall)               cmd_uninstall "$@" ;;
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;
+    converge)                cmd_converge "$@" ;;
     conformance)             cmd_conformance "$@" ;;
     versions)                cmd_versions "$@" ;;
     explain)                 cmd_explain "$@" ;;

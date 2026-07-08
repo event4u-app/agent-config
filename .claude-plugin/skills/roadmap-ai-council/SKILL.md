@@ -1,1 +1,0 @@
-../../../src/domains/product-basic/roadmap/ai-council/command.md

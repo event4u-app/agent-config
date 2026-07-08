@@ -1,1 +1,0 @@
-../../../src/domains/product-basic/roadmap/process-phase/command.md

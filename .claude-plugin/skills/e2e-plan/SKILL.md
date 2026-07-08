@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/e2e-plan/command.md

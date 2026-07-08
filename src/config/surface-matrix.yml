@@ -1,0 +1,213 @@
+# Surface Matrix — machine-checked per-tool canonical-surface declarations.
+#
+# One entry per tool in install.ts::USER_SCOPE_PATHS (set equality enforced by
+# lint_surface_matrix). Consumed by:
+#   - `agent-config doctor` (surface-state check — flags duplicate surfaces)
+#   - `agent-config converge` (per-tool cleanup actions)
+#   - CI (src/scripts/lint_surface_matrix.ts — coverage + drift)
+# Contract: docs/contracts/surface-matrix.md
+#
+# Fields per tool:
+#   surface:     projection | plugin | bundles | export-only
+#                projection  = installer writes content files into the user
+#                              scope path; that projection is canonical
+#                plugin      = the tool's own plugin/marketplace channel is
+#                              canonical (no user-scope projection exists)
+#                bundles     = manual import artifacts (ZIPs); no filesystem
+#                              discovery convention
+#                export-only = a config/marker export; no content tree
+#   hooks:       managed-settings-block | settings-hooks-opt-in | plugin | none
+#   alternates:  legitimate secondary surfaces (NOT duplicates), with role
+#   duplicate:   the duplicate-surface definition — `detect` paths that, when
+#                ALL present, mean the tool has a duplicate content surface.
+#                Only tools with a defined duplicate class are checked by
+#                doctor/converge. `pending-evidence` documents a suspected but
+#                unverified class (never acted on).
+#   converge:    the consented cleanup action for the duplicate class
+#   notes:       provenance — where the classification comes from
+
+schema_version: 1
+
+tools:
+  claude-code:
+    surface: projection
+    scope_path: "~/.claude/"
+    hooks: managed-settings-block
+    alternates:
+      - id: marketplace-plugin
+        role: bootstrap-shim
+        detail: >-
+          hooks/hooks.json (byte-identical to the managed settings block, so
+          Claude Code dedupes) plus one install-pointer skill; zero content
+          skills by construction (lint_marketplace enforces).
+    duplicate:
+      description: >-
+        A pre-shim marketplace plugin snapshot (content skills) installed next
+        to the ~/.claude/ file projection — every skill/command lists twice
+        and the snapshot rots silently.
+      detect:
+        all_of:
+          - "~/.claude/skills"
+          - "~/.claude/plugins/cache/event4u-agent-config"
+    converge:
+      action: plugin-uninstall
+      command: "claude plugin uninstall agent-config@event4u-agent-config"
+      reaps:
+        - "~/.claude/plugins/cache/event4u-agent-config"
+    notes: >-
+      Single-surface decision (agents/settings/contexts/
+      claude-code-single-surface-decision.md); shim invariant verified via
+      scratch marketplace install, 2026-07-08.
+
+  augment:
+    surface: projection
+    scope_path: "~/.augment/"
+    hooks: settings-hooks-opt-in
+    alternates:
+      - id: augment-plugin
+        role: dormant
+        detail: >-
+          .augment-plugin/ manifest-only wrapper (source: "."). Marketplace
+          feature is account-gated ("Plugin marketplace feature is not
+          enabled for your account") — dual install unreproducible today.
+    duplicate:
+      pending_evidence: >-
+        Suspected duplicate class analogous to Claude Code IF Augment enables
+        the plugin marketplace broadly. NOT acted on — evidence gate
+        agents/settings/contexts/augment-surface-parity.md (2026-07-08) could
+        not reproduce; re-run the gate before defining detect paths.
+    notes: >-
+      Projection-primary on evidence. NO retirement move without a fresh
+      parity gate (roadmap Phase 0 rule).
+
+  copilot:
+    surface: plugin
+    scope_path: "~/.copilot/"
+    hooks: plugin
+    notes: >-
+      Plugin-primary by design — no user-scope content projection exists for
+      Copilot; the project bridge is .github/plugin/marketplace.json. The
+      plugin is the correct surface here, not a duplicate (council Q3,
+      2026-07-07). Do not "fix".
+
+  claude-desktop:
+    surface: bundles
+    scope_path: "~/Library/Application Support/Claude/"
+    hooks: none
+    notes: >-
+      Skill ZIPs imported manually via Customize → Skills; no filesystem
+      discovery, no plugin channel — no dual-surface class (Phase 0 survey).
+
+  cursor:
+    surface: projection
+    scope_path: "~/.cursor/"
+    hooks: none
+    notes: Plain projection (rules/commands/personas); no plugin channel.
+
+  windsurf:
+    surface: projection
+    scope_path: "~/.codeium/windsurf/"
+    hooks: none
+    notes: Plain projection (rules only); no plugin channel.
+
+  cline:
+    surface: projection
+    scope_path: "~/Documents/Cline/Rules/"
+    hooks: none
+    notes: Plain projection (rules only); no plugin channel.
+
+  gemini-cli:
+    surface: projection
+    scope_path: "~/.gemini/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel (Phase 0 survey).
+
+  codex:
+    surface: projection
+    scope_path: "~/.codex/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel (Phase 0 survey).
+
+  continue:
+    surface: projection
+    scope_path: "~/.continue/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel (Phase 0 survey).
+
+  droid:
+    surface: projection
+    scope_path: "~/.factory/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel (Phase 0 survey).
+
+  roocode:
+    surface: projection
+    scope_path: "~/.roo/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel.
+
+  kilocode:
+    surface: projection
+    scope_path: "~/.kilocode/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel.
+
+  kiro:
+    surface: projection
+    scope_path: "~/.kiro/"
+    hooks: none
+    notes: Plain projection (rules/steering/personas); no plugin channel.
+
+  qoder:
+    surface: projection
+    scope_path: "~/.qoder/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel.
+
+  opencode:
+    surface: projection
+    scope_path: "~/.opencode/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel.
+
+  trae:
+    surface: projection
+    scope_path: "~/.trae/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel.
+
+  antigravity:
+    surface: projection
+    scope_path: "~/.agents/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel.
+
+  codebuddy:
+    surface: projection
+    scope_path: "~/.codebuddy/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel.
+
+  warp:
+    surface: projection
+    scope_path: "~/.warp/"
+    hooks: none
+    notes: Plain projection (skill bundle); no plugin channel.
+
+  aider:
+    surface: export-only
+    scope_path: "~/.aider.conf.yml"
+    hooks: none
+    notes: Config-file export; no content tree, no plugin channel (Phase 0 survey).
+
+  zed:
+    surface: export-only
+    scope_path: "~/.config/zed/"
+    hooks: none
+    notes: Export/marker only; no plugin channel (Phase 0 survey).
+
+  jetbrains:
+    surface: export-only
+    scope_path: "~/.config/JetBrains/"
+    hooks: none
+    notes: Export/marker only; no plugin channel (Phase 0 survey).

@@ -1,1 +1,0 @@
-../../../src/domains/meta/optimize/skills/command.md

@@ -28,33 +28,11 @@ import { runWorkspacesLs } from './commands/workspaces.js';
 import { runPacksLs } from './commands/packs.js';
 import { runCommandsLs, runCommandsExplain, looksLikeCommandTarget } from './commands/commands.js';
 import { logger } from './log/logger.js';
-import { REGISTRY } from './registry.js';
+import { buildHelp } from './help.js';
 
 function readVersion(): string {
     const pkg = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as { version?: unknown };
     return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
-}
-
-function buildHelp(): string {
-    const lines: string[] = [
-        'agent-config — event4u/agent-config CLI (TS shell)',
-        '',
-        'Usage:',
-        '  agent-config <command> [options]',
-        '  agent-config --help',
-        '  agent-config --version',
-        '',
-        'Native commands (TS shell):',
-    ];
-    for (const entry of REGISTRY) {
-        if (entry.disposition !== 'native') continue;
-        const synopsis = entry.synopsis ?? '';
-        lines.push(`  ${entry.name.padEnd(22)} ${synopsis}`);
-    }
-    lines.push('');
-    lines.push('All other subcommands delegate to the Bash dispatcher.');
-    lines.push('Run `agent-config help --tier=all` for the full Bash-side surface.');
-    return lines.join('\n');
 }
 
 async function main(argv: readonly string[]): Promise<number> {

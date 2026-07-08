@@ -1,1 +1,0 @@
-../../../src/domains/meta/memory/learn-low-impact/command.md

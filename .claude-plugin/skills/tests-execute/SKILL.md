@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/tests/execute/command.md

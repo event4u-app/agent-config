@@ -1,1 +1,0 @@
-../../../src/domains/meta/challenge-me/vision/command.md

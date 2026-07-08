@@ -1,1 +1,0 @@
-../../../src/domains/brand/brand/review/command.md

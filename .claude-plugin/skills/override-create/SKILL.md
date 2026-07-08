@@ -1,1 +1,0 @@
-../../../src/domains/meta/override/create/command.md

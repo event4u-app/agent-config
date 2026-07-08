@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/quality-fix/command.md

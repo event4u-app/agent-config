@@ -1,1 +1,0 @@
-../../../src/domains/product-discovery/knowledge/forget/command.md

@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/module/create/command.md

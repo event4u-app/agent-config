@@ -1,1 +1,0 @@
-../../../src/domains/product-discovery/research/report/command.md

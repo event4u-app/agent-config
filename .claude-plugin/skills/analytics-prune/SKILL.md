@@ -1,1 +1,0 @@
-../../../src/domains/meta/analytics/prune/command.md

@@ -1,1 +1,0 @@
-../../../src/domains/meta/grill-me/command.md

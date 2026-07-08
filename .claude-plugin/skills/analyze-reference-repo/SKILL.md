@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/analyze-reference-repo/command.md

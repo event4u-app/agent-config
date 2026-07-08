@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/judge/steps/command.md
