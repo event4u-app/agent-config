@@ -39,14 +39,11 @@ describe("retrieve_v1 detail parameter", () => {
         const entries = env["entries"] as Array<Record<string, unknown>>;
         expect(entries.length).toBeGreaterThan(0);
         for (const e of entries) {
-            expect(Object.keys(e).sort()).toEqual([
-                "confidence",
-                "id",
-                "source",
-                "title",
-                "tokens_estimate",
-                "type",
-            ]);
+            const expected =
+                e["type"] === "knowledge"
+                    ? ["confidence", "id", "pinned", "source", "title", "tokens_estimate", "type"]
+                    : ["confidence", "id", "source", "title", "tokens_estimate", "type"];
+            expect(Object.keys(e).sort()).toEqual(expected);
             expect(e["body"]).toBeUndefined();
             expect(typeof e["title"]).toBe("string");
             expect((e["title"] as string).length).toBeGreaterThan(0);
@@ -69,6 +66,16 @@ describe("retrieve_v1 detail parameter", () => {
         expect(env["status"]).toBe("partial");
         const slices = env["slices"] as Record<string, Record<string, unknown>>;
         expect(slices["bogus-type"]?.["status"]).toBe("unknown_type");
+    });
+});
+
+describe("knowledge index rows (Phase 4)", () => {
+    it("carry the pinned flag", () => {
+        const env = retrieve_v1(["knowledge"], ["schema v2"], 5, { detail: "index" });
+        const entries = env["entries"] as Array<Record<string, unknown>>;
+        expect(entries.length).toBeGreaterThan(0);
+        const pinnedRow = entries.find((e) => String(e["id"]).startsWith("router-contract"));
+        expect(pinnedRow?.["pinned"]).toBe(true);
     });
 });
 

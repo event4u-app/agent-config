@@ -43,6 +43,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { _entry_tokens_estimate } from './memory_lookup.js';
+
 import { load_agent_settings } from './_lib/agent_settings.js';
 
 export const DEFAULT_FILE = 'agents/runtime/.agent-chat-history';
@@ -708,6 +710,26 @@ export function read_entries(
         agent?: string | null | undefined;
     } = {},
 ): Entry[] {
+    return read_entries_with_refs(options).map((p) => p.entry);
+}
+
+/**
+ * Like {@link read_entries} but each entry carries its `ref` — the 0-based
+ * ordinal in the file's FULL chronological entry list (header excluded,
+ * counted BEFORE any session/agent/last filter), so a ref from an index row
+ * stays valid regardless of the filters a later call applies. Refs are
+ * stable for the append-only log; file rotation invalidates them (documented
+ * — a ref is a within-file locator, not a durable id).
+ * (road-to-memory-retrieval-economy Phase 3.)
+ */
+export function read_entries_with_refs(
+    options: {
+        last?: number | null | undefined;
+        path?: string | null | undefined;
+        session?: string | null | undefined;
+        agent?: string | null | undefined;
+    } = {},
+): Array<{ entry: Entry; ref: number }> {
     const target = options.path ?? file_path();
     const last = options.last ?? null;
     const session = options.session ?? null;
@@ -715,8 +737,9 @@ export function read_entries(
     if (!_isFile(target)) {
         return [];
     }
-    let entries: Entry[] = [];
+    let pairs: Array<{ entry: Entry; ref: number }> = [];
     const lines = _readLines(target);
+    let ref = 0;
     for (let i = 0; i < lines.length; i++) {
         const line = _strip(lines[i] ?? '');
         if (!line) {
@@ -732,23 +755,72 @@ export function read_entries(
             continue;
         }
         if (_isPlainObject(obj)) {
-            entries.push(obj);
+            pairs.push({ entry: obj, ref });
+            ref += 1;
         }
     }
     if (session !== null) {
-        entries = entries.filter((e) => e.s === session);
+        pairs = pairs.filter((p) => p.entry.s === session);
     }
     if (agent !== null) {
         if (agent === AGENT_UNKNOWN) {
-            entries = entries.filter((e) => !e.agent);
+            pairs = pairs.filter((p) => !p.entry.agent);
         } else {
-            entries = entries.filter((e) => e.agent === agent);
+            pairs = pairs.filter((p) => p.entry.agent === agent);
         }
     }
     if (last !== null && last >= 0) {
-        entries = entries.slice(entries.length - last);
+        pairs = pairs.slice(pairs.length - last);
     }
-    return entries;
+    return pairs;
+}
+
+/**
+ * Timeline anchor: the entries around `ref` in the FULL chronological list —
+ * `before`/`after` neighbours plus the anchor itself. JSONL is chronological,
+ * so this is slicing, not indexing (road-to-memory-retrieval-economy P3).
+ * An out-of-range ref returns [].
+ */
+export function slice_around(
+    path_: string | null,
+    ref: number,
+    before = 3,
+    after = 3,
+): Array<{ entry: Entry; ref: number }> {
+    const all = read_entries_with_refs({ path: path_ });
+    if (ref < 0 || ref >= all.length) {
+        return [];
+    }
+    const start = Math.max(0, ref - Math.max(0, before));
+    const end = Math.min(all.length, ref + Math.max(0, after) + 1);
+    return all.slice(start, end);
+}
+
+/**
+ * Compact index row for a history entry: ref + type tag + timestamp-ish
+ * fields when present + a ~100-char preview + the real-tokenizer cost of
+ * fetching the full entry (same lazy-tokenizer contract as memory_lookup's
+ * index rows).
+ */
+export function history_index_row(pair: { entry: Entry; ref: number }): Record<string, unknown> {
+    const e = pair.entry;
+    const text = typeof e.text === 'string' ? e.text : '';
+    const row: Record<string, unknown> = {
+        ref: pair.ref,
+        t: e.t ?? '',
+        preview: text.slice(0, 100),
+        tokens_estimate: _entry_tokens_estimate(e as Record<string, unknown>),
+    };
+    if (typeof e.s === 'string') {
+        row.s = e.s;
+    }
+    for (const tsField of ['ts', 'time', 'started']) {
+        if (typeof (e as Record<string, unknown>)[tsField] === 'string') {
+            row[tsField] = (e as Record<string, unknown>)[tsField];
+            break;
+        }
+    }
+    return row;
 }
 
 export function read_entries_for_current(

@@ -50,7 +50,11 @@
           "last": {"type": "integer", "description": "Return only the most recent N entries, after other filters apply.", "minimum": 1},
           "session": {"type": "string", "description": "Filter to a single 16-char session id."},
           "entry_type": {"type": "string", "description": "Filter by the `t` tag (e.g. note, decision, phase)."},
-          "path": {"type": "string", "description": "Optional history-file path override; defaults to the standard chat-history location under the project root."}
+          "path": {"type": "string", "description": "Optional history-file path override; defaults to the standard chat-history location under the project root."},
+          "around": {"type": "integer", "minimum": 0, "description": "Timeline anchor: return the entries around this ref (from a detail:\"index\" row) instead of the filtered list — depth_before/depth_after neighbours plus the anchor. Refs are within-file ordinals; rotation invalidates them."},
+          "depth_before": {"type": "integer", "minimum": 0, "default": 3, "description": "Neighbours before the anchor (with `around`). Defaults to 3."},
+          "depth_after": {"type": "integer", "minimum": 0, "default": 3, "description": "Neighbours after the anchor (with `around`). Defaults to 3."},
+          "detail": {"type": "string", "enum": ["index", "full"], "default": "full", "description": "'index' returns compact rows (ref, t tag, ~100-char preview, tokens_estimate) instead of full entries — scan first, then re-read the refs you need via `around` or a narrowed filter. 'full' (default) returns complete entries."}
         },
         "additionalProperties": false
       }

@@ -22,6 +22,18 @@ agent-config memory:lookup \
 # --envelope v1 for the retrieval-contract envelope.
 ```
 
+**Index-first discipline** (road-to-memory-retrieval-economy — the mirror
+of the MCP tool descriptions, for hosts without MCP): when you expect more
+hits than you need, look up with `--envelope v1 --detail index` first —
+each row carries `id`, `title` and `tokens_estimate` (the cost of fetching
+it) — then fetch ONLY the ids you will actually use via the `memory_get`
+MCP tool (or a full `--detail full` lookup narrowed to the right keys),
+batching multiple ids into one call. For precise single-hit lookups the
+full envelope is already minimal — the paired measurement showed index-
+first COSTS tokens there (honest null pinned in
+`internal/bench/reports/memory-retrieval-run.json`), so reach for index
+mode on broad or exploratory queries, not reflexively.
+
 Every backend MUST return a list of `Hit` with:
 
 | Field | Meaning |

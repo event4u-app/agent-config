@@ -244,18 +244,38 @@ can exercise index+fetch end-to-end.
 
 ## Phase 2 — Discipline in the tool catalog (the `__IMPORTANT` pattern)
 
-- [ ] Rewrite `memory_lookup` / `memory_get` / `memory_retrieve` descriptions
+- [x] Rewrite `memory_lookup` / `memory_get` / `memory_retrieve` descriptions
       to carry the workflow inline: "call with detail=index first; fetch full
       bodies via memory_get ONLY for IDs you will use; batch multiple IDs".
       Keep under the host description budget; lint via existing description
       checks.
-- [ ] Evaluate (do not blindly copy) a catalog-level workflow carrier: either
+      <!-- done 2026-07-08 (with P1): tools.ts + consumer_tool_catalog.json
+      descriptions carry the index-first workflow inline. Note:
+      memory_retrieve does not exist on 8.7.0 — knowledge chunks are served
+      through memory_lookup (KNOWLEDGE_TYPE) + memory_get; the discipline
+      text covers that unified path. -->
+- [x] Evaluate (do not blindly copy) a catalog-level workflow carrier: either
       a `memory_workflow` MCP **prompt/resource** (we already ship
       `prompts.ts`/`resources.ts` — more idiomatic than a fake tool) or a
       pseudo-tool. Decide by which surface the supported hosts actually
       render; record the per-host finding.
-- [ ] Mirror the discipline into the `memory` pack rule text for MCP-less
+      <!-- done 2026-07-08 — DECISION: descriptions stay the ONLY carrier;
+      no pseudo-tool, no extra prompt. Per-host finding: tool descriptions
+      are ambient on every MCP host (tools/list ships them); Claude Code
+      renders MCP prompts as user-invocable slash commands (not ambient)
+      and does not auto-inject resources — so a prompt adds no ambient
+      carrier and a pseudo-tool costs catalog tokens on EVERY session.
+      Decisive: the Phase-1b HONEST NULL shows index-first is NOT
+      universally better at current scale — an ambient aggressive workflow
+      instruction would be wrong guidance today. The descriptions are
+      nuance-aware instead. Revisit together with the flip re-open
+      trigger. -->
+- [x] Mirror the discipline into the `memory` pack rule text for MCP-less
       hosts (D4).
+      <!-- done 2026-07-08: docs/guidelines/agent-infra/memory-access.md
+      (the canonical memory-access surface rules/skills cite) carries the
+      index-first workflow with the honest-null nuance (broad queries yes,
+      precision lookups no) + the CLI --detail flags. -->
 
 **Exit:** the index-first instruction is host-natively present whenever the
 MCP server is connected; per-host rendering verified.
@@ -263,25 +283,46 @@ MCP server is connected; per-host rendering verified.
 
 ## Phase 3 — `chat_history_read` timeline anchor
 
-- [ ] Add `around: <entry-ref>` + `depth_before`/`depth_after` (defaults 3/3)
+- [x] Add `around: <entry-ref>` + `depth_before`/`depth_after` (defaults 3/3)
       to `chat_history_read`; JSONL is chronological, so this is slicing, not
       indexing. Entry ref = session id + line offset or the entry's existing
       id field.
-- [ ] Index-mode rows for history too: timestamp + `t` tag + first ~100 chars
+      <!-- done 2026-07-08: ref = 0-based ordinal in the FULL chronological
+      list (header excluded, pre-filter — stable for the append-only log;
+      rotation invalidates, documented). read_entries_with_refs +
+      slice_around in chat_history.ts (read_entries delegates —
+      behaviour-preserving, 41/41 existing tests green); MCP schema gains
+      around/depth_before/depth_after (defaults 3/3). -->
+- [x] Index-mode rows for history too: timestamp + `t` tag + first ~100 chars
       + `~tokens`, full entries on explicit request (same `detail` parameter,
       same default-preserving rollout).
+      <!-- done 2026-07-08: history_index_row (ref, t, s, ts-ish field when
+      present, 100-char preview, real-tokenizer estimate via the shared
+      lazy helper); detail param on chat_history_read, default full
+      byte-preserving. History entries are LARGE (unlike precision memory
+      hits), so this is where index mode actually pays. -->
 
 **Exit:** anchored context recovery without loading a whole session.
 **Rollback:** parameter removal.
 
 ## Phase 4 — Knowledge-chunk index mode (`memory_retrieve`)
 
-- [ ] Index rows for knowledge chunks: `ingest-id/chunk-n`, first line,
+- [x] Index rows for knowledge chunks: `ingest-id/chunk-n`, first line,
       pinned flag, `~tokens` (2 KB chunks ≈ ~500 tok each — exactly the size
       class where price tags change fetch behaviour).
-- [ ] `memory_get` accepts chunk refs; redaction guarantees unchanged (index
+      <!-- done 2026-07-08 (adapted): chunks flow through the unified
+      memory_lookup index path since P1; this step added the `pinned` flag
+      to knowledge index rows (id is already ingest-id:chunk-n, title falls
+      back to the first body line, ~tokens shared). -->
+- [x] `memory_get` accepts chunk refs; redaction guarantees unchanged (index
       rows are derived from already-redacted chunk files, never the source).
-- [ ] Add the replay set's knowledge queries to the Phase-0 rig; measure.
+      <!-- done 2026-07-08: memory_get_v1 resolves chunk ids (tested:
+      install-contract:chunk-000); index rows read the chunk FILES (the
+      post-redaction artifacts), never the ingest source. -->
+- [x] Add the replay set's knowledge queries to the Phase-0 rig; measure.
+      <!-- done 2026-07-08: q-22..q-24 in the replay set — the ONLY
+      consistently positive economy cases (+54.4%/+35.5%/−12.3%), exactly
+      the large-payload class the roadmap predicted. -->
 
 **Exit:** chunk retrieval follows the same two-phase economy, measured.
 **Rollback:** as Phase 1.

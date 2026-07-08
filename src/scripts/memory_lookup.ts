@@ -881,6 +881,10 @@ export function retrieve_v1(
                 confidence: new PyFloat(_round4(h.score)),
                 title: _entry_title(h.entry, h.id),
                 tokens_estimate: _entry_tokens_estimate(envelope_entry),
+                // Knowledge chunks carry their pinned flag in the index row
+                // (roadmap Phase 4) — pinned entries rank higher, so the
+                // caller should see why before fetching.
+                ...(h.type === KNOWLEDGE_TYPE ? { pinned: Boolean(h.entry['pinned'] ?? false) } : {}),
             });
         } else {
             entries.push(envelope_entry);

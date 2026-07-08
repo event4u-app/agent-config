@@ -6,10 +6,10 @@
 
 ## Overall
 
-**132 / 462 steps done · 29%**
+**140 / 462 steps done · 30%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 ```
 
 ## Open roadmaps
@@ -30,7 +30,7 @@
 | 12 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 13 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
 | 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 27 | 11 | 15 | 0 | 1 | 0 | ██████░░░░ 58% |
+| 15 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 27 | 3 | 23 | 0 | 1 | 0 | █████████░ 88% |
 | 16 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
 | 18 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
@@ -339,16 +339,16 @@
 
 ### [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md)
 
-**Road to memory-retrieval economy — index first, fetch by ID, price every row** — 15 / 26 done (58%)
+**Road to memory-retrieval economy — index first, fetch by ID, price every row** — 23 / 26 done (88%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Retrieval replay substrate (prerequisite to every cut) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | Index/detail split: `memory_lookup(detail=)` + `memory_get(ids)` | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1b | Default flip (HUMAN GATE) | ✅ done | 0 | 2 | 0 | 1 | 100% |
-| 2 | Discipline in the tool catalog (the `__IMPORTANT` pattern) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | `chat_history_read` timeline anchor | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | Knowledge-chunk index mode (`memory_retrieve`) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Discipline in the tool catalog (the `__IMPORTANT` pattern) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | `chat_history_read` timeline anchor | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 4 | Knowledge-chunk index mode (`memory_retrieve`) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 5 | Compact session-start memory index (opt-in) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 6 | FTS5 pre-decided activation path (write, don't build) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 7 | Candidate ledger: AST-folded code reading (documentation only) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
