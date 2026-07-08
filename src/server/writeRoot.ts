@@ -77,6 +77,23 @@ export function globalWriteRoot(home: string = homedir()): string {
     return join(home, GLOBAL_REL);
 }
 
+/**
+ * Read-only user-global fallback for package-sandbox mode
+ * (road-to-setup-experience follow-up): when the maintainer runs the GUI
+ * inside the package repo (or a worktree), reads seed from the REAL
+ * `~/.event4u/agent-config/` config — name, IDE, installed packs — so a
+ * local/dry-run test prefills like a consumer machine. Writes still land
+ * in the sandbox, never here. `EVENT4U_CONFIG_HOME` overrides the path
+ * (tests + power users, mirroring `user_global_paths.ts`). Returns `null`
+ * outside sandbox mode (global mode already reads the real config).
+ */
+export function userGlobalReadRoot(mode: WriteRootMode, writeRoot: string): string | null {
+    if (mode !== 'package-sandbox') return null;
+    const envHome = process.env['EVENT4U_CONFIG_HOME'];
+    const root = envHome !== undefined && envHome.length > 0 ? resolve(envHome) : globalWriteRoot();
+    return root === writeRoot ? null : root;
+}
+
 export interface ResolveOptions {
     /** Override CWD (tests + explicit --project-root). */
     cwd?: string;

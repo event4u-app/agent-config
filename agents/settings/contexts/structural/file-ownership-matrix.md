@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **464**
-- Edges (incl. self-WRITE): **1584**
+- Edges (incl. self-WRITE): **1587**
 
 ## READ_ONLY edges
 
@@ -220,6 +220,7 @@
 | `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/contexts/execution/subagent-routing.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/contexts/execution/verify-budget.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
@@ -666,6 +667,7 @@
 | `.agent-src.uncondensed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncondensed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncondensed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/git-workflow/SKILL.md` | `.agent-src.uncondensed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/gtm-launch/SKILL.md` | `.agent-src.uncondensed/skills/editorial-calendar/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/gtm-launch/SKILL.md` | `.agent-src.uncondensed/skills/launch-readiness/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/gtm-launch/SKILL.md` | `.agent-src.uncondensed/skills/messaging-architecture/SKILL.md` | `body_link` | 1 |
@@ -1038,6 +1040,7 @@
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/do-and-judge.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/do-competitively.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/do-in-parallel.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/subagent-orchestration/prompts/do-in-steps.md` | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/do-in-steps.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/do-in-worktrees.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/do-in-worktrees.md` | `.agent-src.uncondensed/skills/using-git-worktrees/SKILL.md` | `body_link` | 1 |

@@ -66,6 +66,11 @@ export interface UiServeOptions {
      * road-to-unified-setup § B5.
      */
     wizardMode?: 'install' | 'setup';
+    /**
+     * Explicit project intent (`config --project`) — surfaces the
+     * Project nav tab in the UI (road-to-setup-experience follow-up).
+     */
+    projectSurface?: boolean;
 }
 
 export function isHeadless(): boolean {
@@ -147,6 +152,7 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         idleShutdown: { onIdle: () => { void gracefulExit('browser closed'); } },
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
         ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
+        ...(opts.projectSurface !== undefined ? { projectSurface: opts.projectSurface } : {}),
     });
 
     try {

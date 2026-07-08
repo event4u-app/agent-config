@@ -80,7 +80,7 @@ export const BUDGETS: Record<string, number | null> = {
     'rules.gpt': null,
     'skill_catalog.gpt': 12_500, // always-scanned skill descriptions (skills_core_source, 258); current ~10,999
     'command_catalog.gpt': 5_800, // always-scanned command catalog; current ~5,005
-    'mcp_schemas.gpt': 3_500, // per-connected-client MCP tool schemas; current ~2,942
+    'mcp_schemas.gpt': 4_250, // per-connected-client MCP tool schemas; current ~3,694 after the council-gated run_tests exec pilot (598a8a49f) — re-anchored current + ~15% per this cap's own policy
 };
 
 /**

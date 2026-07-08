@@ -46,6 +46,20 @@ export const PingResponseSchema = z.object({
      * platform does not expose it.
      */
     systemUser: z.string(),
+    /**
+     * `true` only when the CLI was invoked with an explicit project
+     * intent (`config --project`) — the UI shows the Project nav tab
+     * exclusively in that case (road-to-setup-experience follow-up).
+     * Distinct from `projectScopeAvailable`, which is cwd-inferred.
+     */
+    projectSurface: z.boolean(),
+    /**
+     * Maintainer/dev surfaces (Workspace) — shown only when the server
+     * runs with AGENT_CONFIG_DEV_MODE=1 (council 2026-07-08 Q2: the
+     * beta-internal employee workspace leaves the default nav; the
+     * `#/workspace` deep link keeps working regardless).
+     */
+    devSurfaces: z.boolean(),
 });
 
 export type PingResponse = z.infer<typeof PingResponseSchema>;
@@ -69,6 +83,8 @@ export interface PingRouteOptions {
     mode: 'package-sandbox' | 'global';
     /** Server-wide dry-run flag — surfaced to the UI for the banner. */
     dryRun?: boolean;
+    /** Explicit project intent from the CLI (`config --project`). */
+    projectSurface?: boolean;
 }
 
 export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
@@ -83,6 +99,8 @@ export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
                 dryRun: opts.dryRun === true,
                 projectScopeAvailable: opts.projectScopeRoot !== undefined && opts.projectScopeRoot !== null,
                 systemUser: systemUserName(),
+                projectSurface: opts.projectSurface === true,
+                devSurfaces: (process.env['AGENT_CONFIG_DEV_MODE'] ?? '') === '1',
             };
             return response;
         });

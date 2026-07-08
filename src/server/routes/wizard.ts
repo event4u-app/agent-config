@@ -31,7 +31,7 @@ import { mergeIntoTemplate, parseYaml, replaceScalar } from '../io/yamlIO.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { detectInstalledTools, isBinaryOnPath, knownToolIds } from '../../install/toolDetection.js';
-import { readSelectedTools, writeSelectedTools } from '../../install/selectedTools.js';
+import { readSelectedTools, readSelectedPacks, writeSelectedTools } from '../../install/selectedTools.js';
 
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
@@ -76,7 +76,7 @@ export interface WizardRouteOptions {
      * `wizard-state.json` is present. road-to-unified-setup § B0 — the
      * `install` subcommand lands at index 0 (AI tools) and `setup` lands
      * at index 4 (Identity / first settings step), both off the same
-     * 13-step extended flow. Ignored when state has been persisted: a
+     * consolidated extended flow. Ignored when state has been persisted: a
      * resumed wizard always picks up where the user left off.
      */
     initialStep?: number;
@@ -98,6 +98,13 @@ export interface WizardRouteOptions {
      * § Dry-run state contract.
      */
     dryRun?: boolean;
+    /**
+     * Read-only user-global config root (package-sandbox mode) — the
+     * installed-packs prefill also consults the real `~/.event4u`
+     * settings + wizard lockfile so a local test run behaves like a
+     * consumer machine (road-to-setup-experience follow-up).
+     */
+    userGlobalReadRoot?: string | null;
 }
 
 const STATE_REL = join('state', 'wizard-state.json');
@@ -119,13 +126,14 @@ const AI_COUNCIL_KEY_INSTALL: Readonly<Record<string, string>> = {
 const LEGACY_USER_MD_REL = '.agent-user.md';
 const LEGACY_SETTINGS_REL = '.agent-settings.yml';
 // Step count mirrors the UI's `getWizardSteps` plan in `src/ui/wizard/steps.ts`.
-// Bump in lockstep. Default flow = welcome + 7 core steps (editor, personality,
-// cost, roadmap-quality, memory, user-md, review) → 8. Extended mode prepends
-// the install-only lead (ai-tools + roles + packs + legal-consent) → 12. AI
-// Council lives on its own top-level surface (not a wizard step); modules on the
-// Projekt surface.
-const DEFAULT_TOTAL_STEPS = 8;
-const EXTENDED_TOTAL_STEPS = 12;
+// Bump in lockstep. Default flow = welcome + profile + 4 consolidated core
+// steps (editor+behaviour, budgets+cadence, user-md, review) → 6
+// (road-to-setup-experience § Phase 3.1). Extended mode prepends the
+// install-only lead (ai-tools + roles + packs + legal-consent) → 10. AI
+// Council lives on its own top-level surface (not a wizard step); modules on
+// the Projekt surface.
+const DEFAULT_TOTAL_STEPS = 6;
+const EXTENDED_TOTAL_STEPS = 10;
 
 /**
  * Discovery-manifest path. Resolved from the package root the server
@@ -133,6 +141,51 @@ const EXTENDED_TOTAL_STEPS = 12;
  * the location at `dist/discovery/discovery-manifest.json`).
  */
 const MANIFEST_REL = join('dist', 'discovery', 'discovery-manifest.json');
+
+/**
+ * Read the installed-packs manifest — the top-level `packs:` list the
+ * installer injects into `.agent-settings.yml` (road-to-setup-experience
+ * § Phase 2). Union of the global layer (`writeRoot`) and, when distinct,
+ * the project layer (`legacyReadRoot`), both with the flat-root fallback.
+ *
+ * Returns an EMPTY list when no `packs:` key exists anywhere — unlike
+ * `session_profiles.installed_packs` (which treats "absent" as "all packs"
+ * for projection), the wizard must never pre-check the whole vocabulary.
+ */
+async function readInstalledPacks(
+    writeRoot: string,
+    legacyReadRoot: string | null | undefined,
+    userGlobalReadRoot?: string | null,
+): Promise<string[]> {
+    const roots = [writeRoot];
+    if (userGlobalReadRoot && userGlobalReadRoot !== writeRoot) roots.push(userGlobalReadRoot);
+    if (legacyReadRoot && legacyReadRoot !== writeRoot) roots.push(legacyReadRoot);
+    const found = new Set<string>();
+    for (const root of roots) {
+        for (const rel of [SETTINGS_REL, LEGACY_SETTINGS_REL]) {
+            let raw: string;
+            try {
+                raw = await fs.readFile(join(root, rel), 'utf8');
+            } catch {
+                continue;
+            }
+            let values: Record<string, unknown>;
+            try {
+                values = parseYaml(raw);
+            } catch {
+                continue;
+            }
+            const packs = values.packs;
+            if (Array.isArray(packs)) {
+                for (const id of packs) {
+                    if (typeof id === 'string' && id.trim() !== '') found.add(id.trim());
+                }
+            }
+            break; // typed subdir wins over flat root within one root
+        }
+    }
+    return [...found].sort();
+}
 
 const wizardStateSchema = z.object({
     step: z.number().int().min(0),
@@ -829,7 +882,16 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             try {
                 const manifestPath = join(opts.packageRoot, MANIFEST_REL);
                 const raw = await fs.readFile(manifestPath, 'utf8');
-                return JSON.parse(raw) as unknown;
+                const manifest = JSON.parse(raw) as Record<string, unknown>;
+                // road-to-setup-experience § Phase 2 — surface the installed
+                // packs so the packs step pre-checks a prior installation
+                // instead of re-deriving from roles/auto-detect alone.
+                // Union of the settings `packs:` manifest (fresh installs)
+                // and the wizard lockfile (existing settings files never get
+                // the block injected — council 2026-07-08, Q3).
+                const fromSettings = await readInstalledPacks(opts.writeRoot, legacyReadRoot, opts.userGlobalReadRoot);
+                const installedPacks = [...new Set([...fromSettings, ...readSelectedPacks()])].sort();
+                return { ...manifest, installedPacks };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'manifest read failed';
                 await reply.code(500).send({ error: { code: 'MANIFEST_UNAVAILABLE', message } });
@@ -1002,7 +1064,13 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 });
                 return reply;
             }
-            const isDryRun = parsed.data.dry_run === true;
+            // Server-level dry-run is a hard floor: a server booted with
+            // --dry-run must NEVER spawn the real installer, regardless of
+            // what the client payload says. Before this guard a dry-run
+            // wizard's Finish click ran a REAL apply (the client never sent
+            // `dry_run`), writing to the live global root + tool anchors —
+            // caught by the browser E2E (road-to-setup-experience follow-up).
+            const isDryRun = parsed.data.dry_run === true || opts.dryRun === true;
             const payload = parsed.data;
             const tmpPath = join(tmpdir(), `agent-config-apply-${randomBytes(8).toString('hex')}.json`);
             const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'install.ts');
@@ -1048,11 +1116,12 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             };
             reply.raw.on('close', onClose);
 
-            // Record the user's tool selection so the next wizard run
-            // pre-selects exactly these (detect-tools `configured`). Written
-            // on the real-apply path only — a dry-run preview must not.
+            // Record the user's tool + pack selection so the next wizard run
+            // pre-selects exactly these (detect-tools `configured` + the
+            // manifest's `installedPacks`). Written on the real-apply path
+            // only — a dry-run preview must not.
             if (payload.schema_version === 'wizard-v2') {
-                writeSelectedTools(payload.tools);
+                writeSelectedTools(payload.tools, payload.packs ?? []);
             }
 
             let written = 0;

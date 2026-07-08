@@ -5014,6 +5014,13 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/delegation-policy.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-steering.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/delegation-policy.md",
       "target": ".agent-src.uncondensed/contexts/execution/verify-budget.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -9367,6 +9374,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/git-workflow/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/quality-tools/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/github-ci/SKILL.md",
       "target": ".agent-src.uncondensed/skills/github-ci/SKILL.md",
       "type": "WRITE",
@@ -13033,6 +13047,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/do-in-steps.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-steering.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/do-in-steps.md",

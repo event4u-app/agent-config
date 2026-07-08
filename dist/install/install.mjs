@@ -12695,6 +12695,45 @@ function _deploy_claude_desktop(force, package_root, lockfile_path2) {
   );
   return [bundle_count, 0, "deployed", [bundles_dir, ...marker_paths]];
 }
+var _CLAUDE_FLAT_WRAPPER_EXTRA = /* @__PURE__ */ new Set(["commit"]);
+function _apply_claude_flat_command_wrappers(anchor, package_root, current_files) {
+  const wrapped = [];
+  const collisions = [];
+  const eligible = new Set(_CLAUDE_FLAT_WRAPPER_EXTRA);
+  try {
+    const manifest = JSON.parse(
+      fs13.readFileSync(path11.join(package_root, "dist", "discovery", "discovery-manifest.json"), "utf8")
+    );
+    for (const a of manifest.artefacts ?? []) {
+      if (a.category !== "command" || typeof a.slug !== "string") continue;
+      if ((a.tier ?? 2) <= 1 && a.visibility !== "internal") eligible.add(a.slug);
+    }
+  } catch {
+  }
+  for (const slug of [...eligible].sort()) {
+    const flat_rel = `commands/${slug}.md`;
+    const flat_abs = path11.join(anchor, "commands", `${slug}.md`);
+    if (!fs13.existsSync(flat_abs)) continue;
+    const skill_dir = path11.join(anchor, "skills", slug);
+    if (fs13.existsSync(skill_dir)) {
+      collisions.push(slug);
+      continue;
+    }
+    let body = fs13.readFileSync(flat_abs, "utf8");
+    if (body.startsWith("---\n") && !/^name:/m.test(body.split("\n---")[0] ?? "")) {
+      body = body.replace("---\n", `---
+name: ${slug}
+`);
+    }
+    fs13.mkdirSync(skill_dir, { recursive: true });
+    fs13.writeFileSync(path11.join(skill_dir, "SKILL.md"), body, "utf8");
+    fs13.rmSync(flat_abs, { force: true });
+    current_files.delete(flat_rel);
+    current_files.add(`skills/${slug}/SKILL.md`);
+    wrapped.push(slug);
+  }
+  return { wrapped, collisions };
+}
 function _deploy_global_content(tools, force, package_root, lockfile_path2) {
   const results = {};
   for (const tool_id of [...tools].sort()) {
@@ -12729,6 +12768,14 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         current_files,
         expected_deploy_files(src, dest_sub ? dest_sub : "")
       );
+    }
+    if (tool_id === "claude-code") {
+      const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files);
+      if (res.wrapped.length > 0 && !state.QUIET) {
+        info(
+          `  claude-code: ${res.wrapped.length} visible flat command(s) projected as skill wrappers (Claude Code flat-command discovery workaround)`
+        );
+      }
     }
     const missing_targets = _verify_deploy_targets(anchor, plan);
     if (missing_targets.length > 0) {
@@ -14147,6 +14194,7 @@ export {
   ZED_MARKER,
   _VALID_TOOLS,
   _append_unknown_legacy,
+  _apply_claude_flat_command_wrappers,
   _apply_payload_preview,
   _bridge_marker,
   _canonical_settings_target,

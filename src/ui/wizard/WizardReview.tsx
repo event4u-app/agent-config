@@ -36,6 +36,21 @@ export interface WizardReviewProps {
      */
     selectedToolsCount?: number;
     selectedPacksCount?: number;
+    /**
+     * Installed packs the current selection would remove
+     * (road-to-setup-experience § Phase 2). Rendered as a flagged
+     * destructive block; Finish stays disabled until `removalsConfirmed`.
+     */
+    packRemovals?: readonly string[];
+    removalsConfirmed?: boolean;
+    onConfirmRemovals?: (confirmed: boolean) => void;
+    /**
+     * "What happens on Finish" summary (road-to-setup-experience
+     * § Phase 3.3): selected tool ids and pack additions (selected but
+     * not yet installed). Omitted in the non-extended flow.
+     */
+    selectedToolIds?: readonly string[];
+    packAdditions?: readonly string[];
 }
 
 function stepOwnsPath(step: WizardStep, path: string): boolean {
@@ -100,8 +115,74 @@ function stepStatus(
 
 export function WizardReview(props: WizardReviewProps): preact.JSX.Element {
     const jumpSteps = props.steps.filter((_, i) => i !== props.currentIndex);
+    const removals = props.packRemovals ?? [];
+    const tools = props.selectedToolIds ?? [];
+    const additions = props.packAdditions ?? [];
+    const settingsCount = props.changes.length;
+    const hasSummary = tools.length > 0 || additions.length > 0
+        || settingsCount > 0 || props.userMdChanged;
     return (
         <>
+            {hasSummary ? (
+                <section class="ac-review-summary" aria-label="What happens on Finish">
+                    <h2 class="ac-review-summary__title">What happens on Finish</h2>
+                    <ul class="ac-review-summary__list">
+                        {settingsCount > 0 ? (
+                            <li>
+                                <strong>{settingsCount}</strong> setting{settingsCount === 1 ? '' : 's'} will change
+                                {' '}in <code>.agent-settings.yml</code>.
+                            </li>
+                        ) : <li>No settings change.</li>}
+                        {props.userMdChanged ? (
+                            <li>
+                                <code>.agent-user.yml</code> will be
+                                {' '}{props.userMdAction === 'create' ? 'created' : 'updated'}.
+                            </li>
+                        ) : null}
+                        {tools.length > 0 ? (
+                            <li>
+                                Config is installed for {tools.length} tool{tools.length === 1 ? '' : 's'}:
+                                <span class="ac-review-summary__chips">
+                                    {tools.map((t) => <code key={t} class="ac-review-summary__chip">{t}</code>)}
+                                </span>
+                            </li>
+                        ) : null}
+                        {additions.length > 0 ? (
+                            <li>
+                                New pack{additions.length === 1 ? '' : 's'}:
+                                <span class="ac-review-summary__chips">
+                                    {additions.map((p) => <code key={p} class="ac-review-summary__chip">{p}</code>)}
+                                </span>
+                            </li>
+                        ) : null}
+                    </ul>
+                </section>
+            ) : null}
+            {removals.length > 0 ? (
+                <div class="ac-review-removals" role="alert">
+                    <p class="ac-review-removals__title">
+                        ⚠️ {removals.length === 1
+                            ? '1 installed pack will be removed'
+                            : `${removals.length} installed packs will be removed`}
+                    </p>
+                    <ul class="ac-review-removals__list">
+                        {removals.map((id) => <li key={id}><code>{id}</code></li>)}
+                    </ul>
+                    <label class="ac-review-removals__confirm">
+                        <input
+                            type="checkbox"
+                            checked={props.removalsConfirmed ?? false}
+                            onChange={(e): void => {
+                                props.onConfirmRemovals?.((e.currentTarget as HTMLInputElement).checked);
+                            }}
+                        />
+                        <span>
+                            I understand these packs will no longer be installed.
+                            Re-check them on the packs step to keep them.
+                        </span>
+                    </label>
+                </div>
+            ) : null}
             <nav class="ac-wizard__review-nav" aria-label="Jump back to a step">
                 <p class="ac-wizard__review-nav-label">Jump back to a step:</p>
                 <ul class="ac-wizard__review-nav-list">

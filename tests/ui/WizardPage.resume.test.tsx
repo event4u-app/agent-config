@@ -100,16 +100,17 @@ describe('WizardPage resume', () => {
     });
 
     it('triggers loadUserMdOnce when resuming directly on the userMd step (no Loading hang)', async () => {
-        // Resume on step 7 (user-md). Non-extended order: welcome(0), editor(1),
-        // personality(2), cost(3), roadmap-quality(4), memory(5), ai-council(6),
-        // user-md(7). Without the post-loadAll dispatch the body fetch would
-        // never fire and the form would stay stuck on "Loading .agent-user.md…".
-        const restore = installFetchMock(7, {});
+        // Resume on step 4 (user-md). Consolidated non-extended order
+        // (road-to-setup-experience § Phase 3.1): welcome(0), profile(1),
+        // editor+behaviour(2), budgets+cadence(3), user-md(4), review(5).
+        // Without the post-loadAll dispatch the body fetch would never fire
+        // and the form would stay stuck on "Loading .agent-user.md…".
+        const restore = installFetchMock(4, {});
         try {
             render(<WizardPage path="/wizard" />);
             await waitFor(() => expect(loaded.value).toBe(true));
             await waitFor(() => expect(userMdLoaded.value).toBe(true));
-            expect(stepIndex.value).toBe(7);
+            expect(stepIndex.value).toBe(4);
         } finally {
             restore();
         }

@@ -5,6 +5,19 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="noindex" />
         <title>agent-config</title>
+        <script>
+            // Theme boot — set data-theme BEFORE first paint so there is no
+            // flash of the wrong theme (road-to-setup-experience § Phase 4.2).
+            // Persisted override in localStorage wins; otherwise follow the OS.
+            (function () {
+                var stored = null;
+                try { stored = localStorage.getItem('agent-config-theme'); } catch (e) { /* private mode */ }
+                var theme = stored === 'light' || stored === 'dark'
+                    ? stored
+                    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            })();
+        </script>
     </head>
     <body>
         <main id="app"></main>

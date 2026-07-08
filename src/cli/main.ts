@@ -20,8 +20,9 @@ import { runVersions } from './commands/versions.js';
 import { runRecordTriggerEval } from './commands/recordTriggerEval.js';
 import { runDoctorShell } from './commands/doctorShell.js';
 import { runUiServe } from './commands/uiServe.js';
-import { shouldInitLaunchGui, buildInitGuiOptions } from './initRouting.js';
+import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation } from './initRouting.js';
 import { runSettings } from './commands/settings.js';
+import { runConfig } from './commands/config.js';
 import { runMcpServer } from './commands/mcpServer.js';
 import { runWorkspacesLs } from './commands/workspaces.js';
 import { runPacksLs } from './commands/packs.js';
@@ -124,9 +125,36 @@ async function main(argv: readonly string[]): Promise<number> {
             process.exit(code);
         });
 
+    // `config` — the canonical configuration entry point
+    // (road-to-setup-experience § Phase 1). Default scope is GLOBAL
+    // (#/settings hub); `--project` lands on the project surface.
+    // `settings` below stays as a compatible alias of the default scope.
+    program
+        .command('config')
+        .description('Open the configuration GUI (global settings by default; --project for the project surface)')
+        .option('--project', 'Open the project configuration surface instead of global settings')
+        .option('--port <n>', 'Override the auto-picked port', (v) => Number.parseInt(v, 10))
+        .option('--no-open', 'Do not launch the browser')
+        .option('--ui-dist <path>', 'Override the dist/ui directory')
+        .option('--allow-headless', 'Start even when SSH/no-DISPLAY is detected')
+        .option('--project-root <path>', 'Override the project root used to resolve .agent-config/')
+        .option('--dry-run', 'Boot with all writes suppressed (preview-only)')
+        .action(async (opts: {
+            project?: boolean;
+            port?: number;
+            open?: boolean;
+            uiDist?: string;
+            allowHeadless?: boolean;
+            projectRoot?: string;
+            dryRun?: boolean;
+        }) => {
+            const code = await runConfig(opts);
+            process.exit(code);
+        });
+
     program
         .command('settings')
-        .description('Open the local Settings GUI (boots the UI server and lands on #/settings)')
+        .description('Open the local Settings GUI (alias of `config`; lands on #/settings)')
         .option('--port <n>', 'Override the auto-picked port', (v) => Number.parseInt(v, 10))
         .option('--no-open', 'Do not launch the browser')
         .option('--ui-dist <path>', 'Override the dist/ui directory')
@@ -146,7 +174,7 @@ async function main(argv: readonly string[]): Promise<number> {
         });
 
     // `install` — install-flow alias for `ui:serve` that lands on Step 1
-    // (AI tools, index 0) of the extended 13-step wizard. road-to-unified-setup
+    // (AI tools, index 0) of the consolidated extended 10-step wizard. road-to-unified-setup
     // § B0 — same Fastify server, same bundle, only the initial step
     // differs from `setup`.
     program
@@ -184,12 +212,11 @@ async function main(argv: readonly string[]): Promise<number> {
 
     // `setup` — onboarding-only alias for `ui:serve` that lands on the
     // `#/wizard` route. Replaces the deprecated `/onboard` chat skill.
-    // road-to-unified-setup § B0: `setup` defaults to the extended
-    // 13-step flow and lands on Identity (index 4) so the install-only lead
-    // (ai-tools + roles + packs) is skipped. The project `modules` step is
-    // NOT skipped — it sits at the end of the flow, so setup still walks it
-    // (before review). Pass `--no-extended` to fall back to the
-    // settings-only wizard.
+    // road-to-unified-setup § B0 + road-to-setup-experience § Phase 3.1:
+    // `setup` defaults to the consolidated extended 10-step flow and lands
+    // on Editor & behaviour (index 6) so the install-only lead (ai-tools +
+    // roles + packs + legal-consent) is skipped. Pass `--no-extended` to
+    // fall back to the settings-only wizard.
     program
         .command('setup')
         .description('Open the onboarding wizard (boots the UI server and lands on Identity)')
@@ -215,11 +242,11 @@ async function main(argv: readonly string[]): Promise<number> {
                 extendedSteps: extended,
                 // Setup skips the welcome step (it keeps name/language in the
                 // user-md form) and the install-only lead (ai-tools/roles/
-                // packs). Extended → jump to Identity/editor (index 4);
+                // packs/legal-consent). Extended → jump to the first settings
+                // step (Editor & behaviour, index 6 in the consolidated
+                // 10-step plan — road-to-setup-experience § Phase 3.1);
                 // non-extended → skip welcome to the first settings step (1).
-                // The project `modules` step is reached later (end of the
-                // flow), not skipped.
-                initialStep: extended ? 4 : 1,
+                initialStep: extended ? 6 : 1,
                 wizardMode: 'setup',
             };
             if (opts.port !== undefined) forwarded.port = opts.port;
@@ -312,7 +339,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'mcp-server', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
+    const native = ['versions', 'doctor-shell', 'mcp-server', 'ui:serve', 'settings', 'config', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         // Actions that don't hard-exit signal failure via process.exitCode.
@@ -331,6 +358,16 @@ async function main(argv: readonly string[]): Promise<number> {
     // drive the install via /api/v1/wizard/apply → install.py --apply-payload —
     // no CLI tool-picker, one installer. Otherwise fall through to the bash CLI
     // install (road-to-single-install-source-of-truth § Phase 4 follow-up).
+    // `init --project` initializes the minimal consumer project surface
+    // (bridge marker + overrides + gitignore block) via the `refresh
+    // --project` writer — never the GUI, never the global install
+    // (road-to-setup-experience § Phase 1.3).
+    if (head === 'init') {
+        const projectDelegation = buildProjectInitDelegation(argv.slice(1));
+        if (projectDelegation !== null) {
+            return delegateToBash({ args: projectDelegation });
+        }
+    }
     if (head === 'init' && shouldInitLaunchGui(argv.slice(1))) {
         return runUiServe(buildInitGuiOptions(argv.slice(1)));
     }

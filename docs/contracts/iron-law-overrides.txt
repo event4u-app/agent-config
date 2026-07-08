@@ -18,6 +18,7 @@
 # Iron-Law fences + non-externalisable enumerations; further condensation
 # would force semantic loss. All sit ≤ 4 000-char override ceiling.
 ask-when-uncertain
+commit-policy
 direct-answers
 language-and-tone
 no-cheap-questions

@@ -15,7 +15,8 @@ import { WizardPage } from '../../src/ui/pages/WizardPage.js';
 import {
     banner, diffLoading, discoveryLoaded, discoveryLoading, discoveryLoadError,
     discoveryPacks, discoveryWorkspaces, detectedPackIds, errors, extendedSteps,
-    initialSettings, loaded, loadError, packsTouched, saving, schema, selectedPacks,
+    initialSettings, installedPackIds, loaded, loadError, packsTouched, rolesTouched,
+    saving, schema, selectedPacks,
     selectedRoles, selectedTools, settingsLastModified, stepIndex, userMdBody,
     userMdExists, userMdInitial, userMdLoaded, userMdSkipped, values, wizardComplete,
 } from '../../src/ui/wizard/state.js';
@@ -51,10 +52,10 @@ function resetSignals(): void {
     discoveryLoaded.value = false; discoveryLoading.value = false; discoveryLoadError.value = null;
     discoveryPacks.value = []; discoveryWorkspaces.value = []; detectedPackIds.value = [];
     selectedPacks.value = {}; selectedRoles.value = {}; selectedTools.value = {};
-    packsTouched.value = false;
+    packsTouched.value = false; rolesTouched.value = false; installedPackIds.value = [];
 }
 
-function installFetchMock(): { restore: () => void } {
+function installFetchMock(identity?: Record<string, unknown>): { restore: () => void } {
     const original = global.fetch;
     global.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
         const path = typeof url === 'string' ? url : url.toString();
@@ -66,7 +67,11 @@ function installFetchMock(): { restore: () => void } {
             return new Response(JSON.stringify({ values: {}, lastModified: 1, path: '.agent-settings.yml', schema: SETTINGS_SCHEMA }), { status: 200 });
         }
         if (path === '/api/v1/wizard/state' && method === 'POST') return new Response('{"ok":true}', { status: 200 });
-        if (path === '/api/v1/user-md' && method === 'GET') return new Response(JSON.stringify({ body: '', exists: false, lastModified: null }), { status: 200 });
+        if (path === '/api/v1/user-md' && method === 'GET') {
+            return identity !== undefined
+                ? new Response(JSON.stringify({ identity, exists: true, lastModified: 1 }), { status: 200 })
+                : new Response(JSON.stringify({ body: '', exists: false, lastModified: null }), { status: 200 });
+        }
         if (path === '/api/v1/user-md/template' && method === 'GET') return new Response('{"body":""}', { status: 200 });
         if (path === '/api/v1/wizard/manifest' && method === 'GET') return new Response(JSON.stringify(MANIFEST), { status: 200 });
         if (path === '/api/v1/wizard/auto-detect' && method === 'GET') return new Response(JSON.stringify({ root: '/repo', signals: [] }), { status: 200 });
@@ -103,6 +108,34 @@ describe('WizardPage roles step', () => {
 
             fireEvent.click(roleCheckbox(container, 'Founder'));
             await waitFor(() => expect(next.disabled).toBe(false));
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('pre-checks roles recorded in .agent-user.yml on a repeat run', async () => {
+        const mock = installFetchMock({
+            version: 1,
+            identity: { name: 'Matze' },
+            language: 'de',
+            role: ['founder', 'product', 'not-a-workspace'],
+            style: { pace: 'pragmatic' },
+        });
+        try {
+            const { getByRole, container } = render(<WizardPage path="/wizard" />);
+            await waitFor(() => expect(loaded.value).toBe(true));
+            await waitFor(() => expect(discoveryLoaded.value).toBe(true));
+            // Recorded roles seed the checkboxes (unknown ids dropped)…
+            await waitFor(() => expect(selectedRoles.value['founder']).toBe(true));
+            expect(selectedRoles.value['product']).toBe(true);
+            expect(selectedRoles.value['not-a-workspace']).toBeFalsy();
+            expect(roleCheckbox(container, 'Founder').checked).toBe(true);
+            // …and Next is immediately enabled — no re-picking required.
+            const next = getByRole('button', { name: 'Next' }) as HTMLButtonElement;
+            expect(next.disabled).toBe(false);
+            // The seeded roles also drive the pack recommendation.
+            expect(selectedPacks.value['founder-strategy']).toBe(true);
+            expect(selectedPacks.value['product-basic']).toBe(true);
         } finally {
             mock.restore();
         }

@@ -106,12 +106,20 @@ const EXTENDED_STEPS_LEAD: readonly WizardStep[] = [
     },
 ];
 
+/**
+ * Consolidated settings steps (road-to-setup-experience § Phase 3.1):
+ * the former identity + personality pair merged into one "Editor &
+ * behaviour" step, and cost + roadmap-quality + memory merged into one
+ * "Budgets & cadence" step. Ids `identity` / `cost` are kept stable —
+ * the install-mode ContinueScreen, the rtk row, and the review-step
+ * ownership map all anchor on them.
+ */
 const CORE_WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'identity',
-        title: 'Editor and tooling',
-        navLabel: 'Editor',
-        subtitle: 'IDE goes into .agent-settings.yml so the agent opens files in the right tool. rtk presence is auto-detected (see the rtk row). Your name lives in .agent-user.yml (later step).',
+        title: 'Editor & behaviour',
+        navLabel: 'Preferences',
+        subtitle: 'Your IDE plus how the agent behaves: autonomy, output verbosity, PR-comment style. rtk presence is auto-detected (see the rtk row). Your name lives in .agent-user.yml (later step).',
         kind: 'form',
         // `personal.rtk_installed` is NOT a form field — it is auto-detected at
         // runtime (road-to-wizard-ux-improvements § Phase 7) and rendered by a
@@ -119,15 +127,6 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
         paths: [
             'personal.ide',
             'personal.open_edited_files',
-        ],
-    },
-    {
-        id: 'personality',
-        title: 'How should the agent behave?',
-        navLabel: 'Personality',
-        subtitle: 'Autonomy, output verbosity, and PR-comment style.',
-        kind: 'form',
-        paths: [
             'personal.autonomy',
             'personal.minimal_output',
             'personal.play_by_play',
@@ -136,9 +135,9 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
     },
     {
         id: 'cost',
-        title: 'Rule loading, budgets & model tier',
-        navLabel: 'Cost & rules',
-        subtitle: 'Three distinct levers: rule_loading_tier (how many behavioural rules load — token footprint), cost.budgets (optional USD spending ceilings), and model.auto_switch (per-skill model tier). They are independent — the rule tier is not a spend lever and the model tier is not a rule lever.',
+        title: 'Budgets, rules & cadence',
+        navLabel: 'Budgets & cadence',
+        subtitle: 'Independent levers: rule_loading_tier (how many behavioural rules load — token footprint), cost.budgets (optional USD ceilings), model.auto_switch (per-skill model tier), plus quality/roadmap cadence and memory thresholds.',
         kind: 'form',
         paths: [
             'rule_loading_tier',
@@ -148,28 +147,10 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'cost.enforcement',
             'model.auto_switch',
             'tokens.rich_skills',
-        ],
-    },
-    {
-        id: 'roadmap-quality',
-        title: 'Roadmap & quality cadence',
-        navLabel: 'Roadmap & quality',
-        subtitle: 'When the agent runs quality tools and refreshes roadmap dashboards.',
-        kind: 'form',
-        paths: [
             'roadmap.quality_cadence',
             'roadmap.dashboard_regen_cadence',
             'quality.local_auto_run',
             'quality.wait_for_remote_ci',
-        ],
-    },
-    {
-        id: 'memory',
-        title: 'Memory & redaction',
-        navLabel: 'Memory',
-        subtitle: 'Inline-review threshold and transcript-redaction regexes.',
-        kind: 'form',
-        paths: [
             'memory.review_threshold',
             'memory.redact_patterns',
         ],
