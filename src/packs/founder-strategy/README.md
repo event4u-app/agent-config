@@ -5,7 +5,7 @@
 Vision, fundraising narrative, competitive moat.
 
 - **id**: `founder-strategy`
-- **version**: `8.4.1`
+- **version**: `8.6.0`
 - **owner**: founder
 - **requires**: —
 - **artefacts**: 8

@@ -18,6 +18,16 @@
 export type Tier = 'lite' | 'medium' | 'high' | 'inherit';
 export type QuotaPool = 'separate' | 'shared';
 
+/**
+ * Where a resolved tier came from (road-to-cost-aware-model-routing Phase 0):
+ * - 'static'   — declared by frontmatter / category pin,
+ * - 'inferred' — produced by the deterministic per-slice tier inference,
+ * - 'inherit'  — session tier; no downshift decision was made.
+ * Mirrors the `tier_source` telemetry field in
+ * `src/agent-src/contexts/execution/orchestration-telemetry.md`.
+ */
+export type TierSource = 'static' | 'inferred' | 'inherit';
+
 /** Per-tier model alias overrides (empty string = use the tier's runtime default). */
 export interface ModelMap {
     lite?: string;
@@ -35,6 +45,12 @@ export interface RoutingInputs {
     model_map: ModelMap;
     /** From the host-capability manifest. */
     separate_quota_pool: boolean;
+    /**
+     * How `task_tier` was produced: 'static' (frontmatter/category pin) or
+     * 'inferred' (deterministic per-slice inference). Optional — absent
+     * defaults to 'static'. Ignored when the slice runs on the session tier.
+     */
+    task_tier_origin?: Exclude<TierSource, 'inherit'>;
 }
 
 export interface RoutingDecision {
@@ -44,6 +60,8 @@ export interface RoutingDecision {
     model: string;
     /** Whether a separate quota pool is used (bonus) or the shared one. */
     quota_pool: QuotaPool;
+    /** Telemetry value for `tier_source`: 'inherit' when no downshift decision applied. */
+    tier_source: TierSource;
     reason: string;
 }
 
@@ -64,6 +82,11 @@ export function resolveSubagentRouting(inp: RoutingInputs): RoutingDecision {
     const tier: Tier = !inp.downshift || inp.task_tier === 'inherit' ? inp.session_tier : inp.task_tier;
     const downshifted = inp.downshift && inp.task_tier !== 'inherit' && tier !== inp.session_tier;
 
+    // Telemetry provenance: only a real downshift decision carries its origin;
+    // session-tier runs (inherit task, downshift off, or tier == session) are 'inherit'.
+    const applied = inp.downshift && inp.task_tier !== 'inherit';
+    const tier_source: TierSource = applied ? (inp.task_tier_origin ?? 'static') : 'inherit';
+
     // Quota arbitrage: a bonus, only when BOTH the setting and the host allow it.
     const useSeparate = inp.quota_arbitrage && inp.separate_quota_pool;
     const quota_pool: QuotaPool = useSeparate ? 'separate' : 'shared';
@@ -76,6 +99,7 @@ export function resolveSubagentRouting(inp: RoutingInputs): RoutingDecision {
         tier,
         model: modelForTier(tier, inp.model_map),
         quota_pool,
+        tier_source,
         reason: reasonParts.join(' · '),
     };
 }

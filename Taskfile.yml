@@ -89,6 +89,7 @@ tasks:
       - task: check-comparison
       - task: check-structural-breaking
       - task: check-trigger-evals
+      - task: check-trigger-eval-presence
       - task: lint-eval-freshness
       - task: lint-workflow-security
       - task: lint-missions
@@ -255,6 +256,7 @@ tasks:
       - task: check-comparison
       - task: check-structural-breaking
       - task: check-trigger-evals
+      - task: check-trigger-eval-presence
       - task: lint-eval-freshness
       - task: lint-workflow-security
       - task: lint-missions

@@ -224,6 +224,10 @@ record it in the commit message (`Eval stub: deferred`). Peer examples
 for the expected format: `php-coder/evals/triggers.json`,
 `eloquent/evals/triggers.json`, `skill-writing/evals/triggers.json`.
 
+Presence CI-enforced for new skills: `check_trigger_eval_presence` fails
+any skill outside shrink-only grandfather allowlist lacking
+`evals/triggers.json` — *skip* defers query quality, never the file.
+
 Rules / commands / guidelines do **not** get eval stubs — only skills
 route through the top-level catalogue.
 

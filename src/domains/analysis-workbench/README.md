@@ -5,7 +5,7 @@
 RCA, post-mortem, premortem, and decision-review as an integrated learning loop.
 
 - **id**: `analysis-workbench`
-- **version**: `8.4.1`
+- **version**: `8.6.0`
 - **owner**: engineering
 - **requires**: engineering-base
 - **artefacts**: 10

@@ -5,7 +5,7 @@
 Next.js framework patterns.
 
 - **id**: `nextjs`
-- **version**: `8.4.1`
+- **version**: `8.6.0`
 - **owner**: engineering
 - **requires**: react, typescript, engineering-base
 - **artefacts**: 2
