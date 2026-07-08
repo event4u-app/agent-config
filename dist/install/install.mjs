@@ -14078,8 +14078,8 @@ var settingsSchema = external_exports.object({
     enabled: external_exports.boolean().default(true).describe(
       "Global master switch for the subagent layer. true (default) = available; false = fully disabled (the canonical kill-switch \u2014 no auto-dispatch, no routing, everything runs in-session)."
     ),
-    auto: external_exports.enum(["off", "ask", "on"]).default("ask").describe(
-      "Automatic-dispatch mode. off = subagents only via explicit command. ask = classify the task and ask once before dispatching. on = auto-dispatch delegable tasks (surface the choice in one line). Shipped default is ask on subagent-capable hosts, off elsewhere; no-op where the host has no subagent primitive."
+    auto: external_exports.enum(["off", "ask", "on"]).default("on").describe(
+      "Automatic-dispatch mode. off = subagents only via explicit command. ask = classify the task and ask once before dispatching. on = auto-dispatch delegable tasks (surface the choice in one line). Shipped default is on on subagent-capable hosts (flipped from ask 2026-07-09, ADR-117), off elsewhere; no-op where the host has no subagent primitive."
     ),
     downshift: external_exports.boolean().default(true).describe(
       "Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier."
