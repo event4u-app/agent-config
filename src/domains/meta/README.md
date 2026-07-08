@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `8.4.1`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 251
+- **artefacts**: 257
 
-## Commands (124)
+## Commands (130)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -25,6 +25,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`agents-user-show`** — Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
 - **`agents-user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
+- **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
 - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
 - **`check-current-md`** — Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes.
@@ -32,8 +33,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`context`** — Context orchestrator — routes to create, refactor
 - **`context-create`** — Analyze a codebase area and create a structured context document
 - **`context-refactor`** — Analyze, update, and extend an existing context document
-- **`e2e-heal`** — Find, debug, and fix failing Playwright E2E tests
-- **`e2e-plan`** — Explore the application and create a structured E2E test plan in Markdown
+- **`cost`** — Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_loading_tier)
+- **`cost-profile`** — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 - **`estimate-ticket`** — Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
 - **`feature`** — Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
 - **`feature-dev`** — Full 7-phase feature development workflow for complex features.
@@ -41,11 +42,12 @@ Artefacts that maintain this package (agent-config itself).
 - **`feature-plan`** — Interactively plan a feature — research, discuss, and create a structured feature document
 - **`feature-refactor`** — Refine and update an existing feature plan through interactive discussion
 - **`feature-roadmap`** — Generate implementation roadmap(s) from a feature plan and link them
-- **`fix`** — Fix orchestrator — routes to ci, references, portability, seeder, pr-comments
+- **`fix`** — Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, comments, quality
 - **`fix-ci`** — Fetch CI errors from GitHub Actions and fix them
 - **`fix-comments`** — Review the code comments touched by the current branch and simplify, shorten, or remove each one
 - **`fix-portability`** — Find and fix project-specific references in shared .augment/ package files
 - **`fix-pr-comments`** — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
+- **`fix-quality`** — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - **`fix-refs`** — Find and fix broken cross-references in .augment/ and agents/ files
 - **`fix-seeder`** — Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
 - **`ghostwriter`** — Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md).
@@ -73,7 +75,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`module`** — Module orchestrator — routes to create, explore
 - **`module-create`** — Create a new module from .module-template with interactive setup
 - **`module-explore`** — Explore a module — load its structure, docs, and context into the current conversation
-- **`optimize`** — Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
+- **`optimize`** — Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish)
 - **`optimize-agents-dir`** — Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard.
 - **`optimize-augmentignore`** — Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
 - **`optimize-project`** — Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'.
@@ -84,6 +86,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`override`** — Override orchestrator — routes to create, manage
 - **`override-create`** — Creates a project-level override for a shared skill, rule, or command.
 - **`override-manage`** — Reviews, updates, and refactors existing project-level overrides.
+- **`package`** — Package orchestrator — routes to test (verify the package install) and reset (restore installed state)
 - **`package-reset`** — /package-reset
 - **`package-test`** — /package-test
 - **`post-as`** — Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer).
@@ -94,13 +97,14 @@ Artefacts that maintain this package (agent-config itself).
 - **`profile-activate`** — Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence
 - **`profile-deactivate`** — Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns
 - **`profile-show`** — Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface)
+- **`project`** — Project orchestrator — routes to analyze (full audit) and health (read-only status check)
 - **`project-analyze`** — Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 - **`project-health`** — Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
-- **`quality-fix`** — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - **`refine-ticket`** — Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt
 - **`research`** — Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans.
 - **`research-deep`** — Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths.
 - **`research-report`** — Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime.
+- **`review`** — Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns)
 - **`review-changes`** — Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
 - **`review-routing`** — Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
 - **`roadmap`** — Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).
@@ -112,19 +116,21 @@ Artefacts that maintain this package (agent-config itself).
 - **`roadmap-process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
 - **`rule-compliance-audit`** — Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
 - **`security-audit-config`** — Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injection / supply-chain risk — A–F score per category, mapped to OWASP Agentic Top 10
-- **`set-cost-profile`** — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 - **`skill`** — Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it.
 - **`skill-preview`** — Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution.
 - **`skills`** — Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics.
 - **`skills-discover`** — Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why.
+- **`sync`** — Sync orchestrator — routes to agent-settings (template sync) and gitignore (managed block sync, plus legacy-cleanup fix)
 - **`sync-agent-settings`** — Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 - **`sync-gitignore`** — Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
 - **`sync-gitignore-fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
 - **`team-knowledge`** — Team-knowledge orchestrator — routes to consolidate and bootstrap
 - **`team-knowledge-bootstrap`** — One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit.
 - **`team-knowledge-consolidate`** — Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval.
-- **`tests`** — Tests orchestrator — routes to create, execute
+- **`tests`** — Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal
 - **`tests-create`** — Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
+- **`tests-e2e-heal`** — Find, debug, and fix failing Playwright E2E tests
+- **`tests-e2e-plan`** — Explore the application and create a structured E2E test plan in Markdown
 - **`tests-execute`** — Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 - **`threat-model`** — Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written
 - **`update-form-request-messages`** — Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones.

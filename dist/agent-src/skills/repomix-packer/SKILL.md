@@ -99,7 +99,7 @@ If Secretlint flags anything, STOP — sanitize the input or add the offending p
 Most workflows that call this skill pass the snapshot to:
 
 - A code-review pass — pair with [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md) or [`judge-security-auditor`](../judge-security-auditor/SKILL.md).
-- Reference-repo analysis — route to [`analyze-reference-repo`](../../commands/analyze-reference-repo.md).
+- Reference-repo analysis — route to [`analyze-reference-repo`](../../commands/analyze/reference-repo.md).
 - Migration scoping — route to [`blast-radius-analyzer`](../blast-radius-analyzer/SKILL.md).
 
 Cite the snapshot path so the consumer skill can read it.

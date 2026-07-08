@@ -5,14 +5,14 @@ disable-model-invocation: true
 pack: engineering-base
 tier: 2
 visibility: internal
-description: Tests orchestrator — routes to create, execute
+description: Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal
 cluster: tests
 type: orchestrator
 auto_detect: true
 suggestion:
   eligible: true
-  trigger_description: "write tests for these changes, run the test suite"
-  trigger_context: "user wants to author or run tests for the current branch"
+  trigger_description: "write tests for these changes, run the test suite, plan E2E coverage, fix failing playwright tests"
+  trigger_context: "user wants to author or run tests for the current branch, or plan/heal Playwright E2E coverage"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -30,6 +30,8 @@ commands with a single entry point + sub-command dispatch.
 |---|---|---|
 | `/tests create` | `commands/tests/create.md` | Write meaningful tests for the changes in the current branch (stack-adaptive) |
 | `/tests execute` | `commands/tests/execute.md` | Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
+| `/tests e2e-plan` | `commands/tests/e2e-plan.md` | Explore the application and create a structured E2E test plan in Markdown |
+| `/tests e2e-heal` | `commands/tests/e2e-heal.md` | Find, debug, and fix failing Playwright E2E tests |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -48,7 +50,9 @@ the `auto_detect` kill-switch, rollback). Detection table:
 | Explicit sub given (`/tests create`) | that one | — (detection skipped) |
 | "write/author tests", changed source files lack matching tests | `tests/create` | MEDIUM |
 | "run/execute the suite", a test command/run is the intent | `tests/execute` | HIGH |
-| No clear create-vs-run signal | — | LOW → menu (interactive) / `ambiguous_routing` (CI) |
+| "plan E2E coverage", new feature/page without `tests/e2e/` coverage | `tests/e2e-plan` | HIGH |
+| Failing Playwright output in context, "fix the E2E tests" | `tests/e2e-heal` | HIGH |
+| No clear signal | — | LOW → menu (interactive) / `ambiguous_routing` (CI) |
 
 create-vs-run is the only disambiguation: prefer `execute` when the
 intent is to run an existing suite; `create` when authoring new tests.
@@ -66,6 +70,8 @@ Neither is destructive past the normal test-run side effects.
 
    > 1. create — author tests for current-branch changes
    > 2. execute — run the test suite in Docker
+   > 3. e2e-plan — explore the app and write a structured E2E test plan
+   > 4. e2e-heal — find, debug, and fix failing Playwright tests
 
 ## Rules
 

@@ -11,7 +11,7 @@
  * runner and quality tools does this stack actually use, and what is the
  * exact command to invoke them?* It is the engine behind 6.1.0 Step 6 — the
  * toolchain resolver that lets one set of commands (`/tests execute`,
- * `/tests create`, `/quality-fix`, `/review-changes`, `/work`) adapt to
+ * `/tests create`, `/fix quality`, `/review changes`, `/work`) adapt to
  * phpunit / pest / vitest / jest / playwright / pytest / go / cargo instead
  * of exploding into per-stack command variants.
  *

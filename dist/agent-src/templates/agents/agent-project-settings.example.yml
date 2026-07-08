@@ -200,7 +200,7 @@ ghostwriter:
 
 # --- Quality pipeline (optional) ---
 #
-# Per-language gate tools the `quality-fix` command invokes. Empty
+# Per-language gate tools the `/fix quality` command invokes. Empty
 # list = skip the language. Agent will still auto-detect; these
 # values are advisory.
 quality:

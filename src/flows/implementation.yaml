@@ -15,11 +15,11 @@ entry_points:          # commands that START the flow (daily front doors)
   - work
   - implement-ticket
   - feature/dev
-  - bug-fix
+  - bug/fix
 default_path:          # canonical command sequence
   - work
-  - review-changes
-  - quality-fix
+  - review/changes
+  - fix/quality
   - commit
 skills:                # skills the flow composes end-to-end
   - test-driven-development
@@ -30,6 +30,6 @@ commands:              # seed from worksheet ·_flow:implementation_ tags
   - work
   - implement-ticket
   - feature/dev
-  - bug-fix
-  - e2e-plan
-  - e2e-heal
+  - bug/fix
+  - tests/e2e-plan
+  - tests/e2e-heal

@@ -168,7 +168,7 @@ Required fields (ordered):
   [`architecture-review-lens`](../architecture-review-lens/SKILL.md).
 - Artifact / defence judges: [`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md),
   [`judge-injection-defense`](../judge-injection-defense/SKILL.md).
-- Dispatchers that feed this: [`/review-changes`](../../commands/review-changes.md)
+- Dispatchers that feed this: [`/review-changes`](../../commands/review/changes.md)
   (5 code judges), [`subagent-orchestration`](../subagent-orchestration/SKILL.md)
   (parallel judge fan-out).
 - **LLM-as-a-Judge** — Zheng et al. (2023), [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685);

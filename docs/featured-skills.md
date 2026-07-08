@@ -20,7 +20,7 @@ Each row links to the canonical artefact under `dist/agent-src/`. Substitutions 
 | [`/refine-prompt`](../dist/agent-src/skills/refine-prompt/SKILL.md) | Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans |
 | [`/work`](../dist/agent-src/commands/work.md) | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report |
 | [`/grill-me`](../dist/agent-src/commands/grill-me.md) | Interactive grill-style interview that sharpens a fuzzy plan / idea into a copyable Markdown pitch |
-| [`/optimize-prompt`](../dist/agent-src/commands/optimize-prompt.md) | Optimize a raw prompt for ChatGPT / Claude / Gemini via the 4-D methodology |
+| [`/optimize-prompt`](../dist/agent-src/commands/optimize/prompt.md) | Optimize a raw prompt for ChatGPT / Claude / Gemini via the 4-D methodology |
 | [`decision-record`](../dist/agent-src/skills/decision-record/SKILL.md) | Lock a trade-off — options · trade-offs · consequences — before the ADR file is written |
 | [`fundraising-narrative`](../dist/agent-src/skills/fundraising-narrative/SKILL.md) | Why-now / why-us / why-this framing, market-size reasoning, traction-story construction |
 | [`okr-tree-modeling`](../dist/agent-src/skills/okr-tree-modeling/SKILL.md) | Decompose a company objective into team OKRs; audit a draft tree for measurability and laddering |
@@ -67,7 +67,7 @@ Each row links to the canonical artefact under `dist/agent-src/`. Substitutions 
 |---|---|
 | [`/work`](../dist/agent-src/commands/work.md) | Free-form prompt end-to-end loop — refine → plan → implement → test → verify, confidence-band gated |
 | [`/implement-ticket`](../dist/agent-src/commands/implement-ticket.md) | Drive a Jira / Linear ticket end-to-end — same loop, ticket-anchored |
-| [`/review-changes`](../dist/agent-src/commands/review-changes.md) | Self-review local changes before creating a PR — dispatches to five specialized judges and consolidates verdicts |
+| [`/review-changes`](../dist/agent-src/commands/review/changes.md) | Self-review local changes before creating a PR — dispatches to five specialized judges and consolidates verdicts |
 | [`/commit`](../dist/agent-src/commands/commit.md) | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
 | [`judge-bug-hunter`](../dist/agent-src/skills/judge-bug-hunter/SKILL.md) | Correctness review — null-safety, edge cases, off-by-one, races, error handling |
 | [`judge-code-quality`](../dist/agent-src/skills/judge-code-quality/SKILL.md) | Readability review — naming, single-responsibility, DRY, dead code, codebase-convention drift |

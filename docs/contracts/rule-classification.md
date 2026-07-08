@@ -112,9 +112,9 @@ existing skills under `.agent-src.uncondensed/skills/`.
 | commit-conventions | 1938 | `conventional-commits-writing` | Format procedure |
 | docker-commands | 1830 | `docker` | Stack-specific procedure |
 | docs-sync | 3131 | `agent-docs-writing` | Mechanical sync procedure |
-| e2e-testing | 1807 | `e2e-heal` | Procedural; project-specific |
+| e2e-testing | 1807 | `tests-e2e-heal` | Procedural; project-specific |
 | laravel-translations | 995 | `laravel` | Stack-specific |
-| model-recommendation | 2909 | `set-cost-profile` | Routing procedure |
+| model-recommendation | 2909 | `cost-profile` | Routing procedure |
 | onboarding-gate | 4881 | `onboard` | Mechanical: meta-rule about /onboard |
 | package-ci-checks | 1342 | `lint-skills` | Repo-specific procedure |
 | reviewer-awareness | 3573 | `review-routing` | Skill exists; consolidates former `review-routing-awareness` (2026-05-08, see `agents/settings/contexts/adr-auto-rule-consolidation.md`) |

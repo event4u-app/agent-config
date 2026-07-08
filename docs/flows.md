@@ -32,7 +32,7 @@ Explore, plan, estimate, refine, and investigate **before** building.
 Drive a prompt, ticket, or feature end-to-end through plan → implement → verify.
 
 - **Entry commands:** `/work` · `/implement-ticket` · `/feature:dev` · `/bug-fix`
-- **Canonical path:** `/work` → `/review-changes` → `/quality-fix` → `/commit`
+- **Canonical path:** `/work` → `/review changes` → `/fix quality` → `/commit`
 - **Skills:** `test-driven-development` · `code-review` · `systematic-debugging` · `git-workflow`
 
 ## 🔎 Review — *check it*
@@ -40,7 +40,7 @@ Drive a prompt, ticket, or feature end-to-end through plan → implement → ver
 Self-review, judge, quality-fix, and threat-model a change before it ships.
 
 - **Entry commands:** `/review-changes` · `/judge`
-- **Canonical path:** `/review-changes` → `/judge` → `/quality-fix` → `/threat-model`
+- **Canonical path:** `/review changes` → `/judge` → `/fix quality` → `/threat-model`
 - **Skills:** `code-review` · `adversarial-review` · `quality-tools` · `threat-modeling` · `receiving-code-review`
 
 ## 🚢 Delivery — *ship it*

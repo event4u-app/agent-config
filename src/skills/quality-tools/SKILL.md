@@ -35,7 +35,7 @@ Toolchains differ per language and project and are often unknown to the
 agent — discovering and running them burns time and tokens. Under the
 default, exactly three triggers justify running a quality tool:
 
-1. **Explicit ask this turn** — the user says so or invokes `/quality-fix`.
+1. **Explicit ask this turn** — the user says so or invokes `/fix quality`.
 2. **Concrete CI failure** — the remote pipeline reports a failing
    check; run exactly that failing check to reproduce and fix it
    (`/fix:ci` is the canonical flow).

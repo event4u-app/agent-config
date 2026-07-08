@@ -24,7 +24,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/lint_no_new_atomic_commands.ts → parent.parent.parent is repo root.
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const COMMANDS_DIR = '.agent-src.uncondensed/commands';
+// Repointed 2026-07-08 (ADR-115): the legacy uncondensed commands dir no
+// longer exists — command sources live at src/domains/**/command.md.
+// Only files named `command.md` are commands; pack READMEs etc. are skipped.
+const COMMANDS_DIR = 'src/domains';
 const CLUSTER_CONTRACT = 'docs/contracts/command-clusters.md';
 
 interface Violation {
@@ -135,7 +138,7 @@ function added_command_files(baseline: string): string[] {
     }
     const files: string[] = [];
     for (const p of (diff.stdout ?? '').split('\n')) {
-        if (p.endsWith('.md') && p !== '' && path.basename(p) !== 'AGENTS.md') {
+        if (p !== '' && path.basename(p) === 'command.md') {
             files.push(p);
         }
     }
@@ -157,7 +160,7 @@ function added_command_files(baseline: string): string[] {
             const rawPath = line.slice(3).trim();
             const parts = rawPath.split(' -> ');
             const p = parts[parts.length - 1]!;
-            if (p.endsWith('.md') && path.basename(p) !== 'AGENTS.md') {
+            if (path.basename(p) === 'command.md') {
                 if (!files.includes(p)) {
                     files.push(p);
                 }
@@ -181,7 +184,7 @@ function _rglobMdSorted(dir: string): string[] {
             const full = path.join(current, entry.name);
             if (entry.isDirectory()) {
                 walk(full);
-            } else if (entry.isFile() && entry.name.endsWith('.md')) {
+            } else if (entry.isFile() && entry.name === 'command.md') {
                 out.push(full);
             }
         }

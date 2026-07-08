@@ -46,7 +46,7 @@ describe('generate_cookbook — loaders + render (real repo)', () => {
 
 describe('generate_cookbook — anti-cargo-cult guard (validate_refs)', () => {
     it('passes for refs that resolve in the real repo', () => {
-        expect(() => gen.validate_refs('ok', ['review-changes'], ['code-review'])).not.toThrow();
+        expect(() => gen.validate_refs('ok', ['review/changes'], ['code-review'])).not.toThrow();
     });
 
     it('throws BadRecipe naming a non-existent command', () => {

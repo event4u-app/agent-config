@@ -132,5 +132,5 @@ Anti-length: fixtures include `SHORT_COMPLETE` (short, all dimensions) and `LONG
 ## References
 
 - Sibling judges: [`judge-code-quality`](../judge-code-quality/SKILL.md), [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md), [`judge-security-auditor`](../judge-security-auditor/SKILL.md), [`judge-test-coverage`](../judge-test-coverage/SKILL.md).
-- Dispatchers: [`/refine-ticket`](../../commands/refine-ticket.md), [`/adr-create`](../../commands/adr-create.md), [`/review-changes`](../../commands/review-changes.md).
+- Dispatchers: [`/refine-ticket`](../../commands/refine-ticket.md), [`/adr-create`](../../commands/adr-create.md), [`/review-changes`](../../commands/review/changes.md).
 - Rubric schemas: `rubrics/roadmap-score.json`, `rubrics/pr-review-score.json`, `rubrics/architecture-score.json`, `rubrics/ticket-quality-score.json`.

@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **612 artefacts** in this package.
+Maintainer-facing index of all **618 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -376,7 +376,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (166)
+## Commands (172)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -395,21 +395,22 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`analytics`](../src/domains/meta/analytics/command.md) | cluster: analytics | Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`. |
 | command | [`analytics-prune`](../src/domains/meta/analytics/prune/command.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |
 | command | [`analytics-show`](../src/domains/meta/analytics/show/command.md) | cluster: analytics | Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log. |
-| command | [`analyze-reference-repo`](../src/domains/engineering-base/analyze-reference-repo/command.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
-| command | [`analyze`](../src/domains/analysis-workbench/analyze/command.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, or incident frameworks. |
+| command | [`analyze`](../src/domains/analysis-workbench/analyze/command.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, or reference-repo analysis. |
 | command | [`analyze-decision`](../src/domains/analysis-workbench/analyze/decision/command.md) | cluster: analyze | Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded). |
 | command | [`analyze-incident`](../src/domains/analysis-workbench/analyze/incident/command.md) | cluster: analyze | Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate. |
 | command | [`analyze-near-miss`](../src/domains/analysis-workbench/analyze/near-miss/command.md) | cluster: analyze | Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident. |
 | command | [`analyze-postmortem`](../src/domains/analysis-workbench/analyze/postmortem/command.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |
 | command | [`analyze-premortem`](../src/domains/analysis-workbench/analyze/premortem/command.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
+| command | [`analyze-reference-repo`](../src/domains/analysis-workbench/analyze/reference-repo/command.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`brand`](../src/domains/brand/brand/command.md) | cluster: brand | Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer. |
 | command | [`brand-identity`](../src/domains/brand/brand/identity/command.md) | cluster: brand | Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes. |
 | command | [`brand-review`](../src/domains/brand/brand/review/command.md) | cluster: brand | Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule. |
 | command | [`brand-strategy`](../src/domains/brand/brand/strategy/command.md) | cluster: brand | Define brand positioning, archetype, voice, tone, and messaging over the brand-grounding corpus — the strategy that bounds identity and UI. |
 | command | [`brand-tokens`](../src/domains/brand/brand/tokens/command.md) | cluster: brand | Derive a DTCG .tokens.json source of truth from brand decisions, then emit CSS vars + Tailwind via the no-Node token generator. |
 | command | [`brand-voice`](../src/domains/brand/brand/voice/command.md) | cluster: brand | Define the brand voice-and-tone profile — register, do/don't lexicon, and tone shifts by context — the profile the brand-consistency gate checks copy against. |
-| command | [`bug-fix`](../src/domains/engineering-base/bug-fix/command.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
-| command | [`bug-investigate`](../src/domains/engineering-base/bug-investigate/command.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
+| command | [`bug`](../src/domains/engineering-base/bug/command.md) | cluster: bug | Bug orchestrator — routes to investigate (root cause) and fix (plan + implement) |
+| command | [`bug-fix`](../src/domains/engineering-base/bug/fix/command.md) | cluster: bug | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
+| command | [`bug-investigate`](../src/domains/engineering-base/bug/investigate/command.md) | cluster: bug | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
 | command | [`challenge-me`](../src/domains/meta/challenge-me/command.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
 | command | [`challenge-me-vision`](../src/domains/meta/challenge-me/vision/command.md) | cluster: challenge-me | Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff. |
 | command | [`challenge-me-with-docs`](../src/domains/meta/challenge-me/with-docs/command.md) | cluster: challenge-me | Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch. |
@@ -422,7 +423,9 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`context`](../src/domains/meta/context/command.md) | cluster: context | Context orchestrator — routes to create, refactor |
 | command | [`context-create`](../src/domains/meta/context/create/command.md) | cluster: context | Analyze a codebase area and create a structured context document |
 | command | [`context-refactor`](../src/domains/meta/context/refactor/command.md) | cluster: context | Analyze, update, and extend an existing context document |
-| command | [`cost-report`](../src/domains/meta/cost-report/command.md) |  | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
+| command | [`cost`](../src/domains/meta/cost/command.md) | cluster: cost | Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_loading_tier) |
+| command | [`cost-profile`](../src/domains/meta/cost/profile/command.md) | cluster: cost | Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection |
+| command | [`cost-report`](../src/domains/meta/cost/report/command.md) | cluster: cost | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
 | command | [`council`](../src/domains/meta/council/command.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize, analysis, debate |
 | command | [`council-analysis`](../src/domains/meta/council/analysis/command.md) | cluster: council | Run the council on a local analysis output (project-analyze, audit script, codebase scan) — critiques the analysis itself for dedup, evidence quality, and roadmap-readiness. |
 | command | [`council-debate`](../src/domains/meta/council/debate/command.md) | cluster: council | Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds. |
@@ -430,8 +433,6 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`council-design`](../src/domains/meta/council/design/command.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council-optimize`](../src/domains/meta/council/optimize/command.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council-pr`](../src/domains/meta/council/pr/command.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
-| command | [`e2e-heal`](../src/domains/engineering-base/e2e-heal/command.md) |  | Find, debug, and fix failing Playwright E2E tests |
-| command | [`e2e-plan`](../src/domains/engineering-base/e2e-plan/command.md) |  | Explore the application and create a structured E2E test plan in Markdown |
 | command | [`estimate-ticket`](../src/domains/product-basic/estimate-ticket/command.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
 | command | [`feature`](../src/domains/engineering-base/feature/command.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |
 | command | [`feature-dev`](../src/domains/engineering-base/feature/dev/command.md) | cluster: feature | Full 7-phase feature development workflow for complex features. |
@@ -439,11 +440,12 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`feature-plan`](../src/domains/engineering-base/feature/plan/command.md) | cluster: feature | Interactively plan a feature — research, discuss, and create a structured feature document |
 | command | [`feature-refactor`](../src/domains/engineering-base/feature/refactor/command.md) | cluster: feature | Refine and update an existing feature plan through interactive discussion |
 | command | [`feature-roadmap`](../src/domains/engineering-base/feature/roadmap/command.md) | cluster: feature | Generate implementation roadmap(s) from a feature plan and link them |
-| command | [`fix`](../src/domains/engineering-base/fix/command.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments |
+| command | [`fix`](../src/domains/engineering-base/fix/command.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, comments, quality |
 | command | [`fix-ci`](../src/domains/engineering-base/fix/ci/command.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix-comments`](../src/domains/engineering-base/fix/comments/command.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
 | command | [`fix-portability`](../src/domains/engineering-base/fix/portability/command.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
 | command | [`fix-pr-comments`](../src/domains/engineering-base/fix/pr-comments/command.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR |
+| command | [`fix-quality`](../src/domains/engineering-base/fix/quality/command.md) | cluster: fix | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`fix-refs`](../src/domains/engineering-base/fix/refs/command.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
 | command | [`fix-seeder`](../src/domains/engineering-base/fix/seeder/command.md) | cluster: fix | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
 | command | [`ghostwriter`](../src/domains/gtm-marketing/ghostwriter/command.md) | cluster: ghostwriter | Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md). |
@@ -480,19 +482,20 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`module`](../src/domains/engineering-base/module/command.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`module-create`](../src/domains/engineering-base/module/create/command.md) | cluster: module | Create a new module from .module-template with interactive setup |
 | command | [`module-explore`](../src/domains/engineering-base/module/explore/command.md) | cluster: module | Explore a module — load its structure, docs, and context into the current conversation |
-| command | [`optimize-project`](../src/domains/engineering-base/optimize-project/command.md) |  | Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'. |
-| command | [`optimize-prompt`](../src/domains/meta/optimize-prompt/command.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
-| command | [`optimize`](../src/domains/meta/optimize/command.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters |
+| command | [`optimize`](../src/domains/meta/optimize/command.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish) |
 | command | [`optimize-agents-dir`](../src/domains/meta/optimize/agents-dir/command.md) | cluster: optimize | Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard. |
 | command | [`optimize-augmentignore`](../src/domains/meta/optimize/augmentignore/command.md) | cluster: optimize | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
+| command | [`optimize-project`](../src/domains/meta/optimize/project/command.md) | cluster: optimize | Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'. |
+| command | [`optimize-prompt`](../src/domains/meta/optimize/prompt/command.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize-rtk`](../src/domains/meta/optimize/rtk/command.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |
 | command | [`optimize-skills`](../src/domains/meta/optimize/skills/command.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
 | command | [`orchestrate`](../src/domains/meta/orchestrate/command.md) | cluster: orchestrate | Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract |
 | command | [`override`](../src/domains/meta/override/command.md) | cluster: override | Override orchestrator — routes to create, manage |
 | command | [`override-create`](../src/domains/meta/override/create/command.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
 | command | [`override-manage`](../src/domains/meta/override/manage/command.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
-| command | [`package-reset`](../src/domains/meta/package-reset/command.md) |  | /package-reset |
-| command | [`package-test`](../src/domains/engineering-base/package-test/command.md) |  | /package-test |
+| command | [`package`](../src/domains/meta/package/command.md) | cluster: package | Package orchestrator — routes to test (verify the package install) and reset (restore installed state) |
+| command | [`package-reset`](../src/domains/meta/package/reset/command.md) | cluster: package | /package-reset |
+| command | [`package-test`](../src/domains/meta/package/test/command.md) | cluster: package | /package-test |
 | command | [`post-as`](../src/domains/gtm-marketing/post-as/command.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`post-as-ghostwriter`](../src/domains/gtm-marketing/post-as/ghostwriter/command.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
 | command | [`post-as-me`](../src/domains/gtm-marketing/post-as/me/command.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
@@ -504,15 +507,16 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`profile-activate`](../src/domains/meta/profile/activate/command.md) | cluster: profile | Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence |
 | command | [`profile-deactivate`](../src/domains/meta/profile/deactivate/command.md) | cluster: profile | Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns |
 | command | [`profile-show`](../src/domains/meta/profile/show/command.md) | cluster: profile | Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface) |
-| command | [`project-analyze`](../src/domains/engineering-base/project-analyze/command.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
-| command | [`project-health`](../src/domains/engineering-base/project-health/command.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
-| command | [`quality-fix`](../src/domains/engineering-base/quality-fix/command.md) |  | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
+| command | [`project`](../src/domains/engineering-base/project/command.md) | cluster: project | Project orchestrator — routes to analyze (full audit) and health (read-only status check) |
+| command | [`project-analyze`](../src/domains/engineering-base/project/analyze/command.md) | cluster: project | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
+| command | [`project-health`](../src/domains/engineering-base/project/health/command.md) | cluster: project | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
 | command | [`refine-ticket`](../src/domains/product-basic/refine-ticket/command.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
 | command | [`research`](../src/domains/product-discovery/research/command.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
 | command | [`research-deep`](../src/domains/product-discovery/research/deep/command.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
 | command | [`research-report`](../src/domains/product-discovery/research/report/command.md) | cluster: research | Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime. |
-| command | [`review-changes`](../src/domains/engineering-base/review-changes/command.md) |  | Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts |
-| command | [`review-routing`](../src/domains/meta/review-routing/command.md) |  | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
+| command | [`review`](../src/domains/engineering-base/review/command.md) | cluster: review | Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns) |
+| command | [`review-changes`](../src/domains/engineering-base/review/changes/command.md) | cluster: review | Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts |
+| command | [`review-routing`](../src/domains/engineering-base/review/routing/command.md) | cluster: review | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
 | command | [`roadmap`](../src/domains/product-basic/roadmap/command.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution). |
 | command | [`roadmap-ai-council`](../src/domains/product-basic/roadmap/ai-council/command.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
 | command | [`roadmap-create`](../src/domains/product-basic/roadmap/create/command.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
@@ -522,19 +526,21 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`roadmap-process-step`](../src/domains/product-basic/roadmap/process-step/command.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
 | command | [`rule-compliance-audit`](../src/domains/meta/rule-compliance-audit/command.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
 | command | [`security-audit-config`](../src/domains/engineering-base/security-audit-config/command.md) |  | Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injection / supply-chain risk — A–F score per category, mapped to OWASP Agentic Top 10 |
-| command | [`set-cost-profile`](../src/domains/meta/set-cost-profile/command.md) |  | Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`skill`](../src/domains/meta/skill/command.md) | cluster: skill | Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it. |
 | command | [`skill-preview`](../src/domains/meta/skill/preview/command.md) | cluster: skill | Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution. |
 | command | [`skills`](../src/domains/meta/skills/command.md) | cluster: skills | Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics. |
 | command | [`skills-discover`](../src/domains/meta/skills/discover/command.md) | cluster: skills | Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why. |
-| command | [`sync-agent-settings`](../src/domains/meta/sync-agent-settings/command.md) |  | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
-| command | [`sync-gitignore`](../src/domains/engineering-base/sync-gitignore/command.md) | cluster: sync-gitignore | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
-| command | [`sync-gitignore-fix`](../src/domains/engineering-base/sync-gitignore/fix/command.md) | cluster: sync-gitignore | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
+| command | [`sync`](../src/domains/meta/sync/command.md) | cluster: sync | Sync orchestrator — routes to agent-settings (template sync) and gitignore (managed block sync, plus legacy-cleanup fix) |
+| command | [`sync-agent-settings`](../src/domains/meta/sync/agent-settings/command.md) | cluster: sync | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
+| command | [`sync-gitignore`](../src/domains/meta/sync/gitignore/command.md) | cluster: sync | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
+| command | [`sync-gitignore-fix`](../src/domains/meta/sync/gitignore/fix/command.md) | cluster: sync | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
 | command | [`team-knowledge`](../src/domains/meta/team-knowledge/command.md) | cluster: team-knowledge | Team-knowledge orchestrator — routes to consolidate and bootstrap |
 | command | [`team-knowledge-bootstrap`](../src/domains/meta/team-knowledge/bootstrap/command.md) | cluster: team-knowledge | One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit. |
 | command | [`team-knowledge-consolidate`](../src/domains/meta/team-knowledge/consolidate/command.md) | cluster: team-knowledge | Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval. |
-| command | [`tests`](../src/domains/engineering-base/tests/command.md) | cluster: tests | Tests orchestrator — routes to create, execute |
+| command | [`tests`](../src/domains/engineering-base/tests/command.md) | cluster: tests | Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal |
 | command | [`tests-create`](../src/domains/engineering-base/tests/create/command.md) | cluster: tests | Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
+| command | [`tests-e2e-heal`](../src/domains/engineering-base/tests/e2e-heal/command.md) | cluster: tests | Find, debug, and fix failing Playwright E2E tests |
+| command | [`tests-e2e-plan`](../src/domains/engineering-base/tests/e2e-plan/command.md) | cluster: tests | Explore the application and create a structured E2E test plan in Markdown |
 | command | [`tests-execute`](../src/domains/engineering-base/tests/execute/command.md) | cluster: tests | Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
 | command | [`threat-model`](../src/domains/engineering-base/threat-model/command.md) |  | Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written |
 | command | [`update-form-request-messages`](../src/domains/engineering-base/update-form-request-messages/command.md) |  | Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones. |

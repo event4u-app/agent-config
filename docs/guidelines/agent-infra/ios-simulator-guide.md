@@ -11,7 +11,7 @@
   capture, multi-device test sweeps.
 - Intended companions: `react-native-setup` skill (environment),
   `mobile-e2e-strategy` skill (framework selection), `playwright-testing`
-  / `e2e-plan` skills (cross-platform E2E strategy).
+  / `/tests e2e-plan` command (cross-platform E2E strategy).
 - **macOS-only:** Xcode + simctl + (optional) idb require a macOS host.
   On Linux/Windows this guideline is reference-only — no implementation
   recipes are portable.

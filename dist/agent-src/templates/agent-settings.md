@@ -276,7 +276,7 @@ quality:
   # false = default. Agent NEVER runs quality tools / full test suites
   #         proactively — and does not ask. The user runs them manually;
   #         remote CI is the authoritative gate. The agent runs one ONLY
-  #         on: (1) explicit ask this turn (e.g. /quality-fix), (2) a
+  #         on: (1) explicit ask this turn (e.g. /fix quality), (2) a
   #         concrete CI failure — run exactly that failing check, or
   #         (3) the new-gate carve-out below.
   # true  = opt-in legacy: agent runs the quality pipeline whenever
