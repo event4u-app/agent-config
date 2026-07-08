@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **23** open blockers
+> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **26** open blockers
 
 ## Overall
 
-**109 / 270 steps done · 40%**
+**109 / 397 steps done · 27%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
 ```
 
 ## Open roadmaps
@@ -19,20 +19,23 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 15 | 0 | 0 | 0 | [3](#blockers-road-to-adoption-without-narrative-debt) | ░░░░░░░░░░ 0% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | [1](#blockers-road-to-ci-native-release-first-run) | ░░░░░░░░░░ 0% |
 | 3 | [road-to-command-structure-optimization.md](roadmaps/road-to-command-structure-optimization.md) | 6 | 28 | 1 | 23 | 2 | 2 | 0 | ██████████ 96% |
-| 4 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 12 | 0 | 0 | 0 | [2](#blockers-road-to-domain-soundness) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 7 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 8 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ░░░░░░░░░░ 0% |
-| 10 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 25 | 25 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 13 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 61% |
-| 13 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
-| 14 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 16 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 17 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
+| 4 | [road-to-design-artifact-fidelity.md](roadmaps/road-to-design-artifact-fidelity.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-design-artifact-fidelity) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 12 | 0 | 0 | 0 | [2](#blockers-road-to-domain-soundness) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
+| 8 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 49 | 0 | 0 | 0 | [1](#blockers-road-to-frontier-quality-operating-system) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
+| 10 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
+| 11 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 25 | 25 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
+| 14 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 13 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 61% |
+| 15 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
+| 16 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ░░░░░░░░░░ 0% |
+| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 18 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
+| 19 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 20 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
 
 ---
 
@@ -101,6 +104,30 @@
 | 3 | Bare-invocation standardization + lint | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | Regen + downstream surfaces | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Deferred follow-ups (recorded, not executed here) | ⬜ not started | 1 | 0 | 2 | 2 | 0% |
+
+### [road-to-design-artifact-fidelity.md](roadmaps/road-to-design-artifact-fidelity.md)
+
+**Road to design artifact fidelity — make visual work production-grade before it reaches the user** — 0 / 39 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Host capability, eval baseline, and rollout guardrails | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Design artifact lifecycle contract | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Resource-first design context gate | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Surgical edit preservation rule | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Variation and canvas planning | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | Asset and iconography discipline | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Render verification hard gate with honest degradation | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 7 | Design-system extraction floor | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-design-artifact-fidelity"></a>
+**Blockers**
+
+- **host-verification-capability-map** (owner: maintainer) — blocks Phase 0 checkpoint only
+  - **What to do:**
+    screenshot, inspect console logs, or run Playwright. The rule must degrade
+    honestly per host instead of requiring impossible checks.
+  - **Resolved when:** the design verification checklist has a per-host capability table or points to an existing host-capability manifest.
 
 ### [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md)
 
@@ -172,6 +199,31 @@
     matrix YAML (paired arms per the existing ab-v2 discipline).
     2. Pin the resulting report alongside the existing pinned reports.
   - **Resolved when:** one schema-valid matrix report exists and the per-section render consumes it without manual edits.
+
+### [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md)
+
+**Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage** — 0 / 49 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Scope, provenance, metrics, and execution gates | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Prompt-mechanism inventory, dependency graph, and disposition matrix | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 2 | Eval harness and baseline before behavior changes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Currentness, research-routing, and source-quality pilot | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Memory, preference, and prior-context safety | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 5 | Artifact, visual, and connected-tool routing protocol | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 6 | Citation, quoting, domain overlays, and claim self-check | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 7 | Quality eval expansion and default-flip gates | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 8 | Runtime rollout, monitoring, rollback, and re-harvest loop | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-frontier-quality-operating-system"></a>
+**Blockers**
+
+- **source-anonymous-provenance-decision** (owner: maintainer) — blocks Phase 0 checkpoint only
+  - **What to do:**
+    local-only notes, or encrypted `ENC1:` link retention. If encrypted links
+    are required, run the repo's link crypto helper with the maintainer key.
+  - **Resolved when:** Phase 0 records the accepted provenance method without raw source links or external source names in tracked files.
 
 ### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
 
@@ -369,6 +421,30 @@
     3. Once the count reaches ≥ 20, resume this roadmap
     (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
   - **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines for the current month.
+
+### [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md)
+
+**Road to surface-specific agent contracts — stop making one generic agent do every medium badly** — 0 / 39 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Capability matrix, surface detection, and eval baseline | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Surface taxonomy and invariant ledger | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Spreadsheet truth floor | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Deck/document export contracts | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Browser and connector contract | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | Mobile/chat interaction contract | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Code-agent operating contract refresh | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 7 | Cross-surface handoff protocol | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-surface-specific-agent-contracts"></a>
+**Blockers**
+
+- **plugin-surface-capability-confirmation** (owner: maintainer) — blocks Phase 0 checkpoint only
+  - **What to do:**
+    plugin capabilities are reliably present in supported hosts and which must
+    degrade to local file parsing or user-visible limitation.
+  - **Resolved when:** `surface-agent-contracts` has a capability/degrade table or links to the canonical host-capability manifest.
 
 ### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
 
