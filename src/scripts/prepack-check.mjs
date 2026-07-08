@@ -2,11 +2,16 @@
 /**
  * prepack-check.mjs — guard the published artifact.
  *
- * Runs during `npm pack` and `npm publish`. Asserts the compiled TS
- * CLI binary exists, is executable, and carries the Node shebang
- * before the tarball is built. Otherwise a silently-broken `dist/`
- * ships and every `npx @event4u/agent-config` greets the consumer
- * with a cryptic `Cannot find module` panic.
+ * Runs during `npm pack` / `npm publish` AND as a dry-run on every PR
+ * (Static Checks workflow). Two gates:
+ *
+ *   1. Compiled-bin shape — the TS CLI binary exists, is executable, and
+ *      carries the Node shebang before the tarball is built. Otherwise a
+ *      silently-broken `dist/` ships and every `npx @event4u/agent-config`
+ *      greets the consumer with a cryptic `Cannot find module` panic.
+ *   2. Shipped-import completeness — every relative import reachable from
+ *      the shipped `src/` trees resolves to a file the `files` whitelist
+ *      actually ships (the 8.3.0 ERR_MODULE_NOT_FOUND class).
  *
  * Folded from external council pass 2026-05-18 (Phase 1.3 acceptance).
  *
@@ -55,6 +60,104 @@ if (head !== SHEBANG) {
 }
 
 process.stderr.write(`prepack-check: ${BIN} OK\n`);
+
+// ---------------------------------------------------------------------------
+// Import-completeness guard: every relative import reachable from the
+// SHIPPED src/ trees must itself resolve to a shipped file. Catches the
+// 8.3.0 class of bug where src/scripts/_lib/claude_settings_hooks.ts
+// imported src/install/atomic.js while the `files` whitelist did not ship
+// src/install/ — the global install then crashed doctor/conformance with
+// ERR_MODULE_NOT_FOUND. Deterministic, no network, no npm pack invocation:
+// the shipped set is derived from the package.json `files` whitelist.
+// ---------------------------------------------------------------------------
+import { readdirSync } from 'node:fs';
+import { dirname, join, relative, sep } from 'node:path';
+
+const pkg = JSON.parse(readFileSync(resolve('package.json'), 'utf8'));
+const shippedPrefixes = (pkg.files ?? [])
+    .filter((f) => f.endsWith('/'))
+    .map((f) => f.replace(/\/+$/, '') + '/');
+const shippedFiles = new Set((pkg.files ?? []).filter((f) => !f.endsWith('/')));
+
+function isShipped(relPath) {
+    const posix = relPath.split(sep).join('/');
+    if (shippedFiles.has(posix)) return true;
+    return shippedPrefixes.some((p) => posix.startsWith(p));
+}
+
+function* walk(dir) {
+    let entries;
+    try {
+        entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return;
+    }
+    for (const e of entries) {
+        const full = join(dir, e.name);
+        if (e.isDirectory()) {
+            yield* walk(full);
+        } else if (/\.(ts|mts|mjs|js)$/.test(e.name) && !e.name.endsWith('.d.ts')) {
+            yield full;
+        }
+    }
+}
+
+const IMPORT_RE = /(?:from\s+|import\s*\(\s*|require\s*\(\s*)['"](\.\.?\/[^'"]+)['"]/g;
+
+function resolveCandidates(fromDir, spec) {
+    const base = join(fromDir, spec);
+    return [
+        base,
+        base.replace(/\.js$/, '.ts'),
+        base.replace(/\.mjs$/, '.mts'),
+        `${base}.ts`,
+        `${base}.js`,
+        join(base, 'index.ts'),
+        join(base, 'index.js'),
+    ];
+}
+
+const importErrors = [];
+const scanRoots = shippedPrefixes.filter((p) => p.startsWith('src/'));
+for (const root of scanRoots) {
+    for (const file of walk(resolve(root))) {
+        const text = readFileSync(file, 'utf8');
+        for (const m of text.matchAll(IMPORT_RE)) {
+            const spec = m[1];
+            const candidates = resolveCandidates(dirname(file), spec);
+            const hit = candidates.find((c) => {
+                try {
+                    return statSync(c).isFile();
+                } catch {
+                    return false;
+                }
+            });
+            const fileRel = relative(resolve('.'), file);
+            if (hit === undefined) {
+                importErrors.push(`${fileRel}: unresolvable relative import '${spec}'`);
+                continue;
+            }
+            const hitRel = relative(resolve('.'), hit);
+            if (!isShipped(hitRel)) {
+                importErrors.push(
+                    `${fileRel}: imports '${spec}' → ${hitRel}, which is NOT in the ` +
+                        'package.json `files` whitelist (would crash the global install ' +
+                        'with ERR_MODULE_NOT_FOUND)',
+                );
+            }
+        }
+    }
+}
+
+if (importErrors.length > 0) {
+    for (const e of importErrors) {
+        process.stderr.write(`prepack-check: ${e}\n`);
+    }
+    die(`${importErrors.length} shipped import(s) escape the files whitelist.`);
+}
+process.stderr.write(
+    `prepack-check: import-completeness OK (${scanRoots.length} shipped src tree(s) scanned)\n`,
+);
 
 // Optional: invoked with --verbose dumps the size for tarball-budget bookkeeping.
 if (argv.includes('--verbose')) {

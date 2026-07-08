@@ -254,7 +254,12 @@ jobs:
         # prepack-check asserts the chmod +x hook applied by build:cli.
         run: npm run build --silent
 
-      - name: prepack-check (compiled bin shape gate)
+      - name: prepack-check (compiled bin shape + shipped-import completeness)
+        # Dry-run of the publish gate on every PR: also asserts every relative
+        # import reachable from the shipped src/ trees resolves to a file the
+        # package.json `files` whitelist actually ships (the 8.3.0
+        # ERR_MODULE_NOT_FOUND class — doctor/conformance crashed in the
+        # global install because src/install/ was never packed).
         run: node src/scripts/prepack-check.mjs
 
   golden-tests:
