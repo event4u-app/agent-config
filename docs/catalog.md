@@ -9,6 +9,13 @@ are excluded.
 
 ## Skills (264)
 
+> **Behavioural-eval coverage is measured, not implied.** A skill is
+> behaviourally evaluated only if it ships `evals/evals.json`; most do
+> not yet. Coverage is reported per tier (`./scripts-run
+> src/scripts/skill_eval_coverage`) and CI-ratcheted so it can only rise.
+> Listing here never implies a skill is behaviourally tested — the
+> current coverage and its gap are published on [the proof page](proof.md).
+
 | kind | name | extra | description |
 |---|---|---|---|
 | skill | [`accessibility-auditor`](../dist/agent-src/skills/accessibility-auditor/SKILL.md) |  | Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'. |

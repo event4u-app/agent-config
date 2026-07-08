@@ -107,6 +107,17 @@ function render(): string {
         L.push('Benchmark results are published under `docs/` including measured nulls.');
     }
     L.push('');
+    L.push('**Behavioural-eval coverage — the honest baseline.** Skill *quality* is only');
+    L.push('as good as its measurement. Today **2 of 264** skills carry a behavioural');
+    L.push('`evals.json`, and the highest-traffic / highest-cost tiers (default-surface +');
+    L.push('`rich` + routers, **0 of 35**) are not yet covered. We publish that gap rather');
+    L.push('than imply "264 evaluated skills": coverage is measured per tier');
+    L.push('(`./scripts-run src/scripts/skill_eval_coverage`) and **CI-ratcheted so it can');
+    L.push('only rise** — a merged change can never lower it. Authoring the priority-tier');
+    L.push('evals is gated on per-case human ratification (a generated assertion that');
+    L.push('checks the wrong property is worse than none), so the number grows');
+    L.push('deliberately, not overnight.');
+    L.push('');
     L.push('## 3. Known limits (published, witness-tested)');
     L.push('');
     const skillGaps = collectSkillGaps();
@@ -164,6 +175,8 @@ function render(): string {
     L.push('task check-refs     # no broken internal references');
     L.push('task check-skill-gaps    # every logged known-limit cites a real witness test');
     L.push('task check-comparison    # every comparison-table "our evidence" pointer resolves');
+    L.push('./scripts-run src/scripts/skill_eval_coverage         # behavioural-eval coverage, per tier');
+    L.push('./scripts-run src/scripts/skill_eval_coverage --check # the ratchet: coverage may not drop');
     L.push('task build-proof-check   # this page is in sync with its sources');
     L.push('```');
     L.push('');

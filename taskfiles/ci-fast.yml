@@ -377,6 +377,16 @@ tasks:
     desc: "Memory-retrieval replay regression — the corpus-derived replay set's payload must stay within +5% of the pinned baseline (inert until internal/bench/reports/memory-retrieval-baseline.json exists; road-to-memory-retrieval-economy Phase 0)"
     cmd: ./scripts-run src/scripts/memory_replay --check
 
+  check-eval-coverage:
+    silent: true
+    desc: "Behavioural-eval coverage ratchet — overall + per-tier coverage may not drop below the pinned floor (internal/evals/coverage-floor.json); the floor only rises via --write-floor after authoring evals (road-to-skill-eval-coverage Phase 3)"
+    cmd: ./scripts-run src/scripts/skill_eval_coverage --check
+
+  lint-behavioural-eval-freshness:
+    silent: true
+    desc: "Behavioural-eval freshness — a skill whose evals.json pins skill_body_sha must still match its SKILL.md body, or the eval is stale (deterministic, no token spend; unpinned evals out of scope; road-to-skill-eval-coverage Phase 3)"
+    cmd: ./scripts-run src/scripts/lint_behavioural_eval_freshness {{.QUIET_FLAG}}
+
   lint-no-python-twin-rationale:
     silent: true
     desc: "Python-twin rationale guard — comments in src/scripts may not rationalise behaviour by fidelity to the deleted Python originals (twin of / latent quirks replicated / byte-identical to the Python); cite the live consumer instead (road-to-truth-and-reference-hygiene Phase 2)"
