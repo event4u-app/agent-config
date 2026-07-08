@@ -1,1 +1,0 @@
-../../../src/domains/product-discovery/research/deep/command.md

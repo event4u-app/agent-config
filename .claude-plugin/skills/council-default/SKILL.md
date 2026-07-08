@@ -1,1 +1,0 @@
-../../../src/domains/meta/council/default/command.md

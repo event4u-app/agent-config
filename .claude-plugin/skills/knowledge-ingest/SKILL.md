@@ -1,1 +1,0 @@
-../../../src/domains/product-discovery/knowledge/ingest/command.md

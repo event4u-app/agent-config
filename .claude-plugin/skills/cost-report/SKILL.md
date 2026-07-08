@@ -1,1 +1,0 @@
-../../../src/domains/meta/cost-report/command.md

@@ -6,16 +6,20 @@
  * Wave 4b). Mirrors the Python CLI contract exactly: same cwd-relative scan
  * roots, finding messages, stdout output, and exit codes.
  *
- * Validates the Claude Code Plugin Marketplace manifest against the canonical
- * manifest shape:
+ * Validates the Claude Code Plugin Marketplace manifest against the
+ * BOOTSTRAP-SHIM shape (road-to-install-path-convergence): the plugin ships
+ * ONLY hooks plus a single install-pointer skill — content skills are
+ * distributed via the npx file projection, never through this plugin.
  *
  *   - Required top-level fields: name, owner, metadata, plugins
  *   - owner must have name + email
  *   - metadata must have description + version
  *   - metadata.version must match package.json (single source of truth)
- *   - every plugins[].skills[] entry must exist on disk and carry a SKILL.md
- *   - every SKILL.md on disk under the committed skill sources must be listed
- *     in some plugin's skills[] (drift detection)
+ *   - the union of plugins[].skills[] must be EXACTLY the pointer skill
+ *     (./.claude-plugin/skills/install-agent-config) — a repopulated
+ *     content-skill list FAILS by design
+ *   - the pointer entry must exist on disk and carry a SKILL.md
+ *   - .claude-plugin/skills/ on disk must contain ONLY the pointer dir
  *
  * Exit codes: 0 = clean, 1 = problems found, 3 = internal error.
  */
@@ -26,14 +30,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = ".";
 const MARKETPLACE = path.join(ROOT, ".claude-plugin", "marketplace.json");
 const PACKAGE_JSON = path.join(ROOT, "package.json");
-// Committed marketplace skill sources (git-consumed): real skills resolve to
-// dist/agent-src/skills/<name>; command-as-skill entries to the committed
-// .claude-plugin/skills/<slug> projection. .claude/skills/ is a gitignored
-// local channel and is intentionally NOT a marketplace source.
-const SKILL_SOURCE_DIRS = [
-  path.join(ROOT, "dist/agent-src", "skills"),
-  path.join(ROOT, ".claude-plugin", "skills"),
-];
+// Bootstrap shim: the ONLY skill the plugin may list. Content skills live in
+// the npx file projection (dist/agent-src/skills/ ships in the npm package,
+// not through the marketplace). .claude/skills/ is a gitignored local channel
+// and is intentionally NOT a marketplace source.
+const POINTER_SKILL_ENTRY = "./.claude-plugin/skills/install-agent-config";
+const PLUGIN_SKILLS_DIR = path.join(ROOT, ".claude-plugin", "skills");
+const POINTER_SKILL_DIRNAME = "install-agent-config";
 
 type JsonValue =
   | string
@@ -174,6 +177,18 @@ export function main(): number {
       }
       seen.add(p);
 
+      // Bootstrap-shim invariant: any entry other than the pointer skill is
+      // a repopulated content-skill list and must FAIL.
+      if (p !== POINTER_SKILL_ENTRY) {
+        errors.push(
+          `${entry} violates the bootstrap shim: the plugin must not ship ` +
+            `content skills (only \`${POINTER_SKILL_ENTRY}\` is allowed), ` +
+            `got \`${p}\` — content is distributed via ` +
+            "`npx -y @event4u/agent-config init`",
+        );
+        continue;
+      }
+
       // Resolve path relative to repo root (strip leading "./" only,
       // NOT every "." and "/" character)
       const rel = removePrefix(p, "./");
@@ -189,9 +204,7 @@ export function main(): number {
     }
   }
 
-  // Reverse-completeness: every SKILL.md on disk under the committed skill
-  // sources (dist/agent-src/skills/ + .claude-plugin/skills/) must appear in
-  // some plugin's skills[].
+  // Shim completeness: the pointer skill must be listed by some plugin.
   const listed = new Set<string>();
   for (const plugin of plugins) {
     if (!isObject(plugin)) {
@@ -201,43 +214,38 @@ export function main(): number {
     if (Array.isArray(skills)) {
       for (const p of skills) {
         if (typeof p === "string") {
-          listed.add(removePrefix(p, "./"));
+          listed.add(p);
         }
       }
     }
   }
+  if (plugins.length > 0 && !listed.has(POINTER_SKILL_ENTRY)) {
+    errors.push(
+      `bootstrap shim: pointer skill \`${POINTER_SKILL_ENTRY}\` is not ` +
+        "listed in any plugin's skills[]",
+    );
+  }
 
-  for (const sourceDir of SKILL_SOURCE_DIRS) {
-    if (!_exists(sourceDir)) {
-      continue;
-    }
-    // source_dir.relative_to(ROOT).as_posix() — ROOT is ".", so this is the
-    // dir spelled relative to cwd with POSIX separators.
-    const prefix = relPosix(sourceDir, ROOT);
-    let entries: fs.Dirent[];
+  // Shim disk shape: .claude-plugin/skills/ must contain ONLY the pointer
+  // dir — a repopulated symlink tree (e.g. from a stale generator) FAILS.
+  if (_exists(PLUGIN_SKILLS_DIR)) {
+    let entries: fs.Dirent[] = [];
     try {
-      entries = fs.readdirSync(sourceDir, { withFileTypes: true });
+      entries = fs.readdirSync(PLUGIN_SKILLS_DIR, { withFileTypes: true });
     } catch {
-      continue;
+      /* unreadable → nothing to assert */
     }
-    // sorted(source_dir.iterdir()) — full-path string sort.
-    const dirs = entries
-      .map((e) => ({ name: e.name, full: path.join(sourceDir, e.name) }))
-      .sort((a, b) => (a.full < b.full ? -1 : a.full > b.full ? 1 : 0));
-    for (const d of dirs) {
-      if (!_isDir(d.full)) {
-        continue;
-      }
-      if (!_exists(path.join(d.full, "SKILL.md"))) {
-        continue;
-      }
-      const rel = `${prefix}/${d.name}`;
-      if (!listed.has(rel)) {
-        errors.push(
-          "skill exists on disk but is not listed in marketplace.json: " +
-            `\`./${rel}\``,
-        );
-      }
+    const extra = entries
+      .filter((e) => _isDir(path.join(PLUGIN_SKILLS_DIR, e.name)))
+      .map((e) => e.name)
+      .filter((name) => name !== POINTER_SKILL_DIRNAME)
+      .sort();
+    for (const name of extra) {
+      errors.push(
+        "bootstrap shim: unexpected skill dir on disk (plugin ships no " +
+          `content skills): \`.claude-plugin/skills/${name}\` — remove it ` +
+          "or re-run the generator",
+      );
     }
   }
 
@@ -246,15 +254,9 @@ export function main(): number {
   }
 
   const pluginCount = plugins.length;
-  let skillCount = 0;
-  for (const p of plugins) {
-    if (isObject(p) && Array.isArray(p["skills"])) {
-      skillCount += p["skills"].length;
-    }
-  }
   process.stdout.write(
     `✅  marketplace.json (${pluginCount} plugin` +
-      `${pluginCount !== 1 ? "s" : ""}, ${skillCount} skills total)\n`,
+      `${pluginCount !== 1 ? "s" : ""}, bootstrap shim: 1 pointer skill)\n`,
   );
   process.stdout.write("  No issues found.\n");
   return 0;
@@ -266,10 +268,6 @@ function _isDir(p: string): boolean {
   } catch {
     return false;
   }
-}
-
-function relPosix(child: string, base: string): string {
-  return path.relative(base, child).split(path.sep).join("/");
 }
 
 function _isCliEntry(): boolean {

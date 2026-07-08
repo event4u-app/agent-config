@@ -1,1 +1,0 @@
-../../../src/domains/meta/council/debate/command.md

@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/optimize-project/command.md

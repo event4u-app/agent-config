@@ -1,1 +1,0 @@
-../../../src/domains/meta/skill/preview/command.md

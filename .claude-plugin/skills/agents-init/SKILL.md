@@ -1,1 +1,0 @@
-../../../src/domains/meta/agents/init/command.md

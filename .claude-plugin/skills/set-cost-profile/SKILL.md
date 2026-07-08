@@ -1,1 +1,0 @@
-../../../src/domains/meta/set-cost-profile/command.md

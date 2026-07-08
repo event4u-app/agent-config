@@ -1,1 +1,0 @@
-../../../src/domains/brand/brand/voice/command.md

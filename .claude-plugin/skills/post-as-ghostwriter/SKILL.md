@@ -1,1 +1,0 @@
-../../../src/domains/gtm-marketing/post-as/ghostwriter/command.md

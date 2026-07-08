@@ -1,1 +1,0 @@
-../../../src/domains/meta/council/optimize/command.md

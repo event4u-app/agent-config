@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/feature/refactor/command.md

@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/security-audit-config/command.md

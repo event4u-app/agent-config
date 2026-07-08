@@ -1,1 +1,0 @@
-../../../src/domains/meta/analytics/show/command.md

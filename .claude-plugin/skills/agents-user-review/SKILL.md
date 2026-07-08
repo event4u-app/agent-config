@@ -1,1 +1,0 @@
-../../../src/domains/meta/agents/user/review/command.md

@@ -1,1 +1,0 @@
-../../../src/domains/meta/condense/command.md

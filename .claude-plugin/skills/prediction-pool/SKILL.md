@@ -1,1 +1,0 @@
-../../../src/domains/fun/prediction-pool/command.md

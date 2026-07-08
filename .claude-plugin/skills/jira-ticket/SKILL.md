@@ -1,1 +1,0 @@
-../../../src/domains/product-basic/jira-ticket/command.md
