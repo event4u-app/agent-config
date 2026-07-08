@@ -377,6 +377,11 @@ tasks:
     desc: "Memory-retrieval replay regression — the corpus-derived replay set's payload must stay within +5% of the pinned baseline (inert until internal/bench/reports/memory-retrieval-baseline.json exists; road-to-memory-retrieval-economy Phase 0)"
     cmd: ./scripts-run src/scripts/memory_replay --check
 
+  check-second-brain-scorer:
+    silent: true
+    desc: "Second-brain recall scorer dry-run — the deterministic multi-session recall scorer must score the shipped good transcripts PASS and the bad ones FAIL (no model-in-the-loop, no spend; road-to-second-brain-delta-proof Phase 1)"
+    cmd: ./scripts-run src/scripts/second_brain_score --dry-run
+
   check-eval-coverage:
     silent: true
     desc: "Behavioural-eval coverage ratchet — overall + per-tier coverage may not drop below the pinned floor (internal/evals/coverage-floor.json); the floor only rises via --write-floor after authoring evals (road-to-skill-eval-coverage Phase 3)"
