@@ -213,16 +213,31 @@ can exercise index+fetch end-to-end.
 
 ## Phase 1b — Default flip (HUMAN GATE)
 
-- [ ] Run the Phase-0 paired comparison; produce
+- [x] Run the Phase-0 paired comparison; produce
       `internal/bench/reports/memory-retrieval-run.json` (token delta +
       quality verdict).
-- [ ] Falsification checklist (script, not vibes): (a) index mode saves ≥30%
+      <!-- done 2026-07-08: internal/bench/reports/memory-retrieval-run.json
+      — full 7,092 vs index+fetch 6,948 tok (cl100k_base). -->
+- [x] Falsification checklist (script, not vibes): (a) index mode saves ≥30%
       tokens on the replay set aggregate, (b) quality judge win-rate ≥48% for
       index+fetch vs full, (c) no replay query where the model failed to fetch
       a hand-labelled needed entry. Any red → default stays `full`, findings
       documented as honest-null.
-- [ ] On green + sign-off: flip default to `index`, bump envelope docs,
+      <!-- done 2026-07-08: (a) RED — aggregate saving 2.0%, 20/24 queries
+      NEGATIVE; (c) GREEN — zero missed needed-fetches; (b) not run (moot
+      once (a) is red — no judge spend on a falsified flip). STRUCTURAL
+      finding, not a rig bug: full envelopes ship only score>0 matches, so
+      precision queries already pay near-minimum; index+fetch adds a second
+      envelope round-trip. Savings concentrate exactly where payloads are
+      large/multi-entry (knowledge chunks +54%/+36%, multi-type +31%) —
+      quantifying the roadmap's own volume caveat. Verdict block in the
+      pinned report. -->
+- [-] On green + sign-off: flip default to `index`, bump envelope docs,
       BREAKING_CHANGES entry.
+      <!-- cancelled 2026-07-08: falsified by (a) at current corpus scale —
+      the pre-committed red path. Default STAYS full; the mechanism ships
+      opt-in. Re-open trigger: lint_knowledge_scale tripwire fires or
+      broad-recall usage appears; then re-run memory_replay --paired. -->
 
 **Exit:** default flipped with evidence, or an honest-null report.
 **Rollback:** one-line default revert; both modes remain supported.

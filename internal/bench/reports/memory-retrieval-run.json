@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "kind": "memory-retrieval-paired",
+  "roadmap": "road-to-memory-retrieval-economy",
+  "corpus_provenance": "corpus-derived (council 2026-07-08 Option A) \u2014 see tests/fixtures/memory-replay/queries.yml header; claims scoped to corpus-derived replay queries",
+  "tokenizer": "cl100k_base (tiktoken)",
+  "aggregate": {
+    "queries": 24,
+    "full_tokens": 7092,
+    "needed_recall": 1,
+    "index_plus_fetch_tokens": 6948,
+    "saving_pct": 2
+  },
+  "per_query": [
+    {
+      "id": "q-01-owner-router",
+      "full_tokens": 127,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 63,
+      "fetch_tokens": 115,
+      "index_plus_fetch_tokens": 178,
+      "saving_pct": -40.2,
+      "missed_needed": []
+    },
+    {
+      "id": "q-02-owner-install",
+      "full_tokens": 135,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 60,
+      "fetch_tokens": 123,
+      "index_plus_fetch_tokens": 183,
+      "saving_pct": -35.6,
+      "missed_needed": []
+    },
+    {
+      "id": "q-03-owner-claims",
+      "full_tokens": 117,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 63,
+      "fetch_tokens": 106,
+      "index_plus_fetch_tokens": 169,
+      "saving_pct": -44.4,
+      "missed_needed": []
+    },
+    {
+      "id": "q-04-owner-mcp",
+      "full_tokens": 125,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 63,
+      "fetch_tokens": 113,
+      "index_plus_fetch_tokens": 176,
+      "saving_pct": -40.8,
+      "missed_needed": []
+    },
+    {
+      "id": "q-05-bench-frozen-worktree",
+      "full_tokens": 282,
+      "needed_found": 2,
+      "needed_total": 2,
+      "index_tokens": 123,
+      "fetch_tokens": 260,
+      "index_plus_fetch_tokens": 383,
+      "saving_pct": -35.8,
+      "missed_needed": []
+    },
+    {
+      "id": "q-06-tmpdir-leak",
+      "full_tokens": 208,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 72,
+      "fetch_tokens": 196,
+      "index_plus_fetch_tokens": 268,
+      "saving_pct": -28.8,
+      "missed_needed": []
+    },
+    {
+      "id": "q-07-stale-generated",
+      "full_tokens": 324,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 107,
+      "fetch_tokens": 170,
+      "index_plus_fetch_tokens": 277,
+      "saving_pct": 14.5,
+      "missed_needed": []
+    },
+    {
+      "id": "q-08-overclaimed-checkbox",
+      "full_tokens": 168,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 69,
+      "fetch_tokens": 153,
+      "index_plus_fetch_tokens": 222,
+      "saving_pct": -32.1,
+      "missed_needed": []
+    },
+    {
+      "id": "q-09-pr-head-lag",
+      "full_tokens": 167,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 69,
+      "fetch_tokens": 153,
+      "index_plus_fetch_tokens": 222,
+      "saving_pct": -32.9,
+      "missed_needed": []
+    },
+    {
+      "id": "q-10-phantom-ci",
+      "full_tokens": 145,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 71,
+      "fetch_tokens": 134,
+      "index_plus_fetch_tokens": 205,
+      "saving_pct": -41.4,
+      "missed_needed": []
+    },
+    {
+      "id": "q-11-no-runtime",
+      "full_tokens": 133,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 63,
+      "fetch_tokens": 118,
+      "index_plus_fetch_tokens": 181,
+      "saving_pct": -36.1,
+      "missed_needed": []
+    },
+    {
+      "id": "q-12-kernel-scoping",
+      "full_tokens": 142,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 65,
+      "fetch_tokens": 129,
+      "index_plus_fetch_tokens": 194,
+      "saving_pct": -36.6,
+      "missed_needed": []
+    },
+    {
+      "id": "q-13-claims-invariant",
+      "full_tokens": 474,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 200,
+      "fetch_tokens": 129,
+      "index_plus_fetch_tokens": 329,
+      "saving_pct": 30.6,
+      "missed_needed": []
+    },
+    {
+      "id": "q-14-pipeline-parity",
+      "full_tokens": 144,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 68,
+      "fetch_tokens": 132,
+      "index_plus_fetch_tokens": 200,
+      "saving_pct": -38.9,
+      "missed_needed": []
+    },
+    {
+      "id": "q-15-tokenizer",
+      "full_tokens": 138,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 67,
+      "fetch_tokens": 124,
+      "index_plus_fetch_tokens": 191,
+      "saving_pct": -38.4,
+      "missed_needed": []
+    },
+    {
+      "id": "q-16-worktree-wipe-incident",
+      "full_tokens": 246,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 82,
+      "fetch_tokens": 234,
+      "index_plus_fetch_tokens": 316,
+      "saving_pct": -28.5,
+      "missed_needed": []
+    },
+    {
+      "id": "q-17-plugin-cache-incident",
+      "full_tokens": 254,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 79,
+      "fetch_tokens": 242,
+      "index_plus_fetch_tokens": 321,
+      "saving_pct": -26.4,
+      "missed_needed": []
+    },
+    {
+      "id": "q-18-vitest-recursion",
+      "full_tokens": 233,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 80,
+      "fetch_tokens": 221,
+      "index_plus_fetch_tokens": 301,
+      "saving_pct": -29.2,
+      "missed_needed": []
+    },
+    {
+      "id": "q-19-count-drift",
+      "full_tokens": 224,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 71,
+      "fetch_tokens": 211,
+      "index_plus_fetch_tokens": 282,
+      "saving_pct": -25.9,
+      "missed_needed": []
+    },
+    {
+      "id": "q-20-flip-gate-rule",
+      "full_tokens": 135,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 69,
+      "fetch_tokens": 124,
+      "index_plus_fetch_tokens": 193,
+      "saving_pct": -43,
+      "missed_needed": []
+    },
+    {
+      "id": "q-21-incident-and-pattern",
+      "full_tokens": 267,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 92,
+      "fetch_tokens": 242,
+      "index_plus_fetch_tokens": 334,
+      "saving_pct": -25.1,
+      "missed_needed": []
+    },
+    {
+      "id": "q-22-knowledge-removal-safety",
+      "full_tokens": 977,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 109,
+      "fetch_tokens": 521,
+      "index_plus_fetch_tokens": 630,
+      "saving_pct": 35.5,
+      "missed_needed": []
+    },
+    {
+      "id": "q-23-knowledge-router-schema",
+      "full_tokens": 472,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 68,
+      "fetch_tokens": 462,
+      "index_plus_fetch_tokens": 530,
+      "saving_pct": -12.3,
+      "missed_needed": []
+    },
+    {
+      "id": "q-24-knowledge-bench",
+      "full_tokens": 1455,
+      "needed_found": 1,
+      "needed_total": 1,
+      "index_tokens": 151,
+      "fetch_tokens": 512,
+      "index_plus_fetch_tokens": 663,
+      "saving_pct": 54.4,
+      "missed_needed": []
+    }
+  ],
+  "falsification": {
+    "a-token-saving-ge-30pct": false,
+    "b-judge-win-rate": "OUT-OF-BAND \u2014 run check_quality_regression paired judge before flip sign-off",
+    "c-zero-missed-needed": true
+  },
+  "verdict": {
+    "outcome": "HONEST NULL \u2014 default flip falsified at current corpus scale",
+    "decision": "detail default STAYS 'full' (pre-committed: any red check \u2192 no flip). The mechanism ships opt-in.",
+    "checks": {
+      "a-token-saving-ge-30pct": "RED \u2014 aggregate 2.0% (20/24 queries NEGATIVE)",
+      "b-judge-win-rate": "NOT RUN \u2014 moot once (a) is red; no spend on a falsified flip",
+      "c-zero-missed-needed": "GREEN \u2014 0 missed across 24 queries"
+    },
+    "analysis": "Structural, not a rig artifact: the full envelope ships only score>0 matches (memory_lookup filters non-matches), so precision-shaped queries with 1-2 hits already pay near-minimum tokens \u2014 index+fetch ADDS a second envelope round-trip. Savings appear exactly where payloads are large or multi-entry: knowledge chunks +54.4%/+35.5%, multi-type +30.6%. The two-phase economy therefore pays off with VOLUME (many candidates per query, large bodies) \u2014 quantifying the roadmap's own \"absolute win grows with memory volume\" caveat. Re-run this gate when the lint_knowledge_scale tripwire fires or broad-recall usage patterns appear.",
+    "positive_queries": [
+      {
+        "id": "q-07-stale-generated",
+        "saving_pct": 14.5
+      },
+      {
+        "id": "q-13-claims-invariant",
+        "saving_pct": 30.6
+      },
+      {
+        "id": "q-22-knowledge-removal-safety",
+        "saving_pct": 35.5
+      },
+      {
+        "id": "q-24-knowledge-bench",
+        "saving_pct": 54.4
+      }
+    ]
+  }
+}
