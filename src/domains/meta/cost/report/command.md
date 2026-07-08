@@ -118,6 +118,26 @@ Orchestration telemetry (YYYY-MM, N dispatches):
   guardrail breaches:  [token_blowup | spawn_failure | verify_skip | none]
 ```
 
+When the orchestration lines carry the routing extension fields
+(`task_class` / `tier_chosen` / `escalated_from` / `verify_result_by_tier` —
+see `orchestration-telemetry.md`), append the per-tier routing view using
+`readTierRoutingMetrics`, `escalationPromotionCandidates`, and
+`verifyPassDrift` from the same module — this is the per-tier QUALITY view
+that a spend-only dashboard misses:
+
+```
+Tier routing (YYYY-MM):
+  dispatches by tier:      lite N · medium N · high N
+  escalation rate by class: <class>: N.N% (promotion tripwire: >40%)
+  verify-pass rate by tier: lite N.N% · medium N.N%
+  tripwires fired:          [promote <class> | verify-pass drift on <tier> | none]
+```
+
+A fired tripwire is a recommendation to surface, never an auto-flip: the
+escalation tripwire suggests promoting the class's static default tier; the
+drift tripwire flags verifier/model drift for investigation (per
+`subagent-steering.md § Cost-routing tripwires`).
+
 If no orchestration lines exist yet (telemetry capture not yet running or
 no delegated dispatches this month), surface:
 
