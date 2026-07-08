@@ -279,6 +279,7 @@ code {
 .ac-wizard__tool-label { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
 .ac-badge { font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); padding: 0.1rem var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; }
 .ac-badge--installed { background: var(--color-success-soft); color: var(--color-success); }
+.ac-badge--detected { background: var(--color-info-soft, rgba(2, 132, 199, 0.12)); color: var(--color-info); }
 .ac-badge--missing { background: var(--color-surface-alt); color: var(--color-text-muted); }
 .ac-badge--ws { font-size: 0.6875rem; padding: 0.05rem 0.4rem; background: var(--color-surface-alt); color: var(--color-text-muted); border: 1px solid var(--color-border); }
 .ac-badge--ws-active { background: var(--color-accent); color: var(--color-accent-fg); border-color: var(--color-accent); }
@@ -312,6 +313,76 @@ code {
 .ac-council__section { display: flex; flex-direction: column; gap: var(--space-4); border: 0; padding: 0; margin: 0; }
 .ac-council__section:disabled { opacity: 0.55; }
 .ac-council__h { margin: var(--space-2) 0 0; font-size: var(--font-size-sm); color: var(--color-text-muted); }
+
+/* Install-mode start screen (Phase 3.2) — Recommended vs Customize. */
+.ac-start { display: grid; grid-template-columns: 3fr 2fr; gap: var(--space-4); }
+@media (max-width: 700px) { .ac-start { grid-template-columns: 1fr; } }
+.ac-start__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+}
+.ac-start__card--primary { border-color: var(--color-accent); }
+.ac-start__title { margin: 0; font-size: var(--font-size-xl); }
+.ac-start__desc { margin: 0; color: var(--color-text-muted); }
+.ac-start__facts { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-1); color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.ac-start__cta { margin-top: auto; align-self: flex-start; }
+
+/* Review summary — "What happens on Finish" (Phase 3.3). */
+.ac-review-summary {
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+}
+.ac-review-summary__title { margin: 0 0 var(--space-2); font-size: var(--font-size-base); }
+.ac-review-summary__list { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--font-size-sm); }
+.ac-review-summary__chip { margin-right: var(--space-1); }
+
+/* Post-finish getting-started checklist (Phase 3.4). */
+.ac-checklist { display: flex; flex-direction: column; gap: var(--space-5); }
+.ac-checklist__hero { display: flex; flex-direction: column; gap: var(--space-2); }
+.ac-checklist__headline { margin: 0; font-size: var(--font-size-2xl); }
+.ac-checklist__message { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.ac-checklist__items { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-3); counter-reset: checklist; }
+.ac-checklist__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    counter-increment: checklist;
+}
+.ac-checklist__text { display: flex; flex-direction: column; gap: 2px; }
+.ac-checklist__item-title { font-weight: var(--font-weight-medium); }
+.ac-checklist__item-title::before { content: counter(checklist) '. '; color: var(--color-text-subtle); }
+.ac-checklist__item-detail { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.ac-checklist__cmd-row { display: flex; gap: var(--space-2); align-items: center; }
+.ac-checklist__cmd { flex: 1; padding: var(--space-2) var(--space-3); background: var(--color-surface-alt); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: var(--font-size-sm); user-select: all; }
+.ac-checklist__copy { padding: var(--space-1) var(--space-3); font-size: var(--font-size-sm); }
+.ac-checklist__close-hint { margin: 0; color: var(--color-text-subtle); font-size: var(--font-size-sm); }
+
+/* Installed-pack removal warning on the review step (Phase 2) —
+ * destructive change, flagged red, gated behind an explicit confirm. */
+.ac-review-removals {
+    border: 1px solid var(--color-danger);
+    border-left: 3px solid var(--color-danger);
+    border-radius: var(--radius-md);
+    background: var(--color-danger-soft, rgba(239, 68, 68, 0.08));
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+.ac-review-removals__title { margin: 0; font-weight: var(--font-weight-medium); color: var(--color-danger); }
+.ac-review-removals__list { margin: 0; padding-left: var(--space-5); }
+.ac-review-removals__confirm { display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; font-size: var(--font-size-sm); }
 
 .ac-wizard__review-nav { display: flex; flex-direction: column; gap: var(--space-2); }
 .ac-wizard__review-nav-label { color: var(--color-text-muted); font-size: var(--font-size-sm); margin: 0; }

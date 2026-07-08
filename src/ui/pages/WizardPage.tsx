@@ -23,6 +23,7 @@ import { parseUserIdentity } from '@shared/userMd/utils.js';
 import type { UserIdentity } from '@shared/userMd/schema.js';
 import type { JsonSchemaLeaf, JsonValue } from '../forms/schemaTypes.js';
 import { stepAt } from '../wizard/steps.js';
+import { seedPackSelection, computePackRemovals } from '../wizard/packSelection.js';
 import { sliceSchema } from '../wizard/sliceSchema.js';
 import { StepHeader } from '../wizard/StepHeader.js';
 import { StepNav } from '../wizard/StepNav.js';
@@ -30,6 +31,7 @@ import { WizardReview } from '../wizard/WizardReview.js';
 import { RecoveryBanner } from '../wizard/RecoveryBanner.js';
 import { ContinueScreen } from '../wizard/ContinueScreen.js';
 import { BackupScreen } from '../wizard/BackupScreen.js';
+import { FinishChecklist } from '../wizard/FinishChecklist.js';
 import {
     activeTotalSteps,
     banner,
@@ -46,6 +48,7 @@ import {
     extendedSteps,
     getActiveSteps,
     initialSettings,
+    installedPackIds,
     legacyHints,
     legacyV3,
     legacyV3Acknowledged,
@@ -61,7 +64,9 @@ import {
     rtkInstalled,
     rtkRepo,
     packsTouched,
+    packRemovalsConfirmed,
     saving,
+    startAcknowledged,
     schema,
     welcomePrefilled,
     selectedPacks,
@@ -352,6 +357,8 @@ interface ManifestResponse {
         optional_packs?: string[];
         example_roles?: string[];
     }>;
+    /** Installed packs from the settings `packs:` manifest (Phase 2). */
+    installedPacks?: string[];
 }
 
 interface AutoDetectResponse {
@@ -421,8 +428,14 @@ async function loadDiscoveryOnce(): Promise<void> {
             // the pack — never auto-detect / pre-select it.
             .filter((id) => !NO_AUTODETECT_PACK_IDS.has(id));
         detectedPackIds.value = detected;
+        // road-to-setup-experience § Phase 2 — installed packs (prior install's
+        // `packs:` manifest) pre-check on the packs step. Unknown ids (packs
+        // removed from the vocabulary) are dropped silently.
+        installedPackIds.value = (manifest.installedPacks ?? []).filter((id) => knownIds.has(id));
         // Pack pre-selection is driven by the role step (seedPacksFromRoles),
-        // not auto-detect alone — see the packs step-entry trigger.
+        // not auto-detect alone — see the packs step-entry trigger. Installed
+        // packs seed through the same helper so a repeat run starts from the
+        // previous installation instead of an empty grid.
     } catch (err) {
         if (err instanceof ApiCallError) {
             discoveryLoadError.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
@@ -648,13 +661,23 @@ function seedPacksFromRoles(): void {
         .filter(([, v]) => v === true)
         .map(([id]) => id);
     const byWorkspace = new Map(discoveryWorkspaces.value.map((w) => [w.id, w]));
-    const recommended: Record<string, boolean> = {};
+    const roleDefaults: string[] = [];
     for (const role of roleIds) {
-        for (const pack of byWorkspace.get(role)?.default_packs ?? []) recommended[pack] = true;
+        for (const pack of byWorkspace.get(role)?.default_packs ?? []) roleDefaults.push(pack);
     }
-    // Fold in auto-detected project packs (python already filtered upstream).
-    for (const id of detectedPackIds.value) recommended[id] = true;
-    selectedPacks.value = recommended;
+    // Installed packs seed first (Phase 2 — a repeat run starts from the
+    // previous installation), then role recommendations, then auto-detected
+    // project packs. Framework children pull their language cluster on.
+    const clusterOf = new Map<string, string>();
+    for (const p of discoveryPacks.value) {
+        if (p.cluster !== undefined) clusterOf.set(p.id, p.cluster);
+    }
+    selectedPacks.value = seedPackSelection({
+        installed: installedPackIds.value,
+        roleDefaults,
+        detected: detectedPackIds.value,
+        clusterOf,
+    });
 }
 
 /**
@@ -794,6 +817,93 @@ async function finish(): Promise<void> {
     } finally {
         saving.value = false;
     }
+}
+
+/**
+ * Recommended one-click path from the install-mode start screen
+ * (road-to-setup-experience § Phase 3.2): wait for tool + pack detection,
+ * keep the seeded selections (installed/detected tools, installed +
+ * detected packs), then jump straight to the review step. Nothing is
+ * written — Finish on the review screen stays the only commit point.
+ */
+async function startRecommended(): Promise<void> {
+    startAcknowledged.value = true;
+    await Promise.all([loadDiscoveryOnce(), loadToolDetectionOnce()]);
+    // Seed packs from installed + auto-detected (roles are empty on the
+    // recommended path; the helper unions whatever is known).
+    seedPacksFromRoles();
+    await goTo(activeTotalSteps() - 1);
+}
+
+/**
+ * Install-mode start screen — "Recommended setup" (one click + review)
+ * vs "Customize" (walk the steps). Detection results render live inside
+ * the recommended card so it states exactly what it will do.
+ */
+function StartScreen(): preact.JSX.Element {
+    useEffect(() => {
+        void loadDiscoveryOnce();
+        void loadToolDetectionOnce();
+    }, []);
+    const detecting = discoveryLoading.value || toolsDetectionLoading.value
+        || !discoveryLoaded.value || !toolsDetectionLoaded.value;
+    const toolCount = Object.values(toolPresence.value).filter(Boolean).length;
+    const installedCount = installedPackIds.value.length;
+    const detectedCount = detectedPackIds.value
+        .filter((id) => !installedPackIds.value.includes(id)).length;
+    return (
+        <div class="ac-start">
+            <section class="ac-start__card ac-start__card--primary">
+                <h2 class="ac-start__title">Recommended setup</h2>
+                <p class="ac-start__desc">
+                    The fastest path — we pre-select everything we can detect
+                    and you confirm one review screen before anything is written.
+                </p>
+                <ul class="ac-start__facts">
+                    <li>
+                        {detecting
+                            ? 'Detecting your AI tools…'
+                            : toolCount === 0
+                                ? 'No AI tools detected — pick them on the review screen.'
+                                : `${toolCount} AI tool${toolCount === 1 ? '' : 's'} detected and pre-selected.`}
+                    </li>
+                    <li>
+                        {detecting
+                            ? 'Detecting capability packs…'
+                            : installedCount > 0
+                                ? `${installedCount} installed pack${installedCount === 1 ? '' : 's'} kept${detectedCount > 0 ? `, ${detectedCount} more auto-detected` : ''}.`
+                                : detectedCount > 0
+                                    ? `${detectedCount} capability pack${detectedCount === 1 ? '' : 's'} auto-detected.`
+                                    : 'No packs pre-selected — add them any time later.'}
+                    </li>
+                    <li>Settings keep their current values (or safe defaults on a first run).</li>
+                    <li>Nothing is written until you confirm the review screen.</li>
+                </ul>
+                <button
+                    type="button"
+                    class="ac-button ac-button--primary ac-start__cta"
+                    disabled={detecting}
+                    onClick={(): void => { void startRecommended(); }}
+                >
+                    {detecting ? 'Detecting…' : 'Use recommended setup'}
+                </button>
+            </section>
+            <section class="ac-start__card">
+                <h2 class="ac-start__title">Customize</h2>
+                <p class="ac-start__desc">
+                    Walk through every step — tools, roles, packs, behaviour,
+                    budgets — and tune each choice yourself.
+                </p>
+                <button
+                    type="button"
+                    class="ac-button ac-start__cta"
+                    onClick={(): void => { startAcknowledged.value = true; }}
+                >
+                    Customize step by step
+                </button>
+            </section>
+        </div>
+    );
 }
 
 const WELCOME_LANGUAGES = ['de', 'en', 'en-US', 'en-GB', 'fr', 'es', 'it', 'nl', 'pt', 'pt-BR'];
@@ -1017,6 +1127,12 @@ function PacksStepBody(): preact.JSX.Element {
     }
     const sel = selectedPacks.value;
     const detected = new Set(detectedPackIds.value);
+    const installed = new Set(installedPackIds.value);
+    const packBadge = (id: string): preact.JSX.Element | null => {
+        if (installed.has(id)) return <span class="ac-badge ac-badge--installed">installed</span>;
+        if (detected.has(id)) return <span class="ac-badge ac-badge--detected">auto-detected</span>;
+        return null;
+    };
     // Workspace id → label, and the user's selected roles, so each pack tile
     // can badge the areas it belongs to (and highlight the ones the user picked
     // on Step 2 — "this pack matches your role").
@@ -1104,9 +1220,7 @@ function PacksStepBody(): preact.JSX.Element {
                                             }}
                                         />
                                         <span class="ac-pack-tile__title">{pack.label}</span>
-                                        {detected.has(pack.id)
-                                            ? <span class="ac-badge ac-badge--installed">auto-detected</span>
-                                            : null}
+                                        {packBadge(pack.id)}
                                     </label>
                                     {renderWorkspaceBadges(pack.workspaces)}
                                     {pack.description !== ''
@@ -1126,6 +1240,7 @@ function PacksStepBody(): preact.JSX.Element {
                                                             }}
                                                         />
                                                         <span>{child.label}</span>
+                                                        {packBadge(child.id)}
                                                     </label>
                                                 ))}
                                             </fieldset>
@@ -1253,8 +1368,25 @@ function StepBody(): preact.JSX.Element | null {
             onJump={(i): void => { void goTo(i); }}
             selectedToolsCount={Object.values(selectedTools.value).filter(Boolean).length}
             selectedPacksCount={Object.values(selectedPacks.value).filter(Boolean).length}
+            packRemovals={pendingPackRemovals()}
+            removalsConfirmed={packRemovalsConfirmed.value}
+            onConfirmRemovals={(confirmed): void => { packRemovalsConfirmed.value = confirmed; }}
+            selectedToolIds={Object.entries(selectedTools.value).filter(([, v]) => v).map(([id]) => id)}
+            packAdditions={extendedSteps.value
+                ? resolveSelectedPacks().filter((id) => id !== 'engineering-base' && !installedPackIds.value.includes(id))
+                : []}
         />
     );
+}
+
+/**
+ * Installed packs the current selection would drop — flagged on the review
+ * step as a destructive change (road-to-setup-experience § Phase 2). Only
+ * meaningful in extended mode (the packs step exists there).
+ */
+function pendingPackRemovals(): string[] {
+    if (!extendedSteps.value) return [];
+    return computePackRemovals(installedPackIds.value, resolveSelectedPacks());
 }
 
 export function WizardPage({ path: _path }: { path: string }): preact.JSX.Element {
@@ -1297,6 +1429,15 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
     const showRecovery = rec !== null && !recoveryDismissed.value;
     const v3 = legacyV3.value;
     const showBackup = v3 !== null && v3.present && !legacyV3Acknowledged.value;
+    // road-to-setup-experience § Phase 3.2 — install-mode start screen.
+    // Fresh install runs (step 0, no resume) offer "Recommended setup" vs
+    // "Customize" before the stepper renders. Resumed runs and setup mode
+    // never see it.
+    const showStart = extendedSteps.value
+        && wizardMode.value === 'install'
+        && idx === 0
+        && !startAcknowledged.value
+        && !wizardComplete.value;
 
     // road-to-unified-setup § E2 — BackupScreen is a hard gate. Until
     // the operator picks "Backup v3 and proceed" or "Abort", the rest
@@ -1327,6 +1468,24 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
         );
     }
 
+    if (showStart) {
+        return (
+            <div class="ac-page">
+                <header class="ac-page__header">
+                    <h1>Set up agent-config</h1>
+                </header>
+                {banner.value !== null
+                    ? (
+                        <p class={`ac-banner${banner.value.tone === 'error' ? ' ac-banner--error' : ''}`}>
+                            {banner.value.message}
+                        </p>
+                    )
+                    : null}
+                <StartScreen />
+            </div>
+        );
+    }
+
     return (
         <div class="ac-page">
             <StepHeader
@@ -1347,7 +1506,7 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                     />
                 )
                 : null}
-            {banner.value !== null
+            {banner.value !== null && !(wizardComplete.value && isLast && banner.value.tone === 'success')
                 ? (
                     <p class={`ac-banner${banner.value.tone === 'error' ? ' ac-banner--error' : ''}`}>
                         {banner.value.message}
@@ -1355,7 +1514,11 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                 )
                 : null}
             <div class="ac-wizard__step">
-                <StepBody />
+                {wizardComplete.value && isLast
+                    // road-to-setup-experience § Phase 3.4 — post-finish
+                    // getting-started checklist instead of a dead-end banner.
+                    ? <FinishChecklist message={banner.value?.tone === 'success' ? banner.value.message : null} />
+                    : <StepBody />}
             </div>
             {blockedByEmptySelection
                 ? (
@@ -1375,7 +1538,20 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                 skipLabel={isContinueHandoff ? 'Finish install here' : 'Skip'}
                 isLast={isLast}
                 busy={saving.value || diffLoading.value}
-                canFinish={reviewChanges.value.length > 0 || userMdChanged()}
+                canFinish={
+                    (
+                        reviewChanges.value.length > 0
+                        || userMdChanged()
+                        || pendingPackRemovals().length > 0
+                        // Extended mode: a tool selection alone is a real
+                        // install action even without a settings diff
+                        // (recommended path, Phase 3.2).
+                        || (extendedSteps.value && Object.values(selectedTools.value).some(Boolean))
+                    )
+                    // Pending installed-pack removals gate Finish behind the
+                    // explicit confirm on the review block (Phase 2).
+                    && (pendingPackRemovals().length === 0 || packRemovalsConfirmed.value)
+                }
                 completed={wizardComplete.value}
                 onPrev={(): void => { void goTo(idx - 1); }}
                 onNext={(): void => {
