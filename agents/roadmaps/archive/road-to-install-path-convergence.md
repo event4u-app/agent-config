@@ -53,105 +53,125 @@ Revisit-if: marketplace telemetry shows negligible direct-install traffic
 
 ## Phase 0 — Evidence gates
 
-- [ ] **Augment parity gate:** verify on a real Augment CLI setup whether
+- [x] **Augment parity gate:** verify on a real Augment CLI setup whether
       the `~/.augment/` projection alone carries the dispatcher hooks
       (settings/config-registered) and what `auggie plugin install` adds
       next to it — does the dual install duplicate skills/commands the way
       Claude Code did? Findings note in
       `agents/settings/contexts/augment-surface-parity.md`; NO Augment
       retirement move before this gate
-- [ ] **Bootstrap-shim mechanics (Claude Code):** in a scratch marketplace
+- [x] **Bootstrap-shim mechanics (Claude Code):** in a scratch marketplace
       install, verify a plugin with an emptied `skills` list still installs
       cleanly, its `hooks/hooks.json` dedupes against the managed settings
       block (no double-firing), and a plugin-only install (no projection)
       gets firing hooks — the shim invariant the council contested
-- [ ] **No-risk survey:** confirm and document that claude-desktop
+- [x] **No-risk survey:** confirm and document that claude-desktop
       (bundles), codex/continue/droid/gemini-cli (plain projections), and
       export-only tools (aider/zed/jetbrains, copilot) have no
       dual-surface duplicate class; record per-tool in the Phase 2 matrix
       inputs
-- [ ] Decision checkpoint: record gate outcomes; adjust Phase 1/5 scope if
+- [x] Decision checkpoint: record gate outcomes; adjust Phase 1/5 scope if
       the shim invariant fails (fallback: keep listing description-only,
       accelerate Phase 5 delist decision)
+      <!-- checkpoint 2026-07-08: (1) Augment gate — plugin marketplace is
+      account-gated ("not enabled for your account"), dual install
+      unreproducible on a real setup; ~/.augment/ projection carries content
+      but NOT hooks (hooks are opt-in via --augment-user-hooks). Outcome:
+      projection-primary, plugin surface dormant, NO retirement move; matrix
+      entry uses pending_evidence. Full note:
+      agents/settings/contexts/augment-surface-parity.md. (2) Shim invariant
+      PASSED — scratch marketplace install (isolated CLAUDE_CONFIG_DIR,
+      worktree SHA 4d1900b25): empty-content skills list installs cleanly,
+      snapshot ships hooks/hooks.json (6 events) byte-identical to the
+      managed settings block (shared builder + parity test), pointer skill
+      resolves as a real file. No fallback needed; Phase 1/5 scope
+      unchanged. (3) No-risk survey recorded per tool in
+      src/config/surface-matrix.yml (23 tools). -->                       
 
 ## Phase 1 — Bootstrap shim (Claude Code plugin)
 
-- [ ] Strip all skill entries from `.claude-plugin/marketplace.json` and
+- [x] Strip all skill entries from `.claude-plugin/marketplace.json` and
       the `.claude-plugin/skills/` symlink tree; the plugin ships ONLY
       `hooks/hooks.json` (stable, parity-guarded) plus one
       `install-agent-config` pointer skill whose description carries the
       canonical `npx -y @event4u/agent-config init` instruction
-- [ ] Update the marketplace description to the bootstrap wording (door
+- [x] Update the marketplace description to the bootstrap wording (door
       stays open, content lives in the npx install); keep the deprecation
       pointer for the content role
-- [ ] Adjust `lint_marketplace_install_completeness` + the pre-commit
+- [x] Adjust `lint_marketplace_install_completeness` + the pre-commit
       marketplace check to the shim shape (empty-skills is now the
       CORRECT state, a repopulated skills list must FAIL)
       <!-- carve-out: new-gate-verification -->
-- [ ] Verify: fresh direct `claude plugin install` next to a projection
+- [x] Verify: fresh direct `claude plugin install` next to a projection
       produces zero duplicate skill listings and no double-fired hooks
       (extends the golden smoke)
       <!-- carve-out: new-gate-verification -->
 
 ## Phase 2 — Machine-checked surface matrix
 
-- [ ] Author `src/config/surface-matrix.yml`: per tool — canonical surface,
+- [x] Author `src/config/surface-matrix.yml`: per tool — canonical surface,
       legitimate alternates, duplicate-surface definition (detect paths),
       converge action, hook mechanism; seed from the Phase 0 survey
       (claude-code: projection+settings-hooks; copilot: plugin-primary;
       claude-desktop: bundles; augment: pending gate; export-only tools
       marked as such)
-- [ ] CI lint: every tool in `USER_SCOPE_PATHS` / deploy plans has a matrix
+- [x] CI lint: every tool in `USER_SCOPE_PATHS` / deploy plans has a matrix
       entry; matrix paths that reference repo artefacts resolve; drift
       fails the build
       <!-- carve-out: new-gate-verification -->
-- [ ] `doctor` reads the matrix: generalize the `claude-plugin`
+- [x] `doctor` reads the matrix: generalize the `claude-plugin`
       duplicate-surface check into a matrix-driven `surface-state` check
       covering every tool with a defined duplicate class (Claude Code
       keeps its named check as the first consumer)
-- [ ] Document the matrix contract in `docs/contracts/` (schema, who
+- [x] Document the matrix contract in `docs/contracts/` (schema, who
       consumes it, how a new tool onboards)
 
 ## Phase 3 — Converge action + consent model
 
-- [ ] `agent-config converge` (and `upgrade --converge` alias): reads the
+- [x] `agent-config converge` (and `upgrade --converge` alias): reads the
       matrix, performs per-tool cleanup — plugin uninstall via the tool's
       own CLI, tagged-orphan reaping in plugin cache locations — and emits
       a convergence report (what was removed, why, rollback hint)
-- [ ] Consent: first `--converge` use persists `install.auto_converge:
+- [x] Consent: first `--converge` use persists `install.auto_converge:
       true` in the global settings; plain `upgrade` without the key keeps
       today's print-only prompt; TTY-interactive y/N offered once when the
       key is absent and a duplicate surface is detected
-- [ ] Hard-floor audit: converge never deletes user-authored files; only
+- [x] Hard-floor audit: converge never deletes user-authored files; only
       matrix-declared, package-tagged surfaces; dry-run mode
       (`converge --dry-run`) prints the exact actions
-- [ ] Tests: converge with/without consent key, dry-run fidelity, rollback
+- [x] Tests: converge with/without consent key, dry-run fidelity, rollback
       hint correctness, refusal on non-matrix paths
       <!-- carve-out: new-gate-verification -->
 
 ## Phase 4 — Runtime self-detection
 
-- [ ] Add a `surface-probe` concern to `dispatch:hook` SessionStart:
+- [x] Add a `surface-probe` concern to `dispatch:hook` SessionStart:
       detect matrix-declared duplicate surfaces (existence checks only),
       rate-limited to once per day via a state file under
       `agents/runtime/state/`, fail-open, never blocking
-- [ ] Nudge output: ONE line naming the duplicate + the converge command;
+- [x] Nudge output: ONE line naming the duplicate + the converge command;
       suppressed entirely when `install.auto_converge` already ran or the
       surface is clean
-- [ ] Snapshot/unit tests for the probe (clean, duplicate, rate-limited
+- [x] Snapshot/unit tests for the probe (clean, duplicate, rate-limited
       repeat, corrupted state file)
       <!-- carve-out: new-gate-verification -->
 
 ## Phase 5 — Augment follow-through + delist checkpoint
 
-- [ ] Apply the Phase 0 Augment gate outcome: either retire the Augment
+- [x] Apply the Phase 0 Augment gate outcome: either retire the Augment
       plugin content the same way (shim + matrix entry + converge action)
       or record plugin-primary status in the matrix with rationale
-- [ ] Delist decision checkpoint (maintainer call, explicitly NOT
+      <!-- outcome: projection-primary recorded in surface-matrix.yml with
+      pending_evidence rationale (marketplace account-gated, duplication
+      unreproducible); NO retirement — per the Phase 0 gate -->
+- [~] Delist decision checkpoint (maintainer call, explicitly NOT
       autonomous): after a monitoring window, review shim-install traffic
       and duplicate-surface reports; decide keep-shim vs delist; record
       the decision + revisit-if in the decision context
-- [ ] Promote outcomes to `agents/settings/contexts/` (extend
+      <!-- deferred: requires a monitoring window AFTER the shim ships +
+      an explicit maintainer decision — structurally not executable in
+      this run (2026-07-08) -->
+- [x] Promote outcomes to `agents/settings/contexts/` (extend
       `claude-code-single-surface-decision.md` with the convergence layer;
       new Augment decision note)
 
@@ -166,3 +186,5 @@ Revisit-if: marketplace telemetry shows negligible direct-install traffic
   any session on any install path self-diagnoses within a day.
 - Augment's surface model is decided on evidence, not assumption; Copilot's
   plugin-primary status is documented, not accidentally "fixed".
+
+<!-- Deferred items migrated to agents/roadmaps/road-to-install-path-convergence-followup.md on 2026-07-08 -->

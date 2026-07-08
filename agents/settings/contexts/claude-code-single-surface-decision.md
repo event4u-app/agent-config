@@ -45,6 +45,37 @@ needed.
   banner — the CJS `yaml` package could not load under the ESM bundle at
   all (latent: `yamlSafeLoad` silently degraded to `{}` there before).
 
+## Convergence layer (2026-07-08, road-to-install-path-convergence)
+
+Council follow-up (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-07-07,
+2 rounds) closed the four residual gaps of this decision:
+
+- **Bootstrap shim (Q1 tie-break).** The marketplace plugin is stripped to
+  a shim: `hooks/hooks.json` (byte-identical to the managed settings
+  block, so Claude Code dedupes) plus ONE `install-agent-config` pointer
+  skill. A direct marketplace install can no longer recreate the duplicate
+  content surface — by construction: `lint_marketplace` FAILS on any
+  repopulated skills list, and `generate_plugin_command_skills()` converges
+  the tree to shim shape. Shim invariant verified via scratch marketplace
+  install (isolated `CLAUDE_CONFIG_DIR`, 2026-07-08). Stage 2 (delist) is
+  an explicit maintainer checkpoint gated on a monitoring window — see the
+  roadmap's Phase 5.
+- **Consent model (Q2).** `agent-config converge` (+ `upgrade --converge`)
+  performs the cleanup; `install.auto_converge: true` in the global
+  settings is standing consent (persisted on first use); one interactive
+  y/N is the TTY fallback; plain non-TTY `upgrade` keeps the print-only
+  prompt. Silent auto-uninstall stays rejected.
+- **Surface matrix (Q3).** `src/config/surface-matrix.yml` +
+  `docs/contracts/surface-matrix.md` — machine-checked per-tool canonical
+  surface declarations; doctor's matrix-driven `surface-state` check
+  generalizes the `claude-plugin` check; `lint-surface-matrix` gates
+  coverage/drift in CI. Copilot recorded plugin-primary (correct, not a
+  duplicate); Augment recorded projection-primary with the plugin surface
+  `pending_evidence` (see `augment-surface-parity.md`).
+- **Runtime self-detection (Q4).** `surface-probe` SessionStart concern in
+  `dispatch:hook`: once/day, fail-open, one-line nudge naming the
+  duplicate + converge command; silent when clean or consented.
+
 ## Rejected alternatives (don't relitigate without new evidence)
 
 - **Marketplace-primary** (incl. "npx only triggers the marketplace
