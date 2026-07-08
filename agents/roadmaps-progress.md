@@ -6,10 +6,10 @@
 
 ## Overall
 
-**134 / 437 steps done · 31%**
+**140 / 437 steps done · 32%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   31%
+█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
 ```
 
 ## Open roadmaps
@@ -33,7 +33,7 @@
 | 15 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
 | 17 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 18 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
+| 18 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 5 | 6 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ██████░░░░ 55% |
 | 19 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ███████░░░ 73% |
 | 20 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 21 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
@@ -377,13 +377,13 @@
 
 ### [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md)
 
-**Road to second-brain delta proof — measure the memory substrate against a no-memory baseline, and scope it honestly against human-PKM** — 0 / 11 done (0%)
+**Road to second-brain delta proof — measure the memory substrate against a no-memory baseline, and scope it honestly against human-PKM** — 6 / 11 done (55%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Define the task + deterministic scorer (no LLM judge) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Define the task + deterministic scorer (no LLM judge) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Paired measurement: substrate on vs off vs placebo | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Honest positioning vs human-PKM | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Honest positioning vs human-PKM | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Interop instead of competition (optional, gated on Phase 2 PASS) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-second-brain-delta-proof"></a>
