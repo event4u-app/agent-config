@@ -244,9 +244,11 @@ blocker below.
   parity is not demand evidence.
 - Simulated execution paths or fabricated metrics of any kind — a bench
   or probe that cannot run for real reports "not run", never a number.
-- SQLite memory service, vector clocks, distributed memory — the
+- SQLite memory *service*, vector clocks, distributed memory — the
   second-brain verdict and Layer-2 sunset stand; the >500-file tripwire
-  path is in-memory minisearch, pre-decided.
+  path is embedded SQLite FTS5 via built-in `node:sqlite` (no service, no
+  npm dep), pre-decided per ADR-116 (supersedes the earlier "in-memory
+  minisearch" wording).
 - Enterprise facade modules and README claims that outrun the code.
 - Role-mode sprawl — flows + subagent frontmatter cover the mechanism;
   new modes require the standard evidence path.
