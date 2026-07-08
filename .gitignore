@@ -107,6 +107,11 @@ __pycache__/
 /.windsurfrules
 /.ai/
 /GEMINI.md
+# Codex CLI interop output — Codex mirrors `.claude/skills/` into
+# `.agents/skills/` and converts `.claude/agents/*.md` into
+# `.codex/agents/*.toml` on its own runs. Derived, never committed.
+/.agents/
+/.codex/
 
 # Claude Code projection — only `.claude/settings.json` stays TRACKED.
 # The dirs below are generated projections rebuilt by `task generate-tools`,
