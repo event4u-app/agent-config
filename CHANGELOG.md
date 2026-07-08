@@ -989,6 +989,25 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.4.0](https://github.com/event4u-app/agent-config/compare/8.3.0...8.4.0) (2026-07-08)
+
+### Features
+
+* **hooks:** surface-probe SessionStart concern — runtime self-detection ([934f8ae](https://github.com/event4u-app/agent-config/commit/934f8aef6563c53f77937f8d942b5dfd2310cd6b))
+* **converge:** consented duplicate-surface cleanup command ([9b35d00](https://github.com/event4u-app/agent-config/commit/9b35d00dd88b747503cb728502b8b5f288fb325a))
+* **surface-matrix:** machine-checked per-tool canonical-surface inventory ([cf8e932](https://github.com/event4u-app/agent-config/commit/cf8e932a4ca42d1d83d87b585098e39157467955))
+* **plugin:** strip Claude Code plugin to bootstrap shim ([4d1900b](https://github.com/event4u-app/agent-config/commit/4d1900b25bddcf8b0d67858ad7126c279c7522f5))
+
+### Bug Fixes
+
+* **hooks:** surface-probe honors replay mode; fix spy typing in test ([e3900c9](https://github.com/event4u-app/agent-config/commit/e3900c99814cdc371ae5b99ddc9ead09fb2f31cc))
+
+### Documentation
+
+* **context:** unbreak path literal in augment parity note (check-refs) ([d15e4b0](https://github.com/event4u-app/agent-config/commit/d15e4b08a4a5e76cfead11a02d76e4db680186c4))
+* **roadmap:** archive install-path-convergence; spawn delist-checkpoint follow-up ([228b727](https://github.com/event4u-app/agent-config/commit/228b72758b938d3c4fdeaee3bbb42a278aa83e27))
+* **context:** record Augment surface-parity evidence gate outcome ([9144fc1](https://github.com/event4u-app/agent-config/commit/9144fc18b0eaab9e513180a3cf7dba06984b58ca))
+
 ## [8.3.0](https://github.com/event4u-app/agent-config/compare/8.2.0...8.3.0) (2026-07-08)
 
 ### Features
