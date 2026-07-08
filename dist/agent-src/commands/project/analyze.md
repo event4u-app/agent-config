@@ -4,6 +4,8 @@ name: project-analyze
 pack: engineering-base
 tier: 2
 visibility: internal
+sub: analyze
+cluster: project
 skills: [project-analyzer]
 description: Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 suggestion:
@@ -23,7 +25,7 @@ packs:
 This is a **multi-phase, interactive analysis**. Walk through each phase, show findings,
 and ask before creating any documents.
 
-### Phase 1: Project detection
+### 1. Project detection
 
 Gather in parallel:
 - `composer.json` → PHP version, framework, key packages
@@ -92,7 +94,7 @@ Per `verbosity.routine_confirmations` (default `false`):
   > 2. Stop here — keep the overview only
   ```
 
-### Phase 2: Architecture mapping
+### 2. Architecture mapping
 
 Analyze the directory structure:
 
@@ -130,7 +132,7 @@ CODE INVENTORY:
 ═══════════════════════════════════════════════
 ```
 
-### Phase 3: Module inventory (if modules exist)
+### 3. Module inventory (if modules exist)
 
 If `enumerate_modules()` returns any modules (Laravel shape: `app/Modules/` exists), analyze each module:
 
@@ -150,7 +152,7 @@ MODULES:
 ═══════════════════════════════════════════════
 ```
 
-### Phase 4: Agent docs audit
+### 4. Agent docs audit
 
 Scan all existing agent docs:
 
@@ -177,7 +179,7 @@ AGENT DOCS AUDIT:
 ═══════════════════════════════════════════════
 ```
 
-### Phase 5: Business domains
+### 5. Business domains
 
 Identify domains from models, services, routes, and directory structure.
 For each domain: map models → services → controllers → jobs → events.
@@ -215,7 +217,7 @@ Per `verbosity.routine_confirmations` (default `false`):
 For each confirmed domain, create `agents/evidence/analysis/domains/{domain}.md` using the template
 from the `project-analyzer` skill.
 
-### Phase 6: API surface & service map
+### 6. API surface & service map
 
 List all endpoints per version. Map all services with dependencies.
 
@@ -254,7 +256,7 @@ Create:
 - `agents/evidence/analysis/api/contracts.md`
 - `agents/evidence/analysis/services/service-map.md`
 
-### Phase 7: Write analysis files
+### 7. Write analysis files
 
 Write all remaining analysis files that haven't been created yet:
 
@@ -278,7 +280,7 @@ Per `verbosity.routine_confirmations` (default `false`):
   > 2. Skip
   ```
 
-### Phase 8: Gap analysis & action plan
+### 8. Gap analysis & action plan
 
 ```
 ───────────────────────────────────────────────

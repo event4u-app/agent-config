@@ -1,10 +1,11 @@
 ---
 model_tier: medium
 name: sync-gitignore
-pack: engineering-base
+pack: meta
 tier: 2
 visibility: internal
-cluster: sync-gitignore
+sub: gitignore
+cluster: sync
 skills: [sync-gitignore]
 description: Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
 suggestion:
@@ -16,25 +17,25 @@ packs:
   - meta
 ---
 
-# /sync-gitignore
+# /sync gitignore
 
-Top-level entry point for the `/sync-gitignore` family. Bare `/sync-gitignore`
-runs the interactive append-only sync described below. The `:fix`
-sub-command additionally scrubs legacy patterns (pre-`/agents/` layout)
-from anywhere in the consumer's `.gitignore` before re-syncing.
+`.gitignore` sub-family of the [`/sync`](../sync.md) cluster. Bare
+`/sync gitignore` runs the interactive append-only sync described below. The
+`gitignore-fix` sibling additionally scrubs legacy patterns (pre-`/agents/`
+layout) from anywhere in the consumer's `.gitignore` before re-syncing.
 
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/sync-gitignore` (bare) | this file (`## Default flow`) | Interactive — append-only sync of the managed block, dry-run preview, confirm before write |
-| `/sync-gitignore:fix` | `commands/sync-gitignore/fix.md` | Cleanup — strip legacy root-level patterns (pre-`/agents/` layout) wherever they appear, then sync |
+| `/sync gitignore` (bare) | this file (`## Default flow`) | Interactive — append-only sync of the managed block, dry-run preview, confirm before write |
+| `/sync gitignore-fix` | `commands/sync/gitignore/fix.md` | Cleanup — strip legacy root-level patterns (pre-`/agents/` layout) wherever they appear, then sync |
 
 ## Dispatch
 
-1. Parse the user's argument: `/sync-gitignore[:<sub>] [args]`.
-2. Bare `/sync-gitignore` → run the `## Default flow` below verbatim.
-3. `/sync-gitignore:fix` → load `commands/sync-gitignore/fix.md` and follow
+1. Parse the user's argument: `/sync gitignore[-fix] [args]`.
+2. Bare `/sync gitignore` → run the `## Default flow` below verbatim.
+3. `/sync gitignore-fix` → load `commands/sync/gitignore/fix.md` and follow
    its `## Steps` section verbatim.
 4. Unknown sub-command → print the table above and ask which one.
 
@@ -42,7 +43,7 @@ from anywhere in the consumer's `.gitignore` before re-syncing.
 
 Ensures the consumer project's `.gitignore` contains every entry the
 package expects to be ignored (symlinked `.augment/` subdirectories,
-`/agent-config` CLI wrapper, `.agent-settings*`, `agents/runtime/.agent-chat-history*`).
+`/agent-config` CLI wrapper, `.agent-settings*`, `/agents/runtime/` catch-all).
 Canonical list lives in `config/gitignore-block.txt`; the same file
 drives the installer, so the two cannot drift.
 
@@ -63,7 +64,7 @@ Use when:
 - To change what the block contains → edit
   `config/gitignore-block.txt` in the package repo and re-release.
 - To clean up legacy garbage from older installs → use
-  [`/sync-gitignore:fix`](sync-gitignore/fix.md) instead.
+  [`/sync gitignore-fix`](gitignore/fix.md) instead.
 
 ### 1. Locate script and target
 
@@ -78,7 +79,7 @@ Target is always `<project_root>/.gitignore`. If no `.gitignore` exists,
 stop and tell the user — the package does not create one unilaterally:
 
 ```
-> 📝 No .gitignore found at <project_root>. Create one first (e.g. `touch .gitignore`), then re-run /sync-gitignore.
+> 📝 No .gitignore found at <project_root>. Create one first (e.g. `touch .gitignore`), then re-run /sync gitignore.
 ```
 
 ### 2. Dry-run — show the user what would change
@@ -93,7 +94,7 @@ Run the script with `--dry-run` and capture stdout. Three outcomes:
 - **Additions only** (default append-only mode) → show the unified
   diff and ask:
   ```
-  > 📝 /sync-gitignore would add {N} entr{y|ies} to .gitignore:
+  > 📝 /sync gitignore would add {N} entr{y|ies} to .gitignore:
   >
   > {diff}
   >
@@ -121,7 +122,7 @@ full and drops user-added lines inside the block — destructive.
 Mention it only if the user explicitly asks to clean up or reset the
 block, and confirm once more before running it. For removing legacy
 root-level patterns (not user-added lines), prefer
-[`/sync-gitignore:fix`](sync-gitignore/fix.md).
+[`/sync gitignore-fix`](gitignore/fix.md).
 
 ## Rules
 
@@ -132,10 +133,10 @@ root-level patterns (not user-added lines), prefer
   They do not survive `--replace`.
 - Changes to `config/gitignore-block.txt` require a package update in
   the consumer project before this command can apply them.
-- **Do NOT chain sub-commands.** One `/sync-gitignore <sub>` per turn.
+- **Do NOT chain sub-commands.** One `/sync <sub>` per turn.
 
 ## See also
 
-- [`scripts/sync_gitignore.ts`](../../../scripts/sync_gitignore.ts) — the helper
-- [`config/gitignore-block.txt`](../../../config/gitignore-block.txt) — canonical block body
-- [`scripts/install.sh`](../../../scripts/install.sh) — installer integration (same source of truth, `--skip-gitignore` to opt out)
+- [`scripts/sync_gitignore.ts`](../../../../scripts/sync_gitignore.ts) — the helper
+- [`config/gitignore-block.txt`](../../../../config/gitignore-block.txt) — canonical block body
+- [`scripts/install.sh`](../../../../scripts/install.sh) — installer integration (same source of truth, `--skip-gitignore` to opt out)

@@ -1,34 +1,38 @@
 {
-  "command": "review-changes",
-  "intent": "Multi-judge review of the current diff — bugs, security, tests, quality, architecture",
+  "command": "review",
+  "intent": "Review dispatcher — multi-judge self-review of the current diff, or reviewer routing",
   "cases": [
     {
       "prompt": "self-review my changes before I open a PR",
-      "expected": "review-changes"
+      "expected": "review"
     },
     {
       "prompt": "run all the judges on my current diff",
-      "expected": "review-changes"
+      "expected": "review"
     },
     {
       "prompt": "check my changes for bugs, security, and test coverage",
-      "expected": "review-changes"
+      "expected": "review"
     },
     {
       "prompt": "do a full pre-PR review of the working tree",
-      "expected": "review-changes"
+      "expected": "review"
     },
     {
       "prompt": "review the diff across architecture and quality lenses",
-      "expected": "review-changes"
+      "expected": "review"
     },
     {
       "prompt": "vet these changes before committing",
-      "expected": "review-changes"
+      "expected": "review"
     },
     {
       "prompt": "get an external second opinion from another model",
       "expected": "council"
+    },
+    {
+      "prompt": "who should review this PR, suggest reviewers for the diff",
+      "expected": "review"
     }
   ]
 }

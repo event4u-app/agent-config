@@ -1,9 +1,11 @@
 ---
 model_tier: high
 name: review-routing
-pack: meta
+pack: engineering-base
 tier: 2
 visibility: internal
+sub: routing
+cluster: review
 skills: [review-routing, reviewer-awareness]
 description: Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
 suggestion:
@@ -19,11 +21,13 @@ packs:
 # review-routing
 
 > **Intentionally a command, not a skill** (ADR-057, road-to-6.2.0 Step 7b).
-> Meta-tool that debugs task-routing itself. A skill reached only by
-> description-match cannot debug a broken description-matcher (circular
-> dependency); the explicit `/review-routing` command is the guaranteed
-> debug-bypass. Skill-conversion gate **declined**; the `review-routing` skill
-> remains the implementation this command dispatches to.
+> This is a meta-tool used to debug task-routing itself. Converting it to a
+> skill would make it reachable *only* by description-match — useless when the
+> description-matcher is the thing being debugged (a circular dependency). The
+> explicit `/review-routing` command is the guaranteed debug-bypass, reachable
+> regardless of routing health. The `replaces:`/skill-conversion gate is
+> therefore **declined**; the `review-routing` skill below remains the
+> implementation this command dispatches to.
 
 ## Instructions
 
@@ -31,9 +35,9 @@ Produce a review-routing block for the current diff — owner-mapped
 reviewer roles plus any matched historical bug patterns — so the author
 knows *who* to request and *what* to test before opening a PR.
 
-Dispatches to [`review-routing`](../skills/review-routing/SKILL.md) for
+Dispatches to [`review-routing`](../../skills/review-routing/SKILL.md) for
 the core resolution logic. The rule
-[`reviewer-awareness`](../rules/reviewer-awareness.md) governs reviewer
+[`reviewer-awareness`](../../rules/reviewer-awareness.md) governs reviewer
 choice, routing, and data handling.
 
 ### 1. Gather the diff
@@ -45,7 +49,7 @@ choice, routing, and data handling.
 
 ### 2. Dispatch to the skill
 
-Invoke [`review-routing`](../skills/review-routing/SKILL.md) with the
+Invoke [`review-routing`](../../skills/review-routing/SKILL.md) with the
 changed-file list. The skill:
 
 1. Loads `ownership-map.yml` and `historical-bug-patterns.yml` (both
@@ -56,7 +60,7 @@ changed-file list. The skill:
 5. Returns the structured block.
 
 If neither data file exists, the skill returns the generic fallback
-from [`reviewer-awareness`](../rules/reviewer-awareness.md). That is
+from [`reviewer-awareness`](../../rules/reviewer-awareness.md). That is
 valid output — do not invent owners.
 
 ### 3. Present the result
@@ -72,7 +76,7 @@ Append, if present:
 - **Staleness warning** — ownership map > 6 months old.
 - **Required tests** — extracted from matched historical patterns, as a
   follow-up checklist the author must honour before claiming completion
-  ([`verify-before-complete`](../rules/verify-before-complete.md)).
+  ([`verify-before-complete`](../../rules/verify-before-complete.md)).
 
 ### 4. Decide next step
 
@@ -86,7 +90,7 @@ After the block, ask:
 ```
 
 - On **1**: hand off to
-  [`create-pr-description`](../skills/create-pr:description-only/SKILL.md).
+  [`create-pr-description`](../../skills/create-pr:description-only/SKILL.md).
 - On **2**: respect CODEOWNERS — request the *roles* resolved to people
   by the consumer's own mapping, never invent usernames.
 - On **3**: the user wants to curate the map first. Stop.
@@ -116,11 +120,11 @@ After the block, ask:
 
 ## See also
 
-- [`review-routing`](../skills/review-routing/SKILL.md) — the resolver
-- [`reviewer-awareness`](../rules/reviewer-awareness.md) — role vocabulary + data-source rules
-- [`review-routing-data-format`](../docs/guidelines/agent-infra/review-routing-data-format.md)
+- [`review-routing`](../../skills/review-routing/SKILL.md) — the resolver
+- [`reviewer-awareness`](../../rules/reviewer-awareness.md) — role vocabulary + data-source rules
+- [`review-routing-data-format`](../../../docs/guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas
-- [`create-pr-description`](../skills/create-pr:description-only/SKILL.md) —
+- [`create-pr-description`](../../skills/create-pr:description-only/SKILL.md) —
   consumes the routing block
-- [`verify-before-complete`](../rules/verify-before-complete.md) —
+- [`verify-before-complete`](../../rules/verify-before-complete.md) —
   consumes the `required_test` list

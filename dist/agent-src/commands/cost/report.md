@@ -4,6 +4,8 @@ name: cost-report
 pack: analytics
 tier: 2
 visibility: internal
+sub: report
+cluster: cost
 description: Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions.
 skills: [file-editor]
 suggestion:
@@ -76,7 +78,7 @@ Recommend the model lever first:
 ### 4. First-run: prompt to set a budget
 
 If `budget.mjs check` reports `no budget configured`, ask the user (one
-question per turn — see [`ask-when-uncertain`](../rules/ask-when-uncertain.md)):
+question per turn — see [`ask-when-uncertain`](../../rules/ask-when-uncertain.md)):
 
 > No budget set yet. What monthly USD cap do you want to track against?
 > (e.g. 25, 50, 200)
@@ -103,9 +105,10 @@ Allowed values: `today`, `week`, `month`, `all` (default).
 ### 6. Orchestration telemetry summary (when telemetry exists)
 
 Read the current-month JSONL from `agents/runtime/state/audit/YYYY-MM.jsonl`
-(`YYYY-MM` = current UTC month). If it exists and has lines with `input_kind:
-"orchestration"`, surface an orchestration summary via `readOrchestrationMetrics`
-from `src/scripts/_lib/subagent_steering.ts`:
+(where `YYYY-MM` is the current UTC month). If the file exists and contains
+lines with `input_kind: "orchestration"`, surface an orchestration summary
+using `readOrchestrationMetrics` from
+`src/scripts/_lib/subagent_steering.ts`:
 
 ```
 Orchestration telemetry (YYYY-MM, N dispatches):
@@ -115,15 +118,15 @@ Orchestration telemetry (YYYY-MM, N dispatches):
   guardrail breaches:  [token_blowup | spawn_failure | verify_skip | none]
 ```
 
-No orchestration lines yet (capture not running or no delegated dispatches this
-month) → surface:
+If no orchestration lines exist yet (telemetry capture not yet running or
+no delegated dispatches this month), surface:
 
 > No orchestration telemetry yet — subagent dispatches begin writing to
 > `agents/runtime/state/audit/YYYY-MM.jsonl` once `subagents.enabled: true`
 > and a dispatch runs.
 
-Skip this step entirely if the user did not ask about orchestration telemetry and
-there is no `agents/runtime/state/audit/` directory.
+Skip this step entirely if the user did not ask about orchestration telemetry
+and there is no `agents/runtime/state/audit/` directory.
 
 ## Rules
 
@@ -133,8 +136,8 @@ there is no `agents/runtime/state/audit/` directory.
 - **Don't auto-switch profiles.** This command surfaces a recommendation;
   the user runs [`/set-cost-profile`](set-cost-profile.md) themselves.
   Auto-mutation of `.agent-settings.yml` would breach
-  [`commit-policy`](../rules/commit-policy.md) and
-  [`scope-control`](../rules/scope-control.md).
+  [`commit-policy`](../../rules/commit-policy.md) and
+  [`scope-control`](../../rules/scope-control.md).
 - **Honor HARD_STOP.** When `budget.mjs check` exits 1, surface the alert
   prominently and stop the current task — do not keep working through the
   cap silently.
@@ -145,13 +148,11 @@ there is no `agents/runtime/state/audit/` directory.
   `.agent-settings.yml`.
 - [`/agent-status`](agent-status.md) — per-conversation token estimate
   (different scope: in-flight estimate, not historical actuals).
-- [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs) — tracker source.
-- [`scripts/cost/budget.mjs`](../../scripts/cost/budget.mjs) — budget source.
+- [`scripts/cost/track.mjs`](../../../scripts/cost/track.mjs) — tracker source.
+- [`scripts/cost/budget.mjs`](../../../scripts/cost/budget.mjs) — budget source.
 
 ## Attribution
 
-Forked from
-an external reference
-`plugins/external-cost-tracker/scripts/{track,budget}.mjs`. The MCP
-`memory_store` dependency was replaced with a local JSONL append; the
-50/75/90/100% alert ladder and pricing tiers are preserved verbatim.
+Adapted from an external reference. The MCP `memory_store` dependency
+was replaced with a local JSONL append; the 50/75/90/100% alert ladder
+and pricing tiers are preserved verbatim.

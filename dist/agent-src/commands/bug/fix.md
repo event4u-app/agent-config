@@ -4,6 +4,8 @@ name: bug-fix
 pack: engineering-base
 tier: 2
 visibility: internal
+sub: fix
+cluster: bug
 skills: [bug-analyzer, pest-testing]
 description: Plan and implement a bug fix — based on investigation, with quality checks and test verification
 council_depth: deep
@@ -191,4 +193,4 @@ What next?
 
 ## See also
 
-- [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md#developer) — Developer mode output contract (Goal / Plan / Changes / Tests / Open questions)
+- [`role-contracts`](../../../docs/guidelines/agent-infra/role-contracts.md#developer) — Developer mode output contract (Goal / Plan / Changes / Tests / Open questions)

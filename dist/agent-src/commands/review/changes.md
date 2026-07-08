@@ -5,8 +5,10 @@ pack: engineering-base
 intent: "Multi-judge review of the current diff — bugs, security, tests, quality, architecture"
 routes_to: [code-review, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens]
 replaces: []
-tier: 1
-visibility: advanced
+tier: 2
+visibility: internal
+sub: changes
+cluster: review
 skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-synthesis, git-workflow]
 description: Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
 suggestion:
@@ -72,11 +74,11 @@ PR body, commit messages) and runs independently. The judges are:
 
 | Sub-skill | Focus |
 |---|---|
-| [`judge-bug-hunter`](../skills/judge-bug-hunter/SKILL.md) | Correctness, null-safety, edge cases, races, error handling |
-| [`judge-security-auditor`](../skills/judge-security-auditor/SKILL.md) | AuthZ/AuthN, injection, secrets, unsafe deserialization, SSRF, XSS |
-| [`judge-test-coverage`](../skills/judge-test-coverage/SKILL.md) | Missing assertions, uncovered branches, over-mocking, regression-test gaps |
-| [`judge-code-quality`](../skills/judge-code-quality/SKILL.md) | Naming, SRP, DRY, dead code, consistency with codebase conventions |
-| [`architecture-review-lens`](../skills/architecture-review-lens/SKILL.md) | Layer violations, dependency direction, leaky abstractions, cross-service contract drift |
+| [`judge-bug-hunter`](../../skills/judge-bug-hunter/SKILL.md) | Correctness, null-safety, edge cases, races, error handling |
+| [`judge-security-auditor`](../../skills/judge-security-auditor/SKILL.md) | AuthZ/AuthN, injection, secrets, unsafe deserialization, SSRF, XSS |
+| [`judge-test-coverage`](../../skills/judge-test-coverage/SKILL.md) | Missing assertions, uncovered branches, over-mocking, regression-test gaps |
+| [`judge-code-quality`](../../skills/judge-code-quality/SKILL.md) | Naming, SRP, DRY, dead code, consistency with codebase conventions |
+| [`architecture-review-lens`](../../skills/architecture-review-lens/SKILL.md) | Layer violations, dependency direction, leaky abstractions, cross-service contract drift |
 
 The five judges weight equally in the consolidated verdict — none
 overrides another.
@@ -89,7 +91,7 @@ Pick dispatch mode based on diff size and environment:
 - **Parallel** — if `subagents.max_parallel` in `.agent-settings.yml` is
   ≥ 5 and subagent dispatch is available, run all five concurrently
   following the `do-in-parallel` pattern in
-  [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md);
+  [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md);
   the five judges operate on the same diff but produce independent
   reports, so no shared-state risk
 
@@ -130,19 +132,19 @@ If picked **2** → continue with internal judges only.
 
 ### 5. Consolidate
 
-Consolidate via [`judge-synthesis`](../skills/judge-synthesis/SKILL.md) — the
-canonical cross-judge aggregation format. It consumes the step-4 verdict blocks
-(plus any 4b council blocks) and produces one report:
+Consolidate via [`judge-synthesis`](../../skills/judge-synthesis/SKILL.md) — the
+canonical cross-judge aggregation format. It consumes the verdict blocks from
+step 4 (plus any external council blocks from 4b) and produces one report:
 
 - A side-by-side verdict table (one row per judge, its own verdict word)
-- **Consensus** findings flagged by ≥2 judges — highest-confidence items
+- **Consensus** findings flagged by ≥2 judges — the highest-confidence items
 - **Conflicts** where judges disagree on the same target — surfaced, not
   silently resolved
 - A **must-fix / should-fix / advisory** split, each entry tagged with the
   judge(s) that raised it
 
-No single quality score; never auto-gates — it structures the verdicts so the
-next step's decision is informed.
+`judge-synthesis` emits no single quality score and never auto-gates — it
+structures the verdicts so the next step's decision is informed.
 
 ### 6. Decide next steps
 
@@ -153,11 +155,11 @@ next step's decision is informed.
 - If all five returned `apply` → the diff is ready; report and stop
 
 **Opt-in (never auto-on):** when the `revise` findings are *test-driven*
-(failing checks, not subjective craft) and you want bounded auto-repair before
-re-review, hand off to
-[`verify-repair-loop`](../skills/verify-repair-loop/SKILL.md) — a
+(failing checks, not subjective craft) and you want bounded auto-repair
+before re-review, hand off to
+[`verify-repair-loop`](../../skills/verify-repair-loop/SKILL.md) — a
 generate→run→revise→re-run loop gated by a numeric threshold, then a judge
-confirms. Surface as a single follow-up line; do not auto-invoke.
+confirms. Surface it as a single follow-up line; do not auto-invoke.
 
 ### 7. Quality tools (verbosity-gated)
 
@@ -173,7 +175,7 @@ Per `verbosity.routine_confirmations` (default `false`):
   If yes, hand off to the project's quality workflow (e.g.
   `/quality-fix` or the equivalent configured command). The quality and
   test runners are resolved per-stack via the
-  [`toolchain-resolver`](../contexts/execution/toolchain-resolver.md), so
+  [`toolchain-resolver`](../../contexts/execution/toolchain-resolver.md), so
   the hand-off adapts to PHP / JS-TS / Python / Go / Rust rather than
   assuming one stack.
 
@@ -212,13 +214,13 @@ Per `verbosity.routine_confirmations` (default `false`):
 ## See also
 
 - [`/prepare-for-review`](prepare-for-review.md) — updates `main` and merges the full base-branch chain into the target branch (used by step 1)
-- [`judge-synthesis`](../skills/judge-synthesis/SKILL.md) — the cross-judge consolidation format used in step 5 (consensus / conflicts / must-fix, no opaque score)
-- [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — dispatch and model-pairing rules
+- [`judge-synthesis`](../../skills/judge-synthesis/SKILL.md) — the cross-judge consolidation format used in step 5 (consensus / conflicts / must-fix, no opaque score)
+- [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md) — dispatch and model-pairing rules
 - [`/do-and-judge`](do-and-judge.md) — implementer + judge loop for a single change
-- [`verify-repair-loop`](../skills/verify-repair-loop/SKILL.md) — opt-in test-verdict-gated iterate-to-green loop (step 6 hand-off); judge confirms after the numeric gate
+- [`verify-repair-loop`](../../skills/verify-repair-loop/SKILL.md) — opt-in test-verdict-gated iterate-to-green loop (step 6 hand-off); judge confirms after the numeric gate
 - [`/judge`](judge.md) — standalone judge, no review-changes dispatch
-- [`code-review`](../skills/code-review/SKILL.md) — human-oriented review patterns (tone, feedback handling)
-- [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)
+- [`code-review`](../../skills/code-review/SKILL.md) — human-oriented review patterns (tone, feedback handling)
+- [`role-contracts`](../../../docs/guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)
 
 ## References
 

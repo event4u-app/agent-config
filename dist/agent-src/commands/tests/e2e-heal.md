@@ -1,9 +1,12 @@
 ---
 model_tier: medium
-name: e2e-heal
+name: tests-e2e-heal
 pack: engineering-base
 tier: 2
 visibility: internal
+replaces: e2e-heal
+sub: e2e-heal
+cluster: tests
 skills: [playwright-testing]
 description: Find, debug, and fix failing Playwright E2E tests
 suggestion:
@@ -30,7 +33,7 @@ packs:
 > 2. Fix a specific test file — which one?
 > 3. Fix tests that failed in CI — provide the CI run URL or error output
 
-- Read the Playwright guideline: `../docs/guidelines/e2e/playwright.md`
+- Read the Playwright guideline: `../../docs/guidelines/e2e/playwright.md`
 
 ### 2. Run failing tests
 

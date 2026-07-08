@@ -1,9 +1,11 @@
 ---
 model_tier: medium
 name: package-test
-pack: engineering-base
+pack: meta
 tier: 2
 visibility: internal
+sub: test
+cluster: package
 skills: [composer, npm, python-packages, go-modules, cargo-packages]
 description: /package-test
 suggestion:

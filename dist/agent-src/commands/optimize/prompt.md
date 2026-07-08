@@ -4,6 +4,7 @@ name: optimize-prompt
 pack: meta
 tier: 2
 visibility: internal
+sub: prompt
 cluster: optimize
 description: "Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt."
 skills: [prompt-optimizer]
@@ -19,7 +20,7 @@ packs:
 
 # /optimize-prompt
 
-Entry point for the [`prompt-optimizer`](../skills/prompt-optimizer/SKILL.md) skill (persona: **Lyra**). Use when the user wants a polished prompt to paste into an external AI — not when they want the answer that prompt would produce.
+Entry point for the [`prompt-optimizer`](../../skills/prompt-optimizer/SKILL.md) skill (persona: **Lyra**). Use when the user wants a polished prompt to paste into an external AI — not when they want the answer that prompt would produce.
 
 ## Welcome
 
@@ -53,7 +54,7 @@ Three input shapes:
 
 ### 2. Delegate to the skill
 
-Load [`prompt-optimizer`](../skills/prompt-optimizer/SKILL.md) and follow its `## Procedure` verbatim. The skill owns mode detection, the 4-D methodology, the output format, and gotchas.
+Load [`prompt-optimizer`](../../skills/prompt-optimizer/SKILL.md) and follow its `## Procedure` verbatim. The skill owns mode detection, the 4-D methodology, the output format, and gotchas.
 
 ### 3. Hand back
 

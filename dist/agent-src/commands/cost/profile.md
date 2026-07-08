@@ -1,9 +1,12 @@
 ---
 model_tier: medium
-name: set-cost-profile
+name: cost-profile
 pack: meta
 tier: 2
 visibility: internal
+replaces: set-cost-profile
+sub: profile
+cluster: cost
 description: Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 skills: [file-editor]
 suggestion:
@@ -20,7 +23,7 @@ packs:
 # /set-cost-profile
 
 Changes `rule_loading_tier` in `.agent-settings.yml`. Four profiles are defined in
-the [`agent-settings` template](../templates/agent-settings.md#cost-profiles):
+the [`agent-settings` template](../../templates/agent-settings.md#cost-profiles):
 
 - `minimal` · `balanced` · `full` · `custom`
 
@@ -32,7 +35,7 @@ the [`agent-settings` template](../templates/agent-settings.md#cost-profiles):
 - For first-run setup use [`/onboard`](onboard.md).
 - For any other single-value change, edit `.agent-settings.yml`
   directly or ask the agent — the merge rules live in
-  [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
+  [`layered-settings`](../../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 - For role modes use [`/mode`](mode.md) — different concept (sets
   `roles.active_role`, not `rule_loading_tier`).
 
@@ -80,7 +83,7 @@ value directly — still echo the old → new line in step 6.
 ### 5. Write the value
 
 Update `rule_loading_tier` in `.agent-settings.yml` using the
-[section-aware merge rules](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+[section-aware merge rules](../../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 (preserve comments, preserve key order, touch only the changed field).
 
 If the user picked "Keep current", do nothing and stop.
@@ -113,7 +116,7 @@ flip. Cost behaviour on those surfaces is governed by the platform itself.
 
 ## See also
 
-- [`agent-settings`](../templates/agent-settings.md) — profile matrix and settings reference
-- [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md) — merge rules for settings edits
+- [`agent-settings`](../../templates/agent-settings.md) — profile matrix and settings reference
+- [`layered-settings`](../../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for settings edits
 - [`onboard`](onboard.md) — first-run setup (includes profile confirmation)
 - [`mode`](mode.md) — role-mode setter (different concept)

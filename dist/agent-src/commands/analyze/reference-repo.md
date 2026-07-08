@@ -1,9 +1,11 @@
 ---
 model_tier: high
 name: analyze-reference-repo
-pack: engineering-base
+pack: analysis-workbench
 tier: 2
 visibility: internal
+sub: reference-repo
+cluster: analyze
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 suggestion:

@@ -1,11 +1,11 @@
 ---
 model_tier: medium
 name: sync-gitignore-fix
-pack: engineering-base
+pack: meta
 tier: 2
 visibility: internal
-cluster: sync-gitignore
-sub: fix
+cluster: sync
+sub: gitignore
 skills: [sync-gitignore]
 description: Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
 suggestion:
@@ -20,21 +20,21 @@ packs:
 
 # /sync-gitignore:fix
 
-Cleanup sibling of [`/sync-gitignore`](../sync-gitignore.md). Strips
+Cleanup sibling of [`/sync-gitignore`](../gitignore.md). Strips
 legacy patterns (pre-`/agents/` runtime artefacts —
 `.agent-chat-history`, `.agent-chat-history.bak`,
 `.agent-chat-history.*.bak`, `.agent-prices.md`, `.council-tmp/` —
 plus the 2.x intermediate `agents/runtime/.agent-prices.md`) from **anywhere**
 in the consumer's `.gitignore` — inside or outside the managed block —
 then re-runs the regular sync so the current canonical entries
-(`/agents/runtime/.agent-chat-history`, `/agents/runtime/.agent-prices.md`,
-`/agents/runtime/council/`) land in the block.
+(`/agents/runtime/` catch-all, plus the legacy back-compat lines
+`/agents/.agent-chat-history*`) land in the block.
 
 Use when:
 
 - An older installer (pre-May 2026) dropped root-level `.agent-chat-history`
   / `.agent-prices.md` lines that the current scripts no longer recognise.
-- A 2.x install left `/agents/.agent-prices.md` in the block before the
+- A 2.x install left `/agents/runtime/.agent-prices.md` in the block before the
   cache moved under `/agents/runtime/`.
 - A hand-edit added one of those legacy paths and it now conflicts with
   the managed `/agents/...` entry.
@@ -56,7 +56,7 @@ Use when:
 
 ### 1. Locate script and target
 
-Same resolution order as [`/sync-gitignore`](../sync-gitignore.md):
+Same resolution order as [`/sync-gitignore`](../gitignore.md):
 
 1. `./agent-config/scripts/sync_gitignore.ts`
 2. `vendor/event4u/agent-config/scripts/sync_gitignore.ts`
@@ -117,9 +117,9 @@ If the cleanup removed `.agent-chat-history` or any flavour of
 `.agent-prices.md`, mention that the **file** itself (if still present
 at its old location) may need to move. The installer does this
 automatically via
-[`migrate_legacy_root_infra`](../../../scripts/install.sh) (chat-history,
+[`migrate_legacy_root_infra`](../../../../scripts/install.sh) (chat-history,
 root → `agents/`) and
-[`migrate_legacy_prices_file`](../../../scripts/install.sh) (prices,
+[`migrate_legacy_prices_file`](../../../../scripts/install.sh) (prices,
 root or `agents/` → `agents/runtime/`); the agent does not run them
 from this command. One line of guidance is enough:
 
@@ -141,46 +141,55 @@ from this command. One line of guidance is enough:
 
 ### 5. Ignored-but-tracked detection pass
 
-After the legacy-cleanup sync, run the tracked-but-ignored check:
+After the legacy-cleanup sync, run the tracked-but-ignored check
+and surface any files that are now in the ignore list but still committed:
 
 ```bash
 npx tsx node_modules/@event4u/agent-config/src/scripts/check_tracked_but_ignored.ts
 ```
 
-Files reported →
+If files are reported:
 
 ```
-> ⚠️  Tracked but now ignored — will appear in every `git status` until untracked.
-> Fix (files stay on disk):
+> ⚠️  The following files are tracked by git but now covered by an ignore
+> pattern. They will appear in every `git status` until untracked.
+>
+> To remove them from the index (files stay on disk):
 >
 >   git rm --cached \
 >     <file1> \
 >     <file2>
 >
-> Then commit. One-time cleanup.
+> Then commit the result. This is a one-time cleanup.
 ```
 
-NEVER run `git rm --cached` automatically — git-ops are user-owned.
+Do NOT run `git rm --cached` automatically — git-ops are user-owned.
 
-### 6. Agent artefacts not covered
+### 6. Agent artefacts not covered by the managed block
 
-Manifest-vs-block coverage check (`agents-paths.yml` is the reference):
+Scan for known agent-artefact shapes that are neither ignored nor
+legitimately tracked. Use `agents-paths.yml` as the reference:
 
 ```bash
 npx tsx node_modules/@event4u/agent-config/src/scripts/check_gitignore_freshness.ts
 ```
 
-Fails → offer block re-sync (option 1 sync / 2 skip).
+If the check fails, offer to re-sync the block with the current template:
+
+```
+> ⚠️  gitignore-block.txt has entries not yet in your .gitignore.
+> Run option 1 to sync, or 2 to skip.
+```
 
 ## See also
 
-- [`/sync-gitignore`](../sync-gitignore.md) — append-only sync of the
+- [`/sync-gitignore`](../gitignore.md) — append-only sync of the
   managed block (no legacy cleanup)
-- [`scripts/sync_gitignore.ts`](../../../src/scripts/sync_gitignore.ts) —
+- [`scripts/sync_gitignore.ts`](../../../../src/scripts/sync_gitignore.ts) —
   the helper (`--cleanup-legacy` flag)
-- [`scripts/check_tracked_but_ignored.ts`](../../../src/scripts/check_tracked_but_ignored.ts) —
-  ignored-but-tracked detection
-- [`scripts/check_gitignore_freshness.ts`](../../../src/scripts/check_gitignore_freshness.ts) —
-  manifest vs block coverage
-- [`docs/contracts/agents-layout.md`](../../../docs/contracts/agents-layout.md) —
-  classification contract for `agents/` entries
+- [`scripts/check_tracked_but_ignored.ts`](../../../../src/scripts/check_tracked_but_ignored.ts) —
+  ignored-but-tracked detection (Phase 5.2)
+- [`scripts/check_gitignore_freshness.ts`](../../../../src/scripts/check_gitignore_freshness.ts) —
+  manifest vs block coverage check (Phase 3.4)
+- [`docs/contracts/agents-layout.md`](../../../../docs/contracts/agents-layout.md) —
+  full classification contract for `agents/` entries

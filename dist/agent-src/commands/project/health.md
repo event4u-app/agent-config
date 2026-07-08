@@ -4,6 +4,8 @@ name: project-health
 pack: engineering-base
 tier: 2
 visibility: internal
+sub: health
+cluster: project
 skills: [quality-tools]
 description: Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
 suggestion:

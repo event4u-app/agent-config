@@ -4,6 +4,8 @@ name: sync-agent-settings
 pack: meta
 tier: 2
 visibility: internal
+sub: agent-settings
+cluster: sync
 skills: [sync-agent-settings]
 description: Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 suggestion:
@@ -23,7 +25,7 @@ Reconciles `.agent-settings.yml` with the shipped template
 (`config/agent-settings.template.yml`) and the selected cost-profile
 preset (`config/profiles/{profile}.ini`). Applies the section-aware
 merge rules documented in
-[`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md):
+[`layered-settings`](../../../docs/guidelines/agent-infra/layered-settings.md):
 
 - Template section order wins — keys reorder to match.
 - Existing user scalar values are preserved.
@@ -61,7 +63,9 @@ The sync script ships in the installed package. Resolve in order:
 2. `vendor/event4u/agent-config/scripts/sync_agent_settings.ts` — Composer.
 3. `node_modules/@event4u/agent-config/scripts/sync_agent_settings.ts` — npm.
 
-Target is always `<project_root>/.agent-settings.yml`.
+Target is always the canonical `.agent-settings.yml` under `agents/settings/`; a legacy
+repo-root `.agent-settings.yml` is read as a fallback and migrated into the
+canonical location, never written afresh (ADR-038). Pass `--path` to override.
 
 ### 2. Dry-run — show the user what would change
 
@@ -134,9 +138,9 @@ is a local-agent concern.
 
 ## See also
 
-- [`scripts/sync_agent_settings.ts`](../../../scripts/sync_agent_settings.ts) — the helper
-- [`config/agent-settings.template.yml`](../../../config/agent-settings.template.yml) — canonical template
-- [`config/profiles/`](../../../config/profiles/) — profile presets
-- [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md) — the merge rules this command enforces
-- [`scripts/install.ts`](../../../scripts/install.ts) — first-install path; this command handles the update path
+- [`scripts/sync_agent_settings.ts`](../../../../scripts/sync_agent_settings.ts) — the helper
+- [`config/agent-settings.template.yml`](../../../../config/agent-settings.template.yml) — canonical template
+- [`config/profiles/`](../../../../config/profiles/) — profile presets
+- [`layered-settings`](../../../docs/guidelines/agent-infra/layered-settings.md) — the merge rules this command enforces
+- [`scripts/install.ts`](../../../../scripts/install.ts) — first-install path; this command handles the update path
 - [`/sync-gitignore`](sync-gitignore.md) — sibling command for the `.gitignore` block

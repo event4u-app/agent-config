@@ -1,9 +1,12 @@
 ---
 model_tier: medium
-name: quality-fix
+name: fix-quality
 pack: engineering-base
 tier: 2
 visibility: internal
+replaces: quality-fix
+sub: quality
+cluster: fix
 skills: [quality-tools]
 description: Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 suggestion:
@@ -21,7 +24,7 @@ packs:
 ## Step 0: Detect language
 
 Resolve the quality toolchain via the
-[`toolchain-resolver`](../contexts/execution/toolchain-resolver.md) — it
+[`toolchain-resolver`](../../contexts/execution/toolchain-resolver.md) — it
 returns the per-ecosystem `quality` commands (phpstan / pint / tsc /
 eslint / ruff / mypy / …) alongside the test runner, from the same
 manifest read. The wrapper-first preference and the language table below
