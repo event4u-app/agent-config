@@ -731,6 +731,7 @@ const CHECK_IDS = [
     'scope',
     'global-binary',
     'claude-plugin',
+    'claude-command-wrappers',
     'hook-wiring',
     'stale-orphans',
     'manifest-integrity',
@@ -751,6 +752,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'scope',
     'global-binary',
     'claude-plugin',
+    'claude-command-wrappers',
     'hook-wiring',
     'stale-orphans',
     'mcp-mode',
@@ -1072,6 +1074,69 @@ function _check_claude_plugin(): Dict {
             `plugin installed${snapshot_v ? ` (snapshot ${snapshot_v})` : ''} without the ` +
             'file projection — deprecated surface; the projection is the supported path',
         remedy: 'agent-config global (then uninstall the plugin per the printed hint)',
+    };
+}
+
+/**
+ * Claude Code flat-command discovery mitigation (council 2026-07-08,
+ * cc-user-command-discovery): Claude Code ≤ 2.1.204 does not register FLAT
+ * user-scope command files (`~/.claude/commands/<name>.md`) — nested
+ * commands and user-scope skills do. The installer therefore projects
+ * tier-0/1 visible flat commands as skill wrappers. This check flags the
+ * silent-failure state: a projection deployed by an OLDER release that
+ * still carries visible flat commands without wrappers (users see
+ * "Unknown command" for /commit etc. with zero error anywhere).
+ * Probe = `commit` (the canonical always-shipped visible flat command);
+ * static file checks only — never a live model call.
+ */
+function _check_claude_command_wrappers(): Dict {
+    const claude = shutilWhich('claude');
+    if (claude === null) {
+        return {
+            id: 'claude-command-wrappers',
+            status: 'skipped',
+            message: 'Claude Code CLI not on PATH — wrapper check not applicable',
+            remedy: '',
+        };
+    }
+    const anchor = path.join(os.homedir(), '.claude');
+    const commands_dir = path.join(anchor, 'commands');
+    if (!isDir(commands_dir)) {
+        return {
+            id: 'claude-command-wrappers',
+            status: 'skipped',
+            message: 'no ~/.claude/commands projection — nothing to check',
+            remedy: '',
+        };
+    }
+    const flat_probe = fs.existsSync(path.join(commands_dir, 'commit.md'));
+    const wrapper_probe = fs.existsSync(path.join(anchor, 'skills', 'commit', 'SKILL.md'));
+    if (wrapper_probe) {
+        return {
+            id: 'claude-command-wrappers',
+            status: 'ok',
+            message:
+                'flat-command skill wrappers present (Claude Code flat-command ' +
+                'discovery workaround active)',
+            remedy: '',
+        };
+    }
+    if (flat_probe) {
+        return {
+            id: 'claude-command-wrappers',
+            status: 'warn',
+            message:
+                'visible flat commands deployed WITHOUT skill wrappers — Claude Code ' +
+                '\u2264 2.1.204 does not register flat user-scope command files, so ' +
+                '/commit and other visible commands appear as "Unknown command"',
+            remedy: 'agent-config refresh --global (re-deploys with the wrapper projection)',
+        };
+    }
+    return {
+        id: 'claude-command-wrappers',
+        status: 'skipped',
+        message: 'no visible flat commands in the projection — nothing to wrap',
+        remedy: '',
     };
 }
 
@@ -1916,6 +1981,7 @@ function _run_checks(
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
         'claude-plugin': _check_claude_plugin,
+        'claude-command-wrappers': _check_claude_command_wrappers,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
         'manifest-integrity': () => _check_manifest_integrity(manifest),
@@ -1989,6 +2055,7 @@ function _run_checks_no_manifest(
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
         'claude-plugin': _check_claude_plugin,
+        'claude-command-wrappers': _check_claude_command_wrappers,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
         'manifest-integrity': () => _skipped_manifest_check('manifest-integrity'),
@@ -2478,6 +2545,7 @@ export {
     _check_lockfile_freshness,
     _check_global_binary,
     _check_claude_plugin,
+    _check_claude_command_wrappers,
     _check_bridge_drift,
     _check_mcp_mode,
     _check_offline_readiness,
