@@ -398,7 +398,12 @@ async function _chatHistoryReadHandler(
     // refs index the FULL chronological list, so `around` ignores the
     // session/entry_type/last filters by contract.
     if (around !== undefined && around !== null) {
-        const pairs = _chSliceAround(target, around as number, depthBefore, depthAfter);
+        const pairs = _chSliceAround(
+            target,
+            around as number,
+            depthBefore as number,
+            depthAfter as number,
+        );
         const entries =
             detail === 'index'
                 ? pairs.map((p) => _chHistoryIndexRow(p))
