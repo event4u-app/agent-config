@@ -98,6 +98,13 @@ export interface WizardRouteOptions {
      * § Dry-run state contract.
      */
     dryRun?: boolean;
+    /**
+     * Read-only user-global config root (package-sandbox mode) — the
+     * installed-packs prefill also consults the real `~/.event4u`
+     * settings + wizard lockfile so a local test run behaves like a
+     * consumer machine (road-to-setup-experience follow-up).
+     */
+    userGlobalReadRoot?: string | null;
 }
 
 const STATE_REL = join('state', 'wizard-state.json');
@@ -145,8 +152,13 @@ const MANIFEST_REL = join('dist', 'discovery', 'discovery-manifest.json');
  * `session_profiles.installed_packs` (which treats "absent" as "all packs"
  * for projection), the wizard must never pre-check the whole vocabulary.
  */
-async function readInstalledPacks(writeRoot: string, legacyReadRoot: string | null | undefined): Promise<string[]> {
+async function readInstalledPacks(
+    writeRoot: string,
+    legacyReadRoot: string | null | undefined,
+    userGlobalReadRoot?: string | null,
+): Promise<string[]> {
     const roots = [writeRoot];
+    if (userGlobalReadRoot && userGlobalReadRoot !== writeRoot) roots.push(userGlobalReadRoot);
     if (legacyReadRoot && legacyReadRoot !== writeRoot) roots.push(legacyReadRoot);
     const found = new Set<string>();
     for (const root of roots) {
@@ -877,7 +889,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 // Union of the settings `packs:` manifest (fresh installs)
                 // and the wizard lockfile (existing settings files never get
                 // the block injected — council 2026-07-08, Q3).
-                const fromSettings = await readInstalledPacks(opts.writeRoot, legacyReadRoot);
+                const fromSettings = await readInstalledPacks(opts.writeRoot, legacyReadRoot, opts.userGlobalReadRoot);
                 const installedPacks = [...new Set([...fromSettings, ...readSelectedPacks()])].sort();
                 return { ...manifest, installedPacks };
             } catch (err) {

@@ -75,6 +75,13 @@ export interface SettingsRouteOptions {
      * bump. Subsequent real runs start from the same baseline.
      */
     dryRun?: boolean;
+    /**
+     * Read-only user-global config root — the BASE read layer in
+     * package-sandbox mode so local/dry-run tests prefill from the real
+     * `~/.event4u` config (road-to-setup-experience follow-up). Never
+     * written; `null`/undefined → layer skipped.
+     */
+    userGlobalReadRoot?: string | null;
 }
 
 const SETTINGS_RELATIVE = join('settings', '.agent-settings.yml');
@@ -234,26 +241,42 @@ async function readLayeredSettings(
     packageRoot: string,
     writeRoot: string,
     legacyReadRoot: string | null | undefined,
+    userGlobalReadRoot?: string | null,
 ): Promise<LayeredState> {
     const defaults = await loadDefaultSettings(packageRoot);
+    // Read-only user-global base layer (package-sandbox mode only) — the
+    // maintainer's real config seeds the form; writes never land there.
+    const userGlobalLayer = userGlobalReadRoot && userGlobalReadRoot !== writeRoot
+        ? await readSingleLayer(userGlobalReadRoot)
+        : null;
     const globalLayer = await readSingleLayer(writeRoot);
     const projectLayer = legacyReadRoot && legacyReadRoot !== writeRoot
         ? await readSingleLayer(legacyReadRoot)
         : null;
 
     let merged: Record<string, unknown> = defaults;
+    if (userGlobalLayer !== null) merged = deepMerge(merged, userGlobalLayer.values);
     if (globalLayer !== null) merged = deepMerge(merged, globalLayer.values);
     if (projectLayer !== null) merged = deepMerge(merged, projectLayer.values);
 
-    const scaffold = projectLayer ?? globalLayer;
-    const mtimeMs = Math.max(globalLayer?.mtimeMs ?? 0, projectLayer?.mtimeMs ?? 0);
+    const scaffold = projectLayer ?? globalLayer ?? userGlobalLayer;
+    const mtimeMs = Math.max(
+        userGlobalLayer?.mtimeMs ?? 0,
+        globalLayer?.mtimeMs ?? 0,
+        projectLayer?.mtimeMs ?? 0,
+    );
     return {
         raw: scaffold?.raw ?? '',
         values: merged,
         mtimeMs,
         hasRealFile: scaffold !== null,
         sources: {
-            global: globalLayer !== null ? dottedLeafPaths(globalLayer.values) : [],
+            // The user-global base layer reads as "global" provenance too —
+            // both are machine-level (not project) sources.
+            global: [...new Set([
+                ...(userGlobalLayer !== null ? dottedLeafPaths(userGlobalLayer.values) : []),
+                ...(globalLayer !== null ? dottedLeafPaths(globalLayer.values) : []),
+            ])],
             project: projectLayer !== null ? dottedLeafPaths(projectLayer.values) : [],
         },
     };
@@ -274,7 +297,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
         app.get('/api/v1/settings', async (_request, reply) => {
             try {
-                const state = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot);
+                const state = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot, opts.userGlobalReadRoot);
                 if (!state.hasRealFile) {
                     // No on-disk file yet — the wizard creates it. Surface the
                     // template-defaults values + schema + path in the body so
@@ -317,7 +340,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
-            const current = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot);
+            const current = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot, opts.userGlobalReadRoot);
             if (!current.hasRealFile) {
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                 return reply;
@@ -348,7 +371,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
-            const current = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot);
+            const current = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot, opts.userGlobalReadRoot);
             if (!current.hasRealFile) {
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                 return reply;

@@ -32,6 +32,7 @@ import { wizardRoute } from './routes/wizard.js';
 import { workspaceRoute } from './routes/workspace.js';
 import { replayPendingCommits } from './io/atomicMultiWrite.js';
 import { PACKAGE_ROOT } from '../cli/paths.js';
+import { userGlobalReadRoot } from './writeRoot.js';
 
 export type StorageMode = 'package-sandbox' | 'global';
 
@@ -102,6 +103,13 @@ export interface CreateAppOptions {
      * cwd-inferred `projectScopeRoot` (road-to-setup-experience follow-up).
      */
     projectSurface?: boolean;
+    /**
+     * Read-only user-global config root used as the BASE read layer in
+     * package-sandbox mode (prefill from the real `~/.event4u` config).
+     * `undefined` → derived from `mode` via `userGlobalReadRoot()`;
+     * `null` → explicitly disabled (hermetic tests).
+     */
+    userGlobalReadRoot?: string | null;
     /**
      * Enable the extended 13-step wizard endpoints (auto-detect, manifest,
      * apply). road-to-global-only-install § Phase 1.5.
@@ -256,14 +264,22 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     const legacyReadRoot = opts.legacyReadRoot ?? null;
     const projectScopeRoot = opts.projectScopeRoot ?? null;
     const mode: StorageMode = opts.mode ?? 'global';
+    // Package-sandbox mode reads the REAL user-global config as the base
+    // layer (road-to-setup-experience follow-up): local/dry-run tests in
+    // the package repo prefill name / IDE / installed packs like a
+    // consumer machine. Writes never land there. Tests boot in 'global'
+    // mode with temp roots → null → hermetic.
+    const userGlobalRead = opts.userGlobalReadRoot !== undefined
+        ? opts.userGlobalReadRoot
+        : userGlobalReadRoot(mode, writeRoot);
 
     await app.register(pingRoute({ writeRoot, projectScopeRoot, mode, dryRun, projectSurface: opts.projectSurface === true }));
     await app.register(
         discoveryRoute(opts.discoveryManifestPath ? { manifestPath: opts.discoveryManifestPath } : {}),
     );
     await app.register(schemaRoute());
-    await app.register(settingsRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun }));
-    await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun }));
+    await app.register(settingsRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun, userGlobalReadRoot: userGlobalRead }));
+    await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun, userGlobalReadRoot: userGlobalRead }));
     await app.register(installRoute(opts.installRouteOptions ?? {}));
     await app.register(wizardRoute({
         writeRoot,
@@ -271,6 +287,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         projectScopeRoot,
         packageRoot,
         dryRun,
+        userGlobalReadRoot: userGlobalRead,
         extendedSteps: opts.extendedSteps === true,
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
         ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
