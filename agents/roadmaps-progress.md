@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **23** open blockers
+> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **23** open blockers
 
 ## Overall
 
-**113 / 272 steps done · 42%**
+**113 / 336 steps done · 34%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
@@ -19,20 +19,24 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 15 | 0 | 0 | 0 | [3](#blockers-road-to-adoption-without-narrative-debt) | ░░░░░░░░░░ 0% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | [1](#blockers-road-to-ci-native-release-first-run) | ░░░░░░░░░░ 0% |
 | 3 | [road-to-command-structure-optimization.md](roadmaps/road-to-command-structure-optimization.md) | 6 | 28 | 1 | 23 | 2 | 2 | 0 | ██████████ 96% |
-| 4 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 12 | 0 | 0 | 0 | [2](#blockers-road-to-domain-soundness) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 7 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 8 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ░░░░░░░░░░ 0% |
-| 10 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 27 | 23 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 15% |
-| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 13 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 61% |
-| 13 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
-| 14 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 16 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 17 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
+| 4 | [road-to-design-mechanism-harvest.md](roadmaps/road-to-design-mechanism-harvest.md) | 6 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 12 | 0 | 0 | 0 | [2](#blockers-road-to-domain-soundness) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md) | 6 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
+| 9 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
+| 10 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ░░░░░░░░░░ 0% |
+| 13 | [road-to-memory-retrieval-economy.md](roadmaps/road-to-memory-retrieval-economy.md) | 9 | 27 | 23 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 15% |
+| 14 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
+| 16 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 13 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 61% |
+| 17 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 11 | 0 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ░░░░░░░░░░ 0% |
+| 18 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ░░░░░░░░░░ 0% |
+| 19 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 21 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
 
 ---
 
@@ -102,6 +106,19 @@
 | 4 | Regen + downstream surfaces | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Deferred follow-ups (recorded, not executed here) | ⬜ not started | 1 | 0 | 2 | 2 | 0% |
 
+### [road-to-design-mechanism-harvest.md](roadmaps/road-to-design-mechanism-harvest.md)
+
+**Road to design-mechanism harvest** — 0 / 15 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Diagram-type routing ("route on the verb") | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Geometric pre-checks (SVG/diagram self-checks) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Same-ramp contrast + mandatory dark-mode self-test | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Embedded-widget register + componentization threshold | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Async-verifier pattern + design→dev handoff template | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | Record the rejected corpus + taste items | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
 ### [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md)
 
 **Follow-up to discipline-profile tiering — full-tier disposition** — 0 / 3 done (0%)
@@ -144,6 +161,19 @@
   - **What to do:**
     fixed host.
   - **Resolved when:** a pinned domain-truth result set exists and the provenance CLAIMS gate is green.
+
+### [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md)
+
+**Road to execution-discipline harvest** — 0 / 19 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | No-time-estimates rule | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Amend-after-hook-failure git trap | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Tool-tier ladder + no-silent-fallthrough | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Disconfirmation search + per-part grounding (research quality) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Micro-folds (never-cite-the-rule + anti-over-engineering) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | Authoring guidelines (tool-description-as-policy + emphasis budget) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md)
 
@@ -199,6 +229,18 @@
     est. US$3–4 instead of US$8–12) — batch it into the operator sitting
     from `road-to-token-proof-and-story` § Program tracking step 2.
   - **Resolved when:** a non-dry-run `quality-run.json` from a consumer-scoped arm exists and `check_quality_regression --as-flip-gate` exits 0.
+
+### [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md)
+
+**Road to injection-and-authority harvest** — 0 / 15 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Found-instructions quarantine (5-step) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Extended injection-signal taxonomy | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Memory-as-hostile-input write-guards | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Action-authority sharpening (ADAPT into agent-authority) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Injected-block authenticity model (kernel-upgrade PROPOSAL only) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md)
 
@@ -258,6 +300,18 @@
 | 5 | Compact session-start memory index (opt-in) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 6 | FTS5 pre-decided activation path (write, don't build) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 7 | Candidate ledger: AST-folded code reading (documentation only) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
+### [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md)
+
+**Road to orchestration-and-memory harvest** — 0 / 15 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Worker-prompt contract | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Memory upgrades (save-successes, reference-type, verify-then-repair) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Derivability-exclusion (ADAPT) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Instructions-verbatim-first handoff template | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Record the reminder drift-audit disposition | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 

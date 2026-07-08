@@ -55,6 +55,36 @@ dwarfs the work). Below the floor → in-session.
 | `parallelizable: files\|independent` / independent slices | `do-in-parallel` |
 | change needing verification (any of the above) | implementer + cross-model judge per the `subagent-orchestration` Iron Law |
 
+## Per-slice tier inference (v1.5 — deterministic, task-TYPE-keyed)
+
+Once a slice is classified **delegable**, a second deterministic table infers
+its `model_tier` (road-to-cost-aware-model-routing, council 2026-07-08).
+Keyed **exclusively on the classifier's task-TYPE outputs** — never raw size
+metrics; diff size anti-correlates with difficulty in refactoring domains.
+
+```
+UNKNOWN / AMBIGUOUS → inherit (SESSION TIER). NEVER GUESS DOWN.
+SIZE SIGNALS ARE NEGATIVE GUARDS ONLY — THEY REVOKE A lite CANDIDACY,
+THEY NEVER CREATE ONE.
+```
+
+| Slice type (classifier output) | Inferred tier |
+|---|---|
+| Delegable + read-only fan-out (grep / inventory / discovery targets) | `lite` |
+| Delegable + mechanical / template-driven transform WITH test coverage | `lite` (verify-fail escalates to `medium` per the steering cascade) |
+| Delegable + mutating WITHOUT test coverage | `medium` |
+| Delegable + synthesis / judgment (review, analysis slice) | `medium` — judge one tier up per the orchestration Iron Law |
+| Any other / ambiguous shape | `inherit` — session tier, no downshift |
+
+**Negative size guard:** slice scope exceeding the mechanical envelope
+(multi-file mutation, diff surface beyond single responsibility) loses `lite`
+candidacy, resolves one row down — size never argues FOR a downshift, only
+against one.
+
+Every inferred decision records `tier_source: "inferred"` in orchestration
+telemetry (static pins record `"static"`; session-tier runs `"inherit"`) so
+the evidence gate scores inferred routing separately from static pinning.
+
 ## v2+ (deferred, gated on Phase 6 evidence)
 
 LLM-based classification — only if the deterministic rules prove too coarse

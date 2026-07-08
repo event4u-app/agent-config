@@ -42,6 +42,38 @@ Only automatic response to a transient failure; structural/semantic errors (e.g.
 `BLOCKED` envelope) do **not** trigger a downshift — escalate to the orchestrator
 immediately.
 
+## Verify-fail escalation — the downshift cascade (M3)
+
+Cheap-first cascade for DOWNSHIFTED slices only
+(road-to-cost-aware-model-routing, council 2026-07-08). Transient failures
+(above) and verify-fails are distinct: transient retries downward once; a
+**verification failure escalates upward**.
+
+```
+VERIFY-FAIL ON A DOWNSHIFTED RETURN → RE-DISPATCH ONE TIER UP.
+COUNTS AGAINST THE EXISTING N=3 BUDGET — NEVER A NEW BUDGET.
+ATTEMPT 1 lite → ATTEMPT 2 medium → ATTEMPT 3 = SLICE FAILED,
+ORCHESTRATOR REPLANS AT SESSION TIER.
+ESCALATION TRIGGER IS THE JUDGE VERDICT / DETERMINISTIC VERIFY RESULT —
+NEVER THE SUBAGENT'S OWN CONFIDENCE.
+```
+
+- **Scope:** slices with `tier_source: static | inferred` only. `inherit`
+  slices keep existing same-tier retry semantics — no behavior change outside
+  the downshift path.
+- **Budget accounting:** each escalated attempt consumes one of the slice's
+  three attempts (`budgetHalt()` unchanged). Two failed attempts mark the
+  slice failed; the orchestrator replans — a slice's verify-fail never
+  poisons the orchestrator trajectory, only the final verified return (or
+  failure mark) enters its context.
+- **Telemetry:** the re-dispatch records `escalated_from: <failed tier>` and
+  appends to `verify_result_by_tier`.
+- **Economics guard:** a class escalating > 40% of the time is cheaper
+  started on the higher tier — the escalation-rate tripwire (below) promotes
+  its static default; the cascade is for the tail, not the norm.
+
+Deterministic reference: `escalateOnVerifyFail()`.
+
 ## Failure-type stop — the N=3 budget applied per subagent type
 
 Two consecutive **verification-failed** returns from one subagent type in a
@@ -88,6 +120,26 @@ The guardrail thresholds (`breachedGuardrails()`), read off the
 
 A breach is a maintainer/user signal, surfaced — never an automatic flip.
 
+## Cost-routing tripwires — steering policy for downshifted dispatch
+
+Two tripwires guard the cost-aware downshift path
+(road-to-cost-aware-model-routing, council 2026-07-08). Like the rollback
+guardrails they are **surfaced, never auto-flipped** — steering policy over
+the routing telemetry fields (`task_class`, `tier_chosen`, `escalated_from`,
+`verify_result_by_tier` in [`orchestration-telemetry`](orchestration-telemetry.md)),
+not a new mechanism:
+
+| Tripwire | Threshold | Action when fired |
+|---|---|---|
+| **Escalation-rate promotion** | per-class escalation rate > 40% over the rolling window | Class's default tier is wrong — cascading it costs more than starting high (decision-theoretic escalation analysis). Promote the class's static default one tier, log the promotion; do not keep cascading. |
+| **Verify-pass drift** | a tier's verify-pass rate drops below its trailing baseline | Verifier or model drift — a drifting verifier silently escalates everything (cost ~3x). Surface the drift with per-tier numbers; never silently absorb the extra escalations. |
+
+Deterministic references: `escalationPromotionCandidates()` and
+`verifyPassDrift()` over `readTierRoutingMetrics()` aggregates. Per-tier
+quality view (spend by tier, escalation count by class, verify-pass rate by
+tier) surfaces via `/cost:report` — the delayed-signal quality guard: cost
+dashboards alone look fine while quality regresses.
+
 ## Kill-switch
 
 ```
@@ -101,7 +153,8 @@ This is the canonical disable — no code change, effective on the next run.
 
 [`src/scripts/_lib/subagent_steering.ts`](../../../../src/scripts/_lib/subagent_steering.ts)
 (`isLayerDisabled`, `budgetHalt`, `typeStop`, `sliceDispatchAllowed`,
-`breachedGuardrails`), covered by
+`breachedGuardrails`, `readTierRoutingMetrics`,
+`escalationPromotionCandidates`, `verifyPassDrift`), covered by
 [`tests/scripts/_lib_subagent_steering.test.ts`](../../../../tests/scripts/_lib_subagent_steering.test.ts).
 
 ## Related
