@@ -36,13 +36,28 @@ export function shouldInitLaunchGui(rest: readonly string[]): boolean {
     const cliSignals = new Set([
         '--no-ui', '--tools', '--ai', '--yes', '-y', '--quiet', '-q',
         '--dry-run', '--minimal', '--settings-only', '--list-tools',
-        '--validate-only', '--fleet',
+        '--validate-only', '--fleet', '--project',
     ]);
     for (const arg of rest) {
         const flag = arg.split('=', 1)[0];
         if (flag !== undefined && cliSignals.has(flag)) return false;
     }
     return true;
+}
+
+/**
+ * `init --project` — project-surface initialization (road-to-setup-experience
+ * § Phase 1.3). Writes the minimal ADR-020 consumer surface (bridge marker +
+ * overrides scaffold + managed `.gitignore` block) via the `refresh --project`
+ * writer instead of opening the GUI or running the global install. Returns
+ * the args to forward to the Bash dispatcher (`refresh --project [...]`), or
+ * `null` when `--project` is absent. `rest` is argv without the leading
+ * `init` token.
+ */
+export function buildProjectInitDelegation(rest: readonly string[]): string[] | null {
+    if (!rest.includes('--project')) return null;
+    const forwarded = rest.filter((arg) => arg !== '--project');
+    return ['refresh', '--project', ...forwarded];
 }
 
 /**

@@ -20,7 +20,7 @@ export interface CommandEntry {
 }
 
 export const REGISTRY: readonly CommandEntry[] = [
-    { name: 'init', disposition: 'delegate', synopsis: 'One-shot project install.' },
+    { name: 'init', disposition: 'delegate', synopsis: 'One-shot install (opens the wizard); --project initializes the project surface.' },
     { name: 'sync', disposition: 'delegate', synopsis: 'Replay installed-tools.lock.' },
     { name: 'validate', disposition: 'delegate', synopsis: 'Drift detection on the manifest.' },
     { name: 'work', disposition: 'delegate', synopsis: 'Drive the work_engine on a prompt.' },
@@ -40,7 +40,8 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'conformance', disposition: 'delegate', synopsis: 'Consumer conformance contract: doctor --ci + installed-and-firing checks.' },
     { name: 'doctor-shell', disposition: 'native', synopsis: 'Native TS-shell environment probe.' },
     { name: 'ui:serve', disposition: 'native', synopsis: 'Start the local UI server.' },
-    { name: 'settings', disposition: 'native', synopsis: 'Open the local Settings GUI.' },
+    { name: 'config', disposition: 'native', synopsis: 'Open the configuration GUI (global by default; --project for the project surface).' },
+    { name: 'settings', disposition: 'native', synopsis: 'Open the local Settings GUI (alias of config).' },
     { name: 'install', disposition: 'native', synopsis: 'Open the install wizard (UI server, lands on Step 1 / AI tools).' },
     { name: 'setup', disposition: 'native', synopsis: 'Open the onboarding wizard (UI server, lands on Identity).' },
     { name: 'workspaces', disposition: 'native', synopsis: 'List workspaces from the discovery manifest (ls subcommand).' },
