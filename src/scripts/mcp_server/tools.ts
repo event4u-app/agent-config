@@ -416,6 +416,11 @@ async function _memoryLookupHandler(
     // Mirror the Python `os.chdir(consumer_root)` scoping: memory_lookup
     // resolves `agents/memory` relative to CWD, so the consumer root is
     // applied via a chdir window that is always restored.
+    const detailRaw = args.detail ?? 'full';
+    if (detailRaw !== 'full' && detailRaw !== 'index') {
+        throw new Error("'detail' must be 'index' or 'full'");
+    }
+
     const prevCwd = process.cwd();
     let envelope: Record<string, unknown>;
     try {
@@ -424,11 +429,36 @@ async function _memoryLookupHandler(
             [...(types as string[])],
             [...(keys as string[])],
             limitRaw,
+            { detail: detailRaw },
         );
     } finally {
         process.chdir(prevCwd);
     }
     return envelope;
+}
+
+/**
+ * Batch full-entry fetch by ID (road-to-memory-retrieval-economy Phase 1).
+ * The second half of the index→fetch economy: `memory_lookup` with
+ * `detail: 'index'` returns priced rows; this fetches ONLY the bodies the
+ * caller actually needs. Unknown IDs degrade per-ID, never the batch.
+ */
+async function _memoryGetHandler(
+    args: Record<string, unknown>,
+    consumerRoot: string,
+): Promise<Record<string, unknown>> {
+    const memoryLookup = await import('../memory_lookup.js');
+    const ids = args.ids;
+    if (!Array.isArray(ids) || ids.length === 0 || !ids.every((i) => typeof i === 'string')) {
+        throw new Error("'ids' must be a non-empty list of strings");
+    }
+    const prevCwd = process.cwd();
+    try {
+        process.chdir(consumerRoot);
+        return memoryLookup.memory_get_v1([...(ids as string[])]);
+    } finally {
+        process.chdir(prevCwd);
+    }
 }
 
 /** Phase 3 L2 — surface `scripts/memory_status.status()` as JSON. */
@@ -1237,7 +1267,11 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'types, optionally narrowed to specific anchor paths. Use ' +
             'before editing a security-sensitive or historically buggy ' +
             'file to surface prior incidents, ownership, and patterns ' +
-            'tied to it. Reads `agents/memory/<type>/*.yml` plus the ' +
+            'tied to it. WORKFLOW: call with detail:"index" FIRST — each ' +
+            'row carries id, title and tokens_estimate (the cost of ' +
+            'fetching it) — then fetch full bodies via memory_get ONLY ' +
+            'for the ids you will actually use, batching multiple ids ' +
+            'into one call. Reads `agents/memory/<type>/*.yml` plus the ' +
             '`agents/memory/intake/*.jsonl` signal log. Read-only. ' +
             'Returns the v1 retrieval envelope: a `status` field plus ' +
             'per-type `slices` carrying the matched entries.',
@@ -1266,11 +1300,45 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
                     default: 5,
                     description: 'Maximum entries to return per type. Defaults to 5.',
                 },
+                detail: {
+                    type: 'string',
+                    enum: ['index', 'full'],
+                    default: 'full',
+                    description:
+                        "'index' returns compact priced rows (id, title, " +
+                        "tokens_estimate) instead of full bodies — call " +
+                        "this first, then memory_get the ids you need. " +
+                        "'full' (default) returns complete entries.",
+                },
             },
             required: ['types'],
             additionalProperties: false,
         },
         handler: _memoryLookupHandler,
+    },
+    memory_get: {
+        name: 'memory_get',
+        description:
+            'Batch-fetch FULL memory entries by id — the second half of ' +
+            'the index-first retrieval workflow. Call memory_lookup with ' +
+            'detail:"index" first, pick the ids whose title/tokens_estimate ' +
+            'justify the fetch, then fetch them here in ONE batched call. ' +
+            'Unknown ids are reported per-id (ids[<id>]="unknown"), never ' +
+            'failing the batch. Read-only.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                ids: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    minItems: 1,
+                    description: 'Entry ids to fetch (from a detail:"index" lookup).',
+                },
+            },
+            required: ['ids'],
+            additionalProperties: false,
+        },
+        handler: _memoryGetHandler,
     },
     memory_status: {
         name: 'memory_status',

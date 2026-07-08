@@ -165,25 +165,47 @@ set, real-tokenizer counts, with a quality verdict path defined.
 
 The core adaptation. Mechanism first, behaviour-preserving.
 
-- [ ] Add `detail: 'index' | 'full'` to the `memory_lookup` input schema
+- [x] Add `detail: 'index' | 'full'` to the `memory_lookup` input schema
       (`src/scripts/mcp_server/tools.ts`), **default `full`** (D1). CLI twin
       (`memory_lookup.ts`) gains `--detail`; envelope docs updated.
-- [ ] Implement the index row: `id / type / title-or-key / score / ~tokens`
+      <!-- done 2026-07-08: additive options param on retrieve_v1 (default
+      full, byte-identical — snapshot-tested); CLI --detail; MCP schema +
+      catalog (consumer_tool_catalog.json, surgical edit) + inventory doc
+      regenerated (audit_mcp_tools --write, 19 implemented tools). -->
+- [x] Implement the index row: `id / type / title-or-key / score / ~tokens`
       where `~tokens` is `token_count.ts` over the serialized full entry
       (computed at read time; no stored denormalization — file backend stays
       dumb).
-- [ ] Add `memory_get` MCP tool: `ids` (required array), batch fetch of full
+      <!-- done 2026-07-08: _entry_title (title>key>path>first-body-line>id)
+      + _entry_tokens_estimate (lazy createRequire of token_count — the hot
+      MCP import path never pays the tiktoken load; proxy fallback is a UI
+      hint only, measurements go through the D2-compliant rig). -->
+- [x] Add `memory_get` MCP tool: `ids` (required array), batch fetch of full
       entries across types, same v1 envelope, read-only. Reject unknown IDs
       with a per-ID `status` rather than a hard error (batch semantics match
       claude-mem's `get_observations`).
-- [ ] Entry IDs: content-addressed entries already have stable hashes; for
+      <!-- done 2026-07-08: memory_get_v1(ids) scans the SAME iterators with
+      the SAME id derivation as retrieve (lookup and fetch can never
+      disagree — property-tested); envelope {contract_version, status
+      ok|partial|error, entries (full bodies, no confidence — explicit
+      fetch has no relevance score), ids per-id status}; MCP tool
+      memory_get wired + allowlist test updated 18→19. -->
+- [x] Entry IDs: content-addressed entries already have stable hashes; for
       `entries:`-list layouts, derive a deterministic ID
       (`<type>:<file>:<index>` or the entry's `id` field when present) and
       document the precedence. IDs must be stable across a re-run on an
       unchanged tree (test).
-- [ ] Unit tests: index row shape, token estimate presence, batch fetch,
+      <!-- done 2026-07-08: _entry_id — own id field wins; fallback
+      <type>:<file-basename>:<ordinal> derived at ITERATION time (before
+      any stale filtering) so ordinals stay consistent across every
+      consumer of the iterator; stability test green. -->
+- [x] Unit tests: index row shape, token estimate presence, batch fetch,
       unknown-ID handling, default-`full` unchanged-envelope snapshot
       (byte-stable vs current output — the compatibility proof).
+      <!-- done 2026-07-08: tests/scripts/memory_lookup_detail.test.ts —
+      10 tests incl. the byte-identity snapshot, index<full/2 size check,
+      unknown-id batch semantics, knowledge-chunk ids, id stability;
+      full memory/MCP sweep 108/108. -->
 
 **Exit:** both modes callable; default behaviour byte-identical; replay rig
 can exercise index+fetch end-to-end.

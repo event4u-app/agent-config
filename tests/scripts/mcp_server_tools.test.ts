@@ -47,13 +47,16 @@ function tmp(): string {
 // ----------------------------------------------------------------------
 
 describe('tools — allowlist + registry', () => {
-    it('allowlist holds the 18 implemented tools', () => {
+    it('allowlist holds the 19 implemented tools', () => {
         expect(new Set(Object.keys(ALLOWLIST))).toEqual(
             new Set([
                 'lint_skills',
                 'chat_history_append',
                 'chat_history_read',
                 'memory_lookup',
+                // Phase 1 of road-to-memory-retrieval-economy: batch fetch —
+                // the second half of the index-first retrieval workflow.
+                'memory_get',
                 'memory_status',
                 'list_skills',
                 'list_commands',
@@ -72,7 +75,7 @@ describe('tools — allowlist + registry', () => {
                 'run_tests',
             ]),
         );
-        expect(Object.keys(ALLOWLIST).length).toBe(18);
+        expect(Object.keys(ALLOWLIST).length).toBe(19);
         for (const tool of Object.values(ALLOWLIST)) {
             expect(tool.description.trim()).toBeTruthy();
             expect(tool.input_schema.type).toBe('object');
