@@ -5,7 +5,7 @@
 Cross-session memory and chat-history capabilities for the maintainer workspace.
 
 - **id**: `memory`
-- **version**: `8.2.0`
+- **version**: `8.3.0`
 - **owner**: agent-config-maintainer
 - **requires**: meta
 - **artefacts**: 9

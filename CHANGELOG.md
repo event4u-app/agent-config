@@ -989,6 +989,44 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.3.0](https://github.com/event4u-app/agent-config/compare/8.2.0...8.3.0) (2026-07-08)
+
+### Features
+
+* **ci:** add release.yml — merge a `release`-labeled PR to cut a release ([742aa91](https://github.com/event4u-app/agent-config/commit/742aa91c8dc3686a1618291dd425efbc1a69ac13))
+* **release:** add --ci mode to release.ts for the label-triggered CI path ([2fc9db6](https://github.com/event4u-app/agent-config/commit/2fc9db6b98fa998a03e68c0e2ce676c40d63c6e8))
+* **mcp:** ship the run_tests shell-exec pilot under a compiled safety envelope ([598a8a4](https://github.com/event4u-app/agent-config/commit/598a8a49f05f5e9ebd4c0c531a5424f079eb16b6))
+* **guardrails:** hook-matrix single source, golden smoke, doctor-last upgrade step (Phase 4) ([d3ddd37](https://github.com/event4u-app/agent-config/commit/d3ddd37aa9f72dd65cebd54985e121d05a8bc0e6))
+* **mcp:** implement the 8 council-approved Phase 4 tools (17 implemented total) ([71f4074](https://github.com/event4u-app/agent-config/commit/71f4074b1b065dd455b361959322ae18c11e0d6d))
+* **doctor+docs:** plugin retirement — duplicate-surface/hook-wiring checks, migration flow, docs sweep (Phase 3) ([3f6234d](https://github.com/event4u-app/agent-config/commit/3f6234d82730d0210d72c5712ca49a84fb160c0e))
+* **upgrade:** register managed hooks on global deploy; decouple upgrade steps (Phase 2) ([9c06cdb](https://github.com/event4u-app/agent-config/commit/9c06cdba7622691ed8c6b175fbc0f32b975db311))
+* **install:** managed Claude hook registration in settings.json (Phase 1) ([f1a7644](https://github.com/event4u-app/agent-config/commit/f1a7644b89a4da1e67b95cf8dc15eda778f4dc67))
+
+### Bug Fixes
+
+* **scripts:** make upstream-remote wiring idempotent in mcp_registry_submit ([b1c5ee1](https://github.com/event4u-app/agent-config/commit/b1c5ee18105cc2845e66b3595743dfe673292f8c))
+* **roadmap:** correct mcp-cloud-endpoints doc path in Phase 6 step text ([65ab1d6](https://github.com/event4u-app/agent-config/commit/65ab1d6611edd63242b3f334c4233087975d45b0))
+* **ci:** static yaml import + createRequire banner; no unchecked step indexing ([98c71c0](https://github.com/event4u-app/agent-config/commit/98c71c0f88c5e696dd0b5d00ed0e6a38c48717a1))
+* **mcp:** use process.stdout.write instead of console.log in glama drift lint ([80b53fe](https://github.com/event4u-app/agent-config/commit/80b53fea3f52f486395ebb9a7ede4ea583014b55))
+* **mcp:** fix stale glama build docs and dead pycache artifacts ([ea1cece](https://github.com/event4u-app/agent-config/commit/ea1cece30c097846f3475ac51211a2854223cae8))
+* **install:** accept --no-ui in the bash orchestrator (unblocks upgrade) ([a519b34](https://github.com/event4u-app/agent-config/commit/a519b34f9618c5c165d0bcc5c6ea04d7ce141361))
+* **release:** era-split gate measures the post-release state the drift test sees ([572e6ce](https://github.com/event4u-app/agent-config/commit/572e6ce83b74d37112213cb790c3a07a1d4e0968))
+
+### Documentation
+
+* **release:** document the dual release path; fix stale release.py refs ([9ae0aee](https://github.com/event4u-app/agent-config/commit/9ae0aeed403376581d656b2682c6009694e9d1b1))
+* **adr:** ADR-113 — CI-native release, label trigger, bot-PR-approval finding ([7af715c](https://github.com/event4u-app/agent-config/commit/7af715cc0753fbb77facf904101c317f271863e1))
+* **mcp:** Phase 6 — ADR-112 stdio-lite verdict, cloud-scope note, fresh counts ([c6fe3ed](https://github.com/event4u-app/agent-config/commit/c6fe3ed07689b82ea349beb377bd4cf97ceddaca))
+* **context:** Phase 0 hook+agent parity findings — settings.json parity CONFIRMED ([b22bc38](https://github.com/event4u-app/agent-config/commit/b22bc38412d76315d4406f41fbd746a70952cdbb))
+* **roadmap:** add road-to-claude-code-single-surface (council 2026-07-07, Option B projection-primary) ([cb283c3](https://github.com/event4u-app/agent-config/commit/cb283c3c0dbc52f66337a30a8edb94e084caeda6))
+* **mcp:** resolve A0 amendment signoff, run council, record write/exec cut ([323def8](https://github.com/event4u-app/agent-config/commit/323def8c0692c26408791623374d28eee512686a))
+* **readme:** add troubleshooting section for install/upgrade failure modes ([ba33679](https://github.com/event4u-app/agent-config/commit/ba336790f6c8f8eac662e72ae2a408338b03b971))
+
+### Chores
+
+* **roadmap:** archive road-to-ci-native-release; spawn first-run follow-up ([1544c3c](https://github.com/event4u-app/agent-config/commit/1544c3c3773f1eded3e3037e4abf04f66d9e5900))
+* **mcp:** record registry submission, fix submit-script PR head, park roadmap to later/ ([1f8f49f](https://github.com/event4u-app/agent-config/commit/1f8f49f97d0e443141d53736beea59ea45e780e7))
+
 ## [8.2.0](https://github.com/event4u-app/agent-config/compare/8.1.0...8.2.0) (2026-07-07)
 
 ### Features
