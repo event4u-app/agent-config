@@ -29,6 +29,7 @@ import { WizardPage } from './pages/WizardPage.js';
 import { ProjectSettingsPage } from './pages/ProjectSettingsPage.js';
 import { WorkspacePage } from './pages/WorkspacePage.js';
 import { serverStatus, fetchServerStatus } from './serverStatus.js';
+import { theme, toggleTheme } from './theme.js';
 
 interface Surface {
     readonly id: 'setup' | 'project' | 'tasks' | 'council' | 'memory' | 'explain' | 'workspace';
@@ -80,6 +81,15 @@ function TopNav(): preact.JSX.Element {
                         </button>
                     ))}
                 </nav>
+                <button
+                    type="button"
+                    class="ac-topnav__theme"
+                    aria-label={theme.value === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                    title={theme.value === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                    onClick={(): void => { toggleTheme(); }}
+                >
+                    {theme.value === 'dark' ? '☀' : '☾'}
+                </button>
             </div>
         </header>
     );

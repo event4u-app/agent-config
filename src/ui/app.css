@@ -40,9 +40,9 @@ code {
     top: 0;
     z-index: 10;
     padding: var(--space-2) var(--space-4);
-    background: var(--color-warning);
-    color: #ffffff;
-    border-bottom: 1px solid #b45309;
+    background: var(--color-warning-soft);
+    color: var(--color-warning);
+    border-bottom: 1px solid var(--color-border);
     font-size: var(--font-size-sm);
     text-align: center;
 }
@@ -64,6 +64,25 @@ code {
     background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
 }
+.ac-topnav__theme {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--duration-fast) var(--easing-standard),
+                color var(--duration-fast) var(--easing-standard);
+}
+.ac-topnav__theme:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.ac-topnav__theme:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .ac-topnav__inner {
     max-width: var(--layout-max-width);
     margin: 0 auto;
@@ -174,12 +193,15 @@ code {
 .ac-input, .ac-textarea {
     font: inherit;
     color: var(--color-text);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     padding: var(--space-2) var(--space-3);
     width: 100%;
+    transition: border-color var(--duration-fast) var(--easing-standard),
+                box-shadow var(--duration-fast) var(--easing-standard);
 }
+.ac-input:hover, .ac-textarea:hover { border-color: var(--color-border-strong); }
 .ac-input:focus, .ac-textarea:focus { outline: none; box-shadow: var(--shadow-focus); border-color: var(--color-focus-ring); }
 .ac-input[aria-invalid="true"], .ac-textarea[aria-invalid="true"] { border-color: var(--color-danger); }
 .ac-input[aria-invalid="true"]:focus, .ac-textarea[aria-invalid="true"]:focus {
@@ -211,7 +233,7 @@ code {
     cursor: pointer;
     transition: background var(--duration-fast) var(--easing-standard);
 }
-.ac-button:hover { background: var(--color-surface-alt); }
+.ac-button:hover { background: var(--color-surface-hover); border-color: var(--color-border-strong); }
 .ac-button:disabled { opacity: 0.6; cursor: not-allowed; }
 .ac-button--primary { background: var(--color-accent); color: var(--color-accent-fg); border-color: var(--color-accent); }
 .ac-button--primary:hover { background: var(--color-accent-hover); }
@@ -259,14 +281,14 @@ code {
 .ac-wizard__progress { display: flex; gap: var(--space-1); }
 .ac-wizard__progress-segment {
     flex: 1;
-    height: 4px;
+    height: 5px;
     background: var(--color-border);
     border-radius: var(--radius-sm);
     transition: background var(--duration-fast) var(--easing-standard);
 }
 .ac-wizard__progress-segment--filled { background: var(--color-accent); }
 
-.ac-wizard__step { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-6); }
+.ac-wizard__step { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-sm); }
 .ac-wizard__nav { justify-content: space-between; }
 .ac-wizard__nav .ac-button:first-child { margin-right: auto; }
 .ac-wizard__skip { color: var(--color-text-muted); }
@@ -275,7 +297,22 @@ code {
 
 /* AI-tools step (Step 1) — rows with an installed/not-installed badge. */
 .ac-wizard__tool-list { list-style: none; padding-left: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-.ac-wizard__tool-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.ac-wizard__tool-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--duration-fast) var(--easing-standard),
+                background var(--duration-fast) var(--easing-standard);
+}
+.ac-wizard__tool-row:hover { border-color: var(--color-border-strong); }
+.ac-wizard__tool-row:has(input:checked) {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+}
 .ac-wizard__tool-label { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
 .ac-badge { font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); padding: 0.1rem var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; }
 .ac-badge--installed { background: var(--color-success-soft); color: var(--color-success); }
@@ -286,7 +323,22 @@ code {
 
 /* Capability-packs step (Step 2) — one tile per pack; languages expand to frameworks. */
 .ac-wizard__pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-3); }
-.ac-pack-tile { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.ac-pack-tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    transition: border-color var(--duration-fast) var(--easing-standard),
+                background var(--duration-fast) var(--easing-standard);
+}
+.ac-pack-tile:hover { border-color: var(--color-border-strong); }
+.ac-pack-tile:has(> .ac-pack-tile__head input:checked) {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+}
 .ac-pack-tile__head { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; font-weight: var(--font-weight-medium); }
 .ac-pack-tile__title { flex: 1; }
 .ac-pack-tile__role { margin: 0; font-size: var(--font-size-xs); color: var(--color-text); }
