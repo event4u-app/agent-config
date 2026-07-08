@@ -20,6 +20,14 @@ onboarding — that grows real installs while every public claim stays bound to
 `docs/CLAIMS.md`, so adoption is earned on falsifiability rather than borrowed
 from inflated metrics.
 
+> **Sequencing + polish gate (council 2026-07-08, per
+> `archive/road-to-composition-ratchet.md`):** this roadmap is the next one to
+> execute. While it has open phases, no new settings-UI / theming /
+> config-management polish features ship — exceptions: bug fixes, completing
+> broken first-run flows, CI/claims infrastructure. Gate exits when 3 external
+> adoptions are documented or this roadmap is archived. Maintainer discipline,
+> advisory — no CI teeth.
+
 ## Context (measured, do not relitigate)
 
 - Adoption today: 7 stars, 1 fork; 8.0.0 solo-merged (1 participant, no external
