@@ -65,24 +65,38 @@ none of the three drift classes can silently return.
 
 ## Phase 1 — Artefact counts: one generator, one gate, fixed prose
 
-- [ ] Extend the count source of truth to emit skills, rules, commands,
+- [x] Extend the count source of truth to emit skills, rules, commands,
       guidelines, personas, advisors in one place (reuse
       `discovery_stats.ts` / the discovery manifest — do NOT add a second
       counting path that could itself drift). One command prints every
-      canonical count.
-- [ ] Replace/absorb `check_command_count_messaging.ts` with
+      canonical count. <!-- done 2026-07-08: count('router_rules') added
+      (dist/router.json kernel+tier_1+tier_2); truth line prints every kind;
+      TARGETS extended to README prose (3 lines), docs/CLAIMS.md claim
+      numbers, getting-started-by-role, featured-skills,
+      governance-advantage. -->
+- [x] Replace/absorb `check_command_count_messaging.ts` with
       `check_artefact_count_messaging.ts` covering ALL artefact types across
       ALL public prose surfaces (README, docs/, site/) — count-shaped
       mentions that disagree with source, or with EACH OTHER (the
       150-vs-162-vs-166 failure mode), fail the build. That multi-number
-      case is a dedicated regression test.
-- [ ] Fix the live prose in the same change (258→264, 93→95,
+      case is a dedicated regression test. <!-- done 2026-07-08:
+      src/scripts/check_artefact_count_messaging.ts (absorb-not-delete: the
+      old check-command-count target stays wired — required-check names are
+      branch-protection contract surface; header documents the ownership
+      split) + tests/scripts/check_artefact_count_messaging.test.ts (9 tests
+      incl. the 150/162/166 multi-number regression case). -->
+- [x] Fix the live prose in the same change (258→264, 93→95,
       150/162→166) so the gate lands green; where feasible replace
       hand-typed count sentences with generated fragments (badges already
       do this — extend to prose).
-- [ ] Wire the check into the same CI stage as `check-claims`; add the
+- [x] Wire the check into the same CI stage as `check-claims`; add the
       proof-page note: "artefact counts in public prose are generated from
-      source and CI-drift-checked."
+      source and CI-drift-checked." <!-- done 2026-07-08: task
+      check-artefact-counts in taskfiles/ci-fast.yml, wired next to
+      check-claims in BOTH Taskfile.yml groups; proof note emitted by
+      build_proof.ts § 1 (docs/proof.md regenerated + --check green);
+      3 count claims in docs/CLAIMS.md flipped unbacked→backed with the
+      gate as evidence pointer (check_claims green: 7 backed / 1 unbacked). -->
 
 **Exit:** all prose counts match source; the guard covers every artefact type
 and every prose surface; internal inconsistency is a tested failure mode.
