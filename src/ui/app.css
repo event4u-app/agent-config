@@ -806,3 +806,102 @@ code {
     color: var(--color-text-muted);
     font-size: var(--font-size-xs);
 }
+
+/* --- Settings-changes review (road-to-settings-change-review) --------- */
+
+.ac-banner--pending {
+    border-left-color: var(--color-warning);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.ac-button--small {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--font-size-sm);
+}
+
+.ac-page__lede {
+    color: var(--color-text-muted);
+    margin: var(--space-1) 0 0 0;
+}
+
+.ac-settings-changes__group h2 {
+    font-size: var(--font-size-lg);
+    margin: 0 0 var(--space-1);
+}
+.ac-settings-changes__count { color: var(--color-text-muted); font-weight: var(--font-weight-regular, 400); }
+.ac-settings-changes__hint {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    margin: 0 0 var(--space-3);
+}
+.ac-settings-changes__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.ac-change-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+.ac-change-card--must_fix { border-left-color: var(--color-danger); }
+.ac-change-card--adopt    { border-left-color: var(--color-accent); }
+.ac-change-card--review   { border-left-color: var(--color-warning); }
+
+.ac-change-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+.ac-change-card__key { font-size: var(--font-size-sm); overflow-wrap: anywhere; }
+.ac-change-card__badge {
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-2);
+    border: 1px solid var(--color-border);
+    white-space: nowrap;
+    color: var(--color-text-muted);
+}
+.ac-change-card__badge--must_fix { color: var(--color-danger); border-color: var(--color-danger); }
+.ac-change-card__badge--adopt    { color: var(--color-accent); border-color: var(--color-accent); }
+.ac-change-card__badge--review   { color: var(--color-warning); border-color: var(--color-warning); }
+
+.ac-change-card__desc {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    margin: 0;
+}
+.ac-change-card__detail {
+    font-size: var(--font-size-sm);
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+.ac-change-card__choices {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+.ac-change-card__choice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+}
+.ac-change-card .ac-input { max-width: 24rem; }

@@ -27,6 +27,7 @@ import { discoveryRoute } from './routes/discovery.js';
 import { installRoute, type InstallRouteOptions } from './routes/install.js';
 import { schemaRoute } from './routes/schema.js';
 import { settingsRoute } from './routes/settings.js';
+import { settingsChangesRoute } from './routes/settingsChanges.js';
 import { userMdRoute } from './routes/userMd.js';
 import { wizardRoute } from './routes/wizard.js';
 import { workspaceRoute } from './routes/workspace.js';
@@ -279,6 +280,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     );
     await app.register(schemaRoute());
     await app.register(settingsRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun, userGlobalReadRoot: userGlobalRead }));
+    await app.register(settingsChangesRoute({ writeRoot, userGlobalReadRoot: userGlobalRead, dryRun }));
     await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun, userGlobalReadRoot: userGlobalRead }));
     await app.register(installRoute(opts.installRouteOptions ?? {}));
     await app.register(wizardRoute({
