@@ -77,6 +77,13 @@
 - status: backed
 - last_verified: 2026-07-08
 
+### claim: eval-coverage-ratcheted
+- claim: Behavioural-eval coverage is measured per tier and CI-ratcheted so it can only rise; the current coverage and its gap are published, never implied as "264 evaluated skills".
+- kind: qual
+- evidence: src/scripts/skill_eval_coverage.ts#checkRatchet
+- status: backed
+- last_verified: 2026-07-08
+
 ---
 
 ## Unbacked inventory (documented debt — not yet markered in prose)
