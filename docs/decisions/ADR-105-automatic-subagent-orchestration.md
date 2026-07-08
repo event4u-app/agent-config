@@ -17,6 +17,12 @@ type: structural
 (claude-sonnet-4-5 + gpt-4o, design mode) plus host critical-evaluation, and
 implemented by `road-to-auto-subagent-orchestration.md`.
 
+> **Amended 2026-07-09 by ADR-117.** Decision 2 below ("conservative-until-proven
+> shipped default `ask`") is superseded: the shipped default is flipped to `on`
+> on subagent-capable hosts, on a bounded-downside re-evaluation (cost-routing
+> already ships, downside is small and reversible). Every other decision in this
+> ADR stands. See ADR-117 and `orchestration-default-flip-verdict § 2026-07-09`.
+
 ## Context
 
 The package shipped three latent subagent surfaces — the

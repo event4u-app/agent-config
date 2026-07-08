@@ -1,9 +1,19 @@
-# Orchestration Benchmark & Default-Flip Gate (Phase 6)
+# Orchestration Benchmark & Demotion Gate (Phase 6 → telemetry-demotion)
 
-The falsification gate the whole auto-orchestration roadmap is built around.
-Reaching the user's "default `on`" is a **measured milestone**, not an
-assumption: the shipped default for `subagents.auto` flips toward `on` only
-when a real benchmark proves a net win at held quality.
+Originally the falsification gate the auto-orchestration roadmap was built
+around: shipped default for `subagents.auto` would flip toward `on` only on a
+benchmark proving a net win at held quality.
+
+**As of 2026-07-09 the shipped default IS `on`** on subagent-capable hosts
+(ADR-117; [`orchestration-default-flip-verdict`](../../../../agents/settings/contexts/orchestration-default-flip-verdict.md)
+§ 2026-07-09). Flipped on a **bounded-downside re-evaluation**, not a passed
+benchmark: rigorous paired bench:ab not producible here (no runtime executing
+model `Task`/`Agent` calls), win-validation deadlocked (telemetry needs `on`,
+`on` gated on telemetry). Re-eval broke the deadlock — downside of `on` is
+structurally small (delegable slices cost-routed to cheapest tier,
+classification fires only on real structural signals, every return verified) →
+`on` gathers realized telemetry responsibly. This gate now governs
+**demotion**: measured regression flips default back to `ask`.
 
 ## Measurement — pin the method
 
@@ -30,18 +40,20 @@ HONEST-NULL EXIT: no win, or quality regressed → KEEP the conservative default
 
 `gateVerdict()` encodes pass = `net_win && quality_held`.
 
-## Default flip — one line, host-gated
+## Default state + demotion — host-gated
 
-On a **passing** gate, the shipped default for `subagents.auto` becomes `on`
-**only** on hosts whose capability manifest reports `subagent_spawn: true`
-(`off` elsewhere). `resolveShippedDefault()` encodes this. The flip itself is a
-one-line edit to the `subagents.auto` default in
-`src/config/agent-settings.template.yml` — no code change, host-gated by the
-manifest at runtime.
+Shipped default for `subagents.auto` is `on` on hosts whose manifest reports
+`subagent_spawn: true` (`off` elsewhere) — set directly in
+`src/config/agent-settings.template.yml`. `resolveShippedDefault()` remains the
+host-gated resolver, now serving **demotion**: fed a `fail` verdict from
+accumulated real-world orchestration telemetry, resolves back to `ask`
+(conservative). A `pass` keeps `on`. Demotion path is a one-line edit,
+host-gated by the manifest at runtime.
 
-Until the gate passes, the shipped default stays `ask` (conservative). This is
-the reconciliation of the user's "default on" goal with the council's
-"prove-first": `on` is the destination, reached by evidence, not assumed.
+The 2026-07-09 flip reconciles the user's "default on" goal with the council's
+"prove-first": rather than wait on a benchmark that cannot be produced here,
+`on` ships because its downside is bounded and reversible, and realized
+telemetry is now free to accrue and drive demotion if it regresses.
 
 ## Reproducibility
 

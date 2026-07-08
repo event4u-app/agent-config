@@ -12,7 +12,7 @@ whether dispatch is physically possible on the host).
 | Key | Default | Purpose |
 |---|---|---|
 | `subagents.enabled` | `true` | Global master switch. `false` = the whole layer is off — the canonical kill-switch. No auto-dispatch, no routing, everything runs in-session. |
-| `subagents.auto` | `ask` | Auto-dispatch mode: `off` \| `ask` \| `on`. |
+| `subagents.auto` | `on` | Auto-dispatch mode: `off` \| `ask` \| `on`. Default `on` on subagent-capable hosts (flipped from `ask` 2026-07-09, ADR-117), `off` elsewhere. |
 | `subagents.downshift` | `true` | Route delegable sub-tasks to the lowest-capable tier (Phase 2). |
 | `subagents.quota_arbitrage` | `true` | Prefer a separate-quota-pool model where the host manifest allows it (Phase 2 bonus). |
 | `subagents.model_map` | `{}` | Optional per-tier model override for downshift routing. |

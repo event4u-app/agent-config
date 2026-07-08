@@ -524,13 +524,21 @@ subagents:
   # on  = auto-dispatch delegable tasks without asking (surface the choice
   #       in one line).
   #
-  # Initial SHIPPED default is `ask` on hosts whose capability manifest reports
+  # SHIPPED default is `on` on hosts whose capability manifest reports
   # `subagent_spawn: true`, and `off` on hosts without a subagent primitive.
-  # The shipped default flips toward `on` (host-gated) only behind the Phase-6
-  # benchmark gate of road-to-auto-subagent-orchestration.md — never on an
-  # unmeasured claim. Auto-dispatch is also a no-op wherever the host manifest
-  # reports `subagent_spawn: false`, regardless of this value.
-  auto: ask
+  # Auto-dispatch stays a no-op wherever the manifest reports
+  # `subagent_spawn: false`, regardless of this value.
+  #
+  # The default was `ask` until 2026-07-09, when it was flipped to `on` after a
+  # re-evaluation (agents/settings/contexts/orchestration-default-flip-verdict.md
+  # § 2026-07-09; ADR-117). The flip rests on a bounded-downside argument, NOT a
+  # passed benchmark: delegable slices are already cost-routed to the cheapest
+  # capable tier, classification fires only on real structural signals (never
+  # unstructured or tiny work), and every return is verified — so `on` cannot
+  # delegate frontier-priced or speculative work. `resolveShippedDefault()`
+  # remains the telemetry-driven DEMOTION gate: a measured regression demotes
+  # back to `ask`.
+  auto: on
 
   # Route delegable sub-tasks to the lowest-capable model tier (cost + speed
   # via model downshift). true (default) = downshift per declared model_tier;
