@@ -23,8 +23,14 @@ set -euo pipefail
 COPY_DIRS="rules"  # Subdirectories where files must be real copies (space-separated)
 
 # Rules that are internal to the agent-config package and should NOT be shipped to consumers.
-# These are only relevant when developing the agent-config package itself.
-EXCLUDE_RULES="source-of-truth.md augment-portability.md docs-sync.md"
+# Static COMPAT floor only (see src/install/rule_scope.ts for the recorded
+# source-of-truth.md decision — same treatment on project AND global paths).
+# The full workspace/pack scoping list is resolved at runtime by
+# resolve_excluded_rules() via src/install/rule_scope_cli.ts, which re-uses
+# the projection predicate (rule_in_scope) so install semantics can never
+# drift from projection semantics. This variable is the fail-safe fallback
+# when no node/tsx runtime is available (over-ship, never under-ship).
+EXCLUDE_RULES="source-of-truth.md"
 
 # Files inside target/.augment/ that are NOT managed by sync (created by the bridge installer).
 # Never remove them in clean_stale even though they are absent in the source manifest.
@@ -283,6 +289,47 @@ create_symlink() {
 
 
 # --- Core functions ---
+
+# Resolve the full excluded-rule list for this install via the shared
+# scoping CLI (workspace/pack scope from <TARGET>/.agent-settings.yml,
+# router/frontmatter truth, kernel-safe). Overwrites EXCLUDE_RULES on
+# success; keeps the static compat fallback on any failure
+# (road-to-request-scoped-rule-load Phase 1b).
+resolve_excluded_rules() {
+    local rules_src="$SOURCE_PAYLOAD/rules"
+    local settings_file="$TARGET_DIR/.agent-settings.yml"
+    local cli="$SOURCE_DIR/src/install/rule_scope_cli.ts"
+    [[ -f "$cli" && -d "$rules_src" ]] || { log_verbose "rule-scope CLI unavailable — static exclude fallback"; return 0; }
+
+    local tsx_bin=""
+    if [[ -x "$SOURCE_DIR/node_modules/.bin/tsx" ]]; then
+        tsx_bin="$SOURCE_DIR/node_modules/.bin/tsx"
+    elif command -v npx >/dev/null 2>&1; then
+        tsx_bin="npx --yes tsx"
+    else
+        log_verbose "no tsx/npx runtime — static exclude fallback"
+        return 0
+    fi
+
+    local resolved
+    local -a cli_args=(--rules-dir "$rules_src")
+    [[ -f "$settings_file" ]] && cli_args+=(--settings "$settings_file")
+    # TMPDIR pinned for the child: tsx writes its transform cache under
+    # $TMPDIR — on macOS TMPDIR is exported, and callers (tests, wrappers)
+    # may point it INTO the install target, leaking tsx-cache files into a
+    # consumer tree / breaking dry-run's zero-file guarantee.
+    # shellcheck disable=SC2086
+    if resolved=$(TMPDIR=/tmp $tsx_bin "$cli" "${cli_args[@]}" 2>/dev/null); then
+        # Newline list → space list (is_excluded_rule iterates words).
+        EXCLUDE_RULES="$(echo "$resolved" | tr '\n' ' ')"
+        local n
+        n="$(echo "$resolved" | grep -c . || true)"
+        log_verbose "rule scope resolved: $n excluded rule(s)"
+    else
+        log_verbose "rule-scope CLI failed — static exclude fallback"
+    fi
+    return 0
+}
 
 # Check if a relative path matches an excluded rule
 is_excluded_rule() {
@@ -1106,6 +1153,10 @@ main() {
     # 0b. Resolve settings (e.g. augment.rules_use_symlinks). On first
     #     install the file does not exist yet → defaults preserved.
     resolve_settings
+
+    # 0c. Resolve the excluded-rule set for this install (workspace/pack
+    #     scope via the shared rule_scope CLI; static compat fallback).
+    resolve_excluded_rules
 
     # 1. Hybrid sync payload → target/.augment/
     sync_hybrid "$SOURCE_PAYLOAD" "$TARGET_DIR/.augment"

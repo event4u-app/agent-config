@@ -203,7 +203,7 @@ The projection filter (Phase 1) never runs on the install path. Wire it in,
 red-test first, and fix the consumer host emitters that currently destroy the
 Phase-2 trigger signal. Fully autonomous except the inherited human gate above.
 
-- [ ] **Installer integration test (red first):** run `install.sh` (project
+- [x] **Installer integration test (red first):** run `install.sh` (project
       shape) and the global install (`install_global` /
       `src/install/wizard-plan.ts` payload) against fixture targets and
       COUNT the arrived rule files per scope. Assert: consumer project scope
@@ -213,7 +213,13 @@ Phase-2 trigger signal. Fully autonomous except the inherited human gate above.
       is a measured fact (extend `tests/test_install.sh` /
       `tests/test_install_orchestrator.sh` or add a sibling; existing tests
       only assert file existence, never counts).
-- [ ] **Wire the filter into the install path:** have the install pipeline
+      <!-- done 2026-07-08: tests/test_install_rule_scoping.sh (bash, project
+      path — router-derived maintainer-only set, kernel guard, scoped<legacy
+      count) + tests/install/rule_scoping_plan.test.ts (global plan path,
+      6 tests incl. the source-of-truth.md contradiction case). Landed red
+      (12 maintainer-only rules arrived scoped; scoped==legacy 94==94),
+      now green post-wiring: legacy-all 94, scoped(engineering) 76. -->
+- [x] **Wire the filter into the install path:** have the install pipeline
       consume `dist/router.json` v2 workspace/pack fields (or call
       `rule_in_scope()` from the payload-sync path —
       `_copy_dir_dereferencing_symlinks` for the `rules` entry in
@@ -223,6 +229,17 @@ Phase-2 trigger signal. Fully autonomous except the inherited human gate above.
       `install.sh:287-300`) with frontmatter/router truth. Resolve the
       global-vs-project contradiction on `source-of-truth.md` explicitly
       (one documented decision, same treatment both paths).
+      <!-- done 2026-07-08: src/install/rule_scope.ts re-uses the projection
+      predicate rule_in_scope (semantics can never drift) + rule_scope_cli.ts
+      for bash; install.sh resolve_excluded_rules() replaces the dead
+      3-name EXCLUDE_RULES (static compat fallback stays as the
+      no-node fail-safe, over-ship never under-ship; child TMPDIR pinned —
+      the macOS tsx-cache-into-target trap); global path filters via
+      PlanSource.fileFilter in buildInstallPlan, wired in
+      expandWizardSources + the install route (global settings cascade).
+      source-of-truth.md decision recorded in rule_scope.ts: excluded from
+      BOTH consumer paths always — its Iron Law forbids edits a consumer
+      legitimately makes; global shipping it was the bug. -->
 - [ ] **Consumer host emitters:** switch consumer Windsurf emission off the
       frontmatter-stripping concatenator (`install.sh:594-630`) onto the
       condense-path emitter output (or ship pre-built artifacts in `dist/`),

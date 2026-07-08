@@ -46,6 +46,13 @@ export interface PlanSource {
     readonly destDir: string;
     /** Kind recorded on every {@link FileEntry} produced from this source. */
     readonly kind: FileKind;
+    /**
+     * Optional per-file predicate (absolute source path → include?).
+     * Files rejected here never enter the plan — the rule-scoping filter
+     * for `rules` sources (road-to-request-scoped-rule-load Phase 1b).
+     * Absent = include everything (legacy behaviour).
+     */
+    readonly fileFilter?: (srcFile: string) => boolean;
 }
 
 /** Inputs the planner needs to walk source trees and produce an {@link InstallPlan}. */
@@ -147,7 +154,10 @@ export function buildInstallPlan(inputs: PlanInputs): InstallPlan {
 
     for (const source of inputs.sources) {
         const bucket = filesByTool[source.toolId] ?? [];
-        const files = walkSourceTree(source.srcDir);
+        let files = walkSourceTree(source.srcDir);
+        if (source.fileFilter !== undefined) {
+            files = files.filter(source.fileFilter);
+        }
         for (const srcFile of files) {
             const rel = relative(source.srcDir, srcFile);
             const destPath = resolve(source.destDir, rel);

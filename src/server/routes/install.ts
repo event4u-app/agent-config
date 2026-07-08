@@ -37,6 +37,8 @@ import type {
     InstallTarget,
 } from '../../install/types.js';
 import { expandWizardSources } from '../../install/wizard-plan.js';
+import { ruleScopeFromSettings, LEGACY_ALL, type RuleScope } from '../../install/rule_scope.js';
+import { load_agent_settings } from '../../scripts/_lib/agent_settings.js';
 
 const FileKindSchema: z.ZodType<FileKind> = z.enum(['deployed', 'marker', 'bridge']);
 const InstallTargetSchema: z.ZodType<InstallTarget> = z.enum(['global', 'project']);
@@ -216,9 +218,23 @@ function resolveSources(body: PlanRequest, opts: InstallRouteOptions): PlanSourc
     }
     return expandWizardSources(
         opts.home === undefined
-            ? { toolIds: body.toolIds, packageRoot }
-            : { toolIds: body.toolIds, packageRoot, home: opts.home },
+            ? { toolIds: body.toolIds, packageRoot, ruleScope: _globalRuleScope() }
+            : { toolIds: body.toolIds, packageRoot, home: opts.home, ruleScope: _globalRuleScope() },
     );
+}
+
+/**
+ * Rule scope for GLOBAL installs — read from the cascaded settings (the
+ * user-global file; global installs have no project settings). Any loader
+ * failure degrades to LEGACY_ALL (fail-safe: over-ship, never under-ship;
+ * the compat exclusion still applies — Phase 1b decision in rule_scope.ts).
+ */
+function _globalRuleScope(): RuleScope {
+    try {
+        return ruleScopeFromSettings(load_agent_settings({}) as Record<string, unknown>);
+    } catch {
+        return LEGACY_ALL;
+    }
 }
 
 function planFromRequest(body: PlanRequest, opts: InstallRouteOptions): InstallPlan {
