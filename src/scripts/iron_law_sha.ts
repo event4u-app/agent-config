@@ -2,7 +2,7 @@
 /**
  * SHA-256 of every triple-fence block in a rule file (Iron Law preservation).
  *
- * TypeScript twin of `iron_law_sha.py` (Phase 8 / Wave 8e). Mirrors the
+ * Ported from the retired Python `iron_law_sha.py` (Phase 8 / Wave 8e). Mirrors the
  * Python CLI contract byte-for-byte: flags, exit codes, stdout layout.
  *
  * Usage:

@@ -2,7 +2,7 @@
 /**
  * File-first global knowledge-card layer — store path, config, origin-tier.
  *
- * TypeScript twin of `src/scripts/_lib/knowledge_global.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/_lib/knowledge_global.py` (ADR-200,
  * Python→TS migration). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported snake_case names, same semantics, same
  * tier-classification, provenance footer, and config-merge behavior, same

@@ -2,8 +2,8 @@
 /**
  * Decision-engine settings validator (road-to-productization P2).
  *
- * TypeScript twin of `src/scripts/validate_decision_engine.py` (ADR-200,
- * Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY — no flags,
+ * Ported from the retired Python `src/scripts/validate_decision_engine.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — no flags,
  * exit codes (0 clean/warn, 1 hard error, 3 internal), stdout (the
  * `::error::` / `::warning::` GitHub-annotation lines + the summary), same
  * file set (template + project local settings) and order. No behaviour

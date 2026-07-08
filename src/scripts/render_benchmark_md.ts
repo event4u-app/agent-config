@@ -2,7 +2,7 @@
 /**
  * Render `docs/benchmark.md` from the latest paired A/B bench reports.
  *
- * TypeScript twin of `src/scripts/render_benchmark_md.py` (ADR-200, Phase 8 /
+ * Ported from the retired Python `src/scripts/render_benchmark_md.py` (ADR-200, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--quiet` flag, exit code,
  * the stdout/stderr split, byte-identical stdout AND byte-identical rendered
  * `docs/benchmark.md`. The renderer is deterministic — it does not run any
@@ -15,7 +15,7 @@
  * If no reports exist yet, the script writes a placeholder document — never
  * errors out, so the file is always a real description of the bench state.
  *
- * No behaviour changes — latent Python quirks replicated. The only volatile
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour. The only volatile
  * value is the embedded `utc_iso()` timestamp; golden parity for this script
  * pins on structure + the deterministic placeholder/report shape, not on the
  * second-precision timestamp.

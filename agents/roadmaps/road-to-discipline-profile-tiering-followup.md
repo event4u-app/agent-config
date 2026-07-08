@@ -37,6 +37,18 @@ non-Claude host) could un-confound the P2 reading and feeds the same gate.
       on whether `full` is dropped from the enum entirely (gpt-4o's round-2
       dissent position in the original tiering debate).
 
+## Notes (added 2026-07-08)
+
+- **Optional, pre-registered covariate analysis** (from the 2026-07-07
+  subagent-usage review; council 2026-07-08 folded it here as the bench
+  owner): before anyone proposes a task-difficulty gate for the discipline
+  lift, run difficulty (step/tool-count) as a covariate over the EXISTING
+  n=24/84/90 bench pairs and test whether discipline-Δ correlates with
+  difficulty vs trap-family presence. Predicted: null vs difficulty,
+  positive vs trap-family — i.e. the family/trigger axis stays the right
+  gate and a difficulty gate stays unbuilt. Zero new runs; analysis of
+  pinned reports only. Do this only if the difficulty-gate idea resurfaces.
+
 ## Acceptance Criteria
 
 - [ ] `full` is either graduated (evidence), still-labeled experimental with

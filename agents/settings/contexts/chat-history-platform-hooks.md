@@ -3,7 +3,7 @@
 > Phase 1 deliverable for [`road-to-stable-chat-history.md`](../roadmaps/road-to-stable-chat-history.md).
 > Locks in what each of the six supported agent platforms actually
 > offers as a lifecycle-hook surface, so Phase 2 can wire
-> `scripts/chat_history.py` to native events instead of relying on
+> `src/scripts/chat_history.ts` to native events instead of relying on
 > agent discipline. Every classification is cited; stale assumptions
 > are the failure mode this phase exists to prevent.
 >
@@ -13,14 +13,14 @@
 
 Mirrors the roadmap's authoritative definitions:
 
-- **HOOK** — platform fires a lifecycle event, our wrapper runs `chat_history.py append`. Zero agent involvement. Crash-safe.
+- **HOOK** — platform fires a lifecycle event, our wrapper runs `chat_history.ts append`. Zero agent involvement. Crash-safe.
 - **CHECKPOINT** — no automatic hook, but a thin user-invoked command (e.g. `./agent-config chat-history:checkpoint`) takes ~1 s. Fallback when HOOK is impossible or misfires.
 - **MANUAL** — accept that the platform cannot be automated; document the gap. The agent never reads or writes `agents/runtime/.agent-chat-history` cooperatively.
 
 ## Decision matrix
 
 `Verification` column reflects whether the dispatcher's payload extraction
-(`scripts/chat_history.py::_extract_hook_text`) has been confirmed
+(`src/scripts/chat_history.ts::_extract_hook_text`) has been confirmed
 against a real platform payload, against vendor documentation only, or
 not yet at all.
 

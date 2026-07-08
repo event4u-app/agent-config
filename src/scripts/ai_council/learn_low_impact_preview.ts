@@ -1,7 +1,7 @@
 /**
  * Preview builder for `/memory learn-low-impact` (step-9 Phase 7).
  *
- * TypeScript twin of `src/scripts/ai_council/learn_low_impact_preview.py`
+ * Ported from the retired Python `src/scripts/ai_council/learn_low_impact_preview.py`
  * (ADR-200 — Python→TS migration, Phase 1).
  *
  * Default invocation is `--preview`: build a structured plan describing

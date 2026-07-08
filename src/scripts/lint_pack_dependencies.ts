@@ -2,7 +2,7 @@
 /**
  * Pack dependency + pack-graph lints.
  *
- * TypeScript twin of `src/scripts/lint_pack_dependencies.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/lint_pack_dependencies.py` (ADR-200,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract exactly: same checks,
  * finding messages, stdout/stderr split, and exit codes.
  *
@@ -15,7 +15,7 @@
  *
  * Exit codes: 0 = clean · 1 = drift and/or a cycle · 3 = internal error.
  *
- * The Python original imports generate_pack_manifests (`gpm`) for the manifest
+ * the retired Python implementation imports generate_pack_manifests (`gpm`) for the manifest
  * derivation. `gpm` has no TS twin yet (out of this batch's scope), so the
  * needed gpm internals are ported as private helpers below, mirroring the
  * Python source 1:1. They are prefixed `_gpm_` to mark their provenance.

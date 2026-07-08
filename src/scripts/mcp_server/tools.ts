@@ -27,7 +27,7 @@
 // TextContent block with the JSON-serialized payload, so MCP clients
 // can render structured output.
 //
-// TS twin of tools.py (py2ts Phase 8). Mirrors the full public surface:
+// TS port of the retired Python tools.py (ADR-200). Preserves the full public surface:
 //   STDIO_TRANSPORT, BuiltinTool, ToolHandler, ALLOWLIST, to_mcp_tool_meta,
 //   CATALOG_STUBS, STUB_NAMES, REGISTRY, ToolCache, boot_log_line.
 import * as fs from 'node:fs';

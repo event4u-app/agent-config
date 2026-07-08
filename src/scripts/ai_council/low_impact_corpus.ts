@@ -1,7 +1,7 @@
 /**
  * Hardened parser for `agents/decisions/low-impact-decisions.md` (step-9 P4).
  *
- * TypeScript twin of `src/scripts/ai_council/low_impact_corpus.py`
+ * Ported from the retired Python `src/scripts/ai_council/low_impact_corpus.py`
  * (ADR-200 — Python→TS migration, Phase 1).
  *
  * Replaces the silent-skip behaviour of the inline regex in

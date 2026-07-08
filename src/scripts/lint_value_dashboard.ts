@@ -2,10 +2,10 @@
 /**
  * Lint `docs/value.md` for structural invariants.
  *
- * TypeScript twin of `src/scripts/lint_value_dashboard.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/lint_value_dashboard.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--quiet`
  * flag, exit codes (0 / 1), stdout/stderr split, byte-identical messages,
- * same check order. No behaviour changes — latent bugs replicated.
+ * same check order. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Output: one violation per line in non-quiet mode; one-line summary in
  * quiet mode. Exit 0 on clean, 1 on any violation.

@@ -2,13 +2,13 @@
 /**
  * Cache-aware dispatch for `task bench:ab` arms.
  *
- * TypeScript twin of `src/scripts/bench_ab_cache_dispatch.py` (ADR-200
+ * Ported from the retired Python `src/scripts/bench_ab_cache_dispatch.py` (ADR-200
  * Python→TS migration, Phase 8 / Wave 8d). Mirrors the CLI contract EXACTLY:
  * positional `corpus` (`tracka` / `trackb`), the `REMAINDER` `extra` args
  * forwarded to the underlying runner, exit codes (1 corpus missing, else the
  * underlying runner's return code), and byte-identical stdout/stderr.
  *
- * The Python original shelled out via `sys.executable <runner>.py …`; this twin
+ * the retired Python implementation shelled out via `sys.executable <runner>.py …`; this twin
  * invokes the `.ts` runner twins through the repo-local `tsx` binary (those
  * runners are referenced as runtime subprocesses, not imported logic).
  *

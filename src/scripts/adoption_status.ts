@@ -2,13 +2,13 @@
 /**
  * One-screen adoption dashboard for the maintainer's weekly review.
  *
- * TypeScript twin of `src/scripts/adoption_status.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/adoption_status.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8a). The CLI contract is mirrored
  * EXACTLY: same flags (`--json`, `--branch`), same exit codes (0 normal,
  * 1 on registry-read IO error), same byte-identical text + JSON output,
  * same `ci_status` shell-out (now the `.ts` twin run via `tsx` — no
  * python3), same `unknown` best-effort fallbacks. No behaviour
- * changes — latent bugs replicated.
+ * changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Prints three things in one short block:
  *

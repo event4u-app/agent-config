@@ -3,8 +3,8 @@
  * Audit per-area ADR coverage against docs/contracts/ and the canonical
  * AREAS inventory. Contract: docs/contracts/adr-layout.md.
  *
- * TypeScript twin of `src/scripts/audit_adr_coverage.py` (ADR-200, Phase 8 /
- * Wave 8a). The CLI contract is mirrored EXACTLY — the mutually exclusive
+ * Ported from the retired Python `src/scripts/audit_adr_coverage.py` (ADR-200, Phase 8 /
+ * Wave 8a). The CLI contract is pinned — the mutually exclusive
  * `--check` / `--regen-area-readme AREA` group (default `--report`), exit
  * codes, the stdout/stderr split, byte-identical messages, AND byte-identical
  * generated `README.md` for `--regen-area-readme`.
@@ -15,7 +15,7 @@
  *              ADRs and dangling references.
  *   --regen-area-readme <area>  rewrite docs/adrs/<area>/README.md. Idempotent.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

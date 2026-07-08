@@ -2,13 +2,13 @@
 /**
  * check_kernel_rule_bundle — Phase 4.2 of road-to-always-budget-relief.
  *
- * TypeScript twin of `src/scripts/check_kernel_rule_bundle.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--base-ref`
+ * Ported from the retired Python `src/scripts/check_kernel_rule_bundle.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — `--base-ref`
  * / `--label` / `--event-path` / `--files` flags, exit codes (0 pass,
  * 1 fail, 3 internal error), stdout/stderr split, byte-identical finding
  * messages, the same git-diff invocation, base-ref candidate order, and
  * PR-label parsing from the GitHub event JSON. No behaviour changes —
- * latent bugs replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Fails when a single PR (or commit range) modifies more than one
  * kernel rule under `.agent-src.uncondensed/rules/`. Override via the

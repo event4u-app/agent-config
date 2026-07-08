@@ -2,14 +2,14 @@
 /**
  * Agent-settings schema validator (rule_loading_tier untangle, 2026-06-01).
  *
- * TypeScript twin of `src/scripts/validate_agent_settings.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags,
+ * Ported from the retired Python `src/scripts/validate_agent_settings.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — no flags,
  * exit codes (0 every file validates, 1 schema violation, 3 bootstrap
  * failure), stdout output (GitHub `::error::` annotations + summary line),
  * the same template-placeholder substitution, the same checked-file set
  * (template + local settings via the `_lib/agent_settings` twin), and the
  * same Draft-07 enum/type constraints from the shared schema JSON. No
- * behaviour changes — latent bugs replicated.
+ * behaviour changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * DIVERGENCE NOTE (documented per ADR-200 §6): the underlying jsonschema
  * error PROSE is Python-version-dependent. This twin reproduces the schema's

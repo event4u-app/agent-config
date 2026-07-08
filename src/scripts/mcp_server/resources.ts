@@ -15,7 +15,7 @@
 // first H1 line (`# Title`) is used as a title-style fallback, else the
 // filename-derived stem.
 //
-// TS twin of resources.py (py2ts Phase 8). Mirrors the full public surface:
+// TS port of the retired Python resources.py (ADR-200). Preserves the full public surface:
 //   ResourceKind, MIME_MARKDOWN, Resource, scan_rules, scan_guidelines,
 //   scan_contexts, load_all_resources, to_mcp_resource_meta, ResourceCache.
 //   Imports `_project_root` + `_strip_frontmatter` from prompts.ts

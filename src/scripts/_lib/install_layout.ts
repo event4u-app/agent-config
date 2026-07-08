@@ -1,7 +1,7 @@
 /**
  * Install-layout ABI version.
  *
- * TypeScript twin of `src/scripts/_lib/install_layout.py` (ADR-200 — Python→TS
+ * Ported from the retired Python `src/scripts/_lib/install_layout.py` (ADR-200 — Python→TS
  * migration). Public API mirrors the Python module exactly (snake_case kept
  * deliberately — fidelity over TS idiom): the two version constants and the
  * `coerce_layout_version` / `needs_migration` helpers, with Python `int()`

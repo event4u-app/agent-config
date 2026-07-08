@@ -1,7 +1,7 @@
 /**
  * Context bundling for council consultations.
  *
- * TypeScript twin of `src/scripts/ai_council/bundler.py` (ADR-094 —
+ * Ported from the retired Python `src/scripts/ai_council/bundler.py` (ADR-094 —
  * Python→TS migration, Phase 1).
  *
  * Takes a raw artefact (free-form prompt, roadmap path, diff range, or

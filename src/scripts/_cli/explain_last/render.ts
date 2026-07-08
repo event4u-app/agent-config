@@ -1,8 +1,8 @@
 /**
  * Deterministic Markdown projection of an `ExplainTrace`.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/render.py` (ADR-200).
- * Behaviour mirrors the Python original EXACTLY — same fixed section
+ * Ported from the retired Python `src/scripts/_cli/explain_last/render.py` (ADR-200).
+ * Behaviour pins the historical contract exactly — same fixed section
  * order, same skip-empty-chunk join, same `rstrip()` + trailing newline,
  * same tip-footer text and `with_footer` gate. No behaviour changes.
  *

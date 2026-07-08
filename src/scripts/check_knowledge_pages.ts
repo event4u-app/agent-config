@@ -5,7 +5,7 @@
  * `agents/knowledge/{sessions,concepts,procedures,decisions}/*.md`.
  *
  * Deliberately SEPARATE from `check_knowledge_cards.ts` (a byte-faithful
- * parity twin of its retired Python original — never touched here) and
+ * parity port of the retired Python implementation — never touched here) and
  * deliberately warn-only: schema-as-contract for these pages is explicitly
  * deferred (2026-07-05 council verdict) until real team usage data exists.
  * This script never fails the build; it surfaces drift for a human to act

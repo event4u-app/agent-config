@@ -2,11 +2,11 @@
 /**
  * CI Summary — render a GitHub Step Summary from dispatcher run results.
  *
- * TypeScript twin of `src/scripts/ci_summary.py` (ADR-200 — Python→TS
- * migration, Phase 8 / Wave 8a). The CLI contract is mirrored EXACTLY:
+ * Ported from the retired Python `src/scripts/ci_summary.py` (ADR-200 — Python→TS
+ * migration, Phase 8 / Wave 8a). The CLI contract is pinned:
  * same flags (`--runs`, `--title`), same defaults, same stdout/env-file
  * behaviour, same byte-identical markdown output, same exit code (always
- * 0). No behaviour changes — latent bugs replicated.
+ * 0). Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Consumes JSON files produced by `scripts/runtime_dispatcher.py run
  * --output FILE`. Each file is an ExecutionResult dump (see

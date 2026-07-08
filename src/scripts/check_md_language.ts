@@ -2,13 +2,13 @@
 /**
  * Markdown language checker — enforces language-and-tone § ".md files are ALWAYS English".
  *
- * TypeScript twin of `src/scripts/check_md_language.py` (ADR-200, Phase 4 /
- * Wave 4c). The CLI contract is mirrored EXACTLY — positional `paths`,
+ * Ported from the retired Python `src/scripts/check_md_language.py` (ADR-200, Phase 4 /
+ * Wave 4c). The CLI contract is pinned — positional `paths`,
  * `--format` / `--quiet` flags, exit codes (0 clean, 1 violations, 3
  * internal error), stdout/stderr split, byte-identical finding messages,
  * the same per-line skipping (frontmatter, fences, indented code, DE/EN
  * anchors, ignore marker), and the same umlaut + DE-word detection. No
- * behaviour changes — latent bugs replicated.
+ * behaviour changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Scans .md files for German content (umlauts, function words, quoted DE phrases)
  * in body prose, skipping fenced/inline code, DE:/EN: anchors, and ignore markers.

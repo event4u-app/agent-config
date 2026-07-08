@@ -2,13 +2,13 @@
 /**
  * Cluster-pattern compliance check.
  *
- * TypeScript twin of `src/scripts/check_cluster_patterns.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags,
+ * Ported from the retired Python `src/scripts/check_cluster_patterns.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — no flags,
  * exit codes (0 clean, 1 pattern violations, 3 internal error),
  * stdout/stderr split, byte-identical finding messages, the same
  * locked-clusters table parse, the same domains slug map (via the
  * `_lib/agent_src` twin), and the same dispatcher-structure checks. No
- * behaviour changes — latent bugs replicated.
+ * behaviour changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Compares each cluster dispatcher against the Phase 1 reference patterns
  * (`fix`, `optimize`, `feature`).

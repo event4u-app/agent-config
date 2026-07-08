@@ -2,7 +2,7 @@
 /**
  * Fail when an artefact carries a frontmatter field equal to its schema default.
  *
- * TypeScript twin of `src/scripts/lint_frontmatter_boilerplate.py` (ADR-200,
+ * Ported from the retired Python `src/scripts/lint_frontmatter_boilerplate.py` (ADR-200,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract exactly: `--quiet`,
  * scan scope + ordering (skills / rules / commands / personas via
  * `artefact_roots()`), finding messages, stdout/stderr split, exit codes
@@ -11,7 +11,7 @@
  * The frontmatter loader (`validate_frontmatter.apply_schema_defaults`) injects
  * the default at read time, so omitting the field is always behaviour-preserving.
  *
- * NOTE (divergence candidate — DC-1): the Python original imports
+ * NOTE (divergence candidate — DC-1): the retired Python implementation imports
  * `_CATEGORIES`, `_iter`, `_plan_drops` from `migrate_frontmatter_defaults.py`,
  * which has no `.ts` twin yet (out of this batch's scope). To keep TS-only
  * dispatcher resolution working, those three helpers (and `_same`) are inlined

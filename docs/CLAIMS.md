@@ -83,33 +83,38 @@
 
 These are real README claims that need a durable binding before they may carry a
 `<!-- claim: -->` marker. Counts are drift-prone: binding them requires a
-count-source mechanism (a generated number the prose must match), which is
-follow-up work (roadmap B1.2). Listed here so the debt is visible, not hidden.
+count-source mechanism (a generated number the prose must match). That
+mechanism now exists (road-to-truth-and-reference-hygiene Phase 1):
+`update_counts.ts` generates every prose count from source, and
+`check_artefact_count_messaging.ts` fails CI on any count-shaped prose
+mention that drifts or is internally inconsistent — so the three count
+claims below are `backed`. Remaining entries are listed so the debt is
+visible, not hidden.
 
 ### claim: skill-count
-- claim: 258 skills (README hero + feature list).
+- claim: 264 skills (README hero + feature list).
 - kind: quant
-- evidence: needs a generated count-source binding (discovery manifest) — B1.2
-- status: unbacked
-- last_verified:
+- evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
+- status: backed
+- last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 162 commands.
+- claim: 172 commands.
 - kind: quant
-- evidence: needs a generated count-source binding (discovery manifest) — B1.2
-- status: unbacked
-- last_verified:
+- evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
+- status: backed
+- last_verified: 2026-07-08
 
 ### claim: rule-count
-- claim: 93 governed rules.
+- claim: 95 governed rules.
 - kind: quant
-- evidence: needs a generated count-source binding (discovery manifest) — B1.2
-- status: unbacked
-- last_verified:
+- evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
+- status: backed
+- last_verified: 2026-07-08
 
 ### claim: host-agent-count
 - claim: Compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini).
 - kind: quant
-- evidence: needs binding to the projection targets list — B1.2
+- evidence: stays unbacked pending a machine-readable projection-targets list — the concrete binding artifact is `src/config/surface-matrix.yml` (authored by road-to-install-path-convergence Phase 2, per the 2026-07-07 install-path council); once it exists, bind the count to that file and flip. Triaged 2026-07-08 (truth-and-reference-hygiene P3): do NOT bind to prose host tables (`docs/enforcement-by-host.md`) — a substring pointer cannot verify a count.
 - status: unbacked
 - last_verified:

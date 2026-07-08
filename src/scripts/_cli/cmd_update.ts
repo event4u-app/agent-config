@@ -2,8 +2,8 @@
  * `agent-config update` — explicit, opt-in update of the version pin
  * (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/_cli/cmd_update.py` (ADR-200, py2ts
- * migration). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/_cli/cmd_update.py` (ADR-200, py2ts
+ * migration). The CLI contract pins the historical contract exactly — same
  * flags, same exit codes, same stdout/stderr split, byte-identical emitted
  * output, same filesystem effects, same subprocess argv/cwd/env. No behaviour
  * changes — latent quirks are replicated and flagged inline, not fixed.
@@ -140,23 +140,23 @@ function _splitlinesKeepends(text: string): string[] {
 // Replicated module-private helpers (see header parity note)
 // ---------------------------------------------------------------------------
 
-/** Twin of `agent_settings._canonical_settings_path` (file-local private). */
+/** Mirrors `agent_settings._canonical_settings_path` (file-local private). */
 function _canonical_settings_path(project_root: string): string {
     return path.join(project_root, ...LOCAL_PROJECT_SUBDIR, DEFAULT_PROJECT_FILE);
 }
 
-/** Twin of `agent_settings._local_settings_path` (file-local private). */
+/** Mirrors `agent_settings._local_settings_path` (file-local private). */
 function _local_settings_path(project_root: string): string {
     return path.join(project_root, ...LOCAL_PROJECT_SUBDIR, LOCAL_PROJECT_FILE);
 }
 
-/** Twin of `agent_settings._resolve` — absolute, normalised path. */
+/** Mirrors `agent_settings._resolve` — absolute, normalised path. */
 function _resolve(p: string): string {
     return path.resolve(p);
 }
 
 /**
- * Twin of `agent_settings._resolve_cascade_paths` (file-local private).
+ * Mirrors `agent_settings._resolve_cascade_paths` (file-local private).
  *
  * Returns the ordered cascade of in-project settings files (shallow → deep).
  */
@@ -199,7 +199,7 @@ function _resolve_cascade_paths(cwd: string | null, project_path: string | null)
     return out;
 }
 
-/** Twin of `update_check._read_state` (module-private). */
+/** Mirrors `update_check._read_state` (module-private). */
 function _read_state(state_path: string): Record<string, unknown> {
     try {
         const raw = fs.readFileSync(state_path, 'utf-8');
@@ -213,7 +213,7 @@ function _read_state(state_path: string): Record<string, unknown> {
     return {};
 }
 
-/** Twin of `update_check._write_state` (module-private). */
+/** Mirrors `update_check._write_state` (module-private). */
 function _write_state(state_path: string, payload: Record<string, unknown>): void {
     const parent = path.dirname(state_path);
     fs.mkdirSync(parent, { recursive: true });

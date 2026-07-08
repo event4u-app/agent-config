@@ -2,8 +2,8 @@
 /**
  * Quantitative skill-eval orchestrator (skill-writing § 7).
  *
- * TypeScript twin of `src/scripts/run_skill_evals.py` (ADR-200 — Python→TS
- * migration, Phase 8 / Wave 8e). The CLI contract is mirrored EXACTLY:
+ * Ported from the retired Python `src/scripts/run_skill_evals.py` (ADR-200 — Python→TS
+ * migration, Phase 8 / Wave 8e). The CLI contract is pinned:
  * same subcommands (`scaffold`, `aggregate`, `report`), same flags
  * (`--run`), same exit codes (0 success; 1 on `sys.exit(msg)` errors),
  * same byte-identical stdout / stderr prose and byte-identical written

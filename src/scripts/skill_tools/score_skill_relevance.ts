@@ -2,8 +2,8 @@
 /**
  * Block D · D2 — score_skill_relevance.
  *
- * TypeScript twin of `src/scripts/skill_tools/score_skill_relevance.py`
- * (ADR-200, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
+ * Ported from the retired Python `src/scripts/skill_tools/score_skill_relevance.py`
+ * (ADR-200, Phase 8 Wave 8h). The CLI contract is pinned —
  * flags (`--task`, `--skills-dir`, `--top`, `--json`, `--sample`), exit
  * codes (0 / 2), stdout/stderr split, byte-identical human table AND
  * byte-identical JSON (`json.dump(..., indent=2)`, ensure_ascii default).
@@ -28,7 +28,7 @@
  *
  * Output: ranked list with integer scores 0–100, descending. Ties break on name.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

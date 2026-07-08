@@ -1,8 +1,8 @@
 /**
  * Dual-axis deterministic scoring for the bench:ab v2 discipline-axis benchmark.
  *
- * TypeScript twin of `src/scripts/_lib/bench_ab_scoring_v2.py` (ADR-200
- * Python→TS migration). Public API mirrors the Python module EXACTLY — same
+ * Ported from the retired Python `src/scripts/_lib/bench_ab_scoring_v2.py` (ADR-200
+ * Python→TS migration). Public API pins the historical contract exactly — same
  * exported name (`score_task_v2`, deliberately snake_case), same check
  * ordering, same JSON-identical result shape, same scoring math.
  *
@@ -23,7 +23,7 @@
  * The `_diff_line_count` helper replicates CPython `difflib.unified_diff` with
  * default `n=3` context: the SequenceMatcher matching-block algorithm (incl. the
  * `autojunk` popular-element pruning) is ported verbatim so the added+removed
- * line tally is byte-for-byte identical to the Python original.
+ * line tally is byte-for-byte identical to the retired Python implementation.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';

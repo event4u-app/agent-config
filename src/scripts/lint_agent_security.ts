@@ -2,7 +2,7 @@
 /**
  * P1.6 — umbrella runner for the agent-security self-audit linters.
  *
- * TypeScript twin of `src/scripts/lint_agent_security.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/lint_agent_security.py` (ADR-200 —
  * Python→TS migration). Mirrors the CLI contract EXACTLY: the `--sarif PATH`
  * / `--quiet` flags, the per-linter glyph lines, the aggregated summary, the
  * byte-identical SARIF report (`json.dumps(indent=2)` parity), and the exit
@@ -15,9 +15,9 @@
  * (road-to-security-pillar.md P1).
  *
  * The four child linters now have TypeScript twins, so this runner spawns each
- * `<child>.ts --json` via the repo-local `tsx` binary (the Python originals
+ * `<child>.ts --json` via the repo-local `tsx` binary (the retired Python implementations
  * were deleted in the ADR-200 migration). Each child is a separate process so
- * its JSON findings are aggregated here exactly as the Python original
+ * its JSON findings are aggregated here exactly as the retired Python implementation
  * aggregated `subprocess.run` output.
  *
  * Usage:
@@ -51,7 +51,7 @@ const LINTERS: ReadonlyArray<[string, string]> = [
 
 function _run(script: string): [number, Finding[]] {
   // Spawn the child linter's `.ts` twin via the repo-local tsx binary
-  // (capture_output=True, text=True equivalent). Mirrors the Python original's
+  // (capture_output=True, text=True equivalent). Mirrors the retired Python implementation's
   // `subprocess.run([sys.executable, HERE/<child>.py, "--json"])`, now that the
   // children are TypeScript and the `.py` originals are deleted.
   const proc = spawnSync(tsxBin, [path.join(_HERE, script), "--json"], {

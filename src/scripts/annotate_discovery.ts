@@ -2,7 +2,7 @@
 /**
  * R3 Phase 4 mass-annotator — discovery frontmatter helper.
  *
- * TypeScript twin of `src/scripts/annotate_discovery.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/annotate_discovery.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract
  * EXACTLY — the `--pack` choice flag + positional `paths`, exit code (0),
  * the stdout/stderr split, byte-identical messages, and byte-identical
@@ -20,7 +20,7 @@
  * Idempotent: re-runs leave already-annotated files untouched.
  *
  * Mapping table (`PACK_DEFAULTS`) is the council-locked authority. No
- * behaviour changes — latent Python quirks replicated.
+ * behaviour changes — historical quirks preserved (consumers pin the exact behaviour).
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';

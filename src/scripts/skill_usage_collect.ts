@@ -2,7 +2,7 @@
 /**
  * Collect skill-activation signal from Claude Code session jsonl.
  *
- * TypeScript twin of `src/scripts/skill_usage_collect.py` (ADR-200, Phase 8 /
+ * Ported from the retired Python `src/scripts/skill_usage_collect.py` (ADR-200, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--project-slug`, `--out`,
  * `--quiet` flags, exit codes, the stdout/stderr split, byte-identical
  * messages AND the byte-identical appended JSONL (`json.dumps(rec,
@@ -16,7 +16,7 @@
  * Emits one JSONL record per (session, turn, slug, kind), append-only, deduped
  * on the (session_id, turn_idx, slug, kind) tuple.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';

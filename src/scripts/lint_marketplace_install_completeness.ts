@@ -3,8 +3,8 @@
  * Lint that every command in `hooks/hooks.json` resolves to a real
  * dispatcher subcommand in `scripts/_dispatch.bash`.
  *
- * TypeScript twin of `src/scripts/lint_marketplace_install_completeness.py`
- * (ADR-200, Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY —
+ * Ported from the retired Python `src/scripts/lint_marketplace_install_completeness.py`
+ * (ADR-200, Phase 4 / Wave 4b). The CLI contract is pinned —
  * `--hooks-json` / `--dispatch-bash` flags, exit codes (0 clean, 1 unknown
  * subcommand, 2 schema/file error), stdout/stderr split, byte-identical
  * finding messages, same command-extraction regexes and scan order.

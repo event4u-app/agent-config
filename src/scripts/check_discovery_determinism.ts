@@ -2,12 +2,12 @@
 /**
  * Determinism check — runs the discovery scanner twice and diffs the output.
  *
- * TypeScript twin of `src/scripts/check_discovery_determinism.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags,
+ * Ported from the retired Python `src/scripts/check_discovery_determinism.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — no flags,
  * exit codes (0 deterministic, 1 drift), stdout/stderr split, byte-identical
  * messages, and the same `generated_at` normalization + sorted-key JSON
  * comparison. The scanner itself (`build_discovery_manifest.ts`) is run via the
- * repo-local `tsx` binary, mirroring how the Python original invoked the
+ * repo-local `tsx` binary, mirroring how the retired Python implementation invoked the
  * scanner via `sys.executable`. No behaviour changes.
  *
  * Exit codes:

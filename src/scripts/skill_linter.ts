@@ -2,16 +2,16 @@
 /**
  * skill_linter.ts — minimal skill/rule linter for agent-config repositories.
  *
- * TypeScript twin of `src/scripts/skill_linter.py` (ADR-200, Phase 4 Wave 4a).
+ * Ported from the retired Python `src/scripts/skill_linter.py` (ADR-200).
  * The public CLI contract is mirrored EXACTLY: same flags (`--all`,
  * `--changed`, `--format`, `--pairs`, `--duplicates`, `--condensation-quality`,
  * `--strict-warnings`, `--report`, `--repo-root`, `--quiet`, positional paths),
  * same exit codes (0 pass / 1 warn-with-strict / 2 fail / 3 malice-or-internal),
- * same stdout/stderr split, and byte-for-byte finding messages. No behaviour
- * changes — latent Python quirks are replicated.
+ * same stdout/stderr split, and byte-for-byte finding messages (pinned by tests). No behaviour
+ * changes — historical quirks are preserved.
  *
  * Dependencies: imports the `validate_frontmatter` twin (local, ported because
- * the Python original is a later-wave dependency) and the `_lib/agent_src`
+ * the retired Python implementation is a later-wave dependency) and the `_lib/agent_src`
  * twin for multi-root artefact resolution.
  *
  * MVP checks:
@@ -1136,8 +1136,9 @@ function _stripWing3CarveOuts(text: string): string {
     // `## Do NOT` strip: Python uses MULTILINE|DOTALL → `^##` matches at every
     // line start. `\Z` = end of string (no trailing-newline subtlety needed).
     out = out.replace(/^##\s+Do NOT\s*$[\s\S]*?(?=^##\s+|$(?![\s\S]))/gm, '');
-    // `**WHEN NOT to use this**` strip — LATENT PYTHON BUG REPLICATED: the
-    // Python original passes only DOTALL|IGNORECASE (NO MULTILINE), so the
+    // `**WHEN NOT to use this**` strip — HISTORICAL PYTHON-ERA BUG, PRESERVED
+    // (goldens pin it): the retired implementation passed only
+    // DOTALL|IGNORECASE (NO MULTILINE), so the
     // `^##\s+` alternative in its lookahead matches only at string position 0,
     // never at a mid-text line start. With no `**WHEN` after the first one, the
     // non-greedy `.*?` therefore consumes to end-of-string — stripping every
@@ -2781,7 +2782,7 @@ function lint_execution_quality(p: string, text: string): Issue[] {
     const hasVerificationSection = sectionHeadersLower.some((h) =>
         ['verify', 'validat', 'test', 'acceptance', 'quality gate'].some((kw) => h.includes(kw)),
     );
-    // hasAntipatternSection computed in the Python original but never used downstream.
+    // hasAntipatternSection computed in the retired Python implementation but never used downstream.
     void sectionHeadersLower.some((h) =>
         ['do not', "don't", 'gotcha', 'anti-pattern', 'avoid'].some((kw) => h.includes(kw)),
     );

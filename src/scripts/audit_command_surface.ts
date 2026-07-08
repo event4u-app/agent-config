@@ -2,7 +2,7 @@
 /**
  * Command-surface inventory + overlap detection + usage signal.
  *
- * TypeScript twin of `src/scripts/audit_command_surface.py` (ADR-200, Phase 8 /
+ * Ported from the retired Python `src/scripts/audit_command_surface.py` (ADR-200, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--root`, `--budget`,
  * `--check-new`, `--baseline`, `--quiet` flags, exit codes (0 ok / 1 budget
  * violation / 2 root-missing / 3 git error), the stdout/stderr split,
@@ -14,7 +14,7 @@
  * overlap pairs by keyword-cosine similarity, and adds a usage signal from
  * git history.
  *
- * No behaviour changes — latent Python quirks replicated (incl. git-history
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour. (incl. git-history
  * `days_since_*` values, which depend on the wall clock and the worktree's
  * git log — golden parity is run in the SAME repo so both sides observe the
  * identical history; the day arithmetic is reproduced with the same floor).

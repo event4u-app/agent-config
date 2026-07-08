@@ -1,7 +1,7 @@
 /**
  * Section renderers for the `explain last` Markdown projection.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/sections/__init__.py`
+ * Ported from the retired Python `src/scripts/_cli/explain_last/sections/__init__.py`
  * (ADR-200). Re-exports each section module under the same name so the
  * orchestrator (`render.ts`) calls them in fixed order, keeping the
  * Markdown output byte-deterministic for the same input `ExplainTrace`.

@@ -1,8 +1,8 @@
 /**
  * Resolve the `assumptions` why-slot for the trace.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/assumptions.py`
- * (ADR-200). Behaviour mirrors the Python original EXACTLY — same string /
+ * Ported from the retired Python `src/scripts/_cli/explain_last/assumptions.py`
+ * (ADR-200). Behaviour pins the historical contract exactly — same string /
  * dict normalisation, same 120-code-point id slice, same `or`-fallback
  * order, same always-array return. No behaviour changes.
  *

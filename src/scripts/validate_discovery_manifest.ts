@@ -3,13 +3,13 @@
  * Stale-manifest guard — re-builds the manifest in memory and diffs it
  * against the committed `dist/discovery/discovery-manifest.json`.
  *
- * TypeScript twin of `src/scripts/validate_discovery_manifest.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/validate_discovery_manifest.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — `--quiet`
  * flag, exit codes (0 match, 1 drift / missing committed manifest),
  * stdout/stderr split, byte-identical messages, and the same `generated_at`
  * normalization + sorted-key JSON comparison + first-diff-line report. The
  * scanner (`build_discovery_manifest.ts`) is run via the repo-local `tsx`
- * binary, mirroring how the Python original invoked the scanner via
+ * binary, mirroring how the retired Python implementation invoked the scanner via
  * `sys.executable`. No behaviour changes.
  *
  * Exit codes:

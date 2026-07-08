@@ -1,14 +1,14 @@
 /**
  * Locate artefact source roots across the monorepo physical layout.
  *
- * TypeScript twin of `src/scripts/_lib/agent_src.py` (ADR-200, Phase 2
- * Wave 2a). The public API mirrors the Python module EXACTLY — same
+ * Ported from the retired Python `src/scripts/_lib/agent_src.py` (ADR-200, Phase 2
+ * Wave 2a). The public API pins the historical contract exactly — same
  * exported snake_case names, same root ordering, same logical-relpath
  * computation, same first-win precedence when a logical path resolves
  * across multiple roots, and the same error behaviour
  * (`logical_relpath` throws when a path is under no known root; the
  * collision guard in `_root_specs` throws on duplicate non-empty
- * prefixes). No behaviour changes — latent bugs replicated.
+ * prefixes). Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Phase 4 of the monorepo migration (ADR-017) physically moves source
  * artefacts out of the flat `.agent-src.uncondensed/` directory into
@@ -32,10 +32,10 @@
  *   but accepts repo-relative POSIX strings (used by the condenseor's
  *   output-path computation and the LEGACY_SRC_PREFIX logic).
  *
- * Path handling note: the Python original uses `pathlib.Path` objects.
+ * Path handling note: the retired Python implementation uses `pathlib.Path` objects.
  * This twin uses absolute POSIX path strings as the `Path` equivalent
  * (the host filesystem on the supported platforms is POSIX). All public
- * functions that the Python original typed as `Path` accept/return
+ * functions that the retired Python implementation typed as `Path` accept/return
  * strings here; semantics — `.relative_to`, `.as_posix`, `.resolve`,
  * `.rglob`, `.is_dir`, `.is_file`, `.exists` — are reproduced via the
  * helpers below.
@@ -46,7 +46,7 @@ import { fileURLToPath } from 'node:url';
 
 // --- Path-root configuration (mutable to mirror Python module attributes) ----
 //
-// The Python original derives ROOT from `Path(__file__).resolve().parents[3]`
+// the retired Python implementation derives ROOT from `Path(__file__).resolve().parents[3]`
 // and every other root from it as module-level constants. Tests in
 // `tests/test_agent_src_domains.py` reassign `agent_src.SRC_DOMAINS` directly
 // and clear `agent_src._slug_prefix_cache` to point the resolver at a tmp
@@ -474,7 +474,7 @@ export function* iter_all_sources(): Generator<[string, string]> {
             if (!_isFile(p)) {
                 continue;
             }
-            // The Python original guards `relative_to` with try/except
+            // the retired Python implementation guards `relative_to` with try/except
             // ValueError; here `p` is always under `root` by construction, but
             // we mirror the guard for fidelity.
             if (p !== root && !_isUnder(p, root)) {

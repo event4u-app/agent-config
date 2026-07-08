@@ -2,12 +2,12 @@
 /**
  * Hard-Gate linter for the `roadmap-ci-steps-policy` rule.
  *
- * TypeScript twin of `src/scripts/lint_roadmap_ci_steps.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/lint_roadmap_ci_steps.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--quiet`
  * detected by argv membership (no argparse), exit codes (0 / 1),
  * stdout/stderr split, byte-identical messages, same scan scope
  * (`agents/roadmaps/*.md`, sorted) and detection order. No behaviour
- * changes — latent bugs replicated.
+ * changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Forbids full-pipeline CI literals (`task ci`, `make test`, `npm run check`
  * etc.) inside `agents/roadmaps/*.md` checkbox steps or fenced bash blocks

@@ -2,7 +2,7 @@
 /**
  * Maintainer dev script — export / import file-first patterns across projects.
  *
- * TypeScript twin of `src/scripts/pattern_share.py` (ADR-200). Mirrors the
+ * Ported from the retired Python `src/scripts/pattern_share.py` (ADR-200). Mirrors the
  * Python CLI contract EXACTLY — the `export` / `import` subcommands, their
  * positional + flag args (`--out`, `--force`), exit codes (0 / 1 / 2),
  * stdout/stderr split, the byte-identical refusal/success lines (`❌  …` /
@@ -245,7 +245,7 @@ function _isFlag(a: string): boolean {
     return a.startsWith('-') && a !== '-';
 }
 
-// argparse precedence (verified against the Python original):
+// argparse precedence (verified against the retired Python implementation):
 //   1. an optional that needs a value but is missing it → SUB-level error
 //      "argument --out: expected one argument" (during consumption).
 //   2. a missing required positional → SUB-level error

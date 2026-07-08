@@ -2,12 +2,12 @@
 /**
  * Drift detector for the bench corpus — step-4 Phase 3 Step 2.
  *
- * TypeScript twin of `src/scripts/bench_drift_check.py` (ADR-200, Phase 8 /
- * Wave 8d). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/bench_drift_check.py` (ADR-200, Phase 8 /
+ * Wave 8d). The CLI contract pins the historical contract exactly — same
  * flags, same exit codes (0 no-drift/warmup, 1 read error, 2 drift), same
  * stdout/stderr split, byte-identical `--json` payload
  * (`json.dumps(indent=2)` / compact warmup) and Markdown lines. No behaviour
- * changes — latent Python quirks are replicated and flagged as divergence
+ * changes — historical quirks are preserved and flagged as divergence
  * candidates.
  *
  * The drift VERDICT logic is deterministic against a fixed set of reports;

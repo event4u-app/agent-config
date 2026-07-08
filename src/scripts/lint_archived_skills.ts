@@ -2,8 +2,8 @@
 /**
  * Lint archive notes under agents/evidence/archived-skills/.
  *
- * TypeScript twin of `src/scripts/lint_archived_skills.py` (ADR-200, Phase 4
- * / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet` flag, exit
+ * Ported from the retired Python `src/scripts/lint_archived_skills.py` (ADR-200, Phase 4
+ * / Wave 4b). The CLI contract is pinned — `--quiet` flag, exit
  * codes (0 contract holds, 1 violations), stdout/stderr split,
  * byte-identical finding messages, same scan trees and order, same
  * frontmatter parser, same `artefact_roots()` skill-root discovery.

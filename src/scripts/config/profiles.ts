@@ -18,7 +18,7 @@
 // block, the loader returns a structured warning state so `/onboard` can
 // surface "audience not yet picked".
 //
-// Twin of `src/scripts/config/profiles.py`.
+// Ported from the retired Python `src/scripts/config/profiles.py` (ADR-200).
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';

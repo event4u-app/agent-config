@@ -2,12 +2,12 @@
 /**
  * Guard: `CASCADE_ELIGIBLE_KINDS` / `USER_GLOBAL_OVERLAY_KINDS` ↔ docs.
  *
- * TypeScript twin of `src/scripts/check_overlay_cascade_subdirs.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags, exit
+ * Ported from the retired Python `src/scripts/check_overlay_cascade_subdirs.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — no flags, exit
  * codes (0 clean, 1 drift, 3 internal error), stdout/stderr split,
  * byte-identical finding messages, and the same `docs/customization.md` table
  * parse. The `_lib/agents_overlay` twin supplies the two constant sets. No
- * behaviour changes — latent bugs replicated.
+ * behaviour changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Phase 1 of road-to-portable-runtime-and-update-check (P1.6). The
  * overlay resolver in `scripts/_lib/agents_overlay` ships two

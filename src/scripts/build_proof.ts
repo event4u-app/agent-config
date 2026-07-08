@@ -83,6 +83,12 @@ function render(): string {
     }
     L.push('');
     L.push(`**${backed.length} backed claim(s)** — all evidence pointers resolve in CI.`);
+    L.push('');
+    L.push('Artefact counts in public prose (skills, commands, governed rules,');
+    L.push('guidelines, personas) are **generated from source and CI-drift-checked**:');
+    L.push('`update_counts.ts` writes the numbers, `check_artefact_count_messaging.ts`');
+    L.push('fails the build on any count-shaped prose mention that drifts from the');
+    L.push('source count — or on two different numbers for the same artefact kind.');
     if (unbacked.length > 0) {
         L.push('');
         L.push(`We also publish our **debt**: ${unbacked.length} claim(s) are logged as`);

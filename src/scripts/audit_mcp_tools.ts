@@ -2,8 +2,8 @@
 /**
  * MCP-tool inventory generator.
  *
- * TypeScript twin of `src/scripts/audit_mcp_tools.py` (ADR-200 — Python→TS
- * migration, Phase 8 / Wave 8b). The CLI contract is mirrored EXACTLY —
+ * Ported from the retired Python `src/scripts/audit_mcp_tools.py` (ADR-200 — Python→TS
+ * migration, Phase 8 / Wave 8b). The CLI contract is pinned —
  * the mutually-exclusive `--check` / `--write` flags, `--quiet`, exit codes
  * (0 ok / in-sync · 1 drift), the stdout/stderr split, byte-identical
  * messages, and byte-identical written file content.
@@ -14,7 +14,7 @@
  * `docs/contracts/mcp-tool-inventory.md` with every tool cited by
  * `<file>:<line>`.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

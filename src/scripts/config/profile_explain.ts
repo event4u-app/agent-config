@@ -14,7 +14,7 @@
 // Reuses the explain-modes two-views-over-one-envelope convention
 // (`docs/contracts/explain-modes.md`).
 //
-// Twin of `src/scripts/config/profile_explain.py`.
+// Ported from the retired Python `src/scripts/config/profile_explain.py` (ADR-200).
 
 // `any` mirrors Python's `dict[str, Any]` envelope; values are heterogeneous
 // (lists, ints, bools, the `?` placeholder string) and consumed only through

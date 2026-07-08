@@ -1,8 +1,8 @@
 /**
  * Resolve the `inputs` and `pack` why-slots for the trace.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/inputs.py` (ADR-200).
- * Behaviour mirrors the Python original EXACTLY — same resolver reuse,
+ * Ported from the retired Python `src/scripts/_cli/explain_last/inputs.py` (ADR-200).
+ * Behaviour pins the historical contract exactly — same resolver reuse,
  * same `None`-on-error branches, same per-knob source attribution, same
  * pack-marker discovery order and key shape. No behaviour changes.
  *
@@ -30,9 +30,9 @@ const _SILENCED_LOGGERS: readonly string[] = [
 ];
 
 /**
- * Faithful twin of the Python `_silence_resolver_warnings` context manager.
+ * Port of the retired Python `_silence_resolver_warnings` context manager.
  *
- * The Python original raises the level of the `scripts.config.profiles` /
+ * the retired Python implementation raises the level of the `scripts.config.profiles` /
  * `scripts.config.presets` loggers to ERROR so a profile/preset read
  * failure does not leak an absolute path on stderr. The TypeScript config
  * twins funnel through a single shared `agent_settings.logger` that only

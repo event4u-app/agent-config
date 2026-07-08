@@ -2,7 +2,7 @@
 /**
  * Skill-collision cluster analysis (Phase 2.2 of step-1-v2-feedback-followup).
  *
- * TypeScript twin of `skill_collision_clusters.py` (Phase 8 / Wave 8e).
+ * Ported from the retired Python `skill_collision_clusters.py` (Phase 8 / Wave 8e).
  *
  * Walks `.agent-src.uncondensed/skills/<id>/SKILL.md`, extracts the
  * `description` frontmatter, computes pairwise keyword overlap, and groups

@@ -2,13 +2,13 @@
 /**
  * Controlled-verb linter for visible commands.
  *
- * TypeScript twin of `src/scripts/lint_command_verbs.py` (ADR-200,
- * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--baseline`
+ * Ported from the retired Python `src/scripts/lint_command_verbs.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--baseline`
  * / `--all` / `--quiet` flags, exit codes (0 clean, 1 violations, 3
  * internal error), stdout/stderr split, byte-identical finding messages,
  * same scan scope (forward-only git diff + working-tree status, or every
  * visible command under `--all`), and the same sorted iteration order.
- * snake_case kept. No behaviour changes — latent bugs replicated.
+ * snake_case kept. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * A VISIBLE command (tier 0/1) must have a leading token drawn from the
  * approved verb allowlist in `src/config/discovery/command-verbs.yml`.
@@ -312,7 +312,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
 
 function _argparse_error(message: string): never {
     // Mirror Python argparse: usage line + program error, both on stderr,
-    // exit code 2. The prog name is the basename of the Python original.
+    // exit code 2. The prog name is the basename of the retired Python implementation.
     process.stderr.write(
         'usage: lint_command_verbs.py [-h] [--baseline BASELINE] [--all] [--quiet]\n',
     );

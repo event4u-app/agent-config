@@ -21,4 +21,4 @@ size_class: medium
 suggests: []
 surface_tier: lab
 trust_level_default: experimental
-version: 8.4.1
+version: 8.5.0

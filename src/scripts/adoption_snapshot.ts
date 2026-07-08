@@ -2,8 +2,8 @@
 /**
  * Pull the four public adoption signals into a single dated JSONL row.
  *
- * TypeScript twin of `src/scripts/adoption_snapshot.py` (ADR-200, Phase 8
- * Wave 8a). Mirrors the Python CLI contract EXACTLY — flags (`--out`,
+ * Ported from the retired Python `src/scripts/adoption_snapshot.py` (ADR-200, Phase 8
+ * Wave 8a). The CLI contract is pinned — flags (`--out`,
  * `--no-network`), exit codes (0 / 1 / 2), stdout/stderr split, and the
  * byte-identical JSONL row (`json.dumps(row)` default separators,
  * ensure_ascii=True, no trailing space differences).
@@ -59,7 +59,7 @@ const GH_SEARCH_URL_TEMPLATE =
 
 const TIMEOUT_S = 10;
 
-// Free-form JSON-ish value type for signal payloads. The Python original uses
+// Free-form JSON-ish value type for signal payloads. the retired Python implementation uses
 // `dict[str, Any]`; the only documented `any`-shaped surface (HTTP JSON).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;

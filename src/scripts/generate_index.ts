@@ -2,8 +2,8 @@
 /**
  * Generate `agents/index.md` (internal) and `docs/catalog.md` (public).
  *
- * TypeScript twin of `src/scripts/generate_index.py` (ADR-200, Phase 8 /
- * Wave 8a). The CLI contract is mirrored EXACTLY — the single `--check`
+ * Ported from the retired Python `src/scripts/generate_index.py` (ADR-200, Phase 8 /
+ * Wave 8a). The CLI contract is pinned — the single `--check`
  * flag, exit codes (0 / 1 on drift), the stdout split, byte-identical
  * messages, AND byte-identical generated Markdown (both files are write
  * targets; both are sync-checked in CI via `--check`).
@@ -12,7 +12,7 @@
  * `docs/guidelines/` (via the `_lib/agent_src` twin's multi-root discovery)
  * and renders two artefact tables — one for maintainers, one for consumers.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

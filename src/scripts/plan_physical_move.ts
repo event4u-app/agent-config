@@ -2,7 +2,7 @@
 /**
  * Plan + apply the physical monorepo migration (Phase 4).
  *
- * TypeScript twin of `src/scripts/plan_physical_move.py` (ADR-200, Phase 8 /
+ * Ported from the retired Python `src/scripts/plan_physical_move.py` (ADR-200, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--apply`, `--out` flags,
  * exit codes (0 clean dry-run / 1 dry-run-with-conflicts / 2 refuse-apply /
  * 3 source-missing / 4 git-mv-failed), the stdout/stderr split, byte-identical
@@ -13,9 +13,9 @@
  * destination under `packages/core/` or `packages/pack-<id>/`, and emits
  * `dist/migration/move-plan.json`. `--apply` executes the moves via `git mv`.
  *
- * No behaviour changes — latent Python quirks replicated. (The dry-run path
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour. (The dry-run path
  * writes the plan JSON to BOTH the default location and `--out`; when they
- * coincide the file is written twice, exactly as the Python original does.)
+ * coincide the file is written twice, exactly as the retired Python implementation does.)
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';

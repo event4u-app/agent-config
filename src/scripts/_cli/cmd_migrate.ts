@@ -2,8 +2,8 @@
  * `agent-config migrate` — one-shot, opinionated migration off every legacy
  * install / state shape (TypeScript twin).
  *
- * TypeScript twin of `src/scripts/_cli/cmd_migrate.py` (ADR-200, py2ts
- * migration). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/_cli/cmd_migrate.py` (ADR-200, py2ts
+ * migration). The CLI contract pins the historical contract exactly — same
  * flags, same exit codes, same stdout/stderr split, byte-identical emitted
  * output, same filesystem effects. No behaviour changes — latent quirks are
  * replicated and flagged inline, not fixed.
@@ -82,7 +82,7 @@ import { resolve_project_root } from '../_lib/agent_settings.js';
 // specifier into the uncompiled template tree (`.ts` only) and crash the whole
 // CLI at module load — breaking every command (e.g. `agent-config init`).
 // `_load_state_migrator` spawns it via tsx instead (the install orchestrator
-// pattern), keeping the migrator lazy like the Python original.
+// pattern), keeping the migrator lazy like the retired Python implementation.
 
 const PACKAGE_NAME_NPM = '@event4u/agent-config';
 const PACKAGE_NAME_COMPOSER = 'event4u/agent-config';

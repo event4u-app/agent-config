@@ -2,12 +2,12 @@
 /**
  * Tool-agnostic skill-registration probe.
  *
- * TypeScript twin of `src/scripts/probe_skill_registration.py` (ADR-090 —
+ * Ported from the retired Python `src/scripts/probe_skill_registration.py` (ADR-090 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract
  * EXACTLY: flags (`--tool`, `--scope`, `--format`, `--strict`, `--home`,
  * `--project`), exit codes (0 informational / 0 when strict & clean, 2
  * when strict & findings), byte-identical text + JSON stdout, and the same
- * dataclass field order. No behaviour changes — latent quirks replicated.
+ * dataclass field order. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Roadmap: road-to-clean-skill-distribution-channels.md § Phase C.
  * Contract: docs/contracts/skill-distribution-channels.md.

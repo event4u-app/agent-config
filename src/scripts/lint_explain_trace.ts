@@ -2,7 +2,7 @@
 /**
  * Lint an ExplainTrace v1 JSON payload against the schema.
  *
- * TypeScript twin of `src/scripts/lint_explain_trace.py` (ADR-200, Phase 4 /
+ * Ported from the retired Python `src/scripts/lint_explain_trace.py` (ADR-200, Phase 4 /
  * Wave 4b). Reads a JSON file (or stdin via `--stdin`) and validates it
  * against `docs/contracts/explain-trace.schema.json`.
  *
@@ -14,7 +14,7 @@
  *   - error lines ordered by `sorted(absolute_path)`.
  *
  * DOCUMENTED DIVERGENCE (validation-failure message text):
- *   The Python original uses `jsonschema.Draft202012Validator`; its
+ *   the retired Python implementation uses `jsonschema.Draft202012Validator`; its
  *   `ValidationError.message` wording is library-specific. This twin
  *   implements a faithful Draft-2020-12 *subset* validator covering only the
  *   keywords the explain-trace schema uses (type / const / enum / required /

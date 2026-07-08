@@ -2,8 +2,8 @@
 /**
  * Pointer-CI + size + multi-evidence-consistency gate for committed knowledge cards.
  *
- * TypeScript twin of `src/scripts/check_knowledge_cards.py` (ADR-200). The
- * CLI contract mirrors the Python original EXACTLY — same flags (`--dir`,
+ * Ported from the retired Python `src/scripts/check_knowledge_cards.py` (ADR-200). The
+ * CLI contract pins the historical contract exactly — same flags (`--dir`,
  * `--strict`, `--check-urls`, `--freshness-days`), same exit codes
  * (0 / 1 / 3), same stdout/stderr split, byte-identical finding strings,
  * the same `sorted(glob("*.md"))` ordering, the same frontmatter parsing,
@@ -33,7 +33,7 @@ import * as https from 'node:https';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-// Global-store helpers (ADR-100). The Python original imports these lazily and
+// Global-store helpers (ADR-100). the retired Python implementation imports these lazily and
 // tolerantly (try/except → None) so the project-local linter still runs if the
 // _lib package layout shifts; the TS twins always exist, so a static import is
 // byte-faithful for behaviour (the only observable effect is the --global path).
@@ -306,7 +306,7 @@ function _freshness_warnings(p: string, days: number): string[] {
     const today = _todayUtcDate();
     const age = _dateDiffDays(today, newest);
     if (age > days) {
-        // Faithful replication of the Python original (ADR-200): it calls
+        // Faithful replication of the retired Python implementation (ADR-200): it calls
         // `path.relative_to(ROOT)` when the card path is absolute. pathlib
         // raises ValueError (uncaught → process dies, exit 1) when the path is
         // NOT under ROOT — the documented latent crash for an absolute `--dir`

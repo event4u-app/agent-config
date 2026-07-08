@@ -2,8 +2,8 @@
 /**
  * Bench orchestrator — step-4 measurement-and-benchmark Phase 2.
  *
- * TypeScript twin of `src/scripts/bench_run.py` (ADR-200, Phase 8 /
- * Wave 8d). The CLI contract mirrors the Python original EXACTLY — same
+ * Ported from the retired Python `src/scripts/bench_run.py` (ADR-200, Phase 8 /
+ * Wave 8d). The CLI contract pins the historical contract exactly — same
  * flags, exit codes, stdout/stderr split, byte-identical headline / Markdown
  * stdout and byte-identical written report JSON
  * (`json.dumps(indent=2) + "\n"`). No behaviour changes — latent Python
@@ -23,7 +23,7 @@
  * `ai_council.clients` module (it carries no legacy source-tree literal, so
  * ADR-051 does not require porting it in this wave). The `--telegraph-dry-run`
  * path is fully self-contained; the live path degrades to the same "cannot
- * build Anthropic client" exit-2 surface the Python original produces when the
+ * build Anthropic client" exit-2 surface the retired Python implementation produces when the
  * client can't be built. Flagged as a divergence candidate.
  */
 import * as fs from 'node:fs';
@@ -390,7 +390,7 @@ function _run_telegraph(args: Args): number {
 /**
  * Live-API telegraph path. Builds the Anthropic client; on any failure prints
  * the same "cannot build Anthropic client" message and returns 2, mirroring
- * the Python original's `try/except Exception` guard. Because the
+ * the retired Python implementation's `try/except Exception` guard. Because the
  * `ai_council.clients` twin is not yet present, this currently always takes
  * the failure branch (flagged divergence — the live happy path is unreachable
  * until that module is ported).

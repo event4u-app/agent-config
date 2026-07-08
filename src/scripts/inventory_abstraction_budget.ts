@@ -2,7 +2,7 @@
 /**
  * Abstraction-budget inventory — read-only discovery pass.
  *
- * TypeScript twin of `src/scripts/inventory_abstraction_budget.py`
+ * Ported from the retired Python `src/scripts/inventory_abstraction_budget.py`
  * (ADR-200 — Python→TS migration, Phase 8 / Wave 8c). Mirrors the
  * Python CLI contract EXACTLY — the `--quiet` flag, exit code (always
  * 0), the stdout/stderr split routed through the `script_output` twin,
@@ -11,9 +11,9 @@
  * quoting).
  *
  * Imports the `_lib/agent_src` + `_lib/script_output` twins (the SAME
- * surfaces the Python original imports). Reference counts are grep-backed
+ * surfaces the retired Python implementation imports). Reference counts are grep-backed
  * (ripgrep with python-walk fallback) — `rg` is invoked as a subprocess
- * exactly like the Python original, so the counts agree.
+ * exactly like the retired Python implementation, so the counts agree.
  *
  * Read-only. Touches no abstraction file. No behaviour changes — latent
  * Python quirks replicated.
@@ -127,7 +127,7 @@ function newStats(): Stats {
 }
 
 function _log(level: 'info' | 'success' | 'warn' | 'error', msg: string): void {
-    // script_output twin is always present here (unlike the Python original's
+    // script_output twin is always present here (unlike the retired Python implementation's
     // graceful-degradation guard, which exists only for the rare run outside the
     // repo). Mirror the Python branch: when script_output is None it would print
     // only on error to stderr — but in this twin the module is always imported.
@@ -466,7 +466,7 @@ export function inventory_packs(stats: Stats): void {
     // FileNotFoundError when the directory does not exist (it is NOT guarded
     // by an is_dir() check, unlike the other inventory passes). Replicate that
     // latent crash faithfully: on the current src/-based layout (no packages/
-    // dir) the Python original aborts with a FileNotFoundError traceback and
+    // dir) the retired Python implementation aborts with a FileNotFoundError traceback and
     // exit 1. See the divergence note in the wave report — this is a real
     // latent Python bug being mirrored, not a TS choice.
     for (const child of _iterdirSortedStrict(packs_dir)) {

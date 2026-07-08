@@ -2,7 +2,7 @@
 /**
  * Prove a pack + its declared dependency closure is self-contained.
  *
- * TypeScript twin of `prove_pack_extractable.py` (Phase 8 / Wave 8g).
+ * Ported from the retired Python `prove_pack_extractable.py` (Phase 8 / Wave 8g).
  *
  * road-to-6.0.0-D Phase 1 Step 6 — the *extraction proof*. It de-risks the
  * monorepo collapse (Phase 3) by proving that a pack moved into the flat

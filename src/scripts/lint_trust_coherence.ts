@@ -2,12 +2,12 @@
 /**
  * Lint trust/safety coherence across the discovery manifest.
  *
- * TypeScript twin of `src/scripts/lint_trust_coherence.py` (ADR-200,
- * Phase 4 / Wave 4b). Mirrors the Python CLI contract EXACTLY — `--quiet`
+ * Ported from the retired Python `src/scripts/lint_trust_coherence.py` (ADR-200,
+ * Phase 4 / Wave 4b). The CLI contract is pinned — `--quiet`
  * / `--manifest` / `--router` / `--compiled-src` flags, finding messages,
  * stdout/stderr split (errors + summary on stderr; success on stdout),
  * SystemExit-on-missing-file semantics, exit codes. No behaviour changes —
- * latent bugs replicated.
+ * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Walks the discovery manifest and asserts three invariants:
  *   1. advisory/restricted packs ship a `*safety-floor*` rule;

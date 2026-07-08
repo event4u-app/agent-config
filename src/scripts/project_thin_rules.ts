@@ -2,7 +2,7 @@
 /**
  * Thin-projection of the rule layer (lean-initial-context build-out, Phase 3.1).
  *
- * TypeScript twin of `src/scripts/project_thin_rules.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/project_thin_rules.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8b). The CLI contract is mirrored
  * EXACTLY — the `--measure` / `--out` / `--json` flags, exit codes, the
  * stdout/stderr split, byte-identical messages, and byte-identical JSON
@@ -20,11 +20,11 @@
  *
  * NOTE (faithful literal): the thin-entry pointer keeps the verbatim
  * `Body: [`{rule_id}`](../../.agent-src.uncondensed/rules/{rule_id}.md)`
- * Markdown link from the Python original. The same-basename `.py` twin
+ * Markdown link from the retired Python implementation. The same-basename `.py` twin
  * carries that literal, so the ADR-051 legacy-path guard exempts this `.ts`
  * file by twin-parity.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Usage:
  *     project_thin_rules --measure          # measure delta, no write

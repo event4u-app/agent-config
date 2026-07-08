@@ -2,7 +2,7 @@
 /**
  * Render `docs/value.md` from the latest `value-v1` JSON report.
  *
- * TypeScript twin of `src/scripts/render_value_md.py` (ADR-200, Phase 8
+ * Ported from the retired Python `src/scripts/render_value_md.py` (ADR-200, Phase 8
  * / Wave 8b). The public surface and rendered output mirror the Python
  * original EXACTLY — same module-level path constants (exposed through a
  * mutable test seam so the pytest `monkeypatch.setattr` injection ports
@@ -412,7 +412,7 @@ function render_placeholder(): string {
 /**
  * Mirror `Path.relative_to(REPO_ROOT)` — throws when `p` is NOT under the
  * repo root (Python `ValueError`). The default `OUT_PATH` is always in-repo
- * (`docs/value.md`); replicated for fidelity with the Python original.
+ * (`docs/value.md`); replicated for fidelity with the retired Python implementation.
  */
 function _relativeToRepo(p: string): string {
     const abs = path.resolve(p);

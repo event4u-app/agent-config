@@ -1,8 +1,8 @@
 /**
  * Resolve the `memory` why-slot for the trace.
  *
- * TypeScript twin of `src/scripts/_cli/explain_last/memory.py` (ADR-200).
- * Behaviour mirrors the Python original EXACTLY — same two sources, same
+ * Ported from the retired Python `src/scripts/_cli/explain_last/memory.py` (ADR-200).
+ * Behaviour pins the historical contract exactly — same two sources, same
  * coercion order, same `float()` semantics, same `None`-on-empty branch.
  * No behaviour changes.
  *

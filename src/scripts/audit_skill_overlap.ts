@@ -2,14 +2,14 @@
 /**
  * Skill-family content-overlap analysis (6.0.0-C Phase 4 Step 8).
  *
- * TypeScript twin of `src/scripts/audit_skill_overlap.py` (ADR-200 —
+ * Ported from the retired Python `src/scripts/audit_skill_overlap.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the Python CLI
  * contract EXACTLY — the `--threshold` / `--quiet` flags, exit codes
  * (0 ok / 3 no skills), the stdout/stderr split, byte-identical stdout
  * messages, and byte-identical written artefacts (`json.dumps(...,
  * indent=2)` for the JSON + the exact Markdown renderer).
  *
- * No `_lib` imports — the Python original has none; it carries its own
+ * No `_lib` imports — the retired Python implementation has none; it carries its own
  * `_skill_roots()` (which references the `.agent-src.uncondensed/skills`
  * layout literally — this twin reproduces that literal faithfully, since
  * the .py original carries it).
@@ -19,7 +19,7 @@
  * is >= OVERLAP_THRESHOLD. Same-domain (shared `packs:`) >= threshold pairs
  * are the merge candidates. THIS SCRIPT MERGES NOTHING.
  *
- * No behaviour changes — latent Python quirks replicated.
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -91,8 +91,8 @@ function _iterdirSorted(p: string): string[] {
  *   if not roots and legacy.is_dir(): roots = [legacy]
  *
  * `packages.glob("*\/.agent-src.uncondensed/skills")` iterates packages
- * children sorted (pathlib glob over a single level is unsorted, but the
- * Python original does NOT sort here — it relies on `collect()`'s `seen`
+ * children sorted (pathlib glob over a single level is unsorted, and the
+ * retired Python implementation did NOT sort here — it relied on `collect()`'s `seen`
  * dedup keyed on dir name. To stay deterministic we sort the package
  * children; the resulting root order only affects first-win dedup, and no
  * skill dir name collides across packages in practice.)

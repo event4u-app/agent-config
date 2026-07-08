@@ -2,8 +2,8 @@
 /**
  * Sync `.github/topics.yml` + `.github/about.yml` to the GitHub repo.
  *
- * TypeScript twin of `src/scripts/sync_github_metadata.py` (ADR-200, Phase 5).
- * The CLI contract is mirrored EXACTLY — every flag (`--apply`, `--strict`,
+ * Ported from the retired Python `src/scripts/sync_github_metadata.py` (ADR-200).
+ * The CLI contract is pinned — every flag (`--apply`, `--strict`,
  * `--quiet`, `--repo`), exit codes (0 = synced / applied; 2 = drift under
  * `--strict` dry-run; 1 = error via SystemExit — missing token, unresolvable
  * repo, HTTP/transport error), the stdout/stderr split, byte-identical
@@ -14,7 +14,7 @@
  * against a stub with zero network. Error-swallowing is mirrored exactly:
  * any HTTP / transport failure raises `ExitError` → message to stderr, exit 1.
  *
- * No behaviour changes — latent Python quirks replicated. NOTE: the audit log
+ * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour. NOTE: the audit log
  * path mirrors the CODE constant (`agents/notes/visibility-sync-audit.md`),
  * not the docstring's `agents/evidence/notes/…` — DIVERGENCE CANDIDATE below.
  *
@@ -32,7 +32,7 @@ type Json = unknown;
 type JsonObject = Record<string, Json>;
 
 const _HERE = fileURLToPath(import.meta.url);
-// _HERE === <repo>/src/scripts/sync_github_metadata.ts ; the Python original
+// _HERE === <repo>/src/scripts/sync_github_metadata.ts ; the retired Python implementation
 // derives ROOT = <file>.parents[2] — two dirs up from src/scripts.
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 

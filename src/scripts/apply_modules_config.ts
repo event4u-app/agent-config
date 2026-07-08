@@ -2,8 +2,8 @@
 /**
  * Persist a `modules:` block into `.agent-project-settings.yml`.
  *
- * TypeScript twin of `src/scripts/apply_modules_config.py` (ADR-200,
- * Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY — `--project`
+ * Ported from the retired Python `src/scripts/apply_modules_config.py` (ADR-200,
+ * Phase 8 / Wave 8g). The CLI contract is pinned — `--project`
  * / `--input-file` / `--decline` / `--acknowledge-only` flags, JSON payload
  * shape + validation, comment-preserving line-patch (byte-identical written
  * output), exit codes (0 ok/no-op, 2 args/unreachable/malformed-JSON,

@@ -24,7 +24,7 @@
 // Pure functions are unit-testable; the `__main__` CLI is what the `/profile`
 // command shells out to.
 //
-// Twin of `src/scripts/config/session_profiles.py`.
+// Ported from the retired Python `src/scripts/config/session_profiles.py` (ADR-200).
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';

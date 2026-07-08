@@ -3,11 +3,11 @@
  * Auto-rule description-length CI gate (Phase 1.3 of
  * road-to-augment-limit-fit).
  *
- * TypeScript twin of `src/scripts/check_augment_description_cap.py` (ADR-200,
- * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags, exit
+ * Ported from the retired Python `src/scripts/check_augment_description_cap.py` (ADR-200,
+ * Phase 4 / Wave 4c). The CLI contract is pinned — no flags, exit
  * codes (0 pass, 1 over-cap), stdout/stderr split, byte-identical finding
  * messages, same scan scope (`.agent-src.uncondensed/rules/*.md`) and file
- * ordering. No behaviour changes — latent bugs replicated.
+ * ordering. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * For every `type: auto` rule under `.agent-src.uncondensed/rules/`,
  * fail CI when the frontmatter `description:` exceeds DESC_CAP chars.
