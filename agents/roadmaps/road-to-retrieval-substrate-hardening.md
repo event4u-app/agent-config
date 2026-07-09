@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 ---
@@ -33,7 +33,7 @@ graph-retrieval tool (Python). Analysed at the code level (full clone,
 The borrowed *items* below are agent-config's own features; Source G is the
 mechanism reference, never a dependency.
 
-> **Honest framing (do not repeat the ruflo lesson).** Source G's own numbers
+> **Honest framing (do not repeat the prior competitive-harvest parity lesson).** Source G's own numbers
 > show the *graph* is a small lever (+2–2.6 pts on a public recall bench vs
 > seed-only retrieval); the real token win is the index/detail split + a hard
 > budget cut + a tiny always-on nudge. This roadmap adopts the *mechanisms that
@@ -103,8 +103,18 @@ become scope.
       test injects a bidi+zero-width+Tag-block body → sanitized through both
       surfaces (7 tests; 26/26 memory_lookup regression green). B5b
       (versioned-cache lint) stays open — separate increment. -->
-- [ ] B5b: add a lint rule — no derived cache without a version namespace OR an
+- [x] B5b: add a lint rule — no derived cache without a version namespace OR an
       explicit invalidation comment (the rule every later cache layer inherits).
+      <!-- done 2026-07-09: src/scripts/lint_versioned_cache.ts — a fail-on-
+      violation gate scoped to cache-file suffixes (-index.json / -cache.json /
+      .stat-index.json / .agent-learning.json …); requires a `v<N>`/`${version}`
+      path segment OR an inline `// cache-invalidation:` comment. Wired into the
+      CI chains (task lint-versioned-cache). 8 tests incl. a "live src/scripts is
+      clean today" guard; green on the current tree, bites when B2/B3/B5a land.
+      No existing cache-file literal matches the suffix trigger (hot-context is a
+      .md, audit is a dir), so no retrofit is needed — the convention is
+      forward-looking by construction. -->
+
 
 **Exit:** knowledge-chunk retrieval is sanitized; the lint fails a
 version-namespace-less derived cache. **Rollback:** revert the sanitizer call
@@ -112,14 +122,23 @@ version-namespace-less derived cache. **Rollback:** revert the sanitizer call
 
 ## Phase 1 — Token-budget + compact serialization in `retrieve()`
 
-- [ ] B1: `retrieve(types, keys, limit, token_budget?)` — render hits as
+- [x] B1: `retrieve(types, keys, limit, token_budget?)` — render hits as
       one-line compact form (`HIT <type>/<id> [src=<path> score=<x>] <~120-char
       body head>`), exact/seed matches first, hard char-cut at `token_budget × 4`
       with a truncation notice that names a concrete next step ("N more hits —
       narrow with --key or read <path>"). Default (no budget) stays
       byte-identical to today.
-- [ ] Wire the compact/budgeted mode into the MCP `memory_lookup` detail path +
+      <!-- done 2026-07-09: retrieve_v1 gained an additive `token_budget` option
+      (+ _compact_line helper); budget>0 → compact `{id,type,source,confidence,
+      line}` rows, hard-cut at token_budget×4 chars, top-level `truncation`
+      {omitted, hint} naming the next path. Sanitize floor (B6) still applies to
+      the line. Default/index paths byte-identical (v1 contract test green). -->
+- [x] Wire the compact/budgeted mode into the MCP `memory_lookup` detail path +
       the CLI, defaulting off (additive, per the v1 envelope contract).
+      <!-- done 2026-07-09: CLI `--token-budget N` (v1 envelope only); MCP
+      _memoryLookupHandler validates + passes `token_budget`; input_schema +
+      consumer_tool_catalog.json + regenerated mcp-tool-inventory.md. 4 B1 tests
+      + 43-test retrieval regression green; tsc clean. -->
 
 **Exit:** a budgeted `retrieve()` emits compact hits within the char cut + a
 navigation hint; the index/detail split is enforced in the read path.
@@ -132,7 +151,9 @@ navigation hint; the index/detail split is enforced in the read path.
       — mechanically the BM25 core ADR-061 already sanctions, NO engine fork, NO
       minisearch-class dep. `_score()` stays as the mini-corpus fallback.
 - [ ] Activate at the existing `lint_knowledge_scale` tripwire (>200/type,
-      >500 total); measure the grep/substring baseline vs the index on the
+      >500 total); build **lazily at first lookup** + a stat-index (size+mtime_ns),
+      atomic temp-write + `rename()`, version-namespaced per B5b (council Q3 —
+      NOT eager); measure the grep/substring baseline vs the index on the
       then-current corpus BEFORE shipping (reuse the retrieval-precision replay
       rig); ship only on measured ranking lift, else honest-null.
 - [ ] Record the ADR-061 ↔ FTS5 resolution (hand-rolled IDF+trigram = the
@@ -155,23 +176,31 @@ the ADR-061 conflict is closed in writing. **Rollback:** fall back to `_score()`
 
 **Exit:** the aggregator verdicts intake into preferred/contested/dead-end,
 byte-stable; `retrieve()` surfaces the suffix. **Rollback:** drop the sidecar
-merge (curated memory unaffected). **Blocker:** council Q2 (gitignored vs
-committed) resolves the storage decision first.
+merge (curated memory unaffected). **Council Q2 (resolved):** sidecar is
+**gitignored** intake-derived — NO `merge=union` provision (premature); proven
+lessons are manually curated into committed memory, never auto-promoted.
 
 ## Phase 4 — Artefact relation-graph + `affected` / `explain`
 
 - [ ] B4: extend the discovery scanner with deterministic edge-extraction from
       existing fields + markdown links (`supersedes`/`superseded_by`, ADR refs,
       workspace/pack membership, rule→skill mentions, memory-entry→path overlap)
-      → `discovery-graph.json`, same determinism gates. Edges carry confidence
-      labels on the shared trust scale (council Q1).
+      → `discovery-graph.json`, same determinism gates. Edges carry their OWN
+      confidence scale (`EXTRACTED/INFERRED/AMBIGUOUS`), separate from evidence
+      tiers (council Q1); a mapping table in the doc is display-only, never used
+      to override an evidence tier.
 - [ ] `agent-config affected <artefact>` (relation-filtered BFS — query-side
       companion to CI's `check_structural_breaking`) and `agent-config explain
       <concept>` (seed + 2-hop + budget-cut over the artefact graph).
+- [ ] Build the graph **lazily at first `affected`/`explain` call** + a
+      stat-index (size+mtime_ns), atomic temp-write + `rename()` for concurrent-
+      hook idempotency, version-namespaced per B5b (council Q3). NOT eager at
+      discovery-build.
 
 **Exit:** the graph builds deterministically; `affected`/`explain` answer from
-it within a budget. **Rollback:** none (additive artefact + verbs).
-**Blocker:** council Q1 (trust-scale unification) + Q3 (eager vs lazy build).
+it within a budget. **Rollback:** none (additive artefact + verbs). **Council
+Q1+Q3 (resolved):** two trust scales with a display-only mapping; lazy build +
+stat-index + atomic write.
 
 ## Phase 5 — Stat-index for hook/scan latency
 
@@ -194,8 +223,10 @@ it within a budget. **Rollback:** none (additive artefact + verbs).
       33%-judge-inconsistency gap the token-saving live run surfaced.
 
 **Exit:** `benchmark` prints an honest, ledger-bound ratio; the judge harness
-reports Kappa. **Rollback:** none (measurement + reporting). **Blocker:**
-council Q4 (benchmark baseline choice).
+reports Kappa. **Rollback:** none (measurement + reporting). **Council Q4
+(resolved):** baseline = the full always-loaded projection (`token-baseline.json`),
+NOT a grep-session replay; every emitted number binds to `docs/CLAIMS.md` with a
+method line.
 
 ## Phase 7 — File-slicing + interop rule
 
@@ -227,10 +258,58 @@ when an external index is present. **Rollback:** none (additive).
   green). Governance preflight recorded: `domain-adoption-policy` (no new domain),
   `framework-neutrality` (generic), `size-enforcement` (per-artefact budgets).
 
+## Council notes (2026-07-09, claude-sonnet-4-5 + gpt-4o)
+
+Two-member debate pass on the four contested design questions (2 rounds).
+Verdicts encoded into the phases below.
+
+- **Q1 — trust-scale unification → TWO vocabularies + a documented,
+  display-only mapping (SPLIT, resolved on the merits).** gpt-4o argued for one
+  shared contract (consistency); claude-sonnet-4-5 argued the shared contract is
+  a *category error* — edge-confidence describes graph-topology provenance ("how
+  was this relationship discovered?"), evidence tiers describe claim epistemic
+  status ("what is our warrant for believing X?"). EXTRACTED↔Verified is not
+  semantically stable (an extracted edge from a stale import is high-confidence
+  topology but low-confidence truth). Resolution: keep **two separate scales**
+  (edges: `EXTRACTED/INFERRED/AMBIGUOUS`; evidence: `Verified/Assumed/Gap`) with
+  a **documented mapping table that is a display convenience, not a semantic
+  identity** — this delivers gpt-4o's cross-surface consistency without the
+  category error. **Hard condition (claude):** the mapping doc states no
+  tiebreaker is implied; B4 never uses an edge label to override an evidence
+  tier. (Supersedes the roadmap's earlier "one shared contract" default.)
+- **Q2 — learning sidecar → GITIGNORED (converged).** Both members: strictly
+  derived state; committing machine-derived cache creates a falsifiable record
+  and review noise, and violates the intake-derived model. **Refinement
+  (claude, adopted):** DROP the `merge=union` provision now — it is premature
+  (no conflict-resolution semantics for contradictory corroborations exist yet);
+  team-sharing is a separate later decision. **Hard condition (both):** proven,
+  corroborated lessons are *manually* curated into committed memory; the sidecar
+  never auto-promotes into tracked YAML.
+- **Q3 — B2 index build → LAZY at first lookup + stat-index (converged after
+  debate).** Round 1 split (claude eager / gpt-4o lazy); in round 2 **both**
+  converged on lazy after claude's own rebuttal demolished the eager position:
+  determinism means *reproducibility of outputs given identical inputs*, not
+  identical intermediate cache artefacts (the index is the same class of
+  gitignored, session-dependent artefact as hot-context). Eager taxes every
+  `stop` hook even when no lookup happens (~5× wasted work in a typical session).
+  **Hard conditions (claude, adopted):** (a) atomic write — build to a
+  pid-suffixed temp file + `rename()` so concurrent hook invocations stay
+  idempotent (identical content, last-write-wins); (b) `size + mtime_ns` is
+  sufficient for gating *rebuild decisions* — the round-1 "cryptographic
+  binding" demand was explicitly withdrawn as solving a non-problem; (c)
+  version-namespaced per B5b so a tool bump invalidates cleanly.
+- **Q4 — benchmark baseline → FULL always-loaded projection (converged).** Both
+  members: a grep-session replay is a *workload*, not a baseline; baselines must
+  be workload-independent for cross-session comparison. The full projection is
+  the honest "what the user pays today" number, already pinned
+  (`token-baseline.json`). **Hard condition (both, load-bearing):** every emitted
+  number binds to `docs/CLAIMS.md` with a method line, else the benchmark becomes
+  marketing; the synthetic full-corpus strawman is never reproduced.
+
 ## Blockers
 
 ### blocker: contested-design-council-pass
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 3 (Q2), Phase 4 (Q1, Q3), Phase 6 (Q4)
 - **What to do:** run an AI-council pass (spend-bearing) on the four contested
@@ -249,12 +328,18 @@ when an external index is present. **Rollback:** none (additive).
      replay. *Default: full projection (deterministic, already pinned).*
 - **Resolved when:** the four verdicts are recorded under `## Council notes`
   (members + date, no session path) and the contested phases encode them.
+- **Resolution (2026-07-09):** verdicts recorded under `## Council notes`
+  (claude-sonnet-4-5 + gpt-4o); Q1 was a split resolved to two-vocabularies +
+  display-only mapping, Q2/Q4 converged on the defaults, Q3 converged on
+  lazy+stat-index after debate. Phases 3/4/6 updated below.
 
 ### blocker: draft-promotion
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** dashboard visibility + execution
 - **What to do:** this roadmap is `status: draft` (source-derived, council-pending)
   — promote to `ready` after the council pass + a maintainer review of the
   gap-table dispositions.
 - **Resolved when:** `status: ready` and the contested-design blocker is cleared.
+- **Resolution (2026-07-09):** council pass complete (see `## Council notes`);
+  promoted to `status: ready`.

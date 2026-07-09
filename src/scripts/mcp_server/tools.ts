@@ -477,6 +477,18 @@ async function _memoryLookupHandler(
         throw new Error("'detail' must be 'index' or 'full'");
     }
 
+    // B1 (road-to-retrieval-substrate-hardening): optional token budget →
+    // compact one-line rows, hard-cut with a truncation hint. Absent → the
+    // envelope is unchanged (v1 default-full contract holds).
+    const opts: { detail: 'full' | 'index'; token_budget?: number } = { detail: detailRaw };
+    if (args.token_budget !== undefined) {
+        const tb = args.token_budget;
+        if (typeof tb !== 'number' || !Number.isInteger(tb) || typeof tb === 'boolean' || tb < 1) {
+            throw new Error("'token_budget' must be a positive integer");
+        }
+        opts.token_budget = tb;
+    }
+
     const prevCwd = process.cwd();
     let envelope: Record<string, unknown>;
     try {
@@ -485,7 +497,7 @@ async function _memoryLookupHandler(
             [...(types as string[])],
             [...(keys as string[])],
             limitRaw,
-            { detail: detailRaw },
+            opts,
         );
     } finally {
         process.chdir(prevCwd);
@@ -1399,6 +1411,17 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
                         "tokens_estimate) instead of full bodies — call " +
                         "this first, then memory_get the ids you need. " +
                         "'full' (default) returns complete entries.",
+                },
+                token_budget: {
+                    type: 'integer',
+                    minimum: 1,
+                    description:
+                        'Optional token budget. When set, entries are ' +
+                        'rendered as one-line compact rows (id, type, ' +
+                        'confidence, `line`) and the row set is hard-cut at ' +
+                        'token_budget × 4 chars; omitted hits appear as a ' +
+                        'top-level `truncation` hint naming a concrete next ' +
+                        'step. Absent → the envelope is unchanged.',
                 },
             },
             required: ['types'],

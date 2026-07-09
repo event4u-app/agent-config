@@ -625,6 +625,19 @@ export function _entry_title(entry: Record<string, unknown>, id: string): string
     return id;
 }
 
+/**
+ * One-line compact rendering of a hit for the token-budgeted read surface
+ * (road-to-retrieval-substrate-hardening B1):
+ * `HIT <type>/<id> [src=<path> score=<x>] <~120-char body head>`.
+ * The body head is the sanitized entry title (already ≤120 chars). Newlines
+ * are collapsed so one hit is always exactly one line.
+ */
+export function _compact_line(hit: Hit, safeEntry: Record<string, unknown>): string {
+    const head = _entry_title(safeEntry, hit.id).replace(/\s+/g, ' ').trim();
+    const score = hit.score.toFixed(2);
+    return `HIT ${hit.type}/${hit.id} [src=${hit.path} score=${score}] ${head}`;
+}
+
 // Lazy tokenizer handle — the index mode is the ONLY consumer; the default
 // full path must not pay the tiktoken load (hot MCP import path).
 let _tokenizer: { gpt_tokens: (t: string) => { tokens: number }; TIKTOKEN_AVAILABLE: boolean } | null | undefined;
@@ -844,7 +857,7 @@ export function retrieve_v1(
     types: string[],
     keys: string[],
     limit = 20,
-    options: { detail?: 'index' | 'full' } = {},
+    options: { detail?: 'index' | 'full'; token_budget?: number } = {},
 ): Record<string, unknown> {
     // ADDITIVE detail parameter (road-to-memory-retrieval-economy Phase 1,
     // D1): default 'full' keeps the published v1 envelope byte-identical.
@@ -852,7 +865,17 @@ export function retrieve_v1(
     // `title` + `tokens_estimate` (the cost `memory_get` would incur) — so
     // a host can rank before fetching. The default flip to 'index' is a
     // separate, falsification-gated human decision (Phase 1b).
+    //
+    // ADDITIVE token_budget (road-to-retrieval-substrate-hardening B1): when a
+    // positive budget is given, entries are rendered as one-line compact rows
+    // (`{id,type,source,confidence,line}`) and the row set is hard-cut at
+    // `token_budget × 4` chars; omitted hits become a top-level `truncation`
+    // notice naming a concrete next step. Absent (or ≤0) → unchanged, so the
+    // default full/index envelopes stay byte-identical (v1 contract holds).
     const detail = options.detail ?? 'full';
+    const rawBudget = options.token_budget;
+    const budgeted = typeof rawBudget === 'number' && Number.isFinite(rawBudget) && rawBudget > 0;
+    const budgetChars = budgeted ? Math.floor((rawBudget as number) * 4) : 0;
     const known = types.filter((t) => _KNOWN_TYPES.has(t));
     const unknown = types.filter((t) => !_KNOWN_TYPES.has(t));
 
@@ -863,13 +886,46 @@ export function retrieve_v1(
         slice_counts[t] = 0;
     }
     const entries: Record<string, unknown>[] = [];
-    for (const h of hits) {
+    let usedChars = 0;
+    let truncation: Record<string, unknown> | null = null;
+    for (let hi = 0; hi < hits.length; hi++) {
+        const h = hits[hi] as Hit;
         // Sanitize floor (road-to-retrieval-substrate-hardening B6): strip
         // hidden-instruction vectors + control-char noise from corpus content
         // before it enters the agent context. Byte-identical for clean entries
         // (the v1 default-full envelope contract holds); only adversarial /
         // malformed content changes — which is the point.
         const safeEntry = _isPlainObject(h.entry) ? sanitize_entry(h.entry) : {};
+
+        if (budgeted) {
+            // Compact one-line row; hard-cut the row set at token_budget × 4
+            // chars. The count of hits contributed to a slice reflects only
+            // rows that actually fit within the budget.
+            const line = _compact_line(h, safeEntry);
+            const cost = line.length + 1; // +1 for the row separator
+            if (usedChars + cost > budgetChars && entries.length > 0) {
+                const omitted = hits.length - hi;
+                const nextPath = h.path || '<path>';
+                truncation = {
+                    omitted,
+                    hint: `${omitted} more hit(s) — narrow with --key or read ${nextPath}`,
+                };
+                break;
+            }
+            usedChars += cost;
+            entries.push({
+                id: h.id,
+                type: h.type,
+                source: 'repo',
+                confidence: new PyFloat(_round4(h.score)),
+                line,
+            });
+            if (h.type in slice_counts) {
+                slice_counts[h.type] = (slice_counts[h.type] as number) + 1;
+            }
+            continue;
+        }
+
         const envelope_entry: Record<string, unknown> = {
             id: h.id,
             type: h.type,
@@ -926,6 +982,11 @@ export function retrieve_v1(
     };
     if (errors.length > 0) {
         envelope['errors'] = errors;
+    }
+    // B1: only present when a budget was given AND it forced a cut, so the
+    // default envelope stays byte-identical.
+    if (truncation !== null) {
+        envelope['truncation'] = truncation;
     }
     return envelope;
 }
@@ -1009,6 +1070,7 @@ interface ParsedArgs {
     format: 'text' | 'json';
     envelope: 'legacy' | 'v1';
     detail: 'index' | 'full';
+    tokenBudget: number | null;
 }
 
 function _parseArgs(argv: string[]): ParsedArgs {
@@ -1019,6 +1081,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         format: 'text',
         envelope: 'legacy',
         detail: 'full',
+        tokenBudget: null,
     };
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
@@ -1050,6 +1113,10 @@ function _parseArgs(argv: string[]): ParsedArgs {
             args.detail = _checkChoice(a.slice('--detail='.length), ['index', 'full'], '--detail') as
                 | 'index'
                 | 'full';
+        } else if (a === '--token-budget') {
+            args.tokenBudget = _parseInt(argv[++i], '--token-budget');
+        } else if (a.startsWith('--token-budget=')) {
+            args.tokenBudget = _parseInt(a.slice('--token-budget='.length), '--token-budget');
         } else if (a === '-h' || a === '--help') {
             _printUsage();
             process.exit(0);
@@ -1087,7 +1154,8 @@ function _checkChoice(value: string | undefined, choices: string[], flag: string
 function _printUsage(): void {
     process.stdout.write(
         'usage: memory_lookup [-h] [--types TYPES] [--key KEY] [--limit LIMIT] ' +
-            '[--format {text,json}] [--envelope {legacy,v1}]\n',
+            '[--format {text,json}] [--envelope {legacy,v1}] [--detail {index,full}] ' +
+            '[--token-budget N]\n',
     );
 }
 
@@ -1102,7 +1170,11 @@ export function main(): number {
         return 2;
     }
     if (args.envelope === 'v1') {
-        const envelope = retrieve_v1(types, args.key, args.limit, { detail: args.detail });
+        const opts: { detail: 'index' | 'full'; token_budget?: number } = { detail: args.detail };
+        if (args.tokenBudget !== null) {
+            opts.token_budget = args.tokenBudget;
+        }
+        const envelope = retrieve_v1(types, args.key, args.limit, opts);
         process.stdout.write(`${pyJsonDumps(envelope, 2)}\n`);
         return 0;
     }

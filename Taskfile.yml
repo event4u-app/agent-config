@@ -155,6 +155,7 @@ tasks:
       - task: check-knowledge-cards
       - task: check-knowledge-pages
       - task: lint-knowledge-scale
+      - task: lint-versioned-cache
       - task: check-no-local-settings
       - task: check-council-references
       - task: lint-one-off-age
@@ -328,6 +329,7 @@ tasks:
       - task: check-knowledge-cards
       - task: check-knowledge-pages
       - task: lint-knowledge-scale
+      - task: lint-versioned-cache
       - task: check-no-local-settings
       - task: check-council-references
       - task: lint-one-off-age
