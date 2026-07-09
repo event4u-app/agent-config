@@ -120,7 +120,7 @@ claims below are `backed`. Remaining entries are listed so the debt is
 visible, not hidden.
 
 ### claim: skill-count
-- claim: 264 skills (README hero + feature list).
+- claim: 267 skills (README hero + feature list).
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
@@ -134,7 +134,7 @@ visible, not hidden.
 - last_verified: 2026-07-08
 
 ### claim: rule-count
-- claim: 95 governed rules.
+- claim: 100 governed rules.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
