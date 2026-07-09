@@ -144,6 +144,16 @@ jobs:
           task lint-command-tiers
           task lint-rule-tiers
 
+      - name: Run agent-security linters
+        # lint-agent-security aggregates hidden-unicode, mixed-script-confusable,
+        # instruction-smuggling, mcp-config-security, and dangerous-frontmatter
+        # over src/ AND dist/agent-src/. It is otherwise only reachable via the
+        # local `task ci`/`ci-strict` meta-tasks, which no workflow invokes — so a
+        # smuggled instruction, hidden-Unicode payload, or over-broad MCP tool
+        # grant that landed in a tracked artifact (source or projection) would
+        # slip through CI. Blocking findings fail the build; warnings do not.
+        run: task lint-agent-security
+
       - name: Generate lint reports (full repo, informational)
         if: always()
         run: |
