@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `8.8.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 257
+- **artefacts**: 258
 
 ## Commands (130)
 
@@ -143,7 +143,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git.
 
-## Rules (60)
+## Rules (61)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -155,6 +155,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`autonomous-execution`** — Ask-or-act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor stays
 - **`cli-output-handling`** — Verbose CLI output (git, tests, linters, docker, npm, composer) — wrap with rtk; tail/grep fallback
 - **`command-suggestion-policy`** — Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute
+- **`communication-through-line`** — Multi-step or continuation replies carry a red thread — state the goal once, tie each turn back to it, name what changed since last turn, close the loop with one end-summary
 - **`content-quoting-floor`** — Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default
 - **`context-hygiene`** — Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers
 - **`copilot-routing`** — Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config
