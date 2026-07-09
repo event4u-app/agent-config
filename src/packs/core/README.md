@@ -8,7 +8,7 @@ Core framework-neutral artefacts.
 - **version**: `8.8.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 47
+- **artefacts**: 49
 
 ## Contexts (4)
 
@@ -58,6 +58,11 @@ Core framework-neutral artefacts.
 - **`stakeholder`** — The voice that asks why now, why this shape, and who pays the cost of the priority this displaces.
 - **`strategist`** — The senior voice that owns the second-order moves — build-vs-buy, market-entry, moat, vision, contracts, privacy, data-handling under regulatory constraint.
 - **`tech-writer`** — The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin.
+
+## Rules (2)
+
+- **`external-code-graph-interop`** — When the repo ships an external code-graph index (a graph.json-shaped artifact or a SCIP index), query IT first for codebase-structure questions — do not grep from scratch
+- **`question-not-instruction`** — A question is a request for an ANSWER, never authorization to act — answer first; never treat 'why…?' / 'can you…?' / 'what do you think?' as a green light to build, change, or execute
 
 ## Templatess (3)
 

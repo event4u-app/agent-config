@@ -162,7 +162,7 @@ visible, not hidden.
 - last_verified: 2026-07-08
 
 ### claim: rule-count
-- claim: 100 governed rules.
+- claim: 102 governed rules.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed

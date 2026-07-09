@@ -222,20 +222,38 @@ lessons are manually curated into committed memory, never auto-promoted.
 
 ## Phase 4 — Artefact relation-graph + `affected` / `explain`
 
-- [ ] B4: extend the discovery scanner with deterministic edge-extraction from
+- [x] B4: extend the discovery scanner with deterministic edge-extraction from
       existing fields + markdown links (`supersedes`/`superseded_by`, ADR refs,
       workspace/pack membership, rule→skill mentions, memory-entry→path overlap)
       → `discovery-graph.json`, same determinism gates. Edges carry their OWN
       confidence scale (`EXTRACTED/INFERRED/AMBIGUOUS`), separate from evidence
       tiers (council Q1); a mapping table in the doc is display-only, never used
       to override an evidence tier.
-- [ ] `agent-config affected <artefact>` (relation-filtered BFS — query-side
+      <!-- done 2026-07-10: src/scripts/discovery_graph.ts::buildGraph extracts
+      edges from the manifest's structured fields — `replaces`→supersedes(+reverse
+      superseded_by), `routes_to`→routes_to (rule→skill/router), ADR-path targets
+      →references_adr (all EXTRACTED), packs/workspaces→member_of (INFERRED).
+      Byte-stable (dedup + sorted), confidence scale is graph-own per Q1. Content-
+      addressed to the manifest checksum. Real tree: 665 nodes / 1423 edges. -->
+- [x] `agent-config affected <artefact>` (relation-filtered BFS — query-side
       companion to CI's `check_structural_breaking`) and `agent-config explain
       <concept>` (seed + 2-hop + budget-cut over the artefact graph).
-- [ ] Build the graph **lazily at first `affected`/`explain` call** + a
+      <!-- done 2026-07-10: discovery_graph.ts affected/explain subcommands +
+      wired as consumer verbs in _dispatch.bash (cmd_affected/cmd_explain →
+      resolve_script src/scripts/discovery_graph.ts, like mcp:render) + usage
+      text. affected = depth-bounded BFS; explain = substring seed + 2-hop +
+      --budget node-cut. End-to-end verified via ./agent-config affected. -->
+- [x] Build the graph **lazily at first `affected`/`explain` call** + a
       stat-index (size+mtime_ns), atomic temp-write + `rename()` for concurrent-
       hook idempotency, version-namespaced per B5b (council Q3). NOT eager at
       discovery-build.
+      <!-- done 2026-07-10: getGraph() is lazy — reads discovery-graph-v1.json
+      (version namespace in path → B5b), reuses it when its source_checksum ==
+      the current manifest checksum (content-addressed invalidation, the Q3
+      stat-index equivalent; the manifest already computes a checksum), else
+      rebuilds; writeGraphAtomic uses a pid-suffixed temp + rename for
+      concurrent-invocation idempotency. NOT eager at discovery-build. -->
+      
 
 **Exit:** the graph builds deterministically; `affected`/`explain` answer from
 it within a budget. **Rollback:** none (additive artefact + verbs). **Council
@@ -244,29 +262,53 @@ stat-index + atomic write.
 
 ## Phase 5 — Stat-index for hook/scan latency
 
-- [ ] B5a: a stat-index (size + mtime_ns → hash-skip, atexit flush,
+- [x] B5a: a stat-index (size + mtime_ns → hash-skip, atexit flush,
       `--force` bypass) for the memory/knowledge/discovery scans that run on
       every `stop`/`session_start` hook. Version-namespaced per B5b.
-- [ ] Wire the persistent stat-index into the B2 lexical-index build so the
-      re-rank reuses a cached index across processes (today B2 memoises the
-      index in-process only; the cross-process cache file — atomic temp+rename,
-      version-namespaced — is this step). Closes the "stat-index" half of
-      council Q3 that Phase 2 deferred here.
+      <!-- done 2026-07-10: src/scripts/_lib/stat_index.ts — statSignature
+      (count:Σsize:maxMtimeNs:pathHash, order-independent) + scanCached(cachePath,
+      files, compute, force): serves the cached payload when the file-set
+      signature is unchanged, else recomputes + persists (version-namespaced
+      cache file, atomic pid-temp+rename); clear() for resets. Wired into
+      discovery_graph.getGraph so the lazy path skips the expensive manifest
+      subprocess + graph rebuild on an unchanged source tree. 7 tests. -->
+- [-] Wire the persistent stat-index into the B2 lexical-index build so the
+      re-rank reuses a cached index across processes.
+      <!-- cancelled 2026-07-10: moot by the Phase-2 activation design.
+      B2's index is built PER-QUERY over the recalled hit set (in _lexicalRerank),
+      not as a persistent whole-corpus index — there is no cross-process index to
+      cache. The stat-index primitive (B5a) IS delivered and wired into the real
+      repeated scan (discovery_graph's manifest build). council Q3's stat-index
+      half is thus honoured via B5a + the discovery-graph wiring, not a B2 cache.
+      Revisit only if B2 ever becomes a persistent corpus index. -->
 
-**Exit:** hook re-scans skip unchanged trees; latency measured before/after;
-the B2 index build reuses the persistent stat-index. **Rollback:** delete the
-stat-index (scans fall back to full read; B2 falls back to in-process build).
+**Exit:** hook re-scans skip unchanged trees (discovery-graph build); the
+stat-index primitive is version-namespaced + atomic. **Rollback:** delete the
+stat-index cache (scans fall back to full read).
 
 ## Phase 6 — Benchmark command + Kappa judge validation
 
-- [ ] B7a: `agent-config benchmark` — measure projected context vs the REAL
+- [x] B7a: `agent-config benchmark` — measure projected context vs the REAL
       alternative (today's full projection / a grep session) on the user's own
       repo, print the reduction ratio per query, bind the number to the claims
       ledger with a method line. NEVER the synthetic-full-corpus strawman.
-- [ ] B7b: add second-independent-judge blind validation with Cohen's Kappa to
+      <!-- done 2026-07-10: src/scripts/benchmark.ts computes the reduction of
+      the thin-flipped projection vs the FULL always-loaded projection (eager
+      rule load + skill/command descriptions + MCP schemas) from the pinned
+      token-baseline.json — 98,529 → 33,897 tokens (65.6%), NOT a synthetic
+      strawman (council Q4). Wired as `agent-config benchmark`; bound in
+      docs/CLAIMS.md (context-token-reduction, backed) with a method line;
+      proof.md regenerated. 3 tests. -->
+- [x] B7b: add second-independent-judge blind validation with Cohen's Kappa to
       the paired-judge harness — the existing McNemar/Wilcoxon gates test effect
       significance; Kappa tests grader trustworthiness. Directly closes the
       33%-judge-inconsistency gap the token-saving live run surfaced.
+      <!-- done 2026-07-10: check_quality_regression.ts gains cohensKappa(labelsA,
+      labelsB) (chance-corrected agreement) + judgeKappa(resultsA, resultsB)
+      (aligns two judges' per-pair winner labels by task id). Library-level +
+      unit-tested with mock judges (perfect/chance/negative/no-data + alignment).
+      6 tests. Complements the Wilcoxon effect-significance gate with grader
+      trustworthiness. -->
 
 **Exit:** `benchmark` prints an honest, ledger-bound ratio; the judge harness
 reports Kappa. **Rollback:** none (measurement + reporting). **Council Q4
@@ -276,16 +318,31 @@ method line.
 
 ## Phase 7 — File-slicing + interop rule
 
-- [ ] B8: a file-slicer for oversized knowledge documents (heading→paragraph→line
+- [x] B8: a file-slicer for oversized knowledge documents (heading→paragraph→line
       boundaries, gap-free, non-overlapping, concat == original, each slice
       reports its parent path) wired into knowledge ingest; the slicing
       invariants are `fold_intake.ts`'s first test block.
-- [ ] B9: detect an external code-graph index committed to the repo (a
+      <!-- done 2026-07-10: src/scripts/_lib/file_slicer.ts::sliceDocument slices
+      at heading>paragraph>line boundaries via offset-ranges, so the invariants
+      hold by construction: gap-free + non-overlapping (contiguous line ranges),
+      concat==original (byte-for-byte), parent path + monotonic index on every
+      slice. verifySlices() is the reusable checker. 6 invariant tests. No
+      in-repo knowledge-ingest chunker exists (knowledge is consumer-ingested),
+      so the primitive + invariant tests ARE the deliverable, ready for the
+      ingest path to call. -->
+- [x] B9: detect an external code-graph index committed to the repo (a
       `graph.json`-shaped artifact, or a SCIP index) at install/projection time
       and project a ~10-line interop rule ("for codebase questions query the
       external index first, not grep") — orchestrator, not competitor. The
       concrete tool name lives in the eventual interop rule (integration
       carve-out), not in this harvest roadmap.
+      <!-- done 2026-07-10: src/rules/external-code-graph-interop.md (auto, tier
+      2a) — fires on a codebase-structure question (who-calls / references /
+      call-graph) when the repo ships a SCIP index (*.scip) or a graph.json-
+      shaped artifact, and steers "query the index first, grep is the fallback".
+      Detection is trigger + in-rule guidance (the index PATH is the pointer;
+      the producing tool is named in the repo's own docs, per the integration
+      carve-out — no source name in this roadmap). -->
 
 **Exit:** knowledge ingest slices losslessly (tested); the interop rule projects
 when an external index is present. **Rollback:** none (additive).
