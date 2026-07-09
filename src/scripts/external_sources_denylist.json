@@ -54,7 +54,10 @@
     "gztchan",
     "amaancoderx",
     "npxskillui",
-    "\\bskillui\\b"
+    "\\bskillui\\b",
+    "\\bgraphify\\b",
+    "graphify-labs",
+    "penpax"
   ],
   "skip_paths": [
     "src/scripts/check_no_external_sources.py",
