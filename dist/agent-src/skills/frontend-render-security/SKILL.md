@@ -63,9 +63,9 @@ rg -n 'dangerouslySetInnerHTML|v-html|\.innerHTML\s*=|document\.write\(|\beval\(
 rg -n 'NEXT_PUBLIC_.*(SECRET|KEY|TOKEN|PASSWORD)|VITE_.*(SECRET|KEY)|localStorage\.setItem\([^)]*[Tt]oken'
 # Wildcard CORS + unchecked postMessage + open redirect
 rg -n "origin:\s*['\"]\*['\"]|Access-Control-Allow-Origin.*\*"
-rg -n "addEventListener\(\s*['\"]message['\"]" src/   # then confirm each checks event.origin
+rg -n "addEventListener\(\s*['\"]message['\"]"   # then confirm each checks event.origin
 # Unhardened external links
-rg -n 'target=["'\'']_blank["'\'']' src/   # then confirm rel="noopener" present
+rg -n 'target=["'\'']_blank["'\'']'   # then confirm rel="noopener" present
 ```
 
 ## Output format

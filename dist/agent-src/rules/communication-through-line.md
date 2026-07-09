@@ -7,7 +7,7 @@ triggers:
   - intent: "producing a multi-step or continuation reply"
   - intent: "reporting progress on ongoing work"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
-packs: [engineering-base]
+packs: [meta]
 ---
 
 # Communication Through-Line
