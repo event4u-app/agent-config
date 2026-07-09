@@ -1,0 +1,311 @@
+version: 1
+entries:
+  - id: adr-number-collision-on-parallel-prs
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: adr number collision on parallel prs
+    body: "Two open PRs both claim the next ADR-NNN; first merge wins, second must
+      renumber — including the adr: frontmatter field, not just the filename.
+      When two feature PRs are open at once and each adds the next sequential
+      ADR (both grab `ADR-067`, say), the first to merge wins the number. The
+      second PR then **conflicts in `docs/decisions/INDEX.md`** and must
+      renumber. Renumbering is THREE edits, not one — missing any leaves CI red:
+      1. `git mv docs/decisions/ADR-067-foo.md docs/decisions/ADR-068-foo.md` 2.
+      **The `adr:` frontmatter field** inside the file (`adr: 067` → `adr:
+      068`). `src/scripts/adr/re"
+  - id: agent-config-hooks-need-global-binary
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: agent config hooks need global binary
+    body: agent-config Claude-plugin hooks resolve the GLOBAL agent-config binary on
+      PATH; removing the global install silently breaks roadmap-progress + all
+      PostToolUse hooks. In `@event4u/agent-config`, the Claude marketplace
+      plugin's hooks (`hooks/hooks.json`, all 5 events) resolve
+      `$CLAUDE_PROJECT_DIR/agent-config` (in-project wrapper) **then** fall back
+      to a bare `agent-config` on PATH (the **global** install). There is **no
+      npx fallback** in the hook command. If neither resolves → exit 127 → every
+      concern (roadmap-progress dashboard regen, context-hygiene,
+      verify-before-complete, …) silently no-op
+  - id: auto-commit-empties-roadmaps
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: auto commit empties roadmaps
+    body: 'A "chore: add uncomitted roadmaps" auto-commit on main commits roadmap
+      files as 0-byte empties and can drop uncommitted working-tree edits; how
+      to detect + recover. On this repo, an automated commit titled **`chore:
+      add uncomitted roadmaps`** periodically fires on `main` and has twice
+      committed roadmap files as **0-byte empties** (2026-06-13:
+      `road-to-6.0.0-final-readiness.md` +
+      `road-to-reaping-catches-pre-inventory-orphans.md`). It can also leave
+      *uncommitted* working-tree edits behind (they survive on disk but never
+      get committed — e.g. the competitive-borrow v6 pass). **Source is
+      EXTERNAL,'
+  - id: commit-relocates-into-per-branch-worktree
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: commit relocates into per branch worktree
+    body: In agent-config, committing a feature branch in the MAIN checkout triggers
+      automation that relocates the work into a per-branch worktree and resets
+      the main checkout back to main — never --amend in the main checkout. This
+      repo runs a commit pipeline that, when an agent commits on a feature
+      branch in the **main checkout** (`.../event4u/agent-config`), relocates
+      the work into a dedicated per-branch worktree
+      (`.../agent-config-<branch-suffix>`), auto-commits the staged changes
+      there with its own commit messages, resets the main checkout back to
+      `main`, pushes the branch, and opens the PR. Many si
+  - id: council-curl-timeout-fix
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council curl timeout fix
+    body: 'The recurring "Anthropic council member timed out" is a 120s curl
+      timeout, not a broken path — fixed 2026-06-24 (raised to 300s +
+      --max-time). Council now runs reliably 2-voice.. The AI-council Anthropic
+      member intermittently failed with `curl spawn failed: spawnSync curl
+      ETIMEDOUT` (noted as "single-voice / Anthropic timed out" across
+      [[council-legal-pack]], [[council-token-saving-rebuild]],
+      [[gstack-adoption-disposition]]). **Root cause, found 2026-06-24:** not a
+      broken path — the API client `_curlJsonPost` in
+      `src/scripts/ai_council/clients.ts` had a 120s `spawnSync` timeout, and a
+      full 16k'
+  - id: council-install-path-convergence
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council install path convergence
+    body: "2026-07-07 council — Q1 SPLIT resolved as bootstrap-shim-now +
+      delist-checkpoint-later; converged on converge-command consent model,
+      machine-checked surface matrix, dispatch:hook self-probe; roadmap
+      road-to-install-path-convergence.md. Council 2026-07-07 (claude-sonnet-4-5
+      + gpt-4o, 2 rounds, $0.12) on the follow-up to
+      [[council-claude-code-single-surface]] (PR #777): - **Q1 bootstrap-shim vs
+      delist: SPLIT** (members swapped sides across rounds). Tie-break synthesis
+      recorded in the roadmap: Stage 1 strips the Claude plugin to a bootstrap
+      shim NOW (zero skills; keeps hooks.json — byte-identical"
+  - id: council-removal-depth-principle
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council removal depth principle
+    body: "2026-06-14 council — agent-memory removal strip-depth principle:
+      deep-strip Layer-2-only dead seams (operational/provider/shadow), simplify
+      contract artefacts in-place (don't loudly break); retrieval-v1 is internal
+      w/ deleted consumer. AI council (claude-sonnet-4-5 + gpt-4o, 2026-06-14,
+      debate 2 rounds) on how deep to strip the dead \"operational\" machinery
+      while executing `road-to-agent-memory-removal.md`: **Converged
+      principle:** **deep-strip Layer-2-only dead seams** (the package binding +
+      the generic
+      `operational_provider`/`OperationalProvider`/`Shadow`/`with_shadows`/conf\
+      lict-rule-operatio"
+  - id: discovery-strict-frontmatterless-template
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: discovery strict frontmatterless template
+    body: 'A new frontmatter-less template breaks the strict discovery build in CI
+      (Node+Python tests) — quarantine it in unassigned-artefacts.yml. A NEW
+      template/scaffold `.md` with **no YAML frontmatter** (e.g.
+      `src/agent-src/templates/tickets.md`, PR #573) makes
+      `src/scripts/build_discovery_manifest.py --strict` exit 1 ("N unassigned
+      artefact(s); reason: missing or unparseable frontmatter"). Local `--write`
+      (non-strict) exits 0, so it passes locally and **only fails in CI** —
+      surfaces as fast (~20–60s) **Node Tests + Python Tests** failures
+      (`test_projection_scoped` shells out to the builder), not an '
+  - id: enforcement-projection-honest-null
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: enforcement projection honest null
+    body: "2026-06-25 compile-time governance-enforcement (hardened-block injection)
+      measured HONEST-NULL at discipline ceiling on trapD/trapE — condense.ts
+      NOT wired; corpus saturates, doesn't test the pressure failure mode. Phase
+      1 of [[council-ecc-parity-positioning]]: tested whether injecting hardened
+      HARD-CONSTRAINT blocks for the 3 `tier: safety-floor` rules
+      (commit-policy, non-destructive-by-default, scope-control) at projection
+      time reduces Iron-Law violations. **Built (kept):** opt-in `hardened` +
+      `hardened-placebo` (length-matched control) arms in
+      `src/scripts/bench_ab_v2_run.ts` + `hardened_bl"
+  - id: feedback-locks-never-permanent
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: feedback locks never permanent
+    body: "Past decisions (honest-nulls, don't-relitigate locks, token-budget canon)
+      must never silently veto a beneficial change — surface the conflict, offer
+      council re-evaluation. 2026-07-06, recurring frustration (\"das kam nun
+      schon öfters vor und stört mich\"): when a beneficial change is blocked by
+      a recorded past decision — an honest-null verdict, a \"don't relitigate\"
+      memory, the token-frugality canon, an old rule — do NOT silently comply
+      and drop/park the improvement. Surface the conflict and ask the user
+      whether to re-evaluate the contested point in the AI council; if the
+      verdict flips, harden th"
+  - id: fresh-worktree-gate-quirks
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: fresh worktree gate quirks
+    body: "agent-config fresh worktrees — which local gates false-fail (pre-commit
+      .augment lookup, augment-budget needs --project-augment) and the recurring
+      stale-condensation-hash drift on main. Working in fresh `git worktree`s
+      off main in the agent-config repo (the standard pattern for parallel issue
+      PRs), three environment quirks cost time (learned 2026-06-09, 7-issue PR
+      run): 1. **Pre-commit hook false-fails on roadmap touches.** The hook
+      shells to `python3 .augment/scripts/update_roadmap_progress.py`, but
+      `.augment/` is a gitignored local projection that does not exist in a
+      fresh worktree. Fix: reg"
+  - id: git-stash-probe-conflict-hazard
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: git stash probe conflict hazard
+    body: "Never use git stash as a read-only probe in this shared working tree — it
+      sweeps up concurrent sessions' dirty files and a suppressed pop-conflict
+      leaks markers. Using `git stash -u` + `git stash pop >/dev/null 2>&1` as a
+      throwaway \"is this lint failure pre-existing on clean main?\" probe
+      caused a silent conflict (2026-06-15, during road-to-competitive-borrow).
+      `git stash -u` is whole-working-tree and indiscriminate: it swept up stale
+      generated files (5.10.1-era `src/domains/**/pack.yaml`, `README.md`) that
+      a concurrent session had left dirty; the `pop` then conflicted against the
+      current (6.1."
+  - id: github-pr-head-sync-glitch
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: github pr head sync glitch
+    body: "GitHub PR-head can lag the branch ref → new commit's pull_request CI
+      never fires; close/reopen or empty-commit nudges, and a merge can land
+      WITHOUT the last commit. **2026-07-04 (PR #710):** After pushing a
+      follow-up fix commit to a PR branch, `git ls-remote` showed the branch ref
+      at the new SHA, but `gh pr view --json headRefOid` stayed at the OLD SHA.
+      Consequence chain: 1. No `pull_request` `synchronize` event fired for the
+      new commit → **no new Tests/CI run** for it (only the `push`-event
+      workflow, sync-visibility, ran). 2. `gh pr checks` kept showing the OLD
+      commit's (failing) checks. 3. W"
+  - id: glama-sync-break-src-move
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: glama sync break src move
+    body: glama.ai sync hangs trace to the 2026-06-04 scripts/->src/scripts move
+      breaking glama's stored build/CMD paths; fix lives in internal/glama/ +
+      task mcp:glama-test. glama.ai indexes this package's stdio MCP server
+      (`src/scripts/mcp_server/`). On 2026-06-04 the `scripts/` → `src/scripts/`
+      restructure (commit a9741337) broke glama's admin-panel Build-steps + CMD,
+      which still pointed at the old paths → mcp-proxy launches a child that
+      never speaks the protocol → glama hangs in its introspection timeout (the
+      "10-hour sync"). The server code itself is fine (imports in 0.02s, content
+      roots resolve). *
+  - id: py2ts-bundle-macos-symlink-and-tmpdir-traps
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: py2ts bundle macos symlink and tmpdir traps
+    body: "Two macOS-only py2ts regressions behind the. The 3 macOS-only failures on
+      #613 (`python2ts → main`) were two py2ts regressions, both invisible on
+      Linux/Windows. Fixed + CI-verified (PR went 46 SUCCESS / 0 fail /
+      MERGEABLE) on `python2ts` (`e9074ece`, `c2facade`, `75884bc3`). **1.
+      Bundle entry-guard vs macOS `/var` symlink (setup.sh render no-op).**
+      `fallback D` ships a committed esbuild bundle `dist/install/install.mjs`
+      run via plain `node` (raw-source `setup.sh` path has no tsx). install.ts's
+      CLI entry guard compared `import.meta.url` (Node **realpath-resolves** the
+      entry module → `<path>`) a"
+  - id: py2ts-parallel-snapshot-clobber
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: py2ts parallel snapshot clobber
+    body: "Parallel subagents capturing into the shared parity-snapshot tree clobber
+      each other's UNCOMMITTED goldens — commit between batches or capture
+      serially. In the py2ts teardown, parity-snapshot goldens live in one
+      shared tree `tests/_lib/__parity_snapshots__/`. Running rig-conversion
+      subagents **in parallel** (each captures with `PY2TS_CAPTURE=1` and some
+      run `git checkout -- tests/_lib/__parity_snapshots__/` or `git rm` to tidy
+      orphan buckets) **clobbered the earlier wave's UNCOMMITTED snapshots** —
+      the first-wave rigs (budget_guard etc.) went from green to `parity_oracle:
+      no snapshot ... Refus"
+  - id: roadmap-archival-vs-inbound-refs
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: roadmap archival vs inbound refs
+    body: "Completing a roadmap to 100% forces archival (pre-commit hook), which
+      breaks inbound ADR/report refs — keep it 1 criterion shy until the closing
+      PR merges. The pre-commit hook runs `update_roadmap_progress.py --check`,
+      which exits **1** when a roadmap reaches `count_open == 0` (100%) but is
+      still in `agents/roadmaps/` (not `archive/`). So a 100% roadmap **cannot
+      be committed** without `git mv`-ing it to `agents/roadmaps/archive/`. But
+      archiving breaks inbound references: ADRs (`docs/decisions/ADR-0xx`),
+      reports (`agents/reports/`), and sibling roadmaps all link the roadmap at
+      its active path. "
