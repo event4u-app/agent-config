@@ -14,9 +14,10 @@
  *   - sessions scale   — `agents/knowledge/sessions/` > 50 pages
  *                        → design fold-through-consolidate-gate for tracked pages
  *   - type scale       — any single memory/knowledge type > 200 files
- *                        → build the pre-decided file-first in-memory BM25 CLI
+ *                        → rank via `_lib/lexical_index.ts` (hand-rolled BM25 +
+ *                          trigram, no engine fork / no FTS5; ADR-061 honoured)
  *   - corpus scale     — > 500 files across all types
- *                        → same BM25 activation path
+ *                        → same lexical-index activation path
  *   - hot-context size — `agents/runtime/state/hot-context.md` > 600 tokens
  *                        (estimated at 4 chars/token) → trim schema / fix the
  *                        deterministic writer
@@ -151,7 +152,7 @@ export function runChecks(root: string): Warning[] {
                 metric: `${n}/${TYPE_FILES_MAX}`,
                 message:
                     `type '${type}' holds ${n} files (> ${TYPE_FILES_MAX}). ` +
-                    'Activation path (pre-decided): build the file-first in-memory BM25 CLI (re-index at session start, no vectors, no service).',
+                    'Activation path (resolved, road-to-retrieval-substrate-hardening B2): rank via the hand-rolled BM25 + trigram index in `_lib/lexical_index.ts` (pure stdlib, NO engine fork / NO SQLite-FTS5, ADR-061 honoured). Measured lift: mean tie-set 3.333 → 1.0 (internal/bench/reports/lexical-ranking.json). Wire it lazily at first lookup + a stat-index, no vectors, no service.',
             });
         }
     }

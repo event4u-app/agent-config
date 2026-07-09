@@ -215,3 +215,16 @@ marking. The shared grounding engine is still attributed via
 Implementing roadmap: `road-to-image-brand-typography` (Phase A–D),
 archived 2026-06-16; live-validation + command-surface follow-on tracked in
 its sibling follow-up roadmap.
+
+## Resolution note — retrieval ranking at scale (2026-07-09)
+
+The "no engine fork / no minisearch-class dependency" decision is honoured at
+memory/knowledge retrieval scale by a **hand-rolled BM25 + trigram index**
+(`src/scripts/_lib/lexical_index.ts`, pure Node stdlib) rather than SQLite-FTS5
+or any embedded search engine. It activates at the `lint_knowledge_scale`
+tripwire (>200/type or >500 total files) and replaces the coarse `_score`
+bucket scorer's ranking; measured lift on the retrieval-precision corpus is a
+mean top tie-set of 3.333 → 1.0 with precision@1/@5 unchanged
+(`internal/bench/reports/lexical-ranking.json`). This closes the ADR-061 ↔
+FTS5 open question flagged in `road-to-retrieval-substrate-hardening` (B2): the
+BM25 core ADR-061 sanctioned is realised without an engine dependency.
