@@ -89,11 +89,20 @@ become scope.
 
 ## Phase 0 — Sanitize floor + versioned-cache lint (no dependency)
 
-- [ ] B6: add a `sanitize_field()` (strip control chars, cap length, escape
+- [x] B6: add a `sanitize_field()` (strip control chars, cap length, escape
       markup) applied to every corpus-derived field concatenated into agent
       context — `memory_lookup` output and knowledge-chunk read surfaces first;
       a security-lint check asserts no retrieval surface emits unsanitized
       corpus text.
+      <!-- done 2026-07-09: src/scripts/_lib/retrieval_sanitize.ts
+      (sanitize_text/sanitize_entry) strips hidden-instruction vectors
+      (bidi/zero-width/Unicode-tag, codepoint classes shared with
+      lint_hidden_unicode) + C0/C1/DEL control noise + caps length, preserving
+      visible content (byte-identical for clean entries → v1 envelope contract
+      holds). Applied at retrieve_v1 + memory_get_v1 emit boundaries. Witness
+      test injects a bidi+zero-width+Tag-block body → sanitized through both
+      surfaces (7 tests; 26/26 memory_lookup regression green). B5b
+      (versioned-cache lint) stays open — separate increment. -->
 - [ ] B5b: add a lint rule — no derived cache without a version namespace OR an
       explicit invalidation comment (the rule every later cache layer inherits).
 
