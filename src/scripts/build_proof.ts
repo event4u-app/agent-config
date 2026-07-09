@@ -144,6 +144,13 @@ function render(): string {
     L.push('and why the Obsidian export stays declined, are in');
     L.push('[`docs/second-brain-scope.md`](second-brain-scope.md).');
     L.push('');
+    L.push('A follow-up removed the perfect-retrieval assumption: against a store of');
+    L.push('keyword-overlapping confusers the REAL retrieval recalls the needed');
+    L.push('decision into the top-5 (9/9) and the model disambiguates it — retrieval-on');
+    L.push('**27/27** vs no-memory **5/27** and vs placebo **5/27** (p=0.008 both). The');
+    L.push('honest limit: the keyword scorer recalls but does not rank (mean tie-set');
+    L.push('3.3), which is the SQLite-FTS5 activation signal (ADR-116) at scale.');
+    L.push('');
     L.push('## 3. Known limits (published, witness-tested)');
     L.push('');
     const skillGaps = collectSkillGaps();

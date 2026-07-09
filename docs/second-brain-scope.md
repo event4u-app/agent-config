@@ -33,13 +33,25 @@ is now **measured** — a real, placebo-controlled lift, honestly scoped.
 
 ### The scoping caveat (stated, not buried)
 
-This is the **context-value upper bound**, not proof of retrieval precision:
-the corpus is one-fact-per-task, so memory-on injects the exact fact (perfect
-retrieval). It shows that **the right prior fact, surfaced, lets the model
-answer — and that this beats both no memory and equal-byte noise** (the placebo
-isolates mechanism from mere extra context). It does **not** show the substrate
-finds the right fact among many under a large store; that retrieval-precision
-corpus is the follow-up. The public claim is scoped to exactly this.
+The Phase-2 delta is the **context-value upper bound**: the corpus is
+one-fact-per-task, so memory-on injects the exact fact (perfect retrieval). It
+shows that **the right prior fact, surfaced, lets the model answer — and that
+this beats both no memory and equal-byte noise** (the placebo isolates mechanism
+from mere extra context).
+
+**The retrieval-precision follow-up removed the perfect-retrieval assumption**
+(2026-07-09, claim `second-brain-retrieval-precision`,
+`internal/bench/reports/second-brain-retrieval.json`). Against a populated store
+whose distractors deliberately share query keywords with the needed decision,
+the REAL `memory_lookup` retrieval recalls the needed decision into the top-5 in
+**9/9** cases, and the model disambiguates it from the co-injected confusers —
+**retrieval-on 27/27 vs no-memory 5/27 and vs equal-count placebo 5/27**
+(sign test p=0.008 both). **Named limit (honest):** the keyword scorer
+**recalls but does not rank** — mean tie-set 3.3 entries share the top score,
+ties broken by store order, not relevance. So recall into the top-k holds *at
+this scale*; once more than k entries share a keyword it would degrade — which
+is exactly the discrimination gap the SQLite-FTS5 activation path (ADR-116)
+exists to close. The public claims are scoped to exactly this.
 
 ## What it IS (measured lift, bounded as above)
 

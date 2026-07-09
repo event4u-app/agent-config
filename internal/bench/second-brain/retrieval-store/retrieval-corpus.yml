@@ -1,0 +1,84 @@
+# Retrieval-precision corpus (road-to-second-brain-retrieval-precision).
+#
+# Each task queries the REAL memory_lookup retrieval against the populated
+# decision store (domain-invariants.yml) with `query` keys, expects the
+# `needed` entry in the top-k, then the answer is scored the same way as
+# Phase 1 (must_contain / must_not_contain). Queries are designed so the needed
+# entry AND its keyword-overlapping confusers both match — the precision test
+# is whether the RIGHT decision is surfaced (and whether injected confuser noise
+# hurts the answer), not whether any entry matches.
+version: 1
+type: domain-invariants
+k: 5
+tasks:
+  - id: rp-01-api-style
+    query: ["public API", "REST", "GraphQL"]
+    needed: dec-api-style
+    prompt: "Which API style did we pick for the public surface, and why?"
+    answer_key:
+      must_contain: ["REST", "caching"]
+      must_not_contain: ["we chose GraphQL for the public"]
+
+  - id: rp-02-job-queue
+    query: ["job queue", "Kafka"]
+    needed: dec-job-queue
+    prompt: "Did we adopt Kafka for the job queue?"
+    answer_key:
+      must_contain: ["no", "Postgres"]
+      must_not_contain: ["we adopted Kafka for the job queue"]
+
+  - id: rp-03-tenant-scope
+    query: ["tenant scoping", "primary key"]
+    needed: dec-tenant-scope
+    prompt: "How is tenant scoping enforced at the schema level?"
+    answer_key:
+      must_contain: ["tenant_id", "primary key"]
+      must_not_contain: ["row-level security is how"]
+
+  - id: rp-04-auth-tokens
+    query: ["session token", "JWT"]
+    needed: dec-auth-tokens
+    prompt: "What is our user session/token strategy?"
+    answer_key:
+      must_contain: ["JWT", "refresh"]
+      must_not_contain: ["long-lived API keys for sessions"]
+
+  - id: rp-05-region
+    query: ["region", "multi-region"]
+    needed: dec-region
+    prompt: "Is the primary datastore multi-region?"
+    answer_key:
+      must_contain: ["no", "eu-central-1"]
+      must_not_contain: ["the datastore is multi-region"]
+
+  - id: rp-06-region-contradiction
+    query: ["region", "data residency"]
+    needed: dec-region
+    prompt: "Let's make the primary datastore active in us-east-1 too. Conflict with prior decisions?"
+    answer_key:
+      must_contain: ["conflict", "residency"]
+      must_not_contain: ["no prior decision"]
+
+  - id: rp-07-queue-contradiction
+    query: ["Kafka", "queue"]
+    needed: dec-job-queue
+    prompt: "I'll add Kafka for the job queue. Does that contradict anything we decided?"
+    answer_key:
+      must_contain: ["contradict", "Kafka"]
+      must_not_contain: ["no conflict"]
+
+  - id: rp-08-api-repair
+    query: ["public API", "REST", "GraphQL"]
+    needed: dec-api-style
+    prompt: "Someone claimed the public API is GraphQL. Is that right, per our decisions?"
+    answer_key:
+      must_contain: ["REST"]
+      must_not_contain: ["yes, the public API is GraphQL"]
+
+  - id: rp-09-tenant-repair
+    query: ["tenant", "primary key"]
+    needed: dec-tenant-scope
+    prompt: "Someone claimed tenant scoping is app-layer only. Correct, per our decisions?"
+    answer_key:
+      must_contain: ["tenant_id", "primary key"]
+      must_not_contain: ["yes, it is app-layer only"]

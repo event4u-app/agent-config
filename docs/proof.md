@@ -36,11 +36,12 @@ evidence pointer, or `task check-claims` fails the build.
 | The whole layer is compiled into host agents with zero runtime daemon. | qual | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` | ✅ |
 | 100 governed rules. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
+| Removing the perfect-retrieval assumption, the substrate's REAL keyword retrieval recalls the needed decision into the top-5 under keyword-overlapping confusers (precision@5 9/9) and the model disambiguates it from the co-injected confusers — retrieval-on 27/27 vs no-memory 5/27 and vs equal-count placebo 5/27 (claude-haiku-4-5, 9 tasks x 3 seeds, sign test p=0.008 both). Named limit: retrieval RECALLS but does not RANK (mean tie-set 3.3, ties broken by store order, not relevance) — the discrimination gap that motivates the SQLite-FTS5 activation path (ADR-116) at larger scale. | quant | `internal/bench/reports/second-brain-retrieval.json` | ✅ |
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class) before it can merge or publish. | qual | `.github/workflows/skill-lint.yml#task lint-agent-security` | ✅ |
 | 267 skills (README hero + feature list). | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 
-**13 backed claim(s)** — all evidence pointers resolve in CI.
+**14 backed claim(s)** — all evidence pointers resolve in CI.
 
 Artefact counts in public prose (skills, commands, governed rules,
 guidelines, personas) are **generated from source and CI-drift-checked**:
@@ -95,6 +96,13 @@ large store; the lift concentrates exactly where memory is the only source
 and ties where the prompt self-contains the fact. Boundary vs a human PKM,
 and why the Obsidian export stays declined, are in
 [`docs/second-brain-scope.md`](second-brain-scope.md).
+
+A follow-up removed the perfect-retrieval assumption: against a store of
+keyword-overlapping confusers the REAL retrieval recalls the needed
+decision into the top-5 (9/9) and the model disambiguates it — retrieval-on
+**27/27** vs no-memory **5/27** and vs placebo **5/27** (p=0.008 both). The
+honest limit: the keyword scorer recalls but does not rank (mean tie-set
+3.3), which is the SQLite-FTS5 activation signal (ADR-116) at scale.
 
 ## 3. Known limits (published, witness-tested)
 
