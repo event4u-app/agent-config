@@ -1,0 +1,134 @@
+# Retrieval-precision store for the second-brain follow-up
+# (road-to-second-brain-retrieval-precision).
+#
+# A populated decision store the REAL memory_lookup retrieval must search. The
+# 5 `dec-*` NEEDED entries are the session-k decisions the recall tasks depend
+# on; the surrounding distractors deliberately SHARE query keywords with a
+# needed entry (confusers) so precision@k is a real test of the substrate's
+# keyword-substring retrieval under ambiguity — not a trivial win. This is the
+# honest stress the Phase-2 run skipped (it injected the fact directly). A low
+# precision here is evidence for the lint_knowledge_scale / FTS5 activation
+# path (ADR-116), not a failure to hide.
+version: 1
+entries:
+  # --- NEEDED: the 5 core decisions the recall tasks query for ---
+  - id: dec-api-style
+    key: public API style REST GraphQL
+    body: |
+      Decision: the public API is REST, chosen over GraphQL because edge caching
+      is simpler with REST than a single GraphQL endpoint.
+  - id: dec-job-queue
+    key: job queue Kafka Postgres broker
+    body: |
+      Decision: rejected Kafka for the job queue; kept Postgres-backed jobs to
+      avoid operating a message broker.
+  - id: dec-tenant-scope
+    key: tenant scoping primary key schema
+    body: |
+      Constraint: every tenant-scoped table carries tenant_id as the first column
+      of its composite primary key.
+  - id: dec-auth-tokens
+    key: session JWT token refresh auth
+    body: |
+      Decision: sessions use short-lived JWT access tokens with rotating refresh
+      tokens stored httpOnly.
+  - id: dec-region
+    key: region eu-central-1 multi-region GDPR deploy
+    body: |
+      Decision: deploy to a single region (eu-central-1) for GDPR data residency;
+      multi-region is explicitly out of scope.
+
+  # --- CONFUSERS for dec-api-style (share API / REST / GraphQL) ---
+  - id: dist-admin-api-graphql
+    key: internal admin API GraphQL
+    body: |
+      Decision: the INTERNAL admin API uses GraphQL for its flexible query needs
+      (separate from the public surface).
+  - id: dist-api-versioning
+    key: public API versioning URL
+    body: |
+      Decision: the public API versions via URL path (/v1, /v2), not headers.
+  - id: dist-rest-webhooks
+    key: REST webhooks retry
+    body: |
+      Decision: outbound REST webhooks retry with exponential backoff, max 5
+      attempts.
+
+  # --- CONFUSERS for dec-job-queue (share queue / Kafka / jobs) ---
+  - id: dist-event-stream-kafka
+    key: analytics event stream Kafka
+    body: |
+      Decision: Kafka WAS adopted for the analytics event stream (high-throughput,
+      separate from the job queue).
+  - id: dist-cron-jobs
+    key: scheduled cron jobs
+    body: |
+      Decision: periodic maintenance jobs run on cron, not the job queue.
+  - id: dist-dead-letter-queue
+    key: dead letter queue policy
+    body: |
+      Decision: failed jobs move to a dead-letter queue after 3 retries.
+
+  # --- CONFUSERS for dec-tenant-scope (share tenant / primary key) ---
+  - id: dist-tenant-billing
+    key: per-tenant billing cycle
+    body: |
+      Decision: each tenant is billed monthly on its own signup-anniversary cycle.
+  - id: dist-pk-strategy
+    key: primary key UUID strategy
+    body: |
+      Decision: non-tenant tables use UUID v7 primary keys for global uniqueness.
+  - id: dist-row-level-security
+    key: tenant row-level security
+    body: |
+      Decision: database row-level security was evaluated for tenant scoping and
+      REJECTED in favour of the composite-key approach.
+
+  # --- CONFUSERS for dec-auth-tokens (share token / session / auth) ---
+  - id: dist-service-api-keys
+    key: service API keys token
+    body: |
+      Decision: service-to-service auth uses long-lived API keys, not user JWTs.
+  - id: dist-session-cookie
+    key: session cookie SameSite
+    body: |
+      Decision: the session cookie is SameSite=Lax, Secure, httpOnly.
+  - id: dist-oauth-scopes
+    key: OAuth scopes token grant
+    body: |
+      Decision: third-party OAuth grants are scoped read-only by default.
+
+  # --- CONFUSERS for dec-region (share region / multi-region / GDPR) ---
+  - id: dist-cdn-regions
+    key: CDN edge regions multi-region
+    body: |
+      Decision: the CDN serves static assets from multiple edge regions worldwide
+      (the datastore stays single-region — do not confuse the two).
+  - id: dist-backup-region
+    key: backup replication region
+    body: |
+      Decision: database backups replicate nightly to eu-west-1 for disaster
+      recovery.
+  - id: dist-gdpr-retention
+    key: GDPR data retention
+    body: |
+      Decision: personal data is retained 90 days after account closure per GDPR.
+
+  # --- GENERAL distractors (no query-keyword overlap) ---
+  - id: dist-ci-runner
+    key: CI runner concurrency
+    body: |
+      Decision: CI runs on 4 parallel shards to keep wall-clock under 10 minutes.
+  - id: dist-lint-strict
+    key: lint strict mode
+    body: |
+      Decision: the linter runs in strict mode; warnings fail the build.
+  - id: dist-docs-site
+    key: docs site static generator
+    body: |
+      Decision: the docs site is built with a static generator and deployed to
+      GitHub Pages.
+  - id: dist-monorepo
+    key: monorepo workspace layout
+    body: |
+      Decision: the repo is a single-package layout, not a monorepo.

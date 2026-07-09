@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "kind": "second-brain-retrieval-live",
+  "roadmap": "road-to-second-brain-retrieval-precision",
+  "host": "claude-haiku-4-5-20251001",
+  "seeds": 3,
+  "mode": "live",
+  "k": 5,
+  "store": "internal/bench/second-brain/retrieval-store/ (5 needed + 19 distractors, keyword-overlapping confusers)",
+  "precision_at_k": 1,
+  "precision_hits": 9,
+  "mean_tie_set_size": 3.3333333333333335,
+  "discrimination_note": "mean_tie_set_size > 1 means the keyword scorer gave the same top score to multiple entries and broke the tie by STORE ORDER, not relevance — precision@k reflects recall into the top-k, not relevance ranking. This is the ADR-116 (FTS5) signal.",
+  "tasks": 9,
+  "per_task": [
+    {
+      "id": "rp-01-api-style",
+      "needed": "dec-api-style",
+      "needed_rank": 0,
+      "needed_in_top_k": true,
+      "tie_set_size": 4,
+      "top_k_ids": [
+        "dec-api-style",
+        "dist-admin-api-graphql",
+        "dist-api-versioning",
+        "dist-rest-webhooks"
+      ]
+    },
+    {
+      "id": "rp-02-job-queue",
+      "needed": "dec-job-queue",
+      "needed_rank": 0,
+      "needed_in_top_k": true,
+      "tie_set_size": 3,
+      "top_k_ids": [
+        "dec-job-queue",
+        "dist-event-stream-kafka",
+        "dist-cron-jobs"
+      ]
+    },
+    {
+      "id": "rp-03-tenant-scope",
+      "needed": "dec-tenant-scope",
+      "needed_rank": 0,
+      "needed_in_top_k": true,
+      "tie_set_size": 3,
+      "top_k_ids": [
+        "dec-tenant-scope",
+        "dist-pk-strategy",
+        "dist-row-level-security"
+      ]
+    },
+    {
+      "id": "rp-04-auth-tokens",
+      "needed": "dec-auth-tokens",
+      "needed_rank": 0,
+      "needed_in_top_k": true,
+      "tie_set_size": 2,
+      "top_k_ids": [
+        "dec-auth-tokens",
+        "dist-service-api-keys"
+      ]
+    },
+    {
+      "id": "rp-05-region",
+      "needed": "dec-region",
+      "needed_rank": 0,
+      "needed_in_top_k": true,
+      "tie_set_size": 3,
+      "top_k_ids": [
+        "dec-region",
+        "dist-cdn-regions",
+        "dist-backup-region"
+      ]
+    },
+    {
+      "id": "rp-06-region-contradiction",
+      "needed": "dec-region",
+      "needed_rank": 0,
+      "needed_in_top_k": true,
+      "tie_set_size": 3,
+      "top_k_ids": [
+        "dec-region",
+        "dist-cdn-regions",
+        "dist-backup-region"
+      ]
+    },
+    {
+      "id": "rp-07-queue-contradiction",
+      "needed": "dec-job-queue",
+      "needed_rank": 0,
+      "needed_in_top_k": true,
+      "tie_set_size": 4,
+      "top_k_ids": [
+        "dec-job-queue",
+        "dist-event-stream-kafka",
+        "dist-cron-jobs",
+        "dist-dead-letter-queue"
+      ]
+    },
+    {
+      "id": "rp-08-api-repair",
+      "needed": "dec-api-style",
+      "needed_rank": 0,
+      "needed_in_top_k": true,
+      "tie_set_size": 4,
+      "top_k_ids": [
+        "dec-api-style",
+        "dist-admin-api-graphql",
+        "dist-api-versioning",
+        "dist-rest-webhooks"
+      ]
+    },
+    {
+      "id": "rp-09-tenant-repair",
+      "needed": "dec-tenant-scope",
+      "needed_rank": 0,
+      "needed_in_top_k": true,
+      "tie_set_size": 4,
+      "top_k_ids": [
+        "dec-tenant-scope",
+        "dist-tenant-billing",
+        "dist-pk-strategy",
+        "dist-row-level-security"
+      ]
+    }
+  ],
+  "aggregate": {
+    "retrieval-off": {
+      "pass": 5,
+      "total": 27
+    },
+    "retrieval-on": {
+      "pass": 27,
+      "total": 27
+    },
+    "placebo": {
+      "pass": 5,
+      "total": 27
+    }
+  },
+  "paired": {
+    "on-vs-off": {
+      "a_wins": 8,
+      "b_wins": 0,
+      "ties": 1,
+      "sign_p": 0.0078125
+    },
+    "on-vs-placebo": {
+      "a_wins": 8,
+      "b_wins": 0,
+      "ties": 1,
+      "sign_p": 0.0078125
+    }
+  },
+  "verdict": "PASS",
+  "note": "precision@k is deterministic (retrieval only, no spend); the arms are model-scored. A retrieval-on PASS means keyword retrieval both FOUND the right decision under confuser load AND the model used it; a NULL with high precision isolates a model-use gap, a NULL with low precision is evidence for the FTS5 activation path (ADR-116).",
+  "cost": {
+    "calls": 81,
+    "tokens_in": 8442,
+    "tokens_out": 7097
+  }
+}
