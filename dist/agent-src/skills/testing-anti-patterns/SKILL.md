@@ -43,6 +43,7 @@ Do NOT use when:
 4. NEVER ship partial mocks — mirror the real response shape completely.
 5. NEVER treat tests as an afterthought — write the failing test first.
 6. NEVER overfit an assertion — assert the general rule, derive expected values from inputs/seeded data, cover boundary + error cases.
+7. NEVER game the green — a failing test is a finding, not an obstacle; fix the code, never skip/weaken/delete the test or rewrite `expected` to the buggy output.
 ```
 
 ## Procedure: Run the gate before each anti-pattern
@@ -161,6 +162,30 @@ expect([403, 404]).toContain((await api.get(`/users/${otherTenantUser.id}`)).sta
 
 Deriving from seeded data is necessary but **not sufficient** — a test that only reads back the exact fields it seeded is still overfit (a code mutation survives it). A real test also exercises boundary (empty / null / max / Unicode), error (missing / invalid), and, on security-sensitive paths, an abuse case (IDOR, injection string, XSS payload). Coverage of *cases*, not just lines.
 
+### Anti-Pattern 7 — Gaming the green (test-integrity)
+
+Symptom: a test fails, and the "fix" edits the *test* instead of the code — `.skip` / `it.skip` / `xfail` / `@Disabled` on the failing case, deleting the failing assertion, loosening `toBe(x)` to `toBeTruthy()`, or rewriting `expected` to whatever the (possibly buggy) code now emits. The suite goes green while the behavior stays broken — worst outcome, because green now *hides* the bug. The automation-bias trap: under pressure to finish, optimize the signal (green) instead of the target (correct behavior).
+
+Gate:
+
+```
+BEFORE editing a test that is currently failing:
+  Ask: "Is the TEST wrong, or is the CODE wrong?"
+  IF the code is wrong:
+    STOP — fix the code. Editing the test to match buggy output ships the bug green.
+  Editing a test is legitimate ONLY when it encodes a genuinely stale/incorrect
+  expectation (a real, intended spec change) — and then the reason is stated in
+  the diff, never a silent skip/xfail/delete.
+```
+
+Backstop grep — skip/xfail added to chase green (a hit in a diff that also "fixes" a failure is the smell):
+
+```bash
+rg -n '\b(it|test|describe)\.skip\b|\.only\b|xit\(|xdescribe\(|@pytest\.mark\.(skip|xfail)|@Disabled|->markTestSkipped\(' .
+```
+
+Test-surface instance of the `autonomous-execution` N=3 / allowlist-growth antipattern (bulk `skip`/`xfail` to force green = the tool is wrong, not the content) and the `verify-before-complete` floor (green must be *earned*, not manufactured).
+
 ## Output format
 
 1. The mocking decision recorded as a one-line comment in the test file (`// mock at <seam>: <reason>`).
@@ -184,6 +209,7 @@ Deriving from seeded data is necessary but **not sufficient** — a test that on
 - Do NOT invent mock data shapes from memory — record from the real source.
 - Do NOT mark a story complete until at least one test was watched failing first.
 - Do NOT hardcode an expected value the code will emit, or pin a regex to an incidental fixed date/id — derive from inputs and seeded data, and vary the input across cases.
+- Do NOT skip / `xfail` / delete a failing test, or rewrite its `expected` to the code's current output, to get a green run — fix the code, or state a real spec change in the diff.
 
 ## Auto-trigger keywords
 
@@ -195,6 +221,9 @@ Deriving from seeded data is necessary but **not sufficient** — a test that on
 - overfit assertion
 - tautological test
 - hardcoded expected value
+- gaming the green
+- skip failing test
+- test integrity
 
 ## Provenance
 

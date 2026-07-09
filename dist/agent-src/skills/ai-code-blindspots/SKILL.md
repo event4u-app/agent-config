@@ -33,7 +33,7 @@ A CONTROL DEFINED BUT NOT WIRED IS ABSENT. A grep IS CHEAPER THAN A BREACH.
 
 ## Procedure
 
-1. List the surfaces this change touched (endpoint, query, migration, render, file/fetch, infra, dependency, test).
+1. **Inspect** the change and list the surfaces it touched (endpoint, query, migration, render, file/fetch, infra, dependency, test) — analyze what you actually wrote before checking it.
 2. For each surface, take its row below: assert every listed invisible control is present (with file:line), and run the matching backstop grep.
 3. For anything a grep flags or a check can't confirm, open the routed deep skill.
 4. Emit the per-surface confirmation (Output format); surface any unresolved gap to the user — never silently omit.
@@ -48,10 +48,12 @@ Run the row(s) for what you touched. The grep is a fast authoring-time backstop 
 | **DB query / ORM** | parameterized, never string-built; tenant predicate present; no `SELECT *` across a serialization boundary; N+1 avoided (eager load) | `source-discovery`, `security` |
 | **Migration** | reversible (`down`); expand-contract for drop/rename (never a bare `DROP COLUMN` before code stops reading it); transaction; index on new FK/filter column | `engineering-safety-floor`, `migration-architect` |
 | **User-controlled render (FE)** | output-encoded; no `dangerouslySetInnerHTML`/`v-html`/`innerHTML`/`eval` on non-constant input; no secret/token in client code; token not in `localStorage` | `frontend-render-security` |
-| **File / outbound fetch** | path confined to an allowed base; SSRF allow-list + private-IP block on user-supplied URLs; size limit; server-side validation (never client-only) | `security`, `defense-in-depth` |
+| **File / outbound fetch** | path confined to an allowed base; SSRF allow-list + private-IP block on user-supplied URLs; size limit; **explicit timeout** (no unbounded wait); server-side validation (never client-only) | `security`, `defense-in-depth` |
 | **Infra / IaC** | least-privilege (no `Action:*`/`Resource:*`); encryption at rest; no `0.0.0.0/0` to mgmt/DB ports; no hardcoded creds; scanner-verified, not `plan`-verified | `engineering-safety-floor`, `terraform`, `secrets-management` |
 | **New dependency** | exists on the real registry (not hallucinated); not typo-adjacent to a popular one; pinned + lockfile committed; CVE-scanned | `supply-chain-intake`, `dependency-upgrade` |
-| **Secrets/credentials** | never a literal in source; env / secret-manager reference; password columns use bcrypt/argon2, never MD5/SHA | `secrets-management`, `domain-safety-pii` |
+| **Secrets/credentials** | never a literal in source; env / secret-manager reference; password columns use bcrypt/argon2, never MD5/SHA; **agent/MCP config too** — no raw key in `.mcp.json` / agent-config / CI YAML / a committed `.env` (env-var indirection, gitignored) | `secrets-management`, `domain-safety-pii` |
+| **Error path / timeout / retry** | failure handled, never silently swallowed (no empty `catch {}`); external call has a bounded timeout; retry capped + backed-off + idempotent (no retry storm); error surfaced to the caller carries no secret / stack / PII; partial failure leaves consistent state (no half-written record) | `systematic-debugging`, `defense-in-depth` |
+| **Concurrency / shared state** | check-then-act guarded (DB lock / atomic op / transaction — not a read-modify-write race); retried write carries an idempotency key; no unbounded parallel fan-out; shared mutable state synchronized | `source-discovery`, `security` |
 | **Test** | asserts general behavior; expected derived from inputs/seeded data, not hardcoded; boundary + error + abuse cases, not only happy path | `testing-anti-patterns`, `test-driven-development` |
 
 ### Backstop greps (authoring-time, cross-stack)
@@ -66,6 +68,10 @@ rg -n 'query\(.*(\+|\$\{|`).*\)|(SELECT|INSERT|UPDATE|DELETE).*(\+|\$\{)'
 rg -n 'AKIA[0-9A-Z]{16}|sk_live_|AIza[0-9A-Za-z_\-]{35}|password\s*=\s*["\x27]|md5\(|sha1\(' .
 # Infra: wildcard IAM / open ingress / disabled TLS
 rg -n '"Action"\s*:\s*"\*"|"Resource"\s*:\s*"\*"|0\.0\.0\.0/0|InsecureSkipVerify|verify=false|curl.*\| *bash' .
+# Raw secret in an agent/MCP/CI config (should be an env-var reference, not a literal)
+rg -n '(sk_live_|sk-[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16}|ghp_[0-9A-Za-z]{36}|AIza[0-9A-Za-z_\-]{35})' --glob '*.mcp.json' --glob '.mcp.json' --glob '*.env' --glob '**/agent*config*' --glob '.github/workflows/*'
+# Swallowed error (empty catch) / unbounded external call (no timeout arg)
+rg -n 'catch\s*\([^)]*\)\s*\{\s*\}|except[^:]*:\s*pass' .
 ```
 
 The greps name several ecosystems side by side on purpose: keep the ones for the stack in front of you; a hit means read that line, not auto-fix.
@@ -82,6 +88,7 @@ The greps name several ecosystems side by side on purpose: keep the ones for the
 - **Semantically-valid-but-ignored**: an IaC attribute the provider silently ignores (a made-up `encrypted = true` on a resource that doesn't support it) *reads* as a present control but does nothing — a scanner catches it, a code read doesn't.
 - A green grep is necessary, not sufficient — proves the obvious anti-pattern absent, not that the control is correct. Read the seam for anything security-sensitive.
 - Routes; doesn't replace the deep skill. For auth/billing/tenant/secret paths, `security-sensitive-stop` still requires a threat pass *before* editing.
+- **Run it per surface, not once at the end.** In a multi-file / agentic change the omission compounds — each new endpoint, query, or fetch is its own blind spot. Re-run the matching row when each surface lands, not as a single sweep after the whole feature is "done" (by then the missing control is buried under later diffs).
 
 ## Do NOT
 

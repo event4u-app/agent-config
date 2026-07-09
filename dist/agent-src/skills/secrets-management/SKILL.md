@@ -47,6 +47,12 @@ Kubernetes workload secrets                    → External Secrets Operator pul
                                                   k8s `Secret` objects committed to git.
 Cross-tenant / cross-org shared secret         → don't. Re-architect; shared secrets are an
                                                   outage and a breach class on their own.
+AI-agent / MCP-server credential               → env-var indirection in the agent/MCP config
+                                                  (`.mcp.json`, agent-config, CI YAML) — the
+                                                  value lives in the store above; the config
+                                                  holds only `${ENV_VAR}`. Never a raw key
+                                                  inline, and the config path is gitignored if
+                                                  it can hold one.
 ```
 
 ### Step 2 — Pick the access pattern
@@ -115,6 +121,7 @@ Telemetry / APM     → strip from request/response captures; allowlist headers.
 - GitHub environment secrets are NOT available on `pull_request` events from forks — designs that rely on them silently break for external contributors.
 - Vault dynamic creds expire faster than long-running connection pools assume; close + re-acquire on lease near-expiry, don't wait for the failure.
 - Pre-commit scanners fire only when developers install the hook — CI scanners are the load-bearing gate.
+- **Agent/MCP config is a new leak surface.** A raw provider key pasted into `.mcp.json`, an agent-config file, or a CI workflow YAML is a committed secret — the scanning gates (Step 4) must cover those paths too, and the config should reference `${ENV_VAR}`, never the literal. An MCP server that ingests untrusted content **and** holds a live key is the egress leg of the lethal trifecta — see [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md).
 
 ## Do NOT
 
