@@ -187,14 +187,28 @@ the ADR-061 conflict is closed in writing. **Rollback:** fall back to `_score()`
 
 ## Phase 3 — Learning sidecar: decay + corroboration + dead-end ledger
 
-- [ ] B3: a deterministic aggregator over the intake JSONL — signed score with a
+- [x] B3: a deterministic aggregator over the intake JSONL — signed score with a
       30-day half-life, promotion only at ≥2 independent corroborations,
       contested-resolution by recency, output as a sidecar (`.agent-learning.json`)
       + a `LESSONS.md` "known dead ends — don't re-derive" section. Byte-stable
       at a fixed `now` (fits the determinism gates).
+      <!-- done 2026-07-10: src/scripts/learning_sidecar.ts — reads
+      agents/memory/intake/signals-*.jsonl, groups by (entry_type, path), decays
+      each signal 0.5^(ageDays/30), promotes only at ≥2 DISTINCT origins (a
+      single session cannot mint a lesson), resolves competing claims by recency
+      (flagged contested), rolls `polarity: dead_end` signals into the ledger.
+      Emits .agent-learning.json (schema_version-gated) + LESSONS.md; both
+      gitignored (council Q2, no merge=union). `--now` injected for byte-stable
+      output. First real consumer of the B5b versioned-cache lint (invalidation
+      comment). 9 tests; typecheck+eslint green. -->
 - [ ] Display-time merge into `retrieve()` output as a
       `learning=preferred|contested|dead_end` suffix — the sidecar NEVER mutates
       the curated YAML truths; a single session cannot mint a lesson.
+      <!-- next increment: attach the verdict to matching hits at retrieve time
+      (lazy-load the sidecar, key by entry_type + the entry's anchor path —
+      intake `path` vs curated `key` need careful matching, hence its own step);
+      additive, only present when a verdict exists so the v1 envelope stays
+      byte-identical without a sidecar. -->
 
 **Exit:** the aggregator verdicts intake into preferred/contested/dead-end,
 byte-stable; `retrieve()` surfaces the suffix. **Rollback:** drop the sidecar
