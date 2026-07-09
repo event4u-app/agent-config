@@ -30,6 +30,7 @@ function parseArgs(argv: string[]): Options {
     const opts: Options = { dir: DEFAULT_DIR, format: 'text' };
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
+        if (a === undefined) continue;
         if (a === '--dir') opts.dir = argv[++i] ?? opts.dir;
         else if (a.startsWith('--dir=')) opts.dir = a.slice('--dir='.length);
         else if (a === '--format') opts.format = (argv[++i] as Options['format']) ?? opts.format;
