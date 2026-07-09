@@ -49,8 +49,10 @@ Do NOT use when:
   [`security-audit`](../security-audit/SKILL.md)
 * The concern is a diff ready for review — route to
   [`judge-security-auditor`](../judge-security-auditor/SKILL.md)
-* The concern is response/log leakage rather than access gating — route to
-  [`data-exposure-review`](../data-exposure-review/SKILL.md)
+* The concern is PII leakage into logs specifically — route to
+  [`data-flow-mapper`](../data-flow-mapper/SKILL.md). (Role-based field-level
+  output filtering IS access gating — it stays in scope here + the vertical-BOPLA
+  section of [`broken-access-control`](../../rules/broken-access-control.md).)
 * The concern is implementing a control once identified — route to
   [`security`](../security/SKILL.md)
 
@@ -72,8 +74,8 @@ For every entrypoint, analyze the authorization chain and record what you find:
 | Authentication gate | Is login enforced? By which middleware / guard? |
 | Authorization layer | Which policy, gate, voter, or check? Which action/ability? |
 | Data scope | Does the query filter by current user / tenant / owner? |
-| Response filter | Are sensitive fields stripped (resource/serializer/DTO)? |
-| Tests | Is there a negative test (other-tenant / lower-role returns 403/404)? |
+| Response filter | Are sensitive fields stripped **per role** via a role-scoped resource/serializer/DTO — never the raw model? (a driver role must not receive `price`) |
+| Tests | Are the three negative tests present — unauthenticated → 401, non-owner → 403/404, cross-tenant → 403/404 (404 hides existence)? |
 
 Record **what is there**, not what should be there. Use file:line citations.
 
@@ -161,6 +163,17 @@ Runtime confirmation (e.g. *"reproduce the cross-tenant read against staging"*,
   authorization. Still need the policy + scope.
 * **Generic advice without file:line** — reject your own finding if you cannot
   cite the exact location.
+* **The three negative tests are the security boundary.** Every protected
+  entrypoint needs unauthenticated → 401, authenticated-non-owner → 403/404,
+  and cross-tenant → 403/404. A happy-path 200 test proves nothing about access
+  control (this is BOLA / IDOR — OWASP API #1). Untested authz is also a
+  direct GDPR Art. 32 gap. See [`broken-access-control`](../../rules/broken-access-control.md).
+* **Defense-in-depth so one miss can't leak** — stack ≥2 layers on sensitive
+  data: query-level ownership scoping (base scope injects the predicate) + a
+  centralized default-deny policy layer (a route with no declared policy is
+  denied, not silently open) + DB row-level security (Postgres RLS `FORCE ROW
+  LEVEL SECURITY`, tenant var via `SET LOCAL`) as the backstop for a forgotten
+  `WHERE tenant_id`. A single layer is not enough.
 
 ## Do NOT
 
@@ -179,6 +192,10 @@ Runtime confirmation (e.g. *"reproduce the cross-tenant read against staging"*,
 - **OWASP Top 10 2021 — A01 Broken Access Control** — canonical failure modes
   (IDOR, missing function-level checks, forced browsing, metadata tampering).
   [owasp.org/Top10/A01_2021-Broken_Access_Control/](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)
+- **OWASP API Security Top 10 2023 — API1 BOLA** (Broken Object Level
+  Authorization) and **API3 BOPLA** (property-level / mass assignment) — the
+  API-layer names for the same object-ownership failures.
+  [owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/](https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/)
 - **NIST SP 800-53 AC family** — AC-3 Access Enforcement, AC-6 Least Privilege
   — rubric for "minimum control" recommendations.
   [csrc.nist.gov/projects/risk-management/sp800-53-controls](https://csrc.nist.gov/projects/risk-management/sp800-53-controls/release-search#!/800-53)

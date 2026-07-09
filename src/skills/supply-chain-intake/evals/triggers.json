@@ -1,0 +1,52 @@
+{
+    "skill": "supply-chain-intake",
+    "last_eval": "2026-07-09",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for verifying a new third-party dependency before install (existence/slopsquatting, pin+lock, CVE, no curl|bash). Should-not-trigger covers near-miss neighbours (upgrading existing deps, secrets, generic checklist, server auth) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "add the package the model suggested to package.json and install it",
+            "trigger": true
+        },
+        {
+            "q": "is this pip package real or a hallucination before I install?",
+            "trigger": true
+        },
+        {
+            "q": "the install command is a curl piped to bash — is that safe?",
+            "trigger": true
+        },
+        {
+            "q": "prüf diese neue Abhängigkeit bevor ich sie installiere (existiert sie überhaupt?)",
+            "trigger": true
+        },
+        {
+            "q": "should I pin this dependency and commit a lockfile?",
+            "trigger": true
+        },
+        {
+            "q": "upgrade our existing lodash to the latest major and fix breakages",
+            "trigger": false,
+            "note": "upgrading an already-trusted dep → dependency-upgrade"
+        },
+        {
+            "q": "rotate the API keys stored in our secret manager",
+            "trigger": false,
+            "note": "secrets lifecycle → secrets-management"
+        },
+        {
+            "q": "what cross-cutting controls did I miss across this diff?",
+            "trigger": false,
+            "note": "cross-surface checklist → ai-code-blindspots"
+        },
+        {
+            "q": "review the authorization on this endpoint",
+            "trigger": false,
+            "note": "server-side authz → authz-review"
+        },
+        {
+            "q": "why is my build failing on a type error?",
+            "trigger": false,
+            "note": "build/type debugging — not dependency intake"
+        }
+    ]
+}

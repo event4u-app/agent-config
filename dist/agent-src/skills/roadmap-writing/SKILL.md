@@ -61,6 +61,13 @@ in [`.agent-src.uncondensed/templates/roadmaps.md`](../../templates/roadmaps.md)
 Read it before authoring. Do not restate its rules in the roadmap
 body — link the template if a phase needs to override one.
 
+**Naming:** a lone roadmap is `road-to-<slug>.md`. When you create **≥2
+related** roadmaps in one pass (siblings split from one body of work, or
+a follow-up chain), give them a shared `road-to-<family>-<part>.md`
+prefix so relatedness is visible and the dashboard groups them — pick
+the `<family>` slug up front (template rule 21). Follow-ups additionally
+carry `parent_roadmap:` (rule 17).
+
 ### 2. Pick complexity tier honestly
 
 Default `lightweight` (≤ 6 phases, ≤ 600 lines). Only use

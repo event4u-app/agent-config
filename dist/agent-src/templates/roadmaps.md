@@ -156,6 +156,30 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     structured form above; renders richer instructions in per-roadmap
     breakdown.
 
+21. **Related roadmaps share a common filename prefix.** When you create
+    more than one roadmap that belongs together — a follow-up, siblings
+    split from one body of work in a single pass, or phases of one
+    initiative in separate files — give them a shared `road-to-<family>-…`
+    prefix so relatedness is visible in `agents/roadmaps/` and the
+    dashboard groups them. `<family>` = short kebab slug for the shared
+    initiative; the suffix distinguishes members:
+    - **Split-in-one-pass siblings** → `road-to-<family>-<part>.md`
+      (e.g. `road-to-auth-hardening-backend.md`,
+      `road-to-auth-hardening-frontend.md`,
+      `road-to-auth-hardening-infra.md`).
+    - **Follow-ups** → `road-to-<parent>-followup.md` (rule 17): the
+      special case where `<parent>` is the family prefix; keep the
+      `parent_roadmap:` back-link.
+    - **Sibling (non-parent/child) roadmaps** carry no `parent_roadmap:`;
+      the shared prefix is the only linkage — do **not** invent a new
+      frontmatter field. Cross-link siblings by name in each `## Context`
+      block when it helps a reader.
+    Pick the `<family>` slug **once, up front**, before the first of the
+    set — renaming a prefix later means migrating inbound references. A
+    lone roadmap keeps plain `road-to-<slug>.md`; the convention fires
+    only when ≥2 related roadmaps are created together or as a follow-up
+    chain.
+
 ---
 
 ## Quality Gates (remote CI by default)
