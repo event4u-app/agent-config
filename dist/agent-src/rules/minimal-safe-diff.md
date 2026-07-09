@@ -98,4 +98,21 @@ After the incident, open a **follow-up PR** for any scope that was
 intentionally deferred and reference the break-glass commit in its
 description.
 
-See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard` · `verify-before-complete`.
+## Bounded remediation carve-out
+
+The default stands: no drive-by edits, no opportunistic refactors. The one
+bounded exception — a **small, task-aligned security/correctness fix in code
+the current task already touches** — is governed by
+[`active-remediation`](active-remediation.md). Permitted inline **only** when
+ALL hold: same request path / module, ≤ ~10 changed lines in one production file (plus its test file),
+no public-API / response-shape change, no dependency bump or migration, and
+its verification (e.g. the negative test) ships in the same commit. Anything
+outside those five conditions is **not** this carve-out — it is note + ask per
+`active-remediation`. This never licenses reformatting, renames, dependency
+bumps, or version upgrades (a syntax-idiom modernization is allowed only under
+`active-remediation`'s version-gated, behavior-preserving clause; a
+dependency/version bump stays ask-only). The sole case that may interrupt is a
+**live cross-user/tenant data exposure** ([`broken-access-control`](broken-access-control.md)) —
+fix-now-if-small, else stop and surface; never defer it silently.
+
+See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard` · `verify-before-complete` · [`active-remediation`](active-remediation.md) · [`broken-access-control`](broken-access-control.md).
