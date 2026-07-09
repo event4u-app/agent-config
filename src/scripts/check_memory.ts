@@ -81,7 +81,9 @@ const CRITICAL_WARN_THRESHOLD = 10;
 const CRITICAL_STALE_DAYS = 90;
 const KNOWN_TYPES: ReadonlySet<string> = new Set([
     'domain-invariants',
+    'historical-patterns',
     'incident-learnings',
+    'ownership',
     'product-rules',
 ]);
 
