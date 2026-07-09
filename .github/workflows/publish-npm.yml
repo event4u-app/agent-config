@@ -122,6 +122,16 @@ jobs:
           npm pack --dry-run --json --ignore-scripts --silent \
             | jq -e '.[0].files | map(.path) | any(. == "dist/discovery/discovery-manifest.json")'
 
+      - name: Agent-security gate (hidden-unicode / confusable / instruction-smuggling)
+        if: steps.check.outputs.already_published != 'true'
+        # Fail-closed on the RELEASE path, not just the PR path: scan the exact
+        # bytes about to be published (src/ + dist/agent-src/) for hidden-Unicode,
+        # mixed-script-confusable, instruction-smuggling, mcp-config, and
+        # dangerous-frontmatter payloads. A blocking finding aborts the job before
+        # `npm publish`, so "what ships to npm is machine-checked" is a structural
+        # property of this workflow, not a branch-protection configuration.
+        run: ./scripts-run src/scripts/lint_agent_security
+
       - name: Publish via OIDC Trusted Publishing
         if: steps.check.outputs.already_published != 'true'
         run: npm publish

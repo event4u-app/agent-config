@@ -36,10 +36,11 @@ evidence pointer, or `task check-claims` fails the build.
 | The whole layer is compiled into host agents with zero runtime daemon. | qual | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` | ✅ |
 | 100 governed rules. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
+| Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class) before it can merge or publish. | qual | `.github/workflows/skill-lint.yml#task lint-agent-security` | ✅ |
 | 267 skills (README hero + feature list). | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 
-**12 backed claim(s)** — all evidence pointers resolve in CI.
+**13 backed claim(s)** — all evidence pointers resolve in CI.
 
 Artefact counts in public prose (skills, commands, governed rules,
 guidelines, personas) are **generated from source and CI-drift-checked**:
