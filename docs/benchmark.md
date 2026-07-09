@@ -290,3 +290,38 @@ produce more null-lift re-attempts at higher cost. The real lever is **refining 
 on the 28% failure tail** (applies to 100% of tasks at zero marginal cost), not recursion.
 Recursion-as-a-class is closed; the model-critic's contextual-quality angle, if ever
 wanted, is a *different* (quality-review) product, not a recursion follow-up.
+
+## Second-brain recall delta (`claude-haiku-4-5`) — PASS (bounded)
+
+> **Verdict: a real, placebo-controlled cross-session recall lift — honestly
+> scoped to the context-value upper bound, not retrieval precision.** With the
+> right prior fact surfaced, the model answers a multi-session recall task it
+> otherwise cannot; the lift beats BOTH no-memory and equal-byte noise.
+
+Three arms on a fixed host (`claude-haiku-4-5`), deterministic recall corpus
+(9 tasks) × 3 seeds = 81 calls, scored with no model-in-the-loop grading
+(`second_brain_score`). Paired sign test over the 9 tasks:
+
+| arm | pass | vs memory-on (paired sign test) |
+|---|---|---|
+| memory-on (substrate surfaces the prior fact) | **27/27** | — |
+| memory-off (no memory) | 10/27 | on wins 6, ties 3, loses 0 — p = 0.031 |
+| placebo (equal-byte inert context) | 9/27 | on wins 6, ties 3, loses 0 — p = 0.031 |
+
+memory-on beats BOTH off and placebo at p < 0.05 → **PASS**. The lift
+concentrates on the 6 retrieval-accuracy/contradiction tasks where the fact is
+available ONLY from memory (on 3/3, baseline 0/3); it **ties** on the 3 tasks
+whose k+1 prompt already self-contains the signal (an in-prompt correction or a
+named contradiction) — memory-on never loses.
+
+**Honesty scope.** This is the **context-value upper bound**: the corpus is
+one-fact-per-task, so memory-on injects the exact fact (perfect retrieval). It
+proves the *value of the right surfaced fact*, isolated from mere extra context
+by the placebo — NOT the substrate's retrieval *precision* under a large store,
+which is the follow-up corpus. Cost: 6.3k in / 8.7k out tokens for the full run.
+
+- Report: `internal/bench/reports/second-brain-delta.json`; claim
+  `second-brain-recall-lift` (`docs/CLAIMS.md`); scope + the declined Obsidian
+  export in `docs/second-brain-scope.md`.
+- Roadmap: `agents/roadmaps/archive/road-to-second-brain-delta-proof.md` (closed PASS).
+- Harness: `src/scripts/second_brain_run.ts` (`--dry-run` free / `--run` spend).

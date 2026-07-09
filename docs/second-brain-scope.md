@@ -9,35 +9,45 @@
 > Roadmap: `road-to-second-brain-delta-proof`. Verdict of record:
 > `agents/settings/contexts/second-brain-delta-verdict.md` (council 2026-07-07).
 
-## The honest status (2026-07-08)
+## The honest status (2026-07-09 — measured PASS, bounded)
 
 The substrate is **built** (typed knowledge dirs, INDEX generator, retrieval
 protocol, `hot_context_hook` working-memory continuity across compaction,
-`fold_intake`, contradiction surfacing). What is **not yet measured** is the
-*delta*: whether agent-facing memory beats a no-memory baseline on a
-reproducible multi-session task.
+`fold_intake`, contradiction surfacing), and the cross-session recall *delta*
+is now **measured** — a real, placebo-controlled lift, honestly scoped.
 
-- **The measurement rig exists** — a deterministic multi-session recall corpus
+- **The measurement rig** — a deterministic multi-session recall corpus
   (`internal/bench/second-brain/corpus/`) + a scorer
-  (`src/scripts/second_brain_score.ts`) with no model-in-the-loop grading. It
-  dry-runs correctly and discriminatingly on hand-written transcripts.
-- **The paired run does not** — the 3-arm `memory-on` / `memory-off` /
-  `placebo` measurement (Phase 2) is spend-bearing and has not been run. So
-  there is **no measured task-lift**, and therefore **no "second brain"
-  capability claim** is made anywhere in public prose. This is the
-  falsifiability lock: the marker never outruns the evidence.
+  (`src/scripts/second_brain_score.ts`) with no model-in-the-loop grading.
+- **The paired run (Phase 2)** — `memory-on` / `memory-off` / `placebo` on a
+  fixed host (claude-haiku-4-5), 9 tasks × 3 seeds (81 calls). Result:
+  memory-on **27/27**, no-memory **10/27**, equal-byte placebo **9/27**;
+  memory-on beats BOTH, sign test **p = 0.031** for each pairing → **PASS**.
+  Full report: `internal/bench/reports/second-brain-delta.json`
+  (claim `second-brain-recall-lift`).
+- **Where the lift lives** — it concentrates on the retrieval-accuracy tasks
+  where the prior fact is available ONLY from memory (memory-on 3/3, baseline
+  0/3). It **ties** on the three tasks whose k+1 prompt already self-contains
+  the signal (a correction stated in-prompt, or a contradiction the prompt
+  names) — exactly where memory is not the only source. memory-on never loses.
 
-Until the paired run backs a lift, the substrate is documented as **continuity
-convenience** — it carries working memory across sessions and compaction — not
-a proven task-accuracy multiplier.
+### The scoping caveat (stated, not buried)
 
-## What it IS (by design; task-lift unmeasured)
+This is the **context-value upper bound**, not proof of retrieval precision:
+the corpus is one-fact-per-task, so memory-on injects the exact fact (perfect
+retrieval). It shows that **the right prior fact, surfaced, lets the model
+answer — and that this beats both no memory and equal-byte noise** (the placebo
+isolates mechanism from mere extra context). It does **not** show the substrate
+finds the right fact among many under a large store; that retrieval-precision
+corpus is the follow-up. The public claim is scoped to exactly this.
+
+## What it IS (measured lift, bounded as above)
 
 | Capability | What it does | Evidence status |
 |---|---|---|
-| Working-memory continuity | `hot_context_hook` re-injects a bounded, deterministic cache across session boundaries and Claude Code compaction | mechanism shipped; task-lift **unmeasured** |
-| Promotable knowledge cards/pages | typed dirs + INDEX + retrieval protocol, with redaction + team-share gate | mechanism shipped; task-lift **unmeasured** |
-| Contradiction surfacing | a session that contradicts a prior decision is flagged on promote | mechanism shipped; catch-rate **unmeasured** |
+| Working-memory continuity | `hot_context_hook` re-injects a bounded, deterministic cache across session boundaries and Claude Code compaction | mechanism shipped; recall lift **measured (bounded PASS)** |
+| Promotable knowledge cards/pages | typed dirs + INDEX + retrieval protocol, with redaction + team-share gate | mechanism shipped; recall lift **measured (bounded PASS)** |
+| Contradiction surfacing | a session that contradicts a prior decision is flagged on promote | mechanism shipped; ties in-prompt, lift where memory is the only source |
 
 ## What it is NOT
 
@@ -52,15 +62,23 @@ a proven task-accuracy multiplier.
   link-density, hybrid human-facing retrieval — is a *different product* for a
   *different consumer* (a person, not an agent). This package writes
   agent-facing memory; it does not serve a human graph browser.
-- **Not a measured accuracy multiplier** — see the honest status above.
+- **Not an unbounded accuracy multiplier** — the recall lift is measured but
+  scoped to the context-value upper bound (see honest status), not proven
+  retrieval precision under a large store.
 
-## Interop, not competition (gated on a measured lift)
+## Interop, not competition (export declined, on the record)
 
-If — and only if — the Phase-2 paired run shows a real lift, the sanctioned
-next step is a **one-way export** (promoted cards → plain Obsidian-compatible
-Markdown + wikilinks), positioning agent-config as the *writer* and a human PKM
-as the *reader*: complementary, never a replacement. Absent a measured lift,
-the exporter is not built.
+The Phase-2 paired run did show a real (bounded) lift, which unlocks the
+optional one-way export (promoted cards → Obsidian-compatible Markdown). It is
+**deliberately not built**: the delta-verdict of record
+(`agents/settings/contexts/second-brain-delta-verdict.md`, council 2026-07-07)
+**rejected** Obsidian compatibility — the dual-write hazard (an external edit
+that never commits silently diverges the INDEX + recurrence counters) outweighs
+the browsing convenience, and the measured lift is a bounded context-value
+result, not a retrieval-precision proof that would justify a new external
+surface. If a human-PKM bridge is ever wanted, the sanctioned path is a
+read-only static render, not an editable vault. Positioning stays: agent-config
+writes agent-facing memory; it does not replace a human PKM.
 
 ## Verify
 
