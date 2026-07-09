@@ -99,22 +99,42 @@ Material gaps:
 
 ## Phase 0 — Scope, provenance, metrics, and execution gates
 
-- [ ] Define "frontier-quality" as observable package behavior, not a vendor
+- [x] Define "frontier-quality" as observable package behavior, not a vendor
       comparison: currentness recall, correct carrier selection, source-quality
       compliance, memory non-application precision, verification honesty, and
       no regression in existing coding/roadmap workflows.
-- [ ] Add `agents/roadmap-assets/frontier-quality/quality-metrics.md` with
+      <!-- done 2026-07-09 (proposal): quality-metrics.md § 1 — six observable
+      dimensions (currentness recall, carrier selection, source-quality, memory
+      non-application precision, verification honesty, no-regression), each mapped
+      to the EXISTING measurement infra; no-vendor-comparison / no-unbacked-number
+      frame stated. -->
+- [x] Add `agents/roadmap-assets/frontier-quality/quality-metrics.md` with
       baseline tasks, target thresholds, allowed regressions, rollback triggers,
       and the review cadence for re-harvesting future prompt families.
-- [ ] Record source-anonymous provenance in the mechanism matrix using file
+      <!-- done 2026-07-09: agents/roadmap-assets/frontier-quality/quality-metrics.md
+      § 2 — baseline-first, flip thresholds (advisory→routed→default-on),
+      no-silent-regression, per-mechanism rollback triggers, re-harvest cadence. -->
+- [x] Record source-anonymous provenance in the mechanism matrix using file
       checksums and local-only source notes. Raw external links stay outside
       tracked files unless encrypted by the maintainer.
-- [ ] Declare the execution contract: phases -1, 0, and 0.5 require maintainer
+      <!-- done 2026-07-09 (decision): quality-metrics.md § 3 — provenance =
+      file checksums + LOCAL-ONLY source notes (no named source / raw link in
+      tracked files); encrypted-link retention is a maintainer-key alternative,
+      out of scope for this autonomous proposal. Satisfies source-confidentiality
+      by construction. -->
+- [x] Declare the execution contract: phases -1, 0, and 0.5 require maintainer
       checkpoint approval; later implementation phases can run autonomously
       only within the approved matrix and eval gates.
-- [ ] Choose the first pilot slice before any default flip. Recommended pilot:
+      <!-- done 2026-07-09: quality-metrics.md § 4 — contract declared; this
+      doc is a PROPOSAL pending the Phase-0 maintainer checkpoint; Phases 1–8 do
+      not start until accepted, and Phase 1 needs the local external corpus
+      (maintainer-held), so it is not autonomously fabricable. -->
+- [x] Choose the first pilot slice before any default flip. Recommended pilot:
       currentness/research routing, because it is high-value, measurable, and
       less entangled with memory or artifact creation.
+      <!-- done 2026-07-09 (decision): quality-metrics.md § 5 — pilot =
+      currentness / research routing (M1 + source-quality half of M3): high-value,
+      trigger-eval-measurable, least entangled with memory/artifacts. -->
 
 **Exit:** maintainer accepts the metrics, provenance method, execution mode,
 and first pilot slice.
