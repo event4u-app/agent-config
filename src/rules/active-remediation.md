@@ -42,7 +42,7 @@ Security gaps (broken access control, injection, secrets, missing authz — see 
 
 Allowed **only** when ALL hold — this is the testable "small + task-aligned" definition:
 - **Same request path / module** as the current task (not an unrelated feature).
-- **≤ ~10 changed lines**, single file, no cross-file ripple.
+- **≤ ~10 changed lines** in one production file plus its test file — no wider cross-file ripple.
 - **No public-API / response-shape change**, no new parameter.
 - **No dependency bump, no migration, no data change.**
 - **Its verification ships in the same commit** — e.g. the security fix's negative test, or the correctness fix's case.

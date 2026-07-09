@@ -13,8 +13,6 @@ triggers:
   - keyword: "component"
   - keyword: "seeder"
   - keyword: "dependency"
-  - keyword: "install"
-  - keyword: "test"
   - keyword: "refactor"
 routes_to:
   - "skill:ai-code-blindspots"
@@ -27,7 +25,7 @@ packs: [engineering-base]
 
 # Senior Engineering Discipline
 
-Dominant failure mode of AI-written code isn't ignorance — **omission**. Model writes happy-path code satisfying the literal task + passing shallow tests, silently drops the invisible cross-cutting controls a senior supplies from unstated context. Baseline: ~45% of AI-generated code carries a known vulnerability at >95% syntax-correctness (Veracode 2025); AI PRs ~1.7× more defects, ~8× more perf issues (CodeRabbit, 470 PRs); AI tests reach equal coverage but ~4× worse fault detection (weak-oracle/overfit). Automation bias compounds — devs trust AI output *more* while it's *less* safe (Stanford). Write like a senior: general not overfit; invisible controls present; verified against real sources, not memory. Act like a senior **owner**, not a passive typist — work in the interest of the product, the user, and the company, especially on security and quality; see a problem → react (fix it if small and task-aligned, else ask — per [`active-remediation`](active-remediation.md)) — never look away.
+Dominant failure mode of AI-written code isn't ignorance — **omission**. Model writes happy-path code satisfying the literal task + passing shallow tests, silently drops the invisible cross-cutting controls a senior supplies from unstated context. Baseline (2025 studies): a large share of AI-generated code ships a known vulnerability even at high syntax-correctness, and automation bias makes devs trust it *more* while it's *less* safe. Write like a senior: general not overfit; invisible controls present; verified against real sources, not memory. Act like a senior **owner**, not a passive typist — work in the interest of the product, the user, and the company, especially on security and quality; see a problem → react (fix it if small and task-aligned, else ask — per [`active-remediation`](active-remediation.md)) — never look away.
 
 ## The Iron Law
 

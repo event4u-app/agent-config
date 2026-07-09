@@ -58,11 +58,11 @@ Run before committing frontend changes; each should return zero (or every hit is
 
 ```bash
 # Insecure render + eval sinks
-rg -n 'dangerouslySetInnerHTML|v-html|\.innerHTML\s*=|document\.write\(|\beval\(|new Function\(' src/
+rg -n 'dangerouslySetInnerHTML|v-html|\.innerHTML\s*=|document\.write\(|\beval\(|new Function\('
 # Client secrets / token storage
-rg -n 'NEXT_PUBLIC_.*(SECRET|KEY|TOKEN|PASSWORD)|VITE_.*(SECRET|KEY)|localStorage\.setItem\([^)]*[Tt]oken' src/
+rg -n 'NEXT_PUBLIC_.*(SECRET|KEY|TOKEN|PASSWORD)|VITE_.*(SECRET|KEY)|localStorage\.setItem\([^)]*[Tt]oken'
 # Wildcard CORS + unchecked postMessage + open redirect
-rg -n "origin:\s*['\"]\*['\"]|Access-Control-Allow-Origin.*\*" src/
+rg -n "origin:\s*['\"]\*['\"]|Access-Control-Allow-Origin.*\*"
 rg -n "addEventListener\(\s*['\"]message['\"]" src/   # then confirm each checks event.origin
 # Unhardened external links
 rg -n 'target=["'\'']_blank["'\'']' src/   # then confirm rel="noopener" present

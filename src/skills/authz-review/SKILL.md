@@ -75,7 +75,7 @@ For every entrypoint, analyze the authorization chain and record what you find:
 | Authorization layer | Which policy, gate, voter, or check? Which action/ability? |
 | Data scope | Does the query filter by current user / tenant / owner? |
 | Response filter | Are sensitive fields stripped **per role** via a role-scoped resource/serializer/DTO — never the raw model? (a driver role must not receive `price`) |
-| Tests | Are the three negative tests present — unauthenticated → 401, authenticated-non-owner → 403/404, cross-tenant → 403? |
+| Tests | Are the three negative tests present — unauthenticated → 401, non-owner → 403/404, cross-tenant → 403/404 (404 hides existence)? |
 
 Record **what is there**, not what should be there. Use file:line citations.
 
@@ -165,7 +165,7 @@ Runtime confirmation (e.g. *"reproduce the cross-tenant read against staging"*,
   cite the exact location.
 * **The three negative tests are the security boundary.** Every protected
   entrypoint needs unauthenticated → 401, authenticated-non-owner → 403/404,
-  and cross-tenant → 403. A happy-path 200 test proves nothing about access
+  and cross-tenant → 403/404. A happy-path 200 test proves nothing about access
   control (this is BOLA / IDOR — OWASP API #1). Untested authz is also a
   direct GDPR Art. 32 gap. See [`broken-access-control`](../../rules/broken-access-control.md).
 * **Defense-in-depth so one miss can't leak** — stack ≥2 layers on sensitive

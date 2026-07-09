@@ -13,8 +13,6 @@ triggers:
   - keyword: "component"
   - keyword: "seeder"
   - keyword: "dependency"
-  - keyword: "install"
-  - keyword: "test"
   - keyword: "refactor"
 routes_to:
   - "skill:ai-code-blindspots"
@@ -27,7 +25,7 @@ packs: [engineering-base]
 
 # Senior Engineering Discipline
 
-The dominant failure mode of AI-written code is not ignorance — it is **omission**. The model writes the happy-path code that satisfies the literal task and passes shallow tests, and silently drops the invisible cross-cutting controls a senior engineer supplies from context the prompt never states. Baseline: ~45% of AI-generated code carries a known vulnerability at >95% syntax-correctness (Veracode 2025); AI PRs carry ~1.7× more defects and ~8× more performance issues (CodeRabbit, 470 PRs); AI-written tests reach equal coverage but ~4× worse fault detection (the weak-oracle / overfit problem). Automation bias compounds it — developers trust AI output *more* while it is *less* safe (Stanford). Write code the way a senior does: general, not overfit; with the invisible controls present; verified against real sources, not memory. Act like a senior **owner**, not a passive typist — work in the interest of the product, the user, and the company, especially on security and quality; when you see a problem, react (fix it if small and task-aligned, otherwise ask — per [`active-remediation`](active-remediation.md)) — never look away.
+The dominant failure mode of AI-written code is not ignorance — it is **omission**. The model writes the happy-path code that satisfies the literal task and passes shallow tests, and silently drops the invisible cross-cutting controls a senior engineer supplies from context the prompt never states. Baseline (2025 studies): a large share of AI-generated code ships a known vulnerability even at high syntax-correctness, and automation bias makes developers trust it *more* while it is *less* safe. Write code the way a senior does: general, not overfit; with the invisible controls present; verified against real sources, not memory. Act like a senior **owner**, not a passive typist — work in the interest of the product, the user, and the company, especially on security and quality; when you see a problem, react (fix it if small and task-aligned, otherwise ask — per [`active-remediation`](active-remediation.md)) — never look away.
 
 ## The Iron Law
 

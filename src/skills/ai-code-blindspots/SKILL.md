@@ -44,7 +44,7 @@ Run the row(s) for what you touched. The grep is a fast authoring-time backstop 
 
 | Surface you wrote | Invisible controls to assert | Deep skill |
 |---|---|---|
-| **HTTP endpoint / route** | authorization (this principal may act on this resource — not just authenticated); tenant scope; **the three negative tests** (unauth→401, non-owner→403/404, cross-tenant→403); input validation at the boundary; rate limit actually wired; state-changing → CSRF + audit log | `broken-access-control`, `authz-review`, `threat-modeling` |
+| **HTTP endpoint / route** | authorization (this principal may act on this resource — not just authenticated); tenant scope; **the three negative tests** (unauth→401, non-owner→403/404, cross-tenant→403/404); input validation at the boundary; rate limit actually wired; state-changing → CSRF + audit log | `broken-access-control`, `authz-review`, `threat-modeling` |
 | **DB query / ORM** | parameterized, never string-built; tenant predicate present; no `SELECT *` across a serialization boundary; N+1 avoided (eager load) | `source-discovery`, `security` |
 | **Migration** | reversible (`down`); expand-contract for drop/rename (never a bare `DROP COLUMN` before code stops reading it); transaction; index on new FK/filter column | `engineering-safety-floor`, `migration-architect` |
 | **User-controlled render (FE)** | output-encoded; no `dangerouslySetInnerHTML`/`v-html`/`innerHTML`/`eval` on non-constant input; no secret/token in client code; token not in `localStorage` | `frontend-render-security` |
@@ -58,10 +58,10 @@ Run the row(s) for what you touched. The grep is a fast authoring-time backstop 
 
 ```bash
 # Frontend insecure render / client secrets (React + Vue + vanilla)
-rg -n 'dangerouslySetInnerHTML|v-html|\.innerHTML\s*=|\beval\(|new Function\(' src/
-rg -n 'NEXT_PUBLIC_.*(SECRET|KEY|TOKEN)|VITE_.*(SECRET|KEY)|localStorage\.setItem\([^)]*[Tt]oken' src/
+rg -n 'dangerouslySetInnerHTML|v-html|\.innerHTML\s*=|\beval\(|new Function\('
+rg -n 'NEXT_PUBLIC_.*(SECRET|KEY|TOKEN)|VITE_.*(SECRET|KEY)|localStorage\.setItem\([^)]*[Tt]oken'
 # String-built SQL (concatenation / interpolation into a query)
-rg -n 'query\(.*(\+|\$\{|`).*\)|(SELECT|INSERT|UPDATE|DELETE).*(\+|\$\{)' src/
+rg -n 'query\(.*(\+|\$\{|`).*\)|(SELECT|INSERT|UPDATE|DELETE).*(\+|\$\{)'
 # Hardcoded secrets / weak hashing
 rg -n 'AKIA[0-9A-Z]{16}|sk_live_|AIza[0-9A-Za-z_\-]{35}|password\s*=\s*["\x27]|md5\(|sha1\(' .
 # Infra: wildcard IAM / open ingress / disabled TLS

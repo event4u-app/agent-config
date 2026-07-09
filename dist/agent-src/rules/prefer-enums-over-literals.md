@@ -8,20 +8,16 @@ triggers:
   - intent: "adding a status or type field"
   - keyword: "enum"
   - keyword: "status"
-  - keyword: "type"
-  - keyword: "state"
   - keyword: "kind"
   - keyword: "category"
   - keyword: "migration"
-  - keyword: "model"
-  - keyword: "column"
 workspaces: [engineering]
 packs: [engineering-base]
 ---
 
 # Prefer Enums Over Literal Values
 
-When a field/property holds **more than two non-boolean states** — strings (`'active'`, `'pending'`, `'archived'`) or meaningful numeric codes (priority `1`/`2`/`3`, tier levels) — model it as an **enum**, not a bare string/int. An enum names the value in code (readable), makes it greppable + safe to rename, gives exhaustiveness/typo safety, and makes filtering + editing relations far easier than raw literals scattered across the codebase.
+When a field/property holds **two or more non-boolean states** — strings (`'active'`, `'pending'`, `'archived'`) or meaningful numeric codes (priority `1`/`2`/`3`, tier levels) — model it as an **enum**, not a bare string/int. An enum names the value in code (readable), makes it greppable + safe to rename, gives exhaustiveness/typo safety, and makes filtering + editing relations far easier than raw literals scattered across the codebase.
 
 ## The Iron Law
 

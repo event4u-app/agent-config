@@ -6,11 +6,7 @@ description: "Multi-step or continuation replies carry a red thread — state th
 triggers:
   - intent: "producing a multi-step or continuation reply"
   - intent: "reporting progress on ongoing work"
-  - keyword: "continue"
-  - keyword: "next step"
-  - keyword: "phase"
-  - keyword: "progress"
-workspaces: [engineering]
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [engineering-base]
 ---
 

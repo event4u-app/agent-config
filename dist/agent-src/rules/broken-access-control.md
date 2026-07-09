@@ -25,7 +25,7 @@ packs: [engineering-base]
 
 # Broken Access Control
 
-The most common — and most damaging — failure in real systems and AI-written code: log in as one user, see another user's data. **Authenticated ≠ authorized.** The login check passes so the endpoint *feels* protected; the per-object ownership/tenant check is a separate line devs and AI omit — especially when the object id comes from the request. OWASP Web #1 (A01:2021) + API #1 (BOLA/IDOR, API1:2023), trivially scriptable, the single **universal** class across every AI agent tested (DryRun: 87% of AI PRs vulnerable). Real leaks: First American Financial (885M docs, sequential ids, no ownership check, undetected 5 years), Optus (~10M, sequential ids, fix on one host not another), USPS (60M, wildcard search returned any user's data), cross-tenant leak via a single client-supplied header.
+The most common — and most damaging — failure in real systems and AI-written code: log in as one user, see another user's data. **Authenticated ≠ authorized.** The login check passes so the endpoint *feels* protected; the per-object ownership/tenant check is a separate line devs and AI omit — especially when the object id comes from the request. OWASP Web #1 (A01:2021) and API #1 (BOLA/IDOR), trivially scriptable, and a recurring real-world breach class — e.g. First American Financial (885M documents exposed via sequential ids with no ownership check).
 
 ## The Iron Law
 
@@ -33,7 +33,7 @@ The most common — and most damaging — failure in real systems and AI-written
 AUTHENTICATED IS NOT AUTHORIZED. EVERY REQUEST-SUPPLIED ID/FILTER GETS A
 SERVER-DERIVED OWNERSHIP/TENANT CHECK BEFORE ANY DATA IS RETURNED.
 NO DATA-RETURNING ENDPOINT IS DONE WITHOUT THREE NEGATIVE TESTS:
-UNAUTHENTICATED → 401 · AUTHENTICATED-NOT-OWNER → 403/404 · CROSS-TENANT → 403.
+UNAUTHENTICATED → 401 · NOT-OWNER → 403/404 · CROSS-TENANT → 403/404 (404 HIDES EXISTENCE).
 ROLE DECIDES WHICH FIELDS — THE SERVER STRIPS THEM. THE FRONTEND HIDING A FIELD IS NOT PROTECTION.
 A LIVE CROSS-USER EXPOSURE IS A NOTIFIABLE BREACH — NEVER SILENTLY PATCH IT.
 ```
@@ -54,7 +54,7 @@ A protected endpoint is **not complete** until these exist and pass (happy-path 
 
 1. **unauthenticated → 401** (no token).
 2. **authenticated but not the owner → 403/404** (user A requests user B's object with A's token).
-3. **cross-tenant → 403** (a principal in tenant A requests tenant B's resource).
+3. **cross-tenant → 403/404** (a principal in tenant A requests tenant B's resource; prefer 404 on sensitive resources — a hard 403 confirms the id exists in another tenant).
 
 Small + task-aligned gap in code you touched → add the check **and** its negative test in the same commit (auto-fix boundary in `active-remediation`). Bigger → surface it.
 
@@ -66,11 +66,11 @@ Object-ownership (above) is *horizontal* (may this principal touch this record).
 - **Write side (CWE-915).** Bind input through a **role-scoped write-allowlist** — never the raw body. Read-allowed ≠ write-allowed: a role may *see* `status` but not *set* `status:"approved"`; two independent sets.
 - **Function level (BFLA, OWASP API #5).** A role must not reach a function/verb reserved for a higher role. Gate **every mutating verb** (POST/PUT/PATCH/DELETE), deny-by-default — not just the GET you were asked about. The admin button being hidden is not a control.
 - **Nested / GraphQL.** Field-level checks propagate to nested selections; a low-role token selecting a restricted field gets null/error, not data.
-- **Negative tests, per (role × sensitive field), both directions:** lower-role token → the field is **absent from the raw response body** (assert the body, not the UI); lower-role setting it on input → rejected/ignored, **verified by re-reading the persisted record**; every privileged verb → 403 for lower roles.
+- **Negative tests, per (role × sensitive field), both directions:** lower-role token → the field is **absent from the raw response body** (assert the body, not the UI); lower-role setting it on input → rejected/ignored, **verified by re-reading the persisted record**; every privileged verb → 403 for lower roles (403/404 on sensitive object reads).
 
-## Defense-in-depth (so one miss can't leak) → `authz-review`
+## Defense-in-depth (so one miss can't leak)
 
-Stack ≥2 independent layers on sensitive data: **query-level ownership scoping** (base scope injects the predicate) + a **centralized default-deny policy layer** (a route with no declared policy is denied, not silently open) + **DB row-level security** (Postgres RLS `FORCE ROW LEVEL SECURITY`, tenant var via `SET LOCAL`) as the backstop for a forgotten `WHERE tenant_id`. Depth + per-role authz matrix live in `authz-review`.
+Stack ≥2 independent layers on sensitive data — query-level ownership scoping, a centralized default-deny policy layer (a route with no policy is denied, not silently open), and DB row-level security as the backstop for a forgotten `WHERE tenant_id`. The RLS / policy-layer configuration, the per-role authz matrix, and the audit greps live once in [`authz-review`](../skills/authz-review/SKILL.md).
 
 ## GDPR / DSGVO — data protection by design
 
@@ -79,15 +79,13 @@ A cross-user leak violates **Art. 5(1)(f)** (integrity & confidentiality — a p
 ## Backstop greps (authoring-time)
 
 ```bash
-# Record fetched by request id with no owner/tenant predicate nearby
-rg -n '(findById|find|findOne|get)\(\s*(req\.|request\.|params\.|\$request|\$id)' src/
+# Record fetched by request id with no owner/tenant predicate nearby (high-noise — a hit means read the line, not auto-fix)
+rg -n '(findById|find|findOne|get)\(\s*(req\.|request\.|params\.|\$request|\$id)'
 # Client-supplied tenant/user hint used as the scope (should come from the session)
-rg -n '(tenant|tenantId|user_id|userId)\s*=\s*(req|request|params|headers|query)\.' src/
-# Whole-body binding (mass assignment) + sequential-id exposure
-rg -n 'create\(\s*(req\.body|request\.all\(\)|params)\s*\)|update\(\s*(req\.body|request\.all\(\))' src/
-# Raw model serialization into a response (no role-scoped DTO) — field-level over-exposure
-rg -n 'return\s+\$?\w+->toArray\(\)|res\.json\(\s*\w+\s*\)|return\s+model_to_dict|\.to_json\(\)|JsonResponse\(\s*\w+\.__dict__' src/
+rg -n '(tenant|tenantId|user_id|userId)\s*=\s*(req|request|params|headers|query)\.'
 ```
+
+The full authoring-time grep set (mass-assignment, raw-serialization, secrets) lives once in [`ai-code-blindspots`](../skills/ai-code-blindspots/SKILL.md).
 
 A hit means read that line — is the ownership/tenant check present? Some are safe (already scoped); none should ship unchecked.
 

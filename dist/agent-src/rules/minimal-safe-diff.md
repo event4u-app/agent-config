@@ -104,7 +104,7 @@ The default stands: no drive-by edits, no opportunistic refactors. The one
 bounded exception — a **small, task-aligned security/correctness fix in code
 the current task already touches** — is governed by
 [`active-remediation`](active-remediation.md). Permitted inline **only** when
-ALL hold: same request path / module, ≤ ~10 changed lines in a single file,
+ALL hold: same request path / module, ≤ ~10 changed lines in one production file (plus its test file),
 no public-API / response-shape change, no dependency bump or migration, and
 its verification (e.g. the negative test) ships in the same commit. Anything
 outside those five conditions is **not** this carve-out — it is note + ask per

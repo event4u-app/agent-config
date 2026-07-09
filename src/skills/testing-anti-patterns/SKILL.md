@@ -156,7 +156,7 @@ expect(res.body.name).toBe(user.name)
 expect(res.body).not.toHaveProperty('passwordHash')            // security property
 expect((await api.get('/users/999999')).status).toBe(404)      // boundary: missing
 expect((await api.get('/users/abc')).status).toBe(400)         // error: invalid input
-expect((await api.get(`/users/${otherTenantUser.id}`)).status).toBe(403) // abuse: tenant isolation
+expect([403, 404]).toContain((await api.get(`/users/${otherTenantUser.id}`)).status) // abuse: tenant isolation (404 hides existence)
 ```
 
 Deriving from seeded data is necessary but **not sufficient** — a test that only reads back the exact fields it seeded is still overfit (a mutation in the code survives it). A real test also exercises boundary (empty / null / max / Unicode), error (missing / invalid), and, on security-sensitive paths, an abuse case (IDOR, injection string, XSS payload). Coverage of *cases*, not just lines.
