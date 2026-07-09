@@ -76,13 +76,14 @@ tasks:
 
   test:
     silent: true
-    desc: Run all bash integration tests (parallel where safe). TS unit tests run via `task test-ts` (vitest).
+    desc: Run the full test surface — bash integration tests (parallel where safe) + the TS unit suite (`test-ts`, vitest). Narrow vitest runs stay native (`npx vitest run <file>`).
     cmds:
       - bash tests/test_install.sh --parallel
       - bash tests/test_install_orchestrator.sh --parallel
       - bash tests/test_install_openai_key.sh
       - bash tests/test_install_anthropic_key.sh
       - task: test-ai-video
+      - task: test-ts
 
   test-ai-video:
     silent: true
