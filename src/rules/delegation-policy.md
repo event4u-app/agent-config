@@ -73,6 +73,11 @@ primitive → run in-session (clean no-op).
    ordered slice never dispatches before its declared parent's return is
    verified. Both per
    [`subagent-steering`](../contexts/execution/subagent-steering.md).
+6. **Record** telemetry after each dispatch — run `orchestration_record`
+   (one validated line: spawn_count, token_delta + provenance, tier, task_class)
+   per [`orchestration-telemetry`](../contexts/execution/orchestration-telemetry.md)
+   § Emit. This is the agent-behavioral capture the savings report reads;
+   skipping it leaves the value-of-orchestration question unmeasured.
 
 ## Scope — does NOT
 
