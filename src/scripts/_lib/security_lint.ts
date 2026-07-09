@@ -52,6 +52,7 @@ export const DEFAULT_SCAN_ROOTS: readonly string[] = [
     'src/rules',
     'src/agent-src',
     'src/domains',
+    'dist/agent-src',
 ];
 
 // A path is "example/teaching" (0.25x weight) when it lives under docs/ or

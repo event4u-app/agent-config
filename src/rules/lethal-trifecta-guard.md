@@ -21,7 +21,11 @@ packs: [engineering-base]
 Prompt injection is not solvable at the model layer (OWASP LLM01). It is
 contained **architecturally**: a tool/skill/command becomes dangerous only when
 it combines all three legs of the *lethal trifecta*. Remove one leg and an
-injected instruction can do no consequential harm.
+injected instruction can do no consequential harm. This is the agentic
+attack surface OWASP's Agentic Security Initiative (ASI Top 10) catalogues —
+excessive agency, tool misuse, and confused-deputy data exfiltration; the
+Least-Agency discipline in [`tool-safety`](tool-safety.md) is the same defence
+applied to the tool grant.
 
 ## The Iron Law
 
@@ -75,6 +79,7 @@ backstop.
 ## See also
 
 - [`untrusted-input-defense`](untrusted-input-defense.md) — data/instruction separation, spotlighting.
+- [`tool-safety`](tool-safety.md) — Least Agency: the narrowest tool grant breaks the egress leg by construction (OWASP ASI excessive-agency).
 - [`security-sensitive-stop`](security-sensitive-stop.md) — threat-model before editing a sensitive surface.
 - [`non-destructive-by-default`](non-destructive-by-default.md) — the human-in-the-loop egress floor.
 - [`threat-modeling`](../skills/threat-modeling/SKILL.md) — abuse-case enumeration.
