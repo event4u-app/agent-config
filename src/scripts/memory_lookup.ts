@@ -36,6 +36,7 @@ import { createRequire } from 'node:module';
 import YAML, { parseDocument } from 'yaml';
 
 import { sanitize_entry } from './_lib/retrieval_sanitize.js';
+import { LexicalIndex, tokenize as _lexTokenize } from './_lib/lexical_index.js';
 
 
 // PyYAML implicit timestamp resolver. PyYAML's `safe_load` turns a plain
@@ -74,13 +75,35 @@ export let KNOWLEDGE_ROOT = path.join(MEMORY_ROOT, 'knowledge');
 /** Test-only setters mirroring pytest monkeypatch on the module constants. */
 export function _setMemoryRoot(p: string): void {
     MEMORY_ROOT = p;
+    _corpusFileCounts = null; // invalidate the tripwire count cache
 }
 export function _setIntakeRoot(p: string): void {
     INTAKE_ROOT = p;
+    _corpusFileCounts = null;
 }
 export function _setKnowledgeRoot(p: string): void {
     KNOWLEDGE_ROOT = p;
+    _corpusFileCounts = null;
 }
+
+// --- Lexical-index activation tripwire (road-to-retrieval-substrate-hardening
+// B2). Keep in sync with lint_knowledge_scale.ts (the source of truth for the
+// scale tripwire this activates at). Above the tripwire the coarse `_score`
+// bucket ranking is replaced by the BM25 lexical index; below it `_score`
+// stays the mini-corpus fallback (byte-identical to today).
+const _LEX_TYPE_FILES_MAX = 200;
+const _LEX_CORPUS_FILES_MAX = 500;
+/** Per-source relevance factor mirroring the `_score` discounts (curated wins ties). */
+const _LEX_SOURCE_FACTOR: Record<string, number> = { curated: 1.0, intake: 0.9, knowledge: 0.85 };
+
+/** Test-only override of the tripwire thresholds (both set to `n`, `null` clears). */
+let _lexTripwireOverride: number | null = null;
+export function _setLexicalTripwireOverride(n: number | null): void {
+    _lexTripwireOverride = n;
+    _corpusFileCounts = null;
+}
+
+let _corpusFileCounts: { perType: Map<string, number>; total: number } | null = null;
 
 export const CURATED_TYPES: ReadonlySet<string> = new Set([
     'ownership',
@@ -665,6 +688,97 @@ export function _entry_tokens_estimate(envelope_entry: Record<string, unknown>):
     return Math.ceil(serialized.length / 4);
 }
 
+/** Count `*.md` files recursively under a dir (knowledge chunks). */
+function _countMdFiles(dir: string): number {
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return 0;
+    }
+    let n = 0;
+    for (const e of entries) {
+        if (e.isDirectory()) n += _countMdFiles(path.join(dir, e.name));
+        else if (e.isFile() && e.name.endsWith('.md')) n += 1;
+    }
+    return n;
+}
+
+/**
+ * Corpus file counts for the lexical-index tripwire — curated `*.yml` (one per
+ * type), knowledge `*.md` chunks, intake `*.jsonl`. Memoised per root set
+ * (invalidated by the `_set*Root` setters). Mirrors what `lint_knowledge_scale`
+ * counts, so both fire at the same scale.
+ */
+function _countCorpusFiles(): { perType: Map<string, number>; total: number } {
+    if (_corpusFileCounts !== null) return _corpusFileCounts;
+    const perType = new Map<string, number>();
+    let total = 0;
+    // Curated: one file per type present.
+    for (const t of CURATED_TYPES) {
+        const exists = fs.existsSync(path.join(MEMORY_ROOT, `${t}.yml`));
+        const c = exists ? 1 : 0;
+        perType.set(t, c);
+        total += c;
+    }
+    // Knowledge: recursive chunk files.
+    const kn = _countMdFiles(KNOWLEDGE_ROOT);
+    perType.set(KNOWLEDGE_TYPE, kn);
+    total += kn;
+    // Intake: monthly signal logs.
+    try {
+        for (const e of fs.readdirSync(INTAKE_ROOT, { withFileTypes: true })) {
+            if (e.isFile() && e.name.endsWith('.jsonl')) total += 1;
+        }
+    } catch {
+        /* no intake dir — fine */
+    }
+    _corpusFileCounts = { perType, total };
+    return _corpusFileCounts;
+}
+
+/** True when the corpus has crossed the lexical-index activation tripwire. */
+function _lexicalRankActive(types: readonly string[]): boolean {
+    const typeMax = _lexTripwireOverride ?? _LEX_TYPE_FILES_MAX;
+    const corpusMax = _lexTripwireOverride ?? _LEX_CORPUS_FILES_MAX;
+    const counts = _countCorpusFiles();
+    if (counts.total > corpusMax) return true;
+    for (const t of types) {
+        if ((counts.perType.get(t) ?? 0) > typeMax) return true;
+    }
+    return false;
+}
+
+/** Concatenated searchable text of an entry — the fields `_score` reads. */
+function _entryIndexText(entry: Record<string, unknown>): string {
+    const parts: string[] = [];
+    for (const f of ['path', 'key', 'symptom', 'feature', 'rule', 'body']) {
+        const v = entry[f];
+        if (typeof v === 'string') parts.push(v);
+        else if (Array.isArray(v)) for (const x of v) parts.push(_pyStr(x));
+    }
+    return parts.join(' | ');
+}
+
+/**
+ * Re-rank keyword-recalled hits with the BM25 lexical index (B2 activation).
+ * Replaces the coarse `_score` bucket with a continuous, tie-breaking score
+ * mapped into [0,1] (`s/(s+1)`) and scaled by the source factor so curated
+ * truth still wins on equal relevance. Only the `_score`-positive set is
+ * re-ranked (same universe the measurement proved); a hit the index cannot
+ * score (no shared token) keeps a tiny epsilon so it is never dropped.
+ */
+function _lexicalRerank(hits: Hit[], keys: string[]): void {
+    if (hits.length === 0) return;
+    const index = new LexicalIndex(hits.map((h) => ({ id: h.id, text: _entryIndexText(h.entry) })));
+    const qTerms = _lexTokenize(keys.join(' '));
+    for (const h of hits) {
+        const bm25 = index.score(qTerms, h.id);
+        const factor = _LEX_SOURCE_FACTOR[h.source] ?? 0.8;
+        h.score = bm25 > 0 ? (bm25 / (bm25 + 1)) * factor : h.score * 1e-6;
+    }
+}
+
 function _retrieve_internal(types: string[], keys: string[], limit: number, today: Date): [Hit[], SkippedEntry[]] {
     const repo_hits: Hit[] = [];
     const skipped: SkippedEntry[] = [];
@@ -750,7 +864,15 @@ function _retrieve_internal(types: string[], keys: string[], limit: number, toda
     }
 
     _sortMerged(repo_hits);
-    const positives = repo_hits.filter((h) => h.score > 0);
+    let positives = repo_hits.filter((h) => h.score > 0);
+    // B2 activation: above the lexical tripwire, re-rank the recalled set with
+    // the BM25 index so ties break by relevance (not store order). Inert below
+    // scale, so small/curated corpora stay byte-identical to `_score`.
+    if (positives.length > 0 && _lexicalRankActive(types)) {
+        _lexicalRerank(positives, keys);
+        _sortMerged(positives);
+        positives = positives.filter((h) => h.score > 0);
+    }
     const hits = (positives.length > 0 ? positives : repo_hits).slice(0, limit);
     return [hits, skipped];
 }
