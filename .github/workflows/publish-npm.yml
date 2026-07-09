@@ -56,7 +56,10 @@ jobs:
           cache: 'npm'
 
       - name: Upgrade npm (Trusted Publishing requires >= 11.5.1)
-        run: npm install -g npm@latest
+        # Pin to the npm 11 line: npm@latest is now 12.x, which requires
+        # Node >=22 and fails EBADENGINE on this job's Node 20. npm 11 is
+        # Node-20-compatible and already satisfies the >= 11.5.1 floor.
+        run: npm install -g npm@11
 
       - name: Resolve effective tag
         id: tag
