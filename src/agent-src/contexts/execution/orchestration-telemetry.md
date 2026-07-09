@@ -23,6 +23,8 @@ v1 forward-compat rule on unknown fields).
   "task_class": null,
   "tier_chosen": null,
   "tier_source": null,
+  "dispatch_tokens": null,
+  "session_tier": null,
   "escalated_from": null,
   "verify_result_by_tier": null
 }
@@ -46,8 +48,10 @@ v1 forward-compat rule on unknown fields).
 | `tier_source` | enum \| null | Where `tier_chosen` came from: `static` (frontmatter/category pin) · `inferred` (deterministic per-slice inference) · `inherit` (session tier — no downshift decision). Lets the evidence gate score inferred routing separately from static pinning. |
 | `escalated_from` | string \| null | When the slice was re-dispatched after a verification failure: the tier of the FAILED attempt (e.g. `lite` when a lite return failed verify and the slice re-ran on `medium`). `null` = no escalation. |
 | `verify_result_by_tier` | object \| null | Map of tier → verification result for every attempt of this slice (e.g. `{"lite":"fail","medium":"pass"}`). Values: `pass` \| `fail` \| `skipped`. Feeds the per-tier verify-pass-rate tripwire. Enums only, no verdict bodies. |
+| `dispatch_tokens` | int \| null | **Cost-% extension.** Absolute tokens the dispatched slice consumed (measured subagent usage). Feeds the MODELED cost-% in `orchestration_savings_report`, which needs an absolute base the token-count delta lacks. `null` = not recorded. Counts only. |
+| `session_tier` | string \| null | **Cost-% extension.** The orchestrator's OWN tier — the baseline the downshift cost-% measures `tier_chosen` against (a `high`→`lite` downshift is a rate win the token count can't see). `null` = not recorded. |
 
-All five routing fields are additive and optional — a line without them is
+These routing + cost fields are additive and optional — a line without them is
 still a valid orchestration line; readers ignore unknown fields per the v1
 forward-compat rule.
 

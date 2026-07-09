@@ -6,10 +6,12 @@
  * mutation. Handles a missing/empty audit dir gracefully.
  *
  * Usage:
- *   ./scripts-run src/scripts/orchestration_savings_report [--dir <path>] [--format text|json]
+ *   ./scripts-run src/scripts/orchestration_savings_report \
+ *     [--dir <path>] [--format text|json] [--weights lite=1,medium=5,high=15]
  *
  * Default dir: agents/runtime/state/audit (the audit-log-v1 path where the
- * orchestration layer writes telemetry lines). See
+ * orchestration layer writes telemetry lines). `--weights` tunes the
+ * provider-neutral tier weights behind the MODELED cost-%. See
  * `src/agent-src/contexts/execution/orchestration-telemetry.md`.
  */
 
@@ -17,17 +19,30 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { aggregateOrchestrationSavings, type AuditLine, type SavingsReport } from './_lib/orchestration_savings.js';
+import { aggregateOrchestrationSavings, DEFAULT_TIER_WEIGHTS, type AuditLine, type SavingsReport, type TierWeights } from './_lib/orchestration_savings.js';
 
 const DEFAULT_DIR = 'agents/runtime/state/audit';
 
 interface Options {
     dir: string;
     format: 'text' | 'json';
+    weights: TierWeights;
+}
+
+/** Parse `lite=1,medium=5,high=15` → weight map. Returns undefined if nothing valid parsed. */
+function parseWeights(spec: string | undefined): TierWeights | undefined {
+    if (!spec) return undefined;
+    const w: TierWeights = {};
+    for (const pair of spec.split(',')) {
+        const [k, v] = pair.split('=');
+        const n = Number(v);
+        if (k && Number.isFinite(n)) w[k.trim()] = n;
+    }
+    return Object.keys(w).length ? w : undefined;
 }
 
 function parseArgs(argv: string[]): Options {
-    const opts: Options = { dir: DEFAULT_DIR, format: 'text' };
+    const opts: Options = { dir: DEFAULT_DIR, format: 'text', weights: DEFAULT_TIER_WEIGHTS };
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === undefined) continue;
@@ -35,6 +50,8 @@ function parseArgs(argv: string[]): Options {
         else if (a.startsWith('--dir=')) opts.dir = a.slice('--dir='.length);
         else if (a === '--format') opts.format = (argv[++i] as Options['format']) ?? opts.format;
         else if (a.startsWith('--format=')) opts.format = a.slice('--format='.length) as Options['format'];
+        else if (a === '--weights') opts.weights = parseWeights(argv[++i]) ?? opts.weights;
+        else if (a.startsWith('--weights=')) opts.weights = parseWeights(a.slice('--weights='.length)) ?? opts.weights;
     }
     if (opts.format !== 'text' && opts.format !== 'json') opts.format = 'text';
     return opts;
@@ -77,6 +94,13 @@ function renderText(r: SavingsReport, dir: string): string {
         out.push('  by task_class (Δ tokens):');
         for (const [cls, d] of Object.entries(r.by_task_class).sort()) out.push(`    ${cls}: ${d}`);
     }
+    const mc = r.modeled_cost;
+    if (mc.cost_reduction_pct !== null) {
+        out.push(`  MODELED cost reduction: ${(mc.cost_reduction_pct * 100).toFixed(0)}%  (over ${mc.covered_dispatches}/${r.dispatches} dispatch(es) with tier data)`);
+        out.push(`    weights ${JSON.stringify(mc.weights)} · baseline ${mc.baseline_cost_units} → delegated ${mc.delegated_cost_units} cost-units · MODEL, not measured $`);
+    } else {
+        out.push('  MODELED cost reduction: n/a (needs dispatch_tokens + session_tier + tier_chosen on a dispatch)');
+    }
     out.push('  notes:');
     for (const n of r.notes) out.push(`    - ${n}`);
     return out.join('\n');
@@ -85,7 +109,7 @@ function renderText(r: SavingsReport, dir: string): string {
 export function main(argv: string[] = process.argv.slice(2)): number {
     const opts = parseArgs(argv);
     const lines = readAuditLines(opts.dir);
-    const report = aggregateOrchestrationSavings(lines);
+    const report = aggregateOrchestrationSavings(lines, opts.weights);
     if (opts.format === 'json') {
         process.stdout.write(JSON.stringify({ ...report, source: opts.dir }, null, 2) + '\n');
     } else {
