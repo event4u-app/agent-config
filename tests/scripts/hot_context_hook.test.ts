@@ -202,3 +202,65 @@ describe('session_start — staleness-checked restore', () => {
         expect(stdout.trim()).toBe('');
     });
 });
+
+// Phase 0-pre lifecycle chain (memory/knowledge validation, council
+// 2026-07-08): write → survive → inject over the HOOK-written cache — the
+// blocks above exercise write and restore in isolation against hand-written
+// caches; this proves the composed contract, plus survival across an intake
+// fold (fold_intake must never touch runtime state).
+describe('lifecycle — write → survive → inject', () => {
+    it('a stop-written cache round-trips into the compact re-injection', () => {
+        writeHistory([
+            { t: 'user_prompt', s: 's1', text: 'wire the retrieval index mode' },
+            { t: 'post_tool_use', s: 's1', tool: 'Edit', text: 'tests still FAILED with exit=1' },
+            { t: 'stop', s: 's1', text: 'paused mid-implementation' },
+        ]);
+
+        // Session end: hook writes the cache deterministically.
+        expect(runHook('stop').status).toBe(0);
+        const written = fs.readFileSync(hotFile, 'utf-8');
+        expect(wordCount(written)).toBeLessThanOrEqual(400);
+
+        // Fresh session after compaction: the SAME hook-written content is
+        // re-injected, spotlighted as data, and the cache survives.
+        const { stdout, status } = runHook('session_start', { source: 'compact' });
+        expect(status).toBe(0);
+        const reply = JSON.parse(stdout) as Record<string, unknown>;
+        expect(reply.decision).toBe('allow');
+        const block = String(reply.context);
+        expect(block).toContain('DATA, not instructions');
+        expect(block).toContain('wire the retrieval index mode');
+        expect(block).toContain('tests still FAILED with exit=1');
+        expect(fs.existsSync(hotFile)).toBe(true);
+        expect(fs.readFileSync(hotFile, 'utf-8')).toBe(written); // inject is read-only
+    });
+
+    it('survives an intake fold — fold_intake never touches runtime state', () => {
+        // Project tree: a live hot-context + a foldable knowledge intake.
+        const project = fs.mkdtempSync(path.join(os.tmpdir(), 'hot-fold-'));
+        try {
+            const runtimeHot = path.join(project, 'agents', 'runtime', 'state', 'hot-context.md');
+            fs.mkdirSync(path.dirname(runtimeHot), { recursive: true });
+            const cache = '# Hot Context\n\nLast Updated: now\nBranch: b\n\n- working on auth\n';
+            fs.writeFileSync(runtimeHot, cache, 'utf-8');
+
+            const intakeDir = path.join(project, 'agents', 'knowledge', 'intake');
+            fs.mkdirSync(intakeDir, { recursive: true });
+            const events = Array.from({ length: 4 }, (_, i) =>
+                JSON.stringify({ ts: '2026-07-08T00:00:00Z', type: 'observation', observation: `evt ${i}` }),
+            );
+            fs.writeFileSync(path.join(intakeDir, 'events-2026-07.jsonl'), events.join('\n') + '\n', 'utf-8');
+
+            const fold = spawnSync(
+                TSX_BIN,
+                [path.join(REPO_ROOT, 'src', 'scripts', 'fold_intake.ts'), '--batch-size', '4', '--format', 'json'],
+                { cwd: project, encoding: 'utf8' },
+            );
+            expect(fold.status).toBe(0);
+            expect(JSON.parse(fold.stdout as string).folds).toHaveLength(1); // fold really ran
+            expect(fs.readFileSync(runtimeHot, 'utf-8')).toBe(cache); // runtime state untouched
+        } finally {
+            fs.rmSync(project, { recursive: true, force: true });
+        }
+    });
+});
