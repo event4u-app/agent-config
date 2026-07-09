@@ -48,6 +48,17 @@ interface TaskResult {
     index: { rank: number; tieSet: number };
 }
 
+interface RankingSummary {
+    tasks: number;
+    k: number;
+    baseline_mean_tie_set: number;
+    index_mean_tie_set: number;
+    baseline_precision_at_1: number;
+    index_precision_at_1: number;
+    baseline_precision_at_k: number;
+    index_precision_at_k: number;
+}
+
 /** Text an entry contributes to the index — the fields `_score` also reads. */
 function entryText(entry: Record<string, unknown>): string {
     const parts: string[] = [];
@@ -68,7 +79,7 @@ function diagnose(ranked: Array<{ id: string; score: number }>, needed: string):
     return { rank, tieSet };
 }
 
-export function measure(): { tasks: TaskResult[]; summary: Record<string, number> } {
+export function measure(): { tasks: TaskResult[]; summary: RankingSummary } {
     _setMemoryRoot(STORE_DIR);
     _setKnowledgeRoot(path.join(STORE_DIR, 'knowledge-none'));
     _setIntakeRoot(path.join(STORE_DIR, 'intake-none'));
@@ -131,7 +142,7 @@ export function main(argv: string[]): number {
         }
     }
 
-    let out: { tasks: TaskResult[]; summary: Record<string, number> };
+    let out: { tasks: TaskResult[]; summary: RankingSummary };
     try {
         out = measure();
     } catch (exc) {
