@@ -70,7 +70,8 @@
           "types": {"type": "array", "items": {"type": "string"}, "minItems": 1, "description": "Memory types to scan, e.g. `historical-patterns`, `incident-learnings`, `ownership`. At least one required."},
           "keys": {"type": "array", "items": {"type": "string"}, "description": "Optional anchor paths or globs to match entries against (e.g. a file you are about to edit)."},
           "limit": {"type": "integer", "minimum": 1, "default": 5, "description": "Maximum entries to return per type. Defaults to 5."},
-          "detail": {"type": "string", "enum": ["index", "full"], "default": "full", "description": "'index' returns compact priced rows (id, title, tokens_estimate) instead of full bodies — call this first, then memory_get the ids you need. 'full' (default) returns complete entries."}
+          "detail": {"type": "string", "enum": ["index", "full"], "default": "full", "description": "'index' returns compact priced rows (id, title, tokens_estimate) instead of full bodies — call this first, then memory_get the ids you need. 'full' (default) returns complete entries."},
+          "token_budget": {"type": "integer", "minimum": 1, "description": "Optional token budget. When set, entries are rendered as one-line compact rows (id, type, confidence, `line`) and the row set is hard-cut at token_budget × 4 chars; omitted hits appear as a top-level `truncation` hint naming a concrete next step. Absent → the envelope is unchanged."}
         },
         "required": ["types"],
         "additionalProperties": false
