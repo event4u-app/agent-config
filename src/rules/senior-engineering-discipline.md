@@ -58,7 +58,7 @@ The full surface→controls table with authoring-time backstop greps: → `skill
 
 ### 3. Verify — never assert from memory
 
-No completion claim without exercising the real path (the running endpoint / UI / test — not "the code looks right"). "Defined but not wired" (middleware written but never connected to the route) counts as **not done**. → `verify-before-complete`, `source-discovery-gate`.
+No completion claim without exercising the real path (the running endpoint / UI / test — not "the code looks right"). "Defined but not wired" (middleware written but never connected to the route) counts as **not done**. **Before pushing code or opening a PR, run a changed-files static pass — type-checker + linter scoped to the diff (e.g. `tsc --noEmit` on the touched project, the project linter on the changed files) — even when `quality.local_auto_run` is false. This is a narrow probe of your own diff, NOT the suppressed full quality pipeline; skipping it and letting a compile/lint error hit remote CI is a completion claim without evidence (the exact beginner error this guards against).** → `verify-before-complete`, `source-discovery-gate`.
 
 ## When it fires
 
