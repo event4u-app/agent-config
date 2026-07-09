@@ -49,6 +49,13 @@
 - status: backed
 - last_verified: 2026-07-04
 
+### claim: shipped-artifacts-hidden-instruction-scanned
+- claim: Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class) before it can merge or publish.
+- kind: qual
+- evidence: .github/workflows/skill-lint.yml#task lint-agent-security
+- status: backed
+- last_verified: 2026-07-09
+
 ### claim: surgical-uninstall
 - claim: Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.
 - kind: qual

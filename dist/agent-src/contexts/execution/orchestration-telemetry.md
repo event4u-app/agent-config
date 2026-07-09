@@ -74,10 +74,22 @@ audit-log-v1 path; `YYYY-MM` = current UTC month). The line is a standard
 audit-log-v1 object with `input_kind: "orchestration"` and an `orchestration`
 sub-object carrying this shape.
 
-**No hook or daemon required.** The agent writes directly via its file-write
-tool — same mechanism as any other agent-written artifact. No-runtime-compatible
-capture path (decided 2026-06-30, maintainer decision; see
-`road-to-subagent-value-realization.md § Council notes`).
+**No hook or daemon required.** The agent writes the line directly —
+no-runtime-compatible capture path (decided 2026-06-30, maintainer decision; see
+`road-to-subagent-value-realization.md § Council notes`). Do NOT hand-author the
+JSON: run the recorder, which validates + builds a conformant line from the
+counts you already have:
+
+```bash
+./scripts-run src/scripts/orchestration_record --spawn-count <n> \
+  --token-delta <±n> --provenance measured|estimated \
+  [--tier-chosen lite|medium|high] [--tier-source static|inferred|inherit] \
+  [--task-class <id>] [--tiers a,b] [--dispatch-outcome DONE|BLOCKED|…]
+```
+
+A capture **hook** is the wrong tool: the PostToolUse payload carries no subagent
+token usage (only the orchestrator sees it) and a hook reverses the 2026-06-30
+no-hook decision. Reader: `src/scripts/orchestration_savings_report.ts`.
 
 **`token_delta` sourcing priority:**
 1. Host-reported: read `usage.output_tokens` (and `usage.input_tokens` if
