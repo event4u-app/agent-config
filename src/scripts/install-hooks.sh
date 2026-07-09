@@ -42,6 +42,31 @@ if ! ./scripts-run src/scripts/check_no_conflict_markers --quiet; then
     fail=1
 fi
 
+# Changed-files static pass (typecheck + lint) — the deterministic backstop to
+# the behavioural verify-before-complete rule (#818). Catches the compile/lint
+# errors that reach remote CI "Static Checks" (e.g. TS18048). Runs only when
+# the push touches .ts, so docs-only pushes stay fast. Skip a genuine WIP push
+# with AGENT_CONFIG_SKIP_PREPUSH_STATIC=1 (the agent cannot use --no-verify).
+echo "🔍 Static check on changed TypeScript (typecheck + lint)..."
+if [ "${AGENT_CONFIG_SKIP_PREPUSH_STATIC:-}" = "1" ]; then
+    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_STATIC=1"
+else
+    base="$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD~1)"
+    changed_ts="$(git diff --name-only --diff-filter=d "$base"...HEAD -- '*.ts' 2>/dev/null || true)"
+    if [ -n "$changed_ts" ]; then
+        if ! npx eslint $changed_ts; then
+            echo "❌  ESLint failed on changed TypeScript. Fix before pushing (or AGENT_CONFIG_SKIP_PREPUSH_STATIC=1 for a WIP push)."
+            fail=1
+        fi
+        if ! npm run --silent typecheck; then
+            echo "❌  Typecheck (tsc) failed — this is the class of error remote CI 'Static Checks' catches (#818). Fix before pushing."
+            fail=1
+        fi
+    else
+        echo "⏭️  no changed .ts vs origin/main — skipping."
+    fi
+fi
+
 if [ $fail -ne 0 ]; then
     echo ""
     echo "   Push blocked — fix the failures above and re-push."

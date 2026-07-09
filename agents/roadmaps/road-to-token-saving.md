@@ -155,7 +155,15 @@ Build the evidence rig first.
       ids council-mapped (2026-06-26 claude+gpt) to real router ids — scaffold
       VALID, all 4 scenarios present. Coverage 14/89; --require-complete stays red
       until all rules covered (more tasks / multi-rule tags) — operator-optional,
-      non-blocking. Kept [ ] (not yet spanning all rules). -->
+      non-blocking. Kept [ ] (not yet spanning all rules). LIVE JUDGE
+      RUN executed 2026-07-09 (haiku, 30 tasks): thin 5 / eager 11 decisive,
+      win-rate 31% BUT INCONCLUSIVE — Wilcoxon p=0.196 (not significant),
+      judge inconsistency 33%, length-confound 69%. Not a regression verdict
+      (over-claiming a confounded non-significant signal would violate the
+      honest-null discipline); recorded in docs/benchmark.md; evidence
+      internal/bench/reports/quality-run-2026-07-09-haiku-inconclusive.json.
+      A trustworthy verdict needs a stronger length-neutral judge (re-open).
+      Still [ ]: coverage 14/89 AND no trustworthy judge verdict yet. -->
 - [x] Build a **length-controlled paired judge**: pairwise A/B in randomised
       order, swap-and-recheck for position/length bias, reject the judge if it
       flips; paired significance (Wilcoxon signed-rank). Evaluate `promptfoo` as
@@ -506,7 +514,7 @@ stale candidates.
 ## Blockers
 
 ### blocker: phase-0-golden-set
-- **Status:** open
+- **Status:** open — live judge run executed 2026-07-09 (haiku) but INCONCLUSIVE (p=0.196, 33% inconsistency, 69% length-confound); a trustworthy verdict needs a stronger length-neutral judge. Coverage 14/89 also remains.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 Steps 1 + 2 (golden set + host-compliance probe), Phase 1 Step 1 (RTK golden-set run), Phase 8 Step 2 (quality-elbow threshold), and Phase 10 Step 1 (tier-conditional loading)
 - **What to do:**
