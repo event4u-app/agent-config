@@ -989,6 +989,58 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.8.0](https://github.com/event4u-app/agent-config/compare/8.7.0...8.8.0) (2026-07-09)
+
+### Features
+
+* **rules:** security & quality hardening governance layer ([2574ce8](https://github.com/event4u-app/agent-config/commit/2574ce8f243763e06e62ad82e58413d182964a50))
+* **orchestration:** token-savings report over orchestration telemetry ([60b90a2](https://github.com/event4u-app/agent-config/commit/60b90a253efe26810a349a930d8fd6fdf02a3d37))
+* **subagents:** default subagents.auto to `on` on subagent-capable hosts ([bc3eea5](https://github.com/event4u-app/agent-config/commit/bc3eea554e06cbcc9013145143fce93a1a1adb53))
+* **bus-factor:** CODEOWNERS + self-imposed-gate CONTRIBUTING section ([ec9b93e](https://github.com/event4u-app/agent-config/commit/ec9b93ebe94f33aecf6ddb00b72dbfb60b2e0c37))
+* **second-brain:** deterministic multi-session recall corpus + scorer ([5f09fff](https://github.com/event4u-app/agent-config/commit/5f09ffff2d4090ed6761f37d55a8bb0a73b99333))
+* **domain-soundness:** domain-truth fixture schema + validation-status ratchet ([bd67c4d](https://github.com/event4u-app/agent-config/commit/bd67c4dec9de9691eea2b1367807a4e190db5db8))
+* **evals:** staleness lint + wire the coverage ratchet into CI ([886bf25](https://github.com/event4u-app/agent-config/commit/886bf25fedcaface708ee3f8be17135d8be2e742))
+* **evals:** behavioural-eval schema + per-tier coverage metric + ratchet floor ([2e303f6](https://github.com/event4u-app/agent-config/commit/2e303f66d076355434ff720b6d81ac3f3021b22e))
+* **memory:** opt-in session-start index + FTS5/AST backlog ledger ([bb15b21](https://github.com/event4u-app/agent-config/commit/bb15b21fb334d7c44896b7ef4c340c0396f0c6c4))
+* **memory:** catalog discipline, history timeline anchor, chunk index flags ([3cce078](https://github.com/event4u-app/agent-config/commit/3cce0789f48966fe31e8fad1ad63ae2477c53259))
+* **memory:** index/detail split + memory_get batch fetch (Phase 1) ([36547c8](https://github.com/event4u-app/agent-config/commit/36547c88452c99eb02d7c2db61ce9556701db80d))
+* **memory:** Phase 0 replay substrate for the retrieval-economy gate ([6d05daf](https://github.com/event4u-app/agent-config/commit/6d05dafa35ae38b4c4d97cd17a155c1e4bbc801e))
+
+### Bug Fixes
+
+* **rules:** apply council-adjudicated review fixes ([d6d818a](https://github.com/event4u-app/agent-config/commit/d6d818a8bfb79c6862488eb367f4f3e92f7d7aa6))
+* **rules:** satisfy skill-lint, schema, and proof-check gates ([ea551cc](https://github.com/event4u-app/agent-config/commit/ea551cc5c9efb21ab6453948f97848557d98ae1f))
+* **orchestration:** guard undefined argv in savings-report parseArgs ([cf2539e](https://github.com/event4u-app/agent-config/commit/cf2539e73ac7e7edbaee206bcd09e03032986618))
+* **mcp:** cast validated depth args to number for tsc ([cc5a8a4](https://github.com/event4u-app/agent-config/commit/cc5a8a4ac80ac245ec2b30fa4223d1888788e475))
+
+### Documentation
+
+* **orchestration:** document the savings report + the no-percentage limit ([d29a5d1](https://github.com/event4u-app/agent-config/commit/d29a5d10411c3507d6fb035ac44959ee2a738435))
+* **adoption:** link the deployed docs site + surface the 30-second wedge ([eb74680](https://github.com/event4u-app/agent-config/commit/eb74680bec665c422e226ac8c5e8458c8279539e))
+* **adr:** ADR-117 flip subagents.auto default to on; amend ADR-105, supersede verdict ([0b5879c](https://github.com/event4u-app/agent-config/commit/0b5879c3f25014c54779e959e16282ac66d4ae4d))
+* **bus-factor:** bind the honest bus-factor to CLAIMS ([6bbbda4](https://github.com/event4u-app/agent-config/commit/6bbbda4d841f084c27c5a8f34bd10171429bc684))
+* **bus-factor:** inheritable release runbook + succession doc ([7d05577](https://github.com/event4u-app/agent-config/commit/7d05577f32c154332fb8bdf90833e8e7acf7f704))
+* **second-brain:** honest scope vs human-PKM + unproven-lift CLAIMS gate ([b9dc934](https://github.com/event4u-app/agent-config/commit/b9dc9347661237c24cdadd5ca454ed07acbf9409))
+* **domain-soundness:** label the domains unvalidated + gate the provenance claim ([7221662](https://github.com/event4u-app/agent-config/commit/72216625a559818196441349501af3b65c4be3ce))
+* **evals:** publish the honest coverage baseline + label the long tail ([299a7fe](https://github.com/event4u-app/agent-config/commit/299a7fe74360a8df5b7d46c026be65b501685ff0))
+* **memory:** Phase 1b honest null — default flip falsified at current scale ([938aab2](https://github.com/event4u-app/agent-config/commit/938aab2f5d6dcf43fd82738025fe309d5cb7ad91))
+
+### CI
+
+* **second-brain:** wire the recall-scorer dry-run into ci + ci-strict ([7da6d01](https://github.com/event4u-app/agent-config/commit/7da6d010f40793e31a9b3f891a5e08aa2afe184c))
+* **domain-soundness:** wire the validation-status ratchet into ci + ci-strict ([7ae10c2](https://github.com/event4u-app/agent-config/commit/7ae10c2cd4d36e65db3a52c8c68b824200c3f9c6))
+
+### Chores
+
+* **generated:** regenerate counts, router, and pack manifest ([f141060](https://github.com/event4u-app/agent-config/commit/f141060e9da2f4f0a97a257d2786dd42fdf2ee0f))
+* **roadmap:** adoption Phase-0 site-link quick-win landed; rest positioning/human-gated ([de27276](https://github.com/event4u-app/agent-config/commit/de27276b06b3969a8ea8a22ed5327385aa3ff582))
+* **roadmap:** bus-factor inheritability slice landed; gate + admin deferred ([8bf79f5](https://github.com/event4u-app/agent-config/commit/8bf79f5dd3e9dcd940acce7c56eaad978d2525f7))
+* **roadmap:** second-brain-delta-proof P1 rig + P3 gate landed; P2 run deferred ([e01ec9e](https://github.com/event4u-app/agent-config/commit/e01ec9e9691fa5d19390fa3b187bafbef3e34618))
+* **roadmap:** domain-soundness P1/P3-gate/P4-labeling landed; P2 open on domain competence ([9a786d4](https://github.com/event4u-app/agent-config/commit/9a786d4cb2b0dc469c3b2967e8bc360e9877ec79))
+* **roadmap:** skill-eval-coverage P1/P3/P4 landed; P2 open on human gate ([a4c526d](https://github.com/event4u-app/agent-config/commit/a4c526d43a459bb86d78dcf2d07e3dc2d44b6828))
+
+Tests: 7027 (+78 since 8.7.0)
+
 ## [8.7.0](https://github.com/event4u-app/agent-config/compare/8.6.0...8.7.0) (2026-07-08)
 
 ### Features

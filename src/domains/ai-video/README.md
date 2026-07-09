@@ -5,7 +5,7 @@
 AI video pipeline.
 
 - **id**: `ai-video`
-- **version**: `8.7.0`
+- **version**: `8.8.0`
 - **owner**: small-business
 - **requires**: —
 - **artefacts**: 13
