@@ -35,6 +35,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import YAML, { parseDocument } from 'yaml';
 
+import { sanitize_entry } from './_lib/retrieval_sanitize.js';
+
 
 // PyYAML implicit timestamp resolver. PyYAML's `safe_load` turns a plain
 // `YYYY-MM-DD` scalar into a `datetime.date` (str → `YYYY-MM-DD`) and a full
@@ -862,13 +864,19 @@ export function retrieve_v1(
     }
     const entries: Record<string, unknown>[] = [];
     for (const h of hits) {
+        // Sanitize floor (road-to-retrieval-substrate-hardening B6): strip
+        // hidden-instruction vectors + control-char noise from corpus content
+        // before it enters the agent context. Byte-identical for clean entries
+        // (the v1 default-full envelope contract holds); only adversarial /
+        // malformed content changes — which is the point.
+        const safeEntry = _isPlainObject(h.entry) ? sanitize_entry(h.entry) : {};
         const envelope_entry: Record<string, unknown> = {
             id: h.id,
             type: h.type,
             source: 'repo',
             // confidence = round(float(score), 4) — always a Python float.
             confidence: new PyFloat(_round4(h.score)),
-            body: _isPlainObject(h.entry) ? { ...h.entry } : {},
+            body: safeEntry,
         };
         if (h.type in slice_counts) {
             slice_counts[h.type] = (slice_counts[h.type] as number) + 1;
@@ -879,12 +887,12 @@ export function retrieve_v1(
                 type: h.type,
                 source: 'repo',
                 confidence: new PyFloat(_round4(h.score)),
-                title: _entry_title(h.entry, h.id),
+                title: _entry_title(safeEntry, h.id),
                 tokens_estimate: _entry_tokens_estimate(envelope_entry),
                 // Knowledge chunks carry their pinned flag in the index row
                 // (roadmap Phase 4) — pinned entries rank higher, so the
                 // caller should see why before fetching.
-                ...(h.type === KNOWLEDGE_TYPE ? { pinned: Boolean(h.entry['pinned'] ?? false) } : {}),
+                ...(h.type === KNOWLEDGE_TYPE ? { pinned: Boolean(safeEntry['pinned'] ?? false) } : {}),
             });
         } else {
             entries.push(envelope_entry);
@@ -945,7 +953,8 @@ export function memory_get_v1(ids: string[]): Record<string, unknown> {
                 id,
                 type: mtype,
                 source: 'repo',
-                body: _isPlainObject(entry) ? { ...entry } : {},
+                // Sanitize floor (B6) — same injection defense as retrieve_v1.
+                body: _isPlainObject(entry) ? sanitize_entry(entry) : {},
             });
         }
     };
