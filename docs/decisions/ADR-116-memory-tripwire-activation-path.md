@@ -38,6 +38,15 @@ apart:
 The whole point of a pre-decided path is that the tripwire firing needs no
 new debate; in this state, firing would have required one.
 
+Additional evidence for the engine swap (2026-07-10, labelled replay of real
+maintainer queries): `_score()`'s raw-substring match has a
+**separator-recall gap** — hyphen/underscore query keys (`ai_council`,
+`roadmap-progress`, `force-push`) score 0 against space-normalized stored
+keys that spaced variants hit at 0.8. A tokenizing engine (FTS5 unicode61 /
+BM25 tokenizer) splits on separators and closes this class structurally;
+see `docs/second-brain-scope.md` § second named limit for the scoped-out
+claim boundary.
+
 ## Decision
 
 1. **One engine: SQLite FTS5 via Node's built-in `node:sqlite`.**

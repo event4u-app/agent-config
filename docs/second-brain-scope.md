@@ -53,6 +53,19 @@ this scale*; once more than k entries share a keyword it would degrade — which
 is exactly the discrimination gap the SQLite-FTS5 activation path (ADR-116)
 exists to close. The public claims are scoped to exactly this.
 
+**Second named limit (separator recall, found 2026-07-10 in a labelled replay
+of real maintainer queries):** `_score()` matches raw substrings, so a query
+key whose token separator differs from the stored field misses entirely —
+`ai_council`, `roadmap-progress`, `force-push` score 0 against space-normalized
+`key` fields that spaced variants (`ai council`) hit at 0.8. The precision
+measurement above did not probe this class (its confusers share exact
+keywords), so it is scoped OUT of the precision claim. Deliberately not
+hot-fixed: naive scoring is locked until the scale tripwire (the archived
+retrieval-economy roadmap's D5), and the FTS5 unicode61 tokenizer splits on
+separators, closing this structurally at activation time. Reproduce:
+`memory_lookup --types product-rules --key "ai_council"` vs `--key "ai council"`
+against any populated store.
+
 ## What it IS (measured lift, bounded as above)
 
 | Capability | What it does | Evidence status |
