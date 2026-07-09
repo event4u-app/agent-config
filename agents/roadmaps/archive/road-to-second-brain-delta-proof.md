@@ -83,21 +83,27 @@ transcript correctly.
 
 ## Phase 2 — Paired measurement: substrate on vs off vs placebo
 
-- [ ] Three arms, paired: `memory-on` (full substrate), `memory-off` (substrate
+- [x] Three arms, paired: `memory-on` (full substrate), `memory-off` (substrate
       disabled, agent re-derives from scratch), `placebo` (equal-byte inert
       "notes" injected, no retrieval logic) — the placebo isolates *retrieval
       mechanism* from *mere extra context*, exactly as the discipline benchmark
       isolates content from length.
-      <!-- OPEN — blocked on `measurement-spend`: the 3-arm paired run is
-      spend-bearing. The scorer + corpus are ready to run it once authorized. -->
-- [ ] Run on ≥1 host × ≥3 seeds; keep the host fixed (wrapper-delta, not
+      <!-- done 2026-07-09: src/scripts/second_brain_run.ts implements all three
+      arms — memory-on injects the substrate's surfaced prior fact, memory-off
+      the bare question, placebo an EQUAL-BYTE inert block; scored by
+      second_brain_score (no model-in-the-loop). -->
+- [x] Run on ≥1 host × ≥3 seeds; keep the host fixed (wrapper-delta, not
       model comparison). Record cost/run — a memory substrate that wins on
       accuracy but costs 5× context is a different claim than one that wins cheaply.
-      <!-- OPEN — same `measurement-spend` block. -->
-- [ ] Stats: sign/Wilcoxon on the paired per-task scores; report effect size +
+      <!-- done 2026-07-09 (spend authorized): fixed host claude-haiku-4-5,
+      9 tasks × 3 seeds = 81 calls; cost recorded in the report (6.3k in / 8.7k
+      out tokens). Report: internal/bench/reports/second-brain-delta.json. -->
+- [x] Stats: sign/Wilcoxon on the paired per-task scores; report effect size +
       cost factor.
-      <!-- OPEN — same `measurement-spend` block; stats run on the paired scores
-      once the run lands. -->
+      <!-- done 2026-07-09: paired sign test — memory-on 27/27 vs no-memory
+      10/27 (p=0.031) and vs placebo 9/27 (p=0.031); on beats BOTH → PASS. Lift
+      concentrates on the 6 memory-only tasks; ties on the 3 whose prompt
+      self-contains the fact; on never loses. -->
 
 **Exit:** pinned report with per-metric deltas + cost; PASS (substrate beats
 BOTH off and placebo) / NULL recorded.
@@ -111,18 +117,18 @@ BOTH off and placebo) / NULL recorded.
       link-density thesis; not an Obsidian replacement). Category column
       describes human-PKM only by what is publicly observable — never a
       counter-claim to a named project (mirror `docs/proof.md` § 4 discipline).
-      <!-- done 2026-07-08: docs/second-brain-scope.md — IS (continuity / cards /
-      contradiction-surfacing, task-lift UNMEASURED — corrected from the item's
-      "measured", which pre-supposed Phase 2) vs IS NOT (no editable vault, no
-      link-density thesis, not an Obsidian replacement); category by public
-      observation only. -->
+      <!-- done 2026-07-08, updated 2026-07-09: docs/second-brain-scope.md — IS
+      (continuity / cards / contradiction-surfacing, recall lift now MEASURED as
+      a bounded PASS) vs IS NOT (no editable vault, no link-density thesis, not
+      an Obsidian replacement); category by public observation only. -->
 - [x] Add the CLAIMS entry: PASS → `backed` "cross-session recall lift (metric,
       N, p, cost)"; NULL → an `unbacked`/honest-null ledger line + the substrate
       is documented as "continuity convenience, no measured task lift."
-      <!-- done 2026-07-08 (pre-run form): CLAIMS `claim: second-brain-unproven`
-      (backed — the lift is UNMEASURED + the rig exists; evidence
-      docs/second-brain-scope.md). The PASS/NULL lift entry lands when the
-      Phase-2 paired run is authorized. -->
+      <!-- done 2026-07-08, PASS landed 2026-07-09: CLAIMS
+      `claim: second-brain-recall-lift` (backed, quant) — memory-on beats
+      no-memory + placebo, p=0.031 both; evidence
+      internal/bench/reports/second-brain-delta.json. Scoped to the context-value
+      upper bound (not retrieval precision). -->
 - [x] Gate any "second brain" wording in README/site behind the CLAIMS marker;
       `check-claims` fails the build if the marker outruns the evidence.
       <!-- done 2026-07-08: no "second brain" capability marker exists in live
@@ -136,18 +142,21 @@ evidence pointer.
 
 ## Phase 4 — Interop instead of competition (optional, gated on Phase 2 PASS)
 
-- [ ] If (and only if) the substrate shows a real lift, add a one-way export:
+- [x] If (and only if) the substrate shows a real lift, add a one-way export:
       promoted knowledge cards → plain Obsidian-compatible Markdown +
       wikilinks, so the agent-facing memory can *feed* a human PKM rather than
       pretend to replace it. Positions agent-config as the writer, Obsidian as
       the reader — complementary, not competitive.
-      <!-- OPEN — conditional on a Phase-2 PASS. Per the delta verdict, no
-      exporter is built absent a measured lift; the honest default is not to
-      build it. -->
-- [ ] Witness test: an exported card round-trips into a vault folder and renders
+      <!-- RESOLVED 2026-07-09 = recorded decision NOT to build (the Exit's
+      permitted disposition). Phase 2 PASSED, which unlocks the export, but the
+      delta verdict (second-brain-delta-verdict.md, 2026-07-07) REJECTED Obsidian
+      compat (dual-write hazard), and the measured lift is a bounded context-value
+      result, not a retrieval-precision proof justifying a new external surface.
+      Decision + rationale on the record in docs/second-brain-scope.md § Interop. -->
+- [-] Witness test: an exported card round-trips into a vault folder and renders
       (headless Markdown lint), documented as a known-limit if link fidelity is
       partial.
-      <!-- OPEN — conditional on the Phase-4 exporter above. -->
+      <!-- CANCELLED 2026-07-09 — moot: no exporter is built (decision above). -->
 
 **Exit:** export path + witness test, OR a recorded decision not to build it.
 **Rollback:** drop the exporter; core substrate unaffected.
@@ -162,20 +171,24 @@ evidence pointer.
 - If PASS: an honest interop story (export to Obsidian) exists or is explicitly
   declined; the package never claims to *replace* a human PKM.
 
-> **Status (2026-07-08).** Criteria 1 and 3 are MET — the deterministic corpus +
-> scorer exist and are pinned (`check-second-brain-scorer` dry-run), and no
-> "second brain" capability claim appears in public prose (the human-PKM
-> boundary is stated in `docs/second-brain-scope.md`; the honest-null CLAIMS
-> entry + proof § 2 publish the unmeasured status). Criterion 2 (measured
-> against baseline + placebo) remains OPEN — the 3-arm paired run is Phase 2,
-> blocked on `measurement-spend`. Criterion 4 is conditional on a Phase-2 PASS.
-> The measurement rig is complete; the delta lands when spend is authorized. The
-> roadmap stays open on Phase 2, not archived.
+> **Status (2026-07-09) — ALL criteria MET; roadmap complete.** (1) The
+> deterministic corpus + scorer exist and are pinned. (2) The substrate is
+> measured against BOTH a no-memory baseline AND an equal-byte placebo — a real
+> PASS (memory-on 27/27 vs 10/27 vs 9/27, sign test p=0.031 both pairings),
+> pinned in `docs/benchmark.md` + the `second-brain-recall-lift` CLAIMS entry +
+> `internal/bench/reports/second-brain-delta.json`. (3) No "second brain"
+> capability claim outruns its pointer; the human-PKM boundary is stated in
+> `docs/second-brain-scope.md`, and the public claim is explicitly scoped to the
+> context-value upper bound (not retrieval precision). (4) PASS → the interop
+> export is **explicitly declined on the record** (delta verdict rejected
+> Obsidian; the bounded lift does not justify a new external surface). The
+> `measurement-spend` blocker is resolved (spend authorized 2026-07-09, 81
+> calls). Nothing open — this roadmap is archived.
 
 ## Blockers
 
 ### blocker: memory-corpus-authoring
-- **Status:** open
+- **Status:** resolved (2026-07-09) — internal/bench/second-brain/corpus/ holds 9 scorable tasks; scorer dry-run green.
 - **Owner:** maintainer
 - **Blocks:** Phase 1 — corpus + scorer
 - **What to do:** author ≥8 multi-session recall tasks with deterministic answer
@@ -186,7 +199,7 @@ evidence pointer.
   corpus and the scorer passes a dry run.
 
 ### blocker: measurement-spend
-- **Status:** open
+- **Status:** resolved (2026-07-09) — spend authorized; pinned report at internal/bench/reports/second-brain-delta.json (81 calls).
 - **Owner:** maintainer
 - **Blocks:** Phase 2
 - **What to do:** authorize the paired-run spend (3 arms × N tasks × ≥3 seeds).

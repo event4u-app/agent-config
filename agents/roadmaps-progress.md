@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
+> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **22** open blockers
 
 ## Overall
 
-**146 / 437 steps done · 33%**
+**140 / 426 steps done · 33%**
 
 ```text
 █████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%
@@ -33,12 +33,11 @@
 | 15 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
 | 17 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 18 | [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md) | 4 | 11 | 5 | 6 | 0 | 0 | [2](#blockers-road-to-second-brain-delta-proof) | ██████░░░░ 55% |
-| 19 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ███████░░░ 73% |
-| 20 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 21 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 23 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
+| 18 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ███████░░░ 73% |
+| 19 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 22 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
 ---
 
@@ -374,30 +373,6 @@
     § Program tracking step 2 — label the golden stubs, run the live judge
     at `--scope consumer`, tick the live canary on 3 hosts.
   - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0.
-
-### [road-to-second-brain-delta-proof.md](roadmaps/road-to-second-brain-delta-proof.md)
-
-**Road to second-brain delta proof — measure the memory substrate against a no-memory baseline, and scope it honestly against human-PKM** — 6 / 11 done (55%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Define the task + deterministic scorer (no LLM judge) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Paired measurement: substrate on vs off vs placebo | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Honest positioning vs human-PKM | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | Interop instead of competition (optional, gated on Phase 2 PASS) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-second-brain-delta-proof"></a>
-**Blockers**
-
-- **memory-corpus-authoring** (owner: maintainer) — blocks Phase 1 — corpus + scorer
-  - **What to do:**
-    keys; the hard part is designing session-*k*/*k+1* dependencies a headless
-    harness can replay. Reuse the audit-log replay path from the orchestration
-    corpus for session chaining.
-  - **Resolved when:** `internal/bench/second-brain/corpus/` holds a scorable corpus and the scorer passes a dry run.
-- **measurement-spend** (owner: maintainer) — blocks Phase 2
-  - **What to do:**
-  - **Resolved when:** a pinned second-brain delta report exists under `internal/bench/reports/`.
 
 ### [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md)
 
