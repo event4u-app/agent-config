@@ -154,21 +154,27 @@ navigation hint; the index/detail split is enforced in the read path.
       BM25 k1=1.5/b=0.75 over an IDF term index + character-trigram candidate
       prefilter with a token-match guard; deterministic, id-stable tie-break).
       8 unit tests. -->
-- [ ] Activate at the existing `lint_knowledge_scale` tripwire (>200/type,
+- [x] Activate at the existing `lint_knowledge_scale` tripwire (>200/type,
       >500 total); build **lazily at first lookup** + a stat-index (size+mtime_ns),
       atomic temp-write + `rename()`, version-namespaced per B5b (council Q3 —
       NOT eager); measure the grep/substring baseline vs the index on the
       then-current corpus BEFORE shipping (reuse the retrieval-precision replay
       rig); ship only on measured ranking lift, else honest-null.
       <!-- measurement done 2026-07-09 (the ship-gate): measure_lexical_ranking.ts
-      runs both scorers over the retrieval-precision corpus/store — baseline mean
-      top tie-set 3.333 → index 1.0, precision@1 and @5 unchanged at 1.0
-      (internal/bench/reports/lexical-ranking.json, pinned + CLAIMS-bound +
-      regression-locked test). Lift PROVEN → activation authorised. The hot-path
-      wiring (tripwire re-rank in _retrieve_internal + lazy stat-index cache +
-      [0,1] confidence normalisation) is the next increment — it touches the v1
-      confidence contract + the shared retrieval loop and warrants isolated
-      review; step stays open until that lands. -->
+      — baseline mean top tie-set 3.333 → index 1.0, precision@1/@5 unchanged 1.0
+      (internal/bench/reports/lexical-ranking.json, CLAIMS-bound). Lift PROVEN. -->
+      <!-- activation done 2026-07-09: _retrieve_internal re-ranks the recalled
+      set with the BM25 index above the file-count tripwire (_lexicalRankActive,
+      per-type >200 / total >500, memoised per root; injectable override for
+      tests), maps BM25→[0,1] via s/(s+1) × source-factor so the v1 confidence
+      contract holds and curated truth wins ties. Inert below scale (curated
+      single-file types never trip it → byte-identical `_score` path; the
+      knowledge type at chunk scale is the real activation case). 4 activation
+      tests + 54-test retrieval regression green. LAZY BUILD is in-process
+      memoised (rebuild only when the root/corpus signature changes); the
+      PERSISTENT cross-process stat-index cache file (atomic temp+rename,
+      version-namespaced per B5b) is Phase 5 / B5a's scope — noted so the "stat
+      -index" half of council Q3 is delivered there, not silently dropped. -->
 - [x] Record the ADR-061 ↔ FTS5 resolution (hand-rolled IDF+trigram = the
       pre-decided path, no engine fork) in the ADR / `lint_knowledge_scale` doc.
       <!-- done 2026-07-09: ADR-061 "Resolution note — retrieval ranking at
@@ -223,9 +229,15 @@ stat-index + atomic write.
 - [ ] B5a: a stat-index (size + mtime_ns → hash-skip, atexit flush,
       `--force` bypass) for the memory/knowledge/discovery scans that run on
       every `stop`/`session_start` hook. Version-namespaced per B5b.
+- [ ] Wire the persistent stat-index into the B2 lexical-index build so the
+      re-rank reuses a cached index across processes (today B2 memoises the
+      index in-process only; the cross-process cache file — atomic temp+rename,
+      version-namespaced — is this step). Closes the "stat-index" half of
+      council Q3 that Phase 2 deferred here.
 
-**Exit:** hook re-scans skip unchanged trees; latency measured before/after.
-**Rollback:** delete the stat-index (scans fall back to full read).
+**Exit:** hook re-scans skip unchanged trees; latency measured before/after;
+the B2 index build reuses the persistent stat-index. **Rollback:** delete the
+stat-index (scans fall back to full read; B2 falls back to in-process build).
 
 ## Phase 6 — Benchmark command + Kappa judge validation
 
