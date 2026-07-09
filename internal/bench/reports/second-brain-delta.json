@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "kind": "second-brain-delta-live",
+  "roadmap": "road-to-second-brain-delta-proof",
+  "host": "claude-haiku-4-5-20251001",
+  "seeds": 3,
+  "mode": "live",
+  "scoping": "CONTEXT-VALUE UPPER BOUND on a one-fact-per-task corpus: memory-on injects the exact prior fact (perfect retrieval). Measures whether the right prior fact + the placebo-isolated retrieval mechanism let the model answer — NOT retrieval precision under a large store (that is the follow-up corpus).",
+  "per_arm_task": [
+    {
+      "task": "sb-01-api-style",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-off",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 150,
+      "tokens_out": 335
+    },
+    {
+      "task": "sb-01-api-style",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-on",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 264,
+      "tokens_out": 70
+    },
+    {
+      "task": "sb-01-api-style",
+      "metric": "retrieval-accuracy",
+      "arm": "placebo",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 258,
+      "tokens_out": 308
+    },
+    {
+      "task": "sb-02-rejected-queue",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-off",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 138,
+      "tokens_out": 262
+    },
+    {
+      "task": "sb-02-rejected-queue",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-on",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 258,
+      "tokens_out": 104
+    },
+    {
+      "task": "sb-02-rejected-queue",
+      "metric": "retrieval-accuracy",
+      "arm": "placebo",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 249,
+      "tokens_out": 230
+    },
+    {
+      "task": "sb-03-tenant-key",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-off",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 144,
+      "tokens_out": 511
+    },
+    {
+      "task": "sb-03-tenant-key",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-on",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 261,
+      "tokens_out": 650
+    },
+    {
+      "task": "sb-03-tenant-key",
+      "metric": "retrieval-accuracy",
+      "arm": "placebo",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 255,
+      "tokens_out": 391
+    },
+    {
+      "task": "sb-04-auth-choice",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-off",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 132,
+      "tokens_out": 274
+    },
+    {
+      "task": "sb-04-auth-choice",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-on",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 234,
+      "tokens_out": 515
+    },
+    {
+      "task": "sb-04-auth-choice",
+      "metric": "retrieval-accuracy",
+      "arm": "placebo",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 240,
+      "tokens_out": 463
+    },
+    {
+      "task": "sb-05-deploy-target",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-off",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 126,
+      "tokens_out": 199
+    },
+    {
+      "task": "sb-05-deploy-target",
+      "metric": "retrieval-accuracy",
+      "arm": "memory-on",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 273,
+      "tokens_out": 108
+    },
+    {
+      "task": "sb-05-deploy-target",
+      "metric": "retrieval-accuracy",
+      "arm": "placebo",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 249,
+      "tokens_out": 268
+    },
+    {
+      "task": "sb-06-contradiction-region",
+      "metric": "contradiction-catch",
+      "arm": "memory-off",
+      "passes": 1,
+      "seeds": 3,
+      "tokens_in": 186,
+      "tokens_out": 477
+    },
+    {
+      "task": "sb-06-contradiction-region",
+      "metric": "contradiction-catch",
+      "arm": "memory-on",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 300,
+      "tokens_out": 476
+    },
+    {
+      "task": "sb-06-contradiction-region",
+      "metric": "contradiction-catch",
+      "arm": "placebo",
+      "passes": 0,
+      "seeds": 3,
+      "tokens_in": 285,
+      "tokens_out": 213
+    },
+    {
+      "task": "sb-07-contradiction-queue",
+      "metric": "contradiction-catch",
+      "arm": "memory-off",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 165,
+      "tokens_out": 374
+    },
+    {
+      "task": "sb-07-contradiction-queue",
+      "metric": "contradiction-catch",
+      "arm": "memory-on",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 264,
+      "tokens_out": 358
+    },
+    {
+      "task": "sb-07-contradiction-queue",
+      "metric": "contradiction-catch",
+      "arm": "placebo",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 255,
+      "tokens_out": 297
+    },
+    {
+      "task": "sb-08-repair-api",
+      "metric": "repair",
+      "arm": "memory-off",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 189,
+      "tokens_out": 112
+    },
+    {
+      "task": "sb-08-repair-api",
+      "metric": "repair",
+      "arm": "memory-on",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 291,
+      "tokens_out": 97
+    },
+    {
+      "task": "sb-08-repair-api",
+      "metric": "repair",
+      "arm": "placebo",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 276,
+      "tokens_out": 130
+    },
+    {
+      "task": "sb-09-repair-tenant",
+      "metric": "repair",
+      "arm": "memory-off",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 204,
+      "tokens_out": 475
+    },
+    {
+      "task": "sb-09-repair-tenant",
+      "metric": "repair",
+      "arm": "memory-on",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 315,
+      "tokens_out": 427
+    },
+    {
+      "task": "sb-09-repair-tenant",
+      "metric": "repair",
+      "arm": "placebo",
+      "passes": 3,
+      "seeds": 3,
+      "tokens_in": 306,
+      "tokens_out": 536
+    }
+  ],
+  "aggregate": {
+    "memory-off": {
+      "pass": 10,
+      "total": 27,
+      "pass_rate": 0.37037037037037035
+    },
+    "memory-on": {
+      "pass": 27,
+      "total": 27,
+      "pass_rate": 1
+    },
+    "placebo": {
+      "pass": 9,
+      "total": 27,
+      "pass_rate": 0.3333333333333333
+    }
+  },
+  "paired": {
+    "on-vs-off": {
+      "on_wins": 6,
+      "off_wins": 0,
+      "ties": 3,
+      "sign_p": 0.03125
+    },
+    "on-vs-placebo": {
+      "on_wins": 6,
+      "placebo_wins": 0,
+      "ties": 3,
+      "sign_p": 0.03125
+    }
+  },
+  "verdict": "PASS",
+  "cost": {
+    "calls": 81,
+    "tokens_in": 6267,
+    "tokens_out": 8660
+  }
+}

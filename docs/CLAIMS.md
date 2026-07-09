@@ -98,12 +98,12 @@
 - status: backed
 - last_verified: 2026-07-09
 
-### claim: second-brain-unproven
-- claim: The second-brain substrate ships as continuity convenience; its cross-session task lift is unmeasured. A deterministic recall scorer + corpus exist (the rig), but no paired run has measured a lift, so no "second brain" capability claim is made until a backed lift entry exists.
-- kind: qual
-- evidence: docs/second-brain-scope.md#no measured task-lift
+### claim: second-brain-recall-lift
+- claim: On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store.
+- kind: quant
+- evidence: internal/bench/reports/second-brain-delta.json
 - status: backed
-- last_verified: 2026-07-08
+- last_verified: 2026-07-09
 
 ---
 
