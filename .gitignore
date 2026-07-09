@@ -287,3 +287,9 @@ agents/runtime/council/sessions/
 /site/public/media/
 # Field replay corpora await operator privacy review before any commit
 internal/bench/corpora/*.local.yaml
+
+# Learning sidecar — intake-derived, local-only; proven lessons are MANUALLY
+# curated into committed memory (road-to-retrieval-substrate-hardening B3,
+# council Q2: gitignored, no merge=union).
+/agents/memory/.agent-learning.json
+/agents/memory/LESSONS.md
