@@ -6,10 +6,10 @@
 
 ## Overall
 
-**140 / 426 steps done · 33%**
+**145 / 426 steps done · 34%**
 
 ```text
-█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
@@ -25,7 +25,7 @@
 | 7 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 4 | 8 | 0 | 0 | 0 | ███████░░░ 67% |
 | 8 | [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md) | 6 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 10 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 49 | 0 | 0 | 0 | [1](#blockers-road-to-frontier-quality-operating-system) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 44 | 5 | 0 | 0 | [1](#blockers-road-to-frontier-quality-operating-system) | █░░░░░░░░░ 10% |
 | 11 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
 | 12 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 13 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
@@ -214,11 +214,11 @@
 
 ### [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md)
 
-**Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage** — 0 / 49 done (0%)
+**Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage** — 5 / 49 done (10%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Scope, provenance, metrics, and execution gates | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 0 | Scope, provenance, metrics, and execution gates | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1 | Prompt-mechanism inventory, dependency graph, and disposition matrix | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 2 | Eval harness and baseline before behavior changes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Currentness, research-routing, and source-quality pilot | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
