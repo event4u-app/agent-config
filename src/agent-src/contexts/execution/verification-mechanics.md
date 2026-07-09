@@ -11,15 +11,15 @@ incidents.
 
 ## Gate zero — `quality.local_auto_run` (default `false`)
 
-`false` or missing → **never run quality tools or full test suites
-proactively — never ask**. User runs them manually; **remote CI is the
-authoritative gate.** Run one ONLY on: (1) explicit ask this turn,
-(2) concrete CI failure — run exactly that failing check, (3) new-gate
-carve-out (a NEW gate/test this change introduces runs once to be
-proven). Completion wording: *"quality gates delegated to remote CI"* —
-never a pass claim for tools that did not run. Narrow probes proving
-the specific change (one `--filter` test, `curl`, syntax check on the
-edited file) stay allowed. Everything below applies when `true`.
+`false`/missing → **never run the full quality pipeline or full test
+suites proactively — never ask**; remote CI is the gate. Run one ONLY on:
+(1) explicit ask this turn, (2) concrete CI failure — run exactly that
+check, (3) new-gate carve-out (a NEW gate/test this change adds, run once).
+Completion wording: *"quality gates delegated to remote CI"* — never a pass
+claim for tools that did not run. Narrow probes stay allowed (one `--filter`
+test, `curl`); a type-check + lint **scoped to the changed files** is
+REQUIRED before a source push/PR — NOT the full pipeline. Everything below
+applies when `true`.
 
 ## When to run what — timing matters (`local_auto_run: true`)
 
