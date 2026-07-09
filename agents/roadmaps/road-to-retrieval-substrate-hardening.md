@@ -146,18 +146,34 @@ navigation hint; the index/detail split is enforced in the read path.
 
 ## Phase 2 — IDF + trigram index (resolves the ADR-061 ↔ FTS5 conflict)
 
-- [ ] B2: a hand-rolled, dependency-free lexical index (IDF weighting + trigram
+- [x] B2: a hand-rolled, dependency-free lexical index (IDF weighting + trigram
       candidate prefilter with a guard fraction) in TS (~150 lines, pure stdlib)
       — mechanically the BM25 core ADR-061 already sanctions, NO engine fork, NO
       minisearch-class dep. `_score()` stays as the mini-corpus fallback.
+      <!-- done 2026-07-09: src/scripts/_lib/lexical_index.ts (LexicalIndex:
+      BM25 k1=1.5/b=0.75 over an IDF term index + character-trigram candidate
+      prefilter with a token-match guard; deterministic, id-stable tie-break).
+      8 unit tests. -->
 - [ ] Activate at the existing `lint_knowledge_scale` tripwire (>200/type,
       >500 total); build **lazily at first lookup** + a stat-index (size+mtime_ns),
       atomic temp-write + `rename()`, version-namespaced per B5b (council Q3 —
       NOT eager); measure the grep/substring baseline vs the index on the
       then-current corpus BEFORE shipping (reuse the retrieval-precision replay
       rig); ship only on measured ranking lift, else honest-null.
-- [ ] Record the ADR-061 ↔ FTS5 resolution (hand-rolled IDF+trigram = the
+      <!-- measurement done 2026-07-09 (the ship-gate): measure_lexical_ranking.ts
+      runs both scorers over the retrieval-precision corpus/store — baseline mean
+      top tie-set 3.333 → index 1.0, precision@1 and @5 unchanged at 1.0
+      (internal/bench/reports/lexical-ranking.json, pinned + CLAIMS-bound +
+      regression-locked test). Lift PROVEN → activation authorised. The hot-path
+      wiring (tripwire re-rank in _retrieve_internal + lazy stat-index cache +
+      [0,1] confidence normalisation) is the next increment — it touches the v1
+      confidence contract + the shared retrieval loop and warrants isolated
+      review; step stays open until that lands. -->
+- [x] Record the ADR-061 ↔ FTS5 resolution (hand-rolled IDF+trigram = the
       pre-decided path, no engine fork) in the ADR / `lint_knowledge_scale` doc.
+      <!-- done 2026-07-09: ADR-061 "Resolution note — retrieval ranking at
+      scale" + lint_knowledge_scale tripwire messages now name lexical_index.ts
+      as the resolved (no-FTS5) path with the measured lift. -->
 
 **Exit:** the index ranks (mean tie-set → 1 on the retrieval-precision corpus);
 the ADR-061 conflict is closed in writing. **Rollback:** fall back to `_score()`

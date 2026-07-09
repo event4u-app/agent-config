@@ -6,7 +6,7 @@
 
 ## Overall
 
-**149 / 443 steps done · 34%**
+**151 / 443 steps done · 34%**
 
 ```text
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
@@ -33,7 +33,7 @@
 | 15 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
 | 17 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 18 | [road-to-retrieval-substrate-hardening.md](roadmaps/road-to-retrieval-substrate-hardening.md) | 8 | 17 | 13 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 24% |
+| 18 | [road-to-retrieval-substrate-hardening.md](roadmaps/road-to-retrieval-substrate-hardening.md) | 8 | 17 | 11 | 6 | 0 | 0 | 0 | ████░░░░░░ 35% |
 | 19 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ███████░░░ 73% |
 | 20 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 21 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
@@ -377,13 +377,13 @@
 
 ### [road-to-retrieval-substrate-hardening.md](roadmaps/road-to-retrieval-substrate-hardening.md)
 
-**Road to retrieval-substrate hardening** — 4 / 17 done (24%)
+**Road to retrieval-substrate hardening** — 6 / 17 done (35%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Sanitize floor + versioned-cache lint (no dependency) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 1 | Token-budget + compact serialization in `retrieve()` | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | IDF + trigram index (resolves the ADR-061 ↔ FTS5 conflict) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | IDF + trigram index (resolves the ADR-061 ↔ FTS5 conflict) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 3 | Learning sidecar: decay + corroboration + dead-end ledger | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 4 | Artefact relation-graph + `affected` / `explain` | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Stat-index for hook/scan latency | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
