@@ -50,9 +50,9 @@
 - last_verified: 2026-07-04
 
 ### claim: shipped-artifacts-hidden-instruction-scanned
-- claim: Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class) before it can merge or publish.
+- claim: Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge.
 - kind: qual
-- evidence: .github/workflows/skill-lint.yml#task lint-agent-security
+- evidence: .github/workflows/publish-npm.yml#lint_agent_security
 - status: backed
 - last_verified: 2026-07-09
 
