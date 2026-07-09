@@ -1,0 +1,52 @@
+{
+    "skill": "ai-code-blindspots",
+    "last_eval": "2026-07-09",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for the pre-ship 'what invisible cross-cutting controls did the AI omit?' checklist across code surfaces. Should-not-trigger covers near-miss neighbours (deep single-surface skills, prose/docs edits, adversarial config review) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "I just wrote this endpoint — what invisible controls did I forget before I call it done?",
+            "trigger": true
+        },
+        {
+            "q": "run the senior pre-ship checklist over this diff for cross-cutting controls",
+            "trigger": true
+        },
+        {
+            "q": "what does AI-generated code usually omit here — authz, tenant scope, validation?",
+            "trigger": true
+        },
+        {
+            "q": "prüf meinen Code auf die unsichtbaren Kontrollen, die die KI weglässt",
+            "trigger": true
+        },
+        {
+            "q": "before I finish this migration and query, what am I blind to?",
+            "trigger": true
+        },
+        {
+            "q": "review this React component specifically for XSS and client secrets",
+            "trigger": false,
+            "note": "single frontend surface → frontend-render-security"
+        },
+        {
+            "q": "is this npm package safe to add?",
+            "trigger": false,
+            "note": "dependency intake → supply-chain-intake"
+        },
+        {
+            "q": "threat-model this new payments endpoint before I build it",
+            "trigger": false,
+            "note": "pre-build threat model → threat-modeling / security-sensitive-stop"
+        },
+        {
+            "q": "fix the typo in this README",
+            "trigger": false,
+            "note": "prose/docs edit — no code surface"
+        },
+        {
+            "q": "red-team my agent's CLAUDE.md and MCP config",
+            "trigger": false,
+            "note": "agent-config adversarial review → agent-security-review"
+        }
+    ]
+}

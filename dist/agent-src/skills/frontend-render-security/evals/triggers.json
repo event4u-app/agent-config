@@ -1,0 +1,52 @@
+{
+    "skill": "frontend-render-security",
+    "last_eval": "2026-07-09",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for client-side insecure-render / client-trust patterns (XSS, client secrets, client-only auth, CORS, localStorage tokens). Should-not-trigger covers near-miss neighbours (server-side security, generic checklist, accessibility-only, dependency intake) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "is it safe to render this user content with dangerouslySetInnerHTML?",
+            "trigger": true
+        },
+        {
+            "q": "review this Vue component for XSS and any secrets in the bundle",
+            "trigger": true
+        },
+        {
+            "q": "I'm storing the JWT in localStorage — is that ok?",
+            "trigger": true
+        },
+        {
+            "q": "prüf mein Frontend auf unsichere Render-Muster und Client-Secrets",
+            "trigger": true
+        },
+        {
+            "q": "my CORS is set to origin '*' with credentials — problem?",
+            "trigger": true
+        },
+        {
+            "q": "review this API controller's authorization logic",
+            "trigger": false,
+            "note": "server-side authz → authz-review / security-sensitive-stop"
+        },
+        {
+            "q": "what invisible controls did I omit across this whole diff?",
+            "trigger": false,
+            "note": "cross-surface checklist → ai-code-blindspots"
+        },
+        {
+            "q": "make this form accessible — keyboard nav and contrast",
+            "trigger": false,
+            "note": "accessibility only → accessibility-auditor"
+        },
+        {
+            "q": "is this frontend npm dependency real and safe to install?",
+            "trigger": false,
+            "note": "dependency intake → supply-chain-intake"
+        },
+        {
+            "q": "help me center this div with flexbox",
+            "trigger": false,
+            "note": "layout/styling — no security surface"
+        }
+    ]
+}

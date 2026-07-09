@@ -45,6 +45,14 @@ ceiling on what the package may ever become.
   `telegraph-speak`, thin-projector trimming) that rejects a change on
   cost grounds alone.
 - An ADR whose decision is being cited as a blocker for the current change.
+- A **hard structural cap** (kernel size, per-domain persona cap, rich-skill
+  ratio). A change that genuinely *qualifies* to cross the cap — e.g. a new
+  rule that truly meets the kernel-membership inclusion criteria — triggers a
+  **cap-raise proposal + maintainer/council approval**, never a silent
+  downgrade of the rule to fit the old number (e.g. demoting a must-always-fire
+  rule to `auto` just because the kernel says 9). Fitting the cap is not a
+  reason to weaken a qualifying rule; but a rule that does **not** meet the
+  criteria stays out — the cap is not the reason, the criteria are.
 
 ## What to do when it fires
 
