@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "rp-01-api-style",
+      "needed": "dec-api-style",
+      "baseline": {
+        "rank": 0,
+        "tieSet": 4
+      },
+      "index": {
+        "rank": 0,
+        "tieSet": 1
+      }
+    },
+    {
+      "id": "rp-02-job-queue",
+      "needed": "dec-job-queue",
+      "baseline": {
+        "rank": 0,
+        "tieSet": 3
+      },
+      "index": {
+        "rank": 0,
+        "tieSet": 1
+      }
+    },
+    {
+      "id": "rp-03-tenant-scope",
+      "needed": "dec-tenant-scope",
+      "baseline": {
+        "rank": 0,
+        "tieSet": 3
+      },
+      "index": {
+        "rank": 0,
+        "tieSet": 1
+      }
+    },
+    {
+      "id": "rp-04-auth-tokens",
+      "needed": "dec-auth-tokens",
+      "baseline": {
+        "rank": 0,
+        "tieSet": 2
+      },
+      "index": {
+        "rank": 0,
+        "tieSet": 1
+      }
+    },
+    {
+      "id": "rp-05-region",
+      "needed": "dec-region",
+      "baseline": {
+        "rank": 0,
+        "tieSet": 3
+      },
+      "index": {
+        "rank": 0,
+        "tieSet": 1
+      }
+    },
+    {
+      "id": "rp-06-region-contradiction",
+      "needed": "dec-region",
+      "baseline": {
+        "rank": 0,
+        "tieSet": 3
+      },
+      "index": {
+        "rank": 0,
+        "tieSet": 1
+      }
+    },
+    {
+      "id": "rp-07-queue-contradiction",
+      "needed": "dec-job-queue",
+      "baseline": {
+        "rank": 0,
+        "tieSet": 4
+      },
+      "index": {
+        "rank": 0,
+        "tieSet": 1
+      }
+    },
+    {
+      "id": "rp-08-api-repair",
+      "needed": "dec-api-style",
+      "baseline": {
+        "rank": 0,
+        "tieSet": 4
+      },
+      "index": {
+        "rank": 0,
+        "tieSet": 1
+      }
+    },
+    {
+      "id": "rp-09-tenant-repair",
+      "needed": "dec-tenant-scope",
+      "baseline": {
+        "rank": 0,
+        "tieSet": 4
+      },
+      "index": {
+        "rank": 0,
+        "tieSet": 1
+      }
+    }
+  ],
+  "summary": {
+    "tasks": 9,
+    "k": 5,
+    "baseline_mean_tie_set": 3.333,
+    "index_mean_tie_set": 1,
+    "baseline_precision_at_1": 1,
+    "index_precision_at_1": 1,
+    "baseline_precision_at_k": 1,
+    "index_precision_at_k": 1
+  }
+}

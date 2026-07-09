@@ -119,6 +119,13 @@
 - status: backed
 - last_verified: 2026-07-09
 
+### claim: lexical-ranking-lift
+- claim: A hand-rolled, dependency-free BM25 + trigram lexical index resolves the "recalls but does not rank" gap: on the retrieval-precision corpus (9 keyword-overlapping-confuser tasks) it drives the mean top tie-set from 3.333 (the `_score` bucket scorer) to 1.0 — every needed decision uniquely top-ranked — with precision@1 and precision@5 unchanged at 1.0. Method: deterministic, model-free re-ranking of the SAME retrieved entry set; both scorers measured over the identical store via `measure_lexical_ranking.ts`.
+- kind: quant
+- evidence: internal/bench/reports/lexical-ranking.json
+- status: backed
+- last_verified: 2026-07-09
+
 ---
 
 ## Unbacked inventory (documented debt — not yet markered in prose)
