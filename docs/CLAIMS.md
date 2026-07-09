@@ -105,6 +105,13 @@
 - status: backed
 - last_verified: 2026-07-09
 
+### claim: second-brain-retrieval-precision
+- claim: Removing the perfect-retrieval assumption, the substrate's REAL keyword retrieval recalls the needed decision into the top-5 under keyword-overlapping confusers (precision@5 9/9) and the model disambiguates it from the co-injected confusers — retrieval-on 27/27 vs no-memory 5/27 and vs equal-count placebo 5/27 (claude-haiku-4-5, 9 tasks x 3 seeds, sign test p=0.008 both). Named limit: retrieval RECALLS but does not RANK (mean tie-set 3.3, ties broken by store order, not relevance) — the discrimination gap that motivates the SQLite-FTS5 activation path (ADR-116) at larger scale.
+- kind: quant
+- evidence: internal/bench/reports/second-brain-retrieval.json
+- status: backed
+- last_verified: 2026-07-09
+
 ---
 
 ## Unbacked inventory (documented debt — not yet markered in prose)

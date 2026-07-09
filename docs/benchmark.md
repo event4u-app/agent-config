@@ -325,3 +325,39 @@ which is the follow-up corpus. Cost: 6.3k in / 8.7k out tokens for the full run.
   export in `docs/second-brain-scope.md`.
 - Roadmap: `agents/roadmaps/archive/road-to-second-brain-delta-proof.md` (closed PASS).
 - Harness: `src/scripts/second_brain_run.ts` (`--dry-run` free / `--run` spend).
+
+## Second-brain retrieval precision (`claude-haiku-4-5`) — PASS, ranking-limit named
+
+> **Verdict: the lift survives REAL retrieval under confuser load — the
+> substrate recalls the right decision and the model disambiguates it — but the
+> keyword scorer recalls without ranking, which is the FTS5 signal at scale.**
+
+The follow-up to the recall-delta above removes its perfect-retrieval
+assumption. Against a populated decision store (5 needed + 19 distractors, with
+distractors that deliberately share query keywords with the needed decision),
+the run uses the REAL `memory_lookup` retrieval (not injection). Same host, 9
+tasks × 3 seeds = 81 calls.
+
+| metric | result |
+|---|---|
+| precision@5 (needed decision in top-5) | **9/9 (100%)** |
+| mean tie-set size (entries sharing the top score) | **3.3** — recalls, does not rank; ties break by store order |
+| retrieval-on (top-5 injected, confusers included) | **27/27** |
+| retrieval-off (no memory) | 5/27 — paired sign test vs on: 8 wins / 1 tie, p = 0.008 |
+| placebo (equal-count fixed unrelated entries) | 5/27 — vs on: 8 wins / 1 tie, p = 0.008 |
+
+**Reading it honestly.** Recall@5 is 100% *at this scale*: with ≤ k
+keyword-matching entries per query, the needed decision fits in the top-k and
+the model reliably picks it out of the co-injected confusers (retrieval-on
+27/27). The scorer gives 0.8 to any keyword match and breaks ties by store
+order, so it **recalls but does not rank** (mean tie-set 3.3) — once more than
+k entries share a keyword, recall into the top-k degrades. That degradation is
+the discrimination gap the SQLite-FTS5 activation path (ADR-116) exists to
+close; this run is its motivating evidence, not a contradiction of it.
+
+- Report: `internal/bench/reports/second-brain-retrieval.json`; claim
+  `second-brain-retrieval-precision` (`docs/CLAIMS.md`); scope in
+  `docs/second-brain-scope.md`.
+- Store + corpus: `internal/bench/second-brain/retrieval-store/`.
+- Harness: `src/scripts/second_brain_retrieval.ts` (`--dry-run` computes the
+  free deterministic precision@k / tie-set; `--run` adds the model arms).
