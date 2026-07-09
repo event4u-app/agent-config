@@ -100,6 +100,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         task_class: str(flags, 'task-class'),
         task_size_estimate: int(flags, 'task-size-estimate'),
         wall_clock_ms: int(flags, 'wall-clock-ms'),
+        dispatch_tokens: int(flags, 'dispatch-tokens'),
+        session_tier: str(flags, 'session-tier'),
         dispatch_outcome: str(flags, 'dispatch-outcome') as DispatchOutcome | undefined,
         verify_mode: str(flags, 'verify-mode') as VerifyMode | undefined,
         phase: str(flags, 'phase') as LinePhase | undefined,

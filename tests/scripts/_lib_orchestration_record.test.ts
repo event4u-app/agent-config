@@ -74,4 +74,15 @@ describe('buildOrchestrationLine', () => {
         expect(buildOrchestrationLine({ ...BASE, ts: '' }).errors.join(' ')).toMatch(/ts/);
         expect(buildOrchestrationLine({ ...BASE, id: '' }).errors.join(' ')).toMatch(/id/);
     });
+
+    it('carries dispatch_tokens + session_tier into the orchestration object (for the cost-%)', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE, dispatch_tokens: 84000, session_tier: 'high', tier_chosen: 'lite' });
+        expect(errors).toEqual([]);
+        expect(line!.orchestration).toMatchObject({ dispatch_tokens: 84000, session_tier: 'high', tier_chosen: 'lite' });
+    });
+
+    it('defaults dispatch_tokens/session_tier to null and rejects a negative dispatch_tokens', () => {
+        expect((buildOrchestrationLine(BASE).line!.orchestration as Record<string, unknown>).dispatch_tokens).toBeNull();
+        expect(buildOrchestrationLine({ ...BASE, dispatch_tokens: -5 }).errors.join(' ')).toMatch(/dispatch_tokens/);
+    });
 });

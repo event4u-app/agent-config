@@ -69,9 +69,11 @@ describe('aggregateOrchestrationSavings', () => {
         expect(r.by_tier.medium).toBe(500);
         expect(r.by_task_class['read-only-fanout']).toBe(-8000);
 
-        // Honest caveats present: no-percentage limit + estimated-lossy warning.
-        expect(r.notes.join(' ')).toMatch(/not derivable/i);
+        // Honest caveats present: measured-vs-modeled framing + estimated-lossy warning.
+        expect(r.notes.join(' ')).toMatch(/downshift rate win/i);
         expect(r.notes.join(' ')).toMatch(/ESTIMATED/i);
+        // No dispatch_tokens/session_tier on these lines → modeled cost-% unavailable.
+        expect(r.modeled_cost.cost_reduction_pct).toBeNull();
     });
 
     it('defaults absent fields safely (pre-extension line never throws)', () => {
@@ -82,5 +84,33 @@ describe('aggregateOrchestrationSavings', () => {
         expect(r.by_task_class.unclassified).toBe(0);
         // Absent provenance defaults to estimated per the telemetry contract.
         expect(r.by_provenance.estimated.dispatches).toBe(1);
+        // No tier data → modeled cost-% unavailable, with a note pointing at the fix.
+        expect(r.modeled_cost.cost_reduction_pct).toBeNull();
+        expect(r.notes.join(' ')).toMatch(/MODELED cost-% unavailable/i);
+    });
+
+    it('computes a MODELED cost-% from default tier weights + dispatch_tokens', () => {
+        const r = aggregateOrchestrationSavings([
+            { orchestration: { spawn_count: 1, token_delta: 0, dispatch_tokens: 1000, session_tier: 'high', tier_chosen: 'lite' } },
+        ]);
+        // Default weights high=15, lite=1: baseline 1000×15=15000, delegated 1000×1=1000.
+        expect(r.modeled_cost.covered_dispatches).toBe(1);
+        expect(r.modeled_cost.baseline_cost_units).toBe(15000);
+        expect(r.modeled_cost.delegated_cost_units).toBe(1000);
+        expect(r.modeled_cost.cost_reduction_pct).toBeCloseTo(14000 / 15000);
+        expect(r.notes.join(' ')).toMatch(/MODELED cost reduction/i);
+    });
+
+    it('honours custom weights and skips lines missing session_tier', () => {
+        const r = aggregateOrchestrationSavings(
+            [
+                { orchestration: { spawn_count: 1, dispatch_tokens: 100, session_tier: 'high', tier_chosen: 'medium' } },
+                { orchestration: { spawn_count: 1, dispatch_tokens: 100, tier_chosen: 'lite' } }, // no session_tier → skipped
+            ],
+            { lite: 1, medium: 2, high: 10 },
+        );
+        // Only the first line is covered: baseline 100×10=1000, delegated 100×2=200 → 80%.
+        expect(r.modeled_cost.covered_dispatches).toBe(1);
+        expect(r.modeled_cost.cost_reduction_pct).toBeCloseTo(0.8);
     });
 });
