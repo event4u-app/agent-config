@@ -58,7 +58,7 @@ Full surface→controls table + backstop greps: → `skill:ai-code-blindspots`.
 
 ### 3. Verify — never assert from memory
 
-No completion claim without exercising the real path (running endpoint / UI / test — not "the code looks right"). "Defined but not wired" (middleware written, never connected to the route) = **not done**. → `verify-before-complete`, `source-discovery-gate`.
+No completion claim without exercising the real path (running endpoint / UI / test — not "the code looks right"). "Defined but not wired" (middleware written, never connected to the route) = **not done**. **Before pushing code / opening a PR, run a changed-files static pass — type-checker + linter scoped to the diff (`tsc --noEmit` on the touched project, linter on changed files) — even when `quality.local_auto_run` is false: a narrow probe of your own diff, NOT the suppressed full pipeline. Letting a compile/lint error hit remote CI = completion claim without evidence (the beginner error this guards).** → `verify-before-complete`, `source-discovery-gate`.
 
 ## When it fires
 
