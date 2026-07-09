@@ -361,3 +361,45 @@ close; this run is its motivating evidence, not a contradiction of it.
 - Store + corpus: `internal/bench/second-brain/retrieval-store/`.
 - Harness: `src/scripts/second_brain_retrieval.ts` (`--dry-run` computes the
   free deterministic precision@k / tie-set; `--run` adds the model arms).
+
+## Thin-vs-eager quality judge (token-saving Phase 0) — INCONCLUSIVE (judge-limited)
+
+> **Verdict: the live judge run was executed, and it does NOT trustworthily
+> resolve whether the thin rule-projection holds output quality — the signal is
+> non-significant, judge-inconsistent, and length-confounded. Recorded as an
+> honest null; the quality-regression gate stays inert (by design — its report
+> path is gitignored) pending a stronger, length-neutral judge.**
+
+The thin-vs-eager runner (`src/scripts/bench_quality_run.ts`) generates each
+labelled golden task's answer under the THIN rule context (kernel bodies +
+non-kernel pointers, ~15k tok) and the EAGER context (all rule bodies, ~87k
+tok), then judges the pair in both orders (`evaluatePair` → reject-on-flip).
+Live run 2026-07-09, host + judge `claude-haiku-4-5`, 30 labelled tasks
+(evidence: `internal/bench/reports/quality-run-2026-07-09-haiku-inconclusive.json`):
+
+| metric | value | reading |
+|---|---|---|
+| decisive pairs | 16 / 30 | thin 5 · eager 11 |
+| thin win-rate | 31% | below the 0.48 floor — but see the three confounds |
+| Wilcoxon p | **0.196** | **not significant** — no reliable thin≠eager difference |
+| judge inconsistency | **33%** (10/30 flip on order swap) | the haiku judge is unreliable here |
+| length-confound | **69%** of decisive wins went to the LONGER answer | eager (87k ctx) answers longer → verbosity bias, exactly what the harness flags |
+
+**Why it is not a regression verdict.** The win-rate alone would trip the gate,
+but the three diagnostics disqualify it as evidence: the difference is not
+significant (p=0.20), a third of pairs are position-unstable, and two-thirds of
+decisive wins track answer *length*, not quality. A "thin regresses" claim off
+this run would be over-claiming a confounded, non-significant signal — the
+opposite of the honest-null discipline.
+
+**Re-open (fresh-spend follow-up).** A trustworthy verdict needs (a) a stronger
+judge (sonnet-class) to cut the 33% inconsistency, and (b) a length-neutralised
+comparison (truncate/normalise answer length, or score against the anchors
+directly) to remove the 69% verbosity confound. Until then the thin lever is
+NOT adopted as default and the gate stays inert. The golden set also still
+covers only 14/89 rules (operator hand-labelling), a separate gap.
+
+- Runner: `src/scripts/bench_quality_run.ts` (`--dry-run` free / live is
+  API-gated); gate: `src/scripts/check_quality_regression.ts` (inert until a
+  `quality-run.json` — gitignored — exists locally).
+- Roadmap: `agents/roadmaps/road-to-token-saving.md` Phase 0.

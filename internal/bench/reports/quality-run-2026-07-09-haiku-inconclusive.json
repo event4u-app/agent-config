@@ -1,0 +1,188 @@
+{
+  "generated_by": "bench_quality_run",
+  "judge_model": "claude-haiku-4-5-20251001",
+  "dry_run": false,
+  "threshold": 0.48,
+  "results": [
+    {
+      "id": "tq-scope-01",
+      "winner": "eager",
+      "length_delta": -701,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-scope-02",
+      "winner": "inconsistent",
+      "length_delta": -85,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-direct-01",
+      "winner": "thin",
+      "length_delta": -352,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-direct-02",
+      "winner": "tie",
+      "length_delta": 0,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-evidence-01",
+      "winner": "tie",
+      "length_delta": -44,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-evidence-02",
+      "winner": "thin",
+      "length_delta": -1428,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-rootcause-01",
+      "winner": "eager",
+      "length_delta": -801,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-testing-01",
+      "winner": "eager",
+      "length_delta": -736,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-testing-02",
+      "winner": "eager",
+      "length_delta": -909,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-security-01",
+      "winner": "eager",
+      "length_delta": -419,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-security-02",
+      "winner": "inconsistent",
+      "length_delta": -419,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-performance-01",
+      "winner": "eager",
+      "length_delta": -388,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-performance-02",
+      "winner": "eager",
+      "length_delta": -194,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-review-01",
+      "winner": "inconsistent",
+      "length_delta": -398,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-review-02",
+      "winner": "thin",
+      "length_delta": -649,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-docs-01",
+      "winner": "inconsistent",
+      "length_delta": -258,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-docs-02",
+      "winner": "eager",
+      "length_delta": -1396,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-architecture-01",
+      "winner": "eager",
+      "length_delta": -528,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-refactor-01",
+      "winner": "inconsistent",
+      "length_delta": -158,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-refactor-02",
+      "winner": "inconsistent",
+      "length_delta": -233,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-roadmap-01",
+      "winner": "inconsistent",
+      "length_delta": -643,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-roadmap-02",
+      "winner": "eager",
+      "length_delta": -492,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-subagent-01",
+      "winner": "eager",
+      "length_delta": -813,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-subagent-02",
+      "winner": "thin",
+      "length_delta": -351,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-summary-01",
+      "winner": "inconsistent",
+      "length_delta": -2391,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-language-01",
+      "winner": "inconsistent",
+      "length_delta": -3447,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-language-02",
+      "winner": "tie",
+      "length_delta": -19,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-hallucination-01",
+      "winner": "tie",
+      "length_delta": 43,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-user-intent-01",
+      "winner": "thin",
+      "length_delta": -97,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-user-intent-02",
+      "winner": "inconsistent",
+      "length_delta": 378,
+      "winner_is_longer": null
+    }
+  ]
+}
