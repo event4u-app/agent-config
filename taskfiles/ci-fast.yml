@@ -382,6 +382,11 @@ tasks:
     desc: "Second-brain recall scorer dry-run — the deterministic multi-session recall scorer must score the shipped good transcripts PASS and the bad ones FAIL (no model-in-the-loop, no spend; road-to-second-brain-delta-proof Phase 1)"
     cmd: ./scripts-run src/scripts/second_brain_score --dry-run
 
+  check-second-brain-retrieval:
+    silent: true
+    desc: "Second-brain retrieval-precision dry-run — the REAL memory_lookup retrieval must still recall every needed decision into the top-k against the confuser store, and the stubbed arms must wire (deterministic, no spend; road-to-second-brain-retrieval-precision)"
+    cmd: ./scripts-run src/scripts/second_brain_retrieval --dry-run
+
   check-eval-coverage:
     silent: true
     desc: "Behavioural-eval coverage ratchet — overall + per-tier coverage may not drop below the pinned floor (internal/evals/coverage-floor.json); the floor only rises via --write-floor after authoring evals (road-to-skill-eval-coverage Phase 3)"
