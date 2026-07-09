@@ -25,7 +25,9 @@ on:
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"
-      - ".github/workflows/consistency.yml"
+      # Any workflow-file change must trigger the REQUIRED Consistency check
+      # too, or a workflow-only PR deadlocks on "Expected — Waiting for status".
+      - ".github/workflows/**"
       # docs-only PR shape (per docs/contracts/branch-protection-policy.md):
       # Consistency is a REQUIRED check for docs-only PRs, so it must trigger
       # on the docs-only paths or such PRs deadlock (required check never runs).
@@ -62,7 +64,9 @@ on:
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"
-      - ".github/workflows/consistency.yml"
+      # Any workflow-file change must trigger the REQUIRED Consistency check
+      # too, or a workflow-only PR deadlocks on "Expected — Waiting for status".
+      - ".github/workflows/**"
       # docs-only PR shape (per docs/contracts/branch-protection-policy.md):
       # Consistency is a REQUIRED check for docs-only PRs, so it must trigger
       # on the docs-only paths or such PRs deadlock (required check never runs).
