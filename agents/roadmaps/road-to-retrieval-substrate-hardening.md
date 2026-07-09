@@ -201,14 +201,18 @@ the ADR-061 conflict is closed in writing. **Rollback:** fall back to `_score()`
       gitignored (council Q2, no merge=union). `--now` injected for byte-stable
       output. First real consumer of the B5b versioned-cache lint (invalidation
       comment). 9 tests; typecheck+eslint green. -->
-- [ ] Display-time merge into `retrieve()` output as a
+- [x] Display-time merge into `retrieve()` output as a
       `learning=preferred|contested|dead_end` suffix — the sidecar NEVER mutates
       the curated YAML truths; a single session cannot mint a lesson.
-      <!-- next increment: attach the verdict to matching hits at retrieve time
-      (lazy-load the sidecar, key by entry_type + the entry's anchor path —
-      intake `path` vs curated `key` need careful matching, hence its own step);
-      additive, only present when a verdict exists so the v1 envelope stays
-      byte-identical without a sidecar. -->
+      <!-- done 2026-07-10: retrieve_v1 + memory_get_v1 lazily load the gitignored
+      .agent-learning.json (memoised per root, invalidated by the _set*Root
+      setters), match a lesson by (entry_type, anchor = entry.path ?? entry.key),
+      and attach `learning` to the entry body (full) / the row (index, compact) at
+      DISPLAY time — never touching the curated YAML. Additive: absent a sidecar,
+      or on a non-match, the field is omitted so the v1 envelope is byte-identical
+      (conformance + byte-identical detail tests green). 5 merge tests + 59-test
+      retrieval regression green. -->
+      
 
 **Exit:** the aggregator verdicts intake into preferred/contested/dead-end,
 byte-stable; `retrieve()` surfaces the suffix. **Rollback:** drop the sidecar
