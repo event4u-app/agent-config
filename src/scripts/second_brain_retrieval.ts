@@ -180,7 +180,7 @@ export async function run(opts: { mode: 'dry-run' | 'live'; host: string; seeds:
         const neededInTopK = rank >= 0 && rank < k;
         if (neededInTopK) precisionHits += 1;
         tieSetSum += tieSetSize;
-        taskArmPass[task.id] = { 'retrieval-off': 0, 'retrieval-on': 0, placebo: 0 };
+        const tap: Record<Arm, number> = { 'retrieval-off': 0, 'retrieval-on': 0, placebo: 0 };
 
         for (const arm of ARMS) {
             for (let s = 0; s < opts.seeds; s++) {
@@ -192,9 +192,10 @@ export async function run(opts: { mode: 'dry-run' | 'live'; host: string; seeds:
                     transcript = r.text; calls += 1; tIn += r.tokens_in; tOut += r.tokens_out;
                 }
                 armTotal[arm] += 1;
-                if (scoreTask(transcript, _scoreObj(task)).pass) { armPass[arm] += 1; taskArmPass[task.id][arm] += 1; }
+                if (scoreTask(transcript, _scoreObj(task)).pass) { armPass[arm] += 1; tap[arm] += 1; }
             }
         }
+        taskArmPass[task.id] = tap;
         perTask.push({ id: task.id, needed: task.needed, needed_rank: rank, needed_in_top_k: neededInTopK, tie_set_size: tieSetSize, top_k_ids: ids });
     }
 
@@ -203,7 +204,8 @@ export async function run(opts: { mode: 'dry-run' | 'live'; host: string; seeds:
     const pair = (a: Arm, b: Arm) => {
         let aw = 0, bw = 0, ties = 0;
         for (const t of tasks) {
-            const pa = taskArmPass[t.id][a], pb = taskArmPass[t.id][b];
+            const tap = taskArmPass[t.id]!;
+            const pa = tap[a], pb = tap[b];
             if (pa > pb) aw += 1; else if (pb > pa) bw += 1; else ties += 1;
         }
         return { a_wins: aw, b_wins: bw, ties, sign_p: signTestP(aw, bw) };

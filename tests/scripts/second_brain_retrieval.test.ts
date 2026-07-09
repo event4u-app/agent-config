@@ -50,9 +50,9 @@ describe('run --dry-run', () => {
         expect(report.precision_at_k).toBe(1); // 9/9 recalled at k=5 at this scale
         expect(report.mean_tie_set_size as number).toBeGreaterThan(1);
         const agg = report.aggregate as Record<string, { pass: number; total: number }>;
-        expect(agg['retrieval-on'].pass).toBe(agg['retrieval-on'].total);
-        expect(agg['retrieval-off'].pass).toBe(0);
-        expect(agg.placebo.pass).toBe(0);
+        expect(agg['retrieval-on']!.pass).toBe(agg['retrieval-on']!.total);
+        expect(agg['retrieval-off']!.pass).toBe(0);
+        expect(agg['placebo']!.pass).toBe(0);
         expect(report.verdict).toBe('PASS');
     });
 });

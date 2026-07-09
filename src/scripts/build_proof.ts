@@ -151,6 +151,8 @@ function render(): string {
     L.push('honest limit: the keyword scorer recalls but does not rank (mean tie-set');
     L.push('3.3), which is the SQLite-FTS5 activation signal (ADR-116) at scale.');
     L.push('');
+    L.push('## 3. Known limits (published, witness-tested)');
+    L.push('');
     const skillGaps = collectSkillGaps();
     if (skillGaps.length === 0) {
         L.push('No skill has logged a known-limit `gaps:` entry yet. When one does, it');

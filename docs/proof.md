@@ -103,6 +103,8 @@ decision into the top-5 (9/9) and the model disambiguates it — retrieval-on
 honest limit: the keyword scorer recalls but does not rank (mean tie-set
 3.3), which is the SQLite-FTS5 activation signal (ADR-116) at scale.
 
+## 3. Known limits (published, witness-tested)
+
 Each limitation below is stated by the skill itself and carries a witness
 test that reproduces it. If the limitation is ever fixed, its witness goes
 red — so a "Known limit" can never quietly become false.
