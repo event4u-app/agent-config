@@ -5,15 +5,27 @@
  * Consumes the `orchestration` sub-object of audit-log-v1 JSONL lines
  * (contract: `src/agent-src/contexts/execution/orchestration-telemetry.md`).
  *
- * HONEST LIMIT — the telemetry records `token_delta` (net dispatch cost vs the
- * in-session baseline; negative = saved) but NOT the absolute baseline. A clean
- * "% of session saved" is therefore NOT derivable from this data alone — only
- * ABSOLUTE net tokens saved, plus the measured-vs-estimated provenance split.
- * A percentage would need an absolute-baseline field on the telemetry (see the
- * report `notes` and the PR's follow-up section).
+ * TWO metrics, kept distinct on purpose:
+ * 1. MEASURED token counts — `token_delta` (net token-COUNT delta vs the
+ *    in-session baseline; negative = fewer tokens). Real, but blind to the
+ *    downshift RATE win: the same work on a cheaper tier uses ~the same token
+ *    COUNT, so token_delta ≈ 0 for a pure downshift even though cost dropped.
+ * 2. MODELED cost-% (`modeled_cost`) — captures exactly that downshift win via
+ *    provider-neutral tier weights + absolute `dispatch_tokens`. It is a MODEL
+ *    (weights + a same-token-count assumption), NOT a measured $ figure, and is
+ *    clearly labelled as such in the report notes.
  */
 
 export type TokenDeltaProvenance = 'measured' | 'estimated';
+
+/**
+ * Relative, provider-NEUTRAL cost weights per model tier — a tunable ratio, not
+ * $ prices. Default reflects the ~5×/~15× cheap-vs-frontier ratios from the
+ * cost-downshift council; override per project via the report's `--weights`.
+ * Used ONLY for the modeled cost-%, never for the measured token counts.
+ */
+export type TierWeights = Record<string, number>;
+export const DEFAULT_TIER_WEIGHTS: TierWeights = { lite: 1, medium: 5, high: 15 };
 
 /** The `orchestration` sub-object shape we read (subset — additive fields only). */
 export interface OrchestrationRecord {
@@ -23,6 +35,10 @@ export interface OrchestrationRecord {
     tier_chosen?: string | null;
     task_class?: string | null;
     outcome?: string;
+    /** Absolute measured tokens the dispatched slice consumed (for the modeled cost-%). */
+    dispatch_tokens?: number | null;
+    /** The orchestrator's own tier — the baseline the downshift is measured against. */
+    session_tier?: string | null;
 }
 
 /** A parsed audit-log-v1 line (only the fields this aggregator touches). */
@@ -35,6 +51,18 @@ export interface ProvenanceStat {
     dispatches: number;
     /** Σ token_delta for this provenance (negative = net saved). */
     net_token_delta: number;
+}
+
+export interface ModeledCost {
+    /** Dispatches with dispatch_tokens + session_tier + tier_chosen all weight-resolvable. */
+    covered_dispatches: number;
+    /** Σ dispatch_tokens × weight(session_tier) — same tokens costed on the baseline tier. */
+    baseline_cost_units: number;
+    /** Σ dispatch_tokens × weight(tier_chosen) — modeled cost of the downshifted run. */
+    delegated_cost_units: number;
+    /** (baseline − delegated) / baseline, 0..1; null when no covered dispatches. MODELED, not measured $. */
+    cost_reduction_pct: number | null;
+    weights: TierWeights;
 }
 
 export interface SavingsReport {
@@ -54,6 +82,8 @@ export interface SavingsReport {
     by_task_class: Record<string, number>;
     /** measured dispatches / dispatches, 0..1 (0 when no dispatches). */
     measured_share: number;
+    /** Modeled downshift cost-% (tier-weight based). Distinct from the measured token counts. */
+    modeled_cost: ModeledCost;
     /** Honest caveats about what the number does and does not mean. */
     notes: string[];
 }
@@ -70,7 +100,10 @@ function emptyProvenance(): ProvenanceStat {
  * dispatch). Unknown/absent fields default safely (token_delta → 0, provenance
  * → estimated) so a pre-extension line never throws.
  */
-export function aggregateOrchestrationSavings(lines: AuditLine[]): SavingsReport {
+export function aggregateOrchestrationSavings(
+    lines: AuditLine[],
+    weights: TierWeights = DEFAULT_TIER_WEIGHTS,
+): SavingsReport {
     const report: SavingsReport = {
         dispatches: 0,
         total_spawns: 0,
@@ -81,6 +114,7 @@ export function aggregateOrchestrationSavings(lines: AuditLine[]): SavingsReport
         by_tier: {},
         by_task_class: {},
         measured_share: 0,
+        modeled_cost: { covered_dispatches: 0, baseline_cost_units: 0, delegated_cost_units: 0, cost_reduction_pct: null, weights },
         notes: [],
     };
 
@@ -109,17 +143,36 @@ export function aggregateOrchestrationSavings(lines: AuditLine[]): SavingsReport
 
         const cls = o.task_class ?? 'unclassified';
         report.by_task_class[cls] = (report.by_task_class[cls] ?? 0) + delta;
+
+        // Modeled cost — the downshift RATE win token_delta (counts) cannot see:
+        // the same dispatch_tokens on a cheaper tier cost less by the weight ratio.
+        const dt = o.dispatch_tokens ?? 0;
+        const wChosen = o.tier_chosen != null ? weights[o.tier_chosen] : undefined;
+        const wSession = o.session_tier != null ? weights[o.session_tier] : undefined;
+        if (dt > 0 && wChosen !== undefined && wSession !== undefined) {
+            report.modeled_cost.covered_dispatches += 1;
+            report.modeled_cost.baseline_cost_units += dt * wSession;
+            report.modeled_cost.delegated_cost_units += dt * wChosen;
+        }
     }
 
     report.measured_share = report.dispatches === 0 ? 0 : report.by_provenance.measured.dispatches / report.dispatches;
 
+    const mc = report.modeled_cost;
+    mc.cost_reduction_pct = mc.baseline_cost_units > 0 ? (mc.baseline_cost_units - mc.delegated_cost_units) / mc.baseline_cost_units : null;
+
     // Honest caveats — always attached so a consumer never over-reads the number.
     if (report.dispatches === 0) {
-        report.notes.push('No orchestration telemetry yet (0 dispatches). The number accrues as `subagents.auto: on` runs delegate real slices.');
+        report.notes.push('No orchestration telemetry yet (0 dispatches). Data accrues as `subagents.auto: on` delegates real slices (recorded via orchestration_record).');
     } else {
-        report.notes.push('Reports ABSOLUTE net token_delta (negative = saved). A "% of session saved" is NOT derivable — the telemetry records net delta, not the absolute baseline. A percentage needs an absolute-baseline field on the telemetry.');
+        report.notes.push('Token counts are MEASURED but blind to the downshift rate win (same tokens on a cheaper tier ≈ same count). The MODELED cost-% below captures that axis.');
         if (report.by_provenance.estimated.dispatches > 0) {
             report.notes.push(`${report.by_provenance.estimated.dispatches}/${report.dispatches} dispatch(es) use ESTIMATED token_delta (chars/4, lossy). Prefer measured (host usage metadata).`);
+        }
+        if (mc.covered_dispatches > 0 && mc.cost_reduction_pct !== null) {
+            report.notes.push(`MODELED cost reduction ${(mc.cost_reduction_pct * 100).toFixed(0)}% over ${mc.covered_dispatches}/${report.dispatches} dispatch(es) that carry tier data — from provider-neutral tier weights ${JSON.stringify(mc.weights)} + a same-token-count assumption. A MODEL, NOT a measured $ figure; tune with --weights.`);
+        } else {
+            report.notes.push('MODELED cost-% unavailable: no dispatch yet carries dispatch_tokens + session_tier + tier_chosen. Record those (orchestration_record --dispatch-tokens/--session-tier/--tier-chosen) to populate it.');
         }
     }
 

@@ -39,6 +39,10 @@ export interface RecordInput {
     task_class?: string | null | undefined;
     task_size_estimate?: number | undefined;
     wall_clock_ms?: number | undefined;
+    /** Absolute measured tokens the dispatched slice consumed (feeds the modeled cost-%). */
+    dispatch_tokens?: number | null | undefined;
+    /** The orchestrator's own tier — the baseline the downshift cost-% measures against. */
+    session_tier?: string | null | undefined;
     dispatch_outcome?: DispatchOutcome | undefined;
     verify_mode?: VerifyMode | undefined;
     // Audit-log envelope (sensible defaults for a dispatch record)
@@ -96,6 +100,9 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     if (input.wall_clock_ms !== undefined && (!isInt(input.wall_clock_ms) || input.wall_clock_ms < 0)) {
         errors.push('wall_clock_ms must be a non-negative integer');
     }
+    if (input.dispatch_tokens != null && (!isInt(input.dispatch_tokens) || input.dispatch_tokens < 0)) {
+        errors.push('dispatch_tokens must be a non-negative integer (absolute tokens the dispatched slice consumed)');
+    }
 
     const prov: Provenance = input.token_delta_provenance ?? 'estimated';
     if (!PROVENANCES.includes(prov)) errors.push(`token_delta_provenance must be one of ${PROVENANCES.join(' | ')}`);
@@ -137,6 +144,8 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         task_class: input.task_class ?? null,
         tier_chosen: input.tier_chosen ?? null,
         tier_source: input.tier_source ?? null,
+        dispatch_tokens: input.dispatch_tokens ?? null,
+        session_tier: input.session_tier ?? null,
     };
 
     const line: Record<string, unknown> = {
