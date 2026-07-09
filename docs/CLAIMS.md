@@ -126,6 +126,13 @@
 - status: backed
 - last_verified: 2026-07-09
 
+### claim: context-token-reduction
+- claim: The retrieval economy cuts always-loaded context tokens ~65.6% measured against the FULL always-loaded projection — 98,529 → 33,897 tokens (eager rule load + skill/command descriptions + MCP schemas, thin-flipped). Method: `agent-config benchmark` over the pinned token baseline; the baseline is the honest "what the user pays if everything loads eagerly", NOT a synthetic full-corpus strawman (council Q4).
+- kind: quant
+- evidence: internal/bench/reports/token-baseline.json#eager_rule_load
+- status: backed
+- last_verified: 2026-07-10
+
 ---
 
 ## Unbacked inventory (documented debt — not yet markered in prose)

@@ -171,6 +171,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              relation-graph (relation-filtered BFS). Flags: --depth N
   explain                    Seed on a <concept>, expand 2 hops over the relation-graph
                              with a node budget. Flags: --budget N
+  benchmark                  Report context-token reduction vs the full always-loaded
+                             projection (from the pinned token baseline). Flags: --format
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
@@ -445,6 +447,12 @@ cmd_explain() {
   local script
   script="$(resolve_script "src/scripts/discovery_graph.ts")"
   exec_ts "$script" explain "$@"
+}
+
+cmd_benchmark() {
+  local script
+  script="$(resolve_script "src/scripts/benchmark.ts")"
+  exec_ts "$script" "$@"
 }
 
 cmd_mcp_check() {
@@ -1049,6 +1057,7 @@ main() {
     use)                     cmd_use "$@" ;;
     affected)                cmd_affected "$@" ;;
     explain)                 cmd_explain "$@" ;;
+    benchmark)               cmd_benchmark "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
