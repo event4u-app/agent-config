@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: ai-code-blindspots
-description: "Use before finishing any code (endpoint, query, migration, render, file/fetch, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with authoring-time backstop greps and routing to the deep skill per surface."
+description: "Before finishing any code (endpoint, query, migration, render, file, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with backstop greps"
 domain: quality
 workspaces:
   - engineering
@@ -30,6 +30,13 @@ FOR EVERY SURFACE YOU TOUCHED, NAME THE INVISIBLE CONTROL AND CONFIRM IT IS PRES
 "NOT MENTIONED IN THE PROMPT" IS EXACTLY WHY IT IS MISSING — CHECK IT ANYWAY.
 A CONTROL DEFINED BUT NOT WIRED IS ABSENT. A grep IS CHEAPER THAN A BREACH.
 ```
+
+## Procedure
+
+1. List the surfaces this change touched (endpoint, query, migration, render, file/fetch, infra, dependency, test).
+2. For each surface, take its row below: assert every listed invisible control is present (with file:line), and run the matching backstop grep.
+3. For anything a grep flags or a check can't confirm, open the routed deep skill.
+4. Emit the per-surface confirmation (Output format); surface any unresolved gap to the user — never silently omit.
 
 ## Surface → invisible controls → backstop
 

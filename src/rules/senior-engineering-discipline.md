@@ -17,10 +17,10 @@ triggers:
   - keyword: "test"
   - keyword: "refactor"
 routes_to:
-  - skill:ai-code-blindspots
-  - skill:frontend-render-security
-  - skill:supply-chain-intake
-  - skill:testing-anti-patterns
+  - "skill:ai-code-blindspots"
+  - "skill:frontend-render-security"
+  - "skill:supply-chain-intake"
+  - "skill:testing-anti-patterns"
 workspaces: [engineering]
 packs: [engineering-base]
 ---

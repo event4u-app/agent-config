@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: frontend-render-security
-description: "Use when writing or reviewing client-side UI (React/Vue/vanilla) — the insecure-render and client-trust patterns AI ships by default: XSS via innerHTML, client-side secrets, client-only auth, CORS wildcard, token in localStorage — with authoring-time backstop greps."
+description: "Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage"
 domain: quality
 workspaces:
   - engineering
@@ -28,6 +28,13 @@ NEVER RENDER NON-CONSTANT INPUT INTO AN HTML/JS SINK WITHOUT ENCODING OR SANITIZ
 THE CLIENT IS UNTRUSTED — EVERY CLIENT GATE NEEDS A SERVER-SIDE TWIN.
 NO SECRET, PRIVILEGED KEY, OR SESSION TOKEN LIVES IN CLIENT CODE OR localStorage.
 ```
+
+## Procedure
+
+1. Identify the sinks in the diff: HTML/JS render points, API calls, auth/role checks, URL / `postMessage` reads, secret/token usage.
+2. Run the backstop greps below; for each hit, apply the matching fix from the patterns table.
+3. For every client-side gate, confirm a server-side twin exists (the client is never the security boundary).
+4. Emit the per-diff verdict (Output format); surface any unresolved hit to the user.
 
 ## The patterns AI ships by default
 

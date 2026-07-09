@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: testing-anti-patterns
-description: "Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — Iron Laws against mocking-the-mock, production pollution, silent partial mocks, and overfit/tautological assertions."
+description: "Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions"
 domain: quality
 workspaces:
   - engineering

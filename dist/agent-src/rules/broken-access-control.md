@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Any endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant check + the three negative tests (401/non-owner-403/cross-tenant-403), or it is not done"
+description: "Endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant/role check + the three negative tests (401/non-owner/cross-tenant)"
 triggers:
   - intent: "returning user or tenant data"
   - intent: "adding an endpoint that reads a record by id"
@@ -16,9 +16,9 @@ triggers:
   - keyword: "controller"
   - keyword: "findById"
 routes_to:
-  - skill:authz-review
-  - skill:threat-modeling
-  - skill:multi-tenancy
+  - "skill:authz-review"
+  - "skill:threat-modeling"
+  - "skill:multi-tenancy"
 workspaces: [engineering]
 packs: [engineering-base]
 ---

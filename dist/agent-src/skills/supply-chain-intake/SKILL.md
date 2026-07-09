@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: supply-chain-intake
-description: "Use before adding or installing any third-party dependency the agent named itself — verify the package exists (slopsquatting/hallucination is ~1 in 5 AI suggestions), is not typo-adjacent, is pinned + locked, and is CVE-scanned, before it enters the manifest."
+description: "Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned"
 domain: devops
 workspaces:
   - engineering
@@ -29,7 +29,7 @@ A NAME THE MODEL PRODUCED IS A HYPOTHESIS, NOT A DEPENDENCY.
 PIN IT, LOCK IT, CVE-SCAN IT. NEVER PIPE A REMOTE SCRIPT STRAIGHT TO A SHELL.
 ```
 
-## Intake gate — run in order before adding a dependency
+## Procedure — intake gate (run in order before adding a dependency)
 
 1. **Existence** — confirm the exact string resolves on the real registry, published before your session, with real usage:
    ```bash

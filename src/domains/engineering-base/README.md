@@ -16,8 +16,8 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 
 ## Rules (24)
 
-- **`active-remediation`** — Spotted an issue while working (security gap, missing test, bad code, duplication, stale version-idiom) — never ignore it; fix small+aligned inline, ask on bigger, propose a follow-up PR when there are many
-- **`broken-access-control`** — Any endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant check + the three negative tests (401/non-owner-403/cross-tenant-403), or it is not done
+- **`active-remediation`** — Spotted an issue while working (security gap, missing test, bad code, duplication, stale idiom) — never ignore; fix small+aligned inline, ask on bigger, propose a follow-up PR for many
+- **`broken-access-control`** — Endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant/role check + the three negative tests (401/non-owner/cross-tenant)
 - **`commit-conventions`** — Git commit format, branch naming, conventional commits, committing, pushing, creating PRs
 - **`commit-policy`** — Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked
 - **`communication-through-line`** — Multi-step or continuation replies carry a red thread — state the goal once, tie each turn back to it, name what changed since last turn, close the loop with one end-summary
@@ -46,7 +46,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`accessibility-auditor`** — Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
 - **`adversarial-review`** — ONLY on a request for adversarial review, devil's advocate, stress-test, or honest critique ('poke holes', 'be brutal', 'was hältst du davon') — NOT routine code/design review.
 - **`agent-security-review`** — Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit.
-- **`ai-code-blindspots`** — Use before finishing any code (endpoint, query, migration, render, file/fetch, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with authoring-time backstop greps and routing to the deep skill per surface.
+- **`ai-code-blindspots`** — Before finishing any code (endpoint, query, migration, render, file, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with backstop greps
 - **`api-design`** — Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design.
 - **`api-endpoint`** — Use when creating an API endpoint or HTTP route handler — detects the project stack and routes to the matching carve-out (laravel-api-endpoint, nextjs-patterns, symfony-workflow).
 - **`api-testing`** — Use when writing API endpoint tests — integration tests, contract validation, response assertions, mocked external services — even when the user says 'test this route' without naming API testing.
@@ -75,7 +75,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`fe-design`** — Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.ts.
 - **`finishing-a-development-branch`** — Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'.
 - **`form-handler`** — Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'.
-- **`frontend-render-security`** — Use when writing or reviewing client-side UI (React/Vue/vanilla) — the insecure-render and client-trust patterns AI ships by default: XSS via innerHTML, client-side secrets, client-only auth, CORS wildcard, token in localStorage — with authoring-time backstop greps.
+- **`frontend-render-security`** — Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage
 - **`git-workflow`** — Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git.
 - **`github-ci`** — Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'.
 - **`grafana`** — Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana.
@@ -105,7 +105,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`source-discovery`** — Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields.
 - **`sql-writing`** — Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'.
 - **`standards-from-config`** — Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim.
-- **`supply-chain-intake`** — Use before adding or installing any third-party dependency the agent named itself — verify the package exists (slopsquatting/hallucination is ~1 in 5 AI suggestions), is not typo-adjacent, is pinned + locked, and is CVE-scanned, before it enters the manifest.
+- **`supply-chain-intake`** — Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned
 - **`systematic-debugging`** — Use on a bug, test failure, crash, or unexpected behavior — enforce reproduce → isolate → hypothesize → verify before any fix; fires even on 'this is broken' / 'quick fix'.
 - **`tailwind-engineer`** — Use when writing or reviewing Tailwind CSS — utility-first, design-token discipline, no inline-style drift, responsive variants, dark mode — even on 'style this' or 'mach das hübsch'.
 - **`tech-debt-tracker`** — Use when surfacing tech debt as trackable items — interest-vs-principal framing, prioritisation by carrying cost, repayment plan — even if the user just says 'this codebase is a mess'.
@@ -113,7 +113,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`terragrunt`** — Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt.
 - **`test-driven-development`** — Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'.
 - **`test-performance`** — Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives.
-- **`testing-anti-patterns`** — Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — Iron Laws against mocking-the-mock, production pollution, silent partial mocks, and overfit/tautological assertions.
+- **`testing-anti-patterns`** — Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions
 - **`threat-modeling`** — Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation.
 - **`traefik`** — Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing.
 - **`ui-component-architect`** — Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'.
