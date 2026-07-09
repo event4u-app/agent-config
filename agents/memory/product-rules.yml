@@ -1,0 +1,1199 @@
+version: 1
+entries:
+  - id: a3-production-validator-honest-null
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: a3 production validator honest null
+    body: "A3 Gate-A eval of the production-validator subagent came back honest-null
+      (no verdict lift); stays default-off; feeds D3. A3 Gate-A eval
+      (2026-07-05, PR #721, operator-authorised billable run) of the
+      `production-validator` subagent = **HONEST NULL**. Ran the `pv-*` corpus
+      (`internal/bench/orchestration/`) for real via the **Task tool** — 6 fresh
+      independent agents = 3 arms (inline host / generic dispatch /
+      production-validator) × pv-01 (hollow charge()) / pv-02 (clean slugify
+      control). `token_delta_provenance: measured`. - **pv-01: no lift.** All 3
+      arms returned NOT READY citing `charge.ts:13`"
+  - id: capability-matrix-coverage-guard
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: capability matrix coverage guard
+    body: "A new generate_* export in condense.ts must be registered in _FN_SPEC or
+      generate_capability_matrix's empty-guard test fails CI. Adding a new
+      `generate_*` function to condense.ts's `_generate_tools_inner` dispatcher
+      **requires** a matching entry in `_FN_SPEC` in
+      `src/scripts/generate_capability_matrix.ts` (artifact + per-host cells),
+      and a regen of `docs/capability-matrix.md` (drift-checked via `--check`).
+      Otherwise the `generate_capability_matrix.test.ts` \"empty guard\" (every
+      dispatched generate_* must be covered) fails: `expected [ '<new_fn>' ] to
+      deeply equal []`. **Why:** it bit A1 cross-h"
+  - id: council-a1-subagent-contract
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council a1 subagent contract
+    body: "2026-07-04 A1 keystone — subagent-v1 contract ratified by council →
+      ADR-109; PR. Track A / A1 of
+      `road-to-final-state-and-market-readiness.md`. Council 2026-07-04
+      (claude-sonnet-4-5 + gpt-4o, 2 rounds) → **ADR-109** ratifies the
+      `subagent-v1` contract. Landed green in **PR #707** (branch
+      `feat/track-a-subagent-contract`). **Converged (don't relitigate):** - New
+      discovery category **`subagent`** (not `agent`, not a persona subtype). -
+      Governance fields **REQUIRED** not optional (round-2 decisive) — trust
+      block mirrors the skill schema. - `model_tier` **reuse** (ADR-034/035)
+      incl. `inherit` pass"
+  - id: council-access-control-and-remediation
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council access control and remediation
+    body: "2026-07-09 council + web-research decision on
+      access-control/tenant-isolation hardening + a general active-remediation
+      ladder + communication through-line. 2026-07-09 — maintainer: (A) prevent
+      broken access control / cross-user & cross-tenant data leaks (\"log in as
+      user A, see user B's data\"), covered by tests+gates, DSGVO-konform; (B)
+      generalize: detected security gaps / missing tests / bad code /
+      DRY-duplication → ask at session end (or flow-appropriate during), don't
+      disrupt flow; (C) refine to a remediation ladder: small+aligned →
+      auto-fix, bigger/divergent → ask, too-many → follow-up PR(s"
+  - id: council-agent-memory-sunset
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council agent memory sunset
+    body: "2026-06-14 council-locked verdict — sunset agent-memory Layer 2
+      (pgvector/MCP/decay/cross-project), keep Layer 1 (file-first); don't
+      relitigate. AI council (claude-sonnet-4-5 + gpt-4o, 2026-06-14, debate
+      round 1 — full convergence, no split) on \"does agent-memory still make
+      sense vs. native (team) memory in Claude etc.\": **Verdict: sunset/freeze
+      Layer 2, keep Layer 1.** Two layers, evaluated separately: - **Layer 1
+      (file-first, in this repo)** — `agents/memory/<type>/` curated YAML +
+      `intake/*.jsonl`, typed retrieval by path. KEEP. It is *governance*, not
+      storage: auditable (git log), portable"
+  - id: council-ai-failure-mode-prevention
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council ai failure mode prevention
+    body: '2026-07-09 council + web-research decision on encoding "prevent typical
+      AI dev mistakes" as a package golden rule (not testing-only). 2026-07-09 —
+      maintainer asked for a "golden rule": agent writes code like a senior
+      (general, not overfit; no fixed/regex/tautological tests; seeders use
+      random data + tests derive from it) AND, explicitly **not testing-only**,
+      prevent typical AI dev mistakes + security vulns across
+      backend/frontend/db/infra. Web-researched 6 domains (correctness,
+      backend/auth, frontend, db, infra, supply-chain) + inventoried existing
+      coverage. Ran AI council (claude-sonnet-4-5 +'
+  - id: council-analysis-workbench
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council analysis workbench
+    body: 2026-06-15 council-locked design for the analysis/RCA/post-mortem pack
+      (road-to-analysis-workbench.md) — build the loop, not the dump. 2026-06-15
+      council (claude-sonnet-4-5 + gpt-4o, deep + design + peer-review, spend
+      $0.20) locked the design behind
+      `agents/roadmaps/road-to-analysis-workbench.md`. Source = an external LLM
+      ideation thread proposing 14 RCA/post-mortem frameworks +
+      `/analyze:incident` auto-triage; audited as mostly partial-overlap +
+      skill-dump. **Verdicts (don't relitigate):** - **Kill auto-triage** →
+      confidence-weighted *suggester* (`/analyze` proposes weighted paths, user
+      picks
+  - id: council-chat-history-consolidation
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council chat history consolidation
+    body: "2026-06-14 council-locked — KEEP chat-history JSONL log + import
+      (universal cross-host capture; mine-session is claude-code-only), merge
+      the 3 mining paths into one /memory mine, drop /chat-history show; don't
+      relitigate. AI council (claude-sonnet-4-5 + gpt-4o, 2026-06-14, debate 2
+      rounds) on \"after agent-memory removal, do we still need chat-history?
+      combine with file-memory + optimize?\": **Verdict: keep chat-history's
+      JSONL log + `/chat-history import`; consolidate the mining surface; do NOT
+      kill it wholesale.** Anthropic *reversed its own round-1 \"kill it
+      entirely\"* in round 2. Load-bearing"
+  - id: council-claude-code-single-surface
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council claude code single surface
+    body: "2026-07-07 council verdict — Option B projection-primary, marketplace
+      plugin retired, hooks via managed settings.json block; Phase-0 parity gate
+      with thin-plugin fallback; A (marketplace-primary) and D (status quo +
+      guards) REJECTED. Council 2026-07-07 (anthropic/claude-sonnet-4-5 +
+      openai/gpt-4o, 2 rounds, $0.09): both members independently picked
+      **Option B — projection-primary, plugin retired** for the Claude Code
+      dual-surface problem (duplicate skill listings + silent SHA-snapshot
+      staleness). Hooks move into a **managed atomic-merge block in
+      `~/.claude/settings.json`**; hooks are a hard us"
+  - id: council-command-cluster-phase4
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council command cluster phase4
+    body: "2026-07-08 Phase-4 command-cluster consolidation shipped (PR. 2026-07-08
+      council (sonnet-4-5 + gpt-4o, 2 rounds) + ADR-115, shipped in PR #788 (ADR
+      renumbered 114→115 after a parallel-PR collision)
+      (`road-to-command-structure-optimization.md`): - **ADOPTED**: 6 new
+      clusters (`bug`, `project`, `review`, `package`, `cost`, `sync`) + 4
+      extended (`optimize`+project/prompt, `fix`+quality,
+      `tests`+e2e-plan/e2e-heal, `analyze`+reference-repo). 15/19 moves
+      slug-neutral, 4 reorders via `replaces:`. - **DEFERRED/REJECTED — don't
+      relitigate without new evidence**: `ticket` cluster (tier-0
+      `implement-tick"
+  - id: council-contract-integrity
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council contract integrity
+    body: 2026-06-16 council-locked disposition of the v6.1.0 product-review
+      findings F1–F7 → road-to-contract-integrity; Phase 0+1 shipped in PR.
+      2026-06-16 AI-council (sonnet-4-5 + gpt-4o, design mode, 2 rounds +
+      peer-review, $0.12) dispositioned the v6.1.0 external review's
+      product-clarity / complexity-governance / release-discipline findings →
+      `agents/roadmaps/road-to-contract-integrity.md`. Engine themes the
+      reviewers praised were already owned by other roadmaps; this roadmap is
+      only the unaddressed cluster. Don't relitigate. **Verdicts:** F1
+      agent-memory peer dep → remove (Layer 2 sunset, not inst
+  - id: council-decisions-workspace-phases
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council decisions workspace phases
+    body: "Two AI-council verdicts on the employee-product roadmap (encrypt-at-rest
+      deferral, pandoc-CI) — don't relitigate. Two design decisions on
+      `road-to-employee-product-and-external-proof.md` were settled by the
+      repo-local AI council (claude-sonnet-4-5 + gpt-4o, design mode). Don't
+      reopen without new information. **Phase 8 Step 3 — encrypt-at-rest store
+      wiring (2026-06-07):** DEFER to its own narrow PR, after recruit-session
+      validation. Reason: store-side wiring is net-new dual-runtime crypto — the
+      GUI server reads sessions/documents/analytics via Node `fs` and has no
+      crypto layer, so it'd mean AES"
+  - id: council-design-antislop-harvest
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council design antislop harvest
+    body: "2026-06-28 council on harvesting 5 external anti-slop/taste/design
+      references; converged on hybrid detector-as-code architecture + axis
+      ranking; 5 anonymized roadmaps spawned. 2026-06-28: deep-dived 5 external
+      design/taste references (anonymized Source A–E in roadmaps; ENC links in
+      each roadmap's Provenance). Council (claude-sonnet-4-5 + gpt-4o, 2 rounds,
+      $0.13) converged on a **hybrid AND architecture**: a deterministic
+      anti-slop DETECTOR (zero runtime tokens, runs CI/pre-commit/optional hook)
+      emits structured rule-ID findings with **severity P0–P3 + DESIGN.md
+      context-gate exceptions — flags,"
+  - id: council-design-exploration-skills
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council design exploration skills
+    body: "2026-07-06 council verdict on adopting external design-collaborator gaps
+      — 3 new skills, deck starter asset, CP5 emoji rule; don't relitigate.
+      2026-07-06 council (claude-sonnet-4-5 + gpt-4o, 2-round debate, $0.08) on
+      harvesting an external design-collaborator system-prompt reference (Source
+      A; link ENC1-encrypted in the roadmap) →
+      `agents/roadmaps/road-to-design-exploration-skills.md`: - **3 new skills**
+      in `frontend-design` pack: `design-variations`, `wireframe`, `html-deck`.
+      The wireframe-into-variations fold was REJECTED in round 2 by both members
+      (incompatible output contracts: greyscale/d"
+  - id: council-discipline-axis-benchmark
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council discipline axis benchmark
+    body: "2026-06-14 two-session council on the bench:ab benchmark — scrap the
+      binary frame, rebuild around a discipline axis (roadmap
+      road-to-discipline-axis-benchmark.md). Two council sessions (2026-06-14,
+      claude-sonnet-4-5 + gpt-4o, peer-review 2 rounds each) settled the
+      `bench:ab` benchmark. **Session 1 — scrap the v1 frame.** Both converged
+      (gpt-4o flipped salvage→scrap in round 2): a **single binary deterministic
+      pass/fail oracle on a capable host saturates at 100% in every arm** →
+      measures capability (shared by both arms), can't isolate the package's
+      discipline. The live run confirmed it (flat 10"
+  - id: council-ecc-harvest
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council ecc harvest
+    body: "2026-06-15 council-locked ECC competitive-harvest plan — roadmap split,
+      mission-mode shape, REJECT boundary; don't relitigate. ECC (anonymized
+      **Source-E** in tracked artifacts; ENC1 link in roadmap provenance)
+      deep-audited 2026-06-15 (7 facet agents over a local clone) + two live
+      council rounds (claude-sonnet-4-5 + gpt-4o, deep, peer-review). Source-E
+      inventory: 262 skills / 64 agents / 104 rules / 84 commands / 190 scripts.
+      Most was ALREADY-in-AC (often stronger) or REJECTED. **Roadmap split
+      (council order, user chose \"Security first\"):** 1.
+      **road-to-security-hardening** (FIRST, hard depend"
+  - id: council-ecc-parity-positioning
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council ecc parity positioning
+    body: '2026-06-25 council on AC-vs-operator-runtime-suite (ECC) comparison — gap
+      is positioning not capability; universal enforcement lever is compile-time
+      frontmatter, runtime hooks Tier-2 MCP-only; do-not-cross list. 2026-06-25
+      council (claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.14) on how AC should
+      respond to an external operator-runtime reference suite ("Suite R" = ECC,
+      affaan-m/ECC). Verified counts: AC 258 skills / 93 rules / 162 commands /
+      26 personas; Suite R 271 skills / 114 rules / 92 commands / 67 subagents /
+      47 hook scripts. External GPT review undersold AC (read "162" command
+      count as the '
+  - id: council-fable-feedback-3-disposition
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council fable feedback 3 disposition
+    body: "2026-06-14 council disposition of fable-feedback-3 (Sonnet→Fable via
+      skills/memory/orchestration) — skill-DAG killed, capabilities:index as
+      spine. 2026-06-14 council (claude-sonnet-4-5 + gpt-4o, design, 2
+      peer-reviewed rounds) disposed of `agents/tmp/fable-feedback-3.txt` →
+      roadmap `road-to-capability-discoverability.md`. Don't relitigate: -
+      **Skill-DAG metadata (per-skill requires/suggests/conflicts/phase/risk →
+      auto-chains): KILLED** on sequencing chicken-egg (pilot can't prove value
+      w/o metadata; 230 skills shouldn't be annotated w/o proof;
+      hand-author=selection-bias, infer-from-packs=wrong"
+  - id: council-fable-feedback-4-composition-ratchet
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council fable feedback 4 composition ratchet
+    body: "2026-07-08 council disposition of analyst feedback #4 (composition
+      dilution + adoption sequencing) — presence ratchet only, skill-DAG lock
+      re-affirmed, adoption roadmap sequenced next. 2026-07-08 council debate
+      (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds, $0.12) disposed of
+      analyst feedback round 4 (v8.5.0: trigger-evals 43/264 flat,
+      requires_skills 4, parallelizable 4; \"8.x polished for the hundredth
+      user\") → roadmap `agents/roadmaps/road-to-composition-ratchet.md`. Don't
+      relitigate: - **Skill-DAG lock RE-AFFIRMED**
+      ([[council-fable-feedback-3-disposition]]): catalog-wide `requires"
+  - id: council-fable5-and-thinking-models
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council fable5 and thinking models
+    body: "How to run the AI council with a fable5 member + the extended-thinking
+      parser fix the council client needed. **Running the council with
+      claude-fable-5** (2026-07-05): the council `members` in
+      `~/.event4u/agent-config/settings/.ai-council.yml` are keyed by
+      **provider** (anthropic/openai/gemini/xai/perplexity) — **one slot per
+      provider**, enforced (`config.ts _VALID_PROVIDERS`). fable5
+      (`claude-fable-5`) is Anthropic-family, so it occupies the `anthropic`
+      slot (**cannot** run alongside sonnet; it replaces it). To use it: set
+      `members.anthropic.model: claude-fable-5` AND add `claude-fable-5` to `"
+  - id: council-fieldauthz-depupdate-kernel
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council fieldauthz depupdate kernel
+    body: "2026-07-09 council on role/field-level API authz + malicious
+      dependency-update detection + the through-line kernel-vs-auto decision.
+      2026-07-09 — maintainer: (A) endpoints must only return/accept data the
+      user's ROLE + business rules permit (driver ≠ prices, office worker ≠
+      boss's offers) — server-side, never trust the frontend, BOTH directions,
+      user-to-user; (B) on composer/npm dependency **updates**, scan for
+      malicious code/behavior + actively warn the user (prevent an update
+      suddenly exfiltrating data; purpose-legitimacy check — a \"slack-send\"
+      package may send, but did anything ELSE change?"
+  - id: council-final-state-gaphunt-2026-07-04
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council final state gaphunt 2026 07 04
+    body: 2026-07-04 gap-hunt council on the final-state+market-readiness roadmap —
+      split not converged; 6 net-new items kept (A6/A7/B6-B9), 4
+      deferred/rejected. 2026-07-04 gap-hunt council (claude-sonnet-4-5 +
+      gpt-4o, 2-round debate, $0.20) against the **executed** state of
+      `road-to-final-state-and-market-readiness.md` (A1 landing, Track B mostly
+      done). Council **did NOT converge** — split + mutual rebuttal. Adjudicated
+      against identity guardrails. **Kept (folded into master roadmap as new
+      checkboxes):** - **A6** dev-task throughput benchmark (real Laravel/TS
+      slice with-vs-without, held quality → ledge
+  - id: council-final-state-market-readiness
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council final state market readiness
+    body: "2026-06-30 council synthesized the 6 ruflo-analysis drafts into one
+      master roadmap — parallel Track A (capability, gated) + Track B (adoption,
+      wedge-first); don't relitigate. 2026-06-30 council (claude-sonnet-4-5 +
+      gpt-4o, 2-round debate, $0.26) on synthesizing the 6 roadmap drafts in
+      `agents/tmp/up-to-ruf.txt` (ruflo/claude-flow in-code analysis:
+      ruflo-borrowings, closing-the-learning-loop, execution-subagents,
+      subagent-seed-catalog, subagent-evals, adoption-readiness) toward the
+      maintainer's 2 goals: (A) best daily-driver dev tool, (B) market readiness
+      (adoption ≈0, 7 stars vs ruflo 62k). **"
+  - id: council-flow-learnings
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council flow learnings
+    body: "2026-07-07 council verdict on the flow-learnings adoption roadmap
+      (external orchestration-suite harvest) — final 4-phase cut, MCP retrieval
+      REJECTED with re-open conditions. 2026-07-07 council debate
+      (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds, $0.10) on the
+      flow-learnings draft (source: external orchestration suite, \"Source F\";
+      draft from a claude.ai session in `agents/tmp/flow-learnings/`, verified
+      independently on both sides first). Final roadmap:
+      `agents/roadmaps/road-to-flow-learnings.md` (lightweight, 4 phases,
+      execution.mode autonomous). **Verdicts (don't relitigate):** - Con"
+  - id: council-frontier-prompt-harvest
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council frontier prompt harvest
+    body: "2026-07-08 PR. 2026-07-08 (PR #795, branch
+      `feat/frontier-prompt-harvest`, worktree): harvested transplantable
+      mechanisms from leaked frontier-host system prompts (consumer chat,
+      design-tool + data-viz, browser-agent, dispatch, desktop-coding — five
+      parallel teardowns). Council (claude-sonnet-4-5 + gpt-4o, 2 rounds) →
+      **four roadmaps, roadmaps-only PR**:
+      `road-to-execution-discipline-harvest`,
+      `road-to-design-mechanism-harvest`,
+      `road-to-injection-and-authority-harvest`,
+      `road-to-orchestration-and-memory-harvest`. **Why:** the consumer-prompt
+      communication/memory layer was already shipped by `"
+  - id: council-g0dm0d3-defensive-harvest
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council g0dm0d3 defensive harvest
+    body: "2026-06-27 council on harvesting an external LLM-robustness framework
+      into AC — B-first pressure-corpus, reject the stats harness. **STATUS
+      2026-06-27: BOTH harvest roadmaps SHIPPED & MERGED/green — don't
+      rebuild.** - artifact-completeness-rubrics → PR #684 MERGED
+      (judge-artifact-completeness skill + 4 rubric schemas). -
+      injection-defense-pressure-corpus → PR #685 green (lint_confusables.ts NEW
+      corpus linter for visible mixed-script homoglyphs — excludes math
+      operators Δ Σ Π via a TR39 confusable set to avoid FPs, wired into
+      lint_agent_security umbrella; judge-injection-defense skill with inve"
+  - id: council-image-brand-typography
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council image brand typography
+    body: "Council verdicts behind road-to-image-brand-typography.md — don't
+      relitigate sequencing/typography/greenfield.
+      `agents/roadmaps/road-to-image-brand-typography.md` (structural, ready)
+      was authored from `agents/tmp/feedback-design-2026-06-13-04-14.txt` and
+      reviewed by a live 2-round AI council (claude-sonnet-4-5 + gpt-4o, design
+      lens, 2026-06-13). Locked verdicts — do not relitigate: - **Sequence A → C
+      → B → D.** A (pack-ai-image, independent + provides the logo path) → C
+      (typography/icons Reference + style path) → B (pack-brand corpus +
+      brand→token + typography grounding upgrade + greenfield in"
+  - id: council-judge-harness-2026-06-26
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council judge harness 2026 06 26
+    body: "Council verdict on token-saving Phase 0 length-controlled paired judge —
+      promptfoo vs hand-roll. 2026-06-26 council (claude-sonnet-4-5 + gpt-4o, 2
+      rounds, $0.14; gemini member skipped — its client needs a `google-genai`
+      python pkg not installed here) on the token-saving Phase 0
+      **length-controlled paired judge** harness: adopt `promptfoo` (Option A)
+      or hand-roll on the existing `bench_ab_v2_stats.ts` Wilcoxon/McNemar layer
+      (Option B). **Both members landed Option A (promptfoo) — but heavily
+      CONDITIONED**, not a clean mandate: - The required bias controls
+      (randomised order, **swap-and-recheck /"
+  - id: council-knowledge-wiki-selflearning
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council knowledge wiki selflearning
+    body: 2026-07-05 council on knowledge-management + self-learning system —
+      verdict Option C (extend agents/knowledge/ in place, NO separate
+      agents/wiki/), file-first, index+grep retrieval, deterministic TS pieces
+      only; don't relitigate. 2026-07-05 council (claude-sonnet-4-5 + gpt-4o, 2
+      debates × 2 rounds, ~$0.29 total) on building the knowledge-management +
+      self-learning system into agent-config (global personal + repo-tracked
+      team knowledge), after deep-reads of 10 external sources (Karpathy
+      LLM-Wiki gist, theafh/ai-modules knowledge_management, gowtham0992/link,
+      skyllwt/AutoSci ex-OmegaWiki, zilliz
+  - id: council-legal-pack
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council legal pack
+    body: "2026-06-24 council-locked legal-pack design + roadmap
+      (road-to-legal-pack); narrow MVP, safety-floor-first, harden
+      deterministically; don't relitigate. 2026-06-24: harvested the external
+      legal-plugin references (Source A = anthropics/claude-for-legal — 12
+      plugins/90+ agents/5 cookbooks/~20 connectors; B = evolsb CUAD contract
+      skill; C = bettercallclaude Swiss + privilege PreToolUse hook; D =
+      master-claude-for-legal) and council-locked the disposition behind
+      `agents/roadmaps/road-to-legal-pack.md`. **Council was single-voice**
+      (anthropic CLI `curl ETIMEDOUT` again; gpt-4o answered all 7, host c"
+  - id: council-memory-knowledge-validation-tests
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council memory knowledge validation tests
+    body: "2026-07-08 council on validation tests for the memory/knowledge/context
+      substrate — NO new roadmap; shared Phase 0-pre in the two owning roadmaps;
+      deterministic-only; no task test-memory. Council (claude-sonnet-4-5 +
+      gpt-4o, 2026-07-08, 2 rounds, $0.12) on \"how to validate the
+      learning/memory/context/project-knowledge substrate with tests\". GPT-4o
+      initially wanted a dedicated `road-to-memory-knowledge-validation.md`;
+      converged after rebuttal on Sonnet's position: - **NO new roadmap.**
+      Validation foundations land as a shared **Phase 0-pre** embedded in the
+      two owning roadmaps ([[council-tmp-inb"
+  - id: council-memory-tripwire-engine
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council memory tripwire engine
+    body: "2026-07-08 councils on round-2 Obsidian-review feedback — tripwire engine
+      unified on node:sqlite FTS5 (ADR-116), amendments not a new roadmap,
+      harness + next-step field rejected; don't relitigate. Two councils
+      (claude-sonnet-4-5 + gpt-4o, 2026-07-08, disposition 2 rounds $0.10 +
+      engine tie-break 2 rounds $0.04) on the round-2 external
+      Obsidian-comparison feedback: - **Three-way pre-decided-path conflict was
+      real**: verdict Q4 said \"minisearch-class BM25\", retrieval-economy Phase
+      6 said \"SQLite FTS5\", ADR-061 bans engine forks (in-house
+      `bm25_search.ts` exists). A fourth straggler sat in `road-"
+  - id: council-orchestration-flip-honest-null
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council orchestration flip honest null
+    body: "2026-06-26 auto-subagent default-flip resolved HONEST-NULL — keep
+      subagents.auto:ask; headless bench can't measure real orchestration;
+      re-gate flip on real orchestration-telemetry.
+      `road-to-auto-subagent-orchestration-followup` (flip `subagents.auto`
+      ask→on iff a bench shows net token/time win at held quality) resolved
+      **honest-null**: keep `ask`, do NOT flip. **Why (verified at HEAD +
+      AI-council 2026-06-26, claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.09):** a
+      credible orchestrated-vs-single-agent benchmark is **not producible in the
+      headless `bench:ab` harness** — it re-invokes `claude --print` "
+  - id: council-rdp-frontier-reasoning
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council rdp frontier reasoning
+    body: "2026-06-14 council-locked design of the Reasoning Discipline Protocol
+      (RDP) — transplant frontier reasoning *discipline* not capability; don't
+      relitigate. Reasoning Discipline Protocol (RDP) — make any host model
+      think like a pro by transplanting Fable-5's *operating discipline*, never
+      its capability (weights ≠ transferable). Council-locked over 4 debates +
+      GPT/Claude external review. **Locked (don't relitigate):** - **Capability
+      ≠ transferable; discipline = transferable.** No prompt makes a weaker
+      model equal Fable 5. - **No standalone pack/flow** — cohesion via a
+      `reasoning:` settings block "
+  - id: council-reminder-injection-build-to-measure
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council reminder injection build to measure
+    body: "RESOLVED 2026-07-06 — build-to-measure ran, pilot A/B showed Δ=0 on BOTH
+      hosts (incl. haiku), pre-committed teardown executed; third null in the
+      enforcement/salience family. **READOUT (2026-07-06, same day — supersedes
+      the disposition below):** the build-to-measure ran end-to-end in PR #749.
+      12-session pilot (2 scenarios × 3 arms × strong+weak hosts): kernel-only
+      baseline complied 12/12 — **ceiling on BOTH hosts, including haiku-4.5**,
+      Δ=0 pp. Pre-committed <5pp consequence executed: hook apparatus torn down
+      in the same branch that built it. This NARROWS the earlier weak-host
+      caveat: at ~600-w"
+  - id: council-retrieval-substrate-design
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council retrieval substrate design
+    body: "2026-07-09 council verdicts on the 4 retrieval-substrate-hardening design
+      questions; PR. Council pass (claude-sonnet-4-5 + gpt-4o, 2 rounds, ~$0.07)
+      on the four contested design questions of
+      `road-to-retrieval-substrate-hardening`, encoded inline in the roadmap `##
+      Council notes (2026-07-09)`. Shipped in PR #828 (Phase 1 B1 + Phase 0 B5b
+      + council-resolve + promotion draft→ready). - **Q1 trust-scale** — SPLIT,
+      resolved to **two separate vocabularies + a display-only mapping**, NOT
+      one shared contract. Category error: edge-confidence
+      (`EXTRACTED/INFERRED/AMBIGUOUS`) is topology provenance; evid"
+  - id: council-roadmap-pr-gate
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council roadmap pr gate
+    body: "2026-06-14 council-locked — replace roadmap merge-gate with a
+      deterministic PR-gate; /create-pr archives completed roadmaps in-PR
+      (script-driven, no agent annotation), ref-migration part of archival;
+      don't relitigate. AI council (claude-sonnet-4-5 + gpt-4o, 2026-06-14,
+      debate 2 rounds) on replacing the roadmap **merge-gate** (keep 1 item open
+      + `<!-- merge-gated -->` + manual post-merge archive → gets FORGOTTEN →
+      finished roadmaps rot unarchived in main; happened with PR #540) with a
+      **PR-gate**. **Verdict — deterministic, script-driven PR-gate:** -
+      **Trigger (Q1):** `/create-pr` (`src/domains"
+  - id: council-routing-vs-governance-moat
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council routing vs governance moat
+    body: "2026-06-25 council REJECTED the per-skill capability registry + public
+      routing benchmark (measurement theater / wrong-thing-measured); redirect
+      to exploiting the existing compile-time governance moat. 2026-06-25
+      council (claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.11) on a reviewer's 5
+      proposals to make AC provably superior to the external operator-runtime
+      suite (\"Source R\") via routing/governance quality. Both members
+      converged AGAINST the proposals: 1. **Per-skill capability registry
+      (inputs/outputs/confidenceHints) — DO NOT BUILD.** Maintainability
+      theater, no consumer: maintainers use the ski"
+  - id: council-second-brain-delta
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council second brain delta
+    body: "2026-07-07 council on the second-brain competitive delta vs
+      claude-obsidian — ADOPT hot-context cache (deterministic, dispatcher-wide)
+      + tripwires + contradiction surfacing; REJECT Obsidian vault integration
+      2/2; zero roadmap gates; don't relitigate. 2026-07-07 council
+      (claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.19) on the second-brain delta vs
+      the claude-obsidian reference (\"Source O\"), extending
+      [[council-knowledge-wiki-selflearning]] (Option C — SHIPPED,
+      road-to-knowledge-system archived 36/36). Maintainer directive: no roadmap
+      gates → deterministic tripwires instead. **Verdict** (durable: `a"
+  - id: council-security-pillar
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council security pillar
+    body: 2026-06-13 council-locked design behind road-to-security-pillar.md
+      (security as a first-class pillar, inspired by a competitor's
+      agent-security scanner); don't relitigate. `road-to-security-pillar.md`
+      (authored 2026-06-13) is the detailed build-out of
+      `road-to-competitive-borrow.md` P1.2 (untrusted-input-defense rule) and
+      the precondition for its P2.4 security-pack slice. Triggered by a user
+      request to match a competitor's "AgentShield" (prompt-injection checks +
+      config audits + agent security reviews) and go further. Council
+      (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds, design mode,
+  - id: council-setup-experience-redesign
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council setup experience redesign
+    body: "2026-07-08 council + synthesis on config command, wizard IA, styling,
+      tiers, packs removal — shipped PR. 2026-07-08 council debate
+      (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds, $0.18; split on
+      4/5 questions → maintainer-side synthesis per standing tie-break mandate).
+      Shipped end-to-end in PR #783 (branch `feat/setup-experience-redesign`),
+      roadmap archived in-PR
+      (`agents/roadmaps/archive/road-to-setup-experience.md`). Locked decisions:
+      - **Q1 command surface**: hybrid A+C — native `config` (GUI, global
+      default; `--project` → project surface), `settings` = alias, `init
+      --project` = pro"
+  - id: council-subagent-auto-cost-downshift
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council subagent auto cost downshift
+    body: 2026-07-08 council on flipping subagents.auto default on a COST basis (not
+      the settled quality-null); trigger = reasoning≪execution not "small";
+      session on, template default stays ask (telemetry-gated). Council
+      2026-07-08 (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds, $0.08)
+      on whether `subagents.auto` should flip from `ask` → `on` driven by **cost
+      on expensive hosts** (Opus/Fable). This is a distinct mechanism from the
+      prior orchestration honest-null (which tested **quality-lift on strong
+      hosts** → null), so `decision-revisit-gate` mechanism-match cleared it as
+      a valid re-eval. **Con
+  - id: council-subagent-default-flip-revisit
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council subagent default flip revisit
+    body: '2026-07-08 deep council (4 rounds) re-evaluating the subagents.auto
+      ask→on flip; verdict = validate-before-flip via the NOW-runnable
+      paired-delegation probe, NOT flip-first; classifier cost-correctness
+      agreed as precondition. Deep council 2026-07-08
+      (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 4 rounds, $0.30)
+      re-evaluating whether to flip `subagents.auto` shipped default `ask → on`,
+      superseding the 2026-06-26 honest-null verdict. Re-eval justified by
+      `decision-revisit-gate`: three conditions changed — (1) new COST mechanism
+      vs the old quality-null, (2) the `bench:ab` "not producible" blocker'
+  - id: council-team-shared-memory
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council team shared memory
+    body: "2026-06-14 council — team-shared committed memory idea is mostly
+      redundant with git+AGENTS.md+ADRs; gitignore intake, NO personal layer,
+      narrow types, manual size-bounding; open question = markdown vs YML layer;
+      don't relitigate the skeptical verdict. AI council (claude-sonnet-4-5 +
+      gpt-4o, 2026-06-14, debate 2 rounds) on \"team-shared project memory via
+      committed agents/memory — sensible? global/team/personal split? size
+      bounding?\". Both members converged SKEPTICAL in round 2 (gpt-4o switched
+      to Anthropic's side): **The idea is only partly right — and much of it
+      already exists.** Committed fil"
+  - id: council-ticket-bundle-system
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council ticket bundle system
+    body: "2026-06-15 council-locked design for roadmap→importable ticket-bundle
+      system (road-to-ticket-bundles). 2026-06-15 AI-council (claude-sonnet-4-5
+      + gpt-4o, design, 3 rounds, $0.088) locked the design for a system where a
+      high-tier agent plans (roadmap + ADRs + tickets) and a lite-tier agent
+      (Haiku) builds one self-contained, Linear-importable MD ticket at a time.
+      Drove `agents/roadmaps/road-to-ticket-bundles.md`. Origin: operator brief
+      + two external LLM ideation threads (GPT + Claude-web, in
+      `agents/tmp/roadmaps-and-tickets.txt`). A **round 2** (2026-06-15, same
+      members, deep, reconciling a mor"
+  - id: council-tmp-inbox-roadmap-consolidation
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council tmp inbox roadmap consolidation
+    body: 2026-07-08 council resolved the agents/tmp inbox into 8 new + 1 extended
+      roadmap; non-claude-lift-replication dropped as obsolete; don't relitigate
+      the cut. 2026-07-08 — the `agents/tmp/` inbox (10 roadmap drafts from two
+      external-audit chats + 3 review dumps + lock-drift triage, all authored vs
+      8.0.0/8.1.0) was re-verified against 8.3.0 and consolidated via council
+      (claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.10, session
+      tmp-inbox-roadmap-consolidation). **Why:** the drafts contained one fully
+      obsolete premise and one over-claimed active roadmap; blind copying would
+      have shipped stale work. **Ho
+  - id: council-token-program-integration
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council token program integration
+    body: "2026-07-07 council verdict integrating the external token roadmaps with
+      the discipline-profile verdict — parallel-now composition, thin deferred,
+      one runtime knob end-state. 2026-07-07 council (sonnet-4-5 + gpt-4o, 2
+      rounds, $0.13) challenged the three externally-drafted token roadmaps;
+      verdict recorded in
+      `agents/settings/contexts/token-program-integration-verdict.md`, final
+      roadmaps shipped: `road-to-request-scoped-rule-load.md`,
+      `road-to-golden-set-coverage.md`, `road-to-token-proof-and-story.md` (the
+      program orchestrator — tracking table over all six tracks; NO separate
+      orchestrator roadma"
+  - id: council-token-saving-rebuild
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council token saving rebuild
+    body: 2026-06-18 council-locked token-saving rebuild verdicts (D1–D7) behind
+      road-to-token-saving.md; measure-first, thin-projection is the big lever
+      but ships disabled. 2026-06-18 AI-council (claude-sonnet-4-5 + gpt-4o,
+      ~$0.11, design mode) locked the token-saving rebuild design behind
+      `agents/roadmaps/road-to-token-saving.md`. Do not relitigate D1–D7. **Core
+      findings (audit + web research):** the package is a measured-by-proxy
+      **net +59k tokens/request** because `lean_projection.mode` defaults to
+      `eager-all` — the `thin` projector (rule bodies → router pointers, ~−46k
+      tok/req) ships DISABLED, gate
+  - id: council-v2-pilot-complexity-stratified
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council v2 pilot complexity stratified
+    body: 2026-06-14 council on the bench:ab v2 pilot — discipline axis needs
+      complexity-stratified fixtures; budget-raise alone insufficient. The v2
+      discipline-axis benchmark (road-to-discipline-axis-benchmark.md) was built
+      Phases 0–3 (corpus of 15 trap tasks across 5 archetypes, deterministic
+      dual-axis scorer, 4-arm runner vanilla/package/package-rdp/placebo, paired
+      McNemar+Wilcoxon stats — all validated on simulated/synthetic data). **The
+      20-run pilot probe (sonnet, $1/run) surfaced two real problems:** (1) the
+      `package`/`package-rdp` arms load the full plugin rule-corpus per turn → a
+      $1 cap TRUNCATE
+  - id: council-weak-host-lift-tiering
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: council weak host lift tiering
+    body: '2026-07-07 council verdict: discipline_profile enum
+      (auto|off|essential|full), essential(~3x)=kernel+downstream-changes,
+      balanced profile killed, NULL-lift disable-list (no speculative registry),
+      full=experimental opt-in; phased evidence gates. 2026-07-07 cost-factor
+      sweep (report `2026-07-07T05-35-14Z`, Haiku, n=24 pairs/arm) answered
+      "does the 5-11x lift cost pay off": kernel+`downstream-changes` at **3.3x
+      keeps the lift** (+0.458, p=0.0135; full-package residual p=0.37 n.s.);
+      shipped `balanced` profile at 2.9x is **NULL** (p=0.81 — lacks
+      downstream-changes, tier-2); full = 11.7x. Documented'
+  - id: evidence-v2-accumulation-killed
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: evidence v2 accumulation killed
+    body: Evidence v2 accumulation layer KILLED 2026-06-16 (shipped base only) via
+      the silent-conventions eval — structural-scarcity finding. The Evidence v2
+      **accumulation layer** (Class-B auto-capture + Class-C committed lessons)
+      was **KILLED 2026-06-16** — v2 ships as the already-built base (Class A +
+      B/C spec + static-consensus). Decided on a redesigned, valid eval,
+      **without** a billable run. **Why the redesign:** the original Phase-3
+      dogfood eval (`internal/evals/observed-conventions/`) was invalid — its
+      ground truth was `skill_linter.py`, so both arms saturated at 0 errors and
+      the "lift" was pre-
+  - id: feedback-end-of-reply-summary-and-pr-link
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: feedback end of reply summary and pr link
+    body: How to close a reply — one summary at the very end, and the created PR's
+      GitHub link as the literal last line. Close every substantial work-reply
+      with a **concise summary at the very end** (not mid-reply) — status of
+      what's done and what remains, like a short roadmap-stand block. The user
+      explicitly liked this shape. If a PR was created this turn, the **last
+      line of the reply is the GitHub PR URL** so the user doesn't have to
+      search for it. PR link goes last, after the summary. **Why:** the user
+      reads the end of the reply for the outcome; a buried summary or a
+      hard-to-find PR link wastes their
+  - id: feedback-no-proactive-quality-tools
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: feedback no proactive quality tools
+    body: "Never run the full quality pipeline (phpstan, rector, ecs, full test
+      suites, task ci) proactively — act only on concrete CI failure or explicit
+      ask. CARVE-OUT: a changed-files static pass (typecheck+lint on the diff)
+      before pushing source IS REQUIRED, not proactive.. Do NOT run quality
+      tools proactively (2026-07-07): phpstan, rector, ecs, linters, formatters,
+      full test suites, `task ci`, `npm run check`, etc. — neither run them
+      autonomously nor ask whether to run them. **Why:** Tools differ per
+      language/project and are often unknown to the agent; discovering + running
+      them costs time and token"
+  - id: gstack-adoption-disposition
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: gstack adoption disposition
+    body: 'What to adopt/reject from gstack (garrytan) — analysis + council
+      disposition + the harvest roadmap. 2026-06-23: Deep-dived **gstack**
+      (github.com/garrytan/gstack, Garry Tan) per user ask to "level up the
+      package". Key reframe: gstack is a **direct category peer** (Claude-Code
+      skill/command pack, clone-and-install, runtime-agnostic), NOT an app
+      starter. Its loudest criticism ("just prompts in text files, no
+      validation") is exactly our differentiator
+      (linters/condensation-gates/CI/trigger-evals). So most of its *surface* we
+      already have (personas, role-modes, AI council, multi-tool projection, f'
+  - id: local-ci-hygiene-shipped
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: local ci hygiene shipped
+    body: "2026-07-06 PR #748: 22 of 23 local-only task-ci reds fixed; the one
+      remainder is the kernel augment-budget gate (needs −4,450 chars) — own
+      kernel PR required. PR #748 (2026-07-06) restored local `task ci` to green
+      except ONE gate. Root-cause classes: py2ts/src-restructure leftovers
+      (audit_mcp_tools parsed removed tools.py; ai-video ROOT off-by-one; 4
+      skills' execution blocks still `python3`), $HOME leakage in install-test
+      harnesses (scope-guard saw the real drifted user install; CI=true skips it
+      on runners), config drift (YAML `on`→boolean vs string enum; pack-graph
+      edge; surface-map orphans),"
+  - id: media-sync-from-actual-audio
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: media sync from actual audio
+    body: For audio-synced video (lip-sync, beat-cuts, music video) the ground truth
+      is the real audio (transcribe it), never a creative/planning doc or a
+      guessed time-stretch.. When generating audio-synced media (lip-sync,
+      beat-aligned cuts, music videos), the source of truth for **timing and
+      who-does-what** is the **actual audio artifact** — transcribe it to
+      timestamped lyrics and determine the singer/speaker per segment. NEVER
+      drive timing or singer-assignment from a creative/planning document (a
+      Drehbuch/story skeleton) or from a guessed time-stretch factor. Concrete
+      failure that triggered this (odi
+  - id: never-drop-inherited-commits
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: never drop inherited commits
+    body: Never exclude/reset-away/rebase-out/force-push-over commits you didn't
+      author this session without asking the user first — parallel work /
+      multi-agent PRs. When a branch (local or remote) carries commits the agent
+      did **not** author this session, those commits are **not the agent's to
+      drop**. Never exclude them when reseating a branch base, `git reset
+      --hard` them away, rebase them out, or force-push over a branch you didn't
+      create — **without asking the user this turn**. Preserve-first
+      (save-branch / tag) is necessary but **not a substitute for the
+      question**. **Why:** The user often works in
+  - id: no-cheap-sequencing-questions
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: no cheap sequencing questions
+    body: "Don't ask cheap commit/push/PR/next-step questions once the user has
+      signaled the endpoint or one option dominates — execute the prereq chain..
+      User feedback (2026-06-05, during 6.0.0-D Step 16b): the string of \"soll
+      ich committen? / pushen? / PR öffnen? / nächster Schritt?\"
+      numbered-option questions were cheap and unwanted. Once the user has
+      directed toward shipping (e.g. picks the \"push + open PR\" option, or
+      says \"ship X\"), that directional instruction IS the this-turn
+      authorization for the WHOLE prereq chain — commit → push → PR — per
+      [[no-cheap-questions]] Iron Law 5 (prereq work is execut"
+  - id: prefer-browser-wizard-for-setup
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: prefer browser wizard for setup
+    body: 'User ALWAYS wants the browser GUI wizard for any
+      setup/install/upgrade/onboarding flow — never a terminal tool-picker
+      prompt. Stated repeatedly, with frustration.. For `@event4u/agent-config`,
+      the user wants **every** setup / install / upgrade / onboarding flow to
+      open the **browser GUI wizard** (Fastify on `127.0.0.1`, `WIZARD_READY
+      http://127.0.0.1:PORT/...`, auto-launched by
+      `install.py::_wizard_should_launch`), **not** the interactive **terminal
+      tool-picker** ("Pick the tools to install (comma-separated numbers) …
+      Selection:"). The terminal picker is explicitly unwanted ("diese
+      Scheiße"). '
+  - id: recursive-verification-honest-null
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: recursive verification honest null
+    body: "Recursion/self-correction as a capability lever is empirically dead for
+      this package — redundant with the always-on rules; council-confirmed
+      terminal. Don't relitigate.. The Sakana-Fugu-inspired arc (can
+      orchestration bring Sonnet/weak hosts closer to Fable?) ran to an
+      **honest-null** and is **closed** (PRs #648/#649/#650 merged; #651
+      disposition). The portable Fugu mechanism — a depth-bounded `attempt →
+      critic verdict → re-attempt` loop (`recursive-verification` skill,
+      `package-recursive` bench arm,
+      `recursiveGateVerdict`/`resolveRecursiveDefault` in
+      `orchestration_gate.ts`) — was built + tes"
+  - id: roadmap-gated-items-closed-by-decision
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: roadmap gated items closed by decision
+    body: 'B9 + D1–D4 were closed by maintainer decision (not evidence-verified) —
+      do not treat the D-track as evidence-backed. 2026-07-05, maintainer
+      directive ("nimm b9, D3, D4, D1 & D2 als erfüllt hin … als sinnvoll
+      entschieden und festgehalten"): the external-evidence-gated items of
+      `road-to-final-state-and-market-readiness.md` were **closed by decision**,
+      WITHOUT the gate being met — flipped to `[x]` with honest by-decision
+      notes. - **B9** (install-friction study) — instruments exist
+      (`agents/recruit-sessions/_install-friction-runbook.md` +
+      `docs/install-friction-report.md` template) but the study w'
+  - id: roadmap-later-disposition
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: roadmap later disposition
+    body: "later/ is now a first-class enforced roadmap disposition for
+      blocked-for-later work; plus the condensation-gate cascade when editing
+      condensed sources. `agents/roadmaps/later/` is the **fourth roadmap
+      disposition** (PR #583, 2026-06-16) alongside `archive/` (done) and
+      `skipped/` (won't pursue): open work remains but is **blocked-for-later**
+      (gated on an external trigger/decision), **will resume**. Contract:
+      frontmatter `status: later` + a `Blocked until`/`Trigger` resume line;
+      `git mv` to `later/`; open `[ ]` items stay open (parked whole). Excluded
+      from the dashboard + `/roadmap:process-*` vi"
+  - id: route-design-decisions-to-ai-council
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: route design decisions to ai council
+    body: In the agent-config package, route product/design decisions to the AI
+      council rather than asking the user to choose. When a non-trivial
+      design/product decision comes up while working in the
+      `event4u/agent-config` package (e.g. which option among A/B/C, how to
+      scope a default, a contested trade-off), the user wants it **decided in
+      the AI council**, not handed back to them via AskUserQuestion. **Why:**
+      The user said "kläre das im ai council" and then, when I surfaced a
+      council split for them to break, "triff diese und andere entscheidungen im
+      ai council" (2026-06-03). They treat the council as t
+  - id: ruflo-deep-dive-subagent-reframe
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: ruflo deep dive subagent reframe
+    body: 2026-06-29 ruflo/claude-flow deep-dive — its "swarm" is weaker than ours;
+      parity = downgrade; real lever = wire our inert design + capture
+      telemetry. 2026-06-29 deep-dive of `ruvnet/ruflo` (mandatory
+      source-of-truth inspection, not README). **It is a repackaging of
+      `claude-flow` v3.15.0** (TS monorepo; Rust workspace is admitted
+      scorecard-cosmetics). Its "swarm" is an **in-process `Map<string,Agent>`
+      of objects** — NOT OS processes, NOT host `Task` subagent sessions, **no
+      per-agent context isolation**. Only real LLM execution = **one direct
+      provider HTTP call per task** (`callAnthropicMessages
+  - id: source-of-truth-reframe
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: source of truth reframe
+    body: "src/ is the canonical source of truth (not .agent-src.uncondensed); the
+      augment-source-of-truth rule was renamed to source-of-truth. **`src/` is
+      THE canonical source of truth** (uncondensed). `dist/agent-src/` is the
+      condensed output; `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`,
+      `.windsurfrules`, `GEMINI.md` are equal generated projections.
+      **`.agent-src.uncondensed/` is dead legacy** (0 tracked files;
+      `_lib/agent_src.py` labels it `LEGACY_SRC`). Confirmed by ADR-051
+      (accepted) + AI Council (2026-06-09, claude-sonnet-4-5 + gpt-4o).
+      Established via PR #427 (2026-06-09): tier-1 kernel ru"
+  - id: token-saving-autonomous-track-shipped
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 365
+    key: token saving autonomous track shipped
+    body: "token-saving roadmap — the autonomous track is built/shipped; the rest is
+      validation-gated (don't re-build, run the measurement). 2026-06-26:
+      executed the autonomous track of `agents/roadmaps/road-to-token-saving.md`
+      end-to-end. **All autonomous-buildable phases shipped** (each its own PR
+      off main, sequentially merged): Phase 0 measurement rig (#672), Phases 1–2
+      RTK scope-premise-correction + trigger gap (#674), Phase 3 RTK-wrap
+      PreToolUse hook (#675), Phase 5 kernel-prefix byte-stability guard (#676),
+      Phase 8 always-loaded budget gate (#677), Phase 10 backlog triage (#678).
+      (Side: `/fix:pr-co"
