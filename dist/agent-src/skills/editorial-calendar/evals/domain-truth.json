@@ -1,0 +1,16 @@
+{
+  "skill": "editorial-calendar",
+  "domain": "content",
+  "_note": "Rubric domain-truth fixture (road-to-domain-soundness Phase 2, rubric target). The criterion names a CITED EXTERNAL practice/standard — NOT the skill's own output (blocker: domain-competence-for-answer-keys, option a). Authored as a maintainer-RATIFICATION CANDIDATE: rubric is NON-deterministic (pinned-judge known-limit); the Phase-3 run + --write-floor ratchet-pin + per-domain backed-CLAIMS remain the maintainer's gate.",
+  "cases": [
+    {
+      "id": "matches-content-pillar-practice",
+      "scenario": "Plan a content calendar for next quarter for our developer-tools blog.",
+      "source": "The content-pillar + audience-goal-cadence editorial-planning practice (standard content strategy).",
+      "check": {
+        "kind": "rubric",
+        "criterion": "Matches the content-pillar practice: themes tied to a named audience + a stated goal, an explicit publishing cadence, and pieces sequenced with dependencies - not a random list of topics."
+      }
+    }
+  ]
+}

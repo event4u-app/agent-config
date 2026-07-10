@@ -78,7 +78,7 @@ deliberately, not overnight.
 runway, RICE, incident command, messaging), but the skills are forged on
 TS/PHP — "promising, not proven" off those stacks. A disclaimer floor
 bounds *liability*, not *correctness*: a skill can be format-correct,
-disclaimered, and still embed a wrong domain assumption. Today **5 of 20**
+disclaimered, and still embed a wrong domain assumption. Today **9 of 20**
 default-surface domain skills carry a sourced `domain-truth` fixture
 (`./scripts-run src/scripts/domain_soundness_status`); the rest are labeled
 `unvalidated` and the validated count is CI-ratcheted. The fixtures landed

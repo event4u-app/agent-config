@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **637 artefacts** in this package.
+Maintainer-facing index of all **640 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (268)
+## Skills (270)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -245,6 +245,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`skill-writing`](../src/skills/skill-writing/SKILL.md) |  | Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'. |
 | skill | [`song-to-script`](../src/skills/song-to-script/SKILL.md) |  | Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood + lip-sync lines. Triggers 'music video', 'from the song', 'cut to the beat'. |
 | skill | [`source-discovery`](../src/skills/source-discovery/SKILL.md) |  | Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields. |
+| skill | [`spreadsheet-authoring`](../src/skills/spreadsheet-authoring/SKILL.md) |  | Use when building or editing a spreadsheet or model — formulas over hardcoded values, read-back after writes, official-source data, pivot-first charts. Triggers on 'spreadsheet', 'build a model'. |
 | skill | [`sql-writing`](../src/skills/sql-writing/SKILL.md) |  | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'. |
 | skill | [`stakeholder-tradeoff`](../src/skills/stakeholder-tradeoff/SKILL.md) |  | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | skill | [`standards-from-config`](../src/skills/standards-from-config/SKILL.md) |  | Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim. |
@@ -257,6 +258,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`technical-specification`](../src/skills/technical-specification/SKILL.md) |  | Use when the user says \"write a spec\", \"create RFC\", \"write a PRD\", or \"document this decision\". Writes technical specifications, PRDs, RFCs, and ADRs with clear structure. |
 | skill | [`terraform`](../src/skills/terraform/SKILL.md) |  | Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform. |
 | skill | [`terragrunt`](../src/skills/terragrunt/SKILL.md) |  | Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt. |
+| skill | [`test-case-discovery`](../src/skills/test-case-discovery/SKILL.md) |  | Use BEFORE writing any test — enumerate cases per behavior (happy / boundary / error / abuse), prioritize by likelihood × impact, cross-check via subagent — even if the user just says 'add tests'. |
 | skill | [`test-driven-development`](../src/skills/test-driven-development/SKILL.md) |  | Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. |
 | skill | [`test-performance`](../src/skills/test-performance/SKILL.md) |  | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
 | skill | [`testing-anti-patterns`](../src/skills/testing-anti-patterns/SKILL.md) |  | Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions |
@@ -280,7 +282,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) |  | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (102)
+## Rules (103)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -372,6 +374,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`source-confidentiality`](../src/rules/source-confidentiality.md) | auto | Naming an external repo this package copied/harvested/compared against — keep the tracked tree source-anonymous |
 | rule | [`source-discovery-gate`](../src/rules/source-discovery-gate.md) | auto | Before coding/DB/API/vendor work — prove structural facts against a real source (file:line, SDL, probe) |
 | rule | [`source-of-truth`](../src/rules/source-of-truth.md) | auto | Editing dist/agent-src/, .augment/, .claude/, .cursor/ — source of truth is src/; never edit a generated projection |
+| rule | [`spreadsheet-source-quality`](../src/rules/spreadsheet-source-quality.md) | auto | Financial data in a spreadsheet uses official sources first (IR, regulatory filings); aggregator/news/social figures need explicit permission + a cell-level unofficial mark |
 | rule | [`strategy-safety-floor`](../src/rules/strategy-safety-floor.md) | auto | Founder-strategy output (vision, positioning, moats, OKRs) — never a final call; human owns the decision |
 | rule | [`symfony-routing`](../src/rules/symfony-routing.md) | auto | Symfony work (DI, bundles, Doctrine, Messenger, voters, console) — route to symfony-workflow |
 | rule | [`telegraph-speak`](../src/rules/telegraph-speak.md) | auto | telegraph.speak_scope != off — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable |
