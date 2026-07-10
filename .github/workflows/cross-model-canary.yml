@@ -62,3 +62,25 @@ jobs:
             printf '%s' "$OPENAI_API_KEY" > "$HOME/.event4u/agent-config/openai.key"
             printf '%s' "$GEMINI_API_KEY" > "$HOME/.event4u/agent-config/gemini.key" )
           ./node_modules/.bin/tsx src/scripts/cross_model_smoke.ts --skills image-analyser
+      # ADR-118 §4 — the one loop closure: rotating live trigger-eval pass rate
+      # (~5 suites/week, deterministic by UTC week index). A floor breach fails
+      # THIS scheduled job only — PRs are never blocked by live results. The
+      # local interactive skill_trigger_eval gate is untouched; authorization
+      # derives exclusively from the repo-secret key file written here.
+      - name: Trigger-eval pass-rate rotation (skips if key secret absent)
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::Trigger-eval rotation skipped — set ANTHROPIC_API_KEY repo secret to enable."
+            exit 0
+          fi
+          mkdir -p "$HOME/.event4u/agent-config"
+          ( umask 077
+            printf '%s' "$ANTHROPIC_API_KEY" > "$HOME/.event4u/agent-config/anthropic.key" )
+          ./node_modules/.bin/tsx src/scripts/trigger_eval_rotation.ts --out-dir rotation-results
+      - name: Upload rotation result JSONs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trigger-eval-rotation
+          path: rotation-results/
+          if-no-files-found: ignore

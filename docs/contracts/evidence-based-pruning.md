@@ -94,6 +94,7 @@ candidate; the human, seeing the evidence, makes the call.
 
 ## See also
 
+- [`ADR-118`](../decisions/ADR-118-loop-engineering-boundaries.md) — engagement counts stay ONE input; the pruning decision is never automated (disposition #2).
 - [`local-analytics.md`](local-analytics.md) — the measurement events + privacy floor.
 - [`capability-packs.md`](capability-packs.md) — sibling per-pack budget governance.
 - [`ADR-041`](../decisions/ADR-041-controlled-command-verbs.md) — sibling command-surface governance.
