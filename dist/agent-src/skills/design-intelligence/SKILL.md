@@ -81,6 +81,14 @@ and accessibility. The register changes which corpus selections are appropriate
 (distinctive palette/typography in brand mode; predictable, semantic in product
 mode). State the register in the Design Read line below.
 
+**Embedded vs standalone (a third discriminator).** UI **embedded inside a host
+surface** — a widget in a slide, a card in a chat, a panel in someone else's
+app — follows a **flatter charter** than a greenfield standalone page:
+restrained weights, hairline borders, no atmospherics/gradients/shadows that
+would fight the host. Select the register per surface (embedded → flat;
+standalone → the brand/product register above) — it is a selector, not a fixed
+token set (no values vendored; the host's tokens win).
+
 ## Design Read — articulate intent before generating
 
 Before producing any design brief or making any style selection, emit one
@@ -103,7 +111,8 @@ If `DESIGN.md` declares `## Taste Dials`, use those values. Otherwise infer
 three 1–10 dials from the brief and append them to the Design Read line
 (`… · dials V/M/D = 6/3/4`) so the user can correct them; on confirmation,
 suggest persisting to `DESIGN.md` (via `design-system-capture`). Dials are a
-config, not a vibe — never re-infer when `DESIGN.md` already sets them.
+config, not a vibe — never re-infer when `DESIGN.md` already sets them
+(no drift across sessions).
 
 **Dial Inference Table** (brief signal → Variance / Motion / Density, 1–10):
 
@@ -115,15 +124,15 @@ config, not a vibe — never re-infer when `DESIGN.md` already sets them.
 | data-dense / dashboard / admin / cockpit | 4–6 | 2–3 | 7–9 |
 | bold / playful / expressive / awards / Dribbble | 8–10 | 7–10 | 3–5 |
 
-**Dial → downstream levers:**
+**Dial → downstream levers** (how a dial value changes generation):
 
 | Dial | Low (1–3) | High (8–10) |
 |---|---|---|
 | Variance | symmetric grids, one layout family | asymmetry, varied layout families, off-grid accents |
-| Motion | static / reduced-motion-first, opacity-only | choreographed scroll/stagger (GPU-only, reduced-motion alt) |
-| Density | generous whitespace, large spacing scale | tight spacing scale, more info per viewport |
+| Motion | static / `prefers-reduced-motion`-first, opacity-only | choreographed scroll/stagger (still GPU-only, still reduced-motion alt) |
+| Density | generous whitespace, large spacing scale, few items/viewport | tight spacing scale, more information per viewport |
 
-Dials persist in `DESIGN.md`; stack executors (`tailwind-engineer`,
+Dials persist in `DESIGN.md`; the stack executors (`tailwind-engineer`,
 `react-shadcn-ui`, `blade-ui`, `flux`) read `DESIGN.md` and honour them.
 
 **Anti-Default Discipline — first-impulse check:** Before committing to any design direction, verify you are NOT defaulting to:
@@ -140,12 +149,13 @@ If any of these was the first impulse, name a different direction or explicitly 
 When the brief maps to an official design system (Material Design, Fluent,
 Carbon, Polaris, GOV.UK, shadcn, Tailwind UI, Radix, etc.):
 
-0. **Canon grounding first.** Brief names a system OR `components.json`/deps
-   signal one (`@mui/material`, `antd`, `@fluentui/*`, `@carbon/*`,
-   `@atlaskit/*`) → pull
+0. **Canon grounding first.** If the brief names a system OR
+   `components.json`/deps signal one (`@mui/material`, `antd`, `@fluentui/*`,
+   `@carbon/*`, `@atlaskit/*`), pull
    [`docs/guidelines/design-canon.md`](../../../docs/guidelines/design-canon.md),
-   surface the matching one-liner, **offer to fetch the live spec** before
-   committing to the system's conventions. Thin + lazy: skip for a generic brief.
+   surface the matching one-line summary, and **offer to fetch the live spec**
+   before committing to the system's conventions — rather than improvising.
+   The canon index is thin + lazy: do not load it for a generic, unnamed brief.
 1. **Install the real package** — do not hand-recreate its CSS or components.
    Surface the install command for the project's package manager (the
    system's official package, e.g. the shadcn CLI or the `@mui/material`
@@ -158,8 +168,8 @@ Carbon, Polaris, GOV.UK, shadcn, Tailwind UI, Radix, etc.):
    (see Design Read above); never fall back to an unnamed generic aesthetic
    (per `source-discovery-gate`: real source before guessing).
 
-**Grounding precedence** (per `brand-source-of-truth`): consumer brand tokens >
-confirmed session decisions > named canon
+**Grounding precedence** (consistent with `brand-source-of-truth`): consumer
+brand tokens > confirmed session decisions > named canon
 ([`design-canon.md`](../../../docs/guidelines/design-canon.md)) > generated
 corpus. Canon is a gap-filler, never an override of a registered brand value.
 
@@ -266,6 +276,33 @@ guidance + docs URLs from here instead of memory.
 - Do NOT propose a new component the `existing-ui-audit` inventory
   already covers — audit findings outrank corpus suggestions.
 - Do NOT hide low confidence — the user signs off on the gaps too.
+
+## Diagram-type routing — route on the verb
+
+Choose a visualization by the *intent verb*, not the noun. Count the nouns
+before you draw (input-complexity triage): 1–2 → inline prose or a single
+shape; 3–7 → one diagram; 8+ → split or summarize, never one dense picture.
+
+| The user asks… | Intent | Draw |
+|---|---|---|
+| "how does X **work** / flow" | illustrative (intuition) | flowchart / sequence — illustrative default |
+| "what is X's **architecture** / structure" | reference (structural) | structural diagram (boxes + typed edges) |
+| a **cycle** / loop / lifecycle | — | a **stepper widget**, never a hand-drawn ring |
+| a **DB schema / ERD** / entity relations | — | **mermaid**, never hand-placed SVG |
+
+### Geometric pre-checks (run BEFORE finalizing an SVG/diagram)
+
+Ranked by failure rate — procedures, not constants:
+
+1. **viewBox safety** — compute the lowest + rightmost element (plus a buffer)
+   and set the viewBox from that; never assume the default fits.
+2. **arrow-through-box trace** — trace every arrow's path and confirm it does
+   not cross through an unrelated box before drawing it.
+3. **box-width-from-longest-label** — size each box from its longest label
+   before placing it, so text never overflows.
+
+(Reference-only: any color/easing/frame values come from the consumer's tokens
+or a maintained upstream — this skill vendors no drawn-asset corpus.)
 
 ## Interplay (who owns what)
 
