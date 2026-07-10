@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 12 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **13** open blockers
+> 12 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**113 / 198 steps done · 57%**
+**114 / 198 steps done · 58%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   57%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 14 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 7% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 1 | 11 | 0 | 0 | 0 | █████████░ 92% |
-| 4 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
+| 4 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-flow-learnings) | ██████████ 95% |
 | 5 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
 | 6 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
@@ -80,14 +80,14 @@ _2 blockers resolved._
 
 ### [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md)
 
-**Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater** — 17 / 19 done (89%)
+**Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater** — 18 / 19 done (95%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Install & conformance contract | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 1 | Fleet rollout (`init --fleet fleet.yaml`) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 2 | Dispatch failure-policy clarification | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Bench matrix expansion + per-section render | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 3 | Bench matrix expansion + per-section render | ✅ done | 0 | 4 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-flow-learnings"></a>
 **Blockers**
@@ -99,18 +99,8 @@ _2 blockers resolved._
     intentionally mis-permissioned repo as the seeded failure.
     2. Capture the aggregate JSON report.
   - **Resolved when:** aggregate JSON is schema-valid; the seeded repo is red with its pre-flight finding; all siblings are green and conformance-passing.
-- **live-matrix-run** (owner: maintainer) — blocks Phase 3 — live matrix run (live API spend)
-  - **What to do:**
-    1. Invoke the matrix runner for ≥2 task families × 2 hosts from the
-    matrix YAML (paired arms per the existing ab-v2 discipline). The config
-    is committed at `internal/bench/matrix.yaml` (2 families × 2 hosts × arms
-    `vanilla`,`rules-kernel-dc`; host-compatible — codex rejects the plugin
-    `package` arm) and dry-verified: `npx tsx src/scripts/bench_matrix.ts
-    --config internal/bench/matrix.yaml --expand` → 4 cells. Run it with
-    `--run` (per-cell `--budget` caps spend; 4 cells).
-    2. Pin the resulting report alongside the existing pinned reports; regen
-    `docs/benchmark.md` via the per-section renderer (zero manual edits).
-  - **Resolved when:** one schema-valid matrix report exists and the per-section render consumes it without manual edits. - **Why not autonomous (beyond spend):** `--run` spawns the real `claude` + `codex` host CLIs as unattended coding agents (sandbox/approvals off) — an auto-mode agent-spawn gate blocks it independently of the paid-run authorization. Run it in a non-auto session (or approve the permission prompt); the numbers become published benchmark evidence, so the PR review that pins them is the integrity sign-off.
+
+_1 blocker resolved._
 
 ### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
 
