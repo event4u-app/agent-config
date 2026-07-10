@@ -64,7 +64,17 @@ or justify the change to the reviewer. Full clause:
 
 ## PHPDoc
 
-- Only add PHPDoc when type hints are insufficient (e.g. generic arrays: `@param array<int, MyObject> $items`).
-- Do NOT add PHPDoc that just repeats the method signature.
+Enforced by the `code-comment-discipline` rule; keep/drop table + worked
+examples: [`code-clarity.md § Per-language keep/drop tables`](../code-clarity.md#per-language-keepdrop-tables).
+
+- Default is **no docblock**. Add PHPDoc only when it carries information the
+  native signature cannot: generics/array shapes (`@param array<int, MyObject> $items`,
+  `@return Collection<int, Post>`), `@template`, `@throws` callers must handle,
+  `@deprecated` with the successor.
+- Do NOT add PHPDoc that repeats the method signature — no `@param string $name`
+  on `string $name`, no `@return bool` on `): bool`, no `/** @var Foo */` on a
+  natively-typed property.
+- No summary line that re-words the method name (`/** Deactivate the user. */`
+  on `deactivate()`).
 - One docblock per method — never split into multiple `/** */` blocks.
 - Tag order: `@param` → `@return` → `@throws`.

@@ -103,12 +103,117 @@ non-obvious constraint? If yes, keep it — tightened to the constraint
 alone. If the comment only restates what identifiers already convey, or
 explains the change's history rather than the code's behavior, cut it.
 
+This is the canonical long-form behind the
+[`code-comment-discipline`](../../src/rules/code-comment-discipline.md)
+rule. External consensus in one line each: comments explain **why, never
+what** (competent readers get the what from the code); Google's style
+guides (C++/Go/Python/TS) ban stating the obvious — Go: prefer
+self-describing names over redundant comments; Python: "never describe
+the code"; modern PHP (framework-mainstream since PHP 8 typing) drops
+docblocks that only restate native type hints; TSDoc/JSDoc type
+annotations are redundant in typed TypeScript.
+
+### Per-language keep/drop tables
+
+Docblocks earn their place only with **machine-relevant precision** the
+native type system cannot carry, or genuine why-context. Per language:
+
+#### PHP / PHPDoc
+
+| Keep | Drop |
+|---|---|
+| `@return Collection<int, Post>` — generic the native type can't carry | `@return bool` on `): bool` |
+| `@param array<string, User> $usersByEmail` — array shape for PHPStan/Psalm | `@param string $name The name.` on `string $name` |
+| `@template T`, `@phpstan-type`, `@phpstan-assert` | `/** @var LoggerInterface */` on a natively-typed property |
+| `@throws PaymentDeclined` where callers must handle it | `/** Constructor. */` |
+| `@deprecated use X instead` — tool-consumed | Method summary that re-words the method name |
+
+```php
+// ❌ Drop — five lines, zero information beyond the signature
+/**
+ * Deactivate the user.
+ *
+ * @param User $user The user to deactivate.
+ * @return void
+ */
+public function deactivate(User $user): void
+
+// ✅ Keep — the docblock carries what PHP's type system cannot
+/** @param array<int, OrderLine> $lines */
+public function totalCents(array $lines): int
+```
+
+#### TypeScript / JSDoc-TSDoc
+
+| Keep | Drop |
+|---|---|
+| A why: `// half-up to match the invoice renderer; Intl default is half-even` | `@param {string} id` on `id: string` |
+| `@deprecated` with the successor named | `@returns the formatted price` on `: string` |
+| `@internal` when the build strips internals | Restating a type the compiler already enforces |
+| Non-obvious unit/contract: `/** epoch millis, NOT seconds */` | `// call the API` above `await api.call()` |
+
+```ts
+// ❌ Drop — TS carries every fact stated here
+/**
+ * Formats the price.
+ * @param amount - the amount to format
+ * @returns the formatted string
+ */
+export function formatPrice(amount: number): string
+
+// ✅ Keep — constraint the signature can't show
+// Rounds half-up to match the invoice PDF renderer; Intl default is half-even.
+export function formatPrice(amount: number): string
+```
+
+#### Python / docstrings
+
+| Keep | Drop |
+|---|---|
+| Contract detail: raises, units, side effects a caller must know | `"""Return the user."""` on `get_user()` |
+| Public-API docstring where the toolchain renders it (Sphinx/mkdocs) | Args section restating annotated params |
+| Type info only expressible in a docstring in this project's toolchain | `# loop over items` above a comprehension |
+
+```python
+# ❌ Drop
+def get_user(user_id: int) -> User | None:
+    """Get the user by id and return it or None."""
+
+# ✅ Keep — behavior the signature can't show
+def get_user(user_id: int) -> User | None:
+    """Reads through the request-local cache; never hits the DB twice per request."""
+```
+
+#### Go / doc comments
+
+| Keep | Drop |
+|---|---|
+| Exported-symbol doc comment (`godoc` renders it) — one sentence, adds intent | Doc comment that re-words the function name |
+| A why on non-obvious concurrency/ordering | `// increment i` |
+
+Go is the one ecosystem where exported symbols conventionally carry a
+doc comment — keep the convention, but the comment still must say
+something the name doesn't.
+
+### Redundancy self-check (any language)
+
+Before emitting a comment or docblock, all three must be true:
+
+1. It states something **beyond** the names and native types.
+2. It will still be true after the next refactor of the lines below it.
+3. It addresses the future reader of the file — not the reviewer of the diff.
+
+One "no" → drop it. When in doubt: no comment.
+
 ## See also
 
 - Language-specific anchors that link to this guideline:
   - PHP: `docs/guidelines/php/general.md` § Variables
   - PHP: `docs/guidelines/php/php-coding-patterns.md` § Variables
+- `code-comment-discipline` rule — the always-loaded enforcement surface
+  for the comment-discipline clause above.
 - `minimal-safe-diff` rule — orthogonal but aligned: smallest change
-  that solves the stated problem.
+  that solves the stated problem; also owns "no comment additions or
+  removals on untouched code".
 - `direct-answers` rule — same spirit at the prose level: shortest
   version that fully answers the question.

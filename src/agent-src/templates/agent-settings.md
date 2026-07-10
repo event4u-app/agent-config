@@ -549,6 +549,7 @@ the canonical narrative lives in
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
 | `github.pr_reply_method` | `replies_endpoint`, `create_review_comment`, `auto` | `create_review_comment` | GitHub API method for replying to PR review comments. `auto` detects on first use. |
 | `eloquent.access_style` | `getters_setters`, `get_attribute`, `magic_properties` | `getters_setters` | How to access Eloquent model attributes. See `eloquent` skill for details. |
+| `code_style.docblocks` | `minimal`, `full` | `minimal` | Consumed by the `code-comment-discipline` rule. `minimal`: no signature-mirroring docblocks; docblocks only for machine-relevant precision (generics, array shapes) or genuine why-context. `full`: exported public library surface may carry one-line summary docblocks; the redundancy ban still holds. |
 | `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `agents/runtime/.agent-chat-history` (JSONL) for crash recovery. |
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
