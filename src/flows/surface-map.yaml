@@ -69,6 +69,11 @@ commands:
     - tests/execute
     - update-form-request-messages
     - work
+    - worktree
+    - worktree/cleanup
+    - worktree/create
+    - worktree/status
+    - worktree/verify
 
   review:
     - fix/ci

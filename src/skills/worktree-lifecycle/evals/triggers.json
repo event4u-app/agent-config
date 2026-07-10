@@ -1,0 +1,52 @@
+{
+    "skill": "worktree-lifecycle",
+    "last_eval": "2026-07-10",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for worktree governance (scope lock, merge-readiness status, scoped verification, safe cleanup). Should-not-trigger covers the near-miss neighbours (plain branch switch, git-worktree info question, subagent-orchestration mode selection, worktree creation mechanics, remote branch deletion) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "declare a scope lock for this worktree before I start editing",
+            "trigger": true
+        },
+        {
+            "q": "is this worktree merge-ready? check dirty state, ahead/behind and verification evidence",
+            "trigger": true
+        },
+        {
+            "q": "clean up the finished worktrees but make sure no unmerged commits get lost",
+            "trigger": true
+        },
+        {
+            "q": "welche Worktrees sind noch aktiv, und welche Pfade gehören welchem Worktree?",
+            "trigger": true
+        },
+        {
+            "q": "run the scoped verification for the change in this worktree, not the full CI",
+            "trigger": true
+        },
+        {
+            "q": "switch to the feature branch and continue working there",
+            "trigger": false,
+            "note": "plain branch switch, no worktree governance → git-workflow"
+        },
+        {
+            "q": "what does the output of git worktree list mean?",
+            "trigger": false,
+            "note": "git info question, not lifecycle governance"
+        },
+        {
+            "q": "which subagent-orchestration mode should I pick for these three independent tasks?",
+            "trigger": false,
+            "note": "mode selection → subagent-orchestration; worktrees only enter after a mode is chosen"
+        },
+        {
+            "q": "spawn a worktree with ignore-safety checks and a clean test baseline for this refactor",
+            "trigger": false,
+            "note": "creation mechanics → using-git-worktrees"
+        },
+        {
+            "q": "delete the old release branch on origin",
+            "trigger": false,
+            "note": "remote branch deletion, no worktree involved → git-workflow (permission-gated)"
+        }
+    ]
+}
