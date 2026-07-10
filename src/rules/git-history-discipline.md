@@ -120,6 +120,24 @@ If either stop fires and resolution is not immediate → tag the state (`git tag
 
 `--amend` on the *current local* commit before the first push is the narrow exception (treated as continuing to compose the commit, not rewriting history).
 
+## Amend-after-hook-failure trap (data-loss)
+
+When a **pre-commit hook fails, the commit did NOT happen** — no new commit
+object was created. A reflexive `git commit --amend` at that point does not
+"retry the commit"; it rewrites the **previous, already-good** commit,
+destroying that work. This is the one place the narrow `--amend` exception
+above turns into data loss.
+
+Recovery — never amend after a hook failure:
+
+1. Read the hook output and **fix the cause** (the lint/test/format failure).
+2. **Re-stage** the fix (`git add`).
+3. Create a **NEW commit** (`git commit`, not `--amend`) — the prior commit was
+   never overwritten and must stay intact.
+
+Recovery procedures live next to this mechanism in
+[`skill:git-workflow`](../skills/git-workflow/SKILL.md).
+
 ## Why this rule exists
 
 Interactive rebase + fixup loops generate disproportionate token cost on every iteration: re-running CI per replayed commit, resolving the same content conflict in three derived files (`.condensation-hashes.json`, `dist/router.json`, `.windsurfrules`), losing the working tree to a stash that silently re-introduces older state. A single conflict can burn the budget of an entire feature.

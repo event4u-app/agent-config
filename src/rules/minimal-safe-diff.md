@@ -74,6 +74,24 @@ task scope · dependency bumps "because it was close to the cache".
 Ask. A minimal diff plus one follow-up is cheaper than a sprawling diff the
 reviewer has to untangle.
 
+## Anti-over-engineering
+
+The smallest change is also the least *abstract* one:
+
+- **Three similar lines beat a premature abstraction.** Do not extract a helper
+  / generic / config layer to dedupe two or three call sites — inline
+  repetition is cheaper to read and change than the wrong abstraction.
+- **No tombstones.** Delete removed code completely — no `_oldName` renames,
+  no `// removed X` / `// no longer used` markers, no dead re-export shims kept
+  "for safety". Git history is the tombstone.
+- **No docstrings/comments on untouched code.** Do not annotate code the diff
+  does not change.
+
+**Not adopted (council):** the source's "validate only at system boundaries /
+trust internal code" clause is **rejected** — internal code can be wrong, and
+"trust" is not a testing strategy. Keep validating internal invariants; this
+fold is about *diff shape*, not about dropping internal checks.
+
 ## Break-glass exception
 
 This rule stays in force during production incidents. "Break-glass mode"

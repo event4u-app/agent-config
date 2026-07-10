@@ -224,9 +224,10 @@ record it in the commit message (`Eval stub: deferred`). Peer examples
 for the expected format: `php-coder/evals/triggers.json`,
 `eloquent/evals/triggers.json`, `skill-writing/evals/triggers.json`.
 
-Presence CI-enforced for new skills: `check_trigger_eval_presence` fails
-any skill outside shrink-only grandfather allowlist lacking
-`evals/triggers.json` — *skip* defers query quality, never the file.
+Presence is CI-enforced for new skills: `check_trigger_eval_presence`
+fails any skill outside the shrink-only grandfather allowlist that
+lacks `evals/triggers.json` — *skip* therefore defers the queries'
+quality, never the file itself.
 
 Rules / commands / guidelines do **not** get eval stubs — only skills
 route through the top-level catalogue.
@@ -456,3 +457,11 @@ to every skill you author.
 * Skip Procedure or use vague validation
 * Exceed size limits (see `docs/guidelines/agent-infra/size-and-scope.md`)
 * Duplicate rules
+
+## Encode usage policy in the description
+
+Workflow sequencing, preconditions, ID/output provenance ("copy ids verbatim,
+never from memory"), a mandatory "why" intent field, and turn-end contracts
+belong INSIDE this artifact's description/frontmatter — where they fire at the
+decision point — not in always-on prose. See
+[`tool-description-as-policy`](../../../docs/guidelines/agent-infra/tool-description-as-policy.md).

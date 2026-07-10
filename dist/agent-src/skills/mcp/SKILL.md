@@ -21,6 +21,11 @@ Use this skill when:
 
 ## Procedure: Use MCP tools
 
+1. **Inspect available MCP servers** — List configured servers (Sentry, Jira, GitHub, Playwright, Context7, Sequential Thinking) and confirm credentials/permissions for the task.
+2. **Pick the right tool per task** — Match user intent to the server table below; prefer the most specific tool over generic search.
+3. **Chain tools when needed** — Apply the *Combining tools in workflows* patterns; capture intermediate IDs (org slug, project slug, ticket key) before deeper calls.
+4. **Verify and handle errors** — Apply *Error handling* and *Permission boundaries*; confirm the result answers the original question before moving on.
+
 ### Sentry (`augment-partner-remote-mcp-sentry`)
 
 Error tracking and performance monitoring.
@@ -162,6 +167,23 @@ PR creation:
   - Creating Jira tickets or changing status
   - Creating GitHub PRs or pushing code
   - Posting comments on issues/PRs
+
+## Tool-tier ladder — most-specific first, no silent fall-through
+
+Pick the **most specific tool available** for the job: a dedicated tool >
+a generic tool > a lowest-level/raw call. The ladder has an anti-fall-through
+rule:
+
+- A **dedicated tool erroring is a signal to debug/report**, never to silently
+  retry the same job via a broader/slower tier. Silent degradation masks the
+  real failure (the dedicated tool broke) behind a worse-but-working path.
+- The broader tier is for **unavailability** (the specific tool isn't present),
+  **not for error recovery** (it's present but failed). Unavailable → step
+  down a tier; errored → stop and surface.
+
+This is tool-*selection* discipline. Delegation (when to hand work to a
+subagent at all) is [`subagent-orchestration`](../subagent-orchestration/SKILL.md)'s
+concern, not this ladder's — keep the boundary explicit.
 
 ## Related
 

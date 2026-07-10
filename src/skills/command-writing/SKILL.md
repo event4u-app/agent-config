@@ -304,3 +304,11 @@ Good description (trigger-shaped, outcome-focused):
 Bad description (vague, no outcome):
 
 > "PR command"
+
+## Encode usage policy in the description
+
+Workflow sequencing, preconditions, ID/output provenance ("copy ids verbatim,
+never from memory"), a mandatory "why" intent field, and turn-end contracts
+belong INSIDE this artifact's description/frontmatter — where they fire at the
+decision point — not in always-on prose. See
+[`tool-description-as-policy`](../../../docs/guidelines/agent-infra/tool-description-as-policy.md).
