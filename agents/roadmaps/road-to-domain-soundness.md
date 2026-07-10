@@ -103,13 +103,22 @@ classified deterministic-vs-rubric.
       CANDIDATES: the `domain-competence-for-answer-keys` blocker's option (a)
       (keys from citable methods, working shown); `--write-floor` ratchet-pin
       remains the maintainer's ratification act. -->
-- [ ] For each rubric target (`fundraising-narrative`, `messaging-architecture`,
+- [x] For each rubric target (`fundraising-narrative`, `messaging-architecture`,
       `editorial-calendar`, `incident-commander`): author a rubric grounded in a
       cited external standard/practice (e.g. an IC framework for
       `incident-commander`), so "sound" means "matches a named practice," not
       "reads well."
-      <!-- OPEN — same `domain-competence-for-answer-keys` block; the rubric must
-      name a cited practice, which needs domain competence to ground. -->
+      <!-- done 2026-07-10: 4 rubric fixtures authored
+      (skills/<skill>/evals/domain-truth.json). Each criterion names a CITED
+      external practice — ICS (FEMA/NIMS) + Google SRE incident management for
+      incident-commander; the standard venture pitch arc for fundraising-narrative;
+      the message-house model + positioning-before-messaging (Dunford) for
+      messaging-architecture; the content-pillar practice for editorial-calendar —
+      cited in each case's `source`, NOT the skill's own output
+      (`domain-competence-for-answer-keys` blocker option (a)). Authored as
+      maintainer-RATIFICATION CANDIDATES: rubric is non-deterministic
+      (pinned-judge known-limit); the Phase-3 run + `--write-floor` ratchet-pin +
+      Phase-4 backed-CLAIMS remain the maintainer's gate. -->
 - [x] Every fixture cites its ground-truth source; a fixture without a citable
       basis is not a domain-truth fixture and is rejected.
       <!-- done 2026-07-08 (schema-enforced): `source` is REQUIRED on every case,

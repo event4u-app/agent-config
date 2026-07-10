@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **636 public artefacts** shipped by
+Consumer-facing catalog of all **639 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (268)
+## Skills (270)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -18,9 +18,10 @@ are excluded.
 
 > **Non-coding domain correctness is scoped, not proven.** The
 > `finance` / `founder` / `ops` / `content` skills are forged on TS/PHP
-> codebases; 5 of 20 default-surface domain skills carry a sourced
-> `evals/domain-truth.json` fixture (deterministic targets, keys from
-> cited formulas); the rest are labeled `unvalidated` until they pass one
+> codebases; 9 of 20 default-surface domain skills carry a sourced
+> `evals/domain-truth.json` fixture (deterministic targets with keys from
+> cited formulas, or rubric targets matching a named external practice);
+> the rest are labeled `unvalidated` until they pass one
 > (`./scripts-run src/scripts/domain_soundness_status`). A disclaimer
 > floor bounds liability, not correctness — see [the proof page](proof.md).
 
@@ -260,6 +261,7 @@ are excluded.
 | skill | [`skill-writing`](../dist/agent-src/skills/skill-writing/SKILL.md) |  | Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'. |
 | skill | [`song-to-script`](../dist/agent-src/skills/song-to-script/SKILL.md) |  | Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood + lip-sync lines. Triggers 'music video', 'from the song', 'cut to the beat'. |
 | skill | [`source-discovery`](../dist/agent-src/skills/source-discovery/SKILL.md) |  | Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields. |
+| skill | [`spreadsheet-authoring`](../dist/agent-src/skills/spreadsheet-authoring/SKILL.md) |  | Use when building or editing a spreadsheet or model — formulas over hardcoded values, read-back after writes, official-source data, pivot-first charts. Triggers on 'spreadsheet', 'build a model'. |
 | skill | [`sql-writing`](../dist/agent-src/skills/sql-writing/SKILL.md) |  | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'. |
 | skill | [`stakeholder-tradeoff`](../dist/agent-src/skills/stakeholder-tradeoff/SKILL.md) |  | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | skill | [`standards-from-config`](../dist/agent-src/skills/standards-from-config/SKILL.md) |  | Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim. |
@@ -272,6 +274,7 @@ are excluded.
 | skill | [`technical-specification`](../dist/agent-src/skills/technical-specification/SKILL.md) |  | Use when the user says \"write a spec\", \"create RFC\", \"write a PRD\", or \"document this decision\". Writes technical specifications, PRDs, RFCs, and ADRs with clear structure. |
 | skill | [`terraform`](../dist/agent-src/skills/terraform/SKILL.md) |  | Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform. |
 | skill | [`terragrunt`](../dist/agent-src/skills/terragrunt/SKILL.md) |  | Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt. |
+| skill | [`test-case-discovery`](../dist/agent-src/skills/test-case-discovery/SKILL.md) |  | Use BEFORE writing any test — enumerate cases per behavior (happy / boundary / error / abuse), prioritize by likelihood × impact, cross-check via subagent — even if the user just says 'add tests'. |
 | skill | [`test-driven-development`](../dist/agent-src/skills/test-driven-development/SKILL.md) |  | Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. |
 | skill | [`test-performance`](../dist/agent-src/skills/test-performance/SKILL.md) |  | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
 | skill | [`testing-anti-patterns`](../dist/agent-src/skills/testing-anti-patterns/SKILL.md) |  | Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions |
@@ -295,7 +298,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) |  | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (101)
+## Rules (102)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -386,6 +389,7 @@ are excluded.
 | rule | [`slash-command-routing-policy`](../dist/agent-src/rules/slash-command-routing-policy.md) | auto | User types a slash command like /create-pr, /commit, or pastes command file content |
 | rule | [`source-confidentiality`](../dist/agent-src/rules/source-confidentiality.md) | auto | Naming an external repo this package copied/harvested/compared against — keep the tracked tree source-anonymous |
 | rule | [`source-discovery-gate`](../dist/agent-src/rules/source-discovery-gate.md) | auto | Before coding/DB/API/vendor work — prove structural facts against a real source (file:line, SDL, probe) |
+| rule | [`spreadsheet-source-quality`](../dist/agent-src/rules/spreadsheet-source-quality.md) | auto | Financial data in a spreadsheet uses official sources first (IR, regulatory filings); aggregator/news/social figures need explicit permission + a cell-level unofficial mark |
 | rule | [`strategy-safety-floor`](../dist/agent-src/rules/strategy-safety-floor.md) | auto | Founder-strategy output (vision, positioning, moats, OKRs) — never a final call; human owns the decision |
 | rule | [`symfony-routing`](../dist/agent-src/rules/symfony-routing.md) | auto | Symfony work (DI, bundles, Doctrine, Messenger, voters, console) — route to symfony-workflow |
 | rule | [`telegraph-speak`](../dist/agent-src/rules/telegraph-speak.md) | auto | telegraph.speak_scope != off — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable |

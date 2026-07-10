@@ -1,0 +1,16 @@
+{
+  "skill": "incident-commander",
+  "domain": "ops",
+  "_note": "Rubric domain-truth fixture (road-to-domain-soundness Phase 2, rubric target). The criterion names a CITED EXTERNAL practice/standard — NOT the skill's own output (blocker: domain-competence-for-answer-keys, option a). Authored as a maintainer-RATIFICATION CANDIDATE: rubric is NON-deterministic (pinned-judge known-limit); the Phase-3 run + --write-floor ratchet-pin + per-domain backed-CLAIMS remain the maintainer's gate.",
+  "cases": [
+    {
+      "id": "matches-ics-sre-incident-practice",
+      "scenario": "Production checkout is failing for all users. Coordinate the incident from declaration to mitigation.",
+      "source": "Incident Command System (ICS — FEMA/NIMS) + Google SRE incident management ('SRE Workbook', Incident Response): declared severity, distinct IC/comms/ops roles, comms cadence, mitigation-before-root-cause.",
+      "check": {
+        "kind": "rubric",
+        "criterion": "Matches ICS / SRE incident-management practice: declares a severity level, assigns distinct Incident-Commander / communications / ops-lead roles, sets an external comms cadence, and drives mitigation before root-cause — not ad-hoc firefighting or a single-person response."
+      }
+    }
+  ]
+}

@@ -6,7 +6,7 @@
 
 ## Overall
 
-**111 / 200 steps done · 56%**
+**112 / 200 steps done · 56%**
 
 ```text
 ██████████████████████░░░░░░░░░░░░░░░░░░   56%
@@ -19,7 +19,7 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 14 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 7% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
-| 4 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
+| 4 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 1 | 11 | 0 | 0 | 0 | █████████░ 92% |
 | 5 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 6 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
 | 7 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
@@ -86,12 +86,12 @@ _2 blockers resolved._
 
 ### [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md)
 
-**Road to domain soundness — prove or honestly scope the non-forged, non-coding domains** — 10 / 12 done (83%)
+**Road to domain soundness — prove or honestly scope the non-forged, non-coding domains** — 11 / 12 done (92%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Scope to the default surface + define domain-truth fixtures | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Author domain-truth fixtures with domain competence (not output taste) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 2 | Author domain-truth fixtures with domain competence (not output taste) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | Run + gate the provenance claim | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Honest disposition of the long tail | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 
