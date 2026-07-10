@@ -67,8 +67,9 @@ const _require = createRequire(import.meta.url);
 // CHECKBOX_RE = re.compile(r"^\s*[-*]\s+\[([ xX~\-])\]\s", re.MULTILINE)
 const CHECKBOX_RE = /^[ \t\n\r\f\v]*[-*][ \t\n\r\f\v]+\[([ xX~\-])\][ \t\n\r\f\v]/gm;
 // PHASE_RE (MULTILINE) — H2/H3 "Phase <id>" with optional separator + name.
+// Numeric ids accept dotted sub-phases ("1.0", "4.1", "2.3.1").
 const PHASE_RE =
-    /^(#{2,3})[ \t\n\r\f\v]+Phase[ \t\n\r\f\v]+(\d+[a-z]?|[IVX]+|[A-Z](?:\d+)?)(?:[\s:—\-]+([\s\S]*?))?[ \t\f\v\r]*$/gm;
+    /^(#{2,3})[ \t\n\r\f\v]+Phase[ \t\n\r\f\v]+(\d+(?:\.\d+)*[a-z]?|[IVX]+|[A-Z](?:\d+)?)(?:[\s:—\-]+([\s\S]*?))?[ \t\f\v\r]*$/gm;
 // TITLE_RE = re.compile(r"^#\s+(?:Roadmap:\s*)?(.+?)\s*$", re.MULTILINE)
 const TITLE_RE = /^#[ \t\n\r\f\v]+(?:Roadmap:[ \t\n\r\f\v]*)?(.+?)[ \t\f\v\r]*$/m;
 const EXCLUDE_NAMES: ReadonlySet<string> = new Set([
