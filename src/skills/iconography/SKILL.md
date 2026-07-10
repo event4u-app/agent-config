@@ -51,6 +51,30 @@ execution:
 5. **Verify** — check the resolved name on `iconify.design/icon/{set}:{name}`;
    confirm the icon renders as expected before shipping.
 
+## Iconography floor (design fidelity)
+
+Before resolving any new icon, honour the project's existing icon system — the
+Inspect stage of the
+[design-artifact lifecycle](../../../docs/contracts/design-artifact-lifecycle.md).
+
+- **Inspect first.** Detect the icon set already in use (imports, existing
+  `set:name` usages, brand assets) before picking one. A new icon matches the
+  incumbent set's **stroke weight, fill style, corner radius, size, and
+  metaphor** — do not introduce a second visual language (see
+  [`icon-consistency`](../../rules/icon-consistency.md)).
+- **No emoji-as-icon in serious UI.** An emoji is not an icon — never substitute
+  `⚙️`/`🔔`/`✅` for a real icon in a product/admin/marketing surface (functional
+  CLI/status markers are a different context, out of scope here).
+- **No hand-rolled icons when a set exists.** If the project has an icon library
+  or brand mark, use it — do not hand-author a one-off SVG that drifts from the
+  system. Hand-rolling is for a genuinely missing glyph, and then it matches the
+  set's grid + stroke.
+- **Flag substitutions when the exact asset is absent.** When the needed icon or
+  brand mark does not exist in the set, pick the nearest and **state the
+  substitution** ("no exact 'sync' glyph in Heroicons; used `arrow-path`") rather
+  than silently approximating or inventing. (fixtures: `daf-emoji-as-icon`,
+  `daf-fake-svg-logo`.)
+
 ## Output format
 
 1. **Iconify name** — `set:name` string, e.g. `lucide:arrow-right`.
