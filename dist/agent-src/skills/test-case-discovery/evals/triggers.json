@@ -1,0 +1,52 @@
+{
+    "skill": "test-case-discovery",
+    "last_eval": "2026-07-10",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for pre-write test-case enumeration (what to test, edge cases, coverage breadth). Should-not-trigger covers near-miss neighbours: assertion quality (testing-anti-patterns), after-the-fact coverage review (judge-test-coverage), failing-test diagnosis (systematic-debugging), stack-specific execution.",
+    "queries": [
+        {
+            "q": "what should we test here — I don't want happy-path-only coverage",
+            "trigger": true
+        },
+        {
+            "q": "enumerate the edge cases for this endpoint before we write the tests",
+            "trigger": true
+        },
+        {
+            "q": "welche Testfälle brauchen wir für dieses Feature — auch Grenzfälle und Fehlerpfade?",
+            "trigger": true
+        },
+        {
+            "q": "build a case matrix for this behavior — happy, boundary, error, abuse",
+            "trigger": true
+        },
+        {
+            "q": "ask a subagent what else we could test so coverage is broad",
+            "trigger": true
+        },
+        {
+            "q": "this assertion looks tautological — is the test overfit?",
+            "trigger": false,
+            "note": "assertion quality → testing-anti-patterns"
+        },
+        {
+            "q": "are the tests on this finished diff enough?",
+            "trigger": false,
+            "note": "after-the-fact coverage review → judge-test-coverage"
+        },
+        {
+            "q": "this Pest test keeps failing and I don't understand why",
+            "trigger": false,
+            "note": "failing-test diagnosis → systematic-debugging"
+        },
+        {
+            "q": "how do I mock Http in a Laravel feature test?",
+            "trigger": false,
+            "note": "stack-specific execution → pest-testing"
+        },
+        {
+            "q": "schreib die Playwright-Specs für den Login-Flow, die Fälle stehen schon im Ticket",
+            "trigger": false,
+            "note": "case list already exists → playwright-testing executes it"
+        }
+    ]
+}
