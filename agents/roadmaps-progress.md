@@ -6,7 +6,7 @@
 
 ## Overall
 
-**112 / 200 steps done · 56%**
+**113 / 201 steps done · 56%**
 
 ```text
 ██████████████████████░░░░░░░░░░░░░░░░░░   56%
@@ -23,7 +23,7 @@
 | 5 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 6 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
 | 7 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
+| 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
 | 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
 | 11 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
@@ -168,11 +168,11 @@ _2 blockers resolved._
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
-**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 5 / 11 done (45%)
+**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 6 / 12 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Dogfood the review machinery as a pre-merge gate | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Dogfood the review machinery as a pre-merge gate | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
 | 2 | CODEOWNERS + branch protection | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 3 | Make a release inheritable (the runbook) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 4 | Lower bus-factor toward >1 (opportunistic, honest) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
