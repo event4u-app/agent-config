@@ -184,6 +184,45 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     `road-to-<slug>.md` form; the convention fires only when ≥2 related
     roadmaps are created together or as a follow-up chain.
 
+22. **Human gates are the exception — author for autonomous execution.**
+    A roadmap exists to be worked through without stopping; every human
+    checkpoint interrupts that. Default number of human gates in a
+    roadmap: **zero**.
+    - Every step is **agent-executable**. `- [ ] User verifies X`,
+      `- [ ] Manually check Y`, and dedicated "Review / Sign-off" phases
+      are authoring bugs — replace them with an agent-verifiable check
+      (a command, a targeted test, a grep) or delete them.
+    - Exit and acceptance criteria are **agent-decidable** signals (a
+      command exit code, a file that exists, a test that passes) — never
+      "user approves", "looks good", or "sign-off".
+    - A **human gate** is allowed only when only a human can **decide or
+      authorize**: a Hard-Floor action (deploy, prod data/infra),
+      billable spend, or a contested product / architecture decision.
+      Record it as a structured `## Blockers` entry (rule 20) — never as
+      an inline checkbox step scattered through phases.
+    - An **external dependency is a blocker, not a human gate**, whenever
+      the agent can probe its status (CI run finished, package version
+      published, upstream PR merged, API reachable, DNS propagated):
+      record it as a blocker whose `Resolved when:` names the
+      agent-checkable probe (command / URL / query) — do not assign it
+      to a human.
+    - **Merge is never a completion requirement.** A roadmap is
+      implementation-complete once its checkboxes are ticked and
+      verification ran; delivery stays the user's call (no merge / push /
+      commit steps, per `commit-policy`). Merge may appear as a blocker
+      only when later roadmap work technically depends on the merged
+      state.
+    - Do **not** restate safety floors as steps. `non-destructive-by-default`,
+      `security-sensitive-stop`, and `commit-policy` fire at run time on
+      their own; an authored "STOP: confirm with user before X" duplicates
+      them and only adds interruptions.
+    Gate-test before writing any checkpoint: *"Could the agent clear this
+    with a tool or command during the run?"* Yes → it is a step, not a
+    gate. No → structured blocker with a decidable `Resolved when:`,
+    owned by a human only when the blocker is a genuine human gate.
+    `task lint-roadmap-complexity` warns on human-gate step patterns,
+    human-gate phase headings, and human-approval exit criteria.
+
 ---
 
 ## Quality Gates (remote CI by default)
