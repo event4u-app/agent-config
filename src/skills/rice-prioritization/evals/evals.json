@@ -1,0 +1,20 @@
+{
+  "skill": "rice-prioritization",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "rice-rank-three",
+      "prompt": "Prioritize these three features with RICE: A (reach 5000, impact 2, conf 80%, effort 3), B (reach 1000, impact 3, conf 100%, effort 1), C (reach 8000, impact 1, conf 50%, effort 5).",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "RICE"
+        },
+        {
+          "kind": "rubric",
+          "criterion": "Computes RICE = Reach×Impact×Confidence/Effort per item (A≈2667, B=3000, C=800) and ranks by the score, not by gut feel."
+        }
+      ]
+    }
+  ]
+}

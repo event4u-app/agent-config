@@ -1,0 +1,16 @@
+{
+  "skill": "release-comms",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "write-release-note",
+      "prompt": "Write the release announcement for our v-next dashboard redesign.",
+      "assertions": [
+        {
+          "kind": "rubric",
+          "criterion": "Leads with user value + what changed, notes any migration/breaking step, and matches the product voice — not a raw changelog dump."
+        }
+      ]
+    }
+  ]
+}

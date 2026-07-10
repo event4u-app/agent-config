@@ -1,0 +1,20 @@
+{
+  "skill": "runway-cognition",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "runway-shape-and-decision",
+      "prompt": "We have $4.2M cash and burn $560k/month. How long do we have and what should we do?",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "runway"
+        },
+        {
+          "kind": "rubric",
+          "criterion": "Computes months-of-runway = cash/burn (≈7.5) AND frames raise/hold/cut-vs-grow as a shape against the org-stage band, not a single number."
+        }
+      ]
+    }
+  ]
+}

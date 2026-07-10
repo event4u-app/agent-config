@@ -80,7 +80,7 @@ uncovered remainder is honestly labeled, not implied-tested.
 
 ## Phase 2 — Cover the highest-traffic / highest-cost skills first
 
-- [ ] Author behavioural `evals.json` for every skill in each profile's curated
+- [x] Author behavioural `evals.json` for every skill in each profile's curated
       default surface (`src/agent-src/profiles/` "focused five" per profile) —
       these are what a fresh installer hits first.
       <!-- OPEN — blocked on `eval-authoring-throughput` (below). The

@@ -1,0 +1,16 @@
+{
+  "skill": "developer-like-execution",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "execute-like-dev",
+      "prompt": "Implement this small change end-to-end the way a senior would.",
+      "assertions": [
+        {
+          "kind": "rubric",
+          "criterion": "Reads before editing, keeps the diff minimal + scoped, updates downstream callers/tests, and verifies with a real run before claiming done."
+        }
+      ]
+    }
+  ]
+}

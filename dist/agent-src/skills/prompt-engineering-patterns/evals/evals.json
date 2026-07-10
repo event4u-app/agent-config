@@ -1,0 +1,16 @@
+{
+  "skill": "prompt-engineering-patterns",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "apply-prompt-pattern",
+      "prompt": "Which prompting pattern should I use to get structured extraction from messy text, and why?",
+      "assertions": [
+        {
+          "kind": "rubric",
+          "criterion": "Names a concrete pattern (e.g. schema-constrained/structured-output, few-shot) matched to the extraction task, with the trade-off — not a generic tips list."
+        }
+      ]
+    }
+  ]
+}

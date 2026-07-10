@@ -1,0 +1,16 @@
+{
+  "skill": "voice-and-tone-design",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "define-voice",
+      "prompt": "Define the brand voice and tone for our fintech product.",
+      "assertions": [
+        {
+          "kind": "rubric",
+          "criterion": "Produces named voice attributes with do/don't examples and a tone-by-context matrix, grounded in the audience — not adjectives alone."
+        }
+      ]
+    }
+  ]
+}

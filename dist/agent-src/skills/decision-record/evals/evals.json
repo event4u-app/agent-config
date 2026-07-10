@@ -1,0 +1,20 @@
+{
+  "skill": "decision-record",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "record-adr",
+      "prompt": "Record our decision to adopt Postgres over MySQL as an ADR.",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "Consequences"
+        },
+        {
+          "kind": "rubric",
+          "criterion": "Uses the ADR shape — Status / Context / Decision / Consequences / Alternatives — and states the trade-off given up, not only the choice."
+        }
+      ]
+    }
+  ]
+}

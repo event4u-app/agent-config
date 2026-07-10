@@ -1,0 +1,16 @@
+{
+  "skill": "editorial-calendar",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "plan-content-calendar",
+      "prompt": "Plan a content calendar for next quarter for our dev-tools blog.",
+      "assertions": [
+        {
+          "kind": "rubric",
+          "criterion": "Grounds cadence + themes in a named audience + goal, sequences pieces with dependencies, not a random topic list."
+        }
+      ]
+    }
+  ]
+}

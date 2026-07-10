@@ -1,0 +1,16 @@
+{
+  "skill": "doc-coauthoring",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "coauthor-prd",
+      "prompt": "Help me write the PRD for our new onboarding flow.",
+      "assertions": [
+        {
+          "kind": "rubric",
+          "criterion": "Runs the 3-stage flow — context → section-by-section → reader-test — rather than dumping a full doc; asks for the missing context first."
+        }
+      ]
+    }
+  ]
+}
