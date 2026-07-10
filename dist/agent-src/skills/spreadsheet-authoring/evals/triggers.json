@@ -1,0 +1,47 @@
+{
+    "skill": "spreadsheet-authoring",
+    "last_eval": "2026-07-10",
+    "description": "5 should-trigger + 5 should-not-trigger queries for the spreadsheet surface floor (road-to-surface-specific-agent-contracts Phase 2). Should-trigger covers building/editing a spreadsheet or model, entering formulas or sourced/financial figures, and charting raw data. Should-not-trigger covers near-miss neighbours whose vocabulary overlaps but belong to a different surface/skill: unit-economics reasoning, runway shape, a prose document, a slide deck, and backend work.",
+    "queries": [
+        {
+            "q": "build a 3-statement financial model in a spreadsheet",
+            "trigger": true
+        },
+        {
+            "q": "add a formula to sum the revenue column and total it",
+            "trigger": true
+        },
+        {
+            "q": "chart this raw sales transaction data",
+            "trigger": true
+        },
+        {
+            "q": "enter the revenue figures from the company's 10-K into the sheet",
+            "trigger": true
+        },
+        {
+            "q": "create a budget spreadsheet with monthly categories",
+            "trigger": true
+        },
+        {
+            "q": "what is our LTV to CAC ratio and is it healthy?",
+            "trigger": false
+        },
+        {
+            "q": "how long is our cash runway?",
+            "trigger": false
+        },
+        {
+            "q": "write a PRD for the new onboarding feature",
+            "trigger": false
+        },
+        {
+            "q": "turn these results into a slide deck",
+            "trigger": false
+        },
+        {
+            "q": "add a database index on the orders table",
+            "trigger": false
+        }
+    ]
+}

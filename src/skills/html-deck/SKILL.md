@@ -38,6 +38,27 @@ one-off) → [`canvas-design`](../canvas-design/SKILL.md). Responsive product
 UI → [`fe-design`](../fe-design/SKILL.md) + stack executor. Multiple styled
 options of one screen → [`design-variations`](../design-variations/SKILL.md).
 
+## Deck fidelity floor
+
+The deck surface's floor (per
+[`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md)):
+
+- **Outline before slides.** Draft the slide outline (title + one-line intent
+  per slide) before building any slide; when audience or tone is ambiguous, ask
+  once. (fixture: `ssac-deck-missing-notes`.)
+- **Labels + speaker notes.** Every slide carries a stable label and speaker
+  notes, not just on-slide text.
+- **Visual rhythm + readable scale.** Consistent spacing/hierarchy across
+  slides; never sub-readable text (the type floors below). (fixture:
+  `ssac-tiny-slide-text`.)
+- **Image/asset provenance.** Real assets via the project path, no invented
+  brand evidence ([`design-fidelity`](../../rules/design-fidelity.md) § Asset &
+  imagery discipline).
+- **Export verification.** Verify the deck exports/renders
+  ([`design-artifact-verification`](../../../docs/contracts/design-artifact-verification.md));
+  on a host without export capability, say what could not be verified rather
+  than claiming a clean export.
+
 ## Procedure
 
 1. **Discovery.** Confirm: audience (engineers / executives / customers —
