@@ -226,8 +226,17 @@ is untouched; the deliberate curated two-host composite in
       dry-run; render byte-stable across two runs from the same pinned
       inputs; `docs/benchmark.md` regenerated with zero manual table
       edits while retaining the two-host composite structure.
-- [ ] Live matrix run (≥2 task families × 2 hosts) producing one
-      schema-valid report. <!-- blocked-by: live-matrix-run -->
+- [x] Live matrix run (≥2 task families × 2 hosts) producing one
+      schema-valid report.
+      <!-- done 2026-07-10: operator ran `bench_matrix --config
+      internal/bench/matrix.yaml --run` in a non-auto session → 4 schema-valid
+      ab-v2 cells (claude×2 families, codex×2 families, n=14/host). HONEST-NULL:
+      zero discipline lift on either host, every pair a tie. claude ceilings
+      (1.000/1.000 — no headroom, confirms the lift is family-specific); codex
+      capability_pass=0.000 on every task (confounded surface, not a lift
+      signal). Recorded in docs/benchmark.md § Two-host matrix (flow-learnings)
+      as curated prose — a bare table without the codex-capability caveat would
+      overclaim. Two-host composite pipeline demonstrated end-to-end. -->
 
 **Exit gate:** deterministic checks green; live run recorded via the
 blocker below.
@@ -273,9 +282,14 @@ blocker below.
   conformance-passing.
 
 ### blocker: live-matrix-run
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 3 — live matrix run (live API spend)
+- **Resolved 2026-07-10:** operator ran the run in a non-auto session (the
+  `--run` agent-spawn is gated out of auto-mode). 4 schema-valid ab-v2 cells
+  produced; the HONEST-NULL result (no cross-host lift; claude ceilings, codex
+  capability-confounded) is recorded in `docs/benchmark.md` § Two-host matrix
+  (flow-learnings). The composite pipeline is demonstrated end-to-end.
 - **What to do:**
   1. Invoke the matrix runner for ≥2 task families × 2 hosts from the
      matrix YAML (paired arms per the existing ab-v2 discipline). The config
