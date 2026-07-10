@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**172 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**177 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -63,6 +63,11 @@ _Build it. The core "make the change" front — drive a prompt, ticket, or featu
 - `tests-execute` — Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 - `update-form-request-messages` — Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and cl…
 - `work` — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Op…
+- `worktree` — Worktree orchestrator — routes to create, status, verify, cleanup
+- `worktree-cleanup` — Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes
+- `worktree-create` — Create a governed worktree and write its scope-lock note — propose-once branch naming, host-native primitiv…
+- `worktree-status` — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verificati…
+- `worktree-verify` — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the…
 
 ### Review
 

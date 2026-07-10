@@ -1,0 +1,78 @@
+---
+model_tier: medium
+name: worktree-cleanup
+pack: engineering-base
+tier: 2
+visibility: internal
+cluster: worktree
+sub: cleanup
+skills: [worktree-lifecycle, git-workflow]
+description: Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes
+suggestion:
+  eligible: true
+  trigger_description: "clean up the worktrees, remove the finished worktree"
+  trigger_context: "git worktree list shows worktrees whose branches are merged"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+---
+
+# /worktree cleanup
+## Instructions
+
+Safe-removal gate over
+[`worktree-lifecycle § Cleanup discipline`](../../../skills/worktree-lifecycle/SKILL.md#4-cleanup-discipline).
+Removal only — this command never merges, never deletes branches, and
+never force-removes.
+
+### 1. Candidates
+
+`git worktree list --porcelain` — target the worktree(s) named by the
+user, or every non-main worktree when asked to "clean up".
+
+### 2. Per candidate, run the gates IN ORDER
+
+1. **Dirty check** — `git status --porcelain` in the worktree non-empty
+   → **refuse** that candidate; report the dirty files. Never
+   `git worktree remove --force`.
+2. **Unique-commit check** — commits reachable from the worktree branch
+   but from no other ref (branches, remotes, tags):
+
+   ```bash
+   git log <branch> --oneline --not \
+     $(git for-each-ref --format='%(refname)' | grep -v "^refs/heads/<branch>$")
+   ```
+
+   Non-empty → **refuse** removal: the branch holds work that exists
+   nowhere else. Surface the commit list and hand the decision back —
+   dropping commits the session did not author is forbidden by the
+   `git-history-discipline` rule (shared-branch Iron Law); merging or
+   preserving them is the user's call.
+   Empty → removal allowed for this candidate.
+
+### 3. Remove the allowed candidates
+
+```bash
+git worktree remove <path>
+git worktree prune
+```
+
+Branch deletion is NOT part of cleanup — it is a separate,
+permission-gated git op (`scope-control`); if the user wants it, the
+merged-only form (`git branch -d`) applies, never `-D`.
+
+### 4. Report
+
+Use the [`worktree-lifecycle § Output format`](../../../skills/worktree-lifecycle/SKILL.md#output-format):
+per candidate — removed, or refused with the exact gate that fired
+(dirty files, or the unique-commit list verbatim).
+
+### Rules
+
+- **Refusal is the success path** when a gate fires — never retry with
+  `--force`, `-D`, or a reset to make removal "work".
+- **Do NOT delete branches, commit, or push.**
+- Host-auto-cleaned subagent worktrees (`isolation: "worktree"`) that
+  left a branch behind still pass through gate 2 before that branch is
+  touched.

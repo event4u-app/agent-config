@@ -5,6 +5,11 @@
  * and prints an aggregate token-savings report. Read-only; no network, no
  * mutation. Handles a missing/empty audit dir gracefully.
  *
+ * QUALITY × COST PAIRING (council verdict): the savings figures never render
+ * without the quality columns (first_pass_success_rate / escalation_rate).
+ * When ≥ 20 lines in the window carry the quality fields the real rates
+ * render; below 20 the columns render as "n/a (n=<count>)" beside savings.
+ *
  * Usage:
  *   ./scripts-run src/scripts/orchestration_savings_report \
  *     [--dir <path>] [--format text|json] [--weights lite=1,medium=5,high=15]
@@ -77,13 +82,41 @@ export function readAuditLines(dir: string): AuditLine[] {
     return lines;
 }
 
-function renderText(r: SavingsReport, dir: string): string {
+/** Dispatches carrying the quality fields at/above this render the real rates; below, "n/a (n=<count>)". */
+export const QUALITY_GATE_MIN_LINES = 20;
+
+function pct(v: number): string {
+    return `${(v * 100).toFixed(0)}%`;
+}
+
+/**
+ * Render the paired cost × quality block. Council verdict: savings NEVER render
+ * without the quality columns — at n ≥ QUALITY_GATE_MIN_LINES the real rates
+ * render; below, the quality columns render as "n/a (n=<count>)" alongside the
+ * savings figures. There is no savings-only render path.
+ */
+function renderPairedCostQuality(r: SavingsReport): string[] {
+    const q = r.quality;
+    const gated = q.quality_lines >= QUALITY_GATE_MIN_LINES;
+    const fps = gated && q.first_pass_success_rate !== null
+        ? `${pct(q.first_pass_success_rate)} (n=${q.first_pass_lines})`
+        : `n/a (n=${q.first_pass_lines})`;
+    const esc = gated && q.escalation_rate !== null
+        ? `${pct(q.escalation_rate)} (n=${q.escalated_lines})`
+        : `n/a (n=${q.escalated_lines})`;
+    return [
+        '  cost × quality (paired — never savings alone):',
+        `    net token_delta: ${r.net_token_delta} (negative = net saved)   | first_pass_success_rate: ${fps}`,
+        `    tokens saved: ${r.tokens_saved} · tokens added: ${r.tokens_added}   | escalation_rate: ${esc}`,
+    ];
+}
+
+export function renderText(r: SavingsReport, dir: string): string {
     const out: string[] = [];
     out.push('Orchestration savings report');
     out.push(`  source: ${dir}`);
     out.push(`  dispatches: ${r.dispatches}  (total spawns: ${r.total_spawns})`);
-    out.push(`  net token_delta: ${r.net_token_delta}  (negative = net saved)`);
-    out.push(`  tokens saved: ${r.tokens_saved}   tokens added: ${r.tokens_added}`);
+    out.push(...renderPairedCostQuality(r));
     out.push(`  provenance: measured ${r.by_provenance.measured.dispatches} (Δ ${r.by_provenance.measured.net_token_delta}) · estimated ${r.by_provenance.estimated.dispatches} (Δ ${r.by_provenance.estimated.net_token_delta})`);
     out.push(`  measured share: ${(r.measured_share * 100).toFixed(0)}%`);
     if (Object.keys(r.by_tier).length) {

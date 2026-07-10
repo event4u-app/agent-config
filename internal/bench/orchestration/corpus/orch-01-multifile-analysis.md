@@ -35,5 +35,9 @@ For each file, report:
 
 - `spawn_count > 0` in the telemetry line (confirms real delegation happened).
 - `token_delta` is non-zero (positive or negative).
+- Quality pair recorded: `first_pass_success` (returns adopted without parent
+  rework?) and `escalated` (any slice re-run on a higher tier after a
+  verification failure?) — emit via `orchestration_record
+  --first-pass-success true|false --escalated true|false`.
 - Wall clock is faster than sequential would be (subjective — note the
   timing in your experiment log).

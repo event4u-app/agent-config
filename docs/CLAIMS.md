@@ -148,14 +148,14 @@ claims below are `backed`. Remaining entries are listed so the debt is
 visible, not hidden.
 
 ### claim: skill-count
-- claim: 268 skills (README hero + feature list).
+- claim: 269 skills (README hero + feature list).
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 172 commands.
+- claim: 177 commands.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed

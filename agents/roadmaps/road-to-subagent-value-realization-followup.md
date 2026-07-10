@@ -27,7 +27,7 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
 - [ ] **Step 2:** Run the full delegable-task corpus (`orch-01`, `orch-02`, `orch-03`) under both arms (`agent-settings.orchestrated.yml` and `agent-settings.baseline.yml`) across enough sessions to reach ≥ 20 orchestrated dispatches.
 - [ ] **Step 3:** Measure `parallelizable:` classifier recall on the corpus — confirm the deterministic classifier fires `do-in-parallel` / `do-in-steps` on the corpus tasks as expected; record actual hit/miss counts.
 
-**Exit criteria:** ≥ 20 orchestration lines in the audit log; `/cost:report` surfaces a non-empty orchestration summary; classifier recall recorded.
+**Exit criteria:** ≥ 20 orchestration lines in the audit log; `/cost:report` surfaces a non-empty orchestration summary; classifier recall recorded. The ≥ 20-dispatch measurement must include the `first_pass_success` / `escalated` quality columns (per road-to-proof-under-real-conditions Phase 4 — cost and quality reported as a pair, never savings alone).
 **Rollback:** none (measurement only; no code change).
 
 ## Phase 2: Re-gate the `auto: on` flip

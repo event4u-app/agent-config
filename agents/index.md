@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **630 artefacts** in this package.
+Maintainer-facing index of all **637 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (267)
+## Skills (268)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -278,6 +278,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
+| skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) |  | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
 ## Rules (102)
 
@@ -386,7 +387,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (172)
+## Commands (177)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -562,8 +563,13 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`video-stitch`](../src/domains/ai-video/video/stitch/command.md) | cluster: video | Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json. |
 | command | [`video-storyboard`](../src/domains/ai-video/video/storyboard/command.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
 | command | [`work`](../src/domains/engineering-base/work/command.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git. |
+| command | [`worktree`](../src/domains/engineering-base/worktree/command.md) | cluster: worktree | Worktree orchestrator — routes to create, status, verify, cleanup |
+| command | [`worktree-cleanup`](../src/domains/engineering-base/worktree/cleanup/command.md) | cluster: worktree | Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes |
+| command | [`worktree-create`](../src/domains/engineering-base/worktree/create/command.md) | cluster: worktree | Create a governed worktree and write its scope-lock note — propose-once branch naming, host-native primitive preferred |
+| command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
+| command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (89)
+## Guidelines (90)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -607,6 +613,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`scqa-framework`](../docs/guidelines/agent-infra/scqa-framework.md) | agent-infra |  |
 | guideline | [`security-lint-containment`](../docs/guidelines/agent-infra/security-lint-containment.md) | agent-infra |  |
 | guideline | [`self-improvement-pipeline`](../docs/guidelines/agent-infra/self-improvement-pipeline.md) | agent-infra |  |
+| guideline | [`simplicity-and-goal-demos`](../docs/guidelines/agent-infra/simplicity-and-goal-demos.md) | agent-infra |  |
 | guideline | [`six-hats`](../docs/guidelines/agent-infra/six-hats.md) | agent-infra |  |
 | guideline | [`size-and-scope`](../docs/guidelines/agent-infra/size-and-scope.md) | agent-infra |  |
 | guideline | [`skill-quality-checklist`](../docs/guidelines/agent-infra/skill-quality-checklist.md) | agent-infra |  |

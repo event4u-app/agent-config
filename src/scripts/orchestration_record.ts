@@ -11,6 +11,7 @@
  *     --spawn-count 1 --token-delta -72000 --provenance measured \
  *     --tier-chosen lite --tier-source inferred --task-class read-only-fanout \
  *     [--tiers sonnet,opus] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
+ *     [--first-pass-success true|false] [--escalated true|false] \
  *     [--dir <audit-dir>] [--dry-run]
  *
  * Read by `src/scripts/orchestration_savings_report.ts`.
@@ -65,6 +66,19 @@ function str(flags: Flags, key: string): string | undefined {
     return typeof v === 'string' ? v : undefined;
 }
 
+/**
+ * Parse an explicit boolean flag value. `--key true|false` → boolean; a bare
+ * `--key` counts as `true`; any other value is passed through so the lib's
+ * non-boolean validation rejects it with a clear error.
+ */
+function bool(flags: Flags, key: string): boolean | undefined {
+    const v = flags[key];
+    if (v === undefined) return undefined;
+    if (v === true || v === 'true') return true;
+    if (v === 'false') return false;
+    return v as unknown as boolean; // invalid string → caught by the lib's typeof validation
+}
+
 function int(flags: Flags, key: string): number | undefined {
     const v = str(flags, key);
     if (v === undefined) return undefined;
@@ -104,6 +118,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         session_tier: str(flags, 'session-tier'),
         dispatch_outcome: str(flags, 'dispatch-outcome') as DispatchOutcome | undefined,
         verify_mode: str(flags, 'verify-mode') as VerifyMode | undefined,
+        first_pass_success: bool(flags, 'first-pass-success'),
+        escalated: bool(flags, 'escalated'),
         phase: str(flags, 'phase') as LinePhase | undefined,
         outcome: str(flags, 'outcome') as LineOutcome | undefined,
         confidence_band: str(flags, 'confidence-band') as Band | undefined,

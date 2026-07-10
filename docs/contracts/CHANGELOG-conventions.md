@@ -55,6 +55,12 @@ The test-count line is enforced for any release that ships changes to
 `scripts/`, `internal/workers/`, or `dist/agent-src/` content; it can be omitted for
 pure-docs releases.
 
+Minor / major sections (`## [X.Y.0]`) additionally carry a `Rollback:` line for
+every introduced or substantially reworked subsystem — required by
+[`release-sizing.md`](release-sizing.md) and enforced by
+`src/scripts/lint_changelog_rollback.ts` for versions above the current
+`package.json` version (historical sections never retro-fail).
+
 ## What counts as breaking
 
 A change is **breaking** (and MUST appear under `### BREAKING CHANGES`

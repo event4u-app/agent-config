@@ -1,0 +1,45 @@
+name: Release-Adjacent Health
+
+# Daily tripwire for the "red for five releases without anyone noticing"
+# failure mode (deploy-mcp-worker was red from 8.2.0 through 8.6.0 —
+# post-tag workflows are nobody's PR, so nothing surfaced the streak).
+#
+# src/scripts/check_release_adjacent_health.ts inspects the most recent
+# COMPLETED run of every release-adjacent workflow; any workflow whose
+# last completed run is non-success and older than 48h with no newer
+# success fails this job — a visible red on main with an error
+# annotation naming the offender.
+#
+# Part of road-to-proof-under-real-conditions Phase 1; counterfactual
+# mapping in docs/distribution/consumer-matrix.md.
+
+on:
+  schedule:
+    - cron: '30 6 * * *' # daily 06:30 UTC
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  health:
+    name: Watch release-adjacent workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Check last completed run of each watched workflow
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx tsx src/scripts/check_release_adjacent_health.ts --max-red-hours 48

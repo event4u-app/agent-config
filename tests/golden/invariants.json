@@ -1,0 +1,84 @@
+[
+    {
+        "rule": "agent-authority",
+        "file": "src/rules/agent-authority.md",
+        "dist": "dist/agent-src/rules/agent-authority.md",
+        "strings": [
+            "Hard Floor wins, always — autonomy / roadmap / standing instruction never lift.",
+            "irreversible external action (send · publish · post · purchase · submit)"
+        ]
+    },
+    {
+        "rule": "ask-when-uncertain",
+        "file": "src/rules/ask-when-uncertain.md",
+        "dist": "dist/agent-src/rules/ask-when-uncertain.md",
+        "strings": [
+            "ONE QUESTION PER TURN. NO EXCEPTIONS. ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT."
+        ]
+    },
+    {
+        "rule": "commit-policy",
+        "file": "src/rules/commit-policy.md",
+        "dist": "dist/agent-src/rules/commit-policy.md",
+        "strings": [
+            "NEVER COMMIT. NEVER ASK ABOUT COMMITTING. EXCEPTIONS ARE EXPLICIT, NOT INFERRED.",
+            "A ONE-OFF AUTHORIZATION IS SPENT ON EXACTLY THAT OPERATION, ONCE. IT NEVER BECOMES A STANDING LICENSE FOR LATER COMMITS OR PUSHES."
+        ]
+    },
+    {
+        "rule": "direct-answers",
+        "file": "src/rules/direct-answers.md",
+        "dist": "dist/agent-src/rules/direct-answers.md",
+        "strings": [
+            "DO NOT CLAIM WHAT YOU HAVEN'T VERIFIED.",
+            "**no duration estimates**, and **never cite the rule** when declining",
+            "**Live-state facts — never from memory.**"
+        ]
+    },
+    {
+        "rule": "language-and-tone",
+        "file": "src/rules/language-and-tone.md",
+        "dist": "dist/agent-src/rules/language-and-tone.md",
+        "strings": [
+            "MIRROR THE LANGUAGE OF THE USER'S LAST/CURRENT MESSAGE. ALWAYS.",
+            "EVERY USER-VISIBLE TOKEN MUST BE IN THAT LANGUAGE — NO EXCEPTIONS."
+        ]
+    },
+    {
+        "rule": "no-cheap-questions",
+        "file": "src/rules/no-cheap-questions.md",
+        "dist": "dist/agent-src/rules/no-cheap-questions.md",
+        "strings": [
+            "NEVER ASK WHAT CONTEXT ANSWERS.",
+            "NEVER NUMBER CHOICES WITHOUT A REAL TRADE-OFF."
+        ]
+    },
+    {
+        "rule": "non-destructive-by-default",
+        "file": "src/rules/non-destructive-by-default.md",
+        "dist": "dist/agent-src/rules/non-destructive-by-default.md",
+        "strings": [
+            "HARD FLOOR OVERRIDES EVERYTHING. NO AUTONOMY SETTING, NO ROADMAP STEP, NO STANDING INSTRUCTION, NO \"JUST KEEP GOING\" CAN BYPASS IT.",
+            "**Never act while asking.** The ask and the action are strictly sequential: surface the confirmation, then WAIT for the answer.",
+            "an outbound, externally-visible, or money-moving action the user cannot un-see"
+        ]
+    },
+    {
+        "rule": "scope-control",
+        "file": "src/rules/scope-control.md",
+        "dist": "dist/agent-src/rules/scope-control.md",
+        "strings": [
+            "NEVER commit, push, merge, rebase, or force-push without explicit user permission.",
+            "\"CREATE / DRAFT\" AUTHORIZES THE ARTIFACT, NOT ITS EXECUTION."
+        ]
+    },
+    {
+        "rule": "verify-before-complete",
+        "file": "src/rules/verify-before-complete.md",
+        "dist": "dist/agent-src/rules/verify-before-complete.md",
+        "strings": [
+            "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE",
+            "Trusting a previous run from earlier in the conversation"
+        ]
+    }
+]
