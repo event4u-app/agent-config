@@ -32,8 +32,11 @@ Triggers below require explicit user confirmation **on this turn** — not from 
 | **Production data / infra** | prod DB writes / migrations, prod config, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline |
 | **Whimsical / unscoped bulk deletion** | `rm -rf <dir>`, `git rm -r`, glob deletes, `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work — when **not required** by the task (task-aligned WIP deletions allowed, below) |
 | **Commit containing bulk deletions or infra changes** | diff removes a directory, deletes ≥5 unrelated files, or touches Terraform/Pulumi/k8s/Ansible/cloud-config — surface the diff + confirm even when [`commit-policy`](commit-policy.md) authorizes |
+| **Irreversible external action** | **send** / **publish** / **post** / **purchase** / **submit** — an outbound, externally-visible, or money-moving action the user cannot un-see: send an email/message, publish or post content, submit a form, place an order or payment. Also gated by [`scope-control`](scope-control.md) external-comms; named here so the Hard Floor lists the actual buttons |
 
 Standing "just keep going" + next step crosses the floor → STOP, surface it (one numbered-options block per [`user-interaction`](user-interaction.md)), wait.
+
+**Never act while asking.** The ask and the action are strictly sequential: surface the confirmation, then WAIT for the answer. Never fire the action in the same turn you ask for it — no do-then-ask race, no "I went ahead and…". **The approval names the exact object** so the user confirms the real thing, not a category: a download names filename + size + source; a purchase names amount + card-last4 + total; a send names recipient + subject. Shape per [`user-interaction`](user-interaction.md) numbered-options.
 
 ## Not in scope — deterministic regeneration
 
