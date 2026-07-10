@@ -15,7 +15,7 @@ applies_to_user_types:
   - "developer"
   - "maintainer"
 workspaces: [engineering]
-packs: [core]
+packs: [meta]
 ---
 
 # External Code-Graph Interop

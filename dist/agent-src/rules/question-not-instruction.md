@@ -22,7 +22,7 @@ applies_to_user_types:
   - "operator"
   - "researcher"
 workspaces: [engineering]
-packs: [core]
+packs: [meta]
 ---
 
 # Question Is Not an Instruction
