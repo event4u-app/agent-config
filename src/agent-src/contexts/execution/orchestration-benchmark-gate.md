@@ -70,6 +70,7 @@ is auditable rather than asserted.
 
 ## Related
 
+- ADR-118 (`docs/decisions/ADR-118-loop-engineering-boundaries.md`) — demotion stays a manual human edit by decision; never automated (disposition #1).
 - [`auto-orchestration-activation`](auto-orchestration-activation.md) — the `subagents.auto` key this gate sets the default for.
 - [`host-capability-manifest`](host-capability-manifest.md) — `subagent_spawn` gates the flip.
 - [`orchestration-telemetry`](orchestration-telemetry.md) — the per-dispatch metrics the benchmark aggregates.

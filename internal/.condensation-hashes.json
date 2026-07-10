@@ -207,7 +207,7 @@
   "contexts/execution/host-capability-manifest.md": "d9cd1699fe0c3959c5725fc2930bc017cae32d8afdb13d1f2826d4e15cf1eea1",
   "contexts/execution/interrupt-examples.md": "8bda68cd3f8d910d97fc12af9cd1809b69f9766e7c0391782817536d19b32ca0",
   "contexts/execution/non-interactive-contract.md": "8d3cd91409938807321335509cfce54dbe13adaab738d30c749b765d32c6b7ce",
-  "contexts/execution/orchestration-benchmark-gate.md": "0f312223ce0b0ee3b34a59a9f102d163524416b82b3b1f64c190f3544efe0862",
+  "contexts/execution/orchestration-benchmark-gate.md": "545443151f9f38130c06e0f140d2299d2802ceb2d411ca75be3f6e095548d878",
   "contexts/execution/orchestration-telemetry.md": "5084af9e57a6a027cae72bbd1bf60e54887a6eec4ee39ffa18d507c95b60adb7",
   "contexts/execution/project-intelligence.md": "4a5aebab8e4467b4021664ac6748c63ab145ddf3b51236bb9327063e137fddbf",
   "contexts/execution/rdp-gate.md": "f82482f945ac1af5baacab26ce384e1e99da3f504c11dca132e45e3cf3234a5e",

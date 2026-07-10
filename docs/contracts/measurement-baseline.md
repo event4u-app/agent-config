@@ -96,6 +96,7 @@ P2 roadmap reads — not the live `internal/bench/reports/` directory.
 
 ## Cross-references
 
+- [`ADR-118`](../decisions/ADR-118-loop-engineering-boundaries.md) · bench-drift stays advisory by decision — never a blocking gate (disposition #4)
 - [`benchmark-report-schema.md`](benchmark-report-schema.md) · per-report JSON schema
 - [`benchmark-corpus-spec.md`](benchmark-corpus-spec.md) · corpus YAML schema
 - [`condensation-default-kill-criterion.md`](condensation-default-kill-criterion.md) · decision table read by step-4 closeout
