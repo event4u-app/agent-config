@@ -1,0 +1,14 @@
+{
+  "skill": "typography-system",
+  "_calibration": "Behavioural fixtures (road-to-skill-eval-coverage Phase 2, rich set). Deterministic `contains` asserts the line-height output the skill produces; the rubric checks the scale is a computed modular scale (from the given ratio), not arbitrary px — the whole point of the skill.",
+  "scenarios": [
+    {
+      "id": "modular-scale-from-ratio",
+      "prompt": "Build a type scale from a 16px base and a 1.25 modular ratio: give the step sizes, line-heights, and weights for body, h3, h2, h1.",
+      "assertions": [
+        { "kind": "contains", "value": "line-height" },
+        { "kind": "rubric", "criterion": "The step sizes are the 1.25 modular scale off 16px (≈16/20/25/31px), i.e. computed from the ratio, not arbitrary round numbers; each step carries a line-height and weight." }
+      ]
+    }
+  ]
+}

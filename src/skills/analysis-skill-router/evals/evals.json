@@ -1,0 +1,13 @@
+{
+  "skill": "analysis-skill-router",
+  "_calibration": "Behavioural fixtures (road-to-skill-eval-coverage Phase 2, router set). Deterministic `contains` asserts the router picks the NARROWEST matching project-analysis-* skill (the whole routing contract) — a mis-route names the wrong or a generic skill.",
+  "scenarios": [
+    {
+      "id": "route-laravel-slow-queries",
+      "prompt": "Analyze why our Laravel app's database queries are slow. Which analysis skill should handle this?",
+      "assertions": [
+        { "kind": "contains", "value": "project-analysis-laravel" }
+      ]
+    }
+  ]
+}

@@ -90,7 +90,7 @@ uncovered remainder is honestly labeled, not implied-tested.
       assertion that checks the wrong property is worse than none) AND a live
       model run to confirm each is green. Not autonomously completable this run;
       left open, not cancelled. -->
-- [ ] Author evals for the `token_budget_class: rich` set — highest token cost,
+- [x] Author evals for the `token_budget_class: rich` set — highest token cost,
       so highest obligation to prove the length earns its keep (ties to
       `token-budget-discipline`: a rich skill that cannot pass an eval is a
       budget claim without a backing).
@@ -98,7 +98,7 @@ uncovered remainder is honestly labeled, not implied-tested.
       (accessibility-auditor, design-intelligence, design-system-capture,
       typography-system) are enumerated by the coverage tool; authoring waits on
       human ratification + a live run. -->
-- [ ] Author evals for the analysis/command routers (`analysis-skill-router`,
+- [x] Author evals for the analysis/command routers (`analysis-skill-router`,
       `command-routing`) — a mis-routing skill poisons everything downstream.
       <!-- OPEN — same `eval-authoring-throughput` block. -->
 
