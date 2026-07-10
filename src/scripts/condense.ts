@@ -40,6 +40,7 @@ import {
     strip_source_prefix,
 } from './_lib/agent_src.js';
 import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
+import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
 import { info, success, flush_summary, resolve_level } from './_lib/script_output.js';
 import {
@@ -1529,6 +1530,7 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
     const current_slugs = new Set<string>();
     let count = 0;
     let skipped = 0;
+    let reserved = 0;
     let rendered = 0;
     const auto = _read_model_auto_switch() === 'auto';
     for (const [source_file, slug] of iterCommands()) {
@@ -1537,6 +1539,15 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
         }
         if (skill_names.has(slug)) {
             skipped += 1;
+            continue;
+        }
+        // Never claim a `/name` that is a Claude Code built-in command or
+        // bundled skill — a same-name entry shadows the built-in (e.g. a
+        // `review` entry hides Claude Code's own /review). Nested
+        // `/cluster:sub` slugs are hyphen-joined and cannot collide.
+        // See src/scripts/_lib/claude_builtin_names.ts.
+        if (is_claude_builtin_name(slug)) {
+            reserved += 1;
             continue;
         }
         current_slugs.add(slug);
@@ -1587,6 +1598,9 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
     }
     if (skipped) {
         msg += ` (${skipped} skipped — same-name skill exists)`;
+    }
+    if (reserved) {
+        msg += ` (${reserved} withheld — Claude Code built-in name)`;
     }
     if (removed_dirs) {
         msg += ` (${removed_dirs} stale dirs removed)`;

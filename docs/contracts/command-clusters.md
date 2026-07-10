@@ -96,6 +96,24 @@ every phase-numbered cluster head carries `## Sub-commands` (with the
 locked table header), `## Dispatch`, and `## Rules`, and every
 `routes_to:` entry must resolve to a real command.
 
+## Reserved host names — Claude Code never gets a shadowing `/name`
+
+Locked 2026-07-10 (observed: a user-scope `mcp` skill shadowed Claude
+Code's built-in `/mcp` auth dialog). A cluster head or skill whose name
+equals a Claude Code built-in command or bundled skill (`review`,
+`agents`, `memory`, `mcp`, `code-review`, `bug`, `context`, `cost`,
+`skills`, … — canonical set in `src/scripts/_lib/claude_builtin_names.ts`)
+is **withheld from Claude-facing `/name` projections**: the
+`.claude/skills/` command entry is skipped by `condense.ts`, and the
+user-scope installer deploys neither a skill wrapper nor a flat command
+file. Nested `/cluster:sub` commands are unaffected (hyphen/colon-joined
+slugs cannot collide). Skills that keep a reserved name opt out of slash
+registration with `user-invocable: false` (model-invocation only);
+`lint_agent_skill_names.ts` fails CI otherwise. The suite complements
+the host — it never overlays or degrades a built-in. On such names the
+bare-invocation contract above applies to every tool **except** Claude
+Code, where the built-in owns `/name`.
+
 ## Cluster depth and sub-command naming
 
 Locked by [ADR-003](../decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md)

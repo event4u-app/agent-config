@@ -14,6 +14,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { command_slug } from './_lib/agent_src.js';
+import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(path.dirname(SCRIPTS_DIR));
@@ -97,6 +98,18 @@ function frontmatterNameFromFile(p: string): string | null {
     return _frontmatter_name(fs.readFileSync(p, 'utf-8'));
 }
 
+const USER_INVOCABLE_FALSE_RE = /^user-invocable:\s*false\s*$/m;
+
+/** True when the SKILL.md opts out of slash registration (`user-invocable: false`). */
+export function _opts_out_of_slash(text: string): boolean {
+    if (!text.startsWith('---')) {
+        return false;
+    }
+    const end = text.indexOf('\n---', 3);
+    const block = end !== -1 ? text.slice(3, end) : text;
+    return USER_INVOCABLE_FALSE_RE.test(block);
+}
+
 export function _spec_violation(name: string): string | null {
     if (name.length > MAX_NAME_LEN) {
         return `longer than ${MAX_NAME_LEN} chars`;
@@ -176,6 +189,22 @@ export function check_skills(): string[] {
             violations.push(
                 `${rel}: name \`${name}\` != directory \`${dirname}\` — Zed ` +
                     'requires the folder name to match the `name:` field',
+            );
+        }
+        // Reserved-name floor: a skill named after a Claude Code built-in
+        // command / bundled skill shadows the built-in when projected as
+        // `/name` (e.g. a `mcp` skill hides Claude Code's own /mcp dialog).
+        // Opting out of slash registration (`user-invocable: false`) keeps
+        // the skill model-loadable while the host retains the /name.
+        // Reserved set: src/scripts/_lib/claude_builtin_names.ts.
+        if (
+            is_claude_builtin_name(dirname) &&
+            !_opts_out_of_slash(fs.readFileSync(md, 'utf-8'))
+        ) {
+            violations.push(
+                `${rel}: \`${dirname}\` is a Claude Code built-in command name — ` +
+                    'add `user-invocable: false` (model-only invocation) or rename ' +
+                    'the skill; the suite must never shadow a host built-in',
             );
         }
     }

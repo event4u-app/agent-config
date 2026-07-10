@@ -7508,6 +7508,122 @@ function build_merge_entries(file_label, overlay) {
   }));
 }
 
+// src/scripts/_lib/claude_builtin_names.ts
+var _CURRENT = [
+  "add-dir",
+  "advisor",
+  "agents",
+  "autofix-pr",
+  "background",
+  "batch",
+  "branch",
+  "btw",
+  "cd",
+  "chrome",
+  "claude-api",
+  "clear",
+  "code-review",
+  "color",
+  "compact",
+  "config",
+  "context",
+  "copy",
+  "cost",
+  "dataviz",
+  "debug",
+  "deep-research",
+  "design-login",
+  "design-sync",
+  "desktop",
+  "diff",
+  "doctor",
+  "effort",
+  "exit",
+  "export",
+  "fast",
+  "feedback",
+  "fewer-permission-prompts",
+  "focus",
+  "fork",
+  "goal",
+  "heapdump",
+  "help",
+  "hooks",
+  "ide",
+  "init",
+  "insights",
+  "install-github-app",
+  "install-slack-app",
+  "keybindings",
+  "login",
+  "logout",
+  "loop",
+  "mcp",
+  "memory",
+  "mobile",
+  "model",
+  "passes",
+  "permissions",
+  "plan",
+  "plugin",
+  "powerup",
+  "pr-comments",
+  "privacy-settings",
+  "radio",
+  "recap",
+  "release-notes",
+  "reload-plugins",
+  "reload-skills",
+  "remote-control",
+  "remote-env",
+  "rename",
+  "resume",
+  "review",
+  "rewind",
+  "run",
+  "run-skill-generator",
+  "sandbox",
+  "schedule",
+  "scroll-speed",
+  "security-review",
+  "setup-bedrock",
+  "setup-vertex",
+  "simplify",
+  "skills",
+  "stats",
+  "status",
+  "statusline",
+  "stickers",
+  "teleport",
+  "thinking",
+  "trust",
+  "upgrade",
+  "usage",
+  "verify",
+  "vim",
+  "web",
+  "whats-new",
+  "workflow",
+  "workflows",
+  "worktree"
+];
+var _LEGACY = [
+  "bashes",
+  "bug",
+  "migrate-installer",
+  "output-style",
+  "terminal-setup",
+  "theme",
+  "todos"
+];
+var CLAUDE_CODE_BUILTIN_NAMES = /* @__PURE__ */ new Set([
+  ..._CURRENT,
+  ..._LEGACY
+]);
+function is_claude_builtin_name(slug) {
+  return CLAUDE_CODE_BUILTIN_NAMES.has(slug.toLowerCase());
+}
+
 // src/scripts/_lib/installed_lock.ts
 import { randomBytes } from "node:crypto";
 import * as fs2 from "node:fs";
@@ -18517,6 +18633,20 @@ var _CLAUDE_FLAT_WRAPPER_EXTRA = /* @__PURE__ */ new Set(["commit"]);
 function _apply_claude_flat_command_wrappers(anchor, package_root, current_files) {
   const wrapped = [];
   const collisions = [];
+  const reserved = [];
+  const commands_dir = path11.join(anchor, "commands");
+  let flat_entries = [];
+  try {
+    flat_entries = fs13.readdirSync(commands_dir).filter((f) => f.endsWith(".md"));
+  } catch {
+  }
+  for (const fname of flat_entries.sort()) {
+    const slug = fname.slice(0, -".md".length);
+    if (!is_claude_builtin_name(slug)) continue;
+    fs13.rmSync(path11.join(commands_dir, fname), { force: true });
+    current_files.delete(`commands/${fname}`);
+    reserved.push(slug);
+  }
   const eligible = new Set(_CLAUDE_FLAT_WRAPPER_EXTRA);
   try {
     const manifest = JSON.parse(
@@ -18550,7 +18680,7 @@ name: ${slug}
     current_files.add(`skills/${slug}/SKILL.md`);
     wrapped.push(slug);
   }
-  return { wrapped, collisions };
+  return { wrapped, collisions, reserved };
 }
 function _deploy_global_content(tools, force, package_root, lockfile_path2) {
   const results = {};
@@ -18592,6 +18722,11 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
       if (res.wrapped.length > 0 && !state.QUIET) {
         info(
           `  claude-code: ${res.wrapped.length} visible flat command(s) projected as skill wrappers (Claude Code flat-command discovery workaround)`
+        );
+      }
+      if (res.reserved.length > 0 && !state.QUIET) {
+        info(
+          `  claude-code: ${res.reserved.length} flat command(s) withheld \u2014 name is a Claude Code built-in (${res.reserved.join(", ")}); nested /cluster:sub commands remain available`
         );
       }
     }
