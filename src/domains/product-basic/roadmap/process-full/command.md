@@ -57,7 +57,11 @@ with the **scope delta below**.
   (`false` / missing) the pipeline never runs locally; remote CI is
   the gate. On red → stop, surface, do **not** silently roll into
   the next phase. Under `mode: phase-checkpoints`, additionally emit
-  the compact status + continue prompt at every boundary; under
+  a compact status LINE at every boundary — but under `process-full`
+  this is a NON-BLOCKING status, NOT a stop-and-wait: the run continues
+  to the next phase immediately. `phase-checkpoints` narrows to a
+  stop-and-wait only under `/roadmap:process-phase`, never here (a
+  process-full invocation overrides the mode's boundary-wait). Under
   `autonomous`, boundaries are silent (quality pipeline aside).
 - **Final archival:** when the roadmap is fully closed, run the
   archival check from
@@ -66,10 +70,32 @@ with the **scope delta below**.
 ## Iron Law — Full is Full
 
 ```
-/roadmap:process-full PROCESSES EVERY OPEN STEP IN THE FILE.
-PHASE-INTERNAL "(DEFERRED)" / "(OPTIONAL)" / "GATED ON PHASE X"
-NOTES DO NOT NARROW THE WORKING SET. ONLY THE FIVE HALT CONDITIONS
-STOP THE RUN.
+/roadmap:process-full IS LAW: IT PROCESSES EVERY OPEN STEP IN THE FILE,
+TO COMPLETION, ACROSS EVERY PHASE. ONLY THE FIVE HALT CONDITIONS STOP IT.
+PHASE-INTERNAL "(DEFERRED)" / "(OPTIONAL)" / "GATED ON PHASE X" NOTES DO
+NOT NARROW THE WORKING SET. A PHASE BOUNDARY IS NOT A STOP.
+```
+
+The **five — and only five — halt conditions** (exhaustive; nothing else
+stops the run):
+
+1. **Hard-Floor** trigger ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
+2. **Council-off + genuine ambiguity** (only outside an accepted contract with council available).
+3. **Security-sensitive** surface reached.
+4. **Scope-out-of-roadmap** work discovered.
+5. **Test / quality red** that cannot be cleared within the N=3 budget.
+
+```
+FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
+  · "running low on context / token budget"
+  · "quality would degrade / deserves a fresh focused run later"
+  · "avoid a PR pile-up" / "let the open PRs merge first"
+  · "this phase is large / touches a deep subsystem"
+  · "phase-checkpoints mode, so I'll checkpoint and wait"
+  · any agent-invented caution not in the five halt conditions above.
+INVENTING A HALT REASON IS A VIOLATION OF THE COMMAND AND THE USER'S WILL.
+IF CONTEXT RUNS OUT MID-RUN, KEEP LANDING COMPLETE STEPS UNTIL IT DOES —
+NEVER ANNOUNCE A BOUNDARY-STOP BY CHOICE.
 ```
 
 Phase-internal `(deferred)` / `(optional)` / `gated on Phase N` tags are
