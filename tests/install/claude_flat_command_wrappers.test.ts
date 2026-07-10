@@ -100,4 +100,41 @@ describe('_apply_claude_flat_command_wrappers', () => {
         expect(res.wrapped).toEqual(['commit']);
         expect(existsSync(join(anchor, 'skills', 'commit', 'SKILL.md'))).toBe(true);
     });
+
+    // Reserved-name floor: a flat /name equal to a Claude Code built-in
+    // (review, agents, memory, …) must never ship on the claude-code anchor —
+    // neither as a skill wrapper nor as a flat command file — or it shadows
+    // the host's own command (observed with /mcp, 2026-07-10).
+    it('withholds a tier-1 visible command whose name is a Claude Code built-in', () => {
+        writeManifest([{ slug: 'review', tier: 1, visibility: 'advanced' }]);
+        writeCommand('review', 'Review dispatcher.');
+        const current = new Set(['commands/review.md']);
+
+        const res = _apply_claude_flat_command_wrappers(anchor, pkgRoot, current);
+
+        expect(res.reserved).toEqual(['review']);
+        expect(res.wrapped).toEqual([]);
+        expect(existsSync(join(anchor, 'skills', 'review'))).toBe(false);
+        expect(existsSync(join(anchor, 'commands', 'review.md'))).toBe(false);
+        expect(current.has('commands/review.md')).toBe(false);
+    });
+
+    it('removes reserved-name flat files even for tier-2 / internal commands', () => {
+        writeManifest([
+            { slug: 'bug', tier: 2, visibility: 'internal' },
+            { slug: 'cost', tier: 2, visibility: 'internal' },
+        ]);
+        writeCommand('bug');
+        writeCommand('cost');
+        writeCommand('bug-fix'); // nested-slug sibling — not reserved, stays
+        const current = new Set(['commands/bug.md', 'commands/cost.md', 'commands/bug-fix.md']);
+
+        const res = _apply_claude_flat_command_wrappers(anchor, pkgRoot, current);
+
+        expect(res.reserved).toEqual(['bug', 'cost']);
+        expect(existsSync(join(anchor, 'commands', 'bug.md'))).toBe(false);
+        expect(existsSync(join(anchor, 'commands', 'cost.md'))).toBe(false);
+        expect(existsSync(join(anchor, 'commands', 'bug-fix.md'))).toBe(true);
+        expect(current.has('commands/bug-fix.md')).toBe(true);
+    });
 });

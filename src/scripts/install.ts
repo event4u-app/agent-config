@@ -72,6 +72,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import type * as YamlModule from 'yaml';
 
 import { build_merge_entries } from './_lib/json_pointers.js';
+import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import * as installed_lock from './_lib/installed_lock.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -2847,15 +2848,40 @@ function _deploy_claude_desktop(
  * discovery (revert = one package release, no per-machine gating).
  * Tier-2/internal flat commands stay command files. A command whose name
  * collides with a real skill is skipped (the skill already owns `/name`).
+ *
+ * Reserved-name floor: a flat `/name` that equals a Claude Code BUILT-IN
+ * command or bundled skill (see `_lib/claude_builtin_names.ts`) would shadow
+ * the built-in — e.g. a `review` wrapper hides Claude Code's own `/review`.
+ * Such slugs get NEITHER a skill wrapper NOR a flat command file on this
+ * anchor (their nested `/cluster:sub` commands are untouched); the flat file
+ * is removed so a future upstream flat-discovery fix cannot resurrect the
+ * shadowing. The suite complements the host — it never overlays built-ins.
  */
 const _CLAUDE_FLAT_WRAPPER_EXTRA = new Set(['commit']); // essential; absent from the manifest
 export function _apply_claude_flat_command_wrappers(
     anchor: string,
     package_root: string,
     current_files: Set<string>,
-): { wrapped: string[]; collisions: string[] } {
+): { wrapped: string[]; collisions: string[]; reserved: string[] } {
     const wrapped: string[] = [];
     const collisions: string[] = [];
+    const reserved: string[] = [];
+    // Reserved-name sweep over ALL flat command files (any tier): a name
+    // shadowing a Claude Code built-in never ships on the claude-code anchor.
+    const commands_dir = path.join(anchor, 'commands');
+    let flat_entries: string[] = [];
+    try {
+        flat_entries = fs.readdirSync(commands_dir).filter((f) => f.endsWith('.md'));
+    } catch {
+        // No commands dir → nothing to sweep.
+    }
+    for (const fname of flat_entries.sort()) {
+        const slug = fname.slice(0, -'.md'.length);
+        if (!is_claude_builtin_name(slug)) continue;
+        fs.rmSync(path.join(commands_dir, fname), { force: true });
+        current_files.delete(`commands/${fname}`);
+        reserved.push(slug);
+    }
     // Tier-0/1 visible command slugs from the locked discovery manifest.
     const eligible = new Set<string>(_CLAUDE_FLAT_WRAPPER_EXTRA);
     try {
@@ -2892,7 +2918,7 @@ export function _apply_claude_flat_command_wrappers(
         current_files.add(`skills/${slug}/SKILL.md`);
         wrapped.push(slug);
     }
-    return { wrapped, collisions };
+    return { wrapped, collisions, reserved };
 }
 
 function _deploy_global_content(
@@ -2947,6 +2973,13 @@ function _deploy_global_content(
                 info(
                     `  claude-code: ${res.wrapped.length} visible flat command(s) projected as ` +
                         'skill wrappers (Claude Code flat-command discovery workaround)',
+                );
+            }
+            if (res.reserved.length > 0 && !state.QUIET) {
+                info(
+                    `  claude-code: ${res.reserved.length} flat command(s) withheld — name is a ` +
+                        `Claude Code built-in (${res.reserved.join(', ')}); nested /cluster:sub ` +
+                        'commands remain available',
                 );
             }
         }
