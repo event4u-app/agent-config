@@ -279,6 +279,18 @@ This is especially useful when the user provides a screenshot or Figma export as
 - WCAG
 - responsive
 
+## Async-verifier pattern (keep the main context clean)
+
+For a review that needs browser probing, use an **async background verifier**
+rather than self-screenshotting inline: fork a verifier subagent with its own
+view — it takes the screenshots, probes viewports, and checks states, then
+**stays silent on pass and surfaces only real, actionable problems** (never
+nitpicks). The main agent does not self-screenshot, so its context stays clean
+for the actual review reasoning. This is an orchestration pattern —
+dispatch it via [`subagent-orchestration`](../subagent-orchestration/SKILL.md)
+and position it against [`verify-repair-loop`](../verify-repair-loop/SKILL.md)
+(the existing verify skill); it complements them, it does not duplicate them.
+
 ## Gotcha
 
 - Don't review design without understanding the user's constraints (time, resources, scope).
@@ -289,27 +301,29 @@ This is especially useful when the user provides a screenshot or Figma export as
 
 Hybrid: a deterministic detector does the mechanical pattern-matching (zero
 token cost, no catalog reload); you do the judgment it cannot. After the
-structured phases, add an **Anti-Slop Check** section:
+structured review phases, add an explicit **Anti-Slop Check** section:
 
-1. **Run the detector first** — catches pattern-detectable tells so you don't
-   eyeball or re-derive:
+1. **Run the deterministic detector first** — it catches the pattern-detectable
+   tells so you don't eyeball or re-derive them:
    ```
    npx tsx src/scripts/lint_design_slop.ts --dir <consumer-ui-path> --json
    ```
-   Each finding: `rule` (`slop-v1-side-stripe`), `catalogId` (`V1`), `severity`
-   (`P0`–`P3`), `file:line`, `message`. **Cite verbatim** — don't re-describe
-   from the catalog. Findings are *rebuttable presumptions*: a `DESIGN.md`-gated
-   finding is already filtered; a remaining one means intent not declared.
-   `lint_design_slop` is **flags, never a block** (default exit 0; CI opts in via
-   `--fail-on`).
+   Each finding carries `rule` (e.g. `slop-v1-side-stripe`), `catalogId`
+   (`V1`), `severity` (`P0`–`P3`), `file:line`, and a `message`. **Cite these
+   verbatim** (rule-id + catalogId + file:line) — do not re-describe them from
+   the prose catalog. Findings are *rebuttable presumptions*: a finding the
+   consumer's `DESIGN.md` gate suppresses is already filtered out; a remaining
+   finding means the project has not declared the pattern as intentional.
+   `lint_design_slop` is **flags, never a block** (default exit 0; CI opts into
+   failure via `--fail-on`).
 2. **Judge what the detector cannot** — load
    [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
-   for tells needing structural/aesthetic judgment (T3 icon-tile stack, L2
-   three-identical-card grid, V2 glassmorphism intent). List any, cite by entry
-   ID, check the override.
-3. Run the AI-slop originality self-test on the overall direction. Report
-   pass / flag / fail + one sentence of evidence — the judgment the detector
-   does not make.
+   for the tells that need structural/aesthetic judgment (e.g. T3 icon-tile
+   stack, L2 three-identical-card grid, V2 glassmorphism intent). List any that
+   appear, cite by entry ID, and check the override condition.
+3. Run the AI-slop originality self-test on the overall aesthetic direction.
+   Report the result (pass / flag / fail) with one sentence of evidence — this
+   is the human judgment the detector deliberately does not make.
 
 For the **objective quality floors** (WCAG contrast, font-size, line-length,
 reduced-motion, heading hierarchy, focus indicator), do NOT eyeball them —

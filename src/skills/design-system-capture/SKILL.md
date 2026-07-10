@@ -244,6 +244,38 @@ The boundary from `brand-to-tokens`:
   not 4px or 12px)
 Both are consumed together; DESIGN.md takes precedence for usage questions.
 
+## Design→dev handoff README (template)
+
+When handing a design to implementation, emit a README a developer can build
+from **without the mockup open**. Template only — no vendored values (tokens
+come from the consumer's `.tokens.json` / DESIGN.md):
+
+```markdown
+# <Feature> — implementation handoff
+
+Fidelity: <hi-fi = pixel-recreate the mockup | lo-fi = apply the codebase's
+          existing design system, mockup is directional only>
+
+## Screens
+- <screen>: components used + each component's states (default/hover/active/
+  disabled/empty/error/loading)
+
+## Interactions
+- <interaction>: trigger → result, duration + easing (name the token, not a ms
+  literal)
+
+## Tokens
+- Color / type / spacing / radius: reference DESIGN.md / .tokens.json — do not
+  inline hex or px
+
+## Done means
+- Implementable from this README alone; every state and interaction named.
+```
+
+Fidelity declaration is load-bearing: hi-fi vs lo-fi tells the dev whether to
+recreate the mockup pixel-for-pixel or apply the existing system — the single
+most common handoff ambiguity.
+
 ## Gotcha
 
 - **Over-writing instead of diff-updating** — the most common failure.

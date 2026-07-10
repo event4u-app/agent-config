@@ -194,30 +194,37 @@ Example: "Dashboard = control panel for power users, not an exploration space."
 
 ## Importing an extracted design system
 
-A consumer reverse-engineers an existing site/repo with any external static tool
-and hands the result here as a `design-system.json`. We own the **import
-contract**, not the crawler — the package never ships the Playwright runtime, a
-font-bundler, or a `.skill` auto-installer (out of scope). Full schema lazy from
-[`reference/design-system-json.md`](reference/design-system-json.md); read only
-on import.
+A consumer can reverse-engineer an existing site/repo's look-and-feel with any
+external static-extraction tool and hand the result to this skill as a
+`design-system.json` artifact. We own the **import contract**, not the crawler:
+the package never ships the Playwright runtime, a font-bundler, or a `.skill`
+auto-installer (out of scope). Full schema is lazy-loaded from
+[`reference/design-system-json.md`](reference/design-system-json.md) — read it
+only when an import is requested.
 
-Import procedure:
+**Import procedure:**
 
-1. Read `design-system.json`; reject if `source` (kind + ref + captured_at) is
-   missing — no provenance, no import.
-2. Diff every field vs the current `DESIGN.md`.
-3. **Per-field confirm/merge proposal** — observed, not authoritative (mirrors
-   `source-discovery`); never write silently.
-4. Conflict with a registered brand value (confirmed `.tokens.json` / brand
-   token) → **flag, never auto-apply** (`brand-source-of-truth`). Precedence:
-   brand tokens > confirmed `DESIGN.md` > imported observation.
-5. On accept, persist chosen fields; hand mapped DTCG fields to
-   [`brand-to-tokens`](../brand-to-tokens/SKILL.md) / `design-tokens` for
-   `.tokens.json` — no parallel token format.
+1. Read `design-system.json`; reject it if `source` (kind + ref + captured_at)
+   is missing — no provenance, no import.
+2. Diff every field against the current `DESIGN.md`.
+3. Surface a **per-field confirm/merge proposal** — the artifact is *observed,
+   not authoritative* (mirrors `source-discovery`). Never write silently.
+4. **Conflict with a registered brand value** (a confirmed `.tokens.json` /
+   brand token) → **flag, never auto-apply** (`brand-source-of-truth`:
+   consumer brand wins). Precedence: brand tokens > confirmed `DESIGN.md` >
+   imported observation.
+5. On the human's accept, persist the chosen fields into `DESIGN.md`. Where the
+   consumer wants a token source of truth, hand the mapped DTCG fields to
+   [`brand-to-tokens`](../brand-to-tokens/SKILL.md) / `design-tokens` to
+   materialise `.tokens.json` — do not invent a parallel token format.
 
-Two sources, one shape: external target → external tool emits the artifact;
-current repo → prefer [`existing-ui-audit`](../existing-ui-audit/SKILL.md), which
-emits the same shape.
+**Two sources, one shape:**
+
+- **External target** (a site/repo you don't own) → an external tool emits the
+  artifact; import it here.
+- **Current repo** → prefer [`existing-ui-audit`](../existing-ui-audit/SKILL.md);
+  it already inventories the codebase and can emit the same `design-system.json`
+  shape, so the import path is identical either way.
 
 ## How the design skills consume these documents
 
@@ -236,6 +243,38 @@ The boundary from `brand-to-tokens`:
 - DESIGN.md carries usage decisions (elevated surfaces use 8px radius,
   not 4px or 12px)
 Both are consumed together; DESIGN.md takes precedence for usage questions.
+
+## Design→dev handoff README (template)
+
+When handing a design to implementation, emit a README a developer can build
+from **without the mockup open**. Template only — no vendored values (tokens
+come from the consumer's `.tokens.json` / DESIGN.md):
+
+```markdown
+# <Feature> — implementation handoff
+
+Fidelity: <hi-fi = pixel-recreate the mockup | lo-fi = apply the codebase's
+          existing design system, mockup is directional only>
+
+## Screens
+- <screen>: components used + each component's states (default/hover/active/
+  disabled/empty/error/loading)
+
+## Interactions
+- <interaction>: trigger → result, duration + easing (name the token, not a ms
+  literal)
+
+## Tokens
+- Color / type / spacing / radius: reference DESIGN.md / .tokens.json — do not
+  inline hex or px
+
+## Done means
+- Implementable from this README alone; every state and interaction named.
+```
+
+Fidelity declaration is load-bearing: hi-fi vs lo-fi tells the dev whether to
+recreate the mockup pixel-for-pixel or apply the existing system — the single
+most common handoff ambiguity.
 
 ## Gotcha
 
