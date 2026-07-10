@@ -93,13 +93,67 @@ describe('lint_roadmap_complexity — behavioural spec', () => {
     it('human-gate patterns ignore done steps and plain prose', () => {
         const p = write(
             '---\ncomplexity: lightweight\n---\n## Phase 1\n\n' +
-                '- [x] Sign-off recorded in the blocker entry\n' +
+                '- [x] Sign-off from the maintainer recorded in the blocker entry\n' +
                 'The user reviews arrive via the feedback form.\n' +
                 '- [ ] **Step 1:** Add tests for the user email verification flow\n',
         );
         const warnings: string[] = [];
         mod.lint_roadmap(p, 0, warnings);
         expect(warnings.filter((w) => w.includes('human-gate step'))).toEqual([]);
+    });
+
+    it('human-gate patterns ignore agent work ABOUT approval features', () => {
+        const p = write(
+            '---\ncomplexity: lightweight\n---\n## Phase 1\n\n' +
+                '- [ ] Implement the human-review audit log\n' +
+                '- [ ] Add a user approval state to the domain model\n' +
+                '- [ ] Test the sign-off workflow\n',
+        );
+        const warnings: string[] = [];
+        mod.lint_roadmap(p, 0, warnings);
+        expect(warnings.filter((w) => w.includes('human-gate'))).toEqual([]);
+    });
+
+    it('obtain-approval and stakeholder-feedback steps warn', () => {
+        const p = write(
+            '---\ncomplexity: lightweight\n---\n## Phase 1\n\n' +
+                '- [ ] Obtain approval from the product owner\n' +
+                '- [ ] Wait for feedback from stakeholders\n',
+        );
+        const warnings: string[] = [];
+        mod.lint_roadmap(p, 0, warnings);
+        expect(warnings.filter((w) => w.includes('human-gate step'))).toHaveLength(2);
+    });
+
+    it('human-gate phase headings warn; working headings do not', () => {
+        const p = write(
+            '---\ncomplexity: lightweight\n---\n' +
+                '## Phase 1 — Review / Sign-off\n\n- [ ] x\n' +
+                '## Phase 2: User Acceptance\n\n- [ ] y\n' +
+                '## Phase 3 — Review existing skills\n\n- [ ] z\n',
+        );
+        const warnings: string[] = [];
+        mod.lint_roadmap(p, 0, warnings);
+        const hits = warnings.filter((w) => w.includes('human-gate phase heading'));
+        expect(hits).toHaveLength(2);
+        expect(hits.some((w) => w.includes('Review existing skills'))).toBe(false);
+    });
+
+    it('human-approval exit criteria warn inside criteria blocks only', () => {
+        const p = write(
+            '---\ncomplexity: lightweight\n---\n## Phase 1\n\n- [ ] x\n\n' +
+                'Exit criteria:\n' +
+                '- The maintainer approves the implementation.\n\n' +
+                '## Acceptance Criteria\n\n' +
+                'Acceptance: Maintainer confirmation received.\n' +
+                '- All generated links return HTTP 200\n\n' +
+                '## Notes\n\nThe user approves invoices in the billing UI.\n',
+        );
+        const warnings: string[] = [];
+        mod.lint_roadmap(p, 0, warnings);
+        const hits = warnings.filter((w) => w.includes('human-approval exit criterion'));
+        expect(hits).toHaveLength(2);
+        expect(hits.some((w) => w.includes('billing UI'))).toBe(false);
     });
 
     it('autonomous mode: vague step and pre-existing [~] items warn', () => {
