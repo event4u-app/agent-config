@@ -74,6 +74,47 @@ describe('lint_roadmap_complexity — behavioural spec', () => {
         const p = write('---\ncomplexity: structural\n---\n## Horizon\n\nwork\n');
         expect(mod.lint_roadmap(p, 4)).toEqual([]);
     });
+
+    it('human-gate step warns in every execution mode (template rule 22)', () => {
+        const p = write(
+            '---\ncomplexity: lightweight\n---\n## Phase 1\n\n' +
+                '- [ ] **Step 1:** User verifies the dashboard output\n' +
+                '- [ ] **Step 2:** Manually check the rendered page\n' +
+                '- [ ] **Step 3:** Wait for approval from the maintainer\n',
+        );
+        const warnings: string[] = [];
+        const problems = mod.lint_roadmap(p, 0, warnings);
+        expect(problems).toEqual([]);
+        const gateWarnings = warnings.filter((w) => w.includes('human-gate step'));
+        expect(gateWarnings).toHaveLength(3);
+        expect(gateWarnings[0]).toContain('templates/roadmaps.md rule 22');
+    });
+
+    it('human-gate patterns ignore done steps and plain prose', () => {
+        const p = write(
+            '---\ncomplexity: lightweight\n---\n## Phase 1\n\n' +
+                '- [x] Sign-off recorded in the blocker entry\n' +
+                'The user reviews arrive via the feedback form.\n' +
+                '- [ ] **Step 1:** Add tests for the user email verification flow\n',
+        );
+        const warnings: string[] = [];
+        mod.lint_roadmap(p, 0, warnings);
+        expect(warnings.filter((w) => w.includes('human-gate step'))).toEqual([]);
+    });
+
+    it('autonomous mode: vague step and pre-existing [~] items warn', () => {
+        const p = write(
+            '---\ncomplexity: lightweight\nexecution:\n  mode: autonomous\n---\n## Phase 1\n\n' +
+                '- [ ] **Step 1:** Improve the importer\n' +
+                '- [~] **Step 2:** Deferred thing\n',
+        );
+        const warnings: string[] = [];
+        mod.lint_roadmap(p, 0, warnings);
+        expect(warnings.some((w) => w.includes('vague step under execution.mode: autonomous'))).toBe(
+            true,
+        );
+        expect(warnings.some((w) => w.includes('pre-existing [~] deferred item'))).toBe(true);
+    });
 });
 
 // --- Golden parity on the REAL REPO -----------------------------------------

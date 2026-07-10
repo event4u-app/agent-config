@@ -190,6 +190,7 @@ function lint_roadmap(
     _check_execution_mode(fm, problems);
     if (warnings) {
         _check_autonomous_authoring(text, fm, warnings);
+        _check_human_gate_steps(text, warnings);
     }
     return problems;
 }
@@ -229,6 +230,59 @@ function _check_autonomous_authoring(text: string, fm: string, warnings: string[
                     `vague step under execution.mode: autonomous (${label}): ` +
                         `"${rawLine.trim().slice(0, 80)}" — vagueness resolves cheaply at ` +
                         'authoring time, expensively as a mid-run ambiguity halt',
+                );
+                break;
+            }
+        }
+    }
+}
+
+// Human-gate step patterns (templates/roadmaps.md rule 22) — checkbox
+// steps that park work on a human instead of the agent. Steps are
+// agent-executable by default; genuinely user-clearable gates belong in
+// a structured `## Blockers` entry, agent-checkable verifications become
+// commands / targeted tests. Warnings never fail the lint; they fire for
+// every execution mode (an interactive roadmap with sprinkled human-check
+// steps is the same authoring bug, just slower to hurt).
+const HUMAN_GATE_STEP_PATS: Array<[RegExp, string]> = [
+    [
+        /\b(user|maintainer|human|operator) (verifies|reviews|approves|confirms|signs?[- ]off(?: on)?|inspects|validates)\b/i,
+        "'<human> verifies / reviews / approves …' step",
+    ],
+    [
+        /\bmanually (verify|review|check|test|confirm|inspect|validate)\b/i,
+        "'manually verify / check …' step",
+    ],
+    [/\bsign[- ]?off\b/i, "'sign-off' step"],
+    [
+        /\bwait for (the )?(user|maintainer|approval|confirmation|review|feedback)\b/i,
+        "'wait for approval / user' step",
+    ],
+    [/\bask the (user|maintainer)\b/i, "'ask the user' step"],
+    [
+        /\b(get|obtain|request) (user|maintainer) (approval|confirmation|sign[- ]?off)\b/i,
+        "'get user approval' step",
+    ],
+    [/\bhuman review\b/i, "'human review' step"],
+    [
+        /\b(confirm|check|verify|review|clarify) with the (user|maintainer)\b/i,
+        "'confirm with the user' step",
+    ],
+];
+
+function _check_human_gate_steps(text: string, warnings: string[]): void {
+    for (const rawLine of text.split('\n')) {
+        if (!/^\s*-\s*\[ \]/.test(rawLine)) {
+            continue;
+        }
+        for (const [re, label] of HUMAN_GATE_STEP_PATS) {
+            if (re.test(rawLine)) {
+                warnings.push(
+                    `human-gate step (${label}): ` +
+                        `"${rawLine.trim().slice(0, 80)}" — templates/roadmaps.md rule 22: ` +
+                        'steps are agent-executable; replace with an agent-verifiable ' +
+                        'check (command / targeted test) or, if only a human can clear ' +
+                        'it, a structured ## Blockers entry',
                 );
                 break;
             }
