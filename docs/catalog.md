@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **629 public artefacts** shipped by
+Consumer-facing catalog of all **636 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (267)
+## Skills (268)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -293,6 +293,7 @@ are excluded.
 | skill | [`voc-extract`](../dist/agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../dist/agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
+| skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) |  | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
 ## Rules (101)
 
@@ -400,7 +401,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (172)
+## Commands (177)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -576,8 +577,13 @@ are excluded.
 | command | [`video-stitch`](../dist/agent-src/commands/video/stitch.md) | cluster: video | Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json. |
 | command | [`video-storyboard`](../dist/agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
 | command | [`work`](../dist/agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git. |
+| command | [`worktree`](../dist/agent-src/commands/worktree.md) | cluster: worktree | Worktree orchestrator — routes to create, status, verify, cleanup |
+| command | [`worktree-cleanup`](../dist/agent-src/commands/worktree/cleanup.md) | cluster: worktree | Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes |
+| command | [`worktree-create`](../dist/agent-src/commands/worktree/create.md) | cluster: worktree | Create a governed worktree and write its scope-lock note — propose-once branch naming, host-native primitive preferred |
+| command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
+| command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (89)
+## Guidelines (90)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -621,6 +627,7 @@ are excluded.
 | guideline | [`scqa-framework`](../docs/guidelines/agent-infra/scqa-framework.md) | agent-infra |  |
 | guideline | [`security-lint-containment`](../docs/guidelines/agent-infra/security-lint-containment.md) | agent-infra |  |
 | guideline | [`self-improvement-pipeline`](../docs/guidelines/agent-infra/self-improvement-pipeline.md) | agent-infra |  |
+| guideline | [`simplicity-and-goal-demos`](../docs/guidelines/agent-infra/simplicity-and-goal-demos.md) | agent-infra |  |
 | guideline | [`six-hats`](../docs/guidelines/agent-infra/six-hats.md) | agent-infra |  |
 | guideline | [`size-and-scope`](../docs/guidelines/agent-infra/size-and-scope.md) | agent-infra |  |
 | guideline | [`skill-quality-checklist`](../docs/guidelines/agent-infra/skill-quality-checklist.md) | agent-infra |  |
