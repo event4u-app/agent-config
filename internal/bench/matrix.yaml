@@ -1,0 +1,10 @@
+# Bench matrix (road-to-flow-learnings Phase 3) — task-family × host × arm.
+# Expanded by src/scripts/bench_matrix.ts into paired bench_ab_v2_run cells.
+# Bounded live run: 2 families × 2 hosts = 4 cells; budget is PER CELL.
+families: [over-engineering-bait, regression-landmine]
+hosts: [claude, codex]
+arms: [vanilla, rules-kernel-dc]
+seeds: 2
+model: claude-haiku-4-5
+budget: 2.0
+timeout: 180

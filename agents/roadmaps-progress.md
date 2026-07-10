@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 13 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
+> 12 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**113 / 201 steps done · 56%**
+**114 / 198 steps done · 58%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   56%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
@@ -18,17 +18,16 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 14 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 7% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
-| 4 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 1 | 11 | 0 | 0 | 0 | █████████░ 92% |
-| 5 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 6 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 7 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
-| 10 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 11 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 13 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
+| 3 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 1 | 11 | 0 | 0 | 0 | █████████░ 92% |
+| 4 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-flow-learnings) | ██████████ 95% |
+| 5 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
+| 6 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
+| 8 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 10 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 11 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 12 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
 ---
 
@@ -68,22 +67,6 @@ _2 blockers resolved._
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
-### [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md)
-
-**Follow-up to discipline-profile tiering — full-tier disposition** — 0 / 3 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Full-tier disposition (carried from parent Phase 5) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-discipline-profile-tiering-followup"></a>
-**Blockers**
-
-- **legacy** (owner: user) — blocks entire roadmap
-  - **What to do:**
-    an open-source-host adapter exists AND the maintainer wants
-  - **Resolved when:** condition described above clears
-
 ### [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md)
 
 **Road to domain soundness — prove or honestly scope the non-forged, non-coding domains** — 11 / 12 done (92%)
@@ -97,14 +80,14 @@ _2 blockers resolved._
 
 ### [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md)
 
-**Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater** — 17 / 19 done (89%)
+**Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater** — 18 / 19 done (95%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Install & conformance contract | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 1 | Fleet rollout (`init --fleet fleet.yaml`) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 2 | Dispatch failure-policy clarification | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Bench matrix expansion + per-section render | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 3 | Bench matrix expansion + per-section render | ✅ done | 0 | 4 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-flow-learnings"></a>
 **Blockers**
@@ -116,12 +99,8 @@ _2 blockers resolved._
     intentionally mis-permissioned repo as the seeded failure.
     2. Capture the aggregate JSON report.
   - **Resolved when:** aggregate JSON is schema-valid; the seeded repo is red with its pre-flight finding; all siblings are green and conformance-passing.
-- **live-matrix-run** (owner: maintainer) — blocks Phase 3 — live matrix run (live API spend)
-  - **What to do:**
-    1. Invoke the matrix runner for ≥2 task families × 2 hosts from the
-    matrix YAML (paired arms per the existing ab-v2 discipline).
-    2. Pin the resulting report alongside the existing pinned reports.
-  - **Resolved when:** one schema-valid matrix report exists and the per-section render consumes it without manual edits.
+
+_1 blocker resolved._
 
 ### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
 
