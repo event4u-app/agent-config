@@ -88,6 +88,14 @@ cli_call_budget:                # optional; per-day call-count guard for mode: c
   max_calls_per_day:
     <provider>: <int >= 0>                # opt-in per provider; default unset = unlimited
   warn_at: <float in [0.0, 1.0]>          # default 0.8 — pre-run summary line prefixes "⚠️" once used/limit >= warn_at (step-8 D4)
+provider_budgets:               # optional; rolling per-provider call budgets (balancer v1)
+  <provider>:
+    window: <duration string>             # combos of <N>d/<N>h/<N>m (e.g. "5h15m"); total >= 5 minutes
+    max_calls: <int >= 1>                 # calls allowed per rolling window
+routing:                        # solo-member dispatch + balancer switch
+  solo_member_fallback_chain: [<provider>, ...]
+  auth_check_timeout_seconds: <int in [1, 30]>
+  balance: <on | off>                     # default on — see "Provider budget balancing"
 members:                        # per-provider blocks, at least one enabled
   <provider>:
     enabled: <bool>
@@ -554,6 +562,66 @@ The escalation path uses zero extra LLM calls — heuristics run on the
 solo response text in process. The fallback `run_full()` only fires
 when the gate flags the response.
 
+### Provider budget balancing (balancer v1)
+
+Two knobs extend the quota seed with rolling per-provider budgets and a
+budget-aware ordering of the solo-dispatch fallback chain:
+
+| Key | Type | Default | Constraint |
+|---|---|---|---|
+| `provider_budgets.<provider>.window` | duration string | — (required per entry) | Combinations of `<N>d`, `<N>h`, `<N>m` in that order (`"5h"`, `"5h15m"`, `"1d"`, `"30m"`); parsed total must be >= 5 minutes. Unknown formats fail closed. |
+| `provider_budgets.<provider>.max_calls` | `int >= 1` | — (required per entry) | Calls allowed per rolling window. |
+| `routing.balance` | `on` \| `off` | `on` | Enables the balancer on the solo-dispatch path. `off` walks `routing.solo_member_fallback_chain` in configured order, verbatim. |
+
+**Rolling-window semantics.** Unlike `cli_call_budget` (fixed UTC-day
+reset), a provider budget rolls: the window starts at the FIRST call
+after a reset. When `now - window_start >= window`, the counter is
+expired (`used = 0`) and the next recorded call starts a fresh window.
+State persists in the existing counter file
+(`~/.event4u/agent-config/cli-calls.json`) under a `rolling` section;
+the daily `{date, counts}` section is untouched for back-compat.
+
+**Precedence.** `cli_call_budget.max_calls_per_day.<provider>` keeps
+working unchanged. When BOTH blocks name the same provider,
+`provider_budgets` wins and the loader emits a validation warning
+naming the shadowed key (the config still loads).
+
+**Balancing policy — billability-first, then remaining-ratio.** When
+`routing.balance` is `on` (the default), solo dispatch ranks the
+fallback chain instead of walking the configured order:
+
+1. Partition candidates into non-billable (subscription transports:
+   vendor-official `mode: cli`, `mode: manual`) and billable
+   (`mode: api`, community `cli` wrappers).
+2. Within each partition, drop members whose declared budget is
+   exhausted (remaining <= 0) and rank the rest by remaining-ratio
+   (remaining / limit) descending. Members with NO declared budget
+   count as ratio 1.0 and stable-sort after members with a known
+   ratio of 1.0; configured order is preserved among equals.
+3. The non-billable partition dispatches first, then the billable one.
+4. When every candidate is exhausted, the existing `block_quota`
+   behaviour applies — the per-call gate in the CLI client blocks with
+   `cli_quota_exhausted`; no new event type.
+
+**Debate mode is EXEMPT.** The balancer is wired into solo dispatch
+(`--single` / `routing.solo_member_fallback_chain`) only. Debate
+members are never filtered or reordered.
+
+**Reporting.** The pre-run `council:quota` summary line and the
+`agent-config council quota` subcommand show, per budgeted provider:
+used/limit, remaining %, the budget type (`utc-day` vs
+`rolling <window>`), the window reset ETA (`—` when no rolling window
+is active yet), and a billable / non-billable marker.
+
+**Honest limitation.** Budgets are USER-DECLARED approximations of
+subscription windows — providers expose no remaining-quota API, so the
+ledger can drift from the provider's real accounting (calls made
+outside the council, plan changes, provider-side rounding). Declare
+conservative buffers: make the window slightly LONGER and `max_calls`
+slightly LOWER than the real plan limits (e.g. real 5h/40 → declare
+`5h15m` / `38`) so misalignment fails safe — the balancer undercounts
+availability, never overcounts it.
+
 ### Low-impact corpus build pipeline (step-10)
 
 [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
@@ -687,6 +755,14 @@ error) when any of these hold:
     value is not one of `{"off", "educate", "block"}`. Unknown lens keys
     are accepted (forward-compatible) but never silently rewrite the
     global default.
+14. `provider_budgets` is not a mapping, or
+    `provider_budgets.<key>` is an unknown provider, or an entry's
+    `window` is not a parseable `<N>d`/`<N>h`/`<N>m` duration of at
+    least 5 minutes, or `max_calls` is not a positive integer.
+    A provider named in BOTH `provider_budgets` and
+    `cli_call_budget.max_calls_per_day` is NOT an error — the config
+    loads with a warning and the rolling budget wins.
+15. `routing.balance` is not a bool / `on` / `off`.
 
 ## Migration footprint (Phase 0)
 

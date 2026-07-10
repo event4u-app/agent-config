@@ -147,6 +147,31 @@ debate:
 #     openai: 100
 #     gemini: 20
 
+# Rolling per-provider call budgets (provider budget balancer v1).
+# Unlike cli_call_budget (fixed UTC-day reset), each budget declares a
+# rolling window that starts at the FIRST call after a reset — matching
+# subscription shapes like Claude Pro's 5h windows. When a provider is
+# named in BOTH blocks, provider_budgets wins (the loader warns about
+# the shadowed cli_call_budget key).
+#
+# Budgets are USER-DECLARED approximations — providers expose no
+# remaining-quota API. Declare the window slightly LONGER and max_calls
+# slightly LOWER than the real plan limits (real 5h/40 → declare
+# 5h15m/38) so misalignment fails safe: undercount availability, never
+# overcount. `window` combines <N>d/<N>h/<N>m, total >= 5 minutes.
+#
+# Solo dispatch (`--single` / routing.solo_member_fallback_chain) ranks
+# candidates non-billable-first, then by remaining budget ratio, and
+# drops exhausted members. Debate mode is EXEMPT — debate members are
+# never filtered or reordered. Opt out via `routing.balance: off`
+# (default on; the routing block also carries the fallback chain — see
+# docs/contracts/ai-council-config.md § "Provider budget balancing").
+# provider_budgets:
+#   anthropic: { window: "5h15m", max_calls: 38 }
+#   openai:    { window: "1d",    max_calls: 95 }
+# routing:
+#   balance: on
+
 # Per-member configuration. Set enabled=true on the providers you want
 # to consult. The `model:` field selects which model receives the query.
 #
