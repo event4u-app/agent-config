@@ -72,19 +72,39 @@ Gaps:
 
 ## Phase 0 — Host capability, eval baseline, and rollout guardrails
 
-- [ ] Add or reference a host-capability/degrade table for design verification:
+- [x] Add or reference a host-capability/degrade table for design verification:
       local browser, Playwright, screenshots, console inspection, canvas pixel
       checks, PDF render, deck export, document export, image decode, and
       hosts where only static inspection is available.
-- [ ] Create design-artifact eval fixtures before changing behavior: targeted
+      <!-- done 2026-07-10: docs/contracts/design-artifact-verification.md — a
+      per-host-class capability table (A local-with-tooling / B cloud-sandboxed
+      / C CI-headless) across 10 verification primitives, with a probe-first
+      resolution rule (⚠️ = only if the dep is present) and the honest-degrade
+      default (unknown → static-inspect only). Sibling to the subagent
+      host-capability-manifest; not a duplicate (that = subagent primitives). -->
+- [x] Create design-artifact eval fixtures before changing behavior: targeted
       edit preservation, missing asset, inaccessible design system, no
       screenshot/code context, requested variations, unwanted variations,
       overlapping text, mobile fit, and export/readback failure.
-- [ ] Define staged rollout: advisory lifecycle docs first, then routed skill
+      <!-- done 2026-07-10: tests/design-artifacts/eval-fixtures.md — all 9
+      named cases with stable ids (daf-edit-preservation, daf-missing-asset,
+      daf-inaccessible-design-system, daf-no-context, daf-requested-variations,
+      daf-unwanted-variations, daf-overlapping-text, daf-mobile-fit,
+      daf-export-readback-failure), each naming its required primitive (scored
+      only when present, else skipped-with-caveat) + pass criterion. Phase 1
+      links lifecycle branches to these ids. -->
+- [x] Define staged rollout: advisory lifecycle docs first, then routed skill
       updates, then default verification gates only where capability exists.
-- [ ] Define rollback language for any default-on verification gate so a host
+      <!-- done 2026-07-10: § Staged rollout in design-artifact-verification.md —
+      advisory → routed → default-gates-where-capable; a gate is never default-on
+      for a class that can only static_inspect. -->
+- [x] Define rollback language for any default-on verification gate so a host
       without render support can degrade honestly instead of blocking all
       design work.
+      <!-- done 2026-07-10: § Rollback language in design-artifact-verification.md —
+      the verbatim degrade block (names gate + primitive + host class + the
+      unverified property + the fallback); a gate that cannot degrade this way
+      is misconfigured. -->
 
 **Exit:** capability table and eval baseline exist; maintainer accepts which
 verification checks are hard gates per host.

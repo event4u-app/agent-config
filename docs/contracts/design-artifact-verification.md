@@ -1,0 +1,124 @@
+# Design-Artifact Verification — Host-Capability & Degrade Contract
+
+Phase 0 substrate for [`road-to-design-artifact-fidelity`](../../agents/roadmaps/road-to-design-artifact-fidelity.md).
+Design work is only production-grade if the agent **verifies the rendered
+artifact** — but a verification step the host cannot run must degrade honestly,
+never block the work or fake a green check.
+
+This is the **design-verification** sibling of
+[`host-capability-manifest`](../../src/agent-src/contexts/execution/host-capability-manifest.md)
+(which covers *subagent* primitives). Same philosophy: resolve once per session,
+**unknown host assumes nothing**, a missing capability degrades to "prove or
+caveat" rather than a hard block.
+
+## Iron Law — prove or caveat, never fake
+
+```
+A DESIGN ARTIFACT IS "VERIFIED" ONLY BY A CHECK THE HOST ACTUALLY RAN.
+A CAPABILITY THE HOST LACKS DEGRADES TO AN HONEST CAVEAT — NEVER A
+FABRICATED "LOOKS GOOD", NEVER A HARD BLOCK ON ALL DESIGN WORK.
+UNKNOWN HOST → ASSUME STATIC-INSPECTION ONLY.
+```
+
+## Verification primitives
+
+Each design-verification gate needs one of these host primitives:
+
+| Primitive | What it proves | Typical mechanism |
+|---|---|---|
+| `local_browser` | The artifact opens + paints in a real engine | launch a browser on a local URL/file |
+| `playwright` | Automated open + interact + assert, headless | Playwright / Puppeteer runner |
+| `screenshot` | Captured pixels for visual diff / review | Playwright `screenshot`, OS capture |
+| `console_inspect` | No runtime JS errors / warnings on load | devtools / Playwright console API |
+| `canvas_pixel` | Canvas/WebGL actually drew (not blank) | pixel read-back on a screenshot |
+| `pdf_render` | A PDF paginates + renders without error | headless render / `pdftoppm` / lib |
+| `deck_export` | A slide deck exports to the target format | deck tool export path |
+| `doc_export` | A document exports (DOCX/MD/PDF) + re-reads | office/markdown export + readback |
+| `image_decode` | An image decodes to real dimensions/format | image lib / the host's image reader |
+| `static_inspect` | Source/markup read without rendering | file read + parse (always available) |
+
+## Host-class capability table
+
+Precise per-host support varies with what is installed (Playwright is a dev
+dependency, not a guarantee). Resolve the **actual** row at session start; when
+unsure, take the lower capability. Classes, not brand promises:
+
+| Primitive | A · local-with-tooling<br>(Claude Code, Cursor, Windsurf, Augment, Cline, Zed on a dev machine) | B · cloud / sandboxed<br>(claude.ai web, Skills API) | C · CI / headless<br>(GitHub Actions, containers) |
+|---|---|---|---|
+| `local_browser` | ⚠️ if a browser is installed | ❌ | ❌ |
+| `playwright` | ⚠️ if the Playwright dep is present | ❌ | ✅ (headless, deps installed) |
+| `screenshot` | ⚠️ via Playwright / OS capture | ❌ | ✅ via Playwright |
+| `console_inspect` | ⚠️ via Playwright | ❌ | ✅ via Playwright |
+| `canvas_pixel` | ⚠️ via a screenshot read-back | ❌ | ✅ via screenshot read-back |
+| `pdf_render` | ⚠️ if a renderer/lib is present | ❌ | ✅ if the lib is installed |
+| `deck_export` | ⚠️ if the deck tool is present | ❌ | ⚠️ if the tool is installed |
+| `doc_export` | ⚠️ if the office/md tool is present | ❌ | ⚠️ if the tool is installed |
+| `image_decode` | ✅ (image lib / host image reader) | ⚠️ if the host renders images | ✅ (image lib) |
+| `static_inspect` | ✅ | ✅ | ✅ |
+
+Legend: ✅ available · ⚠️ available **only if** the named dependency is present
+(probe first, never assume) · ❌ not available → degrade.
+
+**Resolution rule.** Before a design-verification gate runs, confirm the
+primitive is actually present (e.g. `npx playwright --version`, a renderer on
+`PATH`, the host's image reader). A `⚠️` that fails the probe resolves to `❌`
+for that session — exactly the safe-default of the subagent manifest.
+
+## Honest-degrade behavior
+
+When the needed primitive is `❌` (or a `⚠️` probe fails):
+
+1. **Do the work anyway** — never block design work because a check can't run.
+2. **State the caveat explicitly** in the handoff: *"Not render-verified on this
+   host (no `playwright`); static-inspected only — open `X` locally to confirm
+   Y."* Name the specific unverified property, not a blanket disclaimer.
+3. **Offer the fallback check** the host *can* run (static inspection of the
+   markup, a structural assertion, an image-decode dimension check).
+4. **Never emit a fabricated verification claim** ("renders correctly", "no
+   console errors") for a check that did not run — that is an invented fact
+   ([`direct-answers`](../../src/rules/direct-answers.md) Iron Law 2).
+
+## Staged rollout
+
+Design-artifact fidelity rolls out in three stages so nothing becomes a hard
+gate before its capability + evals exist:
+
+1. **Advisory** — the lifecycle contract + these capability rows ship as
+   guidance the design skills reference. No gate; agents follow the workflow
+   and caveat honestly.
+2. **Routed** — the design skills (`fe-design`, `design-review`,
+   `existing-ui-audit`, `ui-component-architect`, …) are updated to point at
+   the lifecycle stages + the eval fixtures. Still no default block.
+3. **Default gates where capability exists** — a verification gate becomes
+   default-on **only** for host classes whose row shows the primitive `✅`/`⚠️`
+   present; classes without it stay advisory + caveat. A gate is never
+   default-on for a class that can only `static_inspect`.
+
+## Rollback language for a default-on gate
+
+Any default-on verification gate carries this escape, so a host without render
+support degrades instead of blocking every design task:
+
+> **Render verification unavailable on this host.** `<gate>` needs `<primitive>`,
+> which this host class (`<class>`) does not provide. Proceeding without the
+> render check; the artifact is **static-inspected only**. Unverified: `<named
+> property>`. To verify, run `<fallback>` or open the artifact on a
+> local-with-tooling host.
+
+A gate that cannot degrade this way is misconfigured — fix the gate, do not
+strand the user.
+
+## Eval baseline
+
+The design-artifact eval fixtures (the nine cases this phase seeds) live in
+[`tests/design-artifacts/eval-fixtures.md`](../../tests/design-artifacts/eval-fixtures.md).
+Each fixture names the primitive it needs, so a fixture is scored on a host only
+when that primitive resolves present — and skipped-with-caveat otherwise. Phase 1
+links the lifecycle branches to these fixture ids.
+
+## Related
+
+- [`host-capability-manifest`](../../src/agent-src/contexts/execution/host-capability-manifest.md) — the subagent-primitive sibling manifest (same resolve-once / safe-default shape).
+- [`capability-boundary`](capability-boundary.md) — the broader capability-vs-pack boundary.
+- [`playwright-testing`](../../src/skills/playwright-testing/SKILL.md) — the runner most design gates use when `playwright` is present.
+- [`design-review`](../../src/skills/design-review/SKILL.md), [`existing-ui-audit`](../../src/skills/existing-ui-audit/SKILL.md), [`fe-design`](../../src/skills/fe-design/SKILL.md) — the design skills the routed stage updates.
