@@ -111,21 +111,35 @@ verification checks are hard gates per host.
 
 ## Phase 1 — Design artifact lifecycle contract
 
-- [ ] Add `docs/contracts/design-artifact-lifecycle.md` describing the common
+- [x] Add `docs/contracts/design-artifact-lifecycle.md` describing the common
       lifecycle: understand medium/audience/fidelity → inspect source assets
       and design system → define visual system/variation plan → build artifact
       → verify render/load/responsive states → brief handoff.
-- [ ] Map existing skills to lifecycle stages: `existing-ui-audit`,
+      <!-- done 2026-07-10: docs/contracts/design-artifact-lifecycle.md — the
+      6-stage lifecycle table (Understand/Inspect/Plan/Build/Verify/Handoff),
+      each stage citing the fixtures that exercise it. -->
+- [x] Map existing skills to lifecycle stages: `existing-ui-audit`,
       `fe-design`, `design-review`, `ui-component-architect`,
       `playwright-testing`, `brand-audit`, `brand-to-tokens`,
       `presentations`, `PDF`, and document skills where applicable.
-- [ ] Add explicit branch rules: new design vs targeted edit vs iteration vs
+      <!-- done: § Skill → stage map. Conceptual "presentations"/"PDF"/document
+      map to the real skills html-deck / markitdown / doc-coauthoring
+      (design-system-capture added for Handoff). -->
+- [x] Add explicit branch rules: new design vs targeted edit vs iteration vs
       design-system extraction vs handoff to production code.
-- [ ] Add "do not invent filler" and "ask before adding material" as design
+      <!-- done: § Branch rules — 5 branches, each selecting the stages it runs
+      + ≥1 gating fixture; targeted-edit stays surgical, iteration preserves the
+      prior version on a major revision. -->
+- [x] Add "do not invent filler" and "ask before adding material" as design
       constraints. Empty space is a composition problem, not permission to add
       fake sections, fake metrics, or stock-like decoration.
-- [ ] Link lifecycle states to eval ids from Phase 0 so later skill edits can
+      <!-- done: § Design constraints (Iron-Law fence) — no invented filler,
+      ask before adding material; cross-linked direct-answers IL2 +
+      output-discipline. -->
+- [x] Link lifecycle states to eval ids from Phase 0 so later skill edits can
       prove the contract is operational.
+      <!-- done: each lifecycle stage + each branch names its gating fixture id
+      from tests/design-artifacts/eval-fixtures.md; every branch has ≥1. -->
 
 **Exit:** all design-related skills can point to one lifecycle without
 duplicating it, and each lifecycle branch has at least one eval fixture.
