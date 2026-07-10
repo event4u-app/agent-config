@@ -29,7 +29,10 @@
 //
 // CLI subclasses additionally consult the optional
 // `cli_call_budget.max_calls_per_day.<provider>` quota with state persisted at
-// `~/.event4u/agent-config/cli-calls.json` (daily UTC reset).
+// `~/.event4u/agent-config/cli-calls.json` (daily UTC reset). The provider
+// budget balancer (v1) adds an optional rolling-window budget per provider
+// (`provider_budgets.<provider>`) persisted in the same file under a
+// `rolling` section; when both are configured the rolling budget wins.
 //
 // TRANSPORT SEAM (TS-only, for tests): the retired Python implementation calls
 // `subprocess.run` directly inside `CliClient.ask`. The twin routes that one
@@ -273,6 +276,8 @@ interface CliClientOptions {
     max_calls_per_day?: number | null | undefined;
     warn_at?: number | undefined;
     cli_calls_path?: string | null | undefined;
+    /** Rolling budget (provider_budgets.<provider>) — shadows the daily cap. */
+    provider_budget?: ProviderBudgetSpec | null | undefined;
 }
 
 /**
@@ -719,9 +724,8 @@ export function _today_utc_iso(): string {
     return `${y}-${m}-${day}`;
 }
 
-/** Return today's per-provider call counts. Empty dict on UTC rollover. */
-export function load_cli_call_counts(p: string | null = null): Record<string, number> {
-    const target = p !== null ? p : _cliCallsStatePath();
+/** Read the raw counter state file (daily + rolling sections). */
+function _read_cli_calls_state(target: string): Record<string, unknown> {
     if (!fs.existsSync(target)) {
         return {};
     }
@@ -732,7 +736,38 @@ export function load_cli_call_counts(p: string | null = null): Record<string, nu
         // json.JSONDecodeError / OSError
         return {};
     }
-    if (!_isPlainObject(data) || (data as Record<string, unknown>)['date'] !== _today_utc_iso()) {
+    return _isPlainObject(data) ? (data as Record<string, unknown>) : {};
+}
+
+/**
+ * Persist the counter state atomically (write-temp-then-rename) so a
+ * crash mid-write can never truncate the ledger. Key order is stable —
+ * `{date, counts}` keeps its historical byte shape; `rolling` is
+ * appended only when at least one rolling window exists.
+ */
+function _write_cli_calls_state(
+    target: string,
+    payload: {
+        date: string;
+        counts: Record<string, number>;
+        rolling?: Record<string, RollingWindowState>;
+    },
+): void {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    const body: Record<string, unknown> = { date: payload.date, counts: payload.counts };
+    if (payload.rolling !== undefined && Object.keys(payload.rolling).length > 0) {
+        body['rolling'] = payload.rolling;
+    }
+    const tmp = `${target}.tmp-${process.pid}`;
+    fs.writeFileSync(tmp, _jsonDumpsIndent2(body), { encoding: 'utf-8' });
+    fs.renameSync(tmp, target);
+}
+
+/** Return today's per-provider call counts. Empty dict on UTC rollover. */
+export function load_cli_call_counts(p: string | null = null): Record<string, number> {
+    const target = p !== null ? p : _cliCallsStatePath();
+    const data = _read_cli_calls_state(target);
+    if ((data as Record<string, unknown>)['date'] !== _today_utc_iso()) {
         return {};
     }
     const counts = (data as Record<string, unknown>)['counts'];
@@ -759,13 +794,9 @@ export function load_cli_call_counts(p: string | null = null): Record<string, nu
 export function record_cli_call(provider: string, p: string | null = null): number {
     const target = p !== null ? p : _cliCallsStatePath();
     const counts = load_cli_call_counts(target);
+    const rolling = load_rolling_state(target);
     counts[provider] = (counts[provider] ?? 0) + 1;
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(
-        target,
-        _jsonDumpsIndent2({ date: _today_utc_iso(), counts }),
-        { encoding: 'utf-8' },
-    );
+    _write_cli_calls_state(target, { date: _today_utc_iso(), counts, rolling });
     return counts[provider];
 }
 
@@ -774,7 +805,9 @@ export function record_cli_call(provider: string, p: string | null = null): numb
  *
  * `provider=null` clears all providers (today's record). Otherwise only the
  * named provider's count is removed; other providers and the UTC date marker
- * are preserved. Returns the post-reset counts.
+ * are preserved. The provider's rolling-window record (provider-budget
+ * balancer v1) is cleared alongside its daily count. Returns the post-reset
+ * counts.
  */
 export function reset_cli_call_counts(
     provider: string | null = null,
@@ -782,37 +815,168 @@ export function reset_cli_call_counts(
 ): Record<string, number> {
     const target = p !== null ? p : _cliCallsStatePath();
     let counts = load_cli_call_counts(target);
+    let rolling = load_rolling_state(target);
     if (provider === null) {
         counts = {};
+        rolling = {};
     } else {
         delete counts[provider];
+        delete rolling[provider];
     }
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(
-        target,
-        _jsonDumpsIndent2({ date: _today_utc_iso(), counts }),
-        { encoding: 'utf-8' },
-    );
+    _write_cli_calls_state(target, { date: _today_utc_iso(), counts, rolling });
     return counts;
+}
+
+// ── rolling-window ledger (provider-budget balancer v1) ─────────────
+
+/** One provider's rolling-window usage record. */
+export interface RollingWindowState {
+    /** ISO timestamp of the first recorded call in the current window. */
+    window_start: string;
+    used: number;
+}
+
+/** Rolling budget attached to a CLI client (`provider_budgets.<provider>`). */
+export interface ProviderBudgetSpec {
+    window: string;
+    window_seconds: number;
+    max_calls: number;
+}
+
+/**
+ * Return the raw rolling-window records from the counter state file.
+ * No expiry is applied here — callers pass the configured window length
+ * to `rolling_window_used` for the expiry-aware read.
+ */
+export function load_rolling_state(p: string | null = null): Record<string, RollingWindowState> {
+    const target = p !== null ? p : _cliCallsStatePath();
+    const rolling = _read_cli_calls_state(target)['rolling'];
+    if (!_isPlainObject(rolling)) {
+        return {};
+    }
+    const out: Record<string, RollingWindowState> = {};
+    for (const [k, v] of Object.entries(rolling as Record<string, unknown>)) {
+        if (!_isPlainObject(v)) {
+            continue;
+        }
+        const entry = v as Record<string, unknown>;
+        const window_start = entry['window_start'];
+        const used = entry['used'];
+        if (
+            typeof window_start === 'string' &&
+            typeof used === 'number' &&
+            Number.isInteger(used)
+        ) {
+            out[String(k)] = { window_start, used };
+        }
+    }
+    return out;
+}
+
+/**
+ * Return the in-window usage for `provider` under a rolling budget.
+ *
+ * Provider-rolling-window model: the window starts at the FIRST call
+ * after a reset. A record older than `window_seconds` (or an absent /
+ * garbled one) counts as expired → `{used: 0, window_start: null}`; the
+ * next `record_rolling_call` starts a fresh window.
+ */
+export function rolling_window_used(
+    provider: string,
+    window_seconds: number,
+    opts: { cli_calls_path?: string | null; now?: Date | null } = {},
+): { used: number; window_start: string | null } {
+    const state = load_rolling_state(opts.cli_calls_path ?? null);
+    const entry = state[provider];
+    if (entry === undefined) {
+        return { used: 0, window_start: null };
+    }
+    const now = opts.now ?? new Date();
+    const start = Date.parse(entry.window_start);
+    if (Number.isNaN(start) || now.getTime() - start >= window_seconds * 1000) {
+        return { used: 0, window_start: null };
+    }
+    return { used: entry.used, window_start: entry.window_start };
+}
+
+/**
+ * Record one call against `provider`'s rolling window. An expired or
+ * absent window is reset first (`used = 1`, `window_start = now`).
+ * The daily `{date, counts}` section is preserved untouched. Returns
+ * the new in-window total.
+ */
+export function record_rolling_call(
+    provider: string,
+    window_seconds: number,
+    opts: { cli_calls_path?: string | null; now?: Date | null } = {},
+): number {
+    const p = opts.cli_calls_path ?? null;
+    const target = p !== null ? p : _cliCallsStatePath();
+    const now = opts.now ?? new Date();
+    const counts = load_cli_call_counts(target);
+    const rolling = load_rolling_state(target);
+    const entry = rolling[provider];
+    let next: RollingWindowState;
+    if (entry === undefined) {
+        next = { window_start: now.toISOString(), used: 1 };
+    } else {
+        const start = Date.parse(entry.window_start);
+        if (Number.isNaN(start) || now.getTime() - start >= window_seconds * 1000) {
+            next = { window_start: now.toISOString(), used: 1 };
+        } else {
+            next = { window_start: entry.window_start, used: entry.used + 1 };
+        }
+    }
+    rolling[provider] = next;
+    _write_cli_calls_state(target, { date: _today_utc_iso(), counts, rolling });
+    return next.used;
+}
+
+/** Format a reset ETA as `YYYY-MM-DDTHH:MMZ` (UTC, minute precision). */
+export function format_reset_eta(d: Date): string {
+    const pad = (n: number, w = 2): string => n.toString().padStart(w, '0');
+    return (
+        `${pad(d.getUTCFullYear(), 4)}-${pad(d.getUTCMonth() + 1)}-` +
+        `${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}Z`
+    );
+}
+
+/** Next UTC midnight after `now` — the utc-day budget reset instant. */
+export function next_utc_midnight(now: Date): Date {
+    return new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
+    );
 }
 
 /**
  * Build the pre-run quota summary line (step-8 P1, D1 + D4).
  *
  * Returns `[summary, warn_providers]` where `summary` is the formatted
- * one-liner (empty string when no CLI member has a configured cap) and
- * `warn_providers` is the subset whose `used / max_calls_per_day` ratio crossed
- * `warn_at`. Uncapped providers (`max_calls_per_day is None`) are omitted from
- * the summary entirely — they cannot exceed a threshold that does not exist.
+ * one-liner (empty string when no CLI member carries a budget) and
+ * `warn_providers` is the subset whose `used / limit` ratio crossed
+ * `warn_at`. Unbudgeted providers (no `provider_budget`, no
+ * `max_calls_per_day`) are omitted from the summary entirely — they
+ * cannot exceed a threshold that does not exist.
+ *
+ * Per provider the part shows used/limit plus a parenthetical with the
+ * remaining %, the budget type (`utc-day` vs `rolling <window>`), the
+ * window reset ETA (`—` when no rolling window is active yet), and the
+ * billable / non-billable transport marker. A `provider_budget`
+ * (rolling) takes precedence over the daily cap when both are set.
  */
 export function quota_summary_line(
     clients: CliClient[],
-    opts: { cli_calls_path?: string | null } = {},
+    opts: { cli_calls_path?: string | null; now?: Date | null } = {},
 ): [string, string[]] {
     const cliCallsPath = opts.cli_calls_path ?? null;
-    // Python: [c for c in clients if getattr(c, "max_calls_per_day", None)]
-    // → truthy check (None or 0 both falsy).
-    const capped = clients.filter((c) => _pyTruthy(_getattr(c, 'max_calls_per_day', null)));
+    const now = opts.now ?? new Date();
+    // Python heritage: [c for c in clients if getattr(c, "max_calls_per_day", None)]
+    // → truthy check (None or 0 both falsy); rolling budgets extend the filter.
+    const capped = clients.filter(
+        (c) =>
+            _getattr(c, 'provider_budget', null) !== null ||
+            _pyTruthy(_getattr(c, 'max_calls_per_day', null)),
+    );
     if (capped.length === 0) {
         return ['', []];
     }
@@ -821,9 +985,37 @@ export function quota_summary_line(
     const warn: string[] = [];
     for (const c of capped) {
         const name = _getattr(c, 'name', '?') as string;
-        const used = _pyInt(counts[name] ?? 0);
-        const limit = _pyInt((c.max_calls_per_day as number));
-        parts.push(`${name} ${used}/${limit}`);
+        const budget = _getattr(c, 'provider_budget', null) as ProviderBudgetSpec | null;
+        let used: number;
+        let limit: number;
+        let kind: string;
+        let eta: string;
+        if (budget !== null) {
+            const r = rolling_window_used(name, budget.window_seconds, {
+                cli_calls_path: cliCallsPath,
+                now,
+            });
+            used = r.used;
+            limit = _pyInt(budget.max_calls);
+            kind = `rolling ${budget.window}`;
+            eta =
+                r.window_start !== null
+                    ? format_reset_eta(
+                          new Date(Date.parse(r.window_start) + budget.window_seconds * 1000),
+                      )
+                    : '—';
+        } else {
+            used = _pyInt(counts[name] ?? 0);
+            limit = _pyInt(c.max_calls_per_day as number);
+            kind = 'utc-day';
+            eta = format_reset_eta(next_utc_midnight(now));
+        }
+        const remaining = Math.max(limit - used, 0);
+        const pct = limit > 0 ? Math.floor((remaining / limit) * 100) : 0;
+        const bill = c.billable ? 'billable' : 'non-billable';
+        parts.push(
+            `${name} ${used}/${limit} (${pct}% left · ${kind} · resets ${eta} · ${bill})`,
+        );
         const ratio = limit > 0 ? used / limit : 0.0;
         const warnAt = Number(_getattr(c, 'warn_at', 0.8));
         if (ratio >= warnAt) {
@@ -890,6 +1082,7 @@ export abstract class CliClient extends ExternalAIClient {
     timeout_seconds: number;
     max_calls_per_day: number | null;
     warn_at: number;
+    provider_budget: ProviderBudgetSpec | null;
     binary!: string;
     protected _cli_calls_path: string | null;
 
@@ -920,6 +1113,7 @@ export abstract class CliClient extends ExternalAIClient {
         this.timeout_seconds = opts.timeout_seconds ?? DEFAULT_CLI_TIMEOUT_SECONDS;
         this.max_calls_per_day = opts.max_calls_per_day ?? null;
         this.warn_at = opts.warn_at ?? 0.8;
+        this.provider_budget = opts.provider_budget ?? null;
         this._cli_calls_path = opts.cli_calls_path ?? null;
         const binary = opts.binary ?? null;
         if (binary !== null) {
@@ -1011,7 +1205,46 @@ export abstract class CliClient extends ExternalAIClient {
         const t0 = _nowMs();
 
         // 1. quota gate — local counter check before spawning anything.
-        if (this.max_calls_per_day !== null) {
+        //    A rolling provider budget (provider_budgets.<provider>) takes
+        //    precedence over the daily cap when both are configured.
+        if (this.provider_budget !== null) {
+            const budget = this.provider_budget;
+            const { used } = rolling_window_used(this.name, budget.window_seconds, {
+                cli_calls_path: this._cli_calls_path,
+            });
+            if (used >= budget.max_calls) {
+                // step-8 D3 — record the block on the persistent events log.
+                try {
+                    appendEvent({
+                        lens: '',
+                        invocation: '',
+                        action: 'block_quota',
+                        verdict: '',
+                        provider_caps: {
+                            [this.name]: { mode: 'cli', model: this.model },
+                        },
+                        original_ask: user_prompt,
+                        cli_calls_used: used,
+                        cli_calls_max: budget.max_calls,
+                    });
+                } catch {
+                    // never crash ask()
+                }
+                return new CouncilResponse({
+                    provider: this.name,
+                    model: this.model,
+                    text: '',
+                    latency_ms: _elapsedMs(t0),
+                    error: 'cli_quota_exhausted',
+                    metadata: {
+                        cli: true,
+                        cli_calls_used: used,
+                        cli_calls_max: budget.max_calls,
+                        budget_window: budget.window,
+                    },
+                });
+            }
+        } else if (this.max_calls_per_day !== null) {
             const counts = load_cli_call_counts(this._cli_calls_path);
             const used = counts[this.name] ?? 0;
             if (used >= this.max_calls_per_day) {
@@ -1089,9 +1322,16 @@ export abstract class CliClient extends ExternalAIClient {
         }
 
         // 3. record the call — even failures count against the quota so a broken
-        //    CLI cannot burn the whole budget in a tight loop.
+        //    CLI cannot burn the whole budget in a tight loop. The daily count
+        //    is always recorded; the rolling window additionally when a
+        //    provider budget is configured.
         try {
             record_cli_call(this.name, this._cli_calls_path);
+            if (this.provider_budget !== null) {
+                record_rolling_call(this.name, this.provider_budget.window_seconds, {
+                    cli_calls_path: this._cli_calls_path,
+                });
+            }
         } catch {
             // state-file write failure is non-fatal here.
         }
@@ -1177,6 +1417,7 @@ export class AnthropicCliClient extends CliClient {
             max_calls_per_day: opts.max_calls_per_day,
             warn_at: opts.warn_at,
             cli_calls_path: opts.cli_calls_path,
+            provider_budget: opts.provider_budget,
         });
     }
 
@@ -1277,6 +1518,7 @@ export class OpenAICliClient extends CliClient {
             max_calls_per_day: opts.max_calls_per_day,
             warn_at: opts.warn_at,
             cli_calls_path: opts.cli_calls_path,
+            provider_budget: opts.provider_budget,
         });
     }
 
@@ -1400,6 +1642,7 @@ export class GeminiCliClient extends CliClient {
             max_calls_per_day: opts.max_calls_per_day,
             warn_at: opts.warn_at,
             cli_calls_path: opts.cli_calls_path,
+            provider_budget: opts.provider_budget,
         });
     }
 
@@ -1517,6 +1760,7 @@ export class XAICliClient extends CliClient {
             max_calls_per_day: opts.max_calls_per_day,
             warn_at: opts.warn_at,
             cli_calls_path: opts.cli_calls_path,
+            provider_budget: opts.provider_budget,
         });
     }
 
@@ -1583,6 +1827,7 @@ export class PerplexityCliClient extends CliClient {
             max_calls_per_day: opts.max_calls_per_day,
             warn_at: opts.warn_at,
             cli_calls_path: opts.cli_calls_path,
+            provider_budget: opts.provider_budget,
         });
     }
 

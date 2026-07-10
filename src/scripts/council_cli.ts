@@ -25,7 +25,8 @@ import {
     bundle_roadmap,
 } from './ai_council/bundler.js';
 import type {
-    ExternalAIClient} from './ai_council/clients.js';
+    ExternalAIClient,
+    ProviderBudgetSpec} from './ai_council/clients.js';
 import {
     DEFAULT_MAX_TOKENS,
     UNLIMITED_TOKENS_FALLBACK,
@@ -43,12 +44,19 @@ import {
     PerplexityCliClient,
     XAIClient,
     XAICliClient,
+    format_reset_eta,
     load_anthropic_key,
     load_cli_call_counts,
     load_openai_key,
+    next_utc_midnight,
     quota_summary_line,
     reset_cli_call_counts,
+    rolling_window_used,
 } from './ai_council/clients.js';
+import {
+    balanced_fallback_chain,
+    load_ledger_snapshot,
+} from './ai_council/balancer.js';
 import type {
     AdvisorPlan} from './ai_council/advisors.js';
 import {
@@ -408,6 +416,9 @@ function load_settings(
     const settings = load_agent_settings({ project_path: p }) as Dict;
     if (fs.existsSync(ai_council_path)) {
         const cfg = load_council_config(ai_council_path);
+        for (const w of cfg.warnings) {
+            _stderr(`council:config · WARN · ${w}\n`);
+        }
         settings['ai_council'] = _synthesize_ai_council_block(cfg);
     }
     return settings;
@@ -479,6 +490,11 @@ function _synthesize_ai_council_block(cfg: CouncilConfig): Dict {
             max_calls_per_day: _mapToObject(cfg.cli_call_budget.max_calls_per_day),
             warn_at: cfg.cli_call_budget.warn_at,
         },
+        provider_budgets: _mapToObject2(cfg.provider_budgets, (b) => ({
+            window: b.window,
+            window_seconds: b.window_seconds,
+            max_calls: b.max_calls,
+        })),
         necessity_classifier: {
             enabled: cfg.necessity_classifier.enabled,
             mode: cfg.necessity_classifier.mode,
@@ -519,6 +535,14 @@ function _mapToObject<V>(m: ReadonlyMap<string, V>): Record<string, V> {
     return out;
 }
 
+function _mapToObject2<V, R>(m: ReadonlyMap<string, V>, fn: (v: V) => R): Record<string, R> {
+    const out: Record<string, R> = {};
+    for (const [k, v] of m) {
+        out[k] = fn(v);
+    }
+    return out;
+}
+
 // ── member construction ─────────────────────────────────────────────
 
 interface BuildMembersOptions {
@@ -550,6 +574,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     const cli_warn_at = _isDict(cli_budget_cfg)
         ? _pyFloat(cli_budget_cfg['warn_at'] ?? 0.8, 0.8)
         : 0.8;
+    const provider_budgets_cfg = _isDict(ai) ? ((ai['provider_budgets'] as Dict) || {}) : {};
     const overrides = model_overrides || {};
     const siblings = siblings_overrides || {};
 
@@ -613,11 +638,18 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             );
         } else if (mode === 'cli' && _CLI_PROVIDERS.has(name)) {
             try {
+                // provider_budgets.<name> (rolling) shadows the daily cap
+                // for the same provider — precedence per the config warning.
+                const provider_budget = _provider_budget_for(provider_budgets_cfg, name);
                 members.push(
                     _construct_cli_member(name, model, {
                         binary: (cfg['binary'] as string | null) ?? null,
-                        max_calls_per_day: (cli_caps[name] as number | undefined) ?? null,
+                        max_calls_per_day:
+                            provider_budget !== null
+                                ? null
+                                : ((cli_caps[name] as number | undefined) ?? null),
                         warn_at: cli_warn_at,
+                        provider_budget,
                     }),
                 );
             } catch (exc) {
@@ -680,6 +712,28 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
 
 function _setDifference(items: string[], known: Set<string>): string[] {
     return items.filter((x) => !known.has(x));
+}
+
+/** Read `provider_budgets.<name>` from the synthesized ai_council block. */
+function _provider_budget_for(provider_budgets_cfg: Dict, name: string): ProviderBudgetSpec | null {
+    if (!_isDict(provider_budgets_cfg)) {
+        return null;
+    }
+    const entry = provider_budgets_cfg[name];
+    if (!_isDict(entry)) {
+        return null;
+    }
+    const window = entry['window'];
+    const window_seconds = entry['window_seconds'];
+    const max_calls = entry['max_calls'];
+    if (
+        typeof window !== 'string' ||
+        typeof window_seconds !== 'number' ||
+        typeof max_calls !== 'number'
+    ) {
+        return null;
+    }
+    return { window, window_seconds, max_calls };
 }
 
 function _build_advisor_plans(ai_cfg: Dict, repo_root: string): Map<string, AdvisorPlan> {
@@ -801,7 +855,7 @@ function _construct_api_member(
  */
 const _CLI_FACTORY: Record<
     string,
-    [new (opts: { model: string; binary?: string | null; max_calls_per_day?: number | null; warn_at?: number }) => CliClient, string, string]
+    [new (opts: { model: string; binary?: string | null; max_calls_per_day?: number | null; warn_at?: number; provider_budget?: ProviderBudgetSpec | null }) => CliClient, string, string]
 > = {
     anthropic: [AnthropicCliClient, 'claude-sonnet-4-5', 'Claude'],
     openai: [OpenAICliClient, 'gpt-5', 'Codex'],
@@ -813,14 +867,15 @@ const _CLI_FACTORY: Record<
 function _construct_cli_member(
     name: string,
     model: string | null,
-    opts: { binary?: string | null; max_calls_per_day?: number | null; warn_at?: number } = {},
+    opts: { binary?: string | null; max_calls_per_day?: number | null; warn_at?: number; provider_budget?: ProviderBudgetSpec | null } = {},
 ): ExternalAIClient {
     const binary = opts.binary ?? null;
     const max_calls_per_day = opts.max_calls_per_day ?? null;
     const warn_at = opts.warn_at ?? 0.8;
+    const provider_budget = opts.provider_budget ?? null;
     if (name in _CLI_FACTORY) {
         const [cls, default_model] = _CLI_FACTORY[name] as [
-            new (opts: { model: string; binary?: string | null; max_calls_per_day?: number | null; warn_at?: number }) => CliClient,
+            new (opts: { model: string; binary?: string | null; max_calls_per_day?: number | null; warn_at?: number; provider_budget?: ProviderBudgetSpec | null }) => CliClient,
             string,
             string,
         ];
@@ -829,6 +884,7 @@ function _construct_cli_member(
             binary,
             max_calls_per_day,
             warn_at,
+            provider_budget,
         });
     }
     throw new CouncilDisabledError(
@@ -1626,8 +1682,26 @@ function _apply_solo_dispatch(members: ExternalAIClient[]): [ExternalAIClient[],
                 'escalating to full council.',
         ];
     }
+    // Provider budget balancer (v1) — reorder the fallback chain
+    // billability-first / remaining-ratio when routing.balance is on
+    // (the default). `balance: off` walks the configured order verbatim.
+    // Debate mode never routes through here — it stays exempt.
+    let routing = cfg.routing;
+    if (cfg.routing.balance) {
+        const ranked = balanced_fallback_chain(cfg, load_ledger_snapshot(), new Date());
+        if (ranked.length === 0) {
+            // Every declared budget is exhausted. Escalate — the per-call
+            // block_quota gate in CliClient.ask() stays authoritative.
+            return [
+                members,
+                'council:solo · WARN · every fallback-chain member is ' +
+                    'budget-exhausted — escalating to full council.',
+            ];
+        }
+        routing = { ...cfg.routing, solo_member_fallback_chain: ranked };
+    }
     const runtime_names = new Set(members.map((m) => _getattr(m, 'name', '')));
-    const pick = select_solo_member(cfg.routing, cfg.members, {
+    const pick = select_solo_member(routing, cfg.members, {
         auth_cache: new AuthCache(),
         probe: (name: string) => runtime_names.has(name),
     });
@@ -2289,6 +2363,7 @@ function cmd_quota(args: Args, opts: { settings?: Dict | null } = {}): number {
     const cli_budget_cfg = _isDict(ai_cfg) ? ((ai_cfg['cli_call_budget'] as Dict) || {}) : {};
     const caps = _isDict(cli_budget_cfg) ? ((cli_budget_cfg['max_calls_per_day'] as Dict) || {}) : {};
     const warn_at = _isDict(cli_budget_cfg) ? _pyFloat(cli_budget_cfg['warn_at'] ?? 0.8, 0.8) : 0.8;
+    const provider_budgets = _isDict(ai_cfg) ? ((ai_cfg['provider_budgets'] as Dict) || {}) : {};
 
     if (_getattr<string | null>(args, 'reset', null)) {
         const provider = args.reset as string;
@@ -2302,16 +2377,56 @@ function cmd_quota(args: Args, opts: { settings?: Dict | null } = {}): number {
     }
 
     const counts = load_cli_call_counts();
-    if (Object.keys(caps).length === 0) {
+    const budget_providers = _isDict(provider_budgets) ? Object.keys(provider_budgets) : [];
+    if (Object.keys(caps).length === 0 && budget_providers.length === 0) {
         _stdout(
             'council:quota · no providers have a configured ' +
                 'cli_call_budget.max_calls_per_day cap.\n',
         );
         return 0;
     }
-    for (const provider of _pySortedStr(Object.keys(caps))) {
-        const limit = _pyInt(caps[provider]);
-        const used = _pyInt(counts[provider] ?? 0, 0);
+    // Billability is a transport property (see balancer.is_billable_member):
+    // manual = free, vendor-official cli = free, community cli / api = paid.
+    const members_cfg = _isDict(ai_cfg) ? ((ai_cfg['members'] as Dict) || {}) : {};
+    const default_mode = _isDict(ai_cfg) ? String(ai_cfg['mode'] ?? 'api') : 'api';
+    const is_billable = (provider: string): boolean => {
+        const m = _isDict(members_cfg) ? ((members_cfg[provider] as Dict) || {}) : {};
+        const mode = _isDict(m) && typeof m['mode'] === 'string' ? (m['mode'] as string) : default_mode;
+        if (mode === 'manual') {
+            return false;
+        }
+        if (mode === 'cli') {
+            return provider === 'xai' || provider === 'perplexity';
+        }
+        return true;
+    };
+    const now = new Date();
+    const providers = new Set<string>([...Object.keys(caps), ...budget_providers]);
+    for (const provider of _pySortedStr([...providers])) {
+        // provider_budgets (rolling) wins over the utc-day cap when both
+        // name the same provider — mirrors the loader's precedence warning.
+        const pb = _provider_budget_for(provider_budgets, provider);
+        let used: number;
+        let limit: number;
+        let kind: string;
+        let eta: string;
+        if (pb !== null) {
+            const r = rolling_window_used(provider, pb.window_seconds, { now });
+            used = r.used;
+            limit = _pyInt(pb.max_calls);
+            kind = `rolling ${pb.window}`;
+            eta =
+                r.window_start !== null
+                    ? format_reset_eta(
+                          new Date(Date.parse(r.window_start) + pb.window_seconds * 1000),
+                      )
+                    : '—';
+        } else {
+            limit = _pyInt(caps[provider]);
+            used = _pyInt(counts[provider] ?? 0, 0);
+            kind = 'utc-day';
+            eta = format_reset_eta(next_utc_midnight(now));
+        }
         const ratio = limit > 0 ? used / limit : 0.0;
         let status = 'ok';
         if (used >= limit) {
@@ -2319,7 +2434,13 @@ function cmd_quota(args: Args, opts: { settings?: Dict | null } = {}): number {
         } else if (ratio >= warn_at) {
             status = 'warn';
         }
-        _stdout(`council:quota · ${provider} · ${used}/${limit} · ${status}\n`);
+        const remaining = Math.max(limit - used, 0);
+        const pct = limit > 0 ? Math.floor((remaining / limit) * 100) : 0;
+        const bill = is_billable(provider) ? 'billable' : 'non-billable';
+        _stdout(
+            `council:quota · ${provider} · ${used}/${limit} · ${status} · ` +
+                `${pct}% left · ${kind} · resets ${eta} · ${bill}\n`,
+        );
     }
     return 0;
 }

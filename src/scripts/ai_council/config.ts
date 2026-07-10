@@ -33,6 +33,11 @@
  * 8. `binary:` is only valid when the member's effective mode is `cli`;
  *    `cli_call_budget.max_calls_per_day.<provider>` keys must be valid
  *    providers.
+ * 9. `provider_budgets.<provider>` keys must be valid providers; each
+ *    entry needs a parseable `window` (`<N>d`/`<N>h`/`<N>m` combos,
+ *    total >= 5 minutes) and a positive-integer `max_calls`. A provider
+ *    present in BOTH `provider_budgets` and `cli_call_budget` loads with
+ *    a warning — the rolling budget wins.
  *
  * Parity notes (intentional, documented):
  *   - YAML is parsed with `yaml` (npm) at `version: '1.1'`, matching
@@ -492,6 +497,7 @@ export interface LensOverridesConfig {
 export interface RoutingConfig {
     readonly solo_member_fallback_chain: readonly string[];
     readonly auth_check_timeout_seconds: number;
+    readonly balance: boolean;
 }
 
 /** Low-impact dispatch + shadow-mode config (step-9 P8/P10 · U3). */
@@ -507,6 +513,20 @@ export interface CliCallBudgetConfig {
     readonly warn_at: number;
 }
 
+/**
+ * One provider's rolling call budget (provider-budget balancer v1).
+ *
+ * `window` keeps the user-declared duration string for display
+ * (`"5h15m"`); `window_seconds` is the parsed total the ledger and the
+ * balancer compute against. Budgets are USER-DECLARED approximations of
+ * subscription windows — providers expose no remaining-quota API.
+ */
+export interface ProviderBudgetEntry {
+    readonly window: string;
+    readonly window_seconds: number;
+    readonly max_calls: number;
+}
+
 export interface CouncilConfig {
     readonly enabled: boolean;
     readonly defaults: DefaultsConfig;
@@ -515,6 +535,7 @@ export interface CouncilConfig {
     readonly advisors: ReadonlyMap<string, AdvisorConfig>;
     readonly consensus_scoring: ConsensusScoringConfig;
     readonly cli_call_budget: CliCallBudgetConfig;
+    readonly provider_budgets: ReadonlyMap<string, ProviderBudgetEntry>;
     readonly necessity_classifier: NecessityClassifierConfig;
     readonly model_downgrade: ModelDowngradeConfig;
     readonly debate: DebateConfig;
@@ -524,6 +545,12 @@ export interface CouncilConfig {
     readonly low_impact: LowImpactConfig;
     readonly lens_overrides: LensOverridesConfig;
     readonly source_path: PathLike | null;
+    /**
+     * Non-fatal validation warnings collected at load time (e.g. a
+     * `provider_budgets` entry shadowing a `cli_call_budget` cap). The
+     * CLI surfaces them on stderr; the config still loads.
+     */
+    readonly warnings: readonly string[];
 }
 
 // ── default factories (dataclass defaults) ─────────────────────────
@@ -737,6 +764,21 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
     const cli_call_budget = _build_cli_call_budget(
         _asDict(_getOr(raw, 'cli_call_budget', {})),
     );
+    const provider_budgets = _build_provider_budgets(
+        _asDict(_getOr(raw, 'provider_budgets', {})),
+    );
+    // Precedence warning — a rolling budget shadows the daily cap for the
+    // same provider (the rolling budget wins; the daily key is inert).
+    const warnings: string[] = [];
+    for (const provider of provider_budgets.keys()) {
+        if (cli_call_budget.max_calls_per_day.has(provider)) {
+            warnings.push(
+                `provider_budgets.${provider} shadows ` +
+                    `cli_call_budget.max_calls_per_day.${provider} — the ` +
+                    `rolling budget wins for this provider.`,
+            );
+        }
+    }
     const necessity_classifier = _build_necessity_classifier(
         _asDict(_getOr(raw, 'necessity_classifier', {})),
     );
@@ -770,6 +812,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         advisors,
         consensus_scoring: consensus,
         cli_call_budget,
+        provider_budgets,
         necessity_classifier,
         model_downgrade,
         debate,
@@ -779,6 +822,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         low_impact,
         lens_overrides,
         source_path,
+        warnings,
     };
 }
 
@@ -1313,9 +1357,25 @@ function _build_routing(d: Dict, members: Map<string, MemberConfig>): RoutingCon
                 `[1, 30] (got ${_pyRepr(timeout_raw)}).`,
         );
     }
+    // Provider-budget balancer switch (v1). YAML 1.1 parses bare on/off
+    // to booleans; quoted "on"/"off" strings are accepted too. Default on.
+    const balance_raw = _get(d, 'balance', true);
+    let balance: boolean;
+    if (_isBool(balance_raw)) {
+        balance = balance_raw;
+    } else if (balance_raw === 'on') {
+        balance = true;
+    } else if (balance_raw === 'off') {
+        balance = false;
+    } else {
+        throw new CouncilConfigError(
+            `routing.balance must be on|off (got ${_pyRepr(balance_raw)}).`,
+        );
+    }
     return {
         solo_member_fallback_chain: chain,
         auth_check_timeout_seconds: timeout_raw,
+        balance,
     };
 }
 
@@ -1581,6 +1641,94 @@ function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
         );
     }
     return { max_calls_per_day: caps, warn_at };
+}
+
+// ── provider budget balancer (v1) ──────────────────────────────────
+
+/** Minimum accepted rolling-window length — 5 minutes, in seconds. */
+export const MIN_WINDOW_SECONDS = 300;
+
+/**
+ * Canonical duration grammar: `<N>d`, `<N>h`, `<N>m` in that order, each
+ * component optional but at least one required (`"5h"`, `"5h15m"`, `"1d"`,
+ * `"30m"`). Anything else fails closed.
+ */
+const _WINDOW_RE = /^(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?$/;
+
+/**
+ * Parse a rolling-window duration string to total seconds.
+ *
+ * Fail-closed: an unparseable spec or a total below the 5-minute floor
+ * raises `CouncilConfigError` (consistent with the loader's fail-closed
+ * philosophy — a silently-misread window would over-report availability).
+ */
+export function parse_window_duration(spec: Json, scope = 'window'): number {
+    const fail = (): never => {
+        throw new CouncilConfigError(
+            `${scope} must be a duration string combining <N>d/<N>h/<N>m ` +
+                `(e.g. '5h15m') (got ${_pyRepr(spec)}).`,
+        );
+    };
+    if (!_isStr(spec)) {
+        fail();
+    }
+    const m = _WINDOW_RE.exec(spec as string);
+    if (
+        m === null ||
+        (m[1] === undefined && m[2] === undefined && m[3] === undefined)
+    ) {
+        fail();
+    }
+    const groups = m as RegExpExecArray;
+    const days = groups[1] !== undefined ? parseInt(groups[1], 10) : 0;
+    const hours = groups[2] !== undefined ? parseInt(groups[2], 10) : 0;
+    const minutes = groups[3] !== undefined ? parseInt(groups[3], 10) : 0;
+    const total = days * 86400 + hours * 3600 + minutes * 60;
+    if (total < MIN_WINDOW_SECONDS) {
+        throw new CouncilConfigError(
+            `${scope} must be at least 5 minutes (got ${_pyReprStr(spec as string)}).`,
+        );
+    }
+    return total;
+}
+
+function _build_provider_budgets(d: Dict): Map<string, ProviderBudgetEntry> {
+    if (!_isDict(d)) {
+        throw new CouncilConfigError('`provider_budgets` must be a mapping.');
+    }
+    const budgets = new Map<string, ProviderBudgetEntry>();
+    for (const [provider, value] of Object.entries(d)) {
+        if (!_VALID_PROVIDERS.has(provider)) {
+            throw new CouncilConfigError(
+                `provider_budgets.${provider}: unknown provider; valid: ` +
+                    `${_sortedListRepr(_VALID_PROVIDERS)}.`,
+            );
+        }
+        if (!_isDict(value)) {
+            throw new CouncilConfigError(
+                `provider_budgets.${provider} must be a mapping ` +
+                    `(got ${_pyTypeName(value)}).`,
+            );
+        }
+        const window_raw = _get(value, 'window', null);
+        const window_seconds = parse_window_duration(
+            window_raw,
+            `provider_budgets.${provider}.window`,
+        );
+        const max_calls = _get(value, 'max_calls', null);
+        if (!_isInt(max_calls) || _isBool(max_calls) || max_calls <= 0) {
+            throw new CouncilConfigError(
+                `provider_budgets.${provider}.max_calls must be a positive ` +
+                    `integer (got ${_pyRepr(max_calls)}).`,
+            );
+        }
+        budgets.set(provider, {
+            window: window_raw as string,
+            window_seconds,
+            max_calls,
+        });
+    }
+    return budgets;
 }
 
 function _build_advisor(name: string, cfg: Dict): AdvisorConfig {

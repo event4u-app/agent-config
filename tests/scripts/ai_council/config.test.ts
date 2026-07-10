@@ -222,6 +222,133 @@ describe('load_council_config — validation errors', () => {
     });
 });
 
+// === provider budget balancer (v1) =========================================
+
+describe('parse_window_duration', () => {
+    it('parses the canonical combinations', () => {
+        expect(cfg.parse_window_duration('5h')).toBe(5 * 3600);
+        expect(cfg.parse_window_duration('5h15m')).toBe(5 * 3600 + 15 * 60);
+        expect(cfg.parse_window_duration('1d')).toBe(86400);
+        expect(cfg.parse_window_duration('30m')).toBe(1800);
+        expect(cfg.parse_window_duration('1d2h3m')).toBe(86400 + 2 * 3600 + 3 * 60);
+    });
+
+    it('fails closed on unknown formats', () => {
+        for (const bad of ['', '5x', '5', 'h5', '15m5h', 'abc', null, 42]) {
+            expect(() => cfg.parse_window_duration(bad as never)).toThrow(
+                cfg.CouncilConfigError,
+            );
+        }
+    });
+
+    it('rejects totals below the 5-minute floor', () => {
+        expect(() => cfg.parse_window_duration('2m')).toThrow(/at least 5 minutes/);
+        expect(() => cfg.parse_window_duration('0h')).toThrow(/at least 5 minutes/);
+        expect(cfg.parse_window_duration('5m')).toBe(300); // floor itself is OK
+    });
+});
+
+describe('load_council_config — provider_budgets + routing.balance', () => {
+    it('parses budgets; balance defaults to on; no warnings without overlap', () => {
+        const tmp = make_tmp();
+        const payload =
+            MINIMAL_VALID +
+            `provider_budgets:
+  anthropic: { window: "5h15m", max_calls: 38 }
+  openai:    { window: "1d",    max_calls: 95 }
+`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.provider_budgets.get('anthropic')).toEqual({
+            window: '5h15m',
+            window_seconds: 5 * 3600 + 15 * 60,
+            max_calls: 38,
+        });
+        expect(c.provider_budgets.get('openai')).toEqual({
+            window: '1d',
+            window_seconds: 86400,
+            max_calls: 95,
+        });
+        expect(c.routing.balance).toBe(true);
+        expect(c.warnings).toEqual([]);
+    });
+
+    it('unknown provider is rejected', () => {
+        const tmp = make_tmp();
+        const p = write_yaml(
+            tmp,
+            MINIMAL_VALID + 'provider_budgets:\n  zzz: { window: "5h", max_calls: 1 }\n',
+        );
+        expect(() => cfg.load_council_config(p)).toThrow(/provider_budgets\.zzz.*unknown provider/);
+    });
+
+    it('bad window and bad max_calls are rejected', () => {
+        const tmp = make_tmp();
+        const badWindow = write_yaml(
+            tmp,
+            MINIMAL_VALID + 'provider_budgets:\n  anthropic: { window: "5x", max_calls: 1 }\n',
+        );
+        expect(() => cfg.load_council_config(badWindow)).toThrow(
+            /provider_budgets\.anthropic\.window/,
+        );
+        const badCalls = write_yaml(
+            tmp,
+            MINIMAL_VALID + 'provider_budgets:\n  anthropic: { window: "5h", max_calls: 0 }\n',
+        );
+        expect(() => cfg.load_council_config(badCalls)).toThrow(
+            /provider_budgets\.anthropic\.max_calls.*positive integer/,
+        );
+    });
+
+    it('provider_budgets shadows cli_call_budget for the same provider + warns', () => {
+        const tmp = make_tmp();
+        const payload =
+            MINIMAL_VALID +
+            `cli_call_budget:
+  max_calls_per_day:
+    anthropic: 50
+provider_budgets:
+  anthropic: { window: "5h", max_calls: 38 }
+`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        // Both blocks still load — the warning names the shadowed key.
+        expect(c.cli_call_budget.max_calls_per_day.get('anthropic')).toBe(50);
+        expect(c.provider_budgets.get('anthropic')!.max_calls).toBe(38);
+        expect(c.warnings).toEqual([
+            'provider_budgets.anthropic shadows ' +
+                'cli_call_budget.max_calls_per_day.anthropic — the rolling ' +
+                'budget wins for this provider.',
+        ]);
+    });
+
+    it('back-compat: cli_call_budget alone validates with no warnings', () => {
+        const tmp = make_tmp();
+        const payload =
+            MINIMAL_VALID +
+            `cli_call_budget:
+  max_calls_per_day:
+    anthropic: 50
+`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.cli_call_budget.max_calls_per_day.get('anthropic')).toBe(50);
+        expect(c.provider_budgets.size).toBe(0);
+        expect(c.warnings).toEqual([]);
+    });
+
+    it('routing.balance accepts on/off (YAML bool + quoted string); rejects junk', () => {
+        const tmp = make_tmp();
+        const off = cfg.load_council_config(
+            write_yaml(tmp, MINIMAL_VALID + 'routing:\n  balance: off\n'),
+        );
+        expect(off.routing.balance).toBe(false);
+        const on = cfg.load_council_config(
+            write_yaml(tmp, MINIMAL_VALID + 'routing:\n  balance: "on"\n'),
+        );
+        expect(on.routing.balance).toBe(true);
+        const bad = write_yaml(tmp, MINIMAL_VALID + 'routing:\n  balance: sideways\n');
+        expect(() => cfg.load_council_config(bad)).toThrow(/routing\.balance must be on\|off/);
+    });
+});
+
 // === resolve_api_key — env + file ==========================================
 
 describe('resolve_api_key', () => {

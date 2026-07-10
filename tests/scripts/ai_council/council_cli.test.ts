@@ -34,10 +34,12 @@ import {
     ExternalAIClient,
 } from '../../../src/scripts/ai_council/clients.js';
 import type { Price, PriceTable } from '../../../src/scripts/ai_council/pricing.js';
+import { _today_utc_iso } from '../../../src/scripts/ai_council/clients.js';
 import {
     CouncilDisabledError,
     build_members,
     cmd_debate,
+    cmd_quota,
     cmd_run,
     _parse_siblings_overrides,
 } from '../../../src/scripts/council_cli.js';
@@ -427,5 +429,84 @@ describe('cmd_debate', () => {
         }
         expect(rc).toBe(0);
         expect(errSpy.join('')).not.toContain('refused');
+    });
+});
+
+// ── cmd_quota — extended per-provider report (balancer v1) ─────────────
+
+describe('cmd_quota — rolling + utc-day report', () => {
+    it('shows type, remaining %, reset ETA, billable marker; rolling shadows daily', () => {
+        // Sandbox the user-global counter path so the test never touches
+        // the developer's real ~/.event4u state.
+        const home = mkTmp();
+        const savedHome = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = home;
+        const windowStart = new Date(Date.now() - 3600 * 1000).toISOString(); // 1h ago
+        fs.writeFileSync(
+            path.join(home, 'cli-calls.json'),
+            JSON.stringify({
+                date: _today_utc_iso(),
+                counts: { openai: 2, gemini: 5 },
+                rolling: {
+                    anthropic: { window_start: windowStart, used: 3 },
+                },
+            }),
+            'utf-8',
+        );
+        const settings = {
+            ai_council: {
+                enabled: true,
+                mode: 'cli',
+                members: {
+                    anthropic: { enabled: true, mode: 'cli' },
+                    openai: { enabled: true, mode: 'cli' },
+                    gemini: { enabled: true, mode: 'cli' },
+                },
+                cli_call_budget: {
+                    max_calls_per_day: { openai: 10, gemini: 5 },
+                    warn_at: 0.8,
+                },
+                provider_budgets: {
+                    anthropic: { window: '5h15m', window_seconds: 5 * 3600 + 15 * 60, max_calls: 38 },
+                    // gemini is in BOTH blocks — the rolling budget wins:
+                    // no calls in the rolling window, so gemini reports
+                    // 0/10 instead of the exhausted 5/5 daily cap.
+                    gemini: { window: '1d', window_seconds: 86400, max_calls: 10 },
+                },
+            },
+        };
+        const captured: string[] = [];
+        const origWrite = process.stdout.write.bind(process.stdout);
+        process.stdout.write = ((chunk: string | Uint8Array): boolean => {
+            captured.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf-8'));
+            return true;
+        }) as typeof process.stdout.write;
+        let rc: number;
+        try {
+            rc = cmd_quota(
+                { reset: null, confirm: false } as unknown as Parameters<typeof cmd_quota>[0],
+                { settings },
+            );
+        } finally {
+            process.stdout.write = origWrite;
+            if (savedHome === undefined) {
+                delete process.env['EVENT4U_CONFIG_HOME'];
+            } else {
+                process.env['EVENT4U_CONFIG_HOME'] = savedHome;
+            }
+        }
+        expect(rc).toBe(0);
+        const out = captured.join('');
+        expect(out).toMatch(
+            /council:quota · anthropic · 3\/38 · ok · 92% left · rolling 5h15m · resets \d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z · non-billable\n/,
+        );
+        expect(out).toMatch(
+            /council:quota · openai · 2\/10 · ok · 80% left · utc-day · resets \d{4}-\d{2}-\d{2}T00:00Z · non-billable\n/,
+        );
+        // gemini: rolling budget shadows the exhausted daily cap; no
+        // rolling window is active yet → ETA is "—".
+        expect(out).toMatch(
+            /council:quota · gemini · 0\/10 · ok · 100% left · rolling 1d · resets — · non-billable\n/,
+        );
     });
 });

@@ -32,7 +32,11 @@ function member(name: string, enabled: boolean, model = 'm'): MemberConfig {
 }
 
 function routing(chain: string[], timeout = 3): RoutingConfig {
-    return { solo_member_fallback_chain: chain, auth_check_timeout_seconds: timeout };
+    return {
+        solo_member_fallback_chain: chain,
+        auth_check_timeout_seconds: timeout,
+        balance: true,
+    };
 }
 
 // ── Unit tests ───────────────────────────────────────────────────────

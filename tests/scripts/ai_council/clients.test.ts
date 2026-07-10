@@ -66,8 +66,11 @@ import {
     load_openai_key,
     quota_summary_line,
     record_cli_call,
+    record_rolling_call,
     reset_cli_call_counts,
     load_cli_call_counts,
+    load_rolling_state,
+    rolling_window_used,
     type SubprocessResult,
     type TextInputStream,
     type TextOutputStream,
@@ -667,13 +670,45 @@ describe('clients — quota gate + cli-calls counter', () => {
         record_cli_call('anthropic', p); // 4/5 = 0.8 → warn
         const capped = new AnthropicCliClient({ binary: '/bin/echo', max_calls_per_day: 5, cli_calls_path: p });
         const uncapped = new OpenAICliClient({ binary: '/bin/echo', cli_calls_path: p });
-        const [summary, warn] = quota_summary_line([capped, uncapped], { cli_calls_path: p });
-        expect(summary).toBe('⚠️  council:quota · anthropic 4/5');
+        const now = new Date('2026-07-10T10:00:00Z');
+        const [summary, warn] = quota_summary_line([capped, uncapped], { cli_calls_path: p, now });
+        expect(summary).toBe(
+            '⚠️  council:quota · anthropic 4/5 ' +
+                '(20% left · utc-day · resets 2026-07-11T00:00Z · non-billable)',
+        );
         expect(warn).toEqual(['anthropic']);
 
         const [empty, ew] = quota_summary_line([uncapped], { cli_calls_path: p });
         expect(empty).toBe('');
         expect(ew).toEqual([]);
+    });
+
+    it('quota_summary_line shows rolling budgets with reset ETA + billable marker', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        const budget = { window: '5h15m', window_seconds: 5 * 3600 + 15 * 60, max_calls: 38 };
+        const now = new Date('2026-07-10T10:00:00Z');
+        record_rolling_call('anthropic', budget.window_seconds, {
+            cli_calls_path: p,
+            now: new Date('2026-07-10T09:00:00Z'),
+        });
+        const rolling = new AnthropicCliClient({
+            binary: '/bin/echo',
+            provider_budget: budget,
+            cli_calls_path: p,
+        });
+        // Community wrapper — billable stays true even in mode: cli.
+        const community = new XAICliClient({
+            binary: '/bin/echo',
+            provider_budget: { window: '1d', window_seconds: 86400, max_calls: 10 },
+            cli_calls_path: p,
+        });
+        const [summary, warn] = quota_summary_line([rolling, community], { cli_calls_path: p, now });
+        expect(summary).toBe(
+            'council:quota · ' +
+                'anthropic 1/38 (97% left · rolling 5h15m · resets 2026-07-10T14:15Z · non-billable) · ' +
+                'xai 0/10 (100% left · rolling 1d · resets — · billable)',
+        );
+        expect(warn).toEqual([]);
     });
 
     if (py3) {
@@ -714,6 +749,102 @@ describe('clients — quota gate + cli-calls counter', () => {
             expect(norm(tsBytes)).toBe(norm(pyBytes));
         });
     }
+});
+
+// ── rolling-window ledger (provider budget balancer v1) ────────────────
+describe('clients — rolling-window ledger', () => {
+    const WINDOW_5H = 5 * 3600;
+
+    it('accumulates within the window; window_start pins to the first call', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        const t0 = new Date('2026-07-10T09:00:00Z');
+        expect(record_rolling_call('anthropic', WINDOW_5H, { cli_calls_path: p, now: t0 })).toBe(1);
+        const t1 = new Date('2026-07-10T11:00:00Z');
+        expect(record_rolling_call('anthropic', WINDOW_5H, { cli_calls_path: p, now: t1 })).toBe(2);
+        const r = rolling_window_used('anthropic', WINDOW_5H, { cli_calls_path: p, now: t1 });
+        expect(r.used).toBe(2);
+        expect(r.window_start).toBe(t0.toISOString());
+    });
+
+    it('resets past the window — read shows 0, next record starts fresh', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        const t0 = new Date('2026-07-10T09:00:00Z');
+        record_rolling_call('anthropic', WINDOW_5H, { cli_calls_path: p, now: t0 });
+        const later = new Date('2026-07-10T14:00:01Z'); // > 5h after t0
+        expect(rolling_window_used('anthropic', WINDOW_5H, { cli_calls_path: p, now: later })).toEqual({
+            used: 0,
+            window_start: null,
+        });
+        expect(record_rolling_call('anthropic', WINDOW_5H, { cli_calls_path: p, now: later })).toBe(1);
+        const r = rolling_window_used('anthropic', WINDOW_5H, { cli_calls_path: p, now: later });
+        expect(r.window_start).toBe(later.toISOString());
+    });
+
+    it('daily and rolling sections coexist — neither write clobbers the other', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        record_cli_call('anthropic', p);
+        record_rolling_call('anthropic', 3600, {
+            cli_calls_path: p,
+            now: new Date('2026-07-10T09:00:00Z'),
+        });
+        record_cli_call('anthropic', p); // daily write must preserve rolling
+        const parsed = JSON.parse(fs.readFileSync(p, 'utf-8'));
+        expect(parsed.counts).toEqual({ anthropic: 2 });
+        expect(parsed.rolling.anthropic.used).toBe(1);
+        expect(load_rolling_state(p)['anthropic']!.used).toBe(1);
+    });
+
+    it('reset clears the provider rolling record alongside its daily count', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        record_cli_call('anthropic', p);
+        record_rolling_call('anthropic', 3600, { cli_calls_path: p });
+        reset_cli_call_counts('anthropic', p);
+        expect(load_cli_call_counts(p)).toEqual({});
+        expect(load_rolling_state(p)).toEqual({});
+    });
+
+    it('rolling gate blocks with cli_quota_exhausted, shadowing the daily cap', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        const budget = { window: '5h', window_seconds: WINDOW_5H, max_calls: 2 };
+        record_rolling_call('anthropic', WINDOW_5H, { cli_calls_path: p });
+        record_rolling_call('anthropic', WINDOW_5H, { cli_calls_path: p }); // used=2
+        let spawned = false;
+        const Sub = class extends AnthropicCliClient {
+            protected override _runSubprocess(): SubprocessResult {
+                spawned = true;
+                return { returncode: 0, stdout: '{}', stderr: '' };
+            }
+        };
+        const c = new Sub({ binary: '/bin/echo', provider_budget: budget, cli_calls_path: p });
+        const r = c.ask('s', 'u', 1);
+        expect(spawned).toBe(false);
+        expect(r.error).toBe('cli_quota_exhausted');
+        expect(r.metadata).toMatchObject({
+            cli: true,
+            cli_calls_used: 2,
+            cli_calls_max: 2,
+            budget_window: '5h',
+        });
+    });
+
+    it('a successful ask records both daily and rolling usage', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        const budget = { window: '5h', window_seconds: WINDOW_5H, max_calls: 5 };
+        const Sub = class extends AnthropicCliClient {
+            protected override _runSubprocess(): SubprocessResult {
+                return {
+                    returncode: 0,
+                    stdout: JSON.stringify({ result: 'ok', usage: { input_tokens: 1, output_tokens: 1 } }),
+                    stderr: '',
+                };
+            }
+        };
+        const c = new Sub({ binary: '/bin/echo', provider_budget: budget, cli_calls_path: p });
+        const r = c.ask('s', 'u', 1);
+        expect(r.error).toBeNull();
+        expect(load_cli_call_counts(p)).toEqual({ anthropic: 1 });
+        expect(rolling_window_used('anthropic', WINDOW_5H, { cli_calls_path: p }).used).toBe(1);
+    });
 });
 
 // ── CLI error-mapping parity (_classify_stderr) ────────────────────────
