@@ -6,10 +6,10 @@
 
 ## Overall
 
-**171 / 411 steps done · 42%**
+**173 / 396 steps done · 44%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
@@ -20,23 +20,22 @@
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-command-structure-optimization.md](roadmaps/road-to-command-structure-optimization.md) | 6 | 28 | 1 | 23 | 2 | 2 | 0 | ██████████ 96% |
 | 4 | [road-to-design-artifact-fidelity.md](roadmaps/road-to-design-artifact-fidelity.md) | 8 | 39 | 39 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-design-mechanism-harvest.md](roadmaps/road-to-design-mechanism-harvest.md) | 6 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 4 | 8 | 0 | 0 | 0 | ███████░░░ 67% |
-| 8 | [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md) | 6 | 19 | 5 | 14 | 0 | 0 | 0 | ███████░░░ 74% |
-| 9 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 10 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 44 | 5 | 0 | 0 | 0 | █░░░░░░░░░ 10% |
-| 11 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 12 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 3 | 12 | 0 | 0 | 0 | ████████░░ 80% |
-| 13 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
-| 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
-| 16 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 17 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | 0 | ███████░░░ 73% |
-| 18 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 19 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 20 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 21 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
+| 5 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
+| 7 | [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md) | 6 | 19 | 5 | 14 | 0 | 0 | 0 | ███████░░░ 74% |
+| 8 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
+| 9 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 44 | 5 | 0 | 0 | 0 | █░░░░░░░░░ 10% |
+| 10 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
+| 11 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 3 | 12 | 0 | 0 | 0 | ████████░░ 80% |
+| 12 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
+| 13 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
+| 14 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
+| 15 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 16 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | 0 | ███████░░░ 73% |
+| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 18 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 19 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 20 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
 ---
 
@@ -122,13 +121,13 @@ _2 blockers resolved._
 
 ### [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md)
 
-**Road to domain soundness — prove or honestly scope the non-forged, non-coding domains** — 8 / 12 done (67%)
+**Road to domain soundness — prove or honestly scope the non-forged, non-coding domains** — 10 / 12 done (83%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Scope to the default surface + define domain-truth fixtures | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Author domain-truth fixtures with domain competence (not output taste) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
-| 3 | Run + gate the provenance claim | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 2 | Author domain-truth fixtures with domain competence (not output taste) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 3 | Run + gate the provenance claim | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Honest disposition of the long tail | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 
 ### [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md)

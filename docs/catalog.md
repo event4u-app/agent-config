@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **617 public artefacts** shipped by
+Consumer-facing catalog of all **629 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (264)
+## Skills (267)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -18,8 +18,9 @@ are excluded.
 
 > **Non-coding domain correctness is scoped, not proven.** The
 > `finance` / `founder` / `ops` / `content` skills are forged on TS/PHP
-> codebases; their embedded domain heuristics are labeled `unvalidated`
-> until they pass a sourced `evals/domain-truth.json` fixture
+> codebases; 5 of 20 default-surface domain skills carry a sourced
+> `evals/domain-truth.json` fixture (deterministic targets, keys from
+> cited formulas); the rest are labeled `unvalidated` until they pass one
 > (`./scripts-run src/scripts/domain_soundness_status`). A disclaimer
 > floor bounds liability, not correctness — see [the proof page](proof.md).
 
@@ -32,6 +33,7 @@ are excluded.
 | skill | [`agent-docs-writing`](../dist/agent-src/skills/agent-docs-writing/SKILL.md) |  | Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure. |
 | skill | [`agent-security-review`](../dist/agent-src/skills/agent-security-review/SKILL.md) |  | Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit. |
 | skill | [`agents-md-thin-root`](../dist/agent-src/skills/agents-md-thin-root/SKILL.md) |  | Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: hard char ceilings, ≥40% pointer ratio, mandatory emergency-triage block. |
+| skill | [`ai-code-blindspots`](../dist/agent-src/skills/ai-code-blindspots/SKILL.md) |  | Before finishing any code (endpoint, query, migration, render, file, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with backstop greps |
 | skill | [`ai-council`](../dist/agent-src/skills/ai-council/SKILL.md) |  | Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'. |
 | skill | [`analysis-autonomous-mode`](../dist/agent-src/skills/analysis-autonomous-mode/SKILL.md) |  | ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work. |
 | skill | [`analysis-skill-router`](../dist/agent-src/skills/analysis-skill-router/SKILL.md) |  | Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'. |
@@ -116,6 +118,7 @@ are excluded.
 | skill | [`forecast-accuracy`](../dist/agent-src/skills/forecast-accuracy/SKILL.md) |  | Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence test, accuracy retro-loop. Triggers on 'build the forecast', 'why does our commit miss'. |
 | skill | [`forecasting`](../dist/agent-src/skills/forecasting/SKILL.md) |  | Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'. |
 | skill | [`form-handler`](../dist/agent-src/skills/form-handler/SKILL.md) |  | Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'. |
+| skill | [`frontend-render-security`](../dist/agent-src/skills/frontend-render-security/SKILL.md) |  | Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage |
 | skill | [`fundraising-narrative`](../dist/agent-src/skills/fundraising-narrative/SKILL.md) |  | Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'. |
 | skill | [`funnel-analysis`](../dist/agent-src/skills/funnel-analysis/SKILL.md) |  | Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven. |
 | skill | [`git-workflow`](../dist/agent-src/skills/git-workflow/SKILL.md) |  | Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git. |
@@ -261,6 +264,7 @@ are excluded.
 | skill | [`stakeholder-tradeoff`](../dist/agent-src/skills/stakeholder-tradeoff/SKILL.md) |  | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | skill | [`standards-from-config`](../dist/agent-src/skills/standards-from-config/SKILL.md) |  | Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim. |
 | skill | [`subagent-orchestration`](../dist/agent-src/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml. |
+| skill | [`supply-chain-intake`](../dist/agent-src/skills/supply-chain-intake/SKILL.md) |  | Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned |
 | skill | [`symfony-workflow`](../dist/agent-src/skills/symfony-workflow/SKILL.md) |  | Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`. |
 | skill | [`systematic-debugging`](../dist/agent-src/skills/systematic-debugging/SKILL.md) |  | Use on a bug, test failure, crash, or unexpected behavior — enforce reproduce → isolate → hypothesize → verify before any fix; fires even on 'this is broken' / 'quick fix'. |
 | skill | [`tailwind-engineer`](../dist/agent-src/skills/tailwind-engineer/SKILL.md) |  | Use when writing or reviewing Tailwind CSS — utility-first, design-token discipline, no inline-style drift, responsive variants, dark mode — even on 'style this' or 'mach das hübsch'. |
@@ -270,7 +274,7 @@ are excluded.
 | skill | [`terragrunt`](../dist/agent-src/skills/terragrunt/SKILL.md) |  | Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt. |
 | skill | [`test-driven-development`](../dist/agent-src/skills/test-driven-development/SKILL.md) |  | Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. |
 | skill | [`test-performance`](../dist/agent-src/skills/test-performance/SKILL.md) |  | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
-| skill | [`testing-anti-patterns`](../dist/agent-src/skills/testing-anti-patterns/SKILL.md) |  | Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — Iron Laws against mocking-the-mock, production pollution, silent partial mocks. |
+| skill | [`testing-anti-patterns`](../dist/agent-src/skills/testing-anti-patterns/SKILL.md) |  | Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions |
 | skill | [`threat-modeling`](../dist/agent-src/skills/threat-modeling/SKILL.md) |  | Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation. |
 | skill | [`throughput-vs-morale-tradeoff`](../dist/agent-src/skills/throughput-vs-morale-tradeoff/SKILL.md) |  | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
 | skill | [`token-optimizer`](../dist/agent-src/skills/token-optimizer/SKILL.md) |  | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
@@ -290,10 +294,11 @@ are excluded.
 | skill | [`voice-and-tone-design`](../dist/agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 
-## Rules (94)
+## Rules (101)
 
 | kind | name | type | description |
 |---|---|---|---|
+| rule | [`active-remediation`](../dist/agent-src/rules/active-remediation.md) | auto | Spotted an issue while working (security gap, missing test, bad code, duplication, stale idiom) — never ignore; fix small+aligned inline, ask on bigger, propose a follow-up PR for many |
 | rule | [`agent-authority`](../dist/agent-src/rules/agent-authority.md) | always | Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule |
 | rule | [`analysis-skill-routing`](../dist/agent-src/rules/analysis-skill-routing.md) | manual | When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis |
 | rule | [`architecture`](../dist/agent-src/rules/architecture.md) | auto | Architecture rules for new files, classes, controllers, modules, or structural decisions about project organization |
@@ -304,10 +309,12 @@ are excluded.
 | rule | [`autonomous-execution`](../dist/agent-src/rules/autonomous-execution.md) | auto | Ask-or-act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor stays |
 | rule | [`brand-consistency`](../dist/agent-src/rules/brand-consistency.md) | auto | Generated UI/copy/assets check against active brand tokens + voice profile — untraceable values are flagged off-brand |
 | rule | [`brand-source-of-truth`](../dist/agent-src/rules/brand-source-of-truth.md) | auto | Consumer brand tokens + voice profile are the run's source of truth — the corpus fills gaps, never overrides |
+| rule | [`broken-access-control`](../dist/agent-src/rules/broken-access-control.md) | auto | Endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant/role check + the three negative tests (401/non-owner/cross-tenant) |
 | rule | [`cli-output-handling`](../dist/agent-src/rules/cli-output-handling.md) | auto | Verbose CLI output (git, tests, linters, docker, npm, composer) — wrap with rtk; tail/grep fallback |
 | rule | [`command-suggestion-policy`](../dist/agent-src/rules/command-suggestion-policy.md) | auto | Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute |
 | rule | [`commit-conventions`](../dist/agent-src/rules/commit-conventions.md) | auto | Git commit format, branch naming, conventional commits, committing, pushing, creating PRs |
 | rule | [`commit-policy`](../dist/agent-src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
+| rule | [`communication-through-line`](../dist/agent-src/rules/communication-through-line.md) | auto | Multi-step or continuation replies carry a red thread — state the goal once, tie each turn back to it, name what changed since last turn, close the loop with one end-summary |
 | rule | [`content-quoting-floor`](../dist/agent-src/rules/content-quoting-floor.md) | auto | Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default |
 | rule | [`context-hygiene`](../dist/agent-src/rules/context-hygiene.md) | auto | Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
 | rule | [`copilot-routing`](../dist/agent-src/rules/copilot-routing.md) | auto | Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config |
@@ -323,6 +330,7 @@ are excluded.
 | rule | [`domain-safety-retention`](../dist/agent-src/rules/domain-safety-retention.md) | auto | Data retention — jurisdiction gap, longest floor, honor DSR/audit holds; never delete under inquiry |
 | rule | [`downstream-changes`](../dist/agent-src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation |
 | rule | [`engineering-safety-floor`](../dist/agent-src/rules/engineering-safety-floor.md) | auto | Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous |
+| rule | [`external-code-graph-interop`](../dist/agent-src/rules/external-code-graph-interop.md) | auto | When the repo ships an external code-graph index (a graph.json-shaped artifact or a SCIP index), query IT first for codebase-structure questions — do not grep from scratch |
 | rule | [`external-reference-deep-dive`](../dist/agent-src/rules/external-reference-deep-dive.md) | auto | User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README |
 | rule | [`fast-path-marker-visibility`](../dist/agent-src/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path — surface the transparency marker verbatim as the reply opener |
 | rule | [`finance-safety-floor`](../dist/agent-src/rules/finance-safety-floor.md) | auto | Finance-pack output (runway, valuation, DCF, scenarios, unit economics) — never a final invest/raise call; disclosure footer |
@@ -358,8 +366,10 @@ are excluded.
 | rule | [`package-ci-checks`](../dist/agent-src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`persona-governance`](../dist/agent-src/rules/persona-governance.md) | auto | Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path |
 | rule | [`php-coding`](../dist/agent-src/rules/php-coding.md) | auto | Writing/reviewing PHP — strict types, naming, comparisons, early returns, Eloquent conventions |
+| rule | [`prefer-enums-over-literals`](../dist/agent-src/rules/prefer-enums-over-literals.md) | auto | Modeling a field/property with multiple non-boolean states — prefer an enum over bare string/numeric literals; found old-style literals where an enum fits → note, finish the task, ask after |
 | rule | [`preservation-guard`](../dist/agent-src/rules/preservation-guard.md) | auto | Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss |
 | rule | [`provider-lifecycle-discipline`](../dist/agent-src/rules/provider-lifecycle-discipline.md) | auto | Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable |
+| rule | [`question-not-instruction`](../dist/agent-src/rules/question-not-instruction.md) | auto | A question is a request for an ANSWER, never authorization to act — answer first; never treat 'why…?' / 'can you…?' / 'what do you think?' as a green light to build, change, or execute |
 | rule | [`reviewer-awareness`](../dist/agent-src/rules/reviewer-awareness.md) | auto | Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary |
 | rule | [`roadmap-ci-steps-policy`](../dist/agent-src/rules/roadmap-ci-steps-policy.md) | auto | Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline |
 | rule | [`roadmap-progress-sync`](../dist/agent-src/rules/roadmap-progress-sync.md) | auto | Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open |
@@ -368,6 +378,7 @@ are excluded.
 | rule | [`runtime-safety`](../dist/agent-src/rules/runtime-safety.md) | auto | Skill declares execution metadata — enforce safety constraints for assisted/automated execution types |
 | rule | [`scope-control`](../dist/agent-src/rules/scope-control.md) | always | Scope control — no unsolicited architectural changes, refactors, or library replacements |
 | rule | [`security-sensitive-stop`](../dist/agent-src/rules/security-sensitive-stop.md) | auto | Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing |
+| rule | [`senior-engineering-discipline`](../dist/agent-src/rules/senior-engineering-discipline.md) | auto | Writing/generating code — generalize (no overfit or tautological tests), supply the invisible cross-cutting controls the prompt didn't name, never invent an API/field/package |
 | rule | [`size-enforcement`](../dist/agent-src/rules/size-enforcement.md) | manual | Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits |
 | rule | [`skill-improvement-trigger`](../dist/agent-src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../dist/agent-src/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |
@@ -566,7 +577,7 @@ are excluded.
 | command | [`video-storyboard`](../dist/agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
 | command | [`work`](../dist/agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git. |
 
-## Guidelines (87)
+## Guidelines (89)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -583,6 +594,7 @@ are excluded.
 | guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |
 | guideline | [`domain-eval-anti-pattern`](../docs/guidelines/agent-infra/domain-eval-anti-pattern.md) | agent-infra |  |
 | guideline | [`domain-pack-architecture`](../docs/guidelines/agent-infra/domain-pack-architecture.md) | agent-infra |  |
+| guideline | [`emphasis-budget`](../docs/guidelines/agent-infra/emphasis-budget.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
 | guideline | [`failure-signatures`](../docs/guidelines/agent-infra/failure-signatures.md) | agent-infra |  |
 | guideline | [`first-principles`](../docs/guidelines/agent-infra/first-principles.md) | agent-infra |  |
@@ -613,6 +625,7 @@ are excluded.
 | guideline | [`size-and-scope`](../docs/guidelines/agent-infra/size-and-scope.md) | agent-infra |  |
 | guideline | [`skill-quality-checklist`](../docs/guidelines/agent-infra/skill-quality-checklist.md) | agent-infra |  |
 | guideline | [`systems-thinking`](../docs/guidelines/agent-infra/systems-thinking.md) | agent-infra |  |
+| guideline | [`tool-description-as-policy`](../docs/guidelines/agent-infra/tool-description-as-policy.md) | agent-infra |  |
 | guideline | [`tool-integration`](../docs/guidelines/agent-infra/tool-integration.md) | agent-infra |  |
 | guideline | [`untrusted-input-spotlighting`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md) | agent-infra |  |
 | guideline | [`verify-before-complete-demos`](../docs/guidelines/agent-infra/verify-before-complete-demos.md) | agent-infra |  |

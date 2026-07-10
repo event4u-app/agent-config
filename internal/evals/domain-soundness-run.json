@@ -1,0 +1,60 @@
+{
+  "_comment": "Domain-soundness Phase-3 candidate run (road-to-domain-soundness). Records pass/fail of the DETERMINISTIC domain-truth fixtures. This is a CANDIDATE run for maintainer ratification: answer keys were computed independently from cited formulas (never the skill's own output), and each case was answered by an agent that loaded the real SKILL.md and applied its method, then scored deterministically by src/scripts/score_domain_truth.ts. The ratchet floor (internal/evals/domain-soundness-floor.json) is NOT pinned by this run — pinning via `domain_soundness_status --write-floor` remains the maintainer's ratification act.",
+  "run": {
+    "date": "2026-07-10",
+    "method": "per-skill agent loaded src/skills/<skill>/SKILL.md, answered each scenario, output scored deterministically against the sourced answer key (tolerance per case)",
+    "host": "claude-opus-4-8 subagents (general-purpose), one per skill",
+    "scorer": "src/scripts/score_domain_truth.ts",
+    "fidelity_note": "Deterministic finance computations from the skill's documented formulas. A passing case means an agent following the skill produces the correct computed answer; it does not certify the qualitative (rubric) soundness of the skill.",
+    "ratified": false
+  },
+  "skills": [
+    {
+      "skill": "runway-cognition",
+      "all_pass": true,
+      "cases": [
+        { "id": "runway-constant-burn", "expected": 7.5, "extracted": 7.5, "pass": true },
+        { "id": "runway-variable-burn", "expected": 4.33, "extracted": 4.33, "pass": true }
+      ]
+    },
+    {
+      "skill": "unit-economics-modeling",
+      "all_pass": true,
+      "cases": [
+        { "id": "cac-fully-loaded", "expected": 2000, "extracted": 2000, "pass": true },
+        { "id": "ltv-saas", "expected": 20000, "extracted": 20000, "pass": true },
+        { "id": "cac-payback-months", "expected": 5, "extracted": 5, "pass": true }
+      ]
+    },
+    {
+      "skill": "dcf-modeling",
+      "all_pass": true,
+      "cases": [
+        { "id": "gordon-terminal-value", "expected": 1350, "extracted": 1350, "pass": true },
+        { "id": "pv-discount-factor", "expected": 142.36, "extracted": 142.35, "pass": true }
+      ]
+    },
+    {
+      "skill": "forecasting",
+      "all_pass": true,
+      "cases": [
+        { "id": "bottom-up-commit", "expected": 6.318, "extracted": 6.318, "pass": true },
+        { "id": "top-down-arr", "expected": 25.2, "extracted": 25.2, "pass": true }
+      ]
+    },
+    {
+      "skill": "scenario-modeling",
+      "all_pass": true,
+      "cases": [
+        { "id": "downside-band-lower-bound", "expected": 5.418, "extracted": 5.418, "pass": true },
+        { "id": "sensitivity-minus-20pct", "expected": 32, "extracted": 32, "pass": true }
+      ]
+    }
+  ],
+  "summary": {
+    "deterministic_skills_run": 5,
+    "deterministic_cases": 11,
+    "cases_passed": 11,
+    "rubric_targets_deferred": ["incident-commander", "fundraising-narrative", "messaging-architecture", "editorial-calendar"]
+  }
+}

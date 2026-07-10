@@ -1,0 +1,40 @@
+{
+  "skill": "unit-economics-modeling",
+  "domain": "finance",
+  "_note": "Deterministic domain-truth keys computed independently from cited standard SaaS unit-economics formulas (NOT the skill's own output). Authored as maintainer-ratification candidates per road-to-domain-soundness Phase 2 (blocker: domain-competence-for-answer-keys); the Phase-3 run + --write-floor ratchet-pin remain the maintainer's gate.",
+  "cases": [
+    {
+      "id": "cac-fully-loaded",
+      "scenario": "SaaS business. Fully-loaded customer-acquisition spend in the quarter = $200,000; new paying customers acquired in the same window = 100. Compute CAC (fully-loaded). State the single dollar figure.",
+      "source": "Standard SaaS unit economics: CAC = fully-loaded acquisition spend / new paying customers acquired in the same window (e.g. David Skok, 'SaaS Metrics 2.0').",
+      "check": {
+        "kind": "deterministic",
+        "expected": 2000,
+        "tolerance": 0,
+        "rationale": "200,000 / 100 = 2,000. Step 1 of the skill computes CAC = fully-loaded spend / new paying customers."
+      }
+    },
+    {
+      "id": "ltv-saas",
+      "scenario": "SaaS business. ARPA = $500/month, gross margin = 80%, monthly churn rate = 2%. Compute customer lifetime value using the SaaS formula LTV = ARPA x gross margin / monthly churn. State the single dollar figure.",
+      "source": "SaaS LTV = ARPA x gross_margin / monthly_churn_rate (David Skok, 'SaaS Metrics 2.0').",
+      "check": {
+        "kind": "deterministic",
+        "expected": 20000,
+        "tolerance": 0,
+        "rationale": "500 x 0.80 / 0.02 = 400 / 0.02 = 20,000. Step 3 SaaS formula."
+      }
+    },
+    {
+      "id": "cac-payback-months",
+      "scenario": "SaaS business. CAC = $2,000, ARPA = $500/month, gross margin = 80%. Compute the CAC payback period in months = CAC / (ARPA x gross margin). State the single number of months.",
+      "source": "CAC payback (months) = CAC / (ARPA x gross margin) (David Skok, 'SaaS Metrics 2.0').",
+      "check": {
+        "kind": "deterministic",
+        "expected": 5,
+        "tolerance": 0,
+        "rationale": "2,000 / (500 x 0.80) = 2,000 / 400 = 5 months. Step 4 payback formula."
+      }
+    }
+  ]
+}

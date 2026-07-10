@@ -24,6 +24,7 @@ import {
     iter_commands,
     strip_source_prefix,
 } from './_lib/agent_src.js';
+import { computeStatus as domainSoundnessStatus } from './domain_soundness_status.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -398,6 +399,7 @@ export function _render_catalog(
     const publicRules = rules.filter((r) => !INTERNAL_RULES.has(r.name));
     const publicCommands = commands.filter((c) => c.kind === 'command');
     const total = skills.length + publicRules.length + publicCommands.length + guidelines.length;
+    const ds = domainSoundnessStatus();
     const parts = [
         '# agent-config — Public Catalog',
         '',
@@ -419,8 +421,9 @@ export function _render_catalog(
         '',
         '> **Non-coding domain correctness is scoped, not proven.** The',
         '> `finance` / `founder` / `ops` / `content` skills are forged on TS/PHP',
-        '> codebases; their embedded domain heuristics are labeled `unvalidated`',
-        '> until they pass a sourced `evals/domain-truth.json` fixture',
+        `> codebases; ${ds.validated} of ${ds.total} default-surface domain skills carry a sourced`,
+        '> `evals/domain-truth.json` fixture (deterministic targets, keys from',
+        '> cited formulas); the rest are labeled `unvalidated` until they pass one',
         '> (`./scripts-run src/scripts/domain_soundness_status`). A disclaimer',
         '> floor bounds liability, not correctness — see [the proof page](proof.md).',
         '',

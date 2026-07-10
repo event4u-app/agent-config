@@ -1,0 +1,29 @@
+{
+  "skill": "dcf-modeling",
+  "domain": "finance",
+  "_note": "Deterministic domain-truth keys computed independently from cited standard DCF formulas (NOT the skill's own output). Authored as maintainer-ratification candidates per road-to-domain-soundness Phase 2 (blocker: domain-competence-for-answer-keys); the Phase-3 run + --write-floor ratchet-pin remain the maintainer's gate.",
+  "cases": [
+    {
+      "id": "gordon-terminal-value",
+      "scenario": "Year-6 free cash flow to the firm (FCFF) = $108M, WACC = 10%, terminal growth g = 2%. Compute the terminal value at the end of year 5 using the Gordon-growth model TV = FCFF_6 / (WACC - g). State the single figure in $M.",
+      "source": "Gordon-growth terminal value: TV = FCFF_{n+1} / (WACC - g) (standard DCF; e.g. Damodaran, 'Investment Valuation').",
+      "check": {
+        "kind": "deterministic",
+        "expected": 1350,
+        "tolerance": 0.5,
+        "rationale": "108 / (0.10 - 0.02) = 108 / 0.08 = 1,350 ($M). Step 1/Step 2 Gordon-growth terminal value."
+      }
+    },
+    {
+      "id": "pv-discount-factor",
+      "scenario": "An FCFF of $200M is received in year 3. WACC = 12%. Compute its present value = 200 / (1.12)^3. State the single figure in $M to two decimals.",
+      "source": "DCF discounting: PV = CF_t / (1 + WACC)^t (standard DCF; Damodaran, 'Investment Valuation').",
+      "check": {
+        "kind": "deterministic",
+        "expected": 142.36,
+        "tolerance": 0.1,
+        "rationale": "1.12^3 = 1.404928; 200 / 1.404928 = 142.36 ($M). Step 2 discounts each FCFF year by 1 / (1 + WACC)^t."
+      }
+    }
+  ]
+}

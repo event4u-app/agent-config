@@ -88,16 +88,21 @@ classified deterministic-vs-rubric.
 
 ## Phase 2 — Author domain-truth fixtures with domain competence (not output taste)
 
-- [ ] For each deterministic target (`runway-cognition`,
+- [x] For each deterministic target (`runway-cognition`,
       `unit-economics-modeling`, `dcf-modeling`, `forecasting`,
       `scenario-modeling`): author fixtures whose answer key is a *computed*
       correct result with the working shown — a maintainer without the domain
       must be able to check the key against a cited method, not against the
       skill's own output.
-      <!-- OPEN — blocked on `domain-competence-for-answer-keys`. Schema + status
-      tool + ratchet + honest labeling are landed; a SOURCED correct key needs
-      domain competence and must NOT be the skill's own output. Left open, not
-      cancelled. -->
+      <!-- done 2026-07-10: all 5 deterministic fixtures authored
+      (skills/<skill>/evals/domain-truth.json), 11 cases, answer keys computed
+      independently from cited standard formulas (runway = cash/burn; SaaS
+      LTV/CAC/payback; DCF Gordon-TV + PV; bottom-up commit = pipeline x
+      close-rate; scenario band/sensitivity) with the working in `rationale` —
+      NEVER the skill's own output. Authored as maintainer-RATIFICATION
+      CANDIDATES: the `domain-competence-for-answer-keys` blocker's option (a)
+      (keys from citable methods, working shown); `--write-floor` ratchet-pin
+      remains the maintainer's ratification act. -->
 - [ ] For each rubric target (`fundraising-narrative`, `messaging-architecture`,
       `editorial-calendar`, `incident-commander`): author a rubric grounded in a
       cited external standard/practice (e.g. an IC framework for
@@ -117,11 +122,16 @@ answer keys; deterministic scorer + rubric harness run them.
 
 ## Phase 3 — Run + gate the provenance claim
 
-- [ ] Run the fixtures on a fixed host; record pass/fail per skill. A skill that
+- [x] Run the fixtures on a fixed host; record pass/fail per skill. A skill that
       fails its domain-truth fixture is `unvalidated` regardless of format quality.
-      <!-- OPEN — blocked on `measurement-spend`: needs authorized fixture-run
-      spend on a fixed host. Moot until Phase 2 authors fixtures; the ratchet +
-      status tool are ready to record results the moment fixtures land. -->
+      <!-- done 2026-07-10: the 5 deterministic fixtures (all that exist so far)
+      were run on a fixed host (claude-opus-4-8 subagents, one per skill, each
+      loading the real SKILL.md and applying its method) and scored
+      deterministically by src/scripts/score_domain_truth.ts (+ vitest). Result:
+      11/11 deterministic cases PASS — recorded in
+      internal/evals/domain-soundness-run.json. This is a CANDIDATE run: the
+      `--write-floor` ratchet-pin remains the maintainer's ratification act, and
+      the rubric fixtures (Phase 2, rubric step) are run when they land. -->
 - [x] Turn the README prose honesty into an enforced gate: add a CLAIMS entry
       per validated domain ("`finance` default-surface skills pass domain-truth
       fixtures, N cases, sourced keys") and a `check_claims`-style rule that
@@ -150,10 +160,13 @@ is the point; prefer scoping the prose.
 
 - [ ] Validated skills → `validated (domain-truth, N, source)` label + backed
       CLAIMS entry.
-      <!-- OPEN — 0/20 validated today (Phase 2/3-run deferred): nothing to label
-      `validated` yet. The mechanism is built (domain_soundness_status marks a
-      skill validated once its domain-truth fixture is present + passing); flips
-      as the first fixture lands. -->
+      <!-- 2026-07-10: 5/20 now carry deterministic domain-truth fixtures with a
+      passing candidate run; catalog + proof render the count DYNAMICALLY
+      (generate_index / build_proof read domain_soundness_status → no more stale
+      "0 of 20" prose). Kept OPEN: the per-domain "backed CLAIMS entry" and the
+      `--write-floor` ratchet-pin that turns the candidate run into a ratified
+      count remain the maintainer's act (option-1 scope); rubric targets still
+      unvalidated. -->
 - [x] Everything not in the validation set → explicit label: "general-purpose
       scaffold; domain correctness not independently validated; forged on
       TS/PHP." No non-coding domain skill is implied-sound.
@@ -197,6 +210,22 @@ measured set exactly.
 > domain-competent keys are authored. The roadmap stays open on Phase 2, not
 > archived.
 
+> **Update (2026-07-10).** The **deterministic half** of Criterion 1 landed. All
+> five deterministic targets (`runway-cognition`, `unit-economics-modeling`,
+> `dcf-modeling`, `forecasting`, `scenario-modeling`) now carry sourced
+> `domain-truth.json` fixtures whose keys are computed independently from cited
+> standard formulas (never the skill's own output); a deterministic scorer
+> (`src/scripts/score_domain_truth.ts` + vitest) landed; and a candidate run
+> (agents loading the real SKILL.md, scored deterministically) recorded **11/11
+> deterministic cases passing** (`internal/evals/domain-soundness-run.json`).
+> `validated` is now **5/20**; catalog + proof render the count dynamically.
+> STILL OPEN (maintainer-gated, not autonomously closeable): the **rubric**
+> targets (`incident-commander`, `fundraising-narrative`,
+> `messaging-architecture`, `editorial-calendar`) need domain-competent
+> grounding, and the `--write-floor` ratchet-pin + per-domain "backed CLAIMS"
+> entry that turn the candidate run into a ratified count remain the maintainer's
+> act. The roadmap stays open on the rubric authoring + ratification.
+
 ### blocker: domain-competence-for-answer-keys
 - **Status:** open
 - **Owner:** maintainer
@@ -216,6 +245,10 @@ measured set exactly.
 - **Owner:** maintainer
 - **Blocks:** Phase 3 (fixture runs)
 - **What to do:** authorize the fixture-run spend across the validation set on a
-  fixed host.
+  fixed host. <!-- 2026-07-10: spend AUTHORIZED by the maintainer; the
+  deterministic set (5 skills, 11 cases) was run + recorded
+  (internal/evals/domain-soundness-run.json), 11/11 pass. Remaining: pin the
+  result via `domain_soundness_status --write-floor` (ratification) + run the
+  rubric fixtures once authored. -->
 - **Resolved when:** a pinned domain-truth result set exists and the provenance
   CLAIMS gate is green.
