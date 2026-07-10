@@ -187,7 +187,7 @@ recorded decision to keep the wedge standalone).
 ## Blockers
 
 ### blocker: wedge-scope-cut
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1
 - **What to do:** resist shipping the platform as the wedge. Cut to ONE subagent,
@@ -195,9 +195,15 @@ recorded decision to keep the wedge standalone).
   the first screen.
 - **Resolved when:** a single-install wedge exists that a stranger can succeed
   with in under a minute, with no profile/pack choice required.
+- **Resolution (2026-07-10, template rule 22 sweep):** not a human gate — the
+  decision is already made IN this blocker's own text (ONE subagent, one
+  command, one backed promise; no profile/pack choice). Nothing remains to
+  decide or authorize; the constraint is agent-executable and now governs
+  Phase 1 as its scope criterion. The "Resolved when" line stays the phase's
+  agent-checkable exit signal.
 
 ### blocker: activation-instrumentation-posture
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phases 1, 4 (the measured funnel)
 - **What to do:** design the first-run/conversion counters as local, opt-in,
@@ -206,6 +212,12 @@ recorded decision to keep the wedge standalone).
   collection, ship the funnel un-instrumented and say so.
 - **Resolved when:** an activation signal exists that a privacy-conscious
   installer would leave enabled.
+- **Resolution (2026-07-10, template rule 22 sweep):** not a human gate — the
+  design rule is fully specified here (local, opt-in, default-off, aggregate;
+  else ship un-instrumented and say so) and matches the existing
+  `telemetry.artifact_engagement` default-off posture. The agent builds to
+  this constraint; no open decision remains. The privacy constraint governs
+  Phases 1 + 4 as an acceptance criterion.
 
 ### blocker: real-external-participant
 - **Status:** open

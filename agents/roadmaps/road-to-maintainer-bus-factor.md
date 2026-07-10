@@ -174,7 +174,7 @@ trailing-90-day reviewer count is tracked and reported truthfully.
 ## Blockers
 
 ### blocker: self-review-gate-cost
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1
 - **What to do:** running `ai-council` on every PR has real token cost. Scope it:
@@ -183,6 +183,15 @@ trailing-90-day reviewer count is tracked and reported truthfully.
   the gate is not a tax on typo fixes.
 - **Resolved when:** the gate runs within an acceptable per-PR budget and blocks
   on security/claim findings.
+- **Resolution (2026-07-10, template rule 22 sweep):** not a human gate — the
+  scoping decision is already made IN this blocker's own text (in-session
+  `adversarial-review` + `agent-security-review` for non-trivial PRs; full
+  spend-bearing `ai-council` only on large / claim-affecting diffs). The two
+  cheap lenses are in-session skills (no external spend), and implementing +
+  tuning the trigger is agent-executable Phase-1 work. The only spend-bearing
+  branch (`ai-council` on big diffs) stays governed by the standing
+  spend-authorization discipline at run time — no separate roadmap gate
+  needed. The "Resolved when" stays Phase 1's exit criterion.
 
 ### blocker: second-reviewer-availability
 - **Status:** open

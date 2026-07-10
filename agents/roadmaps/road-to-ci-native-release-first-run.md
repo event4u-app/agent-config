@@ -21,9 +21,10 @@ merge, the rest need a maintainer's explicit go-ahead to cut a real release
 (Hard Floor per `non-destructive-by-default`; authoring/reviewing a PR does
 not constitute that authorization).
 
-> Blocked until PR #780 merges (Phase 1) and, separately, until a
-> maintainer explicitly authorizes cutting a real release (Phase 2).
-> Execution starts when the relevant condition clears.
+> Phase 1's condition has CLEARED: PR #780 merged 2026-07-08 (verified live
+> via `gh pr view 780` on 2026-07-10) — Phase 1 is executable now.
+> Phase 2 stays gated until a maintainer explicitly authorizes cutting a real
+> release (Hard Floor per `non-destructive-by-default`).
 
 ## Phase 1: Post-merge dry-run verification (carried from parent Phase 3)
 

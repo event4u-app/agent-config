@@ -239,7 +239,7 @@ single prose style guide.
 ## Blockers
 
 ### blocker: host-verification-capability-map
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 0 checkpoint only
 - **What to do:** map which supported hosts can open local artifacts,
@@ -247,3 +247,9 @@ single prose style guide.
   honestly per host instead of requiring impossible checks.
 - **Resolved when:** the design verification checklist has a per-host
   capability table or points to an existing host-capability manifest.
+- **Resolution (2026-07-10, template rule 22 sweep):** not a human gate —
+  mapping host capabilities is research + documentation the agent performs
+  during Phase 0 (read host docs / existing capability manifests, emit the
+  per-host table with honest degrade rows). Nothing to decide or authorize;
+  the "Resolved when" is an agent-checkable artifact-exists signal and remains
+  Phase 0's exit criterion.

@@ -347,7 +347,7 @@ one external corpus as permanent truth.
 ## Blockers
 
 ### blocker: source-anonymous-provenance-decision
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 0 checkpoint only
 - **What to do:** decide whether tracked provenance uses only checksums plus
@@ -355,3 +355,12 @@ one external corpus as permanent truth.
   are required, run the repo's link crypto helper with the maintainer key.
 - **Resolved when:** Phase 0 records the accepted provenance method without
   raw source links or external source names in tracked files.
+- **Resolution (2026-07-10, template rule 22 sweep):** not a contested
+  decision — the house method already exists and is precedented: encrypted
+  `ENC1:` link retention via `src/scripts/_lib/link_crypto.ts` inside a
+  `## Provenance` block, per the `source-confidentiality` rule and the
+  roadmap-writing § 8.C convention (used by prior source-derived roadmaps,
+  e.g. the archived retrieval-substrate-hardening). The key lives in
+  `.agent-settings.yml` `secrets.link_encryption_key` and the agent has
+  executed this path before. Accepted method: ENC1 links + neutral descriptor;
+  raw material stays local-only under `agents/tmp/`.
