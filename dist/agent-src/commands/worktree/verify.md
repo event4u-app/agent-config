@@ -47,7 +47,7 @@ verifying anything; the evidence must describe the declared change.
 Map the diff to probes per `verify-completion-evidence` (claim →
 command): the single test filter for touched behavior, the
 type-checker/linter scoped to changed files, a `curl`/spec run for a
-touched endpoint. Never substitute `task ci` / the meta-pipeline for a
+touched endpoint. Never substitute the full CI meta-pipeline for a
 targeted probe.
 
 ### 4. Run fresh + record

@@ -175,7 +175,7 @@
   "commands/worktree/cleanup.md": "e2ea407b44299d29e8a37f7d12bcb5a3e236d8496ab2bf4dcd3e83cb7dd00461",
   "commands/worktree/create.md": "f4afa5b924dc2d3bcfdfd78d98c702b4260f60456ed53f2df3cf58d751e5b2f2",
   "commands/worktree/status.md": "582e6a268875b2a341f9911a3b94a3f7aba2a765912e0c58209b253956ce60c4",
-  "commands/worktree/verify.md": "06ca6b531b5da984f972925d71b2eea31b19f265d3ef4e1f170c4a56843d3436",
+  "commands/worktree/verify.md": "6786196ba66e345c4e56adc61dec850b4c4752be61d2c8eaaee9dae952460e28",
   "contexts/augment-infrastructure.md": "fedf9c8fee9133a58588d804bc32ab9bbf80f7d4893521e37213739cf07f810a",
   "contexts/authority/commit-mechanics.md": "31a05281066ec649fd217f2a53cbac7d107dccebdcc609ad5159bc5e810663c8",
   "contexts/authority/destructive-mechanics.md": "d945de439ade9287a47c8a945fbf8ee89dd5e8d69663a18c13aa9d9e68602533",
