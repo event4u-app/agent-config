@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
+> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
 
 ## Overall
 
-**176 / 323 steps done · 54%**
+**157 / 284 steps done · 55%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
 
 ## Open roadmaps
@@ -22,7 +22,7 @@
 | 4 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
 | 6 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 7 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 44 | 5 | 0 | 0 | 0 | █░░░░░░░░░ 10% |
+| 7 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 34 | 15 | 0 | 0 | 0 | ███░░░░░░░ 31% |
 | 8 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
 | 9 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
@@ -30,9 +30,8 @@
 | 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
 | 13 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | 0 | ███████░░░ 73% |
 | 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 10 | 29 | 0 | 0 | 0 | ███████░░░ 74% |
-| 16 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 17 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
+| 15 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 16 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
 ---
 
@@ -142,13 +141,13 @@ _2 blockers resolved._
 
 ### [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md)
 
-**Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage** — 5 / 49 done (10%)
+**Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage** — 15 / 49 done (31%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Scope, provenance, metrics, and execution gates | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Prompt-mechanism inventory, dependency graph, and disposition matrix | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Eval harness and baseline before behavior changes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Prompt-mechanism inventory, dependency graph, and disposition matrix | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 2 | Eval harness and baseline before behavior changes | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Currentness, research-routing, and source-quality pilot | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | Memory, preference, and prior-context safety | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 5 | Artifact, visual, and connected-tool routing protocol | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
@@ -298,21 +297,6 @@ _1 blocker resolved._
     3. Once the count reaches ≥ 20, resume this roadmap
     (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
   - **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines for the current month.
-
-### [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md)
-
-**Road to surface-specific agent contracts — stop making one generic agent do every medium badly** — 29 / 39 done (74%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Capability matrix, surface detection, and eval baseline | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | Surface taxonomy and invariant ledger | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Spreadsheet truth floor | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Deck/document export contracts | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Browser and connector contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Mobile/chat interaction contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 6 | Code-agent operating contract refresh | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 7 | Cross-surface handoff protocol | 🟡 in progress | 1 | 9 | 0 | 0 | 90% |
 
 ### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
 

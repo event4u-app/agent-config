@@ -4,7 +4,7 @@
 
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config)
 
-[![Skills](https://img.shields.io/badge/Skills-268-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-102-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-172-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-90-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+[![Skills](https://img.shields.io/badge/Skills-270-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-103-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-177-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-90-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
 
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
@@ -12,13 +12,13 @@
 
 **Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
-**268 skills, 172 commands, 102 governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
+**270 skills, 177 commands, 103 governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
 ### What's different
 
 It is both deep **and** disciplined — and honest about what it deliberately is not:
 
-- **Depth that routes itself** — 268 skills + 172 commands, with a capability router that loads the right one on intent, not a 500-artefact context dump.
+- **Depth that routes itself** — 270 skills + 177 commands, with a capability router that loads the right one on intent, not a 500-artefact context dump.
 - **Governance on every host** — rules compiled into each tool's native format at projection time; deterministic runtime hooks added on hook-capable hosts. This config-space, host-agnostic governance is the moat ([the governance advantage](docs/governance-advantage.md) · [enforcement by host](docs/enforcement-by-host.md)).
 - **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.<!-- claim:surgical-uninstall -->
 - **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
@@ -67,7 +67,7 @@ what is *not* loaded · examples):
 
 ### Workflows, not raw commands
 
-You don't memorize 172 commands — you run a **work journey**. Four flows span the
+You don't memorize 177 commands — you run a **work journey**. Four flows span the
 developer story end-to-end; each names the command you TYPE to start and the
 skills it composes:
 
@@ -462,7 +462,7 @@ When a prompt matches a command's purpose ("setze ticket ABC-123 um" → `/imple
 | [**Migration**](docs/MIGRATION.md) | Per-version upgrade steps |
 | [**Showcase**](docs/showcase.md) | More examples & expected behavior |
 
-Browse content: [all 172 commands](dist/agent-src/commands/) · [skills catalog](docs/skills-catalog.md) · [full catalog](docs/catalog.md) · [`llms.txt`](llms.txt).
+Browse content: [all 177 commands](dist/agent-src/commands/) · [skills catalog](docs/skills-catalog.md) · [full catalog](docs/catalog.md) · [`llms.txt`](llms.txt).
 
 ---
 

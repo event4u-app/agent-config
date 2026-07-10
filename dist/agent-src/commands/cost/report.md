@@ -116,14 +116,24 @@ Orchestration telemetry (YYYY-MM, N dispatches):
   spawn_failure_rate:  N.N%  (threshold: 10%)
   verify_skip_rate:    N.N%  (threshold: 1%)
   guardrail breaches:  [token_blowup | spawn_failure | verify_skip | none]
+  cost × quality (paired — never savings alone):
+    first_pass_success_rate: N.N% (n=K)   escalation_rate: N.N% (n=K)
 ```
 
-When orchestration lines carry the routing extension fields
+**Quality × cost pairing rule (council verdict):** the savings figure never
+renders without the quality columns. `first_pass_success_rate` and
+`escalation_rate` aggregate over lines carrying the `first_pass_success` /
+`escalated` booleans (see `orchestration-telemetry.md`); with ≥ 20 such lines
+in the window the real rates render, below 20 render `n/a (n=<count>)`
+alongside the savings. `src/scripts/orchestration_savings_report.ts`
+implements this pairing — prefer running it over hand-summarizing.
+
+When the orchestration lines carry the routing extension fields
 (`task_class` / `tier_chosen` / `escalated_from` / `verify_result_by_tier` —
 see `orchestration-telemetry.md`), append the per-tier routing view using
 `readTierRoutingMetrics`, `escalationPromotionCandidates`, and
-`verifyPassDrift` from the same module — the per-tier QUALITY view a
-spend-only dashboard misses:
+`verifyPassDrift` from the same module — this is the per-tier QUALITY view
+that a spend-only dashboard misses:
 
 ```
 Tier routing (YYYY-MM):

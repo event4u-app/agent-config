@@ -39,6 +39,10 @@ export interface OrchestrationRecord {
     dispatch_tokens?: number | null;
     /** The orchestrator's own tier — the baseline the downshift is measured against. */
     session_tier?: string | null;
+    /** QUALITY: subagent return adopted without parent rework. null/absent = pre-extension line / not measured. */
+    first_pass_success?: boolean | null;
+    /** QUALITY: slice retried on a higher tier after a verification failure. null/absent = pre-extension line / not measured. */
+    escalated?: boolean | null;
 }
 
 /** A parsed audit-log-v1 line (only the fields this aggregator touches). */
@@ -65,6 +69,21 @@ export interface ModeledCost {
     weights: TierWeights;
 }
 
+export interface QualityStats {
+    /** Dispatches carrying at least one of the two quality booleans (the n behind the ≥20 pairing gate). */
+    quality_lines: number;
+    /** Dispatches carrying a boolean first_pass_success. */
+    first_pass_lines: number;
+    first_pass_success_count: number;
+    /** first_pass_success_count / first_pass_lines, 0..1; null when no line carries the field. */
+    first_pass_success_rate: number | null;
+    /** Dispatches carrying a boolean escalated. */
+    escalated_lines: number;
+    escalated_count: number;
+    /** escalated_count / escalated_lines, 0..1; null when no line carries the field. */
+    escalation_rate: number | null;
+}
+
 export interface SavingsReport {
     /** Lines carrying an orchestration object with spawn_count > 0. */
     dispatches: number;
@@ -84,6 +103,8 @@ export interface SavingsReport {
     measured_share: number;
     /** Modeled downshift cost-% (tier-weight based). Distinct from the measured token counts. */
     modeled_cost: ModeledCost;
+    /** QUALITY dimension — paired with cost per council verdict; never report savings alone. */
+    quality: QualityStats;
     /** Honest caveats about what the number does and does not mean. */
     notes: string[];
 }
@@ -115,6 +136,15 @@ export function aggregateOrchestrationSavings(
         by_task_class: {},
         measured_share: 0,
         modeled_cost: { covered_dispatches: 0, baseline_cost_units: 0, delegated_cost_units: 0, cost_reduction_pct: null, weights },
+        quality: {
+            quality_lines: 0,
+            first_pass_lines: 0,
+            first_pass_success_count: 0,
+            first_pass_success_rate: null,
+            escalated_lines: 0,
+            escalated_count: 0,
+            escalation_rate: null,
+        },
         notes: [],
     };
 
@@ -154,12 +184,31 @@ export function aggregateOrchestrationSavings(
             report.modeled_cost.baseline_cost_units += dt * wSession;
             report.modeled_cost.delegated_cost_units += dt * wChosen;
         }
+
+        // Quality dimension — only booleans count; null/absent = pre-extension
+        // line / not measured (never a silent false).
+        const q = report.quality;
+        const fps = typeof o.first_pass_success === 'boolean';
+        const esc = typeof o.escalated === 'boolean';
+        if (fps || esc) q.quality_lines += 1;
+        if (fps) {
+            q.first_pass_lines += 1;
+            if (o.first_pass_success === true) q.first_pass_success_count += 1;
+        }
+        if (esc) {
+            q.escalated_lines += 1;
+            if (o.escalated === true) q.escalated_count += 1;
+        }
     }
 
     report.measured_share = report.dispatches === 0 ? 0 : report.by_provenance.measured.dispatches / report.dispatches;
 
     const mc = report.modeled_cost;
     mc.cost_reduction_pct = mc.baseline_cost_units > 0 ? (mc.baseline_cost_units - mc.delegated_cost_units) / mc.baseline_cost_units : null;
+
+    const q = report.quality;
+    q.first_pass_success_rate = q.first_pass_lines > 0 ? q.first_pass_success_count / q.first_pass_lines : null;
+    q.escalation_rate = q.escalated_lines > 0 ? q.escalated_count / q.escalated_lines : null;
 
     // Honest caveats — always attached so a consumer never over-reads the number.
     if (report.dispatches === 0) {
@@ -173,6 +222,9 @@ export function aggregateOrchestrationSavings(
             report.notes.push(`MODELED cost reduction ${(mc.cost_reduction_pct * 100).toFixed(0)}% over ${mc.covered_dispatches}/${report.dispatches} dispatch(es) that carry tier data — from provider-neutral tier weights ${JSON.stringify(mc.weights)} + a same-token-count assumption. A MODEL, NOT a measured $ figure; tune with --weights.`);
         } else {
             report.notes.push('MODELED cost-% unavailable: no dispatch yet carries dispatch_tokens + session_tier + tier_chosen. Record those (orchestration_record --dispatch-tokens/--session-tier/--tier-chosen) to populate it.');
+        }
+        if (q.quality_lines === 0) {
+            report.notes.push('QUALITY columns empty: no dispatch yet carries first_pass_success / escalated. Record them (orchestration_record --first-pass-success/--escalated) — cost and quality are reported as a PAIR, never savings alone.');
         }
     }
 

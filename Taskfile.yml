@@ -162,6 +162,8 @@ tasks:
       - task: check-ownership-matrix
       - task: check-reply-consistency
       - task: check-iron-law-prominence
+      - task: check-rule-invariants
+      - task: lint-changelog-rollback
       - task: check-always-budget
       - task: check-augment-description-cap
       - task: check-augment-budget-strict
@@ -337,6 +339,8 @@ tasks:
       - task: check-ownership-matrix
       - task: check-reply-consistency
       - task: check-iron-law-prominence
+      - task: check-rule-invariants
+      - task: lint-changelog-rollback
       - task: check-always-budget
       - task: check-augment-description-cap
       - task: check-augment-budget-strict

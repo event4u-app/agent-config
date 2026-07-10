@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { aggregateOrchestrationSavings, type AuditLine } from '../../src/scripts/_lib/orchestration_savings.js';
+import { QUALITY_GATE_MIN_LINES, renderText } from '../../src/scripts/orchestration_savings_report.js';
 
 describe('aggregateOrchestrationSavings', () => {
     it('empty input → 0 dispatches with a "no telemetry yet" note', () => {
@@ -99,6 +100,55 @@ describe('aggregateOrchestrationSavings', () => {
         expect(r.modeled_cost.delegated_cost_units).toBe(1000);
         expect(r.modeled_cost.cost_reduction_pct).toBeCloseTo(14000 / 15000);
         expect(r.notes.join(' ')).toMatch(/MODELED cost reduction/i);
+    });
+
+    it('old line without quality fields parses; quality stays empty (null rates)', () => {
+        const r = aggregateOrchestrationSavings([{ orchestration: { spawn_count: 1, token_delta: -100 } }]);
+        expect(r.dispatches).toBe(1);
+        expect(r.quality.quality_lines).toBe(0);
+        expect(r.quality.first_pass_success_rate).toBeNull();
+        expect(r.quality.escalation_rate).toBeNull();
+        expect(r.notes.join(' ')).toMatch(/QUALITY columns empty/i);
+    });
+
+    it('aggregates the quality pair into first_pass_success_rate and escalation_rate', () => {
+        const lines: AuditLine[] = [
+            { orchestration: { spawn_count: 1, token_delta: -100, first_pass_success: true, escalated: false } },
+            { orchestration: { spawn_count: 1, token_delta: -100, first_pass_success: false, escalated: true } },
+            { orchestration: { spawn_count: 1, token_delta: -100, first_pass_success: true, escalated: false } },
+            { orchestration: { spawn_count: 1, token_delta: -100 } }, // pre-extension line — not counted
+        ];
+        const r = aggregateOrchestrationSavings(lines);
+        expect(r.quality.quality_lines).toBe(3);
+        expect(r.quality.first_pass_lines).toBe(3);
+        expect(r.quality.first_pass_success_rate).toBeCloseTo(2 / 3);
+        expect(r.quality.escalated_lines).toBe(3);
+        expect(r.quality.escalation_rate).toBeCloseTo(1 / 3);
+    });
+
+    it('render gate: below 20 quality lines the paired columns render "n/a (n=<count>)" beside savings', () => {
+        const r = aggregateOrchestrationSavings([
+            { orchestration: { spawn_count: 1, token_delta: -100, first_pass_success: true, escalated: false } },
+        ]);
+        const text = renderText(r, 'x');
+        expect(text).toMatch(/cost × quality \(paired — never savings alone\):/);
+        expect(text).toMatch(/tokens saved: 100 .* first_pass_success_rate: n\/a \(n=1\)|first_pass_success_rate: n\/a \(n=1\)/);
+        expect(text).toMatch(/escalation_rate: n\/a \(n=1\)/);
+        // Savings figures render ONLY inside the paired block.
+        expect(text).toMatch(/net token_delta: -100 \(negative = net saved\).*\| first_pass_success_rate/);
+    });
+
+    it(`render gate: at n ≥ ${QUALITY_GATE_MIN_LINES} the real rates render beside savings`, () => {
+        const lines: AuditLine[] = Array.from({ length: QUALITY_GATE_MIN_LINES }, (_, i) => ({
+            orchestration: { spawn_count: 1, token_delta: -50, first_pass_success: i % 2 === 0, escalated: i % 4 === 0 },
+        }));
+        const r = aggregateOrchestrationSavings(lines);
+        expect(r.quality.quality_lines).toBe(QUALITY_GATE_MIN_LINES);
+        const text = renderText(r, 'x');
+        expect(text).toMatch(/first_pass_success_rate: 50% \(n=20\)/);
+        expect(text).toMatch(/escalation_rate: 25% \(n=20\)/);
+        expect(text).not.toMatch(/first_pass_success_rate: n\/a/);
+        expect(text).not.toMatch(/escalation_rate: n\/a/);
     });
 
     it('honours custom weights and skips lines missing session_tier', () => {

@@ -8,6 +8,8 @@
 # is whether the RIGHT decision is surfaced (and whether injected confuser noise
 # hurts the answer), not whether any entry matches.
 version: 1
+stale_ids: [stale-api-style-superseded, stale-job-queue-superseded]
+poisoned_ids: [poison-api-style, poison-tenant-scope]
 type: domain-invariants
 k: 5
 tasks:

@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `8.9.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 260
+- **artefacts**: 265
 
-## Commands (130)
+## Commands (135)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -142,6 +142,11 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-stitch`** — Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git.
+- **`worktree`** — Worktree orchestrator — routes to create, status, verify, cleanup
+- **`worktree-cleanup`** — Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes
+- **`worktree-create`** — Create a governed worktree and write its scope-lock note — propose-once branch naming, host-native primitive preferred
+- **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
+- **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
 ## Rules (63)
 

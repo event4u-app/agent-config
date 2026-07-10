@@ -1,0 +1,196 @@
+name: Consumer Matrix
+
+# Pack-based consumer E2E — road-to-proof-under-real-conditions Phase 1.
+#
+# Closes the tarball window: ordinary PRs run source-level tests,
+# release PRs run shape checks (docs/contracts/release-pr-gating.md),
+# but historically NOTHING between merge and tag exercised the
+# published tarball as a consumer. Two published minors lacked
+# `src/install/` while published code imported from it; `tsx` was
+# missing from the package; the npm publish and MCP worker deploy
+# workflows failed only after the tag existed. Every job here runs
+# BEFORE the tag: on the release PR, weekly against drift, and on
+# demand.
+#
+# Counterfactual mapping (which leg catches which historical failure):
+# docs/distribution/consumer-matrix.md.
+#
+# NOTE: this workflow intentionally does NOT skip on release PRs —
+# release PRs are its primary trigger. It is the documented exemption
+# from the release-pr-gating cut surface: the gating contract's
+# "cannot regress by construction" argument covers source diffs, not
+# tarball shape.
+
+on:
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Weekly Tuesday 06:00 UTC — offset from smoke-public-install
+    # (Monday) so registry/upstream drift surfaces on distinct days.
+    - cron: '0 6 * * 2'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  consumer-matrix:
+    # Runs on release PRs (primary trigger) + cron + dispatch. Ordinary
+    # PRs skip: the source-level matrices own that surface, and this
+    # job's npm-registry leg would add noise there.
+    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    name: tarball E2E · node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install and build (prepack chain)
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build discovery manifest (mirrors publish-npm.yml)
+        run: |
+          ./scripts-run src/scripts/build_discovery_manifest --write --strict
+          ./scripts-run src/scripts/lint_discovery_manifest --quiet
+
+      - name: Run consumer matrix (all legs incl. registry upgrade)
+        run: npx tsx src/scripts/consumer_matrix.ts --json
+
+  publish-dry-run:
+    # Replicates publish-npm.yml up to (not including) `npm publish`,
+    # on BOTH supported Node majors — catches the npm@latest→Node-22
+    # drift class and any pack/build breakage before the tag exists.
+    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    name: npm publish dry-run · node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Assert publish workflow pins npm (no npm@latest drift)
+        # publish-npm.yml must install a MAJOR-pinned npm line, never
+        # `npm@latest` — latest resolved to npm 12 (Node >= 22) while
+        # the publish job ran Node 20 and broke the 8.8.0 publish.
+        run: |
+          set -euo pipefail
+          if grep -E 'npm install -g npm@latest' .github/workflows/publish-npm.yml; then
+            echo "::error::publish-npm.yml installs npm@latest — pin a major (e.g. npm@11)."
+            exit 1
+          fi
+          grep -E 'npm install -g npm@[0-9]+' .github/workflows/publish-npm.yml \
+            || { echo "::error::publish-npm.yml no longer pins npm — keep the major pin."; exit 1; }
+
+      - name: Install pinned npm line (same as publish job)
+        run: |
+          pin="$(grep -oE 'npm install -g npm@[0-9]+' .github/workflows/publish-npm.yml | head -1 | grep -oE 'npm@[0-9]+')"
+          npm install -g "$pin"
+          npm --version
+
+      - name: Install, build, manifest (publish steps sans publish)
+        run: |
+          npm ci
+          npm run build
+          ./scripts-run src/scripts/build_discovery_manifest --write --strict
+          ./scripts-run src/scripts/lint_discovery_manifest --quiet
+
+      - name: Assert discovery manifest is in the tarball
+        run: |
+          npm pack --dry-run --json --ignore-scripts --silent \
+            | jq -e '.[0].files | map(.path) | any(. == "dist/discovery/discovery-manifest.json")'
+
+      - name: Import-completeness over the pack file list
+        # Everything published code imports must be inside the tarball —
+        # the exact class that shipped two minors without src/install/.
+        run: node src/scripts/prepack-check.mjs
+
+      - name: Agent-security gate (same bytes-check as the publish job)
+        run: ./scripts-run src/scripts/lint_agent_security
+
+  mcp-worker-dry-run:
+    # deploy-mcp-worker.yml stayed red across five releases because it
+    # only ran post-release. Same pack + deploy path, --dry-run, pre-tag.
+    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    name: MCP worker deploy dry-run
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: internal/workers/mcp/package-lock.json
+
+      - name: Install Worker deps
+        run: npm ci
+        working-directory: internal/workers/mcp
+
+      - name: Install repo deps (scripts-run needs root tsx — the 8.2–8.6 failure)
+        run: npm ci
+
+      - name: Pack content blob
+        run: ./scripts-run src/scripts/pack_mcp_content
+
+      - name: Wrangler deploy --dry-run (no credentials required)
+        run: npx wrangler deploy --dry-run
+        working-directory: internal/workers/mcp
+
+  plugin-bootstrap:
+    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    name: Plugin bootstrap integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Marketplace manifest lint
+        run: ./scripts-run src/scripts/lint_marketplace
+
+      - name: Plugin symlinks resolve
+        # Every tracked symlink under .claude-plugin/ must resolve to a
+        # file inside the repo — a dangling symlink ships a broken
+        # plugin bootstrap.
+        run: |
+          set -euo pipefail
+          bad=0
+          while IFS= read -r link; do
+            if [ ! -e "$link" ]; then
+              echo "::error::dangling plugin symlink: $link"
+              bad=1
+            fi
+          done < <(find .claude-plugin -type l)
+          exit "$bad"

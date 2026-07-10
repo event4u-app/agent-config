@@ -141,31 +141,31 @@ and first pilot slice.
 
 ## Phase 1 — Prompt-mechanism inventory, dependency graph, and disposition matrix
 
-- [ ] Add a tracked, source-anonymous inventory under
+- [x] Add a tracked, source-anonymous inventory under
       `agents/roadmap-assets/frontier-quality/mechanism-matrix.md` with rows
       for each transferable mechanism: currentness search, tool priority,
       memory gating, preference gating, artifact routing, visual routing,
       research mode, citation/copyright, design verification, surface-specific
       office/browser/mobile/code contracts, and conversational formatting.
-- [ ] For each row record: owner surface, proposed carrier
+- [x] For each row record: owner surface, proposed carrier
       (`kernel-rule`, `auto-rule`, `skill`, `command`, `contract`, `eval`,
       `reject`), activation trigger, existing package coverage, missing
       acceptance gate, dependency ids, conflict ids, rollout flag, and risk if
       over-eagerly generalized.
-- [ ] Add a dependency graph that makes hidden coupling explicit: currentness
+- [x] Add a dependency graph that makes hidden coupling explicit: currentness
       feeds citation/source-quality; tool composition feeds artifact routing;
       capability maps feed design and surface contracts; memory safety feeds
       personalization and prior-chat retrieval.
-- [ ] Add conflict-resolution rules for overlapping mechanisms: project data
+- [x] Add conflict-resolution rules for overlapping mechanisms: project data
       beats web for internal facts; connected app beats browser for owned data;
       explicit user file request beats inline brevity; safety/verification
       floors beat preference and tone; host capability limits beat aspirational
       workflow wording.
-- [ ] Mark rejected items explicitly: vendor product claims, exact model
+- [x] Mark rejected items explicitly: vendor product claims, exact model
       names, environment-specific tool syntax, hidden system-prompt secrecy
       boilerplate that this host already owns, and anything that conflicts
       with `source-confidentiality`.
-- [ ] Add one linter-friendly convention: every future external-prompt harvest
+- [x] Add one linter-friendly convention: every future external-prompt harvest
       roadmap must include a mechanism matrix or cite an existing one.
 
 **Exit:** matrix exists, no named source leakage, every downstream phase
@@ -173,18 +173,18 @@ references row ids, and conflicts have deterministic tie-breakers.
 
 ## Phase 2 — Eval harness and baseline before behavior changes
 
-- [ ] Create or extend a frontier-quality eval corpus before implementing
+- [x] Create or extend a frontier-quality eval corpus before implementing
       routing changes. Include positive and negative fixtures for currentness,
       internal/project-data lookup, memory application, memory non-application,
       artifact carrier choice, connected-app routing, citation discipline,
       surface handoff, and verification honesty.
-- [ ] Add baseline snapshots for existing behavior so adoption can show
+- [x] Add baseline snapshots for existing behavior so adoption can show
       improvement rather than only new green checks.
-- [ ] Add synthetic failure cases for every proposed rule: answering without
+- [x] Add synthetic failure cases for every proposed rule: answering without
       lookup, using web before internal/project data, applying irrelevant
       memory, creating a file when inline is correct, simulating an unavailable
       tool, over-quoting, and claiming verification without evidence.
-- [ ] Define flip gates per mechanism: `advisory` means documentation only,
+- [x] Define flip gates per mechanism: `advisory` means documentation only,
       `routed` means skill/rule can trigger with caveats, `default-on` requires
       trigger recall, negative-example precision, and no material regression in
       existing quality checks.

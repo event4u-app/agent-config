@@ -35,3 +35,6 @@ approach for this codebase and explain the choice in one paragraph.
 - `verify_mode: "judge"` in the orchestration sub-object.
 - `token_delta > 0` (competitive mode always costs more than single-agent —
   the cost is the trade-off assessment, not blind implementation).
+- Quality pair recorded: `first_pass_success` (the judge-picked winner adopted
+  without parent rework?) and `escalated` booleans on the telemetry line
+  (`orchestration_record --first-pass-success true|false --escalated true|false`).

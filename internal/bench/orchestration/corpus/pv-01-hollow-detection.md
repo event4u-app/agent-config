@@ -33,6 +33,10 @@ Run it three ways (the A3 arms):
 - Record `token_delta` (production-validator vs the inline-host baseline) and
   `verify_mode: deterministic` (the citation is checkable against the planted
   `TODO`/hard-coded return).
+- Quality pair recorded on every arm's telemetry line: `first_pass_success`
+  (verdict adopted without parent rework?) and `escalated` (re-run on a higher
+  tier after verification failure?) via `orchestration_record
+  --first-pass-success true|false --escalated true|false`.
 
 **Gate A passes for this unit only if** production-validator flips the outcome
 (`verdict_changed_outcome: true`) where a baseline did not, at acceptable
