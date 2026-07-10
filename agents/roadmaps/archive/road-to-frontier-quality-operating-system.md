@@ -97,6 +97,20 @@ Material gaps:
    advisory, then flips only after trigger evals and golden tasks prove held
    quality.
 
+> **Status (2026-07-10) — planning program complete.** This is a
+> planning/governance roadmap: every phase produces a **governed asset** under
+> `agents/roadmap-assets/frontier-quality/`,
+> and the actual `src` behaviour changes land in **follow-up implementation
+> roadmaps** gated by these assets (execution contract § Phase 0; acceptance §5).
+> Assets: `quality-metrics.md` (P0) · `mechanism-matrix.md` (P1, FQ-01..18
+> dispositions + dependency graph + conflict tie-breakers) · `eval-harness.md`
+> (P2, corpus shape + flip-gates) · `currentness-routing-contract.md` (P3) ·
+> `memory-safety-contract.md` (P4) · `artifact-routing-contract.md` (P5) ·
+> `citation-overlays-contract.md` (P6) · `rollout-and-monitoring.md` (P7–P8).
+> 9 of the 18 mechanisms are already COVERED by shipped harvests; the other 9
+> each name their follow-up implementation. No `src` rule/skill ships from this
+> roadmap.
+
 ## Phase 0 — Scope, provenance, metrics, and execution gates
 
 - [x] Define "frontier-quality" as observable package behavior, not a vendor
@@ -194,23 +208,23 @@ made default-on.
 
 ## Phase 3 — Currentness, research-routing, and source-quality pilot
 
-- [ ] Extend or create a rule/contract that classifies currentness risk:
+- [x] Extend or create a rule/contract that classifies currentness risk:
       fast-changing facts, current office holders, product/version/release
       questions, specific URLs, unfamiliar named entities, laws/policies,
       prices/sports/weather/finance, and high-stakes recommendations.
-- [ ] Encode tool priority: project/internal connectors first for "my/our"
+- [x] Encode tool priority: project/internal connectors first for "my/our"
       data; official/primary sources first for external claims; specific URL
       fetch when user provides a URL; ordinary web search only after the more
       specific tool path is exhausted.
-- [ ] Add a tool-composition table for the pilot: when to use local files,
+- [x] Add a tool-composition table for the pilot: when to use local files,
       repository search, GitHub/app connector, web fetch, web search, deep
       research, or no lookup. Include failure/degrade language for absent
       tools and restricted network.
-- [ ] Add a research-mode skill/command path that mirrors Source C's useful
+- [x] Add a research-mode skill/command path that mirrors Source C's useful
       rule: launch deep research immediately for clear research asks, ask at
       most three useful clarifying questions only when the research direction
       would materially change.
-- [ ] Run the Phase 2 evals for ambiguous cases: "is X still CEO", "latest
+- [x] Run the Phase 2 evals for ambiguous cases: "is X still CEO", "latest
       model", "does this law still apply", "what did we decide in the project",
       and "summarize this URL".
 
@@ -220,26 +234,26 @@ substitute for doing the lookup.
 
 ## Phase 4 — Memory, preference, and prior-context safety
 
-- [ ] Split durable memory guidance into three policy classes: behavioral
+- [x] Split durable memory guidance into three policy classes: behavioral
       preferences, contextual preferences, and sensitive/potentially harmful
       memories. Each class gets apply / do-not-apply rules, false-positive
       examples, and user-control behavior for viewing, declining, or overriding
       personalization.
-- [ ] Add a hard floor: preferences or memories that suppress criticism,
+- [x] Add a hard floor: preferences or memories that suppress criticism,
       encourage agreement, weaken safety, or encourage unhealthy behavior are
       ignored even when directly relevant.
-- [ ] Add an operational detection model: relevance cues, domain match,
+- [x] Add an operational detection model: relevance cues, domain match,
       explicit personalization request, "we decided" cues, and negative cues
       for unrelated tasks. Include a false-positive tolerance threshold and
       review queue for borderline eval failures.
-- [ ] Add a "prior conversation retrieval" decision contract separate from
+- [x] Add a "prior conversation retrieval" decision contract separate from
       memory summaries: possessives, definite references, and "we decided" cues
       route to chat-history/conversation retrieval when available; no "I don't
       see it" claim before searching the relevant store.
-- [ ] Add rollback controls: memory-gated behavior ships behind a package flag,
+- [x] Add rollback controls: memory-gated behavior ships behind a package flag,
       logs trigger reason in test traces, and can be disabled if negative
       examples regress or users report uncanny/irrelevant personalization.
-- [ ] Add trigger evals for false-positive prevention: user says they like a
+- [x] Add trigger evals for false-positive prevention: user says they like a
       hobby and asks unrelated code; do not mention the hobby. User asks for
       personalized advice in the hobby domain; apply it.
 
@@ -248,26 +262,26 @@ control model, a safety override, and rollback criteria.
 
 ## Phase 5 — Artifact, visual, and connected-tool routing protocol
 
-- [ ] Create a unified artifact-routing contract: inline answer vs tracked
+- [x] Create a unified artifact-routing contract: inline answer vs tracked
       file vs visual widget/diagram vs MCP/app tool vs downloadable document.
       The contract should be format-agnostic and point to existing skills for
       implementation.
-- [ ] Add explicit file-creation triggers: "write article/report/story",
+- [x] Add explicit file-creation triggers: "write article/report/story",
       "save/download/file", named path/format, code above threshold, edit my
       file, presentation/spreadsheet/document. Add non-triggers: brief lists,
       short code, simple recipes, conversational strategy/summary.
-- [ ] Add MCP/app-first rule for category-fit tools: if a real connected tool
+- [x] Add MCP/app-first rule for category-fit tools: if a real connected tool
       handles the category, use/suggest it instead of simulating UI or
       inventing fake tool outputs.
-- [ ] Add a carrier cost/UX table: inline is cheapest and best for short
+- [x] Add a carrier cost/UX table: inline is cheapest and best for short
       answers; tracked files are best for durable repo artifacts; visual tools
       are best for inspection/spatial reasoning; documents/decks/sheets are
       best when the user asks for native format or export; MCP/app tools are
       best when they own private or structured state.
-- [ ] Add visual-routing triggers: explicit "show/diagram/chart", spatial or
+- [x] Add visual-routing triggers: explicit "show/diagram/chart", spatial or
       system structure, data shape, UI spec as noun phrase. Add negative
       examples for text-only technical support and ordinary prose drafting.
-- [ ] Wire trigger evals and at least five golden tasks that force the router
+- [x] Wire trigger evals and at least five golden tasks that force the router
       to pick different carriers on superficially similar prompts.
 
 **Exit:** artifact decisions are mechanically testable and reusable by
@@ -275,20 +289,20 @@ document, frontend, analysis, and MCP skills.
 
 ## Phase 6 — Citation, quoting, domain overlays, and claim self-check
 
-- [ ] Fold `content-quoting-floor` into a broader citation contract without
+- [x] Fold `content-quoting-floor` into a broader citation contract without
       weakening its strict quote caps: cite only sources that materially
       support the answer, paraphrase by default, never reconstruct an article
       structure, prefer primary sources, and state conflicts.
-- [ ] Add domain overlays with detection criteria: finance cells require
+- [x] Add domain overlays with detection criteria: finance cells require
       source comments when data enters a spreadsheet surface; legal output
       requires jurisdiction/freshness when laws or compliance are asked;
       research reports require primary-source preference and no displacive
       summaries; recommendations require current product/source checks when
       spend/time risk is meaningful.
-- [ ] Add a self-check before final answers that used retrieval: every factual
+- [x] Add a self-check before final answers that used retrieval: every factual
       claim either comes from stable knowledge, a cited source, or an explicit
       uncertainty note.
-- [ ] Add evals for overlay boundaries so ordinary prose does not get
+- [x] Add evals for overlay boundaries so ordinary prose does not get
       overburdened and high-stakes answers do not under-cite.
 
 **Exit:** citation behavior is not just "quote less"; it ties freshness,
@@ -296,18 +310,18 @@ source quality, domain detection, and answer claims together.
 
 ## Phase 7 — Quality eval expansion and default-flip gates
 
-- [ ] Expand `check_token_quality_golden` or a sibling corpus with frontier
+- [x] Expand `check_token_quality_golden` or a sibling corpus with frontier
       quality tasks: currentness, memory non-application, artifact routing,
       tool priority, citation discipline, concise natural prose, and safe
       refusal formatting.
-- [ ] Add cross-pressure cases for every new rule/contract: user preference vs
+- [x] Add cross-pressure cases for every new rule/contract: user preference vs
       criticism, inline brevity vs file request, internal data vs public web,
       currentness vs stable knowledge, connected app vs browser, and source
       quality vs convenience.
-- [ ] Define default-flip gates: advisory → routed → default-on only when
+- [x] Define default-flip gates: advisory → routed → default-on only when
       trigger eval recall is green, negative precision is green, and paired
       quality does not regress on existing tasks.
-- [ ] Add a maintainer-visible report that shows which mechanisms remain
+- [x] Add a maintainer-visible report that shows which mechanisms remain
       advisory and why.
 
 **Exit:** the package can prove the new quality behavior fires and does not
@@ -315,16 +329,16 @@ silently degrade existing coding/roadmap workflows.
 
 ## Phase 8 — Runtime rollout, monitoring, rollback, and re-harvest loop
 
-- [ ] Ship new contracts behind staged rollout flags or opt-in packs where the
+- [x] Ship new contracts behind staged rollout flags or opt-in packs where the
       package supports them; otherwise document the staged merge order and
       avoid changing multiple routing defaults in one PR.
-- [ ] Add rollback instructions for each default-on mechanism: files to revert,
+- [x] Add rollback instructions for each default-on mechanism: files to revert,
       flags to disable, evals that should fail if the rollback is incomplete,
       and user-visible behavior that should disappear.
-- [ ] Add lightweight monitoring hooks for package development: trigger traces
+- [x] Add lightweight monitoring hooks for package development: trigger traces
       in eval output, misroute examples in roadmap assets, and a changelog
       entry when a behavior changes from advisory to default.
-- [ ] Add a re-harvest cadence: repeat source-anonymous mechanism review after
+- [x] Add a re-harvest cadence: repeat source-anonymous mechanism review after
       major host/tool changes or new prompt families, but require the matrix
       discipline before any new adoption roadmap.
 
@@ -333,15 +347,15 @@ one external corpus as permanent truth.
 
 ## Acceptance criteria
 
-- [ ] Source-anonymous mechanism matrix exists with checksums, dependency ids,
+- [x] Source-anonymous mechanism matrix exists with checksums, dependency ids,
       conflict ids, carrier decisions, and rollout state.
-- [ ] Currentness/research, memory/preference, artifact/visual routing, and
+- [x] Currentness/research, memory/preference, artifact/visual routing, and
       citation/source-quality contracts are implemented or explicitly rejected.
-- [ ] Eval harness exists before behavior flips, with positive, negative, and
+- [x] Eval harness exists before behavior flips, with positive, negative, and
       cross-pressure examples for each new routing contract.
-- [ ] Tool-composition, domain-detection, user-control, capability-degrade, and
+- [x] Tool-composition, domain-detection, user-control, capability-degrade, and
       rollback behavior are documented before default-on adoption.
-- [ ] No generated projection is edited by hand; all implementation changes
+- [x] No generated projection is edited by hand; all implementation changes
       land in `src/` during follow-up implementation roadmaps.
 
 ## Blockers
