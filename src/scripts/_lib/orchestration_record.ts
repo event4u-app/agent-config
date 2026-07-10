@@ -45,6 +45,10 @@ export interface RecordInput {
     session_tier?: string | null | undefined;
     dispatch_outcome?: DispatchOutcome | undefined;
     verify_mode?: VerifyMode | undefined;
+    /** QUALITY: subagent return adopted without parent rework. Optional boolean (null = not measured). */
+    first_pass_success?: boolean | undefined;
+    /** QUALITY: slice retried on a higher tier after a verification failure. Optional boolean (null = not measured). */
+    escalated?: boolean | undefined;
     // Audit-log envelope (sensible defaults for a dispatch record)
     phase?: LinePhase | undefined;
     outcome?: LineOutcome | undefined;
@@ -127,6 +131,13 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     const phase = input.phase ?? 'implement';
     if (!PHASES.includes(phase)) errors.push(`phase must be one of ${PHASES.join(' | ')}`);
 
+    if (input.first_pass_success !== undefined && typeof input.first_pass_success !== 'boolean') {
+        errors.push('first_pass_success must be a boolean (true = return adopted without parent rework) or omitted');
+    }
+    if (input.escalated !== undefined && typeof input.escalated !== 'boolean') {
+        errors.push('escalated must be a boolean (true = retried on a higher tier after verification failure) or omitted');
+    }
+
     if (!input.ts) errors.push('ts (ISO-8601 UTC) is required');
     if (!input.id) errors.push('id (ULID or content hash) is required');
 
@@ -146,6 +157,8 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         tier_source: input.tier_source ?? null,
         dispatch_tokens: input.dispatch_tokens ?? null,
         session_tier: input.session_tier ?? null,
+        first_pass_success: input.first_pass_success ?? null,
+        escalated: input.escalated ?? null,
     };
 
     const line: Record<string, unknown> = {

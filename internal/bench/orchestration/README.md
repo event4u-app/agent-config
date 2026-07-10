@@ -6,10 +6,14 @@
 
 ## What this corpus measures
 
-Real orchestration telemetry (`token_delta`, `spawn_count`, `verify_mode`) from
-the actual Claude Code `Task` tool, read from
+Real orchestration telemetry (`token_delta`, `spawn_count`, `verify_mode`,
+plus the QUALITY pair `first_pass_success` / `escalated`) from the actual
+Claude Code `Task` tool, read from
 `agents/runtime/state/audit/YYYY-MM.jsonl`. This is the primary evidence for
-the `gateVerdict()` flip-gate.
+the `gateVerdict()` flip-gate. Cost and quality are reported as PAIRED columns
+(council verdict — never savings alone): `orchestration_savings_report`
+aggregates the pair into `first_pass_success_rate` / `escalation_rate`, so
+every corpus run MUST populate the two booleans on its telemetry line.
 
 ## What this corpus does NOT measure
 
@@ -30,6 +34,19 @@ the `gateVerdict()` flip-gate.
 3. Paste each corpus task from `corpus/` as a user message.
 4. After the task completes, check `agents/runtime/state/audit/YYYY-MM.jsonl`
    for the `orchestration` sub-object. Run `/cost:report` to see the summary.
+5. Record the quality pair on the line — `first_pass_success` (return adopted
+   without parent rework?) and `escalated` (re-run on a higher tier after a
+   verification failure?):
+
+   ```bash
+   ./scripts-run src/scripts/orchestration_record --spawn-count <n> \
+     --token-delta <±n> --provenance measured \
+     --first-pass-success true|false --escalated true|false
+   ```
+
+   Lines without the pair still parse (additive fields), but they do not count
+   toward the ≥ 20-line quality gate that lets the savings report render the
+   real `first_pass_success_rate` / `escalation_rate` columns.
 
 For a baseline (single-agent, no orchestration):
 1. Set `subagents.auto: off`.
@@ -61,8 +78,8 @@ place versus **two baselines**, per the roadmap's dual-baseline rule:
 Fill this table per task (one row per arm), from the telemetry line's
 `orchestration` object (`token_delta`, `verdict_changed_outcome`, `verify_mode`):
 
-| task | arm | verdict | verdict_changed_outcome | token_delta | tokens acceptable? |
-|---|---|---|---|---|---|
+| task | arm | verdict | verdict_changed_outcome | token_delta | tokens acceptable? | first_pass_success | escalated |
+|---|---|---|---|---|---|---|---|
 
 > **First run recorded (2026-07-05): HONEST NULL** — see
 > [`pv-a3-results.md`](pv-a3-results.md). No baseline was fooled on `pv-01`

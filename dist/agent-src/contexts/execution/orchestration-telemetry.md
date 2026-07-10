@@ -26,7 +26,9 @@ v1 forward-compat rule on unknown fields).
   "dispatch_tokens": null,
   "session_tier": null,
   "escalated_from": null,
-  "verify_result_by_tier": null
+  "verify_result_by_tier": null,
+  "first_pass_success": null,
+  "escalated": null
 }
 ```
 
@@ -34,22 +36,24 @@ v1 forward-compat rule on unknown fields).
 
 | Field | Type | Meaning |
 |---|---|---|
-| `task_size_estimate` | int | Pre-dispatch estimate of the task's size (orchestrator's sizing heuristic). Counts only, no body. |
-| `spawn_count` | int | Subagents dispatched for this task. `0` → handled in-session. |
-| `tiers` | string[] | Model tiers dispatched to, one per spawn class (e.g. `["sonnet","opus"]`). Tier names only, no prompts. |
-| `token_delta` | int | Net token cost vs the in-session baseline. Positive = cost more; negative = saved. Counts only. |
-| `token_delta_provenance` | enum | `"measured"` from host-reported `usage` metadata (preferred); `"estimated"` when self-estimated from response length (mark always when host usage unavailable). |
-| `wall_clock_ms` | int | Dispatch wall-clock duration, milliseconds. |
+| `task_size_estimate` | int | Pre-dispatch estimate of the task's size (the orchestrator's sizing heuristic). Counts only, no body. |
+| `spawn_count` | int | Number of subagents dispatched for this task. `0` → handled in-session. |
+| `tiers` | string[] | Model tiers dispatched to, one entry per spawn class (e.g. `["sonnet","opus"]`). Tier names only, no prompts. |
+| `token_delta` | int | Net token cost of the dispatch versus the in-session baseline. Positive = orchestration cost more; negative = saved tokens. Counts only. |
+| `token_delta_provenance` | enum | `"measured"` when sourced from host-reported `usage` metadata (preferred); `"estimated"` when self-estimated from response length (mark always when host usage is unavailable). |
+| `wall_clock_ms` | int | Wall-clock duration of the dispatch, milliseconds. |
 | `outcome` | enum | One of `DONE` · `DONE_WITH_CONCERNS` · `NEEDS_CONTEXT` · `BLOCKED` · `killed`. |
-| `verify_mode` | enum | How output was verified: `deterministic` · `judge` · `none`. |
-| `verdict_changed_outcome` | bool \| null | **A3 extension (ADR-109 Track A).** For a review/verdict subagent (e.g. `production-validator`): did the verdict change the outcome vs the in-session baseline? `true` = caught a real issue the baseline missed / flipped a false `READY`→`NOT READY`; `false` = no lift; `null` = not a verdict dispatch / not measured. **Negative-control (clean single-file) tasks MUST record `false`** — a `true` on a control = spurious findings, fails Gate A. Additive field on THIS object, not a second schema. Boolean/counts only, no bodies. |
+| `verify_mode` | enum | How the dispatch's output was verified: `deterministic` · `judge` · `none`. |
+| `verdict_changed_outcome` | bool \| null | **A3 extension (ADR-109 Track A).** For a review/verdict subagent (e.g. `production-validator`): did the subagent's verdict actually change the outcome versus the in-session baseline? `true` = it caught a real issue the baseline missed or flipped a false `READY`→`NOT READY`; `false` = same outcome as baseline (no lift); `null` = not a verdict dispatch / not measured. **Negative-control tasks (a clean single-file task) MUST record `false`** — a subagent that reports `true` on a control is producing spurious findings and fails Gate A. This is an additive field on THIS object, not a second schema. Counts/boolean only, no bodies. |
 | `task_class` | string \| null | **Routing extension (road-to-cost-aware-model-routing Phase 0).** Category id of the dispatched slice (e.g. `read-only-fanout`, `mechanical-edit`, `implementation`, `review-synthesis`). Enum-style id only, never free-form task text. `null` = pre-extension line / unclassified. |
 | `tier_chosen` | string \| null | Tier the slice was dispatched on (`lite` \| `medium` \| `high`). `null` = pre-extension line. |
 | `tier_source` | enum \| null | Where `tier_chosen` came from: `static` (frontmatter/category pin) · `inferred` (deterministic per-slice inference) · `inherit` (session tier — no downshift decision). Lets the evidence gate score inferred routing separately from static pinning. |
-| `escalated_from` | string \| null | When the slice re-dispatched after a verification failure: tier of the FAILED attempt (e.g. `lite` when a lite return failed verify and the slice re-ran on `medium`). `null` = no escalation. |
-| `verify_result_by_tier` | object \| null | Map tier → verification result per attempt of this slice (e.g. `{"lite":"fail","medium":"pass"}`). Values: `pass` \| `fail` \| `skipped`. Feeds the per-tier verify-pass-rate tripwire. Enums only, no verdict bodies. |
+| `escalated_from` | string \| null | When the slice was re-dispatched after a verification failure: the tier of the FAILED attempt (e.g. `lite` when a lite return failed verify and the slice re-ran on `medium`). `null` = no escalation. |
+| `verify_result_by_tier` | object \| null | Map of tier → verification result for every attempt of this slice (e.g. `{"lite":"fail","medium":"pass"}`). Values: `pass` \| `fail` \| `skipped`. Feeds the per-tier verify-pass-rate tripwire. Enums only, no verdict bodies. |
 | `dispatch_tokens` | int \| null | **Cost-% extension.** Absolute tokens the dispatched slice consumed (measured subagent usage). Feeds the MODELED cost-% in `orchestration_savings_report`, which needs an absolute base the token-count delta lacks. `null` = not recorded. Counts only. |
 | `session_tier` | string \| null | **Cost-% extension.** The orchestrator's OWN tier — the baseline the downshift cost-% measures `tier_chosen` against (a `high`→`lite` downshift is a rate win the token count can't see). `null` = not recorded. |
+| `first_pass_success` | bool \| null | **QUALITY extension (council verdict: quality × cost paired).** `true` = the subagent return was adopted without parent rework; `false` = the parent had to rework the return before adopting. `null` = pre-extension line / not measured. Boolean only, no bodies. |
+| `escalated` | bool \| null | **QUALITY extension (council verdict: quality × cost paired).** `true` = the slice was retried on a higher tier after a verification failure; `false` = no escalation. `null` = pre-extension line / not measured. Boolean only, no bodies. |
 
 These routing + cost fields are additive and optional — a line without them is
 still a valid orchestration line; readers ignore unknown fields per the v1
@@ -74,49 +78,58 @@ object is an additive extension on an otherwise standard audit-log-v1 line:
 
 After every auto-dispatched orchestration run, the orchestrating agent writes one
 telemetry line to `agents/runtime/state/audit/YYYY-MM.jsonl` (the existing
-audit-log-v1 path; `YYYY-MM` = current UTC month). The line is a standard
-audit-log-v1 object with `input_kind: "orchestration"` and an `orchestration`
-sub-object carrying this shape.
+audit-log-v1 path, where `YYYY-MM` is the current UTC month). The line is a
+standard audit-log-v1 object with `input_kind: "orchestration"` and an
+`orchestration` sub-object carrying this shape.
 
-**No hook or daemon required.** The agent writes the line directly —
-no-runtime-compatible capture path (decided 2026-06-30, maintainer decision; see
-`road-to-subagent-value-realization.md § Council notes`). Do NOT hand-author the
-JSON: run the recorder, which validates + builds a conformant line from the
-counts you already have:
+**No hook or daemon required.** The agent writes the line directly — the
+no-runtime-compatible capture path (decided 2026-06-30, maintainer decision;
+see `road-to-subagent-value-realization.md § Council notes`). Do NOT
+hand-author the JSON: run the recorder, which validates the inputs and builds a
+conformant audit-log-v1 line from the counts you already have:
 
 ```bash
 ./scripts-run src/scripts/orchestration_record --spawn-count <n> \
   --token-delta <±n> --provenance measured|estimated \
   [--tier-chosen lite|medium|high] [--tier-source static|inferred|inherit] \
-  [--task-class <id>] [--tiers a,b] [--dispatch-outcome DONE|BLOCKED|…]
+  [--task-class <id>] [--tiers a,b] [--dispatch-outcome DONE|BLOCKED|…] \
+  [--first-pass-success true|false] [--escalated true|false]
 ```
 
-A capture **hook** is the wrong tool: the PostToolUse payload carries no subagent
-token usage (only the orchestrator sees it) and a hook reverses the 2026-06-30
-no-hook decision. Reader: `src/scripts/orchestration_savings_report.ts`.
+A capture **hook** is the wrong tool here: the PostToolUse payload carries no
+subagent token usage — only the orchestrator sees it (via the run result) — and
+a hook would reverse the 2026-06-30 no-hook decision. Reader:
+`src/scripts/orchestration_savings_report.ts`.
 
 **`token_delta` sourcing priority:**
 1. Host-reported: read `usage.output_tokens` (and `usage.input_tokens` if
-   available) from each subagent call's response metadata. Use the sum minus the
-   estimated single-agent baseline. Set `token_delta_provenance: "measured"`.
-2. Self-estimate fallback: host usage metadata unavailable → estimate from
+   available) from the response metadata of each subagent call. Use the sum
+   minus the estimated single-agent baseline. Set `token_delta_provenance:
+   "measured"`.
+2. Self-estimate fallback: if host usage metadata is unavailable, estimate from
    response length (chars / 4 ≈ tokens). Set `token_delta_provenance:
-   "estimated"`. Lossy; measured always preferred.
+   "estimated"`. This estimate is lossy; measured is always preferred.
 
 ## Savings report
 
-Aggregate accumulated telemetry into a token-savings report:
+Aggregate the accumulated telemetry into a token-savings report:
 
 ```bash
 ./scripts-run src/scripts/orchestration_savings_report [--dir <path>] [--format text|json]
 ```
 
-Sums `token_delta` across dispatches (negative = net saved); splits by
-provenance (measured vs estimated), `tier_chosen`, `task_class`. Reports
-**ABSOLUTE net tokens saved, never a percentage**: telemetry records net delta,
-not the absolute in-session baseline → "% of session saved" not derivable. A
-percentage needs an additive absolute-baseline field (deferred follow-up).
-Reader: [`src/scripts/_lib/orchestration_savings.ts`](../../../../src/scripts/_lib/orchestration_savings.ts).
+It sums `token_delta` across dispatches (negative = net saved) and splits by
+provenance (measured vs estimated), `tier_chosen`, and `task_class`. **Quality
+and cost render as PAIRED columns** (council verdict — never savings alone):
+`first_pass_success_rate` and `escalation_rate` aggregate over the lines that
+carry the quality booleans; with ≥ 20 such lines in the window the real rates
+render beside the savings figures, below 20 the quality columns render as
+`n/a (n=<count>)`. It reports
+**ABSOLUTE net tokens saved, never a percentage**: the telemetry records net
+delta, not the absolute in-session baseline, so a "% of session saved" is not
+derivable from this data. A percentage would require an additive
+absolute-baseline field on this object (deferred follow-up). Reader:
+[`src/scripts/_lib/orchestration_savings.ts`](../../../../src/scripts/_lib/orchestration_savings.ts).
 
 ## Related
 

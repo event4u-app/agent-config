@@ -34,3 +34,7 @@ the next.
 - `spawn_count > 0` in the telemetry line.
 - `verify_mode: "judge"` in the orchestration sub-object.
 - All three files modified in the correct order.
+- Quality pair recorded: `first_pass_success` and `escalated` booleans on the
+  telemetry line (`orchestration_record --first-pass-success true|false
+  --escalated true|false`) — a judge-gated step that forces a redo counts as
+  `first_pass_success: false`.

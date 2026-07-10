@@ -27,3 +27,7 @@ Run the same three arms as pv-01.
   its pv-01 performance. A useful verdict subagent must be silent when there is
   nothing to catch.
 - `token_delta` is recorded but is not a pass/fail input for the control.
+- Quality pair recorded on every arm's telemetry line: `first_pass_success`
+  and `escalated` booleans (`orchestration_record --first-pass-success
+  true|false --escalated true|false`) — a clean control adopted as-is is
+  `first_pass_success: true`, `escalated: false`.

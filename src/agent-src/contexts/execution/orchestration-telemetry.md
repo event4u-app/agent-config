@@ -26,7 +26,9 @@ v1 forward-compat rule on unknown fields).
   "dispatch_tokens": null,
   "session_tier": null,
   "escalated_from": null,
-  "verify_result_by_tier": null
+  "verify_result_by_tier": null,
+  "first_pass_success": null,
+  "escalated": null
 }
 ```
 
@@ -50,6 +52,8 @@ v1 forward-compat rule on unknown fields).
 | `verify_result_by_tier` | object \| null | Map of tier → verification result for every attempt of this slice (e.g. `{"lite":"fail","medium":"pass"}`). Values: `pass` \| `fail` \| `skipped`. Feeds the per-tier verify-pass-rate tripwire. Enums only, no verdict bodies. |
 | `dispatch_tokens` | int \| null | **Cost-% extension.** Absolute tokens the dispatched slice consumed (measured subagent usage). Feeds the MODELED cost-% in `orchestration_savings_report`, which needs an absolute base the token-count delta lacks. `null` = not recorded. Counts only. |
 | `session_tier` | string \| null | **Cost-% extension.** The orchestrator's OWN tier — the baseline the downshift cost-% measures `tier_chosen` against (a `high`→`lite` downshift is a rate win the token count can't see). `null` = not recorded. |
+| `first_pass_success` | bool \| null | **QUALITY extension (council verdict: quality × cost paired).** `true` = the subagent return was adopted without parent rework; `false` = the parent had to rework the return before adopting. `null` = pre-extension line / not measured. Boolean only, no bodies. |
+| `escalated` | bool \| null | **QUALITY extension (council verdict: quality × cost paired).** `true` = the slice was retried on a higher tier after a verification failure; `false` = no escalation. `null` = pre-extension line / not measured. Boolean only, no bodies. |
 
 These routing + cost fields are additive and optional — a line without them is
 still a valid orchestration line; readers ignore unknown fields per the v1
@@ -88,7 +92,8 @@ conformant audit-log-v1 line from the counts you already have:
 ./scripts-run src/scripts/orchestration_record --spawn-count <n> \
   --token-delta <±n> --provenance measured|estimated \
   [--tier-chosen lite|medium|high] [--tier-source static|inferred|inherit] \
-  [--task-class <id>] [--tiers a,b] [--dispatch-outcome DONE|BLOCKED|…]
+  [--task-class <id>] [--tiers a,b] [--dispatch-outcome DONE|BLOCKED|…] \
+  [--first-pass-success true|false] [--escalated true|false]
 ```
 
 A capture **hook** is the wrong tool here: the PostToolUse payload carries no
@@ -114,7 +119,12 @@ Aggregate the accumulated telemetry into a token-savings report:
 ```
 
 It sums `token_delta` across dispatches (negative = net saved) and splits by
-provenance (measured vs estimated), `tier_chosen`, and `task_class`. It reports
+provenance (measured vs estimated), `tier_chosen`, and `task_class`. **Quality
+and cost render as PAIRED columns** (council verdict — never savings alone):
+`first_pass_success_rate` and `escalation_rate` aggregate over the lines that
+carry the quality booleans; with ≥ 20 such lines in the window the real rates
+render beside the savings figures, below 20 the quality columns render as
+`n/a (n=<count>)`. It reports
 **ABSOLUTE net tokens saved, never a percentage**: the telemetry records net
 delta, not the absolute in-session baseline, so a "% of session saved" is not
 derivable from this data. A percentage would require an additive

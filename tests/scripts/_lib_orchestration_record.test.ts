@@ -85,4 +85,21 @@ describe('buildOrchestrationLine', () => {
         expect((buildOrchestrationLine(BASE).line!.orchestration as Record<string, unknown>).dispatch_tokens).toBeNull();
         expect(buildOrchestrationLine({ ...BASE, dispatch_tokens: -5 }).errors.join(' ')).toMatch(/dispatch_tokens/);
     });
+
+    it('carries the quality pair (first_pass_success / escalated) into the orchestration object', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE, first_pass_success: true, escalated: false });
+        expect(errors).toEqual([]);
+        expect(line!.orchestration).toMatchObject({ first_pass_success: true, escalated: false });
+    });
+
+    it('defaults the quality pair to null when omitted (old callers stay valid)', () => {
+        const o = buildOrchestrationLine(BASE).line!.orchestration as Record<string, unknown>;
+        expect(o.first_pass_success).toBeNull();
+        expect(o.escalated).toBeNull();
+    });
+
+    it('rejects non-boolean quality values', () => {
+        expect(buildOrchestrationLine({ ...BASE, first_pass_success: 'yes' as never }).errors.join(' ')).toMatch(/first_pass_success/);
+        expect(buildOrchestrationLine({ ...BASE, escalated: 1 as never }).errors.join(' ')).toMatch(/escalated/);
+    });
 });
