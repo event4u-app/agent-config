@@ -13,7 +13,7 @@ Four rules answer **"may the agent do this autonomously?"** Higher band wins.
 
 | Band | Trigger | Canonical rule |
 |---|---|---|
-| **1. Hard Floor** | Prod-trunk merge · deploy · push · prod data/infra · whimsical bulk deletion · bulk-deletion or infra commit | [`non-destructive-by-default`](non-destructive-by-default.md) |
+| **1. Hard Floor** | Prod-trunk merge · deploy · push · prod data/infra · whimsical bulk deletion · bulk-deletion or infra commit · irreversible external action (send · publish · post · purchase · submit) | [`non-destructive-by-default`](non-destructive-by-default.md) |
 | **2. Permission Gate** | Git op · branch / PR / tag · architectural or library change · scope expansion | [`scope-control`](scope-control.md) |
 | **3. Commit Default** | About to commit — never, unless one of four exceptions fires | [`commit-policy`](commit-policy.md) |
 | **4. Trivial-vs-Blocking** | Routine workflow question — act or ask | [`autonomous-execution`](autonomous-execution.md) |
