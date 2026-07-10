@@ -80,6 +80,27 @@ the feature-PR floor by adding:
 | `release-validation.yml` (Phase B) | `release-shape` | shape detector — fails closed if diff exits the allowlist |
 | `release-validation.yml` (Phase B) | `changelog-entry` | CHANGELOG carries an entry matching the head-branch version |
 | `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` / pack manifests agree on the version |
+| `consumer-matrix.yml` | `consumer-matrix` · `publish-dry-run` · `mcp-worker-dry-run` · `plugin-bootstrap` | pack-based consumer E2E + pre-tag dry-runs of the release-adjacent workflows — see the exemption note below |
+
+## Consumer-matrix exemption — the tarball window
+
+The cut surface above rests on "release PRs cannot regress install or
+runtime behaviour by construction". That argument covers the **source
+diff** — it is blind to the **published tarball**. Every historical
+packaging incident (tarball missing `src/install/` across two minors,
+`tsx` absent from the package, npm-pin drift, the MCP worker deploy red
+across five releases) entered `main` on ordinary PRs and manifested only
+at publish time — exactly the window between merge and tag where nothing
+pack-based ran.
+
+[`consumer-matrix.yml`](../../.github/workflows/consumer-matrix.yml) is
+therefore **exempt from the release-PR skip and runs ON release PRs** (its
+primary trigger), packing the tarball and exercising it as a consumer,
+plus dry-running `publish-npm.yml` and `deploy-mcp-worker.yml` before the
+tag exists. Contract + counterfactual map:
+[`docs/distribution/consumer-matrix.md`](../distribution/consumer-matrix.md).
+The source-level skips above stay unchanged — the exemption adds the
+tarball dimension, it does not reopen the source matrices.
 
 ## Rollback trigger — fail-closed
 
@@ -122,3 +143,8 @@ name alone never bypasses the heavy matrix.
   release-branch naming convention.
 - [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md) — the
   CI-native (`release`-label) entry point into the same script.
+- [`docs/distribution/consumer-matrix.md`](../distribution/consumer-matrix.md) —
+  pack-based consumer E2E; the documented exemption from the cut surface.
+- [`release-sizing.md`](release-sizing.md) — release scope floor: one primary
+  goal per minor, `Rollback:` lines for new / reworked subsystems (gate:
+  `src/scripts/lint_changelog_rollback.ts`).
