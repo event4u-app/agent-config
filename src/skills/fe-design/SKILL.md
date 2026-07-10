@@ -43,6 +43,15 @@ Do NOT use this skill to:
 - Audit an existing UI — that is `existing-ui-audit`
 - Drive the full UI flow — that is the `directives/ui/` orchestrator
 
+> **Resource-first, before taste.** Any request to recreate / redesign / mock /
+> prototype / improve an existing UI runs the
+> [resource-first context gate](../existing-ui-audit/SKILL.md#resource-first-context-gate-design-fidelity)
+> FIRST — search the project's tokens/design-system/assets, hard-stop and ask
+> when a referenced source is inaccessible (never invent from memory), and
+> prefer code over screenshots for exact values. Planning here starts from that
+> inventory, not from generic aesthetic memory (design-artifact lifecycle,
+> Inspect stage).
+
 ## How the directive set cites this skill
 
 `directives/ui/design.ts` produces the design brief (layout, components,

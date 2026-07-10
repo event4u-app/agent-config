@@ -1,0 +1,47 @@
+{
+    "skill": "existing-ui-audit",
+    "last_eval": "2026-07-10",
+    "description": "5 should-trigger + 5 should-not-trigger queries for the resource-first context gate (road-to-design-artifact-fidelity Phase 2). Should-trigger covers the four Phase-2 cases — redesign with code present, screenshot-only, no-assets/owned-UI, and an inaccessible referenced source — plus an improve-existing case; all require inventorying project context BEFORE styling rather than starting from aesthetic memory. Should-not-trigger covers near-miss neighbours whose vocabulary overlaps (backend/API, non-UI, general design knowledge, a genuinely trivial one-line UI edit) that must NOT force a full audit.",
+    "queries": [
+        {
+            "q": "redesign our dashboard — the React components are in src/components, make it cleaner",
+            "trigger": true
+        },
+        {
+            "q": "here is a screenshot of our current app, recreate this screen for us",
+            "trigger": true
+        },
+        {
+            "q": "rebuild our landing page in the same style as the rest of the product",
+            "trigger": true
+        },
+        {
+            "q": "match our Figma file at this link and rebuild the settings page (you may not be able to open it)",
+            "trigger": true
+        },
+        {
+            "q": "improve the UI of our existing checkout flow",
+            "trigger": true
+        },
+        {
+            "q": "add a rate limiter to the /orders API endpoint",
+            "trigger": false
+        },
+        {
+            "q": "write the SQL migration that adds a status column to the orders table",
+            "trigger": false
+        },
+        {
+            "q": "what is the difference between CSS flexbox and grid?",
+            "trigger": false
+        },
+        {
+            "q": "fix the typo in the README heading",
+            "trigger": false
+        },
+        {
+            "q": "explain how our CI release pipeline is structured",
+            "trigger": false
+        }
+    ]
+}
