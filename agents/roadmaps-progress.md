@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **22** open blockers
+> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **22** open blockers
 
 ## Overall
 
-**154 / 444 steps done · 35%**
+**145 / 426 steps done · 34%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
@@ -33,12 +33,11 @@
 | 15 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
 | 17 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 18 | [road-to-retrieval-substrate-hardening.md](roadmaps/road-to-retrieval-substrate-hardening.md) | 8 | 18 | 9 | 9 | 0 | 0 | 0 | █████░░░░░ 50% |
-| 19 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ███████░░░ 73% |
-| 20 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 21 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 23 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
+| 18 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | [1](#blockers-road-to-skill-eval-coverage) | ███████░░░ 73% |
+| 19 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | [1](#blockers-road-to-surface-specific-agent-contracts) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 22 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
 ---
 
@@ -374,21 +373,6 @@
     § Program tracking step 2 — label the golden stubs, run the live judge
     at `--scope consumer`, tick the live canary on 3 hosts.
   - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0.
-
-### [road-to-retrieval-substrate-hardening.md](roadmaps/road-to-retrieval-substrate-hardening.md)
-
-**Road to retrieval-substrate hardening** — 9 / 18 done (50%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Sanitize floor + versioned-cache lint (no dependency) | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 1 | Token-budget + compact serialization in `retrieve()` | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | IDF + trigram index (resolves the ADR-061 ↔ FTS5 conflict) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Learning sidecar: decay + corroboration + dead-end ledger | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 4 | Artefact relation-graph + `affected` / `explain` | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Stat-index for hook/scan latency | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 6 | Benchmark command + Kappa judge validation | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 7 | File-slicing + interop rule | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md)
 
