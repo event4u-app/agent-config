@@ -17,4 +17,4 @@ size_class: medium
 suggests: []
 surface_tier: core
 trust_level_default: core
-version: 8.8.0
+version: 8.9.0

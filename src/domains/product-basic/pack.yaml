@@ -15,4 +15,4 @@ suggests:
 - product-discovery
 surface_tier: core
 trust_level_default: professional
-version: 8.8.0
+version: 8.9.0
