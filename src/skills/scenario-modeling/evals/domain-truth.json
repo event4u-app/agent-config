@@ -1,0 +1,29 @@
+{
+  "skill": "scenario-modeling",
+  "domain": "finance",
+  "_note": "Deterministic domain-truth keys computed independently from cited standard scenario-construction formulas (NOT the skill's own output). The skill's fuller soundness (named headwind, optionality) is qualitative; these cases check only the deterministic band/sensitivity arithmetic it performs. Authored as maintainer-ratification candidates per road-to-domain-soundness Phase 2 (blocker: domain-competence-for-answer-keys); the Phase-3 run + --write-floor ratchet-pin remain the maintainer's gate.",
+  "cases": [
+    {
+      "id": "downside-band-lower-bound",
+      "scenario": "Base commit = $6.3M with a symmetric forecast confidence band of +/-14%. Compute the downside scenario revenue as the band lower bound = commit x (1 - band). State the single figure in $M to three decimals.",
+      "source": "Three-scenario construction: downside = forecast commit-band lower bound = commit x (1 - band_pct) (standard base/upside/downside modeling; NOT an arbitrary base x 0.8).",
+      "check": {
+        "kind": "deterministic",
+        "expected": 5.418,
+        "tolerance": 0.01,
+        "rationale": "6.3 x (1 - 0.14) = 6.3 x 0.86 = 5.418 ($M). Step 1: downside = O2 commit-band lower bound."
+      }
+    },
+    {
+      "id": "sensitivity-minus-20pct",
+      "scenario": "The load-bearing input of a scenario is an enterprise close rate of 40%. Run a -20% sensitivity on that input. Compute the low sensitivity value = 40% x (1 - 0.20). State the single value as a percentage.",
+      "source": "Sensitivity analysis: vary the single load-bearing input by +/-20% (standard scenario robustness test).",
+      "check": {
+        "kind": "deterministic",
+        "expected": 32,
+        "tolerance": 0.1,
+        "rationale": "40 x 0.80 = 32 (%). Step 4: vary the load-bearing input by +/-20%."
+      }
+    }
+  ]
+}

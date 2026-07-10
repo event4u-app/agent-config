@@ -1,0 +1,29 @@
+{
+  "skill": "runway-cognition",
+  "domain": "finance",
+  "_note": "Deterministic domain-truth keys computed independently from cited standard startup-finance definitions (NOT the skill's own output). Authored as maintainer-ratification candidates per road-to-domain-soundness Phase 2 (blocker: domain-competence-for-answer-keys); the Phase-3 run + --write-floor ratchet-pin remain the maintainer's gate.",
+  "cases": [
+    {
+      "id": "runway-constant-burn",
+      "scenario": "A startup holds $4,200,000 in cash with a constant net monthly burn of $560,000. Compute the months of runway. State the single number of months.",
+      "source": "Standard startup-finance runway definition: months of runway = cash balance / net monthly burn (constant-burn case). Common startup-finance primers (e.g. YC / Fenwick startup finance).",
+      "check": {
+        "kind": "deterministic",
+        "expected": 7.5,
+        "tolerance": 0.05,
+        "rationale": "4,200,000 / 560,000 = 7.5 months. runway-cognition Step 2 computes months-of-runway = cash / current-burn; this checks the arithmetic is correct off the forged stacks."
+      }
+    },
+    {
+      "id": "runway-variable-burn",
+      "scenario": "A startup holds $1,000,000 in cash. Net monthly burn is $200,000 for the first 3 months, then $300,000 per month thereafter. Compute the runway in months (the point at which cumulative cash reaches zero). State the single number of months to two decimals.",
+      "source": "Cumulative-cash-depletion definition of runway under a non-constant burn schedule (standard startup-finance).",
+      "check": {
+        "kind": "deterministic",
+        "expected": 4.33,
+        "tolerance": 0.1,
+        "rationale": "First 3 months burn 3 x 200,000 = 600,000, leaving 400,000. At 300,000/month that lasts 400,000/300,000 = 1.333 months. Total = 3 + 1.333 = 4.33 months."
+      }
+    }
+  ]
+}

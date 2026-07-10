@@ -78,13 +78,16 @@ deliberately, not overnight.
 runway, RICE, incident command, messaging), but the skills are forged on
 TS/PHP — "promising, not proven" off those stacks. A disclaimer floor
 bounds *liability*, not *correctness*: a skill can be format-correct,
-disclaimered, and still embed a wrong domain assumption. Today **0 of 20**
+disclaimered, and still embed a wrong domain assumption. Today **5 of 20**
 default-surface domain skills carry a sourced `domain-truth` fixture
-(`./scripts-run src/scripts/domain_soundness_status`); all are labeled
-`unvalidated` and the validated count is CI-ratcheted. Authoring the
-answer keys needs domain competence (a cited method, not the skill's own
-output), so validation lands deliberately — the gap is published, never
-implied away.
+(`./scripts-run src/scripts/domain_soundness_status`); the rest are labeled
+`unvalidated` and the validated count is CI-ratcheted. The fixtures landed
+so far are the **deterministic** targets (runway, unit-economics, DCF,
+forecasting, scenario band/sensitivity), whose answer keys are computed
+from cited standard formulas — never the skill's own output; the
+**rubric** targets (incident command, messaging, fundraising, editorial)
+need domain-competent grounding and remain unvalidated, so validation
+lands deliberately — the gap is published, never implied away.
 
 **Second-brain substrate — measured recall lift, honestly bounded.** On a
 deterministic multi-session recall corpus, the memory substrate beats a

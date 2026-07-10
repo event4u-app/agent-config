@@ -1,0 +1,29 @@
+{
+  "skill": "forecasting",
+  "domain": "finance",
+  "_note": "Deterministic domain-truth keys computed independently from cited standard forecast-construction formulas (NOT the skill's own output). Authored as maintainer-ratification candidates per road-to-domain-soundness Phase 2 (blocker: domain-competence-for-answer-keys); the Phase-3 run + --write-floor ratchet-pin remain the maintainer's gate.",
+  "cases": [
+    {
+      "id": "bottom-up-commit",
+      "scenario": "Bottom-up forecast. Commit-tagged pipeline total = $8.1M; in-window segment close rate = 78%. Compute the commit value = commit-tagged pipeline x in-window close rate. State the single figure in $M to three decimals.",
+      "source": "Bottom-up forecast construction: commit = sum(commit-tagged pipeline) x in-window close rate (standard finance/RevOps forecasting).",
+      "check": {
+        "kind": "deterministic",
+        "expected": 6.318,
+        "tolerance": 0.01,
+        "rationale": "8.1 x 0.78 = 6.318 ($M). Step 1 bottom-up: sum commit-tagged x in-window close-rate per segment."
+      }
+    },
+    {
+      "id": "top-down-arr",
+      "scenario": "Top-down forecast. Total addressable market (TAM) = $4.2B; expected penetration = 0.6%. Compute the top-down ARR = TAM x penetration. State the single figure in $M.",
+      "source": "Top-down forecast construction: ARR = TAM x penetration band (x motion band) (standard market-sizing).",
+      "check": {
+        "kind": "deterministic",
+        "expected": 25.2,
+        "tolerance": 0.05,
+        "rationale": "4,200,000,000 x 0.006 = 25,200,000 = $25.2M. Step 1 top-down: TAM x penetration band."
+      }
+    }
+  ]
+}
