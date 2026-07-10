@@ -15,6 +15,7 @@
 <!-- For changes to shared agent-config package (.augment/, scripts/, templates/) -->
 
 ### Promotion Gate
+- [ ] New capability? Names what it replaces/consolidates, or justifies its routing + context cost (growth ratchet)
 - [ ] Learning occurred 2+ times OR is clearly generalizable
 - [ ] Improves correctness, reliability, or consistency
 - [ ] Prevents a real, observed failure

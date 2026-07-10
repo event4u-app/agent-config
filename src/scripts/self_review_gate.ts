@@ -21,7 +21,7 @@
  * the `check_quality_regression.gateVerdict` pattern.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -244,9 +244,18 @@ export function main(argv: string[]): 0 | 2 {
 
     const key = resolveKey();
     if (!key) {
+        // Explicit NEUTRAL state — never a bare green that reads as "reviewed".
         process.stdout.write(
-            '::notice::self-review-gate skipped — set the ANTHROPIC_API_KEY repo secret to enable the live dogfooded review.\n',
+            '::warning::self-review-gate NEUTRAL — no ANTHROPIC_API_KEY configured, NOTHING was reviewed. ' +
+                'Set the repo secret to enable the live dogfooded review.\n',
         );
+        const summary = process.env.GITHUB_STEP_SUMMARY;
+        if (summary) {
+            appendFileSync(
+                summary,
+                '### Self-review gate: NEUTRAL\n\nNo `ANTHROPIC_API_KEY` secret — nothing was reviewed. This is not a pass.\n',
+            );
+        }
         return 0;
     }
 

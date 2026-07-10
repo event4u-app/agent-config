@@ -21,6 +21,28 @@ Scope discipline, not a ratio: what qualifies is a judgment call the
 maintainer makes when labeling the release PR
 ([`release-pr-gating.md`](release-pr-gating.md)).
 
+### Primary goal declaration
+
+Every release PR body carries one literal line:
+
+```
+Primary-Goal: <one sentence>
+```
+
+A release bundling multiple major themes anyway annotates the
+**exception + reason** in the release notes ("this release bundles N
+themes because <reason>; future releases return to one primary goal").
+The declaration keeps the norm visible and the exception deliberate.
+
+Explicitly REJECTED (council, anthropic/claude-sonnet-4-5 +
+openai/gpt-4o, 2026-07-10): a mechanical subsystem-count lint on the
+release PR. A file→subsystem map is its own maintenance burden, and
+changed-file counts are a bad proxy for scope (a one-line kernel change
+has a larger blast radius than 50 lines in a niche skill). Sizing stays
+a norm enforced by declaration + human judgment; if the maintainer
+wrote a nine-theme release, the maintainer already judged it — the
+header makes that judgment explicit, not automatic.
+
 ## Major subsystems are independently disableable where feasible
 
 A major subsystem shipped or substantially reworked in a release is

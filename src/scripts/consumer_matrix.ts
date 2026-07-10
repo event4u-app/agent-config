@@ -52,6 +52,8 @@ interface LegResult {
     ok: boolean;
     detail: string;
     durationMs: number;
+    /** fn ran to completion (a declared skip or an after-failure skip is NOT executed). */
+    executed: boolean;
 }
 
 function log(msg: string): void {
@@ -313,13 +315,20 @@ async function main(): Promise<number> {
         if (only && !only.includes(leg.name)) continue;
         // Legs after a hard dependency failure cannot run meaningfully.
         if (failed) {
-            ctx.results.push({ leg: leg.name, ok: false, detail: 'skipped (earlier leg failed)', durationMs: 0 });
+            ctx.results.push({
+                leg: leg.name,
+                ok: false,
+                detail: 'skipped (earlier leg failed)',
+                durationMs: 0,
+                executed: false,
+            });
             continue;
         }
         const t0 = Date.now();
         try {
             const detail = await leg.fn(ctx);
-            ctx.results.push({ leg: leg.name, ok: true, detail, durationMs: Date.now() - t0 });
+            const executed = !detail.startsWith('skipped');
+            ctx.results.push({ leg: leg.name, ok: true, detail, durationMs: Date.now() - t0, executed });
             log(`  ✅  ${leg.name} — ${detail}`);
         } catch (err) {
             ctx.results.push({
@@ -327,10 +336,40 @@ async function main(): Promise<number> {
                 ok: false,
                 detail: (err as Error).message,
                 durationMs: Date.now() - t0,
+                executed: true,
             });
             log(`  ❌  ${leg.name} — ${(err as Error).message}`);
             failed = true;
         }
+    }
+
+    // Leg-completeness gate (road-to-fable-feedback-5 Phase 6a): a full run
+    // (no --only) must have EXECUTED every expected leg — a silently-skipped
+    // leg can no longer ride a green workflow. The only declared skip is
+    // `upgrade` under an explicit --skip-registry flag.
+    if (!only && !failed) {
+        const declaredSkips = new Set(ctx.skipRegistry ? ['upgrade'] : []);
+        const missing = LEGS.filter((l) => {
+            const r = ctx.results.find((x) => x.leg === l.name);
+            return r === undefined || (!r.executed && !declaredSkips.has(l.name));
+        }).map((l) => l.name);
+        if (missing.length > 0) {
+            log(`❌  leg-completeness gate: expected leg(s) did not execute: ${missing.join(', ')}`);
+            failed = true;
+        }
+    }
+
+    const manifestPath = getOpt('--manifest');
+    if (manifestPath) {
+        const manifest = {
+            ok: !failed,
+            node: process.version,
+            skipRegistry: ctx.skipRegistry,
+            expected: LEGS.map((l) => l.name),
+            results: ctx.results,
+        };
+        fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+        log(`leg manifest written: ${manifestPath}`);
     }
 
     if (argv.includes('--json')) {
