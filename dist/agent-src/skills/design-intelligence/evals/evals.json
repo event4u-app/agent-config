@@ -1,0 +1,14 @@
+{
+  "skill": "design-intelligence",
+  "_calibration": "Behavioural fixtures (road-to-skill-eval-coverage Phase 2, rich set). Deterministic `contains` asserts the WCAG-checked-token property the skill promises; the rubric (pinned-judge known-limit) checks the corpus-grounding — a grounded brief names a concrete style/palette/type decision, not arbitrary taste.",
+  "scenarios": [
+    {
+      "id": "grounded-brief-fintech-dashboard",
+      "prompt": "Give me a grounded design brief (style, color tokens, typography, layout pattern) for a serious fintech analytics dashboard. Justify the palette's contrast.",
+      "assertions": [
+        { "kind": "contains", "value": "WCAG" },
+        { "kind": "rubric", "criterion": "Selects a concrete named style/archetype + a specific palette and type pairing grounded in the design corpus (not arbitrary), and states at least one anti-pattern to avoid." }
+      ]
+    }
+  ]
+}

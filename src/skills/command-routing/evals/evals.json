@@ -1,0 +1,14 @@
+{
+  "skill": "command-routing",
+  "_calibration": "Behavioural fixtures (road-to-skill-eval-coverage Phase 2, router set). Deterministic `contains` asserts the invocation routes to the matching command (its file/path) rather than improvising — a mis-route runs the wrong command or reinvents it.",
+  "scenarios": [
+    {
+      "id": "route-create-pr",
+      "prompt": "I typed /create-pr — what runs, and which command file governs it?",
+      "assertions": [
+        { "kind": "contains", "value": "create-pr" },
+        { "kind": "rubric", "criterion": "Routes to the create-pr command file (commands/pr/create) and follows it rather than improvising a PR-creation flow." }
+      ]
+    }
+  ]
+}

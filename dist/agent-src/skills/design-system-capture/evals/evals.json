@@ -1,0 +1,15 @@
+{
+  "skill": "design-system-capture",
+  "_calibration": "Behavioural fixtures (road-to-skill-eval-coverage Phase 2, rich set). Deterministic `contains` asserts the two artifacts the skill's contract maintains (DESIGN.md + PRODUCT.md); the rubric checks it captures decisions rather than re-describing generic guidance.",
+  "scenarios": [
+    {
+      "id": "capture-from-repo",
+      "prompt": "Capture this project's design system so future sessions stay consistent: it uses a 4px spacing grid, 8px radius, a spring motion strategy, and a blue primary. Where do these decisions go?",
+      "assertions": [
+        { "kind": "contains", "value": "DESIGN.md" },
+        { "kind": "contains", "value": "PRODUCT.md" },
+        { "kind": "rubric", "criterion": "Routes the visual decisions (spacing/radius/motion/color) into DESIGN.md and interaction patterns into PRODUCT.md, and flags any TBD rather than inventing values." }
+      ]
+    }
+  ]
+}

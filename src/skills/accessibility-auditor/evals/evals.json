@@ -1,0 +1,15 @@
+{
+  "skill": "accessibility-auditor",
+  "_calibration": "Behavioural fixtures (road-to-skill-eval-coverage Phase 2, rich set). Deterministic `contains` asserts a real WCAG audit property (the standard is cited); finding_floor n=2 is a conservative floor (an icon-button with no name + a placeholder-only input surface ≥2 issues), not a calibrated per-host number; the rubric names the specific missing control as a pinned-judge known-limit.",
+  "scenarios": [
+    {
+      "id": "audit-icon-button-and-placeholder-input",
+      "prompt": "Audit this UI for accessibility and list each issue as its own bullet point:\n```html\n<button onclick=\"save()\"><svg width=\"16\" height=\"16\"></svg></button>\n<input type=\"text\" placeholder=\"Email address\">\n```",
+      "assertions": [
+        { "kind": "finding_floor", "n": 2, "pattern": "(?m)^\\s*[-*+]\\s+" },
+        { "kind": "contains", "value": "WCAG" },
+        { "kind": "rubric", "criterion": "Names the icon-only button's missing accessible name (aria-label / visible label) AND the placeholder-not-a-label problem on the input." }
+      ]
+    }
+  ]
+}
