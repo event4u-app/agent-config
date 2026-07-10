@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
+> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
 
 ## Overall
 
-**157 / 284 steps done · 55%**
+**142 / 235 steps done · 60%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   55%
+████████████████████████░░░░░░░░░░░░░░░░   60%
 ```
 
 ## Open roadmaps
@@ -22,16 +22,15 @@
 | 4 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
 | 6 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 7 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 34 | 15 | 0 | 0 | 0 | ███░░░░░░░ 31% |
-| 8 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 9 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
-| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 13 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | 0 | ███████░░░ 73% |
-| 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 16 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
+| 7 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
+| 8 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
+| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
+| 11 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 12 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | 0 | ███████░░░ 73% |
+| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 14 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 15 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
 ---
 
@@ -138,22 +137,6 @@ _2 blockers resolved._
     matrix YAML (paired arms per the existing ab-v2 discipline).
     2. Pin the resulting report alongside the existing pinned reports.
   - **Resolved when:** one schema-valid matrix report exists and the per-section render consumes it without manual edits.
-
-### [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md)
-
-**Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage** — 15 / 49 done (31%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Scope, provenance, metrics, and execution gates | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Prompt-mechanism inventory, dependency graph, and disposition matrix | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Eval harness and baseline before behavior changes | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Currentness, research-routing, and source-quality pilot | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Memory, preference, and prior-context safety | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 5 | Artifact, visual, and connected-tool routing protocol | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 6 | Citation, quoting, domain overlays, and claim self-check | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 7 | Quality eval expansion and default-flip gates | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 8 | Runtime rollout, monitoring, rollback, and re-harvest loop | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
 ### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
 
