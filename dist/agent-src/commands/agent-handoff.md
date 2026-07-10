@@ -47,11 +47,30 @@ Last commit: {hash} {message}
 Roadmap: {roadmap file if active, or "none"}
 ---
 
+## User instructions (VERBATIM — highest priority)
+- {every standing constraint / exclusion / correction the user gave, quoted
+  word-for-word, NEVER summarized — a paraphrase silently drops requirements
+  and causes post-handoff drift}
+
 ## Done
 - {1-2 sentences summarizing what was accomplished}
 
 ## Open
 - {bullet list of remaining tasks or next steps}
+
+## Resume pointer
+- {the exact next action: "continue with X"}
+
+## Repeatable workflow (only when the work is iterative)
+- Atomic unit: {the one thing repeated per iteration}
+- Per-iteration steps: {1, 2, 3}
+- Decision criteria: {when to stop / branch}
+
+## Errors + fixes
+- {what failed and the fix that worked — so the new chat does not re-hit it}
+
+## Feedback history
+- {corrections/preferences the user gave, so they are not re-violated}
 
 ## Key decisions
 - {important decisions made during this conversation}
@@ -59,6 +78,11 @@ Roadmap: {roadmap file if active, or "none"}
 ## Relevant files
 - {list of files that were edited or are important for context}
 ```
+
+**Verbatim-first is the load-bearing rule:** the *User instructions* and
+*Feedback history* sections are preserved word-for-word and never compressed —
+lossy re-summarization of the user's own constraints is the exact failure this
+template prevents. Everything else (Done / Key decisions) stays concise.
 
 ### 3. Present to user
 
@@ -97,8 +121,14 @@ do not auto-execute.
 
 ## Rules
 
-- **Keep it concise** — the prompt should be <30 lines. More context = more input tokens in the new chat.
-- **Only include actionable info** — skip history, reasoning, and failed attempts.
+- **Concise everywhere EXCEPT the verbatim sections.** Keep Done / Key
+  decisions tight, but never truncate *User instructions* or *Feedback history*
+  to hit a line target — losing a user constraint costs far more than the
+  tokens. The concise-<30-line default applies to the narrative, not the
+  verbatim record.
+- **Keep errors + fixes, drop dead-end noise.** Record what failed AND the fix
+  that worked (so the new chat does not re-hit it); skip reasoning chatter and
+  abandoned attempts that led nowhere.
 - **Branch name is critical** — always include it.
 - **Open tasks are critical** — the new chat needs to know what's left.
 - **Decisions are important** — prevents the new chat from re-asking settled questions.
@@ -123,3 +153,10 @@ do not auto-execute.
 Prefer `/agent-handoff` for planned context switches across tools or
 machines; use `/chat-history import` after a crash or fresh-chat reopen
 on the same workspace to surface prior-session context verbatim.
+
+Three distinct mechanisms — do not conflate them:
+
+- **handoff** (this command) — a one-shot push summary for the *next* chat;
+  ephemeral, copy-paste, verbatim on the user's instructions.
+- **[`chat-history import`](../chat-history/import/command.md)** — pull a prior *session's* logged context into the current chat.
+- **durable memory** ([`memory-consolidation`](../../../skills/memory-consolidation/SKILL.md)) — cross-*run* curated facts; a handoff is not memory, and memory is not a transcript.
