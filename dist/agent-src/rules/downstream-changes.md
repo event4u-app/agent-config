@@ -77,3 +77,4 @@ After completing all downstream changes:
 2. **No broken tests** — run the project test suite (Pest / PHPUnit, Jest / Vitest, pytest, `go test ./...`, `cargo test`).
 3. **No broken types / signatures** — project's type-checker (PHPStan / Psalm, TypeScript, mypy / pyright, `go vet`, `cargo check`).
 4. **No stale references** — grep for the old name / namespace / import path to confirm zero results.
+5. **No own-orphans** — the same sweep applied to the new diff: identifiers whose last reference disappeared in a file this diff touched are removed in the same diff (see [`minimal-safe-diff § Own-orphan cleanup`](minimal-safe-diff.md#own-orphan-cleanup)); pre-existing dead code stays.

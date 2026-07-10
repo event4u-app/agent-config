@@ -76,21 +76,51 @@ reviewer has to untangle.
 
 ## Anti-over-engineering
 
-The smallest change is also the least *abstract* one:
+The smallest change is also the least *abstract* and least *speculative* one:
 
 - **Three similar lines beat a premature abstraction.** Do not extract a helper
   / generic / config layer to dedupe two or three call sites — inline
-  repetition is cheaper to read and change than the wrong abstraction.
+  repetition is cheaper to read and change than the wrong abstraction. Per new
+  abstraction: **cite the second caller — or inline it.**
+- **No speculative features.** Nothing beyond what was asked: no
+  configurability or "flexibility" nobody requested, no parameters with one
+  call site, no error handling for scenarios that cannot occur in this
+  codebase.
+- **The rewrite trigger.** If the change could be half the size without losing
+  behavior, rewrite before presenting. Self-check: *"Would a senior engineer
+  call this overcomplicated?"* — if yes, simplify.
 - **No tombstones.** Delete removed code completely — no `_oldName` renames,
   no `// removed X` / `// no longer used` markers, no dead re-export shims kept
   "for safety". Git history is the tombstone.
 - **No docstrings/comments on untouched code.** Do not annotate code the diff
   does not change.
 
+Wrong/right pairs for each ban:
+[`simplicity-and-goal-demos`](../../docs/guidelines/agent-infra/simplicity-and-goal-demos.md)
+— the demos are the recognition surface; match your diff against the *right*
+column before presenting.
+
 **Not adopted (council):** the source's "validate only at system boundaries /
 trust internal code" clause is **rejected** — internal code can be wrong, and
 "trust" is not a testing strategy. Keep validating internal invariants; this
 fold is about *diff shape*, not about dropping internal checks.
+
+## Own-orphan cleanup
+
+Your diff cleans up exactly the mess it made — nothing more:
+
+- An identifier (import, variable, function, parameter) is an **own-orphan**
+  iff its **last reference disappeared in a file THIS diff touched**. Remove
+  it in the same diff — it traces to the task; leaving it is an incomplete
+  change, not restraint.
+- If **any reference survives in a file the diff did not touch**, the
+  identifier is **pre-existing debt** — leave it untouched and surface it via
+  [`active-remediation`](active-remediation.md)'s note-and-ask ladder, never
+  delete drive-by.
+- The check is mechanical: after editing, grep each identifier your hunks
+  stopped referencing; zero remaining references and the last one was yours →
+  own-orphan (delete); otherwise → note. (`downstream-changes` runs the same
+  sweep for renames — this is that sweep applied to the new diff.)
 
 ## Break-glass exception
 
