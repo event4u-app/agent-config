@@ -169,8 +169,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              (experimental — beta gates: docs/contracts/mcp-beta-criteria.md)
   affected                   Show artefacts related to <artefact> via the discovery
                              relation-graph (relation-filtered BFS). Flags: --depth N
-  explain                    Seed on a <concept>, expand 2 hops over the relation-graph
-                             with a node budget. Flags: --budget N
+  graph-explain              Seed on a <concept>, expand 2 hops over the discovery
+                             relation-graph with a node budget. Flags: --budget N
   benchmark                  Report context-token reduction vs the full always-loaded
                              projection (from the pinned token baseline). Flags: --format
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
@@ -443,7 +443,7 @@ cmd_affected() {
   exec_ts "$script" affected "$@"
 }
 
-cmd_explain() {
+cmd_graph_explain() {
   local script
   script="$(resolve_script "src/scripts/discovery_graph.ts")"
   exec_ts "$script" explain "$@"
@@ -1056,7 +1056,7 @@ main() {
     mcp:run)                 cmd_mcp_run "$@" ;;
     use)                     cmd_use "$@" ;;
     affected)                cmd_affected "$@" ;;
-    explain)                 cmd_explain "$@" ;;
+    graph-explain)           cmd_graph_explain "$@" ;;
     benchmark)               cmd_benchmark "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;

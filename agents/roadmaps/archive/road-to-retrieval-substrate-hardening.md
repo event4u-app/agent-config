@@ -238,7 +238,7 @@ lessons are manually curated into committed memory, never auto-promoted.
 - [x] `agent-config affected <artefact>` (relation-filtered BFS — query-side
       companion to CI's `check_structural_breaking`) and `agent-config explain
       <concept>` (seed + 2-hop + budget-cut over the artefact graph).
-      <!-- done 2026-07-10: discovery_graph.ts affected/explain subcommands +
+      <!-- done 2026-07-10: discovery_graph.ts affected + graph-explain subcommands +
       wired as consumer verbs in _dispatch.bash (cmd_affected/cmd_explain →
       resolve_script src/scripts/discovery_graph.ts, like mcp:render) + usage
       text. affected = depth-bounded BFS; explain = substring seed + 2-hop +
