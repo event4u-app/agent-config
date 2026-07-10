@@ -1,5 +1,11 @@
 [
     {
+        "_meta": {
+            "change_process": "docs/contracts/kernel-membership.md § 10 — Changing a protected invariant",
+            "note": "Rewording a protected string requires the documented process (old/new equivalence statement, mutation self-test re-run, eval citation where one exists) — never a silent green-update. ID migration is gated on behavioral evals covering >=10 of the 19 invariants."
+        }
+    },
+    {
         "rule": "agent-authority",
         "file": "src/rules/agent-authority.md",
         "dist": "dist/agent-src/rules/agent-authority.md",

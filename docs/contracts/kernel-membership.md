@@ -302,3 +302,38 @@ with the trigger-relaxed parameter, lock new value, re-attempt.
 | 2026-05-06 | `agents/runtime/council/sessions/20260506T044941Z-phase1-cross-check-r2.json` | Council R2 (3500 tokens) — locks median r, splits criterion #3, adds criterion #5, raises per-rule cap to 2.5k, defines abort criteria | <!-- council-ref-allowed: contract decision trace -->
 | 2026-05-06 | this file | kernel set locked: 9 rules, projected 23 071 chars (median r = 0.712) |
 | 2026-05-06 | P2.2 condensation + `scripts/iron_law_sha.py --all-kernel` | empirical: 25 590 chars (r_actual = 0.795 across kernel; longer rules condense less than the pilot median) — see `docs/decisions/ADR-002-kernel-bucket-overrides.md` (KERNEL_HARD raised 25k → 26k, 6 per-rule overrides ≤ 4k ceiling, all Iron-Law SHAs preserved) |
+
+## § 10 — Changing a protected invariant
+
+The semantic-invariants gate (`src/scripts/check_rule_invariants.ts` over
+`tests/golden/invariants.json`, 19 protected strings across the 9 kernel
+rules) enforces string presence in BOTH `src/rules/` and the
+`dist/agent-src/rules/` projection. String matching is deliberately the
+current enforcement: it is zero-cost and trips on casual edits. Its known
+brittleness — a semantically equivalent rewording breaks the gate — is
+handled by process, not by weakening the gate.
+
+**Rewording a protected string is allowed, but never "update the gate
+green".** A PR that changes an entry in `tests/golden/invariants.json`
+MUST:
+
+1. Name WHICH invariant changes and WHY the wording changes (PR body).
+2. State old/new side-by-side with an explicit assertion-equivalence
+   sentence ("the new wording still guarantees X").
+3. Re-run and quote `check_rule_invariants.ts --mutation-selftest` in the
+   PR (the selftest guards the checker against silently-green
+   normalisation bugs after the edit).
+4. Cite the behavioral eval covering the invariant where one exists; where
+   none exists, say so explicitly — an uncovered invariant rewording gets
+   extra review scrutiny, not less.
+
+Kernel-edit slow-rollout rules (own PR, ≥ 24 h soak between kernel merges,
+per `scope-control § kernel-rule-edits`) apply on top — the invariants file
+is part of the kernel surface.
+
+**ID migration is gated, not planned.** Migrating string fragments to
+frontmatter invariant IDs happens only after behavioral evals cover ≥ 10
+of the 19 invariants. Until then, IDs would claim guarantees nothing
+verifies — an ID whose text drifted validates nothing, and that failure is
+silent, unlike a string miss (council convergence, anthropic/
+claude-sonnet-4-5 + openai/gpt-4o, 2026-07-10).
