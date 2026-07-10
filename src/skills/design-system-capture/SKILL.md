@@ -276,6 +276,27 @@ Fidelity declaration is load-bearing: hi-fi vs lo-fi tells the dev whether to
 recreate the mockup pixel-for-pixel or apply the existing system — the single
 most common handoff ambiguity.
 
+## Design-system extraction floor
+
+When the goal is to extract this repo's design system as a **reusable package
+artifact** (not just DESIGN.md prose), the extraction meets this floor — the
+handoff shape emitted alongside `design-system.json`
+([import contract](reference/design-system-json.md)).
+
+- **Contract contents.** A complete extraction carries: a root guide / manifest;
+  token CSS (or the stack's equivalent); the typography / colour / spacing /
+  iconography foundations; component specimens; an asset inventory (logos, icons,
+  fonts); UI-kit screens; and starting-point templates where appropriate.
+- **Specimen granularity.** Many small foundation cards beat one dense dump —
+  each specimen demonstrates ONE reusable sub-concept (a single button state,
+  one spacing step, one elevation level), so a consumer lifts concepts
+  individually rather than parsing a monolith.
+- **Developer handoff bundle** (extends § Design→dev handoff README): a
+  high-fidelity reference, behaviour notes, the assets list, the component
+  mapping (design name → code component), responsive states, known caveats, and
+  — when the artifact is a mock — an explicit "prototype, not production code"
+  warning so a consumer never ships the reference verbatim.
+
 ## Gotcha
 
 - **Over-writing instead of diff-updating** — the most common failure.

@@ -1,6 +1,6 @@
 # Design-Artifact Lifecycle Contract
 
-Phase 1 of [`road-to-design-artifact-fidelity`](../../agents/roadmaps/road-to-design-artifact-fidelity.md).
+Phase 1 of `road-to-design-artifact-fidelity`.
 One lifecycle every design/artifact skill points at, so "context before taste"
 and "rendered artifact before claim" are a shared workflow, not per-skill folklore.
 Design work is a **pipeline** — understand, inspect, plan, build, verify, hand

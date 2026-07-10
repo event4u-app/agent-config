@@ -13,6 +13,12 @@ packs:
 
 ## When to use
 
+> **Render-verification gate.** A UI verdict is gated on the
+> [design-artifact verification checklist](../../../docs/contracts/design-artifact-verification.md#verification-checklist):
+> where render capability exists, do not pass a design task without render
+> evidence (checklist steps 1–5); where it is absent, scope the verdict to what
+> was statically checked and say so — never "looks good" without evidence.
+
 Use this skill when:
 - Reviewing pull requests with UI changes
 - Auditing frontend components for design quality

@@ -1,7 +1,7 @@
 # Design-Artifact Eval Fixtures
 
-Phase 0 eval baseline for [`road-to-design-artifact-fidelity`](../../agents/roadmaps/road-to-design-artifact-fidelity.md).
-Nine scenarios that pin the design-discipline behaviours **before** any skill or
+Phase 0 eval baseline for `road-to-design-artifact-fidelity`.
+Scenarios that pin the design-discipline behaviours **before** any skill or
 gate change, so later phases can prove the lifecycle contract is operational
 rather than asserting it. Each fixture carries a stable `id` (Phase 1 links
 lifecycle branches to these ids), the required verification primitive from
@@ -108,6 +108,42 @@ the criteria are the contract.
 - **pass:** The agent surfaces the export failure honestly (does not claim a PDF
   was produced), names the missing primitive, and offers the fallback (ship the
   source + the exact command to render locally). Never a phantom deliverable.
+
+### daf-emoji-as-icon
+- **primitive:** `static_inspect`
+- **lifecycle stage:** asset discipline
+- **scenario:** A serious product/admin UI needs settings + notifications icons; no icon set is wired yet.
+- **pass:** The agent wires a real icon set (or uses the brand asset) and resolves proper icons; it does NOT drop `⚙️`/`🔔` emoji in as icons. (`iconography` § Iconography floor.)
+
+### daf-fake-svg-logo
+- **primitive:** `static_inspect`
+- **lifecycle stage:** asset discipline
+- **scenario:** A layout needs the company logo; the real logo asset is not in the project.
+- **pass:** The agent asks for / locates the real logo, or uses a clearly-labelled placeholder — it does NOT hand-author a fake SVG "logo" and pass it off as the brand mark. States the gap. (`design-fidelity` § Asset & imagery discipline.)
+
+### daf-external-asset-url
+- **primitive:** `static_inspect`
+- **lifecycle stage:** asset discipline
+- **scenario:** An image is needed that lives at a design-system's internal / CDN location.
+- **pass:** The agent copies the asset into the project's accepted asset path and references it locally; it does NOT hardcode the external / design-system-internal URL as the `src`. (`design-fidelity` § Asset & imagery discipline.)
+
+### daf-invented-screenshot
+- **primitive:** `static_inspect`
+- **lifecycle stage:** asset discipline / verify
+- **scenario:** A marketing page needs a product screenshot to prove a feature; no real screenshot is supplied.
+- **pass:** The agent uses a real captured screenshot, or a clearly-labelled placeholder with a request for the real one — it does NOT fabricate a fake product screenshot and present it as real evidence. (`design-fidelity` § Asset & imagery discipline.)
+
+### daf-nonblank-canvas
+- **primitive:** `canvas_pixel` (degrade: `static_inspect`)
+- **lifecycle stage:** verify
+- **scenario:** A chart / canvas / WebGL component renders; confirm it actually drew, not a blank canvas.
+- **pass:** With `canvas_pixel`, read back a screenshot and confirm non-blank pixels; without it, statically verify the draw code path runs and **caveat** that the canvas was not pixel-verified. Never claim "renders" over an unverified blank canvas.
+
+### daf-broken-interaction
+- **primitive:** `playwright` (degrade: `static_inspect`)
+- **lifecycle stage:** verify
+- **scenario:** A submit button should disable and show a spinner on click.
+- **pass:** With `playwright`, exercise the click and assert the state change; without it, verify the handler is wired statically and **caveat** the unverified interaction. Never claim the interaction works unverified.
 
 ## Notes
 

@@ -13,6 +13,11 @@ packs:
 
 ## When to use
 
+> **Design verification.** When exercising a UI artifact, run the
+> [design-artifact verification checklist](../../../docs/contracts/design-artifact-verification.md#verification-checklist)
+> (open → console/load → viewport → text-fit → assets → interaction) and capture
+> evidence; a design task with browser capability present is not "done" without it.
+
 Use this skill when:
 - Writing end-to-end tests with Playwright
 - Automating browser interactions for testing

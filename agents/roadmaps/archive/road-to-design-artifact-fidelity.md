@@ -252,16 +252,16 @@ and stop producing unnecessary options when execution was asked.
 
 ## Phase 5 — Asset and iconography discipline
 
-- [ ] Add a design asset rule: copy or reference project-owned assets through
+- [x] Add a design asset rule: copy or reference project-owned assets through
       the target project's accepted asset path; do not hotlink design-system
       internals or bulk-copy huge folders; do not hand-roll icons when an icon
       library or brand asset exists.
-- [ ] Add iconography floor: inspect existing icon system first; match stroke,
+- [x] Add iconography floor: inspect existing icon system first; match stroke,
       fill, size, and metaphor; flag substitutions when exact assets are absent.
-- [ ] Add image-use floor for visual pages/decks: use actual product/place/
+- [x] Add image-use floor for visual pages/decks: use actual product/place/
       object/state imagery where inspection matters; avoid decorative
       atmosphere as the primary proof.
-- [ ] Add tests/evals for known failure modes: emoji-as-icon in serious UI,
+- [x] Add tests/evals for known failure modes: emoji-as-icon in serious UI,
       fake SVG logo, hardcoded external asset URL, and invented product
       screenshot.
 
@@ -270,18 +270,18 @@ fabricated brand evidence.
 
 ## Phase 6 — Render verification hard gate with honest degradation
 
-- [ ] Create a design-specific verification checklist: open artifact, check
+- [x] Create a design-specific verification checklist: open artifact, check
       console/load errors, inspect desktop and mobile viewport, verify text
       fit/no overlap, verify referenced assets decode, verify key interaction
       state, and capture evidence only when the host supports it.
-- [ ] Wire the checklist into `playwright-testing` / `design-review` so design
+- [x] Wire the checklist into `playwright-testing` / `design-review` so design
       tasks cannot claim completion without render evidence when render
       capability exists. For static docs or decks, use the relevant
       presentation/PDF/document verification skill.
-- [ ] Add failure language: if verification cannot run because no browser or
+- [x] Add failure language: if verification cannot run because no browser or
       renderer exists, report that plainly and keep the completion claim
       scoped to what was checked.
-- [ ] Add at least six golden tasks covering nonblank canvas, responsive fit,
+- [x] Add at least six golden tasks covering nonblank canvas, responsive fit,
       missing image, overlapping text, broken interaction, and print/deck
       export readiness.
 
@@ -290,13 +290,13 @@ verification limitation.
 
 ## Phase 7 — Design-system extraction floor
 
-- [ ] Add a design-system extraction contract: root guide/manifest, token CSS
+- [x] Add a design-system extraction contract: root guide/manifest, token CSS
       or equivalent, typography/color/spacing/iconography foundations,
       component specimens, asset inventory, UI-kit screens, and starting
       points when appropriate.
-- [ ] Require specimen granularity: many small foundation cards beat one dense
+- [x] Require specimen granularity: many small foundation cards beat one dense
       dump; each specimen demonstrates a reusable sub-concept.
-- [ ] Add a handoff bundle pattern for developers: high-fidelity reference,
+- [x] Add a handoff bundle pattern for developers: high-fidelity reference,
       behavior notes, assets list, component mapping, responsive states, known
       caveats, and "prototype not production code" warning when applicable.
 
@@ -305,13 +305,13 @@ single prose style guide.
 
 ## Acceptance criteria
 
-- [ ] Host capability/degrade table exists before any hard verification gate.
-- [ ] `design-artifact-lifecycle` contract exists and is cited by the relevant
+- [x] Host capability/degrade table exists before any hard verification gate.
+- [x] `design-artifact-lifecycle` contract exists and is cited by the relevant
       design/frontend/document skills.
-- [ ] Small edit preservation, context gate, asset discipline, variation
+- [x] Small edit preservation, context gate, asset discipline, variation
       planning, and render verification have trigger evals.
-- [ ] Design verification failures produce actionable, user-visible caveats.
-- [ ] No generated projection is edited by hand.
+- [x] Design verification failures produce actionable, user-visible caveats.
+- [x] No generated projection is edited by hand.
 
 ## Blockers
 
