@@ -28,6 +28,26 @@ roadmaps with open work that is blocked-for-later — parked, not active).
   surface alternatives in the pre-run summary.
 - None active → tell the user; suggest [`/roadmap:create`](../../commands/roadmap/create.md).
 
+### Live merge-state before any "in-flight / merged / handled" claim
+
+When selection reasoning would **exclude** a roadmap — or a pre-run summary,
+decision, or any user-facing message would **describe** one — as *in-flight*,
+*handled by an open PR*, *already merged*, or *not yet merged*, verify that
+claim **live at the moment of the claim** (`gh pr view <n> --json state,mergedAt`
+or `gh pr list --search "<slug>"`). Never infer merge state from:
+
+- the **dashboard's open-count** — it lags: a completed roadmap is archived in
+  the **merging** PR, so a roadmap can still read "open" on `main` while its PR
+  is already merged (archive not yet on your checkout), or read "open" seconds
+  before a merge you never re-checked;
+- **session memory** ("I opened a PR for this earlier") or an **earlier fetch** —
+  a merge can land between your fetch and your message.
+
+A stale merge-state claim ships an unnecessary user-facing message about work
+that is already done — the exact failure this clause prevents. This is the
+[`direct-answers`](../../rules/direct-answers.md) Iron-Law-2 live-state rule
+(git/PR state never from memory), applied to roadmap selection.
+
 ## 2. Pre-run summary — gate or inline note
 
 Read `roadmap.skip_pre_run_gate` from `.agent-settings.yml` (default
