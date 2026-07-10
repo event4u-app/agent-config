@@ -31,6 +31,7 @@ still test-after-the-fact.
 Do NOT use when:
 
 - You need to *write* tests (no anti-pattern present yet) — route to [`pest-testing`](../pest-testing/SKILL.md) or [`test-driven-development`](../test-driven-development/SKILL.md).
+- You need to *enumerate* what to test before writing (case matrix, edge-case discovery) — route to [`test-case-discovery`](../test-case-discovery/SKILL.md).
 - The test failure is a real bug — route to [`systematic-debugging`](../systematic-debugging/SKILL.md).
 - You need overall coverage assessment of a finished diff — route to [`judge-test-coverage`](../judge-test-coverage/SKILL.md).
 
@@ -130,7 +131,7 @@ Gate: a feature is not complete until a failing-then-passing test cycle ran for 
 
 ### Anti-Pattern 6 — Overfit / tautological assertions & unrealistic test data
 
-Symptom: the test passes only for one crafted input and proves nothing about the general rule — a hardcoded expected value the code always emits, a narrow regex pinned to a fixed date/id, or an assertion restating the seed. AI-written tests reach the same coverage as human tests but ~4× worse fault detection (weak-oracle): they execute the path, then assert something too weak to catch a bug. Same shape as mocking-the-mock — asserting on your own construction, not the system's behavior.
+Symptom: the test passes only for one crafted input and proves nothing about the general rule — a hardcoded expected value the code will always emit, a narrow regex pinned to a fixed date/id, or an assertion that restates the seed. AI-written tests reach the same coverage as human tests but ~4× worse fault detection (the weak-oracle problem): they execute the path and then assert something too weak to catch a bug. Same shape as mocking-the-mock — asserting on your own construction rather than the system's behavior.
 
 Gate:
 
@@ -141,7 +142,7 @@ BEFORE writing an assertion:
     STOP — derive the expected from the input, and add cases that vary it.
 ```
 
-Test-data realism — seeders/factories emit random data; the test derives its expectation from that data, never a hardcoded literal:
+Test-data realism — seeders/factories emit random data; the test derives its expectation from that data, never from a hardcoded literal:
 
 ```js
 // ❌ WRONG — hardcoded expectation, single happy case
@@ -160,11 +161,11 @@ expect((await api.get('/users/abc')).status).toBe(400)         // error: invalid
 expect([403, 404]).toContain((await api.get(`/users/${otherTenantUser.id}`)).status) // abuse: tenant isolation (404 hides existence)
 ```
 
-Deriving from seeded data is necessary but **not sufficient** — a test that only reads back the exact fields it seeded is still overfit (a code mutation survives it). A real test also exercises boundary (empty / null / max / Unicode), error (missing / invalid), and, on security-sensitive paths, an abuse case (IDOR, injection string, XSS payload). Coverage of *cases*, not just lines.
+Deriving from seeded data is necessary but **not sufficient** — a test that only reads back the exact fields it seeded is still overfit (a mutation in the code survives it). A real test also exercises boundary (empty / null / max / Unicode), error (missing / invalid), and, on security-sensitive paths, an abuse case (IDOR, injection string, XSS payload). Coverage of *cases*, not just lines.
 
 ### Anti-Pattern 7 — Gaming the green (test-integrity)
 
-Symptom: a test fails, and the "fix" edits the *test* instead of the code — `.skip` / `it.skip` / `xfail` / `@Disabled` on the failing case, deleting the failing assertion, loosening `toBe(x)` to `toBeTruthy()`, or rewriting `expected` to whatever the (possibly buggy) code now emits. The suite goes green while the behavior stays broken — worst outcome, because green now *hides* the bug. The automation-bias trap: under pressure to finish, optimize the signal (green) instead of the target (correct behavior).
+Symptom: a test fails, and the "fix" edits the *test* instead of the code — `.skip` / `it.skip` / `xfail` / `@Disabled` on the failing case, deleting the failing assertion, loosening `toBe(x)` to `toBeTruthy()`, or rewriting the `expected` value to whatever the (possibly buggy) code now emits. The suite goes green while the behavior stays broken — the worst outcome, because green now *hides* the bug. This is the automation-bias trap: under pressure to finish, the agent optimizes the signal (green) instead of the target (correct behavior).
 
 Gate:
 
@@ -184,7 +185,7 @@ Backstop grep — skip/xfail added to chase green (a hit in a diff that also "fi
 rg -n '\b(it|test|describe)\.skip\b|\.only\b|xit\(|xdescribe\(|@pytest\.mark\.(skip|xfail)|@Disabled|->markTestSkipped\(' .
 ```
 
-Test-surface instance of the `autonomous-execution` N=3 / allowlist-growth antipattern (bulk `skip`/`xfail` to force green = the tool is wrong, not the content) and the `verify-before-complete` floor (green must be *earned*, not manufactured).
+This is the test-surface instance of the `autonomous-execution` N=3 / allowlist-growth antipattern (bulk `skip`/`xfail` to force green counts as the tool being wrong, not the content) and the `verify-before-complete` floor (green must be *earned*, not manufactured).
 
 ## Output format
 
@@ -227,7 +228,7 @@ Test-surface instance of the `autonomous-execution` N=3 / allowlist-growth antip
 
 ## Provenance
 
-- Adopted from: an external reference (MIT, © 2025 an external reference).
+- Adopted from: an external reference (internal provenance, redacted).
 - Cross-linked: [`pest-testing`](../pest-testing/SKILL.md), [`test-driven-development`](../test-driven-development/SKILL.md), [`judge-test-coverage`](../judge-test-coverage/SKILL.md).
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `testing-anti-patterns`).
 - Iron-Law floor: `verify-before-complete`, `skill-quality`, `senior-engineering-discipline`.

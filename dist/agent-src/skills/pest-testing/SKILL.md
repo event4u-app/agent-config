@@ -56,6 +56,7 @@ discipline, mock-isolation gates, and the 12 process rationalizations
 - Keep setup minimal and relevant.
 - Favor confidence and maintainability over excessive mocking.
 - Cover happy path, validation failures, authorization failures, and important edge cases.
+- Enumerate the cases BEFORE writing — run the [`test-case-discovery`](../test-case-discovery/SKILL.md) funnel; floor per behavior: 1 happy + 1 boundary + 1 error (+1 abuse on security paths).
 
 ## TDD workflow (Red-Green-Refactor)
 
@@ -290,7 +291,6 @@ When generating Pest tests:
 - use factories and Laravel test helpers
 - assert both response and side effects where relevant
 - keep tests readable, isolated, and maintainable
-
 
 ### Filter Pest output
 

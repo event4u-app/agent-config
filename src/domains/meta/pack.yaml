@@ -73,6 +73,7 @@ dependencies:
   - symfony-workflow
   - sync-agent-settings
   - sync-gitignore
+  - test-case-discovery
   - threat-modeling
   - upstream-contribute
   - using-git-worktrees

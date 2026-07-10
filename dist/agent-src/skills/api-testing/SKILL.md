@@ -20,7 +20,7 @@ contract validation, response structure checks, or external service mocking.
 
 1. **Understand the endpoint** — Read the controller, form request, and existing tests. Understand expected behavior, edge cases, and auth requirements before writing anything.
 2. **Set up test data** — Use seeders (preferred) or factories. Mock external services with `Http::fake()`.
-3. **Write test cases** — Cover success, validation errors, authorization failures, edge cases.
+3. **Enumerate test cases** — Run the [`test-case-discovery`](../test-case-discovery/SKILL.md) funnel first; cover success, validation errors, authorization failures, and edge cases — floor per behavior: 1 happy + 1 boundary + 1 error (+1 abuse case; on data-returning endpoints the three `broken-access-control` negative tests are mandatory).
 4. **Assert response** — Check status code, JSON structure, data values. Use `assertJsonStructure()`.
 5. **Verify** — Run the test. Must pass. Check no flaky assertions (no time-dependent, no random ordering).
 
@@ -155,6 +155,8 @@ expect($data['title'])->toBeString();
 expect($data['total'])->toBeString(); // Money as string, not float
 ```
 
+### Filter noisy responses
+
 When a failing test dumps the full JSON body, narrow the diagnosis with `jq` or `grep`
 instead of scrolling the whole payload:
 
@@ -193,6 +195,10 @@ it('handles external API failure gracefully', function () {
 | **Side effects** | Database changes, events dispatched, jobs queued |
 | **Edge cases** | Empty results, large payloads, concurrent access |
 
+## Bridge to UI verification
+
+API tests cover the contract layer. When an endpoint feeds a UI surface (Livewire component, Blade-rendered page, SPA route), complement the API test with a thin UI probe: a `livewire test` for wired components, or a Playwright spec / browser `screenshot` for the rendered shell. Never assume the UI works just because the API test is green.
+
 ## Output format
 
 1. Pest test file covering happy path, validation, auth, and edge cases
@@ -220,3 +226,11 @@ it('handles external API failure gracefully', function () {
 - Do not skip auth tests — always test both authenticated and unauthenticated.
 - Do not assert entire JSON responses — assert only meaningful fields.
 - Do not use `Http::fake()` without also testing the real integration path.
+
+## Anti-bruteforce — diagnose before retry
+
+When a test fails, do not retry blindly with tweaked assertions until something passes. Diagnose the root cause first: print the actual response shape once, compare it to the contract, then write a targeted fix. Trial-and-error retries hide real regressions.
+
+## Clarification guard — ambiguous contract → ask
+
+If the endpoint contract is ambiguous (unclear status code, optional fields, error envelope shape), do not assume. Ask the user or check the OpenAPI spec / route definition before writing assertions — never guess the response shape from the route name.

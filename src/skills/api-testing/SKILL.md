@@ -20,7 +20,7 @@ contract validation, response structure checks, or external service mocking.
 
 1. **Understand the endpoint** — Read the controller, form request, and existing tests. Understand expected behavior, edge cases, and auth requirements before writing anything.
 2. **Set up test data** — Use seeders (preferred) or factories. Mock external services with `Http::fake()`.
-3. **Write test cases** — Cover success, validation errors, authorization failures, edge cases.
+3. **Enumerate test cases** — Run the [`test-case-discovery`](../test-case-discovery/SKILL.md) funnel first; cover success, validation errors, authorization failures, and edge cases — floor per behavior: 1 happy + 1 boundary + 1 error (+1 abuse case; on data-returning endpoints the three `broken-access-control` negative tests are mandatory).
 4. **Assert response** — Check status code, JSON structure, data values. Use `assertJsonStructure()`.
 5. **Verify** — Run the test. Must pass. Check no flaky assertions (no time-dependent, no random ordering).
 

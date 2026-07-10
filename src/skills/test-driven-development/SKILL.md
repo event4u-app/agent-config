@@ -92,7 +92,25 @@ State in one sentence: *"When X happens, the system should do Y."*
 If you cannot state it in one sentence, the scope is too big — split into
 multiple tests, each covering one sentence.
 
-### 2. Write the failing test first
+### 2. Enumerate the cases — discovery before writing (MANDATORY)
+
+Before the first test is written, run the
+[`test-case-discovery`](../test-case-discovery/SKILL.md) funnel for the
+behavior: dimension scan → case synthesis → optional subagent cross-check →
+prioritization. Do not proceed to step 3 with fewer than the floor:
+
+* **1 happy + 1 boundary + 1 error case per behavior** (+1 abuse case on
+  security-relevant paths).
+* Cap at 5–8 cases per behavior; each must be able to fail for a
+  **distinct** reason.
+* Trivial change (< 10 lines, pure refactor, no new behavior) → skip the
+  funnel; 1 happy + 1 boundary case suffices.
+
+Each case from the list then gets its own RED → GREEN cycle (steps 3–6).
+A behavior whose only test is the happy path is **not done** — it is the
+first item of an unfinished case list.
+
+### 3. Write the failing test first
 
 Write the smallest test that expresses the sentence from step 1.
 
@@ -101,7 +119,7 @@ Write the smallest test that expresses the sentence from step 1.
 * Real code paths, not mocks — mock only at I/O boundaries (HTTP, DB, time).
 * Use a descriptive name: `it_rejects_empty_email`, not `test_email_1`.
 
-### 3. Run the test and watch it fail
+### 4. Run the test and watch it fail
 
 Execute the single test (targeted, not the full suite):
 
@@ -120,7 +138,7 @@ Required observations **before proceeding**:
 * If the test passes immediately → it does not test what you think. Fix
   the test, do not start writing production code.
 
-### 4. Write minimum code to pass
+### 5. Write minimum code to pass
 
 Add **just enough** production code to make the test green. No extra
 features, no unrelated refactoring, no "while I'm here" cleanups.
@@ -129,7 +147,7 @@ If you feel the urge to add a parameter, edge case, or helper not covered
 by the current test — stop. That belongs in the next RED step, not this
 GREEN step.
 
-### 5. Run again and watch it pass
+### 6. Run again and watch it pass
 
 Re-run the same targeted command. Required:
 
@@ -137,7 +155,7 @@ Re-run the same targeted command. Required:
 * No previously green tests have turned red.
 * Test output is clean (no new warnings, deprecations, or noise).
 
-### 6. Refactor (only if green)
+### 7. Refactor (only if green)
 
 With all tests green, you may:
 
@@ -148,7 +166,7 @@ With all tests green, you may:
 Do **not** add new behavior during refactor — that needs its own failing
 test first. Re-run tests after the refactor to confirm still-green.
 
-### 7. Repeat for the next behavior
+### 8. Repeat for the next behavior
 
 Back to step 1 with the next single-sentence behavior.
 
@@ -260,6 +278,8 @@ wait for their own failing tests.
 
 * Do NOT write or modify production code before the failing test exists
   and has been observed to fail
+* Do NOT stop after the happy-path test — work through the enumerated
+  case list from step 2 (boundary, error, abuse where relevant)
 * Do NOT accept a test that never failed as evidence the code works
 * Do NOT bundle refactors into the GREEN step
 * Do NOT silence a flaky test — diagnose it, or delete it
@@ -274,6 +294,8 @@ wait for their own failing tests.
 
 ## When to hand over to another skill
 
+* Enumerating what to test before writing (case matrix, dimension scan,
+  subagent cross-check) → [`test-case-discovery`](../test-case-discovery/SKILL.md)
 * Project type-checker / linter / formatter (PHPStan, ECS, Rector for PHP — tsc / eslint / prettier for TS — ruff / mypy for Python) → [`quality-tools`](../quality-tools/SKILL.md)
 * Full Pest conventions and Laravel test helpers → [`pest-testing`](../pest-testing/SKILL.md)
 * Running tests inside Docker → [`tests-execute`](../tests-execute/SKILL.md)
@@ -285,6 +307,10 @@ wait for their own failing tests.
 Before marking TDD work complete:
 
 * [ ] Every new behavior has a test
+* [ ] The case list from step 2 exists and meets the floor (1 happy +
+  1 boundary + 1 error per behavior; abuse case on security paths)
+* [ ] Every enumerated case is either tested or recorded as dropped with
+  a one-line reason — no behavior ships happy-path-only
 * [ ] Each test was observed to fail first, with a matching failure message
 * [ ] The minimum code was written to turn each RED into GREEN
 * [ ] All targeted tests pass
