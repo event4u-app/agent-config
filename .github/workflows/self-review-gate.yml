@@ -1,0 +1,58 @@
+name: Self-review gate
+
+# road-to-maintainer-bus-factor Phase 1 — the package reviews its own PRs with
+# the exact machinery it sells (`adversarial-review` + `agent-security-review`).
+#
+# ADVISORY + INERT-WITHOUT-SECRET (mirrors cross-model-canary.yml):
+#   - gate (every PR): DRY-RUN only — no API, no spend, no secret. Validates the
+#     harness + prints the review plan. Never blocks.
+#   - live-advisory (PR, when ANTHROPIC_API_KEY is set): runs the real dogfooded
+#     review and posts findings as a PR comment. ADVISORY — records what WOULD
+#     block; never fails the check. No key → logged no-op, never a failure.
+#
+# To make it REQUIRED (block on security/claim × high+ findings): add the
+# ANTHROPIC_API_KEY repo secret, pass `--enforce` in the live job, and require
+# this check in branch protection. That flip is the maintainer's act (blocker
+# `self-review-gate-cost`); shipped advisory until then.
+
+on:
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  gate-dry-run:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Self-review plan (dry-run — no spend, advisory)
+        run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --dry-run --base "origin/${{ github.base_ref }}"
+
+  live-advisory:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Dogfooded self-review (advisory; skips if ANTHROPIC_API_KEY absent)
+        run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}"

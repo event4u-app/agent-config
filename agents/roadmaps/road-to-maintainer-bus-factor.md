@@ -52,18 +52,40 @@ maintainer after a gap) ship a correct release without tribal knowledge.
       `agent-security-review` (and, for large diffs, `ai-council` with the
       advisor personas) against the diff, posting findings as a review. This is
       the package reviewing itself with the exact machinery it sells.
-      <!-- OPEN — blocked on `self-review-gate-cost` (maintainer-owned): a live
-      AI-review CI workflow needs an API secret + a per-PR token budget + the
-      block-vs-advise teeth decision; a headless AI workflow is not safely
-      shippable without the maintainer's secret/budget sign-off. Council already
-      confirmed the shape. Deferred to the maintainer, not built blind. -->
-- [ ] Define the gate's teeth: security-sensitive or claim-affecting findings
+      <!-- PARTIAL 2026-07-10: the ADVISORY + INERT-WITHOUT-SECRET half shipped —
+      `.github/workflows/self-review-gate.yml` (mirrors cross-model-canary: a
+      no-spend dry-run plan job on every PR + a secret-gated live-advisory job
+      that posts findings and skips as a logged no-op when ANTHROPIC_API_KEY is
+      absent) driving `src/scripts/self_review_gate.ts` (loads the two review
+      skill bodies as the system prompt, collects structured findings, posts a
+      PR review). STILL MAINTAINER: (a) the API secret + per-PR budget sign-off
+      to make it run LIVE (blocker `self-review-gate-cost`), (b) making it
+      REQUIRED = Phase 2 branch protection, (c) the large-diff `ai-council`
+      escalation. Built advisory, not blind. -->
+- [x] Define the gate's teeth: security-sensitive or claim-affecting findings
       block merge; style findings advise. Wire the verdict through the existing
       `gateVerdict()` pattern so the outcome is recorded, not just printed.
       <!-- council 2026-07-08 (claude-sonnet-4-5 + gpt-4o): confirmed this
       exact shape — block ONLY on security/claim findings; full ai-council
       only on large or claim-affecting diffs; a 100%-blocking gate at
       solo-maintainer token cost would be ignored or gamed. -->
+      <!-- done 2026-07-10: `self_review_gate.ts` exposes pure, unit-tested
+      `classifyBlocking()` (blocks iff kind∈{security,claim} × severity∈
+      {critical,high}) + `gateVerdict(findings,{enforce})` mirroring
+      `check_quality_regression.gateVerdict` (0 pass / 2 block). The verdict is
+      RECORDED via `renderReview()` (advisory phrasing = "WOULD block"), not just
+      printed. Shipped `enforce:false` (advisory); the `--enforce` flip that
+      arms the teeth is the maintainer's act, one flag. -->
+- [ ] Record it honestly on the proof page: "PRs pass a dogfooded AI
+      adversarial-review + security gate; this is a floor, not independent human
+      review."
+      <!-- OPEN 2026-07-10: the literal "PRs pass a dogfooded AI gate" proof-page
+      CLAIM is FALSE while the gate is inert-without-secret (no live run), so
+      recording it now would breach check_claims / no-invented-facts. The honest
+      advisory status IS documented in `docs/self-review-gate.md` (gate exists,
+      advisory, inert without the secret; how to arm it). The proof-page floor
+      CLAIM is the maintainer's to create the moment the gate goes live with the
+      secret — not before. -->
       <!-- OPEN — same `self-review-gate-cost` block (the teeth decision). -->
 - [ ] Record it honestly on the proof page: "PRs pass a dogfooded AI
       adversarial-review + security gate; this is a floor, not independent human
