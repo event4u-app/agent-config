@@ -85,7 +85,7 @@ not exploit: **nesting `bug-fix` as `bug/fix` keeps the invoked slug
 
 - `docs/contracts/command-clusters.md` — locked table (Phase 4 rows) + the
   new "Bare invocation" section.
-- `agents/roadmaps/road-to-command-structure-optimization.md` — inventory,
+- `agents/roadmaps/archive/road-to-command-structure-optimization.md` — inventory,
   council verdicts, phases.
 - ADR-003 (flat clusters), ADR-041 (controlled verbs), ADR-044 (path-derived
   hyphen slugs).

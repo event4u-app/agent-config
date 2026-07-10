@@ -80,10 +80,11 @@ Cross-cutting convergence: (a) cluster subs MUST co-locate with the head in one 
 
 ### Phase 5 — Deferred follow-ups (recorded, not executed here)
 
-- [~] `ticket` cluster (implement/estimate/refine/jira) — deferred per council; revisit with usage telemetry. <!-- deferred: tier-0 slug change + cross-pack move rejected by both council members -->
+- [-] `ticket` cluster (implement/estimate/refine/jira) — deferred per council; revisit with usage telemetry. <!-- deferred: tier-0 slug change + cross-pack move rejected by both council members; MIGRATED 2026-07-10 → later/road-to-command-structure-followup.md -->
 - [-] `security` cluster — rejected; keep `security-audit-config` + `threat-model` flat. <!-- cancelled: unanimous council REJECT, recorded in ADR-115 -->
-- [~] Demote `check-current-md` / `update-form-request-messages` — needs skill-coverage + pack-boundary audit. <!-- deferred: verify md-language-check coverage; laravel pack boundary ADR -->
-- [ ] Resolve the two deferred items above with the maintainer (spawn follow-up roadmap vs drop) — decision deliberately left open until the restructuring PR is reviewed.
+- [-] Demote `check-current-md` / `update-form-request-messages` — needs skill-coverage + pack-boundary audit. <!-- deferred: verify md-language-check coverage; laravel pack boundary ADR; MIGRATED 2026-07-10 → later/road-to-command-structure-followup.md -->
+- [x] Resolve the two deferred items above with the maintainer (spawn follow-up roadmap vs drop) — decision deliberately left open until the restructuring PR is reviewed.
+      <!-- resolved 2026-07-10: DECISION = spawn follow-up (preserve, per roadmap-progress-sync Iron Law 3). Both deferred items lifted verbatim into agents/roadmaps/later/road-to-command-structure-followup.md with their resume triggers (ticket cluster → usage telemetry; demote pair → md-coverage + Laravel pack-boundary ADR). Neither dropped. -->
 - [-] `prepare-for-review` → `review/prepare` — rejected slug change; keep flat. <!-- cancelled: council-rejected for pre-commit muscle memory, recorded in ADR-115 -->
 
 ## Acceptance criteria
