@@ -63,20 +63,19 @@ live in [`docs/benchmark.md`](benchmark.md). We do not delete a measured null to
 make a number look better; the null is the evidence of honesty.
 
 **Behavioural-eval coverage — the honest baseline.** Skill *quality* is only
-as good as its measurement. Today **37 of 270** skills carry a behavioural
+as good as its measurement. Today **39 of 270** skills carry a behavioural
 `evals.json`; the highest-traffic / highest-cost tiers (default-surface +
-`rich` + routers) are **fully covered (35 of 35)**, the long tail (2 of 235)
-is not. We publish that gap rather than imply "270 evaluated skills":
-coverage is measured per tier
+`rich` + routers) are **fully covered (35 of 35)**, the long tail
+(4 of 235) is not. We publish that gap rather than imply
+"270 evaluated skills": coverage is measured per tier
 (`./scripts-run src/scripts/skill_eval_coverage`), **CI-ratcheted so it can
 only rise**, and the priority tiers carry a hard **tier floor**: every
 rich / default-surface / router skill MUST have a behavioural eval or an
-explicit exemption-with-reason in
-`internal/evals/tier-floor-exemptions.json` — no silent exemptions (the
-bright line deliberately replaces a weighted-coverage score; council
-2026-07-10). Authoring long-tail evals is gated on per-case human
-ratification (a generated assertion that checks the wrong property is worse
-than none), so the number grows deliberately, not overnight.
+explicit exemption-with-reason in `internal/evals/tier-floor-exemptions.json`
+— no silent exemptions (the bright line deliberately replaces a
+weighted-coverage score). Authoring long-tail evals is gated on per-case
+human ratification (a generated assertion that checks the wrong property is
+worse than none), so the number grows deliberately, not overnight.
 
 **Non-coding domain soundness — scoped, not proven.** The `finance` /
 `founder` / `ops` / `content` profiles sell concrete domain value (DCF,

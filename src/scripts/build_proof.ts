@@ -27,6 +27,7 @@ import { REPO, LEDGER_REL, load_ledger, pointer_unresolved } from './check_claim
 import { collectSkillGaps } from './check_skill_gaps.js';
 import { loadRows as loadComparisonRows } from './check_comparison.js';
 import { computeStatus as domainSoundnessStatus } from './domain_soundness_status.js';
+import { computeCoverage } from './skill_eval_coverage.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const OUT_REL = 'docs/proof.md';
@@ -108,16 +109,27 @@ function render(): string {
         L.push('Benchmark results are published under `docs/` including measured nulls.');
     }
     L.push('');
+    const cov = computeCoverage();
+    const prio = cov.tiers.priority;
+    const other = cov.tiers.other;
+    const prioLine =
+        prio.covered === prio.total
+            ? `\`rich\` + routers) are **fully covered (${prio.covered} of ${prio.total})**, the long tail`
+            : `\`rich\` + routers, **${prio.covered} of ${prio.total}**) are partially covered; the long tail`;
     L.push('**Behavioural-eval coverage — the honest baseline.** Skill *quality* is only');
-    L.push('as good as its measurement. Today **2 of 264** skills carry a behavioural');
-    L.push('`evals.json`, and the highest-traffic / highest-cost tiers (default-surface +');
-    L.push('`rich` + routers, **0 of 35**) are not yet covered. We publish that gap rather');
-    L.push('than imply "264 evaluated skills": coverage is measured per tier');
-    L.push('(`./scripts-run src/scripts/skill_eval_coverage`) and **CI-ratcheted so it can');
-    L.push('only rise** — a merged change can never lower it. Authoring the priority-tier');
-    L.push('evals is gated on per-case human ratification (a generated assertion that');
-    L.push('checks the wrong property is worse than none), so the number grows');
-    L.push('deliberately, not overnight.');
+    L.push(`as good as its measurement. Today **${cov.overall.covered} of ${cov.overall.total}** skills carry a behavioural`);
+    L.push('`evals.json`; the highest-traffic / highest-cost tiers (default-surface +');
+    L.push(prioLine);
+    L.push(`(${other.covered} of ${other.total}) is not. We publish that gap rather than imply`);
+    L.push(`"${cov.overall.total} evaluated skills": coverage is measured per tier`);
+    L.push('(`./scripts-run src/scripts/skill_eval_coverage`), **CI-ratcheted so it can');
+    L.push('only rise**, and the priority tiers carry a hard **tier floor**: every');
+    L.push('rich / default-surface / router skill MUST have a behavioural eval or an');
+    L.push('explicit exemption-with-reason in `internal/evals/tier-floor-exemptions.json`');
+    L.push('— no silent exemptions (the bright line deliberately replaces a');
+    L.push('weighted-coverage score). Authoring long-tail evals is gated on per-case');
+    L.push('human ratification (a generated assertion that checks the wrong property is');
+    L.push('worse than none), so the number grows deliberately, not overnight.');
     L.push('');
     const ds = domainSoundnessStatus();
     L.push('**Non-coding domain soundness — scoped, not proven.** The `finance` /');
