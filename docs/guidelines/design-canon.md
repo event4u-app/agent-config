@@ -60,3 +60,4 @@ Pull when: choosing or auditing an icon library.
 - `docs/guidelines/design-antipatterns.md` — the anti-slop catalog (T7 default-font tell, C1/C5 palette tells) this canon helps you escape.
 - `brand-source-of-truth` / `brand-consistency` — the precedence this index obeys.
 - `design-intelligence` — the consumer that surfaces these on a brief signal.
+- **Reference, don't vendor** (`domain-adoption-policy`): palette hex tables, font-width CSVs, easing/motion constant libraries, print-CSS recipes, and device-frame recipes are **referenced from maintained upstreams, never forked** into this suite — a vendored data table rots, fork-drifts, and couples the suite to one aesthetic. Corpus assets (palettes, easing tables, device frames) stay upstream references, not forks.

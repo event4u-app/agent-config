@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
+> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
 
 ## Overall
 
@@ -103,19 +103,6 @@ _2 blockers resolved._
 | 5 | Asset and iconography discipline | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 6 | Render verification hard gate with honest degradation | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 7 | Design-system extraction floor | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-
-### [road-to-design-mechanism-harvest.md](roadmaps/road-to-design-mechanism-harvest.md)
-
-**Road to design-mechanism harvest** — 0 / 15 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Diagram-type routing ("route on the verb") | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Geometric pre-checks (SVG/diagram self-checks) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Same-ramp contrast + mandatory dark-mode self-test | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Embedded-widget register + componentization threshold | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Async-verifier pattern + design→dev handoff template | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | Record the rejected corpus + taste items | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md)
 

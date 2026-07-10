@@ -81,6 +81,14 @@ and accessibility. The register changes which corpus selections are appropriate
 (distinctive palette/typography in brand mode; predictable, semantic in product
 mode). State the register in the Design Read line below.
 
+**Embedded vs standalone (a third discriminator).** UI **embedded inside a host
+surface** — a widget in a slide, a card in a chat, a panel in someone else's
+app — follows a **flatter charter** than a greenfield standalone page:
+restrained weights, hairline borders, no atmospherics/gradients/shadows that
+would fight the host. Select the register per surface (embedded → flat;
+standalone → the brand/product register above) — it is a selector, not a fixed
+token set (no values vendored; the host's tokens win).
+
 ## Design Read — articulate intent before generating
 
 Before producing any design brief or making any style selection, emit one
@@ -268,6 +276,33 @@ guidance + docs URLs from here instead of memory.
 - Do NOT propose a new component the `existing-ui-audit` inventory
   already covers — audit findings outrank corpus suggestions.
 - Do NOT hide low confidence — the user signs off on the gaps too.
+
+## Diagram-type routing — route on the verb
+
+Choose a visualization by the *intent verb*, not the noun. Count the nouns
+before you draw (input-complexity triage): 1–2 → inline prose or a single
+shape; 3–7 → one diagram; 8+ → split or summarize, never one dense picture.
+
+| The user asks… | Intent | Draw |
+|---|---|---|
+| "how does X **work** / flow" | illustrative (intuition) | flowchart / sequence — illustrative default |
+| "what is X's **architecture** / structure" | reference (structural) | structural diagram (boxes + typed edges) |
+| a **cycle** / loop / lifecycle | — | a **stepper widget**, never a hand-drawn ring |
+| a **DB schema / ERD** / entity relations | — | **mermaid**, never hand-placed SVG |
+
+### Geometric pre-checks (run BEFORE finalizing an SVG/diagram)
+
+Ranked by failure rate — procedures, not constants:
+
+1. **viewBox safety** — compute the lowest + rightmost element (plus a buffer)
+   and set the viewBox from that; never assume the default fits.
+2. **arrow-through-box trace** — trace every arrow's path and confirm it does
+   not cross through an unrelated box before drawing it.
+3. **box-width-from-longest-label** — size each box from its longest label
+   before placing it, so text never overflows.
+
+(Reference-only: any color/easing/frame values come from the consumer's tokens
+or a maintained upstream — this skill vendors no drawn-asset corpus.)
 
 ## Interplay (who owns what)
 

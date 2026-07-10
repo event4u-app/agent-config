@@ -12,9 +12,9 @@ Adopt 7 design *mechanisms* (portable decision procedures) into `design-intellig
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md` and `docs/guidelines/design-canon.md`, `docs/guidelines/design-modes.md`, `docs/guidelines/design-antipatterns.md`.
-- [ ] Read `src/skills/design-intelligence`, `fe-design`, `design-review`, `accessibility-auditor`, `dashboard-design`, `motion-choreographer`, `typography-system`, `design-tokens`, `iconography` frontmatter + bodies before editing.
-- [ ] Read `src/rules/domain-adoption-policy.md` and `src/rules/design-fidelity.md` — the vendor/volatility and 1:1-fidelity floors this roadmap must respect.
+- [x] Read `AGENTS.md` and `docs/guidelines/design-canon.md`, `docs/guidelines/design-modes.md`, `docs/guidelines/design-antipatterns.md`.
+- [x] Read `src/skills/design-intelligence`, `fe-design`, `design-review`, `accessibility-auditor`, `dashboard-design`, `motion-choreographer`, `typography-system`, `design-tokens`, `iconography` frontmatter + bodies before editing.
+- [x] Read `src/rules/domain-adoption-policy.md` and `src/rules/design-fidelity.md` — the vendor/volatility and 1:1-fidelity floors this roadmap must respect.
 
 ## Context
 
@@ -25,8 +25,8 @@ Adopt 7 design *mechanisms* (portable decision procedures) into `design-intellig
 
 The single best transplant from the data-viz module: choose the visualization by the *intent verb*, not the noun. Reference diagrams (flowchart / structural) vs intuition diagrams (illustrative) split on "how does X work" (illustrative default) vs "what is X's architecture" (structural). Plus two geometric escapes: cycles → stepper widget (not a drawn ring); DB schemas/ERDs → mermaid, never hand-placed SVG.
 
-- [ ] Add a diagram-type routing section to `design-intelligence` (or `dashboard-design` if the diagram surface fits better — decide in the overlap scan): verb-based routing table, cycle→stepper, ERD→mermaid, and "count the nouns before you draw" input-complexity triage.
-- [ ] Verify: `./scripts-run src/scripts/skill_linter` on the touched skill.
+- [x] Add a diagram-type routing section to `design-intelligence` (or `dashboard-design` if the diagram surface fits better — decide in the overlap scan): verb-based routing table, cycle→stepper, ERD→mermaid, and "count the nouns before you draw" input-complexity triage.
+- [x] Verify: `./scripts-run src/scripts/skill_linter` on the touched skill.
 
 **Exit criteria:** verb-based diagram routing + the two geometric escapes are documented as a decision procedure (no drawn-asset corpus).
 **Rollback:** revert the section.
@@ -35,8 +35,8 @@ The single best transplant from the data-viz module: choose the visualization by
 
 Concrete pre-finalize checks that catch the highest-failure-rate diagram bugs, as procedures (not constants): compute the lowest/rightmost element + buffer before setting viewBox; trace every arrow for box-intersection before drawing; size each box from its longest label before placing.
 
-- [ ] Add a "geometric pre-check" checklist to the same diagram section: viewBox-safety, arrow-through-box trace, box-width-from-longest-label. Frame as ranked-by-failure-rate self-checks the author runs before finalizing.
-- [ ] Verify: `./scripts-run src/scripts/skill_linter`.
+- [x] Add a "geometric pre-check" checklist to the same diagram section: viewBox-safety, arrow-through-box trace, box-width-from-longest-label. Frame as ranked-by-failure-rate self-checks the author runs before finalizing.
+- [x] Verify: `./scripts-run src/scripts/skill_linter`.
 
 **Exit criteria:** the pre-check checklist is live as a procedure.
 **Rollback:** revert the checklist.
@@ -45,9 +45,9 @@ Concrete pre-finalize checks that catch the highest-failure-rate diagram bugs, a
 
 A deterministic contrast procedure (not a palette): text on a colored fill uses a darker stop of the *same* color family, never plain black/gray; title and subtitle are two different stops. Plus a mandatory dark-mode self-test: "if the background were near-black, would every text element still be readable?"
 
-- [ ] Add the same-ramp contrast rule + dark-mode self-test to `accessibility-auditor` as a procedure (the ramp itself stays referenced from the consumer's tokens / an upstream color library, never vendored).
-- [ ] Cross-link `design-tokens` (token derivation) and `brand-consistency` so the procedure sits beside token authority without duplicating it.
-- [ ] Verify: `./scripts-run src/scripts/skill_linter`.
+- [x] Add the same-ramp contrast rule + dark-mode self-test to `accessibility-auditor` as a procedure (the ramp itself stays referenced from the consumer's tokens / an upstream color library, never vendored).
+- [x] Cross-link `design-tokens` (token derivation) and `brand-consistency` so the procedure sits beside token authority without duplicating it.
+- [x] Verify: `./scripts-run src/scripts/skill_linter`.
 
 **Exit criteria:** same-ramp contrast + dark-mode self-test live as procedures in `accessibility-auditor`; no hex table added.
 **Rollback:** revert the section.
@@ -56,18 +56,18 @@ A deterministic contrast procedure (not a palette): text on a colored fill uses 
 
 Two calibration mechanisms. (a) The **embedded-widget register**: UI embedded inside a host surface (a widget in a slide/chat) follows a flatter charter (restrained weights, hairline borders, no atmospherics) distinct from greenfield standalone pages — a per-surface register selector, not a fixed token set. (b) The **≥4-repeats-plus-state componentization threshold**: extract a component only when an element repeats ~4× AND carries real props/state; a long single-file body is normal.
 
-- [ ] Add the embedded-vs-standalone register selector to `design-intelligence` / `design-modes` guidance (concept + the discriminator; no token values).
-- [ ] Add the componentization threshold to `fe-design` (or `ui-component-architect`): the ≥4-repeats+state rule as an anti-premature-componentization heuristic.
-- [ ] Verify: `./scripts-run src/scripts/skill_linter`.
+- [x] Add the embedded-vs-standalone register selector to `design-intelligence` / `design-modes` guidance (concept + the discriminator; no token values).
+- [x] Add the componentization threshold to `fe-design` (or `ui-component-architect`): the ≥4-repeats+state rule as an anti-premature-componentization heuristic.
+- [x] Verify: `./scripts-run src/scripts/skill_linter`.
 
 **Exit criteria:** register selector + componentization threshold live as procedures.
 **Rollback:** revert each independently.
 
 ## Phase 5 — Async-verifier pattern + design→dev handoff template
 
-- [ ] Add the async-verifier pattern to `design-review`: after building, fork a background verifier (its own view, screenshots, probing) that stays silent on pass and only surfaces real, actionable problems (not nitpicks); the main agent does not self-screenshot, keeping its context clean. Frame as an orchestration pattern; cross-link `subagent-orchestration` and `verify-repair-loop` so it's positioned against the existing verify skills, not duplicating them.
-- [ ] Add a design→dev handoff README template to `design-review` (or `design-system-capture`): fidelity declaration (hi-fi = pixel-recreate / lo-fi = apply codebase system), per-screen components with states, interactions with duration+easing, tokens section, "implementable from the README alone." Template only — no vendored values.
-- [ ] Verify: `./scripts-run src/scripts/skill_linter`.
+- [x] Add the async-verifier pattern to `design-review`: after building, fork a background verifier (its own view, screenshots, probing) that stays silent on pass and only surfaces real, actionable problems (not nitpicks); the main agent does not self-screenshot, keeping its context clean. Frame as an orchestration pattern; cross-link `subagent-orchestration` and `verify-repair-loop` so it's positioned against the existing verify skills, not duplicating them.
+- [x] Add a design→dev handoff README template to `design-review` (or `design-system-capture`): fidelity declaration (hi-fi = pixel-recreate / lo-fi = apply codebase system), per-screen components with states, interactions with duration+easing, tokens section, "implementable from the README alone." Template only — no vendored values.
+- [x] Verify: `./scripts-run src/scripts/skill_linter`.
 
 **Exit criteria:** async-verifier pattern + handoff template live; both positioned against existing skills without duplication.
 **Rollback:** revert each section.
@@ -76,8 +76,8 @@ Two calibration mechanisms. (a) The **embedded-widget register**: UI embedded in
 
 Make the reject decision durable so a future harvest does not relitigate it.
 
-- [ ] Add a short "Rejected by council" note to this roadmap's Notes (below) AND a one-line pointer in the relevant design guideline's See-also: the palette hex table, font-width CSV, easing library, print-CSS recipe, device-frame recipes, anti-slop font/phrase blacklists, and the 10+-question design-intake interrogation are **not adopted** — corpus assets are referenced from upstream (reference-over-vendor per `domain-adoption-policy`); taste-blacklists are subjective enforcement; the interrogation conflicts with the one-question-per-turn law (`ask-when-uncertain`). A design brief that needs many inputs uses a fill-in markdown template, not agent twenty-questions.
-- [ ] Verify: `./scripts-run src/scripts/check_refs` on touched files.
+- [x] Add a short "Rejected by council" note to this roadmap's Notes (below) AND a one-line pointer in the relevant design guideline's See-also: the palette hex table, font-width CSV, easing library, print-CSS recipe, device-frame recipes, anti-slop font/phrase blacklists, and the 10+-question design-intake interrogation are **not adopted** — corpus assets are referenced from upstream (reference-over-vendor per `domain-adoption-policy`); taste-blacklists are subjective enforcement; the interrogation conflicts with the one-question-per-turn law (`ask-when-uncertain`). A design brief that needs many inputs uses a fill-in markdown template, not agent twenty-questions.
+- [x] Verify: `./scripts-run src/scripts/check_refs` on touched files.
 
 **Exit criteria:** the reject rationale is recorded where the next harvester will see it.
 **Rollback:** revert the note.

@@ -42,6 +42,15 @@ Do NOT use when:
   [`existing-ui-audit`](../existing-ui-audit/SKILL.md) first; reusing
   beats inventing.
 
+## Componentization threshold — ≥4 repeats AND real state
+
+Extract a component only when an element **repeats ~4× or more AND carries real
+props/state**. One or two repeats, or a repeat with no varying props, is not a
+component — inline it. A long single-file body is **normal**, not a smell;
+premature extraction (a "component" used once, or a pure-markup fragment split
+for tidiness) adds indirection without reuse and is the more common mistake
+than under-splitting. Meet BOTH conditions before you extract.
+
 ## Procedure
 
 ### 1. Inspect prior art, state the responsibility in one sentence

@@ -123,6 +123,25 @@ Verdict:      <AA-pass | AA-pass-with-risk | AA-fail>
 Top 3 fixes:  <ordered by user impact>
 ```
 
+## Same-ramp contrast + dark-mode self-test (procedures, not a palette)
+
+Two deterministic procedures — they reference the consumer's tokens / an
+upstream color ramp, they never vendor a hex table:
+
+- **Same-ramp contrast.** Text on a colored fill uses a **darker stop of the
+  same color family**, never plain black/gray dropped on top — same-ramp keeps
+  the contrast on-brand and predictable. Title and subtitle are **two different
+  stops** of that ramp (hierarchy from the ramp, not from an off-ramp gray).
+- **Mandatory dark-mode self-test.** Before finalizing, ask: *"if the background
+  were near-black, would every text element still meet 4.5:1 (body) / 3:1
+  (large/UI)?"* A ramp that only works on light is a fail. Run the test even
+  when the brief is light-only — dark mode arrives later.
+
+The ramp itself is authoritative in [`design-tokens`](../design-tokens/SKILL.md)
+(token derivation) and the consumer's [`brand-consistency`](../../rules/brand-consistency.md)
+tokens — this procedure sits beside that authority, it does not duplicate the
+values.
+
 ## Gotcha
 
 - `aria-label` on a `<button>` overrides its text content for
