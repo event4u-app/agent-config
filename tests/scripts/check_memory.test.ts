@@ -458,3 +458,44 @@ describe('check_memory.ts', () => {
         expect(result.stdout).not.toContain('append-only violation');
     });
 });
+
+// KNOWN_TYPES ⊆ VALID_TYPES drift guard (memory/knowledge validation
+// Phase 0-pre finding, 2026-07-10): check_memory only knew 3 of the 5 types
+// the write side (memory_signal / check_memory_proposal) accepts, so curated
+// historical-patterns / ownership files warned as 'unknown memory type'.
+describe('check_memory.ts — the five write-side types are all known', () => {
+    const TODAY = new Date().toISOString().slice(0, 10);
+    const TYPES = [
+        'domain-invariants',
+        'historical-patterns',
+        'incident-learnings',
+        'ownership',
+        'product-rules',
+    ] as const;
+
+    it('no unknown-type warning for any VALID_TYPES member', () => {
+        const memRoot = join(tmp, 'memory');
+        mkdirSync(memRoot, { recursive: true });
+        for (const t of TYPES) {
+            writeFileSync(
+                join(memRoot, `${t}.yml`),
+                dedent(`
+                    version: 1
+                    entries:
+                      - id: ${t}-1
+                        status: active
+                        confidence: high
+                        source: ["docs/x.md"]
+                        owner: maintainer
+                        last_validated: ${TODAY}
+                        review_after_days: 180
+                        body: "a durable fact"
+                `),
+                'utf-8',
+            );
+        }
+        const r = runMem(memRoot);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).not.toContain('unknown memory type');
+    });
+});

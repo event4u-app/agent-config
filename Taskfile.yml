@@ -219,7 +219,8 @@ tasks:
       - task: runtime-e2e
       - task: lint-ts
       - task: typecheck-ts
-      - task: test-ts
+      # test-ts now runs inside `task: test` above (unified entrypoint,
+      # council 2026-07-08) — not repeated here to avoid a double vitest run.
       - task: build-ts
       # installer-typecheck / installer-test removed in v4.0.0 — the unified
       # setup engine under src/install/ is covered by test-ts (see the note
@@ -393,7 +394,8 @@ tasks:
       - task: runtime-e2e
       - task: lint-ts
       - task: typecheck-ts
-      - task: test-ts
+      # test-ts now runs inside `task: test` above (unified entrypoint,
+      # council 2026-07-08) — not repeated here to avoid a double vitest run.
       - task: build-ts
       - task: check-roadmap-trackable
       - task: check-council-layout
