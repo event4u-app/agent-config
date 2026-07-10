@@ -24,9 +24,9 @@ Close 6 real execution-discipline gaps (time-estimates, amend-trap, tool-tier fa
 
 The one clean gap with nothing adjacent in the suite. An LLM has no wall-clock and no latency training signal; fabricated schedules ("this will take 2–3 weeks") are confident nonsense.
 
-- [ ] Add a one-paragraph "No duration estimates" clause to `src/rules/direct-answers.md` (Iron Law 2 family — invented facts): never predict how long the agent's own work will take, nor how long the user's work will take; break work into actionable steps and let the user judge timing. Keep it to a constraint + the one-line rationale (no clock, no latency signal).
-- [ ] Run the artifact overlap scan against `output-discipline`, `verify-before-complete`, and `direct-answers` per `artifact-drafting-protocol` Phase B; record the extend-vs-create verdict inline in the See-also (expected: fold into `direct-answers`, not a new file).
-- [ ] Verify: `./scripts-run src/scripts/validate_frontmatter` + targeted `./scripts-run src/scripts/check_refs`.
+- [x] Add a one-paragraph "No duration estimates" clause to `src/rules/direct-answers.md` (Iron Law 2 family — invented facts): never predict how long the agent's own work will take, nor how long the user's work will take; break work into actionable steps and let the user judge timing. Keep it to a constraint + the one-line rationale (no clock, no latency signal).
+- [x] Run the artifact overlap scan against `output-discipline`, `verify-before-complete`, and `direct-answers` per `artifact-drafting-protocol` Phase B; record the extend-vs-create verdict inline in the See-also (expected: fold into `direct-answers`, not a new file).
+- [x] Verify: `./scripts-run src/scripts/validate_frontmatter` + targeted `./scripts-run src/scripts/check_refs`.
 
 **Exit criteria:** the no-estimates constraint is live in `direct-answers` with a rationale line; no new always-on file added.
 **Rollback:** revert the `direct-answers` hunk (single paragraph).
@@ -66,9 +66,9 @@ The more-advanced frontier search doctrine adds two research-quality gates absen
 
 ## Phase 5 — Micro-folds (never-cite-the-rule + anti-over-engineering)
 
-- [ ] `direct-answers` (or `reply-close-mechanics`): add the never-cite-the-rule clause — when declining or constraining, give the actual reason, never "my rules/guidelines require X" (appealing to hidden rules replaces real reasoning and widens prompt-extraction surface).
+- [x] `direct-answers` (or `reply-close-mechanics`): add the never-cite-the-rule clause — when declining or constraining, give the actual reason, never "my rules/guidelines require X" (appealing to hidden rules replaces real reasoning and widens prompt-extraction surface).
 - [x] `minimal-safe-diff`: add the anti-over-engineering fold — "three similar lines beat a premature abstraction"; no tombstones (`_var` renames, `// removed` markers, dead re-export shims — delete completely); no docstrings/comments on untouched code. **Reject** the source's "validate only at system boundaries / trust internal code" clause — internal code can be wrong and "trust" is not a testing strategy (council: ADAPT, drop the internal-trust half).
-- [ ] Verify: `./scripts-run src/scripts/check_condensation` targeted at both touched rules.
+- [x] Verify: `./scripts-run src/scripts/check_condensation` targeted at both touched rules.
 
 **Exit criteria:** both folds live; the internal-trust clause is explicitly NOT adopted (noted inline).
 **Rollback:** revert the two folds independently.

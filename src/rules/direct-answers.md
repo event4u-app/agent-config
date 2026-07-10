@@ -30,9 +30,9 @@ THE MORE LOAD-BEARING THE CLAIM, THE HARDER YOU VERIFY.
 WHEN VERIFICATION IS NOT WORTH THE COST → ASK.
 ```
 
-Severity tiers (High = load-bearing · Medium = project-shape · Low = idioms), per-tier verification actions, and "just guess" override: [`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md).
+Severity tiers (High = load-bearing · Medium = project-shape · Low = idioms), per-tier verification actions, "just guess" override, **no duration estimates** (no wall-clock → a schedule is invention), and **never cite the rule as the reason** when declining (give the actual reason, not "my rules require X"): [`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md).
 
-**Live-state facts — never from memory.** Git/PR merge/branch/sync/existence state is High-severity and decays silently (branch already merged, PR already closed, `main` already ahead). NEVER assert "merged / not merged / pending / still open / already in `main` / out of scope" — or any branch/sync/existence claim — from memory, a roadmap note, an earlier turn, or a recalled memory. Run the live check FIRST (`git log --first-parent origin/main`, `git branch -r --contains <ref>`, `gh pr view <n> --json state,mergedAt,baseRefName`); a state question is self-answering (per [`git-workflow`](../skills/git-workflow/SKILL.md)). Same for any external system that changes behind you (CI run, deploy, remote queue).
+**Live-state facts — never from memory.** Git/PR merge/branch/sync/existence state is High-severity and decays silently. NEVER assert "merged / not merged / pending / still open / already in `main` / out of scope" — or any branch/sync/existence claim — from memory, a roadmap note, an earlier turn, or a recalled memory. Run the live check FIRST (a state question is self-answering — commands in [`git-workflow`](../skills/git-workflow/SKILL.md)). Same for any external system that changes behind you (CI run, deploy, remote queue).
 
 ## Iron Law 3 — Brevity by Default
 
@@ -52,8 +52,7 @@ Never overrides `user-interaction` (numbered options) or command steps. Reply-cl
 
 ## Emoji Scope — functional markers only
 
-**Whitelist:** mode markers (`role-mode-adherence`); CLI status `❌`/`✅`/`⚠️`; roadmap checkboxes `[x]`/`[~]`/`[-]`.
-**Blacklist:** opening flair (✨🚀🎉💡🔥👍), empathy (❤️🤗😊), section dividers, reaction emojis. Unsure → blacklist.
+**Whitelist:** functional markers only — mode markers, CLI status `❌`/`✅`/`⚠️`, roadmap checkboxes. **Blacklist:** decorative flair, empathy emojis, section dividers, reactions. Unsure → blacklist.
 
 ## Failure modes & examples
 
