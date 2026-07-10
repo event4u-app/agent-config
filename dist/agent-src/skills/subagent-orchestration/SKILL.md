@@ -66,6 +66,26 @@ manifest reports `subagent_spawn: true`, and the task is classified delegable.
 `auto: ask` → ask once; `auto: on` → surface mode + per-subtask tiers in one
 line; any gate failing → in-session no-op. Never lifts a safety floor.
 
+## Worker-prompt contract
+
+Every dispatched worker prompt obeys four rules — they prevent the two classic
+handoff failures: lossy re-summarization dropping the user's requirements, and
+over-scripted prompts that break on first contingency.
+
+- **(a) User constraints verbatim.** Pass the user's
+  constraints/exclusions/preferences into the worker prompt **verbatim** — never
+  a paraphrase (a paraphrase silently drops requirements).
+- **(b) Describe the goal, don't script the approach.** State the outcome and
+  let the worker choose the path; over-scripting breaks on contingencies.
+- **(c) Translate environment paths.** Orchestrator-local paths do not exist in
+  the worker's sandbox — resolve/translate them at spawn.
+- **(d) Pre-declared check-in conditions.** The worker names, at spawn time, the
+  conditions under which it will halt and ask ("if login required", "if
+  multiple candidates found") — so interrupts are predictable, not surprises.
+
+When to delegate at all is [`delegation-policy`](../../rules/delegation-policy.md);
+the spawn boundary is the [`subagent-spawn-contract`](../../contexts/execution/subagent-spawn-contract.md).
+
 ## The seven modes
 
 Each mode has a decision row: when to use, when not, and the expected
@@ -328,9 +348,9 @@ the judge verdict.
 
 After every auto-dispatched run, write one telemetry line to
 `agents/runtime/state/audit/YYYY-MM.jsonl` (current UTC month — use
-`new Date().toISOString().slice(0, 7)` for the filename). Standard
-audit-log-v1 object with `input_kind: "orchestration"` and an
-`orchestration` sub-object per
+`new Date().toISOString().slice(0, 7)` to compute the filename).
+The line is a standard audit-log-v1 object with `input_kind:
+"orchestration"` and an `orchestration` sub-object per
 [`orchestration-telemetry.md`](../../agent-src/contexts/execution/orchestration-telemetry.md).
 
 Minimal emit (fill what is observable; `token_delta_provenance: "estimated"` if
