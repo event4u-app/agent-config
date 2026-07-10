@@ -33,6 +33,36 @@ Do NOT use when:
 - `directive_set="backend"` — no UI surface to inventory
 - The audit findings already exist in `state.ui_audit` for this state-file (cached) — re-run only if `package.json` or `composer.json` mtime changed
 
+## Resource-first context gate (design fidelity)
+
+Any request to **recreate, redesign, mock, prototype, or improve** a UI runs
+this gate BEFORE styling — the Inspect stage of the
+[design-artifact lifecycle](../../../docs/contracts/design-artifact-lifecycle.md).
+Design starts from project truth, not generic aesthetic memory.
+
+- **Search first (owned UI).** Before proposing anything, search the project
+  for: design tokens, global CSS, the component library / design system (§ 2),
+  supplied screenshots or exported design context, Figma/exported context when
+  connected, assets (logos, icons, fonts), and copy tone. Procedure steps 1–5
+  produce this inventory — do not skip them for a "quick" redesign.
+- **Hard stop on a promised-but-inaccessible source.** When the user explicitly
+  references a design system, local folder, Figma file, or codebase you cannot
+  read, STOP and ask for access — never invent a design from memory to paper
+  over the missing source. A promised source that can't be reached is a blocking
+  question ([`ask-when-uncertain`](../../rules/ask-when-uncertain.md)), not a
+  licence to improvise. (fixture: `daf-inaccessible-design-system`.)
+- **Source priority — code beats screenshots.** For exact values (tokens,
+  spacing, component props) the design-system/code context is authoritative; a
+  screenshot conveys gestalt but is not enough for component/token fidelity.
+  Never read pixel values off a screenshot when the source is available.
+- **Tool composition — inspect before you generate.** Owned UI → repository
+  search + local files FIRST. Connected/imported design data (Figma, tokens
+  export) → that connector next, when available. Browser / image search → only
+  for public references or current product/place imagery, never a substitute
+  for inspecting owned code. Generated imagery → only when the user asks for
+  synthetic assets, or no real inspection is required. (fixtures:
+  `daf-no-context`, `daf-missing-asset`.)
+
 ## Procedure: Audit the existing UI surface
 
 ### 0. Inspect stack and input

@@ -146,23 +146,38 @@ duplicating it, and each lifecycle branch has at least one eval fixture.
 
 ## Phase 2 — Resource-first design context gate
 
-- [ ] Upgrade `existing-ui-audit` / `fe-design` triggers so any request to
+- [x] Upgrade `existing-ui-audit` / `fe-design` triggers so any request to
       recreate, redesign, mock, prototype, or improve a UI first searches for:
       design tokens, global CSS, component library, screenshots, Figma/exported
       context when available, assets/logos/icons/fonts, and copy tone.
-- [ ] Add a hard stop when the user explicitly references an inaccessible
+      <!-- done 2026-07-10: new "## Resource-first context gate" section in
+      existing-ui-audit (search-first list, ties to procedure steps 1–5) + a
+      pointer block in fe-design routing recreate/redesign/mock/prototype/improve
+      through the gate before taste. -->
+- [x] Add a hard stop when the user explicitly references an inaccessible
       design system, local folder, Figma, or codebase: ask for access rather
       than inventing a design from memory.
-- [ ] Add source-priority guidance: code/design-system context beats
+      <!-- done: gate bullet "Hard stop on a promised-but-inaccessible source" —
+      STOP + ask (ask-when-uncertain), never invent from memory; fixture
+      daf-inaccessible-design-system. -->
+- [x] Add source-priority guidance: code/design-system context beats
       screenshots for exact values; screenshots help with gestalt but are not
       enough for component/token fidelity.
-- [ ] Add tool-composition guidance: repository search and local files first
+      <!-- done: gate bullet "Source priority — code beats screenshots". -->
+- [x] Add tool-composition guidance: repository search and local files first
       for owned UI, connector/imported design data first when available,
       browser/image search only for public references or current product/place
       imagery, and generated imagery only when the user asks for synthetic
       assets or no real inspection is required.
-- [ ] Add trigger evals for "redesign this app" with code present, screenshot
+      <!-- done: gate bullet "Tool composition — inspect before you generate"
+      (owned→repo/local; connector next; browser/image public-refs only;
+      generated only on request). -->
+- [x] Add trigger evals for "redesign this app" with code present, screenshot
       only, no assets, and inaccessible referenced source.
+      <!-- done: src/skills/existing-ui-audit/evals/triggers.json — 5
+      should-trigger (the four Phase-2 cases + improve-existing) + 5
+      should-not-trigger near-misses (backend/API, migration, general design
+      knowledge, trivial README typo, CI explain). -->
 
 **Exit:** design work no longer starts from generic aesthetic memory when
 project-specific context exists or was promised.
