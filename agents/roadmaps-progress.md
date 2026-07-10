@@ -6,10 +6,10 @@
 
 ## Overall
 
-**147 / 284 steps done · 52%**
+**157 / 284 steps done · 55%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
 
 ## Open roadmaps
@@ -22,7 +22,7 @@
 | 4 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
 | 6 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 7 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 44 | 5 | 0 | 0 | 0 | █░░░░░░░░░ 10% |
+| 7 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 34 | 15 | 0 | 0 | 0 | ███░░░░░░░ 31% |
 | 8 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
 | 9 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
@@ -141,13 +141,13 @@ _2 blockers resolved._
 
 ### [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md)
 
-**Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage** — 5 / 49 done (10%)
+**Road to frontier-quality operating system — turn external prompt mechanics into governed package leverage** — 15 / 49 done (31%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Scope, provenance, metrics, and execution gates | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Prompt-mechanism inventory, dependency graph, and disposition matrix | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Eval harness and baseline before behavior changes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Prompt-mechanism inventory, dependency graph, and disposition matrix | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 2 | Eval harness and baseline before behavior changes | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Currentness, research-routing, and source-quality pilot | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | Memory, preference, and prior-context safety | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 5 | Artifact, visual, and connected-tool routing protocol | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
