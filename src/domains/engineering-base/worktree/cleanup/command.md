@@ -33,23 +33,28 @@ user, or every non-main worktree when asked to "clean up".
 
 ### 2. Per candidate, run the gates IN ORDER
 
-1. **Dirty check** — `git status --porcelain` in the worktree non-empty
-   → **refuse** that candidate; report the dirty files. Never
-   `git worktree remove --force`.
-2. **Unique-commit check** — commits reachable from the worktree branch
-   but from no other ref (branches, remotes, tags):
+Run the deterministic gate helper (edge-case-tested: detached HEAD,
+branch without remote, tag-only reachability, deleted remote branch,
+untracked files, paths with spaces — `tests/scripts/worktree_cleanup_check.test.ts`):
 
-   ```bash
-   git log <branch> --oneline --not \
-     $(git for-each-ref --format='%(refname)' | grep -v "^refs/heads/<branch>$")
-   ```
+```bash
+./scripts-run src/scripts/worktree_cleanup_check check <worktree-path>
+```
 
-   Non-empty → **refuse** removal: the branch holds work that exists
-   nowhere else. Surface the commit list and hand the decision back —
-   dropping commits the session did not author is forbidden by the
+Exit `0` → removal allowed. Exit `1` → **refuse** that candidate; the
+output names the exact gate:
+
+1. **Detached HEAD** — no branch to judge reachability for; resolve the
+   state manually first.
+2. **Unsaved work** — `git status --porcelain` non-empty (untracked
+   files count as work). Never `git worktree remove --force`.
+3. **Unique commits** — commits reachable from the worktree branch but
+   from no other ref (branches, remotes, AND tags — a tag counts as
+   reachability). The branch holds work that exists nowhere else:
+   surface the commit list and hand the decision back — dropping
+   commits the session did not author is forbidden by the
    `git-history-discipline` rule (shared-branch Iron Law); merging or
    preserving them is the user's call.
-   Empty → removal allowed for this candidate.
 
 ### 3. Remove the allowed candidates
 
