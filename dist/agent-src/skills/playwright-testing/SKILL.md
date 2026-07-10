@@ -36,6 +36,7 @@ Use this skill when:
 3. **Check existing tests** — match patterns in `tests/e2e/` or `e2e/`.
 4. **Check test utilities** — look for page objects, fixtures, helpers.
 5. **Check CI setup** — how are E2E tests run in the pipeline?
+6. **Enumerate the cases** — run the [`test-case-discovery`](../test-case-discovery/SKILL.md) funnel per user flow before writing specs; cover the happy flow AND at least one boundary (empty state, max input) and one error path (failed request, validation rejection) per flow — never the happy flow alone.
 
 ## Test structure
 
@@ -274,3 +275,7 @@ await page.route('**/api/users', route =>
 - Do NOT test implementation details — test user-visible behavior.
 - Do NOT put assertions in Page Objects — assertions belong in test files.
 - Do NOT commit `.only` — enforce via `forbidOnly: !!process.env.CI`.
+
+## Anti-bruteforce — diagnose before retry
+
+When a spec fails, do not retry blindly by re-running, swapping locators at random, or bumping timeouts until green. Diagnose the root cause first: open the trace viewer, inspect the failing locator's `aria` tree, identify the real reason (timing, locator, app state), then apply a targeted fix. Trial-and-error locator swaps mask flaky test design.

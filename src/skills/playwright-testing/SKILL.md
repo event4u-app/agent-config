@@ -36,6 +36,7 @@ Use this skill when:
 3. **Check existing tests** — match patterns in `tests/e2e/` or `e2e/`.
 4. **Check test utilities** — look for page objects, fixtures, helpers.
 5. **Check CI setup** — how are E2E tests run in the pipeline?
+6. **Enumerate the cases** — run the [`test-case-discovery`](../test-case-discovery/SKILL.md) funnel per user flow before writing specs; cover the happy flow AND at least one boundary (empty state, max input) and one error path (failed request, validation rejection) per flow — never the happy flow alone.
 
 ## Test structure
 

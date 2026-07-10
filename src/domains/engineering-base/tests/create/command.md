@@ -6,7 +6,7 @@ tier: 2
 visibility: internal
 cluster: tests
 sub: create
-skills: [pest-testing, quality-tools]
+skills: [test-case-discovery, pest-testing, quality-tools]
 description: Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 suggestion:
   eligible: true
@@ -48,13 +48,33 @@ the style and conventions already in use (assertion shape, naming, fixtures).
 - Read existing tests for the same or related classes to match patterns.
 - Understand what the method is supposed to do, not just what it does.
 
-### 4. Write meaningful tests
+### 4. Discover the test cases BEFORE writing tests
+
+Run the [`test-case-discovery`](../../skills/test-case-discovery/SKILL.md)
+funnel per changed behavior — enumerate first, write second:
+
+1. **Behavior inventory** — 1–3 one-sentence behaviors per changed unit.
+2. **Dimension scan** — input validity (null / empty / zero / negative / max /
+   Unicode / off-by-one), state (prerequisites, transitions, idempotency),
+   collaborator failure (timeout, 4xx/5xx, exceptions, empty results),
+   security surface (authz, tenant, injection) where applicable.
+3. **Case synthesis with floor** — per behavior at least **1 happy +
+   1 boundary + 1 error case**; +1 abuse case on security-relevant paths.
+   No behavior gets a happy-path-only test.
+4. **Cross-check** — when subagents are available, ask ONE subagent with an
+   adversarial lens ("what non-obvious failure mode is missing?"); otherwise
+   run the mandatory self-review pass with the same question.
+5. **Prioritize** — most important cases first (likelihood × impact), cap
+   5–8 per behavior, each case must fail for a distinct reason. Record
+   dropped cases with a one-line reason.
+
+### 5. Write meaningful tests
 
 **DO write tests that:**
 
 - Test the **actual business logic** and expected behavior.
-- Cover **edge cases**: null values, empty strings, boundary values, invalid input.
-- Test **error handling**: what happens when things go wrong?
+- Implement the **case matrix from step 4** — happy path, boundaries, error
+  handling, and (where security-relevant) abuse cases.
 - Test **different code paths**: if/else branches, early returns, fallback behavior.
 - Verify **return values and side effects** that matter.
 - Use descriptive test names that explain the scenario (e.g. `it returns fallback status when input is empty`).
@@ -67,7 +87,7 @@ the style and conventions already in use (assertion shape, naming, fixtures).
 - Test private methods directly — test through the public API.
 - Have no real assertion value (e.g. "it does not throw" without meaningful setup).
 
-### 5. Test structure
+### 6. Test structure
 
 - One test file per class/service being tested.
 - Place tests in the matching directory structure under `tests/` (mirror the source structure).
@@ -75,7 +95,7 @@ the style and conventions already in use (assertion shape, naming, fixtures).
 - Use data providers for testing multiple input/output combinations.
 - Mock external dependencies (database, HTTP, file system) — don't test infrastructure.
 
-### 6. Verify
+### 7. Verify
 
 - Run the tests locally in the PHP container to make sure they pass.
 - If a test fails, fix it — don't just delete it.
@@ -84,6 +104,8 @@ the style and conventions already in use (assertion shape, naming, fixtures).
 
 - **Do NOT commit or push.**
 - **Quality over quantity** — 5 meaningful tests beat 20 trivial ones.
+- **Breadth is part of quality** — a happy-path-only suite is incomplete
+  regardless of how meaningful the single test is; the step-4 floor applies.
 - If a class is hard to test (too many dependencies, global state), flag it and suggest a refactoring approach instead of writing brittle
   tests.
 

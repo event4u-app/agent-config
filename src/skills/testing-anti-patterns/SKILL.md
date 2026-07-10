@@ -31,6 +31,7 @@ still test-after-the-fact.
 Do NOT use when:
 
 - You need to *write* tests (no anti-pattern present yet) — route to [`pest-testing`](../pest-testing/SKILL.md) or [`test-driven-development`](../test-driven-development/SKILL.md).
+- You need to *enumerate* what to test before writing (case matrix, edge-case discovery) — route to [`test-case-discovery`](../test-case-discovery/SKILL.md).
 - The test failure is a real bug — route to [`systematic-debugging`](../systematic-debugging/SKILL.md).
 - You need overall coverage assessment of a finished diff — route to [`judge-test-coverage`](../judge-test-coverage/SKILL.md).
 
