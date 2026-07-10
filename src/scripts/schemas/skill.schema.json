@@ -13,6 +13,10 @@
       "pattern": "^[a-z][a-z0-9-]*$",
       "description": "Lowercase, hyphenated slug; must match the parent directory name."
     },
+    "user-invocable": {
+      "type": "boolean",
+      "description": "Claude Code Agent-Skills extension: false = the skill claims no /name slash command (only the model can load it). REQUIRED (false) when name equals a Claude Code built-in command or bundled skill (see scripts/_lib/claude_builtin_names.ts) so the suite never shadows the host's own /name. Other tools ignore the key."
+    },
     "description": {
       "type": "string",
       "minLength": 1,

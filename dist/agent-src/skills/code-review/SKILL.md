@@ -1,6 +1,8 @@
 ---
 model_tier: high
 name: code-review
+# Claude Code reserves this /name — model-invocation only, so the bundled /code-review skill stays reachable.
+user-invocable: false
 description: "Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards."
 domain: quality
 parallelizable: files

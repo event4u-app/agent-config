@@ -1,6 +1,8 @@
 ---
 model_tier: medium
 name: mcp
+# Claude Code reserves this /name — model-invocation only, so the built-in /mcp (server management + auth) stays reachable.
+user-invocable: false
 description: "Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows."
 domain: process
 workspaces:
