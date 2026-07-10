@@ -34,21 +34,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { sep } from 'node:path';
 import { z } from 'zod';
 import { logger } from '../log/logger.js';
-
-/** Universal fallback floor when a skill carries no domain-specific entry. */
-const DEFAULT_FLOOR = { minRecall: 1.0, minPrecision: 0.8 } as const;
-
-/**
- * Domain-specific floors (Phase D council verdict — tuned to the trigger
- * pattern each skill shows, not a single global pair). A reference task wants
- * near-perfect precision; a judgment task tolerates a looser one. Skills
- * absent here fall back to {@link DEFAULT_FLOOR}.
- */
-const DOMAIN_FLOORS: Readonly<Record<string, { minRecall: number; minPrecision: number }>> = {
-    'image-generation': { minRecall: 1.0, minPrecision: 0.85 },
-    iconography: { minRecall: 1.0, minPrecision: 0.9 },
-    'brand-strategy': { minRecall: 0.9, minPrecision: 0.7 },
-};
+// Floors shared with the weekly canary rotation (ADR-118 §4) — values
+// unchanged, single source of truth.
+import { floor_for } from '../../scripts/_lib/trigger_eval_floors.js';
 
 export interface RecordTriggerEvalOptions {
     /** Path to the EvalResult JSON written by skill_trigger_eval.py --output. */
@@ -135,7 +123,7 @@ function resolveFloor(
     skill: string | null,
     opts: RecordTriggerEvalOptions,
 ): { minRecall: number; minPrecision: number } {
-    const domain = (skill && DOMAIN_FLOORS[skill]) || DEFAULT_FLOOR;
+    const domain = floor_for(skill);
     return {
         minRecall: opts.minRecall ?? domain.minRecall,
         minPrecision: opts.minPrecision ?? domain.minPrecision,
