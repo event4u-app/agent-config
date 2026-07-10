@@ -38,6 +38,7 @@ import {
     _setMemoryRoot,
     retrieve,
 } from './memory_lookup.js';
+import { sanitize_text } from './_lib/retrieval_sanitize.js';
 import { scoreTask } from './second_brain_score.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -67,11 +68,19 @@ export function bindStore(): void {
     _setIntakeRoot(path.join(STORE_DIR, 'intake-none'));
 }
 
-export function loadCorpus(): { type: string; k: number; tasks: RetrievalTask[] } {
+export function loadCorpus(): {
+    type: string;
+    k: number;
+    tasks: RetrievalTask[];
+    stale_ids?: string[];
+    poisoned_ids?: string[];
+} {
     const doc = YAML.parse(fs.readFileSync(path.join(STORE_DIR, 'retrieval-corpus.yml'), 'utf-8')) as {
         type: string;
         k: number;
         tasks: RetrievalTask[];
+        stale_ids?: string[];
+        poisoned_ids?: string[];
     };
     return doc;
 }
@@ -162,11 +171,17 @@ export function signTestP(wins: number, losses: number): number {
 
 export async function run(opts: { mode: 'dry-run' | 'live'; host: string; seeds: number }): Promise<Record<string, unknown>> {
     bindStore();
-    const { type, k, tasks } = loadCorpus();
+    const { type, k, tasks, stale_ids = [], poisoned_ids = [] } = loadCorpus();
+    const staleSet = new Set(stale_ids);
+    const poisonedSet = new Set(poisoned_ids);
     const apiKey = opts.mode === 'live' ? load_anthropic_key() : '';
     const placebo = _placeboBodies(type);
 
     let precisionHits = 0;
+    let topkSlots = 0;
+    let staleHits = 0;
+    let poisonedRetrieved = 0;
+    let poisonedNeutralized = 0;
     let tieSetSum = 0;
     const perTask: Array<Record<string, unknown>> = [];
     const armPass: Record<Arm, number> = { 'retrieval-off': 0, 'retrieval-on': 0, placebo: 0 };
@@ -177,6 +192,18 @@ export async function run(opts: { mode: 'dry-run' | 'live'; host: string; seeds:
     for (const task of tasks) {
         const { topk, rank, tieSetSize } = retrieveFor(task, type, k);
         const ids = topk.map((r) => r.id);
+        topkSlots += topk.length;
+        for (const hit of topk) {
+            if (staleSet.has(hit.id)) staleHits += 1;
+            if (poisonedSet.has(hit.id)) {
+                poisonedRetrieved += 1;
+                // Rejection = the sanitize floor strips every hidden-instruction
+                // vector before the body could reach a prompt.
+                const clean = sanitize_text(hit.body);
+                if (!/[​-‏‪-‮⁦-⁩]/u.test(clean)) poisonedNeutralized += 1;
+            }
+        }
+
         const neededInTopK = rank >= 0 && rank < k;
         if (neededInTopK) precisionHits += 1;
         tieSetSum += tieSetSize;
@@ -226,6 +253,21 @@ export async function run(opts: { mode: 'dry-run' | 'live'; host: string; seeds:
         k,
         store: 'internal/bench/second-brain/retrieval-store/ (5 needed + 19 distractors, keyword-overlapping confusers)',
         precision_at_k: precisionAtK,
+        // road-to-proof-under-real-conditions Phase 5 — retrieval quality pair:
+        // stale_hit_rate: fraction of retrieved top-k slots occupied by
+        // SUPERSEDED store entries (lower is better; the substrate has no
+        // recency/supersede weighting yet, so a non-zero rate is the honest
+        // baseline the FTS5/recency activation path improves on).
+        stale_hit_rate: topkSlots ? staleHits / topkSlots : 0,
+        stale_hits: staleHits,
+        topk_slots: topkSlots,
+        // poisoned_rejection_rate: of poisoned entries that WERE retrieved,
+        // the fraction whose hidden-instruction vectors the sanitize floor
+        // strips (target 1.0; null when none was retrieved this run).
+        poisoned_rejection_rate: poisonedRetrieved ? poisonedNeutralized / poisonedRetrieved : null,
+        poisoned_retrieved: poisonedRetrieved,
+        poisoned_neutralized: poisonedNeutralized,
+
         precision_hits: precisionHits,
         mean_tie_set_size: meanTieSet,
         discrimination_note:
