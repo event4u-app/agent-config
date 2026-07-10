@@ -37,10 +37,11 @@ const ROADMAP_ROOT = 'agents/roadmaps';
 // CHECKBOX_RE = re.compile(r"^\s*[-*]\s+\[([ xX~\-])\]\s", re.MULTILINE)
 const CHECKBOX_RE = /^[ \t]*[-*][ \t]+\[([ xX~\-])\][ \t\f\v]/m;
 // PHASE_RE = re.compile(
-//   r"^(#{2,3})\s+Phase\s+(\d+[a-z]?|[IVX]+|[A-Z](?:\d+)?)"
+//   r"^(#{2,3})\s+Phase\s+(\d+(?:\.\d+)*[a-z]?|[IVX]+|[A-Z](?:\d+)?)"
 //   r"(?:[\s:—\-]+(.*?))?\s*$", re.MULTILINE)
+// Numeric ids accept dotted sub-phases ("1.0", "4.1") — mirrors the dashboard's PHASE_RE.
 const PHASE_RE =
-    /^(#{2,3})[ \t\f\v]+Phase[ \t\f\v]+(\d+[a-z]?|[IVX]+|[A-Z](?:\d+)?)(?:[\s:—\-]+(.*?))?[ \t\f\v]*$/gm;
+    /^(#{2,3})[ \t\f\v]+Phase[ \t\f\v]+(\d+(?:\.\d+)*[a-z]?|[IVX]+|[A-Z](?:\d+)?)(?:[\s:—\-]+(.*?))?[ \t\f\v]*$/gm;
 // FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\s*\n/;
 const DRAFT_VALUES: ReadonlySet<string> = new Set(['draft']);

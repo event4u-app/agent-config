@@ -79,4 +79,18 @@ describe('check_roadmap_trackable — replicated dashboard helpers', () => {
             fs.rmSync(tmp, { recursive: true, force: true });
         }
     });
+
+    it('violations_for: dotted sub-phase ids ("1.0", "4.1") are trackable', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crt-'));
+        try {
+            const p = path.join(tmp, 'road-to-dotted.md');
+            fs.writeFileSync(
+                p,
+                '# Roadmap\n\n## Phase 1.0 — Kickoff\n\n- [ ] a\n\n## Phase 4.1 — Sub track\n\n- [x] b\n',
+            );
+            expect(crt.violations_for(p)).toEqual([]);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
 });

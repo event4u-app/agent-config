@@ -175,15 +175,23 @@ describe('update_roadmap_progress — intent', () => {
                 '## Phase B1 — Letter track',
                 '- [ ] l',
                 '',
+                '## Phase 1.0 — Dotted zero',
+                '- [x] d0',
+                '',
+                '## Phase 4.1 — Dotted sub',
+                '- [ ] d1',
+                '',
             ].join('\n'),
         );
         const { result, dashboard } = regen();
         expect(result.status, 'exit').toBe(0);
-        // All four phase ids appear in the per-roadmap phase breakdown rows.
+        // All six phase ids appear in the per-roadmap phase breakdown rows.
         expect(dashboard).toContain('| 0 | Zero |');
         expect(dashboard).toContain('| III | Roman |');
         expect(dashboard).toContain('| 2a | Sub |');
         expect(dashboard).toContain('| B1 | Letter track |');
+        expect(dashboard).toContain('| 1.0 | Dotted zero |');
+        expect(dashboard).toContain('| 4.1 | Dotted sub |');
     });
 
     it('regen: merge-gated open item still surfaces as an open step', () => {
