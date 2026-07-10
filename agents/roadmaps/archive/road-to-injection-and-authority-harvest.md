@@ -57,9 +57,12 @@ Write-time input validation for the memory layer, missing from `memory-consolida
 
 The council rejected a *parallel* "cannot-delegate" tier as redundant with the existing Hard Floor + `agent-authority` band table — but the concrete instances are worth folding in as sharpenings of the existing tiers.
 
-- [ ] Sharpen `agent-authority` / `non-destructive-by-default` with the concrete instances (as examples under the existing bands, not a new tier): the irreversible-button trigger list (send / publish / post / purchase / submit) as Hard-Floor examples; "never act while asking" (the ask and the action are strictly sequential — no do-then-ask race); "approval asks name the exact object" (filename+size+source for a download; amount+card-last4+total for a purchase) as an approval-UX clause referencing `user-interaction` numbered-options mechanics.
-- [ ] Explicitly record: NO new "cannot-delegate" tier and NO contamination-state rule are added (council: redundant / too-vague-to-operationalize) — one-line note in the roadmap Notes.
-- [ ] Verify: `./scripts-run src/scripts/check_condensation` targeted.
+- [x] Sharpen `agent-authority` / `non-destructive-by-default` with the concrete instances (as examples under the existing bands, not a new tier): the irreversible-button trigger list (send / publish / post / purchase / submit) as Hard-Floor examples; "never act while asking" (the ask and the action are strictly sequential — no do-then-ask race); "approval asks name the exact object" (filename+size+source for a download; amount+card-last4+total for a purchase) as an approval-UX clause referencing `user-interaction` numbered-options mechanics.
+      <!-- done: landed on main via PR #847 (re-land of the lost #840 kernel content) — agent-authority Hard Floor row carries "irreversible external action (send · publish · post · purchase · submit)"; non-destructive-by-default carries the "Irreversible external action" row + "Never act while asking" clause (approval names the exact object). Verified reachable on origin/main. -->
+- [x] Explicitly record: NO new "cannot-delegate" tier and NO contamination-state rule are added (council: redundant / too-vague-to-operationalize) — one-line note in the roadmap Notes.
+      <!-- done: recorded in the ## Notes "Rejected by council" block below. -->
+- [x] Verify: `./scripts-run src/scripts/check_condensation` targeted.
+      <!-- done 2026-07-10: check_condensation passed (Iron Law fences byte-stable in agent-authority + non-destructive). -->
 
 **Exit criteria:** the concrete action-authority instances live under existing bands; the two rejects are recorded.
 **Rollback:** revert the sharpenings.
