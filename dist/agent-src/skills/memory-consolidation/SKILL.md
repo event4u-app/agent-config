@@ -169,6 +169,30 @@ skills — github.com/ViktorAxelsen/MemSkill, Apache-2.0, commit `9907c35f8cc7`)
   reusable facts, not transcripts or one-off chatter.
 - **One durable fact per entry.** No narrative blobs — each entry is a single
   PATTERN / CONVENTION / INVARIANT / GOTCHA the next agent can act on.
+- **Save validated successes, not only corrections.** A correction-only store
+  drifts the agent toward over-caution over time — it only ever learns what NOT
+  to do. Record approaches the user has explicitly validated too, and watch for
+  *quiet* confirmations: "yes exactly", "perfect", an unusual choice accepted
+  without pushback. A validated judgment call is as durable as a correction.
+- **`reference` shape — a pointer, not the truth.** When the durable fact is
+  *where* truth lives in an external system (a dashboard, a ticket tracker, a
+  config source), store the POINTER (system + locator + what it answers), never
+  a copy of the value — the value goes stale, the pointer does not. This mirrors
+  [`source-discovery-gate`](../../rules/source-discovery-gate.md)'s
+  cache-vs-source philosophy: a reference memory is a cache of *where to look*,
+  re-read at use time. (A write-shape discipline over the existing types — not a
+  new backend type; the value it points at is never persisted as truth.)
+- **Derivability check — consult the source before persisting.** Before
+  persisting a fact that could be **derived from the repo / git / config**
+  (a file path, a current version, who-changed-what, a config value), consult
+  the authoritative source. If the source answers it, do **not** persist the
+  derivable value — instead capture what was *surprising* or non-obvious about
+  it (the why, the gotcha, the counter-intuitive part). This holds even when
+  the user says "remember this": redirect the memory to the surprising part,
+  not the derivable fact. Adapted (not a static never-store list — the agent
+  can't know what git will answer without asking): the check is *consult, then
+  decide*. Twin of the read-fresh discipline in
+  [`source-discovery-gate`](../../rules/source-discovery-gate.md).
 - **"Don't relitigate" memories carry scope + `revisit-if`.** A memory that
   locks a question as settled — an honest-null verdict, a council convergence,
   a maintainer call — is not a permanent law; it is a decision under the
@@ -226,10 +250,14 @@ recalled content is *used* once retrieved.
   unprompted — only when the user raises the topic first, this session.
   Bringing up a sensitive memory unprompted is not just unhelpful, it is
   actively harmful.
-- **Staleness still applies.** A recalled memory reflects what was true
-  when it was written — verify referenced files/flags/state still hold
-  before treating it as current (see the memory-and-other-persistence
-  guidance this skill's callers already carry).
+- **Staleness = verify-THEN-repair.** A recalled memory naming a
+  file/function/flag is a claim it existed *when written*. Before
+  recommending from it, verify the named thing still exists; **on
+  conflict, trust the current observation AND repair the memory** —
+  update or remove the stale entry, do not merely ignore it (an ignored
+  stale memory re-misleads the next session). Verify, then repair — not
+  verify-then-shrug (see the memory-and-other-persistence guidance this
+  skill's callers already carry).
 
 ### Retrieval-trigger linguistics
 

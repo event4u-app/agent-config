@@ -92,3 +92,24 @@ of this shape. Revisit-if:
   set.
 - The full pre-registered n≈50/arm run is explicitly funded despite this pilot
   (the pilot is directional, not the full design).
+
+## Reminder drift-audit disposition (2026-07-10, road-to-orchestration-and-memory-harvest Phase 5)
+
+The **reminder drift-audit** reflection (a long-session self-audit: fresh-instance
+test, caring-observer test, licensed silent correction) is mechanism-distinct from
+the torn-down naive/blocking reminder injection above — that tested rule-restatement
+/ blocking projections (a ceiling); this is a *discretionary salience self-audit*.
+Per [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md)
+mechanism-match it is therefore *eligible* for a fresh eval — but:
+
+**Disposition: rejected-now, revisit-if.** Council (claude-sonnet-4-5 + gpt-4o,
+2026-07-08) converged that it is **not worth the eval cost now** — one prior null
+in the reminder family, and the mechanism is subjective/discretionary (no crisp
+pass/fail). No eval is scheduled or built.
+
+**Revisit-if:** salience-drift is observed in production after the other
+orchestration-and-memory harvest items ship — specifically a long-session
+sycophancy ratchet or persona degradation (the agent drifting agreeable/off-brand
+over a long session). That observation reopens the question; absent it, the
+disposition stands. Settled-by-decision (council), cheaper to reopen than a
+settled-by-evidence null.
