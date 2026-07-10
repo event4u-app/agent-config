@@ -241,4 +241,4 @@ or scheduled for removal — never an unlabeled recommendation.
 - **Resolved when:** the harness completes a paired vanilla-vs-essential run
   on a non-Claude host with the deterministic scorer.
 
-<!-- Deferred items migrated to agents/roadmaps/road-to-discipline-profile-tiering-followup.md on 2026-07-07 -->
+<!-- Deferred items migrated to agents/roadmaps/later/road-to-discipline-profile-tiering-followup.md on 2026-07-07 -->

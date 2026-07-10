@@ -112,6 +112,22 @@
 Residual of the full package over `rules-kernel-dc`: Δ=+0.083, Wilcoxon p=0.37
 (only 2 discordant pairs) — **not significant**.
 
+### `full` discipline-tier disposition (council 2026-07-10)
+
+The `full` tier (~11.7×) stays **experimental, opt-in only, never surfaced as a
+recommendation**. Council (claude-sonnet-4-5 + gpt-4o, 2-round debate,
+2026-07-10) converged on **keep-and-relabel over drop**: round 1 favoured
+dropping `full`, but the rebuttal round reversed it — `p=0.37` is *absence of
+evidence*, not *evidence of absence* (an underpowered n=24 compounded by an
+`essential` ceiling effect), and removing an enum value is an **irreversible
+breaking change** for anyone pinning the tier string. An experimental opt-in
+does not violate "measured, not asserted"; an unlabeled *recommendation* would.
+**Revisit-if (drop only when):** a high-powered Claude sweep (n≥100,
+ceiling-adjusted) shows `p>0.20 AND effect <5%` **and** an open-source-host
+adapter sweep returns a null — i.e. `full` is shown *actively* useless, not
+merely unproven. Until then the experimental label stands everywhere `full` is
+documented.
+
 Three findings:
 
 1. **~95% of the lift survives at ~3× cost.** The kernel + `downstream-changes`
