@@ -88,6 +88,28 @@ redesign.
 - Treating an internal "honesty gate" or "stub" concern as licence to redesign the UI.
 - Re-running a redesign after the user already said "match the prototype".
 
+## Surgical visual edits
+
+A request to change one visual thing — a colour, a label, a single element — is
+a **targeted edit**, not a redesign licence. Apply the same
+[`minimal-safe-diff`](minimal-safe-diff.md) discipline to design work that
+backend edits have always owed.
+
+- **Change only the semantic target.** Preserve the surrounding layout,
+  spacing, typography, dimensions, content, animation, and interaction states.
+  Do not rewrite the component, reflow the section, or "modernise" neighbours
+  while you are in there. (fixtures: `daf-edit-preservation`, `daf-unwanted-variations`.)
+- **A broader redesign needs an explicit trigger.** Only phrases like *"new
+  direction"*, *"from scratch"*, *"make it feel premium"*, *"rework the flow"*,
+  or *"give me variations / options"* license a from-scratch rework. Absent such
+  a phrase, a "fix / change / update the X" request is surgical — when unsure
+  which, ask ([`ask-when-uncertain`](ask-when-uncertain.md)). (fixture: `daf-redesign-trigger`.)
+- **Preserve stable anchors.** Where the host exposes DOM/comment metadata, keep
+  comment anchors and screen labels intact so the edit stays locatable. Where
+  the host has no such surface, preserve stable semantic anchors already present
+  in source comments / `data-*` attributes — never strip them, and do not invent
+  new ones.
+
 ## See also
 
 - [`brand-source-of-truth`](brand-source-of-truth.md) / [`brand-consistency`](brand-consistency.md) — same precedence shape, for registered brand tokens.

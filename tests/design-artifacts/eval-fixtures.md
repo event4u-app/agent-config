@@ -69,6 +69,19 @@ the criteria are the contract.
   unrequested alternates or redesign neighbouring sections. Variation is
   produced only when asked. (Inverse of `daf-requested-variations`.)
 
+### daf-redesign-trigger
+- **primitive:** `static_inspect`
+- **lifecycle stage:** targeted edit vs new design (branch selection)
+- **scenario:** Two requests on the same existing component: (a) "change the CTA
+  colour to green"; (b) "give this component a new direction, make it feel
+  premium".
+- **pass:** (a) is a **surgical** edit — only the colour changes, everything
+  else preserved; the agent does not rewrite the whole component for a one-line
+  change. (b) is a **broader redesign** because it carries an explicit
+  redesign-trigger phrase. The agent distinguishes the two by the presence of a
+  redesign trigger, not by rewriting on every edit. Regression witness for the
+  surgical-edit rule (`design-fidelity` § Surgical visual edits).
+
 ### daf-overlapping-text
 - **primitive:** `screenshot` (degrade: `static_inspect` of the CSS box model)
 - **lifecycle stage:** verify render/responsive
