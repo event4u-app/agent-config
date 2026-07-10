@@ -123,7 +123,8 @@ Orchestration telemetry (YYYY-MM, N dispatches):
 **Quality × cost pairing rule (council verdict):** the savings figure never
 renders without the quality columns. `first_pass_success_rate` and
 `escalation_rate` aggregate over lines carrying the `first_pass_success` /
-`escalated` booleans (see `orchestration-telemetry.md`); with ≥ 20 such lines
+`escalated` booleans (definitions: `orchestration-telemetry.md`
+§ Operationalization); with ≥ 20 such lines
 in the window the real rates render, below 20 render `n/a (n=<count>)`
 alongside the savings. `src/scripts/orchestration_savings_report.ts`
 implements this pairing — prefer running it over hand-summarizing.
