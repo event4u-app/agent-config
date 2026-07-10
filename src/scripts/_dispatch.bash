@@ -167,6 +167,12 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   mcp:run                    Run the built-in MCP server over stdio
                              (requires `mcp:setup` first; see docs/mcp-server.md)
                              (experimental — beta gates: docs/contracts/mcp-beta-criteria.md)
+  affected                   Show artefacts related to <artefact> via the discovery
+                             relation-graph (relation-filtered BFS). Flags: --depth N
+  graph-explain              Seed on a <concept>, expand 2 hops over the discovery
+                             relation-graph with a node budget. Flags: --budget N
+  benchmark                  Report context-token reduction vs the full always-loaded
+                             projection (from the pinned token baseline). Flags: --format
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
@@ -428,6 +434,24 @@ resolve_template_script() {
 cmd_mcp_render() {
   local script
   script="$(resolve_script "src/scripts/mcp_render.ts")"
+  exec_ts "$script" "$@"
+}
+
+cmd_affected() {
+  local script
+  script="$(resolve_script "src/scripts/discovery_graph.ts")"
+  exec_ts "$script" affected "$@"
+}
+
+cmd_graph_explain() {
+  local script
+  script="$(resolve_script "src/scripts/discovery_graph.ts")"
+  exec_ts "$script" explain "$@"
+}
+
+cmd_benchmark() {
+  local script
+  script="$(resolve_script "src/scripts/benchmark.ts")"
   exec_ts "$script" "$@"
 }
 
@@ -1031,6 +1055,9 @@ main() {
     mcp:setup)               cmd_mcp_setup "$@" ;;
     mcp:run)                 cmd_mcp_run "$@" ;;
     use)                     cmd_use "$@" ;;
+    affected)                cmd_affected "$@" ;;
+    graph-explain)           cmd_graph_explain "$@" ;;
+    benchmark)               cmd_benchmark "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
