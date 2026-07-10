@@ -262,6 +262,26 @@ artifact drafting, council enablement), not safety.
 
 On halt: stop, surface state, do **not** auto-fix outside the failing step.
 
+### Forbidden non-halt reasons — agent-invented cautions
+
+The halt list above is **exhaustive**. An agent running `process-full` (or any
+wrapper) must **never** stop the run for a reason it invented that is not on
+that list. In particular these are NOT halt conditions and stopping for them is
+a violation of the command and the user's will:
+
+- "running low on context / token budget" — keep landing complete steps until
+  context actually runs out; never announce a boundary-stop by choice.
+- "quality would degrade / this deserves a fresh focused run later"
+- "avoid a PR pile-up" / "let the open PRs merge first"
+- "this phase is large / touches a deep subsystem"
+- "phase-checkpoints mode, so I'll checkpoint and wait" — under `process-full`
+  a phase boundary emits a non-blocking status line and the run **continues**;
+  the stop-and-wait reading of `phase-checkpoints` applies only to
+  `process-phase`.
+
+If the work genuinely cannot continue, it will be because one of the five real
+halt conditions fired — surface THAT, not a manufactured caution.
+
 ### Non-halt — gating notes, "optional" tags
 
 The following are **authoring annotations**, never halt conditions. Do

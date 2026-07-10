@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `8.8.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 258
+- **artefacts**: 260
 
 ## Commands (130)
 
@@ -143,7 +143,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git.
 
-## Rules (61)
+## Rules (63)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -166,6 +166,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`domain-safety-disclaimer`** — Advisory content (legal, medical, financial, consulting) — matching 'not X advice' disclaimer; refuse diagnosis/dosage
 - **`domain-safety-pii`** — Drafts/logs/exports with real customer/candidate data — redact direct IDs, placeholders, flag quasi-ID re-identification
 - **`domain-safety-retention`** — Data retention — jurisdiction gap, longest floor, honor DSR/audit holds; never delete under inquiry
+- **`external-code-graph-interop`** — When the repo ships an external code-graph index (a graph.json-shaped artifact or a SCIP index), query IT first for codebase-structure questions — do not grep from scratch
 - **`external-reference-deep-dive`** — User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README
 - **`fast-path-marker-visibility`** — Low-impact council fast-path — surface the transparency marker verbatim as the reply opener
 - **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead
@@ -186,6 +187,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`package-ci-checks`** — Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
 - **`preservation-guard`** — Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss
+- **`question-not-instruction`** — A question is a request for an ANSWER, never authorization to act — answer first; never treat 'why…?' / 'can you…?' / 'what do you think?' as a green light to build, change, or execute
 - **`reviewer-awareness`** — Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary
 - **`roadmap-ci-steps-policy`** — Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline
 - **`roadmap-progress-sync`** — Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open

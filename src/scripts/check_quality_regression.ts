@@ -108,6 +108,57 @@ export function evaluatePair(
   return { id: task.id, winner, length_delta, winner_is_longer };
 }
 
+/**
+ * Cohen's Kappa — chance-corrected agreement between two raters over the same
+ * categorical labels (road-to-retrieval-substrate-hardening B7b). 1 = perfect,
+ * 0 = chance-level, <0 = worse than chance. `NaN` when there is no data.
+ */
+export function cohensKappa(labelsA: readonly string[], labelsB: readonly string[]): number {
+  const n = Math.min(labelsA.length, labelsB.length);
+  if (n === 0) return Number.NaN;
+  const cats = new Set<string>();
+  for (let i = 0; i < n; i++) {
+    cats.add(labelsA[i] as string);
+    cats.add(labelsB[i] as string);
+  }
+  let observedAgree = 0;
+  const countA = new Map<string, number>();
+  const countB = new Map<string, number>();
+  for (let i = 0; i < n; i++) {
+    const a = labelsA[i] as string;
+    const b = labelsB[i] as string;
+    if (a === b) observedAgree += 1;
+    countA.set(a, (countA.get(a) ?? 0) + 1);
+    countB.set(b, (countB.get(b) ?? 0) + 1);
+  }
+  const po = observedAgree / n;
+  let pe = 0;
+  for (const c of cats) pe += ((countA.get(c) ?? 0) / n) * ((countB.get(c) ?? 0) / n);
+  if (pe === 1) return 1; // both raters unanimous on one label → perfect by convention
+  return Math.round(((po - pe) / (1 - pe)) * 10000) / 10000;
+}
+
+/**
+ * Second-independent-judge validation: Cohen's Kappa over the two judges'
+ * per-pair winner labels (aligned by task id). A LOW kappa means the win-rate
+ * verdict rests on an unreliable grader — the trustworthiness gap the
+ * token-saving live run surfaced (33% judge-inconsistency), distinct from the
+ * effect-significance the Wilcoxon/McNemar gates already test.
+ */
+export function judgeKappa(resultsA: readonly PairResult[], resultsB: readonly PairResult[]): number {
+  const byIdB = new Map(resultsB.map((r) => [r.id, r.winner]));
+  const a: string[] = [];
+  const b: string[] = [];
+  for (const r of resultsA) {
+    const bw = byIdB.get(r.id);
+    if (bw !== undefined) {
+      a.push(r.winner);
+      b.push(bw);
+    }
+  }
+  return cohensKappa(a, b);
+}
+
 export interface QualityAggregate {
   total: number;
   thin_wins: number;

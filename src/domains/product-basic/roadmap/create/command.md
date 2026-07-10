@@ -233,6 +233,18 @@ Write the pick to frontmatter as `execution.mode:`
   and expensive as a mid-run ambiguity halt; pre-existing `[~]` items
   guarantee the archival gate interrupts the run.
   `lint_roadmap_complexity` warns on the same patterns as a backstop.
+- **Human-gate scan (ALL picks):** scan the drafted steps for human-gate
+  patterns (`user verifies/reviews/approves`, `manually check`,
+  `sign-off`, `wait for approval`, `ask the user`, "Review / Sign-off"
+  phases). Human checkpoints default to **zero** (template rule 22) —
+  rewrite each hit as an agent-verifiable check (a command, a targeted
+  test) **before saving**, or promote it to a structured `## Blockers`
+  entry: a **human gate** only when only a human can decide/authorize
+  (Hard-Floor authorization, billable spend, contested decision); an
+  **external dependency** becomes a blocker whose `Resolved when:`
+  names an agent-checkable status probe — never a human gate. Do not
+  author safety floors as steps — they fire at run time on their own.
+  `lint_roadmap_complexity` warns on the same patterns as a backstop.
 
 ### 11. Hand back — HARD STOP, never auto-offer execution
 

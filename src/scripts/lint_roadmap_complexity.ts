@@ -190,6 +190,9 @@ function lint_roadmap(
     _check_execution_mode(fm, problems);
     if (warnings) {
         _check_autonomous_authoring(text, fm, warnings);
+        _check_human_gate_steps(text, warnings);
+        _check_human_gate_phase_headings(text, warnings);
+        _check_human_gate_exit_criteria(text, warnings);
     }
     return problems;
 }
@@ -232,6 +235,127 @@ function _check_autonomous_authoring(text: string, fm: string, warnings: string[
                 );
                 break;
             }
+        }
+    }
+}
+
+// Human-gate step patterns (templates/roadmaps.md rule 22) — checkbox
+// steps that park work on a human instead of the agent. Steps are
+// agent-executable by default; genuinely user-clearable gates belong in
+// a structured `## Blockers` entry, agent-checkable verifications become
+// commands / targeted tests. Warnings never fail the lint; they fire for
+// every execution mode (an interactive roadmap with sprinkled human-check
+// steps is the same authoring bug, just slower to hurt).
+const HUMAN_GATE_STEP_PATS: Array<[RegExp, string]> = [
+    [
+        /\b(user|maintainer|human|operator|stakeholder|product owner) (verifies|reviews|approves|confirms|signs?[- ]off(?: on)?|inspects|validates)\b/i,
+        "'<human> verifies / reviews / approves …' step",
+    ],
+    [
+        /\bmanually (verify|review|check|test|confirm|inspect|validate)\b/i,
+        "'manually verify / check …' step",
+    ],
+    [
+        /\bwait for (the )?(user|maintainer|stakeholders?|approval|confirmation|review|feedback)\b/i,
+        "'wait for approval / user' step",
+    ],
+    [/\bask the (user|maintainer)\b/i, "'ask the user' step"],
+    [
+        /\b(get|obtain|request|await|collect) ((the|an?|final) )?((user|maintainer|stakeholder|product owner|team) )?(approval|confirmation|sign[- ]?off)\b/i,
+        "'obtain approval / sign-off' step",
+    ],
+    [/\bsign[- ]?off (from|by)\b/i, "'sign-off from <human>' step"],
+    [/\bhuman review (required|needed|gate)\b/i, "'human review required' step"],
+    [
+        /\b(confirm|check|verify|review|clarify) with the (user|maintainer)\b/i,
+        "'confirm with the user' step",
+    ],
+];
+
+// Human-gate phase headings (template rule 22) — a phase whose TITLE is
+// the human checkpoint ("## Phase 5 — Review / Sign-off", "## User
+// Acceptance"). Whole-heading match after an optional "Phase N" prefix,
+// so working headings ("## Review existing skills") never fire.
+const HUMAN_GATE_HEADING_PAT =
+    /^#{2,3}\s+(?:phase\s+\d+\s*(?:[—–:.-])?\s*)?(?:review(?:\s*(?:[/&+]|and)\s*sign[- ]?off)?|sign[- ]?off|approval|user\s+acceptance(?:\s+testing)?|manual\s+(?:verification|review|testing|qa)|human\s+(?:validation|review))\s*$/i;
+
+// Human-approval exit / acceptance criteria (template rule 22) — criteria
+// must be agent-decidable (exit code, file exists, test passes), never
+// "user approves" / "looks good". Applied inside Exit-criteria /
+// Acceptance blocks only.
+const HUMAN_GATE_CRITERIA_PAT =
+    /\b(user|maintainer|human|operator|stakeholder|product owner)\b[^\n]{0,60}\b(approv\w*|confirm\w*|sign[- ]?off|reviews)\b|\b(approval|confirmation|sign[- ]?off)\s+(from|by|received)\b|\blooks good\b/i;
+
+const EXIT_CRITERIA_OPENER_PAT = /^\s*(?:[-*]\s+)?\*{0,2}(exit criteria|acceptance(?: criteria)?)\*{0,2}\s*:?/i;
+
+const RULE22_HINT =
+    'templates/roadmaps.md rule 22: steps and criteria are agent-decidable; ' +
+    'replace with an agent-verifiable check (command / targeted test) or, ' +
+    'if only a human can decide/authorize, a structured ## Blockers entry';
+
+function _check_human_gate_steps(text: string, warnings: string[]): void {
+    for (const rawLine of text.split('\n')) {
+        if (!/^\s*-\s*\[ \]/.test(rawLine)) {
+            continue;
+        }
+        for (const [re, label] of HUMAN_GATE_STEP_PATS) {
+            if (re.test(rawLine)) {
+                warnings.push(
+                    `human-gate step (${label}): ` +
+                        `"${rawLine.trim().slice(0, 80)}" — ${RULE22_HINT}`,
+                );
+                break;
+            }
+        }
+    }
+}
+
+function _check_human_gate_phase_headings(text: string, warnings: string[]): void {
+    for (const rawLine of text.split('\n')) {
+        if (!rawLine.startsWith('#')) {
+            continue;
+        }
+        if (HUMAN_GATE_HEADING_PAT.test(rawLine)) {
+            warnings.push(
+                `human-gate phase heading: "${rawLine.trim().slice(0, 80)}" — ` +
+                    'a phase whose work only a human can finish blocks autonomous ' +
+                    `execution; ${RULE22_HINT}`,
+            );
+        }
+    }
+}
+
+function _check_human_gate_exit_criteria(text: string, warnings: string[]): void {
+    let inHeadingBlock = false;
+    let inInlineBlock = false;
+    for (const rawLine of text.split('\n')) {
+        const heading = /^#{1,6}\s+(.*)$/.exec(rawLine);
+        if (heading) {
+            inHeadingBlock = /\b(acceptance|exit criteria)\b/i.test(heading[1]!);
+            inInlineBlock = false;
+            continue;
+        }
+        if (rawLine.trim() === '') {
+            inInlineBlock = false;
+            continue;
+        }
+        const opener = EXIT_CRITERIA_OPENER_PAT.test(rawLine);
+        if (opener) {
+            inInlineBlock = true;
+        }
+        if (!inHeadingBlock && !inInlineBlock) {
+            continue;
+        }
+        // Open-checkbox lines are covered by _check_human_gate_steps;
+        // done/deferred/cancelled lines record history, not future gates.
+        if (/^\s*-\s*\[[ xX~-]\]/.test(rawLine)) {
+            continue;
+        }
+        if (HUMAN_GATE_CRITERIA_PAT.test(rawLine)) {
+            warnings.push(
+                `human-approval exit criterion: "${rawLine.trim().slice(0, 80)}" — ` +
+                    `criteria must be agent-decidable; ${RULE22_HINT}`,
+            );
         }
     }
 }
