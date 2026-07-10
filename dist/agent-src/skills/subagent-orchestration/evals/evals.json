@@ -1,0 +1,42 @@
+{
+    "skill": "subagent-orchestration",
+    "_calibration": "Golden E2E task 2 (road-to-fable-feedback-5 Phase 4c; council 2026-07-10 ranked bad-lite-output delegation second-highest signal/cost). Exercises the never-adopt-unverified Iron Law (delegation-policy) + the escalation path + the telemetry pairing (first_pass_success/escalated per orchestration-telemetry.md § Operationalization). Deterministic `contains` assertions pin the telemetry vocabulary; rubric pins the verification behavior. Baseline: authored 2026-07-10, pending first host-scored run.",
+    "scenarios": [
+        {
+            "id": "sao-bad-lite-output-escalation",
+            "prompt": "You are orchestrating: a lite-tier subagent was dispatched to implement `slugify(title: string): string` (lowercase, spaces to hyphens, strip non-alphanumerics, collapse repeated hyphens). Its return is: `export function slugify(title: string) { return title.toLowerCase().replace(' ', '-'); }` with no tests. Process this return per the orchestration contract and record the dispatch telemetry.",
+            "assertions": [
+                {
+                    "kind": "contains",
+                    "value": "first_pass_success"
+                },
+                {
+                    "kind": "contains",
+                    "value": "escalated"
+                },
+                {
+                    "kind": "rubric",
+                    "criterion": "The return is NOT adopted unverified: verification runs against the stated spec and catches at least two planted defects (String.replace with a string only replaces the FIRST space; non-alphanumerics are not stripped; repeated hyphens are not collapsed; no tests). The orchestrator never merges the defective return as-is."
+                },
+                {
+                    "kind": "rubric",
+                    "criterion": "After the verification failure the slice is re-dispatched on a higher tier (or corrected with the failure fed back), and the telemetry records escalated=true and first_pass_success=false per the operationalization table (business-logic rework counts as rework; formatting would not). The final adopted output satisfies the full spec."
+                }
+            ]
+        },
+        {
+            "id": "sao-good-return-no-spurious-escalation",
+            "prompt": "You are orchestrating: a lite-tier subagent was dispatched to rename the constant `MAX_RETRIES` to `MAX_ATTEMPTS` across a 3-file module. Its return is a diff renaming all 7 occurrences, all references updated, tests still green. Process this return per the orchestration contract and record the dispatch telemetry.",
+            "assertions": [
+                {
+                    "kind": "contains",
+                    "value": "first_pass_success"
+                },
+                {
+                    "kind": "rubric",
+                    "criterion": "Negative control: the clean return is verified and adopted WITHOUT rework or escalation — telemetry records first_pass_success=true and escalated=false. No spurious findings are invented to justify a re-dispatch."
+                }
+            ]
+        }
+    ]
+}

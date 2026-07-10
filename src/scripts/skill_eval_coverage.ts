@@ -26,6 +26,12 @@
  *                  drops below the pinned floor (internal/evals/coverage-floor.json).
  *                  A missing floor file is treated as an all-zero floor
  *                  (bootstrap-inert: never fails before the first --write-floor).
+ *                  ALSO enforces the tier floor (road-to-fable-feedback-5
+ *                  Phase 4a, council 2026-07-10): every `priority`-tier skill
+ *                  (rich + default-surface + router) MUST carry a behavioural
+ *                  evals.json, unless exempted WITH a reason in
+ *                  internal/evals/tier-floor-exemptions.json. No silent
+ *                  exemptions — the bright line replaces weighted scoring.
  *   --write-floor  pin the current coverage as the new floor. Maintainer action
  *                  after authoring evals — the ratchet only ever rises.
  *
@@ -47,6 +53,7 @@ export interface CoverageOptions {
     skillsDir?: string;
     profilesDir?: string;
     floorPath?: string;
+    exemptionsPath?: string;
 }
 
 export interface TierCoverage {
@@ -222,6 +229,52 @@ export function writeFloor(opts: CoverageOptions = {}): CoverageReport {
     return report;
 }
 
+export function _exemptionsPath(opts: CoverageOptions = {}): string {
+    return (
+        opts.exemptionsPath ??
+        path.join(REPO_ROOT, 'internal', 'evals', 'tier-floor-exemptions.json')
+    );
+}
+
+function _readExemptions(p: string): Record<string, string> {
+    try {
+        const raw = JSON.parse(fs.readFileSync(p, 'utf-8')) as {
+            exemptions?: Record<string, unknown>;
+        };
+        const out: Record<string, string> = {};
+        for (const [k, v] of Object.entries(raw.exemptions ?? {})) {
+            if (typeof v === 'string' && v.trim().length > 0) out[k] = v;
+        }
+        return out;
+    } catch {
+        return {};
+    }
+}
+
+/**
+ * Tier floor: every priority-tier skill (rich + default-surface + router)
+ * must carry evals.json, unless exempted with a reason. Stale exemptions
+ * (exempted but now covered, or no longer priority) are reported so the
+ * list cannot silently accumulate.
+ */
+export function checkTierFloor(opts: CoverageOptions = {}): {
+    ok: boolean;
+    violations: string[];
+    stale: string[];
+} {
+    const report = computeCoverage(opts);
+    const exemptions = _readExemptions(_exemptionsPath(opts));
+    const uncovered = report.tiers.priority.uncovered;
+    const violations = uncovered
+        .filter((n) => !(n in exemptions))
+        .map((n) => `priority-tier skill '${n}' has no evals/evals.json and no exemption`);
+    const uncoveredSet = new Set(uncovered);
+    const stale = Object.keys(exemptions)
+        .filter((n) => !uncoveredSet.has(n))
+        .map((n) => `exemption for '${n}' is stale (covered or no longer priority-tier)`);
+    return { ok: violations.length === 0, violations, stale };
+}
+
 /** Ratchet: current coverage must be >= floor, overall and per tier. */
 export function checkRatchet(opts: CoverageOptions = {}): { ok: boolean; regressions: string[] } {
     const report = computeCoverage(opts);
@@ -281,12 +334,27 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     if (argv.includes('--check')) {
         const { ok, regressions } = checkRatchet();
-        if (!ok) {
-            process.stdout.write('❌  eval-coverage ratchet regressed:\n');
-            for (const r of regressions) process.stdout.write(`    - ${r}\n`);
+        const floor = checkTierFloor();
+        if (!ok || !floor.ok) {
+            if (!ok) {
+                process.stdout.write('❌  eval-coverage ratchet regressed:\n');
+                for (const r of regressions) process.stdout.write(`    - ${r}\n`);
+            }
+            if (!floor.ok) {
+                process.stdout.write('❌  priority-tier eval floor violated:\n');
+                for (const v of floor.violations) process.stdout.write(`    - ${v}\n`);
+                process.stdout.write(
+                    '    Author a behavioural evals.json, or add an exemption WITH a reason\n' +
+                        '    to internal/evals/tier-floor-exemptions.json.\n',
+                );
+            }
             return 1;
         }
+        for (const s of floor.stale) {
+            process.stdout.write(`⚠️  ${s}\n`);
+        }
         process.stdout.write('✅  eval-coverage ratchet: no regression.\n');
+        process.stdout.write('✅  priority-tier eval floor: every rich/default-surface/router skill covered or exempted-with-reason.\n');
         return 0;
     }
 
