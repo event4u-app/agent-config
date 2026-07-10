@@ -998,6 +998,124 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.10.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.9.0](https://github.com/event4u-app/agent-config/compare/8.8.0...8.9.0) (2026-07-10)
+
+### Features
+
+* **rules:** simplicity-first bans, own-orphan cleanup, goal-driven execution ([3e4de80](https://github.com/event4u-app/agent-config/commit/3e4de80f9d1f7ece41162503fbcd6309620bf331))
+* **design:** design-artifact-fidelity Phase 0 — verification capability + eval baseline ([da9ff3a](https://github.com/event4u-app/agent-config/commit/da9ff3a41381e6ce0e749a74fd499de28b3ee7ea))
+* **kernel:** re-land direct-answers no-duration + never-cite-the-rule (#844 content lost from main) ([2c46e7f](https://github.com/event4u-app/agent-config/commit/2c46e7f3b194ad2179b92307939d588cdb3971f3))
+* **lint:** fail skills that claim a Claude Code built-in name ([4c0cd39](https://github.com/event4u-app/agent-config/commit/4c0cd39b9a0bf604e436bbc80327b0bddf26b9e3))
+* **install:** withhold Claude Code built-in names from /name projections ([6dcba71](https://github.com/event4u-app/agent-config/commit/6dcba71bc2e5660a00c3dd7106ece65754c71633))
+* **kernel:** re-land action-authority sharpening (#840 content lost from main) ([13f244c](https://github.com/event4u-app/agent-config/commit/13f244c9bcb5d92641e5c87e3964c5d4212c8b46))
+* **domain-soundness:** deterministic domain-truth fixtures + scorer + candidate run ([dfb27a2](https://github.com/event4u-app/agent-config/commit/dfb27a2e8f1871f436bac19446d76c569f33e3c6))
+* **execution:** amend-trap, tool-tier ladder, disconfirmation search, anti-over-engineering, authoring guidelines (P2-P6) ([2e7d4d2](https://github.com/event4u-app/agent-config/commit/2e7d4d2a6210672289a50441295f84e21f4f442a))
+* **design:** same-ramp contrast, componentization threshold, async-verifier, handoff template (P3/P4/P5) ([be49527](https://github.com/event4u-app/agent-config/commit/be49527050f235d9396c14f2fe077c3c38209798))
+* **design:** diagram-type routing + geometric pre-checks + embedded register (P1/P2/P4) ([32947b8](https://github.com/event4u-app/agent-config/commit/32947b8a63abc464edeec399929b3f5605b19ddb))
+* **handoff:** verbatim-first lossless template in agent-handoff (P4) ([76a5455](https://github.com/event4u-app/agent-config/commit/76a54557fb5c366b31b72e67d726a105de9e7a74))
+* **memory:** save-successes + reference-shape + verify-then-repair + derivability (P2/P3) ([d4c6e81](https://github.com/event4u-app/agent-config/commit/d4c6e810df365c8990ef9cf75f0289f970eb4a9a))
+* **orchestration:** worker-prompt contract in subagent-orchestration (P1) ([ba65867](https://github.com/event4u-app/agent-config/commit/ba65867f28273b97c16e7799a7c68d00bc16fccd))
+* **memory:** hostile-input write-guards at persist-time (P3) ([e08287b](https://github.com/event4u-app/agent-config/commit/e08287b663a56b4f6e85d0295f6229ca59cb77da))
+* **security:** found-instructions quarantine + injection-signal taxonomy (P1/P2) ([446909a](https://github.com/event4u-app/agent-config/commit/446909a007c2f7dbffee14adf32fc6cdcef9504e))
+* **lint:** cover human-gate phase headings and exit criteria; sharpen step patterns ([68c8738](https://github.com/event4u-app/agent-config/commit/68c8738d1ee10d5b433de02eaaaf3bf3f836b826))
+* **lint:** warn on human-gate checkbox steps in roadmap complexity lint ([64c5f6c](https://github.com/event4u-app/agent-config/commit/64c5f6cbbe5be69eaf4d84c523b6b6935a351ed9))
+* **knowledge:** document slicer (B8) + external code-graph interop rule (B9) ([c09bcb9](https://github.com/event4u-app/agent-config/commit/c09bcb994577f2ed87a19b7e11b617708bf60561))
+* **memory:** seed the curated corpus from the maintainer memory index ([2422f51](https://github.com/event4u-app/agent-config/commit/2422f51e4f07d5ab2b55ab5c9bf74b5950513957))
+* **bench:** self-measuring benchmark command + Cohen's Kappa judge (B7) ([58b9687](https://github.com/event4u-app/agent-config/commit/58b96878931ef976dce92dc333a966021d3b8e08))
+* **discovery:** stat-index primitive + lazy graph rebuild skip (B5a) ([04c34c6](https://github.com/event4u-app/agent-config/commit/04c34c65bc0b08331a9d8d2a1a9fae7ee20102c6))
+* **discovery:** artefact relation-graph + `affected`/`explain` verbs (B4) ([d9ffe0b](https://github.com/event4u-app/agent-config/commit/d9ffe0bff5f8326f4e077c9b27b7f604180d8242))
+* **memory:** merge learning-sidecar verdicts into retrieve() output (B3) ([46ddf98](https://github.com/event4u-app/agent-config/commit/46ddf98e915db50e6c4b75ef5dcf5ebc13b7c721))
+* **memory:** learning-sidecar aggregator — decay + corroboration + dead-ends (B3) ([11fc4a2](https://github.com/event4u-app/agent-config/commit/11fc4a28bf5e724eb09bf5eb07e66076ebfbc689))
+* **memory:** activate the lexical index in retrieve() above the tripwire (B2) ([6d6dbe8](https://github.com/event4u-app/agent-config/commit/6d6dbe8ae8153868c33fe6f867b953ceae375158))
+* **memory:** measure lexical ranking lift — the B2 ship-gate (proven) ([9f4feb9](https://github.com/event4u-app/agent-config/commit/9f4feb923a30f0462362ef1ae25cd3d482225247))
+* **memory:** add hand-rolled BM25 + trigram lexical index (B2) ([971c86e](https://github.com/event4u-app/agent-config/commit/971c86e982a7afc2ab28424195a7783f7ce1f1e9))
+* **lint:** add versioned-cache gate (B5b) ([5bfe14a](https://github.com/event4u-app/agent-config/commit/5bfe14a78e07b9eac130ee3b8e835080752d1424))
+* **memory:** add token_budget compact read surface to retrieve_v1 ([44b8c4c](https://github.com/event4u-app/agent-config/commit/44b8c4c8d6c4e014c5a1d91219fce57dfe60bfde))
+* **security:** sanitize floor on retrieval read-surfaces (B6) ([07802d6](https://github.com/event4u-app/agent-config/commit/07802d69a8ab501435b965a5a6aa9bf86d2004f7))
+* **orchestration:** modeled cost-% for the downshift rate win ([6a4ec50](https://github.com/event4u-app/agent-config/commit/6a4ec50350cf980fe17ba888957c37c615cc68ce))
+* **hooks:** pre-push changed-TypeScript static pass (typecheck + lint) ([640b789](https://github.com/event4u-app/agent-config/commit/640b789c76a2ac1637fa50fe3917557b7789f2a5))
+* **orchestration:** recorder that emits validated telemetry per dispatch ([12aa7b1](https://github.com/event4u-app/agent-config/commit/12aa7b131c7852734df85f920f079f5f1e01357b))
+* **second-brain:** retrieval-precision harness + store + pinned report ([350e9b7](https://github.com/event4u-app/agent-config/commit/350e9b7a3534cd3030272113a06818b3e384a278))
+* **security:** harden agentic-security rules + skills (Fable5 follow-ups) ([e6fdb23](https://github.com/event4u-app/agent-config/commit/e6fdb23bd919789374a3001a7c6d89170426907a))
+* **second-brain:** paired-run harness + pinned PASS report (Phase 2) ([85c9898](https://github.com/event4u-app/agent-config/commit/85c9898bcef8dfb2439096e38531b5d904233eb8))
+
+### Bug Fixes
+
+* **roadmap:** accept dotted sub-phase ids in PHASE_RE ([aaa54c3](https://github.com/event4u-app/agent-config/commit/aaa54c3ab7060b3e300bac99788325848400f954))
+* **skills:** mcp and code-review opt out of slash registration ([67d261a](https://github.com/event4u-app/agent-config/commit/67d261af0c06147ca3e771b3b6d57ceec34ede63))
+* **roadmap:** live-verify PR merge state before any in-flight/merged claim ([54ae7b0](https://github.com/event4u-app/agent-config/commit/54ae7b063a0bd641a931db423264ed0b8a4452f7))
+* **cli:** rename graph verb explain→graph-explain (collides with decision-chain explain); register verbs; recompile router ([8489858](https://github.com/event4u-app/agent-config/commit/84898580de0df92ec9f2f748d26c9a455c8c2468))
+* **rules:** assign new rules to the `meta` pack, not `core` (strict discovery) ([2a4d118](https://github.com/event4u-app/agent-config/commit/2a4d118fbacaf167d5a005803ef90e9524a7c7b5))
+* **roadmap:** harden /roadmap:process-full as law + add question-not-instruction rule ([b1eee65](https://github.com/event4u-app/agent-config/commit/b1eee65f0ff386b6461b72a39cae577b6582559f))
+* **memory:** align check_memory KNOWN_TYPES with the five write-side types ([1905648](https://github.com/event4u-app/agent-config/commit/1905648dabdfb0680ea1cf610bf43e8f07abda32))
+* **memory:** concrete summary type for measure_lexical_ranking (typecheck) ([475e7be](https://github.com/event4u-app/agent-config/commit/475e7be9af36b6fd7beff717502687f7a84a3e58))
+* **memory:** drop unused import + regenerate proof.md (CI) ([e415eb6](https://github.com/event4u-app/agent-config/commit/e415eb6184b697f1bb667872d6f1b8d08dea1ce6))
+* **second-brain:** restore proof § 3 heading + noUncheckedIndexedAccess guards ([b684a6c](https://github.com/event4u-app/agent-config/commit/b684a6cd1774dfd47d720d5be4cbe32ca854e213))
+* **verify:** require a changed-files static pass before pushing source ([ba3a9b5](https://github.com/event4u-app/agent-config/commit/ba3a9b5f467c5e4621637297366a4e58f84059b2))
+* **security:** post-review nits — through-line pack + FE-render greps + lint desc ([712a338](https://github.com/event4u-app/agent-config/commit/712a3389463453d01df19c421a310ed991a1fc9f))
+* **ci:** pin publish-npm to npm 11 for Node 20 compat ([4c0ed33](https://github.com/event4u-app/agent-config/commit/4c0ed33af0229b53e423a863d9e6946a49d08868))
+
+### Documentation
+
+* **contracts:** document the reserved host-name floor ([7ef51e9](https://github.com/event4u-app/agent-config/commit/7ef51e99d913f1d0e3ce48dd8caefc8804612ea5))
+* **roadmap:** flip execution-discipline non-kernel phases; counts + dashboard + hashes ([9da5da5](https://github.com/event4u-app/agent-config/commit/9da5da576c08f0eae3d7577079cd4f913a7f69ca))
+* **design:** reference-over-vendor pointer + close design-mechanism harvest (P6) ([e41f45c](https://github.com/event4u-app/agent-config/commit/e41f45cdc1297a6fa4293836b5a7a5cbf43a1c00))
+* **roadmap:** record drift-audit disposition (P5); flip + archive orchestration-memory harvest ([a6caca8](https://github.com/event4u-app/agent-config/commit/a6caca8cd5857be9a188ec5c704835e11921c16e))
+* **roadmap:** blocker sweep per template rule 22 — resolve 7 non-gates, unblock ci-native Phase 1 ([fabbbc3](https://github.com/event4u-app/agent-config/commit/fabbbc320dd65be51dc552ff12bde628ee7402a6))
+* **roadmap:** flip injection-authority Phases 1-3,5; sync hashes + dashboard ([0ca2310](https://github.com/event4u-app/agent-config/commit/0ca2310b0007c15f66ed4f95e5e1260b9b6b83be))
+* **contracts:** draft injected-block authenticity model (P5, proposal only) ([0738dad](https://github.com/event4u-app/agent-config/commit/0738dad234ef545c40d0294fdc47b2b116f2c7aa))
+* **roadmap:** separate external blockers from human gates; risk-based autonomous recommendation ([dc049e1](https://github.com/event4u-app/agent-config/commit/dc049e1fe68612367c576db9fae693abf04b1cc5))
+* **roadmap:** autonomy-first authoring — human gates are the exception ([c007ac7](https://github.com/event4u-app/agent-config/commit/c007ac7db79184805d2815ff21da0c4ba7858402))
+* **memory:** name the separator-recall limit in the retrieval scope + ADR-116 ([0c8a6f8](https://github.com/event4u-app/agent-config/commit/0c8a6f8a065347e8a6a4df8b08b319ce23a6f5b5))
+* sync counts (+2 rules), CLAIMS/proof, archive completed roadmap ([101c801](https://github.com/event4u-app/agent-config/commit/101c8015532f258671af28934048bb4049e16ed4))
+* **roadmap:** mark B3 display-merge done — Phase 3 complete ([3fa451a](https://github.com/event4u-app/agent-config/commit/3fa451aff07a9d1309e594614cef5cd1868b6e15))
+* **roadmap:** mark B3 aggregator done (Phase 3 checkbox 1) ([43ba766](https://github.com/event4u-app/agent-config/commit/43ba76606659310d529cbb73b1ad1e1539f6e2fb))
+* **roadmap:** mark B2 activation done — Phase 2 complete ([89f6ae4](https://github.com/event4u-app/agent-config/commit/89f6ae448123e8a633e4e9f990ca0bae442f045c))
+* **memory:** record ADR-061 <-> FTS5 resolution for retrieval ranking (B2) ([0e54680](https://github.com/event4u-app/agent-config/commit/0e546807489e9e8c0c68e8db45fe661a8e3b1790))
+* **roadmap:** resolve retrieval-substrate design council pass; promote to ready ([9194898](https://github.com/event4u-app/agent-config/commit/9194898cfa0b80f2c1bd5f4b3783eaec7337c037))
+* **roadmap:** draft retrieval-substrate hardening (source-anonymous borrow) ([708ac89](https://github.com/event4u-app/agent-config/commit/708ac89d930301fbf9880e59908552d2e8b1d175))
+* **orchestration:** document dispatch_tokens + session_tier telemetry fields ([f59562a](https://github.com/event4u-app/agent-config/commit/f59562a598c610a42a16fd1ced4dfa769eab2f15))
+* **token-saving:** run the live thin-vs-eager judge — honest INCONCLUSIVE ([3ad161b](https://github.com/event4u-app/agent-config/commit/3ad161b104c1a037b22774738e9545f4b65cc0ca))
+* **claims:** repoint hidden-instruction claim to the release gate ([a41815d](https://github.com/event4u-app/agent-config/commit/a41815db830ba90e5daaa512f6b55b6ee8be4f81))
+* **orchestration:** wire the recorder into the emit procedure + delegation-policy ([69042ad](https://github.com/event4u-app/agent-config/commit/69042ad1568bd9e16a520e63c91744cd385567a1))
+* **proof:** regenerate proof page for the new hidden-instruction claim ([45f5a7a](https://github.com/event4u-app/agent-config/commit/45f5a7a106c4c5c5b3b003ed3c3fd8e6be4f8425))
+* **claims:** bind the hidden-instruction CI scan to the claims ledger ([55fe74e](https://github.com/event4u-app/agent-config/commit/55fe74ed2122959d465b9fcc4f2fc6daffd30445))
+* **second-brain:** publish the retrieval-precision result across the surfaces ([3ee930a](https://github.com/event4u-app/agent-config/commit/3ee930a4bc61e3f1c01c7a02b204099f96042e2a))
+* **frontier-quality:** Phase 0 metrics + provenance + contract + pilot proposal ([0e738fb](https://github.com/event4u-app/agent-config/commit/0e738fb32a4645f499055940e386295b265fdc8d))
+* **second-brain:** publish the measured recall lift + decline the export ([8fbaeaf](https://github.com/event4u-app/agent-config/commit/8fbaeaf0fa8a361d9b469dad4d8046d677b4c9a7))
+
+### Refactoring
+
+* **skill:** extract topology hints from subagent-orchestration to context ([4918ef2](https://github.com/event4u-app/agent-config/commit/4918ef2372d7cb2c6e24a71ba9e3307946426899))
+
+### Tests
+
+* **memory:** land the Phase 0-pre substrate-validation foundations ([474df9a](https://github.com/event4u-app/agent-config/commit/474df9af95f8edd2ba10d6ba7ff88465a534d12d))
+
+### CI
+
+* **security:** fail-closed agent-security gate on the publish path ([f8934f7](https://github.com/event4u-app/agent-config/commit/f8934f739a4f27a11e3c0bd8df7c9943ddba519f))
+* **second-brain:** wire the retrieval-precision dry-run into ci + ci-strict ([da4ec36](https://github.com/event4u-app/agent-config/commit/da4ec36e7c84765203864cb9f8e99e62aaf85e53))
+* **security:** wire lint-agent-security into CI and scan dist/agent-src ([453095f](https://github.com/event4u-app/agent-config/commit/453095f28bcf9aaa9c9419872dc732571d9971e3))
+* **consistency:** trigger required check on any workflow change ([e629624](https://github.com/event4u-app/agent-config/commit/e629624644e33fa1926c763f8b1a05c730c0fcdc))
+
+### Chores
+
+* **roadmap:** add + close road-to-simplicity-and-goal-discipline ([026bf11](https://github.com/event4u-app/agent-config/commit/026bf1159e9af14cee1f76ccfa240d7f7b7076f4))
+* **roadmap:** close + archive execution-discipline-harvest (kernel content landed) ([49134d4](https://github.com/event4u-app/agent-config/commit/49134d4cb4178a7baa1cad8dbd38265b9c0d457f))
+* **roadmap:** close + archive injection-and-authority-harvest (kernel content landed) ([810df58](https://github.com/event4u-app/agent-config/commit/810df58e7b7525b781f3cf5f93a1b651a85927fc))
+* **install:** regenerate install bundle ([f167954](https://github.com/event4u-app/agent-config/commit/f1679547063d9cf6c9354c1d25d026f740445169))
+* **condense:** refresh stale hash for commands/optimize/project.md ([fa9c0ec](https://github.com/event4u-app/agent-config/commit/fa9c0ecb57653a6157a1eacdc8eba2fd77a357c5))
+* **condense:** project phases-4-7 rule/command/context edits into dist/agent-src ([7d727db](https://github.com/event4u-app/agent-config/commit/7d727db49522669d2aba3ac8e87cdbf5c9410898))
+* **tasks:** unify task test to include the vitest suite ([e0ca766](https://github.com/event4u-app/agent-config/commit/e0ca766bc7a15ebf17347ac246257d57c04bf63f))
+* **roadmap:** retrieval-substrate-hardening Phase 0 B6 done ([671f8d5](https://github.com/event4u-app/agent-config/commit/671f8d519a885bd93302d9962b3fc5c78469715a))
+* **roadmap:** record the inconclusive live judge run on token-saving Phase 0 ([2356ec8](https://github.com/event4u-app/agent-config/commit/2356ec88527366fe6122fdaeb71e0ff1284f364c))
+* **sync:** regenerate pack manifests after through-line pack move ([adde3de](https://github.com/event4u-app/agent-config/commit/adde3de8e94a7f03a6ebdc31e7837c0696b47209))
+* **roadmap:** frontier-quality Phase 0 authored (proposal, checkpoint pending) ([0912362](https://github.com/event4u-app/agent-config/commit/0912362aedf6a90ae122ad1ea4f167e741c40dae))
+* **roadmap:** close + archive second-brain-delta-proof (PASS) ([ec0909d](https://github.com/event4u-app/agent-config/commit/ec0909d78264d33e7ba71e6387ae553bd3494354))
+
+Tests: 7188 (+161 since 8.8.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
