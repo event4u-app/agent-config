@@ -114,6 +114,7 @@ Load only the frameworks the user's depth bought. Each framework follows the sam
 **L4 addition:**
 
 - **Cross-source comparison** ([`comparison-matrix`](../../../docs/guidelines/agent-infra/comparison-matrix.md)) — web-search 2–3 related sources, compare SCQA across sources, identify consensus vs divergence, synthesize integrated perspective.
+- **Disconfirmation + per-part grounding (pre-synthesis gate)** — run at least one search that tries to *falsify* the leading takeaway (rule alternatives in/out, not only confirm), and ground each part of the reading goal in a retrieved source before writing it. Distinct from [`verify-before-complete`](../../../src/rules/verify-before-complete.md) (completion evidence).
 
 ### Step 4: Synthesize by Goal
 

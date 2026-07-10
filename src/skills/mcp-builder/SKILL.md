@@ -111,3 +111,11 @@ Process: enumerate the tools, explore READ-ONLY data, draft 10 questions, **solv
 - Cross-linked: [`mcp`](../mcp/SKILL.md), [`testing-anti-patterns`](../testing-anti-patterns/SKILL.md), [`api-design`](../api-design/SKILL.md).
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `mcp-builder`).
 - Iron-Law floor: `verify-before-complete`, `tool-safety`, `skill-quality`.
+
+## Encode usage policy in the description
+
+Workflow sequencing, preconditions, ID/output provenance ("copy ids verbatim,
+never from memory"), a mandatory "why" intent field, and turn-end contracts
+belong INSIDE this artifact's description/frontmatter — where they fire at the
+decision point — not in always-on prose. See
+[`tool-description-as-policy`](../../../docs/guidelines/agent-infra/tool-description-as-policy.md).

@@ -92,6 +92,14 @@ Read {fields_path} to get all field definitions.
 6. Fresh-lookup-class fields (current status, versions, prices, dates)
    require a cited live source per `asking-and-brevity-examples § Volatile-fact
    freshness` — never fill from model memory.
+7. **Per-part grounding + disconfirmation (pre-write gate).** Before writing a
+   field, check each part of the request against what was actually retrieved —
+   no part is written unless a retrieved source grounds it. And run at least
+   one search that actively tries to **falsify** the leading hypothesis (rule
+   alternatives in or out), not only searches that confirm it. Distinct from
+   [`source-discovery-gate`](../../../../src/rules/source-discovery-gate.md)
+   (structural evidence) and [`verify-before-complete`](../../../../src/rules/verify-before-complete.md)
+   (completion evidence) — this is *research* evidence.
 
 ## Output path
 {output_path}

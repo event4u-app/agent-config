@@ -37,53 +37,57 @@ A command is **user-invoked** and carries `disable-model-invocation: true`.
 A skill is model-invoked via description routing. If both audiences apply,
 author as a skill and add a thin command that delegates to it.
 
-**A command must EARN a top-level slot** — only three justifications:
-**flow-entry**, **state-query**, **product-surface**. Else it's a skill.
-Check first: [`command-clusters` § Command justification](../../../docs/contracts/command-clusters.md#command-justification--a-command-must-earn-a-top-level-slot)
+**A command must EARN a top-level slot.** Only three justifications qualify:
+**flow-entry**, **state-query**, or **product-surface** — everything else is a
+skill. Check before authoring: [`command-clusters` § Command justification](../../../docs/contracts/command-clusters.md#command-justification--a-command-must-earn-a-top-level-slot)
 ([ADR-048](../../../docs/decisions/ADR-048-command-justification-rule.md)).
 
-**Categorize at creation (checklist).** New top-level command → declare
-`category:` (schema enum `flow-entry | state-query | product-surface`):
+**Categorize at creation (checklist).** When you author a NEW top-level command,
+declare its justification as a `category:` in the frontmatter — the schema enum
+is `flow-entry | state-query | product-surface`:
 
-- [ ] **flow-entry** — daily work start (`work`, `git-commit`, `review-changes`).
-- [ ] **state-query** — read-only check (`agent-status`, `project-health`, `profile`).
-- [ ] **product-surface** — deliberately-started feature (`council`, `research`, `roadmap`).
-- [ ] **fits none → it's a skill.** Don't add the command.
-- [ ] **ambiguous?** Omit `category:` + note why — OPTIONAL (validate-when-present);
-  deferring is intentional.
+- [ ] **flow-entry** — a daily work starting point the user TYPES to begin
+  (`work`, `git-commit`, `review-changes`).
+- [ ] **state-query** — a read-only check (`agent-status`, `project-health`, `profile`).
+- [ ] **product-surface** — a feature started deliberately (`council`, `research`, `roadmap`).
+- [ ] **fits none → it is a skill.** Don't add the command; author a skill.
+- [ ] **genuinely ambiguous?** Omit `category:` and note why — `category:` is
+  OPTIONAL (validate-when-present); deferring is intentional, not forgotten.
 
-Sub-commands inherit the parent cluster's category — leave `category:` off them.
-Why optional + not yet blocking, + the upgrade trigger:
-[`command-category-governance`](../../../docs/contracts/command-category-governance.md).
+Sub-commands (`council:debate`) inherit the parent cluster's category — leave
+`category:` off them. Why optional + not yet a blocking lint, and what triggers
+the upgrade: [`command-category-governance`](../../../docs/contracts/command-category-governance.md).
 
 ## Commands ARE Claude skills (projection reality)
 
-Every `src/agent-src/commands/{name}.md` projects to
-`.claude/skills/{slug}/SKILL.md` via `scripts/condense.ts`
+Every command in `src/agent-src/commands/{name}.md` is projected
+into `.claude/skills/{slug}/SKILL.md` by `scripts/condense.ts`
 (`generate_claude_commands`). Nested commands flatten with `-`
-(`council/default.md` → `council-default`). Skills + commands share the
+(`council/default.md` → `council-default`). Skills and commands share the
 **same `.claude/skills/` namespace** — Claude does not distinguish them.
 
-Authoring consequences:
+Consequences for authoring:
 
-* Frontmatter `description` is Claude's **routing surface**. Generic
-  phrasing → undertriggering even with `disable-model-invocation: true`,
-  because the in-host suggester, fuzzy search, and any tooling that
-  scans `.claude/skills/` ranks by description match.
-* `disable-model-invocation: true` blocks **automatic** invocation only.
-  It does NOT remove the command from discovery surfaces. Weak
-  description = invisible to the suggester even when intent matches.
-* Trigger phrasing follows the same Iron Law as skill descriptions:
+* The frontmatter `description` is the **routing surface** Claude reads.
+  Polite or generic phrasing causes undertriggering even with
+  `disable-model-invocation: true` set, because the in-host command
+  suggester, fuzzy search, and any tooling that scans `.claude/skills/`
+  rank by description match.
+* `disable-model-invocation: true` blocks **automatic** invocation. It
+  does NOT remove the command from discovery surfaces. A weak description
+  means the command is invisible to the suggester even when the user's
+  intent matches.
+* Trigger phrasing must follow the same Iron Law as skill descriptions:
   name 2+ trigger classes (domains, symptoms, user phrasing), end with
   the `... even when the user just says ...` tail, ≤ 200 chars. See
   `skill-writing` § 1b for the canonical before/after.
-* `suggestion.trigger_description` / `suggestion.trigger_context` are
-  **separate** from frontmatter `description` — they drive the in-host
-  suggester (`command-suggestion-policy`), not Claude's skill router.
-  Both matter, both must be precise.
+* The `suggestion.trigger_description` and `suggestion.trigger_context`
+  blocks are **separate** from the frontmatter `description` — they
+  drive the in-host suggester (`command-suggestion-policy`), not Claude's
+  skill router. Both matter, both must be precise.
 
-Bottom line: write the command's `description` as if a skill router
-will read it — because one will.
+Bottom line: write the command's `description` as if a skill router will
+read it — because one will.
 
 ## Procedure
 
@@ -205,9 +209,9 @@ multi-paragraph explanation, extract it into a skill and call it.
 ### 6. Governance baseline (when introducing a new linter check)
 
 **Advisory, reviewer-checked — no CI gate.** When the same PR adds a
-new check to `scripts/skill_linter.ts` (or strengthens an existing one)
-such that previously-clean commands now warn, the PR body MUST record
-the pre-existing violations on `main` in a Markdown table:
+new check to `scripts/skill_linter.ts` (or strengthens an existing
+one) such that previously-clean commands now warn, the PR body MUST
+record the pre-existing violations on `main` in a Markdown table:
 
 ```markdown
 ### Pre-existing baseline (informational)
@@ -217,10 +221,11 @@ the pre-existing violations on `main` in a Markdown table:
 | {new_code} | N | (a) genuine fix · (b) accept · (c) check too aggressive |
 ```
 
-Forward-only: the new check applies to **the file under review** and to
-**future** edits. The baseline table is informational so reviewers can
-spot intent (fix-now vs. backlog) without diffing the full lint output.
-See `agents/evidence/analysis/lint-warning-triage.md` for the 3-bucket reference.
+Forward-only: the new check applies to **the file under review** and
+to **future** edits. The baseline table is informational so reviewers
+can spot intent (fix-now vs. backlog) without diffing the full lint
+output. See `agents/evidence/analysis/lint-warning-triage.md` for the
+3-bucket reference.
 
 ## Output format
 
@@ -299,3 +304,11 @@ Good description (trigger-shaped, outcome-focused):
 Bad description (vague, no outcome):
 
 > "PR command"
+
+## Encode usage policy in the description
+
+Workflow sequencing, preconditions, ID/output provenance ("copy ids verbatim,
+never from memory"), a mandatory "why" intent field, and turn-end contracts
+belong INSIDE this artifact's description/frontmatter — where they fire at the
+decision point — not in always-on prose. See
+[`tool-description-as-policy`](../../../docs/guidelines/agent-infra/tool-description-as-policy.md).
