@@ -6,10 +6,10 @@
 
 ## Overall
 
-**151 / 362 steps done · 42%**
+**156 / 362 steps done · 43%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 14 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 7% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-command-structure-optimization.md](roadmaps/road-to-command-structure-optimization.md) | 6 | 28 | 1 | 23 | 2 | 2 | 0 | ██████████ 96% |
-| 4 | [road-to-design-artifact-fidelity.md](roadmaps/road-to-design-artifact-fidelity.md) | 8 | 39 | 35 | 4 | 0 | 0 | 0 | █░░░░░░░░░ 10% |
+| 4 | [road-to-design-artifact-fidelity.md](roadmaps/road-to-design-artifact-fidelity.md) | 8 | 39 | 30 | 9 | 0 | 0 | 0 | ██░░░░░░░░ 23% |
 | 5 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
 | 7 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
@@ -88,12 +88,12 @@ _2 blockers resolved._
 
 ### [road-to-design-artifact-fidelity.md](roadmaps/road-to-design-artifact-fidelity.md)
 
-**Road to design artifact fidelity — make visual work production-grade before it reaches the user** — 4 / 39 done (10%)
+**Road to design artifact fidelity — make visual work production-grade before it reaches the user** — 9 / 39 done (23%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Host capability, eval baseline, and rollout guardrails | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | Design artifact lifecycle contract | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Design artifact lifecycle contract | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Resource-first design context gate | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Surgical edit preservation rule | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Variation and canvas planning | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
