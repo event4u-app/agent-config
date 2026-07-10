@@ -37,6 +37,9 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
       to recover a partial run — see § 5).
 - [ ] You have read [`succession.md`](succession.md) if any secret-gated
       downstream (npm publish, cloud deploy) must succeed this release.
+- [ ] The release satisfies [`release-sizing.md`](contracts/release-sizing.md) —
+      one primary product goal, and a `Rollback:` line for every new /
+      substantially reworked subsystem (gate: `src/scripts/lint_changelog_rollback.ts`).
 
 ## 2. The pipeline — what `release.ts` does (9 steps)
 

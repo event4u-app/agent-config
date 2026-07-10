@@ -862,6 +862,16 @@ tasks:
     desc: Verify Iron Laws sit at the top of every rule file (H2, first 2 positions)
     cmd: ./scripts-run src/scripts/check_iron_law_prominence {{.QUIET_FLAG}}
 
+  check-rule-invariants:
+    silent: true
+    desc: Kernel semantic invariants — load-bearing clauses of the 9 kernel rules must survive in src + dist (tests/golden/invariants.json; guards the #840/#844 lost-merge-content class)
+    cmd: ./scripts-run src/scripts/check_rule_invariants
+
+  lint-changelog-rollback:
+    silent: true
+    desc: New minor/major CHANGELOG sections above the current version must carry a `Rollback:` line (docs/contracts/release-sizing.md)
+    cmd: ./scripts-run src/scripts/lint_changelog_rollback
+
   check-always-budget:
     silent: true
     desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
