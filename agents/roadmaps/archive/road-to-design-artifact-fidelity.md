@@ -216,37 +216,52 @@ as backend edits.
 
 ## Phase 4 — Variation and canvas planning
 
-- [ ] Add a `design-variation-planning` skill or extend `fe-design`: for
+- [x] Add a design-variation-planning skill or extend `fe-design`: for
       ambiguous creative work, decide whether to ask about variation count and
       axes (visual direction, UX flow, interaction, copy, density, brand
       strictness). For clear implementation tasks, proceed.
-- [ ] Define variation floors: two to three meaningfully different options
+      <!-- done 2026-07-10: EXTENDED fe-design "## Presenting variants" (no new
+      skill — the roadmap goal keeps surface minimal; design-variations already
+      owns the mechanics). New "Decide whether to vary (ask only if ambiguous)"
+      bullet with the 6 axes; clear implementation → proceed with one answer. -->
+- [x] Define variation floors: two to three meaningfully different options
       when the user asks for exploration; no decorative option spam when the
       user asks for one production answer.
-- [ ] Add a canvas/exploration contract for side-by-side concepts: stable
+      <!-- done: "Variation floors" bullet — 2–3 meaningfully different
+      decisions on explore; exactly one on a production answer; no option spam. -->
+- [x] Add a canvas/exploration contract for side-by-side concepts: stable
       frame labels, no nested cards, generous spacing, and export-safe
       coordinates for tools that support canvases. Keep it host-neutral.
-- [ ] Add cost/UX tie-breakers: ask only when the variation axis changes the
+      <!-- done: "Canvas / exploration contract (host-neutral)" bullet — stable
+      frame labels, flat frames, generous spacing, export-safe coords on canvas
+      tools; same labelled-frames shape with or without a real canvas. -->
+- [x] Add cost/UX tie-breakers: ask only when the variation axis changes the
       work materially; otherwise choose a strong default and document the axis
       used in the handoff.
-- [ ] Add trigger evals distinguishing "give me three directions" from
+      <!-- done: "Cost / UX tie-breaker" bullet — ask only when the axis changes
+      the work materially; else strong default + document the axis in handoff. -->
+- [x] Add trigger evals distinguishing "give me three directions" from
       "implement the selected direction".
+      <!-- done: src/skills/fe-design/evals/triggers.json — 5 should-trigger
+      (explore/variation-planning + pattern/flow-planning) + 5 should-not
+      (implement-the-selected-design, existing-ui-audit, surgical edit,
+      backend, non-UI). -->
 
 **Exit:** agents stop producing one generic design when exploration was asked,
 and stop producing unnecessary options when execution was asked.
 
 ## Phase 5 — Asset and iconography discipline
 
-- [ ] Add a design asset rule: copy or reference project-owned assets through
+- [x] Add a design asset rule: copy or reference project-owned assets through
       the target project's accepted asset path; do not hotlink design-system
       internals or bulk-copy huge folders; do not hand-roll icons when an icon
       library or brand asset exists.
-- [ ] Add iconography floor: inspect existing icon system first; match stroke,
+- [x] Add iconography floor: inspect existing icon system first; match stroke,
       fill, size, and metaphor; flag substitutions when exact assets are absent.
-- [ ] Add image-use floor for visual pages/decks: use actual product/place/
+- [x] Add image-use floor for visual pages/decks: use actual product/place/
       object/state imagery where inspection matters; avoid decorative
       atmosphere as the primary proof.
-- [ ] Add tests/evals for known failure modes: emoji-as-icon in serious UI,
+- [x] Add tests/evals for known failure modes: emoji-as-icon in serious UI,
       fake SVG logo, hardcoded external asset URL, and invented product
       screenshot.
 
@@ -255,18 +270,18 @@ fabricated brand evidence.
 
 ## Phase 6 — Render verification hard gate with honest degradation
 
-- [ ] Create a design-specific verification checklist: open artifact, check
+- [x] Create a design-specific verification checklist: open artifact, check
       console/load errors, inspect desktop and mobile viewport, verify text
       fit/no overlap, verify referenced assets decode, verify key interaction
       state, and capture evidence only when the host supports it.
-- [ ] Wire the checklist into `playwright-testing` / `design-review` so design
+- [x] Wire the checklist into `playwright-testing` / `design-review` so design
       tasks cannot claim completion without render evidence when render
       capability exists. For static docs or decks, use the relevant
       presentation/PDF/document verification skill.
-- [ ] Add failure language: if verification cannot run because no browser or
+- [x] Add failure language: if verification cannot run because no browser or
       renderer exists, report that plainly and keep the completion claim
       scoped to what was checked.
-- [ ] Add at least six golden tasks covering nonblank canvas, responsive fit,
+- [x] Add at least six golden tasks covering nonblank canvas, responsive fit,
       missing image, overlapping text, broken interaction, and print/deck
       export readiness.
 
@@ -275,13 +290,13 @@ verification limitation.
 
 ## Phase 7 — Design-system extraction floor
 
-- [ ] Add a design-system extraction contract: root guide/manifest, token CSS
+- [x] Add a design-system extraction contract: root guide/manifest, token CSS
       or equivalent, typography/color/spacing/iconography foundations,
       component specimens, asset inventory, UI-kit screens, and starting
       points when appropriate.
-- [ ] Require specimen granularity: many small foundation cards beat one dense
+- [x] Require specimen granularity: many small foundation cards beat one dense
       dump; each specimen demonstrates a reusable sub-concept.
-- [ ] Add a handoff bundle pattern for developers: high-fidelity reference,
+- [x] Add a handoff bundle pattern for developers: high-fidelity reference,
       behavior notes, assets list, component mapping, responsive states, known
       caveats, and "prototype not production code" warning when applicable.
 
@@ -290,13 +305,13 @@ single prose style guide.
 
 ## Acceptance criteria
 
-- [ ] Host capability/degrade table exists before any hard verification gate.
-- [ ] `design-artifact-lifecycle` contract exists and is cited by the relevant
+- [x] Host capability/degrade table exists before any hard verification gate.
+- [x] `design-artifact-lifecycle` contract exists and is cited by the relevant
       design/frontend/document skills.
-- [ ] Small edit preservation, context gate, asset discipline, variation
+- [x] Small edit preservation, context gate, asset discipline, variation
       planning, and render verification have trigger evals.
-- [ ] Design verification failures produce actionable, user-visible caveats.
-- [ ] No generated projection is edited by hand.
+- [x] Design verification failures produce actionable, user-visible caveats.
+- [x] No generated projection is edited by hand.
 
 ## Blockers
 

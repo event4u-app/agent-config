@@ -13,6 +13,12 @@ packs:
 
 ## When to use
 
+> **Cross-surface handoff.** When this document consumes upstream work (research
+> → document, spreadsheet → report), read the handoff envelope from
+> [`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md#cross-surface-handoff-envelope):
+> trust `verification_already_done`, honour source restrictions, and don't
+> re-fetch what the source already grounded.
+
 Use this skill when:
 
 * User starts a substantial writing task — PRD, RFC, design doc, decision doc, technical spec, proposal
@@ -39,6 +45,27 @@ Move from a fuzzy ask to a complete document the user owns, by:
 * User explicitly wants a document (not a quick answer)
 * `save-file` and `str-replace-editor` available
 * Target path and filename agreed up front
+
+## Document format & export floor
+
+The document surface's floor (per
+[`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md)):
+
+- **Choose the format by intent.** Markdown vs `.docx` vs PDF follows what the
+  user will DO with it — when a named format is requested, produce THAT format
+  via the document tooling; never silently substitute markdown for a `.docx`
+  request. (fixture: `ssac-docx-requested-markdown-only`.)
+- **Preserve edit scope.** On an edit, change only what was asked and preserve
+  the rest of the document (mirrors
+  [`minimal-safe-diff`](../../rules/minimal-safe-diff.md)).
+- **Print/PDF preserves selectable text.** Never rasterize a text-heavy document
+  to an image-only PDF when browser print or native export keeps the text
+  selectable. (fixture: `ssac-pdf-screenshot-rasterized`.)
+- **Verify the output opens/exports.** Confirm the generated file opens /
+  round-trips
+  ([`design-artifact-verification`](../../../docs/contracts/design-artifact-verification.md));
+  where the format's tooling is absent, ship the source + say what could not be
+  verified rather than claiming a produced file.
 
 ## Procedure
 

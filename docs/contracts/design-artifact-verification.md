@@ -1,6 +1,6 @@
 # Design-Artifact Verification — Host-Capability & Degrade Contract
 
-Phase 0 substrate for [`road-to-design-artifact-fidelity`](../../agents/roadmaps/road-to-design-artifact-fidelity.md).
+Phase 0 substrate for `road-to-design-artifact-fidelity`.
 Design work is only production-grade if the agent **verifies the rendered
 artifact** — but a verification step the host cannot run must degrade honestly,
 never block the work or fake a green check.
@@ -77,6 +77,35 @@ When the needed primitive is `❌` (or a `⚠️` probe fails):
 4. **Never emit a fabricated verification claim** ("renders correctly", "no
    console errors") for a check that did not run — that is an invented fact
    ([`direct-answers`](../../src/rules/direct-answers.md) Iron Law 2).
+
+## Verification checklist
+
+Run before claiming a design artifact done. Each step is gated by the primitive
+it needs — a step whose primitive is absent is **skipped with a caveat**, never
+faked (§ Honest-degrade). "Looks good" is not a verification result.
+
+1. **Open the artifact** (`local_browser` / `playwright` / `pdf_render` / `doc_export`) — it opens and paints; a static-only host inspects the source instead.
+2. **Console / load errors** (`console_inspect`) — no runtime errors or failed loads on open.
+3. **Desktop + mobile viewport** (`screenshot`) — inspect a desktop width and ~375px; no overflow / clipping.
+4. **Text fit / no overlap** (`screenshot`, degrade `static_inspect`) — no collisions or truncation at the target breakpoints.
+5. **Referenced assets decode** (`image_decode`) — every referenced image / font resolves and decodes (no broken `src`).
+6. **Key interaction state** (`playwright`) — the primary interaction (open / submit / toggle) behaves; description-only where unavailable.
+7. **Capture evidence only when supported** (`screenshot`) — attach a screenshot / diff when the host can; otherwise cite what was statically checked.
+
+**Completion contract.** A design task with render capability present cannot
+claim "done" without at least steps 1–5 as evidence. Where capability is absent
+(no browser / renderer), report that plainly (§ Rollback language) and keep the
+completion claim scoped to what was actually checked. The checklist is exercised
+by the verification golden tasks in
+[`eval-fixtures.md`](../../tests/design-artifacts/eval-fixtures.md)
+(`daf-nonblank-canvas`, `daf-mobile-fit`, `daf-missing-asset`,
+`daf-overlapping-text`, `daf-broken-interaction`, `daf-export-readback-failure`).
+
+Skills wire this in: [`playwright-testing`](../../src/skills/playwright-testing/SKILL.md)
+runs it when a browser primitive is present; [`design-review`](../../src/skills/design-review/SKILL.md)
+gates its verdict on it; static decks / documents use the deck / PDF / document
+verification path ([`html-deck`](../../src/skills/html-deck/SKILL.md),
+[`markitdown`](../../src/skills/markitdown/SKILL.md) readback).
 
 ## Staged rollout
 

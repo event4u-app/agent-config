@@ -256,11 +256,33 @@ Animate `transform` and `opacity` only. Why: these run on the GPU compositor thr
 
 ## Presenting variants
 
-This skill produces ONE refined solution. When the user wants multiple options
-to compare (or a live tweak panel over one design), hand off to
-[`design-variations`](../design-variations/SKILL.md) — it owns the
-basic→bold variation method and the single-file tweak-panel mechanics
-(CSS custom properties + floating "Tweaks" panel + `localStorage`).
+This skill produces ONE refined solution by default. **Plan the variation
+decision before generating** — do not reflexively emit one generic design when
+exploration was asked, nor spam options when one production answer was asked.
+
+- **Decide whether to vary (ask only if ambiguous).** For ambiguous creative
+  work, decide the variation count and the axis that varies — visual direction,
+  UX flow, interaction model, copy, density, or brand strictness. Ask about
+  count + axis only when the choice changes the work materially; for a clear
+  implementation task, proceed with one answer. (fixture: `daf-requested-variations`.)
+- **Variation floors.** When the user asks to explore, produce **two to three
+  meaningfully different** options along the stated axis — different *decisions*,
+  not the same layout recoloured. When the user asks for one production answer,
+  produce one; no decorative option spam. (fixtures: `daf-requested-variations`,
+  `daf-unwanted-variations`.)
+- **Canvas / exploration contract (host-neutral).** Presenting side-by-side
+  concepts: give each a **stable frame label**, keep frames flat (no nested
+  cards), use generous spacing, and — on tools with a canvas — export-safe
+  coordinates so the layout survives export. Same labelled-frames shape whether
+  the host has a real canvas or just stacked sections.
+- **Cost / UX tie-breaker.** Ask about the axis only when it changes the work
+  materially; otherwise choose a strong default and **document the axis used in
+  the handoff** ("explored along visual-direction; density held constant").
+
+Hand off the actual variation **mechanics** — the basic→bold method and the
+single-file tweak-panel (CSS custom properties + floating "Tweaks" panel +
+`localStorage`) — to [`design-variations`](../design-variations/SKILL.md): this
+section owns the *planning decision*, that skill owns the *execution*.
 
 ## Cross-task design memory — read DESIGN.md / PRODUCT.md first
 

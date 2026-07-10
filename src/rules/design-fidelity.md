@@ -110,6 +110,24 @@ backend edits have always owed.
   in source comments / `data-*` attributes — never strip them, and do not invent
   new ones.
 
+## Asset & imagery discipline
+
+Visual artifacts carry **real assets or honest placeholders — never fabricated
+brand evidence**. The design-surface instance of the no-invented-facts floor.
+
+- **Copy owned assets through the project's accepted path.** Reference or copy
+  project-owned assets (logos, icons, fonts, images) via the target project's
+  asset directory/pipeline — never hotlink a design-system's internal URL, never
+  bulk-copy a huge source folder. (fixtures: `daf-missing-asset`, `daf-external-asset-url`.)
+- **Real imagery where inspection matters.** On visual pages/decks, use actual
+  product / place / object / state imagery where the image IS the proof (a
+  product screenshot, a real dashboard state). Decorative atmosphere is not proof
+  — never pass a stock-like or invented image off as the real product. An
+  invented product screenshot is fabricated evidence. (fixture: `daf-invented-screenshot`.)
+- **Icons follow the iconography floor** — no emoji-as-icon in serious UI, no
+  hand-rolled icon when a set exists; see
+  [`iconography`](../skills/iconography/SKILL.md) § Iconography floor.
+
 ## See also
 
 - [`brand-source-of-truth`](brand-source-of-truth.md) / [`brand-consistency`](brand-consistency.md) — same precedence shape, for registered brand tokens.

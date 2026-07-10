@@ -13,6 +13,11 @@ packs:
 
 ## When to use
 
+> **Design verification.** When exercising a UI artifact, run the
+> [design-artifact verification checklist](../../../docs/contracts/design-artifact-verification.md#verification-checklist)
+> (open → console/load → viewport → text-fit → assets → interaction) and capture
+> evidence; a design task with browser capability present is not "done" without it.
+
 Use this skill when:
 - Writing end-to-end tests with Playwright
 - Automating browser interactions for testing
@@ -182,6 +187,12 @@ jq '.suites[].specs[] | select(.tests[].results[].status=="failed")' pw.json
 # Scan trace logs for one selector
 rg --color=never 'getByRole.*Submit' test-results/
 ```
+
+**Run verification.** The test run's **exit code** is the pass/fail signal — `0`
+means every spec passed, non-zero means at least one failed. Read the **command
+output** (or the `--reporter=json` above) to **diagnose** the failing spec's
+**root cause**; do not blindly re-run hoping it turns green — a retry-until-pass
+is not a fix, and a flaky green hides the real defect.
 
 ## Avoiding flaky tests
 

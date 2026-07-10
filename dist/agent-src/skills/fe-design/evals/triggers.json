@@ -1,0 +1,47 @@
+{
+    "skill": "fe-design",
+    "last_eval": "2026-07-10",
+    "description": "5 should-trigger + 5 should-not-trigger queries for the variation & canvas planning layer (road-to-design-artifact-fidelity Phase 4). Should-trigger covers exploration / variation planning and UI-design decisions where fe-design plans BEFORE generating (give me directions, explore, plan the flow, pattern choice). Should-not-trigger covers near-misses that must NOT invoke design planning: pure implementation of an already-selected design (apply-step), inventorying existing UI (existing-ui-audit), a surgical one-line edit, and non-UI/backend work.",
+    "queries": [
+        {
+            "q": "give me three directions for the pricing page",
+            "trigger": true
+        },
+        {
+            "q": "explore a few visual directions for the dashboard before we commit",
+            "trigger": true
+        },
+        {
+            "q": "design the multi-step onboarding flow",
+            "trigger": true
+        },
+        {
+            "q": "should this filter be a modal or an inline panel?",
+            "trigger": true
+        },
+        {
+            "q": "plan the responsive layout for the settings screen",
+            "trigger": true
+        },
+        {
+            "q": "implement the selected checkout design in React exactly as approved",
+            "trigger": false
+        },
+        {
+            "q": "what form components do we already have in the codebase?",
+            "trigger": false
+        },
+        {
+            "q": "change the primary button colour to green",
+            "trigger": false
+        },
+        {
+            "q": "add a database index on orders.status",
+            "trigger": false
+        },
+        {
+            "q": "fix the failing unit test in the auth module",
+            "trigger": false
+        }
+    ]
+}

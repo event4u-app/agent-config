@@ -24,6 +24,12 @@ letterbox to any viewport. A deck is fixed-canvas media (default 1920×1080,
 
 ## When to use
 
+> **Cross-surface handoff.** A deck often consumes upstream analysis
+> (spreadsheet → deck, research → deck). Read the handoff envelope from
+> [`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md#cross-surface-handoff-envelope):
+> trust `verification_already_done` (don't recompute the source's numbers),
+> carry the asset list, and keep source restrictions intact.
+
 - The user asks for a deck, presentation, slides, or a pitch as a web/HTML
   deliverable.
 
@@ -31,6 +37,27 @@ letterbox to any viewport. A deck is fixed-canvas media (default 1920×1080,
 one-off) → [`canvas-design`](../canvas-design/SKILL.md). Responsive product
 UI → [`fe-design`](../fe-design/SKILL.md) + stack executor. Multiple styled
 options of one screen → [`design-variations`](../design-variations/SKILL.md).
+
+## Deck fidelity floor
+
+The deck surface's floor (per
+[`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md)):
+
+- **Outline before slides.** Draft the slide outline (title + one-line intent
+  per slide) before building any slide; when audience or tone is ambiguous, ask
+  once. (fixture: `ssac-deck-missing-notes`.)
+- **Labels + speaker notes.** Every slide carries a stable label and speaker
+  notes, not just on-slide text.
+- **Visual rhythm + readable scale.** Consistent spacing/hierarchy across
+  slides; never sub-readable text (the type floors below). (fixture:
+  `ssac-tiny-slide-text`.)
+- **Image/asset provenance.** Real assets via the project path, no invented
+  brand evidence ([`design-fidelity`](../../rules/design-fidelity.md) § Asset &
+  imagery discipline).
+- **Export verification.** Verify the deck exports/renders
+  ([`design-artifact-verification`](../../../docs/contracts/design-artifact-verification.md));
+  on a host without export capability, say what could not be verified rather
+  than claiming a clean export.
 
 ## Procedure
 
