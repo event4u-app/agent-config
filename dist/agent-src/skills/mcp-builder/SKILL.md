@@ -107,7 +107,15 @@ Process: enumerate the tools, explore READ-ONLY data, draft 10 questions, **solv
 
 - Upstream protocol: https://modelcontextprotocol.io
 - Upstream SDKs: https://github.com/modelcontextprotocol/python-sdk · https://github.com/modelcontextprotocol/typescript-sdk
-- Adopted from: an external reference (MIT, © 2025 an external reference) — external `./reference/*.md` file links replaced with inline guidance + upstream URLs.
+- Adopted from: an external reference (internal provenance, redacted) — external `./reference/*.md` file links replaced with inline guidance + upstream URLs.
 - Cross-linked: [`mcp`](../mcp/SKILL.md), [`testing-anti-patterns`](../testing-anti-patterns/SKILL.md), [`api-design`](../api-design/SKILL.md).
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `mcp-builder`).
 - Iron-Law floor: `verify-before-complete`, `tool-safety`, `skill-quality`.
+
+## Encode usage policy in the description
+
+Workflow sequencing, preconditions, ID/output provenance ("copy ids verbatim,
+never from memory"), a mandatory "why" intent field, and turn-end contracts
+belong INSIDE this artifact's description/frontmatter — where they fire at the
+decision point — not in always-on prose. See
+[`tool-description-as-policy`](../../../docs/guidelines/agent-infra/tool-description-as-policy.md).

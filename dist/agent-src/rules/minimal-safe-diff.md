@@ -74,6 +74,24 @@ task scope · dependency bumps "because it was close to the cache".
 Ask. A minimal diff plus one follow-up is cheaper than a sprawling diff the
 reviewer has to untangle.
 
+## Anti-over-engineering
+
+The smallest change is also the least *abstract* one:
+
+- **Three similar lines beat a premature abstraction.** Do not extract a helper
+  / generic / config layer to dedupe two or three call sites — inline
+  repetition is cheaper to read and change than the wrong abstraction.
+- **No tombstones.** Delete removed code completely — no `_oldName` renames,
+  no `// removed X` / `// no longer used` markers, no dead re-export shims kept
+  "for safety". Git history is the tombstone.
+- **No docstrings/comments on untouched code.** Do not annotate code the diff
+  does not change.
+
+**Not adopted (council):** the source's "validate only at system boundaries /
+trust internal code" clause is **rejected** — internal code can be wrong, and
+"trust" is not a testing strategy. Keep validating internal invariants; this
+fold is about *diff shape*, not about dropping internal checks.
+
 ## Break-glass exception
 
 This rule stays in force during production incidents. "Break-glass mode"
@@ -103,16 +121,16 @@ description.
 The default stands: no drive-by edits, no opportunistic refactors. The one
 bounded exception — a **small, task-aligned security/correctness fix in code
 the current task already touches** — is governed by
-[`active-remediation`](active-remediation.md). Permitted inline **only** when
-ALL hold: same request path / module, ≤ ~10 changed lines in one production file (plus its test file),
-no public-API / response-shape change, no dependency bump or migration, and
-its verification (e.g. the negative test) ships in the same commit. Anything
-outside those five conditions is **not** this carve-out — it is note + ask per
-`active-remediation`. This never licenses reformatting, renames, dependency
-bumps, or version upgrades (a syntax-idiom modernization is allowed only under
-`active-remediation`'s version-gated, behavior-preserving clause; a
-dependency/version bump stays ask-only). The sole case that may interrupt is a
-**live cross-user/tenant data exposure** ([`broken-access-control`](broken-access-control.md)) —
+[`active-remediation`](active-remediation.md). It is permitted inline **only**
+when ALL hold: same request path / module, ≤ ~10 changed lines in one
+production file (plus its test file), no public-API / response-shape change, no dependency bump or migration,
+and its verification (e.g. the negative test) ships in the same commit.
+Anything outside those five conditions is **not** this carve-out — it is
+note + ask per `active-remediation`. This never licenses reformatting,
+renames, dependency bumps, or version upgrades (a syntax-idiom modernization
+is allowed only under `active-remediation`'s version-gated, behavior-preserving
+clause; a dependency/version bump stays ask-only). The sole case that may
+interrupt is a **live cross-user/tenant data exposure** ([`broken-access-control`](broken-access-control.md)) —
 fix-now-if-small, else stop and surface; never defer it silently.
 
 See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard` · `verify-before-complete` · [`active-remediation`](active-remediation.md) · [`broken-access-control`](broken-access-control.md).

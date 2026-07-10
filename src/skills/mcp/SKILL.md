@@ -168,6 +168,23 @@ PR creation:
   - Creating GitHub PRs or pushing code
   - Posting comments on issues/PRs
 
+## Tool-tier ladder — most-specific first, no silent fall-through
+
+Pick the **most specific tool available** for the job: a dedicated tool >
+a generic tool > a lowest-level/raw call. The ladder has an anti-fall-through
+rule:
+
+- A **dedicated tool erroring is a signal to debug/report**, never to silently
+  retry the same job via a broader/slower tier. Silent degradation masks the
+  real failure (the dedicated tool broke) behind a worse-but-working path.
+- The broader tier is for **unavailability** (the specific tool isn't present),
+  **not for error recovery** (it's present but failed). Unavailable → step
+  down a tier; errored → stop and surface.
+
+This is tool-*selection* discipline. Delegation (when to hand work to a
+subagent at all) is [`subagent-orchestration`](../subagent-orchestration/SKILL.md)'s
+concern, not this ladder's — keep the boundary explicit.
+
 ## Related
 
 - **Skill:** `sentry-integration` — Sentry-specific investigation patterns
