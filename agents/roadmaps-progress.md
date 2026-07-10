@@ -6,10 +6,10 @@
 
 ## Overall
 
-**157 / 411 steps done · 38%**
+**171 / 411 steps done · 42%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
 ```
 
 ## Open roadmaps
@@ -23,7 +23,7 @@
 | 5 | [road-to-design-mechanism-harvest.md](roadmaps/road-to-design-mechanism-harvest.md) | 6 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-domain-soundness.md](roadmaps/road-to-domain-soundness.md) | 4 | 12 | 4 | 8 | 0 | 0 | 0 | ███████░░░ 67% |
-| 8 | [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md) | 6 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md) | 6 | 19 | 5 | 14 | 0 | 0 | 0 | ███████░░░ 74% |
 | 9 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 10 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 44 | 5 | 0 | 0 | 0 | █░░░░░░░░░ 10% |
 | 11 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
@@ -146,16 +146,16 @@ _2 blockers resolved._
 
 ### [road-to-execution-discipline-harvest.md](roadmaps/road-to-execution-discipline-harvest.md)
 
-**Road to execution-discipline harvest** — 0 / 19 done (0%)
+**Road to execution-discipline harvest** — 14 / 19 done (74%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | No-time-estimates rule | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Amend-after-hook-failure git trap | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Tool-tier ladder + no-silent-fallthrough | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Disconfirmation search + per-part grounding (research quality) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Micro-folds (never-cite-the-rule + anti-over-engineering) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | Authoring guidelines (tool-description-as-policy + emphasis budget) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Amend-after-hook-failure git trap | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Tool-tier ladder + no-silent-fallthrough | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 4 | Disconfirmation search + per-part grounding (research quality) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 5 | Micro-folds (never-cite-the-rule + anti-over-engineering) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 6 | Authoring guidelines (tool-description-as-policy + emphasis budget) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 
 ### [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md)
 

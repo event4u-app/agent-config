@@ -12,8 +12,8 @@ Close 6 real execution-discipline gaps (time-estimates, amend-trap, tool-tier fa
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, `CLAUDE.md`, and the kernel/router contracts (`docs/contracts/kernel-membership.md`, `docs/contracts/rule-router.md`).
-- [ ] Read `src/rules/git-history-discipline.md`, `src/rules/minimal-safe-diff.md`, `src/rules/direct-answers.md`, `src/rules/output-discipline.md`, and the `skill-writing` / `command-writing` / `mcp-builder` skills before editing.
+- [x] Read `AGENTS.md`, `CLAUDE.md`, and the kernel/router contracts (`docs/contracts/kernel-membership.md`, `docs/contracts/rule-router.md`).
+- [x] Read `src/rules/git-history-discipline.md`, `src/rules/minimal-safe-diff.md`, `src/rules/direct-answers.md`, `src/rules/output-discipline.md`, and the `skill-writing` / `command-writing` / `mcp-builder` skills before editing.
 
 ## Context
 
@@ -35,9 +35,9 @@ The one clean gap with nothing adjacent in the suite. An LLM has no wall-clock a
 
 A precise, high-severity data-loss mechanism missing from `git-history-discipline`: when a pre-commit hook fails, the commit did NOT happen — a subsequent `git commit --amend` rewrites the *previous* (already-good) commit, destroying work. Fix, re-stage, create a NEW commit.
 
-- [ ] Add the trap to `src/rules/git-history-discipline.md` as one clause under the existing amend restrictions: name the mechanism (hook failure ⇒ no commit created ⇒ amend targets the wrong commit) and the correct recovery (fix → re-stage → new commit, never amend).
-- [ ] Cross-link `skill:git-workflow` (recovery procedures) so the mechanism lives next to the how-to.
-- [ ] Verify: `./scripts-run src/scripts/check_condensation` targeted at the touched rule (preservation-guard: Iron Law sections byte-stable).
+- [x] Add the trap to `src/rules/git-history-discipline.md` as one clause under the existing amend restrictions: name the mechanism (hook failure ⇒ no commit created ⇒ amend targets the wrong commit) and the correct recovery (fix → re-stage → new commit, never amend).
+- [x] Cross-link `skill:git-workflow` (recovery procedures) so the mechanism lives next to the how-to.
+- [x] Verify: `./scripts-run src/scripts/check_condensation` targeted at the touched rule (preservation-guard: Iron Law sections byte-stable).
 
 **Exit criteria:** the trap is documented in `git-history-discipline` with the recovery sequence.
 **Rollback:** revert the single clause.
@@ -46,9 +46,9 @@ A precise, high-severity data-loss mechanism missing from `git-history-disciplin
 
 Frontier surfaces encode a tool-selection ladder (dedicated tool > generic > lowest-level) with an anti-fallthrough clause: a dedicated tool erroring means debug/report, never silently retry via a slower/broader tier (silent degradation masks real failures). We cover subagent orchestration but not tool-selection failure discipline.
 
-- [ ] Author a short section in the `mcp` skill (or `token-optimizer` if the tool-selection surface fits better — decide during the overlap scan): pick the most specific available tool; a specific tool's error is a signal to debug/report, not to silently fall back to a broader tool; the broader tier is for *unavailability*, not *error recovery*.
-- [ ] Cross-link `subagent-orchestration` (which owns delegation, not tool-tier selection) so the boundary is explicit.
-- [ ] Verify: `./scripts-run src/scripts/skill_linter` on the touched skill.
+- [x] Author a short section in the `mcp` skill (or `token-optimizer` if the tool-selection surface fits better — decide during the overlap scan): pick the most specific available tool; a specific tool's error is a signal to debug/report, not to silently fall back to a broader tool; the broader tier is for *unavailability*, not *error recovery*.
+- [x] Cross-link `subagent-orchestration` (which owns delegation, not tool-tier selection) so the boundary is explicit.
+- [x] Verify: `./scripts-run src/scripts/skill_linter` on the touched skill.
 
 **Exit criteria:** tool-tier ladder + no-silent-fallthrough documented in one skill with a clear boundary vs subagent-orchestration.
 **Rollback:** revert the skill section.
@@ -57,9 +57,9 @@ Frontier surfaces encode a tool-selection ladder (dedicated tool > generic > low
 
 The more-advanced frontier search doctrine adds two research-quality gates absent from our verify family: (a) **disconfirmation** — run searches to rule alternatives *in or out*, not only to gather support for the favored hypothesis (confirmation-bias countermeasure); (b) **per-part grounding** — before writing, check each part of the request against what was actually retrieved.
 
-- [ ] Fold both gates into the `research:deep` / `research:report` pre-write step and `deep-reading-analyst` (one pointer line each): a claim is not written until each request-part is grounded in a retrieved source, and at least one search actively tries to falsify the leading hypothesis.
-- [ ] Cross-link `source-discovery-gate` (structural evidence) and `verify-before-complete` (completion evidence) so the three evidence surfaces are distinguished, not duplicated.
-- [ ] Verify: `./scripts-run src/scripts/check_refs` on touched files.
+- [x] Fold both gates into the `research:deep` / `research:report` pre-write step and `deep-reading-analyst` (one pointer line each): a claim is not written until each request-part is grounded in a retrieved source, and at least one search actively tries to falsify the leading hypothesis.
+- [x] Cross-link `source-discovery-gate` (structural evidence) and `verify-before-complete` (completion evidence) so the three evidence surfaces are distinguished, not duplicated.
+- [x] Verify: `./scripts-run src/scripts/check_refs` on touched files.
 
 **Exit criteria:** disconfirmation + per-part grounding wired into the research surfaces with no duplication of the existing evidence rules.
 **Rollback:** revert the pointer lines.
@@ -67,7 +67,7 @@ The more-advanced frontier search doctrine adds two research-quality gates absen
 ## Phase 5 — Micro-folds (never-cite-the-rule + anti-over-engineering)
 
 - [ ] `direct-answers` (or `reply-close-mechanics`): add the never-cite-the-rule clause — when declining or constraining, give the actual reason, never "my rules/guidelines require X" (appealing to hidden rules replaces real reasoning and widens prompt-extraction surface).
-- [ ] `minimal-safe-diff`: add the anti-over-engineering fold — "three similar lines beat a premature abstraction"; no tombstones (`_var` renames, `// removed` markers, dead re-export shims — delete completely); no docstrings/comments on untouched code. **Reject** the source's "validate only at system boundaries / trust internal code" clause — internal code can be wrong and "trust" is not a testing strategy (council: ADAPT, drop the internal-trust half).
+- [x] `minimal-safe-diff`: add the anti-over-engineering fold — "three similar lines beat a premature abstraction"; no tombstones (`_var` renames, `// removed` markers, dead re-export shims — delete completely); no docstrings/comments on untouched code. **Reject** the source's "validate only at system boundaries / trust internal code" clause — internal code can be wrong and "trust" is not a testing strategy (council: ADAPT, drop the internal-trust half).
 - [ ] Verify: `./scripts-run src/scripts/check_condensation` targeted at both touched rules.
 
 **Exit criteria:** both folds live; the internal-trust clause is explicitly NOT adopted (noted inline).
@@ -77,10 +77,10 @@ The more-advanced frontier search doctrine adds two research-quality gates absen
 
 Two meta-guidelines for artifact *authors*, not runtime rules.
 
-- [ ] **Tool-description-as-policy** — add guidance to `skill-writing` / `command-writing` / `mcp-builder`: encode workflow sequencing, preconditions, ID/output provenance ("copy IDs verbatim, never from memory"), a mandatory "why" intent field, and turn-end contracts INSIDE the tool/command/skill description (fires at the decision point) rather than as always-on prose. One shared guidance block, referenced from each.
-- [ ] **Emphasis budget** — add a short authoring guideline (candidate home: `guideline:agent-infra/skill-quality-checklist` or a new `docs/guidelines/agent-infra/emphasis-budget.md`): reserve ALL-CAPS / "Iron Law" / spaced-repetition for asymmetric, irreversible harm (data-loss, credential exposure, safety, legal); when adding emphasis, document the specific harm being prevented and why post-hoc correction is insufficient. **This is a review-time authoring discipline, NOT a merge-blocking linter** — per the council convergence, a mechanical caps quota is unenforceable (semantic substitution defeats it), blocks ready work, and the "~40 Iron Laws" figure is a denominator artifact (majority already protect data-loss/credential scenarios). No CI gate; PR review owns the judgment.
-- [ ] Run the overlap scan against `preservation-guard`, `size-enforcement`, and `token-budget-discipline`; record the extend-vs-create verdict inline.
-- [ ] Verify: `./scripts-run src/scripts/validate_frontmatter` + `./scripts-run src/scripts/check_refs` on touched files.
+- [x] **Tool-description-as-policy** — add guidance to `skill-writing` / `command-writing` / `mcp-builder`: encode workflow sequencing, preconditions, ID/output provenance ("copy IDs verbatim, never from memory"), a mandatory "why" intent field, and turn-end contracts INSIDE the tool/command/skill description (fires at the decision point) rather than as always-on prose. One shared guidance block, referenced from each.
+- [x] **Emphasis budget** — add a short authoring guideline (candidate home: `guideline:agent-infra/skill-quality-checklist` or a new `docs/guidelines/agent-infra/emphasis-budget.md`): reserve ALL-CAPS / "Iron Law" / spaced-repetition for asymmetric, irreversible harm (data-loss, credential exposure, safety, legal); when adding emphasis, document the specific harm being prevented and why post-hoc correction is insufficient. **This is a review-time authoring discipline, NOT a merge-blocking linter** — per the council convergence, a mechanical caps quota is unenforceable (semantic substitution defeats it), blocks ready work, and the "~40 Iron Laws" figure is a denominator artifact (majority already protect data-loss/credential scenarios). No CI gate; PR review owns the judgment.
+- [x] Run the overlap scan against `preservation-guard`, `size-enforcement`, and `token-budget-discipline`; record the extend-vs-create verdict inline.
+- [x] Verify: `./scripts-run src/scripts/validate_frontmatter` + `./scripts-run src/scripts/check_refs` on touched files.
 
 **Exit criteria:** both authoring guidelines live; the emphasis guideline explicitly states it is not a merge gate.
 **Rollback:** revert the guideline files/sections.
