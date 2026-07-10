@@ -13,6 +13,12 @@ packs:
 
 ## When to use
 
+> **Cross-surface handoff.** When this document consumes upstream work (research
+> → document, spreadsheet → report), read the handoff envelope from
+> [`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md#cross-surface-handoff-envelope):
+> trust `verification_already_done`, honour source restrictions, and don't
+> re-fetch what the source already grounded.
+
 Use this skill when:
 
 * User starts a substantial writing task — PRD, RFC, design doc, decision doc, technical spec, proposal

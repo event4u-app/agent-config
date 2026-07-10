@@ -24,6 +24,12 @@ letterbox to any viewport. A deck is fixed-canvas media (default 1920×1080,
 
 ## When to use
 
+> **Cross-surface handoff.** A deck often consumes upstream analysis
+> (spreadsheet → deck, research → deck). Read the handoff envelope from
+> [`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md#cross-surface-handoff-envelope):
+> trust `verification_already_done` (don't recompute the source's numbers),
+> carry the asset list, and keep source restrictions intact.
+
 - The user asks for a deck, presentation, slides, or a pitch as a web/HTML
   deliverable.
 
