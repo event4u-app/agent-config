@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
+> 19 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
 
 ## Overall
 
-**173 / 396 steps done · 44%**
+**161 / 381 steps done · 42%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
 ```
 
 ## Open roadmaps
@@ -26,16 +26,15 @@
 | 8 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 9 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 44 | 5 | 0 | 0 | 0 | █░░░░░░░░░ 10% |
 | 10 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 11 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 3 | 12 | 0 | 0 | 0 | ████████░░ 80% |
-| 12 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
-| 14 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 16 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | 0 | ███████░░░ 73% |
-| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 18 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 19 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 20 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
+| 11 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
+| 13 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ░░░░░░░░░░ 0% |
+| 14 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 15 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | 0 | ███████░░░ 73% |
+| 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 17 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 18 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 19 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
 ---
 
@@ -213,18 +212,6 @@ _2 blockers resolved._
     est. US$3–4 instead of US$8–12) — batch it into the operator sitting
     from `road-to-token-proof-and-story` § Program tracking step 2.
   - **Resolved when:** a non-dry-run `quality-run.json` from a consumer-scoped arm exists and `check_quality_regression --as-flip-gate` exits 0.
-
-### [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md)
-
-**Road to injection-and-authority harvest** — 12 / 15 done (80%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Found-instructions quarantine (5-step) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Extended injection-signal taxonomy | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Memory-as-hostile-input write-guards | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | Action-authority sharpening (ADAPT into agent-authority) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Injected-block authenticity model (kernel-upgrade PROPOSAL only) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md)
 
