@@ -112,6 +112,22 @@
 Residual of the full package over `rules-kernel-dc`: Δ=+0.083, Wilcoxon p=0.37
 (only 2 discordant pairs) — **not significant**.
 
+### `full` discipline-tier disposition (council 2026-07-10)
+
+The `full` tier (~11.7×) stays **experimental, opt-in only, never surfaced as a
+recommendation**. Council (claude-sonnet-4-5 + gpt-4o, 2-round debate,
+2026-07-10) converged on **keep-and-relabel over drop**: round 1 favoured
+dropping `full`, but the rebuttal round reversed it — `p=0.37` is *absence of
+evidence*, not *evidence of absence* (an underpowered n=24 compounded by an
+`essential` ceiling effect), and removing an enum value is an **irreversible
+breaking change** for anyone pinning the tier string. An experimental opt-in
+does not violate "measured, not asserted"; an unlabeled *recommendation* would.
+**Revisit-if (drop only when):** a high-powered Claude sweep (n≥100,
+ceiling-adjusted) shows `p>0.20 AND effect <5%` **and** an open-source-host
+adapter sweep returns a null — i.e. `full` is shown *actively* useless, not
+merely unproven. Until then the experimental label stands everywhere `full` is
+documented.
+
 Three findings:
 
 1. **~95% of the lift survives at ~3× cost.** The kernel + `downstream-changes`
@@ -212,6 +228,41 @@ The three-host evidence ledger: Claude weak = family-scoped lift · Claude
 strong = ceiling null · GPT weak = failed replication (confounded surface).
 
 - Report: `internal/bench/reports/ab-v2/2026-07-07T10-33-53Z-ab-v2-paired.json`.
+
+## Two-host matrix (flow-learnings Phase 3, `claude-haiku-4-5`) — Gate verdict: **HONEST-NULL**
+
+First live run of the `bench_matrix` two-host composite (`internal/bench/matrix.yaml`):
+2 task families × 2 hosts × arms `vanilla` vs `rules-kernel-dc`, 2 seeds,
+n=14 paired runs per host. Result — **zero discipline lift on either host**,
+every pair a tie:
+
+| Host / family | n | discipline (van → rkdc) | capability |
+|---|---|---:|---|
+| `claude` / over-engineering-bait | 8 | 1.000 → 1.000 | 1.000 |
+| `claude` / regression-landmine | 6 | 1.000 → 1.000 | 1.000 |
+| `codex` / over-engineering-bait | 8 | 1.000 → 1.000 | **0.000** |
+| `codex` / regression-landmine | 6 | 0.667 → 0.667 | **0.000** |
+
+Two honest reads, neither a lift:
+
+1. **`claude` ceilings** on both capability and discipline (1.000 everywhere) —
+   no headroom, the injected rules are redundant here. This is the same
+   strong-/ceiling-host null the corpus shows elsewhere; these two families are
+   not the ones `downstream-changes` carries a lift on (that is the
+   scope/downstream family), so a null here **confirms** the lift is
+   family-specific, it does not contradict it.
+2. **`codex` capability_pass = 0.000 on every task, both arms** — the codex host
+   did not complete these fixtures capably at all, so its discipline column is
+   **not a meaningful lift signal** (a confounded surface, echoing the P2
+   `gpt-5-mini` replication failure above — a non-Claude host + these fixtures).
+   Reported here as a caveat, not a measurement; a bare table without this note
+   would overclaim.
+
+Net: the matrix pipeline works end-to-end and the composite is reproducible, but
+this cell set carries **no** cross-host discipline lift — `claude` has no
+headroom and `codex` is capability-confounded. Not published as a lift claim.
+
+- Reports (operator-local, untracked): four `internal/bench/reports/ab-v2/2026-07-10T19-2*Z-ab-v2-paired.json` cells (claude×2 families, codex×2 families).
 
 ## Strong host (`sonnet`, full 30-task corpus) — Gate verdict: **HONEST-NULL**
 
