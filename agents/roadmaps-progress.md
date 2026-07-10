@@ -6,10 +6,10 @@
 
 ## Overall
 
-**147 / 323 steps done · 46%**
+**176 / 323 steps done · 54%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
+██████████████████████░░░░░░░░░░░░░░░░░░   54%
 ```
 
 ## Open roadmaps
@@ -30,7 +30,7 @@
 | 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
 | 13 | [road-to-skill-eval-coverage.md](roadmaps/road-to-skill-eval-coverage.md) | 4 | 11 | 3 | 8 | 0 | 0 | 0 | ███████░░░ 73% |
 | 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 39 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 15 | [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md) | 8 | 39 | 10 | 29 | 0 | 0 | 0 | ███████░░░ 74% |
 | 16 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
 | 17 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
@@ -301,18 +301,18 @@ _1 blocker resolved._
 
 ### [road-to-surface-specific-agent-contracts.md](roadmaps/road-to-surface-specific-agent-contracts.md)
 
-**Road to surface-specific agent contracts — stop making one generic agent do every medium badly** — 0 / 39 done (0%)
+**Road to surface-specific agent contracts — stop making one generic agent do every medium badly** — 29 / 39 done (74%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Capability matrix, surface detection, and eval baseline | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Surface taxonomy and invariant ledger | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 0 | Capability matrix, surface detection, and eval baseline | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 1 | Surface taxonomy and invariant ledger | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Spreadsheet truth floor | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Deck/document export contracts | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Browser and connector contract | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | Mobile/chat interaction contract | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 6 | Code-agent operating contract refresh | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 7 | Cross-surface handoff protocol | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+| 4 | Browser and connector contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 5 | Mobile/chat interaction contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 6 | Code-agent operating contract refresh | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 7 | Cross-surface handoff protocol | 🟡 in progress | 1 | 9 | 0 | 0 | 90% |
 
 ### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
 

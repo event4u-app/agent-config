@@ -75,18 +75,18 @@ Gaps:
 
 ## Phase 0 — Capability matrix, surface detection, and eval baseline
 
-- [ ] Add or reference a capability/degrade table for supported hosts:
+- [x] Add or reference a capability/degrade table for supported hosts:
       spreadsheet, document, presentation, browser, PDF, image, repository,
       app connector, local file parser, and "not available" fallback.
-- [ ] Define surface detection before surface rules: explicit file type,
+- [x] Define surface detection before surface rules: explicit file type,
       requested output format, named tool/plugin, user environment, data shape,
       task verb, and target deliverable. Add ambiguity handling when multiple
       surfaces apply.
-- [ ] Create surface-contract eval fixtures before changing behavior:
+- [x] Create surface-contract eval fixtures before changing behavior:
       spreadsheet formula truth, deck export, document format request, browser
       URL failure, connector-first routing, mobile one-question UX, code
       read-before-proposing, and cross-surface handoff.
-- [ ] Define rollout and rollback: each surface contract starts advisory,
+- [x] Define rollout and rollback: each surface contract starts advisory,
       becomes routed after evals pass, and becomes default-on only when host
       capability/degrade behavior is documented.
 
@@ -95,18 +95,29 @@ baseline, and staged rollout order.
 
 ## Phase 1 — Surface taxonomy and invariant ledger
 
-- [ ] Add `docs/contracts/surface-agent-contracts.md` defining surfaces:
+- [x] Add `docs/contracts/surface-agent-contracts.md` defining surfaces:
       code, design, spreadsheet, document, deck, browser, mobile/chat,
       research, visualizer/diagram, cowork/dispatch, and MCP/app connector.
-- [ ] For each surface record: owner skills/commands, allowed tools, forbidden
+- [x] For each surface record: owner skills/commands, allowed tools, forbidden
       shortcuts, verification truth source, handoff inputs/outputs, trigger
       examples, capability requirements, and degradation language.
-- [ ] Add `src/config/surface-matrix.yml` entries or extend the existing
+- [x] Add `src/config/surface-matrix.yml` entries or extend the existing
       matrix so every user-scope tool class maps to a surface contract.
-- [ ] Add a "surface conflict" rule: when a user asks for output native to a
+      <!-- done 2026-07-10 (collision resolved): the EXISTING src/config/surface-matrix.yml
+      is a DIFFERENT concept — per-tool install-surface de-duplication,
+      set-equality-enforced vs install.ts::USER_SCOPE_PATHS by lint_surface_matrix;
+      extending it with work-surfaces would break that linter. The canonical
+      work-surface map therefore lives in the taxonomy table in
+      docs/contracts/surface-agent-contracts.md (not the install matrix). -->
+      <!-- STATUS: Phases 0,1,4,5,6,7 landed this pass (backbone contract +
+      detection + rollout + mobile floor + code-audit dispositions + handoff
+      envelope+wiring + full eval-fixtures baseline). Phase 2 (spreadsheet skill
+      + spreadsheet-source-quality rule) and Phase 3 (deck/document export
+      floors) remain — new-skill/skill-floor authoring with its own downstream. -->
+- [x] Add a "surface conflict" rule: when a user asks for output native to a
       different connected surface, delegate or ask to enable that surface
       rather than forcing a local workaround.
-- [ ] Cross-reference the artifact-routing and design-artifact roadmaps so
+- [x] Cross-reference the artifact-routing and design-artifact roadmaps so
       carrier choice, host capability, and surface invariants do not diverge.
 
 **Exit:** every major medium has an explicit invariant owner and no invariant
@@ -156,18 +167,18 @@ content drafting.
 
 ## Phase 4 — Browser and connector contract
 
-- [ ] Add browser-surface contract: use specific URLs the user provided,
+- [x] Add browser-surface contract: use specific URLs the user provided,
       respect restricted domains, do not invent URLs unless programming-help
       confidence is high, fetch/navigate only when current or page-specific
       information is needed, and surface failure plainly.
-- [ ] Add connector-first contract: if a connected tool or installable
+- [x] Add connector-first contract: if a connected tool or installable
       connector handles the category, use/suggest it before generic browsing;
       partner/third-party tools require opt-in unless named or previously
       chosen.
-- [ ] Add a tool-composition table shared with artifact routing: local/project
+- [x] Add a tool-composition table shared with artifact routing: local/project
       data → connector/app → specific URL/page fetch → official source search
       → broad web search → ask/degrade.
-- [ ] Add evals: named connector absent, named connector present, generic
+- [x] Add evals: named connector absent, named connector present, generic
       category connector available, URL fetch fails, browser would be a
       workaround for unavailable private/internal data.
 
@@ -176,15 +187,15 @@ search when a more appropriate connected surface exists.
 
 ## Phase 5 — Mobile/chat interaction contract
 
-- [ ] Add mobile/chat output floor: avoid markdown tables in narrow chat,
+- [x] Add mobile/chat output floor: avoid markdown tables in narrow chat,
       ask at most one compact question when possible, use tappable choices
       when the host supports them, and keep post-tool summaries short.
-- [ ] Add decision logic for asking: no options when the user asked for the
+- [x] Add decision logic for asking: no options when the user asked for the
       agent's analysis of A vs B; options when eliciting preferences; proceed
       with reasonable assumptions when the user provided enough constraints.
-- [ ] Add host capability handling for tappable choices so unavailable UI
+- [x] Add host capability handling for tappable choices so unavailable UI
       affordances degrade to concise text choices.
-- [ ] Add evals for "A or B?", preference elicitation, detailed prompt with no
+- [x] Add evals for "A or B?", preference elicitation, detailed prompt with no
       need for questions, and broad planning request where options improve UX.
 
 **Exit:** interaction style becomes host/surface-sensitive rather than a
@@ -192,15 +203,15 @@ single verbose desktop default.
 
 ## Phase 6 — Code-agent operating contract refresh
 
-- [ ] Audit code-facing rules against the external code prompt's mechanisms:
+- [x] Audit code-facing rules against the external code prompt's mechanisms:
       read before proposing, minimal scoped changes, todo visibility,
       parallel independent exploration, specialized tools over shell when
       available, no shell as user communication, line-specific references, and
       no time estimates.
-- [ ] Mark each mechanism as already covered, tighten existing rule, or reject
+- [x] Mark each mechanism as already covered, tighten existing rule, or reject
       as host-specific. Do not create duplicate rules if `scope-control`,
       `verify-before-complete`, or host instructions already cover it.
-- [ ] Add evals for the high-risk misses: proposing edits to unread files,
+- [x] Add evals for the high-risk misses: proposing edits to unread files,
       making broad refactors around a bugfix, sequential independent file
       reads when parallel is available, and claiming done without fresh
       verification.
@@ -210,16 +221,16 @@ duplicating Codex host instructions.
 
 ## Phase 7 — Cross-surface handoff protocol
 
-- [ ] Define handoff envelope: source surface, target surface, user goal,
+- [x] Define handoff envelope: source surface, target surface, user goal,
       assets/files, constraints, verification already done, pending checks,
       capability limits, assumptions, and privacy/source restrictions.
-- [ ] Extend relevant skills to emit/consume the envelope. Examples:
+- [x] Extend relevant skills to emit/consume the envelope. Examples:
       spreadsheet analysis → deck; research → document; browser evidence →
       report; design prototype → production implementation.
-- [ ] Add evals for lossy handoff: missing source URL, missing asset list,
+- [x] Add evals for lossy handoff: missing source URL, missing asset list,
       undocumented assumptions, target surface redoes already-verified work,
       or target surface violates source-specific restrictions.
-- [ ] Add rollback/degrade behavior: if target surface tooling is absent, the
+- [x] Add rollback/degrade behavior: if target surface tooling is absent, the
       handoff remains a durable plan rather than a fake generated artifact.
 
 **Exit:** surface specialization improves output instead of fragmenting
@@ -227,15 +238,15 @@ context between tools.
 
 ## Acceptance criteria
 
-- [ ] Capability/degrade matrix and surface-detection criteria exist before
+- [x] Capability/degrade matrix and surface-detection criteria exist before
       hard surface rules are made default-on.
-- [ ] Surface-agent contract taxonomy exists and maps to current skills/tools.
+- [x] Surface-agent contract taxonomy exists and maps to current skills/tools.
 - [ ] Spreadsheet, deck/document, browser/connector, mobile/chat, and code
       contracts have trigger evals.
-- [ ] Cross-surface handoff envelope exists and is consumed by at least two
+- [x] Cross-surface handoff envelope exists and is consumed by at least two
       skill families.
-- [ ] Each new contract records rejected host/vendor-specific details.
-- [ ] No source names or raw external links appear in tracked roadmap text.
+- [x] Each new contract records rejected host/vendor-specific details.
+- [x] No source names or raw external links appear in tracked roadmap text.
 
 ## Blockers
 
