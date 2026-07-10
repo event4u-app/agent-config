@@ -190,19 +190,31 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     - Exit + acceptance criteria are **agent-decidable** signals (command
       exit code, file exists, test passes) — never "user approves",
       "looks good", "sign-off".
-    - Human gate allowed only when **only a human can clear it**:
-      Hard-Floor action (deploy, prod data/infra, merge), billable spend,
-      external dependency, contested product decision. Record as
+    - **Human gate** allowed only when only a human can **decide or
+      authorize**: Hard-Floor action (deploy, prod data/infra), billable
+      spend, contested product / architecture decision. Record as
       structured `## Blockers` entry (rule 20) — never as inline checkbox
       step scattered through phases.
+    - **External dependency = blocker, not human gate**, whenever agent
+      can probe its status (CI run finished, package version published,
+      upstream PR merged, API reachable, DNS propagated): record as
+      blocker whose `Resolved when:` names the agent-checkable probe
+      (command / URL / query) — do not assign to a human.
+    - **Merge is never a completion requirement.** Roadmap is
+      implementation-complete once checkboxes ticked and verification
+      ran; delivery stays the user's call (no merge / push / commit
+      steps, per `commit-policy`). Merge may appear as a blocker only
+      when later roadmap work technically depends on the merged state.
     - Do **not** restate safety floors as steps. `non-destructive-by-default`,
       `security-sensitive-stop`, `commit-policy` fire at run time on
       their own; authored "STOP: confirm with user before X" duplicates
       them → only adds interruptions.
     Gate-test before any checkpoint: *"Could the agent clear this with a
     tool or command during the run?"* Yes → step, not gate. No →
-    structured blocker with decidable `Resolved when:`.
-    `task lint-roadmap-complexity` warns on human-gate step patterns.
+    structured blocker with decidable `Resolved when:`, owned by a human
+    only when the blocker is a genuine human gate.
+    `task lint-roadmap-complexity` warns on human-gate step patterns,
+    human-gate phase headings, and human-approval exit criteria.
 
 ---
 

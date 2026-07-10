@@ -237,10 +237,12 @@ Write the pick to frontmatter as `execution.mode:`
   `sign-off`, `wait for approval`, `ask the user`, "Review / Sign-off"
   phases). Human checkpoints default to **zero** (template rule 22) —
   rewrite each hit as agent-verifiable check (command, targeted test)
-  **before saving**, or promote to structured `## Blockers` entry when
-  only a human can clear it (Hard-Floor action, billable spend,
-  external dependency, contested decision). Do not author safety floors
-  as steps — they fire at run time on their own.
+  **before saving**, or promote to structured `## Blockers` entry:
+  **human gate** only when only a human can decide/authorize
+  (Hard-Floor authorization, billable spend, contested decision);
+  **external dependency** becomes a blocker whose `Resolved when:`
+  names an agent-checkable status probe — never a human gate. Do not
+  author safety floors as steps — they fire at run time on their own.
   `lint_roadmap_complexity` warns on the same patterns as a backstop.
 
 ### 11. Hand back — HARD STOP, never auto-offer execution
