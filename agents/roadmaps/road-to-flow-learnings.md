@@ -278,10 +278,22 @@ blocker below.
 - **Blocks:** Phase 3 — live matrix run (live API spend)
 - **What to do:**
   1. Invoke the matrix runner for ≥2 task families × 2 hosts from the
-     matrix YAML (paired arms per the existing ab-v2 discipline).
-  2. Pin the resulting report alongside the existing pinned reports.
+     matrix YAML (paired arms per the existing ab-v2 discipline). The config
+     is committed at `internal/bench/matrix.yaml` (2 families × 2 hosts × arms
+     `vanilla`,`rules-kernel-dc`; host-compatible — codex rejects the plugin
+     `package` arm) and dry-verified: `npx tsx src/scripts/bench_matrix.ts
+     --config internal/bench/matrix.yaml --expand` → 4 cells. Run it with
+     `--run` (per-cell `--budget` caps spend; 4 cells).
+  2. Pin the resulting report alongside the existing pinned reports; regen
+     `docs/benchmark.md` via the per-section renderer (zero manual edits).
 - **Resolved when:** one schema-valid matrix report exists and the
   per-section render consumes it without manual edits.
+- **Why not autonomous (beyond spend):** `--run` spawns the real `claude` +
+  `codex` host CLIs as unattended coding agents (sandbox/approvals off) — an
+  auto-mode agent-spawn gate blocks it independently of the paid-run
+  authorization. Run it in a non-auto session (or approve the permission
+  prompt); the numbers become published benchmark evidence, so the PR review
+  that pins them is the integrity sign-off.
 
 ## Acceptance criteria (anti-dump)
 
