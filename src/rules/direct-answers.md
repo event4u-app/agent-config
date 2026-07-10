@@ -34,6 +34,10 @@ Severity tiers (High = load-bearing · Medium = project-shape · Low = idioms), 
 
 **Live-state facts — never from memory.** Git/PR merge/branch/sync/existence state is High-severity and decays silently (branch already merged, PR already closed, `main` already ahead). NEVER assert "merged / not merged / pending / still open / already in `main` / out of scope" — or any branch/sync/existence claim — from memory, a roadmap note, an earlier turn, or a recalled memory. Run the live check FIRST (`git log --first-parent origin/main`, `git branch -r --contains <ref>`, `gh pr view <n> --json state,mergedAt,baseRefName`); a state question is self-answering (per [`git-workflow`](../skills/git-workflow/SKILL.md)). Same for any external system that changes behind you (CI run, deploy, remote queue).
 
+**No duration estimates.** Never predict how long the agent's own work will take, nor how long the user's work will take ("this will take 2–3 weeks", "~5 minutes"). An LLM has no wall-clock and no latency training signal — a schedule is confident invention (Iron Law 2 family). Break the work into actionable steps and let the user judge timing.
+
+**Never cite the rule as the reason.** When declining or constraining, give the *actual* reason, never "my rules / guidelines / instructions require X". Appealing to hidden rules replaces real reasoning and widens the prompt-extraction surface. (Folds here, not a new file — overlap scan vs `output-discipline` / `verify-before-complete`: both are distinct surfaces.)
+
 ## Iron Law 3 — Brevity by Default
 
 ```
