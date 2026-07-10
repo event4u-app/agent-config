@@ -96,3 +96,32 @@ context only — does NOT mean the user's message is about that file.
 - Treat the open file as relevant only when the user's message
   explicitly references it (e.g. "fix this file", "what does this
   do?", "update the open file").
+
+## Goal-driven execution — vague ask → verifiable goal
+
+Before executing a multi-step task, transform it into criteria a tool can
+check. Strong criteria let the loop run independently; weak criteria ("make it
+work") guarantee rework.
+
+| Vague ask | Verifiable goal |
+|---|---|
+| "Add validation" | Write tests for the invalid inputs, then make them pass |
+| "Fix the bug" | Write a test that reproduces it (fails), then make it pass |
+| "Refactor X" | Tests green before AND after; diff shows no behavior change |
+| "Make it faster" | Name the metric + target (p95 < 200ms); measure before/after |
+| "Clean this up" | Clarification trigger — no checkable success state exists yet |
+
+For multi-step tasks, state the plan with a verify per step:
+
+```
+1. [step] → verify: [check]
+2. [step] → verify: [check]
+3. [step] → verify: [check]
+```
+
+A step without a `verify:` is not a step — it is an assumption. A task whose
+success cannot be checked is a clarification trigger, not an execution
+trigger (route to `ask-when-uncertain`).
+
+Wrong/right demos:
+[`simplicity-and-goal-demos`](../../../../../docs/guidelines/agent-infra/simplicity-and-goal-demos.md).

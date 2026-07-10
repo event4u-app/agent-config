@@ -33,6 +33,7 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 - Prefer targeted inspection (jq, debugger, logs) over brute-force.
 - Always verify results after changes (API, UI, tests) using the concrete tool that exercises that surface — `curl` / Playwright / browser for HTTP and UI, debugger / `xdebug` for runtime frames, the project's test runner for behavior.
 - When behavior can be defined → prefer test-first / TDD.
+- **Multi-step task → restate as verifiable success criteria first** (test that reproduces the bug, failing-then-passing check, before/after invariant) and plan `step → verify:` per step; a task whose success cannot be checked is a clarification trigger, not an execution trigger. Transformation table: [`think-before-action-mechanics § Goal-driven execution`](../contexts/communication/rules-auto/think-before-action-mechanics.md#goal-driven-execution--vague-ask--verifiable-goal).
 - Unclear requirements → precise clarification question, not hidden assumptions.
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless explicitly changed.
 - Do NOT modify code you do not fully understand — read it, trace the flow, then change it.
