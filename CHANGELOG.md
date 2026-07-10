@@ -998,6 +998,47 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.10.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.10.0](https://github.com/event4u-app/agent-config/compare/8.9.0...8.10.0) (2026-07-10)
+
+### Features
+
+* **bus-factor:** dogfooded self-review gate (advisory, inert without secret) ([f5afbca](https://github.com/event4u-app/agent-config/commit/f5afbca154e5a62fff7c3f3a3409334457a05e84))
+* **domain-soundness:** author 4 rubric-target domain-truth fixtures (candidates) ([b391a0c](https://github.com/event4u-app/agent-config/commit/b391a0cf13051946ea9b024b68353e6c9a31c124))
+* **evals:** skill-eval-coverage — default-surface set (29 evals) + close + archive ([119328e](https://github.com/event4u-app/agent-config/commit/119328e62410573561c09e6a4076adeece167b3f))
+* **evals:** skill-eval-coverage — behavioural evals for the rich + router sets ([84f066e](https://github.com/event4u-app/agent-config/commit/84f066eb9131310dc0ce3526162565dd3f3cc7ac))
+* **quality:** frontier-quality-operating-system Phases 3–8 — close + archive ([e75d52d](https://github.com/event4u-app/agent-config/commit/e75d52d29787f8dcfcdc7a321df6221e3cb252ec))
+* **testing:** wire mandatory case discovery into TDD, /tests create, stack skills ([d2e9ec5](https://github.com/event4u-app/agent-config/commit/d2e9ec565419fa4166ff04e6b43039226fab8bde))
+* **skill:** add test-case-discovery — enumerate-before-write coverage funnel ([6dc2e76](https://github.com/event4u-app/agent-config/commit/6dc2e76dadc7188c8e64e49e04f7c1fd21d64288))
+* **quality:** frontier-quality-operating-system Phases 1+2 — mechanism matrix + eval-harness spine ([92ad083](https://github.com/event4u-app/agent-config/commit/92ad083a6ce7cd33bfdbc36f04b500b0f0594f56))
+* **work:** consumer-flow intake wiring + retrieval quality metrics ([1ca3b7d](https://github.com/event4u-app/agent-config/commit/1ca3b7d9535b5d49f5d61011a92366ca762cf763))
+* **worktree:** governed worktree layer — skill + /worktree:* thin cluster ([e662249](https://github.com/event4u-app/agent-config/commit/e6622494f5f5d8f00337bf93a3ac750defcc69e1))
+* **telemetry:** delegation quality pair — first_pass_success + escalated ([ded001f](https://github.com/event4u-app/agent-config/commit/ded001f22e4d4eb70a0f4318f47d2aa4323ede58))
+* **sizing:** release-sizing contract + CHANGELOG Rollback: gate ([e591098](https://github.com/event4u-app/agent-config/commit/e591098665eb10561e55b064a1f99e29f3c649e4))
+* **invariants:** kernel semantic-invariant gate (guards lost-merge-content class) ([59c58d5](https://github.com/event4u-app/agent-config/commit/59c58d5995a4127ebae82ea2fd48109ac508928f))
+* **surface:** surface-specific-agent-contracts Phases 2+3 — close + archive ([4899010](https://github.com/event4u-app/agent-config/commit/489901079c538a04f39d293f747fac9040e981f7))
+* **release-gate:** pack-based consumer matrix, release-adjacent dry-runs, red-workflow tripwire ([3742c9a](https://github.com/event4u-app/agent-config/commit/3742c9a8f290156f9696f51f51cf981f49ba97be))
+* **surface:** surface-specific-agent-contracts Phases 0/1/4/5/6/7 — backbone + fixtures ([9bff235](https://github.com/event4u-app/agent-config/commit/9bff2351b2e28703033084be0bf3541458731ea7))
+* **design:** design-artifact-fidelity Phases 5–7 + close + archive ([d92355a](https://github.com/event4u-app/agent-config/commit/d92355ac333d429803270219f1b8d1a4d24f6a85))
+* **design:** design-artifact-fidelity Phase 4 — variation & canvas planning ([b1ae817](https://github.com/event4u-app/agent-config/commit/b1ae817d3a76c9cc859f206a28278b29c9795778))
+* **design:** design-artifact-fidelity Phase 3 — surgical edit preservation ([065fd17](https://github.com/event4u-app/agent-config/commit/065fd1712f6256a662f0073f828491f8b0bc3433))
+* **design:** design-artifact-fidelity Phase 2 — resource-first context gate ([4a40217](https://github.com/event4u-app/agent-config/commit/4a40217e6f86b3d6a5b8f3e25cceeaeea10b550a))
+* **design:** design-artifact-fidelity Phase 1 — lifecycle contract ([1256d47](https://github.com/event4u-app/agent-config/commit/1256d47e94f5a3c874b726e6b24045aca6f74513))
+
+### Bug Fixes
+
+* **ci:** heal post-merge reds — portability literal, ranking regression, proof drift ([319a2f8](https://github.com/event4u-app/agent-config/commit/319a2f82e67fd2c498a113a627df9ae77871b327))
+* **skill:** playwright-testing — add run-verification note (clears skill_linter warnings) ([68db2b6](https://github.com/event4u-app/agent-config/commit/68db2b629a2689926fc6befdcdd944ea006e4652))
+
+### Chores
+
+* regenerate docs/proof.md — skill-count claim 269 → 270 ([0ec4c58](https://github.com/event4u-app/agent-config/commit/0ec4c5831941aa95b55613bb2c1ffe61c8724ab3))
+* **roadmap:** close + archive command-structure-optimization (deferred items → later/ follow-up) ([fa9a1b7](https://github.com/event4u-app/agent-config/commit/fa9a1b71e4623f4138123299b3fbbf5179d7eb68))
+* regenerate counts, pack manifests, condensation hashes ([1ba1a86](https://github.com/event4u-app/agent-config/commit/1ba1a863de5e52e139ca1283ef36f252672f7ba5))
+* fix command-count badges to 177 (counts-update missed hero badge + browse line) ([4d6551d](https://github.com/event4u-app/agent-config/commit/4d6551d14c80e936135125cdb98476b6fb575913))
+* sync counts, manifests, projections, dashboards; archive completed roadmap ([5178af3](https://github.com/event4u-app/agent-config/commit/5178af3bd66dffb1071607e03b0551a2c5e74d01))
+
+Tests: 7212 (+24 since 8.9.0)
+
 ## [8.9.0](https://github.com/event4u-app/agent-config/compare/8.8.0...8.9.0) (2026-07-10)
 
 ### Features
