@@ -194,7 +194,7 @@ matches the measured set exactly.
 ## Blockers
 
 ### blocker: eval-authoring-throughput
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 2 (bulk authoring)
 - **What to do:** authoring N behavioural evals is the real cost. Use the
@@ -203,3 +203,11 @@ matches the measured set exactly.
   asserts the wrong property is worse than none.
 - **Resolved when:** the default-surface + rich tiers reach 100% passing
   coverage.
+- **Resolution (2026-07-10, template rule 22 sweep):** not a human gate —
+  drafting evals with the scaffold tooling is agent-executable Phase-2 work,
+  and the ratification concern is already covered by the normal PR review the
+  maintainer performs on every change (the evals land in a reviewable diff;
+  a wrong assertion is caught there, exactly like any other shipped test).
+  No decision or authorization precedes the work; throughput is a cost note,
+  not a gate (rule 22: "could the agent clear this with a tool during the
+  run?" — yes). The "Resolved when" stays Phase 2's exit criterion.

@@ -514,7 +514,7 @@ stale candidates.
 ## Blockers
 
 ### blocker: phase-0-golden-set
-- **Status:** open — live judge run executed 2026-07-09 (haiku) but INCONCLUSIVE (p=0.196, 33% inconsistency, 69% length-confound); a trustworthy verdict needs a stronger length-neutral judge. Coverage 14/89 also remains.
+- **Status:** open — live judge run executed 2026-07-09 (haiku) but INCONCLUSIVE (p=0.196, 33% inconsistency, 69% length-confound); a trustworthy verdict needs a stronger length-neutral judge. Coverage 14/89 also remains. Tooling update 2026-07-10: the judge-trustworthiness half is now instrumentable — `check_quality_regression.ts` gained `cohensKappa`/`judgeKappa` (second-independent-judge agreement, shipped with retrieval-substrate-hardening B7b), so the next paid run can VALIDATE the grader instead of discovering inconsistency after the fact. The blocker itself stays: the rerun is billable spend (human gate).
 - **Owner:** maintainer
 - **Blocks:** Phase 0 Steps 1 + 2 (golden set + host-compliance probe), Phase 1 Step 1 (RTK golden-set run), Phase 8 Step 2 (quality-elbow threshold), and Phase 10 Step 1 (tier-conditional loading)
 - **What to do:**

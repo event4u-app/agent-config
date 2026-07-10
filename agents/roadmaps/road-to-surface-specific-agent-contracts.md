@@ -240,7 +240,7 @@ context between tools.
 ## Blockers
 
 ### blocker: plugin-surface-capability-confirmation
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 0 checkpoint only
 - **What to do:** confirm which spreadsheet/document/presentation/browser
@@ -248,3 +248,9 @@ context between tools.
   degrade to local file parsing or user-visible limitation.
 - **Resolved when:** `surface-agent-contracts` has a capability/degrade table
   or links to the canonical host-capability manifest.
+- **Resolution (2026-07-10, template rule 22 sweep):** not a human gate —
+  confirming host plugin capabilities is research + documentation the agent
+  performs during Phase 0 (read host docs, probe where possible, emit the
+  capability/degrade table with honest "degrades to local parsing" rows).
+  Nothing to decide or authorize; the "Resolved when" is an agent-checkable
+  artifact-exists signal and remains Phase 0's exit criterion.
