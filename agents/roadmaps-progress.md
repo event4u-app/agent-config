@@ -6,10 +6,10 @@
 
 ## Overall
 
-**145 / 426 steps done · 34%**
+**157 / 426 steps done · 37%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
 ```
 
 ## Open roadmaps
@@ -27,7 +27,7 @@
 | 9 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 10 | [road-to-frontier-quality-operating-system.md](roadmaps/road-to-frontier-quality-operating-system.md) | 9 | 49 | 44 | 5 | 0 | 0 | [1](#blockers-road-to-frontier-quality-operating-system) | █░░░░░░░░░ 10% |
 | 11 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 12 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 12 | [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md) | 5 | 15 | 3 | 12 | 0 | 0 | 0 | ████████░░ 80% |
 | 13 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
 | 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 6 | 5 | 0 | 0 | [2](#blockers-road-to-maintainer-bus-factor) | ████░░░░░░ 45% |
 | 15 | [road-to-orchestration-and-memory-harvest.md](roadmaps/road-to-orchestration-and-memory-harvest.md) | 5 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -266,15 +266,15 @@
 
 ### [road-to-injection-and-authority-harvest.md](roadmaps/road-to-injection-and-authority-harvest.md)
 
-**Road to injection-and-authority harvest** — 0 / 15 done (0%)
+**Road to injection-and-authority harvest** — 12 / 15 done (80%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Found-instructions quarantine (5-step) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Extended injection-signal taxonomy | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Memory-as-hostile-input write-guards | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Found-instructions quarantine (5-step) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Extended injection-signal taxonomy | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Memory-as-hostile-input write-guards | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Action-authority sharpening (ADAPT into agent-authority) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Injected-block authenticity model (kernel-upgrade PROPOSAL only) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Injected-block authenticity model (kernel-upgrade PROPOSAL only) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md)
 
