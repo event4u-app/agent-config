@@ -1,0 +1,16 @@
+{
+  "skill": "refine-ticket",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "refine-ticket-dor",
+      "prompt": "Refine this ticket: 'make search better'.",
+      "assertions": [
+        {
+          "kind": "rubric",
+          "criterion": "Tightens to a bounded scope with acceptance criteria + a definition-of-ready; asks the one blocking question rather than guessing scope."
+        }
+      ]
+    }
+  ]
+}

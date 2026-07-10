@@ -1,0 +1,16 @@
+{
+  "skill": "dashboard-design",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "design-metrics-dashboard",
+      "prompt": "Design a metrics dashboard for our SaaS ops team.",
+      "assertions": [
+        {
+          "kind": "rubric",
+          "criterion": "Leads with the decisions the viewer must make, groups metrics by that, uses the right chart per data shape, and avoids vanity metrics."
+        }
+      ]
+    }
+  ]
+}

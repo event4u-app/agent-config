@@ -1,0 +1,20 @@
+{
+  "skill": "incident-commander",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "coordinate-incident",
+      "prompt": "Production is down — checkout is failing for all users. Coordinate the incident.",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "sever"
+        },
+        {
+          "kind": "rubric",
+          "criterion": "Declares a severity, assigns IC/comms/ops roles, sets a comms cadence, and drives to mitigation-before-root-cause — matches a named IC practice."
+        }
+      ]
+    }
+  ]
+}

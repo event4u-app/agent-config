@@ -1,0 +1,16 @@
+{
+  "skill": "test-driven-development",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "tdd-new-validator",
+      "prompt": "TDD a password-strength validator (min length, mixed case, a digit).",
+      "assertions": [
+        {
+          "kind": "rubric",
+          "criterion": "Writes a failing test FIRST (red), then the minimal code (green), then refactors — and covers boundary + negative cases, not only the happy path."
+        }
+      ]
+    }
+  ]
+}

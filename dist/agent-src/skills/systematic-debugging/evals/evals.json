@@ -1,0 +1,20 @@
+{
+  "skill": "systematic-debugging",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "debug-flaky-test",
+      "prompt": "A test passes locally but fails in CI intermittently. Walk me through debugging it.",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "hypothesis"
+        },
+        {
+          "kind": "rubric",
+          "criterion": "Forms a hypothesis, isolates one variable, and runs one-test-one-fix-one-rerun rather than shotgun edits."
+        }
+      ]
+    }
+  ]
+}

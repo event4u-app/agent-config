@@ -1,0 +1,20 @@
+{
+  "skill": "scenario-modeling",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "base-upside-downside",
+      "prompt": "Model base / upside / downside for our annual plan off a $6.3M commit.",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "downside"
+        },
+        {
+          "kind": "rubric",
+          "criterion": "Downside names a concrete HEADWIND (not base×0.8), upside names a tailwind, and reads optionality — not just ±20% on base."
+        }
+      ]
+    }
+  ]
+}

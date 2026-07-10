@@ -1,0 +1,20 @@
+{
+  "skill": "dcf-modeling",
+  "_calibration": "Behavioural fixture (road-to-skill-eval-coverage Phase 2, default-surface). Deterministic assertions on a real output property where reliable; rubric pins the qualitative core as a known-limit (pass ratified in PR review, not a hidden judge). finding_floor n is a conservative floor, not a calibrated per-host number.",
+  "scenarios": [
+    {
+      "id": "dcf-terminal-value-and-sensitivity",
+      "prompt": "DCF this target: year-6 FCFF $108M, WACC 10%, terminal growth 2%, net debt $200M. Give enterprise + equity value and the discount-rate sensitivity.",
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "WACC"
+        },
+        {
+          "kind": "rubric",
+          "criterion": "Computes Gordon terminal value = FCFF_{n+1}/(WACC−g) = 108/0.08 = 1350, bridges EV→equity via net debt, and includes a WACC/terminal-growth sensitivity grid — never a single point estimate."
+        }
+      ]
+    }
+  ]
+}
