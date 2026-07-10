@@ -184,19 +184,32 @@ project-specific context exists or was promised.
 
 ## Phase 3 — Surgical edit preservation rule
 
-- [ ] Add or extend a rule for small visual edits: if the user asks for a
+- [x] Add or extend a rule for small visual edits: if the user asks for a
       color/text/one-element change, change only that semantic target and
       preserve surrounding layout, spacing, typography, dimensions, content,
       animation, and interaction states.
-- [ ] Add examples of legitimate broader redesign triggers: "new direction",
+      <!-- done 2026-07-10: extended src/rules/design-fidelity.md with a
+      "## Surgical visual edits" section — change only the semantic target,
+      preserve the surrounding layout/spacing/typography/dimensions/content/
+      animation/interaction; cross-links minimal-safe-diff. -->
+- [x] Add examples of legitimate broader redesign triggers: "new direction",
       "from scratch", "make it feel premium", "rework the flow", "give me
       variations".
-- [ ] Add comment-anchor/screen-label preservation guidance for hosts that can
+      <!-- done: the section's "A broader redesign needs an explicit trigger"
+      bullet lists exactly these phrases; absent one, a fix/change/update
+      request is surgical. -->
+- [x] Add comment-anchor/screen-label preservation guidance for hosts that can
       expose DOM/comment metadata. Where host support is absent, preserve
       stable semantic anchors in source code comments/data attributes only if
       already present.
-- [ ] Add regression tests or trigger evals where an agent must not rewrite an
+      <!-- done: the "Preserve stable anchors" bullet — keep DOM/comment anchors
+      + screen labels where the host exposes them; else preserve already-present
+      source comment / data-* anchors, never strip or invent. -->
+- [x] Add regression tests or trigger evals where an agent must not rewrite an
       entire component for a one-line copy or color edit.
+      <!-- done: tests/design-artifacts/eval-fixtures.md gains daf-redesign-trigger
+      (surgical one-line edit vs explicit-trigger redesign), the regression
+      witness alongside the existing daf-edit-preservation + daf-unwanted-variations. -->
 
 **Exit:** small-change design tasks get the same minimal-safe-diff discipline
 as backend edits.
