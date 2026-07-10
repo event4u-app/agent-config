@@ -180,6 +180,30 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     only when ≥2 related roadmaps are created together or as a follow-up
     chain.
 
+22. **Human gates are the exception — author for autonomous execution.**
+    Roadmap exists to be worked through without stopping; every human
+    checkpoint interrupts that. Default human-gate count: **zero**.
+    - Every step is **agent-executable**. `- [ ] User verifies X`,
+      `- [ ] Manually check Y`, dedicated "Review / Sign-off" phases =
+      authoring bugs — replace with agent-verifiable check (command,
+      targeted test, grep) or delete.
+    - Exit + acceptance criteria are **agent-decidable** signals (command
+      exit code, file exists, test passes) — never "user approves",
+      "looks good", "sign-off".
+    - Human gate allowed only when **only a human can clear it**:
+      Hard-Floor action (deploy, prod data/infra, merge), billable spend,
+      external dependency, contested product decision. Record as
+      structured `## Blockers` entry (rule 20) — never as inline checkbox
+      step scattered through phases.
+    - Do **not** restate safety floors as steps. `non-destructive-by-default`,
+      `security-sensitive-stop`, `commit-policy` fire at run time on
+      their own; authored "STOP: confirm with user before X" duplicates
+      them → only adds interruptions.
+    Gate-test before any checkpoint: *"Could the agent clear this with a
+    tool or command during the run?"* Yes → step, not gate. No →
+    structured blocker with decidable `Resolved when:`.
+    `task lint-roadmap-complexity` warns on human-gate step patterns.
+
 ---
 
 ## Quality Gates (remote CI by default)

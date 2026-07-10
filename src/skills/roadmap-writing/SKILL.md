@@ -104,19 +104,49 @@ run mechanics:
 The field is intent, never a permission grant — grants happen only at
 the run-start contract. `/roadmap:create` asks this as one question;
 when authoring a roadmap directly, ask it too (follow-ups pre-select
-the parent's mode but always re-ask). **Authoring duty for
+the parent's mode but always re-ask). **Recommend `autonomous`** — it
+is the mode roadmaps are written for; suggest `interactive` only when
+the plan genuinely needs step-level user control. **Authoring duty for
 `autonomous`:** steps must be precise enough to clear the
 `ask-when-uncertain` vague-trigger patterns — vagueness is resolved at
 authoring time, not mid-run; pre-existing `[~]` items in an
 `autonomous` roadmap draw a lint warning (they guarantee the archival
 gate fires later).
 
+### 4c. Autonomy-first — zero human gates by default
+
+Roadmaps exist to be executed without stopping
+([`templates/roadmaps.md` rule 22](../../agent-src/templates/roadmaps.md)).
+The default number of human checkpoints in a roadmap is **zero**.
+
+- Every step is **agent-executable**. `- [ ] User verifies X`,
+  `- [ ] Manually check Y`, and dedicated "Review / Sign-off" phases
+  are authoring bugs — replace each with an agent-verifiable check (a
+  command, a targeted test, a grep) or delete it.
+- A human gate is legitimate only when **only a human can clear it**:
+  a Hard-Floor action (deploy, prod data/infra, merge), billable
+  spend, an external dependency, or a contested product decision.
+  Record it as a structured `## Blockers` entry (§ 5b) — never as an
+  inline checkbox step scattered through phases.
+- Do **not** restate safety floors as steps — `non-destructive-by-default`,
+  `security-sensitive-stop`, and `commit-policy` fire at run time on
+  their own; an authored "STOP: confirm with user" duplicates them and
+  only adds interruptions.
+
+Gate-test before writing any checkpoint: *"Could the agent clear this
+with a tool or command during the run?"* Yes → it is a step, not a
+gate. No → structured blocker with a decidable `Resolved when:`.
+`lint_roadmap_complexity` warns on human-gate step patterns in every
+execution mode.
+
 ### 5. Exit & rollback per phase
 
 Each phase declares **exit criteria** (decidable signals that the
 phase is done) and **rollback** (what to revert if the phase fails).
 A phase without exit criteria is open-ended; a phase without
-rollback assumes success.
+rollback assumes success. Exit criteria are **agent-decidable** — a
+command exit code, a file that exists, a test that passes — never
+"user reviews" or "looks good" (§ 4c).
 
 ### 5b. Blockers are structured, not free prose
 
@@ -127,7 +157,9 @@ with `Status` / `Owner` / `Blocks` / `What to do` / `Resolved when`),
 never a stray "blocked on X" sentence. The dashboard generator parses
 these into the overview's `Blocker` column and the per-roadmap
 breakdown. Full shape: [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
-Omit the section entirely when the roadmap has no such gate.
+Omit the section entirely when the roadmap has no such gate. Before
+adding one, run the § 4c gate-test — anything the agent can clear
+with a tool or command during the run is a step, not a blocker.
 
 ### 6. Step-marker semantics — pick `[~]` (defer) vs `[-]` (cancel) honestly
 
@@ -289,7 +321,11 @@ to every roadmap you author.
 3. Are checkboxes present in every non-intro phase?
 4. Are exit criteria decidable, or vibe-based ("looks good")?
 5. Is content duplicated from another roadmap (supersession instead)?
-6. *Source-derived/adoption only (§ 8):* is there a `KEEP`/`FOLD`/`CUT`
+6. Are there human-gate steps (`user verifies`, `manual check`,
+   sign-off phases) that § 4c bans — could each become an
+   agent-verifiable check, or a structured blocker if genuinely
+   user-clearable?
+7. *Source-derived/adoption only (§ 8):* is there a `KEEP`/`FOLD`/`CUT`
    gap-table behind the scope, a `## Provenance` block with an `ENC1:`
    link, inlined council convergence, and an anti-dump acceptance
    criterion? (Internally-originated roadmap → these must be **absent**,
@@ -303,6 +339,10 @@ to every roadmap you author.
   template rule 13 + [`scope-control`](../../rules/scope-control.md#git-operations--permission-gated).
 * Plan automatic branch switches mid-roadmap (template rule 14).
 * Ship a phase without checkboxes (`roadmap-progress-sync` Iron Law #2).
+* Write inline human-verification steps (`- [ ] user verifies …`,
+  `manually check …`) or dedicated "Review / Sign-off" phases — human
+  gates live in `## Blockers`, and only when genuinely user-clearable
+  (§ 4c / template rule 22).
 * Write merge, push, or commit steps into the roadmap. Roadmaps plan
   **work**; merge / push / commit are delivery decisions owned by the
   user (`commit-policy` Iron Law). A roadmap is "implementation-complete"
@@ -338,6 +378,12 @@ to every roadmap you author.
   the phase has prose. Enforced by `roadmap-progress-sync` Iron Law #2.
 - **Vague goal sentence** — "Improve roadmap quality" forces every
   reader to re-derive intent and blocks decidable acceptance.
+- **Human-gate steps sprinkled through phases** — every
+  `- [ ] user verifies …` interrupts an autonomous run to re-ask
+  permission the run-start contract already granted, and the dashboard
+  counts it as open work the agent can never close. § 4c: replace with
+  an agent-verifiable check, or promote to a structured blocker when
+  only a human can clear it.
 - **Restating template rules** — pasting structural rules into the
   roadmap body creates two sources of truth that drift over months.
 - **Version numbers in phase names** — `Phase 1 — v1.8.0` violates
