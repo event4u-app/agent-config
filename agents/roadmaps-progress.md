@@ -6,7 +6,7 @@
 
 ## Overall
 
-**110 / 316 steps done · 35%**
+**111 / 316 steps done · 35%**
 
 ```text
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
@@ -29,7 +29,7 @@
 | 11 | [road-to-opt-hygiene-and-debt.md](roadmaps/road-to-opt-hygiene-and-debt.md) | 4 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 12 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 13 | [road-to-opt-portfolio-consolidation.md](roadmaps/road-to-opt-portfolio-consolidation.md) | 4 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 14 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 14 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 11 | 1 | 0 | 0 | 0 | █░░░░░░░░░ 8% |
 | 15 | [road-to-opt-subagent-harvest.md](roadmaps/road-to-opt-subagent-harvest.md) | 3 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 17 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
@@ -263,13 +263,13 @@ _1 blocker resolved._
 
 ### [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md)
 
-**Road to opt retrieval and memory — wire the orphan, benchmark honestly, borrow the protocol discipline** — 0 / 12 done (0%)
+**Road to opt retrieval and memory — wire the orphan, benchmark honestly, borrow the protocol discipline** — 1 / 12 done (8%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | resolve the orphaned retrieval surface | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2 | honest self-benchmark with a second judge | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | protocol borrows (six small mechanisms, no engines) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 3 | protocol borrows (six small mechanisms, no engines) | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
 | 4 | close out the source file | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
 ### [road-to-opt-subagent-harvest.md](roadmaps/road-to-opt-subagent-harvest.md)

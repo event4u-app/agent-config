@@ -37,8 +37,11 @@ contested flags, fact-change protocol) — all without new infrastructure.
     `_lexicalRerank` wiring (lines ~827/928); `_lib/lexical_index.ts`
     (BM25 + trigram prefilter, tripwire-gated).
   - OPEN: `second_brain_retrieval.ts` has zero call sites outside itself;
-    no term-coverage-squaring in `lexical_index.ts`; no retrieval
-    self-benchmark command; protocol borrows below.
+    no term-coverage-squaring in `lexical_index.ts`; no END-TO-END
+    retrieval benchmark (the deterministic ranking benchmark
+    `measure_lexical_ranking.ts` exists — Phase 2 measures a different
+    object: real `retrieve_v1` vs a realistic baseline with token totals
+    and a κ judge); protocol borrows below.
 
 ## Provenance
 
@@ -81,7 +84,10 @@ against a REALISTIC baseline.
 - [ ] Benchmark command: real `retrieve_v1` (with/without `token_budget` +
       prefilter) vs the realistic baseline (current projection / grep
       session transcript), on fixed query fixtures; report token totals
-      and answer-coverage, never a synthetic corpus multiplier.
+      and answer-coverage, never a synthetic corpus multiplier. Extends /
+      reuses the `measure_lexical_ranking.ts` corpus and conventions —
+      that script stays the deterministic ranking benchmark; this one
+      measures the end-to-end surface (no duplication).
 - [ ] Add a blind second-judge pass + Cohen's-κ computation (~20 LOC) to
       the existing McNemar/Wilcoxon harness; κ reported alongside every
       judged verdict.
@@ -118,9 +124,9 @@ in the report schema; no README/marketing claim cites an unbacked number.
 - [ ] **Read-escalation snippet** (consumer-facing): the 4-step ladder
       (hot cache → index → type index → entry) as a template snippet for
       cross-project knowledge access in consumer docs.
-- [ ] **Injection line-budget check**: verify `hot_context_hook.ts` caps
-      injected memory content by lines/chars; if uncapped, add the cap
-      (small, config-backed).
+- [x] **Injection budget check**: verified during PR-#886 review —
+      `hot_context_hook.ts` already carries a `WORD_CAP = 400` hard cap
+      (line 47); nothing to add.
 
 **Exit criteria:** each borrow lands in its named artifact with the
 existing checker (similarity / contradiction / lint) as its enforcement
