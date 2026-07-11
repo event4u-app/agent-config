@@ -227,6 +227,7 @@ commands:
     - ghostwriter/list
     - ghostwriter/show
     - ghostwriter/write
+    - humanize
     - post-as
     - post-as/ghostwriter
     - post-as/me
