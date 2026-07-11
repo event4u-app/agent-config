@@ -87,6 +87,27 @@ describe('load_council_config — happy path', () => {
         expect(c.cost_budget.max_total_usd).toBe(0.0);
     });
 
+    it('stance_tally defaults to disabled when the block is absent (Phase 1)', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        expect(c.stance_tally.enabled).toBe(false);
+    });
+
+    it('stance_tally.enabled: true is honoured', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nstance_tally:\n  enabled: true\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.stance_tally.enabled).toBe(true);
+    });
+
+    it('stance_tally.enabled non-bool is rejected', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nstance_tally:\n  enabled: "yes"\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+            /stance_tally\.enabled.*bool/,
+        );
+    });
+
     it('per-member mode override precedence', () => {
         const tmp = make_tmp();
         const payload = `enabled: true
