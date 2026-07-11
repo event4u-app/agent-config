@@ -9380,7 +9380,7 @@ function build_claude_hook_matrix(manifest_path2) {
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
     const native = ac_to_native[ac_event];
     if (native === void 0) continue;
-    matrix[native] = `BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; "$BIN" dispatch:hook --platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
+    matrix[native] = `BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; command -v "$BIN" >/dev/null 2>&1 || exit 0; "$BIN" dispatch:hook --platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
   }
   return matrix;
 }
@@ -17291,7 +17291,7 @@ var CURSOR_DISPATCHER_BINDINGS = [
   ["post_tool_use", "postToolUse"]
 ];
 function _cursor_dispatch_command(ac_event, native) {
-  return `./agent-config dispatch:hook --platform cursor --event ${ac_event} --native-event ${native}`;
+  return `[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform cursor --event ${ac_event} --native-event ${native}`;
 }
 function ensure_cursor_bridge(project_root, force) {
   const hooks = {};
@@ -17437,7 +17437,7 @@ var WINDSURF_DISPATCHER_BINDINGS = [
   ["stop", "post_cascade_response"]
 ];
 function _windsurf_dispatch_command(ac_event, native) {
-  return `./agent-config dispatch:hook --platform windsurf --event ${ac_event} --native-event ${native}`;
+  return `[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform windsurf --event ${ac_event} --native-event ${native}`;
 }
 function ensure_windsurf_bridge(project_root, force) {
   const hooks = {};
@@ -17497,7 +17497,7 @@ var GEMINI_DISPATCHER_BINDINGS = [
   ["post_tool_use", "AfterTool", ".*"]
 ];
 function _gemini_dispatch_command(ac_event, native) {
-  return `./agent-config dispatch:hook --platform gemini --event ${ac_event} --native-event ${native}`;
+  return `[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform gemini --event ${ac_event} --native-event ${native}`;
 }
 function _gemini_hooks_dict(command_factory) {
   const out = {};

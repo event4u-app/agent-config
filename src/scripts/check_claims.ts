@@ -42,6 +42,13 @@ const SURFACE_ROOTS = ['README.md', 'docs'];
 const CLAIM_MARKER = /<!--\s*claim:([A-Za-z0-9._-]+)\s*-->/g;
 const URL_DATED = /^https?:\/\/\S+\(\d{4}-\d{2}-\d{2}\)\s*$/;
 
+/** Witness sweep (P1.2) — marketing-class surfaces where a bare number must
+ *  not appear as a capability claim. docs/proof.md and docs/comparison.yaml
+ *  are structurally witnessed (pointer columns + their own linters). */
+const WITNESS_SURFACES = ['README.md', 'CAPABILITIES.yaml'];
+/** A percentage or multiplier reading as a measured capability figure. */
+const QUANTIFIED_CLAIM = /\b\d+(?:\.\d+)?\s*(?:%|[x×](?![A-Za-z0-9]))/;
+
 class ExitCode extends Error {
     code: number;
     constructor(code: number) {
@@ -222,6 +229,39 @@ function main(argv: string[] = process.argv.slice(2)): number {
         if (entry.status !== 'backed') continue;
         const un = pointer_unresolved(entry.evidence);
         if (un) findings.push({ id: entry.id, file: LEDGER_REL, reason: `backed entry has dangling evidence — ${un}` });
+    }
+
+    // 3. Witness sweep (road-to-opt-subagent-harvest P1.2): a QUANTIFIED
+    //    capability claim on a marketing-class surface must be witnessed — a
+    //    `<!-- claim:ID -->` marker on the same line, or an explicit
+    //    `unverified` annotation. Unmarkered numbers are exactly how an
+    //    "84.8%"-style figure spreads across surfaces with no methodology
+    //    (the anti-lesson this check encodes). Fenced code blocks are skipped.
+    for (const rel of WITNESS_SURFACES) {
+        const abs = path.join(REPO, rel);
+        let text: string;
+        try {
+            text = fs.readFileSync(abs, 'utf-8');
+        } catch {
+            continue;
+        }
+        let inFence = false;
+        const lines = text.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i] as string;
+            if (/^\s*(```|~~~)/.test(line)) {
+                inFence = !inFence;
+                continue;
+            }
+            if (inFence) continue;
+            if (!QUANTIFIED_CLAIM.test(line)) continue;
+            if (/<!--\s*claim:/.test(line) || /unverified/i.test(line)) continue;
+            findings.push({
+                id: '(unmarkered)',
+                file: `${rel}:${i + 1}`,
+                reason: `quantified claim without a claim marker or 'unverified' annotation — ${line.trim().slice(0, 70)}`,
+            });
+        }
     }
 
     if (findings.length > 0) {

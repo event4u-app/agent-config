@@ -1634,9 +1634,19 @@ export function generate_claude_subagents(): number {
     }
     _mkdirp(MODULE_STATE.CLAUDE_AGENTS_DIR);
 
-    const sources = _rglobSorted(MODULE_STATE.SUBAGENTS_SOURCE, '*.md').filter((p) => _isFile(p));
+    const sources = _rglobSorted(MODULE_STATE.SUBAGENTS_SOURCE, '*.md').filter(
+        (p) => _isFile(p) && !path.basename(p).startsWith('_'),
+    );
     const current = new Set<string>();
     let count = 0;
+
+    // Prompt-defense preamble partial (road-to-opt-subagent-harvest P1.1):
+    // `_`-prefixed files in src/subagents/ are partials, never agents. The
+    // preamble is injected at the top of every projected body so the whole
+    // fleet carries a uniform injection-defense baseline — each dispatched
+    // subagent is an untrusted-content ingestion point.
+    const defensePath = path.join(MODULE_STATE.SUBAGENTS_SOURCE, '_prompt-defense.md');
+    const defense = _isFile(defensePath) ? _readText(defensePath).trim() : '';
 
     for (const src of sources) {
         const stem = path.basename(src, '.md');
@@ -1661,6 +1671,10 @@ export function generate_claude_subagents(): number {
         const tier = typeof fm['model_tier'] === 'string' ? (fm['model_tier'] as string) : 'inherit';
         const model = tier === 'inherit' ? 'inherit' : (_TIER_TO_CLAUDE_MODEL[tier] ?? 'inherit');
 
+        const guardedBody =
+            defense !== '' && !body.includes('prompt-defense-preamble')
+                ? `\n${defense}\n${body}`
+                : body;
         const out =
             '---\n' +
             `name: ${name}\n` +
@@ -1668,7 +1682,7 @@ export function generate_claude_subagents(): number {
             `tools: ${tools}\n` +
             `model: ${model}\n` +
             '---\n' +
-            body;
+            guardedBody;
 
         const target = path.join(MODULE_STATE.CLAUDE_AGENTS_DIR, `${name}.md`);
         _writeText(target, out);
