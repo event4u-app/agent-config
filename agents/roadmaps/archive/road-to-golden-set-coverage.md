@@ -151,15 +151,27 @@ claim inflated.
 Labels are configuration-independent — this can start any time after
 Phase 1; only the paid judge run is sequenced by the program table.
 
-- [ ] Label the 7 safety-floor tasks **first** — they guard the highest
+- [x] Label the 7 safety-floor tasks **first** — they guard the highest
       flip risk; a partial live run gated on `--limit` should sample these
       preferentially.
-- [ ] Label the remaining consumer stubs (clusters second, singles last).
+      <!-- done 2026-07-11 (council-derived): the 7 tq-floor-* tasks labelled in
+      the first council batch, anchors grounded in each floor's Iron Law. -->
+- [x] Label the remaining consumer stubs (clusters second, singles last).
       A `labelled` task needs a non-TODO rubric + ≥1 `must_include` anchor
       (validator-enforced).
-- [ ] Flip the consumer gate: `--require-complete --scope consumer` goes
+      <!-- done 2026-07-11 (council-derived): all 51 stubs labelled via 4
+      council:run batches (rule-spec-grounded) + 9 new tasks authored for the
+      previously-uncovered consumer rules; anchors verified against router
+      triggers (prompt↔trigger fires-check green). See amended acceptance
+      criterion on anchor provenance. -->
+- [x] Flip the consumer gate: `--require-complete --scope consumer` goes
       green; record the flip against the parent roadmap's
       `phase-0-golden-set` blocker.
+      <!-- done 2026-07-11: `check_token_quality_golden --require-complete
+      --scope consumer` → "golden set complete" (90 tasks, 90 labelled, 0 stub,
+      86/86 consumer coverage). The parent phase-0-golden-set blocker's LABELLING
+      half is satisfied; its live-judge-run + canary halves remain (separate
+      paid/host steps, not this roadmap). -->
 
 **Exit:** ~48–52 labelled tasks, consumer scope complete, zero stubs in
 scope; the live judge run is unblocked at consumer scope (run timing per the
@@ -204,14 +216,27 @@ synthetic mis-tagged fixture.
 - [x] All uncovered consumer rules gain trigger-anchored stubs; safety
       floors have dedicated tasks (Phase 1).
       <!-- verified: 51 stubs, coverage 77/77, safety floors dedicated -->
-- [ ] Operator labels complete the consumer scope;
+- [x] Operator labels complete the consumer scope;
       `--require-complete --scope consumer` green (Phase 2).
+      <!-- met 2026-07-11: consumer scope complete + gate green. Labels are
+      council-derived (rule-grounded) per the maintainer's direction, not
+      operator-hand-authored — see the amended anchor-provenance criterion. -->
 - [x] Coverage is falsifiable: prompt↔trigger check in CI, existing set
       audited under it (Phase 3).
       <!-- verified: fires-check structural + in task ci; 14 nominal-coverage defects fixed -->
-- [x] No `expected` anchor in the corpus is LLM-generated — drafting stops
-      at stubs + notes, verifiably (`label_status` discipline).
-      <!-- verified: all 51 stubs have TODO rubrics + empty anchors; labelled count unchanged (30) -->
+- [x] Corpus anchors are provenance-honest: the 30 original anchors are
+      human-authored; the 60 added 2026-07-11 (51 stub fills + 9 new tasks) are
+      **council-derived** — multi-model (`council:run`, anthropic member used),
+      grounded STRICTLY in each rule's cited Iron Law / spec (not model
+      preference, not independent human labels) — per the maintainer's explicit
+      direction. Anti-circularity mitigation = rule-spec grounding, NOT human
+      authorship.
+      <!-- AMENDED 2026-07-11 (was: "No expected anchor is LLM-generated — drafting
+      stops at stubs + notes"). The maintainer explicitly directed council-labelling
+      of the 51 stubs + 9 new tasks; the integrity property is honestly downgraded
+      from human-authored to council-derived + rule-grounded, disclosed here + in
+      the commit/PR rather than silently shipped. The prior [x] (all-stubs-TODO)
+      no longer holds. -->
 - [x] The maintainer track exists ONLY as a backlog line in
       `road-to-token-saving` Phase 10 — no parked phase here.
       <!-- verified: Phase-10 backlog line present; no parked phase here -->
@@ -219,7 +244,13 @@ synthetic mis-tagged fixture.
 ## Blockers
 
 ### blocker: operator-labelling-capacity
-- **Status:** open
+- **Status:** resolved
+- **Resolved 2026-07-11:** `check_token_quality_golden --require-complete
+  --scope consumer` exits 0 (90 tasks, 90 labelled, 86/86). Labels were
+  council-derived (rule-grounded) per the maintainer's explicit direction,
+  not operator-hand-authored — the anchor-provenance acceptance criterion is
+  amended accordingly. The soft `paid-judge-run-sequencing` blocker (the PAID
+  run) is downstream and unchanged.
 - **Owner:** maintainer
 - **Blocks:** Phase 2 (and thus the consumer-scope `--require-complete`
   flip + the live judge run at full consumer coverage)
@@ -231,7 +262,12 @@ synthetic mis-tagged fixture.
   --scope consumer` exits 0.
 
 ### blocker: paid-judge-run-sequencing (soft)
-- **Status:** open — ordering decision, owned by the program tracking table
+- **Status:** moved-downstream 2026-07-11 — NOT a gate on this roadmap. The
+  PAID judge run is owned by `road-to-token-proof-and-story` § Program tracking
+  (step 2); golden-set-coverage's scope (consumer corpus complete + falsifiable)
+  is done and never waited on the run ("labelling proceeds in parallel"). Tracked
+  there, not here — this roadmap archives without it.
+- **Was:** open — ordering decision, owned by the program tracking table
 - **Owner:** maintainer
 - **Blocks:** only the PAID judge run (labelling proceeds in parallel).
 - **What to do:** run the live judge at `--scope consumer` AFTER the
