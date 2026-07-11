@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **8** open blockers
+> 8 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **6** open blockers
 
 ## Overall
 
-**84 / 156 steps done · 54%**
+**72 / 128 steps done · 56%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+██████████████████████░░░░░░░░░░░░░░░░░░   56%
 ```
 
 ## Open roadmaps
@@ -23,8 +23,7 @@
 | 5 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
 | 6 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 7 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
-| 8 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 9 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 7 | 28 | 0 | 2 | [1](#blockers-road-to-token-saving) | ████████░░ 80% |
+| 8 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
 
 ---
 
@@ -165,40 +164,9 @@ _1 blocker resolved._
 | 3 | External soak confirmation | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 4 | Removal execution (blocked on Phases 1–3) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
-### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
-
-**Road to token proof and story — orchestrate, prove, activate, adopt** — 12 / 26 done (46%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Harden the flip gate (small, verified, do first) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | One critical path for six tracks (the program table) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | Field evidence: replay + session telemetry | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
-| 3 | Public proof refresh (benchmark, claims, release story) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Spend the story: one named external pilot (N=1) | 🟡 in progress | 7 | 2 | 0 | 0 | 22% |
-
-<a id="blockers-road-to-token-proof-and-story"></a>
-**Blockers**
-
-- **flip-gates-upstream (inherited)** (owner: maintainer) — blocks Phase 2 post-flip arms and Phase 3 (need the flips landed); Phases 0, 1 and the Phase 2 corpus/tooling build are unblocked now.
-  - **What to do:**
-    (consumer-scoping default → discipline_profile default → thin
-    un-deferral decision), each behind its own hardened gate.
-  - **Resolved when:** the consumer-scoping default flip and the discipline_profile default flip have landed (thin optional — arms can run with the "modelled, not shipped" label for the thin arm).
-- **field-corpus-privacy** (owner: maintainer) — blocks Phase 2 replay arms (need the exported, privacy-reviewed corpus from Galawork/event4u sessions).
-  - **What to do:**
-    --history <repo>/agents/runtime/.agent-chat-history --limit 200` per
-    repo, then review the `.local.yaml` output under the low-impact-corpus
-    privacy floor (drop/redact anything client- or person-identifying).
-    Progress 2026-07-07: agent-config's own history exported (30 prompts →
-    `internal/bench/corpora/field-prompts.local.yaml`, gitignored, awaiting
-    review). Still needed: exports from the Galawork consumer repos (their
-    history files are outside this checkout — operator run) to reach N≥100.
-  - **Resolved when:** a reviewed corpus file exists and the low-impact-corpus privacy floor checklist for it is signed off.
-
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 28 / 35 done (80%)
+**Road to token saving — measure, then cut, at constant quality** — 28 / 33 done (85%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -207,8 +175,8 @@ _1 blocker resolved._
 | 2 | Close the RTK trigger gap | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 3 | Deterministic RTK wrap hook + install verification | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Cache-aware ordering as a CI invariant (D5) | ✅ done | 0 | 2 | 0 | 1 | 100% |
-| 8 | Always-loaded budget linter (D6) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 3 | 11 | 0 | 0 | 79% |
+| 8 | Always-loaded budget linter (D6) | ✅ done | 0 | 2 | 0 | 1 | 100% |
+| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 2 | 11 | 0 | 1 | 85% |
 
 <a id="blockers-road-to-token-saving"></a>
 **Blockers**
