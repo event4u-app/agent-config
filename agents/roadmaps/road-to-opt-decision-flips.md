@@ -23,7 +23,8 @@ reality.
 - Sweep evidence: five parallel analyses (roadmap portfolio, ADR/lock
   challenge, package health, archive mine, tmp mine) verified against repo
   state on 2026-07-11; py2ts migration confirmed landed on `main`
-  (0 tracked `.py` under `src/`, 547 `.ts`).
+  (0 tracked `.py` under `src/`; 739 `.ts` files under `src/` at branch
+  HEAD `9688082a6`).
 
 ## Context — why these flips now
 

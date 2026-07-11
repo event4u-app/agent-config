@@ -6,25 +6,32 @@ complexity: lightweight
 
 > Part of the `road-to-opt-*` cluster (2026-07-11 sweep). The package audit
 > found the corpus healthy (9-rule sha-guarded kernel, low skill overlap,
-> real budget gates) but with four concrete debts that violate the
-> package's OWN policies — an allowlist 5× over its cap, an eager rule load
-> 5.7× the thin path, 19 MB of tracked reference payload, and a graveyard
-> of stale point-in-time reports.
+> real budget gates) but with concrete debts that violate the package's
+> OWN policies — an allowlist 5× over its cap, an eager rule load 5.7× the
+> thin path, and a graveyard of stale point-in-time reports.
+>
+> **Number correction (review, 2026-07-11):** the sweep's first draft
+> claimed `agents/reference/` was "19 MB tracked" — that figure came from
+> a local `du` including gitignored content. Actually tracked: 37 files,
+> ~0.1 MB (branch HEAD `9688082a6`). The tracking-policy decision below
+> survives at low priority; the urgency claim does not.
 
 ## Goal
 
 Bring the package back inside its own policy lines: framework-leakage
 allowlist under the 20-entry cap, the five heaviest auto-rules migrated to
-thin stubs, a deliberate tracking decision for `agents/reference/`, and a
-retention convention that stops report/scratch accumulation.
+thin stubs, and a retention convention (including a low-priority tracking
+decision for `agents/reference/`) that stops report/scratch accumulation.
 
 ## Prerequisites
 
-- Audit numbers (verified 2026-07-11): allowlist 104 entries; 78/104 dist
-  rules ≥1500 B full-body; token baseline `eager_rule_load` 78,513 vs
-  `thin_rule_load` 13,881; `agents/reference/` 19 MB tracked;
-  `agents/tmp.old/` 3.4 MB / 173 files (gitignored); 91 TODO/FIXME lines
-  across 62 files in `src/scripts` + `src/rules`.
+- Audit numbers (re-verified at branch HEAD `9688082a6`, 2026-07-11):
+  allowlist 104 entries; 78/104 dist rules ≥1500 B full-body; token
+  baseline `eager_rule_load` 78,513 vs `thin_rule_load` 13,881;
+  `agents/reference/` 37 tracked files / ~0.1 MB (the on-disk directory is
+  larger only through gitignored content); `agents/tmp.old/` 3.4 MB /
+  173 files (gitignored); 91 TODO/FIXME lines across 62 files in
+  `src/scripts` + `src/rules`.
 
 ## Phase 1 — framework-leakage allowlist: 104 → under 20
 
@@ -82,11 +89,11 @@ preservation checks green; measured `eager_rule_load` reduction recorded.
 
 ## Phase 3 — tracked-weight decisions
 
-- [ ] `agents/reference/` (19 MB tracked): decide per subdirectory —
-      gitignore (like `agents/runtime/`), move durable material to
-      `docs/`, or keep-tracked with a written justification. Execute the
-      decision; the repo's heaviest non-code payload must be deliberate,
-      not accidental.
+- [ ] `agents/reference/` (37 tracked files, ~0.1 MB — low priority):
+      decide per subdirectory — gitignore (like `agents/runtime/`), move
+      durable material to `docs/`, or keep-tracked with a written
+      justification. The point is deliberateness, not weight; the
+      gitignored bulk in the same directory stays local either way.
 - [ ] Stale `agents/reports/` snapshots: untrack the 6.0.0-era one-shots
       (`command-surface.json` 127 K, `command-classification-6.0.0-d.md`
       40 K, `step-16-19b-execution-plan.md`, other `6.0.0-*`) after a

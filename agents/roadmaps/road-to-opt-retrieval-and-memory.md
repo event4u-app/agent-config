@@ -2,32 +2,43 @@
 complexity: lightweight
 ---
 
-# Road to opt retrieval and memory — finish the substrate, then borrow the protocol discipline
+# Road to opt retrieval and memory — wire the orphan, benchmark honestly, borrow the protocol discipline
 
 > Part of the `road-to-opt-*` cluster (2026-07-11 sweep). Two source pools:
 > (a) the residual items from the maintainer's borrow catalogue in
-> `agents/tmp/graphify.txt` (B3/B4/B6/B8 already shipped; B1/B2/B7 open;
-> the "Phase 0–1 implementation" mentioned in that chat log was applied to
-> a clone and never landed here), and (b) protocol-level mechanisms from
-> five external memory/knowledge references whose ENGINES were all
-> re-confirmed as rejected (vectors/services/vault — the Layer-2 sunset
-> holds) but whose write/recall discipline is genuinely sharper than ours.
+> `agents/tmp/graphify.txt`, and (b) protocol-level mechanisms from five
+> external memory/knowledge references whose ENGINES were all re-confirmed
+> as rejected (vectors/services/vault — the Layer-2 sunset holds) but whose
+> write/recall discipline is genuinely sharper than ours.
+>
+> **Scope correction (review, 2026-07-11):** the sweep's first draft
+> scheduled B1 (token-budgeted retrieve) and the lexical-prefilter wiring —
+> both had ALREADY landed via road-to-retrieval-substrate-hardening
+> (merged 2026-07-10; `retrieve_v1` `token_budget` + `truncation` envelope,
+> `_lexicalRerank` wiring in `memory_lookup.ts`, `_lib/lexical_index.ts`
+> BM25 + trigram prefilter). The stale verification came from a
+> two-fold trap: an earlier checkout AND `grep` silently returning zero
+> hits on a file it classifies as binary (`memory_lookup.ts` — use
+> `grep -a`). This roadmap now tracks only what is verifiably open.
 
 ## Goal
 
-Close the retrieval-substrate residuals (token-budgeted retrieve, lexical
-prefilter wiring, honest self-benchmark, and actually wiring the dormant
-`second_brain_retrieval.ts`) and land six small protocol borrows
-(provenance anchors, dedup thresholds, contested flags, fact-change
-protocol) — all without new infrastructure.
+Resolve the orphaned retrieval surface, port the two residual lexical
+refinements, build the honest self-benchmark with a second judge, and land
+six small protocol borrows (provenance anchors, dedup thresholds,
+contested flags, fact-change protocol) — all without new infrastructure.
 
 ## Prerequisites
 
-- Verified 2026-07-11: `_lib/lexical_index.ts` (BM25 + trigram) shipped and
-  dormant behind the `lint_knowledge_scale` tripwire; `discovery_graph.ts`
-  already provides `affected`/`explain`; `second_brain_retrieval.ts`
-  (~320 LOC) exists but has zero call sites outside itself;
-  `memory_lookup.ts` has no token budget (grep: 0 hits).
+- Verified against branch HEAD `9688082a6` (2026-07-11, binary-safe
+  `grep -a`):
+  - LANDED, not scheduled here: `token_budget` option + `truncation`
+    envelope in `memory_lookup.ts` `retrieve_v1` (lines ~1038–1175);
+    `_lexicalRerank` wiring (lines ~827/928); `_lib/lexical_index.ts`
+    (BM25 + trigram prefilter, tripwire-gated).
+  - OPEN: `second_brain_retrieval.ts` has zero call sites outside itself;
+    no term-coverage-squaring in `lexical_index.ts`; no retrieval
+    self-benchmark command; protocol borrows below.
 
 ## Provenance
 
@@ -40,47 +51,26 @@ retained encrypted:
 - Source D (research-wiki reference): `ENC1:GxUBWIQWgIQoethY5BrEV36ACWpP+ngiG6LGceWcHracjp4/9mUUZQoEv7LhCkB02tF5OBpA7ytK/FWnqb50iGpGOJ7TXb5dQpI1xTG4TbtZkcXAreB37G4ajCr1Fu2uo7bVRw==`
 - Source E (knowledge-plugin reference): `ENC1:N4t+kRg0s6Lw/5x5FIavekgfoiZGeJ1PANmiDVGCJ/hgar63lIXmP5A5LvHXL1llEhJ70G6ugzGwuvG8S9zbw1XXEyjO7vvJgUoTafdrGoFhXdRtvGVlXNQ3kKIl0L3nGmi83peS/P6q3gSv/gy1kQqgy5LPJ9DZmoqyvX8YWP0Kt5KWS0W6g9nh8Q==`
 
-## Phase 1 — B1: token-budgeted, compact retrieve in `memory_lookup.ts`
-
-Mechanism verified at source level (Source A): `char_budget = tokens * 3`;
-seed/top hits render first, remainder degree-/score-sorted; every field
-passes the sanitize floor before concatenation; the cut snaps to the last
-newline; the truncation notice is actionable (names how many entries were
-cut and how to narrow), never a bare "truncated".
-
-- [ ] Add an optional `token_budget` to `memory_lookup.ts::retrieve_v1`
-      (additive; absent = today's behavior byte-identical). Top hit always
-      survives the budget.
-- [ ] Reuse `_lib/retrieval_sanitize.ts` on every rendered field (the
-      sanitize floor exists — this wires it into the budget path).
-- [ ] Emit the actionable truncation trailer (count cut + narrowing hint).
-- [ ] Unit tests: budget honored ±1 line, newline-snap, top-hit survival,
-      zero-budget degenerate case, sanitize applied.
-
-**Exit criteria:** `npx vitest run tests/scripts/memory_lookup*` green with
-the new cases; default path byte-identical (snapshot test).
-
-## Phase 2 — wire the dormant retrieval surface
+## Phase 1 — resolve the orphaned retrieval surface
 
 - [ ] Decide the ONE consumer for `second_brain_retrieval.ts` (candidate:
       the hot-context/session-start path or `/memory:load`) and wire it;
       if no consumer survives scrutiny, delete the file instead — a 320-LOC
       module with zero call sites is debt either way. Record the decision
       inline in the change.
-- [ ] Wire the lexical prefilter option: when the `lint_knowledge_scale`
-      tripwire fires, `memory_lookup` consults `_lib/lexical_index.ts`
-      (candidate-superset-or-null contract: needles < 3 chars or rarest
-      trigram posting > 10% of corpus → full scan; never worse than brute
-      force). Below the tripwire nothing changes.
-- [ ] Port the term-coverage-squaring correction into the lexical scorer
-      so a single generic-term exact match cannot outrank multi-rare-term
-      matches (regression fixture included).
+- [ ] Port the two residual lexical refinements into
+      `_lib/lexical_index.ts`, each only after confirming absence with a
+      binary-safe grep: (a) term-coverage squaring, so a single
+      generic-term exact match cannot outrank multi-rare-term matches
+      (regression fixture included); (b) the candidate-superset-or-null
+      guard contract (needles < 3 chars or rarest trigram posting > ~10 %
+      of corpus → full scan) if the current guard is weaker.
 
 **Exit criteria:** either a real call site exists for
-`second_brain_retrieval.ts` or the file is gone; prefilter covered by
-tests on both sides of the tripwire.
+`second_brain_retrieval.ts` or the file is gone; both refinements present
+or confirmed pre-existing, with tests.
 
-## Phase 3 — B7: honest self-benchmark with a second judge
+## Phase 2 — honest self-benchmark with a second judge
 
 Anti-lesson from Source A verified at source level: its shipped benchmark
 uses a fabricated baseline (corpus ≈ nodes × 50 words) and a cruder scorer
@@ -88,7 +78,7 @@ than its real retrieval path, and its claimed dual-judge κ=0.81 has no
 runnable harness. We build the honest version — measure the REAL path
 against a REALISTIC baseline.
 
-- [ ] Benchmark command: real `retrieve_v1` (with/without budget +
+- [ ] Benchmark command: real `retrieve_v1` (with/without `token_budget` +
       prefilter) vs the realistic baseline (current projection / grep
       session transcript), on fixed query fixtures; report token totals
       and answer-coverage, never a synthetic corpus multiplier.
@@ -102,7 +92,7 @@ against a REALISTIC baseline.
 **Exit criteria:** benchmark reproducible from a clean checkout; κ present
 in the report schema; no README/marketing claim cites an unbacked number.
 
-## Phase 4 — protocol borrows (six small mechanisms, no engines)
+## Phase 3 — protocol borrows (six small mechanisms, no engines)
 
 - [ ] **Transcript-anchor provenance** (Source C): mined memory entries
       carry a `transcript:` / session-anchor field pointing at the lossless
@@ -136,12 +126,13 @@ in the report schema; no README/marketing claim cites an unbacked number.
 existing checker (similarity / contradiction / lint) as its enforcement
 hook; no new storage layer, no new service.
 
-## Phase 5 — close out the source file
+## Phase 4 — close out the source file
 
 - [ ] Move `agents/tmp/graphify.txt` → `agents/tmp.old/` in the main
       checkout (local, gitignored on both sides) — the catalogue is fully
-      dispositioned: B3/B4/B6/B8 shipped previously, B1/B2/B7 + wiring by
-      this roadmap, the anti-lesson recorded in Phase 3.
+      dispositioned: B3/B4/B6/B8 + B1/B2 shipped previously (substrate
+      hardening + discovery graph), the residuals and the anti-lesson by
+      this roadmap.
 
 ## Acceptance criteria
 
@@ -151,3 +142,6 @@ hook; no new storage layer, no new service.
   output is byte-identical (snapshot-tested).
 - Every borrowed mechanism cites its enforcement hook; prose-only
   discipline without a checker is not a completed step.
+- Every "verified absent" claim in this roadmap's execution is re-checked
+  with a binary-safe grep (`grep -a`) at the executing commit — the trap
+  that produced this roadmap's own scope correction.
