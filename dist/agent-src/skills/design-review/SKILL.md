@@ -58,9 +58,21 @@ A **live preview URL** is required for testing.
 ### Phase 1: Interaction
 
 - Test user flows end-to-end.
-- Verify hover, focus, active, and disabled states.
+- **Six interaction states — every interactive element asserts each one** (single
+  canonical states checklist; no other review phase repeats it):
+  1. **default** — resting state is a deliberate style, not the browser default.
+  2. **hover** — pointer feedback present (not the *only* affordance — see focus).
+  3. **active** — pressed/engaged state visibly distinct from hover.
+  4. **disabled** — unmistakably non-interactive (a contrast dip a user cannot read
+     as "disabled" is a WCAG 1.4.1 failure — see `accessibility-auditor`).
+  5. **focus** — visible `:focus-visible` indicator (Q6 floor, `lint_design_quality`).
+  6. **loading** — explicit pending state (skeleton/spinner/disabled-submit), never a dead frozen control.
+- **Transition timing** between these states follows the motion bands in
+  [`fe-design`](../fe-design/SKILL.md) § Motion (micro-feedback ~100–200 ms;
+  structural open/close ~200–500 ms) — the timing source of truth; do not restate
+  a competing band set here. Every animated transition carries a
+  `prefers-reduced-motion` alternative (M5 / Q4).
 - Test keyboard navigation (Tab, Enter, Escape, Arrow keys).
-- Check loading states and transitions.
 - Verify form submission and error recovery.
 
 ### Phase 2: Responsiveness
@@ -296,6 +308,15 @@ for the actual review reasoning. This is an orchestration pattern —
 dispatch it via [`subagent-orchestration`](../subagent-orchestration/SKILL.md)
 and position it against [`verify-repair-loop`](../verify-repair-loop/SKILL.md)
 (the existing verify skill); it complements them, it does not duplicate them.
+
+**Why the audit passes stay serial (not a parallel-4 fan-out).** A fan-out of
+a11y + slop + hierarchy + states across four subagents was evaluated and
+deferred: the passes share one live browser/navigation session and later phases
+build on state established by earlier ones — not cleanly independent; and the
+expensive part (browser probing / screenshots) is already offloaded by the async
+verifier above, which captures the fan-out's main win without four separate
+views. Reconsider only when `design-review` runs as a standalone heavy batch over
+many *independent* surfaces, where per-surface `do-in-parallel` genuinely pays.
 
 ## Gotcha
 

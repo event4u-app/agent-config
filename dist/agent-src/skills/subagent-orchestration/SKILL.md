@@ -279,6 +279,14 @@ Rules:
   cost without value and gets removed.
 - No self-play/"adversarial training" framing — this is one judge, one
   rubric, one running app.
+- **Low-priority future candidate (needs real screenshot tooling — do not
+  build speculatively):** the async silent-verifier shape from
+  [`design-review`](../design-review/SKILL.md) § Async-verifier pattern — a
+  background verifier owning UI verification via screenshots, forbidding the
+  main agent from self-checking, silent on pass — is the natural mechanism for
+  this mode's judge once dependable screenshot tooling lands. Recorded from
+  road-to-opt-design-polish; gate behind the same `verdict_changed_outcome`
+  adoption evidence above.
 
 ## Status taxonomy — every subagent return uses one envelope
 

@@ -321,15 +321,13 @@ Reading this as: <page-kind> for <audience>, <vibe> language, leaning <design-sy
 **If context is incomplete:** state so and proceed exploratory — do NOT block.
 
 **Anti-Default Discipline:** Before committing to any layout or component
-pattern, verify you are NOT defaulting to:
-- Centered hero + 3-column feature grid + CTA (the "AI landing page" layout)
-- Side-stripe `border-left` accent cards (V1 in `design-antipatterns`)
-- Identical card grids with no visual rhythm (L2)
-- `Inter` or `Space Grotesk` as the uncritical font pick (T7)
-- Glassmorphism as a decoration device (V2)
-
-If any of these was the first impulse, choose a different approach or
-explicitly justify why this brief genuinely calls for it.
+pattern, cross-check your first impulse against
+[`design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md) —
+the L1/L2 "AI landing page" layout (centered hero + 3-column grid + CTA), the
+V1 side-stripe card, the T7 default-font pick, and V2 decorative glassmorphism.
+If a tell was the first impulse, choose a different approach or explicitly
+justify why this brief calls for it. (The full pre-proposal scan is under
+*Anti-slop discipline* below.)
 
 ## Aesthetic direction
 

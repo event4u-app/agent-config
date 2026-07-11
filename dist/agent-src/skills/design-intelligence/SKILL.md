@@ -135,14 +135,14 @@ config, not a vibe — never re-infer when `DESIGN.md` already sets them
 Dials persist in `DESIGN.md`; the stack executors (`tailwind-engineer`,
 `react-shadcn-ui`, `blade-ui`, `flux`) read `DESIGN.md` and honour them.
 
-**Anti-Default Discipline — first-impulse check:** Before committing to any design direction, verify you are NOT defaulting to:
-- Purple/violet + cyan-on-dark gradient palette (AI color cliché)
-- Centered hero over a dark gradient mesh with a single CTA
-- Three equal-weight feature cards in a grid
-- Inter or Space Grotesk as the uncritical body font choice
-- "Premium consumer" cream/sand background + brass/clay accents
-
-If any of these was the first impulse, name a different direction or explicitly justify why this brief genuinely calls for it.
+**Anti-Default Discipline — first-impulse check:** Before committing to any
+design direction, cross-check your first impulse against the current-generation
+tells in [`design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+(§ Current-generation tells — the warm-editorial C5+T2+T7 signature and the
+previous-generation C1/C2 gradient) plus the L1/L2 layout defaults. If a tell was
+your first reach, name a different direction or explicitly justify why this brief
+genuinely calls for it. (The finalization cross-check against the full catalog is
+under *Anti-slop discipline* below.)
 
 ## Honesty / real-system grounding
 
