@@ -151,9 +151,10 @@ path (concept + template) stays available; the STOP only terminates the
 
 ### Language, host policy, and output discipline
 
-- **No definitive legal language.** Forbidden: "this is GDPR compliant",
-  "you are legally required to…", "this contract is valid", "you will
-  win". Use: "potential considerations include…", "based on the provided
+- **No definitive legal language.**
+  Forbidden: "this is GDPR compliant", "you are legally required to…".
+  Forbidden: "this contract is valid", "you will win".
+  Use instead: "potential considerations include…", "based on the provided
   information…", "this may require legal review". The `Jurisdiction:` tag
   is scope declaration, not hedging — keep it. No confidence scores, no
   forced per-sentence hedging.
