@@ -127,6 +127,10 @@ brand evidence**. The design-surface instance of the no-invented-facts floor.
 - **Icons follow the iconography floor** — no emoji-as-icon in serious UI, no
   hand-rolled icon when a set exists; see
   [`iconography`](../skills/iconography/SKILL.md) § Iconography floor.
+- **Ask before adding material — no unrequested filler.** Do not generate copy,
+  placeholder sections, or decorative blocks the user did not ask for to "complete"
+  a design. Where the brief is silent on a region, surface the gap ([`ask-when-uncertain`](ask-when-uncertain.md))
+  or leave an honest placeholder — never invent filler content to fill space.
 
 ## See also
 
