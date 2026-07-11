@@ -54,6 +54,14 @@ user decides when to run each plate).
   in, not duplicated: its net-new mechanisms were folded here **anonymized**
   (its open-source-name drafts would trip the `check-no-external-sources` gate;
   its re-proposed numeric readiness score stays dropped per the council lock).
+- A follow-up **depth-reconciliation pass** read the parallel exploration's full
+  drafts (not just its summary) and folded the net-new planning-level grounding
+  they carried: the census-honesty prerequisite + privacy constraint into
+  `reliability-measurement`; the consumer-launch diagnostic promoted to its own
+  `prelaunch-diagnostics` plate (score surfaced for council re-evaluation, not
+  adopted); style/stance separation + a bring-your-own-checker loop-shape into
+  `prose-authenticity`. Execution-level minutiae (exact file paths, JSON field
+  lists) were left to execution time, not duplicated here.
 
 ---
 
@@ -67,6 +75,7 @@ user decides when to run each plate).
 | **P2** | [`road-to-ecosystem-harvest-skill-authoring-rigor`](road-to-ecosystem-harvest-skill-authoring-rigor.md) | Spec alignment + a quantitative description-optimizer raise the quality floor of every future skill. |
 | **P2** | [`road-to-ecosystem-harvest-skill-quality-gates`](road-to-ecosystem-harvest-skill-quality-gates.md) | Deterministic gates: description-circularity lint, eval-schema v2 (tool-choice + trajectory), effort pinning, read-only-by-default scripts, host-loadability smoke. *(Second sweep.)* |
 | **P2** | [`road-to-ecosystem-harvest-workflow-contracts`](road-to-ecosystem-harvest-workflow-contracts.md) | Per-mode forbidden-lists with diff-checkable negatives, a host-neutral HANDOFF contract, plan-first merge-conflicts. *(Second sweep.)* |
+| **P2** | [`road-to-ecosystem-harvest-prelaunch-diagnostics`](road-to-ecosystem-harvest-prelaunch-diagnostics.md) | Consumer-launch diagnostic: stable finding IDs, Unknown ≠ Pass epistemics, findings regression gate, suppression-with-evidence. *(Second sweep; split from reliability-measurement.)* |
 | **P2** | [`road-to-ecosystem-harvest-document-skills`](road-to-ecosystem-harvest-document-skills.md) | Completes the document read→write cycle (a read skill already ships); scoped v1, CI-gated pptx. |
 | **P2** | [`road-to-ecosystem-harvest-prose-authenticity`](road-to-ecosystem-harvest-prose-authenticity.md) | A prose-level AI-ism taxonomy fills a real hole the code/UI slop rules don't cover. |
 | **P2** | [`road-to-ecosystem-harvest-tool-pitfalls`](road-to-ecosystem-harvest-tool-pitfalls.md) | Cheap, high-signal troubleshooting sections on the highest-burden shipped tool skills. |
