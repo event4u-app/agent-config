@@ -1,0 +1,444 @@
+{
+  "generated": "2026-07-11T12-02-29Z",
+  "corpus": "tests/fixtures/ai-tells",
+  "aggregate": {
+    "pairs": 20,
+    "length_controlled_pairs": 16,
+    "mean_hard_before": 0.9,
+    "mean_hard_after": 0,
+    "mean_cluster_before": 53.97,
+    "mean_cluster_after": 0,
+    "mean_dash_before": 9.22,
+    "mean_dash_after": 0,
+    "judge_model": "claude-sonnet-4-5",
+    "judged_pairs": 16,
+    "prefers_after": 16,
+    "prefers_before": 0
+  },
+  "results": [
+    {
+      "name": "01-gtm-post",
+      "language": "en",
+      "words_before": 104,
+      "words_after": 87,
+      "length_ratio": 0.84,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 2,
+        "cluster_score_per_500": 84.13,
+        "dash_density_per_500": 9.62
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "after-first"
+      }
+    },
+    {
+      "name": "02-readme-section",
+      "language": "en",
+      "words_before": 89,
+      "words_after": 90,
+      "length_ratio": 1.01,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 2,
+        "cluster_score_per_500": 64.61,
+        "dash_density_per_500": 5.62
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "after-first"
+      }
+    },
+    {
+      "name": "03-linkedin-draft",
+      "language": "en",
+      "words_before": 102,
+      "words_after": 89,
+      "length_ratio": 0.87,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 1,
+        "cluster_score_per_500": 61.27,
+        "dash_density_per_500": 9.8
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "before-first"
+      }
+    },
+    {
+      "name": "04-blog-paragraph",
+      "language": "en",
+      "words_before": 90,
+      "words_after": 102,
+      "length_ratio": 1.13,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 0,
+        "cluster_score_per_500": 88.89,
+        "dash_density_per_500": 5.56
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "before-first"
+      }
+    },
+    {
+      "name": "05-release-note",
+      "language": "en",
+      "words_before": 98,
+      "words_after": 89,
+      "length_ratio": 0.91,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 3,
+        "cluster_score_per_500": 30.61,
+        "dash_density_per_500": 5.1
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "before-first"
+      }
+    },
+    {
+      "name": "06-product-update",
+      "language": "en",
+      "words_before": 91,
+      "words_after": 103,
+      "length_ratio": 1.13,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 2,
+        "cluster_score_per_500": 60.44,
+        "dash_density_per_500": 5.49
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "after-first"
+      }
+    },
+    {
+      "name": "07-event-recap",
+      "language": "en",
+      "words_before": 111,
+      "words_after": 94,
+      "length_ratio": 0.85,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 1,
+        "cluster_score_per_500": 54.05,
+        "dash_density_per_500": 4.5
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "after-first"
+      }
+    },
+    {
+      "name": "08-case-study",
+      "language": "en",
+      "words_before": 99,
+      "words_after": 107,
+      "length_ratio": 1.08,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 0,
+        "cluster_score_per_500": 50.51,
+        "dash_density_per_500": 10.1
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "after-first"
+      }
+    },
+    {
+      "name": "09-founder-post",
+      "language": "en",
+      "words_before": 92,
+      "words_after": 117,
+      "length_ratio": 1.27,
+      "length_controlled": false,
+      "before": {
+        "hard_total": 0,
+        "cluster_score_per_500": 32.61,
+        "dash_density_per_500": 10.87
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      }
+    },
+    {
+      "name": "10-ghostwriter-draft",
+      "language": "en",
+      "words_before": 108,
+      "words_after": 113,
+      "length_ratio": 1.05,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 1,
+        "cluster_score_per_500": 43.98,
+        "dash_density_per_500": 4.63
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "before-first"
+      }
+    },
+    {
+      "name": "11-hiring-post",
+      "language": "en",
+      "words_before": 66,
+      "words_after": 82,
+      "length_ratio": 1.24,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 1,
+        "cluster_score_per_500": 64.39,
+        "dash_density_per_500": 7.58
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "before-first"
+      }
+    },
+    {
+      "name": "12-newsletter-intro",
+      "language": "en",
+      "words_before": 60,
+      "words_after": 82,
+      "length_ratio": 1.37,
+      "length_controlled": false,
+      "before": {
+        "hard_total": 0,
+        "cluster_score_per_500": 87.5,
+        "dash_density_per_500": 16.67
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      }
+    },
+    {
+      "name": "13-sales-email",
+      "language": "en",
+      "words_before": 69,
+      "words_after": 84,
+      "length_ratio": 1.22,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 2,
+        "cluster_score_per_500": 28.99,
+        "dash_density_per_500": 7.25
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "after-first"
+      }
+    },
+    {
+      "name": "14-product-philosophy",
+      "language": "en",
+      "words_before": 71,
+      "words_after": 99,
+      "length_ratio": 1.39,
+      "length_controlled": false,
+      "before": {
+        "hard_total": 0,
+        "cluster_score_per_500": 42.25,
+        "dash_density_per_500": 7.04
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      }
+    },
+    {
+      "name": "15-talk-recap",
+      "language": "en",
+      "words_before": 75,
+      "words_after": 80,
+      "length_ratio": 1.07,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 1,
+        "cluster_score_per_500": 56.67,
+        "dash_density_per_500": 13.33
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "after-first"
+      }
+    },
+    {
+      "name": "16-changelog-blurb",
+      "language": "en",
+      "words_before": 71,
+      "words_after": 79,
+      "length_ratio": 1.11,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 0,
+        "cluster_score_per_500": 38.73,
+        "dash_density_per_500": 14.08
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "before-first"
+      }
+    },
+    {
+      "name": "17-founder-reflection",
+      "language": "en",
+      "words_before": 70,
+      "words_after": 95,
+      "length_ratio": 1.36,
+      "length_controlled": false,
+      "before": {
+        "hard_total": 0,
+        "cluster_score_per_500": 46.43,
+        "dash_density_per_500": 14.29
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      }
+    },
+    {
+      "name": "01-linkedin-de",
+      "language": "de",
+      "words_before": 76,
+      "words_after": 74,
+      "length_ratio": 0.97,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 1,
+        "cluster_score_per_500": 59.21,
+        "dash_density_per_500": 13.16
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "before-first"
+      }
+    },
+    {
+      "name": "02-blog-de",
+      "language": "de",
+      "words_before": 83,
+      "words_after": 91,
+      "length_ratio": 1.1,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 0,
+        "cluster_score_per_500": 36.14,
+        "dash_density_per_500": 6.02
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "after-first"
+      }
+    },
+    {
+      "name": "03-release-de",
+      "language": "de",
+      "words_before": 73,
+      "words_after": 77,
+      "length_ratio": 1.05,
+      "length_controlled": true,
+      "before": {
+        "hard_total": 1,
+        "cluster_score_per_500": 47.95,
+        "dash_density_per_500": 13.7
+      },
+      "after": {
+        "hard_total": 0,
+        "cluster_score_per_500": 0,
+        "dash_density_per_500": 0
+      },
+      "judge": {
+        "preferred": "after",
+        "order": "after-first"
+      }
+    }
+  ]
+}

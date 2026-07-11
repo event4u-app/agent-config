@@ -325,23 +325,23 @@ not code.
 
 ## Acceptance criteria
 
-- [ ] Detector exists with a fixture suite: 100% hard-tell catch, 0 false
+- [x] Detector exists with a fixture suite: 100% hard-tell catch, 0 false
       positives on "after" fixtures (Phase 0 gate held at close).
-- [ ] `humanizer` skill ships two-phase (lean SKILL.md + on-demand
+- [x] `humanizer` skill ships two-phase (lean SKILL.md + on-demand
       `data/patterns.md`), passes skill-linter + 5/5 + 5/5 trigger evals.
-- [ ] Write-engine step 4b live with: default-on + `--raw` opt-out,
+- [x] Write-engine step 4b live with: default-on + `--raw` opt-out,
       fingerprint precedence, disclosure-footer exemption,
       technical-output exclusion — all four written into the contract.
-- [ ] `/humanize` command registered across the full downstream surface;
+- [x] `/humanize` command registered across the full downstream surface;
       reuses ≥ 2 existing assets (humanizer skill + write-engine
       style-source resolution) — no new voice mechanism (anti-dump
       litmus).
-- [ ] No new artifact duplicates an existing one: chat tone, brand voice,
+- [x] No new artifact duplicates an existing one: chat tone, brand voice,
       quoting, and code-placeholder lanes untouched (gap-table FOLD/CUT
       dispositions hold).
-- [ ] Governance preflight: no new domain (within gtm-marketing —
+- [x] Governance preflight: no new domain (within gtm-marketing —
   `domain-adoption-policy` does not fire), no new personas,
   framework-neutral (prose tooling, no stack mandates), skill within
   size budgets.
-- [ ] Public copy about the feature is claims-ledger-bound or
+- [x] Public copy about the feature is claims-ledger-bound or
       non-quantitative; the banned-claim line is respected.
