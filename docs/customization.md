@@ -406,6 +406,18 @@ agents/
 Full classification (git policy, retention, owner) for every allowed entry:
 [`docs/contracts/agents-layout.md`](contracts/agents-layout.md).
 
+#### Environment bootstrap (optional)
+
+If standing up your project takes more than a package install — starting
+services, seeding fixtures, generating config — declare a single **`env-bootstrap`**
+entry in your runner file (a `Taskfile.yml` / `Makefile` target or a
+`package.json` script named `env-bootstrap`). When present, the agent surfaces
+it as the suggested first action at worktree/session stand-up (see the
+`using-git-worktrees` skill § 5) — **suggest-only, never auto-run**. This gives
+long-running work one deterministic stand-up entry instead of re-deriving it
+each session. Purely optional: with no entry, dependency install + a green
+baseline is the whole stand-up.
+
 #### User inbox workflow (`agents/tmp/` → `agents/tmp.old/`)
 
 Drop a note or draft into `agents/tmp/` and point a command at it

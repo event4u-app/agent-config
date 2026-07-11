@@ -67,6 +67,32 @@ When **3 consecutive attempts** at the same task fail (code fix, test fix, confi
 
 **Does NOT reset the counter:** Unrelated tasks. User providing new information (course correction).
 
+**Failure identity — same error vs new error.** Not all failures are equal. Define
+the failure signature = **same target + same error class** (same failing test with
+the same assertion/exception, same lint rule id, same build error). Then:
+
+- **Same failure signature twice → stop and pivot now.** Do not burn the third
+  attempt on a near-identical retry of a fix that already failed the same way —
+  a repeated identical signature means the current hypothesis is wrong, not
+  under-applied. Change strategy (re-read the source, form a new hypothesis, ask)
+  instead of retrying the same shape.
+- **A new error signature each attempt = progress.** Peeling one error to reveal
+  a different one is forward motion; the counter continues rather than tripping,
+  because you are learning, not looping.
+
+**Hard-blocker classes — skip retries entirely, go straight to ask/surface.** Some
+failures cannot be fixed by another attempt; retrying only wastes the budget.
+On the **first** occurrence of any of these, do not count toward the 3 — stop and
+surface immediately:
+
+- Missing credentials / unset required secret or token.
+- Permission denied (auth/authz, file mode, protected branch, insufficient scope).
+- Spend / quota / rate limit reached (billing cap, API quota, 429 that will not clear on its own).
+- External-service `5xx` / outage / DNS-unreachable — a dependency is down, not your code.
+
+Retrying a hard-blocker is the canonical wasted-attempt; the fix is a decision or
+an external change only the user/environment can make.
+
 ## Tool Loop Detection
 
 Calling the **same tool** more than **2 times in a row** with similar parameters = loop.
