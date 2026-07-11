@@ -21,7 +21,8 @@
 //   - --repair wizard-state (absent no-op + present unlink, hermetic home).
 //   - every individual `--check <id>` health check (scope, global-binary,
 //     stale-orphans, mcp-mode, mcp-beta-readiness, offline-readiness,
-//     python-runtime, tier-usage-readiness, council-cli, wizard-state, plus
+//     python-runtime, humanizer-runtime, tier-usage-readiness, council-cli,
+//     wizard-state, plus
 //     the three manifest-required checks reporting `skipped`).
 //   - scope monorepo detection, mcp-mode valid/invalid JSON, tier-usage
 //     enabled/poisoned/empty/custom-path, wizard-state shape validation
@@ -298,6 +299,7 @@ describe('doctor — individual checks', () => {
         'mcp-beta-readiness',
         'offline-readiness',
         'python-runtime',
+        'humanizer-runtime',
         'tier-usage-readiness',
         'council-cli',
         'unsupported-combos',

@@ -19,3 +19,12 @@ Judge claude-sonnet-4-5: prefers the humanized text in **16/16** pairs (randomiz
 This eval measures the package's own pattern counts and a blind prose-quality preference.
 It never measures third-party "AI detector" outcomes — that claim class is banned
 (unfalsifiable from our side; see roadmap non-goals).
+
+## Open question — real-draft lift is unmeasured
+
+The `before` fixtures were **deliberately tell-seeded**, so a perfect score
+measures seeded-tell removal on a self-constructed corpus — NOT that real
+ghostwriter drafts get better. Real-world lift stays **unmeasured** until
+write-engine step 4b has processed real `/ghostwriter:write` drafts and those
+have been paired-evaluated (the `road-to-humanizer-hardening` live-usage
+blocker). The claim ledger is scoped to "on the fixture corpus" accordingly.

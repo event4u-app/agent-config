@@ -22,8 +22,11 @@
  * never third-party "AI detector" outcomes; that claim class stays banned.
  *
  * Usage:
- *   npx tsx src/scripts/bench_humanizer_eval.ts            # objective only
- *   npx tsx src/scripts/bench_humanizer_eval.ts --judge    # + blind preference (billable)
+ *   npx tsx src/scripts/bench_humanizer_eval.ts                          # objective only (free)
+ *   npx tsx src/scripts/bench_humanizer_eval.ts --judge --confirm-spend  # + blind preference (billable)
+ *
+ * `--judge` without `--confirm-spend` estimates the billable call count and
+ * halts (exit 2) — the spend is opt-in, never fired implicitly.
  */
 
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -107,9 +110,28 @@ async function judgePair(
 
 async function main(): Promise<void> {
   const runJudge = process.argv.includes("--judge");
+  const confirmSpend = process.argv.includes("--confirm-spend");
   const pairs = loadPairs();
   if (pairs.length < 20) {
     console.error(`corpus too small: ${pairs.length} pairs (< 20)`);
+    process.exit(2);
+  }
+
+  // Spend gate: --judge fires one billable API call per length-controlled
+  // pair (via the council client's curl transport). Estimate + halt unless
+  // --confirm-spend is passed — mirrors council:run's explicit-confirm model,
+  // never an interactive prompt. The objective-only default path is free.
+  if (runJudge && !confirmSpend) {
+    const controlledCount = pairs.filter((p) => {
+      const b = analyzeText(p.before, p.language).words;
+      const a = analyzeText(p.after, p.language).words;
+      return Math.abs(1 - a / b) <= LENGTH_TOLERANCE;
+    }).length;
+    process.stderr.write(
+      `--judge makes ${controlledCount} billable API call(s) (one per length-controlled pair). ` +
+        `Re-run with --confirm-spend to authorize the spend. ` +
+        `The objective-only run (no --judge) is free.\n`,
+    );
     process.exit(2);
   }
 
@@ -192,6 +214,15 @@ async function main(): Promise<void> {
     "This eval measures the package's own pattern counts and a blind prose-quality preference.",
     'It never measures third-party "AI detector" outcomes — that claim class is banned',
     "(unfalsifiable from our side; see roadmap non-goals).",
+    "",
+    "## Open question — real-draft lift is unmeasured",
+    "",
+    "The `before` fixtures were **deliberately tell-seeded**, so a perfect score",
+    "measures seeded-tell removal on a self-constructed corpus — NOT that real",
+    "ghostwriter drafts get better. Real-world lift stays **unmeasured** until",
+    "write-engine step 4b has processed real `/ghostwriter:write` drafts and those",
+    "have been paired-evaluated (the `road-to-humanizer-hardening` live-usage",
+    "blocker). The claim ledger is scoped to \"on the fixture corpus\" accordingly.",
     "",
   ].join("\n");
 
