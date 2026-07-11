@@ -39,7 +39,15 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
       NOT count toward Step 2's ≥20-measured gate or the pre-registered
       `orchestration-dispatch-net-win` claim (orch-02/03, provenance measured). -->
 - [ ] **Step 2:** Run the full delegable-task corpus (`orch-01`, `orch-02`, `orch-03`) under both arms (`agent-settings.orchestrated.yml` and `agent-settings.baseline.yml`) across enough sessions to reach ≥ 20 orchestrated dispatches.
-- [ ] **Step 3:** Measure `parallelizable:` classifier recall on the corpus — confirm the deterministic classifier fires `do-in-parallel` / `do-in-steps` on the corpus tasks as expected; record actual hit/miss counts.
+- [x] **Step 3:** Measure `parallelizable:` classifier recall on the corpus — confirm the deterministic classifier fires `do-in-parallel` / `do-in-steps` on the corpus tasks as expected; record actual hit/miss counts.
+      <!-- done 2026-07-11: deterministic measurement (no spend/agents) via the
+      new regression test src/scripts/_lib/auto_dispatch.corpus.test.ts (8 tests,
+      green). Encodes each corpus task's documented classification signal +
+      asserts classifyTask v1 output. RESULT: recall 2/2 on the modes v1 covers
+      — orch-01 → do-in-parallel, orch-02 → do-in-steps; FP 0 — pv-02 negative
+      control correctly NOT dispatched (below size floor). Documented scope gap:
+      orch-03 (do-competitively) + pv-01 (verdict) are NOT in classifyTask v1's
+      two DispatchModes — recorded as known scope, not misses. -->
 
 **Exit criteria:** ≥ 20 orchestration lines in the audit log; `/cost:report` surfaces a non-empty orchestration summary; classifier recall recorded. The ≥ 20-dispatch measurement must include the `first_pass_success` / `escalated` quality columns (per road-to-proof-under-real-conditions Phase 4 — cost and quality reported as a pair, never savings alone).
 **Rollback:** none (measurement only; no code change).
@@ -69,7 +77,9 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
 ## Acceptance Criteria
 
 - [ ] A real orchestrated dispatch emits a captured, reportable telemetry line with a sourced `token_delta`; `breachedGuardrails` reads live telemetry.
-- [ ] `parallelizable:` classifier recall measured on the corpus.
+- [x] `parallelizable:` classifier recall measured on the corpus.
+      <!-- met 2026-07-11: recall 2/2 (v1-covered modes) + FP 0, via
+      src/scripts/_lib/auto_dispatch.corpus.test.ts. -->
 - [ ] The `auto: on` flip is re-evaluated through `gateVerdict()` on real telemetry, with the outcome recorded — flip only if evidenced.
 
 ## Blockers

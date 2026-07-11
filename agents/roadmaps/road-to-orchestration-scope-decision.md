@@ -87,9 +87,17 @@ CLAIMS, `unbacked`.
 - [ ] Run real delegable work with `subagents.enabled: true`,
       `subagents.auto: ask` until `agents/runtime/state/audit/YYYY-MM.jsonl`
       carries ≥20 orchestration lines (parent followup Phase 1, Steps 1–3).
-- [ ] Measure `parallelizable:` classifier recall AND false-positive rate on the
+- [x] Measure `parallelizable:` classifier recall AND false-positive rate on the
       corpus (`orch-01..03`, `pv-01`, `pv-02`) — both matter; a leaky classifier
       loses on cost even when it wins on the true positives.
+      <!-- done 2026-07-11: deterministic measurement via the regression test
+      src/scripts/_lib/auto_dispatch.corpus.test.ts (8 tests, green). Recall 2/2
+      on the v1-covered modes (orch-01 → do-in-parallel, orch-02 → do-in-steps);
+      false-positive rate 0 (pv-02 negative control NOT dispatched). Scope gap
+      recorded: orch-03 (do-competitively) + pv-01 (verdict) are outside
+      classifyTask v1's two DispatchModes. NOTE: this is the deterministic half
+      of Phase 2; the ≥20 real telemetry lines (line above) stay maintainer-run,
+      so the Phase-2 exit is not yet fully met. -->
 
 **Exit:** ≥20 real orchestration lines; classifier recall + FP rate recorded.
 **Rollback:** none — measurement only.
