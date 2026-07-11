@@ -103,7 +103,10 @@ export function buildInstallPlan(inputs) {
     const filesByTool = {};
     for (const source of inputs.sources) {
         const bucket = filesByTool[source.toolId] ?? [];
-        const files = walkSourceTree(source.srcDir);
+        let files = walkSourceTree(source.srcDir);
+        if (source.fileFilter !== undefined) {
+            files = files.filter(source.fileFilter);
+        }
         for (const srcFile of files) {
             const rel = relative(source.srcDir, srcFile);
             const destPath = resolve(source.destDir, rel);

@@ -84,6 +84,17 @@
         }
       }
     },
+    "code_style": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "docblocks": {
+          "type": "string",
+          "enum": ["minimal", "full"],
+          "description": "Consumed by the code-comment-discipline rule. minimal (default) = no signature-mirroring docblocks; docblocks only for machine-relevant precision (generics, array shapes) or genuine why-context. full = exported public library surface may carry one-line summary docblocks; the redundancy ban still holds."
+        }
+      }
+    },
     "tokens": {
       "type": "object",
       "additionalProperties": true,

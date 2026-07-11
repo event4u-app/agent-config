@@ -52,12 +52,42 @@ v1 forward-compat rule on unknown fields).
 | `verify_result_by_tier` | object \| null | Map of tier → verification result for every attempt of this slice (e.g. `{"lite":"fail","medium":"pass"}`). Values: `pass` \| `fail` \| `skipped`. Feeds the per-tier verify-pass-rate tripwire. Enums only, no verdict bodies. |
 | `dispatch_tokens` | int \| null | **Cost-% extension.** Absolute tokens the dispatched slice consumed (measured subagent usage). Feeds the MODELED cost-% in `orchestration_savings_report`, which needs an absolute base the token-count delta lacks. `null` = not recorded. Counts only. |
 | `session_tier` | string \| null | **Cost-% extension.** The orchestrator's OWN tier — the baseline the downshift cost-% measures `tier_chosen` against (a `high`→`lite` downshift is a rate win the token count can't see). `null` = not recorded. |
-| `first_pass_success` | bool \| null | **QUALITY extension (council verdict: quality × cost paired).** `true` = the subagent return was adopted without parent rework; `false` = the parent had to rework the return before adopting. `null` = pre-extension line / not measured. Boolean only, no bodies. |
-| `escalated` | bool \| null | **QUALITY extension (council verdict: quality × cost paired).** `true` = the slice was retried on a higher tier after a verification failure; `false` = no escalation. `null` = pre-extension line / not measured. Boolean only, no bodies. |
+| `first_pass_success` | bool \| null | **QUALITY extension (council verdict: quality × cost paired).** `true` = the subagent return was adopted without parent rework; `false` = the parent had to rework the return before adopting. Precise rework definition: § Operationalization below. `null` = pre-extension line / not measured. Boolean only, no bodies. |
+| `escalated` | bool \| null | **QUALITY extension (council verdict: quality × cost paired).** `true` = the slice was retried on a higher tier after a verification failure; `false` = no escalation. Semantics: § Operationalization below. `null` = pre-extension line / not measured. Boolean only, no bodies. |
 
 These routing + cost fields are additive and optional — a line without them is
 still a valid orchestration line; readers ignore unknown fields per the v1
 forward-compat rule.
+
+## Operationalization — `first_pass_success` / `escalated` (definitions, no schema change)
+
+Quality booleans only comparable across sessions when "parent rework" means the same thing everywhere. Mechanical decision table:
+
+```
+first_pass_success = TRUE iff the parent adopts the subagent work product
+with NO scope-relevant modification and issues NO corrective follow-up
+prompt to the same subagent within the same task scope.
+
+EXCLUDED from "modification" (still TRUE):
+  - auto-formatter output (prettier / eslint --fix / pint --fix)
+  - import sorting
+  - lockfile regeneration
+  - whitespace-only diffs
+
+INCLUDED as rework (FALSE):
+  - any business-logic line diff to the returned work product
+  - added or changed tests
+  - changed API contract / signature
+  - manual conflict resolution
+  - architectural restructuring of the returned diff
+
+escalated = TRUE iff the parent re-dispatched the same slice to a higher
+tier after a verification failure. A mechanism metric, not a quality
+verdict — it records that the escalation path fired, not how good the
+final output was.
+```
+
+**Honest boundary:** both fields are machine-observable proxies from the orchestrator's own actions; they do NOT measure output quality directly. Adopted-without-rework can still be mediocre; a rejected return can have failed on a formality. Field extensions (`verification_passed`, `parent_rework_level`, `regression_detected`, `task_completed`, `judge_confidence`, `human_rejected`) are explicitly NOT added: five of six are unobservable without new infra (verification harness, diff classifier, judge step, human feedback loop) and would breach the counts-only privacy floor or record guesses. Revisit-if: a verification harness makes a candidate field machine-observable without content inspection. Two-field cap = council decision (2026-07-10); this section operationalizes it, never widens it.
 
 ## Privacy floor
 
@@ -122,7 +152,7 @@ It sums `token_delta` across dispatches (negative = net saved) and splits by
 provenance (measured vs estimated), `tier_chosen`, and `task_class`. **Quality
 and cost render as PAIRED columns** (council verdict — never savings alone):
 `first_pass_success_rate` and `escalation_rate` aggregate over the lines that
-carry the quality booleans; with ≥ 20 such lines in the window the real rates
+carry the quality booleans (per the § Operationalization definitions above); with ≥ 20 such lines in the window the real rates
 render beside the savings figures, below 20 the quality columns render as
 `n/a (n=<count>)`. It reports
 **ABSOLUTE net tokens saved, never a percentage**: the telemetry records net

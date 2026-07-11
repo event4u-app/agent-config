@@ -67,7 +67,39 @@ jobs:
           ./scripts-run src/scripts/lint_discovery_manifest --quiet
 
       - name: Run consumer matrix (all legs incl. registry upgrade)
-        run: npx tsx src/scripts/consumer_matrix.ts --json
+        run: npx tsx src/scripts/consumer_matrix.ts --json --manifest leg-manifest.json
+
+      # Leg-completeness surface (fable-feedback-5 Phase 6a): the driver
+      # already FAILS on a silently-skipped leg; the manifest makes the
+      # executed-legs table reviewer-checkable per Node major at a glance.
+      - name: Leg manifest → job summary
+        if: always()
+        run: |
+          if [ -f leg-manifest.json ]; then
+            {
+              echo "### Consumer matrix legs · node ${{ matrix.node }}"
+              echo ""
+              echo "| leg | ok | executed | detail |"
+              echo "|---|---|---|---|"
+              node -e '
+                const m = require("./leg-manifest.json");
+                for (const r of m.results) {
+                  const d = String(r.detail).replace(/\|/g, "\\|").slice(0, 120);
+                  console.log(`| ${r.leg} | ${r.ok ? "✅" : "❌"} | ${r.executed ? "yes" : "no"} | ${d} |`);
+                }
+              '
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "no leg-manifest.json produced (run crashed before manifest write)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload leg manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: consumer-matrix-leg-manifest-node${{ matrix.node }}
+          path: leg-manifest.json
+          if-no-files-found: warn
 
   publish-dry-run:
     # Replicates publish-npm.yml up to (not including) `npm publish`,

@@ -1,0 +1,4 @@
+{
+  "_comment": "Priority-tier eval-floor exemptions (road-to-fable-feedback-5 Phase 4a). Every rich/default-surface/router skill MUST carry evals/evals.json; a skill may be exempted ONLY here, with a reason — no silent exemptions. Empty at introduction: all 35 priority-tier skills are covered.",
+  "exemptions": {}
+}

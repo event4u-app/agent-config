@@ -504,6 +504,20 @@ design:
   #              autonomy setting, roadmap, or standing instruction lifts it).
   fidelity_mode: strict
 
+code_style:
+  # minimal | full  (default: minimal)
+  #
+  # Consumed by the code-comment-discipline rule.
+  # minimal = comments state a WHY or a constraint the code cannot show;
+  #           no signature-mirroring docblocks anywhere; docblocks earn their
+  #           place only with machine-relevant precision (generics, array
+  #           shapes) or genuine why-context.
+  # full    = the exported public surface of a library package MAY carry a
+  #           one-line summary docblock per symbol (IDE/consumer ergonomics).
+  #           The redundancy ban still holds: no @param/@return lines that
+  #           mirror the native signature, ever.
+  docblocks: minimal
+
 # --- Subagent orchestration ---
 #
 # Controls model selection, parallelism, and AUTOMATIC orchestration for

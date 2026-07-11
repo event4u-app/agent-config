@@ -101,26 +101,33 @@ A worktree is **merge-ready** only when ALL hold:
 
 ### 4. Cleanup discipline
 
-Removal is gated, in order:
+Removal is gated by the deterministic helper (edge-case-tested: detached
+HEAD, branch without remote, tag-only reachability, deleted remote
+branch, untracked files, paths with spaces —
+`tests/scripts/worktree_cleanup_check.test.ts`):
 
-1. **Dirty check** — `git status --porcelain` in the worktree non-empty
-   → refuse (`git worktree remove` refuses too; never answer with
-   `--force`).
-2. **Unique-commit check** — commits reachable from the worktree branch
-   but from **no other ref** (branches, remotes, tags):
+```bash
+./scripts-run src/scripts/worktree_cleanup_check check <worktree-path>
+```
 
-   ```bash
-   git log <branch> --oneline --not \
-     $(git for-each-ref --format='%(refname)' | grep -v "^refs/heads/<branch>$")
-   ```
+Exit `0` → removal allowed; exit `1` → refuse, gates in order:
 
-   Non-empty → **refuse removal**; the branch holds work that exists
-   nowhere else. Surface the commit list and hand back — merging or
-   preserving them is the user's call (`git-history-discipline`).
-   Empty → removal allowed.
-3. **Remove, never delete** — `git worktree remove <path>`, then
-   `git worktree prune`. Branch deletion is a separate, permission-gated
-   step (`scope-control`); never force-delete (`-D`) as part of cleanup.
+1. **Detached HEAD** — no branch to judge reachability for; resolve
+   manually first.
+2. **Unsaved work** — `git status --porcelain` non-empty, untracked
+   files included (never answer with `--force`).
+3. **Unique-commit check** — commits reachable from the worktree branch
+   but from **no other ref** (branches, remotes, AND tags — a tag counts
+   as reachability). Non-empty → **refuse removal**; the branch holds
+   work that exists nowhere else. Surface the commit list and hand
+   back — merging or preserving them is the user's call
+   (`git-history-discipline`).
+
+Then: **remove, never delete** — `git worktree remove <path>`, then
+`git worktree prune`. Branch deletion is a separate, permission-gated
+step (`scope-control`); never force-delete (`-D`) as part of cleanup.
+Cross-worktree scope-lock overlaps are scanned via
+`worktree_cleanup_check scope-overlap` (surfaced by `/worktree status`).
 
 ## Host-native mapping
 

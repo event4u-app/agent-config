@@ -64,7 +64,12 @@ function loadEntries(root: string): InvariantEntry[] {
     if (!Array.isArray(parsed)) {
         throw new Error(`${INVARIANTS_JSON}: expected a top-level array`);
     }
-    for (const entry of parsed as InvariantEntry[]) {
+    // A leading `{"_meta": ...}` element carries the change-process pointer
+    // (JSON has no comments); it is not an invariant entry.
+    const entries = (parsed as Array<InvariantEntry | { _meta: unknown }>).filter(
+        (e): e is InvariantEntry => !('_meta' in e),
+    );
+    for (const entry of entries) {
         if (
             typeof entry.rule !== 'string' ||
             typeof entry.file !== 'string' ||
@@ -77,7 +82,7 @@ function loadEntries(root: string): InvariantEntry[] {
             );
         }
     }
-    return parsed as InvariantEntry[];
+    return entries;
 }
 
 /** Check one entry against pre-normalised file contents. */
@@ -144,7 +149,9 @@ function formatText(misses: Miss[], invariantCount: number): string {
     lines.push(
         '\nA kernel rule lost a load-bearing clause — likely a merge or condensation ' +
             'dropped it silently (see the #840/#844 incident in this file header). ' +
-            'Restore the clause or deliberately update tests/golden/invariants.json.',
+            'Restore the clause, or reword it via the documented change process: ' +
+            'docs/contracts/kernel-membership.md § 10 — Changing a protected invariant ' +
+            '(never "update the gate green").',
     );
     return lines.join('\n');
 }

@@ -45,6 +45,18 @@ One report block per worktree (skip the main working tree unless asked).
 - **Verification evidence** — present/absent per the run's `/worktree
   verify` record; absent → "none attached", never inferred.
 
+After the per-worktree blocks, run the cross-worktree overlap scan once:
+
+```bash
+./scripts-run src/scripts/worktree_cleanup_check scope-overlap
+```
+
+Exit `1` → two live scope locks own overlapping paths (e.g.
+`src/middleware/**` × `src/middleware/stack.ts`). Surface the pairs as a
+hazard: neither worktree is merge-ready while the same path is owned by
+both — the user decides (split ownership, sequence the tasks, or re-cut
+scope). Never let both silently edit the shared file.
+
 ### 3. Merge-readiness verdict
 
 Apply the five-point checklist from

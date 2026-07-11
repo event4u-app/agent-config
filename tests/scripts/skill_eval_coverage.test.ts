@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     checkRatchet,
+    checkTierFloor,
     computeCoverage,
     writeFloor,
 } from '../../src/scripts/skill_eval_coverage.js';
@@ -59,7 +60,19 @@ afterEach(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
 });
 
-const opts = () => ({ skillsDir, profilesDir, floorPath });
+const opts = () => ({
+    skillsDir,
+    profilesDir,
+    floorPath,
+    exemptionsPath: path.join(tmp, 'exemptions.json'),
+});
+
+function writeExemptions(exemptions: Record<string, string>): void {
+    fs.writeFileSync(
+        path.join(tmp, 'exemptions.json'),
+        JSON.stringify({ exemptions }),
+    );
+}
 
 describe('computeCoverage', () => {
     it('counts overall + per-tier from source-derived tier sets', () => {
@@ -120,5 +133,46 @@ describe('ratchet — writeFloor + checkRatchet', () => {
         const res = checkRatchet(opts());
         expect(res.ok).toBe(false);
         expect(res.regressions.some((r) => r.includes("tier 'rich'"))).toBe(true);
+    });
+});
+
+describe('tier floor — checkTierFloor', () => {
+    it('fails when a priority-tier skill has no evals and no exemption', () => {
+        mkSkill('routing-skill', { covered: false });
+        mkProfile('dev', ['routing-skill']);
+        const r = checkTierFloor(opts());
+        expect(r.ok).toBe(false);
+        expect(r.violations.join('\n')).toContain("'routing-skill'");
+    });
+
+    it('passes when the uncovered priority skill is exempted with a reason', () => {
+        mkSkill('routing-skill', { covered: false });
+        mkProfile('dev', ['routing-skill']);
+        writeExemptions({ 'routing-skill': 'fixture-only skill; eval pending harness support' });
+        const r = checkTierFloor(opts());
+        expect(r.ok).toBe(true);
+        expect(r.stale).toEqual([]);
+    });
+
+    it('an empty-string reason does not count as an exemption', () => {
+        mkSkill('routing-skill', { covered: false });
+        mkProfile('dev', ['routing-skill']);
+        writeExemptions({ 'routing-skill': '  ' });
+        expect(checkTierFloor(opts()).ok).toBe(false);
+    });
+
+    it('reports a stale exemption when the skill is now covered', () => {
+        mkSkill('routing-skill', { covered: true });
+        mkProfile('dev', ['routing-skill']);
+        writeExemptions({ 'routing-skill': 'was uncovered once' });
+        const r = checkTierFloor(opts());
+        expect(r.ok).toBe(true);
+        expect(r.stale.join('\n')).toContain("'routing-skill'");
+    });
+
+    it('non-priority (other-tier) skills are exempt from the floor', () => {
+        mkSkill('niche-skill', { covered: false });
+        mkProfile('dev', []);
+        expect(checkTierFloor(opts()).ok).toBe(true);
     });
 });

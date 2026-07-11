@@ -20,6 +20,7 @@
 import { homedir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 import { buildInstallPlan } from './plan.js';
+import { ruleFileArrives, LEGACY_ALL } from './rule_scope.js';
 /**
  * Per-tool user-scope anchor directory, mirrored 1:1 from
  * `scripts/install.py:USER_SCOPE_PATHS`. Values may use `~` for the
@@ -157,6 +158,8 @@ export function expandAnchor(anchor, home) {
  */
 export function expandWizardSources(inputs) {
     const { toolIds, packageRoot, home } = inputs;
+    const scope = inputs.ruleScope ?? LEGACY_ALL;
+    const ruleFilter = (srcFile) => ruleFileArrives(srcFile, scope);
     const out = [];
     for (const toolId of toolIds) {
         const deploy = GLOBAL_DEPLOY_SOURCES[toolId];
@@ -167,7 +170,17 @@ export function expandWizardSources(inputs) {
         for (const [srcRel, destSub] of deploy) {
             const srcDir = join(packageRoot, srcRel);
             const destDir = destSub.length === 0 ? destRoot : join(destRoot, destSub);
-            out.push({ toolId, srcDir, destDir, kind: 'deployed' });
+            // Rule sources get the install-time scoping filter — the same
+            // predicate the projection path uses (Phase 1b: Pipeline B may
+            // never drift from Pipeline A).
+            const isRuleSource = srcRel === 'dist/agent-src/rules';
+            out.push({
+                toolId,
+                srcDir,
+                destDir,
+                kind: 'deployed',
+                ...(isRuleSource ? { fileFilter: ruleFilter } : {}),
+            });
         }
     }
     return out;
