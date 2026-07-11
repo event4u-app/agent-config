@@ -26,7 +26,13 @@ const WEDGE_DIR = path.join(REPO, 'docs', 'wedge');
 
 function _units(): string[] {
     if (!fs.existsSync(SUBAGENT_SRC)) return [];
-    return fs.readdirSync(SUBAGENT_SRC).filter((f) => f.endsWith('.md')).sort();
+    // `_`-prefixed files are injected partials (e.g. _prompt-defense.md), not
+    // projectable agents — they carry no wedge doc. Mirrors the filter in
+    // condense.generate_claude_subagents and build_discovery_manifest.
+    return fs
+        .readdirSync(SUBAGENT_SRC)
+        .filter((f) => f.endsWith('.md') && !f.startsWith('_'))
+        .sort();
 }
 
 const _tmp: string[] = [];
