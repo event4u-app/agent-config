@@ -1,10 +1,26 @@
 ---
 complexity: structural
-status: ready
+status: later
 parent_roadmap: road-to-token-saving
 ---
 
 # Road to token proof and story — orchestrate, prove, activate, adopt
+
+> **Parked in `later/` (2026-07-11, AI-council re-scoping).** Phase 2 measures
+> FIELD token savings "before vs after each flip" + correlates with real
+> `sessions.jsonl` — but the thin/scoped default-flips it would measure FAILED
+> the quality gate (#887, thin 36.2% < 48%) and are evidence-blocked (#888), and
+> no field cost data is captured. So the field-evidence report cannot exist yet.
+> Council (claude-sonnet-4-5 + gpt-4o, 2-round debate, 2026-07-11) converged:
+> **park, do not close** — the token-savings THESIS is intact; only the *thin*
+> mechanism died. If scoped-context-reduction under orchestration (the live path,
+> `road-to-orchestration-scope-decision` + `road-to-subagent-value-realization-followup`)
+> shows quality-neutral savings, Phase 2's measurement chain applies to that
+> mechanism instead.
+>
+> **Resume when:** a context-reduction mechanism (orchestration-scoped loading,
+> or a new single-request one) passes the quality gate AND real field
+> `sessions.jsonl` spend data exists for a before/after window.
 
 > The token program now spans six tracks (`road-to-token-saving` +
 > HUMAN-MEASUREMENT, `road-to-request-scoped-rule-load`,

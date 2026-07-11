@@ -10,6 +10,26 @@ status: ready
 > ordering, RTK everywhere, and the dead-weight removals — each gated on real
 > evidence, never on a chars/4 estimate.
 
+> **Council re-scope (2026-07-11, claude-sonnet-4-5 + gpt-4o, 2-round debate,
+> cluster head for the token/measurement roadmaps).** After the thin-null (#887,
+> thin 36.2% < 48%) + the evidence-blocked flips (#888), the council converged:
+> **the token-savings THESIS is intact; only the *thin* mechanism died.**
+> Per-item disposition:
+> - **token-saving (this roadmap): RE-SCOPE.** DEAD (quality-blocked): the
+>   thin-flip, the scoped-flip, and the quality-elbow-gated budget linter
+>   (`[-]` below). KEEP: RTK tier_2→kernel promotion (an orthogonal refactor,
+>   not a token bet). CONDITIONAL: "every shipped lever measured" stays as a
+>   gate for any *future* lever.
+> - **token-proof-and-story: PARKED in `later/`** — measures savings from flips
+>   that did not ship; resume when a context-reduction mechanism passes the
+>   quality gate + real field spend data exists.
+> - **request-scoped-rule-load + orchestration-scope-decision +
+>   subagent-value-realization: KEEP ACTIVE** — orchestration telemetry is
+>   *scoped-context-reduction tested in a decomposed setting*, i.e. the LIVE
+>   continuation of the thesis (a different mechanism than thin, still untested).
+>   The opt-in workspace-scoping path is shippable today + is the measurement
+>   target; parking it would orphan the target.
+
 
 > **Program sequencing:** the token program's single critical path + tracking
 > table live in `road-to-token-proof-and-story.md` § Program tracking — this
@@ -403,12 +423,15 @@ Make the always-loaded token surface a first-class, gated metric.
       extracted to a pure `evaluate_budgets()` + 12 tests (synthetic over-budget
       fails, current passes). NOTE: a kernel/tier-1 *aggregate* sum was not added
       — the per-surface caps + check_always_budget already cover the floor. -->
-- [ ] Set the threshold at the **quality elbow** found in Phase 0 (context-rot:
+- [-] Set the threshold at the **quality elbow** found in Phase 0 (context-rot:
       quality degrades well before the window fills), not at a % of max window.
-      <!-- PROVISIONAL caps in place (current + ~15% headroom = regression caps,
-      explicitly NOT the elbow). The context-rot quality elbow needs the Phase 0
-      live validation run (operator/cost-gated) — same key that unblocks the
-      thin-flip + RTK kernel-promotion. Re-anchor the caps with that evidence then. -->
+      <!-- cancelled 2026-07-11 (AI-council re-scope): the quality-elbow was
+      never established — the Phase-0 live run that ran was the thin-vs-eager
+      win-rate judge (#887), not a context-rot degradation curve, and its main
+      consumer (the thin-flip) is measured-dead. The budget linter stays at the
+      PROVISIONAL regression caps (already in place); the "elbow threshold"
+      refinement is moot. Re-open only if a context-reduction mechanism ships and
+      a real elbow curve is measured. -->
 - [x] Trim the 15 skill descriptions at the 202-char cap toward ~150; descriptions
       are always-scanned across ~250 skills.
       <!-- done 2026-06-27: trimmed the 15 at the 199–200 cap (systematic-debugging,
@@ -527,8 +550,14 @@ stale candidates.
       kernel-rule prefix drifts from internal/bench/reports/kernel-prefix.json — a
       change there invalidates every consumer's KV-cache. Shipped earlier
       (token-saving Phase 5); the acceptance box was stale-open. -->
-- [ ] An always-loaded budget linter gates CI at the quality-elbow threshold
+- [-] An always-loaded budget linter gates CI at the quality-elbow threshold
       (Phase 8).
+      <!-- cancelled 2026-07-11 (AI-council re-scope): the budget linter
+      (check_always_budget) IS wired + gates CI, but at the PROVISIONAL
+      concentration/regression caps — NOT a quality-elbow, which was never
+      established (thin failed; no context-rot curve run). The "at the
+      quality-elbow threshold" acceptance-as-worded is moot; the linter itself
+      stands. -->
 - [x] The Phase 10 backlog is triaged (no stale candidates).
       <!-- met (reality-sync 2026-07-11): all 8 Phase-10 backlog items are [x]
       (each promoted to a phase, folded, or triaged with a recorded reason —
