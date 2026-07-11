@@ -179,6 +179,11 @@ dist/agent-src/skills/*/evals/runs/
 # bridges via plain `node` without a tsx/node_modules toolchain (fallback D
 # of the py2ts consumer-runtime decision). Freshness enforced in CI.
 !/dist/install/
+# …but NOT the *_cli.js entry points: tsc emits them here, yet they run from
+# src/install/*_cli.ts (via install.sh), never from dist. Re-ignore the
+# byproducts so they don't show as untracked or get committed by accident.
+/dist/install/*_cli.js
+/dist/install/*_cli.js.map
 
 # AI Council per-run cache (raw provider responses keyed by run id).
 # Regenerated on demand from the council session JSON; never commit.
