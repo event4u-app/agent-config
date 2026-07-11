@@ -141,6 +141,16 @@ reproducible-on-checkout claim table.
 - [ ] One-line positioning, testable: "The only agent layer that publishes the
       runs where it changed nothing." If a reader can falsify that (find a
       competitor publishing honest nulls), the line updates — that's the point.
+- [ ] Publish the persona placebo-benchmark verdict as an adoption asset:
+      `later/road-to-opt-council-deliberation` Phase 4 runs a pre-registered
+      3-arm benchmark (method-personas / famous-figure framing / bare
+      multi-provider calls) whose outcome is publishable in BOTH
+      directions — a measured lift or an honest null on persona prompts —
+      and lands as a proof artifact either way. Turn that artifact into
+      one story on the proof surface ("a council implementation with
+      falsifiable verdicts — including the persona-theater question"):
+      content from already-budgeted work, zero extra measurement spend.
+      Gated on that benchmark's verdict existing; either outcome ships.
 
 **Exit:** a differentiator page whose every claim is CI-drift-checked; the
 positioning line is itself falsifiable.

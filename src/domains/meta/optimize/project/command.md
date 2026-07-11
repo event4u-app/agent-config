@@ -124,6 +124,18 @@ live git/CI state) per
 [`source-discovery-gate`](../../rules/source-discovery-gate.md) —
 never challenge a decision based on a remembered or assumed fact.
 
+**SHA-pinned verification.** Every `Verified:` prerequisite or
+evidence line written into an output roadmap MUST be re-run inside the
+output branch/worktree at its HEAD at verification time, and cite that
+SHA — never carried over from an earlier checkout. If a claim-relevant
+commit lands between verification and the roadmap's landing, the claim
+must be re-verified (the cited SHA makes the gap detectable). A sweep
+that verifies against a stale clone produces exactly the stale prose
+it exists to repair. Two known false-negative traps: files that `grep`
+classifies as binary return zero hits silently (use `grep -a` / `rg`),
+and a parallel session may land the claimed gap between analysis and
+authoring.
+
 ### Step 3 — Challenge interview (user-gated, budgeted)
 
 One question per turn, numbered options with a recommendation —
