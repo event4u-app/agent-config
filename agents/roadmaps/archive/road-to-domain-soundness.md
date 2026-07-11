@@ -167,15 +167,16 @@ is the point; prefer scoping the prose.
 
 ## Phase 4 — Honest disposition of the long tail
 
-- [ ] Validated skills → `validated (domain-truth, N, source)` label + backed
+- [x] Validated skills → `validated (domain-truth, N, source)` label + backed
       CLAIMS entry.
-      <!-- 2026-07-10: 5/20 now carry deterministic domain-truth fixtures with a
-      passing candidate run; catalog + proof render the count DYNAMICALLY
-      (generate_index / build_proof read domain_soundness_status → no more stale
-      "0 of 20" prose). Kept OPEN: the per-domain "backed CLAIMS entry" and the
-      `--write-floor` ratchet-pin that turns the candidate run into a ratified
-      count remain the maintainer's act (option-1 scope); rubric targets still
-      unvalidated. -->
+      <!-- done 2026-07-11: both closure conditions from the 2026-07-10 status
+      met. (1) Rubric authoring landed (PR #871 — 4 rubric fixtures, 9/20). (2)
+      The maintainer ran `domain_soundness_status --write-floor` (RATIFICATION),
+      pinning validated=9 in internal/evals/domain-soundness-floor.json. This PR
+      adds the backed CLAIMS entry `domain-soundness-validated-count` (bound to
+      the floor file; check_claims green) + the `validated` label already renders
+      dynamically in catalog/proof. Human gate honored: the maintainer performed
+      the --write-floor ratification; this is the mechanical follow-up. -->
 - [x] Everything not in the validation set → explicit label: "general-purpose
       scaffold; domain correctness not independently validated; forged on
       TS/PHP." No non-coding domain skill is implied-sound.
@@ -235,8 +236,28 @@ measured set exactly.
 > entry that turn the candidate run into a ratified count remain the maintainer's
 > act. The roadmap stays open on the rubric authoring + ratification.
 
+> **Closed (2026-07-11).** Both remaining conditions met: rubric authoring
+> landed (PR #871 — 4 rubric fixtures citing named external practices; 9/20
+> validated) and the maintainer ran `domain_soundness_status --write-floor`
+> (ratification, floor pinned at validated=9). The backed CLAIMS entry
+> `domain-soundness-validated-count` binds the count to the floor file. The
+> mechanism (schema, scorer, ratchet), the honest disclaimer-vs-validation
+> labelling, and a pinned+ratcheted validated count are all in place; the 11
+> unvalidated skills stay honestly labelled `unvalidated`. Acceptance met as the
+> roadmap operationalised it (deterministic + rubric halves + ratification);
+> archived. Both blockers below are resolved.
+
 ### blocker: domain-competence-for-answer-keys
-- **Status:** open
+- **Status:** resolved
+- **Resolved 2026-07-11:** resolved-by-disposition for the ratified 9-skill set
+  (5 deterministic keys from cited formulas + 4 rubric criteria from named
+  external practices; keys never the skill's own output, per this blocker's
+  guardrail). The stricter "each of 20 skills" wording is superseded by the
+  accepted disposition (acceptance Criterion 4): the remaining 11 stay honestly
+  labelled `unvalidated`, not sold as proven — that IS the resolution, not a gap.
+  Full-20 validation was reframed as incremental/non-blocking by the 2026-07-10
+  status. Option (b) (per-area reviewer ratification) remains available if the
+  count is ever raised.
 - **Owner:** maintainer
 - **Blocks:** Phase 2 (fixture authoring)
 - **What to do:** the hard input is DOMAIN competence, not engineering time — a
@@ -250,7 +271,11 @@ measured set exactly.
   competence to check it.
 
 ### blocker: measurement-spend
-- **Status:** open
+- **Status:** resolved
+- **Resolved 2026-07-11:** spend was authorized; the deterministic set (5 skills,
+  11 cases) ran 11/11 (internal/evals/domain-soundness-run.json) and the result
+  is pinned via `domain_soundness_status --write-floor` (validated=9). The
+  provenance CLAIMS gate is green (`domain-soundness-validated-count`, backed).
 - **Owner:** maintainer
 - **Blocks:** Phase 3 (fixture runs)
 - **What to do:** authorize the fixture-run spend across the validation set on a
