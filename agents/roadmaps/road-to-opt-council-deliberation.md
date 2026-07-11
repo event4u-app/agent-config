@@ -1,19 +1,18 @@
 ---
-status: later
-complexity: structural
 status: ready
+complexity: structural
 execution:
   mode: autonomous
 ---
 
 # Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater
 
-> **Parked in `later/` by maintainer decision (2026-07-12).**
-> Blocked until: the pre-existing active roadmap portfolio (the
-> roadmaps that were active before the 2026-07-11 `road-to-opt-*`
-> cluster landed) is worked down, OR the maintainer explicitly and
-> exclusively requests execution of this roadmap. Do NOT pick this
-> file up as part of another task or an autonomous sweep.
+> **Un-parked 2026-07-11 on the maintainer's explicit exclusive request.**
+> Executing the autonomously-completable phases (0–1). Phase 2's auto-selection
+> detail and Phase 3's repair-call policy are gated on `blocker:
+> contested-design-council-pass` (a billable `/council:design` run — user's
+> call); Phase 4 is gated on `blocker: benchmark-spend-authorization`. Those
+> billable/design gates are the halt — surfaced, not pre-decided.
 
 > Source-level comparison against **Source G** — an external prompt-only
 > multi-persona council skill (18 historical-figure agents, a ~940-line
@@ -114,25 +113,31 @@ this session; agent-config claims re-verified against `src/` at HEAD
 
 Independent of any adoption; fixes our own artefact first.
 
-- [ ] Rewrite the Iron-Law block in `src/skills/ai-council/SKILL.md` to
+- [x] Rewrite the Iron-Law block in `src/skills/ai-council/SKILL.md` to
       match shipped behaviour: the council never sees the *host's*
       reasoning or framing; peer replies are visible from round 2
       onward **only anonymised, never attributed**. Keep the fence
       style consistent with the existing block.
-- [ ] Grep-sweep for restatements of the old wording in
+      <!-- done: reworded the fenced block (SKILL.md ~L120) — ROUND 2+ MAY SEE PRIOR PEER REPLIES, ANONYMISED ONLY, NEVER ATTRIBUTED, NEVER THE HOST'S. -->
+- [x] Grep-sweep for restatements of the old wording in
       `src/domains/meta/council/**/command.md` and
       `docs/contracts/ai-council-config.md`; align each hit.
-- [ ] Add **Kill Criteria** and **Concrete Next Step** as required
+      <!-- done: the old "does not see prior replies" wording existed ONLY at SKILL.md L122 (map-confirmed); command.md + contract already describe anonymised-peer behaviour correctly. grep for the old wording outside archive = zero hits. -->
+- [x] Add **Kill Criteria** and **Concrete Next Step** as required
       sections to every lens synthesis template (SKILL § synthesis
       templates): Kill Criteria entries must be observable without
       re-convening the council and carry a threshold or event; Concrete
       Next Step is exactly one artefact-producing action.
-- [ ] Renderer check: synthesis output missing either section, or
+      <!-- done: added to all 5 lens templates in prompts.ts (default/pr/analysis + a new CREATIVE_SYNTHESIS for design/optimize that keeps a free-form body and appends the two sections). SKILL doc table + R4-Q4 split prose updated. -->
+- [x] Renderer check: synthesis output missing either section, or
       containing a placeholder-empty section, fails the render step
       with a named error (test with a fixture transcript).
-- [ ] Fold the evidence-label + provider-spread lines into
+      <!-- done: SynthesisRenderError + assert_synthesis_sections() in prompts.ts (called on the synthesis-emit path — the Phase-2 chairman + any record step); tests/scripts/ai_council/synthesis_check.test.ts red on missing/empty section, green on complete (6 tests). -->
+- [x] Fold the evidence-label + provider-spread lines into
       `replay.ts` output (one aggregate line each; no new template
       section).
+      <!-- done: two trailer lines (Evidence spread H/M/L across N findings; Provider spread N distinct) in render_decision_replay; replay.test.ts asserts both (verify: npx vitest run tests/scripts/ai_council/replay.test.ts). -->
+      <!-- verify: npx vitest run tests/scripts/ai_council/prompts.test.ts tests/scripts/ai_council/replay.test.ts tests/scripts/ai_council/synthesis_check.test.ts -->
 
 **Exit criteria:** grep for the old Iron-Law sentence returns zero hits
 outside the archive; render-check test red on a fixture missing Kill
@@ -152,7 +157,8 @@ Deterministic port of Source G's tally, engineered instead of prompted.
       `STANCE: <label> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no`,
       with the label-matching instruction (peers backing the same option
       use the same label; `abstain` allowed).
-- [ ] New module `src/scripts/ai_council/stance_tally.ts`: parse stance
+      <!-- partial: STANCE_LINE_CONTRACT constant authored in prompts.ts (with the label-matching + abstain instruction). The orchestrator wiring that APPENDS it to the final round (_augment_for_next_round, gated on next_round === rounds) is the remaining integration — see the halt note at the phase foot. -->
+- [x] New module `src/scripts/ai_council/stance_tally.ts`: parse stance
       lines (tolerant of whitespace/case, re-prompt-marker on
       unparseable — never infer from prose); canonicalise labels
       (exact-match after casefold; unmatched labels stay distinct — no
@@ -161,20 +167,35 @@ Deterministic port of Source G's tally, engineered instead of prompted.
       weights; abstain contributes to `W_total` only; consensus iff
       `W_option ≥ ⅔ × W_total`; below threshold → structured split
       result, never a forced winner, never an auto-added round.
+      <!-- done: stance_tally.ts — parse_stance_line (last-line, tolerant, null=repair-marker), tally_stances (base-weight W_total incl. abstain, ⅔ threshold, split), render_vote_tally. verify: npx vitest run tests/scripts/ai_council/stance_tally.test.ts -->
 - [ ] One bounded repair call per member with a missing/unparseable
       stance line (stance-line-only re-prompt), billable and gated like
       any member call; surfaced in the estimate as a `may add up to N
       repair calls` row.
+      <!-- BLOCKED on `blocker: contested-design-council-pass` — the repair-call auto-fire-vs-confirm policy is the design question that blocker reserves for a billable /council:design run. The tally already RETURNS needs_repair (parsed, tested); only the billable dispatch policy waits. -->
 - [ ] Verdict section **Vote Tally** in the synthesis template: one line
       per option (`<option> — <weight> (<backers with confidence>)`),
       threshold stated, cleared-or-escalated stated.
-- [ ] Tests in `tests/scripts/ai_council/stance_tally.test.ts` including
+      <!-- partial: render_vote_tally() authored + tested in stance_tally.ts (exactly this shape). Injecting it into the live synthesis output is part of the same orchestrator integration as the final-round wiring — remaining. -->
+- [x] Tests in `tests/scripts/ai_council/stance_tally.test.ts` including
       Source G's own worked example as a fixture (3-seat panel, one
       abstain; assert the abstain raises the bar and the split
       escalates) plus parse-tolerance and repair-marker cases.
-- [ ] Config key `ai_council.stance_tally.enabled` (default `false`)
+      <!-- done: 12 tests — the 3-seat/one-abstain worked example (abstain raises the bar → 1.75 splits, would clear without it; 2.0 clears exactly), parse-tolerance (whitespace/case/medium-alias/last-line), distinct-labels, repair-marker. -->
+- [x] Config key `ai_council.stance_tally.enabled` (default `false`)
       documented in `docs/contracts/ai-council-config.md`; schema
       validation rejects unknown values.
+      <!-- done: StanceTallyConfig + _build_stance_tally (default false, non-bool rejected) wired into CouncilConfig/_build_config; contract-doc § Stance tally added; config.test.ts asserts default-off + honoured + non-bool rejection. -->
+
+> **Phase 1 halt — orchestrator integration gated.** The default-off foundation
+> is landed and verified (module + config + prompt contract + doc + tests). The
+> remaining three items are one coupled orchestrator integration — append the
+> STANCE suffix to the final round, run the tally, inject the Vote Tally, and
+> dispatch the bounded repair call. Its repair-call policy (auto-fire vs a
+> one-line confirm) is exactly the question `blocker: contested-design-council-pass`
+> reserves for a billable `/council:design` run, so this integration halts here
+> pending that decision. Everything shipped is default-off: with
+> `stance_tally.enabled: false` the council path is byte-identical to today.
 
 **Exit criteria:** stance-tally test file green; a fixture run with
 `enabled: false` produces byte-identical output to today's path
