@@ -2,15 +2,23 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 8 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **6** open blockers
+> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **6** open blockers
 
 ## Overall
 
-**72 / 128 steps done · 56%**
+**85 / 141 steps done · 60%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   56%
+████████████████████████░░░░░░░░░░░░░░░░   60%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-opt-harness-discipline.md](roadmaps/road-to-opt-harness-discipline.md) | 13 | 1 | 0 |
 
 ## Open roadmaps
 
@@ -19,11 +27,12 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 15 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 6% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 4 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 5 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 6 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 7 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
-| 8 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
+| 4 | [road-to-opt-harness-discipline.md](roadmaps/road-to-opt-harness-discipline.md) | 5 | 14 | 0 | 13 | 1 | 0 | 0 | ██████████ 100% |
+| 5 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 8 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 9 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
 
 ---
 
@@ -85,6 +94,18 @@ _2 blockers resolved._
   - **Resolved when:** ≥1 non-maintainer has reviewed a merged PR, or the phase is explicitly deferred pending adoption.
 
 _1 blocker resolved._
+
+### [road-to-opt-harness-discipline.md](roadmaps/road-to-opt-harness-discipline.md)
+
+**Road to opt harness discipline — port the native-harness behaviors weaker hosts don't have** — 13 / 13 done (100%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | deterministic environment bootstrap (S) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | machine-checkable step verification (M) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | error-signature triage in the failure counter (S) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 4 | promote the fable draft rules as cross-tool harness ports (S) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 5 | style-contract tension: decision step (no silent resolve) | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
