@@ -36,7 +36,6 @@ import {
   DEFAULT_MAX_DASH_DENSITY,
   DEFAULT_MAX_HARD,
   sniffLanguage,
-  type TellRule,
 } from "./ai_tells_rules.js";
 
 export interface RuleHit {
@@ -228,9 +227,9 @@ async function main(): Promise<void> {
     const reasons = gate ? exceedsThresholds(report, thresholds) : [];
     if (reasons.length > 0) failed = true;
     if (json) jsonOut[name] = report;
-    else console.log(humanSummary(name, report, reasons));
+    else process.stdout.write(humanSummary(name, report, reasons) + "\n");
   }
-  if (json) console.log(JSON.stringify(jsonOut, null, 2));
+  if (json) process.stdout.write(JSON.stringify(jsonOut, null, 2) + "\n");
   process.exit(failed ? 1 : 0);
 }
 

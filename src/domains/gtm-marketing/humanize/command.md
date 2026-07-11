@@ -3,7 +3,7 @@ model_tier: inherit
 name: humanize
 pack: gtm-marketing
 tier: 2
-visibility: public
+visibility: visible
 description: Remove AI-writing tells from pasted text or a file — runs the humanizer skill's draft→audit→final loop and prints the rewrite plus a detector summary.
 cluster: humanize
 skills: [humanizer]

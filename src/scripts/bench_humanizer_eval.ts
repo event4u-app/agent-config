@@ -132,7 +132,7 @@ async function main(): Promise<void> {
     };
     if (runJudge && controlled) {
       row.judge = await judgePair(p, i);
-      console.log(`  judged ${p.name}: prefers ${row.judge.preferred} (${row.judge.order})`);
+      process.stdout.write(`  judged ${p.name}: prefers ${row.judge.preferred} (${row.judge.order})\n`);
     }
     results.push(row);
   }
@@ -200,7 +200,7 @@ async function main(): Promise<void> {
   writeFileSync(join(REPORT_DIR, "humanizer-v1.md"), md);
   writeFileSync(join(REPORT_DIR, `${iso}-humanizer-v1.json`), JSON.stringify(payload, null, 2));
   writeFileSync(join(REPORT_DIR, `${iso}-humanizer-v1.md`), md);
-  console.log(md);
+  process.stdout.write(md + "\n");
 }
 
 main().catch((err) => {
