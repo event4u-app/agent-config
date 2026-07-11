@@ -163,19 +163,19 @@ trigger evals present.
 
 ## Phase 5 — style-contract tension: decision step (no silent resolve)
 
-- [~] Surface to the maintainer: Source C's harness mandates complete
+- [ ] Surface to the maintainer: Source C's harness mandates complete
       sentences and bans fragment/arrow-chain prose, which directly
       conflicts with `telegraph-speak`'s condensation grammar for reply
       prose. Present the trade-off (readability-for-humans vs token
       frugality; current `speak_scope` default) as a numbered-options
       decision; record the outcome in the telegraph-speak rule or a
       context note. This roadmap does NOT pre-decide it.
-      <!-- deferred: SURFACED to the maintainer as a numbered-options decision in the execution reply (not pre-decided, per this step's own instruction). Resolution — a maintainer pick — is required before this roadmap archives; the outcome then lands in telegraph-speak or a context note. -->
+      <!-- surfaced 2026-07-11 to the maintainer as a numbered-options decision in the execution reply / PR (not pre-decided, per this step's own instruction). Stays OPEN — the step completes only when the maintainer picks and the outcome lands in telegraph-speak or a context note. -->
 
-> **Phase 5 status: surfaced, awaiting maintainer decision.** Phases 1–4 are
-> complete and shipped; this roadmap stays active (not archived) until the
-> style-contract decision above is made. See the PR description / execution
-> reply for the numbered options.
+> **Phase 5 status: OPEN — surfaced, awaiting the maintainer's decision.**
+> Phases 1–4 are complete and shipped; this roadmap stays active (one open
+> step, not archived) until the style-contract decision above is made. See the
+> PR description / execution reply for the numbered options.
 
 ## Acceptance criteria
 
