@@ -259,21 +259,38 @@ export function main(argv: string[]): 0 | 2 {
         return 0;
     }
 
-    const client = new AnthropicClient({ api_key: key });
-    const resp = client.ask(buildSystemPrompt(), diffText(baseRef, plan.files), 4096);
-    if (resp.error) {
-        process.stdout.write(`::warning::self-review-gate — model call failed: ${resp.error}\n`);
-        return 0; // advisory: a transport failure never blocks the merge
-    }
-    const findings = parseFindings(resp.text);
-    const body = renderReview(findings, enforce);
-    postReview(body);
+    // Belt-and-suspenders: the WHOLE live path is wrapped so that ANYTHING going
+    // wrong — no API credit / balance (HTTP 402), rate-limit (429), network error,
+    // a client-ctor throw, a parse failure — resolves to a NEUTRAL exit 0, never a
+    // red CI. A missing key or no-credit must never become a merge blocker; the
+    // gate is advisory by design. (Only an --enforce run with real blocking
+    // findings returns 2 — an error is not a finding.)
+    try {
+        const client = new AnthropicClient({ api_key: key });
+        const resp = client.ask(buildSystemPrompt(), diffText(baseRef, plan.files), 4096);
+        if (resp.error) {
+            process.stdout.write(
+                `::warning::self-review-gate NEUTRAL — model call did not complete (${resp.error}); ` +
+                    'nothing was reviewed, not a blocker.\n',
+            );
+            return 0; // no credit / transport / API error → never blocks the merge
+        }
+        const findings = parseFindings(resp.text);
+        const body = renderReview(findings, enforce);
+        postReview(body);
 
-    const code = gateVerdict(findings, { enforce });
-    if (code === 2) {
-        process.stdout.write('::error::self-review-gate — merge-blocking findings under enforce mode.\n');
+        const code = gateVerdict(findings, { enforce });
+        if (code === 2) {
+            process.stdout.write('::error::self-review-gate — merge-blocking findings under enforce mode.\n');
+        }
+        return code;
+    } catch (e) {
+        process.stdout.write(
+            `::warning::self-review-gate NEUTRAL — unexpected error (${e instanceof Error ? e.message : String(e)}); ` +
+                'nothing was reviewed, not a blocker.\n',
+        );
+        return 0;
     }
-    return code;
 }
 
 if (existsSync(process.argv[1] ?? '') && import.meta.url === `file://${process.argv[1]}`) {
