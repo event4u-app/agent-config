@@ -6,10 +6,10 @@
 
 ## Overall
 
-**96 / 168 steps done · 57%**
+**98 / 168 steps done · 58%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   57%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
@@ -25,7 +25,7 @@
 | 7 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
 | 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 9 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 10 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
+| 10 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 9 | 26 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 74% |
 
 ---
 
@@ -227,17 +227,17 @@ _1 blocker resolved._
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 24 / 35 done (69%)
+**Road to token saving — measure, then cut, at constant quality** — 26 / 35 done (74%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Measurement substrate (the prerequisite to every cut) | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
+| 0 | Measurement substrate (the prerequisite to every cut) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 | 1 | RTK everywhere (un-gate the scope) | 🟡 in progress | 1 | 2 | 0 | 1 | 67% |
 | 2 | Close the RTK trigger gap | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 3 | Deterministic RTK wrap hook + install verification | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Cache-aware ordering as a CI invariant (D5) | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 8 | Always-loaded budget linter (D6) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 6 | 8 | 0 | 0 | 57% |
+| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 5 | 9 | 0 | 0 | 64% |
 
 <a id="blockers-road-to-token-saving"></a>
 **Blockers**
