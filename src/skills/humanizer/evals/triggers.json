@@ -1,0 +1,17 @@
+{
+  "skill": "humanizer",
+  "last_eval": "2026-07-11",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers de-slopping deliverable prose (EN + DE phrasings). Should-not-trigger covers the near-miss neighbors: brand-voice definition (voice-and-tone-design), chat-reply tone (direct-answers), voice-capture drafting (ghostwriter), translation, and plain shortening.",
+  "queries": [
+    {"q": "make this sound less like AI", "trigger": true},
+    {"q": "this post reads like ChatGPT wrote it, fix that", "trigger": true},
+    {"q": "humanize this draft", "trigger": true},
+    {"q": "remove the AI-isms from my article", "trigger": true},
+    {"q": "schreib das um, damit es nicht KI-generiert klingt", "trigger": true},
+    {"q": "define our brand voice", "trigger": false, "note": "routes to voice-and-tone-design (voice definition, not per-line editing)"},
+    {"q": "stop opening your replies with praise", "trigger": false, "note": "chat-reply tone — owned by direct-answers"},
+    {"q": "write a LinkedIn post in the style of a public figure", "trigger": false, "note": "routes to /ghostwriter:write (humanizer runs inside its step 4b, not standalone)"},
+    {"q": "translate this paragraph to German", "trigger": false, "note": "translation, not de-slopping"},
+    {"q": "shorten this paragraph to half the length", "trigger": false, "note": "compression, not tell removal"}
+  ]
+}

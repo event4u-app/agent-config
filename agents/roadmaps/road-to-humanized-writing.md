@@ -113,12 +113,12 @@ House constraints shaping the design:
 
 ## Prerequisites
 
-- [ ] Confirm `docs/contracts/write-engine.md` still carries
+- [x] Confirm `docs/contracts/write-engine.md` still carries
       `stability: beta` / `keep-beta-until: 2026-08-13` (verified
       2026-07-11) — a step addition inside the beta window is a minor
       contract edit; if the window lapsed before Phase 2 starts, re-scope
       Phase 2 as a versioned contract change first.
-- [ ] Confirm `gtm-marketing` pack (`src/domains/gtm-marketing/pack.yaml`)
+- [x] Confirm `gtm-marketing` pack (`src/domains/gtm-marketing/pack.yaml`)
       is the distribution surface and its `size_class` budget has headroom
       for one skill + one command.
 - [x] Decision D1 — humanize pass default-on inside the write engine,
@@ -159,7 +159,7 @@ false positives on the "after" set; suite green in the targeted run.
 
 ## Phase 1 — `humanizer` skill (two-phase, deliverable-scoped)
 
-- [ ] `src/skills/humanizer/SKILL.md` (~80 lines): frontmatter per the
+- [x] `src/skills/humanizer/SKILL.md` (~80 lines): frontmatter per the
       `voice-and-tone-design` shape (`domain: product`, `tier: senior`,
       `workspaces: [gtm]`, `packs: [gtm-marketing]`,
       `recommended_for_user_types: [creator, consultant, gtm]`,
@@ -171,22 +171,23 @@ false positives on the "after" set; suite green in the targeted run.
       and a pointer to run `detect_ai_tells.ts` on the final draft when a
       runtime is available (prose-only fallback otherwise). Include
       `## Gotcha` and ≥ 2 Output requirements (skill-linter floor).
-- [ ] `src/skills/humanizer/data/patterns.md`: the full catalog in our own
+- [x] `src/skills/humanizer/data/patterns.md`: the full catalog in our own
       wording — five groups with before/after pairs, what-NOT-to-flag,
       human-signals-to-preserve. Loaded only during an active pass;
       untouched by the condenser.
-- [ ] `evals/triggers.json`: 5 should-trigger ("make this sound less like
+- [x] `evals/triggers.json`: 5 should-trigger ("make this sound less like
       AI", "this post reads like ChatGPT wrote it", "humanize this draft",
       "remove the AI-isms from my article", "rewrite so it doesn't sound
       generated") + 5 near-miss non-triggers ("define our brand voice",
       "stop opening replies with praise", "write a post as <figure>",
       "translate this to German", "shorten this paragraph").
-- [ ] Reference section cites the Wikipedia "Signs of AI writing" guide
+- [x] Reference section cites the Wikipedia "Signs of AI writing" guide
       (public); no external-repo naming (source-confidentiality).
-- [ ] Downstream surface for a new plain skill: register in
-      `.claude-plugin/marketplace.json` `skills[]` (hand-maintained) and
-      re-run discovery/regeneration so pack/tier tables stay in sync.
-- [ ] Verify: `./scripts-run src/scripts/skill_linter` targeted at the new
+- [-] Downstream surface: marketplace `skills[]` registration is obsolete —
+      the manifest now carries only the bootstrap pointer skill
+      (`lint_marketplace` green); pack/tier tables regenerated via
+      `task sync` + `task generate-tools` instead. <!-- cancelled: stale memory; verified 2026-07-11 -->
+- [x] Verify: `./scripts-run src/scripts/skill_linter` targeted at the new
       skill + trigger evals pass.
 
 **Exit criteria:** skill-linter green for the new skill; trigger evals

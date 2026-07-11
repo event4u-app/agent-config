@@ -6,10 +6,10 @@
 
 ## Overall
 
-**92 / 189 steps done · 49%**
+**97 / 188 steps done · 52%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   49%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 15 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 6% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-humanized-writing.md](roadmaps/road-to-humanized-writing.md) | 6 | 33 | 25 | 8 | 0 | 0 | 0 | ██░░░░░░░░ 24% |
+| 3 | [road-to-humanized-writing.md](roadmaps/road-to-humanized-writing.md) | 6 | 33 | 19 | 13 | 0 | 1 | 0 | ████░░░░░░ 41% |
 | 4 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
 | 5 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
@@ -67,12 +67,12 @@ _2 blockers resolved._
 
 ### [road-to-humanized-writing.md](roadmaps/road-to-humanized-writing.md)
 
-**Road to humanized writing — pattern-audited drafts across the write engine** — 8 / 33 done (24%)
+**Road to humanized writing — pattern-audited drafts across the write engine** — 13 / 32 done (41%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Detector + fixture corpus (measurement substrate first) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | `humanizer` skill (two-phase, deliverable-scoped) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | `humanizer` skill (two-phase, deliverable-scoped) | ✅ done | 0 | 5 | 0 | 1 | 100% |
 | 2 | Write-engine v1.1: audit pass as engine step | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | On-demand surface: `/humanize` command + cross-links | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | German pattern subset (language-aware, demand-gated) | ✅ done | 0 | 3 | 0 | 0 | 100% |
