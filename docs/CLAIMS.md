@@ -98,6 +98,13 @@
 - status: backed
 - last_verified: 2026-07-08
 
+### claim: domain-soundness-validated-count
+- claim: The validated non-coding domain-skill count is pinned and CI-ratcheted at a maintainer-set floor (9 of 20 default-surface skills carry a sourced `evals/domain-truth.json` fixture at pin time, 2026-07-11 — 5 deterministic, keys from cited formulas; 4 rubric, criteria matching a named external practice); the floor only rises via a maintainer `--write-floor` after a new sourced fixture lands.
+- kind: quant
+- evidence: internal/evals/domain-soundness-floor.json#validated
+- status: backed
+- last_verified: 2026-07-11
+
 ### claim: bus-factor-tracked
 - claim: The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more.
 - kind: qual

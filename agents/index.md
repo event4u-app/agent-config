@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **640 artefacts** in this package.
+Maintainer-facing index of all **641 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -282,7 +282,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) |  | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (103)
+## Rules (104)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -299,6 +299,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`brand-source-of-truth`](../src/rules/brand-source-of-truth.md) | auto | Consumer brand tokens + voice profile are the run's source of truth — the corpus fills gaps, never overrides |
 | rule | [`broken-access-control`](../src/rules/broken-access-control.md) | auto | Endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant/role check + the three negative tests (401/non-owner/cross-tenant) |
 | rule | [`cli-output-handling`](../src/rules/cli-output-handling.md) | auto | Verbose CLI output (git, tests, linters, docker, npm, composer) — wrap with rtk; tail/grep fallback |
+| rule | [`code-comment-discipline`](../src/rules/code-comment-discipline.md) | auto | Writing/editing code in any language — a comment states a WHY or a constraint the code cannot show; never restate what names/types already say; no signature-mirroring docblocks |
 | rule | [`command-suggestion-policy`](../src/rules/command-suggestion-policy.md) | auto | Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute |
 | rule | [`commit-conventions`](../src/rules/commit-conventions.md) | auto | Git commit format, branch naming, conventional commits, committing, pushing, creating PRs |
 | rule | [`commit-policy`](../src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |

@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **639 public artefacts** shipped by
+Consumer-facing catalog of all **640 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -298,7 +298,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) |  | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (102)
+## Rules (103)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -315,6 +315,7 @@ are excluded.
 | rule | [`brand-source-of-truth`](../dist/agent-src/rules/brand-source-of-truth.md) | auto | Consumer brand tokens + voice profile are the run's source of truth — the corpus fills gaps, never overrides |
 | rule | [`broken-access-control`](../dist/agent-src/rules/broken-access-control.md) | auto | Endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant/role check + the three negative tests (401/non-owner/cross-tenant) |
 | rule | [`cli-output-handling`](../dist/agent-src/rules/cli-output-handling.md) | auto | Verbose CLI output (git, tests, linters, docker, npm, composer) — wrap with rtk; tail/grep fallback |
+| rule | [`code-comment-discipline`](../dist/agent-src/rules/code-comment-discipline.md) | auto | Writing/editing code in any language — a comment states a WHY or a constraint the code cannot show; never restate what names/types already say; no signature-mirroring docblocks |
 | rule | [`command-suggestion-policy`](../dist/agent-src/rules/command-suggestion-policy.md) | auto | Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute |
 | rule | [`commit-conventions`](../dist/agent-src/rules/commit-conventions.md) | auto | Git commit format, branch naming, conventional commits, committing, pushing, creating PRs |
 | rule | [`commit-policy`](../dist/agent-src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
