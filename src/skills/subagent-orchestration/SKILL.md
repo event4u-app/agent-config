@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: subagent-orchestration
-description: "Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml."
+description: "Use when orchestrating implementer/judge subagents — form gate + eight modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge)."
 domain: process
 workspaces:
   - agent-config-maintainer
@@ -82,11 +82,46 @@ over-scripted prompts that break on first contingency.
 - **(d) Pre-declared check-in conditions.** The worker names, at spawn time, the
   conditions under which it will halt and ask ("if login required", "if
   multiple candidates found") — so interrupts are predictable, not surprises.
+- **(e) Attach relevant knowledge — read-only (road-to-opt-subagent-harvest
+  P3).** Before dispatch, look up the slice's key identifiers via
+  `memory_lookup` / the knowledge cards and attach the top hits to the
+  worker prompt AS LEADS — labelled per the source-discovery discipline
+  (negative facts + pointers durable; positive structure = hypothesis to
+  re-confirm, never a build input). The WRITE half stays forbidden: a
+  subagent's output is never auto-persisted into memory — promotion is
+  always the human-gated flow (ADR-098 floor). Auto-surface, never
+  auto-write.
 
 When to delegate at all is [`delegation-policy`](../../rules/delegation-policy.md);
 the spawn boundary is the [`subagent-spawn-contract`](../../contexts/execution/subagent-spawn-contract.md).
 
-## The seven modes
+## Form gate — deterministic, BEFORE mode selection
+
+With auto-dispatch on by default (ADR-117), mode selection happens without
+a human in the loop — so the FORM is decided by a static table first, and
+only then is the specific mode picked inside that form. Static table only:
+no learned routing, no self-modifying selector (rejected, stays rejected).
+
+| Task shape (structural signal) | Form | Modes in the form |
+|---|---|---|
+| ≥ 2 independent, verifiable slices | parallel | `do-in-parallel`, `do-competitively` |
+| Multi-step cross-wing chain needing filesystem isolation | worktrees | `do-in-worktrees` |
+| Ordered steps with declared dependencies | steps | `do-in-steps` |
+| Single change with non-trivial risk / contested spec / decision | judge | `do-and-judge`, `do-and-judge-two-stage`, `judge-with-debate`, `do-with-live-app-judge` |
+| Single slice below the delegability floor, unstructured, or frontier-priced | none | no dispatch — run in-session |
+
+Rules:
+
+- The gate consumes the SAME structural signals as
+  `auto_dispatch.ts::classifyTask` (slice count, dependency declarations,
+  size floor) — it never re-interprets the task text on vibes.
+- Ambiguous shape → `none` (in-session), never a speculative spawn — the
+  delegation-policy default.
+- Record the outcome in the telemetry line (`dispatch_mode` field, mode id
+  or `none`) so the gate's value is measurable inside the ADR-117
+  prove-or-drop window.
+
+## The eight modes
 
 Each mode has a decision row: when to use, when not, and the expected
 model pairing. Defaults come from
@@ -222,6 +257,29 @@ other's open files or branch state). Selection rules:
   worktrees automatically — the user keeps the option to harvest a
   partial idea before cleanup.
 
+### 8. do-with-live-app-judge (gated — UI-heavy tasks)
+
+Implementer ships the change AND starts the dev server; the judge drives
+the RUNNING application (Playwright / browser) against a written rubric —
+it never reads the diff. Catches the class static review misses: wired-but-
+broken flows, dead buttons, state that renders wrong only at runtime.
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| UI-heavy change where "looks right in the diff" ≠ "works in the app"; a dev server + browser tooling exist | Backend/logic change (a diff judge is cheaper and sharper); no runnable app surface | implementer = session; judge = same tier, fresh context, browser tools only |
+
+Rules:
+
+- The judge's rubric is written BEFORE dispatch (what flows to click, what
+  must render) — never improvised from the diff it must not read.
+- Record `dispatch_mode: do-with-live-app-judge` + `verdict_changed_outcome`
+  on every use. **Adoption gate:** this mode stays experimental until its
+  `verdict_changed_outcome` telemetry shows it changes outcomes (caught a
+  real issue a diff judge missed); a mode that never flips a verdict is
+  cost without value and gets removed.
+- No self-play/"adversarial training" framing — this is one judge, one
+  rubric, one running app.
+
 ## Status taxonomy — every subagent return uses one envelope
 
 Every implementer or judge return must conform to
@@ -256,7 +314,7 @@ Each mode's literal dispatch template lives under
 matching prompt at dispatch time and substitutes `{{placeholders}}`.
 Edits to a prompt do not bloat this skill against the 400-line sunset
 trigger; `tests/test_subagent_prompt_loading.py` confirms each of the
-seven modes resolves to a loadable prompt that cites all four taxonomy
+eight modes resolves to a loadable prompt that cites all four taxonomy
 statuses.
 
 ## Procedure
@@ -285,7 +343,7 @@ same context, **stop** and report. Do not improvise.
 
 ### 3. Pick the mode
 
-Match task shape to one of the seven modes. When two modes could fit,
+Run the form gate first, then match task shape to one of the eight modes. When two modes could fit,
 prefer the cheaper one (`do-and-judge` < `do-and-judge-two-stage` <
 `do-in-steps` < `do-in-parallel` < `do-competitively` <
 `judge-with-debate` < `do-in-worktrees`).

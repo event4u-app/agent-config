@@ -61,8 +61,9 @@ primitive → run in-session (clean no-op).
 2. **Tier-size** each slice (`lite|medium|high`) per the classification context —
    never the orchestrator's own session tier (the cost win is the per-call
    downsize; see [`subagent-routing`](../contexts/execution/subagent-routing.md)).
-3. **Dispatch** via the matching `subagent-orchestration` mode (independent →
-   do-in-parallel; ordered → do-in-steps; risk/correctness → + judge).
+3. **Dispatch** via the form gate + matching `subagent-orchestration` mode
+   (independent → do-in-parallel; ordered → do-in-steps; risk/correctness →
+   + judge; UI-heavy → live-app judge, efficacy-gated).
 4. **Verify** every return per
    [`verify-budget`](../contexts/execution/verify-budget.md); the cross-model
    judge Iron Law and the N=3 budget ([`autonomous-execution`](autonomous-execution.md))
@@ -89,7 +90,7 @@ primitive → run in-session (clean no-op).
 
 ## See also
 
-- [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — the 7 modes this selects.
+- [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — the form gate + 8 modes this selects.
 - [`subagent-boundary`](../docs/contracts/subagent-boundary.md) — what a subagent owns vs never owns (task-meaning, memory, pack-surface, safety-floor bypass).
 - [`auto-orchestration-activation`](../contexts/execution/auto-orchestration-activation.md) — the gate.
 - [`reasoning-orchestrator`](../skills/reasoning-orchestrator/SKILL.md) — RDP dispatch, now gated here.

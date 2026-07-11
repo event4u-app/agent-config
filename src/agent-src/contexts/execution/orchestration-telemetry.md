@@ -21,6 +21,7 @@ v1 forward-compat rule on unknown fields).
   "verify_mode": "deterministic",
   "verdict_changed_outcome": null,
   "task_class": null,
+  "dispatch_mode": null,
   "tier_chosen": null,
   "tier_source": null,
   "dispatch_tokens": null,
@@ -45,6 +46,7 @@ v1 forward-compat rule on unknown fields).
 | `outcome` | enum | One of `DONE` · `DONE_WITH_CONCERNS` · `NEEDS_CONTEXT` · `BLOCKED` · `killed`. |
 | `verify_mode` | enum | How the dispatch's output was verified: `deterministic` · `judge` · `none`. |
 | `verdict_changed_outcome` | bool \| null | **A3 extension (ADR-109 Track A).** For a review/verdict subagent (e.g. `production-validator`): did the subagent's verdict actually change the outcome versus the in-session baseline? `true` = it caught a real issue the baseline missed or flipped a false `READY`→`NOT READY`; `false` = same outcome as baseline (no lift); `null` = not a verdict dispatch / not measured. **Negative-control tasks (a clean single-file task) MUST record `false`** — a subagent that reports `true` on a control is producing spurious findings and fails Gate A. This is an additive field on THIS object, not a second schema. Counts/boolean only, no bodies. |
+| `dispatch_mode` | enum \| null | **Form-gate extension (road-to-opt-subagent-harvest P2).** Which orchestration mode the deterministic form gate selected for this dispatch (`do-and-judge`, `do-and-judge-two-stage`, `do-in-steps`, `do-in-parallel`, `do-competitively`, `judge-with-debate`, `do-in-worktrees`, `do-with-live-app-judge`) or `none` (gate declined dispatch). Mode id only. `null` = pre-extension line. Makes the form-gate's value measurable inside the ADR-117 prove-or-drop window. |
 | `task_class` | string \| null | **Routing extension (road-to-cost-aware-model-routing Phase 0).** Category id of the dispatched slice (e.g. `read-only-fanout`, `mechanical-edit`, `implementation`, `review-synthesis`). Enum-style id only, never free-form task text. `null` = pre-extension line / unclassified. |
 | `tier_chosen` | string \| null | Tier the slice was dispatched on (`lite` \| `medium` \| `high`). `null` = pre-extension line. |
 | `tier_source` | enum \| null | Where `tier_chosen` came from: `static` (frontmatter/category pin) · `inferred` (deterministic per-slice inference) · `inherit` (session tier — no downshift decision). Lets the evidence gate score inferred routing separately from static pinning. |

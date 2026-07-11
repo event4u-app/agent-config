@@ -30,8 +30,6 @@ trust:
   human_review_required: true
 ---
 <!-- agent-config:human-review-banner -->
-> HUMAN REVIEW REQUIRED · trust: advisory · owner: unknown
-
 > HUMAN REVIEW REQUIRED · trust: advisory · owner: legal
 
 # Legal Safety Floor
