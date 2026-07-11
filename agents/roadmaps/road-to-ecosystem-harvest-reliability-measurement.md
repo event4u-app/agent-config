@@ -7,9 +7,10 @@ status: ready
 
 **Trigger:** Ecosystem survey (see [`road-to-ecosystem-harvest-index`](road-to-ecosystem-harvest-index.md)).
 Sources cited source-anonymously (**K** = a loaded-vs-fired transcript pruner,
-**M** = a PR-review worked-example, **L** = a production-readiness scorer,
-**A** = a multi-harness marketplace, **E** = a slash-command collection, **G** =
-a security-firm repo); full provenance in the index § Provenance.
+**W** = a cross-tool session-audit CLI, **M** = a PR-review worked-example,
+**L** = a production-readiness scorer, **A** = a multi-harness marketplace,
+**E** = a slash-command collection, **G** = a security-firm repo); full
+provenance in the index § Provenance.
 
 **Priority: P1.** The loaded-vs-fired utilization report is the one mechanism
 that lets the suite **subtract** — it feeds the token-budget program directly by
@@ -38,8 +39,11 @@ useful" into "the transcripts say so".
 ## Phase 1 — Adopt-now plate (≤ 5 units)
 
 - [ ] **U1 — Loaded-vs-fired utilization report.** A transcript-driven analysis that computes, per skill/rule/command over a session window, `Fired / Loaded` and surfaces "loaded but never fired" dead weight (the "what you carry vs what you touch" ratio). Reuse the existing per-turn engagement data as the event source; output a ranked cut-candidate list. *Source K.* Verify: run on a real transcript set, assert the report names ≥1 zero-fire always-loaded artifact (or proves 100% utilization).
+  - **REAP / KEEP / REVIEW verdicts with a session floor.** Each candidate gets a verdict, but only above a minimum session count — **absence of evidence is not evidence of absence** (a skill unused across 3 sessions is not yet a cut). *Source K.*
+  - **Reversible quarantine, not deletion.** A cut moves the artifact to a quarantine with a manifest (what/when/why + restore path), never a hard delete — feeds `road-to-tier-removal` safely. *Source K.*
+  - **Cross-tool session-audit facet.** Beyond fire-rate: per-session cost / token / tool-failure / health signals across hosts (the raw material for the token-budget story). *Source W.* Keep measurement CI-side/opt-in; add no always-loaded surface.
 - [ ] **U2 — Golden-adversarial review fixtures.** A small fixture library of known-bad inputs with required verdicts (canonical: "golden SQL-injection PR → must produce a high/block finding"; a benign look-alike → must NOT). Wire into the `judge-*` / `code-review` eval harness as a regression gate. *Source M.* Verify: the fixtures run in CI and fail loudly if a review skill regresses to missing the planted bug.
-- [ ] **U3 — Evidence-gated go/no-go into `launch-readiness`.** NOT a numeric score (dropped by council as gameable false precision) — instead, per-item binary gates with hard blockers: an unresolved P0 (data/tenant boundary, auth, secrets) is a hard no-go; a checklist item with no cited evidence cannot be marked ready. *Source L, de-scoped.* Verify: a checklist with one unresolved P0 yields an explicit no-go, not a soft warning.
+- [ ] **U3 — Evidence-gated go/no-go into `launch-readiness`.** NOT a numeric score (dropped by council as gameable false precision) — instead, per-item binary gates with hard blockers: an unresolved P0 (data/tenant boundary, auth, secrets) is a hard no-go; a checklist item with no cited evidence cannot be marked ready (**Unknown ≠ Pass**). Adopt from the scorer, minus the score: **stable finding IDs** (so a finding is trackable across runs) + a **`diff --ci` regression gate** (a previously-passing item regressing turns CI red). *Source L, de-scoped per council (score dropped, mechanics kept).* Verify: a checklist with one unresolved P0 yields an explicit no-go; a fixture regression on a stable ID fails the diff gate.
 - [ ] **U4 — Real-host loadability smoke test.** A CI check that boots each projected host against the generated tree and asserts skills/rules actually load (complements the existing condensation-hash + linter gates, which prove *shape* not *loadability*). *Source G.* Verify: the check catches a deliberately-malformed projection.
 - [ ] **U5 (rolling) — Agent-coordination-history facet.** Extend `orchestration-telemetry` to record *which subagent combinations* completed successfully (not just counts) so the orchestrator can prefer combos that worked. *Source E.* Verify: after a multi-agent run, the record names the combo + outcome.
 

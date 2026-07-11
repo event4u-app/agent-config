@@ -45,6 +45,15 @@ user decides when to run each plate).
   against the suite's current 271-skill / ~90-rule / ~150-command surface.
 - The adopt/gate/reject calls and the sequencing were vetted by a 2-member
   AI-council debate (see § Council convergence).
+- A **second sweep** (source directory's backing repo == this same catalog)
+  closed disposition on every remaining entry and added four second-sweep
+  roadmaps (review-mechanics, skill-quality-gates, workflow-contracts, and the
+  second-sweep coverage file). Its load-bearing external mechanism claims were
+  independently fact-checked against real source files (verbatim-confirmed). A
+  parallel local exploration (gitignored drafts, another prefix) was reconciled
+  in, not duplicated: its net-new mechanisms were folded here **anonymized**
+  (its open-source-name drafts would trip the `check-no-external-sources` gate;
+  its re-proposed numeric readiness score stays dropped per the council lock).
 
 ---
 
@@ -54,13 +63,17 @@ user decides when to run each plate).
 |---|---|---|
 | **P1** | [`road-to-ecosystem-harvest-bug-security-rigor`](road-to-ecosystem-harvest-bug-security-rigor.md) | The over-reporting gate is a live credibility fire — an over-flagging bug/security cluster damages trust today. |
 | **P1** | [`road-to-ecosystem-harvest-reliability-measurement`](road-to-ecosystem-harvest-reliability-measurement.md) | The loaded-vs-fired utilization report is the only mechanism that lets the suite **subtract** dead-weight skills — it enables the token-budget program. Golden-adversarial fixtures make review output testable. |
+| **P1** | [`road-to-ecosystem-harvest-review-mechanics`](road-to-ecosystem-harvest-review-mechanics.md) | Five verified upgrades to the review surface (ordering-bias, change-type routing, reasoned validation + dropped-FP transparency, two-tier triage, security deep-verify). *(Second sweep.)* |
 | **P2** | [`road-to-ecosystem-harvest-skill-authoring-rigor`](road-to-ecosystem-harvest-skill-authoring-rigor.md) | Spec alignment + a quantitative description-optimizer raise the quality floor of every future skill. |
+| **P2** | [`road-to-ecosystem-harvest-skill-quality-gates`](road-to-ecosystem-harvest-skill-quality-gates.md) | Deterministic gates: description-circularity lint, eval-schema v2 (tool-choice + trajectory), effort pinning, read-only-by-default scripts, host-loadability smoke. *(Second sweep.)* |
+| **P2** | [`road-to-ecosystem-harvest-workflow-contracts`](road-to-ecosystem-harvest-workflow-contracts.md) | Per-mode forbidden-lists with diff-checkable negatives, a host-neutral HANDOFF contract, plan-first merge-conflicts. *(Second sweep.)* |
 | **P2** | [`road-to-ecosystem-harvest-document-skills`](road-to-ecosystem-harvest-document-skills.md) | Completes the document read→write cycle (a read skill already ships); scoped v1, CI-gated pptx. |
 | **P2** | [`road-to-ecosystem-harvest-prose-authenticity`](road-to-ecosystem-harvest-prose-authenticity.md) | A prose-level AI-ism taxonomy fills a real hole the code/UI slop rules don't cover. |
 | **P2** | [`road-to-ecosystem-harvest-tool-pitfalls`](road-to-ecosystem-harvest-tool-pitfalls.md) | Cheap, high-signal troubleshooting sections on the highest-burden shipped tool skills. |
 | **P3** | [`road-to-ecosystem-harvest-product-gate`](road-to-ecosystem-harvest-product-gate.md) | A tiny "should this exist?" demand check, one altitude above the engineering-fit gate. |
 | **P3** | [`road-to-ecosystem-harvest-ergonomics`](road-to-ecosystem-harvest-ergonomics.md) | Ergonomic dispatch + per-phase commands; nice-to-have, low risk. |
 | **Watch** | [`road-to-ecosystem-harvest-domain-watch`](road-to-ecosystem-harvest-domain-watch.md) | New verticals (LLM-app engineering, cloud-native) — gated by `domain-adoption-policy`; one narrow exception adopted. |
+| **Coverage** | [`road-to-ecosystem-harvest-second-sweep`](road-to-ecosystem-harvest-second-sweep.md) | Closes disposition on **every** remaining catalog entry (the backing repo == this directory); fold-in patch list; introduces zero new workstreams. |
 
 ---
 
@@ -73,6 +86,7 @@ does not execute it; it moves the plate from "planned" to "cleared to start".
 - [ ] Accept **P2** plates (skill-authoring-rigor, document-skills, prose-authenticity, tool-pitfalls)
 - [ ] Accept **P3** plates (product-gate, ergonomics)
 - [ ] Confirm **domain-watch** dispositions (defer LLM-vertical + cloud-native to watch-notes; adopt only the narrow LLM-feature evaluator)
+- [ ] Accept the **second-sweep** cluster (review-mechanics, skill-quality-gates, workflow-contracts) + confirm the catalog is fully dispositioned
 - [ ] Ratify the § Reject-log (do not re-propose the rejected items without new evidence)
 
 ---
@@ -155,3 +169,18 @@ via [`link_crypto`](../../src/scripts/_lib/link_crypto.ts) (`decrypt`):
 - Source L — production-readiness scoring skill — `ENC1:JKej0TiHC20KFStSusNrMlVz4TC2NK4iYtiS0CaGf+WeomhWzabYtGIep3VIxqBOxf1Gl5JZdPmxRcOnuPjORg==`
 - Source M — PR-review MCP worked-example — `ENC1:zM+Y9hGxL9Yqw2zIaJzh5yal+Y4MwGpXIc3GsSUPONLhrIwDVB/pdgP0JqTG6irzajf7MTRDeppxj2DGQzDcLQ==`
 - Source N — the aggregator directory — `ENC1:NPKra0DJ3jLvw5c+0dY+lLyCz5FYygifacb1HG0qQpcoIFY2owmaAxp5M7+Fu6aKzVzVIXthvN9lpdvYEy3KKA==`
+
+Second-sweep sources (added 2026-07-11):
+
+- Source O — a 3-persona PR-review skill — `ENC1:zkKLJL4UHD4xKS2RkcpBnltE5TsfHiHHhYE5jTmwf/VGwM6YfSpBKa0MQquhICSYY5lXOrDXxlIK1u2YcJkKLg==`
+- Source P — a mobile-app repo's change-review skill — `ENC1:U5tBkwgukRXSjrUFO3aK9i6AWtRGNA7ZSo6BuPSQjRWnaKVE+XXLSJGkYv3tyKDnQRCKH+uzO7iG/iS2jB0amg==`
+- Source Q — an RL-env repo's alignment-review skill — `ENC1:fUXZLKOTf6mZqpb4G57BSpWTHdj9ZHyAlj89lLM+YqXobr0A6EQPYDeB9BLnwsjRhgmO/gx4r3W19n9eswDymQ==`
+- Source R — a credential-broker skill with a rich eval schema — `ENC1:YXiGR7seaokdTUxVLQDh/n93VEvaTnY1yi0Fb8o+cOuA8s53PinujOz4coOd6SQMr1OomP8KfqDVvoAEPmGRbg==`
+- Source S — a quality-toolkit skill with pinned effort frontmatter — `ENC1:R4Yrix0e+8Wsfo2snlmyqBWuUKaVw+2gK/hK5G2vS64uKozSAjUVw7De/ZM/Q19nGwqoK5oGAh6atukiC17Wsw==`
+- Source T — a read-only-by-default script skill — `ENC1:abLyVRd3Gl4rrzn9U/KjhVAMd6357yxPoQhIlSOqzs3sU6VbVRbHy66ua59KYkJLL9OBEjoUXiT3iAoD7RgxGg==`
+- Source U — a 4-mode TDD state-machine skill — `ENC1:b4HABODTohxc6CpAb9lT+e2K44enjvpdBDdPXYvd8ql8KnfTl9Ce+FgzlHqL11cWlPvyVXoO+3+2G0XGeqEqqw==`
+- Source V — a plan-first merge-conflict skill — `ENC1:V1v8RES6tPqUkn/NeRd7eQ/U8uTup4H5C5rBpruZmm1rjC4lIA65TlJ1AJhPzb/lH/hpoPwLCmj55vEa6dV0dA==`
+- Source W — a cross-tool session-audit CLI — `ENC1:xseK+2aYtwmeI5+lBVjPNqXw9KtF1knmUytomXU+bgOFByPd2acpfwoB1dHYU+1xvOm2bY5AVCKNYp+Qmfrp+g==`
+- Source Y — a container-tooling repo (otel-instrument) — `ENC1:WMs4sUBQ0ehy3zj5MNIKGNzY8UHumWV5X8dJ9262UVeV8xlX1Yz+aw2AAG2qp9EGZE4MxsFWH12gSgt4E/hBmw==`
+- Source Z — a critical-planning-file safety skill — `ENC1:ZNVbKKTOfOG6DhBw3kbN1MH8ZFeFkPTn9pTp0v/jml9T6Hqk1HhMIhTf+qiR+pnUf9GJaRChvZZH4UUvR2yhrA==`
+- Source AA — a canonical-skill→multi-adapter generator with a verify script — `ENC1:Z4wWTMphm8Tl654v16MSa7OAFJfrgUgTULDU8WBBog9dpotDD+VMolEZ8cetGuV0oVXGU0emw/wLMRAcYdKEPQ==`
