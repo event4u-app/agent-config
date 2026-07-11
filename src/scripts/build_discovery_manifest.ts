@@ -419,6 +419,12 @@ function* _iter_artefacts(): Generator<[string, string]> {
     // `_classify` subagent branch derives the manifest payload (default-off,
     // packs:[]) — static projection only, never runtime-dispatched.
     for (const p of _collect('subagents', '*.md')) {
+        // `_`-prefixed files are injected partials (e.g. _prompt-defense.md),
+        // not projectable agents — never discovery artefacts. Mirrors the
+        // same filter in condense.generate_claude_subagents.
+        if (path.basename(p).startsWith('_')) {
+            continue;
+        }
         yield [p, 'subagent'];
     }
 }
