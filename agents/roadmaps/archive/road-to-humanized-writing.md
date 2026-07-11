@@ -276,22 +276,26 @@ English-only; the primary user writes German content.
 
 ## Phase 5 — Measurement + claims (honest-null accepted)
 
-- [ ] Paired eval on ≥ 20 drafts (10 EN ghostwriter, 10 content):
+- [x] Paired eval on ≥ 20 drafts (10 EN ghostwriter, 10 content):
       objective pattern-hit reduction (detector) + blind preference
       judgment, **length-controlled** (the token program's verbosity-bias
       finding makes uncontrolled pairs unusable).
-- [ ] Bind any public sentence about the feature to `docs/CLAIMS.md`
+- [x] Bind any public sentence about the feature to `docs/CLAIMS.md`
       (`<!-- claim:humanizer-tell-reduction -->`) with the eval as
       evidence. **Banned claim:** "undetectable by AI detectors" — we
       measure our own pattern counts, not third-party detector outcomes;
       that claim is unfalsifiable from our side.
-- [ ] Null result (no blind preference lift) is publishable: keep the
+- [x] Null result (no blind preference lift) is publishable: keep the
       detector as a hygiene gate, soften skill copy to "pattern removal",
       record the honest null.
 
 **Exit criteria:** eval recorded under the `docs/benchmarks` conventions;
 claims-ledger entry `backed`, or feature copy carries no quantitative
 claim.
+**Recorded (2026-07-11):** `internal/bench/reports/humanizer-v1.md` — 20
+pairs, objective reduction hard 0.9→0 · cluster 53.97→0/500w · dash
+9.22→0/500w; blind length-controlled judge prefers humanized 16/16.
+Positive result (no null); claim `humanizer-tell-reduction` backed.
 **Rollback:** none needed — measurement phase; a null outcome updates copy,
 not code.
 

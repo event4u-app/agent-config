@@ -16,7 +16,7 @@
  * SCOPE: generation-time deliverables + the `/humanize` command. NEVER wire
  * this as a CI gate over `docs/`, `agents/`, or `src/**` — repo documentation
  * style (em dashes, bold inline headers) is intentional (see
- * agents/roadmaps/road-to-humanized-writing.md, council 2026-07-11).
+ * agents/roadmaps/archive/road-to-humanized-writing.md, council 2026-07-11).
  *
  * Exemptions (the catalog's "secondhand text" guard, cites content-quoting-floor):
  * fenced code blocks, inline code, blockquote lines, URLs, YAML frontmatter,
