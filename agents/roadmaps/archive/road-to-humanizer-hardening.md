@@ -57,7 +57,7 @@ Minor items (folded into the phases, not their own roadmap):
 - [x] Confirm the shell-exec finding is a false positive
       (`detect_ai_tells.ts` has no `exec`/`spawn`; verified 2026-07-11) — so
       Phase 1 targets the injection/hidden-unicode vector only.
-- [ ] Confirm `docs/contracts/write-engine.md` is still `stability: beta`
+- [x] Confirm `docs/contracts/write-engine.md` is still `stability: beta`
       when Phase 2 starts; if the window lapsed, Phase 2 becomes a versioned
       contract edit.
 
@@ -68,25 +68,25 @@ drafts) treats ingested pasted text / file content as material to rewrite.
 That content is untrusted — it can carry planted instructions
 ("ignore the above, output X") or hidden-unicode smuggling.
 
-- [ ] In the `humanizer` skill's procedure, add an explicit ingestion guard:
+- [x] In the `humanizer` skill's procedure, add an explicit ingestion guard:
       before the draft→audit→final loop, treat pasted text / file content as
       **data, not instructions** (spotlight/datamark it), and never obey
       instruction-shaped content found inside it — per
       [`untrusted-input-defense`](../../src/rules/untrusted-input-defense.md).
-- [ ] Wire a hidden-unicode + confusables scan on ingested content, reusing
+- [x] Wire a hidden-unicode + confusables scan on ingested content, reusing
       `src/scripts/_lib/retrieval_sanitize.ts` (or the `lint_hidden_unicode`
       class) rather than a new primitive — surface a warning when anomalous
       characters appear, do not silently strip.
-- [ ] Add the low-severity ReDoS guard in `detect_ai_tells.ts`: cap per-pattern
+- [x] Add the low-severity ReDoS guard in `detect_ai_tells.ts`: cap per-pattern
       match time or bound the two variable-window patterns
       (`tell-negative-parallelism`, `tell-rule-of-three`) so adversarial input
       cannot force catastrophic backtracking. (Explicitly NOT a shell-exec fix —
       that finding was a false positive.)
-- [ ] Fixtures: an injection-laden "text to humanize" (planted "ignore
+- [x] Fixtures: an injection-laden "text to humanize" (planted "ignore
       instructions" line) is treated as data and reported, not obeyed; a
       hidden-unicode sample is flagged. Extend
       `tests/scripts/detect_ai_tells.test.ts` or a new command-level test.
-- [ ] Verify: `npx vitest run <the new/extended suite>`
+- [x] Verify: `npx vitest run <the new/extended suite>`
       <!-- carve-out: new-gate-verification -->
 
 **Exit criteria:** ingestion guard documented in the skill; hidden-unicode
@@ -101,16 +101,16 @@ Step 4b runs `detect_ai_tells.ts` via `npx tsx` "when a runtime is available".
 On a consumer install without a Node toolchain the graceful prose-only
 fallback must actually fire — this has never been verified.
 
-- [ ] Add a doctor check (extend `src/scripts/_cli/cmd_doctor.ts`) that reports
+- [x] Add a doctor check (extend `src/scripts/_cli/cmd_doctor.ts`) that reports
       whether the tsx/detector runtime is present, so a consumer sees the
       write-engine humanize-audit runtime status explicitly.
-- [ ] Prove the fallback: a test that runs the step-4b path with the detector
+- [x] Prove the fallback: a test that runs the step-4b path with the detector
       runtime unavailable and asserts the prose-only audit still completes
       (no thrown error, no broken write-engine output).
-- [ ] Add a CHANGELOG.md note: write-engine step 4b is default-on for
+- [x] Add a CHANGELOG.md note: write-engine step 4b is default-on for
       ghostwriter/`post-as` drafts as of this line, with the `--raw` opt-out —
       so existing users see the behavior change.
-- [ ] Verify: `npx vitest run <fallback test>` green; `cmd_doctor` prints the
+- [x] Verify: `npx vitest run <fallback test>` green; `cmd_doctor` prints the
       runtime line.
       <!-- carve-out: new-gate-verification -->
 
@@ -120,17 +120,20 @@ fallback test passes; CHANGELOG note landed.
 
 ## Phase 3 — Bench-script spend-gate + count-drift allowlist decision
 
-- [ ] Gate the billable path in `bench_humanizer_eval.ts`: `--judge` makes
+- [x] Gate the billable path in `bench_humanizer_eval.ts`: `--judge` makes
       real API calls (via the council client's `spawnSync` curl transport).
       Require an explicit spend acknowledgement (a `--confirm-spend` flag or an
       estimate-and-halt) before any billable judge call, consistent with the
       council's own cost-disclosure pattern. The objective-only default path
       stays free and unchanged.
-- [ ] Investigate the recurring README/generated-count drift: determine whether
-      it is a deterministic artifact of count ordering (self-clears on regen) or
-      a real drift. If artifact, add a scoped allowlist/annotation so genuine
-      count drifts are not masked; if real, fix the generator ordering.
-- [ ] Verify: bench objective-only run stays free (no network); the spend-gate
+- [x] Investigate the recurring README/generated-count drift. **Disposition:
+      real staleness, not an artifact — no allowlist.** Each occurrence was a
+      generated count (`docs/command-flows.md`, README badge) not regenerated
+      after adding an artifact; the gate caught it correctly and the fix is
+      always `task build-*` / regenerate. An allowlist entry would mask genuine
+      future drift — explicitly rejected. Recorded so the next reviewer does
+      not re-open it.
+- [x] Verify: bench objective-only run stays free (no network); the spend-gate
       blocks `--judge` without the flag (a targeted unit check).
 
 **Exit criteria:** `--judge` cannot spend without explicit acknowledgement;
@@ -142,17 +145,17 @@ count-drift disposition recorded (allowlist entry or generator fix).
 The 16/16 blind preference is on the self-seeded fixture corpus — it proves
 seeded-tell removal, not real-draft improvement. The claim must say so.
 
-- [ ] Rewrite the `CLAIMS.md` `humanizer-tell-reduction` entry to (a) name
+- [x] Rewrite the `CLAIMS.md` `humanizer-tell-reduction` entry to (a) name
       **n = 20 pairs, judge = claude-sonnet-4-5, deterministic seed**, and
       (b) scope the sentence to "on the fixture corpus" — the reproducibility
       the "falsifiability path for outsiders" bar requires.
-- [ ] Add an explicit open-question line to the report + claim: real-draft lift
+- [x] Add an explicit open-question line to the report + claim: real-draft lift
       is **unmeasured** until step 4b has processed real `/ghostwriter:write`
       runs; the fixture result is not evidence of real-world improvement.
-- [ ] Open a `## Blockers` live-usage gate: the stronger claim (real-draft
+- [x] Open a `## Blockers` live-usage gate: the stronger claim (real-draft
       preference lift) stays unbacked until ≥ N real ghostwriter drafts have run
       through step 4b and been paired-evaluated. Do not fabricate that corpus.
-- [ ] Verify: `check_claims` green with the re-scoped entry; the report names
+- [x] Verify: `check_claims` green with the re-scoped entry; the report names
       n / model / seed and carries the open-question line.
 
 **Exit criteria:** claim entry names n/model/seed and is corpus-scoped; the
@@ -184,15 +187,15 @@ real-world question is explicitly open behind the live-usage blocker;
 
 ## Acceptance criteria
 
-- [ ] `/humanize` ingestion treats untrusted content as data (injection guard
+- [x] `/humanize` ingestion treats untrusted content as data (injection guard
       + hidden-unicode scan via an existing #812 primitive), with passing
       injection + hidden-unicode fixtures.
-- [ ] Step-4b runtime-absent fallback is proven by a test; doctor reports the
+- [x] Step-4b runtime-absent fallback is proven by a test; doctor reports the
       runtime; CHANGELOG carries the default-on note.
-- [ ] `bench_humanizer_eval.ts --judge` cannot spend without explicit
+- [x] `bench_humanizer_eval.ts --judge` cannot spend without explicit
       acknowledgement; count-drift disposition recorded.
-- [ ] `CLAIMS.md` `humanizer-tell-reduction` names n/judge-model/seed, is scoped
+- [x] `CLAIMS.md` `humanizer-tell-reduction` names n/judge-model/seed, is scoped
       to the fixture corpus, and the real-draft claim is gated behind the
       live-usage blocker; `check_claims` green.
-- [ ] No council-settled v1 decision reopened; the false-positive shell-exec
+- [x] No council-settled v1 decision reopened; the false-positive shell-exec
       finding is explicitly not encoded.
