@@ -23,7 +23,21 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
 
 ## Phase 1: Seed real telemetry
 
-- [ ] **Step 1:** Verify end-to-end on one real `do-in-parallel` dispatch: a telemetry line is emitted, appended, and reportable. Cite the JSONL line. (Run corpus `orch-01` from `internal/bench/orchestration/corpus/` with `subagents.auto: on`.)
+- [x] **Step 1:** Verify end-to-end on one real `do-in-parallel` dispatch: a telemetry line is emitted, appended, and reportable. Cite the JSONL line. (Run corpus `orch-01` from `internal/bench/orchestration/corpus/` with `subagents.auto: on`.)
+      <!-- done 2026-07-11: ran orch-01 (multi-file analysis) as a real
+      do-in-parallel dispatch via the native Agent tool — 3 parallel read-only
+      subagents (parser.ts / formatter.ts / cli.ts; the 4th fixture reducers.mjs
+      is absent), each returned a usable findings block first-pass, no rework, no
+      escalation. Recorded via `orchestration_record --spawn-count 3
+      --task-class read-only-fanout --first-pass-success true --escalated false`
+      → audit line id 872AEB965EE351794177F1C128 in
+      agents/runtime/state/audit/2026-07.jsonl (gitignored runtime state).
+      `orchestration_savings_report` reads it (dispatches 1 · spawns 3 · paired
+      cost×quality). PIPELINE-VERIFICATION ONLY: token_delta is `provenance:
+      estimated` (+28000 = tokens ADDED — 3-tiny-file fan-out is overhead-bound,
+      not a win), n=1. This line is explicitly NOT a measured data point and does
+      NOT count toward Step 2's ≥20-measured gate or the pre-registered
+      `orchestration-dispatch-net-win` claim (orch-02/03, provenance measured). -->
 - [ ] **Step 2:** Run the full delegable-task corpus (`orch-01`, `orch-02`, `orch-03`) under both arms (`agent-settings.orchestrated.yml` and `agent-settings.baseline.yml`) across enough sessions to reach ≥ 20 orchestrated dispatches.
 - [ ] **Step 3:** Measure `parallelizable:` classifier recall on the corpus — confirm the deterministic classifier fires `do-in-parallel` / `do-in-steps` on the corpus tasks as expected; record actual hit/miss counts.
 

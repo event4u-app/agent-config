@@ -6,10 +6,10 @@
 
 ## Overall
 
-**117 / 198 steps done · 59%**
+**118 / 198 steps done · 60%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   59%
+████████████████████████░░░░░░░░░░░░░░░░   60%
 ```
 
 ## Open roadmaps
@@ -25,7 +25,7 @@
 | 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
 | 8 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 7 | 3 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ███░░░░░░░ 30% |
 | 9 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 10 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 8 | 1 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | █░░░░░░░░░ 11% |
 | 11 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
 | 12 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
 
@@ -213,11 +213,11 @@ _1 blocker resolved._
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
-**Follow-up to Subagent value realization** — 0 / 9 done (0%)
+**Follow-up to Subagent value realization** — 1 / 9 done (11%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Seed real telemetry | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Seed real telemetry | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 2 | Re-gate the `auto: on` flip | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-subagent-value-realization-followup"></a>
