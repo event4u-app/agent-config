@@ -6,10 +6,10 @@
 
 ## Overall
 
-**100 / 175 steps done · 57%**
+**102 / 175 steps done · 58%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   57%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
@@ -25,7 +25,7 @@
 | 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 8 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 | 9 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 10 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 9 | 26 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 74% |
+| 10 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 7 | 28 | 0 | 2 | [1](#blockers-road-to-token-saving) | ████████░░ 80% |
 
 ---
 
@@ -223,7 +223,7 @@ _1 blocker resolved._
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 26 / 35 done (74%)
+**Road to token saving — measure, then cut, at constant quality** — 28 / 35 done (80%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -233,7 +233,7 @@ _1 blocker resolved._
 | 3 | Deterministic RTK wrap hook + install verification | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Cache-aware ordering as a CI invariant (D5) | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 8 | Always-loaded budget linter (D6) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 5 | 9 | 0 | 0 | 64% |
+| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 3 | 11 | 0 | 0 | 79% |
 
 <a id="blockers-road-to-token-saving"></a>
 **Blockers**
