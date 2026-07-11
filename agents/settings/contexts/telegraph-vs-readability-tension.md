@@ -20,7 +20,7 @@ reply prose, and neither currently wins by an evidenced decision.
 
 ## Why council, not a unilateral flip
 
-Per [`decision-revisit-gate`](../../../.agent-src.uncondensed/rules/decision-revisit-gate.md),
+Per [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md),
 a change blocked (or driven) purely by a budget/frugality-canon line gets the
 trade-off **surfaced and re-evaluated**, never an auto-flip. `telegraph-speak` is a
 deliberate, documented frugality lock; readability is a load-bearing quality goal.
