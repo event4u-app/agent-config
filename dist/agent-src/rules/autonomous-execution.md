@@ -29,9 +29,7 @@ Three values: `on` (suppress trivial questions), `off` (ask trivial questions to
 
 ## Opt-in detection — match by intent, not exact string
 
-In `auto` mode, flip to `on` for the rest of the conversation when the user expresses **"stop asking on trivial steps, just work"**. Recognize **intent**, not the literal substring. Opt-out (same intent, reversed) flips back to `off`. Both directions are **speech-act-checked**: the phrase must be a meta-instruction to the agent, not content / quote / subject / code / third-party reference / hypothetical. In doubt → keep current mode, no speculative flips.
-
-Algorithm and speech-act heuristic: [`contexts/execution/autonomy-detection.md`](../contexts/execution/autonomy-detection.md). Anchor phrases (DE+EN), no-flip patterns, counter-examples, trivial-vs-blocking taxonomy, commit-policy summary, and named failure modes: [`contexts/execution/autonomy-mechanics.md`](../contexts/execution/autonomy-mechanics.md) + [`contexts/execution/autonomy-examples.md`](../contexts/execution/autonomy-examples.md).
+In `auto` mode, flip to `on` when the user expresses **"stop asking on trivial steps, just work"** — matched by intent, speech-act-checked, reversible; in doubt → no speculative flips. Algorithm: [`contexts/execution/autonomy-detection.md`](../contexts/execution/autonomy-detection.md); summary + anchor phrases + taxonomy: [`contexts/execution/autonomy-mechanics.md`](../contexts/execution/autonomy-mechanics.md) + [`contexts/execution/autonomy-examples.md`](../contexts/execution/autonomy-examples.md).
 
 ## Task-scope — autonomy is bound to the named task
 
@@ -41,22 +39,7 @@ DOES NOT CARRY OVER TO A DIFFERENT, LATER DELIVERABLE.
 NEW TASK → FRESH CONFIRMATION.
 ```
 
-Two distinct autonomy shapes — keep them apart:
-
-| Shape | Trigger | Scope |
-|---|---|---|
-| **Conversation-wide trivial-question suppression** | "stop asking on trivial steps, just work" — no deliverable named. | Sticky for the rest of the conversation. Suppresses trivial workflow questions only; never lifts blocking, Hard Floor, or [`scope-control`](scope-control.md) gates. |
-| **Task-scoped autonomous execution** | "work autonomously on X", "arbeite die Roadmap Y komplett ab", "do PROJ-123 end-to-end" — a deliverable / artifact / ticket is named. | Bound to **that** task. Ends when the task ends. Does **not** authorize starting a new, distinct task autonomously. |
-
-Litmus test: does the directive name (or unambiguously point to) a single concrete deliverable? Yes → task-scoped, scope ends with the deliverable. No → conversation-wide, trivial-question suppression only.
-
-When the user later issues a **new** request — different ticket, different roadmap, different artifact, different feature — treat it as a fresh task. Re-confirm autonomy for the new scope before:
-
-- creating a branch / worktree / PR / tag for the new work,
-- implementing a roadmap whose **authoring** was the prior turn's deliverable (per [`scope-control § authoring vs implementation`](scope-control.md#authoring-vs-implementation--verb-discipline)),
-- expanding scope beyond the new task's literal ask.
-
-In doubt whether the new request inherits or needs fresh confirmation → fresh confirmation. The Hard Floor and [`scope-control`](scope-control.md) gates apply to every task regardless.
+Litmus: does the directive name a single concrete deliverable? Yes → task-scoped, ends with the deliverable; no → conversation-wide trivial-question suppression only. Shapes table, re-confirmation triggers, and the in-doubt default: [`autonomy-mechanics § Task-scope`](../contexts/execution/autonomy-mechanics.md).
 
 ## User interrupts override the current task
 
@@ -64,7 +47,7 @@ A new instruction from the user mid-flight is **not** a continuation — see [`u
 
 ## Validation-loop budget — hard cap N=3 per target
 
-Autonomous flows must not iterate indefinitely on the same validation target. **Validation target** = a single identifiable artefact: a file path, a lint rule ID, a test name, a CI sub-task name. Natural-language clustering ("the linter stuff") does **not** count as a target — agents will rename their way out of the budget.
+**Validation target** = a single identifiable artefact (file path, lint rule ID, test name, CI sub-task name) — natural-language clusters ("the linter stuff") don't count.
 
 ```
 3 CONSECUTIVE FAILED ATTEMPTS ON THE SAME VALIDATION TARGET → STOP.
@@ -73,7 +56,7 @@ DO NOT ITERATE BEYOND N=3 WITHOUT EXPLICIT USER APPROVAL.
 COUNTER RESETS ONLY ON A DIFFERENT TARGET OR USER-APPROVED CONTINUATION.
 ```
 
-A "failed attempt" is an iteration that did not move the target from red to green. Tuning the tool around the target (e.g. growing an allowlist, loosening a threshold, suppressing a check) counts as an attempt — and is usually a sign the **tool**, not the content, is wrong.
+Failed attempt = an iteration that did not move the target red → green; tuning the tool around the target counts as an attempt.
 
 ### Antipattern — allowlist-growth as silent budget bypass
 
@@ -82,23 +65,10 @@ ALLOWLIST > 20 ENTRIES IN ONE SESSION = THE LINTER IS WRONG.
 STOP. PROPOSE LINTER REDESIGN OR REMOVAL. DO NOT EXPAND THE ALLOWLIST FURTHER.
 ```
 
-Crossing the 20-entry threshold counts as the 3rd validation-target failure for the linter in question, regardless of prior attempt count. The fix is a tool-shape change (heuristic tightening, scope narrowing, deletion), not more entries. Same logic for: warning-suppression lists growing past ~20, `// noqa` / `# type: ignore` sweeps over many files in one session, test `skip` / `xfail` bulk-adds to chase green.
+Crossing 20 entries counts as the 3rd validation-target failure — fix the tool shape, not the list. Verify with the narrowest tool that proves the target green (a single `curl` / Playwright spec for HTTP/UI, the test runner with a `--filter`, an `xdebug` step-through) — never a meta-pipeline as per-iteration probe. Failed-attempt detail, suppression-sweep equivalents, probe-efficiency detail, and adaptive effort & stop (RDP): [`autonomy-mechanics § Validation-loop budget`](../contexts/execution/autonomy-mechanics.md).
 
-### Probe efficiency — direct over orchestration
-
-When validating a single target, run the **specific** check, not a meta-task that fans out to dozens of sub-tasks. Use the failing tool's direct entry point (the specific script invocation, the specific runner target, the single-test filter for the project's test runner) rather than the full CI meta-pipeline. Full-pipeline runs are appropriate at phase boundaries, not as a per-iteration probe.
-
-Concrete tool mapping — verify with the narrowest tool that proves the target green: a single `curl` / Playwright spec / browser run for HTTP behavior, the project's test runner with a `--filter` for one test, a debugger / `xdebug` step-through for one frame. Never substitute a meta-pipeline for a tool that pinpoints the failure.
-
-## Adaptive effort & stop (RDP)
-
-Scale effort to task difficulty, and stop when marginal evidence drops — coupled
-to the N=3 budget above, never replacing it. On a host with a native effort knob
-(e.g. an `effort` parameter), the right move is to **set it high** for hard tasks
-rather than scaffold; the scaffold here is for a standard host **without** such a
-knob. The per-dimension uncertainty score (see
-[`notes-first-reasoning`](notes-first-reasoning.md)) feeds this decision. Engage
-per [`rdp-gate`](../contexts/execution/rdp-gate.md).
+Body migrated to `contexts/execution/autonomy-mechanics.md` (per P4 of `road-to-kernel-and-router.md`) — opt-in detection summary, task-scope shapes table, N=3 mechanics, allowlist-antipattern detail, probe efficiency, adaptive effort (RDP).
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also
 
