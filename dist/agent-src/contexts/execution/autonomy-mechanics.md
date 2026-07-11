@@ -129,6 +129,15 @@ knob. The per-dimension uncertainty score (see
 [`notes-first-reasoning`](../../rules/notes-first-reasoning.md)) feeds this
 decision. Engage per [`rdp-gate`](rdp-gate.md).
 
+**Concrete diminishing-returns stop-signal.** Operationalize "marginal evidence
+drops" so it is checkable, not vibes: when **two consecutive investigative probes**
+(a read, a grep, a query) yield **no new load-bearing information** — nothing that
+changes the plan or the hypothesis — stop gathering and act on what you have (or
+ask). The diminishing-returns twin of N=3: N=3 stops fruitless *fixing*, this stops
+fruitless *searching*. Never overrides the read-loop abort in
+[`context-hygiene`](../../rules/context-hygiene.md) — that is the hard ceiling;
+this is the earlier soft signal.
+
 ## End-of-turn checkpoint
 
 Before ending a turn, check the last paragraph of the reply. If it is a

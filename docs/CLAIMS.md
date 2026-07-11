@@ -190,7 +190,7 @@ visible, not hidden.
 - last_verified:
 
 ### claim: humanizer-tell-reduction
-- claim: The humanizer pass removes every mechanically detected AI-writing tell on the 20-pair fixture corpus (mean hard hits 0.9 → 0, cluster score 53.97 → 0 per 500 words, dash density 9.22 → 0), and a blind, length-controlled judge preferred the humanized text in 16/16 controlled pairs.
+- claim: On the fixture corpus (n = 20 before/after pairs, 16 length-controlled within ±25%), the humanizer pass removes every mechanically detected AI-writing tell (mean hard hits 0.9 → 0, cluster score 53.97 → 0 per 500 words, dash density 9.22 → 0), and a blind judge (claude-sonnet-4-5, deterministic per-pair A/B seed) preferred the humanized text in 16/16 length-controlled pairs. Scope note — the "before" fixtures were deliberately tell-seeded, so this measures seeded-tell removal on a self-constructed corpus, NOT real-draft improvement; real-world lift is unmeasured until step 4b has processed real ghostwriter drafts (see the road-to-humanizer-hardening live-usage blocker).
 - kind: quant
 - evidence: internal/bench/reports/humanizer-v1.md#prefers the humanized text
 - status: backed

@@ -53,7 +53,9 @@ Write `.worktree-scope.md` at the new worktree root per
 ### 4. Report
 
 Use the [`worktree-lifecycle § Output format`](../../../skills/worktree-lifecycle/SKILL.md#output-format):
-worktree path + branch + `owns:` list, baseline state, next step.
+worktree path + branch + `owns:` list, baseline state, next step. If the project
+declares an `env-bootstrap` entry (see [`using-git-worktrees § 5`](../../../skills/using-git-worktrees/SKILL.md)),
+name it as the suggested next action — suggest, never auto-run.
 
 ### Rules
 

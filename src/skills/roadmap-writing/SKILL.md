@@ -91,6 +91,16 @@ and council-pass notes capture the *why*; checkboxes capture the
 [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
 Iron Law #2.
 
+**Bind a `verify:` on behavior-changing steps.** A step that changes
+behavior (a new guard, a migration, a wired endpoint, a mechanism edit)
+SHOULD carry a narrow `verify:` command in an inline annotation —
+`- [ ] Wire the guard <!-- verify: task test -- --filter=GuardTest -->`
+— so its `[x]` flip is machine-checkable, not just agent-asserted (template
+rule 23; enforced by the flip-guard). Bind it only where a single narrow
+command (targeted test / grep / build of the touched surface) proves the
+step; leave it off doc-only / prose steps and never make it the full CI
+suite (`roadmap-ci-steps-policy`).
+
 ### 4b. Declare the execution mode (frontmatter)
 
 Every new roadmap declares how a later `/roadmap:process-*` run should

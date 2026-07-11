@@ -216,6 +216,20 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     `task lint-roadmap-complexity` warns on human-gate step patterns,
     human-gate phase headings, and human-approval exit criteria.
 
+23. **Optional `verify:` step-field — machine-checkable flip.** A
+    behavior-changing step MAY carry a named verification command on its
+    own inline-annotation line, e.g.
+    `- [ ] Add the tenant-scope guard <!-- verify: task test -- --filter=TenantScopeTest -->`.
+    When declared, `/roadmap:process-*` will not accept its `[x]` flip
+    without a **fresh green run of that exact command** in the same run
+    (flip-guard, see
+    [`roadmap-process-loop § 5b`](../contexts/execution/roadmap-process-loop.md)).
+    The machine-checkable tightening of rule 22's agent-decidable signals —
+    bind it on **behavior-changing** steps (a new guard, migration, wired
+    endpoint); doc-only / prose steps leave it off. Keep the command
+    **narrow** (targeted test / grep / build of the touched surface),
+    never the full CI pipeline (`roadmap-ci-steps-policy`).
+
 ---
 
 ## Quality Gates (remote CI by default)

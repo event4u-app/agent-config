@@ -185,6 +185,16 @@ Pairs with [`context-hygiene § Read-Loop Detection`](../../rules/context-hygien
 6. **Full suite at the end, not between laps.** It is the gate, not
    the feedback loop.
 
+**Failure-signature triage — same taxonomy as [`context-hygiene § The 3-Failure Rule`](../../rules/context-hygiene.md#the-3-failure-rule).**
+The **failure signature** = **same target + same error class** (same failing test
++ same assertion, same lint rule id, same build error). **Same failure signature
+twice → stop and pivot** — don't spend the next lap on a near-identical retry; a
+repeated identical signature means the hypothesis is wrong, not under-applied. A
+**new error signature each attempt = progress** and the counter continues. The
+**hard-blocker classes** (missing credentials, permission denied, spend/quota/rate
+limit, external-service `5xx`) skip retries entirely — surface on first
+occurrence; another lap cannot fix them.
+
 **Anti-patterns this loop prevents:**
 
 * Editing source to make tests pass when the test was wrong (or

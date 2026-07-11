@@ -52,3 +52,13 @@ constraints, available tools, and information gaps, then **close the gaps by
 query/test** before proposing a solution — don't design against assumptions.
 Engage per [`rdp-gate`](../contexts/execution/rdp-gate.md) (skip on trivial
 tasks; light touch on a strong-reasoning host).
+
+**Ground the harness, not just the code.** Beyond structural facts (schema, API,
+DTO — the `source-discovery-gate`), ground the *runtime harness* before acting:
+which tools and host capabilities are actually available, whether a native effort
+knob exists, and whether the credentials / permissions the task needs are present.
+A task that assumes a tool or credential it never confirmed is designing against
+an assumption exactly as a hallucinated field is — a missing-capability discovery
+is cheaper before the first action than after a failed one. (A native-harness
+behavior on the strongest host; made explicit here so it holds on every host this
+package projects to.)

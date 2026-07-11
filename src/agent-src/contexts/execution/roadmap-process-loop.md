@@ -246,6 +246,21 @@ For each open step in the working set (scope-bound — see wrapper):
    `process-phase`, `process-full`); the cost is one `git diff` per
    step.
 
+   **`verify:` gate (when a step carries one).** If the step declares a
+   named `verify:` command (roadmap step-field convention, see
+   [`templates/roadmaps.md`](../../templates/roadmaps.md)), a `[x]` flip
+   additionally requires a **fresh green run of that exact command this
+   iteration** — its passing output present in this reply or an earlier
+   one this run. Flipping a `verify:`-bearing step to `[x]` without that
+   fresh green run is the same class of violation as a forgotten flip:
+   **halt loudly** ("step \<N\> flipped without its `verify:` run —
+   \`<cmd>\`"), do not auto-fix. This is a check on existing output, not a
+   new loop or a new script — the agent runs the step's own command, the
+   same way `think-before-action`'s `step → verify:` planning already
+   asks. Steps with no `verify:` field are governed by the flip-guard
+   above unchanged (agent-decidable exit/acceptance criteria remain the
+   default; `verify:` is the opt-in machine-checkable tightening).
+
 6. **Dashboard regen — cadence-gated.** Run
    `./agent-config roadmap:progress` when due per
    `roadmap.dashboard_regen_cadence` (resolved in § 4):
