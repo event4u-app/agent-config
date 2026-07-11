@@ -47,6 +47,26 @@ entries needing structural or aesthetic judgment (e.g. `T3` icon-tile stack,
 `L2` three-identical-card grid, `V2` glassmorphism intent, `C7` theme-inversion)
 stay agent-judgment-only and are deliberately **not** in the detector.
 
+## Current-generation tells (generation-dated — review 2026-Q4)
+
+Default-template signatures rotate as model defaults rotate; naming the
+*current* one is more actionable than a timeless list. The entries below stay
+in their own categories — this section only tracks which combination reads as
+*this year's* generated default, so the first-impulse check has one dated
+pointer instead of a scattered mental list. As of **2026-07**:
+
+- **This generation — "warm editorial":** cream/sand background + serif display
+  + brass/clay/terracotta accent (catalog **C5** + **T2** + **T7** Instrument
+  Serif). This is now the reflexive "sophisticated / premium" reach — exactly
+  the role the purple/cyan gradient played for the previous generation.
+- **Previous generation — "gradient dark":** purple/violet + cyan-on-dark with
+  gradient text (**C1** + **C2**). Still a tell, now dated rather than current.
+
+**Review trigger:** re-confirm this section whenever a new frontier-model
+generation ships a visibly different default aesthetic. It is a *when-does-it-
+rotate* note, not a new pattern — never add a tell here that lacks a catalog
+entry in the sections below.
+
 ### Consistency Locks & layout caps (taste-dials roadmap)
 
 Within-project invariants + repetition caps. Override = declare the value in
