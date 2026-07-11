@@ -28,7 +28,8 @@
  * Health checks (see `CHECK_IDS`):
  * scope · global-binary · claude-plugin · stale-orphans · manifest-integrity ·
  * lockfile-freshness · bridge-drift · mcp-mode · mcp-beta-readiness ·
- * offline-readiness · python-runtime · tier-usage-readiness · council-cli ·
+ * offline-readiness · python-runtime · humanizer-runtime · tier-usage-readiness ·
+ * council-cli ·
  * unsupported-combos · wizard-state.
  * Each emits a structured `{id, status, message, remedy}` record with
  * `status` ∈ `ok` / `warn` / `fail` / `skipped` (rendered
@@ -742,6 +743,7 @@ const CHECK_IDS = [
     'mcp-beta-readiness',
     'offline-readiness',
     'python-runtime',
+    'humanizer-runtime',
     'tier-usage-readiness',
     'council-cli',
     'unsupported-combos',
@@ -762,6 +764,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'mcp-beta-readiness',
     'offline-readiness',
     'python-runtime',
+    'humanizer-runtime',
     'tier-usage-readiness',
     'council-cli',
     'wizard-state',
@@ -1505,6 +1508,33 @@ function _check_python_runtime(): Dict {
     };
 }
 
+function _check_humanizer_runtime(): Dict {
+    // Write-engine step 4b (humanize audit) runs `detect_ai_tells.ts` via a
+    // Node/tsx runtime "when available", degrading to a prose-only audit
+    // otherwise. This check surfaces which path a consumer install gets so the
+    // default-on behavior is not a silent surprise. Either state is healthy —
+    // the fallback is graceful by design — so it never fails the run.
+    const node = shutilWhich('node');
+    if (node === null) {
+        return {
+            id: 'humanizer-runtime',
+            status: 'ok',
+            message:
+                'no Node runtime on PATH — write-engine step 4b uses the ' +
+                'prose-only humanize audit (graceful fallback)',
+            remedy:
+                'install Node to enable the mechanical detect_ai_tells.ts pass; ' +
+                'the prose audit runs regardless',
+        };
+    }
+    return {
+        id: 'humanizer-runtime',
+        status: 'ok',
+        message: `Node runtime present (${node}) — step 4b runs the mechanical detect_ai_tells.ts pass`,
+        remedy: '',
+    };
+}
+
 function _check_mcp_beta_readiness(project_root: string): Dict {
     // Maintainer-scoped gate: the six artefacts live in the agent-config
     // SOURCE repo. In a consumer project the paths can never exist, so the
@@ -2130,6 +2160,7 @@ function _run_checks(
         'mcp-beta-readiness': () => _check_mcp_beta_readiness(project_root),
         'offline-readiness': () => _check_offline_readiness(),
         'python-runtime': () => _check_python_runtime(),
+        'humanizer-runtime': () => _check_humanizer_runtime(),
         'tier-usage-readiness': () => _check_tier_usage_readiness(project_root),
         'council-cli': () => _check_council_cli(project_root),
         'unsupported-combos': () => _check_unsupported_combos(manifest),
@@ -2200,6 +2231,7 @@ function _run_checks_no_manifest(
         'mcp-beta-readiness': () => _check_mcp_beta_readiness(project_root),
         'offline-readiness': () => _check_offline_readiness(),
         'python-runtime': () => _check_python_runtime(),
+        'humanizer-runtime': () => _check_humanizer_runtime(),
         'tier-usage-readiness': () => _check_tier_usage_readiness(project_root),
         'council-cli': () => _check_council_cli(project_root),
         'unsupported-combos': () => _skipped_manifest_check('unsupported-combos'),
@@ -2687,6 +2719,7 @@ export {
     _check_offline_readiness,
     _check_stale_orphans,
     _check_python_runtime,
+    _check_humanizer_runtime,
     _check_mcp_beta_readiness,
     _check_tier_usage_readiness,
     _check_council_cli,

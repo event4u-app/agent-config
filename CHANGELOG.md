@@ -94,6 +94,23 @@ One question — answer in [Discussions](https://github.com/event4u-app/agent-co
 This gates the read-only MCP discovery helper (`agent-config mcp:search`) and the
 deferred auto-install question (`ADR-086`).
 
+### Added — humanizer (AI-tell removal for deliverable prose) (`road-to-humanized-writing` + `road-to-humanizer-hardening`)
+
+- **`humanizer` skill + `/humanize` command** (gtm-marketing pack) — remove
+  AI-writing tells from deliverable prose (posts, articles, drafts) via a
+  draft→audit→final loop; scoped to deliverable text only, never chat replies
+  or repo docs.
+- **`detect_ai_tells.ts` detector** — deterministic hard-tell / weighted-cluster
+  / em-dash-density scan (EN + DE), with a hidden-unicode ingestion scan and a
+  ReDoS length bound on untrusted input.
+- **Behavior change — write-engine step 4b is default-on.** Ghostwriter /
+  `post-as` drafts now pass a humanize audit before delivery; opt out per run
+  with `--raw`. The mechanical detector pass runs when a Node runtime is
+  present and degrades to a prose-only audit otherwise — the new
+  `humanizer-runtime` doctor check reports which path an install gets.
+- **Disclosure footer stays inviolable** through the audit; quoted/secondhand
+  text is never rewritten.
+
 ### Added — `agents/` directory contract + gitignore hygiene (`road-to-agents-dir-and-gitignore-hygiene`)
 
 - **`docs/contracts/agents-layout.md`** — authoritative contract for every top-level entry in `agents/` (purpose, git policy, retention, consumer-scope); includes the User Inbox Workflow (`agents/tmp/` → `agents/tmp.old/`).
