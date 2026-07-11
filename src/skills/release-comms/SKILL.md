@@ -131,3 +131,5 @@ Sprint 47 ships a one-click monthly export and three small bug fixes:
 - "After this release, you can pull a board-ready monthly report in one click." (active, at-risk — same sentence ⇒ collapse to one).
 - Surfaces: changelog (full), in-app prompt to active users on next month-end, email to at-risk cohort with the same sentence and one CTA. No social.
 - Truth-check: claim links to the export PR; "one click" is literal — verified against the shipped UI.
+
+→ Final prose pass for audience-facing output: [`humanizer`](../humanizer/SKILL.md) — remove AI-writing tells before delivery.

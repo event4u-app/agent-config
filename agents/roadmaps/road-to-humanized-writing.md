@@ -233,21 +233,21 @@ usable on demand without the engine hook.
 
 ## Phase 3 — On-demand surface: `/humanize` command + cross-links
 
-- [ ] New command `src/domains/gtm-marketing/humanize/command.md`
+- [x] New command `src/domains/gtm-marketing/humanize/command.md`
       (suggestion-eligible, `skills: [humanizer]`): takes pasted text or a
       file path, runs the full loop, prints audit notes + final rewrite +
       detector summary. Optional `--voice=<ghostwriter-slug|me>` reuses the
       write-engine style-source resolution — no new voice mechanism. No
       file writes (engine rule).
-- [ ] Walk the full standalone-command downstream surface (7 places:
+- [x] Walk the full standalone-command downstream surface (7 places:
       command file, cluster/pack registration, discovery regen, tiers +
       README tables, projections via the generation tasks) — run the
       generation tasks on a clean tree.
-- [ ] Cross-link (one See-also line each, no content duplication):
+- [x] Cross-link (one See-also line each, no content duplication):
       `readme-writing`, `readme-writing-package`, `doc-coauthoring`,
       `content-funnel-design`, `editorial-calendar`, `release-comms` →
       "final prose pass: `humanizer`".
-- [ ] Verify: command lint + `/humanize` trigger evals pass; discovery
+- [x] Verify: command lint + `/humanize` trigger evals pass; discovery
       check green (`./scripts-run` targeted invocations).
 
 **Exit criteria:** command registered across the downstream surface;

@@ -8,7 +8,11 @@ Positioning, messaging, editorial, content funnel.
 - **version**: `8.10.0`
 - **owner**: gtm, founder
 - **requires**: —
-- **artefacts**: 9
+- **artefacts**: 10
+
+## Commands (1)
+
+- **`humanize`** — Remove AI-writing tells from pasted text or a file — runs the humanizer skill's draft→audit→final loop and prints the rewrite plus a detector summary.
 
 ## Skills (9)
 

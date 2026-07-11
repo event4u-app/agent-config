@@ -4,11 +4,11 @@
 
 ## Summary
 
-- **Total commands:** 161
+- **Total commands:** 198
 - **Top-level commands (directory `.`):** 0
-- **Sub-cluster directories:** 159
-- **Low-signal (≤2 commits AND ≤30d old):** 7
-- **Overlap pairs (cosine ≥ 0.6):** 7
+- **Sub-cluster directories:** 191
+- **Low-signal (≤2 commits AND ≤30d old):** 29
+- **Overlap pairs (cosine ≥ 0.6):** 6
 
 ## Per-directory counts
 
@@ -25,12 +25,25 @@
 | `ai-video/video/scene` | 1 |
 | `ai-video/video/stitch` | 1 |
 | `ai-video/video/storyboard` | 1 |
+| `analysis-workbench` | 2 |
+| `analysis-workbench/analyze` | 1 |
+| `analysis-workbench/analyze/decision` | 1 |
+| `analysis-workbench/analyze/incident` | 1 |
+| `analysis-workbench/analyze/near-miss` | 1 |
+| `analysis-workbench/analyze/postmortem` | 1 |
+| `analysis-workbench/analyze/premortem` | 1 |
+| `analysis-workbench/analyze/reference-repo` | 1 |
+| `brand` | 1 |
+| `brand/brand` | 1 |
+| `brand/brand/identity` | 1 |
+| `brand/brand/review` | 1 |
+| `brand/brand/strategy` | 1 |
+| `brand/brand/tokens` | 1 |
+| `brand/brand/voice` | 1 |
 | `engineering-base` | 1 |
-| `engineering-base/analyze-reference-repo` | 1 |
-| `engineering-base/bug-fix` | 1 |
-| `engineering-base/bug-investigate` | 1 |
-| `engineering-base/e2e-heal` | 1 |
-| `engineering-base/e2e-plan` | 1 |
+| `engineering-base/bug` | 1 |
+| `engineering-base/bug/fix` | 1 |
+| `engineering-base/bug/investigate` | 1 |
 | `engineering-base/feature` | 1 |
 | `engineering-base/feature/dev` | 1 |
 | `engineering-base/feature/explore` | 1 |
@@ -39,10 +52,10 @@
 | `engineering-base/feature/roadmap` | 1 |
 | `engineering-base/fix` | 1 |
 | `engineering-base/fix/ci` | 1 |
+| `engineering-base/fix/comments` | 1 |
 | `engineering-base/fix/portability` | 1 |
-| `engineering-base/fix/pr-bot-comments` | 1 |
 | `engineering-base/fix/pr-comments` | 1 |
-| `engineering-base/fix/pr-developer-comments` | 1 |
+| `engineering-base/fix/quality` | 1 |
 | `engineering-base/fix/refs` | 1 |
 | `engineering-base/fix/seeder` | 1 |
 | `engineering-base/implement-ticket` | 1 |
@@ -50,23 +63,31 @@
 | `engineering-base/judge/on-diff` | 1 |
 | `engineering-base/judge/solo` | 1 |
 | `engineering-base/judge/steps` | 1 |
+| `engineering-base/mission/upgrade` | 1 |
 | `engineering-base/module` | 1 |
 | `engineering-base/module/create` | 1 |
 | `engineering-base/module/explore` | 1 |
-| `engineering-base/package-test` | 1 |
 | `engineering-base/prepare-for-review` | 1 |
-| `engineering-base/project-analyze` | 1 |
-| `engineering-base/project-health` | 1 |
-| `engineering-base/quality-fix` | 1 |
-| `engineering-base/review-changes` | 1 |
-| `engineering-base/sync-gitignore` | 1 |
-| `engineering-base/sync-gitignore/fix` | 1 |
+| `engineering-base/project` | 1 |
+| `engineering-base/project/analyze` | 1 |
+| `engineering-base/project/health` | 1 |
+| `engineering-base/review` | 1 |
+| `engineering-base/review/changes` | 1 |
+| `engineering-base/review/routing` | 1 |
+| `engineering-base/security-audit-config` | 1 |
 | `engineering-base/tests` | 1 |
 | `engineering-base/tests/create` | 1 |
+| `engineering-base/tests/e2e-heal` | 1 |
+| `engineering-base/tests/e2e-plan` | 1 |
 | `engineering-base/tests/execute` | 1 |
 | `engineering-base/threat-model` | 1 |
 | `engineering-base/update-form-request-messages` | 1 |
 | `engineering-base/work` | 1 |
+| `engineering-base/worktree` | 1 |
+| `engineering-base/worktree/cleanup` | 1 |
+| `engineering-base/worktree/create` | 1 |
+| `engineering-base/worktree/status` | 1 |
+| `engineering-base/worktree/verify` | 1 |
 | `fun` | 2 |
 | `fun/prediction-pool` | 1 |
 | `git` | 1 |
@@ -81,10 +102,13 @@
 | `gtm-marketing/ghostwriter/list` | 1 |
 | `gtm-marketing/ghostwriter/show` | 1 |
 | `gtm-marketing/ghostwriter/write` | 1 |
+| `gtm-marketing/humanize` | 1 |
 | `gtm-marketing/post-as` | 1 |
 | `gtm-marketing/post-as/ghostwriter` | 1 |
 | `gtm-marketing/post-as/me` | 1 |
 | `laravel` | 1 |
+| `legal-review-prep` | 3 |
+| `legal-review-prep/evals` | 3 |
 | `meta` | 1 |
 | `meta/agent-handoff` | 1 |
 | `meta/agent-status` | 1 |
@@ -106,14 +130,14 @@
 | `meta/challenge-me/with-docs` | 1 |
 | `meta/chat-history` | 1 |
 | `meta/chat-history/import` | 1 |
-| `meta/chat-history/learn` | 1 |
-| `meta/chat-history/show` | 1 |
 | `meta/check-current-md` | 1 |
 | `meta/condense` | 1 |
 | `meta/context` | 1 |
 | `meta/context/create` | 1 |
 | `meta/context/refactor` | 1 |
-| `meta/cost-report` | 1 |
+| `meta/cost` | 1 |
+| `meta/cost/profile` | 1 |
+| `meta/cost/report` | 1 |
 | `meta/council` | 1 |
 | `meta/council/analysis` | 1 |
 | `meta/council/debate` | 1 |
@@ -131,28 +155,35 @@
 | `meta/memory/propose` | 1 |
 | `meta/mode` | 1 |
 | `meta/optimize` | 1 |
-| `meta/optimize-prompt` | 1 |
 | `meta/optimize/agents-dir` | 1 |
 | `meta/optimize/augmentignore` | 1 |
+| `meta/optimize/project` | 1 |
+| `meta/optimize/prompt` | 1 |
 | `meta/optimize/rtk` | 1 |
 | `meta/optimize/skills` | 1 |
 | `meta/orchestrate` | 1 |
 | `meta/override` | 1 |
 | `meta/override/create` | 1 |
 | `meta/override/manage` | 1 |
-| `meta/package-reset` | 1 |
+| `meta/package` | 1 |
+| `meta/package/reset` | 1 |
+| `meta/package/test` | 1 |
 | `meta/profile` | 1 |
 | `meta/profile/activate` | 1 |
 | `meta/profile/deactivate` | 1 |
 | `meta/profile/show` | 1 |
-| `meta/review-routing` | 1 |
 | `meta/rule-compliance-audit` | 1 |
-| `meta/set-cost-profile` | 1 |
 | `meta/skill` | 1 |
 | `meta/skill/preview` | 1 |
 | `meta/skills` | 1 |
 | `meta/skills/discover` | 1 |
-| `meta/sync-agent-settings` | 1 |
+| `meta/sync` | 1 |
+| `meta/sync/agent-settings` | 1 |
+| `meta/sync/gitignore` | 1 |
+| `meta/sync/gitignore/fix` | 1 |
+| `meta/team-knowledge` | 1 |
+| `meta/team-knowledge/bootstrap` | 1 |
+| `meta/team-knowledge/consolidate` | 1 |
 | `meta/upstream-contribute` | 1 |
 | `product-basic` | 1 |
 | `product-basic/estimate-ticket` | 1 |
@@ -161,6 +192,7 @@
 | `product-basic/roadmap` | 1 |
 | `product-basic/roadmap/ai-council` | 1 |
 | `product-basic/roadmap/create` | 1 |
+| `product-basic/roadmap/materialize` | 1 |
 | `product-basic/roadmap/process-full` | 1 |
 | `product-basic/roadmap/process-phase` | 1 |
 | `product-basic/roadmap/process-step` | 1 |
@@ -178,20 +210,19 @@
 
 | # | A | B | cosine | A description | B description |
 |---|---|---|---:|---|---|
-| 1 | `roadmap:process-phase` | `roadmap:process-step` | 0.79 | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
-| 2 | `implement-ticket` | `work` | 0.78 | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
-| 3 | `ghostwriter:write` | `post-as:ghostwriter` | 0.72 | Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer. | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
-| 4 | `fix:pr-comments` | `fix:pr-developer-comments` | 0.68 | Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR | Fix and reply to human reviewer comments on a GitHub PR |
-| 5 | `roadmap:process-full` | `roadmap:process-phase` | 0.66 | Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries. | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
-| 6 | `post-as` | `post-as:ghostwriter` | 0.63 | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
-| 7 | `video:from-script` | `video:scene` | 0.62 | Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Dry-run default; network calls require explicit per-turn confirmation. | Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Dry-run default; live calls require explicit per-turn confirmation. |
+| 1 | `roadmap-process-phase` | `roadmap-process-step` | 0.79 | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
+| 2 | `implement-ticket` | `work` | 0.77 | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git. | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, confidence-band gated, no auto-git. |
+| 3 | `ghostwriter-write` | `post-as-ghostwriter` | 0.72 | Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer. | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
+| 4 | `roadmap-process-full` | `roadmap-process-phase` | 0.66 | Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries. | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
+| 5 | `tests-create` | `tests-execute` | 0.64 | Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) | Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
+| 6 | `post-as` | `post-as-ghostwriter` | 0.63 | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
 
 ## Usage-signal note
 
 Per-command invocation telemetry is **not** available. Two surrogate signals were considered:
 
 - **Filesystem mtime** — useless: `task sync` rewrites every file when the   condensed and uncondensed trees are regenerated.
-- **Git history (`--follow`)** — uninformative here: the `.agent-src.uncondensed/`   directory is the result of a recent rename (`.augment.uncondensed/` →   `.agent-src.uncondensed/`), so almost every file shows a single recent commit   on the current branch. 7 of 161 commands fall into the   ≤2-commits / ≤30d-old bucket purely as a   rename artefact, not as a real cold-tail signal.
+- **Git history (`--follow`)** — uninformative here: the `.agent-src.uncondensed/`   directory is the result of a recent rename (`.augment.uncondensed/` →   `.agent-src.uncondensed/`), so almost every file shows a single recent commit   on the current branch. 29 of 198 commands fall into the   ≤2-commits / ≤30d-old bucket purely as a   rename artefact, not as a real cold-tail signal.
 
 **Implication for Phase 1 categorisation:** keep / merge / retire decisions must be made on **intent** (description content, overlap with sibling commands, tier placement, cluster fit) rather than usage data. The cosine-≥0.6 overlap pairs above are the primary structural lever.
 
@@ -205,164 +236,201 @@ Column `bucket` is left blank — the categorisation lives in [`command-surface-
 
 | Name | Path | Tier | Cluster | Aliases | Lines | Commits | Age (d) | Bucket |
 |---|---|---:|---|---|---:|---:|---:|---|
-| `FIRST_WIN` | `src/domains/ai-video/FIRST_WIN.md` | — | — | — | 67 | 2 | 12 | |
-| `README` | `src/domains/ai-video/README.md` | — | — | — | 23 | 1 | 1 | |
-| `image:analyse` | `src/domains/ai-video/image/analyse/command.md` | 2 | image | — | 52 | 3 | 4 | |
-| `image` | `src/domains/ai-video/image/command.md` | 2 | image | — | 73 | 3 | 4 | |
-| `image:create` | `src/domains/ai-video/image/create/command.md` | 2 | image | — | 54 | 3 | 4 | |
-| `image:verify` | `src/domains/ai-video/image/verify/command.md` | 2 | image | — | 49 | 3 | 4 | |
-| `video` | `src/domains/ai-video/video/command.md` | 2 | video | — | 74 | 11 | 17 | |
-| `video:from-script` | `src/domains/ai-video/video/from-script/command.md` | 2 | video | — | 128 | 10 | 17 | |
-| `video:from-song` | `src/domains/ai-video/video/from-song/command.md` | 2 | video | — | 352 | 5 | 5 | |
-| `video:scene` | `src/domains/ai-video/video/scene/command.md` | 2 | video | — | 97 | 9 | 17 | |
-| `video:stitch` | `src/domains/ai-video/video/stitch/command.md` | 2 | video | — | 88 | 10 | 17 | |
-| `video:storyboard` | `src/domains/ai-video/video/storyboard/command.md` | 2 | video | — | 100 | 9 | 17 | |
-| `README` | `src/domains/engineering-base/README.md` | — | — | — | 98 | 1 | 1 | |
-| `analyze-reference-repo` | `src/domains/engineering-base/analyze-reference-repo/command.md` | 2 | — | — | 204 | 10 | 17 | |
-| `bug-fix` | `src/domains/engineering-base/bug-fix/command.md` | 2 | — | — | 193 | 11 | 17 | |
-| `bug-investigate` | `src/domains/engineering-base/bug-investigate/command.md` | 2 | — | — | 186 | 10 | 17 | |
-| `e2e-heal` | `src/domains/engineering-base/e2e-heal/command.md` | 2 | — | — | 110 | 10 | 17 | |
-| `e2e-plan` | `src/domains/engineering-base/e2e-plan/command.md` | 2 | — | — | 97 | 10 | 17 | |
-| `feature` | `src/domains/engineering-base/feature/command.md` | 1 | feature | — | 62 | 11 | 17 | |
-| `feature:dev` | `src/domains/engineering-base/feature/dev/command.md` | 2 | feature | — | 124 | 11 | 17 | |
-| `feature:explore` | `src/domains/engineering-base/feature/explore/command.md` | 2 | feature | — | 191 | 10 | 17 | |
-| `feature:plan` | `src/domains/engineering-base/feature/plan/command.md` | 2 | feature | — | 333 | 11 | 17 | |
-| `feature:refactor` | `src/domains/engineering-base/feature/refactor/command.md` | 2 | feature | — | 194 | 10 | 17 | |
-| `feature:roadmap` | `src/domains/engineering-base/feature/roadmap/command.md` | 2 | feature | — | 222 | 11 | 17 | |
-| `fix:ci` | `src/domains/engineering-base/fix/ci/command.md` | 2 | fix | — | 59 | 10 | 17 | |
-| `fix` | `src/domains/engineering-base/fix/command.md` | 1 | fix | — | 64 | 11 | 17 | |
-| `fix:portability` | `src/domains/engineering-base/fix/portability/command.md` | 2 | fix | — | 108 | 12 | 17 | |
-| `fix:pr-bot-comments` | `src/domains/engineering-base/fix/pr-bot-comments/command.md` | 2 | fix | — | 157 | 10 | 17 | |
-| `fix:pr-comments` | `src/domains/engineering-base/fix/pr-comments/command.md` | 2 | fix | — | 69 | 10 | 17 | |
-| `fix:pr-developer-comments` | `src/domains/engineering-base/fix/pr-developer-comments/command.md` | 2 | fix | — | 163 | 10 | 17 | |
-| `fix:refs` | `src/domains/engineering-base/fix/refs/command.md` | 2 | fix | — | 105 | 12 | 17 | |
-| `fix:seeder` | `src/domains/engineering-base/fix/seeder/command.md` | 2 | fix | — | 158 | 11 | 17 | |
-| `implement-ticket` | `src/domains/engineering-base/implement-ticket/command.md` | 0 | — | — | 170 | 11 | 17 | |
-| `judge` | `src/domains/engineering-base/judge/command.md` | 1 | judge | — | 64 | 11 | 17 | |
-| `judge:on-diff` | `src/domains/engineering-base/judge/on-diff/command.md` | 2 | judge | — | 124 | 9 | 17 | |
-| `judge:solo` | `src/domains/engineering-base/judge/solo/command.md` | 2 | judge | — | 96 | 9 | 17 | |
-| `judge:steps` | `src/domains/engineering-base/judge/steps/command.md` | 2 | judge | — | 94 | 9 | 17 | |
-| `module` | `src/domains/engineering-base/module/command.md` | 2 | module | — | 51 | 9 | 17 | |
-| `module:create` | `src/domains/engineering-base/module/create/command.md` | 2 | module | — | 144 | 10 | 17 | |
-| `module:explore` | `src/domains/engineering-base/module/explore/command.md` | 2 | module | — | 202 | 13 | 17 | |
-| `package-test` | `src/domains/engineering-base/package-test/command.md` | 2 | — | — | 239 | 10 | 17 | |
-| `prepare-for-review` | `src/domains/engineering-base/prepare-for-review/command.md` | 2 | — | — | 107 | 9 | 17 | |
-| `project-analyze` | `src/domains/engineering-base/project-analyze/command.md` | 2 | — | — | 321 | 12 | 17 | |
-| `project-health` | `src/domains/engineering-base/project-health/command.md` | 2 | — | — | 106 | 12 | 17 | |
-| `quality-fix` | `src/domains/engineering-base/quality-fix/command.md` | 2 | — | — | 138 | 12 | 17 | |
-| `review-changes` | `src/domains/engineering-base/review-changes/command.md` | 1 | — | — | 209 | 10 | 17 | |
-| `sync-gitignore` | `src/domains/engineering-base/sync-gitignore/command.md` | 2 | sync-gitignore | — | 140 | 12 | 17 | |
-| `sync-gitignore:fix` | `src/domains/engineering-base/sync-gitignore/fix/command.md` | 2 | sync-gitignore | — | 149 | 13 | 17 | |
-| `tests` | `src/domains/engineering-base/tests/command.md` | 2 | tests | — | 51 | 9 | 17 | |
-| `tests:create` | `src/domains/engineering-base/tests/create/command.md` | 2 | tests | — | 84 | 9 | 17 | |
-| `tests:execute` | `src/domains/engineering-base/tests/execute/command.md` | 2 | tests | — | 68 | 9 | 17 | |
-| `threat-model` | `src/domains/engineering-base/threat-model/command.md` | 2 | — | — | 126 | 9 | 17 | |
-| `update-form-request-messages` | `src/domains/engineering-base/update-form-request-messages/command.md` | 2 | — | — | 200 | 12 | 17 | |
-| `work` | `src/domains/engineering-base/work/command.md` | 0 | — | — | 170 | 10 | 17 | |
-| `FIRST_WIN` | `src/domains/fun/FIRST_WIN.md` | — | — | — | 48 | 3 | 3 | |
-| `README` | `src/domains/fun/README.md` | — | — | — | 19 | 10 | 3 | |
-| `prediction-pool` | `src/domains/fun/prediction-pool/command.md` | 2 | — | — | 235 | 6 | 3 | |
-| `README` | `src/domains/git/README.md` | — | — | — | 18 | 1 | 0 | |
-| `git-commit` | `src/domains/git/commit/command.md` | 0 | git-commit | — | 194 | 11 | 17 | |
-| `git-commit-in-chunks` | `src/domains/git/commit/in-chunks/command.md` | 2 | git-commit | — | 147 | 10 | 17 | |
-| `git-pr-create` | `src/domains/git/pr/create/command.md` | 1 | git-pr-create | — | 253 | 13 | 17 | |
-| `git-pr-create-description-only` | `src/domains/git/pr/create/description-only/command.md` | 2 | git-pr-create | — | 161 | 11 | 17 | |
-| `README` | `src/domains/gtm-marketing/README.md` | — | — | — | 22 | 1 | 1 | |
-| `ghostwriter` | `src/domains/gtm-marketing/ghostwriter/command.md` | 2 | ghostwriter | — | 101 | 10 | 17 | |
-| `ghostwriter:delete` | `src/domains/gtm-marketing/ghostwriter/delete/command.md` | 2 | ghostwriter | — | 124 | 11 | 17 | |
-| `ghostwriter:fetch` | `src/domains/gtm-marketing/ghostwriter/fetch/command.md` | 2 | ghostwriter | — | 190 | 11 | 17 | |
-| `ghostwriter:list` | `src/domains/gtm-marketing/ghostwriter/list/command.md` | 2 | ghostwriter | — | 108 | 11 | 17 | |
-| `ghostwriter:show` | `src/domains/gtm-marketing/ghostwriter/show/command.md` | 2 | ghostwriter | — | 119 | 11 | 17 | |
-| `ghostwriter:write` | `src/domains/gtm-marketing/ghostwriter/write/command.md` | 2 | ghostwriter | — | 165 | 10 | 17 | |
-| `post-as` | `src/domains/gtm-marketing/post-as/command.md` | 2 | post-as | — | 63 | 9 | 17 | |
-| `post-as:ghostwriter` | `src/domains/gtm-marketing/post-as/ghostwriter/command.md` | 2 | post-as | — | 72 | 10 | 17 | |
-| `post-as:me` | `src/domains/gtm-marketing/post-as/me/command.md` | 2 | post-as | — | 130 | 12 | 17 | |
-| `README` | `src/domains/laravel/README.md` | — | — | — | 42 | 32 | 14 | |
-| `README` | `src/domains/meta/README.md` | — | — | — | 282 | 54 | 14 | |
-| `agent-handoff` | `src/domains/meta/agent-handoff/command.md` | 0 | — | — | 124 | 15 | 17 | |
-| `agent-status` | `src/domains/meta/agent-status/command.md` | 0 | — | — | 141 | 12 | 17 | |
-| `agents:audit` | `src/domains/meta/agents/audit/command.md` | 2 | agents | — | 158 | 10 | 17 | |
-| `agents` | `src/domains/meta/agents/command.md` | 1 | agents | — | 65 | 11 | 17 | |
-| `agents:init` | `src/domains/meta/agents/init/command.md` | 2 | agents | — | 194 | 11 | 17 | |
-| `agents:optimize` | `src/domains/meta/agents/optimize/command.md` | 2 | agents | — | 187 | 9 | 17 | |
-| `agents:user-accept` | `src/domains/meta/agents/user/accept/command.md` | 2 | agents | — | 123 | 11 | 17 | |
-| `agents:user` | `src/domains/meta/agents/user/command.md` | 2 | agents | — | 71 | 10 | 17 | |
-| `agents:user-init` | `src/domains/meta/agents/user/init/command.md` | 2 | agents | — | 163 | 12 | 17 | |
-| `agents:user-review` | `src/domains/meta/agents/user/review/command.md` | 2 | agents | — | 113 | 10 | 17 | |
-| `agents:user-show` | `src/domains/meta/agents/user/show/command.md` | 2 | agents | — | 115 | 12 | 17 | |
-| `agents:user-update` | `src/domains/meta/agents/user/update/command.md` | 2 | agents | — | 103 | 10 | 17 | |
-| `analytics` | `src/domains/meta/analytics/command.md` | 2 | analytics | — | 57 | 8 | 10 | |
-| `analytics:prune` | `src/domains/meta/analytics/prune/command.md` | 2 | analytics | — | 71 | 8 | 10 | |
-| `analytics:show` | `src/domains/meta/analytics/show/command.md` | 2 | analytics | — | 100 | 8 | 10 | |
-| `challenge-me` | `src/domains/meta/challenge-me/command.md` | 2 | challenge-me | — | 89 | 10 | 17 | |
-| `challenge-me:vision` | `src/domains/meta/challenge-me/vision/command.md` | 2 | challenge-me | — | 443 | 10 | 17 | |
-| `challenge-me:with-docs` | `src/domains/meta/challenge-me/with-docs/command.md` | 2 | challenge-me | — | 352 | 9 | 17 | |
-| `chat-history` | `src/domains/meta/chat-history/command.md` | 2 | chat-history | — | 59 | 11 | 17 | |
-| `chat-history:import` | `src/domains/meta/chat-history/import/command.md` | 2 | chat-history | — | 172 | 12 | 17 | |
-| `chat-history:learn` | `src/domains/meta/chat-history/learn/command.md` | 2 | chat-history | — | 184 | 11 | 17 | |
-| `chat-history:show` | `src/domains/meta/chat-history/show/command.md` | 2 | chat-history | — | 113 | 13 | 17 | |
-| `check-current-md` | `src/domains/meta/check-current-md/command.md` | 2 | — | — | 143 | 10 | 17 | |
-| `condense` | `src/domains/meta/condense/command.md` | 1 | — | — | 241 | 12 | 17 | |
-| `context` | `src/domains/meta/context/command.md` | 2 | context | — | 51 | 10 | 17 | |
-| `context:create` | `src/domains/meta/context/create/command.md` | 2 | context | — | 181 | 11 | 17 | |
-| `context:refactor` | `src/domains/meta/context/refactor/command.md` | 2 | context | — | 183 | 11 | 17 | |
-| `cost-report` | `src/domains/meta/cost-report/command.md` | 2 | — | — | 131 | 12 | 17 | |
-| `council:analysis` | `src/domains/meta/council/analysis/command.md` | 2 | council | — | 147 | 10 | 17 | |
-| `council` | `src/domains/meta/council/command.md` | 1 | council | — | 110 | 12 | 17 | |
-| `council:debate` | `src/domains/meta/council/debate/command.md` | 2 | council | — | 134 | 10 | 17 | |
-| `council:default` | `src/domains/meta/council/default/command.md` | 2 | council | — | 289 | 10 | 17 | |
-| `council:design` | `src/domains/meta/council/design/command.md` | 2 | council | — | 107 | 9 | 17 | |
-| `council:optimize` | `src/domains/meta/council/optimize/command.md` | 2 | council | — | 123 | 9 | 17 | |
-| `council:pr` | `src/domains/meta/council/pr/command.md` | 2 | council | — | 130 | 9 | 17 | |
-| `grill-me` | `src/domains/meta/grill-me/command.md` | 2 | challenge-me | — | 49 | 9 | 17 | |
-| `memory:add` | `src/domains/meta/memory/add/command.md` | 2 | memory | — | 147 | 11 | 17 | |
-| `memory` | `src/domains/meta/memory/command.md` | 1 | memory | — | 60 | 11 | 17 | |
-| `memory:learn-low-impact` | `src/domains/meta/memory/learn-low-impact/command.md` | 2 | memory | — | 148 | 11 | 17 | |
-| `memory:load` | `src/domains/meta/memory/load/command.md` | 2 | memory | — | 176 | 10 | 17 | |
-| `memory:mine-session` | `src/domains/meta/memory/mine-session/command.md` | 2 | memory | — | 157 | 10 | 17 | |
-| `memory:promote` | `src/domains/meta/memory/promote/command.md` | 2 | memory | — | 195 | 10 | 17 | |
-| `memory:propose` | `src/domains/meta/memory/propose/command.md` | 2 | memory | — | 122 | 10 | 17 | |
-| `mode` | `src/domains/meta/mode/command.md` | 1 | — | — | 133 | 11 | 17 | |
-| `optimize-prompt` | `src/domains/meta/optimize-prompt/command.md` | 2 | optimize | — | 67 | 9 | 17 | |
-| `optimize:agents-dir` | `src/domains/meta/optimize/agents-dir/command.md` | 2 | optimize | — | 119 | 12 | 17 | |
-| `optimize:augmentignore` | `src/domains/meta/optimize/augmentignore/command.md` | 2 | optimize | — | 312 | 12 | 17 | |
-| `optimize` | `src/domains/meta/optimize/command.md` | 1 | optimize | — | 60 | 11 | 17 | |
-| `optimize:rtk` | `src/domains/meta/optimize/rtk/command.md` | 2 | optimize | — | 161 | 11 | 17 | |
-| `optimize:skills` | `src/domains/meta/optimize/skills/command.md` | 2 | optimize | — | 132 | 10 | 17 | |
-| `orchestrate` | `src/domains/meta/orchestrate/command.md` | 2 | orchestrate | — | 129 | 11 | 17 | |
-| `override` | `src/domains/meta/override/command.md` | 2 | override | — | 51 | 10 | 17 | |
-| `override:create` | `src/domains/meta/override/create/command.md` | 2 | override | — | 108 | 10 | 17 | |
-| `override:manage` | `src/domains/meta/override/manage/command.md` | 2 | override | — | 107 | 10 | 17 | |
-| `package-reset` | `src/domains/meta/package-reset/command.md` | 2 | — | — | 163 | 10 | 17 | |
-| `profile:activate` | `src/domains/meta/profile/activate/command.md` | 2 | profile | — | 82 | 4 | 3 | |
-| `profile` | `src/domains/meta/profile/command.md` | 2 | profile | — | 69 | 4 | 3 | |
-| `profile:deactivate` | `src/domains/meta/profile/deactivate/command.md` | 2 | profile | — | 69 | 4 | 3 | |
-| `profile:show` | `src/domains/meta/profile/show/command.md` | 2 | profile | — | 71 | 4 | 3 | |
-| `review-routing` | `src/domains/meta/review-routing/command.md` | 2 | — | — | 118 | 9 | 17 | |
-| `rule-compliance-audit` | `src/domains/meta/rule-compliance-audit/command.md` | 2 | — | — | 150 | 10 | 17 | |
-| `set-cost-profile` | `src/domains/meta/set-cost-profile/command.md` | 2 | — | — | 118 | 11 | 17 | |
-| `skill` | `src/domains/meta/skill/command.md` | 2 | skill | — | 49 | 4 | 5 | |
-| `skill:preview` | `src/domains/meta/skill/preview/command.md` | 2 | skill | — | 68 | 6 | 5 | |
-| `skills` | `src/domains/meta/skills/command.md` | 2 | skills | — | 57 | 4 | 5 | |
-| `skills:discover` | `src/domains/meta/skills/discover/command.md` | 2 | skills | — | 77 | 4 | 5 | |
-| `sync-agent-settings` | `src/domains/meta/sync-agent-settings/command.md` | 2 | — | — | 143 | 13 | 17 | |
-| `upstream-contribute` | `src/domains/meta/upstream-contribute/command.md` | 2 | — | — | 182 | 9 | 17 | |
-| `README` | `src/domains/product-basic/README.md` | — | — | — | 23 | 1 | 1 | |
-| `estimate-ticket` | `src/domains/product-basic/estimate-ticket/command.md` | 1 | — | — | 92 | 10 | 17 | |
-| `jira-ticket` | `src/domains/product-basic/jira-ticket/command.md` | 1 | — | — | 84 | 10 | 17 | |
-| `refine-ticket` | `src/domains/product-basic/refine-ticket/command.md` | 1 | — | — | 104 | 10 | 17 | |
-| `roadmap:ai-council` | `src/domains/product-basic/roadmap/ai-council/command.md` | 2 | roadmap | — | 189 | 10 | 17 | |
-| `roadmap` | `src/domains/product-basic/roadmap/command.md` | 1 | roadmap | — | 82 | 11 | 17 | |
-| `roadmap:create` | `src/domains/product-basic/roadmap/create/command.md` | 2 | roadmap | — | 240 | 12 | 17 | |
-| `roadmap:process-full` | `src/domains/product-basic/roadmap/process-full/command.md` | 2 | roadmap | — | 109 | 10 | 17 | |
-| `roadmap:process-phase` | `src/domains/product-basic/roadmap/process-phase/command.md` | 2 | roadmap | — | 75 | 10 | 17 | |
-| `roadmap:process-step` | `src/domains/product-basic/roadmap/process-step/command.md` | 2 | roadmap | — | 63 | 10 | 17 | |
-| `README` | `src/domains/product-discovery/README.md` | — | — | — | 18 | 1 | 1 | |
-| `knowledge` | `src/domains/product-discovery/knowledge/command.md` | 2 | knowledge | — | 70 | 10 | 11 | |
-| `knowledge:cross-repo` | `src/domains/product-discovery/knowledge/cross-repo/command.md` | 2 | knowledge | — | 72 | 4 | 5 | |
-| `knowledge:forget` | `src/domains/product-discovery/knowledge/forget/command.md` | 2 | knowledge | — | 97 | 9 | 11 | |
-| `knowledge:ingest` | `src/domains/product-discovery/knowledge/ingest/command.md` | 2 | knowledge | — | 115 | 9 | 11 | |
-| `knowledge:list` | `src/domains/product-discovery/knowledge/list/command.md` | 2 | knowledge | — | 95 | 9 | 11 | |
-| `research` | `src/domains/product-discovery/research/command.md` | 2 | research | — | 178 | 9 | 17 | |
-| `research:deep` | `src/domains/product-discovery/research/deep/command.md` | 2 | research | — | 155 | 9 | 17 | |
-| `research:report` | `src/domains/product-discovery/research/report/command.md` | 2 | research | — | 140 | 9 | 17 | |
+| `FIRST_WIN` | `src/domains/ai-video/FIRST_WIN.md` | — | — | — | 67 | 3 | 48 | |
+| `README` | `src/domains/ai-video/README.md` | — | — | — | 30 | 26 | 37 | |
+| `image-analyse` | `src/domains/ai-video/image/analyse/command.md` | 2 | image | — | 53 | 5 | 40 | |
+| `image` | `src/domains/ai-video/image/command.md` | 2 | image | — | 74 | 4 | 40 | |
+| `image-create` | `src/domains/ai-video/image/create/command.md` | 2 | image | — | 55 | 5 | 40 | |
+| `image-verify` | `src/domains/ai-video/image/verify/command.md` | 2 | image | — | 50 | 5 | 40 | |
+| `video` | `src/domains/ai-video/video/command.md` | 2 | video | — | 75 | 13 | 54 | |
+| `video-from-script` | `src/domains/ai-video/video/from-script/command.md` | 2 | video | — | 159 | 18 | 54 | |
+| `video-from-song` | `src/domains/ai-video/video/from-song/command.md` | 2 | video | — | 491 | 14 | 41 | |
+| `video-scene` | `src/domains/ai-video/video/scene/command.md` | 2 | video | — | 131 | 14 | 54 | |
+| `video-stitch` | `src/domains/ai-video/video/stitch/command.md` | 2 | video | — | 89 | 12 | 54 | |
+| `video-storyboard` | `src/domains/ai-video/video/storyboard/command.md` | 2 | video | — | 101 | 12 | 54 | |
+| `FIRST_WIN` | `src/domains/analysis-workbench/FIRST_WIN.md` | — | — | — | 53 | 1 | 26 | |
+| `README` | `src/domains/analysis-workbench/README.md` | — | — | — | 27 | 24 | 26 | |
+| `analyze` | `src/domains/analysis-workbench/analyze/command.md` | 1 | analyze | — | 127 | 3 | 26 | |
+| `analyze-decision` | `src/domains/analysis-workbench/analyze/decision/command.md` | 2 | analyze | — | 108 | 2 | 26 | |
+| `analyze-incident` | `src/domains/analysis-workbench/analyze/incident/command.md` | 2 | analyze | — | 120 | 3 | 26 | |
+| `analyze-near-miss` | `src/domains/analysis-workbench/analyze/near-miss/command.md` | 2 | analyze | — | 113 | 2 | 26 | |
+| `analyze-postmortem` | `src/domains/analysis-workbench/analyze/postmortem/command.md` | 2 | analyze | — | 130 | 2 | 26 | |
+| `analyze-premortem` | `src/domains/analysis-workbench/analyze/premortem/command.md` | 2 | analyze | — | 104 | 2 | 26 | |
+| `analyze-reference-repo` | `src/domains/analysis-workbench/analyze/reference-repo/command.md` | 2 | analyze | — | 207 | 12 | 54 | |
+| `README` | `src/domains/brand/README.md` | — | — | — | 33 | 25 | 24 | |
+| `brand` | `src/domains/brand/brand/command.md` | 2 | brand | — | 59 | 1 | 24 | |
+| `brand-identity` | `src/domains/brand/brand/identity/command.md` | 2 | brand | — | 27 | 1 | 24 | |
+| `brand-review` | `src/domains/brand/brand/review/command.md` | 2 | brand | — | 27 | 1 | 24 | |
+| `brand-strategy` | `src/domains/brand/brand/strategy/command.md` | 2 | brand | — | 28 | 1 | 24 | |
+| `brand-tokens` | `src/domains/brand/brand/tokens/command.md` | 2 | brand | — | 28 | 1 | 24 | |
+| `brand-voice` | `src/domains/brand/brand/voice/command.md` | 2 | brand | — | 27 | 1 | 24 | |
+| `README` | `src/domains/engineering-base/README.md` | — | — | — | 125 | 45 | 37 | |
+| `bug` | `src/domains/engineering-base/bug/command.md` | 2 | bug | — | 59 | 1 | 3 | |
+| `bug-fix` | `src/domains/engineering-base/bug/fix/command.md` | 2 | bug | — | 196 | 13 | 54 | |
+| `bug-investigate` | `src/domains/engineering-base/bug/investigate/command.md` | 2 | bug | — | 189 | 12 | 54 | |
+| `feature` | `src/domains/engineering-base/feature/command.md` | 1 | feature | — | 64 | 14 | 54 | |
+| `feature-dev` | `src/domains/engineering-base/feature/dev/command.md` | 2 | feature | — | 125 | 13 | 54 | |
+| `feature-explore` | `src/domains/engineering-base/feature/explore/command.md` | 2 | feature | — | 192 | 12 | 54 | |
+| `feature-plan` | `src/domains/engineering-base/feature/plan/command.md` | 2 | feature | — | 333 | 15 | 54 | |
+| `feature-refactor` | `src/domains/engineering-base/feature/refactor/command.md` | 2 | feature | — | 195 | 12 | 54 | |
+| `feature-roadmap` | `src/domains/engineering-base/feature/roadmap/command.md` | 2 | feature | — | 223 | 13 | 54 | |
+| `fix-ci` | `src/domains/engineering-base/fix/ci/command.md` | 2 | fix | — | 60 | 12 | 54 | |
+| `fix` | `src/domains/engineering-base/fix/command.md` | 1 | fix | — | 94 | 18 | 54 | |
+| `fix-comments` | `src/domains/engineering-base/fix/comments/command.md` | 2 | fix | — | 101 | 1 | 19 | |
+| `fix-portability` | `src/domains/engineering-base/fix/portability/command.md` | 2 | fix | — | 109 | 16 | 54 | |
+| `fix-pr-comments` | `src/domains/engineering-base/fix/pr-comments/command.md` | 2 | fix | — | 230 | 14 | 54 | |
+| `fix-quality` | `src/domains/engineering-base/fix/quality/command.md` | 2 | fix | — | 149 | 16 | 54 | |
+| `fix-refs` | `src/domains/engineering-base/fix/refs/command.md` | 2 | fix | — | 106 | 16 | 54 | |
+| `fix-seeder` | `src/domains/engineering-base/fix/seeder/command.md` | 2 | fix | — | 159 | 13 | 54 | |
+| `implement-ticket` | `src/domains/engineering-base/implement-ticket/command.md` | 0 | — | — | 200 | 16 | 54 | |
+| `judge` | `src/domains/engineering-base/judge/command.md` | 1 | judge | — | 87 | 15 | 54 | |
+| `judge-on-diff` | `src/domains/engineering-base/judge/on-diff/command.md` | 2 | judge | — | 125 | 12 | 54 | |
+| `judge-solo` | `src/domains/engineering-base/judge/solo/command.md` | 2 | judge | — | 97 | 11 | 54 | |
+| `judge-steps` | `src/domains/engineering-base/judge/steps/command.md` | 2 | judge | — | 97 | 12 | 54 | |
+| `mission-upgrade` | `src/domains/engineering-base/mission/upgrade/command.md` | 1 | — | — | 202 | 5 | 25 | |
+| `module` | `src/domains/engineering-base/module/command.md` | 2 | module | — | 53 | 11 | 54 | |
+| `module-create` | `src/domains/engineering-base/module/create/command.md` | 2 | module | — | 145 | 12 | 54 | |
+| `module-explore` | `src/domains/engineering-base/module/explore/command.md` | 2 | module | — | 203 | 17 | 54 | |
+| `prepare-for-review` | `src/domains/engineering-base/prepare-for-review/command.md` | 2 | — | — | 108 | 10 | 54 | |
+| `project-analyze` | `src/domains/engineering-base/project/analyze/command.md` | 2 | project | — | 324 | 15 | 54 | |
+| `project` | `src/domains/engineering-base/project/command.md` | 2 | project | — | 60 | 1 | 3 | |
+| `project-health` | `src/domains/engineering-base/project/health/command.md` | 2 | project | — | 109 | 15 | 54 | |
+| `review-changes` | `src/domains/engineering-base/review/changes/command.md` | 2 | review | — | 231 | 15 | 54 | |
+| `review` | `src/domains/engineering-base/review/command.md` | 1 | review | — | 61 | 1 | 3 | |
+| `review-routing` | `src/domains/engineering-base/review/routing/command.md` | 2 | review | — | 130 | 12 | 54 | |
+| `security-audit-config` | `src/domains/engineering-base/security-audit-config/command.md` | 2 | — | — | 85 | 4 | 27 | |
+| `tests` | `src/domains/engineering-base/tests/command.md` | 2 | tests | — | 83 | 14 | 54 | |
+| `tests-create` | `src/domains/engineering-base/tests/create/command.md` | 2 | tests | — | 114 | 13 | 54 | |
+| `tests-e2e-heal` | `src/domains/engineering-base/tests/e2e-heal/command.md` | 2 | tests | — | 114 | 13 | 54 | |
+| `tests-e2e-plan` | `src/domains/engineering-base/tests/e2e-plan/command.md` | 2 | tests | — | 101 | 13 | 54 | |
+| `tests-execute` | `src/domains/engineering-base/tests/execute/command.md` | 2 | tests | — | 86 | 13 | 54 | |
+| `threat-model` | `src/domains/engineering-base/threat-model/command.md` | 2 | — | — | 127 | 10 | 54 | |
+| `update-form-request-messages` | `src/domains/engineering-base/update-form-request-messages/command.md` | 2 | — | — | 201 | 13 | 54 | |
+| `work` | `src/domains/engineering-base/work/command.md` | 0 | — | — | 209 | 15 | 54 | |
+| `worktree-cleanup` | `src/domains/engineering-base/worktree/cleanup/command.md` | 2 | worktree | — | 83 | 2 | 0 | |
+| `worktree` | `src/domains/engineering-base/worktree/command.md` | 2 | worktree | — | 85 | 1 | 0 | |
+| `worktree-create` | `src/domains/engineering-base/worktree/create/command.md` | 2 | worktree | — | 62 | 1 | 0 | |
+| `worktree-status` | `src/domains/engineering-base/worktree/status/command.md` | 2 | worktree | — | 75 | 2 | 0 | |
+| `worktree-verify` | `src/domains/engineering-base/worktree/verify/command.md` | 2 | worktree | — | 70 | 2 | 0 | |
+| `FIRST_WIN` | `src/domains/fun/FIRST_WIN.md` | — | — | — | 48 | 3 | 40 | |
+| `README` | `src/domains/fun/README.md` | — | — | — | 19 | 33 | 40 | |
+| `prediction-pool` | `src/domains/fun/prediction-pool/command.md` | 2 | — | — | 236 | 8 | 40 | |
+| `README` | `src/domains/git/README.md` | — | — | — | 18 | 24 | 37 | |
+| `git-commit` | `src/domains/git/commit/command.md` | 0 | git-commit | — | 196 | 13 | 54 | |
+| `git-commit-in-chunks` | `src/domains/git/commit/in-chunks/command.md` | 2 | git-commit | — | 148 | 11 | 54 | |
+| `git-pr-create` | `src/domains/git/pr/create/command.md` | 1 | git-pr-create | — | 310 | 21 | 54 | |
+| `git-pr-create-description-only` | `src/domains/git/pr/create/description-only/command.md` | 2 | git-pr-create | — | 162 | 12 | 54 | |
+| `README` | `src/domains/gtm-marketing/README.md` | — | — | — | 27 | 26 | 37 | |
+| `ghostwriter` | `src/domains/gtm-marketing/ghostwriter/command.md` | 2 | ghostwriter | — | 102 | 13 | 54 | |
+| `ghostwriter-delete` | `src/domains/gtm-marketing/ghostwriter/delete/command.md` | 2 | ghostwriter | — | 125 | 13 | 54 | |
+| `ghostwriter-fetch` | `src/domains/gtm-marketing/ghostwriter/fetch/command.md` | 2 | ghostwriter | — | 191 | 13 | 54 | |
+| `ghostwriter-list` | `src/domains/gtm-marketing/ghostwriter/list/command.md` | 2 | ghostwriter | — | 109 | 14 | 54 | |
+| `ghostwriter-show` | `src/domains/gtm-marketing/ghostwriter/show/command.md` | 2 | ghostwriter | — | 120 | 13 | 54 | |
+| `ghostwriter-write` | `src/domains/gtm-marketing/ghostwriter/write/command.md` | 2 | ghostwriter | — | 166 | 13 | 54 | |
+| `humanize` | `src/domains/gtm-marketing/humanize/command.md` | 2 | humanize | — | 96 | 0 | — | |
+| `post-as` | `src/domains/gtm-marketing/post-as/command.md` | 2 | post-as | — | 64 | 11 | 54 | |
+| `post-as-ghostwriter` | `src/domains/gtm-marketing/post-as/ghostwriter/command.md` | 2 | post-as | — | 73 | 12 | 54 | |
+| `post-as-me` | `src/domains/gtm-marketing/post-as/me/command.md` | 2 | post-as | — | 131 | 14 | 54 | |
+| `README` | `src/domains/laravel/README.md` | — | — | — | 42 | 55 | 50 | |
+| `FIRST_WIN` | `src/domains/legal-review-prep/FIRST_WIN.md` | — | — | — | 32 | 2 | 17 | |
+| `LEGAL_NOTICE` | `src/domains/legal-review-prep/LEGAL_NOTICE.md` | — | — | — | 54 | 4 | 17 | |
+| `README` | `src/domains/legal-review-prep/README.md` | — | — | — | 23 | 22 | 17 | |
+| `README` | `src/domains/legal-review-prep/evals/README.md` | — | — | — | 63 | 5 | 17 | |
+| `dpa-art28-controller-audit-deletion` | `src/domains/legal-review-prep/evals/dpa-art28-controller-audit-deletion.md` | — | — | — | 32 | 2 | 17 | |
+| `dpa-art28-processor-subprocessor` | `src/domains/legal-review-prep/evals/dpa-art28-processor-subprocessor.md` | — | — | — | 32 | 2 | 17 | |
+| `README` | `src/domains/meta/README.md` | — | — | — | 288 | 117 | 50 | |
+| `agent-handoff` | `src/domains/meta/agent-handoff/command.md` | 0 | — | — | 162 | 18 | 54 | |
+| `agent-status` | `src/domains/meta/agent-status/command.md` | 0 | — | — | 142 | 14 | 54 | |
+| `agents-audit` | `src/domains/meta/agents/audit/command.md` | 2 | agents | — | 159 | 14 | 54 | |
+| `agents` | `src/domains/meta/agents/command.md` | 1 | agents | — | 67 | 15 | 54 | |
+| `agents-init` | `src/domains/meta/agents/init/command.md` | 2 | agents | — | 195 | 15 | 54 | |
+| `agents-optimize` | `src/domains/meta/agents/optimize/command.md` | 2 | agents | — | 188 | 13 | 54 | |
+| `agents-user-accept` | `src/domains/meta/agents/user/accept/command.md` | 2 | agents | — | 124 | 14 | 54 | |
+| `agents-user` | `src/domains/meta/agents/user/command.md` | 2 | agents | — | 72 | 13 | 54 | |
+| `agents-user-init` | `src/domains/meta/agents/user/init/command.md` | 2 | agents | — | 164 | 15 | 54 | |
+| `agents-user-review` | `src/domains/meta/agents/user/review/command.md` | 2 | agents | — | 114 | 13 | 54 | |
+| `agents-user-show` | `src/domains/meta/agents/user/show/command.md` | 2 | agents | — | 116 | 15 | 54 | |
+| `agents-user-update` | `src/domains/meta/agents/user/update/command.md` | 2 | agents | — | 104 | 13 | 54 | |
+| `analytics` | `src/domains/meta/analytics/command.md` | 2 | analytics | — | 78 | 10 | 47 | |
+| `analytics-prune` | `src/domains/meta/analytics/prune/command.md` | 2 | analytics | — | 72 | 11 | 47 | |
+| `analytics-show` | `src/domains/meta/analytics/show/command.md` | 2 | analytics | — | 101 | 11 | 47 | |
+| `challenge-me` | `src/domains/meta/challenge-me/command.md` | 2 | challenge-me | — | 90 | 11 | 54 | |
+| `challenge-me-vision` | `src/domains/meta/challenge-me/vision/command.md` | 2 | challenge-me | — | 444 | 12 | 54 | |
+| `challenge-me-with-docs` | `src/domains/meta/challenge-me/with-docs/command.md` | 2 | challenge-me | — | 353 | 11 | 54 | |
+| `chat-history` | `src/domains/meta/chat-history/command.md` | 2 | chat-history | — | 62 | 15 | 54 | |
+| `chat-history-import` | `src/domains/meta/chat-history/import/command.md` | 2 | chat-history | — | 172 | 16 | 54 | |
+| `check-current-md` | `src/domains/meta/check-current-md/command.md` | 2 | — | — | 144 | 15 | 54 | |
+| `condense` | `src/domains/meta/condense/command.md` | 1 | — | — | 242 | 17 | 54 | |
+| `context` | `src/domains/meta/context/command.md` | 2 | context | — | 53 | 12 | 54 | |
+| `context-create` | `src/domains/meta/context/create/command.md` | 2 | context | — | 182 | 14 | 54 | |
+| `context-refactor` | `src/domains/meta/context/refactor/command.md` | 2 | context | — | 184 | 13 | 54 | |
+| `cost` | `src/domains/meta/cost/command.md` | 2 | cost | — | 57 | 1 | 3 | |
+| `cost-profile` | `src/domains/meta/cost/profile/command.md` | 2 | cost | — | 122 | 14 | 54 | |
+| `cost-report` | `src/domains/meta/cost/report/command.md` | 2 | cost | — | 189 | 19 | 54 | |
+| `council-analysis` | `src/domains/meta/council/analysis/command.md` | 2 | council | — | 148 | 13 | 54 | |
+| `council` | `src/domains/meta/council/command.md` | 1 | council | — | 112 | 18 | 54 | |
+| `council-debate` | `src/domains/meta/council/debate/command.md` | 2 | council | — | 135 | 15 | 54 | |
+| `council-default` | `src/domains/meta/council/default/command.md` | 2 | council | — | 325 | 15 | 54 | |
+| `council-design` | `src/domains/meta/council/design/command.md` | 2 | council | — | 108 | 12 | 54 | |
+| `council-optimize` | `src/domains/meta/council/optimize/command.md` | 2 | council | — | 124 | 12 | 54 | |
+| `council-pr` | `src/domains/meta/council/pr/command.md` | 2 | council | — | 131 | 12 | 54 | |
+| `grill-me` | `src/domains/meta/grill-me/command.md` | 2 | challenge-me | — | 50 | 10 | 54 | |
+| `memory-add` | `src/domains/meta/memory/add/command.md` | 2 | memory | — | 149 | 16 | 54 | |
+| `memory` | `src/domains/meta/memory/command.md` | 1 | memory | — | 62 | 14 | 54 | |
+| `memory-learn-low-impact` | `src/domains/meta/memory/learn-low-impact/command.md` | 2 | memory | — | 149 | 14 | 54 | |
+| `memory-load` | `src/domains/meta/memory/load/command.md` | 2 | memory | — | 188 | 16 | 54 | |
+| `memory-mine-session` | `src/domains/meta/memory/mine-session/command.md` | 2 | memory | — | 184 | 15 | 54 | |
+| `memory-promote` | `src/domains/meta/memory/promote/command.md` | 2 | memory | — | 226 | 14 | 54 | |
+| `memory-propose` | `src/domains/meta/memory/propose/command.md` | 2 | memory | — | 137 | 15 | 54 | |
+| `mode` | `src/domains/meta/mode/command.md` | 1 | — | — | 134 | 12 | 54 | |
+| `optimize-agents-dir` | `src/domains/meta/optimize/agents-dir/command.md` | 2 | optimize | — | 120 | 16 | 54 | |
+| `optimize-augmentignore` | `src/domains/meta/optimize/augmentignore/command.md` | 2 | optimize | — | 313 | 15 | 54 | |
+| `optimize` | `src/domains/meta/optimize/command.md` | 1 | optimize | — | 72 | 16 | 54 | |
+| `optimize-project` | `src/domains/meta/optimize/project/command.md` | 2 | optimize | — | 262 | 6 | 4 | |
+| `optimize-prompt` | `src/domains/meta/optimize/prompt/command.md` | 2 | optimize | — | 69 | 11 | 54 | |
+| `optimize-rtk` | `src/domains/meta/optimize/rtk/command.md` | 2 | optimize | — | 162 | 13 | 54 | |
+| `optimize-skills` | `src/domains/meta/optimize/skills/command.md` | 2 | optimize | — | 133 | 16 | 54 | |
+| `orchestrate` | `src/domains/meta/orchestrate/command.md` | 2 | orchestrate | — | 130 | 14 | 54 | |
+| `override` | `src/domains/meta/override/command.md` | 2 | override | — | 73 | 13 | 54 | |
+| `override-create` | `src/domains/meta/override/create/command.md` | 2 | override | — | 109 | 12 | 54 | |
+| `override-manage` | `src/domains/meta/override/manage/command.md` | 2 | override | — | 108 | 12 | 54 | |
+| `package` | `src/domains/meta/package/command.md` | 2 | package | — | 56 | 1 | 3 | |
+| `package-reset` | `src/domains/meta/package/reset/command.md` | 2 | package | — | 166 | 12 | 54 | |
+| `package-test` | `src/domains/meta/package/test/command.md` | 2 | package | — | 242 | 12 | 54 | |
+| `profile-activate` | `src/domains/meta/profile/activate/command.md` | 2 | profile | — | 83 | 7 | 39 | |
+| `profile` | `src/domains/meta/profile/command.md` | 2 | profile | — | 70 | 5 | 39 | |
+| `profile-deactivate` | `src/domains/meta/profile/deactivate/command.md` | 2 | profile | — | 70 | 7 | 39 | |
+| `profile-show` | `src/domains/meta/profile/show/command.md` | 2 | profile | — | 81 | 8 | 39 | |
+| `rule-compliance-audit` | `src/domains/meta/rule-compliance-audit/command.md` | 2 | — | — | 158 | 12 | 54 | |
+| `skill` | `src/domains/meta/skill/command.md` | 2 | skill | — | 50 | 5 | 41 | |
+| `skill-preview` | `src/domains/meta/skill/preview/command.md` | 2 | skill | — | 69 | 10 | 41 | |
+| `skills` | `src/domains/meta/skills/command.md` | 2 | skills | — | 58 | 5 | 41 | |
+| `skills-discover` | `src/domains/meta/skills/discover/command.md` | 2 | skills | — | 78 | 7 | 41 | |
+| `sync-agent-settings` | `src/domains/meta/sync/agent-settings/command.md` | 2 | sync | — | 146 | 17 | 54 | |
+| `sync` | `src/domains/meta/sync/command.md` | 2 | sync | — | 58 | 1 | 3 | |
+| `sync-gitignore` | `src/domains/meta/sync/gitignore/command.md` | 2 | sync | — | 142 | 15 | 54 | |
+| `sync-gitignore-fix` | `src/domains/meta/sync/gitignore/fix/command.md` | 2 | sync | — | 195 | 19 | 54 | |
+| `team-knowledge-bootstrap` | `src/domains/meta/team-knowledge/bootstrap/command.md` | 2 | team-knowledge | — | 107 | 1 | 5 | |
+| `team-knowledge` | `src/domains/meta/team-knowledge/command.md` | 2 | team-knowledge | — | 65 | 2 | 5 | |
+| `team-knowledge-consolidate` | `src/domains/meta/team-knowledge/consolidate/command.md` | 2 | team-knowledge | — | 106 | 1 | 5 | |
+| `upstream-contribute` | `src/domains/meta/upstream-contribute/command.md` | 2 | — | — | 183 | 12 | 54 | |
+| `README` | `src/domains/product-basic/README.md` | — | — | — | 25 | 26 | 37 | |
+| `estimate-ticket` | `src/domains/product-basic/estimate-ticket/command.md` | 1 | — | — | 93 | 11 | 54 | |
+| `jira-ticket` | `src/domains/product-basic/jira-ticket/command.md` | 1 | — | — | 85 | 11 | 54 | |
+| `refine-ticket` | `src/domains/product-basic/refine-ticket/command.md` | 1 | — | — | 105 | 11 | 54 | |
+| `roadmap-ai-council` | `src/domains/product-basic/roadmap/ai-council/command.md` | 2 | roadmap | — | 190 | 14 | 54 | |
+| `roadmap` | `src/domains/product-basic/roadmap/command.md` | 1 | roadmap | — | 84 | 15 | 54 | |
+| `roadmap-create` | `src/domains/product-basic/roadmap/create/command.md` | 2 | roadmap | — | 306 | 19 | 54 | |
+| `roadmap-materialize` | `src/domains/product-basic/roadmap/materialize/command.md` | 2 | roadmap | — | 73 | 3 | 25 | |
+| `roadmap-process-full` | `src/domains/product-basic/roadmap/process-full/command.md` | 2 | roadmap | — | 151 | 15 | 54 | |
+| `roadmap-process-phase` | `src/domains/product-basic/roadmap/process-phase/command.md` | 2 | roadmap | — | 90 | 14 | 54 | |
+| `roadmap-process-step` | `src/domains/product-basic/roadmap/process-step/command.md` | 2 | roadmap | — | 70 | 14 | 54 | |
+| `README` | `src/domains/product-discovery/README.md` | — | — | — | 18 | 24 | 37 | |
+| `knowledge` | `src/domains/product-discovery/knowledge/command.md` | 2 | knowledge | — | 71 | 11 | 47 | |
+| `knowledge-cross-repo` | `src/domains/product-discovery/knowledge/cross-repo/command.md` | 2 | knowledge | — | 73 | 7 | 41 | |
+| `knowledge-forget` | `src/domains/product-discovery/knowledge/forget/command.md` | 2 | knowledge | — | 98 | 12 | 47 | |
+| `knowledge-ingest` | `src/domains/product-discovery/knowledge/ingest/command.md` | 2 | knowledge | — | 116 | 12 | 47 | |
+| `knowledge-list` | `src/domains/product-discovery/knowledge/list/command.md` | 2 | knowledge | — | 105 | 13 | 47 | |
+| `research` | `src/domains/product-discovery/research/command.md` | 2 | research | — | 180 | 12 | 54 | |
+| `research-deep` | `src/domains/product-discovery/research/deep/command.md` | 2 | research | — | 169 | 14 | 54 | |
+| `research-report` | `src/domains/product-discovery/research/report/command.md` | 2 | research | — | 149 | 14 | 54 | |

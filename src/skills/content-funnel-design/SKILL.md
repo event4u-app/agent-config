@@ -177,3 +177,5 @@ Mid-market HR analytics, funnel-analysis diagnosed mid-funnel leak (decision-sta
 - Leverage point — *mid-funnel proof*, because the decision-stage call is starved of conviction; structural ripple.
 - Pathway — *"How HR directors lose 7 hours per board-quarter"* (top) → *"Cohort-retention deep-dive vs. spreadsheet rebuild"* (mid) → *ROI calculator* (decision).
 - Hand-off → `editorial-calendar` re-allocates campaign weight to mid-funnel; `funnel-analysis` re-diagnoses at week 4.
+
+→ Final prose pass for audience-facing output: [`humanizer`](../humanizer/SKILL.md) — remove AI-writing tells before delivery.

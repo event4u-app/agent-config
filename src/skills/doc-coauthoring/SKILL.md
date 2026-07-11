@@ -158,3 +158,5 @@ Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md).
 * Reprint the whole doc on every iteration
 * Declare "done" without the Stage 3 reader test
 * Generate doc content from scratch when the user has existing context — gap-closing is the whole point
+
+→ Final prose pass for audience-facing output: [`humanizer`](../humanizer/SKILL.md) — remove AI-writing tells before delivery.

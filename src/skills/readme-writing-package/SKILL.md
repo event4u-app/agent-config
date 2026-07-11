@@ -348,3 +348,5 @@ to every package README you author.
 - Do NOT hide requirements or version constraints
 - Do NOT write a giant example when a 10-line one would do
 - Do NOT overload README with reference material — link to /docs
+
+→ Final prose pass for audience-facing output: [`humanizer`](../humanizer/SKILL.md) — remove AI-writing tells before delivery.
