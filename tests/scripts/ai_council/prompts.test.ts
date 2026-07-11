@@ -57,9 +57,25 @@ describe('prompts — synthesis_template', () => {
             expect(synthesis_template(m)).toBe(synthesis_template('default'));
         }
     });
-    it('creative lenses return empty string', () => {
-        expect(synthesis_template('design')).toBe('');
-        expect(synthesis_template('optimize')).toBe('');
+    it('creative lenses keep a free-form body but carry the two required verdict sections', () => {
+        // Phase 0 (road-to-opt-council-deliberation): creative lenses are no
+        // longer empty passthroughs — every lens must close with Kill criteria
+        // + Concrete next step. The body stays open-ended prose.
+        for (const lens of ['design', 'optimize']) {
+            const t = synthesis_template(lens);
+            expect(t).not.toBe('');
+            expect(t).toContain('free-form');
+            expect(t).toContain('### Kill criteria');
+            expect(t).toContain('### Concrete next step');
+        }
+        expect(synthesis_template('design')).toBe(synthesis_template('optimize'));
+    });
+    it('every decision lens template carries Kill criteria + Concrete next step', () => {
+        for (const lens of ['default', 'pr', 'analysis']) {
+            const t = synthesis_template(lens);
+            expect(t).toContain('### Kill criteria');
+            expect(t).toContain('### Concrete next step');
+        }
     });
     it('unknown mode raises with sorted-union expected list', () => {
         expect(() => synthesis_template('bogus')).toThrow(/Unknown synthesis mode 'bogus'/);

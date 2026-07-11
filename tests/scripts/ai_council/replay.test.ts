@@ -169,6 +169,14 @@ describe('replay — render structural unit', () => {
         expect(idxF2).toBeLessThan(idxF4);
     });
 
+    it('renders the Phase-0 aggregate lines (evidence + provider spread)', () => {
+        // road-to-opt-council-deliberation Phase 0 FOLD: two summary lines in
+        // the trailer, not a new template section.
+        const out = render_decision_replay(buildTsInputs(FULL_SPEC));
+        expect(out).toMatch(/\*\*Evidence spread\*\*: \d+ high · \d+ medium · \d+ low \(across \d+ finding/);
+        expect(out).toMatch(/\*\*Provider spread\*\*: \d+ distinct provider\(s\) deliberated/);
+    });
+
     it('collapses whitespace in the original ask blockquote', () => {
         const out = render_decision_replay(buildTsInputs(FULL_SPEC));
         expect(out).toContain('> Should we adopt the new architecture?\n');

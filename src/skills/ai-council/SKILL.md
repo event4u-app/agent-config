@@ -118,9 +118,9 @@ prompt that asks them to think on their own merits.
 ## Neutrality guidelines (Iron Law)
 
 ```
-THE COUNCIL DOES NOT SEE THE HOST AGENT'S ANALYSIS.
-THE COUNCIL DOES NOT SEE PRIOR REPLIES.
-THE COUNCIL SEES THE ARTEFACT + THE NEUTRAL SYSTEM PROMPT. NOTHING ELSE.
+THE COUNCIL NEVER SEES THE HOST AGENT'S ANALYSIS, REASONING, OR FRAMING.
+ROUND 1 SEES THE ARTEFACT + THE NEUTRAL SYSTEM PROMPT. NOTHING ELSE.
+ROUND 2+ MAY SEE PRIOR PEER REPLIES — ANONYMISED ONLY, NEVER ATTRIBUTED, NEVER THE HOST'S.
 THE HOST AGENT IS THE CONVENER, NEVER A REVIEWER.
 ```
 
@@ -466,15 +466,20 @@ templates live in `scripts/ai_council/prompts.ts::_SYNTHESIS_TABLE`
 and are exposed via `synthesis_template(mode)`.
 
 **R4 Q4 split** — decision lenses get a structured Karpathy-style
-template; creative lenses stay open-ended prose (bare slot):
+template; creative lenses keep an open-ended prose body. **Every lens
+now closes with two required verdict-discipline sections** — **Kill
+criteria** (observable falsifiers with a threshold or event, checkable
+without re-convening the council) and **Concrete next step** (exactly
+one artefact-producing action) — added so no synthesis ships an
+unfalsifiable verdict (road-to-opt-council-deliberation Phase 0):
 
 | Lens | Class | Synthesis sections |
 |---|---|---|
-| `default` | decision | Agreement · Clashes · Blind spots · Recommendation · Next step |
-| `pr` | decision | Consensus · Conflicts · Must-fix before merge · Recommendation |
-| `analysis` | decision | Top-10 by consensus · Supporting · Outliers |
-| `design` | creative | *(no template — open prose passthrough)* |
-| `optimize` | creative | *(no template — open prose passthrough)* |
+| `default` | decision | Agreement · Clashes · Blind spots · Recommendation · **Kill criteria · Concrete next step** |
+| `pr` | decision | Consensus · Conflicts · Must-fix before merge · Recommendation · **Kill criteria · Concrete next step** |
+| `analysis` | decision | Top-10 by consensus · Supporting · Outliers · **Kill criteria · Concrete next step** |
+| `design` | creative | open prose body + **Kill criteria · Concrete next step** |
+| `optimize` | creative | open prose body + **Kill criteria · Concrete next step** |
 
 Input modes (`prompt` / `roadmap` / `diff` / `files`) inherit the
 `default` decision template — they are bundling shapes, not lenses.
