@@ -212,3 +212,31 @@ describe("untrusted-input handling (Phase 1 hardening)", () => {
     expect(Date.now() - start).toBeLessThan(5000);
   });
 });
+
+describe("scan-what-you-ingest invariant (Phase 1 regression lock)", () => {
+  // The hidden-unicode guard MUST scan the raw, full input — before exemption
+  // stripping and before the ReDoS truncation — because an attacker plants
+  // bidi/zero-width/tag chars exactly in the spans a naive scanner skips (code
+  // fences, blockquotes, past a length cap) while the LLM still ingests them.
+  // These lock the invariant so a future refactor cannot move the scan after
+  // stripExempt()/slice() without turning a test red.
+  it("catches a hidden-unicode payload INSIDE a code fence (pre-strip scan)", () => {
+    const fenced = "Clean prose.\n\n```\ncode ‮​ here\n```\n";
+    const r = analyzeText(fenced, "en");
+    const total = r.hidden_unicode.reduce((s, f) => s + f.count, 0);
+    expect(total).toBeGreaterThanOrEqual(2);
+  });
+
+  it("catches a hidden-unicode payload INSIDE a blockquote (pre-strip scan)", () => {
+    const quoted = "Normal line.\n\n> quoted ‍⁦ text\n";
+    const r = analyzeText(quoted, "en");
+    expect(r.hidden_unicode.length).toBeGreaterThan(0);
+  });
+
+  it("catches a hidden-unicode payload BEYOND the ReDoS truncation bound", () => {
+    const far = "x".repeat(MAX_SCAN_CHARS + 50) + " ​‮";
+    const r = analyzeText(far, "en");
+    expect(r.truncated).toBe(true); // tell scan is bounded...
+    expect(r.hidden_unicode.length).toBeGreaterThan(0); // ...but the guard still saw it
+  });
+});
