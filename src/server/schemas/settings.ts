@@ -208,6 +208,11 @@ export const settingsSchema = z.object({
             'Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading.',
         ),
     }).default({ rich_skills: 'on' }),
+    code_style: z.object({
+        docblocks: z.enum(['minimal', 'full']).default('minimal').describe(
+            'Consumed by the code-comment-discipline rule. minimal (default) = no signature-mirroring docblocks; docblocks only for machine-relevant precision (generics, array shapes) or genuine why-context. full = the exported public surface of a library package may carry one-line summary docblocks; the redundancy ban still holds.',
+        ),
+    }).default({ docblocks: 'minimal' }),
     reasoning: z.object({
         enabled: z.boolean().default(true).describe(
             'Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead).',

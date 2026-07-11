@@ -5,7 +5,7 @@ alwaysApply: false
 description: "Writing/editing code in any language — a comment states a WHY or a constraint the code cannot show; never restate what names/types already say; no signature-mirroring docblocks"
 triggers:
   - intent: "writing or generating code"
-  - intent: "adding a class, method, or function"
+  - intent: "adding a class / method / function"
   - intent: "refactoring code"
   - keyword: "comment"
   - keyword: "docblock"

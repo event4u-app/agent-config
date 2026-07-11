@@ -277,7 +277,7 @@
   "rules/brand-source-of-truth.md": "f1a0a1d29a67bbf48baa211eef009fa2d6c07346a7b58303a0d7a74b84a248fd",
   "rules/broken-access-control.md": "345c00b22ac49771df34afa9bbadc5fe25cadbfa21148ee7726e147223135a5f",
   "rules/cli-output-handling.md": "ae095d2d6de55191007ea21819dc657d8fe413eac09a0846ba3dbd021fbb272d",
-  "rules/code-comment-discipline.md": "f5c91df27e67932c6766ec88aec8f427839aa439daac76a300b3986f238f92ae",
+  "rules/code-comment-discipline.md": "3a5f46bade47da994a32eb86b9fd95068b9a54e3ba75f48ce8b814f48d750499",
   "rules/command-suggestion-policy.md": "b34523af7f5a054e68bc18a432eceb7f3cabbfeee63c6d6279ec730724a81a79",
   "rules/commit-conventions.md": "57c2a2d16c6ce00db5831fd4b7df99e29433680d742f4713f4738a8823e2f29f",
   "rules/commit-policy.md": "eeb803c90535e541e3606d92420841b96373310c57367f6c1e85210611ef3736",
