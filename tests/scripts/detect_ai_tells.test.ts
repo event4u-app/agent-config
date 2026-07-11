@@ -118,6 +118,26 @@ describe("density + cluster mechanics", () => {
   });
 });
 
+describe("write-engine step 4b gate (ghostwriter fixture)", () => {
+  const FOOTER = "\n\nWritten in the style of Vera Holmwood, not by them.\n";
+
+  it("a deliberately AI-ism-seeded draft fails the 4b thresholds", () => {
+    const report = analyzeText(load("en", "10-ghostwriter-draft", "before"), "en");
+    expect(exceedsThresholds(report, THRESHOLDS).length).toBeGreaterThan(0);
+  });
+
+  it("the humanized fixture-voice draft passes the 4b thresholds", () => {
+    const report = analyzeText(load("en", "10-ghostwriter-draft", "after"), "en");
+    expect(exceedsThresholds(report, THRESHOLDS)).toEqual([]);
+  });
+
+  it("appending the literal disclosure footer never flips the verdict (footer exemption)", () => {
+    const clean = load("en", "10-ghostwriter-draft", "after");
+    const withFooter = analyzeText(clean + FOOTER, "en");
+    expect(exceedsThresholds(withFooter, THRESHOLDS)).toEqual([]);
+  });
+});
+
 describe("exemption handling (secondhand-text guard)", () => {
   it("never scans fenced code, inline code, blockquotes, or quoted spans", () => {
     const text = [

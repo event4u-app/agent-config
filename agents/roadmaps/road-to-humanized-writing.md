@@ -200,7 +200,7 @@ artifacts stand alone.
 
 Amend `docs/contracts/write-engine.md` inside the beta window:
 
-- [ ] New **step 4b — humanize audit** between Draft (4) and Footer (5):
+- [x] New **step 4b — humanize audit** between Draft (4) and Footer (5):
       run the audit question ("what makes this draft read AI-generated?")
       against the draft, revise, and where a runtime exists verify the
       final draft with `detect_ai_tells.ts` under engine thresholds.
@@ -209,15 +209,16 @@ Amend `docs/contracts/write-engine.md` inside the beta window:
       profile's captured voice legitimately uses a watched pattern (em
       dashes, `emoji_rules: allowed`), the fingerprint wins and that
       pattern is suppressed for the run — never left to judgment.
-- [ ] Disclosure footer (§5) explicitly exempt from the audit: a literal
+- [x] Disclosure footer (§5) explicitly exempt from the audit: a literal
       template string the humanizer must never touch (council Q5).
-- [ ] Technical/reference output exclusion: when the requested artifact is
+- [x] Technical/reference output exclusion: when the requested artifact is
       reference/technical documentation, step 4b is skipped and says so
       (neutral register is correct there).
-- [ ] Config: `humanizer:` block in
-      `src/config/agent-settings.template.yml` — `write_engine: on`,
+- [x] Config: `humanizer:` block in
+      `src/agent-src/templates/agents/agent-project-settings.example.yml`
+      <!-- corrected target: consumer write-engine settings live in the project-settings example, next to the ghostwriter block --> — `write_engine: on`,
       `max_cluster_score`, `max_dash_density`, `language: auto`.
-- [ ] Extend ghostwriter cluster tests: the fictional fixture profile
+- [x] Extend ghostwriter cluster tests: the fictional fixture profile
       draft passes the detector; a deliberately AI-ism-seeded draft fails
       step 4b. Run the extended tests targeted
       (`npx vitest run <cluster-test-path>`).
@@ -225,6 +226,8 @@ Amend `docs/contracts/write-engine.md` inside the beta window:
 **Exit criteria:** contract updated and lint-clean; extended cluster tests
 green in the targeted run; one recorded before/after run on the fictional
 fixture showing draft-vs-final hard-hit + cluster-score reduction.
+**Recorded run (2026-07-11):** seeded draft hard 1 · cluster 43.98/500w ·
+dashes 4.63/500w → final 0 · 0 · 0 (fixture pair `10-ghostwriter-draft`).
 **Rollback:** revert the contract edit + template block; skill remains
 usable on demand without the engine hook.
 
