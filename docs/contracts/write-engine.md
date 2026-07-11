@@ -65,7 +65,8 @@ One question per turn, in this order:
 Modifiers may be supplied via flags (`--tone=casual --length=200
 --channel=linkedin-post --audience="early-stage founders"`) to skip
 the interactive interview. `--as=<slug>` selects the ghostwriter
-non-interactively for `/ghostwriter:write` and the alias.
+non-interactively for `/ghostwriter:write` and the alias. `--raw`
+skips the step-4b humanize audit for this run (see § 4b).
 
 #### Per-channel defaults
 
@@ -101,6 +102,42 @@ Emit the body as a single fenced markdown block. The body MUST:
 - Honour `style.fingerprint.closer_patterns` for the last sentence.
 - Respect `style.fingerprint.hashtag_rules` and `emoji_rules`.
 - Stay within ±15% of the requested length.
+
+### 4b. Humanize audit (default-on, `--raw` opts out)
+
+After drafting and before the footer, run the AI-tell audit from the
+[`humanizer`](../../src/skills/humanizer/SKILL.md) skill against the
+draft body:
+
+1. Ask: "What makes this draft read AI-generated?" — audit against the
+   pattern catalog (`src/skills/humanizer/data/patterns.md`), counting
+   clusters, never isolated hits.
+2. Revise the draft to clear the audit findings while preserving the
+   step-4 fingerprint constraints and full coverage.
+3. Where a runtime is available, verify the final body with
+   `npx tsx src/scripts/detect_ai_tells.ts --stdin --fail` under the
+   thresholds from the consumer's `humanizer:` block in
+   `.agent-project-settings.yml` (defaults: hard 0, cluster score 3 per
+   500 words, dash density 2 per 500 words). No runtime → the prose
+   audit in (1) is the pass; do not skip it.
+
+Precedence and scope rules (binding, not judgment calls):
+
+- **Fingerprint wins.** When the profile's captured voice legitimately
+  uses a watched pattern (a figure who genuinely writes in em dashes,
+  `emoji_rules: allowed`, hashtag rules), the step-4 fingerprint
+  constraint is authoritative and the corresponding tell is suppressed
+  for that run.
+- **The disclosure footer (§ 5) is exempt.** It is a literal template
+  string appended after this step — the audit never inspects, rewords,
+  or removes it.
+- **Technical/reference output is excluded.** When the requested
+  artifact is reference or technical documentation, skip step 4b and
+  say so — neutral, plain prose is the correct register there.
+- **`--raw` opts out per run.** The flag skips step 4b entirely (for
+  deliberate neutral-register output); it never touches the footer
+  rules. Default is on for every engine consumer
+  (`humanizer.write_engine: on`).
 
 ### 5. Append the disclosure footer (ghostwriter only)
 

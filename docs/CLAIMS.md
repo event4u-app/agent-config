@@ -155,14 +155,14 @@ claims below are `backed`. Remaining entries are listed so the debt is
 visible, not hidden.
 
 ### claim: skill-count
-- claim: 270 skills (README hero + feature list).
+- claim: 271 skills (README hero + feature list).
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 177 commands.
+- claim: 178 commands.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
@@ -188,3 +188,10 @@ visible, not hidden.
 - evidence: PRE-REGISTERED 2026-07-11 (road-to-orchestration-scope-decision Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) held quality is deterministic, scored by `src/scripts/check_quality_regression.ts` thresholds — a token/wall win that degrades output below the regression threshold FAILS the claim; (2) negative control — `pv-02-negative-control` must NOT trigger dispatch (a classifier that fires on everything is a cost leak, not a win); (3) win metric — ≥15% reduction in token-or-wall on `orch-02`+`orch-03` vs the single-agent baseline, read from `agents/runtime/state/audit/*.jsonl` orchestration lines through `gateVerdict()` / `resolveShippedDefault()`. Binds to a resolving report once ≥20 real `ask`-mode telemetry lines exist (Phase 2 — maintainer-run; the corpus `--run` agent-spawn is gated out of auto-mode). PROVE → flip to backed for the proven family only; DROP → renewed honest-null, keep `ask`, demote orchestration from the public value proposition.
 - status: unbacked
 - last_verified:
+
+### claim: humanizer-tell-reduction
+- claim: The humanizer pass removes every mechanically detected AI-writing tell on the 20-pair fixture corpus (mean hard hits 0.9 → 0, cluster score 53.97 → 0 per 500 words, dash density 9.22 → 0), and a blind, length-controlled judge preferred the humanized text in 16/16 controlled pairs.
+- kind: quant
+- evidence: internal/bench/reports/humanizer-v1.md#prefers the humanized text
+- status: backed
+- last_verified: 2026-07-11

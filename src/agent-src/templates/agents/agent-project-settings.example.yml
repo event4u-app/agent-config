@@ -198,6 +198,20 @@ ghostwriter:
   # but still validated by the lint.
   aliases: true
 
+# Humanize audit for write-engine consumers (/ghostwriter:write,
+# /post-as:me, /post-as:ghostwriter) — write-engine contract § 4b.
+# Default-on inside the engine; per-run opt-out via --raw. Off
+# everywhere else: this block never restyles chat replies or repo docs.
+humanizer:
+  # Run the step-4b humanize audit in write-engine drafts.
+  write_engine: on
+  # Weighted cluster-score cap per 500 words (detect_ai_tells.ts).
+  max_cluster_score: 3
+  # Em/en-dash density cap per 500 words (CP1 parity, not zero).
+  max_dash_density: 2
+  # Pattern language: en | de | auto (auto sniffs from the draft).
+  language: auto
+
 # --- Quality pipeline (optional) ---
 #
 # Per-language gate tools the `/fix quality` command invokes. Empty

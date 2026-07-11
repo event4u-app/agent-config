@@ -238,3 +238,5 @@ to every README you author.
 - Do NOT skip repository inspection before writing
 - Do NOT preserve weak structure from an existing README just because it exists
 - Do NOT add marketing language ("blazing fast", "revolutionary", "next-gen")
+
+→ Final prose pass for audience-facing output: [`humanizer`](../humanizer/SKILL.md) — remove AI-writing tells before delivery.

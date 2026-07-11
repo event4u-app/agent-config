@@ -168,3 +168,5 @@ Mid-market HR analytics tool, audience matrix locked (HR director · CFO · IT-s
 - Cadence classification — evergreen (4 beats, Pareto-cut top 2 carry pull); campaign (2 beats keyed to board-quarter launch wave); reactive (8 hours per fortnight reserved); debt (11 items: 5 repay, 4 archive, 2 retire).
 - Beat-map — HR director (mid-funnel proof): one cohort-retention deep-dive per quarter. CFO (decision-funnel proof): one ROI calculator refresh per board-quarter. IT-security (top-funnel awareness): one HRIS-integration architecture explainer evergreen.
 - Hand-off → `content-funnel-design` translates each beat into its content shape; `release-comms` co-schedules board-quarter campaign with launch waves.
+
+→ Final prose pass for audience-facing output: [`humanizer`](../humanizer/SKILL.md) — remove AI-writing tells before delivery.
