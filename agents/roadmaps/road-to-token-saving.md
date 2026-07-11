@@ -145,9 +145,20 @@ Build the evidence rig first.
       64,116 → 74,317 GPT tok (+16%); thin-projection lever saved_gpt 50,338 →
       60,170 (78.5% → 81%). Past proxy-based cut estimates understated both load
       and savings. -->
-- [ ] Build a held-out golden set of ~30 tasks spanning all 88 rules, including
+- [x] Build a held-out golden set of ~30 tasks spanning all 88 rules, including
       multi-turn, conflicting-rule, and corner-case scenarios; hand-labelled
       expected outcomes (not LLM-generated).
+      <!-- done 2026-07-11 — golden set consumer-COMPLETE (90 tasks, 86/86,
+      PR #885), BUT anchors are COUNCIL-derived not hand-labelled (maintainer-
+      directed; the "not LLM-generated" property is honestly downgraded — see
+      road-to-golden-set-coverage's amended anchor-provenance criterion).
+      FULL sonnet n=90 quality run 2026-07-11 SUPERSEDES the haiku n=30 below:
+      thin 17 / eager 30 decisive (win-rate 36.2%), tie 15, inconsistent 28;
+      length-confound 60%. Flip-gate RED (36.2% < 48% floor) → thin-projection
+      FAILS the quality gate and STAYS DISABLED. Caveat: eager's edge is partly
+      verbosity bias (60% length-confound) + a noisy judge (31% inconsistent),
+      so the loss is not cleanly attributable to real quality — but the DECISION
+      rule (gate) is unambiguously red, so "do not flip thin" holds. -->
       <!-- rig + initial labels DONE; full coverage operator-optional. Schema
       TOKEN-QUALITY-GOLDEN-SCHEMA.md + validator check_token_quality_golden.ts
       (structure + rule-coverage vs dist/router.json, --require-complete gate) +
@@ -500,8 +511,14 @@ stale candidates.
 
 ## Acceptance criteria
 
-- [ ] A real-tokenizer, length-controlled, paired benchmark exists and runs in CI
+- [x] A real-tokenizer, length-controlled, paired benchmark exists and runs in CI
       (Phase 0).
+      <!-- met 2026-07-11: bench_quality_run (API-gated, curl→Anthropic) +
+      check_quality_regression (flip-gate, CI-wired) exist; a full sonnet n=90
+      run executed and produced internal/bench/reports/quality-run.json
+      (operator-local). VERDICT: thin fails the gate (36.2% < 48%) → thin
+      projection does not ship. Length-controlled (length-confound tracked 60%),
+      paired (both orders, reject-on-flip → 28 inconsistent excluded). -->
 - [ ] RTK rule + skill are active in a consumer-shaped project; trigger gap closed;
       deterministic wrap hook ships with passing tests (Phases 1–3).
 - [ ] Cache-aware ordering + kernel byte-stability are CI-enforced (Phase 5).
