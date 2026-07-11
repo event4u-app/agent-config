@@ -112,6 +112,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         tier_chosen: str(flags, 'tier-chosen') as TierChosen | undefined,
         tier_source: str(flags, 'tier-source') as TierSource | undefined,
         task_class: str(flags, 'task-class'),
+        dispatch_mode: str(flags, 'dispatch-mode') as never,
         task_size_estimate: int(flags, 'task-size-estimate'),
         wall_clock_ms: int(flags, 'wall-clock-ms'),
         dispatch_tokens: int(flags, 'dispatch-tokens'),

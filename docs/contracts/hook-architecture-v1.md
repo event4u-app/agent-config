@@ -192,6 +192,31 @@ Phase 7.4 ships a regression test that spawns two concurrent
 dispatcher invocations against the same event and asserts no torn
 writes (file ends with valid JSON, last-writer-wins).
 
+## Hook-resilience shim — every registered command degrades silently
+
+Every hook command the installer registers (Claude managed block + plugin
+`hooks/hooks.json`, Cursor, Windsurf, Gemini, the Augment trampoline) follows
+one shape (road-to-opt-subagent-harvest P1.4):
+
+1. **Resolve the dispatcher** — project-local binary first, PATH fallback
+   where the platform supports it (Claude: `$CLAUDE_PROJECT_DIR/agent-config`
+   → `agent-config`).
+2. **Missing dispatcher → silent `exit 0`.** A hook must never error-spam or
+   block the agent loop on a repo where the suite is not (yet) installed.
+   This is the honest degrade even for `fail_closed` concerns: an absent
+   dispatcher cannot evaluate anything, so there is nothing to fail closed
+   ON — the deny power exists only where the suite exists.
+3. **Present dispatcher → exit code PROPAGATES.** No `|| true` around the
+   dispatch call itself: a `fail_closed: true` concern (e.g.
+   `block-no-verify`) keeps its deny. Fail-open of crashed concerns is
+   handled INSIDE `dispatch_hook.ts` per the manifest's `fail_closed` flag,
+   never by the outer shim.
+
+The Augment trampoline (`src/scripts/hooks/augment-dispatcher.sh`) is the
+reference implementation of the same contract in shell form (`set -u`,
+silent bails, unconditional `exit 0` — Augment concerns are all
+observe-only, so blanket exit 0 is correct there).
+
 ## Copilot fallback pattern
 
 Copilot has no hook surface. Concerns whose source rule cites

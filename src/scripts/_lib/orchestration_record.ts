@@ -24,6 +24,17 @@ export type TierSource = 'static' | 'inferred' | 'inherit';
 export type Band = 'low' | 'medium' | 'high';
 export type LinePhase = 'refine' | 'memory' | 'analyze' | 'plan' | 'implement' | 'test' | 'verify' | 'report';
 export type LineOutcome = 'success' | 'blocked' | 'skipped' | 'error';
+/** The orchestration form the form-gate selected (road-to-opt-subagent-harvest P2). */
+export type DispatchModeId =
+    | 'do-and-judge'
+    | 'do-and-judge-two-stage'
+    | 'do-in-steps'
+    | 'do-in-parallel'
+    | 'do-competitively'
+    | 'judge-with-debate'
+    | 'do-in-worktrees'
+    | 'do-with-live-app-judge'
+    | 'none';
 
 /** Inputs the agent supplies about one auto-dispatch. */
 export interface RecordInput {
@@ -37,6 +48,8 @@ export interface RecordInput {
     tier_chosen?: TierChosen | null | undefined;
     tier_source?: TierSource | null | undefined;
     task_class?: string | null | undefined;
+    /** Form-gate outcome: which of the seven modes (or 'none') the gate selected. */
+    dispatch_mode?: DispatchModeId | null | undefined;
     task_size_estimate?: number | undefined;
     wall_clock_ms?: number | undefined;
     /** Absolute measured tokens the dispatched slice consumed (feeds the modeled cost-%). */
@@ -153,6 +166,7 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         outcome: dOutcome,
         verify_mode: vMode,
         task_class: input.task_class ?? null,
+        dispatch_mode: input.dispatch_mode ?? null,
         tier_chosen: input.tier_chosen ?? null,
         tier_source: input.tier_source ?? null,
         dispatch_tokens: input.dispatch_tokens ?? null,

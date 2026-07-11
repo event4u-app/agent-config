@@ -1,6 +1,10 @@
 version: '3'
 
 tasks:
+  lint-originality-shingles:
+    desc: "Re-skin detector — entity-masked 8-word shingle overlap across skills/personas/subagents. Report-only (calibration); arm with --threshold <pct> once the allowlist is seeded."
+    cmd: ./scripts-run src/scripts/lint_originality_shingles --top 10
+
   lint-skills:
     silent: true
     desc: Lint all skills and rules

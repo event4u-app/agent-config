@@ -15,10 +15,12 @@ import {
 const MATRIX = {
     SessionStart:
         'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
+        'command -v "$BIN" >/dev/null 2>&1 || exit 0; ' +
         '"$BIN" dispatch:hook --platform claude --event session_start ' +
         '--native-event SessionStart --project-dir "$CLAUDE_PROJECT_DIR" --min-version 1',
     Stop:
         'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
+        'command -v "$BIN" >/dev/null 2>&1 || exit 0; ' +
         '"$BIN" dispatch:hook --platform claude --event stop ' +
         '--native-event Stop --project-dir "$CLAUDE_PROJECT_DIR" --min-version 1',
 };

@@ -1100,7 +1100,11 @@ const CURSOR_DISPATCHER_BINDINGS: ReadonlyArray<readonly [string, string]> = [
 ];
 
 function _cursor_dispatch_command(ac_event: string, native: string): string {
+    // Hook-resilience shim (P1.4): missing binary → silent exit 0; a
+    // present dispatcher's exit code propagates (fail_closed concerns
+    // keep their deny power).
     return (
+        `[ -x ./agent-config ] || exit 0; ` +
         `./agent-config dispatch:hook ` +
         `--platform cursor --event ${ac_event} ` +
         `--native-event ${native}`
@@ -1271,7 +1275,11 @@ const WINDSURF_DISPATCHER_BINDINGS: ReadonlyArray<readonly [string, string]> = [
 ];
 
 function _windsurf_dispatch_command(ac_event: string, native: string): string {
+    // Hook-resilience shim (P1.4): missing binary → silent exit 0; a
+    // present dispatcher's exit code propagates (fail_closed concerns
+    // keep their deny power).
     return (
+        `[ -x ./agent-config ] || exit 0; ` +
         `./agent-config dispatch:hook ` +
         `--platform windsurf --event ${ac_event} ` +
         `--native-event ${native}`
@@ -1343,7 +1351,11 @@ const GEMINI_DISPATCHER_BINDINGS: ReadonlyArray<readonly [string, string, string
 ];
 
 function _gemini_dispatch_command(ac_event: string, native: string): string {
+    // Hook-resilience shim (P1.4): missing binary → silent exit 0; a
+    // present dispatcher's exit code propagates (fail_closed concerns
+    // keep their deny power).
     return (
+        `[ -x ./agent-config ] || exit 0; ` +
         `./agent-config dispatch:hook ` +
         `--platform gemini --event ${ac_event} ` +
         `--native-event ${native}`

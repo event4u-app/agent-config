@@ -108,8 +108,16 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
         if (!concerns || (Array.isArray(concerns) && concerns.length === 0)) continue;
         const native = ac_to_native[ac_event];
         if (native === undefined) continue;
+        // Hook-resilience shim (road-to-opt-subagent-harvest P1.4):
+        // local binary → PATH fallback → SILENT exit 0 when neither exists
+        // (a hook must never error-spam the loop on an uninstalled repo).
+        // The dispatcher's own exit code PROPAGATES when it runs — a
+        // fail_closed concern (e.g. block-no-verify) still denies; only the
+        // missing-binary case degrades open, which is the honest degrade
+        // (an absent dispatcher cannot evaluate anything).
         matrix[native] =
             'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
+            'command -v "$BIN" >/dev/null 2>&1 || exit 0; ' +
             `"$BIN" dispatch:hook --platform claude --event ${ac_event} ` +
             `--native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" ` +
             `--min-version ${String(hook_spec)}`;

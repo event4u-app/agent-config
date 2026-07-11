@@ -104,4 +104,27 @@ describe('check_claims — mechanism', () => {
         const r = run();
         expect(r.code).toBe(0);
     });
+
+    it('witness sweep: an unmarkered quantified claim in README fails; markered or unverified passes', () => {
+        write('docs/CLAIMS.md', backedLedger);
+        write('README.md', 'This layer saves 65% of tokens.\n');
+        const bad = run();
+        expect(bad.code).toBe(2);
+        expect(bad.stderr).toContain('quantified claim without a claim marker');
+
+        write(
+            'README.md',
+            [
+                'This layer saves 65% of tokens. <!-- claim:good -->',
+                'Rough guess: maybe 3x faster (unverified, not measured).',
+                '```',
+                'benchmark output: 99% — fenced, never scanned',
+                '```',
+                '',
+            ].join('\n'),
+        );
+        const good = run();
+        expect(good.code).toBe(0);
+    });
+
 });

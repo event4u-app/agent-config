@@ -21,6 +21,7 @@ v1 forward-compat rule on unknown fields).
   "verify_mode": "deterministic",
   "verdict_changed_outcome": null,
   "task_class": null,
+  "dispatch_mode": null,
   "tier_chosen": null,
   "tier_source": null,
   "dispatch_tokens": null,
@@ -45,6 +46,7 @@ v1 forward-compat rule on unknown fields).
 | `outcome` | enum | One of `DONE` · `DONE_WITH_CONCERNS` · `NEEDS_CONTEXT` · `BLOCKED` · `killed`. |
 | `verify_mode` | enum | How the dispatch's output was verified: `deterministic` · `judge` · `none`. |
 | `verdict_changed_outcome` | bool \| null | **A3 extension (ADR-109 Track A).** For a review/verdict subagent (e.g. `production-validator`): did the subagent's verdict actually change the outcome versus the in-session baseline? `true` = it caught a real issue the baseline missed or flipped a false `READY`→`NOT READY`; `false` = same outcome as baseline (no lift); `null` = not a verdict dispatch / not measured. **Negative-control tasks (a clean single-file task) MUST record `false`** — a subagent that reports `true` on a control is producing spurious findings and fails Gate A. This is an additive field on THIS object, not a second schema. Counts/boolean only, no bodies. |
+| `dispatch_mode` | enum \| null | **Form-gate extension (road-to-opt-subagent-harvest P2).** Which orchestration mode the deterministic form gate selected for this dispatch (`do-and-judge`, `do-and-judge-two-stage`, `do-in-steps`, `do-in-parallel`, `do-competitively`, `judge-with-debate`, `do-in-worktrees`, `do-with-live-app-judge`) or `none` (gate declined dispatch). Mode id only. `null` = pre-extension line. Makes the form-gate's value measurable inside the ADR-117 prove-or-drop window. |
 | `task_class` | string \| null | **Routing extension (road-to-cost-aware-model-routing Phase 0).** Category id of the dispatched slice (e.g. `read-only-fanout`, `mechanical-edit`, `implementation`, `review-synthesis`). Enum-style id only, never free-form task text. `null` = pre-extension line / unclassified. |
 | `tier_chosen` | string \| null | Tier the slice was dispatched on (`lite` \| `medium` \| `high`). `null` = pre-extension line. |
 | `tier_source` | enum \| null | Where `tier_chosen` came from: `static` (frontmatter/category pin) · `inferred` (deterministic per-slice inference) · `inherit` (session tier — no downshift decision). Lets the evidence gate score inferred routing separately from static pinning. |
@@ -61,7 +63,8 @@ forward-compat rule.
 
 ## Operationalization — `first_pass_success` / `escalated` (definitions, no schema change)
 
-Quality booleans only comparable across sessions when "parent rework" means the same thing everywhere. Mechanical decision table:
+The two quality booleans are only comparable across sessions when "parent
+rework" means the same thing everywhere. The mechanical decision table:
 
 ```
 first_pass_success = TRUE iff the parent adopts the subagent work product
@@ -87,7 +90,18 @@ verdict — it records that the escalation path fired, not how good the
 final output was.
 ```
 
-**Honest boundary:** both fields are machine-observable proxies from the orchestrator's own actions; they do NOT measure output quality directly. Adopted-without-rework can still be mediocre; a rejected return can have failed on a formality. Field extensions (`verification_passed`, `parent_rework_level`, `regression_detected`, `task_completed`, `judge_confidence`, `human_rejected`) are explicitly NOT added: five of six are unobservable without new infra (verification harness, diff classifier, judge step, human feedback loop) and would breach the counts-only privacy floor or record guesses. Revisit-if: a verification harness makes a candidate field machine-observable without content inspection. Two-field cap = council decision (2026-07-10); this section operationalizes it, never widens it.
+**Honest boundary:** both fields are machine-observable proxies from the
+orchestrator's own actions; they do NOT measure output quality directly. An
+adopted-without-rework return can still be mediocre; a rejected return can
+have failed on a formality. Field extensions (`verification_passed`,
+`parent_rework_level`, `regression_detected`, `task_completed`,
+`judge_confidence`, `human_rejected`) are explicitly NOT added: five of the
+six are unobservable without new infrastructure (verification harness, diff
+classifier, judge step, human feedback loop) and would breach the counts-only
+privacy floor or record guesses. Revisit-if: a verification harness exists
+that makes a candidate field machine-observable without content inspection.
+The two-field cap is a council decision (2026-07-10); this section
+operationalizes it rather than widening it.
 
 ## Privacy floor
 
