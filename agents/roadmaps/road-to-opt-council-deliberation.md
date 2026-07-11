@@ -81,6 +81,7 @@ this session; agent-config claims re-verified against `src/` at HEAD
 | Source-G item | Verdict | Evidence |
 |---|---|---|
 | Kill Criteria + Concrete Next Step verdict sections | **KEEP** | absent from all lens templates in `src/skills/ai-council/SKILL.md` § synthesis templates |
+| Acceptable Compromises verdict section | FOLD | optional section, rendered only when the stance tally reports a split or a conditional consensus (that is when a compromise surface exists); NOT a required section on every synthesis — review 2026-07-12 closed the silent omission from the first draft |
 | Structured `STANCE:` line + confidence-weighted option tally, ⅔ threshold, split → user | **KEEP** | `consensus.ts` is finding-level only; no option-level verdict path anywhere in `src/scripts/ai_council/` |
 | Abstain counts toward base-weight denominator (anti-gaming) | **KEEP** | part of the tally design; adopted with it |
 | Chairman synthesis by non-deliberating member | **KEEP** | host synthesises today (SKILL § neutrality: "the host runs the council and synthesises convergence") |
@@ -276,6 +277,11 @@ discipline. No persona ships from this roadmap regardless of outcome.
       panel-mode (which then owns the replace-mode-invariant ADR);
       on a null result, record the CUT as evidence-closed with re-open
       conditions (new model generations, changed provider landscape).
+- [ ] Either way, hand the verdict artifact to
+      `road-to-adoption-without-narrative-debt` Phase 3 as the
+      publishable proof-surface story (lift AND honest null are both
+      publication-grade for the falsifiable-verdicts identity) — the
+      measurement is budgeted here; the story costs nothing extra.
 
 **Exit criteria:** benchmark artefacts exist for all arms; proof/claims
 entries pass the claims lint; the disposition step is executed (either

@@ -6,7 +6,7 @@
 
 ## Overall
 
-**111 / 316 steps done · 35%**
+**111 / 318 steps done · 35%**
 
 ```text
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
@@ -16,13 +16,13 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 15 | 14 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 7% |
+| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 15 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 6% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-flow-learnings) | ██████████ 95% |
 | 4 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
 | 5 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 7 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 28 | 28 | 0 | 0 | 0 | [2](#blockers-road-to-opt-council-deliberation) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 29 | 0 | 0 | 0 | [2](#blockers-road-to-opt-council-deliberation) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-opt-decision-flips.md](roadmaps/road-to-opt-decision-flips.md) | 4 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-opt-design-polish.md](roadmaps/road-to-opt-design-polish.md) | 4 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-opt-harness-discipline.md](roadmaps/road-to-opt-harness-discipline.md) | 5 | 14 | 14 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -43,14 +43,14 @@
 
 ### [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md)
 
-**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 1 / 15 done (7%)
+**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 1 / 16 done (6%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Quick wins already verified missing (autonomous, hours not weeks) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 1 | One 30-second wedge, not the whole platform | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Discoverability where the category is browsed | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Turn the proof surface into the differentiator narrative | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Turn the proof surface into the differentiator narrative | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Convert the wedge to the platform (measured, not assumed) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-adoption-without-narrative-debt"></a>
@@ -167,7 +167,7 @@ _1 blocker resolved._
 
 ### [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md)
 
-**Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater** — 0 / 28 done (0%)
+**Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater** — 0 / 29 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -175,7 +175,7 @@ _1 blocker resolved._
 | 1 | Option-level stance tally | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 2 | Chairman synthesis (opt-in) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 3 | Debate enforcement gates | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Persona placebo benchmark (measure, don't adopt) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Persona placebo benchmark (measure, don't adopt) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 5 | close out the source file | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-opt-council-deliberation"></a>
