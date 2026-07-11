@@ -27,7 +27,7 @@ evidence pointer, or `task check-claims` fails the build.
 | Claim | Kind | Evidence | Resolves |
 |---|---|---|---|
 | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. | qual | `docs/succession.md#trailing 90 days` | ✅ |
-| 177 commands. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
+| 178 commands. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | The retrieval economy cuts always-loaded context tokens ~65.6% measured against the FULL always-loaded projection — 98,529 → 33,897 tokens (eager rule load + skill/command descriptions + MCP schemas, thin-flipped). Method: `agent-config benchmark` over the pinned token baseline; the baseline is the honest "what the user pays if everything loads eagerly", NOT a synthetic full-corpus strawman (council Q4). | quant | `internal/bench/reports/token-baseline.json#eager_rule_load` | ✅ |
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
 | The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted. | qual | `src/scripts/domain_soundness_status.ts#checkRatchet` | ✅ |
@@ -35,16 +35,17 @@ evidence pointer, or `task check-claims` fails the build.
 | On the READ-ONLY FAN-OUT slice family, tier-downshifted subagent dispatch (lite/haiku vs session-tier-proxy sonnet) nets a ≥30% USD-weighted token-cost reduction at held quality — measured 2026-07-08 (n=10 paired live dispatches, 20 telemetry lines): 10/10 exact-match on BOTH arms, 29.4% fewer raw tokens, 76.5% USD-weighted cost reduction at the 3x haiku↔sonnet price ratio. FAMILY-SCOPED — the mechanical-edit family is unmeasured and its downshift (incl. the deferred tier downgrades of existing units) stays gated. Negative control held: an open-ended synthesis/unknown slice never resolves below the session tier (inferSliceTier → medium/inherit, never lite). | quant | `internal/bench/routing-downshift/results-2026-07-08.md#FAMILY-SCOPED PROVE` | ✅ |
 | The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed. | quant | `docs/benchmark.md#REPLICATION FAILED` | ✅ |
 | Behavioural-eval coverage is measured per tier and CI-ratcheted so it can only rise; the current coverage and its gap are published, never implied as "264 evaluated skills". | qual | `src/scripts/skill_eval_coverage.ts#checkRatchet` | ✅ |
+| The humanizer pass removes every mechanically detected AI-writing tell on the 20-pair fixture corpus (mean hard hits 0.9 → 0, cluster score 53.97 → 0 per 500 words, dash density 9.22 → 0), and a blind, length-controlled judge preferred the humanized text in 16/16 controlled pairs. | quant | `internal/bench/reports/humanizer-v1.md#prefers the humanized text` | ✅ |
 | A hand-rolled, dependency-free BM25 + trigram lexical index resolves the "recalls but does not rank" gap: on the retrieval-precision corpus (9 keyword-overlapping-confuser tasks) it drives the mean top tie-set from 3.333 (the `_score` bucket scorer) to 1.0 — every needed decision uniquely top-ranked — with precision@1 and precision@5 unchanged at 1.0. Method: deterministic, model-free re-ranking of the SAME retrieved entry set; both scorers measured over the identical store via `measure_lexical_ranking.ts`. | quant | `internal/bench/reports/lexical-ranking.json` | ✅ |
 | The whole layer is compiled into host agents with zero runtime daemon. | qual | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` | ✅ |
 | 104 governed rules. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
 | Removing the perfect-retrieval assumption, the substrate's REAL keyword retrieval recalls the needed decision into the top-5 under keyword-overlapping confusers (precision@5 9/9) and the model disambiguates it from the co-injected confusers — retrieval-on 27/27 vs no-memory 5/27 and vs equal-count placebo 5/27 (claude-haiku-4-5, 9 tasks x 3 seeds, sign test p=0.008 both). Named limit: retrieval RECALLS but does not RANK (mean tie-set 3.3, ties broken by store order, not relevance) — the discrimination gap that motivates the SQLite-FTS5 activation path (ADR-116) at larger scale. | quant | `internal/bench/reports/second-brain-retrieval.json` | ✅ |
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `.github/workflows/publish-npm.yml#lint_agent_security` | ✅ |
-| 270 skills (README hero + feature list). | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
+| 271 skills (README hero + feature list). | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 
-**17 backed claim(s)** — all evidence pointers resolve in CI.
+**18 backed claim(s)** — all evidence pointers resolve in CI.
 
 Artefact counts in public prose (skills, commands, governed rules,
 guidelines, personas) are **generated from source and CI-drift-checked**:
@@ -64,11 +65,11 @@ live in [`docs/benchmark.md`](benchmark.md). We do not delete a measured null to
 make a number look better; the null is the evidence of honesty.
 
 **Behavioural-eval coverage — the honest baseline.** Skill *quality* is only
-as good as its measurement. Today **39 of 270** skills carry a behavioural
+as good as its measurement. Today **39 of 271** skills carry a behavioural
 `evals.json`; the highest-traffic / highest-cost tiers (default-surface +
 `rich` + routers) are **fully covered (35 of 35)**, the long tail
-(4 of 235) is not. We publish that gap rather than imply
-"270 evaluated skills": coverage is measured per tier
+(4 of 236) is not. We publish that gap rather than imply
+"271 evaluated skills": coverage is measured per tier
 (`./scripts-run src/scripts/skill_eval_coverage`), **CI-ratcheted so it can
 only rise**, and the priority tiers carry a hard **tier floor**: every
 rich / default-surface / router skill MUST have a behavioural eval or an
