@@ -106,8 +106,8 @@ Council (claude-sonnet-4-5 + gpt-4o, 2 rounds, actual $0.14) converged on:
 - **New domains** — cloud-native/K8s is a hard **no** (resume-driven, zero
   demand for a solo-founder consumer). The LLM-app vertical is a **category
   error** to open wholesale (that is building LangChain, not using the suite);
-  adopt **only** a single black-box `evaluate-llm-feature` skill and defer the
-  rest to watch-notes.
+  adopt **only** a single black-box evaluator (a new `evaluate-llm-feature`,
+  tracked in the domain-watch plate) and defer the rest to watch-notes.
 - **Contested** — DROP Monte-Carlo reliability testing (redundant with the
   utilization report; theoretical for deterministic pattern-matching). DROP the
   0–100 readiness *score* (false precision, becomes a gaming target); keep only
