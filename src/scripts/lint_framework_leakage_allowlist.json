@@ -1,634 +1,121 @@
 {
   "version": 1,
-  "_doc": "Each entry: { file: relative path from repo root, lines: [int,...] | \"*\" for whole file, reason: short justification }. Use sparingly — first ask whether the file should be neutralized instead.",
+  "_doc": "Each entry: { file: relative path from repo root, lines: [int,...] | \"*\" for whole file, reason: short justification }. Use sparingly — first ask whether the file should be neutralized or carved out. Policy cap: > 20 entries means the linter (or the content) is wrong — fix the tool or the text, never grow the list. Rebuilt 2026-07-12 (road-to-opt-hygiene-and-debt Phase 1): 104 → minimal set after heuristic upgrades + 25 content neutralizations + 2 carve-outs.",
   "entries": [
     {
-      "file": ".agent-src.uncondensed/skills/module-detect-on-the-fly/SKILL.md",
+      "file": "src/rules/code-comment-discipline.md",
       "lines": [
-        34,
-        96
+        100
       ],
-      "reason": "Cross-stack noise-segment enumeration (vendor + node_modules + dist/Modules) documenting the module-detection path filter"
+      "reason": "Worked PHP docblock demo inside the rule's own wrong/right example block — quoted teaching content."
     },
     {
-      "file": ".agent-src.uncondensed/skills/using-git-worktrees/SKILL.md",
+      "file": "src/skills/api-testing/SKILL.md",
       "lines": [
-        134,
-        135,
-        136,
-        156
+        218
       ],
-      "reason": "Multi-stack package-manager comparison table"
+      "reason": "Quoted example of a framework-internal behavior explicitly marked as what NOT to test — meta content, not a mandate."
     },
     {
-      "file": ".agent-src.uncondensed/skills/refine-prompt/SKILL.md",
+      "file": "src/skills/learning-to-rule-or-skill/SKILL.md",
       "lines": [
-        92,
-        94,
-        96,
-        141,
-        184,
-        273
+        320,
+        322
       ],
-      "reason": "Project-detection enumeration listing all supported stacks"
+      "reason": "Example learnings/decisions quoted verbatim in the promotion-flow walkthrough — meta content."
     },
     {
-      "file": ".agent-src.uncondensed/commands/analyze-reference-repo.md",
+      "file": "src/skills/markitdown/SKILL.md",
       "lines": [
-        54
+        74,
+        111
       ],
-      "reason": "Manifest-file enumeration across ecosystems"
+      "reason": "Tool-intrinsic install lines — markitdown IS a pip package; the install command is the tool's identity, not stack leakage."
     },
     {
-      "file": ".agent-src.uncondensed/commands/optimize/augmentignore.md",
-      "lines": "*",
-      "reason": "Per-stack augmentignore rules — by definition stack-aware"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/optimize/rtk.md",
-      "lines": "*",
-      "reason": "Per-tool rtk filter detection — by definition tool-aware"
-    },
-    {
-      "file": ".agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md",
-      "lines": "*",
-      "reason": "The neutrality rule itself enumerates the forbidden tokens to forbid them"
-    },
-    {
-      "file": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
+      "file": "src/skills/module-management/SKILL.md",
       "lines": [
-        2,
-        3,
-        57
-      ],
-      "reason": "Roadmap CI policy explicitly enumerates forbidden commands and trigger keywords"
-    },
-    {
-      "file": ".agent-src.uncondensed/rules/architecture.md",
-      "lines": [
-        22,
-        23,
-        29,
-        30,
-        65
-      ],
-      "reason": "Stack-routing pointers and cross-stack enumeration of validation/handler primitives"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/api-endpoint/SKILL.md",
-      "lines": [
-        51,
-        68
-      ],
-      "reason": "Cross-stack validation primitive enumeration and pointer to laravel-api-endpoint carve-out"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/code-review/SKILL.md",
-      "lines": [
-        44,
-        45,
-        46,
-        53,
-        66,
-        67,
-        78,
         87,
-        89,
-        91,
-        223
+        99,
+        107,
+        108,
+        109,
+        115,
+        124,
+        156,
+        172
       ],
-      "reason": "Cross-stack code-review checklist enumerates handler shape, validation, authz, ORM, escaping per framework"
+      "reason": "Canonical multi-stack module catalogue (Laravel HMVC / Symfony DDD / Node / Python sections) — keep-in-place is a recorded council decision; per-stack sections sit farther apart than the ±10-line window."
     },
     {
-      "file": ".agent-src.uncondensed/skills/security/SKILL.md",
+      "file": "src/skills/po-discovery/SKILL.md",
       "lines": [
-        20,
-        27,
-        31,
-        32,
-        41,
-        45,
-        52,
-        62,
-        80
+        45
       ],
-      "reason": "Cross-stack security review enumerates auth primitives (Policies, voters, guards, middleware) and config paths"
+      "reason": "Quoted example ticket title ('upgrade Laravel to 11') illustrating when discovery adds noise — meta content."
     },
     {
-      "file": ".agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md",
+      "file": "src/skills/repomix-packer/SKILL.md",
       "lines": [
-        57,
-        58,
-        59,
-        104,
-        181
+        44
       ],
-      "reason": "Evidence-mapping table enumerates the type-checker / linter / refactor tool per stack including PHPStan, Rector, ECS"
+      "reason": "Tool-intrinsic install line — repomix IS an npm package."
     },
     {
-      "file": ".agent-src.uncondensed/commands/tests/execute.md",
-      "lines": "*",
-      "reason": "Multi-stack test runner dispatch (Pest/PHPUnit/Jest/pytest/cargo-test) — enumerates per-stack commands by design"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/tests/create.md",
-      "lines": "*",
-      "reason": "Multi-stack test framework selection — enumerates Pest/PHPUnit/Jest/pytest options by design"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/module/explore.md",
-      "lines": "*",
-      "reason": "Multi-stack module detection (Laravel HMVC / Symfony bundles / DDD-lite) — enumerates per-stack patterns by design"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/package-test.md",
-      "lines": "*",
-      "reason": "Multi-stack package linking (composer/npm/pip/cargo/go) — declared in skills frontmatter"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/package-reset.md",
-      "lines": "*",
-      "reason": "Multi-stack package reset (composer/npm) — declared in skills frontmatter"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/dependency-upgrade/SKILL.md",
-      "lines": "*",
-      "reason": "Multi-stack dependency upgrade examples (composer/npm/pip) — declared stack-agnostic in description"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
-      "lines": "*",
-      "reason": "Cross-stack frontend design enumerates Blade/Livewire/Flux/React-shadcn for stack-routing dispatch"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/code-refactoring/SKILL.md",
-      "lines": "*",
-      "reason": "Multi-stack refactoring examples (Laravel app/Modules + Nx + mono-repo) per stack-detection"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/database/SKILL.md",
-      "lines": "*",
-      "reason": "Cross-stack ORM enumeration (Eloquent/Doctrine) with carve-out pointers"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/project-analyze.md",
-      "lines": "*",
-      "reason": "Stack-detection templates show per-framework default outputs (Laravel/Standalone PHP/etc.) — multi-stack by design"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/commit.md",
-      "lines": "*",
-      "reason": "Example commit block uses Laravel paths from a reference project; the procedure itself is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/test-driven-development/SKILL.md",
-      "lines": "*",
-      "reason": "Multi-stack TDD examples — PHP/Pest and TypeScript/Jest sections both present"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/context-authoring/SKILL.md",
-      "lines": "*",
-      "reason": "Cross-stack context examples enumerate per-stack auth/ORM primitives"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/migration-architect/SKILL.md",
-      "lines": "*",
-      "reason": "Cross-stack migration architecture enumerates laravel-migration/Doctrine/Alembic/Prisma carve-outs"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/api-design/SKILL.md",
-      "lines": "*",
-      "reason": "Cross-stack API design enumerates per-framework validation/handler primitives"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/error-handling-patterns/SKILL.md",
-      "lines": "*",
-      "reason": "Cross-stack error handling enumerates exceptions/Result/Maybe per language"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
-      "lines": "*",
-      "reason": "Cross-stack security audit enumerates per-stack auth/ORM/escaping primitives"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/skill-writing/SKILL.md",
-      "lines": "*",
-      "reason": "Skill-writing references PHPStan/Pest as examples drawn from this package's own dogfooded skills"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/systematic-debugging/SKILL.md",
-      "lines": "*",
-      "reason": "Debugging examples drawn from PHP project; the procedure is stack-agnostic (reproduce → isolate → hypothesize → verify)"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
-      "lines": "*",
-      "reason": "Anti-pattern examples drawn from Pest/PHPUnit; the iron laws apply to all test frameworks"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/testing-anti-patterns/process-anti-patterns.md",
-      "lines": "*",
-      "reason": "Anti-pattern examples drawn from Pest; the rules apply to all test frameworks"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/api-testing/SKILL.md",
-      "lines": "*",
-      "reason": "Cross-stack API testing enumerates Pest/PHPUnit/Jest/pytest"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/agent-docs-writing/SKILL.md",
-      "lines": "*",
-      "reason": "Agent-docs examples reference PHPStan/Pest as this package's dogfooded toolchain"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/bug-analyzer/SKILL.md",
-      "lines": "*",
-      "reason": "Bug-analysis examples drawn from PHP project; the procedure is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/defense-in-depth/SKILL.md",
-      "lines": "*",
-      "reason": "Defense-in-depth examples enumerate per-stack validation primitives"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
-      "lines": "*",
-      "reason": "UI-audit references Blade/Livewire/Flux/React-shadcn as stack-routing options"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/form-handler/SKILL.md",
-      "lines": "*",
-      "reason": "Form-handling examples enumerate per-framework validation/submission primitives"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md",
-      "lines": "*",
-      "reason": "Examples drawn from PHP/Pest as this package's dogfooded toolchain"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/markitdown/SKILL.md",
-      "lines": "*",
-      "reason": "Markitdown skill references Composer/pip as install paths"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/mcp/SKILL.md",
-      "lines": "*",
-      "reason": "MCP examples enumerate Python/Node/PHP server implementations"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/mcp-builder/SKILL.md",
-      "lines": "*",
-      "reason": "MCP-builder enumerates Python FastMCP and Node TypeScript SDK with examples per language"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/readme-writing/SKILL.md",
-      "lines": "*",
-      "reason": "README examples reference composer.json/package.json/pyproject.toml per ecosystem"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/ui-component-architect/SKILL.md",
-      "lines": "*",
-      "reason": "Cross-stack UI component architecture enumerates Blade/Livewire/React"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/bug-investigate.md",
-      "lines": "*",
-      "reason": "Bug-investigate examples reference PHPStan/Pest from package's dogfooded toolchain"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/commit/in-chunks.md",
-      "lines": "*",
-      "reason": "Commit-in-chunks examples drawn from Laravel reference project; procedure is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/condense.md",
-      "lines": "*",
-      "reason": "Condense command references this package's own .agent-src.uncondensed Laravel-tooling examples"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/council/default.md",
-      "lines": "*",
-      "reason": "AI Council examples reference PHP/Laravel from package's dogfooded toolchain"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/fix/pr-bot-comments.md",
-      "lines": "*",
-      "reason": "PR-comment fix examples reference Rector/PHPStan from package's dogfooded toolchain"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/fix/pr-developer-comments.md",
-      "lines": "*",
-      "reason": "PR developer-comment fix examples reference PHP review patterns from package's dogfooded toolchain"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/quality-fix.md",
-      "lines": "*",
-      "reason": "Quality-fix dispatches per stack (PHPStan/ECS/Rector for PHP, tsc/biome for JS) — multi-stack by design"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/roadmap/create.md",
-      "lines": "*",
-      "reason": "Roadmap creation examples drawn from this package's own Laravel-tooling work"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/rule-compliance-audit.md",
-      "lines": "*",
-      "reason": "Rule-audit examples reference this package's own rule corpus including PHP/Laravel rules"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md",
-      "lines": "*",
-      "reason": "Blast-radius examples drawn from Laravel reference project; procedure is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/data-flow-mapper/SKILL.md",
-      "lines": "*",
-      "reason": "Data-flow examples drawn from Laravel reference project; procedure is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/file-editor/SKILL.md",
-      "lines": "*",
-      "reason": "File-editor references PHP filename heuristic for IDE detection"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/launch-readiness/SKILL.md",
-      "lines": "*",
-      "reason": "Launch-readiness checklist references Laravel Pulse/Horizon as monitoring options"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/logging-monitoring/SKILL.md",
-      "lines": "*",
-      "reason": "Logging-monitoring enumerates per-stack log shippers including Laravel channels"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/memory-consolidation/SKILL.md",
-      "lines": "*",
-      "reason": "Memory examples drawn from PHP/Laravel reference project; procedure is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/performance/SKILL.md",
-      "lines": "*",
-      "reason": "Performance examples drawn from Laravel reference project; principles are stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/po-discovery/SKILL.md",
-      "lines": "*",
-      "reason": "PO-discovery examples drawn from Laravel reference project; procedure is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
-      "lines": "*",
-      "reason": "Project-analyzer skill enumerates vendor/ and node_modules/ as third-party paths to exclude"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/readme-reviewer/SKILL.md",
-      "lines": "*",
-      "reason": "README reviewer enumerates composer.json/package.json/pyproject.toml per ecosystem"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/repomix-packer/SKILL.md",
-      "lines": "*",
-      "reason": "Repomix examples drawn from package's own Laravel toolchain"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/roadmap-management/SKILL.md",
-      "lines": "*",
-      "reason": "Roadmap examples drawn from this package's own framework-neutrality work"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/rule-writing/SKILL.md",
-      "lines": "*",
-      "reason": "Rule-writing examples reference this package's own dogfooded PHP/Laravel rules"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/sentry-integration/SKILL.md",
-      "lines": "*",
-      "reason": "Sentry integration examples drawn from Laravel reference project"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/skill-reviewer/SKILL.md",
-      "lines": "*",
-      "reason": "Skill-reviewer references this package's own dogfooded PHP/Laravel skills"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/upstream-contribute/SKILL.md",
-      "lines": "*",
-      "reason": "Upstream-contribute examples drawn from this package's own Laravel-tooling contributions"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/agents/init.md",
-      "lines": "*",
-      "reason": "Agents-init references PHP/Laravel as one detected stack"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/challenge-me/vision.md",
-      "lines": "*",
-      "reason": "Challenge-me examples drawn from PHP/Laravel reference project"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/challenge-me/with-docs.md",
-      "lines": "*",
-      "reason": "Challenge-me examples drawn from PHP/Laravel reference project"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/feature/dev.md",
-      "lines": "*",
-      "reason": "Feature-dev examples drawn from Laravel reference project; procedure is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/jira-ticket.md",
-      "lines": "*",
-      "reason": "Jira-ticket examples drawn from Laravel reference project; procedure is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/override/create.md",
-      "lines": "*",
-      "reason": "Override-create examples drawn from this package's own Laravel-rule overrides"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/project-health.md",
-      "lines": "*",
-      "reason": "Project-health examples drawn from Laravel reference project; check itself is stack-agnostic"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/sync-agent-settings.md",
-      "lines": "*",
-      "reason": "Sync-agent-settings references PHP/Laravel from package's dogfooded toolchain"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/sync-gitignore.md",
-      "lines": "*",
-      "reason": "Sync-gitignore enumerates per-stack ignore patterns including PHP/Composer"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/sync-gitignore/fix.md",
-      "lines": "*",
-      "reason": "Sync-gitignore-fix enumerates per-stack ignore patterns"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/upstream-contribute.md",
-      "lines": "*",
-      "reason": "Upstream-contribute examples drawn from this package's own Laravel-tooling contributions"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "file": "src/skills/rule-writing/SKILL.md",
       "lines": [
-        227
+        76
       ],
-      "reason": "Multi-stack formatter enumeration (ECS, Prettier, Ruff, gofmt) — comparative example, no project mandate"
+      "reason": "Quoted rule-description example (the php-coding rule's own description string) — meta content."
     },
     {
-      "file": ".agent-src.uncondensed/rules/architecture.md",
+      "file": "src/skills/security-audit/SKILL.md",
       "lines": [
-        69
+        122
       ],
-      "reason": "Multi-framework module-system enumeration (Laravel, Turborepo, NestJS, Go) — comparative example, no project mandate"
+      "reason": "Multi-ecosystem XSS row (Blade/JSX/Jinja peers on one line) + a quoted false-positive example ('Laravel's CSRF is already handled') — documentation, not a mandate."
     },
     {
-      "file": ".agent-src.uncondensed/skills/module-management/SKILL.md",
-      "lines": "*",
-      "reason": "Canonical module-management skill — enumerates Laravel HMVC / Symfony DDD / Node / Python / Go carve-outs by design (road-to-configurable-modules Phase C)"
-    },
-    {
-      "file": ".agent-src.uncondensed/skills/context-document/SKILL.md",
+      "file": "src/skills/skill-reviewer/SKILL.md",
       "lines": [
-        55,
-        56,
-        80
+        70
       ],
-      "reason": "Cross-stack target-directory examples (Laravel / Symfony) for module-scoped context docs — comparative example, no mandate"
+      "reason": "Quoted anti-example ('❌ Describing how Laravel middleware works') — the line teaches what NOT to write."
     },
     {
-      "file": "src/skills/source-discovery/SKILL.md",
+      "file": "src/skills/skill-writing/SKILL.md",
       "lines": [
-        95
+        148,
+        456
       ],
-      "reason": "Cross-stack local-first example — names node_modules AND vendor side by side (JS + PHP) for vendor-package discovery; comparative, no mandate"
+      "reason": "Quoted description examples + the 'too-broad skill (Laravel skill)' anti-pattern — meta content."
     },
     {
-      "file": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
+      "file": "src/skills/supply-chain-intake/SKILL.md",
       "lines": [
-        20
+        70,
+        72
       ],
-      "reason": "Single Laravel-shape example showing how `{module_root}/{agent_folder}/roadmaps/` resolves on a Laravel HMVC project"
+      "reason": "Per-ecosystem check commands in fenced blocks; the pip/composer siblings sit farther apart than the ±10-line window — genuine multi-ecosystem documentation."
     },
     {
-      "file": ".agent-src.uncondensed/rules/architecture.md",
+      "file": "src/skills/test-driven-development/SKILL.md",
       "lines": [
-        74
+        197,
+        200,
+        208,
+        212
       ],
-      "reason": "Single Laravel-shape example showing how `{module_root}/*/{agent_folder}/` resolves on a Laravel HMVC project (road-to-configurable-modules Phase D)"
+      "reason": "Worked Example A (PHP/Pest) paired with Example B (TypeScript/Jest) farther apart than the ±10-line window — canonical two-stack demo."
     },
     {
-      "file": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
+      "file": "src/skills/testing-anti-patterns/SKILL.md",
       "lines": [
-        99
+        87,
+        124,
+        185
       ],
-      "reason": "Single Laravel-shape example showing module-scoped roadmap path (road-to-configurable-modules Phase D)"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/context/create.md",
-      "lines": [
-        53
-      ],
-      "reason": "Single Laravel-shape example for module-context target directory (road-to-configurable-modules Phase D)"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/context/refactor.md",
-      "lines": [
-        27
-      ],
-      "reason": "Single Laravel-shape example for module-context discovery path (road-to-configurable-modules Phase D)"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/feature/explore.md",
-      "lines": [
-        123
-      ],
-      "reason": "Single Laravel-shape example showing how `enumerate_modules()` resolves on a Laravel HMVC project (road-to-configurable-modules Phase D)"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/feature/plan.md",
-      "lines": [
-        142,
-        171,
-        255
-      ],
-      "reason": "Laravel-shape examples for module-scoped contexts and feature target paths (road-to-configurable-modules Phase D)"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/feature/refactor.md",
-      "lines": [
-        27
-      ],
-      "reason": "Single Laravel-shape example for module-feature discovery path (road-to-configurable-modules Phase D)"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/feature/roadmap.md",
-      "lines": [
-        27,
-        127
-      ],
-      "reason": "Laravel-shape examples for module-feature/roadmap discovery and target paths (road-to-configurable-modules Phase D)"
-    },
-    {
-      "file": ".agent-src.uncondensed/commands/optimize/agents-dir.md",
-      "lines": [
-        24
-      ],
-      "reason": "Single Laravel-shape example for per-module agents directory (road-to-configurable-modules Phase D)"
-    },
-    {
-      "file": "src/skills/code-review/SKILL.md",
-      "lines": [
-        222
-      ],
-      "reason": "Cross-stack formatter enumeration (ECS, Prettier, Ruff, gofmt) — multi-ecosystem documentation"
-    },
-    {
-      "file": "src/skills/context-document/SKILL.md",
-      "lines": [
-        82
-      ],
-      "reason": "Laravel example path inside a stack-agnostic module-context table"
-    },
-    {
-      "file": "src/skills/iconography/SKILL.md",
-      "lines": [
-        29
-      ],
-      "reason": "Cross-stack UI-stack enumeration (React, Blade, Tailwind)"
-    },
-    {
-      "file": "src/skills/code-review/SKILL.md",
-      "lines": [
-        79,
-        88,
-        90
-      ],
-      "reason": "Cross-stack security-review checklist rows naming Laravel/Symfony/NestJS/DTO peers side-by-side (allowed multi-ecosystem documentation, not a mandate)"
-    },
-    {
-      "file": "src/skills/context-document/SKILL.md",
-      "lines": [
-        83
-      ],
-      "reason": "Module-path resolution table citing the Laravel shape as one named example next to the generic modules.root_paths mechanism"
-    },
-    {
-      "file": "src/skills/verify-completion-evidence/SKILL.md",
-      "lines": [
-        191
-      ],
-      "reason": "Carve-out pointer to the quality-tools skill (the sanctioned one-line handoff shape from framework-neutrality-in-generic-skills)"
-    },
-    {
-      "file": "src/skills/api-endpoint/SKILL.md",
-      "lines": [
-        52,
-        69
-      ],
-      "reason": "Cross-stack validation primitive enumeration and pointer to laravel-api-endpoint carve-out"
+      "reason": "Multi-ecosystem capture-tools line and skip-marker grep spanning pytest/PHPUnit/JS in one pattern — documentation across stacks."
     }
   ]
 }

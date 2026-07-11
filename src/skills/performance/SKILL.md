@@ -56,7 +56,7 @@ Re-measure after fix. Check that cache invalidation works correctly.
 
 - Cache invalidation bugs are worse than slow queries — don't add caching everywhere.
 - Eager loading N+1 is the #1 win — always check list endpoints.
-- Don't cache Eloquent collections with loaded relations — too large.
+- Don't cache ORM collections/entities with loaded relations (Eloquent, Doctrine, Prisma) — too large.
 - Always include tenant ID in cache keys (multi-tenant).
 
 ## Do NOT

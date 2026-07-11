@@ -76,6 +76,12 @@ create new bugs. Quick patches mask underlying issues.
 
 ## Procedure: Analyze a bug
 
+1. **Inspect inputs and reproducers** — Pull every source named in *Input sources* (branch, Jira, Sentry, error string, user description) before forming a hypothesis.
+2. **Investigate root cause** — Run Phase 1 below; gather evidence, walk the stacktrace, consult engineering memory.
+3. **Find the pattern** — Run Phase 2; check for similar bugs elsewhere in the codebase.
+4. **Form and test a hypothesis** — Run Phase 3; write a failing test that reproduces the bug.
+5. **Fix and verify** — Run Phase 4; apply the minimal change, re-run the failing test plus the wider suite.
+
 ### Phase 1: Root Cause Investigation
 
 Gather all available evidence before forming any hypothesis:
@@ -122,7 +128,7 @@ This is especially important for:
 
 - Find **working examples** of similar code paths in the codebase.
 - Compare the broken path against the working reference.
-- Identify the **specific difference** that → the failure.
+- Identify the **specific difference** that causes the failure.
 - Check if the issue is isolated or part of a broader pattern.
 
 ### Phase 3: Hypothesis and Testing
@@ -135,11 +141,11 @@ This is especially important for:
   - Each fix reveals new shared state or coupling in a different place.
   - Fixes require "massive refactoring" to implement.
   - Each fix creates new symptoms elsewhere.
-- Common root → in this project:
+- Common root causes in this project:
   - **Missing validation** on external sync data (CSV, XML, JSON imports).
   - **Null values** from optional DB columns not handled.
   - **Type mismatches** between legacy DB columns and PHP code.
-  - **Race conditions** in multi-tenant DB switching.
+  - **Race conditions** in multi-tenant database switching.
   - **Missing fallbacks** when external services are unavailable.
 
 ### Phase 4: Implementation
@@ -177,18 +183,9 @@ For each code path, test these scenarios mentally:
 | **State** | Uninitialized state, partial updates, rollback failures |
 | **External** | Network timeout, API errors, malformed responses |
 
-### 3. Known bug patterns (PHP/Laravel)
+### 3. Known bug patterns
 
-- N+1 queries hidden in loops or accessors
-- Missing `->fresh()` after update when using same instance
-- Eloquent lazy loading in queued jobs (serialization issues)
-- `now()` timezone mismatches
-- Missing FK constraints allowing orphaned records
-- `DB::transaction()` with external side effects (emails, API calls)
-- Model events firing during seeding or migration
-- Off-by-one errors in pagination or date ranges
-- Silent exception swallowing (`catch (\Exception $e) {}`)
-- Floating point comparison for money/quantities
+→ PHP/Laravel bug-pattern catalogue: see [`php-debugging`](../php-debugging/SKILL.md).
 
 ### 4. Output format (proactive mode)
 
@@ -227,10 +224,10 @@ Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? 
 |---|---|
 | "Should work now" | RUN the verification — confidence ≠ evidence |
 | "It's probably X, let me fix that" | "Probably" = guessing. Complete Phase 1 first |
-| "Quick fix for now" | Quick fixes mask root → and create technical debt |
+| "Quick fix for now" | Quick fixes mask root causes and create technical debt |
 | "I'll investigate later" | Later never comes. Investigate now |
 | "One more fix attempt" (after 2+) | 3+ failures = architectural problem. Stop and discuss |
-| "Issue is simple, don't need process" | Simple issues have root → too. Process is fast for simple bugs |
+| "Issue is simple, don't need process" | Simple issues have root causes too. Process is fast for simple bugs |
 | "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing |
 
 ## Output format
@@ -238,6 +235,12 @@ Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? 
 1. Root cause analysis with evidence trail
 2. Fix implementation or fix plan with specific files and changes
 3. Regression test covering the failure scenario
+
+## Verification examples
+
+- **Backend bug**: reproduce with `curl` against the failing route (or an `actingAs()` HTTP test) before and after the fix; assert the new response shape with `assertJsonPath`.
+- **Runtime bug**: place a `xdebug` breakpoint at the suspect frame, step through, and inspect the stack trace; for log-only repros, dump the failing variable with `dd(` once, then remove.
+- **Regression test**: add a test that reproduces the original failure first (red), then makes it green — never write the test post-fix from memory.
 
 ## Gotcha
 

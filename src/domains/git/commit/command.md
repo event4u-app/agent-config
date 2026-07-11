@@ -87,7 +87,7 @@ Rules for splitting:
 - **Do NOT split arbitrarily** — only split when the changes are logically independent.
 - **Prefer fewer, coherent commits** over many tiny ones.
 - **Tests always go with the code they test** unless there are many test-only changes.
-- **Style-only changes** (ECS/Rector formatting) may get their own `style:` or `chore:` commit
+- **Style-only changes** (formatter / auto-refactor output — ECS, Prettier, Ruff) may get their own `style:` or `chore:` commit
   if they are large and mixed with logic changes.
 
 ### 5. Present the commit plan (verbosity-gated)
@@ -123,6 +123,7 @@ Show the proposed commits as a numbered list, including which files go into each
 ```
 Proposed commits:
 
+(Laravel-project example)
 1. feat(DEV-1234): add absence type filter to working time report
    → app/Services/WorkingTimeService.php
    → app/Http/Controllers/WorkingTimeController.php

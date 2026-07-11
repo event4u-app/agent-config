@@ -91,7 +91,7 @@ funnel per changed behavior — enumerate first, write second:
 
 - One test file per class/service being tested.
 - Place tests in the matching directory structure under `tests/` (mirror the source structure).
-- Group related tests with `describe` blocks (Pest) or separate test methods (PHPUnit).
+- Group related tests with `describe` blocks (Pest, Jest, vitest) or separate test methods (PHPUnit, pytest test classes).
 - Use data providers for testing multiple input/output combinations.
 - Mock external dependencies (database, HTTP, file system) — don't test infrastructure.
 

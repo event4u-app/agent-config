@@ -141,7 +141,7 @@ NEVER ASK WHAT `grep`, `view`, OR `codebase-retrieval` ANSWERS IN SECONDS.
 2. **Look up before asking.** Existing routes, model fields, conventions,
    feature flags, previous similar features → resolve from the repo.
    Surface findings briefly in the next question block ("Repo says X
-   already exists at `path/to/file.php`"). The user should never have to
+   already exists at `path/to/file`"). The user should never have to
    answer a question the codebase already answers.
 3. **List the open dimensions** internally — goal, scope, users, data,
    constraints, success criteria, edge cases, rollback. Do not surface

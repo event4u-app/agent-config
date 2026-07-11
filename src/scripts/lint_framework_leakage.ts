@@ -128,7 +128,7 @@ const LEAKAGE: Record<string, string[]> = {
     ],
     'JS-specific': [
         '\\bpackage\\.json\\b',
-        '\\bnpm (install|run|test|ci)\\b',
+        '\\bnpm (install|run|test|ci|update|audit|exec)\\b',
         '\\byarn (install|add|test)\\b',
         '\\bpnpm (install|add|run|test)\\b',
         '\\bnode_modules\\b',
@@ -147,19 +147,68 @@ const FAMILY: Record<string, string> = {
 const CROSS_STACK_HINTS: Record<string, string[]> = {
     ruby: ['\\bRails\\b', '\\bbin/rails\\b', '\\bGemfile\\b', '\\bbundle exec\\b'],
     python: ['\\bDjango\\b', '\\bFastAPI\\b', '\\bFlask\\b', '\\bpoetry\\b',
-        '\\buv (add|sync|run|pip)\\b', '\\bvenv\\b'],
+        '\\buv (add|sync|run|pip)\\b', '\\bvenv\\b', '\\bPydantic\\b', '\\bJinja\\b',
+        'docs\\.python\\.org'],
     node: ['\\bExpress\\b', '\\bNext\\.?js\\b', '\\bNode\\.?js\\b', '\\bnpx\\b',
-        '\\bvitest\\b', '\\bjest\\b', '\\beslint\\b', '\\bprettier\\b'],
-    go: ['\\bgo (test|build|run|mod)\\b', '\\bgolangci-lint\\b', '\\bGoLand\\b'],
+        '\\bvitest\\b', '\\bjest\\b', '\\beslint\\b', '\\bprettier\\b',
+        '\\bReact\\b', '\\bVue\\b', '\\bNestJS\\b', '\\bTypeScript\\b',
+        '\\btsc\\b', '\\bzod\\b', '\\bPrisma\\b', '\\bTailwind\\b',
+        '\\bTurborepo\\b', '\\bclass-validator\\b', '\\bInertia\\b',
+        '\\bJSX\\b', '\\bNx\\b',
+        '\\.tsx?\\b', 'typescriptlang\\.org'],
+    go: ['\\bgo (test|build|run|mod)\\b', '\\bgolangci-lint\\b', '\\bGoLand\\b',
+        '\\bGolang\\b', '\\bgo\\.dev\\b'],
     rust: ['\\bcargo (test|build|run|check|fmt|clippy|add|update)\\b',
-        '\\bClippy\\b', '\\brustfmt\\b', '\\bCargo\\.toml\\b'],
+        '\\bClippy\\b', '\\brustfmt\\b', '\\bCargo\\.toml\\b',
+        'rust-lang\\.org'],
     dotnet: ['\\bdotnet (test|build|run|add|restore)\\b', '\\b\\.NET\\b'],
     java: ['\\bSpring\\b', '\\bmvn (test|clean|install|package)\\b',
         '\\bgradle\\b', '\\bMaven\\b'],
+    // Additional hint vocabulary for the PHP family — the LEAKAGE patterns
+    // are hit patterns; these are window-only hints so a JS/Python hit next
+    // to plain-language PHP mentions self-suppresses as cross-stack docs.
+    php: ['\\bvendor/', '\\bPHP\\b'],
+    // Polyglot-runner pseudo-family: a Taskfile/Makefile mention marks the
+    // window as multi-stack tooling documentation (runner files are
+    // ecosystem-neutral by definition).
+    'polyglot-runner': ['\\bTaskfile(\\.ya?ml)?\\b', '\\bMakefile\\b'],
 };
+// Case-insensitive on purpose (fix G2): "Prettier" / "ESLint" in prose are
+// the same hint as their lowercase binary names.
 const CROSS_STACK_RE: Record<string, RegExp> = Object.fromEntries(
-    Object.entries(CROSS_STACK_HINTS).map(([fam, pats]) => [fam, new RegExp(pats.join('|'))]),
+    Object.entries(CROSS_STACK_HINTS).map(([fam, pats]) => [fam, new RegExp(pats.join('|'), 'i')]),
 );
+
+// Framework-name pair rule (fix G3): Laravel and Symfony share the `php`
+// family, so a genuine Laravel-vs-Symfony comparison never counted as
+// cross-stack. Two DISTINCT framework names in the window are documentation
+// of alternatives, not a mandate.
+const FRAMEWORK_NAMES: readonly string[] = [
+    'Laravel', 'Symfony', 'Django', 'Rails', 'NestJS', 'Next\\.js', 'Spring',
+    'Flask', 'FastAPI',
+];
+const FRAMEWORK_NAME_RES: readonly RegExp[] = FRAMEWORK_NAMES.map(
+    (n) => new RegExp(`\\b${n}\\b`),
+);
+
+// Carve-out-pointer suppression (fix G6): the neutrality rule's own
+// "Allowed: carve-out pointers" shape — a handoff line linking to a
+// framework-specific artifact, or the sanctioned `→ ` pointer prefix.
+const POINTER_LINK_RE = /\]\((?:\.\.\/)+([a-z0-9-]+)\//;
+function _is_carve_out_pointer_line(line: string): boolean {
+    const trimmed = line.trimStart();
+    if (trimmed.startsWith('→ ') || trimmed.startsWith('→')) {
+        return true;
+    }
+    const m = POINTER_LINK_RE.exec(line);
+    return m !== null && CARVE_OUT_RE.test(m[1] as string);
+}
+
+// Sanctioned single-stack annotation (fix G5): the corpus-wide
+// "(Laravel shape: …)" / "Laravel example:" marker on a generic mechanism
+// (road-to-configurable-modules Phase D decision).
+const SHAPE_EXAMPLE_RE =
+    /\((?:Laravel|Symfony|Django|Rails|Next\.js)[^)]*\b(?:shape|example)\b|\b(?:Laravel|Symfony|Django|Rails) (?:shape|example):/i;
 
 const FRONTMATTER_FRAMEWORK_RE = /^---\s*\n([\s\S]*?)\n---/m;
 const FRAMEWORK_KEY_RE = /^(?:framework|\s+framework)\s*:\s*(\S+)/m;
@@ -287,6 +336,22 @@ function _families_in_window(lines: string[], idx: number, radius = 10): Set<str
     return families;
 }
 
+/** Fix G3: count DISTINCT framework names in the window (pair rule). */
+function _framework_names_in_window(lines: string[], idx: number, radius = 10): number {
+    const lo = Math.max(0, idx - radius);
+    const hi = Math.min(lines.length, idx + radius + 1);
+    const seen = new Set<number>();
+    for (let j = lo; j < hi; j++) {
+        const line = lines[j] as string;
+        for (let k = 0; k < FRAMEWORK_NAME_RES.length; k++) {
+            if (!seen.has(k) && (FRAMEWORK_NAME_RES[k] as RegExp).test(line)) {
+                seen.add(k);
+            }
+        }
+    }
+    return seen.size;
+}
+
 export interface Hit {
     line: number;
     category: string;
@@ -310,13 +375,23 @@ export function scan_file(p: string): Hit[] {
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i] as string;
                 if (rx.test(line)) {
+                    // Sanctioned shapes suppress the hit outright (fixes G5/G6):
+                    // a carve-out pointer line or a "(Laravel shape/example)"
+                    // annotation on a generic mechanism is the neutrality
+                    // rule's OWN allowed form, not leakage.
+                    if (_is_carve_out_pointer_line(line) || SHAPE_EXAMPLE_RE.test(line)) {
+                        continue;
+                    }
                     const families = _families_in_window(lines, i);
+                    const cross =
+                        families.size >= 2 ||
+                        _framework_names_in_window(lines, i) >= 2;
                     hits.push({
                         line: i + 1,
                         category,
                         pattern: pat,
                         snippet: line.trim().slice(0, 160),
-                        cross_stack: families.size >= 2,
+                        cross_stack: cross,
                     });
                 }
             }
@@ -424,6 +499,12 @@ export function main(argv?: readonly string[]): number {
             continue;
         }
         if (has_framework_frontmatter(f)) {
+            continue;
+        }
+        // Self-exemption: the neutrality rule itself enumerates the forbidden
+        // tokens (frontmatter triggers + fix table) — it can never be clean
+        // by construction.
+        if (f.endsWith(`${path.sep}framework-neutrality-in-generic-skills.md`)) {
             continue;
         }
         const rel = relToRepo(f);

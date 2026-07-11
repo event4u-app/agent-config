@@ -63,7 +63,7 @@ Located in `.github/`. Contains:
 - Architecture rules
 - PHP coding standards
 - Naming conventions
-- Eloquent & database rules
+- ORM & database rules (Laravel example: Eloquent)
 - API development rules
 
 **Purpose:** Coding standards shared with GitHub Copilot and other AI tools.

@@ -85,20 +85,20 @@ Do NOT use for single-line fixes, trivial changes, or urgent hotfixes.
 ### Phase 5: Implementation
 
 1. **Wait for explicit approval** before writing code.
-2. Create a task list with all impl steps.
+2. Create a task list with all implementation steps.
 3. Follow chosen architecture from Phase 4.
 4. Follow codebase conventions strictly (read guidelines).
 5. Update task list as progress is made.
-6. Write tests alongside the impl.
+6. Write tests alongside the implementation.
 
 ### Phase 6: Quality Review
 
-1. Review the impl for:
+1. Review the implementation for:
    - **Simplicity & DRY** — is the code as simple as possible?
    - **Correctness** — are there logic errors or missing edge cases?
    - **Conventions** — does it follow project patterns?
 2. Run quality tools:
-   - PHPStan (or equivalent)
+   - Static analysis (PHPStan, tsc, mypy — whichever the project runs)
    - Tests
    - Code style
 3. Present findings with severity levels.

@@ -58,7 +58,7 @@ step 3 grouping rules:
 - Same feature / fix → one commit.
 - Migration + corresponding model/seeder → one commit.
 - Test + the class under test → one commit.
-- Style-only changes (ECS/Rector/formatter) → separate `style:` /
+- Style-only changes (formatter / auto-refactor output — ECS, Prettier, Ruff) → separate `style:` /
   `chore:` commit when mixed with logic changes.
 - Truly unrelated change → its own commit.
 

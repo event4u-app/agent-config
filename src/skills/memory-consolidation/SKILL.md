@@ -374,7 +374,7 @@ consolidation cycle:
 - `/memory:mine-session --since 2026-05-06 --confirm-transcript-access --preview`.
 - Miner surfaces 4 facts: 1 correction (`PaymentGateway::charge` must
   not throw on idempotency replays — `convention`), 1 decision
-  (`Stripe webhook signing key lives in `config/services.php` only —
+  (Laravel example: `Stripe webhook signing key lives in `config/services.php` only —
   `gotcha`), 2 patterns (`PaymentGatewayTest` flakes when seeded data
   carries timestamps in microseconds — `pattern + gotcha`).
 - Report cites 0 stale flags. Re-run with `--commit-intake` after

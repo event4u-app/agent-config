@@ -201,7 +201,7 @@ API tests cover the contract layer. When an endpoint feeds a UI surface (Livewir
 
 ## Output format
 
-1. Pest test file covering happy path, validation, auth, and edge cases
+1. Test file in the project’s test framework (Pest, Jest, pytest) covering happy path, validation, auth, and edge cases
 2. Test names as readable sentences describing expected behavior
 3. Mocked external services where applicable
 

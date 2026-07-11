@@ -36,7 +36,7 @@ Do NOT use when:
 
 ### Step 1: Layer 1 — Entry-point validation
 
-Reject obviously invalid input at the API / route / command boundary. In Laravel this is FormRequest rules; in pure PHP services it is the public method on the service.
+Reject obviously invalid input at the API / route / command boundary. In Laravel this is FormRequest rules; in Express a zod-validated middleware; in pure services it is the public method on the service.
 
 ```php
 public function createProject(string $name, string $workingDirectory): Project
@@ -152,6 +152,6 @@ BEFORE adding the 5th guard:
 
 ## Provenance
 
-- Adopted from: an external reference (MIT, © 2025 an external reference).
+- Adopted from: an external reference (internal provenance, redacted).
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `defense-in-depth`).
 - Iron-Law floor: `non-destructive-by-default`, `verify-before-complete`, `skill-quality`.

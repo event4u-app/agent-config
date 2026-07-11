@@ -36,7 +36,7 @@ Do NOT use when:
 
 ### Step 1: Layer 1 — Entry-point validation
 
-Reject obviously invalid input at the API / route / command boundary. In Laravel this is FormRequest rules; in pure PHP services it is the public method on the service.
+Reject obviously invalid input at the API / route / command boundary. In Laravel this is FormRequest rules; in Express a zod-validated middleware; in pure services it is the public method on the service.
 
 ```php
 public function createProject(string $name, string $workingDirectory): Project

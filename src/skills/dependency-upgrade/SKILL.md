@@ -85,7 +85,7 @@ pip list --outdated         # pip
 poetry show --outdated       # poetry
 uv pip list --outdated       # uv
 
-# Upgrade a specific package
+# Upgrade a specific package (same shape for composer require / npm install pkg@latest)
 pip install --upgrade package-name
 poetry update package-name
 uv pip install --upgrade package-name
@@ -266,7 +266,7 @@ CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch 
 - Don't upgrade multiple major versions at once — one major version per upgrade cycle.
 - The model tends to skip reading the CHANGELOG — breaking changes hide in minor releases too.
 - Always run the full test suite after upgrading, not just the affected tests.
-- Lock file conflicts after upgrade are expected — resolve by re-running `composer update`.
+- Lock file conflicts after upgrade are expected — resolve by re-running the package manager's update (`composer update`, `npm update`, `poetry update`).
 
 ## Do NOT
 

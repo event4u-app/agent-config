@@ -58,7 +58,7 @@ release-shaped; route to `finishing-a-development-branch`.
 Walk the diff with the following gates:
 
 - Tests green on the integration suite (cite the run).
-- Quality gates green (PHPStan / linters / type-checks).
+- Quality gates green (static analysis / linters / type-checks).
 - Migrations are reversible OR the irreversibility is explicit.
 - Feature flag / kill switch named, default off unless intended.
 - Doc / changelog / release notes present (hand off to
@@ -93,24 +93,25 @@ caused this in six hours?"* If you cannot, the trip wire is wrong.
 
 ### 4b. Post-deploy verification fragments (manual checks, not an auto-canary)
 
-Right after deploy, the on-call runs these by hand — **checklist items, not an
-automated canary loop** (a real canary is a runtime, out of scope). Cheap "did
-the deploy silently break a thing that doesn't page" probes; include only those
-that apply:
+Right after deploy, the on-call runs these quick checks by hand. They are
+**checklist items, not an automated canary loop** — a real canary is a runtime
+and out of scope here; these are cheap "did the deploy silently break a thing
+that doesn't page" probes. Include only the ones that apply to the stack:
 
-- **SSE / streaming heartbeat** — if the app serves SSE / a long-lived stream,
-  confirm a connection stays open + emits a heartbeat past the proxy's idle
-  timeout (a proxy/buffering config change silently kills streaming while every
-  other endpoint looks fine).
-- **Static-asset content-type drift** — fetch a built asset, assert its
-  `Content-Type` (JS as `*/javascript`, CSS as `text/css`); a CDN/build change
-  serving assets as `text/plain` breaks the browser but returns 200.
-- **LCP delta** — spot-check Largest-Contentful-Paint on the top route vs the
-  pre-deploy baseline; a regression past the agreed delta is a trip wire even
-  when no error fires.
+- **SSE / streaming heartbeat** — if the app serves Server-Sent Events or a
+  long-lived stream, confirm a connection stays open and emits a heartbeat past
+  the proxy's idle timeout (a deploy that changes proxy/buffering config silently
+  kills streaming while every other endpoint looks fine).
+- **Static-asset content-type drift** — fetch a built asset and assert the
+  `Content-Type` (JS as `text/javascript`/`application/javascript`, CSS as
+  `text/css`); a CDN/build change that serves assets as `text/plain` or
+  `application/octet-stream` breaks the app in the browser but returns HTTP 200.
+- **LCP delta** — spot-check Largest-Contentful-Paint on the top route against
+  the pre-deploy baseline; a regression beyond the agreed delta is a trip wire
+  even when no error fires.
 
-Each is a one-shot pass/fail an on-call can eyeball; failures feed the § 4 trip
-wires. Do not build a standing canary service for them.
+Each fragment is a one-shot check with a pass/fail an on-call can eyeball; failures
+feed the § 4 trip wires. Do not build a standing canary service for them.
 
 ### 5. Ops handoff
 

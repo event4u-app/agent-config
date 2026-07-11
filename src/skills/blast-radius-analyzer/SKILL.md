@@ -164,7 +164,7 @@ does not execute code, run tests, or touch the network**.
 ## Gotcha
 
 * **Reflection / string-based dispatch** — `call_user_func`, event names as
-  strings, Laravel `resolve($classString)`. Grep the string too, not just the symbol.
+  strings, DI-container string lookups (Laravel `resolve($classString)`, NestJS `moduleRef.get()`). Grep the string too, not just the symbol.
 * **Dynamic column access** — `$model->{$field}` or query builder `->get([...])`
   with variable arrays. A column rename can leak through these.
 * **Trait / mixin fan-out** — overriding a method pulled in via trait affects

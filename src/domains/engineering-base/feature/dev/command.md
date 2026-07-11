@@ -98,7 +98,7 @@ Do NOT use for single-line fixes, trivial changes, or urgent hotfixes.
    - **Correctness** — are there logic errors or missing edge cases?
    - **Conventions** — does it follow project patterns?
 2. Run quality tools:
-   - PHPStan (or equivalent)
+   - Static analysis (PHPStan, tsc, mypy — whichever the project runs)
    - Tests
    - Code style
 3. Present findings with severity levels.

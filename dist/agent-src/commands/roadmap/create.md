@@ -86,7 +86,7 @@ Use the template structure:
 ## Acceptance Criteria
 
 - [ ] {criteria}
-- [ ] All quality gates pass (PHPStan, Rector, tests)
+- [ ] All quality gates pass (static analysis, linter, tests)
 
 ## Notes
 
@@ -141,16 +141,17 @@ Only when the search is empty: save to the chosen location and show the final pa
 
 ### 7. Move consumed inbox file (if applicable)
 
-User pointed at a file in `agents/tmp/` as the roadmap source
-(e.g. "create a roadmap from `agents/tmp/my-idea.md`") →
+If the user provided the roadmap content by pointing to a file in `agents/tmp/`
+(e.g. "create a roadmap from `agents/tmp/my-idea.md`"):
 
 ```bash
+# Move the consumed file to agents/tmp.old/ in the same reply as saving the roadmap.
 mv agents/tmp/<filename> agents/tmp.old/<filename>
 ```
 
-Automatic, same reply as saving — no confirmation (gitignored, local-only,
-reversible). Move ONLY files explicitly named as input. Never touch other
-`agents/tmp/` files.
+Do this automatically — no confirmation needed (file is gitignored, local-only,
+reversible). Only move files that were explicitly named as INPUT to this command.
+Never touch other files in `agents/tmp/`.
 
 ### 8. Update the progress dashboard
 
@@ -232,14 +233,14 @@ Write the pick to frontmatter as `execution.mode:`
   and expensive as a mid-run ambiguity halt; pre-existing `[~]` items
   guarantee the archival gate interrupts the run.
   `lint_roadmap_complexity` warns on the same patterns as a backstop.
-- **Human-gate scan (ALL picks):** scan drafted steps for human-gate
+- **Human-gate scan (ALL picks):** scan the drafted steps for human-gate
   patterns (`user verifies/reviews/approves`, `manually check`,
   `sign-off`, `wait for approval`, `ask the user`, "Review / Sign-off"
   phases). Human checkpoints default to **zero** (template rule 22) —
-  rewrite each hit as agent-verifiable check (command, targeted test)
-  **before saving**, or promote to structured `## Blockers` entry:
-  **human gate** only when only a human can decide/authorize
-  (Hard-Floor authorization, billable spend, contested decision);
+  rewrite each hit as an agent-verifiable check (a command, a targeted
+  test) **before saving**, or promote it to a structured `## Blockers`
+  entry: a **human gate** only when only a human can decide/authorize
+  (Hard-Floor authorization, billable spend, contested decision); an
   **external dependency** becomes a blocker whose `Resolved when:`
   names an agent-checkable status probe — never a human gate. Do not
   author safety floors as steps — they fire at run time on their own.

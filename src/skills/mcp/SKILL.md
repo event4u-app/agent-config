@@ -114,7 +114,7 @@ Library documentation lookup.
 | `query-docs` | Query documentation | Get up-to-date API docs and examples |
 
 **Key pattern:** Always resolve library ID first → then query. Max 3 calls per question.
-**Use for:** Laravel, PHP, Livewire, Tailwind, or any library docs.
+**Use for:** Laravel, React, Django, Tailwind, or any library docs.
 
 ### Sequential Thinking (`Sequential_thinking`)
 

@@ -72,6 +72,63 @@ Push, merge, rebase, branch creation, PR operations, and tags
 remain permission-gated by
 [`scope-control § git-operations`](../../rules/scope-control.md#git-operations--permission-gated).
 
+## Opt-in detection — rule-level summary
+
+(Migrated from the [`autonomous-execution`](../../rules/autonomous-execution.md)
+rule per P4 of `road-to-kernel-and-router.md`; the detection algorithm itself
+lives in [`autonomy-detection.md`](autonomy-detection.md) — that file is the
+stronger, operative source.)
+
+In `auto` mode, flip to `on` for the rest of the conversation when the user expresses **"stop asking on trivial steps, just work"**. Recognize **intent**, not the literal substring. Opt-out (same intent, reversed) flips back to `off`. Both directions are **speech-act-checked**: the phrase must be a meta-instruction to the agent, not content / quote / subject / code / third-party reference / hypothetical. In doubt → keep current mode, no speculative flips.
+
+Algorithm and speech-act heuristic: [`autonomy-detection.md`](autonomy-detection.md). Anchor phrases (DE+EN), no-flip patterns, counter-examples, trivial-vs-blocking taxonomy, commit-policy summary, and named failure modes: this file + [`autonomy-examples.md`](autonomy-examples.md).
+
+## Task-scope — two autonomy shapes
+
+Depth for the rule's task-scope Iron Law (`NEW TASK → FRESH CONFIRMATION`).
+Two distinct autonomy shapes — keep them apart:
+
+| Shape | Trigger | Scope |
+|---|---|---|
+| **Conversation-wide trivial-question suppression** | "stop asking on trivial steps, just work" — no deliverable named. | Sticky for the rest of the conversation. Suppresses trivial workflow questions only; never lifts blocking, Hard Floor, or [`scope-control`](../../rules/scope-control.md) gates. |
+| **Task-scoped autonomous execution** | "work autonomously on X", "arbeite die Roadmap Y komplett ab", "do PROJ-123 end-to-end" — a deliverable / artifact / ticket is named. | Bound to **that** task. Ends when the task ends. Does **not** authorize starting a new, distinct task autonomously. |
+
+Litmus test: does the directive name (or unambiguously point to) a single concrete deliverable? Yes → task-scoped, scope ends with the deliverable. No → conversation-wide, trivial-question suppression only.
+
+When the user later issues a **new** request — different ticket, different roadmap, different artifact, different feature — treat it as a fresh task. Re-confirm autonomy for the new scope before:
+
+- creating a branch / worktree / PR / tag for the new work,
+- implementing a roadmap whose **authoring** was the prior turn's deliverable (per [`scope-control § authoring vs implementation`](../../rules/scope-control.md#authoring-vs-implementation--verb-discipline)),
+- expanding scope beyond the new task's literal ask.
+
+In doubt whether the new request inherits or needs fresh confirmation → fresh confirmation. The Hard Floor and [`scope-control`](../../rules/scope-control.md) gates apply to every task regardless.
+
+## Validation-loop budget — mechanics (N=3)
+
+Autonomous flows must not iterate indefinitely on the same validation target. **Validation target** = a single identifiable artefact: a file path, a lint rule ID, a test name, a CI sub-task name. Natural-language clustering ("the linter stuff") does **not** count as a target — agents will rename their way out of the budget.
+
+A "failed attempt" is an iteration that did not move the target from red to green. Tuning the tool around the target (e.g. growing an allowlist, loosening a threshold, suppressing a check) counts as an attempt — and is usually a sign the **tool**, not the content, is wrong.
+
+### Allowlist-growth antipattern — detail
+
+Crossing the 20-entry threshold counts as the 3rd validation-target failure for the linter in question, regardless of prior attempt count. The fix is a tool-shape change (heuristic tightening, scope narrowing, deletion), not more entries. Same logic for: warning-suppression lists growing past ~20, `// noqa` / `# type: ignore` sweeps over many files in one session, test `skip` / `xfail` bulk-adds to chase green.
+
+### Probe efficiency — direct over orchestration
+
+When validating a single target, run the **specific** check, not a meta-task that fans out to dozens of sub-tasks. Use the failing tool's direct entry point (the specific script invocation, the specific runner target, the single-test filter for the project's test runner) rather than the full CI meta-pipeline. Full-pipeline runs are appropriate at phase boundaries, not as a per-iteration probe.
+
+Concrete tool mapping — verify with the narrowest tool that proves the target green: a single `curl` / Playwright spec / browser run for HTTP behavior, the project's test runner with a `--filter` for one test, a debugger / `xdebug` step-through for one frame. Never substitute a meta-pipeline for a tool that pinpoints the failure.
+
+## Adaptive effort & stop (RDP)
+
+Scale effort to task difficulty, and stop when marginal evidence drops — coupled
+to the N=3 budget above, never replacing it. On a host with a native effort knob
+(e.g. an `effort` parameter), the right move is to **set it high** for hard tasks
+rather than scaffold; the scaffold here is for a standard host **without** such a
+knob. The per-dimension uncertainty score (see
+[`notes-first-reasoning`](../../rules/notes-first-reasoning.md)) feeds this
+decision. Engage per [`rdp-gate`](rdp-gate.md).
+
 ## End-of-turn checkpoint
 
 Before ending a turn, check the last paragraph of the reply. If it is a
