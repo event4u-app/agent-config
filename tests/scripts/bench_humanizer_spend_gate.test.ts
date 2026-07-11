@@ -25,7 +25,13 @@ describe("bench_humanizer_eval spend gate", () => {
     expect(r.status).toBe(2);
     expect(r.stderr).toMatch(/billable API call/i);
     expect(r.stderr).toMatch(/--confirm-spend/);
-    // Halted before the judge loop → no per-pair "judged …" line on stdout.
+    // Structural "no network" proof: the gate returns via process.exit(2)
+    // BEFORE the judge loop and BEFORE any report is emitted. The API client
+    // is only constructed inside judgePair(), which the loop never reaches —
+    // so absence of both the per-pair "judged …" line AND the report header
+    // means no billable call could have fired.
     expect(r.stdout).not.toMatch(/judged /);
+    expect(r.stdout).not.toMatch(/Humanizer paired eval/);
+    expect((r.stdout ?? "").trim()).toBe("");
   });
 });
