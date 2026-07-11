@@ -59,15 +59,24 @@ not an unfinished swarm.
 
 ## Phase 1 — Pre-commit the falsifiable minimal claim
 
-- [ ] Before collecting more data, write the single claim under test into
+- [x] Before collecting more data, write the single claim under test into
       `docs/CLAIMS.md` as `unbacked` (pre-registration — no moving the goalposts
       after the numbers land): e.g. "On the ordered-refactor + competitive-impl
       families (`orch-02`, `orch-03`), contract-governed dispatch nets ≥15%
       token-or-wall reduction at non-regressed quality vs single-agent."
-- [ ] Define "held quality" deterministically: reuse `check_quality_regression.ts`
+      <!-- done 2026-07-11: `### claim: orchestration-dispatch-net-win` added to
+      docs/CLAIMS.md § Unbacked inventory, status unbacked, not markered in prose
+      (markering an unbacked claim fails check_claims — the binding must come
+      first). -->
+- [x] Define "held quality" deterministically: reuse `check_quality_regression.ts`
       thresholds so a token win that degrades output fails the claim.
-- [ ] Define the negative control: `pv-02-negative-control` must NOT trigger
+      <!-- done 2026-07-11: baked into the claim's falsification criteria (1) —
+      held quality scored by src/scripts/check_quality_regression.ts thresholds;
+      a token/wall win below the regression threshold FAILS the claim. -->
+- [x] Define the negative control: `pv-02-negative-control` must NOT trigger
       dispatch — a classifier that fires on everything is a cost leak, not a win.
+      <!-- done 2026-07-11: baked into the claim's falsification criteria (2) —
+      pv-02-negative-control must NOT trigger dispatch. -->
 
 **Exit:** one pre-registered, deterministically-scored orchestration claim in
 CLAIMS, `unbacked`.
