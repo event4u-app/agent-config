@@ -169,7 +169,7 @@ _1 blocker resolved._
   - **What to do:**
     § Program tracking step 2 — label the golden stubs, run the live judge
     at `--scope consumer`, tick the live canary on 3 hosts.
-  - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0.
+  - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0. - **Evidence update 2026-07-11 (real run landed — gate is RED, not just pending):** the consumer golden set is complete (PR #885) and a full sonnet n=90 `check_quality_regression --as-flip-gate` ran (PR #887). It **FAILS** (thin win-rate 36.2% < 48% floor; length-confound 60%, judge inconsistency 31%). CAVEAT: that run measured the **thin** projection (kernel bodies + non-kernel pointers), NOT this roadmap's **workspace-scoping** reduction — a milder, different cut with **no dedicated arm** in `bench_quality_run` yet. So the held-quality arm is **not** directly resolved, but the strongest same-class reduction failed the gate decisively → treat context-reduction-for-tokens as **quality-risky by prior** on this eval. **Disposition (maintainer, 2026-07-11): do NOT spend another ~$33 on a workspace-scoped arm** that shares the same verbosity confound and would most likely reconfirm the negative; the Phase-1 DEFAULT flip stays **evidence-blocked**. The opt-in build path is unaffected (per Blocks above). Revisit only with a length-normalised arm that kills the confound.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
