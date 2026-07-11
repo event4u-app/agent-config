@@ -1,3 +1,14 @@
+---
+adr: 003
+status: accepted
+date: 2026-05-07
+decision: flat-cluster-subs-and-colon-syntax
+supersedes: —
+superseded_by: —
+phase: command-cluster contract (Phase 2 follow-up)
+type: structural
+---
+
 # ADR-003 — Flat Cluster Sub-Commands and Colon-Canonical Invocation
 
 - **Status:** Accepted (2026-05-07)

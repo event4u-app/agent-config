@@ -5,7 +5,7 @@ Canonical record of *why* the command/rule/skill classification metadata
 and skill trees are not consolidation candidates. Captured so future sessions
 do **not** re-derive this from source or re-litigate settled verdicts.
 
-Last validated: 2026-06-13.
+Last validated: 2026-07-12 (path refs refreshed post-py2ts; §2–3 verdicts unchanged).
 
 ## 1. The metadata is load-bearing — not dead frontmatter
 
@@ -32,8 +32,8 @@ truth and `tier` a back-compat alias, **deferring** the `tier` drop (its
 the discovery manifest is a published npm artifact that dual-emits the integer
 `tier`, external consumers are unknown, and the defer rests on a Runtime Risk
 that cannot be ruled out (assumption, not evidence). Integer-`tier` readers are
-all internal (`commands.ts` fallback, `audit_command_surface.py`,
-`build_discovery_manifest.py` dual-emit); `workspace_hosts.py` uses an
+all internal (`commands.ts` fallback, `audit_command_surface.ts`,
+`build_discovery_manifest.ts` dual-emit); `workspace_hosts.ts` uses an
 unrelated host-inventory tier. Removal execution + the re-open mechanism
 (versioned manifest v2 / telemetry + time-boxed review) live in
 `road-to-tier-removal.md` (blocked).

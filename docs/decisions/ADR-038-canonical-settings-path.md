@@ -1,3 +1,13 @@
+---
+adr: 038
+status: accepted
+date: 2026-06-01
+decision: canonical-settings-path
+supersedes: —
+superseded_by: —
+type: structural
+---
+
 # ADR-038: Canonical settings path is `agents/settings/.agent-settings.yml`
 
 - **Status:** Accepted

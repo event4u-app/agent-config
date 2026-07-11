@@ -1,3 +1,14 @@
+---
+adr: 114
+status: accepted
+date: 2026-07-08
+decision: commit-policy-iron-law-override
+supersedes: —
+superseded_by: —
+phase: kernel-budget overrides (extends ADR-002)
+type: structural
+---
+
 # ADR-114 — commit-policy Iron-Law Override (per-rule cap 2.5k → ceiling 4.0k)
 
 - **Status:** Accepted (2026-07-08)

@@ -3,10 +3,11 @@ adr: 117
 status: accepted
 date: 2026-07-09
 decision: subagents-auto-default-on
-supersedes: 105
+supersedes: —
 superseded_by: —
 phase: auto-subagent-orchestration
 type: structural
+amends: 105 (Decision 2 only — the shipped default; the contract itself stands)
 ---
 
 # ADR-117 — Flip `subagents.auto` shipped default to `on` (host-gated) on bounded-downside re-evaluation

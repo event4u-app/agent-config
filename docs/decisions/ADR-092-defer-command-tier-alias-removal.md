@@ -29,13 +29,16 @@ question with the Phase-3 investigation evidence.
 Investigation findings (`road-to-metadata-and-command-surface-leanness`, Phase 3):
 
 - **Integer-`tier` readers are internal:** `src/cli/commands/commands.ts`
-  (fallback after `visibility`), `src/scripts/audit_command_surface.py`
-  (report column + budget fallback), `src/scripts/build_discovery_manifest.py`
-  (**dual-emits `tier`** into the manifest). `src/cli/python/workspace_hosts.py`
+  (fallback after `visibility`), `src/scripts/audit_command_surface.ts`
+  (report column + budget fallback), `src/scripts/build_discovery_manifest.ts`
+  (**dual-emits `tier`** into the manifest). `src/cli/python/workspace_hosts.ts`
   uses a semantically unrelated host-inventory tier.
+  <!-- paths updated 2026-07-12: every reader migrated to TS during the
+  completed ADR-200 py2ts migration; the original .py list is preserved in
+  git history. -->
 - **The discovery manifest is a published npm artifact** — `package.json`
   `files` + `build:discovery` in `prepack` + `prepublishOnly:
-  check_release_includes_discovery.py`. It dual-emits the integer `tier`.
+  check_release_includes_discovery.ts`. It dual-emits the integer `tier`.
   **External npm consumers that read the integer key are unknown.**
 - The defer rests on a **Runtime Risk that cannot be ruled out** (a consumer
   may register/branch on the integer `tier`), not on evidence that such a
@@ -75,7 +78,7 @@ forcing function so it cannot calcify into permanent debt:
 ## Consequences
 
 - The `tier:` ⇄ `visibility:` dual-field persists during the deferral;
-  drift is mitigated by the `lint_command_tiers.py` consistency check (when
+  drift is mitigated by the `lint_command_tiers.ts` consistency check (when
   both present, they must agree).
 - The removal is **cheaply reversible** if ever executed: restoring the `tier`
   field is a manifest schema patch (< 1h to publish), far below the rollback
@@ -83,6 +86,27 @@ forcing function so it cannot calcify into permanent debt:
   unknown-consumer hard stop.
 - `road-to-tier-removal.md` institutionalises the trigger so the defer stays
   visible in planning rather than becoming folklore.
+
+## Addendum (2026-07-12) — re-open mechanism mid-flight
+
+Recorded during `road-to-opt-decision-flips` Phase 2; not a re-litigation —
+this ADR's own forcing function is executing:
+
+- **All integer-`tier` readers are now TypeScript** (ADR-200 migration landed
+  on `main`; the reader list above updated in place).
+- **Re-open mechanism #1 shipped:** `build_discovery_manifest.ts` emits the
+  machine-readable `deprecations` block + `sunset` field announcing the
+  `tier` deprecation (road-to-tier-removal Phase 1). Verified in the
+  **released** artifact: npm `8.10.0` (published 2026-07-10) ships
+  `dist/discovery/discovery-manifest.json` with
+  `deprecations[0] = {key: tier, replacement: visibility, since: ADR-092,
+  sunset: null}`.
+- **Soak status:** the soak clock runs since publish; zero tier-related
+  breakage reports (issue sweep 2026-07-12). The unknown-external-consumer
+  hard stop is NOT lifted by the notice alone — the soak must elapse.
+- **Execution continues in `road-to-tier-removal.md`**, revived from
+  `later/` to active on 2026-07-12 with the soak evidence cited in its
+  banner (portfolio-consolidation Phase 2).
 
 ## References
 
