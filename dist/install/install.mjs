@@ -14281,10 +14281,10 @@ var settingsSchema = external_exports.object({
   }),
   knowledge: external_exports.object({
     global_sharing: external_exports.object({
-      enabled: external_exports.boolean().default(false).describe(
-        "Master switch for the file-first global knowledge-card store (ADR-100, default-off per ADR-101 / Evidence v2 Phase 0 until cross-project reuse is measured). User-global setting \u2014 keep in ~/.event4u/agent-config/agent-settings.yml. false fully no-ops the layer; project-local cards (v1) are unaffected."
+      enabled: external_exports.boolean().default(true).describe(
+        "Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the validated bounded-downside flip superseding ADR-103 \u2014 write-time redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). User-global setting \u2014 keep in ~/.event4u/agent-config/agent-settings.yml. false fully no-ops the layer (single-key revert); project-local cards (v1) are unaffected."
       ),
-      allowed_tiers: external_exports.array(external_exports.string()).default(["public", "vendor"]).describe(
+      allowed_tiers: external_exports.array(external_exports.string()).default(["public"]).describe(
         "Origin tiers auto-eligible to cross a project boundary. proprietary is manual-only regardless (the gate hard-codes it), so an in-house schema never auto-shares."
       ),
       redaction: external_exports.object({

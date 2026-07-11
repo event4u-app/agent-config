@@ -1,3 +1,14 @@
+---
+adr: 002
+status: accepted
+date: 2026-05-06
+decision: kernel-bucket-overrides
+supersedes: —
+superseded_by: —
+phase: road-to-kernel-and-router · P2.2
+type: structural
+---
+
 # ADR-002 — Kernel-Bucket Cap Raise (25k → 26k) and Per-Rule Iron-Law Overrides
 
 - **Status:** Accepted (2026-05-06)

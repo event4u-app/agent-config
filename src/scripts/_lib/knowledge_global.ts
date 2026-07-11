@@ -6,7 +6,9 @@
  * Python→TS migration). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported snake_case names, same semantics, same
  * tier-classification, provenance footer, and config-merge behavior, same
- * exit codes and byte-identical stdout. No behaviour changes.
+ * exit codes and byte-identical stdout. No behaviour changes at port time;
+ * one deliberate post-port change: DEFAULT_ALLOWED_TIERS narrowed to
+ * ['public'] per ADR-119 (2026-07-12).
  *
  * Structure-grounding v2 (ADR-100 / road-to-structure-grounding-v2). Promotes
  * *expensive* (remote) project-local knowledge cards to a per-user, file-first
@@ -51,8 +53,10 @@ export const TIERS: readonly string[] = ['public', 'vendor', 'proprietary'];
 /**
  * Default tiers eligible to auto-cross a project boundary under default-on.
  * `proprietary` is excluded by design — manual-only regardless of `enabled`.
+ * Narrowed to `public` only per ADR-119 (2026-07-12, council-validated
+ * flip): `vendor` is a deliberate opt-in widening, not the shipped default.
  */
-export const DEFAULT_ALLOWED_TIERS: readonly string[] = ['public', 'vendor'];
+export const DEFAULT_ALLOWED_TIERS: readonly string[] = ['public'];
 
 /**
  * Hard defaults applied when the setting block is absent. Default is ON for

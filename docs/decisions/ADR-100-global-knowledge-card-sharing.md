@@ -11,6 +11,13 @@ type: structural
 
 # ADR-100 — Global cross-project knowledge-card sharing
 
+> **Partial supersession (clarified 2026-07-12):** this ADR supersedes
+> ADR-098 **Decision-10 only** (the measure-then-decide gate for the
+> global layer); every other ADR-098 decision stands. The frontmatter
+> `supersedes:` field carries the bare number because the index
+> link-checker validates it; this note is the qualifier's home.
+
+
 ## Status
 
 Accepted (2026-06-15). Council-designed (claude-sonnet-4-5 + gpt-4o, design

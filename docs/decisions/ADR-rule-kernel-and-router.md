@@ -1,3 +1,14 @@
+---
+adr: —
+status: accepted
+date: 2026-05-06
+decision: rule-kernel-and-router-roadmap-closure
+supersedes: —
+superseded_by: —
+phase: road-to-kernel-and-router (closure record)
+type: structural
+---
+
 # ADR — Rule Kernel and Router (Roadmap Closure)
 
 - **Status:** Accepted (2026-05-06)

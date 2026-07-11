@@ -90,7 +90,7 @@ table; size and context-chain columns are derived from the rule files.
 | `no-cheap-questions.md` | always | 3719 | 3719 | pre-send Q&A check | agent-only | output | NA-soft | 3 | no | Pre-send self-check, no platform surface |
 | `no-decorative-emojis-in-git-surfaces.md` | auto | 4196 | 4196 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
 | `no-pr-progress-comments.md` | auto | 4226 | 4226 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
-| `no-roadmap-references.md` | auto | 6275 | 6275 | file save on stable artifacts | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/check_no_roadmap_refs.py (CI gate) |
+| `no-roadmap-references.md` | auto | 6275 | 6275 | file save on stable artifacts | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/check_no_roadmap_refs.ts (CI gate) |
 | `non-destructive-by-default.md` | always | 3562 | 3562 | destructive-op intent | agent-only | tool-call | NA-soft | safety-floor | no | Safety floor — Iron Law, not modified |
 | `notes-first-reasoning.md` | auto | 2897 | 2897 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
 | `onboarding-gate.md` | auto | 1204 | 1204 | first turn (settings.onboarded == false) | settings | state | low | 1 | no | Pilot candidate — frequency 100% on un-onboarded projects, binary verifiable |
@@ -108,9 +108,9 @@ table; size and context-chain columns are derived from the rule files.
 | `runtime-safety.md` | auto | 1460 | 1460 | skill metadata change | hook | tool-call | low | 2b | no | Linter-enforceable on skill frontmatter |
 | `scope-control.md` | always | 3915 | 3915 | git-op / refactor intent | agent-only | tool-call | NA-soft | safety-floor | no | Safety floor — permission gate |
 | `security-sensitive-stop.md` | auto | 4574 | 4574 | file-edit on auth/billing/secrets paths | hook | tool-call | low | 2a | no | Path-pattern based marker — strong candidate for low-cost hook |
-| `size-enforcement.md` | manual | 1265 | 1265 | file save on src/{skills,rules} or src/agent-src/commands/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by skill_linter.py + check_always_budget.py |
+| `size-enforcement.md` | manual | 1265 | 1265 | file save on src/{skills,rules} or src/agent-src/commands/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by skill_linter.ts + check_always_budget.ts |
 | `skill-improvement-trigger.md` | auto | 710 | 710 | task completion (settings.skill_improvement) | settings | state | low | 2a | no | Settings-flag observable; pipeline already exists |
-| `skill-quality.md` | auto | 694 | 694 | skill create/edit | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/skill_linter.py |
+| `skill-quality.md` | auto | 694 | 694 | skill create/edit | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/skill_linter.ts |
 | `slash-command-routing-policy.md` | auto | 771 | 771 | user msg starts with / | hook | tool-call | low | 1 | suspected | Pattern-detection; live-fire signal unverified |
 | `source-confidentiality.md` | auto | 3906 | 3906 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
 | `source-discovery-gate.md` | auto | 4230 | 4230 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |

@@ -5,7 +5,7 @@ date: 2026-05-09
 decision: skill-tools-python-pilot-pass
 supersedes: —
 superseded_by: —
-phase: road-to-better-skills-and-profiles · Block D (D1–D5)
+phase: road-to-better-skills-and-profiles · Block D (D1–D5) — historical: Python pilot; zero .py remains post-ADR-200
 ---
 
 # ADR-006 — Skill-Tools Python Pilot: Outcome and Decision

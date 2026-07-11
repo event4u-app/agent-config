@@ -5,10 +5,20 @@ date: 2026-07-08
 decision: memory-tripwire-activation-path
 supersedes: —
 superseded_by: —
-phase: road-to-memory-retrieval-economy · Phase 6
+phase: road-to-memory-retrieval-economy · Phase 6 (amended — see 2026-07-12 note)
 ---
 
 # ADR-116 — Memory scale-tripwire activation path: one engine, measured at fire time
+
+> **Amended in practice (recorded 2026-07-12):** the SQLite-FTS5 engine
+> this ADR pre-decided was never built. The activation path was
+> re-resolved by road-to-retrieval-substrate-hardening B2 (done
+> 2026-07-09): a hand-rolled stdlib BM25 + trigram prefilter in
+> `src/scripts/_lib/lexical_index.ts` (no SQLite, ADR-061 honoured),
+> dormant until the `lint_knowledge_scale` tripwire fires (200/type,
+> 500 total). The tripwire thresholds and measurement-at-activation
+> discipline of this ADR stand unchanged; only the engine choice moved.
+
 
 - **Deciders:** maintainer + AI council (anthropic/claude-sonnet-4-5 +
   openai/gpt-4o; disposition debate 2 rounds + engine tie-break 2 rounds,

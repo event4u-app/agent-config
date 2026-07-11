@@ -7,7 +7,10 @@
  * the tier gate are matched byte-for-byte against the retired Python implementation. The
  * public API and CLI contract mirror Python exactly — same exported
  * snake_case names, same `GateResult` shape + `summary()` text, same exit
- * codes and stdout. No behaviour changes.
+ * codes and stdout. No behaviour changes at port time; one ADDITIVE
+ * hardening landed after the port (2026-07-12, ADR-103 flip validation):
+ * hidden-unicode detection + strip-then-rescan in `redaction_scan` — inputs
+ * without invisible characters are unaffected.
  *
  * Structure-grounding v2, Phase 1 — the privacy crux (ADR-100 /
  * road-to-structure-grounding-v2). Before any project-local card may cross a
@@ -121,11 +124,26 @@ function _compileIgnoreCase(pattern: string): RegExp {
     return new RegExp(pattern, 'i');
 }
 
+// Invisible / control characters usable to smuggle an identifier past the
+// pattern scan (zero-width class, bidi controls, soft hyphen, BOM, Unicode
+// Tag block) — the encoding-smuggling attack class from the ADR-103
+// council re-evaluation (2026-07-11). Presence is itself a violation:
+// a knowledge card has no legitimate need for invisible characters, and
+// halt-and-surface (never silent-rewrite) is this gate's contract.
+const _HIDDEN_UNICODE_RE =
+    /[­​-‏‪-‮⁠-⁤⁦-⁩﻿\u{E0000}-\u{E007F}]/gu;
+
 /**
  * Combined privacy-floor + source-confidentiality scan over `text`.
  *
  * Returns the list of violations (empty = clean). Reused by the Phase-4
  * linter as the CI net that redaction actually fired on committed cards.
+ *
+ * Hidden-unicode hardening (additive, 2026-07-12): invisible characters are
+ * flagged as their own violation class AND the pattern scan runs on the
+ * stripped text, so a zero-width-broken key/email is still caught by its
+ * own category. Inputs without invisible characters behave byte-identically
+ * to the pre-hardening scan.
  */
 export function redaction_scan(
     text: string,
@@ -136,16 +154,36 @@ export function redaction_scan(
         sql_identifiers?: readonly string[];
     } = {},
 ): RedactionViolation[] {
-    const floor = redact_low_impact_entry(text, {
+    const violations: RedactionViolation[] = [];
+    _HIDDEN_UNICODE_RE.lastIndex = 0;
+    const hidden = text.match(_HIDDEN_UNICODE_RE);
+    let scanText = text;
+    if (hidden !== null && hidden.length > 0) {
+        const counts = new Map<string, number>();
+        for (const ch of hidden) {
+            const cp = `U+${(ch.codePointAt(0) as number).toString(16).toUpperCase().padStart(4, '0')}`;
+            counts.set(cp, (counts.get(cp) ?? 0) + 1);
+        }
+        const summary = [...counts.entries()]
+            .map(([cp, n]) => (n > 1 ? `${cp}×${n}` : cp))
+            .join(' ');
+        violations.push({
+            category: 'hidden_unicode',
+            snippet: _pySliceHead(summary, 40),
+            note: 'invisible characters — possible identifier smuggling; pattern scan ran on the stripped text',
+        });
+        scanText = text.replace(_HIDDEN_UNICODE_RE, '');
+    }
+    const floor = redact_low_impact_entry(scanText, {
         repoRoot: options.repo_root ?? null,
         privateDomains: options.private_domains ?? [],
         customerNames: options.customer_names ?? [],
         sqlIdentifiers: options.sql_identifiers ?? [],
     });
-    const violations: RedactionViolation[] = [...floor.violations];
+    violations.push(...floor.violations);
     for (const rx of _load_denylist_patterns()) {
         rx.lastIndex = 0;
-        const m = rx.exec(text);
+        const m = rx.exec(scanText);
         if (m) {
             violations.push({
                 category: 'external_source',

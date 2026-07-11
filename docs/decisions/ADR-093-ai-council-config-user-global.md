@@ -1,6 +1,6 @@
 ---
 adr: 093
-status: accepted
+status: superseded
 date: 2026-06-13
 decision: ai-council-config-user-global
 supersedes: —

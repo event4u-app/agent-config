@@ -5,11 +5,21 @@ date: 2026-06-11
 decision: python-to-typescript-migration
 supersedes: —
 superseded_by: —
-phase: py2ts · migration-infrastructure
+phase: py2ts · migration-infrastructure (historical record — migration landed on main)
 type: structural
 ---
 
 # ADR-200 — Full Python → TypeScript migration: execution model, branch strategy, dispatcher, parity gates
+
+> **Number retained by decision (2026-07-12):** the provisional-number
+> clause ("final number assigned at the python2ts → main merge") has
+> fired — the migration is complete on `main` (0 tracked `.py` under
+> `src/`). Renumbering was evaluated and declined: 521 files reference
+> "ADR-200" as a stable identifier; a rename would be a 521-file
+> mechanical churn (projections, condensation hashes, docs) for zero
+> behavioral gain. ADR-200 stays the permanent number; the record is
+> historical (migration architecture, landed).
+
 
 > Provisional number 200 (reserved, out-of-band). main ADRs grow sequentially; the migration ADR is renumbered to a high reserved slot to stop recurring collisions on the long-lived `python2ts` branch. Final number is assigned at the `python2ts`→`main` merge.
 

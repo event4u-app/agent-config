@@ -1,6 +1,6 @@
 ---
 adr: 028
-status: accepted
+status: superseded
 date: 2026-05-25
 decision: root-layout
 supersedes: —
