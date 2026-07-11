@@ -163,19 +163,19 @@ trigger evals present.
 
 ## Phase 5 — style-contract tension: decision step (no silent resolve)
 
-- [ ] Surface to the maintainer: Source C's harness mandates complete
+- [x] Surface to the maintainer: Source C's harness mandates complete
       sentences and bans fragment/arrow-chain prose, which directly
       conflicts with `telegraph-speak`'s condensation grammar for reply
       prose. Present the trade-off (readability-for-humans vs token
       frugality; current `speak_scope` default) as a numbered-options
       decision; record the outcome in the telegraph-speak rule or a
       context note. This roadmap does NOT pre-decide it.
-      <!-- surfaced 2026-07-11 to the maintainer as a numbered-options decision in the execution reply / PR (not pre-decided, per this step's own instruction). Stays OPEN — the step completes only when the maintainer picks and the outcome lands in telegraph-speak or a context note. -->
+      <!-- done: surfaced 2026-07-11 as a numbered-options decision; maintainer disposition = re-evaluate in the AI council (not a unilateral flip, per decision-revisit-gate). Outcome recorded in agents/settings/contexts/telegraph-vs-readability-tension.md with the council question + revisit-if. The council run itself is NOT auto-fired (commit-policy/scope-control — maintainer's call); invoke /council when ready. -->
 
-> **Phase 5 status: OPEN — surfaced, awaiting the maintainer's decision.**
-> Phases 1–4 are complete and shipped; this roadmap stays active (one open
-> step, not archived) until the style-contract decision above is made. See the
-> PR description / execution reply for the numbered options.
+> **Phase 5 resolved by routing to the AI council** (maintainer decision,
+> 2026-07-11). The style-contract tension is captured in
+> `agents/settings/contexts/telegraph-vs-readability-tension.md`; the council
+> re-eval is a maintainer-invoked follow-up, deliberately not auto-run.
 
 ## Acceptance criteria
 
