@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 11 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**110 / 187 steps done · 59%**
+**98 / 168 steps done · 58%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   59%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
@@ -19,14 +19,13 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 15 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 6% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-flow-learnings) | ██████████ 95% |
-| 4 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 5 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 8 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 9 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 10 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 11 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 11 | 24 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 69% |
+| 4 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
+| 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 7 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 9 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 10 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 9 | 26 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 74% |
 
 ---
 
@@ -89,33 +88,6 @@ _2 blockers resolved._
   - **Resolved when:** aggregate JSON is schema-valid; the seeded repo is red with its pre-flight finding; all siblings are green and conformance-passing.
 
 _1 blocker resolved._
-
-### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
-
-**Road to golden-set coverage — make every flip verdict mean something** — 14 / 18 done (78%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Scope-aware coverage accounting | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 1 | Trigger-anchored stub drafting (consumer rules, autonomous) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Operator labelling sprint (the human gate) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Prompt↔trigger falsifiability linter | 🟡 in progress | 1 | 8 | 0 | 0 | 89% |
-
-<a id="blockers-road-to-golden-set-coverage"></a>
-**Blockers**
-
-- **operator-labelling-capacity** (owner: maintainer) — blocks Phase 2 (and thus the consumer-scope `--require-complete` flip + the live judge run at full consumer coverage)
-  - **What to do:**
-    (est. 2–4 h focused work; stub `notes` carry each rule's Iron-Law line as
-    raw material). Batch with the operator sitting defined in
-    `road-to-token-proof-and-story` Phase 1.
-  - **Resolved when:** `check_token_quality_golden --require-complete --scope consumer` exits 0.
-- **paid-judge-run-sequencing (soft)** (owner: maintainer) — blocks only the PAID judge run (labelling proceeds in parallel).
-  - **What to do:**
-    consumer-scoping default flip shrinks the eager arm (~3× cheaper,
-    est. US$3–4 instead of US$8–12) — batch it into the operator sitting
-    from `road-to-token-proof-and-story` § Program tracking step 2.
-  - **Resolved when:** a non-dry-run `quality-run.json` from a consumer-scoped arm exists and `check_quality_regression --as-flip-gate` exits 0.
 
 ### [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md)
 
@@ -255,17 +227,17 @@ _1 blocker resolved._
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 24 / 35 done (69%)
+**Road to token saving — measure, then cut, at constant quality** — 26 / 35 done (74%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Measurement substrate (the prerequisite to every cut) | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
+| 0 | Measurement substrate (the prerequisite to every cut) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 | 1 | RTK everywhere (un-gate the scope) | 🟡 in progress | 1 | 2 | 0 | 1 | 67% |
 | 2 | Close the RTK trigger gap | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 3 | Deterministic RTK wrap hook + install verification | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Cache-aware ordering as a CI invariant (D5) | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 8 | Always-loaded budget linter (D6) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 6 | 8 | 0 | 0 | 57% |
+| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 5 | 9 | 0 | 0 | 64% |
 
 <a id="blockers-road-to-token-saving"></a>
 **Blockers**
