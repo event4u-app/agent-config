@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+status: later
 parent_roadmap: road-to-install-path-convergence
 ---
 
@@ -21,6 +22,11 @@ the recorded revisit-if conditions.
 > (suggested: ~4 weeks post-merge) has elapsed. Execution starts when the
 > maintainer opens the checkpoint — this is a maintainer call, explicitly
 > NOT autonomous.
+>
+> **Moved to `later/` 2026-07-12 (road-to-opt-portfolio-consolidation
+> Phase 3):** the single open item is monitoring-window-gated and
+> maintainer-only — parked-shaped, not workable-now. Resume when the
+> ~4-week window has elapsed and the maintainer opens the checkpoint.
 
 ## Phase 1: Delist decision checkpoint
 

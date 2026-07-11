@@ -17,10 +17,15 @@ parent_roadmap: road-to-subagent-value-realization-followup
 > Decide, on evidence, whether agent-config competes on orchestration at all —
 > and if so, on exactly one narrow, measured claim rather than a swarm feature
 > race. The subagent-v1 contract (ADR-109) and telemetry path are built; the
-> A3 production-validator Gate-A eval is an honest null; `subagents.auto`
-> stays `ask`. This roadmap converts that standing null into a decision:
+> A3 production-validator Gate-A eval is an honest null. `subagents.auto`
+> defaults to `on` since ADR-117 (2026-07-09) — a bounded-downside flip,
+> explicitly NOT a passed benchmark; `resolveShippedDefault()`/`gateVerdict()`
+> is retained as the telemetry-driven demotion gate back to `ask`. This
+> roadmap converts the standing null into a decision on the PUBLIC claim:
 > prove a minimal orchestration win, or remove the surface from the public
 > value proposition and keep it as an internal contract only.
+> <!-- reconciled 2026-07-12 with ADR-117 via road-to-opt-portfolio-consolidation
+>      Phase 1 (default was described as `ask` — stale since 2026-07-09). -->
 
 ## Goal
 
@@ -39,7 +44,9 @@ not an unfinished swarm.
   `/cost:report` orchestration summary, `gateVerdict()` in
   `src/scripts/_lib/orchestration_gate.ts`.
 - Standing evidence: A3 production-validator Gate-A eval = honest null;
-  `subagents.auto` default = `ask`; the flip is gated on real telemetry
+  `subagents.auto` default = `on` since ADR-117 (2026-07-09,
+  bounded-downside basis — not evidence of value; demotion gate to `ask`
+  retained). The PUBLIC claim stays gated on real telemetry
   (`agents/settings/contexts/orchestration-default-flip-verdict.md`).
 - The blocker is structural, not code: real orchestrated dispatches cannot be
   produced by a headless harness — they need real usage (parent followup
@@ -84,9 +91,10 @@ CLAIMS, `unbacked`.
 
 ## Phase 2 — Accumulate real telemetry (inherits parent followup)
 
-- [ ] Run real delegable work with `subagents.enabled: true`,
-      `subagents.auto: ask` until `agents/runtime/state/audit/YYYY-MM.jsonl`
-      carries ≥20 orchestration lines (parent followup Phase 1, Steps 1–3).
+- [ ] Run real delegable work with `subagents.enabled: true` under the
+      post-ADR-117 default (`subagents.auto: on`) until
+      `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥20 orchestration
+      lines (parent followup Phase 1, Steps 1–3).
 - [x] Measure `parallelizable:` classifier recall AND false-positive rate on the
       corpus (`orch-01..03`, `pv-01`, `pv-02`) — both matter; a leaky classifier
       loses on cost even when it wins on the true positives.
@@ -104,13 +112,14 @@ CLAIMS, `unbacked`.
 
 ## Phase 3 — Gate the claim: prove or drop
 
-- [ ] Feed the accumulated `ask`-mode telemetry through `gateVerdict()` /
+- [ ] Feed the accumulated real telemetry through `gateVerdict()` /
       `resolveShippedDefault()`. PROVE = the pre-registered claim clears its
       threshold at held quality AND the negative control stayed quiet.
-- [ ] PROVE → mark the CLAIMS entry `backed` with a resolving pointer; propose
-      `subagents.auto: ask → on` for the proven family only (scoped, not global);
-      update the flip verdict.
-- [ ] DROP → record the renewed honest null; keep `ask`; **and** demote the
+- [ ] PROVE → mark the CLAIMS entry `backed` with a resolving pointer; the
+      ADR-117 `on` default is thereby CONFIRMED for the proven family (the
+      bounded-downside basis upgrades to evidence); update the flip verdict.
+- [ ] DROP → record the renewed honest null; demote the default back to
+      `ask` via ADR-117's retained demotion gate; **and** demote the
       orchestration surface from the public value proposition: README/site stop
       listing orchestration as a capability and instead state the honest stance —
       "contract exists, default off, value not established; we do not ship
@@ -139,8 +148,8 @@ proof surface.
 
 - Exactly one orchestration claim is pre-registered, deterministically scored,
   and resolved to `backed` or honest-null — never left ambiguous.
-- The `subagents.auto` default moves only on proven, family-scoped evidence;
-  `ask` remains the floor.
+- The ADR-117 `on` default is confirmed or demoted only on real,
+  family-scoped evidence; `ask` remains the demotion floor.
 - If dropped, the public value proposition no longer implies orchestration; the
   contract survives internally, unadvertised.
 - The negative control (`pv-02`) is part of the pass condition — a classifier
@@ -153,7 +162,7 @@ proof surface.
 - **Owner:** user
 - **Blocks:** Phase 2 (and thereby Phase 3's decision)
 - **What to do:** the build work is done; only real delegable work produces the
-  telemetry. Use the agent on genuinely parallel/ordered multi-file tasks with
-  `subagents.auto: ask`, then check
+  telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under
+  the post-ADR-117 default (`subagents.auto: on`), then check
   `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
 - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.

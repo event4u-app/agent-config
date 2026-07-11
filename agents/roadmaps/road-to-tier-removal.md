@@ -1,13 +1,18 @@
 ---
 complexity: structural
-status: later
 parent_roadmap: metadata-and-command-surface-leanness
 ---
 
 # Roadmap: Command `tier:` Alias Removal
 
-> **Parked in `later/` — Phase 1 (evidence mechanism) shipped; remaining work
-> is soak-gated.** The re-open mechanism the roadmap was blocked on now exists:
+> **Un-parked 2026-07-12 (road-to-opt-portfolio-consolidation Phase 2):**
+> resume evidence verified live — the released npm 8.10.0 (2026-07-10)
+> ships `dist/discovery/discovery-manifest.json` with the `deprecations`
+> block on `tier` (since ADR-092, replacement `visibility`, `sunset:
+> null`), and zero tier-related breakage issues exist. The maintainer
+> review happened via the merged optimization-sweep PR that scheduled
+> this revival. Phase 1 (evidence mechanism) shipped; the soak clock has
+> been running since publish. The re-open mechanism the roadmap was blocked on now exists:
 > the discovery manifest is **v2** with a machine-readable `deprecations`
 > signal on the integer `tier` key (Option B — chosen by AI council, telemetry
 > ruled out as infeasible in a no-runtime package; see § Council notes). `tier`

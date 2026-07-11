@@ -1,5 +1,16 @@
 # Multi-Package Architecture Roadmap
 
+> **Superseded, not blocked (recorded 2026-07-12,
+> road-to-opt-portfolio-consolidation Phase 3):** the value propositions
+> this roadmap chased are delivered by mechanisms that actually shipped —
+> minimal install / "users only see what they install" via
+> `discipline_profile` + workspace/pack scoping + consumer-scoped rule
+> projection (road-to-request-scoped-rule-load), and the
+> extract-packs idea lives on in the gated
+> `domain-pack-extraction-when-triggered.md` (the live successor). The
+> premise (split into separately distributed npm packages) is obsolete;
+> this file stays in `skipped/` as the historical record.
+
 Source: GPT strategic analysis (April 2026) on modular distribution for agent-config.
 
 ## Goal
