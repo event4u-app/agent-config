@@ -142,7 +142,7 @@ reproducible-on-checkout claim table.
       runs where it changed nothing." If a reader can falsify that (find a
       competitor publishing honest nulls), the line updates — that's the point.
 - [ ] Publish the persona placebo-benchmark verdict as an adoption asset:
-      `road-to-opt-council-deliberation` Phase 4 runs a pre-registered
+      `later/road-to-opt-council-deliberation` Phase 4 runs a pre-registered
       3-arm benchmark (method-personas / famous-figure framing / bare
       multi-provider calls) whose outcome is publishable in BOTH
       directions — a measured lift or an honest null on persona prompts —

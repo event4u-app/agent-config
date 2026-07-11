@@ -1,8 +1,16 @@
 ---
+status: later
 complexity: lightweight
 ---
 
 # Road to opt portfolio consolidation — merge, revive, park, and dedupe the roadmap estate
+
+> **Parked in `later/` by maintainer decision (2026-07-12).**
+> Blocked until: the pre-existing active roadmap portfolio (the
+> roadmaps that were active before the 2026-07-11 `road-to-opt-*`
+> cluster landed) is worked down, OR the maintainer explicitly and
+> exclusively requests execution of this roadmap. Do NOT pick this
+> file up as part of another task or an autonomous sweep.
 
 > Part of the `road-to-opt-*` cluster (2026-07-11 sweep). The portfolio is
 > disciplined, not sprawling — but ADR-117 orphaned two active roadmaps'

@@ -1,8 +1,16 @@
 ---
+status: later
 complexity: lightweight
 ---
 
 # Road to opt retrieval and memory — wire the orphan, benchmark honestly, borrow the protocol discipline
+
+> **Parked in `later/` by maintainer decision (2026-07-12).**
+> Blocked until: the pre-existing active roadmap portfolio (the
+> roadmaps that were active before the 2026-07-11 `road-to-opt-*`
+> cluster landed) is worked down, OR the maintainer explicitly and
+> exclusively requests execution of this roadmap. Do NOT pick this
+> file up as part of another task or an autonomous sweep.
 
 > Part of the `road-to-opt-*` cluster (2026-07-11 sweep). Two source pools:
 > (a) the residual items from the maintainer's borrow catalogue in

@@ -1,4 +1,5 @@
 ---
+status: later
 complexity: structural
 status: ready
 execution:
@@ -6,6 +7,13 @@ execution:
 ---
 
 # Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater
+
+> **Parked in `later/` by maintainer decision (2026-07-12).**
+> Blocked until: the pre-existing active roadmap portfolio (the
+> roadmaps that were active before the 2026-07-11 `road-to-opt-*`
+> cluster landed) is worked down, OR the maintainer explicitly and
+> exclusively requests execution of this roadmap. Do NOT pick this
+> file up as part of another task or an autonomous sweep.
 
 > Source-level comparison against **Source G** — an external prompt-only
 > multi-persona council skill (18 historical-figure agents, a ~940-line
