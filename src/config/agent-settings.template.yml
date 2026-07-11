@@ -747,26 +747,32 @@ memory:
 # removes the store and strips provenance from project cards.
 knowledge:
   global_sharing:
-    # Default OFF until cross-project reuse is measured (Evidence v2 Phase 0;
-    # ADR-101 amends ADR-100). ADR-098 set a measure-then-decide gate for the
-    # global layer; ADR-100 shipped it default-on without waiting out the
-    # measurement window. Until reuse is instrumented across >= 2 real projects
-    # and shown positive, the safe default for a tool others install is opt-in,
-    # not opt-out — cross-project data movement should never be the default.
-    # Flip to `true` only after the reuse signal exists.
+    # Default ON since the ADR-103 supersession (2026-07-12, council
+    # claude-sonnet-4-5 + gpt-4o 2026-07-11 — flip-with-validation): the
+    # measure-then-decide gate was a structural deadlock (reuse can only
+    # accrue while the layer is on; on was withheld pending reuse), the same
+    # shape ADR-117 broke for subagents. Bounded downside: write-time
+    # redaction floor (adversarially spot-checked incl. hidden-unicode
+    # smuggling), narrowest tier default ([public]), suggest-then-confirm
+    # promotion, and the pre-registered demotion trigger — any cross-project
+    # PII/secret sighting in a shared card auto-reverts this default to
+    # `false` plus an incident note. Single-key revert: set `enabled: false`
+    # and the layer fully no-ops.
     #
     # Turning sharing on does NOT make promotion automatic — promotion is always
     # suggest-then-confirm (auto_promote_threshold gates the *suggestion*, never
     # a silent write). v1 (project-local discipline + cards) is byte-for-byte
     # unaffected by this default; only the cross-project store is gated off.
-    enabled: false
+    enabled: true
 
     # Origin tiers eligible to cross a project boundary under default-on.
     # `proprietary` (in-house DB / private API / client schemas) is EXCLUDED by
     # design — it is manual-only regardless of `enabled`, so no client-A schema
     # ever leaks into client-B's session. Adding it here does NOT enable
     # auto-share; the tier gate hard-codes proprietary as manual-only.
-    allowed_tiers: [public, vendor]
+    # Narrowest default per the 2026-07-11 council verdict: `vendor` is a
+    # deliberate opt-in widening, not the shipped default.
+    allowed_tiers: [public]
 
     # Write-time redaction before any card is eligible to go global. Runs the
     # low-impact-corpus-privacy-floor + source-confidentiality pattern set

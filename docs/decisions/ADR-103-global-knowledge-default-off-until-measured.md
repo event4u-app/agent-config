@@ -1,10 +1,10 @@
 ---
 adr: 103
-status: accepted
+status: superseded
 date: 2026-06-16
 decision: global-knowledge-default-off-until-measured
 supersedes: —
-superseded_by: —
+superseded_by: 119
 phase: evidence-v2
 type: structural
 ---

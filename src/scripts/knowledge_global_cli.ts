@@ -71,7 +71,7 @@ function _list_cards(): string[] {
     return _globMdSorted(store).filter((p) => path.basename(p).toLowerCase() !== 'readme.md');
 }
 
-function _freshness_state(text: string, cfg: SettingsDict): string {
+export function _freshness_state(text: string, cfg: SettingsDict): string {
     const fresh = _isPlainObject(cfg['freshness']) ? (cfg['freshness'] as SettingsDict) : {};
     const hyp = _pyInt(fresh['hypothesis_after_days'], 90);
     const stale = _pyInt(fresh['stale_after_days'], 180);
