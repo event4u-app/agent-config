@@ -1,0 +1,335 @@
+---
+complexity: structural
+status: ready
+execution:
+  mode: autonomous
+---
+
+# Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater
+
+> Source-level comparison against **Source G** — an external prompt-only
+> multi-persona council skill (18 historical-figure agents, a ~940-line
+> coordinator protocol, zero engine code, zero tests) — cloned fresh and
+> verified on both sides (agent-config at HEAD, 2026-07-10). Source G's
+> execution model is LLM-as-interpreter (tally math, anonymisation, and
+> enforcement all run as prose instructions), but its *deliberation
+> protocol* is genuinely literature-grounded: blind first round,
+> anonymised cross-examination with an anti-conformity directive,
+> structured stance lines with confidence-weighted tallying and an
+> honest split-escalation, a non-panel Chairman synthesizer, and
+> falsifiability-shaped verdict sections. This roadmap adopts the
+> verified protocol gaps onto the existing `ai_council` TS engine and
+> settles the persona question by measurement, not adoption.
+
+## Goal
+
+Land four default-off protocol capabilities on the existing council
+engine — (1) Kill-Criteria/Concrete-Next-Step verdict discipline plus an
+Iron-Law wording fix, (2) deterministic option-level stance tally with a
+⅔ consensus threshold and honest split escalation, (3) opt-in Chairman
+synthesis by a non-deliberating member, (4) debate enforcement gates
+(anti-conformity directive, dissent quota, novelty gate, restate gate) —
+and produce a three-arm placebo benchmark verdict on persona prompts
+before any panel-mode work is considered.
+
+## Prerequisites
+
+- [x] Provenance ENC1 token minted with the maintainer key (2026-07-11).
+- [ ] Confirm `tests/scripts/ai_council/_harness.ts` covers a fake-client
+      seam usable for tally/chairman tests (no billable calls in CI).
+
+## Context
+
+The council engine (`src/scripts/ai_council/`, 29 test files) is
+transport- and cost-complete but protocol-thin: `consensus.ts` scores
+*findings*, yet no mechanism produces an *option-level* verdict for
+"A or B?" questions; synthesis is performed by the host agent, which the
+skill's own Iron Law argues cannot independently judge an artefact it
+framed; `rounds:N` prompts ask members to "refine, agree, or push back"
+with no conformity countermeasures. Source G closes exactly these gaps —
+and nothing else it ships survives the gap-table below. The persona
+layer (its marketing centerpiece) is contradicted by the persona-prompt
+literature and carries living-person impersonation risk for a
+distributed npm package; it enters this roadmap only as a benchmark
+arm, never as adopted scope.
+
+## Provenance
+
+Source referenced anonymously per `source-confidentiality`; real links
+retained encrypted:
+
+- Source G (analyzed repo): `ENC1:ki1/hoRNUIvMApaMJZYSAI/EBkuVY9RqhE9GRpU7lHv9E3G89yeHmT7z+GXkn49sYrqVqqiYGT75uoFW/y7WP07pp5Vh94wmKDKf0f4yRIZ5yTO0vi1SiLcfH6NVPmsy5EMomvsjJX6SRvb6sdPKcNVusxxd`
+
+Anti-stale-clone discipline: Source G cloned fresh at its latest release
+this session; agent-config claims re-verified against `src/` at HEAD
+(2026-07-10), producing three material confirmations that shaped scope:
+
+1. `rounds:N` + `/council debate` already anonymise prior-round replies
+   (`Reviewer A/B/C`), so Source G's Round-2 anonymisation is
+   ALREADY-HAVE — only the *prompt-level* anti-conformity directive and
+   the *post-round* enforcement checks are gaps.
+2. The Karpathy peer-review pass and Minority-Views bucketing already
+   exist (`consensus.ts`, SKILL § peer-review) — Source G's minority
+   report is ALREADY-HAVE.
+3. The skill's Iron Law sentence "THE COUNCIL DOES NOT SEE PRIOR
+   REPLIES" is contradicted by the shipped `rounds:N` behaviour
+   (anonymised peer replies from round 2). This is a claims-hygiene bug
+   in our own artefact, fixed in Phase 0 independent of any adoption.
+
+## Gap-table (KEEP / FOLD / CUT / ALREADY-HAVE)
+
+| Source-G item | Verdict | Evidence |
+|---|---|---|
+| Kill Criteria + Concrete Next Step verdict sections | **KEEP** | absent from all lens templates in `src/skills/ai-council/SKILL.md` § synthesis templates |
+| Structured `STANCE:` line + confidence-weighted option tally, ⅔ threshold, split → user | **KEEP** | `consensus.ts` is finding-level only; no option-level verdict path anywhere in `src/scripts/ai_council/` |
+| Abstain counts toward base-weight denominator (anti-gaming) | **KEEP** | part of the tally design; adopted with it |
+| Chairman synthesis by non-deliberating member | **KEEP** | host synthesises today (SKILL § neutrality: "the host runs the council and synthesises convergence") |
+| Anti-conformity directive in round-2+ prompts | **KEEP** | `prompts.ts` round-augmentation carries no such directive |
+| Dissent quota + novelty gate with bounded repair re-prompts | **KEEP** | no post-round enforcement exists on the debate path |
+| Problem restate gate (opt-in) | **KEEP** | no pre-round-1 restatement anywhere on the consult path |
+| Evidence labels (`empirical/mechanistic/strategic/ethical/heuristic`) | FOLD | into `decision-replay.md` aggregation (`replay.ts`) — a render concern, not a new pipeline stage |
+| Epistemic-diversity scorecard | FOLD | provider spread is already knowable from the session; render as one replay line, not a template section |
+| Session metadata block with `schema_version` | ALREADY-HAVE | session artefacts + `events_log.ts` + replay cover it |
+| Anonymised multi-round debate | ALREADY-HAVE | `rounds:N`, `/council debate`, continue-as-debate |
+| Peer review / minority report | ALREADY-HAVE | Karpathy peer-review (opt-in) + `consensus.ts` Minority Views |
+| Blind first round | ALREADY-HAVE | round 1 = artefact + neutral preamble only |
+| Provider detection / shell heredoc dispatch | ALREADY-HAVE | `clients.ts` / `modes.ts` are strictly stronger (JSON envelopes, auth handling, billable contract) |
+| Budget/cost machinery | ALREADY-HAVE (inverse) | Source G has none; nothing to learn |
+| Domain-weight seat (1.5×, locked pre-analysis) | CUT | members are providers, not domain personas; meaningless without panel-mode. Re-open: panel-mode follow-up, if spawned |
+| 18 historical/living-person personas | CUT | persona-prompt literature shows no reliable reasoning lift; living-person impersonation (researcher/author figures) is a legal+brand risk for a distributed package; correlated-error problem on single-provider setups |
+| Persona panel-mode (N persona seats × M providers, polarity routing, triads, keyword auto-selection) | CUT → evidence-gated | blocked on the Phase 4 benchmark verdict; would also require superseding the Phase-6 replace-mode invariants ("one-advisor-per-provider", "never adds calls") via a dedicated ADR — none of that is authorized by this roadmap |
+| Project-level `.council.yaml` override | CUT | exact failure mode ADR-104 buried after real damage; project/artefact pinning already has a channel (frontmatter, `council_depth` precedent). Re-open only as non-billing frontmatter keys, never a project config file |
+| Prose-protocol execution model (LLM computes tally/anonymisation) | CUT (anti-lesson) | everything countable lands in TS with tests — the inverse of Source G's approach |
+
+## Phase 0 — Claims hygiene + verdict falsifiability
+
+Independent of any adoption; fixes our own artefact first.
+
+- [ ] Rewrite the Iron-Law block in `src/skills/ai-council/SKILL.md` to
+      match shipped behaviour: the council never sees the *host's*
+      reasoning or framing; peer replies are visible from round 2
+      onward **only anonymised, never attributed**. Keep the fence
+      style consistent with the existing block.
+- [ ] Grep-sweep for restatements of the old wording in
+      `src/domains/meta/council/**/command.md` and
+      `docs/contracts/ai-council-config.md`; align each hit.
+- [ ] Add **Kill Criteria** and **Concrete Next Step** as required
+      sections to every lens synthesis template (SKILL § synthesis
+      templates): Kill Criteria entries must be observable without
+      re-convening the council and carry a threshold or event; Concrete
+      Next Step is exactly one artefact-producing action.
+- [ ] Renderer check: synthesis output missing either section, or
+      containing a placeholder-empty section, fails the render step
+      with a named error (test with a fixture transcript).
+- [ ] Fold the evidence-label + provider-spread lines into
+      `replay.ts` output (one aggregate line each; no new template
+      section).
+
+**Exit criteria:** grep for the old Iron-Law sentence returns zero hits
+outside the archive; render-check test red on a fixture missing Kill
+Criteria, green on a complete one; `npx vitest run
+tests/scripts/ai_council/replay.test.ts` green with the new lines
+asserted.
+
+**Rollback:** revert the SKILL/template/renderer commits; no config
+schema or engine behaviour changed in this phase.
+
+## Phase 1 — Option-level stance tally
+
+Deterministic port of Source G's tally, engineered instead of prompted.
+
+- [ ] Final-round prompt (in `prompts.ts`) appends the mandatory closing
+      line contract:
+      `STANCE: <label> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no`,
+      with the label-matching instruction (peers backing the same option
+      use the same label; `abstain` allowed).
+- [ ] New module `src/scripts/ai_council/stance_tally.ts`: parse stance
+      lines (tolerant of whitespace/case, re-prompt-marker on
+      unparseable — never infer from prose); canonicalise labels
+      (exact-match after casefold; unmatched labels stay distinct — no
+      fuzzy merging in v1); weight = confidence factor
+      (`high 1.0 / med 0.75 / low 0.5`); `W_total` from **base**
+      weights; abstain contributes to `W_total` only; consensus iff
+      `W_option ≥ ⅔ × W_total`; below threshold → structured split
+      result, never a forced winner, never an auto-added round.
+- [ ] One bounded repair call per member with a missing/unparseable
+      stance line (stance-line-only re-prompt), billable and gated like
+      any member call; surfaced in the estimate as a `may add up to N
+      repair calls` row.
+- [ ] Verdict section **Vote Tally** in the synthesis template: one line
+      per option (`<option> — <weight> (<backers with confidence>)`),
+      threshold stated, cleared-or-escalated stated.
+- [ ] Tests in `tests/scripts/ai_council/stance_tally.test.ts` including
+      Source G's own worked example as a fixture (3-seat panel, one
+      abstain; assert the abstain raises the bar and the split
+      escalates) plus parse-tolerance and repair-marker cases.
+- [ ] Config key `ai_council.stance_tally.enabled` (default `false`)
+      documented in `docs/contracts/ai-council-config.md`; schema
+      validation rejects unknown values.
+
+**Exit criteria:** stance-tally test file green; a fixture run with
+`enabled: false` produces byte-identical output to today's path
+(parity snapshot); estimate output shows the repair-call row only when
+the feature is on.
+
+**Rollback:** flip the default-off key; module and prompt-suffix are
+additive — revert the two commits restores the prior prompt byte-for-byte.
+
+## Phase 2 — Chairman synthesis (opt-in)
+
+Applies our own host-bias argument to the synthesis step.
+
+- [ ] Config block `ai_council.chairman: { mode: host|member|auto,
+      member?: <name> }`, default `host` (today's behaviour, byte-
+      identical). `auto` picks the highest-tier enabled member that did
+      **not** deliberate in the session; if every enabled member
+      deliberated, fall back to `host` with a visible verdict
+      annotation (`Chairman: host (no non-panel member available)`).
+      `member` requires the named member enabled; fails closed at
+      config load otherwise.
+- [ ] Orchestrator dispatch: after consensus scoring (and stance tally,
+      when on), render the chairman prompt (transcript with identities
+      restored + the lens synthesis template) and send as one member
+      call through the existing client/transport layer; billable rules,
+      `on_overrun`, and daily ledger apply unchanged.
+- [ ] Chairman call failure → host-synthesis fallback with the
+      annotation `Chairman: <member> (FAILED — host fallback)`; never a
+      silent substitution.
+- [ ] `council:estimate` shows the chairman call as its own row when
+      `mode != host`.
+- [ ] ADR via `adr-create`: chairman-mode supersedes the
+      always-host-synthesis stance in the council skill; records the
+      bias argument and the default-`host` compatibility guarantee.
+- [ ] Tests: auto-selection (non-panel preference, fallback path),
+      fail-closed `member` validation, failure annotation, estimate
+      row; all against the fake-client harness.
+
+**Exit criteria:** `npx vitest run
+tests/scripts/ai_council/orchestrator.test.ts
+tests/scripts/ai_council/config.test.ts` green including the new cases;
+`mode: host` parity snapshot unchanged; ADR file exists and passes the
+ADR lint.
+
+**Rollback:** default is `host`; removing the config block and dispatch
+commit restores prior behaviour exactly.
+
+## Phase 3 — Debate enforcement gates
+
+Prompt-level directive is free; deterministic checks add bounded,
+visible repair cost.
+
+- [ ] Add the anti-conformity directive to the round-2+ augmented prompt
+      in `prompts.ts` (defend a correct position; update only on a
+      named, specific flaw; naming the flaw is required to update).
+      Identical text for `api`, `cli`, and `manual` transports.
+- [ ] `ai_council.debate_gates.enabled` (default `false`) activating two
+      deterministic post-round checks on the debate path:
+      **dissent quota** (≥ 2 members with non-identical objection
+      markers; below quota → one targeted dissent re-prompt to the most
+      recently converged member) and **novelty gate** (round-N reply
+      must not be a normalised near-duplicate of the member's round-N−1
+      reply; duplicate → one targeted re-prompt). Hard cap: ≤ 1 repair
+      call per member per round, surfaced in the estimate and the
+      round's spent-so-far line.
+- [ ] `--restate` flag (and `ai_council.restate.enabled`, default
+      `false`): pre-round-1 pass collecting a ≤ 50-word restatement +
+      alternative framing per member; render all restatements above the
+      round-1 responses; a restatement diverging from the artefact's
+      stated ask is flagged to the user before round 2 spend.
+- [ ] Manual-mode parity: gates emit their re-prompt blocks through the
+      same paste flow; restate is one extra block per member.
+- [ ] Tests: quota satisfied/violated fixtures, near-duplicate
+      detection boundary cases, repair-cap enforcement, restate
+      rendering, estimate rows.
+
+**Exit criteria:** new test file green; with both keys `false`, debate
+fixtures produce parity-snapshot-identical output; estimate for an
+enabled run shows worst-case repair rows.
+
+**Rollback:** both features default-off behind their keys; the
+directive text is one revertible commit in `prompts.ts`.
+
+## Phase 4 — Persona placebo benchmark (measure, don't adopt)
+
+Settles Source G's centerpiece claim with the existing bench rig
+discipline. No persona ships from this roadmap regardless of outcome.
+
+- [ ] Fixture set: 10–15 option-shaped decision questions (architecture
+      forks, trade-offs) with pre-registered blind-judging rubrics,
+      stored under the bench fixtures tree.
+- [ ] Three arms on the existing council transports:
+      (a) method-persona prompts (the five shipped advisor personas) on
+      ≥ 2 distinct providers; (b) the same prompts rebranded as
+      famous-figure personas (persona text held constant, only the
+      identity framing swapped); (c) bare multi-provider calls, no
+      persona. Single-provider replication of all three arms as a
+      secondary axis.
+- [ ] Blind judging via the existing verification-judge pattern; judge
+      never sees arm labels.
+- [ ] Verdict recorded in `docs/proof.md` + `CLAIMS.md` shape: per-arm
+      scores, the pre-registered hypothesis (a ≈ b on lift; provider
+      diversity > persona identity), and honest-null reporting if arms
+      are indistinguishable.
+- [ ] Disposition step: on a measured, non-trivial lift for persona
+      arms *beyond* provider diversity, spawn a
+      `road-to-opt-council-deliberation-followup.md` for
+      panel-mode (which then owns the replace-mode-invariant ADR);
+      on a null result, record the CUT as evidence-closed with re-open
+      conditions (new model generations, changed provider landscape).
+
+**Exit criteria:** benchmark artefacts exist for all arms; proof/claims
+entries pass the claims lint; the disposition step is executed (either
+the follow-up file exists or the evidence-closed record does).
+
+**Rollback:** benchmark is additive tooling + fixtures; nothing
+user-facing changes in this phase.
+
+## Phase 5 — close out the source file
+
+- [ ] Move `agents/tmp/council-inteligence.txt` → `agents/tmp.old/` in the
+      main checkout (local, gitignored on both sides) — the analysis and
+      the draft it carried are fully absorbed by this roadmap.
+
+## Blockers
+
+### blocker: contested-design-council-pass
+
+- **Status:** open
+- **Owner:** user (billable spend)
+- **Blocks:** Phase 2 auto-selection detail, Phase 3 repair-call policy
+- **What to do:** run `/council:design` on two questions before those
+  phases execute: (1) should `chairman: auto` prefer tier or
+  provider-family-difference when both are available; (2) should gate
+  repair calls fire automatically under the cap or require a one-line
+  confirm in interactive runs. Append the convergence as a
+  `## Council notes` block here.
+- **Resolved when:** the council-notes block exists in this file with
+  both questions answered.
+
+### blocker: benchmark-spend-authorization
+
+- **Status:** open
+- **Owner:** user (billable spend)
+- **Blocks:** Phase 4 execution (authoring the fixtures is unblocked)
+- **What to do:** approve the estimated multi-arm benchmark budget once
+  the fixture count is fixed (estimate rendered by `council:estimate`
+  across arms before the first billable call).
+- **Resolved when:** the user has confirmed the run budget in-session.
+
+## Acceptance criteria (anti-dump)
+
+- Every new capability is default-off; with all new keys at defaults,
+  parity snapshots for consult, debate, and synthesis paths are
+  byte-identical to pre-roadmap output.
+- No new artefact duplicates an ALREADY-HAVE row in the gap-table; the
+  FOLD rows land inside their named existing artefacts (`replay.ts`,
+  lens templates), not as new files.
+- All new config keys documented in
+  `docs/contracts/ai-council-config.md` with schema validation
+  rejecting unknown values; chairman ADR landed and lint-green.
+- Iron-Law wording matches shipped behaviour everywhere (Phase 0 grep
+  clean) — no public-facing claim about the protocol exists without a
+  CLAIMS.md entry or a proof artefact.
+- Personas: zero persona artefacts added; the Phase 4 verdict (lift or
+  honest null) is recorded before any panel-mode follow-up exists.
+
