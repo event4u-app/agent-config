@@ -521,10 +521,18 @@ stale candidates.
       paired (both orders, reject-on-flip → 28 inconsistent excluded). -->
 - [ ] RTK rule + skill are active in a consumer-shaped project; trigger gap closed;
       deterministic wrap hook ships with passing tests (Phases 1–3).
-- [ ] Cache-aware ordering + kernel byte-stability are CI-enforced (Phase 5).
+- [x] Cache-aware ordering + kernel byte-stability are CI-enforced (Phase 5).
+      <!-- met (reality-sync 2026-07-11): `check_kernel_prefix_stability`
+      (taskfiles/engine.yml, wired into the CI cadence) fails if the always-loaded
+      kernel-rule prefix drifts from internal/bench/reports/kernel-prefix.json — a
+      change there invalidates every consumer's KV-cache. Shipped earlier
+      (token-saving Phase 5); the acceptance box was stale-open. -->
 - [ ] An always-loaded budget linter gates CI at the quality-elbow threshold
       (Phase 8).
-- [ ] The Phase 10 backlog is triaged (no stale candidates).
+- [x] The Phase 10 backlog is triaged (no stale candidates).
+      <!-- met (reality-sync 2026-07-11): all 8 Phase-10 backlog items are [x]
+      (each promoted to a phase, folded, or triaged with a recorded reason —
+      verified). The acceptance box was stale-open. -->
 - [ ] Every shipped lever carries a measured before/after at held-constant
       quality — no lever shipped on an unmeasured claim.
 
