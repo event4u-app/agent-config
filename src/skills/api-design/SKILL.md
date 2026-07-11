@@ -48,13 +48,14 @@ Do NOT use when:
 Routes versioned via URL prefix: `/api/v1/...`, `/api/v2/...`
 
 ```
-routes/api/v1/projects.php  → /api/v1/projects
+routes/api/v1/projects.php  → /api/v1/projects   (Laravel)
+app/api/v1/projects/route.ts → /api/v1/projects   (Next.js)
 routes/api/v2/projects.php  → /api/v2/projects
 ```
 
 ### Automatic fallback
 
-If a route doesn't exist in the requested version, the system falls back to the next older version. Configured in `config/app.php`:
+If a route doesn't exist in the requested version, the system falls back to the next older version. Configured in the framework's app config (`config/app.php` in Laravel):
 
 ```php
 'api_versioning' => [

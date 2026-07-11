@@ -183,18 +183,9 @@ For each code path, test these scenarios mentally:
 | **State** | Uninitialized state, partial updates, rollback failures |
 | **External** | Network timeout, API errors, malformed responses |
 
-### 3. Known bug patterns (PHP/Laravel)
+### 3. Known bug patterns
 
-- N+1 queries hidden in loops or accessors
-- Missing `->fresh()` after update when using same instance
-- Eloquent lazy loading in queued jobs (serialization issues)
-- `now()` timezone mismatches
-- Missing FK constraints allowing orphaned records
-- `DB::transaction()` with external side effects (emails, API calls)
-- Model events firing during seeding or migration
-- Off-by-one errors in pagination or date ranges
-- Silent exception swallowing (`catch (\Exception $e) {}`)
-- Floating point comparison for money/quantities
+→ PHP/Laravel bug-pattern catalogue: see [`php-debugging`](../php-debugging/SKILL.md).
 
 ### 4. Output format (proactive mode)
 

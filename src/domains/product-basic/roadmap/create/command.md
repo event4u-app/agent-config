@@ -86,7 +86,7 @@ Use the template structure:
 ## Acceptance Criteria
 
 - [ ] {criteria}
-- [ ] All quality gates pass (PHPStan, Rector, tests)
+- [ ] All quality gates pass (static analysis, linter, tests)
 
 ## Notes
 

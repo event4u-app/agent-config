@@ -147,7 +147,7 @@ search_events(organizationSlug='my-org', naturalLanguageQuery='count of database
 - **Skill:** `logging-monitoring` — full monitoring stack (Sentry + Grafana + Loki)
 - **Skill:** `bug-analyzer` — uses Sentry as input for bug investigation
 - **Command:** `/bug-investigate` — fetches Sentry details automatically
-- **Config:** `config/sentry.php` — Sentry DSN and configuration
+- **Config:** the SDK's config surface (`config/sentry.php` in Laravel, `sentry.client.config.ts` in Next.js) — Sentry DSN and configuration
 
 
 ## Output format

@@ -140,7 +140,7 @@ Runtime confirmation (e.g. *"actually POST a request and log the payload"*,
   it. If you stop at persistence you missed half the trace.
 * **Silent type coercion** — framework middleware often casts strings to
   ints or trims whitespace. Mark these as explicit hops.
-* **Confusing validation with authorization** — a FormRequest-style validator
+* **Confusing validation with authorization** — a request-validation-layer validator (FormRequest in Laravel, zod schema in Node)
   is a validation hop, not an authorization hop. They are distinct.
 * **Tenancy scope on retrieval** — the write path was tenant-scoped; the read
   path joined on a global table and leaked. Check both directions.

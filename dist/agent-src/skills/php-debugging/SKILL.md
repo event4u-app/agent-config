@@ -214,9 +214,26 @@ docker compose logs php-xdebug | rg --color=never "$REQUEST_ID"
 - Do NOT use var_dump() or dd() — use Xdebug breakpoints.
 - Do NOT debug in the fast container — switch to the Xdebug container.
 
+## Clarification guard — ambiguous repro → ask
+
+If the bug repro is unclear (which request, which user, which env, which input shape?), do not start placing breakpoints at random. Ask the user for the failing payload, the exact route, or the Sentry trace. Setting breakpoints based on a guessed flow wastes a session.
+
 ## Auto-trigger keywords
 
 - Xdebug
 - PHP debugging
 - breakpoint
 - step debugging
+
+## Known Laravel bug patterns (from bug-analyzer)
+
+- N+1 queries hidden in loops or accessors
+- Missing `->fresh()` after update when using same instance
+- Eloquent lazy loading in queued jobs (serialization issues)
+- `now()` timezone mismatches
+- Missing FK constraints allowing orphaned records
+- `DB::transaction()` with external side effects (emails, API calls)
+- Model events firing during seeding or migration
+- Off-by-one errors in pagination or date ranges
+- Silent exception swallowing (`catch (\Exception $e) {}`)
+- Floating point comparison for money/quantities

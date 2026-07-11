@@ -65,7 +65,7 @@ packs:
 ### 6. Implement
 
 - Apply the changes following all project coding standards (see AGENTS.md).
-- Use `Math` helper for calculations, proper type hints, `declare(strict_types=1)` in new files, etc.
+- Follow the project's coding standards in new files (strict typing, precise numeric helpers), etc.
 - Write the code as if a senior developer would review it.
 
 ### 7. Verify

@@ -58,7 +58,7 @@ release-shaped; route to `finishing-a-development-branch`.
 Walk the diff with the following gates:
 
 - Tests green on the integration suite (cite the run).
-- Quality gates green (PHPStan / linters / type-checks).
+- Quality gates green (static analysis / linters / type-checks).
 - Migrations are reversible OR the irreversibility is explicit.
 - Feature flag / kill switch named, default off unless intended.
 - Doc / changelog / release notes present (hand off to

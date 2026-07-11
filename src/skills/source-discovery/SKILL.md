@@ -92,7 +92,7 @@ distinct methods/fields *intended* to be used, OR the source exposes >50 methods
 and ≥1 is used, OR a prior hallucination on it, OR local types/README are
 insufficient)** — judged on *intended* use at discovery (still built **before**
 coding). For a card-worthy dependency named in the task: **local-first**
-(`node_modules` / `vendor` README + type defs; the **installed version is ground
+(`node_modules` / `vendor/` README + type defs; the **installed version is ground
 truth**), then the net (registry → repo host → homepage). **Pin the remote ref to
 the installed version — never blind `main`.** Reuse
 [`external-reference-deep-dive`](../../rules/external-reference-deep-dive.md) +

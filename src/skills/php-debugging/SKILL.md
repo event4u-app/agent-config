@@ -224,3 +224,16 @@ If the bug repro is unclear (which request, which user, which env, which input s
 - PHP debugging
 - breakpoint
 - step debugging
+
+## Known Laravel bug patterns (from bug-analyzer)
+
+- N+1 queries hidden in loops or accessors
+- Missing `->fresh()` after update when using same instance
+- Eloquent lazy loading in queued jobs (serialization issues)
+- `now()` timezone mismatches
+- Missing FK constraints allowing orphaned records
+- `DB::transaction()` with external side effects (emails, API calls)
+- Model events firing during seeding or migration
+- Off-by-one errors in pagination or date ranges
+- Silent exception swallowing (`catch (\Exception $e) {}`)
+- Floating point comparison for money/quantities

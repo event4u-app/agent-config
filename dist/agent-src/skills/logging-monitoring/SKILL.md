@@ -21,7 +21,7 @@ Do NOT use when:
 
 ## Procedure: Add logging or monitoring
 
-1. Read `config/logging.php` for available channels.
+1. Read the framework's logging config for available channels (`config/logging.php` in Laravel, `LOGGING` in Django, winston/pino in Node).
 2. Check for Grafana module: `app/Modules/Grafana/`.
 3. Read `agents/` docs for module-specific logging.
 

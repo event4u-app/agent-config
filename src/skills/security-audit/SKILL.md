@@ -67,7 +67,7 @@ User Input → Controller → Validation → Service → DB/File/External
 | Category | What to look for |
 |---|---|
 | **SQL Injection** | Raw queries with concatenation, missing parameter binding |
-| **XSS** | Unescaped output in Blade (`{!! !!}`), JSON responses with HTML |
+| **XSS** | Unescaped template output (Blade `{!! !!}`, JSX `dangerouslySetInnerHTML`, Jinja `|safe`), JSON responses with HTML |
 | **CSRF** | Missing middleware, API endpoints without token verification |
 | **Auth bypass** | Missing policy checks, broken gate logic, `withoutMiddleware()` |
 | **IDOR** | Direct object access without ownership verification |
@@ -81,14 +81,7 @@ User Input → Controller → Validation → Service → DB/File/External
 
 ### 4. Framework-specific checks
 
-**Laravel:**
-- `env()` in non-config files (leaks in debug mode)
-- Debug mode (`APP_DEBUG=true`) in production
-- Missing `$fillable` on models used with `request()->all()`
-- `Route::any()` exposing unintended HTTP methods
-- Missing rate limiting on login/register/password-reset
-- Broadcast channels without proper authorization
-- Missing encryption on sensitive cookie/session data
+→ Laravel-specific checks: see [`laravel`](../laravel/SKILL.md) § Security audit checks.
 
 ### 5. Dependency audit
 

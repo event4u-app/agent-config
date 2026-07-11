@@ -133,7 +133,7 @@ Then add these **Laravel-specific** checks:
 ## Config and environment
 
 - Read configuration from config files, not directly from `env()` outside config files.
-- Do not introduce new env variables unless necessary.
+- Do not introduce new environment variables unless necessary.
 - Reuse existing config structure and naming patterns.
 
 ## Database interaction
@@ -203,3 +203,16 @@ When generating Laravel code:
 - middleware
 - route
 - application structure
+
+## Security audit checks (from security-audit)
+
+Laravel-specific audit list (carved out of the generic `security-audit`
+skill, 2026-07-12):
+
+- `env()` in non-config files (leaks in debug mode)
+- Debug mode (`APP_DEBUG=true`) in production
+- Missing `$fillable` on models used with `request()->all()`
+- `Route::any()` exposing unintended HTTP methods
+- Missing rate limiting on login/register/password-reset
+- Broadcast channels without proper authorization
+- Missing encryption on sensitive cookie/session data

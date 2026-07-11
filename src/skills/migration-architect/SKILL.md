@@ -117,7 +117,8 @@ Next: /laravel-migration (or framework-native equivalent) for the DDL of phase 1
 
 ## Do NOT
 
-- Do NOT write DDL — that is the framework-specific migration skill's job (`laravel-migration` for Laravel).
+- Do NOT write DDL — that is the framework-specific migration skill's job
+  (→ [`laravel-migration`](../laravel-migration/SKILL.md) for Laravel).
 - Do NOT collapse phases to "ship it" because the user is impatient;
   surface the risk and let the user decide.
 - Do NOT skip the deprecation cycle because nobody is using the old

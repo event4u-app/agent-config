@@ -100,7 +100,7 @@ Run the project's type-checker and linter after each significant step — do NOT
 
 | Stack | Typical pipeline |
 |---|---|
-| Laravel / PHP | `vendor/bin/phpstan analyse` → `vendor/bin/rector process` → `vendor/bin/ecs check --fix` → re-run PHPStan |
+| Laravel / PHP | `vendor/bin/phpstan analyse` → `vendor/bin/rector process` → `vendor/bin/ecs check --fix` → re-run the static analyser |
 | TypeScript | `tsc --noEmit` → `eslint --fix` → `prettier --write` |
 | Python | `mypy` (or `pyright`) → `ruff check --fix` → `ruff format` |
 | Go | `go vet ./...` → `golangci-lint run --fix` → `gofmt -w` |
@@ -137,35 +137,35 @@ After the code changes are verified, update all affected documentation:
 ## Common refactoring patterns
 
 ### Rename (method, class, property)
-1. Find all usages → update all usages → update docs → run PHPStan → run tests.
+1. Find all usages → update all usages → update docs → run the static analyser → run tests.
 
 ### Extract method / class
-1. Create the new method/class → move logic → update caller → update docs → run PHPStan → run tests.
+1. Create the new method/class → move logic → update caller → update docs → run the static analyser → run tests.
 
 ### Move class to different namespace
-1. Move file → update namespace → find all `use` statements → update imports → update docs → run PHPStan.
+1. Move file → update namespace → find all `use` statements → update imports → update docs → run the static analyser.
 
 ### Change method signature
-1. Update the method → find all callers → update each caller → present test changes → update docs → run PHPStan.
+1. Update the method → find all callers → update each caller → present test changes → update docs → run the static analyser.
 
 ### Change API endpoint
 1. Update controller + request + resource + OpenAPI schemas + route → present test changes →
-   update docs (`agents/reference/docs/controller.md`, `agents/reference/docs/api-resources.md`) → run PHPStan → run tests.
+   update docs (`agents/reference/docs/controller.md`, `agents/reference/docs/api-resources.md`) → run the static analyser → run tests.
 
 ### Replace implementation (e.g. switch service)
 1. Create new implementation → update binding → find all direct references → update → present test
-   changes → update docs → run PHPStan → run tests → remove old implementation.
+   changes → update docs → run the static analyser → run tests → remove old implementation.
 
 ### Move/restructure module
 1. Move files → update namespaces → update `ModuleServiceProvider` if needed → update module routes →
-   update module agent docs → update project contexts → run PHPStan → run tests.
+   update module agent docs → update project contexts → run the static analyser → run tests.
 
 ## Safety rules
 
 - **Never skip the caller search** — missing a caller is the #1 cause of broken refactorings.
 - **Never remove old code before verifying** the new code works everywhere.
 - **Never change test expectations without user approval** — explain what changes and why first.
-- **Run PHPStan after every step**, not just at the end.
+- **Run the static analyser after every step** (PHPStan, `tsc --noEmit`, mypy — whichever the project runs), not just at the end.
 - **Run tests after every step**, not just at the end.
 - **Update docs after code changes** — stale docs are worse than no docs.
 - **Do NOT commit or push** — only apply local changes.

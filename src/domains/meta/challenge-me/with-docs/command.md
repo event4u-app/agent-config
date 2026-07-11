@@ -262,7 +262,7 @@ When the user states "X is implemented as Y" AND the claim is
 constraint), agent runs `view` / `grep` / `codebase-retrieval` to
 verify. Mismatch → single question block:
 
-> Your seed says X works via Y. The code (`path/to/file.php:123`) shows
+> Your seed says X works via Y. The code (`path/to/file:123`) shows
 > it via Z. Which is right?
 > 1. **Code is right, my seed was wrong** — recommended.
 > 2. Seed is right, code is stale — separate fix needed.
