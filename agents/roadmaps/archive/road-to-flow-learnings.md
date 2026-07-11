@@ -181,8 +181,15 @@ it never bridges to or drives another tool's runtime.
 - [x] Fixture test: ≥3 fixture repos with one seeded failure — failing
       repo red with its finding, siblings green, aggregate JSON
       schema-validated.
-- [ ] Real org fleet run (internal-adoption lever + dogfood corpus).
-      <!-- blocked-by: org-fleet-run -->
+- [x] Real org fleet run (internal-adoption lever + dogfood corpus).
+      <!-- done 2026-07-11: maintainer ran `agent-config init --fleet fleet.yaml`
+      (global) across 3 real galawork org repos — galawork-api, galawork-web,
+      capisco — ALL green (installed + conformance exit 0). A `--json` re-run
+      (idempotent) with one intentionally-nonexistent seeded repo produced a
+      SCHEMA-VALID aggregate (validateFleetReport → no problems): 3 siblings ok +
+      the seeded repo `preflight-failed` red, and the failure did NOT abort the
+      siblings (per-repo isolation confirmed on real repos). Report operator-local
+      (not committed). Seeded-red isolation also covered by the [x] fixture test. -->
 
 **Exit gate:** fixture test green (deterministic); org fleet run
 recorded via the blocker below.
@@ -274,7 +281,13 @@ blocker below.
 ## Blockers
 
 ### blocker: org-fleet-run
-- **Status:** open
+- **Status:** resolved
+- **Resolved 2026-07-11:** all resolve conditions met on a real run —
+  `agent-config init --fleet` across 3 real galawork repos (galawork-api,
+  galawork-web, capisco) all **green + conformance-passing**; a `--json` capture
+  with one nonexistent seeded repo yielded a **schema-valid** aggregate
+  (`validateFleetReport` clean) where the **seeded repo is red** with its
+  pre-flight finding and **all 3 siblings stayed green** (isolation confirmed).
 - **Owner:** maintainer
 - **Blocks:** Phase 1 — Fleet rollout
 - **What to do:**
