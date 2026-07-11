@@ -7,6 +7,11 @@ execution:
 
 # Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater
 
+> **Near-archive (verified 2026-07-12, road-to-opt-portfolio-consolidation
+> Phase 3):** 18 of 19 steps done. The single open step is the real org
+> fleet run (`blocker: org-fleet-run`, maintainer-owned) — nothing else
+> blocks archival.
+
 > Source-level comparison against **Source F** — an external
 > agent-orchestration / scaffolding suite (a stale, zero-own-commit fork
 > of a high-star upstream) — re-verified on both sides this session.

@@ -5,7 +5,10 @@ parent_roadmap: subagent-value-realization
 
 # Roadmap: Follow-up to Subagent value realization
 
-> Seed real orchestration telemetry from production use, then re-gate the `subagents.auto` default flip on that evidence via `gateVerdict()`.
+> Seed real orchestration telemetry from production use, then confirm-or-demote the ADR-117 `subagents.auto: on` default on that evidence via `gateVerdict()`.
+> <!-- reconciled 2026-07-12 with ADR-117 (default flipped ask → on on 2026-07-09,
+>      bounded-downside basis; this roadmap was written pre-flip) via
+>      road-to-opt-portfolio-consolidation Phase 1. -->
 
 ## Context
 
@@ -52,10 +55,10 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
 **Exit criteria:** ≥ 20 orchestration lines in the audit log; `/cost:report` surfaces a non-empty orchestration summary; classifier recall recorded. The ≥ 20-dispatch measurement must include the `first_pass_success` / `escalated` quality columns (per road-to-proof-under-real-conditions Phase 4 — cost and quality reported as a pair, never savings alone).
 **Rollback:** none (measurement only; no code change).
 
-## Phase 2: Re-gate the `auto: on` flip
+## Phase 2: Confirm or demote the ADR-117 `auto: on` default
 
-- [ ] **Step 1:** Feed the accumulated real `ask`-mode orchestration telemetry through the existing `gateVerdict()` / `resolveShippedDefault()`.
-- [ ] **Step 2:** If (and only if) the data shows a net token-or-time win at held quality, propose flipping `subagents.auto` default `ask → on` as a maintainer decision; otherwise record the renewed honest-null and keep `ask`.
+- [ ] **Step 1:** Feed the accumulated real orchestration telemetry through the existing `gateVerdict()` / `resolveShippedDefault()`.
+- [ ] **Step 2:** If the data shows a net token-or-time win at held quality, record the ADR-117 `on` default as evidence-CONFIRMED (bounded-downside basis upgrades to measured); otherwise record the renewed honest-null and demote the default back to `ask` via ADR-117's retained demotion gate — a maintainer decision either way.
 - [ ] **Step 3:** Update `agents/settings/contexts/orchestration-default-flip-verdict.md` with the new evidence pass (date + outcome), per `no-roadmap-references` (inline, no session path).
 
 **Exit criteria:** `gateVerdict()` run on real telemetry; flip decision recorded with evidence either way.
@@ -80,7 +83,7 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
 - [x] `parallelizable:` classifier recall measured on the corpus.
       <!-- met 2026-07-11: recall 2/2 (v1-covered modes) + FP 0, via
       src/scripts/_lib/auto_dispatch.corpus.test.ts. -->
-- [ ] The `auto: on` flip is re-evaluated through `gateVerdict()` on real telemetry, with the outcome recorded — flip only if evidenced.
+- [ ] The ADR-117 `auto: on` default is re-evaluated through `gateVerdict()` on real telemetry, with the outcome recorded — confirmed if evidenced, demoted to `ask` if not.
 
 ## Blockers
 
@@ -89,9 +92,10 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
 - **Owner:** user
 - **Blocks:** Phase 1 — Seed real telemetry
 - **What to do:**
-  1. Use the agent with `subagents.enabled: true` and `subagents.auto: ask`
-     (or `on`) during real work, long enough to accumulate real orchestrated
-     dispatches — the build work is done; only real usage produces this.
+  1. Use the agent with `subagents.enabled: true` under the post-ADR-117
+     default (`subagents.auto: on`) during real work, long enough to
+     accumulate real orchestrated dispatches — the build work is done;
+     only real usage produces this.
   2. Check the current-month audit log line count:
      `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`.
   3. Once the count reaches ≥ 20, resume this roadmap

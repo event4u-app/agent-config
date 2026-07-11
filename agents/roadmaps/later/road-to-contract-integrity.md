@@ -11,6 +11,13 @@ status: later
 > prunes against the Phase-0 census; documenting families before the cull would
 > enshrine a bloated surface. **Resume when** that pruning lands. Open `[ ]`
 > items are intentionally kept open — this roadmap is parked whole, not dropped.
+>
+> **Dependency status update (2026-07-12,
+> road-to-opt-portfolio-consolidation Phase 2):** `road-to-tier-removal`
+> was revived from `later/` to active — its soak evidence (deprecations
+> block shipped in released 8.10.0, zero breakage reports) verified. The
+> circular parking is broken; this roadmap STAYS parked until that
+> pruning actually lands (the resume condition above is unchanged).
 
 **Trigger:** Two independent external reviews of the unreleased `main` (103
 commits past `6.1.0` = 6.2.0-in-progress, captured in

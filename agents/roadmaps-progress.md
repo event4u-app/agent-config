@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **9** open blockers
 
 ## Overall
 
-**98 / 168 steps done · 58%**
+**100 / 175 steps done · 57%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+███████████████████████░░░░░░░░░░░░░░░░░   57%
 ```
 
 ## Open roadmaps
@@ -19,11 +19,11 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 15 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 6% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-flow-learnings) | ██████████ 95% |
-| 4 | [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md) | 1 | 1 | 1 | 0 | 0 | 0 | [1](#blockers-road-to-install-path-convergence-followup) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 7 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 4 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
+| 5 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 8 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 | 9 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
 | 10 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 9 | 26 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 74% |
 
@@ -89,22 +89,6 @@ _2 blockers resolved._
 
 _1 blocker resolved._
 
-### [road-to-install-path-convergence-followup.md](roadmaps/road-to-install-path-convergence-followup.md)
-
-**Follow-up to install-path convergence — delist decision checkpoint** — 0 / 1 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Delist decision checkpoint | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-install-path-convergence-followup"></a>
-**Blockers**
-
-- **legacy** (owner: user) — blocks entire roadmap
-  - **What to do:**
-    the bootstrap shim has shipped and a monitoring window
-  - **Resolved when:** condition described above clears
-
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
 **Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 6 / 12 done (50%)
@@ -144,8 +128,8 @@ _1 blocker resolved._
 
 - **real-orchestration-usage** (owner: user) — blocks Phase 2 (and thereby Phase 3's decision)
   - **What to do:**
-    telemetry. Use the agent on genuinely parallel/ordered multi-file tasks with
-    `subagents.auto: ask`, then check
+    telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under
+    the post-ADR-117 default (`subagents.auto: on`), then check
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
 
@@ -178,21 +162,33 @@ _1 blocker resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Seed real telemetry | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 2 | Re-gate the `auto: on` flip | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
+| 2 | Confirm or demote the ADR-117 `auto: on` default | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
 
 <a id="blockers-road-to-subagent-value-realization-followup"></a>
 **Blockers**
 
 - **telemetry-sample-size** (owner: user) — blocks Phase 1 — Seed real telemetry
   - **What to do:**
-    1. Use the agent with `subagents.enabled: true` and `subagents.auto: ask`
-    (or `on`) during real work, long enough to accumulate real orchestrated
-    dispatches — the build work is done; only real usage produces this.
+    1. Use the agent with `subagents.enabled: true` under the post-ADR-117
+    default (`subagents.auto: on`) during real work, long enough to
+    accumulate real orchestrated dispatches — the build work is done;
+    only real usage produces this.
     2. Check the current-month audit log line count:
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`.
     3. Once the count reaches ≥ 20, resume this roadmap
     (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
   - **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines for the current month.
+
+### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
+
+**Command `tier:` Alias Removal** — 2 / 7 done (29%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Evidence mechanism build-out | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 2 | Internal dependency audit (just-in-time) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3 | External soak confirmation | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 4 | Removal execution (blocked on Phases 1–3) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
 
