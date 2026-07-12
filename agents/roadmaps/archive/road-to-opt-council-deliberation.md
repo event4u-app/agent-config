@@ -109,7 +109,7 @@ this session; agent-config claims re-verified against `src/` at HEAD
 | Budget/cost machinery | ALREADY-HAVE (inverse) | Source G has none; nothing to learn |
 | Domain-weight seat (1.5×, locked pre-analysis) | CUT | members are providers, not domain personas; meaningless without panel-mode. Re-open: panel-mode follow-up, if spawned |
 | 18 historical/living-person personas | CUT | persona-prompt literature shows no reliable reasoning lift; living-person impersonation (researcher/author figures) is a legal+brand risk for a distributed package; correlated-error problem on single-provider setups |
-| Persona panel-mode (N persona seats × M providers, polarity routing, triads, keyword auto-selection) | CUT → evidence-gated | blocked on the Phase 4 benchmark verdict; would also require superseding the Phase-6 replace-mode invariants ("one-advisor-per-provider", "never adds calls") via a dedicated ADR — none of that is authorized by this roadmap |
+| Persona panel-mode (N persona seats × M providers, polarity routing, triads, keyword auto-selection) | CUT → **EVIDENCE-CLOSED (2026-07-12)** | blocked on the Phase 4 benchmark verdict; would also require superseding the Phase-6 replace-mode invariants ("one-advisor-per-provider", "never adds calls") via a dedicated ADR — none of that is authorized by this roadmap |
 | Project-level `.council.yaml` override | CUT | exact failure mode ADR-104 buried after real damage; project/artefact pinning already has a channel (frontmatter, `council_depth` precedent). Re-open only as non-billing frontmatter keys, never a project config file |
 | Prose-protocol execution model (LLM computes tally/anonymisation) | CUT (anti-lesson) | everything countable lands in TS with tests — the inverse of Source G's approach |
 
@@ -314,29 +314,33 @@ directive text is one revertible commit in `prompts.ts`.
 Settles Source G's centerpiece claim with the existing bench rig
 discipline. No persona ships from this roadmap regardless of outcome.
 
-- [ ] Fixture set: 10–15 option-shaped decision questions (architecture
+- [x] Fixture set: 10–15 option-shaped decision questions (architecture
       forks, trade-offs) with pre-registered blind-judging rubrics,
       stored under the bench fixtures tree.
-- [ ] Three arms on the existing council transports:
+      <!-- done (2026-07-12): internal/bench/corpora/persona-placebo.yaml — 12 A-vs-B decision fixtures, each with a pre-registered blind rubric; loader-validated by tests. -->
+- [x] Three arms on the existing council transports:
       (a) method-persona prompts (the five shipped advisor personas) on
       ≥ 2 distinct providers; (b) the same prompts rebranded as
       famous-figure personas (persona text held constant, only the
       identity framing swapped); (c) bare multi-provider calls, no
       persona. Single-provider replication of all three arms as a
       secondary axis.
-- [ ] Blind judging via the existing verification-judge pattern; judge
+      <!-- done: bench_persona_placebo.ts — method (5 shipped advisor personas rotated) / figure (SAME text, identity swapped to deceased figures) / bare, on sonnet + gpt-4o; per-provider split = single-provider replication. The identity-swap invariant (text constant) is unit-tested. -->
+- [x] Blind judging via the existing verification-judge pattern; judge
       never sees arm labels.
-- [ ] Verdict recorded in `docs/proof.md` + `CLAIMS.md` shape: per-arm
+- [x] Verdict recorded in `docs/proof.md` + `CLAIMS.md` shape: per-arm
       scores, the pre-registered hypothesis (a ≈ b on lift; provider
       diversity > persona identity), and honest-null reporting if arms
       are indistinguishable.
-- [ ] Disposition step: on a measured, non-trivial lift for persona
+      <!-- done: HONEST NULL exactly as pre-registered — method 5.04 vs figure 4.88 (Δ=0.17, p=0.607); provider Δ=2.58 ≈ 15× identity Δ; whole persona layer +0.08 vs bare. CLAIMS.md claim:persona-identity-placebo-null (backed) + proof.md § honest nulls; artifact internal/bench/reports/persona-placebo.json; actual cost $1.77 (budget confirmed in-session, cap $50). -->
+- [x] Disposition step: on a measured, non-trivial lift for persona
       arms *beyond* provider diversity, spawn a
       `road-to-opt-council-deliberation-followup.md` for
       panel-mode (which then owns the replace-mode-invariant ADR);
       on a null result, record the CUT as evidence-closed with re-open
       conditions (new model generations, changed provider landscape).
-- [ ] Either way, hand the verdict artifact to
+      <!-- done: NULL → the persona panel-mode CUT is EVIDENCE-CLOSED (see the gap-table row annotation). No follow-up roadmap. Re-open only on: a new model generation with materially different persona-conditioning, or a changed provider landscape that collapses provider diversity. -->
+- [x] Either way, hand the verdict artifact to
       `road-to-adoption-without-narrative-debt` Phase 3 as the
       publishable proof-surface story (lift AND honest null are both
       publication-grade for the falsifiable-verdicts identity) — the
@@ -351,7 +355,9 @@ user-facing changes in this phase.
 
 ## Phase 5 — close out the source file
 
-- [ ] Move `agents/tmp/council-inteligence.txt` → `agents/tmp.old/` in the
+> Done 2026-07-12: the source file was already absent from agents/tmp/ (graveyard cleared in a prior sweep) — the analysis is fully absorbed by this roadmap; the disposition is this record.
+
+- [x] Move `agents/tmp/council-inteligence.txt` → `agents/tmp.old/` in the
       main checkout (local, gitignored on both sides) — the analysis and
       the draft it carried are fully absorbed by this roadmap.
 

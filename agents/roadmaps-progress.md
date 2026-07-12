@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **9** open blockers
+> 26 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **8** open blockers
 
 ## Overall
 
-**113 / 375 steps done · 30%**
+**91 / 346 steps done · 26%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
 ```
 
 ## Open roadmaps
@@ -34,15 +34,14 @@
 | 16 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 17 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 19 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 7 | 22 | 0 | 0 | [1](#blockers-road-to-opt-council-deliberation) | ████████░░ 76% |
-| 20 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 5 | 5 | 0 | 0 | 0 | █████░░░░░ 50% |
-| 21 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
-| 22 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 23 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 24 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 25 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 34 | 4 | 1 | 0 | [2](#blockers-road-to-team-mode) | █░░░░░░░░░ 11% |
-| 26 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
-| 27 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
+| 19 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 5 | 5 | 0 | 0 | 0 | █████░░░░░ 50% |
+| 20 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
+| 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 22 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 23 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 24 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 34 | 4 | 1 | 0 | [2](#blockers-road-to-team-mode) | █░░░░░░░░░ 11% |
+| 25 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 26 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
 
 ---
 
@@ -240,31 +239,6 @@ _2 blockers resolved._
   - **Resolved when:** ≥1 non-maintainer has reviewed a merged PR, or the phase is explicitly deferred pending adoption.
 
 _1 blocker resolved._
-
-### [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md)
-
-**Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater** — 22 / 29 done (76%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Claims hygiene + verdict falsifiability | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Option-level stance tally | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Chairman synthesis (opt-in) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 3 | Debate enforcement gates | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 4 | Persona placebo benchmark (measure, don't adopt) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 5 | close out the source file | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-opt-council-deliberation"></a>
-**Blockers**
-
-- **contested-design-council-pass** (owner: user (billable spend) — executed under the standing spend-to-unblock authorization; estimate disclosed ($0.83 projected), actual $0.08.) — blocks Phase 2 auto-selection detail, Phase 3 repair-call policy
-  - **What to do:**
-    phases execute: (1) should `chairman: auto` prefer tier or
-    provider-family-difference when both are available; (2) should gate
-    repair calls fire automatically under the cap or require a one-line
-    confirm in interactive runs. Append the convergence as a
-    `## Council notes` block here.
-  - **Resolved when:** the council-notes block exists in this file with both questions answered. → See `## Council notes` below.
 
 ### [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md)
 
