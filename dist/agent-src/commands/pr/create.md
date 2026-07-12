@@ -83,6 +83,32 @@ only ask when an overlapping open PR makes the base genuinely ambiguous. Never
 improvise the base or silently proceed when behind **and** overlapping. The
 10-second fetch beats hours of rebase reconciliation after the parent PR lands.
 
+**On merge conflict: regenerate, don't abort.** Most conflicts on this class of
+branch are in **generated files** — the roadmap dashboard
+(`agents/roadmaps-progress.md`), `docs/proof.md`, condensation hashes, tool
+projections. Resolve **by regenerating from the merged sources**, never by
+hand-picking hunks:
+
+1. `./agent-config roadmap:progress` → dashboard.
+2. `./scripts-run src/scripts/build_proof` → `docs/proof.md`.
+3. `bash src/scripts/condense.sh --check` (re-`--mark-done` dependents on a
+   hash conflict) → condensation state.
+4. Stage regenerated files, complete the merge, re-run touched verification
+   before pushing.
+
+Only a conflict in **hand-authored** content is surfaced to the user; a
+generated-file conflict never is.
+
+### 1b-ii. Update freshness — MANDATORY on EVERY later push to an open PR
+
+The gate is not creation-only. **Every subsequent push** to a branch with an
+open PR (CI fix, review response, follow-up commit) re-runs the sequence first:
+`git fetch origin {target-base}` → behind-check → merge `origin/{target-base}`
+in (regenerating on conflict as above) → verify → push. A PR that sits open
+while its base advances goes stale silently; keeping the base merged at every
+touch keeps it `mergeStateStatus: CLEAN`. Behind-check `0` → the step costs one
+fetch and nothing else.
+
 ### 1c. PR-gate — archive completed roadmaps (MANDATORY)
 
 A roadmap that reached 100% (`count_open == 0 && count_deferred == 0`) must
