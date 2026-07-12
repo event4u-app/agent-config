@@ -39,6 +39,7 @@
 // describe block below: `manifest-integrity` / `lockfile-freshness` /
 // `unsupported-combos` reporting on a real lockfile, plus the full report and
 // `--json` over a manifest-present root, all byte-identical py-vs-ts.
+import * as crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -594,7 +595,7 @@ describe('doctor — team check', () => {
         claudeDir: string;
         home: string;
     }
-    const TEAM_ENV_KEYS = ['PATH', 'CODEX_HOME', 'CLAUDE_CONFIG_DIR', 'EVENT4U_CONFIG_HOME'];
+    const TEAM_ENV_KEYS = ['PATH', 'CODEX_HOME', 'CLAUDE_CONFIG_DIR', 'EVENT4U_CONFIG_HOME', 'CLAUDE_PLUGIN_DATA'];
 
     function withTeamEnv(setup: (t: TeamEnv) => void, fn: (t: TeamEnv) => void): void {
         const base = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-team-'));
@@ -613,6 +614,7 @@ describe('doctor — team check', () => {
         process.env['CODEX_HOME'] = t.codexHome;
         process.env['CLAUDE_CONFIG_DIR'] = t.claudeDir;
         process.env['EVENT4U_CONFIG_HOME'] = t.home;
+        delete process.env['CLAUDE_PLUGIN_DATA'];
         try {
             setup(t);
             fn(t);
@@ -644,6 +646,28 @@ describe('doctor — team check', () => {
     }
     function settings(t: TeamEnv, body: string): void {
         fs.writeFileSync(path.join(t.root, '.agent-settings.yml'), body);
+    }
+    /** Seed the upstream codex-plugin state for t.root with the gate toggled. */
+    function upstreamGateState(t: TeamEnv, stopReviewGate: boolean): void {
+        const canonical = fs.realpathSync.native(t.root);
+        const slug =
+            (path.basename(t.root) || 'workspace')
+                .replace(/[^a-zA-Z0-9._-]+/g, '-')
+                .replace(/^-+|-+$/g, '') || 'workspace';
+        const hash = crypto.createHash('sha256').update(canonical).digest('hex').slice(0, 16);
+        const dir = path.join(
+            t.claudeDir,
+            'plugins',
+            'data',
+            'codex-openai-codex',
+            'state',
+            `${slug}-${hash}`,
+        );
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'state.json'),
+            JSON.stringify({ version: 1, config: { stopReviewGate }, jobs: [] }),
+        );
     }
     const CODEX_PLUGIN_ENTRY = { 'codex@openai-codex': [{ scope: 'user', enabled: true }] };
     const ENABLED = 'ai_team:\n  enabled: true\n';
@@ -712,6 +736,111 @@ describe('doctor — team check', () => {
         );
     });
 
+    // --- sub-signal (a): expiry-aware auth (PR-#924 advisory finding) -----
+
+    /** Fake JWT with an `exp` claim — payload-decode only, no signature. */
+    function fakeJwt(exp: number): string {
+        const payload = Buffer.from(JSON.stringify({ exp })).toString('base64url');
+        return `eyJhbGciOiJub25lIn0.${payload}.sig`;
+    }
+    function codexAuthBody(t: TeamEnv, body: unknown): void {
+        fs.mkdirSync(t.codexHome, { recursive: true });
+        fs.writeFileSync(path.join(t.codexHome, 'auth.json'), JSON.stringify(body));
+    }
+    const PAST = Math.floor(Date.now() / 1000) - 3600;
+    const FUTURE = Math.floor(Date.now() / 1000) + 3600;
+
+    it('sub-signal (a): expired JWT access_token → warn "appears expired"', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuthBody(t, { tokens: { access_token: fakeJwt(PAST) } });
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain('codex auth ⚠️ expired');
+                expect(res['remedy']).toContain(
+                    'auth token appears expired — run `codex login`',
+                );
+            },
+        );
+    });
+
+    it('sub-signal (a): explicit past expires_at field → warn "appears expired"', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuthBody(t, { expires_at: PAST, tokens: {} });
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['remedy']).toContain('auth token appears expired');
+            },
+        );
+    });
+
+    it('sub-signal (a): live JWT access_token → ok, no presence-only note', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuthBody(t, { tokens: { access_token: fakeJwt(FUTURE) } });
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('codex auth ✅');
+                expect(res['message']).not.toContain('presence-only check');
+            },
+        );
+    });
+
+    it('sub-signal (a): expired id_token next to live access_token → ok (latest wins)', () => {
+        // Real ~/.codex/auth.json shape: refresh_token keeps access alive
+        // past the id_token's exp — an expired id_token alone is not an
+        // auth failure.
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuthBody(t, {
+                    tokens: { id_token: fakeJwt(PAST), access_token: fakeJwt(FUTURE) },
+                });
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('codex auth ✅');
+            },
+        );
+    });
+
+    it('sub-signal (a): no derivable expiry → ok + presence-only annotation', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuth(t); // {"tokens":{}} — nothing expiry-shaped
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain(
+                    'presence-only check — expiry not verifiable locally',
+                );
+            },
+        );
+    });
+
     it('sub-signal (b): claude host without the plugin → warn + install commands', () => {
         withTeamEnv(
             (t) => {
@@ -732,6 +861,73 @@ describe('doctor — team check', () => {
         );
     });
 
+    // --- sub-signal (b): namespace-resistant identity (PR-#924 finding) ---
+
+    /** `plugins/known_marketplaces.json` — the real on-disk source registry shape. */
+    function knownMarketplaces(t: TeamEnv, entries: Record<string, string>): void {
+        const pdir = path.join(t.claudeDir, 'plugins');
+        fs.mkdirSync(pdir, { recursive: true });
+        const body: Record<string, unknown> = {};
+        for (const [name, repo] of Object.entries(entries)) {
+            body[name] = { source: { source: 'github', repo } };
+        }
+        fs.writeFileSync(path.join(pdir, 'known_marketplaces.json'), JSON.stringify(body));
+    }
+
+    it('sub-signal (b): marketplace source repo matches upstream → verified, no annotation', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuthBody(t, { tokens: { access_token: fakeJwt(FUTURE) } });
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+                knownMarketplaces(t, { 'openai-codex': 'openai/codex-plugin-cc' });
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('codex plugin ✅');
+                expect(res['message']).not.toContain('identity not fully verified');
+            },
+        );
+    });
+
+    it('sub-signal (b): no marketplace registry → prefix match annotated as unverified', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuthBody(t, { tokens: { access_token: fakeJwt(FUTURE) } });
+                claudeHost(t, CODEX_PLUGIN_ENTRY); // no known_marketplaces.json
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain(
+                    'codex plugin ✅ — identity not fully verified (prefix match)',
+                );
+            },
+        );
+    });
+
+    it('sub-signal (b): namespace squat — codex@ prefix from a foreign repo → unverified', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuthBody(t, { tokens: { access_token: fakeJwt(FUTURE) } });
+                claudeHost(t, { 'codex@openai-codex': [{ scope: 'user' }] });
+                // Same marketplace NAME, foreign source repo — the squat case
+                // pure prefix matching cannot see.
+                knownMarketplaces(t, { 'openai-codex': 'attacker/codex-plugin-cc' });
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['message']).toContain('identity not fully verified (prefix match)');
+            },
+        );
+    });
+
     it('sub-signal (b): non-Claude-Code host → plugin n/a, all else green → ok', () => {
         withTeamEnv(
             (t) => {
@@ -748,7 +944,7 @@ describe('doctor — team check', () => {
         );
     });
 
-    it('sub-signal (c): review gate on while loop bound absent → warn', () => {
+    it('sub-signal (c): managed without an explicit bound → ok (shipped default 3 applies)', () => {
         withTeamEnv(
             (t) => {
                 settings(t, ENABLED + '  review_gate:\n    managed: true\n');
@@ -758,9 +954,9 @@ describe('doctor — team check', () => {
             },
             (t) => {
                 const res = _check_team(t.root);
-                expect(res['status']).toBe('warn');
-                expect(res['message']).toContain('review-gate ⚠️ on, loop bound absent');
-                expect(res['remedy']).toContain('ai_team.review_gate.max_consecutive_blocks');
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('review-gate on');
+                expect(res['message']).toContain('bound 3');
             },
         );
     });
@@ -780,6 +976,66 @@ describe('doctor — team check', () => {
                 const res = _check_team(t.root);
                 expect(res['status'], String(res['message'])).toBe('ok');
                 expect(res['message']).toContain('review-gate on');
+            },
+        );
+    });
+
+    it('sub-signal (c): managed with an invalid loop bound → warn', () => {
+        withTeamEnv(
+            (t) => {
+                settings(
+                    t,
+                    ENABLED + '  review_gate:\n    managed: true\n    max_consecutive_blocks: 0\n',
+                );
+                fakeCodex(t);
+                codexAuth(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain('loop bound invalid');
+                expect(res['remedy']).toContain('ai_team.review_gate.max_consecutive_blocks');
+            },
+        );
+    });
+
+    it('sub-signal (c): plugin gate enabled while managed:false → warn with enable hint + quoted upstream cost warning', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuth(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+                upstreamGateState(t, true);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain('plugin gate on, unmanaged');
+                expect(res['remedy']).toContain('ai_team.review_gate.managed: true');
+                expect(res['remedy']).toContain(
+                    '"The review gate can create a long-running Claude/Codex loop ' +
+                        'and may drain usage limits quickly."',
+                );
+            },
+        );
+    });
+
+    it('sub-signal (c): plugin gate enabled AND managed → ok, detail reflects both', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED + '  review_gate:\n    managed: true\n');
+                fakeCodex(t);
+                codexAuth(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+                upstreamGateState(t, true);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('review-gate on');
+                expect(res['message']).toContain('plugin gate on');
             },
         );
     });

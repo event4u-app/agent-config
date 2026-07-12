@@ -80,13 +80,88 @@ export function claude_plugin_installed(): boolean {
 }
 
 /**
+ * Codex plugin detection richness — presence plus namespace-resistant
+ * identity verification.
+ *
+ * `installed` — a `codex@<marketplace>` key exists in
+ * `plugins/installed_plugins.json` (prefix match, any marketplace).
+ * `identity_verified` — at least one such marketplace resolves, via the
+ * sibling `plugins/known_marketplaces.json` registry
+ * (`{ "<marketplace>": { source: { source: "github", repo: "owner/repo" } } }`
+ * — the real on-disk shape; `installed_plugins.json` entries themselves
+ * carry no repo/owner field), to the official upstream repo
+ * (`CODEX_MARKETPLACE_REPO`). When the registry file is absent, unreadable,
+ * or its entry has no `source.repo`, identity stays UNVERIFIED (honest
+ * fallback: prefix match only) — never inferred from the marketplace
+ * name alone, which any squatter can reuse.
+ */
+export interface CodexPluginIdentity {
+    readonly installed: boolean;
+    readonly identity_verified: boolean;
+}
+
+/** Marketplace names (the `@<marketplace>` suffix) a plugin id is installed from. */
+function _plugin_marketplaces(plugin_id: string): string[] {
+    const p = path.join(claude_config_dir(), 'plugins', 'installed_plugins.json');
+    let data: unknown;
+    try {
+        data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    } catch {
+        return [];
+    }
+    if (data === null || typeof data !== 'object') return [];
+    const plugins = (data as { plugins?: unknown }).plugins;
+    if (plugins === null || plugins === undefined || typeof plugins !== 'object') return [];
+    const prefix = `${plugin_id}@`;
+    return Object.keys(plugins as Record<string, unknown>)
+        .filter((k) => k.startsWith(prefix))
+        .map((k) => k.slice(prefix.length));
+}
+
+/** `source.repo` recorded for a marketplace in `known_marketplaces.json`, or null. */
+function _marketplace_source_repo(marketplace: string): string | null {
+    const p = path.join(claude_config_dir(), 'plugins', 'known_marketplaces.json');
+    let data: unknown;
+    try {
+        data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    } catch {
+        return null;
+    }
+    if (data === null || typeof data !== 'object') return null;
+    const entry = (data as Record<string, unknown>)[marketplace];
+    if (entry === null || entry === undefined || typeof entry !== 'object') return null;
+    const source = (entry as { source?: unknown }).source;
+    if (source === null || source === undefined || typeof source !== 'object') return null;
+    const repo = (source as { repo?: unknown }).repo;
+    return typeof repo === 'string' && repo.trim() !== '' ? repo.trim() : null;
+}
+
+/**
+ * Presence + identity of the official OpenAI codex plugin. Read-only:
+ * detection never writes under `~/.claude/`. See `CodexPluginIdentity`
+ * for the verification contract.
+ */
+export function codex_plugin_identity(): CodexPluginIdentity {
+    const marketplaces = _plugin_marketplaces(CODEX_PLUGIN_ID);
+    if (marketplaces.length === 0) {
+        return { installed: false, identity_verified: false };
+    }
+    const want = CODEX_MARKETPLACE_REPO.toLowerCase();
+    const identity_verified = marketplaces.some(
+        (m) => (_marketplace_source_repo(m) ?? '').toLowerCase() === want,
+    );
+    return { installed: true, identity_verified };
+}
+
+/**
  * True when the official OpenAI codex plugin is recorded in Claude Code's
  * `plugins/installed_plugins.json` (any marketplace — matched by the
  * `codex@` id prefix). Unreadable / absent file → false. Read-only:
- * detection never writes under `~/.claude/`.
+ * detection never writes under `~/.claude/`. Presence only — for
+ * namespace-resistant identity use `codex_plugin_identity()`.
  */
 export function codex_plugin_installed(): boolean {
-    return _plugin_id_recorded(CODEX_PLUGIN_ID);
+    return codex_plugin_identity().installed;
 }
 
 /**
