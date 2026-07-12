@@ -113,6 +113,49 @@ export function scan_text(
     return { findings, seen };
 }
 
+/** Structured-surface totals — generated files whose counts are YAML fields,
+ * not prose, so the KIND_PATTERNS prose scan cannot see them. CAPABILITIES.yaml
+ * proved this gap: it drifted to 268/177 while every prose surface said
+ * 271/178, because only its own `--check` guarded it and a stale commit can
+ * land through parallel merges. This scan makes the messaging gate a second,
+ * independent net over the same canonical counts. */
+export const STRUCTURED_SURFACES: ReadonlyArray<{
+    file: string;
+    fields: ReadonlyArray<[kind: string, pattern: RegExp]>;
+}> = [
+    {
+        file: 'CAPABILITIES.yaml',
+        fields: [
+            ['skills', /^\s*skills_total:\s*(\d+)\s*$/m],
+            ['commands', /^\s*commands_total:\s*(\d+)\s*$/m],
+        ],
+    },
+];
+
+export function scan_structured(
+    rel: string,
+    text: string,
+    fields: ReadonlyArray<[string, RegExp]>,
+    expected: Record<string, number>,
+): { findings: Finding[]; seen: Record<string, Set<number>> } {
+    const findings: Finding[] = [];
+    const seen: Record<string, Set<number>> = {};
+    for (const [kind, pattern] of fields) {
+        const m = text.match(pattern);
+        if (m === null) {
+            continue; // absent field is the generator's own --check's problem
+        }
+        const found = Number.parseInt(m[1]!, 10);
+        (seen[kind] ??= new Set()).add(found);
+        const exp = expected[kind]!;
+        if (found !== exp) {
+            const line = text.slice(0, m.index ?? 0).split('\n').length;
+            findings.push({ file: rel, line, kind, found, expected: exp, approx: false });
+        }
+    }
+    return { findings, seen };
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const QUIET = argv.includes('--quiet');
     const expected: Record<string, number> = {};
@@ -134,6 +177,19 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             continue;
         }
         const { findings, seen } = scan_text(rel, fs.readFileSync(p, 'utf-8'), expected);
+        allFindings.push(...findings);
+        for (const [kind, nums] of Object.entries(seen)) {
+            for (const n of nums) (global_seen[kind] ??= new Set()).add(n);
+        }
+    }
+
+    for (const { file, fields } of STRUCTURED_SURFACES) {
+        const p = path.join(ROOT, file);
+        if (!fs.existsSync(p)) {
+            process.stderr.write(`  ⚠️  surface missing (skipped): ${file}\n`);
+            continue;
+        }
+        const { findings, seen } = scan_structured(file, fs.readFileSync(p, 'utf-8'), fields, expected);
         allFindings.push(...findings);
         for (const [kind, nums] of Object.entries(seen)) {
             for (const n of nums) (global_seen[kind] ??= new Set()).add(n);
