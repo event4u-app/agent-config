@@ -71,6 +71,12 @@ export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-pro';
 export const DEFAULT_XAI_MODEL = 'grok-4';
 export const DEFAULT_PERPLEXITY_MODEL = 'sonar-pro';
 
+// codex CLI (subscription transport) default model for `OpenAICliClient`.
+// Omitting `model` in the client options pins THIS value — it is a pin, not
+// "latest"; the codex CLI's own default may be newer. Bump deliberately;
+// never assume it drifts forward on its own.
+export const DEFAULT_OPENAI_CLI_MODEL = 'gpt-5';
+
 // OpenAI-API-compatible endpoints. xAI and Perplexity both expose the
 // `/v1/chat/completions` shape, so their clients reuse the `openai` SDK with a
 // custom `base_url`. Gemini has its own SDK (`google-genai`).
@@ -1271,7 +1277,7 @@ export class OpenAICliClient extends CliClient {
 
     constructor(opts: CliClientOptions = {}) {
         super({
-            model: opts.model ?? 'gpt-5',
+            model: opts.model ?? DEFAULT_OPENAI_CLI_MODEL,
             binary: opts.binary,
             timeout_seconds: opts.timeout_seconds,
             max_calls_per_day: opts.max_calls_per_day,

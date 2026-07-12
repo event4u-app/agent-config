@@ -159,6 +159,12 @@ Implications:
   user opt into a per-day cap; counter state persists at
   `~/.event4u/agent-config/cli-calls.json` with daily UTC reset (wired in
   Phase 1 of the CLI-transport roadmap).
+- **Omitting `model:` for a vendor `cli` member is a PIN, not "latest".**
+  Each CLI client falls back to a named constant when `model` is unset —
+  for `openai` that is `DEFAULT_OPENAI_CLI_MODEL` (`clients.ts`). The value
+  is a deliberate pin; the vendor CLI's own default may be newer. Bump the
+  constant intentionally — never assume the omitted default tracks the
+  provider's latest release.
 - **Quota observability (step-8 D1, D4):** every `council run` /
   `council debate` prints a one-line `council:quota · <provider>
   used/limit · …` summary before the first member fires. Only
