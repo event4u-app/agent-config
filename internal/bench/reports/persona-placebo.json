@@ -1,0 +1,553 @@
+{
+  "generated_by": "bench_persona_placebo",
+  "dry_run": false,
+  "preregistered": {
+    "hypotheses": [
+      "H1: method ≈ figure (identity adds nothing beyond method text)",
+      "H2: provider diversity > persona identity"
+    ],
+    "fixtures": 12,
+    "arms": [
+      "method",
+      "figure",
+      "bare"
+    ],
+    "providers": [
+      "anthropic",
+      "openai"
+    ],
+    "judge": "claude-opus-4-8",
+    "blind": "judge never sees arm labels or persona names"
+  },
+  "arm_means": {
+    "method": 5.041666666666667,
+    "method:anthropic": 6.333333333333333,
+    "method:openai": 3.75,
+    "figure": 4.875,
+    "figure:anthropic": 6.25,
+    "figure:openai": 3.5,
+    "bare": 4.958333333333333,
+    "bare:anthropic": 6.166666666666667,
+    "bare:openai": 3.75
+  },
+  "h1": {
+    "method_wins": 9,
+    "figure_wins": 6,
+    "sign_p": 0.60723876953125,
+    "identity_delta": 0.16666666666666696
+  },
+  "h2": {
+    "provider_delta": 2.5833333333333335,
+    "identity_delta": 0.16666666666666696,
+    "holds": true
+  },
+  "persona_lift_vs_bare": 0.08333333333333393,
+  "cells": [
+    {
+      "fixture": "pp-01",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "contrarian",
+      "score": 8
+    },
+    {
+      "fixture": "pp-01",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "contrarian",
+      "score": 5
+    },
+    {
+      "fixture": "pp-01",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "contrarian",
+      "score": 6
+    },
+    {
+      "fixture": "pp-01",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "contrarian",
+      "score": 4
+    },
+    {
+      "fixture": "pp-01",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "contrarian",
+      "score": 3
+    },
+    {
+      "fixture": "pp-01",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "contrarian",
+      "score": 3
+    },
+    {
+      "fixture": "pp-02",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "executor",
+      "score": 5
+    },
+    {
+      "fixture": "pp-02",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "executor",
+      "score": 8
+    },
+    {
+      "fixture": "pp-02",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "executor",
+      "score": 6
+    },
+    {
+      "fixture": "pp-02",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "executor",
+      "score": 3
+    },
+    {
+      "fixture": "pp-02",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "executor",
+      "score": 3
+    },
+    {
+      "fixture": "pp-02",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "executor",
+      "score": 4
+    },
+    {
+      "fixture": "pp-03",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "expansionist",
+      "score": 7
+    },
+    {
+      "fixture": "pp-03",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "expansionist",
+      "score": 9
+    },
+    {
+      "fixture": "pp-03",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "expansionist",
+      "score": 6
+    },
+    {
+      "fixture": "pp-03",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "expansionist",
+      "score": 5
+    },
+    {
+      "fixture": "pp-03",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "expansionist",
+      "score": 5
+    },
+    {
+      "fixture": "pp-03",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "expansionist",
+      "score": 3
+    },
+    {
+      "fixture": "pp-04",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "first-principles",
+      "score": 5
+    },
+    {
+      "fixture": "pp-04",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "first-principles",
+      "score": 6
+    },
+    {
+      "fixture": "pp-04",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "first-principles",
+      "score": 6
+    },
+    {
+      "fixture": "pp-04",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "first-principles",
+      "score": 4
+    },
+    {
+      "fixture": "pp-04",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "first-principles",
+      "score": 4
+    },
+    {
+      "fixture": "pp-04",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "first-principles",
+      "score": 3
+    },
+    {
+      "fixture": "pp-05",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "outsider",
+      "score": 6
+    },
+    {
+      "fixture": "pp-05",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "outsider",
+      "score": 4
+    },
+    {
+      "fixture": "pp-05",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "outsider",
+      "score": 4
+    },
+    {
+      "fixture": "pp-05",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "outsider",
+      "score": 3
+    },
+    {
+      "fixture": "pp-05",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "outsider",
+      "score": 2
+    },
+    {
+      "fixture": "pp-05",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "outsider",
+      "score": 3
+    },
+    {
+      "fixture": "pp-06",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "contrarian",
+      "score": 4
+    },
+    {
+      "fixture": "pp-06",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "contrarian",
+      "score": 4
+    },
+    {
+      "fixture": "pp-06",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "contrarian",
+      "score": 7
+    },
+    {
+      "fixture": "pp-06",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "contrarian",
+      "score": 3
+    },
+    {
+      "fixture": "pp-06",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "contrarian",
+      "score": 2
+    },
+    {
+      "fixture": "pp-06",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "contrarian",
+      "score": 5
+    },
+    {
+      "fixture": "pp-07",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "executor",
+      "score": 6
+    },
+    {
+      "fixture": "pp-07",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "executor",
+      "score": 7
+    },
+    {
+      "fixture": "pp-07",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "executor",
+      "score": 8
+    },
+    {
+      "fixture": "pp-07",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "executor",
+      "score": 2
+    },
+    {
+      "fixture": "pp-07",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "executor",
+      "score": 3
+    },
+    {
+      "fixture": "pp-07",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "executor",
+      "score": 3
+    },
+    {
+      "fixture": "pp-08",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "expansionist",
+      "score": 7
+    },
+    {
+      "fixture": "pp-08",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "expansionist",
+      "score": 6
+    },
+    {
+      "fixture": "pp-08",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "expansionist",
+      "score": 4
+    },
+    {
+      "fixture": "pp-08",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "expansionist",
+      "score": 3
+    },
+    {
+      "fixture": "pp-08",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "expansionist",
+      "score": 2
+    },
+    {
+      "fixture": "pp-08",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "expansionist",
+      "score": 3
+    },
+    {
+      "fixture": "pp-09",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "first-principles",
+      "score": 9
+    },
+    {
+      "fixture": "pp-09",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "first-principles",
+      "score": 9
+    },
+    {
+      "fixture": "pp-09",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "first-principles",
+      "score": 9
+    },
+    {
+      "fixture": "pp-09",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "first-principles",
+      "score": 8
+    },
+    {
+      "fixture": "pp-09",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "first-principles",
+      "score": 8
+    },
+    {
+      "fixture": "pp-09",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "first-principles",
+      "score": 7
+    },
+    {
+      "fixture": "pp-10",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "outsider",
+      "score": 9
+    },
+    {
+      "fixture": "pp-10",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "outsider",
+      "score": 9
+    },
+    {
+      "fixture": "pp-10",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "outsider",
+      "score": 7
+    },
+    {
+      "fixture": "pp-10",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "outsider",
+      "score": 6
+    },
+    {
+      "fixture": "pp-10",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "outsider",
+      "score": 6
+    },
+    {
+      "fixture": "pp-10",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "outsider",
+      "score": 6
+    },
+    {
+      "fixture": "pp-11",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "contrarian",
+      "score": 7
+    },
+    {
+      "fixture": "pp-11",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "contrarian",
+      "score": 5
+    },
+    {
+      "fixture": "pp-11",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "contrarian",
+      "score": 6
+    },
+    {
+      "fixture": "pp-11",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "contrarian",
+      "score": 3
+    },
+    {
+      "fixture": "pp-11",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "contrarian",
+      "score": 2
+    },
+    {
+      "fixture": "pp-11",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "contrarian",
+      "score": 2
+    },
+    {
+      "fixture": "pp-12",
+      "provider": "anthropic",
+      "arm": "method",
+      "persona": "executor",
+      "score": 3
+    },
+    {
+      "fixture": "pp-12",
+      "provider": "anthropic",
+      "arm": "figure",
+      "persona": "executor",
+      "score": 3
+    },
+    {
+      "fixture": "pp-12",
+      "provider": "anthropic",
+      "arm": "bare",
+      "persona": "executor",
+      "score": 5
+    },
+    {
+      "fixture": "pp-12",
+      "provider": "openai",
+      "arm": "method",
+      "persona": "executor",
+      "score": 1
+    },
+    {
+      "fixture": "pp-12",
+      "provider": "openai",
+      "arm": "figure",
+      "persona": "executor",
+      "score": 2
+    },
+    {
+      "fixture": "pp-12",
+      "provider": "openai",
+      "arm": "bare",
+      "persona": "executor",
+      "score": 3
+    }
+  ],
+  "cost_usd_actual": 1.7746,
+  "verdict": "honest-null: identity framing adds nothing beyond the method text (Δ=0.17, p=0.607); provider diversity dominates persona identity (provider Δ=2.58)"
+}
