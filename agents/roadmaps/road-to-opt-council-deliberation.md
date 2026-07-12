@@ -45,8 +45,9 @@ before any panel-mode work is considered.
 ## Prerequisites
 
 - [x] Provenance ENC1 token minted with the maintainer key (2026-07-11).
-- [ ] Confirm `tests/scripts/ai_council/_harness.ts` covers a fake-client
+- [x] Confirm `tests/scripts/ai_council/_harness.ts` covers a fake-client
       seam usable for tally/chairman tests (no billable calls in CI).
+      <!-- confirmed (2026-07-11 map correction): _harness.ts is the py2ts parity oracle; the actual no-billable seam is subclassing ExternalAIClient with an overridden ask() (orchestrator.test.ts Mock/CapturingMock) — used by every tally/chairman/gate test since. -->
 
 ## Context
 
@@ -273,12 +274,12 @@ visible repair cost.
       call per member per round, surfaced in the estimate and the
       round's spent-so-far line.
       <!-- PARTIAL: the config key (debate_gates.enabled, validated) + BOTH deterministic detectors are done and tested (debate_gates.ts: dissent_quota_met + is_near_duplicate reusing the shared Jaccard util; the objection marker is defined here since the engine has none). GATED: the bounded repair re-prompt (one billable call per member per round) + its auto-fire-vs-confirm POLICY are exactly what `blocker: contested-design-council-pass` reserves for /council:design; the policy is now DECIDED (council 2026-07-12, see ## Council notes; encoded in repair_action) — only the dispatch wiring remains. -->
-- [ ] `--restate` flag (and `ai_council.restate.enabled`, default
+- [x] `--restate` flag (and `ai_council.restate.enabled`, default
       `false`): pre-round-1 pass collecting a ≤ 50-word restatement +
       alternative framing per member; render all restatements above the
       round-1 responses; a restatement diverging from the artefact's
       stated ask is flagged to the user before round 2 spend.
-      <!-- PARTIAL: restate.enabled config key done + tested (default false). GATED: the pre-round-1 restatement pass is a billable per-member call — lands with the debate-gate dispatch. -->
+      <!-- done (restate PR, 2026-07-12): --restate CLI flag + config key; pre-round-1 pass via _run_round (spend gate/ledger/stamping unchanged) BEFORE any debate spend; restatements rendered above round 1 by cmd_debate; a low-overlap restatement vs the stated ask is flagged to stderr before further spend; restate responses included in the actual-cost total. Tested (extra call + on_restate + round prompt untouched; default-off parity). -->
 - [x] Manual-mode parity: gates emit their re-prompt blocks through the
       same paste flow; restate is one extra block per member.
       <!-- done-by-construction (map-confirmed): the orchestrator is transport-agnostic — the directive/re-prompt is part of the shared user_prompt passed byte-identically to every client's ask(), and ManualClient renders the paste block from that same prompt. No per-transport special-casing needed or added. -->

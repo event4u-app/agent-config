@@ -509,3 +509,31 @@ describe('stance repair call (Phase 1 wiring)', () => {
         expect(hasStance.prompts.length).toBe(1);
     });
 });
+
+describe('restate pass (Phase 3 wiring)', () => {
+    const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'A or B?' });
+
+    it('restate on → one pre-round-1 call per member, surfaced via on_restate', () => {
+        const a = new CapturingMock('anthropic', 'm', ['Restated: choose A or B.', 'pos A']);
+        const b = new CapturingMock('openai', 'm', ['Restated: pick between A and B.', 'pos B']);
+        const seen: CouncilResponse[][] = [];
+        const rounds = run_debate([a, b], q, {
+            max_rounds: 1,
+            restate: true,
+            on_restate: (rs) => seen.push(rs),
+        });
+        expect(a.prompts.length).toBe(2); // restate + round 1
+        expect(a.prompts[0]).toContain('RESTATE');
+        expect(a.prompts[1]).not.toContain('RESTATE');
+        expect(seen).toHaveLength(1);
+        expect(seen[0]!.map((r) => r.text)).toEqual(['Restated: choose A or B.', 'Restated: pick between A and B.']);
+        expect(rounds[0]!.map((r) => r.text)).toEqual(['pos A', 'pos B']);
+    });
+
+    it('default off → no extra call, round-1 prompt untouched', () => {
+        const a = new CapturingMock('anthropic', 'm', ['pos A']);
+        run_debate([a], q, { max_rounds: 1 });
+        expect(a.prompts.length).toBe(1);
+        expect(a.prompts[0]).toBe(q.user_prompt);
+    });
+});

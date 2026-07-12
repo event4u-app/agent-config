@@ -443,8 +443,11 @@ remaining wiring step.
   defend a position; change only on a specific named flaw; agreement without a
   named reason is conformity). Byte-identical across api/cli/manual (it is part of
   the shared `user_prompt`). Default-off keeps the debate path byte-identical.
-- `restate.enabled` (bool, default `false`) — reserved for the pre-round-1
-  restatement pass.
+- `restate.enabled` (bool, default `false`) — or the `--restate` debate flag:
+  a pre-round-1 pass collecting a ≤ 50-word restatement + one alternative
+  framing per member (billable, through the same spend gate), rendered above
+  the round-1 responses; a restatement with little token overlap vs the stated
+  ask is flagged before further spend.
 
 The deterministic post-round detectors — dissent-quota (`debate_gates.dissent_quota_met`)
 and the novelty gate (`debate_gates.is_near_duplicate`, reusing the shared

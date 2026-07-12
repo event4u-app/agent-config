@@ -1055,6 +1055,14 @@ export interface RunDebateOptions {
      * (no unplanned spend without an explicit transport).
      */
     on_repair?: ((member: string, reason: string) => boolean) | null;
+    /**
+     * Phase 3 restate pass (`ai_council.restate.enabled` / `--restate`): a
+     * pre-round-1 billable call per member collecting a <=50-word restatement
+     * + one alternative framing. Default off -> no extra calls, byte-identical.
+     */
+    restate?: boolean;
+    /** Receives the restate responses (rendering, divergence flags, cost). */
+    on_restate?: ((responses: CouncilResponse[]) => void) | null;
 }
 
 /**
@@ -1115,6 +1123,27 @@ export function run_debate(
     const spent: Spent = { input: 0, output: 0, usd: 0.0 };
     const all_rounds: CouncilResponse[][] = [];
     let current_user_prompt = question.user_prompt;
+
+    // Phase 3 restate: one pre-round-1 call per member. Runs BEFORE any debate
+    // spend so a diverging restatement can be flagged before round-2 cost.
+    if (opts.restate === true) {
+        const restateQ = new CouncilQuestion({
+            mode: question.mode,
+            user_prompt:
+                `Before the debate begins: RESTATE the question below in at most 50 words, ` +
+                `then offer ONE alternative framing of it. Do not argue a position yet.\n\n---\n\n` +
+                `${question.user_prompt}`,
+            max_tokens: question.max_tokens,
+        });
+        const restated = _run_round(members, restateQ, budget, spent, {
+            table,
+            on_overrun,
+            project,
+            original_ask,
+            advisor_plans,
+        });
+        opts.on_restate?.(restated);
+    }
 
     for (let round_idx = 0; round_idx < max_rounds; round_idx++) {
         const round_number = round_idx + 1;
