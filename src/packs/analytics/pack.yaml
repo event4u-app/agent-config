@@ -15,4 +15,4 @@ size_class: small
 suggests: []
 surface_tier: core
 trust_level_default: core
-version: 8.12.0
+version: 8.13.0
