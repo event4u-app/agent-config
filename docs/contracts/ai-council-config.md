@@ -366,6 +366,35 @@ _artefact mode: full|redacted (counts only)_
 
 Findings are ranked by `consensus_strength` descending. Empty sessions
 emit the heading plus `*No findings were extracted for this session.*`.
+The trailer additionally carries two aggregate lines — **Evidence spread**
+(high/medium/low counts across findings) and **Provider spread** (distinct
+providers that deliberated) — folded in beside `_artefact mode:_`.
+
+### Stance tally (Phase 1 — option-level verdict)
+
+`consensus_scoring` scores *findings*; `stance_tally` produces an
+*option-level* verdict for "A or B?" questions. **Default-off**; with the
+block absent the council path is byte-identical to today.
+
+**Configuration.**
+
+- `stance_tally.enabled` (bool, default `false`) — master switch. A
+  non-bool value is rejected at config load (`CouncilConfigError`); unknown
+  values are not silently coerced.
+
+**Behaviour when enabled.** The final round appends a mandatory closing-line
+contract — `STANCE: <label> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no`
+— parsed deterministically (`stance_tally.ts`), never inferred from prose.
+Weights are confidence factors (`high 1.0 / med 0.75 / low 0.5`); `W_total`
+sums base weights over every member with a parseable stance (abstentions
+included, so they raise the bar). Consensus requires an option to clear
+`⅔ × W_total`; below threshold a structured **split** is returned to the
+user — never a forced winner, never an auto-added round. The synthesis gains
+a **Vote Tally** section (one line per option, the threshold, and a
+cleared-or-escalated line). A member whose stance line is missing or
+unparseable is a repair-marker; the bounded stance-line-only repair call and
+its estimate row are surfaced separately (gated behind the same key and the
+per-run spend estimate).
 
 ### Decision resolution by impact (Phase 10, ask-user routing)
 

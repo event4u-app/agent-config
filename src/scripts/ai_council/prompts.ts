@@ -148,6 +148,18 @@ one of several independent reviewers. Round-specific instructions:
 End each round with: a one-line position summary and the single
 piece of evidence that would change your mind.`;
 
+/**
+ * Mandatory closing-line contract appended to the FINAL round when
+ * `ai_council.stance_tally` is enabled (Phase 1). Peers backing the same option
+ * MUST reuse the same label so the deterministic tally can canonicalise it;
+ * `abstain` is allowed. Parsed by `stance_tally.parse_stance_line` — the tally
+ * never infers a stance from the surrounding prose, so an omitted or malformed
+ * line becomes a repair-marker, not a guess.
+ */
+export const STANCE_LINE_CONTRACT = `Close your reply with EXACTLY this line, and nothing after it:
+STANCE: <option-label> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no
+Reuse the SAME <option-label> as any peer backing the same option (match their wording); use \`abstain\` only if you genuinely cannot choose. CONFIDENCE is your certainty in the pick; DEALBREAKER is \`yes\` only if you would block on the alternative.`;
+
 const _MODE_TABLE: Record<string, string> = {
     prompt: PROMPT_MODE,
     roadmap: ROADMAP_MODE,
@@ -233,8 +245,15 @@ read it directly from a response.
 A single sentence: which course the host agent should advise the
 user to take, grounded in the strongest converged point.
 
-### Next step
-One concrete next action the user can take in their current turn.`;
+### Kill criteria
+Observable conditions that would falsify this recommendation without
+re-convening the council. Each entry names a threshold or a specific
+event — never a vague "if it goes wrong". Omit only if genuinely none
+exist, and say so explicitly.
+
+### Concrete next step
+Exactly one artefact-producing action the user can take in their
+current turn.`;
 
 export const PR_SYNTHESIS = `Summarise the council with the PR-review shape below.
 
@@ -251,7 +270,17 @@ and the host agent confirms are load-bearing. Maximum five.
 
 ### Recommendation
 APPROVE / REQUEST_CHANGES / REJECT and a single sentence justifying
-the verdict, anchored on the strongest consensus or must-fix line.`;
+the verdict, anchored on the strongest consensus or must-fix line.
+
+### Kill criteria
+Observable conditions that would falsify this verdict without re-convening
+the council (a failing check, a missing test, a regression signal). Each
+entry names a threshold or a specific event. Omit only if genuinely none
+exist, and say so.
+
+### Concrete next step
+Exactly one artefact-producing action the author can take in their current
+turn.`;
 
 export const ANALYSIS_SYNTHESIS = `Summarise the council with the analysis-lens shape below.
 
@@ -270,19 +299,41 @@ metadata shape as Top-10.
 ### Outliers
 Single-reviewer findings the others did not engage with. Keep them
 — they are signal for a future deeper analysis pass — but mark each
-as \`unverified-by-council\`.`;
+as \`unverified-by-council\`.
 
-// Creative lenses — open-ended prose, no template. The renderer keeps
-// the bare "Convergence / Divergence" slot so the host agent can write
-// free-form synthesis.
-const _CREATIVE_PASSTHROUGH = '';
+### Kill criteria
+Observable conditions that would falsify the analysis's leading finding
+without re-convening the council. Each entry names a threshold or event.
+Omit only if genuinely none exist, and say so.
+
+### Concrete next step
+Exactly one artefact-producing action the user can take in their current
+turn.`;
+
+// Creative lenses — free-form prose synthesis, then the two required
+// verdict-discipline sections. The body stays open-ended (the host agent
+// writes the Convergence / Divergence prose on its own merits); only the
+// falsifiable close is mandated, so every lens carries Kill criteria +
+// Concrete next step (road-to-opt-council-deliberation Phase 0).
+export const CREATIVE_SYNTHESIS = `Write a free-form convergence / divergence
+synthesis of the council in prose — no fixed section shape for the body.
+Then close with exactly these two sections:
+
+### Kill criteria
+Observable conditions that would falsify the direction you converged on,
+without re-convening the council. Each entry names a threshold or event.
+Omit only if genuinely none exist, and say so.
+
+### Concrete next step
+Exactly one artefact-producing action the user can take in their current
+turn.`;
 
 const _SYNTHESIS_TABLE: Record<string, string> = {
     default: DEFAULT_SYNTHESIS,
     pr: PR_SYNTHESIS,
     analysis: ANALYSIS_SYNTHESIS,
-    design: _CREATIVE_PASSTHROUGH,
-    optimize: _CREATIVE_PASSTHROUGH,
+    design: CREATIVE_SYNTHESIS,
+    optimize: CREATIVE_SYNTHESIS,
 };
 
 // Input modes inherit the `default` decision template. Lens overrides
@@ -369,6 +420,55 @@ export function synthesis_template(mode: string | null): string {
 
 export function all_synthesis_modes(): string[] {
     return Object.keys(_SYNTHESIS_TABLE).sort();
+}
+
+/**
+ * Raised when a completed synthesis is missing a required verdict-discipline
+ * section (Kill criteria / Concrete next step) or carries it empty. Named so
+ * the render step fails loudly rather than emitting an unfalsifiable verdict.
+ * Mirrors the `CouncilConfigError` named-error precedent in `config.ts`.
+ */
+export class SynthesisRenderError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'SynthesisRenderError';
+    }
+}
+
+/** The two sections every lens synthesis must close with (Phase 0). */
+export const REQUIRED_SYNTHESIS_SECTIONS = ['Kill criteria', 'Concrete next step'] as const;
+
+/**
+ * Validate a **completed** synthesis (the host- or chairman-authored text that
+ * fills the Convergence / Divergence slot) — not the template prompt. Every
+ * lens must close with a non-empty `### Kill criteria` and `### Concrete next
+ * step`; a missing or placeholder-empty section throws `SynthesisRenderError`
+ * naming the first offender. Called on the synthesis-emit path (the chairman
+ * synthesis in Phase 2, and any future synthesis-record step); safe to call on
+ * decision and creative lenses alike, since both now require the two sections.
+ */
+export function assert_synthesis_sections(text: string): void {
+    const lines = text.split('\n');
+    const isHeading = (l: string): boolean => /^#{2,4}\s/.test(l);
+    for (const section of REQUIRED_SYNTHESIS_SECTIONS) {
+        const headingRe = new RegExp(`^#{2,4}\\s+${section}\\s*$`, 'i');
+        const idx = lines.findIndex((l) => headingRe.test(l));
+        if (idx === -1) {
+            throw new SynthesisRenderError(
+                `synthesis is missing the required "### ${section}" section`,
+            );
+        }
+        let body = '';
+        for (let i = idx + 1; i < lines.length; i++) {
+            if (isHeading(lines[i] as string)) break;
+            body += lines[i];
+        }
+        if (body.trim().length === 0) {
+            throw new SynthesisRenderError(
+                `synthesis "### ${section}" section is empty (placeholder)`,
+            );
+        }
+    }
 }
 
 /**

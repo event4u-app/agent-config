@@ -451,6 +451,11 @@ export interface DecisionReplayConfig {
     readonly include_member_arguments: boolean;
 }
 
+/** Option-level stance tally (road-to-opt-council-deliberation Phase 1). */
+export interface StanceTallyConfig {
+    readonly enabled: boolean;
+}
+
 /** Routing entry for one impact class (Phase 10). */
 export interface DecisionResolutionEntry {
     readonly mode: string;
@@ -519,6 +524,7 @@ export interface CouncilConfig {
     readonly model_downgrade: ModelDowngradeConfig;
     readonly debate: DebateConfig;
     readonly decision_replay: DecisionReplayConfig;
+    readonly stance_tally: StanceTallyConfig;
     readonly decision_resolution: DecisionResolutionConfig;
     readonly routing: RoutingConfig;
     readonly low_impact: LowImpactConfig;
@@ -748,6 +754,10 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         _asDict(_getOr(raw, 'decision_replay', {})),
         'decision_replay',
     );
+    const stance_tally = _build_stance_tally(
+        _asDict(_getOr(raw, 'stance_tally', {})),
+        'stance_tally',
+    );
     const decision_resolution = _build_decision_resolution(
         _asDict(_getOr(raw, 'decision_resolution', {})),
     );
@@ -774,6 +784,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         model_downgrade,
         debate,
         decision_replay,
+        stance_tally,
         decision_resolution,
         routing,
         low_impact,
@@ -925,6 +936,23 @@ function _build_decision_replay(d: Dict, scope: string): DecisionReplayConfig {
         enabled: Boolean(enabled),
         include_member_arguments: Boolean(include_args),
     };
+}
+
+/**
+ * `ai_council.stance_tally` — option-level stance tally (Phase 1). Default-off;
+ * an absent block yields `{ enabled: false }`, keeping the council path
+ * byte-identical. Per-field type validation (mirrors `_build_decision_replay`);
+ * a non-bool `enabled` is rejected rather than silently coerced.
+ */
+function _build_stance_tally(d: Dict, scope: string): StanceTallyConfig {
+    if (!_isDict(d)) {
+        throw new CouncilConfigError(`\`${scope}\` must be a mapping.`);
+    }
+    const enabled = _get(d, 'enabled', false);
+    if (!_isBool(enabled)) {
+        throw new CouncilConfigError(`\`${scope}.enabled\` must be a bool.`);
+    }
+    return { enabled: Boolean(enabled) };
 }
 
 const _VALID_RESOLUTION_MODES: ReadonlySet<string> = new Set([

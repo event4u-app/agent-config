@@ -308,6 +308,23 @@ export function render_decision_replay(inputs: DecisionReplayInputs): string {
         }
         lines.push(`**Synthesis verdict**: ${verdict} consensus — ${f.source} sourced.\n`);
     }
+    // Aggregate render lines (Phase 0 fold): one evidence-label line + one
+    // provider-spread line — folded into the trailer, not a new template
+    // section (gap-table FOLD row: evidence labels + provider spread → replay).
+    const evTally: Record<string, number> = { H: 0, M: 0, L: 0 };
+    for (const f of ranked) {
+        const em = _metaGet(inputs.metadata, f.id);
+        const q = (em?.evidence_quality ?? '').toUpperCase().charAt(0);
+        if (q === 'H' || q === 'M' || q === 'L') {
+            evTally[q] = (evTally[q] as number) + 1;
+        }
+    }
+    const providers = new Set(inputs.deliberation.map((r) => r.provider));
+    lines.push(
+        `- **Evidence spread**: ${evTally.H} high · ${evTally.M} medium · ` +
+            `${evTally.L} low (across ${ranked.length} finding(s))\n` +
+            `- **Provider spread**: ${providers.size} distinct provider(s) deliberated\n`,
+    );
     const mode_label = inputs.include_member_arguments ? 'full' : 'redacted (counts only)';
     lines.push(`---\n\n_artefact mode: ${mode_label}_\n`);
     return _pyRStrip(lines.join('\n')) + '\n';
