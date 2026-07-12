@@ -477,3 +477,35 @@ describe('debate-gate repair dispatch (Phase 3 wiring)', () => {
         expect(rounds[1]![0]!.text).toContain('flaw in ordering'); // original kept
     });
 });
+
+describe('stance repair call (Phase 1 wiring)', () => {
+    const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'A or B?' });
+
+    it('a member without a stance line gets ONE stance-only repair; the line is appended', () => {
+        const a = new CapturingMock('anthropic', 'm', [
+            'I prefer A for its simplicity.', // final round: no STANCE line
+            'STANCE: A | CONFIDENCE: high | DEALBREAKER: no', // repair reply
+        ]);
+        const collected: CouncilResponse[] = [];
+        const out = consult([a], q, null, {
+            stance_tally: true,
+            on_stance_repair: () => true,
+            on_stance_repair_result: (r) => collected.push(r),
+        });
+        expect(a.prompts.length).toBe(2);
+        expect(a.prompts[1]).toContain('ONLY that single line');
+        expect(out[0]!.text).toContain('STANCE: A | CONFIDENCE: high');
+        expect(collected.length).toBe(1);
+    });
+
+    it('no transport → detect-only; a parseable stance → no repair', () => {
+        const noTransport = new CapturingMock('anthropic', 'm', ['I prefer A.']);
+        consult([noTransport], q, null, { stance_tally: true });
+        expect(noTransport.prompts.length).toBe(1);
+        const hasStance = new CapturingMock('anthropic', 'm', [
+            'Reasoning.\n\nSTANCE: A | CONFIDENCE: med | DEALBREAKER: no',
+        ]);
+        consult([hasStance], q, null, { stance_tally: true, on_stance_repair: () => true });
+        expect(hasStance.prompts.length).toBe(1);
+    });
+});

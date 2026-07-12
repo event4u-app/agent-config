@@ -171,11 +171,11 @@ Deterministic port of Source G's tally, engineered instead of prompted.
       `W_option ≥ ⅔ × W_total`; below threshold → structured split
       result, never a forced winner, never an auto-added round.
       <!-- done: stance_tally.ts — parse_stance_line (last-line, tolerant, null=repair-marker), tally_stances (base-weight W_total incl. abstain, ⅔ threshold, split), render_vote_tally. verify: npx vitest run tests/scripts/ai_council/stance_tally.test.ts -->
-- [ ] One bounded repair call per member with a missing/unparseable
+- [x] One bounded repair call per member with a missing/unparseable
       stance line (stance-line-only re-prompt), billable and gated like
       any member call; surfaced in the estimate as a `may add up to N
       repair calls` row.
-      <!-- BLOCKED on `blocker: contested-design-council-pass` — the repair-call auto-fire-vs-confirm policy is the design question that blocker reserves for a billable /council:design run. The tally already RETURNS needs_repair (parsed, tested); only the billable dispatch policy waits. -->
+      <!-- done (final PR, 2026-07-12): stance-line-only repair in consult after the final round — dispatched via the on_stance_repair transport (interactive confirm in cmd_run; null = detect-only), reuses _run_round, repaired line APPENDED to the member's text so the tally reads it; cost collected via on_stance_repair_result into cost_usd_actual. Tested (repair+append, detect-only, parseable-skip). -->
 - [x] Verdict section **Vote Tally** in the synthesis template: one line
       per option (`<option> — <weight> (<backers with confidence>)`),
       threshold stated, cleared-or-escalated stated.
@@ -234,10 +234,10 @@ Applies our own host-bias argument to the synthesis step.
 - [x] `council:estimate` shows the chairman call as its own row when
       `mode != host`.
       <!-- done (dispatch PR): _chairman_cost_delta (worst-case single-member estimate) + a '+chairman synthesis' row in format_estimate_table, threaded at both cmd_run and cmd_estimate call sites. -->
-- [ ] ADR via `adr-create`: chairman-mode supersedes the
+- [x] ADR via `adr-create`: chairman-mode supersedes the
       always-host-synthesis stance in the council skill; records the
       bias argument and the default-`host` compatibility guarantee.
-      <!-- deferred to land WITH the dispatch (avoids a premature ADR + the parallel-PR ADR-number-collision hazard): the ADR documents the dispatch decision, which is the gated follow-up. Contract doc § Chairman synthesis records the config + the default-host guarantee now. -->
+      <!-- done (final PR): ADR-120-council-chairman-mode — bias argument, council-decided auto policy, default-host compatibility guarantee; index regenerated. -->
 - [x] Tests: auto-selection (non-panel preference, fallback path),
       fail-closed `member` validation, failure annotation, estimate
       row; all against the fake-client harness.
