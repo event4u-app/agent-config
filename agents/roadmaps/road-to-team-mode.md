@@ -387,5 +387,6 @@ the disposition step executed either way.
   `agents/codex-rescue.md`, `scripts/stop-review-gate-hook.mjs` +
   `prompts/stop-review-gate.md`, skills `codex-cli-runtime`,
   `codex-result-handling`, `gpt-5-4-prompting`.
-- Council: not yet run. Optionally route the Phase-0 boundary decision through
-  `/council:design` before committing.
+- Council: not run. Phase 0 shipped its boundary prose as authored; a
+  `/council:design` pass on the Phase 0 ADR (integration shape) is available
+  for the still-open Phases 1–6 if the shape decision wants a second opinion.

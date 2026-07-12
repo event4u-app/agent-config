@@ -160,11 +160,14 @@ Implications:
   `~/.event4u/agent-config/cli-calls.json` with daily UTC reset (wired in
   Phase 1 of the CLI-transport roadmap).
 - **Omitting `model:` for a vendor `cli` member is a PIN, not "latest".**
-  Each CLI client falls back to a named constant when `model` is unset —
-  for `openai` that is `DEFAULT_OPENAI_CLI_MODEL` (`clients.ts`). The value
-  is a deliberate pin; the vendor CLI's own default may be newer. Bump the
-  constant intentionally — never assume the omitted default tracks the
-  provider's latest release.
+  Each vendor CLI client (`anthropic` / `openai` / `gemini`) falls back to a
+  dedicated `DEFAULT_*_CLI_MODEL` constant when `model` is unset
+  (`clients.ts`); `xai` / `perplexity` CLIs are community API wrappers and
+  reuse their `DEFAULT_*_MODEL` API constant. The value is a deliberate pin;
+  the vendor CLI's own default may be newer. Bump the constant intentionally —
+  never assume the omitted default tracks the provider's latest release. The
+  CLI constants are separate from the API ones because the two can legitimately
+  diverge — `openai` API `gpt-4o` vs CLI `gpt-5` is the proof.
 - **Quota observability (step-8 D1, D4):** every `council run` /
   `council debate` prints a one-line `council:quota · <provider>
   used/limit · …` summary before the first member fires. Only

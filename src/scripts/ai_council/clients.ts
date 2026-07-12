@@ -71,11 +71,20 @@ export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-pro';
 export const DEFAULT_XAI_MODEL = 'grok-4';
 export const DEFAULT_PERPLEXITY_MODEL = 'sonar-pro';
 
-// codex CLI (subscription transport) default model for `OpenAICliClient`.
-// Omitting `model` in the client options pins THIS value — it is a pin, not
-// "latest"; the codex CLI's own default may be newer. Bump deliberately;
-// never assume it drifts forward on its own.
+// Vendor CLI (subscription transport) default models. Omitting `model` in a
+// CLI client's options pins THESE values — a pin, not "latest"; the vendor
+// CLI's own default may be newer. Bump deliberately; never assume drift.
+//
+// These are SEPARATE from the API-transport `DEFAULT_*_MODEL` constants above
+// because API and CLI defaults can legitimately diverge — openai proves it
+// (API `gpt-4o` vs CLI `gpt-5`). The anthropic/gemini CLI values currently
+// coincide with their API defaults, but stay pinned independently so a future
+// divergence is a one-line change, not a hunt through inline literals.
+// (`xai` / `perplexity` CLI reuse their API constants: their CLIs are
+// community wrappers around the same paid API, so the values do not diverge.)
 export const DEFAULT_OPENAI_CLI_MODEL = 'gpt-5';
+export const DEFAULT_ANTHROPIC_CLI_MODEL = 'claude-sonnet-4-5';
+export const DEFAULT_GEMINI_CLI_MODEL = 'gemini-2.5-pro';
 
 // OpenAI-API-compatible endpoints. xAI and Perplexity both expose the
 // `/v1/chat/completions` shape, so their clients reuse the `openai` SDK with a
@@ -1177,7 +1186,7 @@ export class AnthropicCliClient extends CliClient {
 
     constructor(opts: CliClientOptions = {}) {
         super({
-            model: opts.model ?? 'claude-sonnet-4-5',
+            model: opts.model ?? DEFAULT_ANTHROPIC_CLI_MODEL,
             binary: opts.binary,
             timeout_seconds: opts.timeout_seconds,
             max_calls_per_day: opts.max_calls_per_day,
@@ -1400,7 +1409,7 @@ export class GeminiCliClient extends CliClient {
 
     constructor(opts: CliClientOptions = {}) {
         super({
-            model: opts.model ?? 'gemini-2.5-pro',
+            model: opts.model ?? DEFAULT_GEMINI_CLI_MODEL,
             binary: opts.binary,
             timeout_seconds: opts.timeout_seconds,
             max_calls_per_day: opts.max_calls_per_day,
