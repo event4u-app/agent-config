@@ -372,7 +372,12 @@ gate); the body moves to the inventory's named target; the rule's trigger-set
 routing must fire at least as well as the monolithic rule did
 (trigger-eval infrastructure is the verifier).
 
-- [ ] **Batch A — existing-target extensions (9 rules):** roadmap-ci-steps-policy
+- [x] <!-- done 2026-07-12 (feedback-8.11-2 Phase 2): 9/9 migrated, 0
+      skipped; stub bytes 56,389→27,209 (−51.7%); preservation +
+      frontmatter + trigger-matrix suites green; roadmap-ci-steps body
+      landed in NEW contexts/execution/roadmap-ci-steps-mechanics.md
+      (process-loop 5x over its 4k budget — contingency per step note). -->
+      **Batch A — existing-target extensions (9 rules):** roadmap-ci-steps-policy
       → roadmap-process-loop context; code-comment-discipline →
       code-clarity guideline; untrusted-input-defense →
       untrusted-input-spotlighting guideline; no-roadmap-references →

@@ -68,19 +68,44 @@ When the agent picks a provider for a `/video:*` / `/image:*` /
 1. **Read** the `provider_lifecycle` tag from the adapter's header
    comment **and** the matching `<provider id="…">` block in
    `agents/templates/.ai-video.xml.example` (or the operator's
-   `agents/.ai-video.xml`).
+   `agents/.ai-video.xml`). This applies to every resolution path —
+   `--provider <id>`, `<default-video-provider>` /
+   `<default-image-provider>`, or a skill's default. A **mismatch
+   between the two sources is a contract violation** and MUST be
+   surfaced before running.
 2. **Refuse-and-surface** if the operator's resolved default is a
    non-`stable` tier — name the tier and the path to this contract
    document, then emit one clarifying question (per
    [`ask-when-uncertain`](../../.augment/rules/ask-when-uncertain.md)):
    either pick a `stable` provider, or confirm the non-stable run.
+   No silent default. No "I'll just try it".
 3. **Record** in the run summary which tier the chosen adapter
-   carries — this is the audit log entry the agent-in-the-loop
-   model rests on.
+   carries — the summary line after every `/video:*` / `/image:*` /
+   `/audio:*` run names the chosen provider AND its tier. This is the
+   audit log entry the agent-in-the-loop model rests on.
+4. **Never auto-promote.** Promotion is the maintainer's call. The
+   agent MAY draft a promotion checklist (per
+   [§ 2 — Promotion path](#-2--promotion-path)) for maintainer
+   review, but the tier-flip commit is human-authored.
 
 The agent never picks `deprecated` silently. If a successor is
 declared, the agent surfaces "X is deprecated; successor: Y" before
-running.
+running — even with confirmation.
+
+### § 4a — Failure modes (agent-side violations)
+
+_Origin: migrated from `src/rules/provider-lifecycle-discipline.md` per the P4 pattern of `road-to-kernel-and-router.md`. The rule keeps the Iron Law and the read-tier / refuse-and-surface one-liners; the detail lives here._
+
+- Running `/video:scene` against the `<default-video-provider>` without reading the lifecycle tag first → violation.
+- Picking a `community` provider because it was named in the prompt, without surfacing the tier → violation.
+- Editing an adapter and leaving its header `Lifecycle:` comment out of sync with `agents/templates/.ai-video.xml.example` → violation (CI does not catch this; the agent must).
+- Auto-promoting an adapter from `experimental` to `stable` because "dry-run worked" → violation. Promotion requires a maintainer-captured real-API smoke trace under `agents/reference/ai-video/smoke-traces/`.
+
+### § 4b — Why agent-in-the-loop, not a Python gate
+
+A Python pre-run gate enumerating tier-by-command rules would either be too coarse (`experimental → block`, breaking day-to-day dev iteration) or too detailed (per-command tier matrix, drifting from reality on every new provider). The agent reading the tag at run time, surfacing the tier, and asking is the correct enforcement surface: the model that picked the provider is the model that surfaces the obligation, and the human is the policy decision point.
+
+The CI guarantee is structural reachability — the linter would fail if a provider was declared in `agents/templates/.ai-video.xml.example` without a lifecycle tag (extension planned). It does not enforce the runtime obligation; the agent does.
 
 ## § 5 — Day-one assignment
 

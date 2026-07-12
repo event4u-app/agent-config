@@ -73,6 +73,21 @@ describe('countRuntimeStateSurfaces', () => {
         expect(res.count).toBe(3);
     });
 
+    it('drops glob/template placeholder tokens (grep artifacts, not surfaces)', () => {
+        write(
+            'src/a.ts',
+            [
+                "const P1 = 'agents/runtime/state/<concern>.json'; // template placeholder — must NOT count",
+                "const P2 = 'agents/runtime/state/*.json'; // glob — must NOT count",
+                "const P3 = 'agents/runtime/state/<id>.json'; // template placeholder — must NOT count",
+                "const P4 = 'agents/runtime/state/real-surface.json'; // real — counts",
+            ].join('\n'),
+        );
+        const res = cr.countRuntimeStateSurfaces(path.join(tmpDir, 'src'));
+        expect(res.names).toEqual(['real-surface.json']);
+        expect(res.count).toBe(1);
+    });
+
     it('excludes its own source file from the scan (self-referential guard)', () => {
         write('src/complexity_report.ts', "const example = 'agents/runtime/state/self-noise.json';");
         write('src/real.ts', "const P = 'agents/runtime/state/real-file.json';");
@@ -193,6 +208,66 @@ describe('countGateMentions', () => {
     });
 });
 
+describe('countRuleSkillCoupling', () => {
+    it('reuses rule_backlinks collect() — counts distinct targets and total backlinks', () => {
+        write(
+            'src/rules/docker-commands.md',
+            '---\ntype: "auto"\nroutes_to:\n  - "skill:docker"\n---\n\n# Docker Commands\nBody migrated to `skill:docker`.\n',
+        );
+        write(
+            'src/rules/php-coding.md',
+            '---\ntype: "auto"\n---\n\n# Php Coding\nBody migrated to `guideline:php/php-coding-patterns`.\n',
+        );
+        write(
+            'src/rules/laravel-translations.md',
+            '---\ntype: "auto"\n---\n\n# Laravel Translations\nBody migrated to `skill:docker`.\n',
+        );
+        const res = cr.countRuleSkillCoupling(path.join(tmpDir, 'src', 'rules'));
+        // Targets: skill:docker + guideline:php/php-coding-patterns.
+        expect(res.targets).toBe(2);
+        // Backlinks: docker-commands→skill:docker (frontmatter+prose dedupe to 1),
+        // laravel-translations→skill:docker, php-coding→guideline — 3 total.
+        expect(res.backlinks).toBe(3);
+        expect(res.method).toMatch(/rule_backlinks/);
+    });
+
+    it('returns zero on a missing rules dir', () => {
+        const res = cr.countRuleSkillCoupling(path.join(tmpDir, 'src', 'rules'));
+        expect(res.targets).toBe(0);
+        expect(res.backlinks).toBe(0);
+    });
+});
+
+describe('loadBaseline', () => {
+    it('parses a valid baseline file', () => {
+        const p = write(
+            'internal/reports/complexity-baseline.json',
+            JSON.stringify({
+                schema_version: 1,
+                baselined_at: '2026-07-12',
+                reason: 'initial baseline (feedback-8.11-2 Phase 1)',
+                metrics: {
+                    settings_axes_total: 1,
+                    runtime_state_surfaces: 1,
+                    dependency_edges: 1,
+                    always_rule_bytes: 1,
+                    gate_mentions_total: 1,
+                    rule_skill_coupling_backlinks: 1,
+                },
+            }),
+        );
+        const b = cr.loadBaseline(p);
+        expect(b).not.toBeNull();
+        expect(b!.metrics.settings_axes_total).toBe(1);
+    });
+
+    it('returns null for a missing or corrupt file', () => {
+        expect(cr.loadBaseline(path.join(tmpDir, 'nope.json'))).toBeNull();
+        const p = write('internal/reports/complexity-baseline.json', '{ not valid json');
+        expect(cr.loadBaseline(p)).toBeNull();
+    });
+});
+
 describe('parsePreviousSnapshot + renderReport round-trip', () => {
     function mkSnapshot(overrides: Partial<cr.Snapshot> = {}): cr.Snapshot {
         return {
@@ -203,6 +278,7 @@ describe('parsePreviousSnapshot + renderReport round-trip', () => {
             dependency_edges: { count: 1, source: 'import-proxy', method: 'm' },
             always_rule_bytes: { count: 1, bytes: 100, ids: ['a'], method: 'm' },
             gate_mentions: { total: 1, files: 1, perFile: 1, method: 'm' },
+            rule_skill_coupling: { targets: 1, backlinks: 1, method: 'm' },
             ...overrides,
         };
     }
@@ -238,6 +314,48 @@ describe('parsePreviousSnapshot + renderReport round-trip', () => {
         expect(currentText).toContain('| Active settings axes | 2 | 3 | +1 |');
         expect(currentText).toContain('| Always-loaded rule bytes | 100 | 150 | +50 |');
         expect(currentText).toContain('| Runtime-state surfaces | 1 | 1 | 0 |');
+    });
+
+    it('labels the proxy metrics as (PROXY) in the metric table and names the CI task', () => {
+        const text = cr.renderReport(mkSnapshot(), null);
+        expect(text).toContain('| 2 | Runtime-state surfaces (PROXY) |');
+        expect(text).toContain('| 3 | Cross-subsystem dependency edges (PROXY) |');
+        expect(text).toContain('| 5 | Mandatory gates per core workflow (PROXY) |');
+        expect(text).toContain('| 6 | Rule→skill coupling |');
+        expect(text).toContain('Wired into CI as `task complexity-report`');
+        expect(text).not.toContain('Not wired into CI');
+    });
+
+    it('renders the ratchet section with WARN above baseline and improvement below', () => {
+        const baseline: cr.Baseline = {
+            schema_version: 1,
+            baselined_at: '2026-07-12',
+            reason: 'initial baseline (feedback-8.11-2 Phase 1)',
+            metrics: {
+                settings_axes_total: 2, // == current → neither WARN nor improvement
+                runtime_state_surfaces: 0, // current 1 → above baseline → WARN
+                dependency_edges: 5, // current 1 → below baseline → improvement
+                always_rule_bytes: 100,
+                gate_mentions_total: 1,
+                rule_skill_coupling_backlinks: 1,
+            },
+        };
+        const text = cr.renderReport(mkSnapshot(), null, baseline);
+        expect(text).toContain('## Ratchet vs baseline');
+        expect(text).toContain('| Runtime-state surfaces | 0 | 1 | +1 |');
+        expect(text).toContain(
+            'WARN: Runtime-state surfaces is above baseline (0 → 1, +1) — justify in the PR that raises it, ' +
+                'or re-baseline deliberately (update complexity-baseline.json in the same PR with a one-line reason field).',
+        );
+        expect(text).toContain('Improved: Cross-subsystem dependency edges is below baseline (5 → 1, -4).');
+        expect(text).not.toContain('WARN: Active settings axes');
+    });
+
+    it('skips the ratchet comparison when no baseline is present', () => {
+        const text = cr.renderReport(mkSnapshot(), null, null);
+        expect(text).toContain('## Ratchet vs baseline');
+        expect(text).toMatch(/No baseline file found .* ratchet comparison skipped/);
+        expect(text).not.toContain('WARN:');
     });
 
     it('parsePreviousSnapshot returns null for text with no embedded block', () => {
@@ -301,6 +419,33 @@ describe('main — end to end over a fixture root', () => {
         // delta table instead of "baseline run".
         expect(secondText).toContain('Previous report generated:');
         expect(secondText).toMatch(/\| Metric \| Previous \| Current \| Δ \|/);
+    });
+
+    it('picks up a checked-in baseline under --root and renders the ratchet section', () => {
+        seedFixtureRoot();
+        write(
+            'internal/reports/complexity-baseline.json',
+            JSON.stringify({
+                schema_version: 1,
+                baselined_at: '2026-07-12',
+                reason: 'initial baseline (feedback-8.11-2 Phase 1)',
+                metrics: {
+                    settings_axes_total: 0, // fixture has 5 → above baseline → WARN
+                    runtime_state_surfaces: 99, // fixture has 1 → below baseline → improvement
+                    dependency_edges: 1,
+                    always_rule_bytes: 999_999,
+                    gate_mentions_total: 2,
+                    rule_skill_coupling_backlinks: 0,
+                },
+            }),
+        );
+        const code = cr.main(['--root', tmpDir, '--quiet']);
+        expect(code).toBe(0);
+        const text = fs.readFileSync(path.join(tmpDir, 'internal', 'reports', 'complexity-report.md'), 'utf-8');
+        expect(text).toContain('## Ratchet vs baseline');
+        expect(text).toContain('(baselined 2026-07-12 — "initial baseline (feedback-8.11-2 Phase 1)")');
+        expect(text).toMatch(/WARN: Active settings axes is above baseline/);
+        expect(text).toMatch(/Improved: Runtime-state surfaces is below baseline/);
     });
 
     it('always returns exit code 0 even when the settings template is missing', () => {
