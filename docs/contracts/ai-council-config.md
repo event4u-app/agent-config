@@ -400,10 +400,12 @@ included, so they raise the bar). Consensus requires an option to clear
 `⅔ × W_total`; below threshold a structured **split** is returned to the
 user — never a forced winner, never an auto-added round. The synthesis gains
 a **Vote Tally** section (one line per option, the threshold, and a
-cleared-or-escalated line). A member whose stance line is missing or
-unparseable is a repair-marker; the bounded stance-line-only repair call and
-its estimate row are surfaced separately (gated behind the same key and the
-per-run spend estimate).
+cleared-or-escalated line). The final-round wiring is LIVE (2026-07-12): `consult` appends the contract to
+the final round and `render` emits the Vote Tally block, threaded via
+`payload.stance_tally`. A member whose stance line is missing or unparseable is
+a repair-marker; the bounded stance-line-only repair CALL (policy: `repair_action`
+— confirm-interactive / auto-fire under `--auto-continue`) and its estimate row
+are the remaining dispatch wiring.
 
 ### Chairman synthesis (Phase 2 — opt-in)
 

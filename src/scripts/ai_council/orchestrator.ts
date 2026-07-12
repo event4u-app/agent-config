@@ -57,6 +57,7 @@ import type { AdvisorPlan } from './advisors.js';
 import {
     advisor_system_prompt,
     ANTI_CONFORMITY_DIRECTIVE,
+    STANCE_LINE_CONTRACT,
     build_extraction_user_prompt,
     build_peer_review_user_prompt,
     build_scoring_user_prompt,
@@ -64,6 +65,7 @@ import {
     synthesis_template,
     system_prompt_for,
 } from './prompts.js';
+import { render_vote_tally, tally_stances } from './stance_tally.js';
 
 // ── Python-format / stdlib parity helpers ────────────────────────────────
 //
@@ -410,6 +412,13 @@ export interface ConsultOptions {
         | ((round_idx: number, responses: CouncilResponse[]) => void)
         | null;
     advisor_plans?: Map<string, AdvisorPlan> | null;
+    /**
+     * Phase 1 (stance tally): when true, the FINAL round's user prompt appends
+     * the mandatory `STANCE:` closing-line contract so `stance_tally.ts` can
+     * tally option-level verdicts deterministically. Default `false` → every
+     * round's prompt is byte-identical to today.
+     */
+    stance_tally?: boolean;
 }
 
 /**
@@ -468,13 +477,23 @@ export function consult(
     let last_results: CouncilResponse[] = [];
     let current_user_prompt = question.user_prompt;
 
+    const stance_tally = opts.stance_tally ?? false;
     for (let round_idx = 0; round_idx < rounds; round_idx++) {
+        // Phase 1: the FINAL round carries the mandatory STANCE closing-line
+        // contract when the tally is enabled. Off (default) → the original
+        // question object flows through untouched, byte-identical to today.
+        const is_final = round_idx === rounds - 1;
+        const base_prompt = round_idx === 0 ? question.user_prompt : current_user_prompt;
+        const prompt_for_round =
+            is_final && stance_tally
+                ? `${base_prompt}\n\n---\n\n${STANCE_LINE_CONTRACT}`
+                : base_prompt;
         const round_question =
-            round_idx === 0
+            round_idx === 0 && prompt_for_round === question.user_prompt
                 ? question
                 : new CouncilQuestion({
                       mode: question.mode,
-                      user_prompt: current_user_prompt,
+                      user_prompt: prompt_for_round,
                       max_tokens: question.max_tokens,
                   });
         last_results = _run_round(members, round_question, resolvedBudget, spent, {
@@ -1446,6 +1465,12 @@ export interface RenderOptions {
     consensus?: ConsensusResult | null;
     peer_review?: PeerReviewResult | null;
     explain_confidence?: boolean | null;
+    /**
+     * Phase 1 (stance tally): when true, a `### Vote Tally` block — computed
+     * deterministically from the final-round response texts — is rendered
+     * before the Convergence / Divergence slot. Default `false` → byte-identical.
+     */
+    stance_tally?: boolean;
 }
 
 /**
@@ -1517,6 +1542,17 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
         body = template;
     } else {
         body = '*to be summarised by the host agent*';
+    }
+    if (opts.stance_tally === true) {
+        // Phase 1: deterministic option-level tally from the final-round
+        // response texts (the STANCE closing lines live IN the texts, so the
+        // render is a pure projection — no config or transport needed here).
+        const tally = tally_stances(
+            responses
+                .filter((r) => !r.error)
+                .map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
+        );
+        blocks.push(render_vote_tally(tally));
     }
     blocks.push(`## Convergence / Divergence\n\n${body}`);
     return blocks.join('\n\n---\n\n');
