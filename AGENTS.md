@@ -18,6 +18,7 @@ task ci                # full pipeline — green before PR
 ## Pointers
 
 - **Self-orientation**: [`package-self-orientation`](docs/contracts/package-self-orientation.md).
+- **System map (maintainers)**: [`system-map`](docs/maintainers/system-map.md) — the one-page how-it-fits-together.
 - **Kernel + Router** — 9 Iron-Law rules, tier-1/2 routing: [`kernel-membership`](docs/contracts/kernel-membership.md) + [`rule-router`](docs/contracts/rule-router.md).
 - **Trust & Safety** — enum, HRR banner, floors: [`trust-and-safety`](docs/contracts/trust-and-safety.md) + [`ADR-018`](docs/decisions/ADR-018-trust-and-safety-layer.md).
 - **Content pipelines** (A→D): [`docs/architecture.md`](docs/architecture.md).
