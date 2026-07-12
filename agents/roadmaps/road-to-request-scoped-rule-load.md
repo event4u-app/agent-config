@@ -359,6 +359,54 @@ skeptical prior, adopt-or-honest-null terminal.
 evidence.
 **Rollback:** delete the generated pilot skills.
 
+## Phase 5 — P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12)
+
+The systematic skills-rules coupling pass (maintainer note c of the 8.11
+feedback; council AMEND-convergence: fold it HERE, not a separate roadmap).
+Input inventory: `docs/guidelines/agent-infra/rule-body-migration-inventory.md`
+(2026-07-12 — 32 already-thin / **16 should-migrate** with named targets /
+56 must-stay-monolithic; kernel + safety floors excluded by construction).
+Each rule keeps its Iron-Law stub (heading + fenced block + negations
+byte-preserved — `check_condensation` / preservation-guard is the per-batch
+gate); the body moves to the inventory's named target; the rule's trigger-set
+routing must fire at least as well as the monolithic rule did
+(trigger-eval infrastructure is the verifier).
+
+- [ ] **Batch A — existing-target extensions (9 rules):** roadmap-ci-steps-policy
+      → roadmap-process-loop context; code-comment-discipline →
+      code-clarity guideline; untrusted-input-defense →
+      untrusted-input-spotlighting guideline; no-roadmap-references →
+      skill:agent-docs-writing; decision-revisit-gate → skill:decision-review;
+      improve-before-implement → agent-interaction-and-decision-quality
+      guideline; architecture → skill:module-detect-on-the-fly;
+      persona-governance → persona-schema contract;
+      provider-lifecycle-discipline → provider-lifecycle contract.
+      Per-rule: migrate body, keep stub, run preservation check + trigger evals.
+      <!-- verify: ./scripts-run src/scripts/check_condensation -->
+- [ ] **Batch B — new-guideline homes (7 rules):** context-hygiene,
+      minimal-safe-diff, domain-adoption-policy, design-fidelity,
+      framework-neutrality-in-generic-skills, artifact-drafting-protocol,
+      active-remediation → each gets its named
+      `docs/guidelines/agent-infra/*-mechanics.md` (per the inventory);
+      same per-rule gates as Batch A.
+- [ ] **Batch C — safety-floor template application (review-heavy, optional):**
+      the inventory found `legal-safety-floor` is the exemplar of P4 applied
+      INSIDE a safety floor (Iron Laws inline, mechanics in the profile
+      skill). Evaluate applying the same shape to the other 6 domain-safety
+      floors — extra review per `security-sensitive-stop`; skip with a note
+      if the trade-off is negative (floors are classified must-stay; this
+      batch changes their internal shape only, never their eager presence).
+- [ ] **Backlink report** — regenerate the derived per-skill inbound-routes
+      report after each batch (see `rule_backlinks` generator, feedback-8.11
+      Phase 6) so skill authors see which rules route to them; no
+      frontmatter key (council: routed_from_rules REJECTED).
+
+**Exit criteria:** the 16 should-migrate rules are thin stubs; preservation
+checks green per batch; trigger-eval coverage not regressed; backlink report
+current.
+**Rollback:** per-batch — restore the monolithic rule bodies from git; the
+target files' added sections are additive.
+
 ## Acceptance criteria
 
 - [x] `dist/router.json` v2 carries workspaces/packs; CI byte-stability
