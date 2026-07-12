@@ -34,7 +34,7 @@
 | 16 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 17 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 19 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 15 | 14 | 0 | 0 | [2](#blockers-road-to-opt-council-deliberation) | █████░░░░░ 48% |
+| 19 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 15 | 14 | 0 | 0 | [1](#blockers-road-to-opt-council-deliberation) | █████░░░░░ 48% |
 | 20 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 8 | 2 | 0 | 0 | 0 | ██░░░░░░░░ 20% |
 | 21 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
 | 22 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -257,19 +257,14 @@ _1 blocker resolved._
 <a id="blockers-road-to-opt-council-deliberation"></a>
 **Blockers**
 
-- **contested-design-council-pass** (owner: user (billable spend)) — blocks Phase 2 auto-selection detail, Phase 3 repair-call policy
+- **contested-design-council-pass** (owner: user (billable spend) — executed under the standing spend-to-unblock authorization; estimate disclosed ($0.83 projected), actual $0.08.) — blocks Phase 2 auto-selection detail, Phase 3 repair-call policy
   - **What to do:**
     phases execute: (1) should `chairman: auto` prefer tier or
     provider-family-difference when both are available; (2) should gate
     repair calls fire automatically under the cap or require a one-line
     confirm in interactive runs. Append the convergence as a
     `## Council notes` block here.
-  - **Resolved when:** the council-notes block exists in this file with both questions answered.
-- **benchmark-spend-authorization** (owner: user (billable spend)) — blocks Phase 4 execution (authoring the fixtures is unblocked)
-  - **What to do:**
-    the fixture count is fixed (estimate rendered by `council:estimate`
-    across arms before the first billable call).
-  - **Resolved when:** the user has confirmed the run budget in-session.
+  - **Resolved when:** the council-notes block exists in this file with both questions answered. → See `## Council notes` below.
 
 ### [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md)
 

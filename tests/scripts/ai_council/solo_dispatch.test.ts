@@ -22,6 +22,7 @@ function member(name: string, enabled: boolean, model = 'm'): MemberConfig {
     return {
         name,
         enabled,
+        tier: null,
         model,
         api_key_ref: null,
         mode: null,

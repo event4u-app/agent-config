@@ -417,16 +417,22 @@ synthesis instead. **Default `host`** = today's behaviour, byte-identical.
   value is rejected at config load.
 - `chairman.member` (string, required when `mode: member`) — must name a member
   that exists AND is enabled; **fails closed** at load otherwise.
+- `members.<name>.tier` (int ≥ 1, optional) — capability rank used only as the
+  `auto` tie-break (higher = stronger); non-integer / < 1 rejected at load.
 
 **Selection** (`chairman.ts` `select_chairman`, pure): `host` → host synthesis;
 `member` → the named member, but only if it did **not** deliberate this session
 (a member that argued cannot self-judge — else host fallback with a visible
-annotation); `auto` → **conservative host fallback** with an annotation. `auto`
-does not yet pick a member: the engine has no cross-member tier field, and
-whether `auto` prefers model tier or provider-family difference is reserved for a
-billable `/council:design` run — so it falls back to host rather than pre-decide.
-The billable chairman dispatch (rendering the synthesis as one member call) lands
-with that decision + a `MemberConfig.tier` source.
+annotation); `auto` → **provider-family difference primary, tier tie-break,
+config-order final** — decided by the contested-design council pass
+(claude-sonnet-4-5 + gpt-4o, 2-round debate, 2026-07-12): independence from the
+deliberators' priors is the binding constraint for a judge, so `auto` picks a
+non-deliberating member (provider-different by construction under the
+one-member-per-provider invariant); among candidates the optional
+`members.<name>.tier` wins, else the deterministic config order; no
+non-deliberating member → annotated host fallback. The billable chairman
+dispatch (rendering the synthesis as one member call in `cmd_run`) is the
+remaining wiring step.
 
 ### Debate enforcement gates (Phase 3 — opt-in)
 
@@ -440,9 +446,16 @@ with that decision + a `MemberConfig.tier` source.
 
 The deterministic post-round detectors — dissent-quota (`debate_gates.dissent_quota_met`)
 and the novelty gate (`debate_gates.is_near_duplicate`, reusing the shared
-Jaccard util) — are implemented and tested as pure functions; their bounded
-repair re-prompt (one billable call per member per round, under a hard cap) and
-its auto-fire-vs-confirm policy land with the `/council:design` decision.
+Jaccard util) — are implemented and tested as pure functions.
+
+**Repair-call policy** (`debate_gates.repair_action`) — decided by the
+contested-design council pass (claude-sonnet-4-5 + gpt-4o, 2026-07-12): a cost
+estimate is an upper bound, not a spend commitment, and repairs are failure-mode
+responses — so **interactive runs get a one-line confirm** before each repair
+call; **unattended runs (`--auto-continue`) auto-fire** under the hard cap
+(≤ 1 repair per member per round, absolute — an already-repaired member is
+skipped in every mode); manual-transport members follow the same policy. The
+repair-dispatch wiring in `run_debate` is the remaining step.
 
 ### Decision resolution by impact (Phase 10, ask-user routing)
 

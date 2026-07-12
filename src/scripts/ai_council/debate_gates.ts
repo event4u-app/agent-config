@@ -60,3 +60,30 @@ export function count_dissenters(texts: readonly string[]): number {
 export function dissent_quota_met(texts: readonly string[], quota = DISSENT_QUOTA): boolean {
     return count_dissenters(texts) >= quota;
 }
+
+/** What the run path does when a gate warrants a repair re-prompt. */
+export type RepairAction = 'fire' | 'confirm' | 'skip';
+
+/**
+ * Repair-call policy — decided by the contested-design council pass
+ * (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2-round debate, 2026-07-12):
+ * a cost estimate is an **upper bound, not a spend commitment**, and repairs
+ * are failure-mode responses rather than the mainline path. So:
+ *
+ * - unattended runs (`--auto-continue`) **auto-fire** under the hard cap
+ *   (≤ 1 repair per member per round);
+ * - interactive runs get a **one-line confirm** before each repair call;
+ * - the cap is absolute: a member that already received its repair this round
+ *   is never re-prompted again (`skip`), regardless of mode;
+ * - manual-transport members follow the same policy (deliberation-flow impact,
+ *   not cost, governs — the repair "call" is one more paste block).
+ */
+export function repair_action(opts: {
+    auto_continue: boolean;
+    already_repaired: boolean;
+}): RepairAction {
+    if (opts.already_repaired) {
+        return 'skip';
+    }
+    return opts.auto_continue ? 'fire' : 'confirm';
+}
