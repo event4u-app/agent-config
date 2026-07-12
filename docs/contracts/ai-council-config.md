@@ -456,8 +456,10 @@ estimate is an upper bound, not a spend commitment, and repairs are failure-mode
 responses — so **interactive runs get a one-line confirm** before each repair
 call; **unattended runs (`--auto-continue`) auto-fire** under the hard cap
 (≤ 1 repair per member per round, absolute — an already-repaired member is
-skipped in every mode); manual-transport members follow the same policy. The
-repair-dispatch wiring in `run_debate` is the remaining step.
+skipped in every mode); manual-transport members follow the same policy. The repair dispatch is LIVE in `run_debate` (2026-07-12): post-round checks on
+round 2+, ≤ 1 repair per member per round, dispatched via the CLI's
+`_make_repair_confirm` transport (auto-fire under `--auto-continue`, one-line
+confirm interactive); a successful repair replaces the member's round entry.
 
 ### Decision resolution by impact (Phase 10, ask-user routing)
 

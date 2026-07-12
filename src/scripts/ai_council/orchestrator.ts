@@ -65,6 +65,7 @@ import {
     synthesis_template,
     system_prompt_for,
 } from './prompts.js';
+import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
 import { render_vote_tally, tally_stances } from './stance_tally.js';
 
 // ── Python-format / stdlib parity helpers ────────────────────────────────
@@ -895,6 +896,90 @@ function _augment_for_debate_round(
     );
 }
 
+/**
+ * Phase 3 post-round enforcement (2026-07-12 council policy): deterministic
+ * detectors flag members whose round added nothing (novelty near-duplicate of
+ * their own prior round) or when the round collapsed toward agreement (dissent
+ * quota unmet → the most-recently-converged member). At most ONE bounded repair
+ * re-prompt per member per round, dispatched only through the `on_repair`
+ * transport (confirm-interactive / auto-fire under --auto-continue); the repair
+ * call reuses `_run_round`, so the projected-spend gate, ledger, and metadata
+ * stamping apply unchanged. A successful repair REPLACES the member's entry so
+ * downstream rounds/persistence see the repaired reply.
+ */
+function _run_debate_gate_repairs(
+    members: ExternalAIClient[],
+    results: CouncilResponse[],
+    prior: CouncilResponse[],
+    round_question: CouncilQuestion,
+    budget: CostBudget,
+    spent: Spent,
+    round_opts: {
+        table: PriceTable | null;
+        on_overrun: OnOverrunCallback | null;
+        project: ProjectContext | null;
+        original_ask: string;
+        advisor_plans: Map<string, AdvisorPlan> | null;
+    },
+    on_repair: ((member: string, reason: string) => boolean) | null,
+): CouncilResponse[] {
+    const flagged: Array<{ idx: number; reason: string }> = [];
+    const okText = (r: CouncilResponse | undefined): string =>
+        r !== undefined && r.error === null ? r.text : '';
+    for (let i = 0; i < results.length; i++) {
+        const curr = okText(results[i]);
+        const prev = okText(prior[i]);
+        if (curr !== '' && prev !== '' && is_near_duplicate(prev, curr)) {
+            flagged.push({ idx: i, reason: 'novelty: near-duplicate of your own prior round' });
+        }
+    }
+    const texts = results.map((r) => okText(r));
+    if (!dissent_quota_met(texts.filter((t) => t !== ''))) {
+        // Most-recently-converged heuristic: the LAST member with a real reply
+        // that carries no objection marker.
+        for (let i = results.length - 1; i >= 0; i--) {
+            const t = okText(results[i]);
+            if (t !== '' && count_dissenters([t]) === 0 && !flagged.some((f) => f.idx === i)) {
+                flagged.push({ idx: i, reason: 'dissent quota unmet: state a genuine objection or confirm with a named reason' });
+                break;
+            }
+        }
+    }
+    if (flagged.length === 0 || on_repair === null) {
+        return results;
+    }
+    const repaired = new Set<number>();
+    const out = [...results];
+    for (const f of flagged) {
+        if (repaired.has(f.idx)) {
+            continue; // hard cap: <= 1 repair per member per round
+        }
+        const member = members[f.idx];
+        if (member === undefined) {
+            continue;
+        }
+        if (!on_repair(member.name, f.reason)) {
+            continue;
+        }
+        repaired.add(f.idx);
+        const repairQ = new CouncilQuestion({
+            mode: round_question.mode,
+            user_prompt:
+                `${round_question.user_prompt}\n\n---\n\n` +
+                `REPAIR RE-PROMPT (${f.reason}). Your previous reply this round did not ` +
+                `advance the debate. Respond again: either a genuinely updated position ` +
+                `naming the specific flaw that moved you, or an explicit defense with NEW evidence.`,
+            max_tokens: round_question.max_tokens,
+        });
+        const rr = _run_round([member], repairQ, budget, spent, round_opts);
+        const r0 = rr[0];
+        if (r0 !== undefined && r0.error === null && r0.text.trim() !== '') {
+            out[f.idx] = r0;
+        }
+    }
+    return out;
+}
+
 export interface RunDebateOptions {
     budget?: CostBudget | null;
     table?: PriceTable | null;
@@ -914,6 +999,14 @@ export interface RunDebateOptions {
      * prompt is byte-identical to today.
      */
     debate_gates?: boolean;
+    /**
+     * Phase 3 repair transport, per the 2026-07-12 council policy
+     * (`debate_gates.repair_action`): the CLI passes `() => true` under
+     * `--auto-continue` (auto-fire under the cap) or an interactive one-line
+     * confirm otherwise. `null`/absent → gates detect but never dispatch
+     * (no unplanned spend without an explicit transport).
+     */
+    on_repair?: ((member: string, reason: string) => boolean) | null;
 }
 
 /**
@@ -1000,6 +1093,23 @@ export function run_debate(
             });
         }
 
+        if (opts.debate_gates === true && round_idx > 0 && all_rounds.length > 0) {
+            results = _run_debate_gate_repairs(
+                members,
+                results,
+                all_rounds[all_rounds.length - 1] as CouncilResponse[],
+                // round_idx > 0 here, so current_user_prompt IS this round's prompt.
+                new CouncilQuestion({
+                    mode: question.mode,
+                    user_prompt: current_user_prompt,
+                    max_tokens: question.max_tokens,
+                }),
+                budget,
+                spent,
+                { table, on_overrun, project, original_ask, advisor_plans },
+                opts.on_repair ?? null,
+            );
+        }
         all_rounds.push(results);
         if (on_round_complete !== null) {
             on_round_complete(round_number, results);

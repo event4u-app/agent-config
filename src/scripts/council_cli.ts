@@ -2068,6 +2068,20 @@ function _listEq(a: string[], b: string[]): boolean {
     return a.every((v, i) => v === b[i]);
 }
 
+
+/** Phase 3 repair transport (council 2026-07-12): auto-fire under
+ *  --auto-continue; one-line confirm otherwise (blank/EOF stdin = N). */
+function _make_repair_confirm(auto_continue: boolean): (member: string, reason: string) => boolean {
+    if (auto_continue) {
+        return () => true;
+    }
+    return (member: string, reason: string): boolean => {
+        _stdout(`\ndebate:repair ${member} — ${reason} — send one bounded repair re-prompt? [y/N]: `);
+        const answer = _readStdinLine();
+        return answer === 'y' || answer === 'yes';
+    };
+}
+
 function _make_debate_continue_prompt(opts: {
     auto_continue: boolean;
     stream?: ((s: string) => void) | null;
@@ -2282,6 +2296,7 @@ function cmd_debate(
             on_round_complete: _on_round_complete,
             on_continue,
             debate_gates: debate_gates_on,
+            on_repair: debate_gates_on ? _make_repair_confirm(Boolean(_getattr(args, 'auto_continue', false))) : null,
             advisor_plans,
             seed_round_1: seed,
         });
