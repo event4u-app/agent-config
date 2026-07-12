@@ -66,7 +66,7 @@ import {
     system_prompt_for,
 } from './prompts.js';
 import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
-import { render_vote_tally, tally_stances } from './stance_tally.js';
+import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
 
 // ── Python-format / stdlib parity helpers ────────────────────────────────
 //
@@ -420,6 +420,14 @@ export interface ConsultOptions {
      * round's prompt is byte-identical to today.
      */
     stance_tally?: boolean;
+    /**
+     * Phase 1 stance-repair transport (2026-07-12 council policy): confirm per
+     * member in interactive runs; `null`/absent → a missing/unparseable stance
+     * stays a repair-marker in the tally, never an unplanned billable call.
+     */
+    on_stance_repair?: ((member: string) => boolean) | null;
+    /** Receives each stance-repair response so the caller can account its cost. */
+    on_stance_repair_result?: ((r: CouncilResponse) => void) | null;
 }
 
 /**
@@ -513,6 +521,46 @@ export function consult(
                 last_results,
                 round_idx + 2,
             );
+        }
+    }
+
+    // Phase 1 stance repair: one bounded stance-line-only re-prompt per member
+    // whose final reply lacks a parseable STANCE line — dispatched only through
+    // the on_stance_repair transport, reusing _run_round (spend gate + ledger +
+    // stamping unchanged). The repaired stance line is APPENDED to the member's
+    // final text so the deterministic tally can read it.
+    const on_stance_repair = opts.on_stance_repair ?? null;
+    if (stance_tally && on_stance_repair !== null) {
+        for (let i = 0; i < last_results.length; i++) {
+            const r = last_results[i] as CouncilResponse;
+            if (r.error !== null || r.text.trim() === '' || parse_stance_line(r.text) !== null) {
+                continue;
+            }
+            const member = members[i];
+            if (member === undefined || !on_stance_repair(member.name)) {
+                continue;
+            }
+            const repairQ = new CouncilQuestion({
+                mode: question.mode,
+                user_prompt:
+                    `Your reply is missing the mandatory closing stance line. ` +
+                    `Reply with ONLY that single line for your final position.\n\n${STANCE_LINE_CONTRACT}`,
+                max_tokens: question.max_tokens,
+            });
+            const rr = _run_round([member], repairQ, resolvedBudget, spent, {
+                table,
+                on_overrun,
+                project,
+                original_ask,
+                advisor_plans,
+            });
+            const rep = rr[0];
+            if (rep !== undefined) {
+                opts.on_stance_repair_result?.(rep);
+                if (rep.error === null && parse_stance_line(rep.text) !== null) {
+                    r.text = `${r.text.trim()}\n\n${rep.text.trim()}`;
+                }
+            }
         }
     }
 

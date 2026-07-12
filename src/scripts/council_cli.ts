@@ -1906,6 +1906,7 @@ function cmd_run(
         _isDict(ai_cfg) &&
         _isDict(ai_cfg['stance_tally']) &&
         (ai_cfg['stance_tally'] as Dict)['enabled'] === true;
+    const stance_repairs: CouncilResponse[] = [];
     const responses = consult(members, question, budget, {
         table,
         project,
@@ -1913,6 +1914,14 @@ function cmd_run(
         rounds,
         advisor_plans,
         stance_tally: stance_tally_on,
+        // Interactive one-line confirm (cmd_run has no --auto-continue); the
+        // repaired-call cost is collected so cost_usd_actual stays honest.
+        on_stance_repair: stance_tally_on
+            ? (member: string): boolean => _make_repair_confirm(false)(member, 'missing stance line')
+            : null,
+        on_stance_repair_result: (r: CouncilResponse): void => {
+            stance_repairs.push(r);
+        },
     });
     const persona_labels = build_persona_labels(advisor_plans, billable);
     const peer_review = _maybe_run_peer_review(
@@ -1941,6 +1950,7 @@ function cmd_run(
     if (chairman !== null && chairman.response !== null) {
         all_responses.push(chairman.response);
     }
+    all_responses.push(...stance_repairs);
     for (const r of all_responses) {
         if (r.error) {
             continue;
