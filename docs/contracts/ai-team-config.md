@@ -47,6 +47,9 @@ ai_team:
   allow_delegate: <bool>          # second opt-in for the write path, default false
   max_calls_per_day: <int >= 0>   # default 50; counts into the shared openai bucket
   suppress_setup_hint: <bool>     # default false; cosmetic wizard-hint suppression
+  review_gate:                    # managed governance of the plugin's Stop-hook Review Gate
+    managed: <bool>               # default false = byte-identical pre-Phase-4 behavior
+    max_consecutive_blocks: <int >= 1>  # default 3; circuit-breaker loop bound
 ```
 
 | Key | Type | Default | Semantics |
@@ -56,6 +59,8 @@ ai_team:
 | `allow_delegate` | bool | `false` | Second opt-in for the **only** wrapper that delegates write access (`/team:delegate`). Refuses with an enable pointer until BOTH `enabled` and `allow_delegate` are `true`. |
 | `max_calls_per_day` | int ≥ 0 | `50` | Per-day ceiling on team calls, read against the **shared** `cli_call_budget` openai bucket (see § Quota). `0` blocks all team calls. |
 | `suppress_setup_hint` | bool | `false` | Suppress the one-line wizard/init recommendation to install the codex plugin on Claude-Code hosts. Cosmetic only. |
+| `review_gate.managed` | bool | `false` | Managed governance of the codex plugin's Stop-hook Review Gate (Phase 4). `false` = no counting, no circuit breaker — the Stop path is byte-identical to pre-Phase-4 dispatch. `true` = consecutive BLOCK verdicts are counted per session (first-line `ALLOW:`/`BLOCK:` contract of the gate transcript; anything else is honestly `UNKNOWN` and never counted) and the circuit breaker trips at the bound. |
+| `review_gate.max_consecutive_blocks` | int ≥ 1 | `3` | Circuit-breaker bound. At this many CONSECUTIVE BLOCKs in one session a visible notice is injected **exactly once** and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Unknown keys inside `review_gate` are rejected fail-closed, same as the parent block. |
 
 ### Why `model: 'auto'` instead of a pinned ID
 
@@ -68,10 +73,14 @@ default, and only the codex CLI knows what that currently is. `'auto'`
 therefore delegates the choice to the CLI; a set value is a user pin and
 passes through verbatim — the loader never rewrites or "corrects" it.
 
-**Future keys:** `review_gate` (managed, loop-bound governance of the
-plugin's Stop-hook Review Gate) is reserved for a later team-mode phase
-(Phase 4). Do not add it — or any other key — ahead of its phase; the
-loader rejects unknown keys today by design.
+**`review_gate` (Phase 4, shipped):** the loop-bound governance block is
+live — module `src/scripts/ai_team/review_gate.ts` (counter state under
+`agents/runtime/state/team-review-gate.json`, ledger under
+`agents/runtime/team/events.log`, one `team.gate: BLOCK 2/3` /
+`ALLOW reset` line per gate verdict). The gate itself stays upstream's;
+upstream's own warning applies while it is enabled unmanaged: "The
+review gate can create a long-running Claude/Codex loop and may drain
+usage limits quickly." Any other key stays rejected fail-closed.
 
 ## Role semantics — the council-verdict design constraint
 
@@ -140,6 +149,30 @@ order:
 same *counter*: whichever path a call takes, it increments the one shared
 bucket, and each surface enforces its own configured cap against that
 shared count.
+
+**Worked example — two ceilings, one counter.** Council ceiling
+`cli_call_budget.max_calls_per_day.openai: 100`, team ceiling
+`ai_team.max_calls_per_day: 50`, shared counter at 45 openai calls today:
+both paths are open. Five team calls later the counter reads 50 — team
+calls are now blocked (50 >= 50) while council CLI calls continue until
+the counter reaches 100. Whichever path fires a call, the same counter
+moves; each surface only decides where *its* ceiling sits on that shared
+count. `/team status` renders exactly this state: the live counter, both
+ceilings, and which path (if any) is currently blocked.
+
+### Team-review envelope
+
+Every `/team:review` return — plugin path and multi-host fallback alike — is emitted in the
+team-review status envelope (`src/skills/subagent-orchestration/schemas/team-review-status.json`),
+which extends the `subagent-status.json` frame: `status` (`DONE | DONE_WITH_CONCERNS |
+NEEDS_CONTEXT | BLOCKED`), `findings[]` (`severity`/`evidence`/`suggested_fix`/`location?`),
+`reviewed_ref` (HEAD sha of the bundle), `model` (`'auto'` = codex CLI default), and
+`quota` (`{used, ceiling}` on the shared `cli_call_budget` openai bucket); unparseable model
+output is preserved verbatim in `raw` with status `DONE_WITH_CONCERNS` — never silently dropped.
+Plugin text is summarized INTO the envelope and preserved verbatim beneath — never rewritten.
+<!-- PLACEHOLDER: the team-review-envelope subsection (review-gate ledger
+     line format `team.gate: BLOCK n/N` read by /team status) is inserted
+     here by the orchestrator in a later step. Do not remove this marker. -->
 
 ## Validation rules (fail-closed)
 
