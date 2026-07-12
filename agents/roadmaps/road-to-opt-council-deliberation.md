@@ -8,13 +8,14 @@ execution:
 # Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater
 
 > **Un-parked 2026-07-11 on the maintainer's explicit exclusive request.**
-> Phases 0–1 (foundation) landed in PR #903. **This PR continues the autonomous
-> tranche: Phase 2 (Chairman synthesis) + Phase 3 (Debate enforcement gates),
-> both default-off.** The two design details the `contested-design-council-pass`
-> blocker reserves — chairman `auto` tier-vs-provider preference, and repair-call
-> auto-fire-vs-confirm — take a **conservative default** (host-fallback /
-> confirm) and are surfaced for the billable `/council:design` run rather than
-> pre-decided. Phase 4 stays gated on `benchmark-spend-authorization`.
+> Phases 0–1 landed in PR #903; Phase 2–3 default-off surfaces in PR #906.
+> **2026-07-12: the `contested-design-council-pass` blocker is RESOLVED** via a
+> billable 2-round council debate under the standing spend-to-unblock
+> authorization (see `## Council notes`); both design decisions are encoded in
+> code (`select_chairman` auto-policy, `repair_action`). Remaining open work is
+> the billable dispatch WIRING (chairman call in cmd_run + estimate row + ADR;
+> repair-dispatch + restate in run_debate; stance-tally final-round
+> integration) and Phase 4 (gated on `benchmark-spend-authorization`).
 
 > Source-level comparison against **Source G** — an external prompt-only
 > multi-persona council skill (18 historical-figure agents, a ~940-line
@@ -225,7 +226,7 @@ Applies our own host-bias argument to the synthesis step.
       restored + the lens synthesis template) and send as one member
       call through the existing client/transport layer; billable rules,
       `on_overrun`, and daily ledger apply unchanged.
-      <!-- GATED (billable + blocker). Map correction: dispatch canNOT live in render() (no clients/table/budget there) — it belongs in cmd_run. The pure SELECTION is done (chairman.ts select_chairman + tests, incl. the deliberated-member self-judge fallback). The billable dispatch + a MemberConfig.tier source for `auto` land with the /council:design decision. -->
+      <!-- GATED (billable + blocker). Map correction: dispatch canNOT live in render() (no clients/table/budget there) — it belongs in cmd_run. The pure SELECTION is done (chairman.ts select_chairman + tests, incl. the deliberated-member self-judge fallback). UPDATE 2026-07-12: the auto-policy is DECIDED (council pass, see ## Council notes) and implemented (select_chairman provider-difference + tier tie-break; members.<name>.tier config field landed) — only the billable cmd_run dispatch wiring remains. -->
 - [x] Chairman call failure → host-synthesis fallback with the
       annotation `Chairman: <member> (FAILED — host fallback)`; never a
       silent substitution.
@@ -271,7 +272,7 @@ visible repair cost.
       reply; duplicate → one targeted re-prompt). Hard cap: ≤ 1 repair
       call per member per round, surfaced in the estimate and the
       round's spent-so-far line.
-      <!-- PARTIAL: the config key (debate_gates.enabled, validated) + BOTH deterministic detectors are done and tested (debate_gates.ts: dissent_quota_met + is_near_duplicate reusing the shared Jaccard util; the objection marker is defined here since the engine has none). GATED: the bounded repair re-prompt (one billable call per member per round) + its auto-fire-vs-confirm POLICY are exactly what `blocker: contested-design-council-pass` reserves for /council:design; they land with that decision. -->
+      <!-- PARTIAL: the config key (debate_gates.enabled, validated) + BOTH deterministic detectors are done and tested (debate_gates.ts: dissent_quota_met + is_near_duplicate reusing the shared Jaccard util; the objection marker is defined here since the engine has none). GATED: the bounded repair re-prompt (one billable call per member per round) + its auto-fire-vs-confirm POLICY are exactly what `blocker: contested-design-council-pass` reserves for /council:design; the policy is now DECIDED (council 2026-07-12, see ## Council notes; encoded in repair_action) — only the dispatch wiring remains. -->
 - [ ] `--restate` flag (and `ai_council.restate.enabled`, default
       `false`): pre-round-1 pass collecting a ≤ 50-word restatement +
       alternative framing per member; render all restatements above the
@@ -287,14 +288,18 @@ visible repair cost.
       <!-- done for the landed surface: debate_gates.test.ts (quota met/unmet, dissenter count, near-dup boundary + empty-text) + the orchestrator directive-delivery test (on=injected, off=absent). repair-cap / estimate-row tests land with the gated repair dispatch. -->
       <!-- verify: npx vitest run tests/scripts/ai_council/debate_gates.test.ts tests/scripts/ai_council/orchestrator.test.ts -->
 
-> **Phase 2–3 continuation halt (this PR, #NNN).** Landed default-off + verified:
-> chairman config + `select_chairman` selection; the anti-conformity directive
-> wired end-to-end; the debate-gate detectors; the `debate_gates` / `restate`
-> config; contract-doc. **Remaining (billable + `/council:design`-gated):** the
-> chairman billable dispatch (needs a new `MemberConfig.tier` source for `auto`)
-> + its estimate row + ADR; the debate-gate repair re-prompt (needs the
-> auto-fire-vs-confirm policy) + the restate pass. With every new key at its
-> default, the consult / debate / synthesis paths stay byte-identical.
+> **Phase 2–3 status (updated 2026-07-12).** PR #906 landed the default-off
+> surfaces (chairman config + selection, anti-conformity directive wired
+> end-to-end, gate detectors, `debate_gates`/`restate` config). The
+> design-unblock PR then **resolved the `/council:design` blocker** (see
+> `## Council notes`) and encoded both decisions: `select_chairman` `auto` now
+> genuinely selects (provider-family difference primary, optional
+> `members.<name>.tier` tie-break, config-order final) and `repair_action`
+> encodes confirm-interactive / auto-fire-under-`--auto-continue` with an
+> absolute per-round cap. **Remaining (next tranche):** the billable chairman
+> dispatch in `cmd_run` + estimate row + ADR; the repair-dispatch + restate
+> wiring in `run_debate`; the stance-tally final-round integration. With every
+> new key at its default, all paths stay byte-identical.
 
 **Exit criteria:** new test file green; with both keys `false`, debate
 fixtures produce parity-snapshot-identical output; estimate for an
@@ -353,8 +358,10 @@ user-facing changes in this phase.
 
 ### blocker: contested-design-council-pass
 
-- **Status:** open
-- **Owner:** user (billable spend)
+- **Status:** resolved (2026-07-12)
+- **Owner:** user (billable spend) — executed under the standing
+  spend-to-unblock authorization; estimate disclosed ($0.83 projected),
+  actual $0.08.
 - **Blocks:** Phase 2 auto-selection detail, Phase 3 repair-call policy
 - **What to do:** run `/council:design` on two questions before those
   phases execute: (1) should `chairman: auto` prefer tier or
@@ -363,7 +370,32 @@ user-facing changes in this phase.
   confirm in interactive runs. Append the convergence as a
   `## Council notes` block here.
 - **Resolved when:** the council-notes block exists in this file with
-  both questions answered.
+  both questions answered. → See `## Council notes` below.
+
+## Council notes — contested-design pass (2026-07-12)
+
+Council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2-round debate,
+2026-07-12, actual $0.08) converged on both questions:
+
+1. **Chairman `auto` prefers PROVIDER-FAMILY DIFFERENCE, not tier.** Both
+   members independently recommended (b): the chairman's mandate is
+   independence from deliberation bias, and provider diversity is the one
+   structural independence guarantee available without an LLM call; chairing
+   with the strongest model when the deliberators share its provider
+   concentrates most of the decision surface on one provider's priors.
+   **Tie-break** (where the debate refined): among provider-different
+   candidates, prefer the stronger capability signal — an optional explicit
+   `tier` value on member config when present (gpt-4o's tie-break), else the
+   deterministic config order (claude's no-LLM-call constraint; the engine's
+   only trusted ordering). Implemented in `chairman.ts::select_chairman`.
+2. **Repair calls: one-line CONFIRM in interactive runs; AUTO-FIRE under
+   `--auto-continue`.** Both members converged on (b): a cost estimate is an
+   upper bound, not a spend commitment — repairs are failure-mode responses,
+   not the mainline path, so unplanned billable calls ask in interactive
+   sessions; unattended runs auto-fire under the hard cap. Manual-transport
+   members follow the same policy (deliberation-flow impact, not cost, governs
+   — per the round-1 openai position, uncontradicted in round 2).
+   Encoded in `debate_gates.ts::repair_action`.
 
 ### blocker: benchmark-spend-authorization
 

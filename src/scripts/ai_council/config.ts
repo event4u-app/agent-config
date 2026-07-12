@@ -373,6 +373,13 @@ export interface MemberConfig {
     readonly binary: string | null;
     readonly model_ladder: readonly string[];
     readonly participate_low_impact: boolean;
+    /**
+     * Optional capability rank for chairman-`auto` tie-breaking (Phase 2;
+     * council 2026-07-12 — provider-family difference is primary, tier is the
+     * tie-break). Higher = stronger. `null` when unset; selection then falls
+     * back to deterministic config order.
+     */
+    readonly tier: number | null;
 }
 
 /**
@@ -1667,6 +1674,17 @@ function _build_member(
                 `(got ${_pyTypeName(participate_raw)}).`,
         );
     }
+    const tier_raw = _get(cfg, 'tier', null);
+    let tier: number | null = null;
+    if (tier_raw !== null && tier_raw !== undefined) {
+        if (typeof tier_raw !== 'number' || !Number.isInteger(tier_raw) || tier_raw < 1) {
+            throw new CouncilConfigError(
+                `members.${name}.tier must be an integer >= 1 when set ` +
+                    `(got ${_pyRepr(tier_raw)}).`,
+            );
+        }
+        tier = tier_raw;
+    }
     return {
         name,
         enabled: member_enabled,
@@ -1676,6 +1694,7 @@ function _build_member(
         binary: (binary as string | null) ?? null,
         model_ladder: ladder,
         participate_low_impact: participate_raw,
+        tier,
     };
 }
 
