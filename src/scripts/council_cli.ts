@@ -25,6 +25,7 @@ import {
     bundle_roadmap,
 } from './ai_council/bundler.js';
 import { select_chairman } from './ai_council/chairman.js';
+import { jaccardSimilarity } from './_lib/text_similarity.js';
 import type { ChairmanCandidate } from './ai_council/chairman.js';
 import { synthesis_template } from './ai_council/prompts.js';
 import type {
@@ -2287,6 +2288,31 @@ function cmd_debate(
         auto_continue: Boolean(_getattr(args, 'auto_continue', false)),
     });
 
+    // Phase 3: restate pass — CLI flag OR config key; default off.
+    const restate_on =
+        Boolean(_getattr(args, 'restate', false)) ||
+        (_isDict(ai_cfg) && _isDict(ai_cfg['restate']) && (ai_cfg['restate'] as Dict)['enabled'] === true);
+    const restate_responses: CouncilResponse[] = [];
+    const ask_for_divergence = (args.original_ask as string) || '';
+    const on_restate = (rs: CouncilResponse[]): void => {
+        restate_responses.push(...rs);
+        const blocks = rs
+            .filter((r) => !r.error && r.text.trim() !== '')
+            .map((r) => `### ${r.provider} - ${r.model}\n\n${r.text.trim()}`);
+        if (blocks.length > 0) {
+            _stdout(`\n## Restatements (pre-round-1)\n\n${blocks.join('\n\n')}\n`);
+        }
+        // Divergence flag BEFORE further spend: a restatement far from the
+        // stated ask is surfaced to the user (Jaccard over token sets).
+        if (ask_for_divergence.trim() !== '') {
+            for (const r of rs) {
+                if (!r.error && r.text.trim() !== '' && jaccardSimilarity(ask_for_divergence, r.text) < 0.1) {
+                    _stderr(`⚠️  restate divergence: ${r.provider} restated the ask with little overlap — verify framing before continuing.\n`);
+                }
+            }
+        }
+    };
+
     // Phase 3: debate gates (anti-conformity directive on round 2+). Read
     // defensively from the raw ai_council block — a malformed/absent
     // `debate_gates` reads as off, keeping the debate prompt byte-identical.
@@ -2307,6 +2333,8 @@ function cmd_debate(
             on_continue,
             debate_gates: debate_gates_on,
             on_repair: debate_gates_on ? _make_repair_confirm(Boolean(_getattr(args, 'auto_continue', false))) : null,
+            restate: restate_on,
+            on_restate: restate_on ? on_restate : null,
             advisor_plans,
             seed_round_1: seed,
         });
@@ -2324,7 +2352,7 @@ function cmd_debate(
     }
 
     let actual_total = 0.0;
-    for (const rnd of all_rounds) {
+    for (const rnd of [...all_rounds, restate_responses]) {
         for (const r of rnd) {
             if (r.error) {
                 continue;
@@ -2571,6 +2599,7 @@ interface Args {
     single: boolean;
     prose_synthesis: boolean | null;
     auto_continue: boolean;
+    restate?: boolean;
     continue_as_debate: string | null;
     // render / replay
     responses?: string | null;
@@ -2700,6 +2729,7 @@ function _specsFor(cmd: string): { positionals: string[]; opts: OptSpec[]; requi
                     { flag: '--confirm', takesValue: false, apply: (o) => (o.confirm = true) },
                     { flag: '--rounds', takesValue: true, isInt: true, apply: (o, v) => (o.rounds = v === null ? null : parseInt(v, 10)) },
                     { flag: '--auto-continue', takesValue: false, apply: (o) => (o.auto_continue = true) },
+                    { flag: '--restate', takesValue: false, apply: (o) => (o.restate = true) },
                     { flag: '--continue-as-debate', takesValue: true, apply: (o, v) => (o.continue_as_debate = v) },
                     { flag: '--invocation', takesValue: true, choices: ['agent', 'user_explicit'], apply: (o, v) => (o.invocation = v as string) },
                     { flag: '--proceed-anyway', takesValue: false, apply: (o) => (o.proceed_anyway = true) },
