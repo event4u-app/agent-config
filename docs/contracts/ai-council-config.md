@@ -405,6 +405,45 @@ unparseable is a repair-marker; the bounded stance-line-only repair call and
 its estimate row are surfaced separately (gated behind the same key and the
 per-run spend estimate).
 
+### Chairman synthesis (Phase 2 — opt-in)
+
+The skill's own Iron Law argues the host, having framed the artefact, cannot
+independently judge it. `chairman` lets a **non-deliberating member** author the
+synthesis instead. **Default `host`** = today's behaviour, byte-identical.
+
+**Configuration.**
+
+- `chairman.mode` (enum `host` | `member` | `auto`, default `host`) — an unknown
+  value is rejected at config load.
+- `chairman.member` (string, required when `mode: member`) — must name a member
+  that exists AND is enabled; **fails closed** at load otherwise.
+
+**Selection** (`chairman.ts` `select_chairman`, pure): `host` → host synthesis;
+`member` → the named member, but only if it did **not** deliberate this session
+(a member that argued cannot self-judge — else host fallback with a visible
+annotation); `auto` → **conservative host fallback** with an annotation. `auto`
+does not yet pick a member: the engine has no cross-member tier field, and
+whether `auto` prefers model tier or provider-family difference is reserved for a
+billable `/council:design` run — so it falls back to host rather than pre-decide.
+The billable chairman dispatch (rendering the synthesis as one member call) lands
+with that decision + a `MemberConfig.tier` source.
+
+### Debate enforcement gates (Phase 3 — opt-in)
+
+- `debate_gates.enabled` (bool, default `false`) — when on, round-2+ debate
+  prompts carry the **anti-conformity directive** (`prompts.ANTI_CONFORMITY_DIRECTIVE`:
+  defend a position; change only on a specific named flaw; agreement without a
+  named reason is conformity). Byte-identical across api/cli/manual (it is part of
+  the shared `user_prompt`). Default-off keeps the debate path byte-identical.
+- `restate.enabled` (bool, default `false`) — reserved for the pre-round-1
+  restatement pass.
+
+The deterministic post-round detectors — dissent-quota (`debate_gates.dissent_quota_met`)
+and the novelty gate (`debate_gates.is_near_duplicate`, reusing the shared
+Jaccard util) — are implemented and tested as pure functions; their bounded
+repair re-prompt (one billable call per member per round, under a hard cap) and
+its auto-fire-vs-confirm policy land with the `/council:design` decision.
+
 ### Decision resolution by impact (Phase 10, ask-user routing)
 
 Five-class impact classifier triages every pending agent question

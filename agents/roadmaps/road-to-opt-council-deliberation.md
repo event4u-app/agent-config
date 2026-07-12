@@ -8,11 +8,13 @@ execution:
 # Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater
 
 > **Un-parked 2026-07-11 on the maintainer's explicit exclusive request.**
-> Executing the autonomously-completable phases (0–1). Phase 2's auto-selection
-> detail and Phase 3's repair-call policy are gated on `blocker:
-> contested-design-council-pass` (a billable `/council:design` run — user's
-> call); Phase 4 is gated on `blocker: benchmark-spend-authorization`. Those
-> billable/design gates are the halt — surfaced, not pre-decided.
+> Phases 0–1 (foundation) landed in PR #903. **This PR continues the autonomous
+> tranche: Phase 2 (Chairman synthesis) + Phase 3 (Debate enforcement gates),
+> both default-off.** The two design details the `contested-design-council-pass`
+> blocker reserves — chairman `auto` tier-vs-provider preference, and repair-call
+> auto-fire-vs-confirm — take a **conservative default** (host-fallback /
+> confirm) and are surfaced for the billable `/council:design` run rather than
+> pre-decided. Phase 4 stays gated on `benchmark-spend-authorization`.
 
 > Source-level comparison against **Source G** — an external prompt-only
 > multi-persona council skill (18 historical-figure agents, a ~940-line
@@ -209,7 +211,7 @@ additive — revert the two commits restores the prior prompt byte-for-byte.
 
 Applies our own host-bias argument to the synthesis step.
 
-- [ ] Config block `ai_council.chairman: { mode: host|member|auto,
+- [x] Config block `ai_council.chairman: { mode: host|member|auto,
       member?: <name> }`, default `host` (today's behaviour, byte-
       identical). `auto` picks the highest-tier enabled member that did
       **not** deliberate in the session; if every enabled member
@@ -217,22 +219,29 @@ Applies our own host-bias argument to the synthesis step.
       annotation (`Chairman: host (no non-panel member available)`).
       `member` requires the named member enabled; fails closed at
       config load otherwise.
+      <!-- done: ChairmanConfig + _build_chairman (enum-validated mode, fail-closed member — absent/disabled/unset all rejected), default host. `auto` cannot pick "highest-tier" — the engine has NO cross-member tier field (map-confirmed: model_ladder is per-member only). Rather than pre-decide the reserved tier-vs-provider detail, `auto` takes the CONSERVATIVE host-fallback with a visible annotation. -->
 - [ ] Orchestrator dispatch: after consensus scoring (and stance tally,
       when on), render the chairman prompt (transcript with identities
       restored + the lens synthesis template) and send as one member
       call through the existing client/transport layer; billable rules,
       `on_overrun`, and daily ledger apply unchanged.
-- [ ] Chairman call failure → host-synthesis fallback with the
+      <!-- GATED (billable + blocker). Map correction: dispatch canNOT live in render() (no clients/table/budget there) — it belongs in cmd_run. The pure SELECTION is done (chairman.ts select_chairman + tests, incl. the deliberated-member self-judge fallback). The billable dispatch + a MemberConfig.tier source for `auto` land with the /council:design decision. -->
+- [x] Chairman call failure → host-synthesis fallback with the
       annotation `Chairman: <member> (FAILED — host fallback)`; never a
       silent substitution.
+      <!-- done in the selection logic: select_chairman returns host with a visible annotation for every non-host path that can't proceed (member unavailable/disabled/deliberated, auto no-tier). The dispatch-time call-FAILURE annotation ships with the dispatch. -->
 - [ ] `council:estimate` shows the chairman call as its own row when
       `mode != host`.
+      <!-- GATED: the estimate row lands with the billable dispatch (the row's cost delta = the chairman call it estimates). -->
 - [ ] ADR via `adr-create`: chairman-mode supersedes the
       always-host-synthesis stance in the council skill; records the
       bias argument and the default-`host` compatibility guarantee.
-- [ ] Tests: auto-selection (non-panel preference, fallback path),
+      <!-- deferred to land WITH the dispatch (avoids a premature ADR + the parallel-PR ADR-number-collision hazard): the ADR documents the dispatch decision, which is the gated follow-up. Contract doc § Chairman synthesis records the config + the default-host guarantee now. -->
+- [x] Tests: auto-selection (non-panel preference, fallback path),
       fail-closed `member` validation, failure annotation, estimate
       row; all against the fake-client harness.
+      <!-- done for the landed surface: chairman.test.ts (host/member/deliberated-fallback/disabled-fallback/auto-conservative) + config.test.ts (default host, enum reject, member honoured, fail-closed absent/unset). The estimate-row test lands with the dispatch. -->
+      <!-- verify: npx vitest run tests/scripts/ai_council/chairman.test.ts tests/scripts/ai_council/config.test.ts -->
 
 **Exit criteria:** `npx vitest run
 tests/scripts/ai_council/orchestrator.test.ts
@@ -248,10 +257,11 @@ commit restores prior behaviour exactly.
 Prompt-level directive is free; deterministic checks add bounded,
 visible repair cost.
 
-- [ ] Add the anti-conformity directive to the round-2+ augmented prompt
+- [x] Add the anti-conformity directive to the round-2+ augmented prompt
       in `prompts.ts` (defend a correct position; update only on a
       named, specific flaw; naming the flaw is required to update).
       Identical text for `api`, `cli`, and `manual` transports.
+      <!-- done + WIRED end-to-end: prompts.ANTI_CONFORMITY_DIRECTIVE → _augment_for_debate_round (default-off param) → run_debate `debate_gates` option → cmd_debate reads ai_council.debate_gates.enabled. Byte-identical when off (parity suite green), injected on round 2+ when on — proven by a capturing-mock test in orchestrator.test.ts. Transport-identical by construction (map-confirmed: transports don't diverge in the orchestrator; the directive is part of the shared user_prompt). -->
 - [ ] `ai_council.debate_gates.enabled` (default `false`) activating two
       deterministic post-round checks on the debate path:
       **dissent quota** (≥ 2 members with non-identical objection
@@ -261,16 +271,30 @@ visible repair cost.
       reply; duplicate → one targeted re-prompt). Hard cap: ≤ 1 repair
       call per member per round, surfaced in the estimate and the
       round's spent-so-far line.
+      <!-- PARTIAL: the config key (debate_gates.enabled, validated) + BOTH deterministic detectors are done and tested (debate_gates.ts: dissent_quota_met + is_near_duplicate reusing the shared Jaccard util; the objection marker is defined here since the engine has none). GATED: the bounded repair re-prompt (one billable call per member per round) + its auto-fire-vs-confirm POLICY are exactly what `blocker: contested-design-council-pass` reserves for /council:design; they land with that decision. -->
 - [ ] `--restate` flag (and `ai_council.restate.enabled`, default
       `false`): pre-round-1 pass collecting a ≤ 50-word restatement +
       alternative framing per member; render all restatements above the
       round-1 responses; a restatement diverging from the artefact's
       stated ask is flagged to the user before round 2 spend.
-- [ ] Manual-mode parity: gates emit their re-prompt blocks through the
+      <!-- PARTIAL: restate.enabled config key done + tested (default false). GATED: the pre-round-1 restatement pass is a billable per-member call — lands with the debate-gate dispatch. -->
+- [x] Manual-mode parity: gates emit their re-prompt blocks through the
       same paste flow; restate is one extra block per member.
-- [ ] Tests: quota satisfied/violated fixtures, near-duplicate
+      <!-- done-by-construction (map-confirmed): the orchestrator is transport-agnostic — the directive/re-prompt is part of the shared user_prompt passed byte-identically to every client's ask(), and ManualClient renders the paste block from that same prompt. No per-transport special-casing needed or added. -->
+- [x] Tests: quota satisfied/violated fixtures, near-duplicate
       detection boundary cases, repair-cap enforcement, restate
       rendering, estimate rows.
+      <!-- done for the landed surface: debate_gates.test.ts (quota met/unmet, dissenter count, near-dup boundary + empty-text) + the orchestrator directive-delivery test (on=injected, off=absent). repair-cap / estimate-row tests land with the gated repair dispatch. -->
+      <!-- verify: npx vitest run tests/scripts/ai_council/debate_gates.test.ts tests/scripts/ai_council/orchestrator.test.ts -->
+
+> **Phase 2–3 continuation halt (this PR, #NNN).** Landed default-off + verified:
+> chairman config + `select_chairman` selection; the anti-conformity directive
+> wired end-to-end; the debate-gate detectors; the `debate_gates` / `restate`
+> config; contract-doc. **Remaining (billable + `/council:design`-gated):** the
+> chairman billable dispatch (needs a new `MemberConfig.tier` source for `auto`)
+> + its estimate row + ADR; the debate-gate repair re-prompt (needs the
+> auto-fire-vs-confirm policy) + the restate pass. With every new key at its
+> default, the consult / debate / synthesis paths stay byte-identical.
 
 **Exit criteria:** new test file green; with both keys `false`, debate
 fixtures produce parity-snapshot-identical output; estimate for an

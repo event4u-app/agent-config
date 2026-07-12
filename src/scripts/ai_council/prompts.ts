@@ -160,6 +160,16 @@ export const STANCE_LINE_CONTRACT = `Close your reply with EXACTLY this line, an
 STANCE: <option-label> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no
 Reuse the SAME <option-label> as any peer backing the same option (match their wording); use \`abstain\` only if you genuinely cannot choose. CONFIDENCE is your certainty in the pick; DEALBREAKER is \`yes\` only if you would block on the alternative.`;
 
+/**
+ * Anti-conformity directive appended to round-2+ debate prompts when
+ * `ai_council.debate_gates` is enabled (road-to-opt-council-deliberation
+ * Phase 3). Counters the round-over-round convergence-to-consensus drift the
+ * `rounds:N` path otherwise invites. Byte-identical across the api / cli /
+ * manual transports (it becomes part of the shared `user_prompt`, which every
+ * client's `ask()` receives verbatim), so no per-transport special-casing.
+ */
+export const ANTI_CONFORMITY_DIRECTIVE = `Anti-conformity rule for this round: defend a position you still believe is correct. Change your position ONLY when a specific, named flaw in it has been identified — and you must name that flaw explicitly to justify the change. Do not soften or converge merely because other reviewers disagree; agreement without a named reason is conformity, not reasoning.`;
+
 const _MODE_TABLE: Record<string, string> = {
     prompt: PROMPT_MODE,
     roadmap: ROADMAP_MODE,
