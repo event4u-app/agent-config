@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 25 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **8** open blockers
+> 24 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **8** open blockers
 
 ## Overall
 
@@ -10,6 +10,10 @@
 
 ```text
 ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+**94 / 328 steps done · 29%**
+
+```text
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
 ```
 
 ## Open roadmaps
@@ -18,29 +22,28 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 15 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 6% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-ecosystem-harvest-bug-security-rigor.md](roadmaps/road-to-ecosystem-harvest-bug-security-rigor.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-ecosystem-harvest-document-skills.md](roadmaps/road-to-ecosystem-harvest-document-skills.md) | 2 | 10 | 9 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-ecosystem-harvest-domain-watch.md](roadmaps/road-to-ecosystem-harvest-domain-watch.md) | 3 | 8 | 6 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-ecosystem-harvest-ergonomics.md](roadmaps/road-to-ecosystem-harvest-ergonomics.md) | 1 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-ecosystem-harvest-index.md](roadmaps/road-to-ecosystem-harvest-index.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 8 | [road-to-ecosystem-harvest-prelaunch-diagnostics.md](roadmaps/road-to-ecosystem-harvest-prelaunch-diagnostics.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 9 | [road-to-ecosystem-harvest-product-gate.md](roadmaps/road-to-ecosystem-harvest-product-gate.md) | 1 | 5 | 5 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 11 | [road-to-ecosystem-harvest-reliability-measurement.md](roadmaps/road-to-ecosystem-harvest-reliability-measurement.md) | 1 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 12 | [road-to-ecosystem-harvest-review-mechanics.md](roadmaps/road-to-ecosystem-harvest-review-mechanics.md) | 4 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 13 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 14 | [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md) | 1 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 15 | [road-to-ecosystem-harvest-skill-quality-gates.md](roadmaps/road-to-ecosystem-harvest-skill-quality-gates.md) | 4 | 18 | 18 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 16 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 17 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 19 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 3 | 6 | 1 | 0 | 0 | ███████░░░ 67% |
-| 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 21 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 8 | 29 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 78% |
-| 22 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 23 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 15 | 23 | 1 | 0 | [2](#blockers-road-to-team-mode) | ██████░░░░ 61% |
-| 24 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
-| 25 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
+| 3 | [road-to-ecosystem-harvest-document-skills.md](roadmaps/road-to-ecosystem-harvest-document-skills.md) | 2 | 10 | 9 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-ecosystem-harvest-domain-watch.md](roadmaps/road-to-ecosystem-harvest-domain-watch.md) | 3 | 8 | 6 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-ecosystem-harvest-ergonomics.md](roadmaps/road-to-ecosystem-harvest-ergonomics.md) | 1 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-ecosystem-harvest-index.md](roadmaps/road-to-ecosystem-harvest-index.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 7 | [road-to-ecosystem-harvest-prelaunch-diagnostics.md](roadmaps/road-to-ecosystem-harvest-prelaunch-diagnostics.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-ecosystem-harvest-product-gate.md](roadmaps/road-to-ecosystem-harvest-product-gate.md) | 1 | 5 | 5 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 10 | [road-to-ecosystem-harvest-reliability-measurement.md](roadmaps/road-to-ecosystem-harvest-reliability-measurement.md) | 1 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-ecosystem-harvest-review-mechanics.md](roadmaps/road-to-ecosystem-harvest-review-mechanics.md) | 4 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 12 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md) | 1 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 14 | [road-to-ecosystem-harvest-skill-quality-gates.md](roadmaps/road-to-ecosystem-harvest-skill-quality-gates.md) | 4 | 18 | 18 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 15 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 16 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 17 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
+| 18 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 3 | 6 | 1 | 0 | 0 | ███████░░░ 67% |
+| 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 8 | 29 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 78% |
+| 21 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 22 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 23 | 15 | 1 | 0 | [2](#blockers-road-to-team-mode) | ████░░░░░░ 39% |
+| 23 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 24 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
 
 ---
 
@@ -79,15 +82,6 @@ _2 blockers resolved._
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-
-### [road-to-ecosystem-harvest-bug-security-rigor.md](roadmaps/road-to-ecosystem-harvest-bug-security-rigor.md)
-
-**Ecosystem-Harvest — Bug & Security Rigor** — 0 / 10 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Adopt-now plate (≤ 5 units) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Gated / deferred | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
 ### [road-to-ecosystem-harvest-document-skills.md](roadmaps/road-to-ecosystem-harvest-document-skills.md)
 

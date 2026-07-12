@@ -1,0 +1,52 @@
+{
+    "skill": "security-maturity-assessment",
+    "last_eval": "2026-07-12",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN posture/scorecard/baseline phrasings. Should-not-trigger covers the neighbouring security skills (vuln hunt, authz chain, threat model, secure coding, agent config) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "how mature is the security posture of our billing module?",
+            "trigger": true
+        },
+        {
+            "q": "give me a security scorecard for this codebase with evidence per category",
+            "trigger": true
+        },
+        {
+            "q": "wie sicher ist dieses Modul aufgestellt? Bitte pro Kategorie bewerten",
+            "trigger": true
+        },
+        {
+            "q": "baseline our security maturity before the hardening sprint",
+            "trigger": true
+        },
+        {
+            "q": "rate input validation, secrets and tenant isolation for the API package",
+            "trigger": true
+        },
+        {
+            "q": "audit this module for SQL injection and XSS vulnerabilities",
+            "trigger": false,
+            "note": "vulnerability hunt → security-audit"
+        },
+        {
+            "q": "review the authorization chain for the invoice download route",
+            "trigger": false,
+            "note": "single-route authz → authz-review"
+        },
+        {
+            "q": "threat-model the new file-upload feature before we build it",
+            "trigger": false,
+            "note": "pre-implementation → threat-modeling"
+        },
+        {
+            "q": "write a policy and gate for this new admin action",
+            "trigger": false,
+            "note": "writing secure code → security"
+        },
+        {
+            "q": "red-team my Claude agent's MCP and hook config",
+            "trigger": false,
+            "note": "agent config/behaviour → agent-security-review"
+        }
+    ]
+}
