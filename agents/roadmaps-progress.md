@@ -6,7 +6,7 @@
 
 ## Overall
 
-**113 / 375 steps done · 30%**
+**113 / 380 steps done · 30%**
 
 ```text
 ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
@@ -26,7 +26,7 @@
 | 8 | [road-to-ecosystem-harvest-prelaunch-diagnostics.md](roadmaps/road-to-ecosystem-harvest-prelaunch-diagnostics.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-ecosystem-harvest-product-gate.md](roadmaps/road-to-ecosystem-harvest-product-gate.md) | 1 | 5 | 5 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 11 | [road-to-ecosystem-harvest-reliability-measurement.md](roadmaps/road-to-ecosystem-harvest-reliability-measurement.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-ecosystem-harvest-reliability-measurement.md](roadmaps/road-to-ecosystem-harvest-reliability-measurement.md) | 1 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 12 | [road-to-ecosystem-harvest-review-mechanics.md](roadmaps/road-to-ecosystem-harvest-review-mechanics.md) | 4 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 13 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 14 | [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md) | 1 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -38,7 +38,7 @@
 | 20 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 5 | 5 | 0 | 0 | 0 | █████░░░░░ 50% |
 | 21 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
 | 22 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 23 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 23 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 9 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 76% |
 | 24 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 25 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 34 | 4 | 1 | 0 | [2](#blockers-road-to-team-mode) | █░░░░░░░░░ 11% |
 | 26 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
@@ -154,11 +154,11 @@ _2 blockers resolved._
 
 ### [road-to-ecosystem-harvest-reliability-measurement.md](roadmaps/road-to-ecosystem-harvest-reliability-measurement.md)
 
-**Ecosystem-Harvest — Reliability & Measurement** — 0 / 10 done (0%)
+**Ecosystem-Harvest — Reliability & Measurement** — 0 / 11 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Adopt-now plate (≤ 5 units) | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+| 1 | Adopt-now plate (≤ 5 units) | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
 
 ### [road-to-ecosystem-harvest-review-mechanics.md](roadmaps/road-to-ecosystem-harvest-review-mechanics.md)
 
@@ -310,7 +310,7 @@ _1 blocker resolved._
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
-**Road to request-scoped rule load — ship only what the request needs** — 28 / 33 done (85%)
+**Road to request-scoped rule load — ship only what the request needs** — 28 / 37 done (76%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -319,7 +319,8 @@ _1 blocker resolved._
 | 1b | Pipeline B: make scoping reach actual consumer installs | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | 🟡 in progress | 4 | 7 | 0 | 0 | 64% |
+| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | 🟡 in progress | 7 | 7 | 0 | 0 | 50% |
 
 <a id="blockers-road-to-request-scoped-rule-load"></a>
 **Blockers**
@@ -378,7 +379,7 @@ _1 blocker resolved._
     2. The trigger guide's `gpt-5.6-sol` is unverified marketing copy — the
     plugin's own prompting skill still targets `gpt-5-4`. Append the verified
     list here.
-  - **Resolved when:** a dated model-ID list exists in this file.
+  - **Resolved when:** a dated model-ID list exists in this file. - **Resolution (2026-07-12, verified live):** codex-cli 0.134.0 on the maintainer machine, subscription-authed; model list read from the CLI's own server-fetched cache (`~/.codex/models_cache.json`, fetched_at 2026-07-12T09:54Z) and cross-checked by a live `codex exec` header: - `gpt-5.5` — GPT-5.5, the CLI's current default (live exec header shows `model: gpt-5.5`) - `gpt-5.4` — GPT-5.4 - `gpt-5.4-mini` — GPT-5.4-Mini - `codex-auto-review` — Codex Auto Review (review-specialised) A bogus id is rejected with "not supported when using Codex with a ChatGPT account" (HTTP 400) — so arm pinning MUST use ids from this list. The trigger guide's `gpt-5.6-sol` is confirmed NOT available. Benchmark arms: pin builder/reviewer arms to `gpt-5.5` (default) and consider `codex-auto-review` for the review arm; re-read the cache at Phase 5 execution time (model lists rotate).
 - **benchmark-spend-authorization** (owner: user) — blocks Phase 5 execution (authoring fixtures is unblocked)
   - **What to do:**
     1. Approve the run once the fixture count is fixed; three arms × N fixtures

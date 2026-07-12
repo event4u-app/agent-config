@@ -59,6 +59,29 @@ export const TIERS: readonly string[] = ['public', 'vendor', 'proprietary'];
 export const DEFAULT_ALLOWED_TIERS: readonly string[] = ['public'];
 
 /**
+ * Sensitivity axis (Phase 1, road-to-feedback-8.11 / successor note to
+ * ADR-119) — orthogonal to `TIERS` (origin) and layered on top of the
+ * existing tier + redaction gate. `tier` classifies WHERE a card came from;
+ * `sensitivity` classifies WHETHER it may ever leave the project at all.
+ *
+ *   * `prohibited` — contains redaction-class content; never leaves the
+ *     repo. Machine-derived from the redaction scan (a card is never
+ *     hand-labelled into this class — a positive hit forces it).
+ *   * `project` — DEFAULT. Stays project-local; promotion is refused
+ *     unless a human explicitly reclassifies the card to `shareable`.
+ *   * `shareable` — eligible for the global store; must pass redaction
+ *     AND carry full promotion provenance (see the G5 footer fields).
+ *
+ * Deliberately kept to three machine-anchored classes — a wider
+ * team/organization taxonomy is phantom for a single-maintainer install and
+ * would over-fit; revisit only once a real multi-tenant consumer exists.
+ */
+export const SENSITIVITIES: readonly string[] = ['prohibited', 'project', 'shareable'];
+
+/** Default sensitivity for a card with no explicit `sensitivity:` field. */
+export const DEFAULT_SENSITIVITY = 'project';
+
+/**
  * Hard defaults applied when the setting block is absent. Default is ON for
  * the safe tiers; turning sharing on never makes promotion automatic.
  */
@@ -384,6 +407,14 @@ const _PROVENANCE_FIELDS: readonly string[] = [
     'last_verified',
     'tier',
     'seen_in',
+    // G5 promotion audit-trail fields (Phase 1, road-to-feedback-8.11):
+    // the more consistent home for these than frontmatter, since they sit
+    // alongside the other promotion-time facts above, not the card's own
+    // origin-tier/sensitivity classification (which lives in frontmatter).
+    'source_repo',
+    'owner',
+    'review_after',
+    'promotion_reason',
 ];
 
 /** Render the global-card provenance footer (the unversioned-store audit trail). */
@@ -394,6 +425,10 @@ export function render_provenance_footer(args: {
     last_verified: string;
     tier: string;
     seen_in: string[];
+    source_repo: string;
+    owner: string;
+    review_after: string;
+    promotion_reason: string;
 }): string {
     return [
         PROVENANCE_START,
@@ -403,9 +438,18 @@ export function render_provenance_footer(args: {
         `- last_verified: ${args.last_verified}`,
         `- tier: ${args.tier}`,
         `- seen_in: ${args.seen_in.join(', ')}`,
+        `- source_repo: ${args.source_repo}`,
+        `- owner: ${args.owner}`,
+        `- review_after: ${args.review_after}`,
+        `- promotion_reason: ${_singleLine(args.promotion_reason)}`,
         PROVENANCE_END,
         '',
     ].join('\n');
+}
+
+/** Collapse a human-entered reason to one line — footer fields are line-based. */
+function _singleLine(s: string): string {
+    return s.replace(/\r\n|\r|\n/g, ' ').trim();
 }
 
 /** Extract the provenance footer fields as a flat dict (empty if absent). */

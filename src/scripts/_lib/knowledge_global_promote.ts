@@ -187,6 +187,156 @@ export function should_suggest(
     return len >= options.threshold;
 }
 
+// ---------------------------------------------------------------------------
+// Sensitivity gate (Phase 1, road-to-feedback-8.11 — successor note to
+// ADR-119). Layered ON TOP of the existing tier/redaction gate in
+// `knowledge_global_redaction.ts`: a card must clear tier + redaction FIRST,
+// then clear this gate before its write is allowed to proceed.
+// ---------------------------------------------------------------------------
+
+/** Outcome of the sensitivity gate for one promotion attempt. */
+export interface SensitivityGateResult {
+    readonly eligible: boolean;
+    readonly reason: string;
+    /** The EFFECTIVE sensitivity used for the decision (post auto-derivation). */
+    readonly sensitivity: string;
+}
+
+/**
+ * Resolve the effective sensitivity used for a promotion decision.
+ *
+ * A redaction hit always forces `prohibited`, overriding any declared value —
+ * this is independent of the tier gate's own `halt_on_trigger` setting, so a
+ * `prohibited` override never depends on that unrelated config flag. An
+ * unset / invalid declared value defaults to `project` (never `shareable` —
+ * `shareable` is never auto-assigned, only explicitly declared by a human).
+ */
+export function resolve_effective_sensitivity(declared: string, violations_present: boolean): string {
+    if (violations_present) {
+        return 'prohibited';
+    }
+    const d = (declared ?? '').trim();
+    return knowledge_global.SENSITIVITIES.includes(d) ? d : knowledge_global.DEFAULT_SENSITIVITY;
+}
+
+/**
+ * Gate a card for promotion on the sensitivity axis.
+ *
+ * Refuses anything whose effective sensitivity is not `shareable` (including
+ * the machine-derived `prohibited` override), and refuses a `shareable` card
+ * that has no human-entered `promotion_reason` — the auto-promote
+ * *suggestion* only ever leads to a write once a human states why the card
+ * is safe to share.
+ */
+export function gate_sensitivity_for_promotion(
+    declared_sensitivity: string,
+    options: { violations_present?: boolean; promotion_reason?: string } = {},
+): SensitivityGateResult {
+    const violations_present = options.violations_present ?? false;
+    const effective = resolve_effective_sensitivity(declared_sensitivity, violations_present);
+
+    if (effective === 'prohibited') {
+        return {
+            eligible: false,
+            sensitivity: effective,
+            reason:
+                'sensitivity: prohibited — redaction-class content, never leaves the repo',
+        };
+    }
+    if (effective !== 'shareable') {
+        return {
+            eligible: false,
+            sensitivity: effective,
+            reason:
+                `sensitivity '${effective}' — promotion refused unless a human explicitly ` +
+                "reclassifies the card to 'shareable'",
+        };
+    }
+    const reason = (options.promotion_reason ?? '').trim();
+    if (!reason) {
+        return {
+            eligible: false,
+            sensitivity: effective,
+            reason:
+                "sensitivity 'shareable' but no promotion_reason given — a human must state " +
+                'why this card is safe to share before it may be promoted',
+        };
+    }
+    return { eligible: true, sensitivity: effective, reason: 'sensitivity gate passed' };
+}
+
+// ---------------------------------------------------------------------------
+// Revocation ledger — append-only tombstone trail (Phase 1, road-to-feedback-8.11)
+// ---------------------------------------------------------------------------
+
+export const REVOCATIONS_FILENAME = '.revocations.jsonl';
+
+/** One append-only tombstone line: what was revoked, when, and why. */
+export interface RevocationEntry {
+    readonly revoked_at: string;
+    readonly card_id: string;
+    readonly reason: string;
+}
+
+function _revocations_path(env: knowledge_global.EnvMapType): string {
+    return path.join(knowledge_global.global_store_dir(env, { create: true }), REVOCATIONS_FILENAME);
+}
+
+/**
+ * Append one tombstone line to the revocation ledger — the caller MUST call
+ * this BEFORE deleting the card/usage entry it documents. Append-only (a
+ * single `fs.appendFileSync`, never rewritten): no `forget` / `forget --tier`
+ * / `purge` call ever removes a prior tombstone, so the ledger stays a
+ * durable audit trail across every deletion path — including `purge`, which
+ * deliberately spares this one file while wiping everything else.
+ */
+export function append_tombstone(
+    card_id: string,
+    reason: string,
+    options: { today?: string; env?: knowledge_global.EnvMapType } = {},
+): RevocationEntry {
+    const entry: RevocationEntry = {
+        revoked_at: options.today ?? '',
+        card_id,
+        reason: reason || 'no reason given',
+    };
+    fs.appendFileSync(_revocations_path(options.env ?? null), JSON.stringify(entry) + '\n', 'utf-8');
+    return entry;
+}
+
+/** Read the revocation ledger. Tolerant: missing file → []; malformed lines are skipped. */
+export function load_tombstones(env: knowledge_global.EnvMapType = null): RevocationEntry[] {
+    let text: string;
+    try {
+        text = fs.readFileSync(
+            path.join(knowledge_global.global_store_dir(env), REVOCATIONS_FILENAME),
+            'utf-8',
+        );
+    } catch {
+        return [];
+    }
+    const out: RevocationEntry[] = [];
+    for (const raw of text.split(/\r\n|\r|\n/)) {
+        const line = raw.trim();
+        if (!line) {
+            continue;
+        }
+        try {
+            const obj: unknown = JSON.parse(line);
+            if (_isPlainObject(obj) && typeof obj['card_id'] === 'string') {
+                out.push({
+                    revoked_at: String(obj['revoked_at'] ?? ''),
+                    card_id: obj['card_id'],
+                    reason: String(obj['reason'] ?? ''),
+                });
+            }
+        } catch {
+            // corrupt line — skip; never let one bad line crash the ledger read
+        }
+    }
+    return out;
+}
+
 /**
  * List cards that warrant a promotion suggestion under the current config.
  *

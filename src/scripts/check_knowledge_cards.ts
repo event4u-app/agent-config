@@ -105,13 +105,17 @@ function _frontmatter_get(text: string, ...keys: string[]): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Global-store-only checks (ADR-100): tier validity, provenance footer,
- * and a redaction-clean assertion (the secret/PII patterns must have been
- * halted/cleaned before the card was written — never present in a global card).
+ * Global-store-only checks (ADR-100 + Phase 1 sensitivity axis,
+ * road-to-feedback-8.11 / successor note to ADR-119): tier validity,
+ * sensitivity validity, provenance footer (incl. the promotion audit-trail
+ * fields), and a redaction-clean assertion (the secret/PII patterns must
+ * have been halted/cleaned before the card was written — never present in a
+ * global card).
  */
 function _check_global_card(rel: string, text: string, fm: Record<string, string>): string[] {
     const errors: string[] = [];
     const valid_tiers = _kg !== null ? _kg.TIERS : ['public', 'vendor', 'proprietary'];
+    const valid_sensitivities = _kg !== null ? _kg.SENSITIVITIES : ['prohibited', 'project', 'shareable'];
 
     // G1 — tier present and valid
     const tier = (fm['tier'] ?? '').trim();
@@ -121,7 +125,27 @@ function _check_global_card(rel: string, text: string, fm: Record<string, string
         errors.push(`${rel}:0 — G1: tier '${tier}' not in ${_pyReprList(_sorted(valid_tiers))}`);
     }
 
-    // G2 — provenance footer present with all fields
+    // G4 — sensitivity present and valid
+    const sensitivity = (fm['sensitivity'] ?? '').trim();
+    if (!sensitivity) {
+        errors.push(`${rel}:0 — G4: global card missing 'sensitivity' in frontmatter`);
+    } else if (!valid_sensitivities.includes(sensitivity)) {
+        errors.push(
+            `${rel}:0 — G4: sensitivity '${sensitivity}' not in ${_pyReprList(_sorted(valid_sensitivities))}`,
+        );
+    }
+
+    // G6 — a `prohibited` card must never be in the global store at all: it
+    // contains redaction-class content and should never have left the
+    // project. Hard error regardless of anything else on the card.
+    if (sensitivity === 'prohibited') {
+        errors.push(
+            `${rel}:0 — G6: sensitivity 'prohibited' must never be in the global store ` +
+                '(redaction-class content — this card should never have been promoted)',
+        );
+    }
+
+    // G2 + G5 — provenance footer present with all promotion audit-trail fields
     if (_kg !== null) {
         const prov = _kg.parse_provenance_footer(text);
         if (!_pyTruthyObj(prov)) {
@@ -130,6 +154,11 @@ function _check_global_card(rel: string, text: string, fm: Record<string, string
             for (const field of ['first_seen', 'promoted_at', 'last_verified', 'tier', 'seen_in']) {
                 if (!prov[field]) {
                     errors.push(`${rel}:0 — G2: provenance footer missing '${field}'`);
+                }
+            }
+            for (const field of ['source_repo', 'owner', 'review_after', 'promotion_reason']) {
+                if (!prov[field]) {
+                    errors.push(`${rel}:0 — G5: provenance footer missing '${field}'`);
                 }
             }
         }
