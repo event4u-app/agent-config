@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **640 public artefacts** shipped by
+Consumer-facing catalog of all **642 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (270)
+## Skills (271)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -129,6 +129,7 @@ are excluded.
 | skill | [`guideline-writing`](../dist/agent-src/skills/guideline-writing/SKILL.md) |  | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
 | skill | [`hiring-loop-design`](../dist/agent-src/skills/hiring-loop-design/SKILL.md) |  | Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'. |
 | skill | [`html-deck`](../dist/agent-src/skills/html-deck/SKILL.md) |  | Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests. |
+| skill | [`humanizer`](../dist/agent-src/skills/humanizer/SKILL.md) |  | Use when removing AI-writing tells from deliverable prose — posts, articles, drafts. Triggers on 'make this sound less like AI', 'humanize this draft', 'this reads like ChatGPT wrote it'. |
 | skill | [`iconography`](../dist/agent-src/skills/iconography/SKILL.md) |  | Resolve an icon request to a concrete Iconify name and emit the embedding for the project's stack. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler. |
 | skill | [`image-analyser`](../dist/agent-src/skills/image-analyser/SKILL.md) |  | Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'. |
 | skill | [`image-creator`](../dist/agent-src/skills/image-creator/SKILL.md) |  | Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'. |
@@ -265,7 +266,7 @@ are excluded.
 | skill | [`sql-writing`](../dist/agent-src/skills/sql-writing/SKILL.md) |  | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'. |
 | skill | [`stakeholder-tradeoff`](../dist/agent-src/skills/stakeholder-tradeoff/SKILL.md) |  | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | skill | [`standards-from-config`](../dist/agent-src/skills/standards-from-config/SKILL.md) |  | Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim. |
-| skill | [`subagent-orchestration`](../dist/agent-src/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml. |
+| skill | [`subagent-orchestration`](../dist/agent-src/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — form gate + eight modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge). |
 | skill | [`supply-chain-intake`](../dist/agent-src/skills/supply-chain-intake/SKILL.md) |  | Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned |
 | skill | [`symfony-workflow`](../dist/agent-src/skills/symfony-workflow/SKILL.md) |  | Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`. |
 | skill | [`systematic-debugging`](../dist/agent-src/skills/systematic-debugging/SKILL.md) |  | Use on a bug, test failure, crash, or unexpected behavior — enforce reproduce → isolate → hypothesize → verify before any fix; fires even on 'this is broken' / 'quick fix'. |
@@ -406,7 +407,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (177)
+## Commands (178)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -485,6 +486,7 @@ are excluded.
 | command | [`ghostwriter-show`](../dist/agent-src/commands/ghostwriter/show.md) | cluster: ghostwriter | Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only. |
 | command | [`ghostwriter-write`](../dist/agent-src/commands/ghostwriter/write.md) | cluster: ghostwriter | Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer. |
 | command | [`grill-me`](../dist/agent-src/commands/grill-me.md) | cluster: challenge-me | Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch |
+| command | [`humanize`](../dist/agent-src/commands/humanize.md) | cluster: humanize | Remove AI-writing tells from pasted text or a file — runs the humanizer skill's draft→audit→final loop and prints the rewrite plus a detector summary. |
 | command | [`image`](../dist/agent-src/commands/image.md) | cluster: image | Character-image fidelity orchestrator — analyse, create, and verify a character image against its canon. Routes to analyse, create, verify. |
 | command | [`image-analyse`](../dist/agent-src/commands/image/analyse.md) | cluster: image | Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report. |
 | command | [`image-create`](../dist/agent-src/commands/image/create.md) | cluster: image | Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default. |
