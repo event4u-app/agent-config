@@ -113,6 +113,11 @@ commands:
     - council/design
     - council/optimize
     - council/pr
+    - team
+    - team/adversarial
+    - team/delegate
+    - team/review
+    - team/status
     - grill-me
     - research
     - research/deep

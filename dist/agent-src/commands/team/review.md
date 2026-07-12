@@ -1,0 +1,84 @@
+---
+model_tier: inherit
+name: team-review
+disable-model-invocation: true
+pack: product-reasoning
+tier: 2
+visibility: internal
+description: Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on ai_team.enabled; fails closed when the plugin is absent.
+cluster: team
+sub: review
+suggestion:
+  eligible: true
+  trigger_description: "team review, second model review, cross-model review of my changes, GPT drüberschauen lassen, review the diff with another strong model"
+  trigger_context: "ai_team.enabled is true AND there is an uncommitted / staged diff the user wants a second strong model to review with repo access"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - product-reasoning
+---
+
+# /team review
+
+## Instructions
+
+Thin wrapper: cross-model review of the current change. On Claude Code hosts
+it delegates verbatim to the official plugin's `/codex:review` — this wrapper
+owns only the governance gates around it.
+
+### 1. Gate — `ai_team.enabled`
+
+Read `ai_team.enabled` from `.agent-settings.yml`. Missing or `false` →
+print the enable pointer from `/team` (master) § "Default-off gate" and
+**STOP**. No plugin probe, no partial run.
+
+### 2. Gate — plugin presence (fail closed)
+
+On a Claude Code host, verify the official plugin is installed (its
+`/codex:*` commands are available). Absent → print the fail-closed block
+from `/team` (master) § "Fail-closed contract" — the remediation path is
+`agent-config doctor --check team` — and **STOP**. Never reimplement the
+review inline; never silently no-op.
+
+On a non-Claude-Code host: the repo-diff-bundle fallback is a later phase.
+State that team review currently requires the Claude Code plugin, point to
+`agent-config doctor --check team`, and stop.
+
+### 3. Delegate
+
+Invoke the plugin:
+
+- `/team review` → `/codex:review`
+- `/team review --background` → `/codex:review --background`
+
+Pass the flag through unchanged. Scope resolution (what counts as "the
+diff") is the plugin's job — do not pre-compute or filter the diff here.
+
+### 4. Return the review verbatim
+
+Render the plugin's review output unchanged. Do not summarize, re-rank, or
+soften findings. The call counts into the
+`cli_call_budget.max_calls_per_day.openai` quota (one subscription, one
+counter); if the quota is exhausted the transport refuses — surface that
+refusal, do not retry.
+
+## Output format
+
+- The plugin's review, verbatim.
+- Nothing else on success; gate failures print exactly one block (enable
+  pointer or fail-closed block) and stop.
+
+## Do NOT
+
+- Do NOT run when `ai_team.enabled` is false — enable pointer, stop.
+- Do NOT reimplement the review inline when the plugin is absent — fail
+  closed with the doctor pointer.
+- Do NOT edit files, commit, push, or open a PR — this wrapper is read-only.
+- Do NOT claim a review-quality lift; the benchmark verdict is pending (see
+  `/team` master § "No-claims note").
+
+## See also
+
+- `/team` — master orchestrator: gates, boundary table vs `/council`.
+- `/team adversarial` — focused adversarial variant.
+- `adversarial-review` skill — single-model self-review, the free first rung.

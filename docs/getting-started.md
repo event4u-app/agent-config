@@ -174,7 +174,37 @@ Your agent now understands slash commands:
 | `/fix quality` | Run and fix all quality checks |
 | `/chat-history import` | Pull a prior session into the current chat (resume) |
 
-→ [Browse all 178 active commands](../dist/agent-src/commands/)
+→ [Browse all 183 active commands](../dist/agent-src/commands/)
+
+---
+
+## Team mode — cross-model review (default off)
+
+Team mode pairs two strong models on one change: one model builds, a
+second reviews the **real diff** in your working tree and hands the
+findings back for a fix round. It is the depth complement to the
+[AI council](../dist/agent-src/skills/ai-council/SKILL.md): the council
+collects many cheap, neutral opinions on an artefact's *text*; team mode
+puts one strong, opinionated reviewer *inside the repo*.
+
+| Axis | Council | Team mode |
+|---|---|---|
+| Repo access | none — members see only the artefact text | full — the reviewer reads the real diff and git state |
+| Shape | breadth — N neutral opinions, one round | depth — one strong reviewer, build→review→fix iteration |
+| Cost model | API-billed members (per-token) | subscription-authed `codex` CLI (runs under your existing plan) |
+
+**Setup.** Run `agent-config doctor --check team` — it verifies the
+`codex` binary + auth and, on Claude Code hosts, the Codex plugin, and
+prints the exact remediation command for anything missing.
+
+**Default off.** Team mode ships disabled (`ai_team.enabled: false` in
+`.agent-settings.yml`); no team command runs and no cross-model call is
+made until you opt in.
+
+**No lift claim.** Whether cross-model team review catches more real
+defects than single-model adversarial self-review is **unproven** — the
+package makes no review-quality claim until the pre-registered benchmark
+has run and its verdict is recorded.
 
 ---
 

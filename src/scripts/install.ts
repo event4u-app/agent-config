@@ -4453,6 +4453,36 @@ function _read_consumer_auto_switch(project_root: string): string {
     return 'suggest';
 }
 
+/**
+ * Team-mode setup hint (road-to-team-mode Phase 1 Step 2) — a one-line
+ * recommendation printed after a claude-code install/init pointing at the
+ * doctor `team` section. Returns null when suppressed via
+ * `ai_team.suppress_setup_hint: true` in `.agent-settings.yml` (default
+ * false; the `ai_team` block may not exist in the schema yet — read
+ * leniently). Pointer only: never auto-installs, never modifies
+ * `~/.claude/plugins`.
+ */
+function _team_setup_hint_line(project_root: string): string | null {
+    let data: Record<string, unknown>;
+    try {
+        data = load_agent_settings({ project_path: _resolve_settings_read(project_root) });
+    } catch {
+        data = {};
+    }
+    const ai_team = _isPlainObject(data) ? data['ai_team'] : null;
+    const flag = _isPlainObject(ai_team)
+        ? (ai_team as Record<string, unknown>)['suppress_setup_hint']
+        : null;
+    const suppressed =
+        flag === true ||
+        (typeof flag === 'string' && ['true', 'yes', 'on', '1'].includes(flag.trim().toLowerCase()));
+    if (suppressed) return null;
+    return (
+        '  • Claude Code team mode (optional cross-model review via the official ' +
+        'codex plugin): run `agent-config doctor --check team` for setup status.'
+    );
+}
+
 function finalize_claude_model_tiers(project_root: string): number {
     const claude_skills = path.join(project_root, '.claude', 'skills');
     const augment_skills = path.join(project_root, '.augment', 'skills');
@@ -4644,6 +4674,13 @@ function _main_project_install(
             );
             process.stdout.write('\n');
         }
+        if (_is_tool_enabled(tools, 'claude-code')) {
+            const team_hint = _team_setup_hint_line(project_root);
+            if (team_hint !== null) {
+                process.stdout.write(team_hint + '\n');
+                process.stdout.write('\n');
+            }
+        }
     }
 
     _propose_modules_config(project_root, is_first_run);
@@ -4730,6 +4767,8 @@ export {
     // ADR-200 py2ts: re-exported for test_consumer_model_tier.ts twin
     // (Python test imports `install.finalize_claude_model_tiers` directly).
     finalize_claude_model_tiers,
+    // road-to-team-mode Phase 1 Step 2: exported for the wizard-hint tests.
+    _team_setup_hint_line,
     SUPPORTED_PROFILES,
     DEFAULT_PROFILE,
     _VALID_TOOLS,

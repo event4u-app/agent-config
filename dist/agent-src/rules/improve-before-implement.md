@@ -42,6 +42,8 @@ Before implementing:
 
 Run, in order: **1. Is the request clear?** · **2. Does it fit the existing architecture?** · **3. Is the approach sound?**
 
+Verification stays concrete — a `curl` probe against the endpoint, a Playwright spec, an `xdebug` step-through, or the project's test runner with a targeted filter — never a from-memory assertion (full section in the guideline below).
+
 Body migrated to [`guideline:agent-infra/agent-interaction-and-decision-quality` § 8](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#8-improve-before-implement--pre-implementation-validation) (per P4 of `road-to-kernel-and-router.md`) — the three checks' detail, how-to-challenge example, scope limits, verify-with-concrete-tools, RDP intent-inference.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 

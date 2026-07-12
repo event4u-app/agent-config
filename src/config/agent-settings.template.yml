@@ -629,6 +629,46 @@ worktrees:
 #
 # See `docs/contracts/ai-council-config.md` for the schema.
 
+# --- AI Team (cross-model strong-pair review — /team family) ---
+#
+# Governs the default-off `/team` capability family: one strong external
+# model (via the codex CLI, subscription-authed) reviews inside the repo —
+# the depth complement to the council's breadth. Schema + validation
+# contract: `docs/contracts/ai-team-config.md`. The loader
+# (`src/scripts/ai_team/config.ts`) rejects unknown keys fail-closed.
+ai_team:
+  # Master switch. false (default) = /team commands are never suggested
+  # and every invocation refuses with an enable pointer; true = the
+  # family is live (individual gates below still apply).
+  enabled: false
+
+  # Model handed to the codex CLI. 'auto' (default) = pass NO --model
+  # flag, the codex CLI's own default applies — this tracks the
+  # subscription's current strongest model instead of pinning a stale
+  # ID. Any other value passes through verbatim as `--model <value>`.
+  model: auto
+
+  # Second opt-in for the ONLY wrapper that delegates write access
+  # (/team:delegate → the plugin's native-Codex worker). false (default)
+  # = delegate refuses with an enable pointer even when ai_team.enabled
+  # is true. Both keys must be true before delegation is reachable.
+  allow_delegate: false
+
+  # Per-day cap on team calls. Team calls count into the EXISTING
+  # cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json,
+  # daily UTC reset) — one subscription, one counter, never a parallel
+  # count. This key is the team-side ceiling read against that shared
+  # bucket. 0 = block all team calls; raise if you review heavily.
+  max_calls_per_day: 50
+
+  # Suppress the one-line wizard/init recommendation to set up the codex
+  # plugin on Claude-Code hosts. Cosmetic only — never changes behavior.
+  suppress_setup_hint: false
+
+  # NOTE for future keys: `review_gate` (managed loop-bound governance of
+  # the plugin's Stop-hook Review Gate) lands in a later team-mode phase
+  # (Phase 4) — do not add it here ahead of that phase.
+
 # --- Onboarding ---
 #
 # Tracks whether the initial setup flow (/onboard) has been completed

@@ -45,7 +45,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { _parse, main, _check_settings_review_pending } from '../../../src/scripts/_cli/cmd_doctor.js';
+import { _parse, main, _check_settings_review_pending, _check_team } from '../../../src/scripts/_cli/cmd_doctor.js';
 import { runInProc } from '../../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
@@ -302,6 +302,7 @@ describe('doctor — individual checks', () => {
         'humanizer-runtime',
         'tier-usage-readiness',
         'council-cli',
+        'team',
         'unsupported-combos',
         'wizard-state',
     ];
@@ -576,6 +577,241 @@ describe('doctor — settings-review-pending check', () => {
         } finally {
             fs.rmSync(home, { recursive: true, force: true });
         }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// team check (road-to-team-mode Phase 1) — hermetic env: PATH (codex binary),
+// CODEX_HOME (auth.json), CLAUDE_CONFIG_DIR (plugin registry),
+// EVENT4U_CONFIG_HOME (no council config → default binary name).
+// ---------------------------------------------------------------------------
+
+describe('doctor — team check', () => {
+    interface TeamEnv {
+        root: string;
+        bin: string;
+        codexHome: string;
+        claudeDir: string;
+        home: string;
+    }
+    const TEAM_ENV_KEYS = ['PATH', 'CODEX_HOME', 'CLAUDE_CONFIG_DIR', 'EVENT4U_CONFIG_HOME'];
+
+    function withTeamEnv(setup: (t: TeamEnv) => void, fn: (t: TeamEnv) => void): void {
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-team-'));
+        const t: TeamEnv = {
+            root: path.join(base, 'proj'),
+            bin: path.join(base, 'bin'),
+            codexHome: path.join(base, 'codex-home'),
+            claudeDir: path.join(base, 'claude'),
+            home: path.join(base, 'e4u-home'),
+        };
+        fs.mkdirSync(t.root, { recursive: true });
+        fs.mkdirSync(t.bin, { recursive: true });
+        const prev: Record<string, string | undefined> = {};
+        for (const k of TEAM_ENV_KEYS) prev[k] = process.env[k];
+        process.env['PATH'] = t.bin;
+        process.env['CODEX_HOME'] = t.codexHome;
+        process.env['CLAUDE_CONFIG_DIR'] = t.claudeDir;
+        process.env['EVENT4U_CONFIG_HOME'] = t.home;
+        try {
+            setup(t);
+            fn(t);
+        } finally {
+            for (const k of TEAM_ENV_KEYS) {
+                if (prev[k] === undefined) delete process.env[k];
+                else process.env[k] = prev[k] as string;
+            }
+            fs.rmSync(base, { recursive: true, force: true });
+        }
+    }
+
+    function fakeCodex(t: TeamEnv): void {
+        const p = path.join(t.bin, 'codex');
+        fs.writeFileSync(p, '#!/bin/sh\nexit 0\n');
+        fs.chmodSync(p, 0o755);
+    }
+    function codexAuth(t: TeamEnv): void {
+        fs.mkdirSync(t.codexHome, { recursive: true });
+        fs.writeFileSync(path.join(t.codexHome, 'auth.json'), '{"tokens":{}}');
+    }
+    function claudeHost(t: TeamEnv, plugins: Record<string, unknown> | null): void {
+        fs.mkdirSync(t.claudeDir, { recursive: true });
+        if (plugins !== null) {
+            const pdir = path.join(t.claudeDir, 'plugins');
+            fs.mkdirSync(pdir, { recursive: true });
+            fs.writeFileSync(path.join(pdir, 'installed_plugins.json'), JSON.stringify({ plugins }));
+        }
+    }
+    function settings(t: TeamEnv, body: string): void {
+        fs.writeFileSync(path.join(t.root, '.agent-settings.yml'), body);
+    }
+    const CODEX_PLUGIN_ENTRY = { 'codex@openai-codex': [{ scope: 'user', enabled: true }] };
+    const ENABLED = 'ai_team:\n  enabled: true\n';
+
+    it('ai_team absent → ok "not configured (default-off)"', () => {
+        withTeamEnv(
+            () => {},
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('ok');
+                expect(res['message']).toBe('team mode not configured (default-off)');
+                expect(res['remedy']).toContain('ai_team.enabled: true');
+            },
+        );
+    });
+
+    it('enabled + binary + auth + plugin all green → ok', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuth(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('team mode enabled');
+                expect(res['message']).toContain('codex binary ✅');
+                expect(res['message']).toContain('codex auth ✅');
+                expect(res['message']).toContain('codex plugin ✅');
+                expect(res['message']).toContain('review-gate off');
+            },
+        );
+    });
+
+    it('sub-signal (a): binary missing → warn + exact install remediation', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                codexAuth(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain('codex binary ❌');
+                expect(res['remedy']).toContain('npm install -g @openai/codex');
+            },
+        );
+    });
+
+    it('sub-signal (a): auth.json absent → warn + `codex login` remediation', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain('codex auth ❌');
+                expect(res['remedy']).toContain('run `codex login`');
+            },
+        );
+    });
+
+    it('sub-signal (b): claude host without the plugin → warn + install commands', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuth(t);
+                claudeHost(t, null); // dir exists (claude host) but no plugin registry
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain('codex plugin ❌');
+                expect(res['remedy']).toContain(
+                    'claude plugin marketplace add openai/codex-plugin-cc',
+                );
+                expect(res['remedy']).toContain('claude plugin install codex@openai-codex');
+            },
+        );
+    });
+
+    it('sub-signal (b): non-Claude-Code host → plugin n/a, all else green → ok', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                codexAuth(t);
+                // t.claudeDir never created + no `claude` on PATH → not a claude host.
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('not a Claude Code host');
+            },
+        );
+    });
+
+    it('sub-signal (c): review gate on while loop bound absent → warn', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED + '  review_gate:\n    managed: true\n');
+                fakeCodex(t);
+                codexAuth(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain('review-gate ⚠️ on, loop bound absent');
+                expect(res['remedy']).toContain('ai_team.review_gate.max_consecutive_blocks');
+            },
+        );
+    });
+
+    it('sub-signal (c): review gate on with loop bound present → ok', () => {
+        withTeamEnv(
+            (t) => {
+                settings(
+                    t,
+                    ENABLED + '  review_gate:\n    managed: true\n    max_consecutive_blocks: 3\n',
+                );
+                fakeCodex(t);
+                codexAuth(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('review-gate on');
+            },
+        );
+    });
+
+    it('half-configured: gate managed while ai_team disabled → warn', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, 'ai_team:\n  enabled: false\n  review_gate:\n    managed: true\n');
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain('half-configured');
+                expect(res['remedy']).toContain('ai_team.enabled: true');
+            },
+        );
+    });
+
+    it('runs stable via --check team (hermetic env)', () => {
+        withTeamEnv(
+            () => {},
+            (t) => {
+                const res = runTs(['--check', 'team'], t.root, {
+                    PATH: t.bin,
+                    CODEX_HOME: t.codexHome,
+                    CLAUDE_CONFIG_DIR: t.claudeDir,
+                    EVENT4U_CONFIG_HOME: t.home,
+                });
+                expect(res.status).toBe(0);
+                expect(res.stdout).toContain('team mode not configured (default-off)');
+            },
+        );
     });
 });
 

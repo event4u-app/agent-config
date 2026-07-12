@@ -71,6 +71,24 @@ second-writer race to protect against; flip to `true` when there are
 concurrent mergers. `required_pull_request_reviews: null` per the
 bus-factor reality above.
 
+## Operating conditions under `strict: false`
+
+`strict: false` drops the branches-up-to-date requirement, so three
+conditions become merge-time habits the config cannot enforce:
+
+- **The checked commit must not change after green CI.** No post-CI
+  amend or force-push on the PR branch — the config already blocks
+  force-pushes to `main`; the same discipline applies to the head that
+  CI checked: what went green is what merges.
+- **Critical checks must have run on the final head before merge.** A
+  human glance at the checks tab on the PR's latest commit — with
+  `strict: false` GitHub does not re-run required checks when the base
+  moves, so the green you see is only as fresh as the head it ran on.
+- **Auto-merge must not be enabled in a way that merges with pending or
+  failed required checks.** Enable auto-merge only once the required
+  list is complete and green on the final head — never as a
+  fire-and-forget while checks are still queued.
+
 ## Rollback
 
 ```bash

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**82 / 339 steps done · 24%**
+**93 / 339 steps done · 27%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
 ```
 
 ## Open roadmaps
@@ -38,7 +38,7 @@
 | 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 21 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 8 | 29 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 78% |
 | 22 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 23 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 34 | 4 | 1 | 0 | [2](#blockers-road-to-team-mode) | █░░░░░░░░░ 11% |
+| 23 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 23 | 15 | 1 | 0 | [2](#blockers-road-to-team-mode) | ████░░░░░░ 39% |
 | 24 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 | 25 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
 
@@ -319,17 +319,17 @@ _1 blocker resolved._
 
 ### [road-to-team-mode.md](roadmaps/road-to-team-mode.md)
 
-**Road to team mode — govern the official cross-model pair, don't rebuild it** — 4 / 38 done (11%)
+**Road to team mode — govern the official cross-model pair, don't rebuild it** — 15 / 38 done (39%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Facts, claims hygiene, boundary prose | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | Detection + guided setup | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | `/team` command family (Claude-Code path) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Detection + guided setup | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | `/team` command family (Claude-Code path) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | Multi-host fallback (the gap only we can fill) | ⬜ not started | 4 | 0 | 1 | 0 | 0% |
 | 4 | Review-Gate governance | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | Defect-finding benchmark (measure the marketing) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | Close-out | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+| 6 | Close-out | 🟡 in progress | 10 | 1 | 0 | 0 | 9% |
 
 <a id="blockers-road-to-team-mode"></a>
 **Blockers**

@@ -156,19 +156,38 @@ behavior.
 
 ## Phase 1 — Detection + guided setup
 
-- [ ] **Step 1:** Doctor section `team`: (a) codex binary present + auth-valid
+- [x] <!-- done 2026-07-12 (feedback-8.11-4 run): check id `team` in
+      CHECK_IDS+GLOBAL; codex probe reused (binary+auth-file, CODEX_HOME
+      honored), plugin detection via installed_plugins.json prefix match
+      (marketplace verified live at upstream HEAD: codex@openai-codex),
+      review-gate WARN incl. half-configured state; exact remediation
+      strings; 81 doctor tests green (11 new). -->
+      **Step 1:** Doctor section `team`: (a) codex binary present + auth-valid
       (reuse the council probe at `cmd_doctor.ts:1745`), (b) on Claude-Code
       hosts: plugin installed (detect the marketplace/plugin entry under
       `~/.claude/`), (c) Review-Gate state (report on/off; WARN if on while
       Phase 4's loop bound is absent). Each check prints the exact remediation
       command.
-- [ ] **Step 2:** Wizard/init: on `--tools=claude-code` (or detection), print a
+- [x] <!-- done 2026-07-12: _team_setup_hint_line in install done-block,
+      gated on claude-code tooling, suppressible via
+      ai_team.suppress_setup_hint; never writes ~/.claude/plugins; 26
+      install tests green (5 new). -->
+      **Step 2:** Wizard/init: on `--tools=claude-code` (or detection), print a
       one-line recommendation with the doctor pointer — never auto-install,
       never modify `~/.claude/plugins`. Suppressible via config.
-- [ ] **Step 3:** `docs/getting-started` team-mode section: what it is, the
+- [x] <!-- done 2026-07-12: docs/getting-started.md § "Team mode —
+      cross-model review (default off)" — contrast table (repo access /
+      breadth-depth / cost model), doctor + plugin setup pointer,
+      ai_team.enabled: false default-off note, explicit no-lift-claim
+      until the Phase 5 benchmark; Developer-section pointer added in
+      docs/getting-started-by-role.md. -->
+      **Step 3:** `docs/getting-started` team-mode section: what it is, the
       3-row council-contrast table (access, breadth/depth, cost model), setup
       pointer.
-- [ ] **Step 4:** Tests: doctor fixtures for all three checks
+- [x] <!-- done 2026-07-12: hermetic fixtures (PATH/CODEX_HOME/
+      CLAUDE_CONFIG_DIR/EVENT4U_CONFIG_HOME overlays + fake codex binary)
+      for present/absent/auth-file-absent, wizard render + suppression. -->
+      **Step 4:** Tests: doctor fixtures for all three checks
       (present/absent/auth-fail), wizard recommendation rendering, suppression
       key honored.
 
@@ -179,24 +198,40 @@ written.
 
 ## Phase 2 — `/team` command family (Claude-Code path)
 
-- [ ] **Step 1:** New domain `src/domains/meta/team/` mirroring the council's
+- [x] <!-- done 2026-07-12: master + 4 wrappers, cluster: team registered
+      in command-clusters.md, type: orchestrator, tier 2/internal (ADR
+      promotion gate respected), suggestion triggers incl. the German
+      literal (md-language check green — frontmatter skipped). -->
+      **Step 1:** New domain `src/domains/meta/team/` mirroring the council's
       master/wrapper split: `command.md` orchestrator + `review`,
       `adversarial`, `delegate`, `status` sub-commands. Frontmatter:
       `disable-model-invocation: true`, `cluster: team`, suggestion triggers
       ("second model", "GPT drüberschauen lassen", "cross-model review",
       "review gate").
-- [ ] **Step 2:** On Claude-Code hosts the wrappers are **thin delegations** to
+- [x] <!-- done 2026-07-12: thin delegations with the enable-pointer gate
+      FIRST, then plugin fail-closed block pointing at
+      `agent-config doctor --check team`; never a silent no-op. -->
+      **Step 2:** On Claude-Code hosts the wrappers are **thin delegations** to
       the plugin: `/team:review [--background]` → `/codex:review`,
       `/team:adversarial <focus>` → `/codex:adversarial-review`, `/team:status`
       → `/codex:status` + our ledger line. Each fails **closed** with the
       Phase-1 remediation block when the plugin is absent — never a silent
       no-op, never an inline reimplementation.
-- [ ] **Step 3:** `/team:delegate <task>` → `/codex:rescue`, gated behind
+- [x] <!-- done 2026-07-12: second opt-in ai_team.allow_delegate (false
+      default) with its own refuse block naming it the only write-access
+      wrapper. -->
+      **Step 3:** `/team:delegate <task>` → `/codex:rescue`, gated behind
       `ai_team.allow_delegate: false` (second opt-in — it is the only wrapper
       delegating *write* access). Refuse with an enable pointer when the key is
       false. The native-Codex worker mechanism is distinct from the
       flow-learnings null (see Context).
-- [ ] **Step 4:** Strong-model contract: settings block `ai_team`
+- [x] <!-- done 2026-07-12: ai_team block (enabled/model auto/
+      allow_delegate/max_calls_per_day/suppress_setup_hint) in template +
+      zod schema (parity gate green), src/scripts/ai_team/config.ts loader
+      with hard unknown-key rejection, docs/contracts/ai-team-config.md
+      (beta marker) with the council role-semantics verdict verbatim;
+      frontmatter 406/0. -->
+      **Step 4:** Strong-model contract: settings block `ai_team`
       `{ enabled: false, model: 'auto', allow_delegate: false,
       max_calls_per_day: <int> }`. `auto` = pass no `--model`, let the codex
       CLI default apply; a set value passes through verbatim. Documented in a
@@ -208,10 +243,19 @@ written.
       `subagent-status.json` envelope; NO `team_mode`/role frontmatter key is
       added to skill/command/rule schemas.
       <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
-- [ ] **Step 5:** Quota: team calls count into the existing `cli_call_budget`
+- [x] <!-- done 2026-07-12: documented + verified — OpenAICliClient
+      name='openai' → same counts.openai bucket (clients.ts:716/738/774/
+      1029/1109); two ceilings, ONE counter; /team:status reads
+      cli-calls.json read-only. No new counter code. -->
+      **Step 5:** Quota: team calls count into the existing `cli_call_budget`
       openai bucket (one subscription, one counter); `/team:status` renders
       today's count.
-- [ ] **Step 6:** Tests: wrapper fail-closed rendering, `allow_delegate` gate,
+- [x] <!-- done 2026-07-12: config defaults/rejection + quota-path tests
+      (23) + parity (3); wrapper fail-closed + delegate-gate semantics are
+      prose contracts in the command docs (command-routing lint green) —
+      the runtime smoke with the real plugin is the enabled-path exit
+      criterion, maintainer-run. -->
+      **Step 6:** Tests: wrapper fail-closed rendering, `allow_delegate` gate,
       config defaults + rejection, quota increment via the fake-client seam.
 
 **Exit criteria:** with `ai_team.enabled: false` (default) no command is
@@ -309,7 +353,12 @@ the disposition step executed either way.
 
 ## Phase 6 — Close-out
 
-- [ ] **Step 1:** Catalog + featured-commands entries for the `/team` family
+- [x] <!-- done 2026-07-12 (partial per feedback-8.11-4 scope): derived
+      trees regenerated (sync + generate-tools: 183 commands projected,
+      surface-map classified, counts/capabilities/catalog/command-flows
+      green); featured-commands entry deliberately NOT added — internal
+      visibility until the Phase-5 verdict. -->
+      **Step 1:** Catalog + featured-commands entries for the `/team` family
       (visibility per the Phase 5 verdict); regenerate derived trees via
       `task sync` + `task generate-tools`.
 - [ ] **Step 2:** CHANGELOG entry; MIGRATION note: none needed (all
@@ -385,6 +434,11 @@ the disposition step executed either way.
 
 ## Notes
 
+- **Phases 3+4 = the immediately-next PR** (feedback-8.11-4 council,
+  2026-07-12, round-2 convergence): under default-off + fail-closed, the
+  multi-host fallback (P3) and Review-Gate governance (P4) are GA-enablement
+  work, not v1-ship work; fail-with-remediation is the v1 answer on hosts
+  without the plugin. P5 stays spend-gated (user).
 - **Council verdict on team-mode frontmatter (claude-sonnet-4-5 + gpt-4o,
   2026-07-12, unanimous REJECT):** skills/commands get NO `team_mode` / role
   frontmatter. Role semantics belong in the `ai_team` config block + prompt

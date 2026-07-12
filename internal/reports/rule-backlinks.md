@@ -9,6 +9,29 @@ REJECTED — linkage stays rule-side and derivable).
 
 76 routing targets · 84 backlinks
 
+## Orphan stubs
+
+A stub pointing at a deleted target is a broken promise. `--check` exits 1
+iff this section is non-empty; report mode always exits 0.
+
+None — all 76 resolvable targets resolve.
+
+## Fan-out (info)
+
+Backlink targets per rule. 49 routing rules · max fan-out 8.
+Rules with >2 targets are listed as info, NOT failures.
+
+| Rule | Targets |
+|---|---|
+| `domain-safety-disclaimer` | 8 |
+| `strategy-safety-floor` | 6 |
+| `finance-safety-floor` | 5 |
+| `domain-safety-pii` | 4 |
+| `legal-safety-floor` | 4 |
+| `senior-engineering-discipline` | 4 |
+| `broken-access-control` | 3 |
+| `ui-audit-gate` | 3 |
+
 ## contexts/execution/autonomy-mechanics.md
 
 - `autonomous-execution` (prose)
@@ -320,4 +343,13 @@ REJECTED — linkage stays rule-side and derivable).
 ## skill:vision-articulation
 
 - `strategy-safety-floor` (frontmatter)
+
+## Design notes — gated future work
+
+Round-4 later-hard-gates list, verbatim: invalid backlinks, cyclic
+ownership, kernel-budget breach, new setting without profile default,
+new runtime-state surface without owner, stub without valid target.
+Precondition: only precise, non-proxy metrics may ever hard-gate.
+Cycles / competing-owners metrics are PARKED per the complexity report's
+kill-criterion discipline.
 
