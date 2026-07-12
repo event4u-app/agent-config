@@ -7,18 +7,18 @@ Derived from rule frontmatter `routes_to:` + "Body migrated to" prose.
 No skill frontmatter carries this (council 2026-07-12: routed_from_rules
 REJECTED — linkage stays rule-side and derivable).
 
-76 routing targets · 84 backlinks
+83 routing targets · 91 backlinks
 
 ## Orphan stubs
 
 A stub pointing at a deleted target is a broken promise. `--check` exits 1
 iff this section is non-empty; report mode always exits 0.
 
-None — all 76 resolvable targets resolve.
+None — all 83 resolvable targets resolve.
 
 ## Fan-out (info)
 
-Backlink targets per rule. 49 routing rules · max fan-out 8.
+Backlink targets per rule. 56 routing rules · max fan-out 8.
 Rules with >2 targets are listed as info, NOT failures.
 
 | Rule | Targets |
@@ -64,13 +64,37 @@ Rules with >2 targets are listed as info, NOT failures.
 
 - `linked-projects-onboarding-gate` (prose)
 
+## guideline:agent-infra/active-remediation-mechanics
+
+- `active-remediation` (prose)
+
 ## guideline:agent-infra/agent-interaction-and-decision-quality
 
 - `improve-before-implement` (frontmatter)
 
+## guideline:agent-infra/artifact-drafting-protocol-mechanics
+
+- `artifact-drafting-protocol` (prose)
+
+## guideline:agent-infra/context-hygiene-mechanics
+
+- `context-hygiene` (prose)
+
+## guideline:agent-infra/domain-adoption-gates
+
+- `domain-adoption-policy` (prose)
+
+## guideline:agent-infra/framework-neutrality-patterns
+
+- `framework-neutrality-in-generic-skills` (prose)
+
 ## guideline:agent-infra/linked-projects-onboarding-gate
 
 - `linked-projects-onboarding-gate` (frontmatter)
+
+## guideline:agent-infra/minimal-safe-diff-mechanics
+
+- `minimal-safe-diff` (prose)
 
 ## guideline:agent-infra/missing-tool-handling
 
@@ -103,6 +127,10 @@ Rules with >2 targets are listed as info, NOT failures.
 ## guideline:code-clarity
 
 - `code-comment-discipline` (prose)
+
+## guideline:design-fidelity-mechanics
+
+- `design-fidelity` (prose)
 
 ## guideline:php/php-coding-patterns
 
