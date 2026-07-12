@@ -374,6 +374,11 @@ tasks:
     desc: "road-to-capability-discoverability P2 — fail if CAPABILITIES.yaml is stale vs the skill/command/pack surface (auto-run in CI; kill-switch on >5s / >50KB)"
     cmd: ./scripts-run src/scripts/generate_capabilities_index --check
 
+  complexity-report:
+    silent: true
+    desc: "road-to-feedback-8.11 P5 — regenerate internal/reports/complexity-report.md (soft ratchet: report-only, ALWAYS exit 0; kill criterion in the report header)"
+    cmd: ./scripts-run src/scripts/complexity_report
+
   generate-cookbook:
     silent: true
     desc: "road-to-competitive-borrow P1.4 — (re)generate docs/cookbook.md from src/flows/cookbook.yaml + the four user-work flows (validates every command/skill ref)"
