@@ -25,6 +25,11 @@
  *    (the codex CLI default applies); any other value passes through
  *    verbatim.
  * 5. `max_calls_per_day` is a non-negative integer (bools rejected).
+ * 6. `review_gate` is a nested mapping with the same fail-closed posture:
+ *    unknown keys inside it are rejected, `managed` is a boolean
+ *    (default `false` = byte-identical pre-Phase-4 behavior), and
+ *    `max_consecutive_blocks` is a POSITIVE integer (a loop bound of 0
+ *    would mean "always tripped" — reject it, don't reinterpret it).
  */
 import { load_agent_settings, type SettingsDict } from '../_lib/agent_settings.js';
 
@@ -36,13 +41,25 @@ export class TeamConfigError extends Error {
     }
 }
 
+export interface AiTeamReviewGateConfig {
+    readonly managed: boolean;
+    readonly max_consecutive_blocks: number;
+}
+
 export interface AiTeamConfig {
     readonly enabled: boolean;
     readonly model: string;
     readonly allow_delegate: boolean;
     readonly max_calls_per_day: number;
     readonly suppress_setup_hint: boolean;
+    readonly review_gate: AiTeamReviewGateConfig;
 }
+
+/** Shipped `review_gate` defaults — `managed: false` = pre-Phase-4 behavior. */
+export const AI_TEAM_REVIEW_GATE_DEFAULTS: AiTeamReviewGateConfig = Object.freeze({
+    managed: false,
+    max_consecutive_blocks: 3,
+});
 
 /** Shipped defaults — byte-parity with `src/config/agent-settings.template.yml`. */
 export const AI_TEAM_DEFAULTS: AiTeamConfig = Object.freeze({
@@ -51,6 +68,7 @@ export const AI_TEAM_DEFAULTS: AiTeamConfig = Object.freeze({
     allow_delegate: false,
     max_calls_per_day: 50,
     suppress_setup_hint: false,
+    review_gate: AI_TEAM_REVIEW_GATE_DEFAULTS,
 });
 
 /**
@@ -66,6 +84,12 @@ const _KNOWN_KEYS: ReadonlySet<string> = new Set([
     'allow_delegate',
     'max_calls_per_day',
     'suppress_setup_hint',
+    'review_gate',
+]);
+
+const _KNOWN_REVIEW_GATE_KEYS: ReadonlySet<string> = new Set([
+    'managed',
+    'max_consecutive_blocks',
 ]);
 
 function _isDict(value: unknown): value is Record<string, unknown> {
@@ -87,6 +111,52 @@ function _requireBool(raw: Record<string, unknown>, key: string, fallback: boole
         );
     }
     return value;
+}
+
+/**
+ * Validate the nested `ai_team.review_gate` mapping (fail-closed, same
+ * posture as the parent block). Absent / null → shipped defaults.
+ */
+function _build_review_gate(raw: unknown): AiTeamReviewGateConfig {
+    if (raw === null || raw === undefined) {
+        return AI_TEAM_REVIEW_GATE_DEFAULTS;
+    }
+    if (!_isDict(raw)) {
+        throw new TeamConfigError('`ai_team.review_gate` must be a mapping.');
+    }
+    for (const key of Object.keys(raw)) {
+        if (!_KNOWN_REVIEW_GATE_KEYS.has(key)) {
+            throw new TeamConfigError(
+                `ai_team.review_gate.${key}: unknown key; valid: ` +
+                    `[${[..._KNOWN_REVIEW_GATE_KEYS].map((k) => `'${k}'`).join(', ')}].`,
+            );
+        }
+    }
+
+    let managed = AI_TEAM_REVIEW_GATE_DEFAULTS.managed;
+    if ('managed' in raw) {
+        const value = raw['managed'];
+        if (!_isBool(value)) {
+            throw new TeamConfigError(
+                `\`ai_team.review_gate.managed\` must be a boolean (got ${JSON.stringify(value)}).`,
+            );
+        }
+        managed = value;
+    }
+
+    let max_consecutive_blocks = AI_TEAM_REVIEW_GATE_DEFAULTS.max_consecutive_blocks;
+    if ('max_consecutive_blocks' in raw) {
+        const value = raw['max_consecutive_blocks'];
+        if (_isBool(value) || typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
+            throw new TeamConfigError(
+                '`ai_team.review_gate.max_consecutive_blocks` must be a positive integer ' +
+                    `(got ${JSON.stringify(value)}).`,
+            );
+        }
+        max_consecutive_blocks = value;
+    }
+
+    return { managed, max_consecutive_blocks };
 }
 
 /**
@@ -144,7 +214,9 @@ export function build_ai_team_config(raw: unknown): AiTeamConfig {
         max_calls_per_day = value;
     }
 
-    return { enabled, model, allow_delegate, max_calls_per_day, suppress_setup_hint };
+    const review_gate = _build_review_gate('review_gate' in raw ? raw['review_gate'] : undefined);
+
+    return { enabled, model, allow_delegate, max_calls_per_day, suppress_setup_hint, review_gate };
 }
 
 /**

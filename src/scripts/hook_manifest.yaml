@@ -134,6 +134,17 @@ concerns:
     script: src/scripts/surface_probe_hook.ts
     args: []
     fail_closed: false
+  # road-to-team-mode Phase 4 — managed Review-Gate circuit breaker.
+  # Runs AFTER the plugin's own Stop gate: reads the persisted gate job
+  # record, counts consecutive BLOCK verdicts per session, injects the
+  # circuit-breaker notice exactly once at ai_team.review_gate.
+  # max_consecutive_blocks. No-op (byte-identical Stop path) while
+  # ai_team.review_gate.managed is false — the shipped default.
+  # Never blocks, exit 0 always.
+  team-review-gate:
+    script: src/scripts/team_review_gate_hook.ts
+    args: []
+    fail_closed: false
 
 platforms:
   augment:
@@ -146,7 +157,7 @@ platforms:
   claude:
     session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:      [chat-history]
-    stop:             [chat-history, hot-context, verify-before-complete]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
