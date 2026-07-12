@@ -216,3 +216,10 @@ visible, not hidden.
 - evidence: internal/bench/reports/persona-placebo.json#honest-null
 - status: backed
 - last_verified: 2026-07-12
+
+### claim: retrieval-substrate-live-pass
+- claim: On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with keyword-overlapping confusers), the memory retrieval substrate scored precision@5 = 100% (9/9) with 100% poisoned-entry rejection, and the retrieval-on arm passed 27/27 model-scored tasks vs 2/27 with retrieval off and 4/27 with a placebo injection. Known limit stays published: mean tie-set 4.1 means top-k ties break by store order, not relevance (the ADR-116/FTS5 signal).
+- kind: quant
+- evidence: internal/bench/reports/second-brain-retrieval.json#retrieval-on
+- status: backed
+- last_verified: 2026-07-12
