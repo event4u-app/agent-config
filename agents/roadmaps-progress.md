@@ -233,16 +233,6 @@ _2 blockers resolved._
 
 _1 blocker resolved._
 
-### [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md)
-
-**Road to opt measurement unblock — one judge run cascade-unblocks the token program** — 6 / 9 done (67%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | length-neutral judge rerun (the cascade key) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | non-Claude lift replication (discipline_profile auto flip gate) | 🟡 in progress | 1 | 1 | 1 | 0 | 50% |
-| 3 | cross-model e2e parity eval: re-scope the keystone | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
-
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
 **Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front** — 4 / 10 done (40%)

@@ -105,10 +105,15 @@ export function _spawn_subagent(
  *
  * Deterministic on purpose: this only *counts*. The substantive judgement —
  * is each match a real finding, and what should `n` be per host — is the
- * calibration layer (Phase 1 gold set + per-host floor), which is gated on the
- * P0 cross-model distributions and therefore NOT wired here yet. So
- * `finding_floor` is available as a mechanism and exercised by fixtures, but is
- * not an enforcing CI gate until calibrated.
+ * calibration layer. CALIBRATED 2026-07-12: the cross-model count-distribution
+ * pass (`bench_parity_count.ts`, design in
+ * `docs/design/cross-model-parity-eval.md`) recorded per-host finding-count
+ * distributions over the orchestration corpus for 2 vendors and derived
+ * per-task floors from the cross-host lower envelope
+ * (`internal/bench/reports/parity-count.json`). `finding_floor` is therefore an
+ * ENFORCING gate: a fixture's `n` is justified against the cross-vendor norm,
+ * not one vendor's output shape. New floors follow the same envelope rule
+ * (max(1, min over hosts of median count); negative controls excluded).
  */
 export function _count_findings(output: string, pattern?: string): number {
     if (pattern !== undefined && pattern !== '') {

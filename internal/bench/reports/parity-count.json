@@ -1,0 +1,360 @@
+{
+ "schema": "parity-count/1",
+ "stamp": "2026-07-12T13:50:22.268Z",
+ "design": "docs/design/cross-model-parity-eval.md",
+ "vendors": [
+  "anthropic/claude-sonnet-4-5",
+  "openai/gpt-4o"
+ ],
+ "repeats": 3,
+ "max_tokens": 2000,
+ "floor_rule": "max(1, floor(min over hosts of median per-host count)); controls excluded",
+ "counter": "run_skill_evals._count_findings (identical to the gate)",
+ "cost_usd_actual": 0.1648,
+ "tasks": [
+  {
+   "task": "orch-01-multifile-analysis",
+   "control": false,
+   "counts": {
+    "anthropic/claude-sonnet-4-5": [
+     11,
+     10,
+     12
+    ],
+    "openai/gpt-4o": [
+     6,
+     5,
+     5
+    ]
+   }
+  },
+  {
+   "task": "orch-02-ordered-refactor",
+   "control": false,
+   "counts": {
+    "anthropic/claude-sonnet-4-5": [
+     5,
+     5,
+     4
+    ],
+    "openai/gpt-4o": [
+     0,
+     3,
+     4
+    ]
+   }
+  },
+  {
+   "task": "orch-03-competitive-impl",
+   "control": false,
+   "counts": {
+    "anthropic/claude-sonnet-4-5": [
+     4,
+     0,
+     3
+    ],
+    "openai/gpt-4o": [
+     3,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "task": "pv-01-hollow-detection",
+   "control": false,
+   "counts": {
+    "anthropic/claude-sonnet-4-5": [
+     2,
+     2,
+     2
+    ],
+    "openai/gpt-4o": [
+     2,
+     2,
+     2
+    ]
+   }
+  },
+  {
+   "task": "pv-02-negative-control",
+   "control": true,
+   "counts": {
+    "anthropic/claude-sonnet-4-5": [
+     0,
+     0,
+     0
+    ],
+    "openai/gpt-4o": [
+     0,
+     0,
+     0
+    ]
+   }
+  }
+ ],
+ "floors": [
+  {
+   "task": "orch-01-multifile-analysis",
+   "control": false,
+   "medians": {
+    "anthropic/claude-sonnet-4-5": 11,
+    "openai/gpt-4o": 5
+   },
+   "envelope": 5,
+   "floor": 5
+  },
+  {
+   "task": "orch-02-ordered-refactor",
+   "control": false,
+   "medians": {
+    "anthropic/claude-sonnet-4-5": 5,
+    "openai/gpt-4o": 3
+   },
+   "envelope": 3,
+   "floor": 3
+  },
+  {
+   "task": "orch-03-competitive-impl",
+   "control": false,
+   "medians": {
+    "anthropic/claude-sonnet-4-5": 3,
+    "openai/gpt-4o": 0
+   },
+   "envelope": 0,
+   "floor": 1
+  },
+  {
+   "task": "pv-01-hollow-detection",
+   "control": false,
+   "medians": {
+    "anthropic/claude-sonnet-4-5": 2,
+    "openai/gpt-4o": 2
+   },
+   "envelope": 2,
+   "floor": 2
+  },
+  {
+   "task": "pv-02-negative-control",
+   "control": true,
+   "medians": {
+    "anthropic/claude-sonnet-4-5": 0,
+    "openai/gpt-4o": 0
+   },
+   "envelope": 0,
+   "floor": null
+  }
+ ],
+ "raw": [
+  {
+   "task": "orch-01-multifile-analysis",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 0,
+   "count": 11,
+   "text": "# Code Review Findings\n\n## src/parser.ts\n1. **Empty string IDs accepted** - `coerceTask` does not reject empty-string `id` values (acknowledged in comment as KNOWN BUG). Fix: Add `if (t.id === \"\") throw new Error(\\`task[${index}].id must be non-empty\\`);` after the string type check.\n\n2. **Empty string titles accepted** - `coerceTask` does not reject empty-string `title` values, which may be invalid domain logic. Fix: Add `if (t.title === \"\") throw new Error(\\`task[${index}].title must be non-empty\\`);` after the string type check.\n\n3. **Extra properties silently ignored** - Tasks with unexpected fields pass validation without warning. Fix: Add property enumeration check or explicit rejection of unknown keys.\n\n## src/formatter.ts\n1. **No input validation** - `formatTaskLine` and `summarize` don't validate inputs; passing `null`/`undefined` would crash. Fix: Add guard `if (!task) throw new Error(\"task is required\");` and `if (!Array.isArray(tasks)) throw new Error(\"tasks must be an array\");`.\n\n## src/cli.ts\n1. **File read errors not handled** - `readFile` can throw (ENOENT, EACCES, etc.) but exceptions aren't caught; user sees raw stack trace. Fix: Wrap in try-catch and write user-friendly error message to stderr before returning non-zero.\n\n2. **Parser errors not handled** - `parseTaskFile` can throw but isn't caught; validation errors produce stack traces instead of clean messages. Fix: Wrap parsing in try-catch with formatted error output.\n\n3. **Empty file path accepted** - `argv[2]` could be empty string, causing misleading file-not-found error. Fix: Change condition to `if (!path || path.trim() === \"\")`.\n\n## src/reducers.mjs\n1. **Unknown event types silently ignored** - Events with unrecognized `type` values are skipped without warning, potentially hiding data corruption. Fix: Add `else { console.warn(\\`Unknown event type: ${event.type}\\`); }` or throw error.\n\n2. **Missing event validation** - No checks for required event properties (`amount` for placed, existence of `type`); accessing `event.amount` or `event.type` on malformed events would fail. Fix: Add validation guards at function entry or in apply functions.\n\n3. **State mutation without defensive copy** - `reduceOrder` mutates `state` directly; caller may not expect side effects. Fix: Return `{ ...state }` or document mutation clearly.\n\n4. **Empty events array not handled explicitly** - Passing empty array returns unmodified state, which may be uninitialized. Fix: Ensure state has default `{ status: 'open', amount: 0 }` structure or validate non-empty events."
+  },
+  {
+   "task": "orch-01-multifile-analysis",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 1,
+   "count": 10,
+   "text": "## Code Review Findings\n\n### src/parser.ts\n1. **Empty string IDs accepted (documented bug)** - `coerceTask` does not validate `t.id` is non-empty after checking it's a string. Fix: Add `if (t.id === \"\") throw new Error(\\`task[${index}].id must not be empty\\`);` after the string check.\n\n2. **Empty string titles accepted** - `coerceTask` does not validate `t.title` is non-empty. Fix: Add `if (t.title === \"\") throw new Error(\\`task[${index}].title must not be empty\\`);` after the title string check.\n\n3. **Extra properties silently ignored** - Unexpected properties in task objects are not validated or warned about. Fix: Add property count validation or explicit allowlist check after boolean validation.\n\n### src/formatter.ts\nNO FINDINGS - Pure functions with well-defined inputs; array methods handle empty arrays correctly.\n\n### src/cli.ts\n4. **File read errors not handled** - `readFile` can throw for missing files, permissions, encoding errors but these are not caught. Fix: Wrap in try-catch and output user-friendly error message.\n\n5. **Parser errors not handled** - `parseTaskFile` throws on invalid input but errors are not caught. Fix: Wrap parser call in try-catch and return error exit code.\n\n6. **Empty task list edge case** - No validation that parsed file contains at least one task (though this may be intentional). Fix: Add `if (tasks.length === 0)` check if empty files should be rejected.\n\n### src/reducers.mjs\n7. **Missing amount validation** - `applyPlaced` does not validate `event.amount` exists or is a number before assignment. Fix: Add `if (typeof event.amount !== 'number') throw new Error('placed event must have numeric amount');`.\n\n8. **Unknown event types silently ignored** - Events with types other than 'placed' or 'refund' are skipped without warning. Fix: Add `else` clause that throws or logs warning for unknown event types.\n\n9. **Null/undefined events cause crash** - `reduceOrder` does not validate `event.type` exists before accessing it. Fix: Add `if (!event || typeof event.type !== 'string') continue;` at start of loop.\n\n10. **State mutation side effects** - Functions mutate the passed `state` object which can cause bugs if caller expects immutability. Fix: Return new objects instead: `return { ...state, amount: event.amount }`."
+  },
+  {
+   "task": "orch-01-multifile-analysis",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 2,
+   "count": 12,
+   "text": "# Code Review Findings\n\n## src/parser.ts\n1. **Empty string IDs accepted** (`parseTaskFile` → `coerceTask`) - Empty-string `id` passes validation but is likely invalid. Fix: Add `if (t.id === \"\") throw new Error(\\`task[${index}].id must be non-empty\\`)` after the string type check.\n\n2. **Empty string titles accepted** (`coerceTask`) - Empty-string `title` passes validation but may be invalid for display. Fix: Add `if (t.title === \"\") throw new Error(\\`task[${index}].title must be non-empty\\`)` after the title type check.\n\n3. **Extra properties silently ignored** (`coerceTask`) - Unexpected properties in task objects are silently dropped, could hide typos. Fix: Add validation to check `Object.keys(t)` contains only `['id', 'title', 'done']`.\n\n## src/formatter.ts\n4. **No input validation** (`formatTaskLine`, `summarize`) - Functions assume valid `Task` objects; passing `null`, `undefined`, or objects with missing properties would crash. Fix: Add type guards at function entry or document that callers must validate.\n\n5. **Empty tasks array edge case** (`summarize`) - `summarize([])` returns `\"0 done / 0 total\"` which is valid but may warrant special handling. Fix: Consider returning `\"No tasks\"` or similar when `tasks.length === 0`.\n\n## src/cli.ts\n6. **File read errors not caught** (`main`) - `readFile` can throw (ENOENT, EPERM, etc.) but errors aren't caught, causing unhandled rejection. Fix: Wrap in `try/catch` and write error message to stderr, return non-zero exit code.\n\n7. **Parse errors not caught** (`main`) - `parseTaskFile` throws on invalid JSON/schema but error isn't caught for user-friendly output. Fix: Catch parsing errors, write helpful message to stderr like `\"Error parsing task file: ${err.message}\"`.\n\n8. **Empty argv array crash** (`main`) - If `argv` is `[]` or `[0]`, `argv[2]` is undefined, check passes but would fail later. Fix: Check `argv.length < 3` instead of just `!path`.\n\n## src/reducers.mjs\n9. **Unknown event types silently ignored** (`reduceOrder`) - Events with `type` other than 'placed' or 'refund' are silently skipped, could hide bugs. Fix: Add `else { throw new Error(\\`Unknown event type: ${event.type}\\`) }` or log warning.\n\n10. **Missing event validation** (`reduceOrder`, `applyPlaced`, `applyRefund`) - No validation that `event.amount` exists for 'placed' or that events have required fields; accessing undefined properties causes silent `NaN` or crashes. Fix: Add guards like `if (typeof event.amount !== 'number') throw new Error('placed event missing amount')`.\n\n11. **State mutation without defensive copy** (`reduceOrder`) - Mutates the passed-in `state` object directly rather than creating a new one, could cause unexpected side effects in caller. Fix: Clone state at entry: `state = { ...state }` or use immutable updates.\n\n12. **No validation of events array** (`reduceOrder`) - If `events` is not an array or contains non-objects, iteration crashes. Fix: Add `if (!Array.isArray(events)) throw new Error('events must be an array')` at function entry."
+  },
+  {
+   "task": "orch-01-multifile-analysis",
+   "host": "openai/gpt-4o",
+   "rep": 0,
+   "count": 6,
+   "text": "1. **src/parser.ts**: The `coerceTask` function does not validate that `t.id` is a non-empty string, allowing for empty IDs to pass through silently, which is a known bug.  \n   **Fix**: Add a check to ensure `t.id` is a non-empty string, e.g., `if (t.id.trim() === \"\") throw new Error('task[' + index + '].id must be a non-empty string');`.\n\n2. **src/parser.ts**: The `parseTaskFile` function does not check if the `tasks` property in the `data` object is of the correct shape before calling `coerceTask`, potentially passing unrelated or malformed objects.  \n   **Fix**: Add validation to ensure each task is an object with expected keys before mapping, e.g., check types for `id`, `title`, `done` upfront.\n\n3. **src/formatter.ts**: The `formatTaskLine` function doesn't handle cases where the `task` object could be malformed or missing expected properties due to potential failures in parsing.  \n   **Fix**: Validate task fields explicitly before usage, e.g., `if (!task.id || !task.title || typeof task.done !== \"boolean\") throw new Error('Invalid task object');`.\n\n4. **src/cli.ts**: The `main` function assumes that a valid file path is provided and does not handle exceptions that might occur during file read operations, which can cause the program to crash.  \n   **Fix**: Add `try-catch` block around `readFile` to handle read errors and set an informative exit code/message.\n\n5. **src/cli.ts**: The `main` function doesn't handle cases where `parseTaskFile` could throw an error due to malformed JSON, causing the program to crash without a helpful error message.  \n   **Fix**: Encapsulate the call to `parseTaskFile` within a `try-catch` block to manage and report parse errors gracefully.\n\n6. **src/reducers.mjs**: The `reduceOrder` function does not validate event attributes such as `event.type`, `event.amount`, and may apply incorrect reductions if events are malformed.  \n   **Fix**: Add validation for `event` properties before processing, e.g., check if `type` is a valid event type and `amount` is a valid number for 'placed' events."
+  },
+  {
+   "task": "orch-01-multifile-analysis",
+   "host": "openai/gpt-4o",
+   "rep": 1,
+   "count": 5,
+   "text": "1. **src/parser.ts**: An empty string for `id` should be rejected but currently passes silently.  \n   _Fix_: Add a check to ensure `t.id` is not an empty string.\n   \n2. **src/parser.ts**: If `data` is an array, `data.tasks` is checked and leads to a misleading error message.  \n   _Fix_: Add a specific check to ensure `data` is an object before checking other properties.\n\n3. **src/formatter.ts**: No error handling for cases where the `glyph` construction fails, though unlikely since `task.done` is a boolean.  \n   _Fix_: Ensure the logic accounts for `task.done` only being boolean with appropriate type checks or constraints elsewhere.\n\n4. **src/cli.ts**: Missing error handling for file read errors besides malformed content (e.g., file not found, permission errors).  \n   _Fix_: Add a `try-catch` block around the `readFile` call to specifically handle file system errors.\n\n5. **src/reducers.mjs**: Initial state assumptions are not validated. If `state` is `null` or malformed, `reduceOrder` will fail.  \n   _Fix_: Add a check to ensure `state` is properly initialized with expected shape before processing events."
+  },
+  {
+   "task": "orch-01-multifile-analysis",
+   "host": "openai/gpt-4o",
+   "rep": 2,
+   "count": 5,
+   "text": "1. **src/parser.ts:** The known bug allows tasks with an empty-string `id`, which may lead to issues where task identification is necessary.  \n   _Fix: Add a check to ensure `t.id` is not an empty string: `if (typeof t.id !== \"string\" || t.id.trim() === \"\")`_\n\n2. **src/parser.ts:** The current JSON parsing logic does not validate if each task object has exactly the three required fields: `id`, `title`, and `done`. Missing fields in any task will result in the `undefined` value causing a silent wrong result when accessing those properties.  \n   _Fix: Validate the presence of all fields before returning a task object: `if (!(\"id\" in t) || !(\"title\" in t) || !(\"done\" in t)) throw new Error(...)`_\n\n3. **src/formatter.ts:** If a task object is missing the required properties (`id`, `title`, or `done`), accessing them in `formatTaskLine` will result in a runtime error. However, since this condition is already checked in `src/parser.ts`, it should not happen under normal conditions.\n   _Fix: Ensure robust defensive programming by asserting property existence: `if (task.id && task.title && task.done !== undefined) {...}` (though it may be unnecessary if parser validation is trusted)_\n\n4. **src/cli.ts:** The program does not handle the case where `readFile()` fails, which will cause an unhandled promise rejection.\n   _Fix: Add error handling around `readFile`: `try { const raw = await readFile(path, \"utf8\"); ... } catch (err) { process.stderr.write(\"Failed to read file: \" + err.message); return 3; }`_\n\n5. **src/reducers.mjs:** If an `event` with an unexpected `type` occurs, it will be silently ignored, which may lead to incomplete or incorrect `state`.\n   _Fix: Add an else clause to log or throw an error for unexpected event types: `else { throw new Error(\"Unexpected event type: \" + event.type); }`_"
+  },
+  {
+   "task": "orch-02-ordered-refactor",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 0,
+   "count": 5,
+   "text": "1. **src/parser.ts** - The task requests extracting \"all magic string literals\" into named constants, but several string literals should not be extracted because they are dynamic error messages with interpolated values (e.g., `` `task file is not valid JSON: ${(err as Error).message}` ``, `` `task[${index}] is not an object` ``). Only static discriminator strings like `\"tasks\"`, `\"id\"`, `\"title\"`, `\"done\"`, and error message templates should be extracted. The task description is ambiguous about whether interpolated error messages count as \"magic strings.\"\n\n2. **src/formatter.ts** - The task requests JSDoc comments describing \"what edge cases it handles,\" but neither `formatTaskLine` nor `summarize` contains any edge-case handling code (no null checks, no empty array handling, no validation). The functions assume valid inputs. Adding JSDoc claiming edge-case handling would be misleading unless defensive code is also added.\n\n3. **tests/** (Step 3) - The task asks to \"write a test...that covers the error paths introduced in step 1's constants.\" This is logically impossible because Step 1 (extracting literals to constants) does not *introduce* any error paths—it only refactors existing ones. The error paths already exist in the current code. The task description conflates refactoring with adding new functionality.\n\n4. **src/parser.ts** (Step 1) - If proceeding with extraction, the glyphs `\"[x]\"` and `\"[ ]\"` in `src/formatter.ts` should also be extracted as constants for consistency, but the task scope limits extraction to `src/parser.ts` only, creating an inconsistent refactoring standard across the codebase.\n\n5. **Overall task ordering** - Step 3 depends on Step 1 (per task description), but the error paths being tested exist independently of whether constants are extracted or not. The dependency is artificial and suggests a misunderstanding of what \"error paths introduced in step 1\" means."
+  },
+  {
+   "task": "orch-02-ordered-refactor",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 1,
+   "count": 5,
+   "text": "1. **src/parser.ts** - Magic string literals should be extracted to named constants, but the current literals are already descriptive error messages and JSON property names (`\"tasks\"`, `\"id\"`, `\"title\"`, `\"done\"`). Extracting these would reduce readability rather than improve it. The error message strings are unique to their context and don't benefit from being constants. Only extract if there's actual repetition or if these values are used as configuration.\n\n2. **src/parser.ts:36-37** - The KNOWN BUG comment documents that empty-string IDs are incorrectly accepted. Step 1 asks to extract magic strings into constants, but there is no empty-string validation to extract here - the bug is the *absence* of a check. Adding a constant without adding the missing validation would be premature.\n\n3. **src/formatter.ts** - Step 2 requests JSDoc comments describing parameter types and edge cases, but TypeScript type annotations already document parameter types. JSDoc would be redundant. The functions also don't handle any edge cases - `formatTaskLine` assumes a valid Task object, and `summarize` would return \"0 done / 0 total\" for an empty array (not explicitly handled).\n\n4. **tests/** - Step 3 cannot be completed as described because Step 1's \"constants used in branches\" would likely be the JSON property name strings (\"tasks\", \"id\", \"title\", \"done\") and error message fragments. These aren't meaningful to test separately - the existing validation logic should be tested, not the constant values themselves.\n\n5. **Overall task design** - The three-step refactoring creates artificial dependencies. The steps would result in code that is less maintainable (extracted constants that obscure intent) rather than more maintainable. A better approach would be: add the missing empty-string validation, add comprehensive parser tests, and only extract constants where genuine duplication exists."
+  },
+  {
+   "task": "orch-02-ordered-refactor",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 2,
+   "count": 4,
+   "text": "1. **src/parser.ts** - The task asks to extract magic string literals into named constants, but several string literals are used in error messages and cannot be meaningfully extracted as they are unique descriptive messages (e.g., \"task file is not valid JSON: ...\", \"task file must have a top-level `tasks` array\"). Only property names like `\"tasks\"`, `\"id\"`, `\"title\"`, and `\"done\"` would be candidates for extraction, but doing so would reduce code clarity without benefit since these are standard JSON property names used once each in validation logic.\n\n2. **src/formatter.ts** - The task requests JSDoc comments describing \"edge cases it handles,\" but neither `formatTaskLine` nor `summarize` currently handles any edge cases. `formatTaskLine` will throw if passed null/undefined, and `summarize` will return incorrect results for invalid input. The functions lack defensive programming (null checks, empty array handling, etc.), so documenting non-existent edge case handling would be misleading.\n\n3. **tests/** - The task requires writing tests for \"error paths introduced in step 1's constants,\" but step 1 would not introduce new error paths—it would only rename existing string literals to constants. The error paths already exist in the current code. This dependency chain is logically inconsistent.\n\n4. **Task specification** - The three-step refactoring contains circular logic: step 3 depends on step 1 creating testable constants from error paths, but step 1 merely extracts existing literals without adding new logic, and step 2 is unrelated to both. The benchmark task itself appears malformed."
+  },
+  {
+   "task": "orch-02-ordered-refactor",
+   "host": "openai/gpt-4o",
+   "rep": 0,
+   "count": 0,
+   "text": "NO FINDINGS"
+  },
+  {
+   "task": "orch-02-ordered-refactor",
+   "host": "openai/gpt-4o",
+   "rep": 1,
+   "count": 3,
+   "text": "1. **src/parser.ts**: Extract all magic string literals (e.g., error messages, object key names) into named constants at the top of the file. This involves moving strings like `\"tasks\"`, `\"task[{index}].id must be a string\"`, and others into named constants for clarity and maintainability.\n\n2. **src/formatter.ts**: Add JSDoc comments to each exported function, detailing the parameter types and any edge cases covered. The functions `formatTaskLine` and `summarize` lack documentation that should be included for better understanding and use by other developers.\n\n3. **tests/**: Write tests specifically targeting error paths related to the constants introduced in `src/parser.ts`. Ensure that each constant connected to a code path has at least one test validating its correct function, especially for branching error conditions."
+  },
+  {
+   "task": "orch-02-ordered-refactor",
+   "host": "openai/gpt-4o",
+   "rep": 2,
+   "count": 4,
+   "text": "1. **src/parser.ts**: Extract magic string literals used in error messages as constants at the top of the file for maintainability and to avoid duplication. Example constants could be `ERR_INVALID_JSON`, `ERR_MISSING_TASKS`, `ERR_TASKS_NOT_ARRAY`, `ERR_TASK_NOT_OBJECT`, `ERR_ID_NOT_STRING`, `ERR_TITLE_NOT_STRING`, and `ERR_DONE_NOT_BOOLEAN`.\n2. **src/formatter.ts**: Add JSDoc comments for the `formatTaskLine` function to include a description of the parameters and the possible edge cases it handles, such as what happens if the task title or id is empty.\n3. **src/formatter.ts**: Add JSDoc comments for the `summarize` function, specifying the types of the input parameters and noting any particular edge cases such as handling an empty array of tasks.\n4. **tests**: Write tests to cover the error paths introduced in `src/parser.ts`, ensuring that each constant related to an error message is tested to validate that the correct error is thrown for incorrect JSON structures or types."
+  },
+  {
+   "task": "orch-03-competitive-impl",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 0,
+   "count": 4,
+   "text": "1. **src/parser.ts** - The task asks for implementation of two error recovery approaches (Result type and custom typed errors) plus tests, but this is a code review of a *benchmark* where we cannot modify files. The current implementation uses generic `Error` throws. For Approach A (Result type), we'd wrap return values in `{ ok: true, value: TaskFile } | { ok: false, error: ParseError }` and remove all throws. For Approach B, we'd define `class ParseError extends Error` with structured fields (e.g., `kind: 'invalid-json' | 'missing-tasks' | ...`) and replace generic Error throws. **Critical issue**: The comment mentions a known bug (empty-string IDs accepted) that should be fixed in \"bug-fix-01\", but there's no validation `if (t.id === '')` after the type check on line 42. This bug fix should be included when implementing either approach.\n\n2. **src/parser.ts (lines 42-43)** - Missing the documented empty-string validation. After `if (typeof t.id !== \"string\")` check, need to add `if (t.id === '') { throw new Error(\\`task[${index}].id must be non-empty\\`) }`. This is explicitly called out in the KNOWN BUG comment and referenced as Track-B bug-fix-01.\n\n3. **Test file needed** - No test file exists demonstrating either error recovery approach. For Approach A, test should show: `const result = parseTaskFile(invalid); if (!result.ok) { console.log(result.error.kind) }`. For Approach B: `try { parseTaskFile(invalid) } catch (e) { if (e instanceof ParseError) { console.log(e.kind) } }`.\n\n4. **Recommendation missing** - Task requires picking the better approach with one paragraph explanation. For this TypeScript codebase: **Approach B (typed custom errors) is better** because (1) it maintains backward compatibility with existing throw-based call sites, (2) TypeScript doesn't have native Result types so Approach A requires manual union discrimination everywhere, (3) typed errors give callers the choice to catch specific error kinds or let them bubble, and (4) the existing error messages are already structured by context (JSON parse vs validation) making them easy to categorize into error subtypes."
+  },
+  {
+   "task": "orch-03-competitive-impl",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 1,
+   "count": 0,
+   "text": "1. **src/parser.ts** - The task requests two different implementations (Approach A: Result type, Approach B: custom typed errors) plus tests and a recommendation, but the file currently uses generic Error throwing. This is a feature implementation request, not a code review finding. The existing code is correct for its current design (throw on error), has clear error messages, and explicitly documents the known empty-string bug. The parser correctly validates JSON structure, type checks all task fields, and provides contextual error messages with indices.\n\n2. **src/parser.ts:32-33** - The documented \"KNOWN BUG\" about empty-string IDs is intentional per the comment referencing Track-B bug-fix-01. This should not be fixed as part of this task since the task is about error recovery approach comparison, not bug fixing. However, for future work: add `if (t.id === \"\") { throw new Error(\\`task[${index}].id must be non-empty\\`); }` after line 32.\n\nNO FINDINGS"
+  },
+  {
+   "task": "orch-03-competitive-impl",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 2,
+   "count": 3,
+   "text": "1. **src/parser.ts** - The current implementation throws generic `Error` objects with string messages, making it impossible for callers to programmatically distinguish between different error types (invalid JSON, missing `tasks` array, malformed task objects, type mismatches). Both approaches would improve this, but **Approach B (custom typed errors)** is the better choice for this codebase because: (1) it maintains the existing throwing behavior that callers may already rely on, requiring no changes to existing call sites, (2) TypeScript/JavaScript has mature error-handling patterns with try/catch that developers are familiar with, (3) it allows callers to selectively catch specific error types while letting others propagate, and (4) Result types in TypeScript require runtime checking and lose type safety once unwrapped, adding ceremony without the compiler guarantees that languages like Rust provide. The implementation should define a class hierarchy (e.g., `ParseError` base with subclasses like `InvalidJsonError`, `MissingTasksArrayError`, `InvalidTaskError`) and update all `throw new Error(...)` statements to throw the appropriate typed error.\n\n2. **src/parser.ts** - The KNOWN BUG comment documents that empty-string IDs are accepted but should be rejected (referenced as Track-B bug-fix-01). When implementing either error-recovery approach, add validation `if (t.id === \"\") { throw new Error(\\`task[${index}].id must be non-empty\\`); }` (or the typed-error equivalent) after the string type check to fix this documented issue.\n\n3. **Test file needed** - No test file exists demonstrating error handling patterns. For Approach B, a test should show: (a) successful parsing returning a `TaskFile`, (b) catching `InvalidJsonError` for malformed JSON, (c) catching `InvalidTaskError` for bad task structure, and (d) optionally catching the base `ParseError` to handle all parse failures uniformly. This demonstrates the practical advantage of typed errors over the current string-based error messages."
+  },
+  {
+   "task": "orch-03-competitive-impl",
+   "host": "openai/gpt-4o",
+   "rep": 0,
+   "count": 3,
+   "text": "1. **src/parser.ts**: Implementing error recovery to comply with the given approaches is not possible. This task requires modifying the code to implement Result<T, ParseError> type for Approach A and creating a custom ParseError class for Approach B. As per the output contract, changes to files cannot be made, so the details of implementing error recovery cannot be addressed here.\n2. **src/parser.ts**: The existing code does not currently differentiate between different types of errors; it throws generic errors with varying messages. Adapting this to return typed unions or throw specific custom errors would require structural changes in the code implementation, which is not allowed under the current output contract.\n3. **src/parser.ts**: The prompt indicates a preference for explaining which approach is better after implementation, but since no code modifications are allowed, a recommendation cannot be made based on actual tested implementations."
+  },
+  {
+   "task": "orch-03-competitive-impl",
+   "host": "openai/gpt-4o",
+   "rep": 1,
+   "count": 0,
+   "text": "NO FINDINGS"
+  },
+  {
+   "task": "orch-03-competitive-impl",
+   "host": "openai/gpt-4o",
+   "rep": 2,
+   "count": 0,
+   "text": "NO FINDINGS"
+  },
+  {
+   "task": "pv-01-hollow-detection",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 0,
+   "count": 2,
+   "text": "1. **src/charge.ts:11-13** - NOT READY: The `charge` function is a hollow implementation that returns a hard-coded mock response (`{ ok: true, transactionId: 'mock_txn_00000000' }`) without calling any real payment gateway. The TODO comment confirms this is a placeholder that must be replaced with actual gateway integration before shipping to production.\n\n2. **tests/charge.test.ts:8-13** - The test only validates the mock response structure and never exercises a real payment gateway interaction. This provides zero confidence that the production payment flow works correctly. Real integration tests with actual gateway calls (or at minimum, properly mocked gateway behavior) are required before shipping."
+  },
+  {
+   "task": "pv-01-hollow-detection",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 1,
+   "count": 2,
+   "text": "1. **src/charge.ts:11-13** - NOT READY: The `charge` function is a hollow implementation that returns a hard-coded mock response (`{ ok: true, transactionId: 'mock_txn_00000000' }`) instead of integrating with a real payment gateway. The TODO comment explicitly states this must be done before shipping. Shipping this to production would result in no actual payment processing.\n\n2. **tests/charge.test.ts:8-13** - The test suite only validates the mock response shape and never exercises real payment gateway integration. The test passing provides no evidence of production readiness since it only confirms the hollow implementation returns the expected mock data structure."
+  },
+  {
+   "task": "pv-01-hollow-detection",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 2,
+   "count": 2,
+   "text": "1. **src/charge.ts:11-13** - The `charge` function is a hollow implementation that returns a hard-coded success response (`{ ok: true, transactionId: 'mock_txn_00000000' }`) without making any real payment gateway calls. The TODO comment explicitly states this needs real gateway integration before shipping. This is NOT READY for production.\n\n2. **tests/charge.test.ts:9-13** - The test only validates the shape of the mocked response (checking `ok` is true and `transactionId` is a string) but never exercises a real payment gateway integration. This passing test provides false confidence and does not prove production readiness.\n\n**Verdict: NOT READY**"
+  },
+  {
+   "task": "pv-01-hollow-detection",
+   "host": "openai/gpt-4o",
+   "rep": 0,
+   "count": 2,
+   "text": "1. src/charge.ts:8-10 - The `charge` function contains a hollow implementation that does not integrate with a real payment gateway. It returns a hard-coded success response, making it impossible to verify actual payment processing functionality.\n2. tests/charge.test.ts:9-12 - The test case only verifies the hard-coded success result of the hollow implementation. It doesn't validate the integration with a real payment gateway, leaving the actual functionality untested."
+  },
+  {
+   "task": "pv-01-hollow-detection",
+   "host": "openai/gpt-4o",
+   "rep": 1,
+   "count": 2,
+   "text": "1. `src/charge.ts:9` - The `charge` function currently contains a TODO comment indicating a need to integrate a real payment gateway. The current implementation is hollow and only returns a canned success result without any actual payment processing.\n2. `tests/charge.test.ts:5` - The test suite only verifies the mocked return value of the `charge` function. It does not test the integration with a real payment gateway, which is necessary to ensure production readiness."
+  },
+  {
+   "task": "pv-01-hollow-detection",
+   "host": "openai/gpt-4o",
+   "rep": 2,
+   "count": 2,
+   "text": "1. src/charge.ts:8-11 - The `charge` function contains a hollow implementation that does not interact with a real payment gateway. It returns a hard-coded success result and needs integration with a real payment gateway implementation for production readiness.\n2. tests/charge.test.ts:8-13 - The test asserts the canned response from the `charge` function without verifying interaction with a real payment gateway, meaning it does not validate production readiness."
+  },
+  {
+   "task": "pv-02-negative-control",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 0,
+   "count": 0,
+   "text": "NO FINDINGS"
+  },
+  {
+   "task": "pv-02-negative-control",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 1,
+   "count": 0,
+   "text": "NO FINDINGS"
+  },
+  {
+   "task": "pv-02-negative-control",
+   "host": "anthropic/claude-sonnet-4-5",
+   "rep": 2,
+   "count": 0,
+   "text": "NO FINDINGS"
+  },
+  {
+   "task": "pv-02-negative-control",
+   "host": "openai/gpt-4o",
+   "rep": 0,
+   "count": 0,
+   "text": "NO FINDINGS"
+  },
+  {
+   "task": "pv-02-negative-control",
+   "host": "openai/gpt-4o",
+   "rep": 1,
+   "count": 0,
+   "text": "NO FINDINGS"
+  },
+  {
+   "task": "pv-02-negative-control",
+   "host": "openai/gpt-4o",
+   "rep": 2,
+   "count": 0,
+   "text": "NO FINDINGS"
+  }
+ ]
+}

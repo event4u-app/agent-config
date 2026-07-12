@@ -81,16 +81,16 @@ unit-tested; the run is blocked on auth + spend.
       non-Anthropic host with a built adapter); verify with a 1-task
       smoke before the paired run.
       <!-- done (2026-07-12): codex CLI installed + logged in (ChatGPT); 1-task LIVE smoke green on --host codex (bench_ab_v2_run --limit 1 --arms vanilla, report written). Arm-mapping corrected against the parked design: the codex 'essential' arm is rules-kernel-dc (package-rdp is claude-host-only). -->
-- [~] Run the paired vanilla-vs-`essential` discipline benchmark on the
+- [x] Run the paired vanilla-vs-`essential` discipline benchmark on the
       non-Claude host per the parked design in
       `agents/tmp.old/road-to-alternatives/road-to-non-claude-lift-replication.md`.
-      <!-- IN FLIGHT (2026-07-12): fired under in-session authorization (option 'Feuern', worst-case $180 hard-capped per-run, realistic $20-60) — bench_ab_v2_run --host codex --arms vanilla,rules-kernel-dc --seeds 3 --budget 3.5, exactly per the parked design. ~2h background; the report + disposition land in the follow-up PR. -->
-- [ ] Disposition: replicated lift → ship the `auto` default flip
+      <!-- done (2026-07-12): bench_ab_v2_run --host codex --arms vanilla,rules-kernel-dc --seeds 3 --model gpt-5.5. First fire misfired (model pin omitted → 180/180 API-rejected, $0); re-fired with the pin, checkpoint-resumed after an external stop at 130/180. Final: 180 runs, 78 valid (100 rejected by the ChatGPT-account usage limit, balanced 50/52 across arms — no arm bias; 2 timeouts). Raw report local-only per .gitignore (internal/bench/reports/ab-v2/2026-07-12T15-32-13Z-ab-v2-paired.json); stats in docs/benchmark.md. -->
+- [x] Disposition: replicated lift → ship the `auto` default flip
       (settings template + install bundle regen + docs); null/negative →
       record the honest null and keep the current default, citing the
       2026-07-10 flow-learnings two-host precedent (claude ceilings +
       codex capability=0 for those families).
-      <!-- GATED: fires only once the run above produces a verdict. The flip itself (settings template + install-bundle regen) is a shippable step once the evidence exists. -->
+      <!-- done (2026-07-12): HONEST NULL — on gpt-5.5/codex (n=37 valid pairs) capability 92%→89% (McNemar p=1.0) and discipline 1.000→0.892 (Δ=−0.108, Wilcoxon p=0.0225 on 7 non-zero pairs, directionally NEGATIVE). No replicated lift → discipline_profile default stays vendor-granular (no auto flip), consistent with the 2026-07-10 two-host precedent and the gpt-5-mini replication failure. Limitation published: usage-limit truncation (78/180 valid, balanced across arms). Re-open path: full uncapped 180-run replication. Section in docs/benchmark.md. -->
 
 **Exit criteria:** a recorded verdict either ships the flip or closes it
 with evidence; no placeholder default remains unexplained.
@@ -107,15 +107,16 @@ true — re-scope, don't assume).
       (candidate: council-transport-backed execution of the existing
       corpus tasks rather than a full in-host harness).
       <!-- done: docs/design/cross-model-parity-eval.md — re-scopes to council-transport dispatch (consult over ≥2 ExternalAIClient vendors) of a task-adapter over internal/bench/orchestration/corpus/, measuring per-host finding output (NOT running model-emitted subagent calls — the still-open blocker is designed around, not assumed away). Feeds finding_floor calibration (cross-host lower-envelope) to promote it from inert to an enforcing gate. Build-vs-defer cost inputs specified. -->
-- [ ] Decide build-vs-defer on that design with the maintainer (cost
+- [x] Decide build-vs-defer on that design with the maintainer (cost
       estimate attached). If deferred again, park with the concrete
       missing capability named — not the generic "harness doesn't exist".
-      <!-- GATED: build-vs-defer is a maintainer cost decision (the design + cost inputs are in the doc above). -->
-- [ ] If built: run the parity eval; feed the per-host finding-count
+      <!-- done 2026-07-12: maintainer decided BUILD + count-pass, ceiling $8 (in-session numbered-options answer "Bauen + Count-Pass (~$3–8)"). -->
+- [x] If built: run the parity eval; feed the per-host finding-count
       distributions into `finding_floor` calibration and promote
       `finding_floor` from inert mechanism to enforcing CI gate (its
       recorded deferral reason was exactly this missing calibration
       input).
+      <!-- done 2026-07-12: bench_parity_count.ts LIVE pass (5 tasks × 2 vendors × 3 repeats, $0.16 of the $8 ceiling) → internal/bench/reports/parity-count.json. Floors calibrated via cross-host lower envelope (orch-01: 5, orch-02: 3, orch-03: 1, pv-01: 2; pv-02 control excluded, 0/0 clean). finding_floor comment flipped to ENFORCING in run_skill_evals.ts; claim cross-model-parity-count backed in docs/CLAIMS.md; section in docs/benchmark.md. Unit tests tests/scripts/bench_parity_count.test.ts (5 pass). -->
       <!-- GATED: billable multi-vendor run, depends on the build decision. -->
       <!-- verify: test -f docs/design/cross-model-parity-eval.md -->
 
