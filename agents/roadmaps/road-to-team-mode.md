@@ -270,17 +270,25 @@ green.
 Review lens only. The worker-delegate fallback stays deferred (flow-learnings
 null).
 
-- [ ] **Step 1:** `team_dispatch.ts` (new, beside the council scripts, sharing
+- [x] <!-- done 2026-07-12 (feedback-8.11-5): built at
+      src/scripts/ai_team/team_dispatch.ts (ai_team home, not council);
+      bundle+prompt+envelope; NOTICE entry added. -->
+      **Step 1:** `team_dispatch.ts` (new, beside the council scripts, sharing
       `clients.ts`): build a **repo-context bundle** — `git status`, bounded
       `git diff` (staged + unstaged, size-capped with a truncation marker),
       file list — and send it through `OpenAICliClient` with a review system
       prompt derived from the plugin's adversarial-review findings shape
       (attributed; Apache-2.0 permits it, NOTICE entry added).
-- [ ] **Step 2:** Honest capability delta in every fallback run's header: no
+- [x] <!-- done 2026-07-12: header rendered FIRST in call AND manual
+      modes, test-pinned; points Claude-Code users to the plugin path. -->
+      **Step 2:** Honest capability delta in every fallback run's header: no
       background jobs, no broker, single synchronous call, diff-bundle instead
       of live repo access — the fallback is *worse* than the plugin and says
       so, pointing Claude-Code users back to Phase 2.
-- [ ] **Step 3:** Same `ai_team` config, same quota bucket, same fail-closed
+- [x] <!-- done 2026-07-12: TeamReviewCliClient inherits quota gate +
+      recording + _AUTH_FAILURE_PATTERNS; --manual renders between ═
+      rules, zero subprocess, zero quota. -->
+      **Step 3:** Same `ai_team` config, same quota bucket, same fail-closed
       auth behavior (`_AUTH_FAILURE_PATTERNS` reused). Manual-mode parity per
       council precedent: `--manual` renders the bundle between `═` rules for
       paste-into-web usage.
@@ -289,7 +297,10 @@ null).
       foreign host, the exact flow-learnings honest-null. Re-open only if the
       Phase 5 review verdict shows lift.
       <!-- deferred: gated on Phase 5 review-lift; worker mechanism = flow-learnings HONEST-NULL -->
-- [ ] **Step 5:** Tests: bundle size cap + truncation marker, header delta
+- [x] <!-- done 2026-07-12: 29 tests — cap boundary red/green,
+      marker, header ordering, auth-fail→BLOCKED, quota-exhausted no-spawn,
+      manual render, envelope parse + raw fallback, auto-vs-pinned model. -->
+      **Step 5:** Tests: bundle size cap + truncation marker, header delta
       prose, auth-fail path, manual render — all against the fake client.
 
 **Exit criteria:** on a non-Claude-Code host, `/team:review` produces a review
@@ -301,20 +312,31 @@ boundary; zero new network/auth code (transport reuse proven by import graph).
 
 The gate itself stays upstream's; we govern it.
 
-- [ ] **Step 1:** `ai_team.review_gate: { managed: false,
+- [x] <!-- done 2026-07-12 (feedback-8.11-5): verdict read from the
+      plugin's persisted job record (siblings never see gate stdout;
+      first-line ALLOW/BLOCK contract verified against installed upstream
+      1.0.4), job id = dedupe key; wired as manifest stop concern. -->
+      **Step 1:** `ai_team.review_gate: { managed: false,
       max_consecutive_blocks: 3 }` (default `managed: false` = today's
       behavior, byte-identical). When managed: our Stop-hook dispatch runs
       *after* the plugin's gate and counts consecutive BLOCK verdicts per
       session (parse the first-line ALLOW/BLOCK contract from the gate
       transcript); at the bound it injects a visible circuit-breaker notice and
       stops re-blocking — the user decides, never an infinite Claude↔Codex loop.
-- [ ] **Step 2:** Ledger: one events-log line per gate verdict
+- [x] <!-- done 2026-07-12: agents/runtime/team/events.log JSONL,
+      enum-only; read helper + format for /team:status. -->
+      **Step 2:** Ledger: one events-log line per gate verdict
       (`team.gate: BLOCK 2/3`) so `/team:status` and session replay show gate
       spend.
-- [ ] **Step 3:** Doctor (Phase 1 check c) upgraded: WARN when the plugin gate
+- [x] <!-- done 2026-07-12: reads the plugin's own state.json
+      (layout verified against the installed plugin); WARN quotes the
+      upstream cost warning + /codex:setup --disable-review-gate. -->
+      **Step 3:** Doctor (Phase 1 check c) upgraded: WARN when the plugin gate
       is enabled and `managed: false` — with the enable hint and the upstream
       cost warning quoted.
-- [ ] **Step 4:** Tests: block-count state machine (fixture transcripts),
+- [x] <!-- done 2026-07-12: 22 review_gate + 4 hook-E2E + doctor (c)
+      rewritten; ALLOW/BLOCK/UNKNOWN sequences incl. reset + dedupe. -->
+      **Step 4:** Tests: block-count state machine (fixture transcripts),
       circuit-breaker rendering at the bound, ledger line shape, doctor WARN.
 
 **Exit criteria:** fixture session with 3 consecutive BLOCKs shows the
@@ -327,6 +349,14 @@ upstream's hook is never modified.
 
 Settles the "a second model finds errors the first never sees" claim with the
 existing bench-rig discipline before any public copy exists.
+
+> **Metric family PRE-REGISTERED (feedback-8.11-5 council, 2026-07-12):**
+> primary = planted-defect recall against ground truth, false-positive
+> count, cost/time/calls, fix success; judge preference is SECONDARY.
+> Numeric thresholds are fixed at fixture-authoring time — still before
+> any execution (prereg discipline holds). The iterated build→review→fix
+> LOOP and the deferred worker-delegate share the same gate: both unlock
+> only on a positive review-lift verdict here.
 
 - [ ] **Step 1:** Fixture set: 10–15 seeded-defect diffs (logic bug, race,
       missing empty-state, off-by-one, security smell) with pre-registered
