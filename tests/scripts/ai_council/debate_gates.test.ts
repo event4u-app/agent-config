@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     count_dissenters,
+    repair_action,
     dissent_quota_met,
     is_near_duplicate,
 } from '../../../src/scripts/ai_council/debate_gates.js';
@@ -46,5 +47,18 @@ describe('dissent quota', () => {
     it('ignores empty replies', () => {
         expect(count_dissenters(['', 'I object to the schema change.'])).toBe(1);
         expect(dissent_quota_met(['', 'I object.'])).toBe(false);
+    });
+});
+
+describe('repair_action (council 2026-07-12 policy)', () => {
+    it('auto-continue → fire under the cap', () => {
+        expect(repair_action({ auto_continue: true, already_repaired: false })).toBe('fire');
+    });
+    it('interactive → one-line confirm', () => {
+        expect(repair_action({ auto_continue: false, already_repaired: false })).toBe('confirm');
+    });
+    it('cap is absolute: already-repaired member is skipped in every mode', () => {
+        expect(repair_action({ auto_continue: true, already_repaired: true })).toBe('skip');
+        expect(repair_action({ auto_continue: false, already_repaired: true })).toBe('skip');
     });
 });

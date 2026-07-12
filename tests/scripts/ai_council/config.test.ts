@@ -142,6 +142,27 @@ describe('load_council_config — happy path', () => {
         );
     });
 
+    it('members.<name>.tier is optional (null when unset), honoured when set', () => {
+        const c = cfg.load_council_config(write_yaml(make_tmp(), MINIMAL_VALID));
+        expect(c.members.get('anthropic')!.tier).toBeNull();
+        const payload = MINIMAL_VALID.replace(
+            'api_key_ref: env:ANTHROPIC_KEY',
+            'api_key_ref: env:ANTHROPIC_KEY\n    tier: 3',
+        );
+        const c2 = cfg.load_council_config(write_yaml(make_tmp(), payload));
+        expect(c2.members.get('anthropic')!.tier).toBe(3);
+    });
+
+    it('members.<name>.tier rejects non-integer / < 1 values', () => {
+        const payload = MINIMAL_VALID.replace(
+            'api_key_ref: env:ANTHROPIC_KEY',
+            'api_key_ref: env:ANTHROPIC_KEY\n    tier: 0',
+        );
+        expect(() => cfg.load_council_config(write_yaml(make_tmp(), payload))).toThrow(
+            /tier must be an integer/,
+        );
+    });
+
     it('debate_gates and restate default to disabled (Phase 3)', () => {
         const c = cfg.load_council_config(write_yaml(make_tmp(), MINIMAL_VALID));
         expect(c.debate_gates.enabled).toBe(false);

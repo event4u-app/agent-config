@@ -38,6 +38,7 @@ function mem(name: string, enabled = true, pli = true): MemberConfig {
     return {
         name,
         enabled,
+        tier: null,
         participate_low_impact: pli,
         model: 'm',
         api_key_ref: null,
