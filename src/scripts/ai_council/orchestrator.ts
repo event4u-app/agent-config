@@ -56,6 +56,7 @@ import type { ProjectContext } from './project_context.js';
 import type { AdvisorPlan } from './advisors.js';
 import {
     advisor_system_prompt,
+    ANTI_CONFORMITY_DIRECTIVE,
     build_extraction_user_prompt,
     build_peer_review_user_prompt,
     build_scoring_user_prompt,
@@ -838,6 +839,9 @@ function _augment_for_debate_round(
     original_prompt: string,
     prior_responses: CouncilResponse[],
     next_round_number: number,
+    // Phase 3: when the debate gates are enabled, prepend the anti-conformity
+    // directive. Default `false` keeps the prompt byte-identical to today.
+    anti_conformity = false,
 ): string {
     const blocks: string[] = [];
     let label_idx = 0;
@@ -853,6 +857,7 @@ function _augment_for_debate_round(
         return original_prompt;
     }
     const prior_block = blocks.join('\n\n');
+    const anti_conformity_block = anti_conformity ? `${ANTI_CONFORMITY_DIRECTIVE}\n\n` : '';
     return (
         `${original_prompt}\n\n` +
         `---\n\n` +
@@ -861,6 +866,7 @@ function _augment_for_debate_round(
         `debate. Below are anonymised positions from independent\n` +
         `reviewers in the previous round. You do NOT know which model\n` +
         `produced which position.\n\n` +
+        anti_conformity_block +
         `Identify the SINGLE strongest opposing position and write a\n` +
         `rebuttal addressed at its strongest steel-manned form. Do NOT\n` +
         `search for common ground — name the load-bearing flaw the\n` +
@@ -883,6 +889,12 @@ export interface RunDebateOptions {
     on_continue?: DebateContinuePrompt | null;
     advisor_plans?: Map<string, AdvisorPlan> | null;
     seed_round_1?: CouncilResponse[] | null;
+    /**
+     * Phase 3: when true (from `ai_council.debate_gates.enabled`), round-2+
+     * prompts carry the anti-conformity directive. Default `false` → the debate
+     * prompt is byte-identical to today.
+     */
+    debate_gates?: boolean;
 }
 
 /**
@@ -981,6 +993,7 @@ export function run_debate(
                 question.user_prompt,
                 results,
                 round_number + 1,
+                opts.debate_gates ?? false,
             );
             // Hard-cap + continue-prompt gating before kicking off N+1.
             let next_round_usd: number;

@@ -2129,6 +2129,14 @@ function cmd_debate(
         auto_continue: Boolean(_getattr(args, 'auto_continue', false)),
     });
 
+    // Phase 3: debate gates (anti-conformity directive on round 2+). Read
+    // defensively from the raw ai_council block — a malformed/absent
+    // `debate_gates` reads as off, keeping the debate prompt byte-identical.
+    const debate_gates_on =
+        _isDict(ai_cfg) &&
+        _isDict(ai_cfg['debate_gates']) &&
+        (ai_cfg['debate_gates'] as Dict)['enabled'] === true;
+
     let all_rounds: CouncilResponse[][];
     try {
         all_rounds = run_debate(members, question, {
@@ -2139,6 +2147,7 @@ function cmd_debate(
             max_rounds: rounds,
             on_round_complete: _on_round_complete,
             on_continue,
+            debate_gates: debate_gates_on,
             advisor_plans,
             seed_round_1: seed,
         });
