@@ -370,7 +370,10 @@ Each rule keeps its Iron-Law stub (heading + fenced block + negations
 byte-preserved — `check_condensation` / preservation-guard is the per-batch
 gate); the body moves to the inventory's named target; the rule's trigger-set
 routing must fire at least as well as the monolithic rule did
-(trigger-eval infrastructure is the verifier).
+(trigger-eval infrastructure is the verifier). The proof that migrated
+bodies load only on demand is owned by the utilization window
+(`docs/design/utilization-window-criteria.md` D-rules) plus this
+roadmap's request-scoped load — not by new apparatus.
 
 - [x] <!-- done 2026-07-12 (feedback-8.11-2 Phase 2): 9/9 migrated, 0
       skipped; stub bytes 56,389→27,209 (−51.7%); preservation +
@@ -393,7 +396,13 @@ routing must fire at least as well as the monolithic rule did
       framework-neutrality-in-generic-skills, artifact-drafting-protocol,
       active-remediation → each gets its named
       `docs/guidelines/agent-infra/*-mechanics.md` (per the inventory);
-      same per-rule gates as Batch A.
+      same per-rule gates as Batch A. **Stub-necessity pre-questions
+      (answer per rule BEFORE migrating — Batch A deliberately kept all
+      9 stubs; B does not inherit that default):** does the stub need to
+      exist at all? can the rule be removed entirely? is a router entry
+      alone sufficient? is the rule merely historical? A rule answered
+      as a full-removal candidate gets its own disposition note instead
+      of a mechanical migrate-and-keep-stub pass.
 - [ ] **Batch C — safety-floor template application (review-heavy, optional):**
       the inventory found `legal-safety-floor` is the exemplar of P4 applied
       INSIDE a safety floor (Iron Laws inline, mechanics in the profile
@@ -401,6 +410,11 @@ routing must fire at least as well as the monolithic rule did
       floors — extra review per `security-sensitive-stop`; skip with a note
       if the trade-off is negative (floors are classified must-stay; this
       batch changes their internal shape only, never their eager presence).
+      The same stub-necessity pre-questions as Batch B apply per floor
+      before touching it (need-to-exist / remove-entirely /
+      router-entry-alone / merely-historical) — floors are must-stay by
+      classification, so a "remove" answer here means escalate with a
+      disposition note, never a silent cut.
 - [ ] **Backlink report** — regenerate the derived per-skill inbound-routes
       report after each batch (see `rule_backlinks` generator, feedback-8.11
       Phase 6) so skill authors see which rules route to them; no
