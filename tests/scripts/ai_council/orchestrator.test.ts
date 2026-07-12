@@ -421,3 +421,59 @@ describe('chairman synthesis injection (Phase 2 wiring)', () => {
         expect(plain).not.toContain('Chairman:');
     });
 });
+
+describe('debate-gate repair dispatch (Phase 3 wiring)', () => {
+    const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'A or B?' });
+    const seed = [
+        new CouncilResponse({ provider: 'anthropic', model: 'm', text: 'I object: A has a flaw in ordering.', latency_ms: 1 }),
+        new CouncilResponse({ provider: 'openai', model: 'm', text: 'However, B mishandles retries — I disagree.', latency_ms: 1 }),
+    ];
+
+    it('a near-duplicate round-2 reply triggers ONE repair and the repaired reply replaces it', () => {
+        // anthropic repeats its round-1 text verbatim in round 2 (novelty dup),
+        // then returns a fresh reply on the repair call.
+        const a = new CapturingMock('anthropic', 'm', [
+            'I object: A has a flaw in ordering.', // round 2 = dup of seed
+            'Updated: the ordering flaw is resolved by the queue barrier — I now back B.',
+        ]);
+        const b = new CapturingMock('openai', 'm', ['However, B mishandles retries — I disagree; the flaw is unaddressed.']);
+        const rounds = run_debate([a, b], q, {
+            max_rounds: 2,
+            seed_round_1: seed,
+            debate_gates: true,
+            on_repair: () => true,
+        });
+        expect(a.prompts.length).toBe(2); // round-2 ask + exactly one repair
+        expect(a.prompts[1]).toContain('REPAIR RE-PROMPT');
+        expect(rounds[1]![0]!.text).toContain('queue barrier'); // repaired reply replaced
+    });
+
+    it('on_repair=null (no transport) detects but never dispatches; gates off = no checks', () => {
+        const a = new CapturingMock('anthropic', 'm', ['I object: A has a flaw in ordering.']);
+        run_debate([a, new CapturingMock('openai', 'm', ['However — I disagree.'])], q, {
+            max_rounds: 2,
+            seed_round_1: seed,
+            debate_gates: true,
+            on_repair: null,
+        });
+        expect(a.prompts.length).toBe(1); // no repair call
+        const c = new CapturingMock('anthropic', 'm', ['I object: A has a flaw in ordering.']);
+        run_debate([c, new CapturingMock('openai', 'm', ['However — I disagree.'])], q, {
+            max_rounds: 2,
+            seed_round_1: seed,
+        });
+        expect(c.prompts.length).toBe(1);
+    });
+
+    it('a declined confirm skips the repair', () => {
+        const a = new CapturingMock('anthropic', 'm', ['I object: A has a flaw in ordering.']);
+        const rounds = run_debate([a, new CapturingMock('openai', 'm', ['However — I disagree.'])], q, {
+            max_rounds: 2,
+            seed_round_1: seed,
+            debate_gates: true,
+            on_repair: () => false,
+        });
+        expect(a.prompts.length).toBe(1);
+        expect(rounds[1]![0]!.text).toContain('flaw in ordering'); // original kept
+    });
+});
