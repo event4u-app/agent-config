@@ -1,16 +1,19 @@
 ---
-status: later
+status: ready
 complexity: lightweight
 ---
 
 # Road to opt measurement unblock — one judge run cascade-unblocks the token program
 
-> **Parked in `later/` by maintainer decision (2026-07-12).**
-> Blocked until: the pre-existing active roadmap portfolio (the
-> roadmaps that were active before the 2026-07-11 `road-to-opt-*`
-> cluster landed) is worked down, OR the maintainer explicitly and
-> exclusively requests execution of this roadmap. Do NOT pick this
-> file up as part of another task or an autonomous sweep.
+> **Un-parked 2026-07-11 on the maintainer's explicit exclusive request.**
+> This roadmap's value is billable **verdicts** — judge / benchmark runs that,
+> under automation, are interactive `/dev/tty` gates and money-moving Hard-Floor
+> actions. The autonomously-completable work is the **design prep** those runs
+> need: the length-neutral rerun design (Phase 1 step 1) and the re-scoped
+> cross-model parity-eval design doc (Phase 3 step 1). Every paid execution, host
+> auth, and build-vs-defer decision is surfaced, not auto-fired. Prereqs
+> re-verified live: PR #885 MERGED; the delegable corpus
+> `internal/bench/orchestration/corpus/` EXISTS.
 
 > Part of the `road-to-opt-*` cluster (2026-07-11 sweep). The single
 > highest-leverage finding: five roadmaps (~40 % of the active portfolio —
@@ -42,7 +45,7 @@ longer holds — turning the portfolio's measurement debt into verdicts.
 
 ## Phase 1 — length-neutral judge rerun (the cascade key)
 
-- [ ] Design the rerun against the three recorded failure modes of the
+- [x] Design the rerun against the three recorded failure modes of the
       2026-07-09 attempt: (a) length confound — enforce length-matched
       pairs or a length-partialed scoring rubric; (b) judge
       inconsistency — stronger judge tier + the blind second-judge /
@@ -50,15 +53,20 @@ longer holds — turning the portfolio's measurement debt into verdicts.
       Phase 3; reuse, don't duplicate); (c) underpowered comparison —
       fix the sample size from the golden corpus before the first
       billable call.
+      <!-- done: docs/design/length-neutral-judge-rerun.md — (a) ±15% length-matched pairs AND a length-partialed rubric with a Spearman-ρ confound flag; (b) strongest judge tier + blind second judge reported via the EXISTING cohensKappa/judgeKappa in check_quality_regression.ts (reuse, not rebuild), κ ≥ 0.60 floor; (c) pre-registered n for 80% power at ≥10pp, fixed before the first call, sign-test/McNemar. Report schema + disposition specified. -->
 - [ ] Render the cost estimate (`council:estimate`-class disclosure) and
       confirm the run budget in-session before executing.
+      <!-- GATED: billable run — needs an in-session estimate + the maintainer's budget confirmation (Hard-Floor money-moving). Not auto-fired. -->
 - [ ] Execute the paired judge run; write the verdict artifact under
       `internal/bench/reports/` with κ and confound diagnostics inline.
+      <!-- GATED: the judged run is money-moving AND an interactive /dev/tty gate that hard-aborts under automation. Maintainer executes per the design doc above. -->
 - [ ] Disposition step: on a trustworthy verdict (either direction),
       update the token-program tracking table in
       `road-to-token-proof-and-story.md` and unblock/close the dependent
       gates; on a second inconclusive, record WHY with the diagnostics
       and stop — no third run without a design change.
+      <!-- GATED: fires only once the run above produces a verdict. -->
+      <!-- verify: test -f docs/design/length-neutral-judge-rerun.md -->
 
 **Exit criteria:** verdict artifact exists with κ ≥ agreed floor and no
 length confound flag; the token-program table cites it.
@@ -72,14 +80,17 @@ unit-tested; the run is blocked on auth + spend.
 - [ ] Restore non-Claude host auth (codex or the cheapest available
       non-Anthropic host with a built adapter); verify with a 1-task
       smoke before the paired run.
+      <!-- GATED: host auth is a human/repo-admin credential step — cannot be done autonomously. -->
 - [ ] Run the paired vanilla-vs-`essential` discipline benchmark on the
       non-Claude host per the parked design in
       `agents/tmp.old/road-to-alternatives/road-to-non-claude-lift-replication.md`.
+      <!-- GATED: billable paired benchmark on the non-Claude host — money-moving + depends on the auth step. Not auto-fired. -->
 - [ ] Disposition: replicated lift → ship the `auto` default flip
       (settings template + install bundle regen + docs); null/negative →
       record the honest null and keep the current default, citing the
       2026-07-10 flow-learnings two-host precedent (claude ceilings +
       codex capability=0 for those families).
+      <!-- GATED: fires only once the run above produces a verdict. The flip itself (settings template + install-bundle regen) is a shippable step once the evidence exists. -->
 
 **Exit criteria:** a recorded verdict either ships the flip or closes it
 with evidence; no placeholder default remains unexplained.
@@ -91,18 +102,22 @@ delegable-task corpus (NOW EXISTS — `internal/bench/orchestration/corpus/`)
 and a harness that cannot execute model-emitted subagent calls (still
 true — re-scope, don't assume).
 
-- [ ] Write the re-scoped design doc: smallest harness capability that
+- [x] Write the re-scoped design doc: smallest harness capability that
       lets ≥ 2 vendors execute the SAME delegable corpus end-to-end
       (candidate: council-transport-backed execution of the existing
       corpus tasks rather than a full in-host harness).
+      <!-- done: docs/design/cross-model-parity-eval.md — re-scopes to council-transport dispatch (consult over ≥2 ExternalAIClient vendors) of a task-adapter over internal/bench/orchestration/corpus/, measuring per-host finding output (NOT running model-emitted subagent calls — the still-open blocker is designed around, not assumed away). Feeds finding_floor calibration (cross-host lower-envelope) to promote it from inert to an enforcing gate. Build-vs-defer cost inputs specified. -->
 - [ ] Decide build-vs-defer on that design with the maintainer (cost
       estimate attached). If deferred again, park with the concrete
       missing capability named — not the generic "harness doesn't exist".
+      <!-- GATED: build-vs-defer is a maintainer cost decision (the design + cost inputs are in the doc above). -->
 - [ ] If built: run the parity eval; feed the per-host finding-count
       distributions into `finding_floor` calibration and promote
       `finding_floor` from inert mechanism to enforcing CI gate (its
       recorded deferral reason was exactly this missing calibration
       input).
+      <!-- GATED: billable multi-vendor run, depends on the build decision. -->
+      <!-- verify: test -f docs/design/cross-model-parity-eval.md -->
 
 **Exit criteria:** design doc + explicit build/defer decision recorded;
 if built, `finding_floor` calibration data exists and the gate is armed.
