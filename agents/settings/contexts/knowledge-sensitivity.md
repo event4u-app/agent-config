@@ -47,3 +47,21 @@ crossing the project boundary is always a human act with a recorded
 from); `sensitivity` classifies BOUNDARY (how far it may travel). Both gates
 run at promotion: tier gate first (proprietary = manual-only), then
 redaction, then sensitivity.
+
+## Scaling posture (feedback-8.11-2, 2026-07-12)
+
+The reviewer's scale worries ("human promotion_reason protects but does not
+scale") map to five mechanisms — three already exist:
+
+| Ask | Status |
+|---|---|
+| "never globally promote this source" policy | EXISTS — `agents/knowledge/.share-blocklist` (first gate in the promotion order) |
+| per-entry expiry | EXISTS — `review_after` (required on shared cards, linter G5) |
+| bulk revocation | EXISTS — `knowledge:global:purge` tombstones every card before wiping |
+| batch review | PARKED |
+| ownership queues | PARKED |
+
+Batch-review / ownership-queue tooling is deliberately NOT built: current
+promotion volume is far below any bottleneck. Revisit-if: **>20 pending
+promotion suggestions accumulate within one observation window** — then
+design queue tooling against the real backlog shape, not a guessed one.
