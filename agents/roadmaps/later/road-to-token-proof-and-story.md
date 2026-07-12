@@ -48,6 +48,16 @@ evidence-backed value prop tested at N=1, not the assumed adoption blocker.
 
 ## Context — verified on the live checkout, 2026-07-07
 
+> **Gate update (2026-07-12):** the thin-vs-eager quality question is
+> **CLOSED-BY-DIAGNOSIS** — the length-neutral rerun (double-blind
+> cross-family judges, ±15% pairing, pre-registered n=90) returned the SECOND
+> inconclusive (κ=0.46 < 0.60; 65/90 pairs length-dropped; ρ=0.45 within-band;
+> 7 agreed decisive pairs). Per the pre-registered design, no third
+> paired-judge run: any future attempt must use a categorically different
+> method (deterministic anchor-scoring). Thin stays disabled. Evidence:
+> `internal/bench/reports/quality-rerun-length-neutral.json` +
+> `docs/benchmark.md` § Length-neutral judge RERUN.
+
 - **Gate hole (live-verified):** `bench_quality_run --dry-run` writes
   `internal/bench/reports/quality-run.json` (`dry_run: true`, 30 mock ties);
   `check_quality_regression` consumes it and **exits 0** ("inconclusive —

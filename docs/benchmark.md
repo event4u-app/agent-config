@@ -454,3 +454,42 @@ covers only 14/89 rules (operator hand-labelling), a separate gap.
   API-gated); gate: `src/scripts/check_quality_regression.ts` (inert until a
   `quality-run.json` — gitignored — exists locally).
 - Roadmap: `agents/roadmaps/road-to-token-saving.md` Phase 0.
+
+## Length-neutral judge RERUN (2026-07-12) — SECOND INCONCLUSIVE, gate CLOSED-BY-DIAGNOSIS
+
+**Verdict: `inconclusive-low-kappa` — and per the pre-registered design
+(`docs/design/length-neutral-judge-rerun.md`) a second inconclusive means
+RECORD WHY AND STOP: no third run without a design change. The thin lever
+stays NOT adopted; further paired-judge spend on this question is closed.**
+
+The rerun fixed all three recorded failure modes *by construction* — ±15%
+output-token pair matching with a reported dropped-bucket, two arm-blind
+judges from different provider families (claude-opus-4-8 + gpt-4o, both
+orders, reject-on-flip) with a κ ≥ 0.60 admissibility floor, a Spearman-ρ
+length diagnostic (|ρ| ≥ 0.3 withholds), and a pre-registered n = 90 (the
+full council-labelled corpus). Runner: `src/scripts/bench_quality_rerun.ts`;
+artifact: `internal/bench/reports/quality-rerun-length-neutral.json`;
+actual cost $34.80 (cap $250).
+
+**Why the gate is now closed rather than pending — the diagnostics carry the
+answer:**
+
+| Diagnostic | Value | Reading |
+|---|---|---|
+| Pair survival | **25/90** (65 dropped by the ±15% band) | Eager answers are *systematically* longer — the length difference is structural to the arms, not noise a judge can be told to ignore |
+| Cross-family judge agreement | **κ = 0.46** (< 0.60 floor) | Even top-tier judges from different vendors disagree on which answer is better — the rubric-visible quality difference is smaller than judge noise |
+| Length leakage within the band | **ρ = 0.45** (flagged ≥ 0.3) | Even among length-matched pairs, wins still track length |
+| Agreed decisive pairs | **7** (thin 3 / eager 4, p = 1.0) | Nothing separable remains once length and judge noise are controlled |
+
+**The honest conclusion:** the thin-vs-eager output-quality question is not
+resolvable by LLM-paired judging on this corpus — the measurable signal is
+dominated by structural length effects and judge disagreement, in BOTH the
+naive (2026-07-09/11) and the length-neutral (2026-07-12) designs. This is a
+*diagnosis*, not a "pending": the thin projection stays DISABLED on the
+existing precedent, the quality-regression gate stays inert, and any future
+attempt must use a categorically different method (e.g. deterministic
+anchor-scoring against `must_include`/`must_not`, not pairwise LLM judging).
+
+- Runner: `src/scripts/bench_quality_rerun.ts` (design-pinned constants:
+  band ±15%, κ floor 0.60, ρ flag 0.3, effect floor 10pp; `--max-usd` guard).
+- Roadmap: `agents/roadmaps/road-to-opt-measurement-unblock.md` Phase 1.
