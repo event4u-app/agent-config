@@ -184,7 +184,8 @@ For each open step in the working set (scope-bound — see wrapper):
    on the same line, regenerate the dashboard, continue to the next
    step. Never run the gate. Carve-out marker present → run normally
    (new gate must be verified once locally). Setting `true` → run
-   normally.
+   normally. Full pattern table, carve-outs, linter contract, failure
+   modes: [`roadmap-ci-steps-mechanics`](roadmap-ci-steps-mechanics.md).
 1. **Bundled read — one parallel tool-call block.** The step
    description, the immediately-relevant code files, and any
    guideline/context the step cites are **independent** reads and

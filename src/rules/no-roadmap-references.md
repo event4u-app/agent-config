@@ -12,6 +12,7 @@ triggers:
   - intent: "link to council artefact"
 routes_to:
   - "skill:ai-council"
+  - "skill:agent-docs-writing"
 validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
@@ -50,87 +51,22 @@ INLINE COUNCIL CONVERGENCE WITH DATE + MEMBERS, NEVER THE PATH.
 Stable artifact = anything that is **not** a roadmap, council
 session, chat-history archive, commit message, or PR description.
 
-## Forbidden patterns
+Forbidden in one line: any specific `*.md` / `*.json` file under
+`agents/roadmaps/` (incl. `archive/`, `skipped/`) or under
+`agents/runtime/council/{questions,responses,sessions}/` cited from a stable
+artifact. CI enforcement: `scripts/check_no_roadmap_refs.ts` (roadmap layer)
+and `scripts/check_council_references.ts` (council layer) — both fail the
+build on any new violation.
 
-These paths must not appear inside a stable artifact:
-
-- `agents/roadmaps/<file>.md`, `agents/roadmaps/archive/<file>.md`,
-  `agents/roadmaps/skipped/<file>.md`
-- `agents/runtime/council/questions/<file>.md`,
-  `agents/runtime/council/responses/<file>.json`,
-  `agents/runtime/council/sessions/<file>.json` or `<timestamp>/...`
-
-Stable artifact = any file under `.agent-src.uncondensed/{rules,
-skills,commands,contexts,templates,personas}/`, `agents/settings/contexts/`,
-`docs/guidelines/`, `docs/contracts/`, `docs/architecture.md`,
-`docs/customization.md`, `docs/getting-started.md`, `docs/catalog.md`,
-`AGENTS.md`, `README.md`, `copilot-instructions.md`.
-
-CI enforcement: `scripts/check_no_roadmap_refs.ts` (roadmap layer)
-and `scripts/check_council_references.ts` (council layer) — both
-fail the build on any new violation.
-
-## Allowed patterns
-
-- `agents/roadmaps/` and `agents/runtime/council/*/` as **directory** mentions
-  (talking about the layer, not a specific file)
-- Roadmap → roadmap references (siblings within the transient layer)
-- The `ai-council` skill and `/council:*` commands documenting the
-  output path schema
-- Inline council convergence summary — e.g. *"Council
-  (claude-sonnet-4-5 + gpt-4o, 2026-05-06) converged on …"* with
-  date + members, no filepath
-- Council sessions, `agents/runtime/.agent-chat-history`, commit messages, PR
-  descriptions — transient by construction, not part of the package
-  surface
-
-## Structural carve-outs (immutable inputs / decision provenance)
-
-Two source/target shapes are exempt from the council-link ban
-because the target is **immutable input** or **decision provenance**,
-not transient drafting state. The linter implements these directly
-(`STRUCTURAL_CARVEOUTS` in `scripts/check_council_references.ts`);
-they do **not** need an inline `<!-- council-ref-allowed: ... -->`
-pragma.
-
-| Source                                         | Target                                           | Why                                                                                  |
-| ---------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `agents/settings/contexts/evaluation-*.md`              | `agents/runtime/council/questions/*.md`                  | Question file is a frozen function-parameter / spend-gate input, not documentation. |
-| `docs/contracts/*.md`                          | `agents/runtime/council/sessions/*/synthesis.md`         | Synthesis is the audit-trail receipt; contract inlines the decision body itself.    |
-
-Driven by the 2026-05-14 P3.4 council round (claude-sonnet-4-5 +
-gpt-4o, converged on rule refactor over escape-hatch overuse). Any
-other source/target combination still needs an inline pragma or
-inline-summary rewrite.
-
-## What to do instead
-
-When a stable artifact needs to cite a transient finding:
-
-1. Identify the durable conclusion — decision, contract, lesson,
-   mechanic.
-2. Promote it to a context file under `agents/settings/contexts/` (ADR,
-   mechanics doc, locked decision). The roadmap or council session
-   can then point at the context, not the other way around.
-3. Reference the context from the stable artifact.
-4. For council convergences specifically: inline a convergence-summary
-   block (members, date, cost if relevant — see `ai-council`
-   § Output format) instead of linking the session JSON.
-
-Failure modes:
-
-- *"I'll just link to the roadmap, it's evidence."* The roadmap
-  gets archived, then deleted, then the link rots. **Promote first,
-  link second.**
-- *"I'll just link to the session JSON, it's evidence."* The session
-  is gone in 7 days. **Inline first, link never.**
+Body migrated to [`skill:agent-docs-writing` § Transient-reference discipline](../skills/agent-docs-writing/SKILL.md) (per P4 of `road-to-kernel-and-router.md`) — forbidden/allowed pattern catalog, structural carve-outs table (evaluation-context → council-question, contract → session-synthesis), promote-then-link procedure, failure modes.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also
 
+- [`skill:agent-docs-writing`](../skills/agent-docs-writing/SKILL.md) —
+  roadmap layer conventions + the migrated pattern catalog
 - [`augment-edit-discipline`](augment-edit-discipline.md) — portability
   + cross-reference sync after rename / delete
-- [`skill:agent-docs-writing`](../skills/agent-docs-writing/SKILL.md) —
-  roadmap layer conventions
 - [`roadmap-progress-sync`](roadmap-progress-sync.md) — sync dashboard
   on roadmap touch
 - [`source-of-truth`](source-of-truth.md) — edit

@@ -30,22 +30,23 @@ roadmaps with open work that is blocked-for-later — parked, not active).
 
 ### Live merge-state before any "in-flight / merged / handled" claim
 
-Selection reasoning that **excludes** a roadmap — or a pre-run summary,
-decision, or user-facing message that **describes** one — as *in-flight*,
-*handled by an open PR*, *already merged*, or *not yet merged* → verify **live
-at claim time** (`gh pr view <n> --json state,mergedAt` / `gh pr list --search
-"<slug>"`). Never infer merge state from:
+When selection reasoning would **exclude** a roadmap — or a pre-run summary,
+decision, or any user-facing message would **describe** one — as *in-flight*,
+*handled by an open PR*, *already merged*, or *not yet merged*, verify that
+claim **live at the moment of the claim** (`gh pr view <n> --json state,mergedAt`
+or `gh pr list --search "<slug>"`). Never infer merge state from:
 
-- **dashboard open-count** — lags: a completed roadmap archives in the
-  **merging** PR, so it can read "open" on `main` while its PR is already
-  merged, or read "open" seconds before a merge you never re-checked;
-- **session memory** ("opened a PR for this earlier") or an **earlier fetch** —
-  a merge can land between fetch and message.
+- the **dashboard's open-count** — it lags: a completed roadmap is archived in
+  the **merging** PR, so a roadmap can still read "open" on `main` while its PR
+  is already merged (archive not yet on your checkout), or read "open" seconds
+  before a merge you never re-checked;
+- **session memory** ("I opened a PR for this earlier") or an **earlier fetch** —
+  a merge can land between your fetch and your message.
 
-Stale merge-state claim ships an unnecessary message about work already done —
-the failure this prevents. The [`direct-answers`](../../rules/direct-answers.md)
-Iron-Law-2 live-state rule (git/PR state never from memory), applied to
-roadmap selection.
+A stale merge-state claim ships an unnecessary user-facing message about work
+that is already done — the exact failure this clause prevents. This is the
+[`direct-answers`](../../rules/direct-answers.md) Iron-Law-2 live-state rule
+(git/PR state never from memory), applied to roadmap selection.
 
 ## 2. Pre-run summary — gate or inline note
 
@@ -90,7 +91,7 @@ does not fire.
 
 ## 3. Pre-scan — execution contract or commit-step ask
 
-Read `execution.mode` from roadmap's frontmatter
+Read `execution.mode` from the roadmap's frontmatter
 (`autonomous` | `phase-checkpoints` | `interactive`; absent =
 `interactive`).
 
@@ -101,17 +102,17 @@ its four-class pre-scan over every open step:
 1. commit-shaped steps (patterns below),
 2. git-shape needs (branch / push / PR / delivery),
 3. artifact-authoring steps (new or materially rewritten skill / rule /
-   command / guideline — feeds batched drafting-protocol research
+   command / guideline — feeds the batched drafting-protocol research
    pass, run at contract time against current artifact state),
 4. open questions / ambiguity markers (incl. `ask-when-uncertain`
    vague-trigger patterns).
 
-Surface contract summary; user's single **Accept** activates all run
-grants (branch, chunked commits, push to run's own feature branch
-only, PR-open, batched artifact drafting, council auto-enable) —
-cached for run, never re-asked. Contract never lifts a Hard Floor or
-any safety floor; boundaries + per-mode gate table live in contract
-context.
+Surface the contract summary; the user's single **Accept** activates
+all run grants (branch, chunked commits, push to the run's own feature
+branch only, PR-open, batched artifact drafting, council auto-enable) —
+cached for the run, never re-asked. The contract never lifts a Hard
+Floor or any safety floor; boundaries + per-mode gate table live in the
+contract context.
 
 **`mode: interactive` (or field absent)** → legacy commit-step scan
 only: lines matching `commit:` / `git commit` / `Commit phase`.
@@ -135,11 +136,11 @@ Read both keys from `.agent-settings.yml` once and cache for the whole
 run. Do **not** re-read inside the step loop.
 
 **`roadmap.quality_cadence`** — when to run the quality pipeline.
-Only relevant when `quality.local_auto_run` is `true`; `false` or
-missing (default) → local pipeline runs suppressed at EVERY cadence —
-remote CI is the gate, run-end report states *"quality gates delegated
-to remote CI"* instead of a pass claim (new-gate carve-out steps still
-run once).
+Only relevant when `quality.local_auto_run` is `true`; when it is
+`false` or missing (the default), local pipeline runs are suppressed at
+EVERY cadence — remote CI is the gate, and the run-end report states
+*"quality gates delegated to remote CI"* instead of a pass claim
+(new-gate carve-out steps still run once).
 
 | Value | Pipeline runs (`local_auto_run: true` only) |
 |---|---|
@@ -183,7 +184,8 @@ For each open step in the working set (scope-bound — see wrapper):
    on the same line, regenerate the dashboard, continue to the next
    step. Never run the gate. Carve-out marker present → run normally
    (new gate must be verified once locally). Setting `true` → run
-   normally.
+   normally. Full pattern table, carve-outs, linter contract, failure
+   modes: [`roadmap-ci-steps-mechanics`](roadmap-ci-steps-mechanics.md).
 1. **Bundled read — one parallel tool-call block.** The step
    description, the immediately-relevant code files, and any
    guideline/context the step cites are **independent** reads and
@@ -201,17 +203,18 @@ For each open step in the working set (scope-bound — see wrapper):
 2. Analyze the codebase for what the step requires.
 3. Decide and act — implement. **No "should I implement this?" prompt.**
 4. **Open question handling:**
-   - **Council on** (toggled manually, or auto-enabled for run by
-     accepted execution contract — § 3) → invoke per
+   - **Council on** (toggled manually, or auto-enabled for the run by
+     an accepted execution contract — § 3) → invoke per
      [`ai-council`](../../skills/ai-council/SKILL.md), integrate
-     convergence, proceed. Token spend was opted in (contract summary
-     named members). `high_impact` / `user_required` classifications
-     still escalate to user per
+     convergence, proceed. Token spend was opted in (the contract
+     summary named the members). `high_impact` / `user_required`
+     classifications still escalate to the user per
      [`ask-when-uncertain`](../../rules/ask-when-uncertain.md).
    - **Council off / not configured** → halt, surface once, wait.
-     Resume on next turn. Execution contract cannot enable a council
-     with no configured members — contract summary says so upfront,
-     and in-run ambiguity halts (never silent guessing).
+     Resume on next turn. An execution contract cannot enable a
+     council that has no configured members — the contract summary
+     says so upfront, and in-run ambiguity halts (never silent
+     guessing).
 5. **Atomic flip — same reply, every step.**
    Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
    `[~]` partial · `[-]` skipped. **Non-skippable, non-batchable**
@@ -228,32 +231,35 @@ For each open step in the working set (scope-bound — see wrapper):
    git status --porcelain -- agents/roadmaps/<file>.md
    ```
 
-   (`git status --porcelain`, not `git diff` — roadmap file still
-   **untracked** (e.g. fresh worktree) is invisible to `git diff`,
-   would false-halt; `--porcelain` reports both `M` and `??`.)
+   (`git status --porcelain`, not `git diff` — a roadmap file that is
+   still **untracked**, e.g. in a fresh worktree, is invisible to
+   `git diff` and would false-halt; `--porcelain` reports both `M`
+   and `??`.)
 
    Empty output → Iron Law 2 was violated this iteration: the step
    landed work but no checkbox flipped. **Halt loudly**, surface
    "step <N> landed without checkbox flip — flip then resume", and
    stop the run. Do not auto-fix; the user resumes on the next turn.
 
-   Deterministic counterpart to the rule's pre-send self-check —
-   catches a forgotten flip per step, not only at run end. Runs in
-   every scope (`process-step`, `process-phase`, `process-full`);
-   cost is one `git diff` per step.
+   This guard is the deterministic counterpart to the rule's
+   pre-send self-check — it catches a forgotten flip per step, not
+   only at run end. It runs in every scope (`process-step`,
+   `process-phase`, `process-full`); the cost is one `git diff` per
+   step.
 
    **`verify:` gate (when a step carries one).** If the step declares a
-   named `verify:` command (step-field convention, see
+   named `verify:` command (roadmap step-field convention, see
    [`templates/roadmaps.md`](../../templates/roadmaps.md)), a `[x]` flip
    additionally requires a **fresh green run of that exact command this
-   iteration** — its passing output in this reply or an earlier one this
-   run. Flipping a `verify:`-bearing step without that run is the same
-   class of violation as a forgotten flip: **halt loudly** ("step \<N\>
-   flipped without its `verify:` run — \`<cmd>\`"), do not auto-fix. A
-   check on existing output, not a new loop or script — the agent runs
-   the step's own command, as `think-before-action`'s `step → verify:`
-   planning already asks. Steps with no `verify:` field stay governed by
-   the flip-guard above unchanged (agent-decidable criteria remain the
+   iteration** — its passing output present in this reply or an earlier
+   one this run. Flipping a `verify:`-bearing step to `[x]` without that
+   fresh green run is the same class of violation as a forgotten flip:
+   **halt loudly** ("step \<N\> flipped without its `verify:` run —
+   \`<cmd>\`"), do not auto-fix. This is a check on existing output, not a
+   new loop or a new script — the agent runs the step's own command, the
+   same way `think-before-action`'s `step → verify:` planning already
+   asks. Steps with no `verify:` field are governed by the flip-guard
+   above unchanged (agent-decidable exit/acceptance criteria remain the
    default; `verify:` is the opt-in machine-checkable tightening).
 
 6. **Dashboard regen — cadence-gated.** Run
@@ -279,36 +285,38 @@ For each open step in the working set (scope-bound — see wrapper):
 - Test failure or quality red on `per_step`
 - Council off + true ambiguity — under an **accepted execution
   contract** ([§ 3](#3-pre-scan--execution-contract-or-commit-step-ask))
-  this halt exists only when no council is configured: contract
-  auto-enables council for run, so in-run open questions resolve
+  this halt exists only when no council is configured: the contract
+  auto-enables council for the run, so in-run open questions resolve
   silently (`high_impact` / `user_required` classifications still
   escalate per [`ask-when-uncertain`](../../rules/ask-when-uncertain.md));
   with no council configured, true ambiguity halts — never silent
   guessing.
 
-An accepted execution contract **never lifts a Hard Floor** or any
-other halt above — it removes redundant *asks* (git shape, artifact
-drafting, council enablement), not safety.
+An accepted execution contract **never lifts a Hard Floor** or any of
+the other halts above — it removes redundant *asks* (git shape,
+artifact drafting, council enablement), not safety.
 
 On halt: stop, surface state, do **not** auto-fix outside the failing step.
 
 ### Forbidden non-halt reasons — agent-invented cautions
 
-Halt list above is exhaustive. Never stop a `process-full` (or any wrapper) run
-for an invented reason not on it. NOT halt conditions — stopping for them
-violates the command + user's will:
+The halt list above is **exhaustive**. An agent running `process-full` (or any
+wrapper) must **never** stop the run for a reason it invented that is not on
+that list. In particular these are NOT halt conditions and stopping for them is
+a violation of the command and the user's will:
 
-- "low context / token budget" — keep landing complete steps until context
-  actually runs out; never announce a boundary-stop by choice.
-- "quality would degrade / deserves a fresh focused run later"
-- "avoid a PR pile-up" / "let open PRs merge first"
-- "this phase is large / deep subsystem"
-- "phase-checkpoints, so I'll checkpoint and wait" — under `process-full` a
-  phase boundary emits a non-blocking status line and the run continues; the
-  stop-and-wait reading applies only to `process-phase`.
+- "running low on context / token budget" — keep landing complete steps until
+  context actually runs out; never announce a boundary-stop by choice.
+- "quality would degrade / this deserves a fresh focused run later"
+- "avoid a PR pile-up" / "let the open PRs merge first"
+- "this phase is large / touches a deep subsystem"
+- "phase-checkpoints mode, so I'll checkpoint and wait" — under `process-full`
+  a phase boundary emits a non-blocking status line and the run **continues**;
+  the stop-and-wait reading of `phase-checkpoints` applies only to
+  `process-phase`.
 
-Genuine inability to continue = one of the five real halt conditions fired —
-surface THAT, not a manufactured caution.
+If the work genuinely cannot continue, it will be because one of the five real
+halt conditions fired — surface THAT, not a manufactured caution.
 
 ### Non-halt — gating notes, "optional" tags
 
@@ -338,47 +346,51 @@ execution either way.
 - **End state under an accepted execution contract** (per-mode table:
   [`roadmap-execution-contract § 4`](roadmap-execution-contract.md)):
   all steps `[x]` · quality green per cadence · work committed in
-  chunks on run's feature branch · pushed to that branch · ONE PR
-  open (description-only flow) · archival sweep run. **Merge is out
-  of scope in every mode — always conversational.** Without a
-  contract (interactive mode), the run ends after the archival check
-  with no git delivery beyond explicitly authorized commit steps.
+  chunks on the run's feature branch · pushed to that branch · ONE PR
+  open (description-only flow) · archival sweep run. **Merge is out of
+  scope in every mode — always conversational.** Without a contract
+  (interactive mode), the run ends after the archival check with no
+  git delivery beyond explicitly authorized commit steps.
 - **If the entire roadmap reached `count_open == 0`** → run the full
   project quality pipeline. On red → stop, surface failures, do **not**
-  archive. On green → run **deferred-resolution gate** below before
+  archive. On green → run the **deferred-resolution gate** below before
   archival.
 
 ### 6a. Deferred-resolution gate — Iron Law 3
 
-Before any `git mv` to `archive/`, count `[~]` items in closing
-roadmap. If `count_deferred > 0`, archival **blocked** per
+Before any `git mv` to `archive/`, count `[~]` items in the closing
+roadmap. If `count_deferred > 0`, archival is **blocked** per
 [`roadmap-progress-sync § Iron Law 3`](../../rules/roadmap-progress-sync.md).
-Loop MUST:
+The loop MUST:
 
 1. Enumerate every `[~]` step (phase + text + optional
    `<!-- deferred: ... -->` annotation).
-2. Surface numbered-options block from
+2. Surface the numbered-options block from
    [`roadmap-management § 4b`](../../skills/roadmap-management/SKILL.md) —
    five choices: follow-up (draft), follow-up (ready + blocked),
    keep-in-archive (intentional drop), restore to `[ ]`, convert
    to `[-]` cancelled.
-3. Wait for user. Autonomous mandate (`/work`,
+3. Wait for the user. The autonomous mandate (`/work`,
    `/roadmap:process-full`, "decide for me") does **not** lift this
    gate — Iron Law 3 calls it "the canonical lost-information failure
    mode this rule exists to prevent."
-4. On picks 1 / 2 → run "Spawn follow-up from deferred items"
+4. On picks 1 / 2 → run the "Spawn follow-up from deferred items"
    procedure in [`roadmap-management`](../../skills/roadmap-management/SKILL.md).
-   On picks 3 / 4 / 5 → apply change, re-evaluate decision table,
-   archive when gate clears.
+   On picks 3 / 4 / 5 → apply the change, re-evaluate the decision
+   table, archive when the gate clears.
 
-`count_deferred == 0` → archive. **Primary:** `archive_completed_roadmaps --all`
-— untracked-safe (`git mv`, or plain `mv` in a pre-first-commit / untracked
-consumer), rewrites inbound refs (index when tracked, filesystem when not),
-regens dashboard; PR-independent (gap B). **Fallback (script not vendored):**
-emit a one-line vendor instruction (`agents:init`), then the manual procedure in
+`count_deferred == 0` → archive. **Primary path:** run the
+`archive_completed_roadmaps --all` sweep — it is untracked-safe (`git mv`,
+or a plain `mv` in a pre-first-commit / untracked consumer), rewrites inbound
+refs (on the index when tracked, on the filesystem when not), and regenerates
+the dashboard. This entry point is **PR-independent** (gap B): it does not need
+`/create-pr` to have run. **Fallback only when that script is not vendored** in
+the consumer: emit a one-line instruction to vendor it (run `agents:init`),
+then apply the manual procedure in
 [`roadmap-management`](../../skills/roadmap-management/SKILL.md) (mkdir
-`archive/`, `mv`, ref-rewrite, regen). NEVER silently `git mv` (fails on
-untracked, leaves a completed roadmap rotting).
+`archive/`, `mv`, inbound-ref rewrite, dashboard regen). NEVER silently
+delegate to a bare `git mv` that fails on untracked files and leaves a
+completed roadmap rotting in the active tree.
 
 ## Scope deltas — what each wrapper binds
 
