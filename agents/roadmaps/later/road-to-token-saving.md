@@ -1,9 +1,21 @@
 ---
 complexity: structural
-status: ready
+status: later
 ---
 
 # Road to token saving — measure, then cut, at constant quality
+
+> **Parked (2026-07-12, later/ disposition).** Every remaining open step is
+> operator-gated; nothing is agent-workable now. **Resume when the operator
+> runs either gate:** (1) the RTK golden-set completeness validation (RTK
+> binary + live outputs) that gates the tier_2→kernel promotion — the
+> promotion itself then ships as its OWN PR under the kernel-edit slow-rollout
+> (≥24h soak, never autonomous); (2) the live trigger-eval spot-check
+> (`./scripts-run src/scripts/skill_trigger_eval` from a real terminal —
+> /dev/tty confirm, billable). The measurement blocker below is RESOLVED
+> NEGATIVE: the 2026-07-12 length-neutral judge RERUN was a second
+> inconclusive → LLM-paired judging is CLOSED-BY-DIAGNOSIS for thin-vs-eager
+> (docs/benchmark.md); deterministic anchor-scoring is the only re-open path.
 
 > Cut the package's per-request token load at **held-constant output quality** —
 > measurement substrate first, then the thin-projection lever, cache-aware
@@ -206,13 +218,18 @@ Build the evidence rig first.
       length-confound tracking, reuses bench_ab_v2_stats.wilcoxon; pluggable
       JudgeFn (mock in 10 tests). The LIVE judge-model verdict run is the
       operator/cost gate (produces internal/bench/reports/quality-run.json). -->
-- [ ] Add a **host-compliance probe**: ship a thin-projected canary rule, invoke
+- [-] Add a **host-compliance probe**: ship a thin-projected canary rule, invoke
       its keyword on each supported host (Claude Code, Cursor, Augment), assert
       the rule fires AND the host shows the pointer, not the body.
       <!-- scaffold built: canary fixture tests/fixtures/host-compliance/ +
       probe src/scripts/probe_host_compliance.ts (mechanical demotion via the real
       thin_entry projector VERIFIED: body→pointer, still selectable) + 5 tests +
       printed operator checklist. LIVE per-host invocation is the operator gate. -->
+      <!-- cancelled 2026-07-12: the probe verifies THIN-projection host behaviour;
+      the thin mechanism is dead (#887 win-rate 36.2% < 48%; council re-scope
+      2026-07-11) and the judge path is CLOSED-BY-DIAGNOSIS (2026-07-12 rerun,
+      second inconclusive). Scaffold + tests stay in-tree for a deterministic
+      anchor-scoring re-open. -->
 - [x] Instrument latency p95/p99 for on-demand rule loads (not just mean).
       <!-- done: src/scripts/bench_rule_load_latency.ts (non-kernel resolve+read,
       warm-up + nearest-rank p50/p95/p99) + 6 tests, task bench-rule-load-latency.
@@ -568,7 +585,7 @@ stale candidates.
 ## Blockers
 
 ### blocker: phase-0-golden-set
-- **Status:** open — live judge run executed 2026-07-09 (haiku) but INCONCLUSIVE (p=0.196, 33% inconsistency, 69% length-confound); a trustworthy verdict needs a stronger length-neutral judge. Coverage 14/89 also remains. Tooling update 2026-07-10: the judge-trustworthiness half is now instrumentable — `check_quality_regression.ts` gained `cohensKappa`/`judgeKappa` (second-independent-judge agreement, shipped with retrieval-substrate-hardening B7b), so the next paid run can VALIDATE the grader instead of discovering inconsistency after the fact. The blocker itself stays: the rerun is billable spend (human gate).
+- **Status:** RESOLVED NEGATIVE (2026-07-12) — the length-neutral judge RERUN (pre-registered: ±15% token-band pairing, double blind judges claude-opus-4-8 + gpt-4o both orders, κ floor 0.60) produced a SECOND inconclusive; the gate is **CLOSED-BY-DIAGNOSIS**: thin-vs-eager is not resolvable by LLM-paired judging on this corpus (see docs/benchmark.md § Length-neutral judge RERUN). Only re-open path: deterministic anchor-scoring against `must_include`/`must_not`. Consequence for this roadmap: the thin lever stays dead; the remaining open steps are operator-gated only (RTK validation + live trigger-eval), not judge-gated.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 Steps 1 + 2 (golden set + host-compliance probe), Phase 1 Step 1 (RTK golden-set run), Phase 8 Step 2 (quality-elbow threshold), and Phase 10 Step 1 (tier-conditional loading)
 - **What to do:**
