@@ -158,26 +158,14 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
     [
         'README.md',
         [
-            // Browse-content line: `… [all NNN commands](…)`. Raw file
-            // count (the hero `Commands-N` badge carries the *active*
-            // count and is owned by check_command_count_messaging.py).
-            ['(\\[all )(\\d+)( commands\\])', 'commands'],
-            // Hero badges: shields.io URLs `Skills-NNN-<color>` etc.
+            // Counts live only in the hero badges — shields.io URLs
+            // `Skills-NNN-<color>` etc. Prose counts were removed from the
+            // README on purpose (the badges carry the numbers); the Commands
+            // badge is owned by check_command_count_messaging.
             ['(/badge/Skills-)(\\d+)(-)', 'skills'],
             ['(/badge/Rules-)(\\d+)(-)', 'rules'],
             ['(/badge/Guidelines-)(\\d+)(-)', 'guidelines'],
             ['(/badge/Personas-)(\\d+)(-)', 'personas'],
-            // Hero prose sentence: `**N skills, N commands, N governed rules**`
-            // (road-to-truth-and-reference-hygiene Phase 1: prose counts are
-            // generated, never hand-typed).
-            ['(\\*\\*)(\\d+)( skills, )', 'skills'],
-            ['( skills, )(\\d+)( commands, )', 'commands'],
-            ['( commands, )(\\d+)( governed rules\\*\\*)', 'rules'],
-            // Feature-list line: `— N skills + N commands, with a capability router`
-            ['(— )(\\d+)( skills \\+ )', 'skills'],
-            ['( skills \\+ )(\\d+)( commands,)', 'commands'],
-            // Work-journey line: `You don't memorize N commands`
-            ['(memorize )(\\d+)( commands)', 'commands'],
         ],
     ],
     [
@@ -186,7 +174,7 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
             // The three count claims — their numbers are generated from the
             // same source the gate checks, closing the ledger's own
             // "count-source binding" debt (B1.2).
-            ['(- claim: )(\\d+)( skills \\(README hero)', 'skills'],
+            ['(- claim: )(\\d+)( skills\\.)', 'skills'],
             ['(- claim: )(\\d+)( commands\\.)', 'commands'],
             ['(- claim: )(\\d+)( governed rules\\.)', 'rules'],
         ],
