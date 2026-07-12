@@ -28,7 +28,7 @@ evidence pointer, or `task check-claims` fails the build.
 |---|---|---|---|
 | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. | qual | `docs/succession.md#trailing 90 days` | ✅ |
 | 178 commands. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
-| The retrieval economy cuts always-loaded context tokens ~65.6% measured against the FULL always-loaded projection — 98,529 → 33,897 tokens (eager rule load + skill/command descriptions + MCP schemas, thin-flipped). Method: `agent-config benchmark` over the pinned token baseline; the baseline is the honest "what the user pays if everything loads eagerly", NOT a synthetic full-corpus strawman (council Q4). | quant | `internal/bench/reports/token-baseline.json#eager_rule_load` | ✅ |
+| A MEASURED-BUT-NOT-SHIPPED experiment — the thin rule projection reduced eager rule load 78,513 → 13,881 GPT-tokens (whole always-loaded projection 98,529 → 33,897, ~65.6%), but FAILED the quality gate (thin win-rate 36.2% vs required 48%) and does not ship; it un-defers only behind `discipline_profile: essential`. Shipped behavior does NOT include this reduction. Method: `agent-config benchmark` over the pinned token baseline; the baseline is the honest "what the user pays if everything loads eagerly", NOT a synthetic full-corpus strawman (council Q4); quality gate per the Phase-0 paired judge run. | quant | `internal/bench/reports/token-baseline.json#eager_rule_load` | ✅ |
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
 | The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted. | qual | `src/scripts/domain_soundness_status.ts#checkRatchet` | ✅ |
 | The validated non-coding domain-skill count is pinned and CI-ratcheted at a maintainer-set floor (9 of 20 default-surface skills carry a sourced `evals/domain-truth.json` fixture at pin time, 2026-07-11 — 5 deterministic, keys from cited formulas; 4 rubric, criteria matching a named external practice); the floor only rises via a maintainer `--write-floor` after a new sourced fixture lands. | quant | `internal/evals/domain-soundness-floor.json#validated` | ✅ |
@@ -54,7 +54,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 2 claim(s) are logged as
+We also publish our **debt**: 3 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.

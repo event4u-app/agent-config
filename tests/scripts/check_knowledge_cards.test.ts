@@ -202,3 +202,105 @@ describe('check_knowledge_cards.ts', () => {
         expect(r.stderr).toContain('unrecognized arguments: --bogus');
     });
 });
+
+// ---------------------------------------------------------------------------
+// --global mode: G4 (sensitivity) / G5 (promotion audit-trail footer fields)
+// / G6 (prohibited hard error) — Phase 1, road-to-feedback-8.11 / successor
+// note to ADR-119. G1 (tier) / G2 (footer) / G3 (redaction-clean) already
+// existed but had no dedicated fixture coverage; the sensitivity axis tests
+// below exercise the whole `--global` gate, not just the three new checks.
+// ---------------------------------------------------------------------------
+
+const VALID_GLOBAL_FOOTER = [
+    '<!-- global-provenance:start -->',
+    '<!-- This global store is unversioned (ADR-100); this footer is its audit trail. -->',
+    '- first_seen: repo-a · 2026-01-01',
+    '- promoted_at: 2026-01-01',
+    '- last_verified: 2026-01-01',
+    '- tier: public',
+    '- seen_in: repo-a',
+    '- source_repo: repo-a',
+    '- owner: alice',
+    '- review_after: 2026-07-01',
+    '- promotion_reason: approved for cross-project reuse',
+    '<!-- global-provenance:end -->',
+    '',
+].join('\n');
+
+function globalCard(opts: { tier?: string; sensitivity?: string; footer?: string | null } = {}): string {
+    const tier = opts.tier ?? 'public';
+    const sensitivity = opts.sensitivity ?? 'shareable';
+    const footer = opts.footer === undefined ? VALID_GLOBAL_FOOTER : (opts.footer ?? '');
+    return (
+        `---\ntrust: t\ntype: anti-hallucination\ntier: ${tier}\nsensitivity: ${sensitivity}\n` +
+        `links:\n  authoritative: package.json\n---\nBody.\n\n${footer}`
+    );
+}
+
+describe('check_knowledge_cards.ts --global — sensitivity axis (G4/G5/G6)', () => {
+    it('a fully-formed global card (tier + sensitivity + full footer) passes', () => {
+        writeCard('good.md', globalCard());
+        const r = runTs(['--dir', cardDirRel, '--global']);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toContain('passed all checks');
+    });
+
+    it('the same card WITHOUT --global is not held to G1/G4/G5/G6', () => {
+        writeCard('good.md', globalCard());
+        const r = runTs(['--dir', cardDirRel]);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toContain('passed all checks');
+    });
+
+    it('G4 — missing sensitivity fails', () => {
+        writeCard(
+            'bad.md',
+            `---\ntrust: t\ntype: anti-hallucination\ntier: public\nlinks:\n  authoritative: package.json\n---\nBody.\n\n${VALID_GLOBAL_FOOTER}`,
+        );
+        const r = runTs(['--dir', cardDirRel, '--global']);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain("G4: global card missing 'sensitivity'");
+    });
+
+    it('G4 — invalid sensitivity value fails', () => {
+        writeCard('bad.md', globalCard({ sensitivity: 'bogus' }));
+        const r = runTs(['--dir', cardDirRel, '--global']);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain("G4: sensitivity 'bogus' not in");
+    });
+
+    it("G6 — sensitivity 'prohibited' is a hard error in the global store", () => {
+        writeCard('bad.md', globalCard({ sensitivity: 'prohibited' }));
+        const r = runTs(['--dir', cardDirRel, '--global']);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain("G6: sensitivity 'prohibited' must never be in the global store");
+    });
+
+    it('G5 — footer missing the promotion audit-trail fields fails once per field', () => {
+        const thinFooter = [
+            '<!-- global-provenance:start -->',
+            '- first_seen: repo-a · 2026-01-01',
+            '- promoted_at: 2026-01-01',
+            '- last_verified: 2026-01-01',
+            '- tier: public',
+            '- seen_in: repo-a',
+            '<!-- global-provenance:end -->',
+            '',
+        ].join('\n');
+        writeCard('bad.md', globalCard({ footer: thinFooter }));
+        const r = runTs(['--dir', cardDirRel, '--global']);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain("G5: provenance footer missing 'source_repo'");
+        expect(r.stdout).toContain("G5: provenance footer missing 'owner'");
+        expect(r.stdout).toContain("G5: provenance footer missing 'review_after'");
+        expect(r.stdout).toContain("G5: provenance footer missing 'promotion_reason'");
+    });
+
+    it('G2 — missing footer entirely does not additionally spam G5 (single audit-trail error)', () => {
+        writeCard('bad.md', globalCard({ footer: null }));
+        const r = runTs(['--dir', cardDirRel, '--global']);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('G2: missing provenance footer');
+        expect(r.stdout).not.toContain('G5:');
+    });
+});

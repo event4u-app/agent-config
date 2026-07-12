@@ -1,0 +1,5 @@
+# Identity map — resolves the placeholder committer identity that a
+# misconfigured repo-local git config stamped on a large share of history
+# (72 of the last 100 commits at the time of the 8.11 feedback review).
+# History is NOT rewritten; this maps it for shortlog/blame/log output.
+matze4u <171579628+matze4u@users.noreply.github.com> t <t@t.t>

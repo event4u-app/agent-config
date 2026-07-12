@@ -49,6 +49,18 @@ before any panel-mode work is considered.
       seam usable for tally/chairman tests (no billable calls in CI).
       <!-- confirmed (2026-07-11 map correction): _harness.ts is the py2ts parity oracle; the actual no-billable seam is subclassing ExternalAIClient with an overridden ask() (orchestrator.test.ts Mock/CapturingMock) — used by every tally/chairman/gate test since. -->
 
+## Gate — baseline before further phases (feedback-8.11, 2026-07-12)
+
+Phases beyond the currently landed ones are **gated on the council-vs-solo
+baseline verdict** (design: `docs/design/council-vs-solo-baseline.md`;
+pre-registered claim: `docs/CLAIMS.md § council-vs-solo-baseline`). The
+2026-07-12 feedback-disposition debate (claude-sonnet-4-5 + gpt-4o) rejected
+extending the deliberation protocol before a measured council-vs-single-model
+quality signal exists: no lift on any decision subset → the protocol goes
+maintenance-only and the remaining phases here are parked with the honest
+null; lift on a subset → admission criteria are derived from that subset's
+measured characteristics. Baseline execution is spend-gated (user).
+
 ## Context
 
 The council engine (`src/scripts/ai_council/`, 29 test files) is

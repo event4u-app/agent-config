@@ -16,6 +16,7 @@ import {
     gate_card_for_global,
     redaction_scan,
 } from '../../src/scripts/_lib/knowledge_global_redaction.js';
+import { gate_sensitivity_for_promotion } from '../../src/scripts/_lib/knowledge_global_promote.js';
 import { _freshness_state } from '../../src/scripts/knowledge_global_cli.js';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
@@ -112,5 +113,45 @@ describe('attack class 3 — temporal context collapse', () => {
 
     it('a card with no provenance footer is unclassifiable, never silently fresh', () => {
         expect(_freshness_state('# Card: naked claim\n\nNo footer.\n', cfg)).toBe('?');
+    });
+});
+
+describe('attack class 4 — cross-project contamination (sensitivity axis, Phase 1 road-to-feedback-8.11)', () => {
+    it('a card carrying project-identifying content marked `project` never promotes', () => {
+        // The card content itself is clean — the point is that `project`
+        // sensitivity alone refuses promotion, independent of redaction.
+        const card =
+            '# Card: internal runbook\n\nProject-local notes about our deploy process.\n';
+        const violations = redaction_scan(card);
+        expect(violations).toEqual([]); // clean, but that must not matter
+
+        const res = gate_sensitivity_for_promotion('project', {
+            violations_present: violations.length > 0,
+            promotion_reason: 'looks safe to me',
+        });
+        expect(res.eligible).toBe(false);
+        expect(res.sensitivity).toBe('project');
+    });
+
+    it('a `shareable` card that acquires redaction-class content on update blocks — never a silent shareable', () => {
+        // Simulates an edit that introduces a secret into a previously-clean
+        // shareable card. The stale `sensitivity: shareable` declaration on
+        // the card must not survive the update.
+        const updated = '# Card: webhook structure\n\nContact ops-lead@example.com for access.\n';
+        const violations = redaction_scan(updated);
+        expect(violations.length).toBeGreaterThan(0);
+
+        const res = gate_sensitivity_for_promotion('shareable', {
+            violations_present: violations.length > 0,
+            promotion_reason: 'was reviewed before the edit that introduced the contact',
+        });
+        expect(res.eligible).toBe(false);
+        expect(res.sensitivity).toBe('prohibited'); // never a silent shareable
+    });
+
+    it('never auto-assigns shareable — an unset sensitivity defaults to project and is refused', () => {
+        const res = gate_sensitivity_for_promotion('', { violations_present: false });
+        expect(res.eligible).toBe(false);
+        expect(res.sensitivity).toBe('project');
     });
 });

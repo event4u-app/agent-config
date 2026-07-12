@@ -34,6 +34,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -105,9 +106,12 @@ function _disabled_notice(): number {
 // Subcommands
 // ---------------------------------------------------------------------------
 
-function cmd_list(args: { json: boolean }): number {
+function cmd_list(args: { json: boolean; revoked: boolean }): number {
     if (!kg.is_enabled()) {
         return _disabled_notice();
+    }
+    if (args.revoked) {
+        return _list_revoked(args.json);
     }
     const cfg = kg.load_global_sharing_config();
     const cards = _list_cards();
@@ -138,6 +142,24 @@ function cmd_list(args: { json: boolean }): number {
         process.stdout.write(
             `${_ljust(r['card'] as string, 28)} ${_ljust(r['tier'] as string, 12)} ${_ljust(r['freshness'] as string, 11)} ${_ljust(r['last_verified'] as string, 14)} ${r['seen_in']}\n`,
         );
+    }
+    return 0;
+}
+
+/** Render the revocation ledger (`list --revoked`) — table or `--json`. */
+function _list_revoked(json: boolean): number {
+    const trail = kgp.load_tombstones();
+    if (json) {
+        process.stdout.write(kg.pyJsonDumps(trail, 2, true) + '\n');
+        return 0;
+    }
+    if (trail.length === 0) {
+        process.stdout.write(`No revocations recorded in ${kg.global_store_dir()}.\n`);
+        return 0;
+    }
+    process.stdout.write(`${_ljust('REVOKED-AT', 12)} ${_ljust('CARD', 28)} REASON\n`);
+    for (const t of trail) {
+        process.stdout.write(`${_ljust(t.revoked_at, 12)} ${_ljust(t.card_id, 28)} ${t.reason}\n`);
     }
     return 0;
 }
@@ -185,37 +207,45 @@ function cmd_trace(args: { card: string; json: boolean }): number {
     return 0;
 }
 
-function _forget_one(card: string): boolean {
+/**
+ * Remove one global card + its usage entry. Writes an append-only tombstone
+ * to the revocation ledger BEFORE deleting anything — no silent deletes.
+ */
+function _forget_one(card: string, reason: string): boolean {
     const p = _card_path(card);
-    let removed = false;
-    if (fs.existsSync(p)) {
-        fs.unlinkSync(p);
-        removed = true;
-    }
     const cid = kgp.card_id_from({ card_name: card });
     const usage = kgp.load_usage();
     const cards = usage['cards'] as SettingsDict;
-    if (cid in cards) {
+    const has_card = fs.existsSync(p);
+    const has_usage = cid in cards;
+    if (!has_card && !has_usage) {
+        return false;
+    }
+    kgp.append_tombstone(cid, reason, { today: _today() });
+    if (has_card) {
+        fs.unlinkSync(p);
+    }
+    if (has_usage) {
         delete cards[cid];
         write_atomic(
             path.join(kg.global_store_dir(null, { create: true }), kgp.USAGE_FILENAME),
             kg.pyJsonDumps(usage, 2, true) + '\n',
         );
-        removed = true;
     }
-    return removed;
+    return true;
 }
 
-function cmd_forget(args: { card: string; tier: string }): number {
+function cmd_forget(args: { card: string; tier: string; reason: string }): number {
     if (!kg.is_enabled()) {
         return _disabled_notice();
     }
     if (args.tier) {
+        const reason = args.reason || `bulk forget (tier=${args.tier})`;
         let removed = 0;
         for (const p of _list_cards()) {
             const prov = kg.parse_provenance_footer(_readReplace(p));
             if (prov['tier'] === args.tier) {
-                if (_forget_one(_stem(p))) {
+                if (_forget_one(_stem(p), reason)) {
                     removed += 1;
                 }
             }
@@ -228,7 +258,7 @@ function cmd_forget(args: { card: string; tier: string }): number {
         process.exitCode = 1;
         return 1;
     }
-    if (_forget_one(args.card)) {
+    if (_forget_one(args.card, args.reason || 'manual forget')) {
         process.stdout.write(`Forgot global card '${args.card}'.\n`);
         return 0;
     }
@@ -237,7 +267,16 @@ function cmd_forget(args: { card: string; tier: string }): number {
     return 1;
 }
 
-function cmd_promote(args: { path: string; source: string; tier: string; manual: boolean }): number {
+function cmd_promote(args: {
+    path: string;
+    source: string;
+    tier: string;
+    manual: boolean;
+    sensitivity: string;
+    reason: string;
+    owner: string;
+    review_after: string;
+}): number {
     if (!kg.is_enabled()) {
         return _disabled_notice();
     }
@@ -258,13 +297,20 @@ function cmd_promote(args: { path: string; source: string; tier: string; manual:
     const allowed = [...kg.allowed_tiers()];
 
     const redaction = _isPlainObject(cfg['redaction']) ? (cfg['redaction'] as SettingsDict) : {};
+    const redaction_enabled = _pyBool(redaction['enabled'], true);
+    const halt_on_trigger = _pyBool(redaction['halt_on_trigger'], true);
+    // Computed once — feeds BOTH the existing tier gate below AND the new
+    // sensitivity auto-derivation, independent of `halt_on_trigger` (a
+    // `prohibited` override never depends on that unrelated config flag).
+    const violations = redaction_enabled ? kgr.redaction_scan(text) : [];
+
     const result = kgr.gate_card_for_global(text, {
         tier,
         source: args.source,
         card_name: path.basename(src_path),
         allowed_tiers: allowed,
-        redaction_enabled: _pyBool(redaction['enabled'], true),
-        halt_on_trigger: _pyBool(redaction['halt_on_trigger'], true),
+        redaction_enabled,
+        halt_on_trigger,
     });
     if (!result.eligible) {
         if (result.manual_only && !args.manual) {
@@ -282,8 +328,7 @@ function cmd_promote(args: { path: string; source: string; tier: string; manual:
             return 2;
         }
         // manual override of proprietary: still run redaction, never skip it.
-        const violations = kgr.redaction_scan(text);
-        if (violations.length > 0 && _pyBool(redaction['halt_on_trigger'], true)) {
+        if (violations.length > 0 && halt_on_trigger) {
             process.stderr.write(
                 'global-share BLOCKED (manual proprietary): redaction halt — ' +
                     violations.map((v) => `${v.category}: ${_pyRepr(v.snippet)}`).join('; ') +
@@ -292,6 +337,19 @@ function cmd_promote(args: { path: string; source: string; tier: string; manual:
             process.exitCode = 2;
             return 2;
         }
+    }
+
+    // Sensitivity gate — layered ON TOP of the tier/redaction gate above.
+    const declared_sensitivity =
+        args.sensitivity || _frontmatter_sensitivity(text) || kg.DEFAULT_SENSITIVITY;
+    const sens = kgp.gate_sensitivity_for_promotion(declared_sensitivity, {
+        violations_present: violations.length > 0,
+        promotion_reason: args.reason,
+    });
+    if (!sens.eligible) {
+        process.stderr.write(`global-share BLOCKED: ${sens.reason}\n`);
+        process.exitCode = 2;
+        return 2;
     }
 
     // Build provenance + usage.
@@ -306,6 +364,11 @@ function cmd_promote(args: { path: string; source: string; tier: string; manual:
         ? (entry['first_seen'] as SettingsDict)
         : { repo: slug, date: today };
 
+    const fresh = _isPlainObject(cfg['freshness']) ? (cfg['freshness'] as SettingsDict) : {};
+    const review_after =
+        args.review_after || _addDaysIso(today, _pyInt(fresh['stale_after_days'], 180));
+    const owner = args.owner || _defaultOwner();
+
     const footer = kg.render_provenance_footer({
         first_seen_repo: (first['repo'] as string) ?? slug,
         first_seen_date: (first['date'] as string) ?? today,
@@ -313,8 +376,13 @@ function cmd_promote(args: { path: string; source: string; tier: string; manual:
         last_verified: today,
         tier,
         seen_in,
+        source_repo: slug,
+        owner,
+        review_after,
+        promotion_reason: args.reason,
     });
-    let out_text = _ensure_tier_frontmatter(text, tier);
+    let out_text = _ensure_frontmatter_field(text, 'tier', tier);
+    out_text = _ensure_frontmatter_field(out_text, 'sensitivity', sens.sensitivity);
     out_text = _rstrip(kg.strip_provenance_footer(out_text)) + '\n\n' + footer;
     const dest = _card_path(cid);
     write_atomic(path.join(kg.global_store_dir(null, { create: true }), path.basename(dest)), out_text);
@@ -329,11 +397,11 @@ function cmd_promote(args: { path: string; source: string; tier: string; manual:
             kg.pyJsonDumps(usage, 2, true) + '\n',
         );
     }
-    process.stdout.write(`Promoted '${cid}' (tier=${tier}) → ${dest}\n`);
+    process.stdout.write(`Promoted '${cid}' (tier=${tier}, sensitivity=${sens.sensitivity}) → ${dest}\n`);
     return 0;
 }
 
-function cmd_purge(args: { confirm: boolean }): number {
+function cmd_purge(args: { confirm: boolean; reason: string }): number {
     // Remove the global store and strip provenance footers from project cards.
     if (!args.confirm) {
         process.stderr.write(
@@ -345,9 +413,30 @@ function cmd_purge(args: { confirm: boolean }): number {
     }
 
     const store = kg.global_store_dir();
+    const reason = args.reason || 'full store purge';
+    if (fs.existsSync(store)) {
+        // Tombstone every surviving card_id BEFORE deleting anything — no
+        // silent deletes, even on the biggest deletion event this CLI has.
+        const usage = kgp.load_usage();
+        const cards = usage['cards'] as SettingsDict;
+        const seen_ids = new Set<string>();
+        for (const p of _list_cards()) {
+            const cid = _stem(p);
+            seen_ids.add(cid);
+            kgp.append_tombstone(cid, reason, { today: _today() });
+        }
+        for (const cid of Object.keys(cards)) {
+            if (!seen_ids.has(cid)) {
+                kgp.append_tombstone(cid, reason, { today: _today() });
+            }
+        }
+    }
     let removed = 0;
     if (fs.existsSync(store)) {
         for (const p of _globAllSorted(store)) {
+            if (path.basename(p) === kgp.REVOCATIONS_FILENAME) {
+                continue; // the ledger survives its own purge entry — the audit trail persists
+            }
             if (_isFile(p)) {
                 fs.unlinkSync(p);
                 removed += 1;
@@ -356,7 +445,7 @@ function cmd_purge(args: { confirm: boolean }): number {
         try {
             fs.rmdirSync(store);
         } catch {
-            // non-empty (subdirs) — leave it
+            // non-empty (the ledger, or subdirs) — leave it
         }
     }
     process.stdout.write(`Purged global store (${removed} file(s)) at ${store}.\n`);
@@ -511,32 +600,43 @@ function cmd_lead_check(args: { report: string; strict: boolean }): number {
 // ---------------------------------------------------------------------------
 
 function _frontmatter_tier(text: string): string {
+    const val = _frontmatter_scalar(text, 'tier');
+    return kg.TIERS.includes(val) ? val : '';
+}
+
+function _frontmatter_sensitivity(text: string): string {
+    const val = _frontmatter_scalar(text, 'sensitivity');
+    return kg.SENSITIVITIES.includes(val) ? val : '';
+}
+
+/** Read a top-level scalar frontmatter field's raw (quote-stripped) value. */
+function _frontmatter_scalar(text: string, field: string): string {
     const m = _FRONTMATTER_RE.exec(text);
     if (!m) {
         return '';
     }
     for (const line of _splitlines(m[1] as string)) {
         const s = _strip(line);
-        if (s.startsWith('tier:')) {
-            const val = _stripQuotes(_strip(s.slice('tier:'.length)));
-            return kg.TIERS.includes(val) ? val : '';
+        if (s.startsWith(`${field}:`)) {
+            return _stripQuotes(_strip(s.slice(field.length + 1)));
         }
     }
     return '';
 }
 
-function _ensure_tier_frontmatter(text: string, tier: string): string {
-    // Ensure the card frontmatter carries an accurate `tier:` field.
+/** Ensure the card frontmatter carries an accurate `<field>: <value>` line. */
+function _ensure_frontmatter_field(text: string, field: string, value: string): string {
     const m = _FRONTMATTER_RE.exec(text);
     if (!m) {
         return text;
     }
     const block = m[1] as string;
+    const line_re = new RegExp(`^\\s*${field}:.*$`, 'm');
     let new_block: string;
-    if (/^\s*tier:/m.test(block)) {
-        new_block = _reSubFirst(block, /^\s*tier:.*$/m, `tier: ${tier}`);
+    if (line_re.test(block)) {
+        new_block = _reSubFirst(block, line_re, `${field}: ${value}`);
     } else {
-        new_block = `tier: ${tier}\n${block}`;
+        new_block = `${field}: ${value}\n${block}`;
     }
     // m.index of group 1: in Python `m.start(1)` / `m.end(1)`. The full match
     // starts at 0 (anchored `^`); group 1 begins after the leading `---\n`.
@@ -612,20 +712,23 @@ function _wrap<T>(cmd: string, rest: string[], parse: (rest: string[]) => T | nu
 
 // Per-subcommand argparse-faithful parsers.
 
-function _parseList(rest: string[]): { json: boolean } | number {
+function _parseList(rest: string[]): { json: boolean; revoked: boolean } | number {
     let json = false;
-    const usage = `${_PROG} list [-h] [--json]`;
+    let revoked = false;
+    const usage = `${_PROG} list [-h] [--json] [--revoked]`;
     for (const a of rest) {
         if (a === '-h' || a === '--help') {
             return _subHelp(usage);
         }
         if (a === '--json') {
             json = true;
+        } else if (a === '--revoked') {
+            revoked = true;
         } else {
             return _subError('list', `unrecognized arguments: ${a}`, usage);
         }
     }
-    return { json };
+    return { json, revoked };
 }
 
 function _parseShow(rest: string[]): { card: string } | number {
@@ -674,10 +777,11 @@ function _parseTrace(rest: string[]): { card: string; json: boolean } | number {
     return { card, json };
 }
 
-function _parseForget(rest: string[]): { card: string; tier: string } | number {
-    const usage = `${_PROG} forget [-h] [--tier {public,vendor,proprietary}] [card]`;
+function _parseForget(rest: string[]): { card: string; tier: string; reason: string } | number {
+    const usage = `${_PROG} forget [-h] [--tier {public,vendor,proprietary}] [--reason REASON] [card]`;
     let card = '';
     let tier = '';
+    let reason = '';
     let cardSet = false;
     for (let i = 0; i < rest.length; i += 1) {
         const a = rest[i] as string;
@@ -689,6 +793,10 @@ function _parseForget(rest: string[]): { card: string; tier: string } | number {
             tier = choice;
         } else if (a.startsWith('--tier=')) {
             tier = _choiceOrExit(a.slice('--tier='.length), ['public', 'vendor', 'proprietary'], '--tier', 'forget', usage);
+        } else if (a === '--reason') {
+            reason = (rest[++i] ?? '') as string;
+        } else if (a.startsWith('--reason=')) {
+            reason = a.slice('--reason='.length);
         } else if (a.startsWith('-')) {
             return _subError('forget', `unrecognized arguments: ${a}`, usage);
         } else if (!cardSet) {
@@ -698,15 +806,35 @@ function _parseForget(rest: string[]): { card: string; tier: string } | number {
             return _subError('forget', `unrecognized arguments: ${a}`, usage);
         }
     }
-    return { card, tier };
+    return { card, tier, reason };
 }
 
-function _parsePromote(rest: string[]): { path: string; source: string; tier: string; manual: boolean } | number {
-    const usage = `${_PROG} promote [-h] [--source SOURCE] [--tier {public,vendor,proprietary}] [--manual] path`;
+function _parsePromote(
+    rest: string[],
+):
+    | {
+          path: string;
+          source: string;
+          tier: string;
+          manual: boolean;
+          sensitivity: string;
+          reason: string;
+          owner: string;
+          review_after: string;
+      }
+    | number {
+    const usage =
+        `${_PROG} promote [-h] [--source SOURCE] [--tier {public,vendor,proprietary}] ` +
+        '[--manual] [--sensitivity {prohibited,project,shareable}] [--reason REASON] ' +
+        '[--owner OWNER] [--review-after DATE] path';
     let p: string | null = null;
     let source = '';
     let tier = '';
     let manual = false;
+    let sensitivity = '';
+    let reason = '';
+    let owner = '';
+    let review_after = '';
     for (let i = 0; i < rest.length; i += 1) {
         const a = rest[i] as string;
         if (a === '-h' || a === '--help') {
@@ -722,6 +850,34 @@ function _parsePromote(rest: string[]): { path: string; source: string; tier: st
             tier = _choiceOrExit(a.slice('--tier='.length), ['public', 'vendor', 'proprietary'], '--tier', 'promote', usage);
         } else if (a === '--manual') {
             manual = true;
+        } else if (a === '--sensitivity') {
+            sensitivity = _choiceOrExit(
+                rest[++i],
+                ['prohibited', 'project', 'shareable'],
+                '--sensitivity',
+                'promote',
+                usage,
+            );
+        } else if (a.startsWith('--sensitivity=')) {
+            sensitivity = _choiceOrExit(
+                a.slice('--sensitivity='.length),
+                ['prohibited', 'project', 'shareable'],
+                '--sensitivity',
+                'promote',
+                usage,
+            );
+        } else if (a === '--reason') {
+            reason = (rest[++i] ?? '') as string;
+        } else if (a.startsWith('--reason=')) {
+            reason = a.slice('--reason='.length);
+        } else if (a === '--owner') {
+            owner = (rest[++i] ?? '') as string;
+        } else if (a.startsWith('--owner=')) {
+            owner = a.slice('--owner='.length);
+        } else if (a === '--review-after') {
+            review_after = (rest[++i] ?? '') as string;
+        } else if (a.startsWith('--review-after=')) {
+            review_after = a.slice('--review-after='.length);
         } else if (a.startsWith('-')) {
             return _subError('promote', `unrecognized arguments: ${a}`, usage);
         } else if (p === null) {
@@ -733,7 +889,7 @@ function _parsePromote(rest: string[]): { path: string; source: string; tier: st
     if (p === null) {
         return _subError('promote', 'the following arguments are required: path', usage);
     }
-    return { path: p, source, tier, manual };
+    return { path: p, source, tier, manual, sensitivity, reason, owner, review_after };
 }
 
 function _parseValidate(rest: string[]): { check_urls: boolean } | number {
@@ -774,20 +930,26 @@ function _parseLeadCheck(rest: string[]): { report: string; strict: boolean } | 
     return { report, strict };
 }
 
-function _parsePurge(rest: string[]): { confirm: boolean } | number {
-    const usage = `${_PROG} purge [-h] [--confirm]`;
+function _parsePurge(rest: string[]): { confirm: boolean; reason: string } | number {
+    const usage = `${_PROG} purge [-h] [--confirm] [--reason REASON]`;
     let confirm = false;
-    for (const a of rest) {
+    let reason = '';
+    for (let i = 0; i < rest.length; i += 1) {
+        const a = rest[i] as string;
         if (a === '-h' || a === '--help') {
             return _subHelp(usage);
         }
         if (a === '--confirm') {
             confirm = true;
+        } else if (a === '--reason') {
+            reason = (rest[++i] ?? '') as string;
+        } else if (a.startsWith('--reason=')) {
+            reason = a.slice('--reason='.length);
         } else {
             return _subError('purge', `unrecognized arguments: ${a}`, usage);
         }
     }
-    return { confirm };
+    return { confirm, reason };
 }
 
 function _subHelp(usage: string): number {
@@ -1075,6 +1237,33 @@ function _dateDiffDays(a: YMD, b: YMD): number {
     const ta = Date.UTC(a.y, a.m - 1, a.d);
     const tb = Date.UTC(b.y, b.m - 1, b.d);
     return Math.round((ta - tb) / 86_400_000);
+}
+
+/** `YYYY-MM-DD` + N days → `YYYY-MM-DD` (UTC). Invalid input → the input unchanged. */
+function _addDaysIso(iso: string, days: number): string {
+    const parsed = _strptime(iso);
+    if (parsed === null) {
+        return iso;
+    }
+    const ms = Date.UTC(parsed.y, parsed.m - 1, parsed.d) + days * 86_400_000;
+    const d = new Date(ms);
+    const y = d.getUTCFullYear();
+    const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}-${mo}-${dd}`;
+}
+
+/** Default `owner` for a promoted card when `--owner` is not given. */
+function _defaultOwner(): string {
+    try {
+        const name = os.userInfo().username;
+        if (name) {
+            return name;
+        }
+    } catch {
+        // platform without a resolvable user (rare) — fall through
+    }
+    return process.env['USER'] ?? process.env['USERNAME'] ?? 'unknown';
 }
 
 /** Mirror Python `OSError`'s `str(exc)` for the read-failure message. */

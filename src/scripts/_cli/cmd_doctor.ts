@@ -731,6 +731,7 @@ function relativeTo(p: string, base: string): string | null {
 const CHECK_IDS = [
     'scope',
     'global-binary',
+    'git-identity',
     'claude-plugin',
     'claude-command-wrappers',
     'surface-state',
@@ -755,6 +756,7 @@ const CHECK_IDS = [
 const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'scope',
     'global-binary',
+    'git-identity',
     'claude-plugin',
     'claude-command-wrappers',
     'surface-state',
@@ -836,6 +838,97 @@ function _check_scope(project_root: string): Dict {
         id: 'scope',
         status: 'ok',
         message: 'standalone project root',
+        remedy: '',
+    };
+}
+
+/** Placeholder git identities that must never author real history — the
+ * 8.11 feedback found 72/100 recent commits stamped `t <t@t.t>` because a
+ * repo-local config carried a throwaway identity. Reads config FILES (no
+ * shell-out): repo-local wins over global, worktree gitdirs resolved. */
+const _PLACEHOLDER_EMAIL_RE = /^(t@t\.t|.*@example\.(com|org)|.*@localhost)$/i;
+const _PLACEHOLDER_NAME_RE = /^(t|test|user|nobody|x)$/i;
+
+export function _git_config_path(project_root: string): string | null {
+    const gd = path.join(project_root, '.git');
+    try {
+        const st = fs.statSync(gd);
+        if (st.isDirectory()) {
+            return path.join(gd, 'config');
+        }
+        // Worktree: `.git` is a file "gitdir: <path>".
+        const m = readText(gd).match(/^gitdir:\s*(.+)\s*$/m);
+        if (m === null) {
+            return null;
+        }
+        const gdPath = path.resolve(project_root, m[1]!.trim());
+        const commondirFile = path.join(gdPath, 'commondir');
+        if (pathExists(commondirFile)) {
+            const common = path.resolve(gdPath, readText(commondirFile).trim());
+            return path.join(common, 'config');
+        }
+        return path.join(gdPath, 'config');
+    } catch {
+        return null;
+    }
+}
+
+function _parse_git_user(configText: string): { name: string | null; email: string | null } {
+    let inUser = false;
+    let name: string | null = null;
+    let email: string | null = null;
+    for (const raw of configText.split('\n')) {
+        const line = raw.trim();
+        if (line.startsWith('[')) {
+            inUser = /^\[user\]/i.test(line);
+            continue;
+        }
+        if (!inUser) {
+            continue;
+        }
+        const m = line.match(/^(name|email)\s*=\s*(.+)$/i);
+        if (m !== null) {
+            if (m[1]!.toLowerCase() === 'name') name = m[2]!.trim();
+            else email = m[2]!.trim();
+        }
+    }
+    return { name, email };
+}
+
+export function _check_git_identity(project_root: string): Dict {
+    const cfgPath = _git_config_path(project_root);
+    if (cfgPath === null || !pathExists(cfgPath)) {
+        return { id: 'git-identity', status: 'skipped', message: 'not a git repository', remedy: '' };
+    }
+    let ident = _parse_git_user(readText(cfgPath));
+    if (ident.name === null && ident.email === null) {
+        const globalCfg = path.join(os.homedir(), '.gitconfig');
+        if (pathExists(globalCfg)) {
+            ident = _parse_git_user(readText(globalCfg));
+        }
+    }
+    if (ident.name === null && ident.email === null) {
+        return {
+            id: 'git-identity',
+            status: 'warn',
+            message: 'no git user identity configured (repo or global)',
+            remedy: 'git config user.name "<you>" && git config user.email "<you@host>"',
+        };
+    }
+    const badEmail = ident.email !== null && _PLACEHOLDER_EMAIL_RE.test(ident.email);
+    const badName = ident.name !== null && _PLACEHOLDER_NAME_RE.test(ident.name);
+    if (badEmail || badName) {
+        return {
+            id: 'git-identity',
+            status: 'warn',
+            message: `placeholder git identity configured: ${ident.name ?? '?'} <${ident.email ?? '?'}> — commits will be unattributable`,
+            remedy: 'git config user.name "<you>" && git config user.email "<you@host>" (and add a .mailmap for already-authored history)',
+        };
+    }
+    return {
+        id: 'git-identity',
+        status: 'ok',
+        message: `${ident.name ?? '?'} <${ident.email ?? '?'}>`,
         remedy: '',
     };
 }
@@ -2142,6 +2235,7 @@ function _run_checks(
     const runners: Record<string, CheckRunner> = {
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
+        'git-identity': () => _check_git_identity(project_root),
         'claude-plugin': _check_claude_plugin,
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
@@ -2219,6 +2313,7 @@ function _run_checks_no_manifest(
     const runners: Record<string, CheckRunner> = {
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
+        'git-identity': () => _check_git_identity(project_root),
         'claude-plugin': _check_claude_plugin,
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,

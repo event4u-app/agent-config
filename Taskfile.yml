@@ -210,6 +210,7 @@ tasks:
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check
       - task: generate-capabilities-index-check
+      - task: complexity-report
       - task: build-proof-check
       - task: generate-cookbook-check
       - task: generate-role-experiences-catalog-check
@@ -387,6 +388,7 @@ tasks:
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check
       - task: generate-capabilities-index-check
+      - task: complexity-report
       - task: build-proof-check
       - task: generate-cookbook-check
       - task: generate-role-experiences-catalog-check

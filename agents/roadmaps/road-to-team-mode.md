@@ -201,7 +201,12 @@ written.
       max_calls_per_day: <int> }`. `auto` = pass no `--model`, let the codex
       CLI default apply; a set value passes through verbatim. Documented in a
       new `docs/contracts/ai-team-config.md`; schema validation rejects unknown
-      keys.
+      keys. Design constraint (council verdict 2026-07-12, see Notes): ALL
+      role semantics (builder/reviewer/verifier selection, eligibility) live
+      in this `ai_team` block + the prompt library — reuse
+      subagent-orchestration's implementer/judge frame and its
+      `subagent-status.json` envelope; NO `team_mode`/role frontmatter key is
+      added to skill/command/rule schemas.
       <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
 - [ ] **Step 5:** Quota: team calls count into the existing `cli_call_budget`
       openai bucket (one subscription, one counter); `/team:status` renders
@@ -342,7 +347,7 @@ the disposition step executed either way.
 ## Blockers
 
 ### blocker: model-id-verification
-- **Status:** open
+- **Status:** resolved 2026-07-12
 - **Owner:** maintainer
 - **Blocks:** Phase 2 config-doc examples, Phase 5 arm pinning
 - **What to do:**
@@ -352,6 +357,21 @@ the disposition step executed either way.
      plugin's own prompting skill still targets `gpt-5-4`. Append the verified
      list here.
 - **Resolved when:** a dated model-ID list exists in this file.
+- **Resolution (2026-07-12, verified live):** codex-cli 0.134.0 on the
+  maintainer machine, subscription-authed; model list read from the CLI's own
+  server-fetched cache (`~/.codex/models_cache.json`, fetched_at
+  2026-07-12T09:54Z) and cross-checked by a live `codex exec` header:
+  - `gpt-5.5` — GPT-5.5, the CLI's current default (live exec header shows
+    `model: gpt-5.5`)
+  - `gpt-5.4` — GPT-5.4
+  - `gpt-5.4-mini` — GPT-5.4-Mini
+  - `codex-auto-review` — Codex Auto Review (review-specialised)
+  A bogus id is rejected with "not supported when using Codex with a ChatGPT
+  account" (HTTP 400) — so arm pinning MUST use ids from this list. The
+  trigger guide's `gpt-5.6-sol` is confirmed NOT available. Benchmark arms:
+  pin builder/reviewer arms to `gpt-5.5` (default) and consider
+  `codex-auto-review` for the review arm; re-read the cache at Phase 5
+  execution time (model lists rotate).
 
 ### blocker: benchmark-spend-authorization
 - **Status:** open
@@ -365,6 +385,20 @@ the disposition step executed either way.
 
 ## Notes
 
+- **Council verdict on team-mode frontmatter (claude-sonnet-4-5 + gpt-4o,
+  2026-07-12, unanimous REJECT):** skills/commands get NO `team_mode` / role
+  frontmatter. Role semantics belong in the `ai_team` config block + prompt
+  library (reusing subagent-orchestration's implementer/judge frame and status
+  envelope), not smeared across 271 skill files while the feature's role model
+  does not operationally exist. Revisit-if: Phase 2 execution turns out to be
+  blocked SPECIFICALLY on artefact-level role metadata — then re-open via
+  decision-revisit-gate, not by silently adding the key.
+- **Priority (feedback-8.11 disposition, 2026-07-12):** Phases 1–2 are the
+  next structural build after the feedback-8.11 hygiene/boundary work — the
+  external reviews rank finishing team mode above further council features.
+  The `model-id-verification` blocker is resolved (see Blockers);
+  `benchmark-spend-authorization` remains with the user and blocks only
+  Phase 5 execution.
 - Standalone capability roadmap, not part of the `road-to-opt-*` optimization
   family — team mode is a new surface, not a tuning of an existing one.
 - Cost/limits are the real constraint, not model capability: default to the

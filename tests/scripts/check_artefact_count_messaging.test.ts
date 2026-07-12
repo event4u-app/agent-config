@@ -12,7 +12,9 @@ import { describe, expect, it } from "vitest";
 import {
     canonical_for,
     main,
+    scan_structured,
     scan_text,
+    STRUCTURED_SURFACES,
 } from "../../src/scripts/check_artefact_count_messaging.js";
 
 const EXPECTED = { skills: 264, commands: 166, rules: 95, guidelines: 87, personas: 29 };
@@ -85,8 +87,50 @@ describe("canonical_for — source-of-truth resolution", () => {
     });
 });
 
+describe("scan_structured — generated YAML surfaces (CAPABILITIES.yaml drift class)", () => {
+    const FIELDS = STRUCTURED_SURFACES[0]!.fields;
+
+    it("passes totals that match the canonical counts", () => {
+        const { findings } = scan_structured(
+            "CAPABILITIES.yaml",
+            "meta:\n  skills_total: 264\n  commands_total: 166\n",
+            FIELDS,
+            EXPECTED,
+        );
+        expect(findings).toEqual([]);
+    });
+
+    it("fails a deliberate off-by-one (the 268-vs-271 regression)", () => {
+        const { findings } = scan_structured(
+            "CAPABILITIES.yaml",
+            "meta:\n  skills_total: 263\n  commands_total: 166\n",
+            FIELDS,
+            EXPECTED,
+        );
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toMatchObject({ kind: "skills", found: 263, expected: 264 });
+    });
+
+    it("feeds the cross-surface inconsistency net (prose vs YAML disagree)", () => {
+        const prose = scan_text("README.md", "ships 264 skills.", EXPECTED);
+        const yaml = scan_structured(
+            "CAPABILITIES.yaml",
+            "  skills_total: 263\n",
+            FIELDS,
+            EXPECTED,
+        );
+        const seen = new Set([...prose.seen["skills"]!, ...yaml.seen["skills"]!]);
+        expect(seen.size).toBeGreaterThan(1); // two DIFFERENT numbers → gate fires
+    });
+
+    it("absent field is skipped (owned by the generator's own --check)", () => {
+        const { findings } = scan_structured("CAPABILITIES.yaml", "meta: {}\n", FIELDS, EXPECTED);
+        expect(findings).toEqual([]);
+    });
+});
+
 describe("live gate — real repo surfaces", () => {
-    it("all flagship surfaces are in sync with source", () => {
+    it("all flagship surfaces (incl. structured) are in sync with source", () => {
         expect(main(["--quiet"])).toBe(0);
     });
 });

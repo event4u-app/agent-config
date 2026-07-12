@@ -616,3 +616,66 @@ describe('doctor — --ci contract', () => {
         expect(() => JSON.parse(t.stdout)).not.toThrow();
     });
 });
+
+describe('--check git-identity (placeholder-identity guard)', () => {
+    // Unit-level: exercise the exported check directly against fixture roots
+    // (no shell-out — the check reads config files).
+    const mkRepo = (configBody: string): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-ident-'));
+        fs.mkdirSync(path.join(dir, '.git'), { recursive: true });
+        fs.writeFileSync(path.join(dir, '.git', 'config'), configBody);
+        return dir;
+    };
+
+    it('warns on the placeholder identity that stamped real history (t <t@t.t>)', async () => {
+        const { _check_git_identity } = await import('../../../src/scripts/_cli/cmd_doctor.js');
+        const dir = mkRepo('[user]\n\tname = t\n\temail = t@t.t\n');
+        try {
+            const res = _check_git_identity(dir) as { status: string; message: string };
+            expect(res.status).toBe('warn');
+            expect(res.message).toContain('placeholder');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('passes a real identity', async () => {
+        const { _check_git_identity } = await import('../../../src/scripts/_cli/cmd_doctor.js');
+        const dir = mkRepo('[user]\n\tname = Jane Doe\n\temail = jane@company.tld\n');
+        try {
+            const res = _check_git_identity(dir) as { status: string };
+            expect(res.status).toBe('ok');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('skips outside a git repository', async () => {
+        const { _check_git_identity } = await import('../../../src/scripts/_cli/cmd_doctor.js');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-ident-norepo-'));
+        try {
+            const res = _check_git_identity(dir) as { status: string };
+            expect(res.status).toBe('skipped');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('resolves a worktree gitdir pointer to the shared config', async () => {
+        const { _check_git_identity } = await import('../../../src/scripts/_cli/cmd_doctor.js');
+        const main = mkRepo('[user]\n\tname = t\n\temail = t@t.t\n');
+        const wt = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-ident-wt-'));
+        const gdPath = path.join(main, '.git', 'worktrees', 'wt1');
+        fs.mkdirSync(gdPath, { recursive: true });
+        fs.writeFileSync(path.join(gdPath, 'commondir'), '../..\n');
+        fs.writeFileSync(path.join(wt, '.git'), `gitdir: ${gdPath}\n`);
+        try {
+            const res = _check_git_identity(wt) as { status: string; message: string };
+            expect(res.status).toBe('warn');
+            expect(res.message).toContain('t@t.t');
+        } finally {
+            fs.rmSync(main, { recursive: true, force: true });
+            fs.rmSync(wt, { recursive: true, force: true });
+        }
+    });
+});
