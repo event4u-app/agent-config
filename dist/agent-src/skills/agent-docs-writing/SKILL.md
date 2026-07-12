@@ -287,8 +287,8 @@ These paths must not appear inside a stable artifact:
   `agents/runtime/council/responses/<file>.json`,
   `agents/runtime/council/sessions/<file>.json` or `<timestamp>/...`
 
-Stable artifact = any file under `.agent-src.uncondensed/{rules,
-skills,commands,contexts,templates,personas}/`, `agents/settings/contexts/`,
+Stable artifact = any file under `src/{rules,skills,domains}/`,
+`src/agent-src/{contexts,templates,personas}/`, `agents/settings/contexts/`,
 `docs/guidelines/`, `docs/contracts/`, `docs/architecture.md`,
 `docs/customization.md`, `docs/getting-started.md`, `docs/catalog.md`,
 `AGENTS.md`, `README.md`, `copilot-instructions.md`.
