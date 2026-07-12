@@ -108,6 +108,52 @@ describe('load_council_config — happy path', () => {
         );
     });
 
+    it('chairman defaults to host synthesis (Phase 2)', () => {
+        const c = cfg.load_council_config(write_yaml(make_tmp(), MINIMAL_VALID));
+        expect(c.chairman.mode).toBe('host');
+        expect(c.chairman.member).toBeNull();
+    });
+
+    it('chairman.mode enum is validated', () => {
+        const payload = `${MINIMAL_VALID}\nchairman:\n  mode: bogus\n`;
+        expect(() => cfg.load_council_config(write_yaml(make_tmp(), payload))).toThrow(
+            /chairman\.mode/,
+        );
+    });
+
+    it('chairman mode:member with a valid enabled member is honoured', () => {
+        const payload = `${MINIMAL_VALID}\nchairman:\n  mode: member\n  member: anthropic\n`;
+        const c = cfg.load_council_config(write_yaml(make_tmp(), payload));
+        expect(c.chairman.mode).toBe('member');
+        expect(c.chairman.member).toBe('anthropic');
+    });
+
+    it('chairman mode:member fails closed when the member is absent', () => {
+        const payload = `${MINIMAL_VALID}\nchairman:\n  mode: member\n  member: mistral\n`;
+        expect(() => cfg.load_council_config(write_yaml(make_tmp(), payload))).toThrow(
+            /no such member/,
+        );
+    });
+
+    it('chairman mode:member fails closed when member is unset', () => {
+        const payload = `${MINIMAL_VALID}\nchairman:\n  mode: member\n`;
+        expect(() => cfg.load_council_config(write_yaml(make_tmp(), payload))).toThrow(
+            /member.*is unset/,
+        );
+    });
+
+    it('debate_gates and restate default to disabled (Phase 3)', () => {
+        const c = cfg.load_council_config(write_yaml(make_tmp(), MINIMAL_VALID));
+        expect(c.debate_gates.enabled).toBe(false);
+        expect(c.restate.enabled).toBe(false);
+    });
+
+    it('debate_gates.enabled: true is honoured', () => {
+        const payload = `${MINIMAL_VALID}\ndebate_gates:\n  enabled: true\n`;
+        const c = cfg.load_council_config(write_yaml(make_tmp(), payload));
+        expect(c.debate_gates.enabled).toBe(true);
+    });
+
     it('per-member mode override precedence', () => {
         const tmp = make_tmp();
         const payload = `enabled: true
