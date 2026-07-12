@@ -95,13 +95,16 @@ human voice there; don't inject personality or restructure.
 
 ## Gotcha
 
-Most common failure: over-correction — flattening formal-but-human
-prose because it is polished. Polish is not a tell — a real editor once
-"fixed" a customer quote and a product name because they contained the
-word "seamless"; both were verbatim secondhand text, had to be
-restored. Flag only specific catalog patterns, in clusters —
-audit finds fewer than two distinct pattern groups → leave prose
-alone, say so.
+- **Over-correction — flattening formal-but-human prose because it is
+  polished.** Polish is not a tell. A real editor once "fixed" a customer
+  quote and a product name because they contained the word "seamless";
+  both were verbatim secondhand text, had to be restored.
+- **Firing on a single stray tell.** Catalog is cluster-based — audit
+  finds fewer than two distinct pattern groups → leave the prose alone,
+  say so, rather than rewriting on one weak signal.
+- **Rewriting quoted or verbatim material.** Customer quotes, product
+  names, cited passages, and code stay byte-for-byte; humanize only the
+  author's own connective prose, never text the author is reporting.
 
 ## Related Skills
 

@@ -1416,6 +1416,7 @@ export function lint_skill(p: string, text: string): LintResult {
             'flux',
             'forecasting',
             'grafana',
+            'humanizer',
             'iconography',
             'laravel',
             'livewire',
