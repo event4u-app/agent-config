@@ -107,15 +107,16 @@ true — re-scope, don't assume).
       (candidate: council-transport-backed execution of the existing
       corpus tasks rather than a full in-host harness).
       <!-- done: docs/design/cross-model-parity-eval.md — re-scopes to council-transport dispatch (consult over ≥2 ExternalAIClient vendors) of a task-adapter over internal/bench/orchestration/corpus/, measuring per-host finding output (NOT running model-emitted subagent calls — the still-open blocker is designed around, not assumed away). Feeds finding_floor calibration (cross-host lower-envelope) to promote it from inert to an enforcing gate. Build-vs-defer cost inputs specified. -->
-- [ ] Decide build-vs-defer on that design with the maintainer (cost
+- [x] Decide build-vs-defer on that design with the maintainer (cost
       estimate attached). If deferred again, park with the concrete
       missing capability named — not the generic "harness doesn't exist".
-      <!-- GATED: build-vs-defer is a maintainer cost decision (the design + cost inputs are in the doc above). -->
-- [ ] If built: run the parity eval; feed the per-host finding-count
+      <!-- done 2026-07-12: maintainer decided BUILD + count-pass, ceiling $8 (in-session numbered-options answer "Bauen + Count-Pass (~$3–8)"). -->
+- [x] If built: run the parity eval; feed the per-host finding-count
       distributions into `finding_floor` calibration and promote
       `finding_floor` from inert mechanism to enforcing CI gate (its
       recorded deferral reason was exactly this missing calibration
       input).
+      <!-- done 2026-07-12: bench_parity_count.ts LIVE pass (5 tasks × 2 vendors × 3 repeats, $0.16 of the $8 ceiling) → internal/bench/reports/parity-count.json. Floors calibrated via cross-host lower envelope (orch-01: 5, orch-02: 3, orch-03: 1, pv-01: 2; pv-02 control excluded, 0/0 clean). finding_floor comment flipped to ENFORCING in run_skill_evals.ts; claim cross-model-parity-count backed in docs/CLAIMS.md; section in docs/benchmark.md. Unit tests tests/scripts/bench_parity_count.test.ts (5 pass). -->
       <!-- GATED: billable multi-vendor run, depends on the build decision. -->
       <!-- verify: test -f docs/design/cross-model-parity-eval.md -->
 
