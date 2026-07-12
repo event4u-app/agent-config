@@ -1,0 +1,411 @@
+{
+  "generated_by": "bench_quality_rerun",
+  "design": "docs/design/length-neutral-judge-rerun.md",
+  "dry_run": false,
+  "gen_model": "claude-sonnet-4-5",
+  "judges": [
+    "claude-opus-4-8",
+    "gpt-4o"
+  ],
+  "preregistered": {
+    "n": 90,
+    "pair_band": 0.15,
+    "kappa_floor": 0.6,
+    "spearman_flag": 0.3,
+    "effect_floor_pp": 10,
+    "power_note": "n is corpus-limited (all labelled golden tasks); 80% power at ≥10pp needs ~190 decisive pairs — achievable power at this n is lower and stated rather than grown post-hoc."
+  },
+  "pairing": {
+    "surviving": 25,
+    "dropped": 65,
+    "dropped_ids": [
+      "tq-scope-01",
+      "tq-scope-02",
+      "tq-evidence-01",
+      "tq-testing-02",
+      "tq-security-01",
+      "tq-performance-01",
+      "tq-performance-02",
+      "tq-review-01",
+      "tq-review-02",
+      "tq-docs-01",
+      "tq-docs-02",
+      "tq-architecture-01",
+      "tq-refactor-01",
+      "tq-refactor-02",
+      "tq-roadmap-01",
+      "tq-roadmap-02",
+      "tq-subagent-02",
+      "tq-summary-01",
+      "tq-language-01",
+      "tq-language-02",
+      "tq-hallucination-01",
+      "tq-user-intent-01",
+      "tq-user-intent-02",
+      "tq-floor-eng-01",
+      "tq-floor-fin-01",
+      "tq-floor-legal-01",
+      "tq-floor-trifecta-01",
+      "tq-git-flow-01",
+      "tq-stack-symfony-01",
+      "tq-design-fid-01",
+      "tq-brand-01",
+      "tq-ui-audit-01",
+      "tq-interact-01",
+      "tq-interrupt-01",
+      "tq-hygiene-01",
+      "tq-tokeneff-01",
+      "tq-autonomy-01",
+      "tq-cmd-route-01",
+      "tq-authority-01",
+      "tq-output-01",
+      "tq-quote-01",
+      "tq-external-01",
+      "tq-invite-01",
+      "tq-decision-01",
+      "tq-missing-tool-01",
+      "tq-model-rec-01",
+      "tq-attrib-01",
+      "tq-onboard-01",
+      "tq-role-01",
+      "tq-cli-01",
+      "tq-copilot-01",
+      "tq-source-disc-01",
+      "tq-media-gov-01",
+      "tq-media-sync-01",
+      "tq-domain-disc-01",
+      "tq-domain-pii-01",
+      "tq-domain-ret-01",
+      "tq-upstream-01",
+      "tq-exec-safety-01",
+      "tq-rem-01",
+      "tq-cmt-01",
+      "tq-grf-01",
+      "tq-enm-01",
+      "tq-qst-01",
+      "tq-sen-01"
+    ]
+  },
+  "judge_agreement": {
+    "kappa": 0.4612,
+    "kappa_floor": 0.6
+  },
+  "length_diagnostic": {
+    "spearman_rho": 0.4493585171364585,
+    "flag_at": 0.3,
+    "flagged": true
+  },
+  "result": {
+    "agreed_decisive": 7,
+    "agreed_thin": 3,
+    "agreed_eager": 4,
+    "sign_test_p": 1,
+    "thin_win_rate": 0.42857142857142855
+  },
+  "judge1_results": [
+    {
+      "id": "tq-direct-01",
+      "winner": "tie",
+      "length_delta": 120,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-direct-02",
+      "winner": "tie",
+      "length_delta": 0,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-evidence-02",
+      "winner": "thin",
+      "length_delta": -212,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-rootcause-01",
+      "winner": "thin",
+      "length_delta": -423,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-testing-01",
+      "winner": "thin",
+      "length_delta": -7,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-security-02",
+      "winner": "tie",
+      "length_delta": -171,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-subagent-01",
+      "winner": "tie",
+      "length_delta": 25,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-floor-strat-01",
+      "winner": "inconsistent",
+      "length_delta": 50,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-floor-nondestruct-01",
+      "winner": "inconsistent",
+      "length_delta": -149,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-floor-untrusted-01",
+      "winner": "tie",
+      "length_delta": 107,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-git-hist-01",
+      "winner": "thin",
+      "length_delta": -59,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-stack-laravel-01",
+      "winner": "inconsistent",
+      "length_delta": -64,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-notes-01",
+      "winner": "thin",
+      "length_delta": -154,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-markdown-01",
+      "winner": "eager",
+      "length_delta": 15,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-devcontainer-01",
+      "winner": "inconsistent",
+      "length_delta": -1,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-linked-01",
+      "winner": "inconsistent",
+      "length_delta": -151,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-artifact-01",
+      "winner": "eager",
+      "length_delta": -74,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-telemetry-01",
+      "winner": "eager",
+      "length_delta": 215,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-skill-imp-01",
+      "winner": "inconsistent",
+      "length_delta": 66,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-fastpath-01",
+      "winner": "inconsistent",
+      "length_delta": 11,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-roadmap-sync-01",
+      "winner": "thin",
+      "length_delta": 171,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-roadmap-ci-01",
+      "winner": "eager",
+      "length_delta": -508,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-bac-01",
+      "winner": "thin",
+      "length_delta": 1456,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-ctl-01",
+      "winner": "eager",
+      "length_delta": 192,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-spr-01",
+      "winner": "eager",
+      "length_delta": 44,
+      "winner_is_longer": false
+    }
+  ],
+  "judge2_results": [
+    {
+      "id": "tq-direct-01",
+      "winner": "tie",
+      "length_delta": 120,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-direct-02",
+      "winner": "tie",
+      "length_delta": 0,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-evidence-02",
+      "winner": "inconsistent",
+      "length_delta": -212,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-rootcause-01",
+      "winner": "inconsistent",
+      "length_delta": -423,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-testing-01",
+      "winner": "thin",
+      "length_delta": -7,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-security-02",
+      "winner": "tie",
+      "length_delta": -171,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-subagent-01",
+      "winner": "tie",
+      "length_delta": 25,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-floor-strat-01",
+      "winner": "thin",
+      "length_delta": 50,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-floor-nondestruct-01",
+      "winner": "thin",
+      "length_delta": -149,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-floor-untrusted-01",
+      "winner": "inconsistent",
+      "length_delta": 107,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-git-hist-01",
+      "winner": "inconsistent",
+      "length_delta": -59,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-stack-laravel-01",
+      "winner": "inconsistent",
+      "length_delta": -64,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-notes-01",
+      "winner": "eager",
+      "length_delta": -154,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-markdown-01",
+      "winner": "eager",
+      "length_delta": 15,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-devcontainer-01",
+      "winner": "inconsistent",
+      "length_delta": -1,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-linked-01",
+      "winner": "inconsistent",
+      "length_delta": -151,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-artifact-01",
+      "winner": "eager",
+      "length_delta": -74,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-telemetry-01",
+      "winner": "inconsistent",
+      "length_delta": 215,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-skill-imp-01",
+      "winner": "eager",
+      "length_delta": 66,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-fastpath-01",
+      "winner": "inconsistent",
+      "length_delta": 11,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-roadmap-sync-01",
+      "winner": "thin",
+      "length_delta": 171,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-roadmap-ci-01",
+      "winner": "eager",
+      "length_delta": -508,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-bac-01",
+      "winner": "thin",
+      "length_delta": 1456,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-ctl-01",
+      "winner": "inconsistent",
+      "length_delta": 192,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-spr-01",
+      "winner": "eager",
+      "length_delta": 44,
+      "winner_is_longer": false
+    }
+  ],
+  "cost_usd_actual": 34.7951,
+  "verdict": "inconclusive-low-kappa (κ=0.46 < 0.6)"
+}
