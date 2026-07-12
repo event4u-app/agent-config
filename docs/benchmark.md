@@ -492,7 +492,7 @@ anchor-scoring against `must_include`/`must_not`, not pairwise LLM judging).
 
 - Runner: `src/scripts/bench_quality_rerun.ts` (design-pinned constants:
   band ±15%, κ floor 0.60, ρ flag 0.3, effect floor 10pp; `--max-usd` guard).
-- Roadmap: `agents/roadmaps/road-to-opt-measurement-unblock.md` Phase 1.
+- Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 1.
 
 ## Cross-model parity count (2026-07-12) — PASS, `finding_floor` armed
 
@@ -529,4 +529,32 @@ in `internal/bench/reports/parity-count.json`.
 
 - Runner: `src/scripts/bench_parity_count.ts` (pre-registered: 3 repeats,
   2 vendors, envelope floor rule, controls excluded, `--max-usd` abort).
-- Roadmap: `agents/roadmaps/road-to-opt-measurement-unblock.md` Phase 3.
+- Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 3.
+
+## Non-Claude lift replication, second vendor host (2026-07-12) — HONEST NULL
+
+The `discipline_profile: auto` flip gate required a replicated lift on a
+non-Claude host. Executed per the parked design (paired vanilla vs
+`rules-kernel-dc` = the essential cut, 30 tasks × 3 seeds) on the codex CLI
+host with `gpt-5.5` (ChatGPT account).
+
+- **Capability:** 92% → 89% (McNemar p = 1.0) — no effect.
+- **Discipline:** 1.000 → 0.892 (Δ = −0.108, Wilcoxon p = 0.0225 on 7
+  non-zero pairs) — no lift; directionally **negative** on this host.
+- **Verdict:** NO replicated lift. `discipline_profile` keeps its
+  vendor-granular default (`unknown_defaults`, no `auto` flip) — consistent
+  with the 2026-07-10 two-host precedent (claude strong-host ceilings) and
+  the earlier gpt-5-mini replication failure on the same injection surface.
+
+Limitations, published: the ChatGPT-account usage limit rejected 100 of 180
+runs mid-corpus (plus 2 timeouts), leaving n = 37 valid pairs — the
+truncation is **balanced across arms** (50/52), so it weakens power but does
+not bias the comparison. An earlier same-day fire misfired entirely (model
+pin omitted → all runs API-rejected, $0) and is excluded as a harness error,
+not evidence. Raw report is local-only by design
+(`internal/bench/reports/ab-v2/` is gitignored); this section + the roadmap
+notes are the durable record. Re-open path: a full uncapped 180-run
+replication on a per-token-billed key.
+
+- Runner: `src/scripts/bench_ab_v2_run.ts --host codex` (checkpoint-resumable).
+- Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 2.
