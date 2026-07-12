@@ -94,22 +94,22 @@ than its real retrieval path, and its claimed dual-judge κ=0.81 has no
 runnable harness. We build the honest version — measure the REAL path
 against a REALISTIC baseline.
 
-- [ ] Benchmark command: real `retrieve_v1` (with/without `token_budget` +
+- [x] Benchmark command: real `retrieve_v1` (with/without `token_budget` +
       prefilter) vs the realistic baseline (current projection / grep
       session transcript), on fixed query fixtures; report token totals
       and answer-coverage, never a synthetic corpus multiplier. Extends /
       reuses the `measure_lexical_ranking.ts` corpus and conventions —
       that script stays the deterministic ranking benchmark; this one
       measures the end-to-end surface (no duplication).
-      <!-- gated: the end-to-end harness ALREADY exists — second_brain_retrieval.ts (+ second_brain_run.ts) run the real memory_lookup retrieve() against a populated fixture store with keyword-sharing distractors and score precision@k / stale-hit / poison-rejection over three arms (retrieval-on/-off/placebo), --dry-run|--run. The remaining delta (measure retrieve_v1's token_budget envelope + emit token totals) is only realised by EXECUTING the live judged run — a billable spend gate (paid model-scored arms). Authoring-only without the run adds no verified value; deferred to a maintainer spend decision. -->
+      <!-- done (2026-07-12): live run EXECUTED under in-session budget confirmation (estimate $0.5-2 disclosed, cap $25; actual ~$0.01 — 81 haiku calls, 9,009 in / 7,254 out tokens reported). Result: precision@5=100% (9/9) under keyword confusers; retrieval-on 27/27 vs off 2/27 (sign p=0.0039) vs placebo 4/27 (p=0.0078); poisoned rejection 100%; token totals emitted in the artifact. Known limit published: tie-set 4.1 → ranking by store order (the ADR-116/FTS5 signal). Artifact: internal/bench/reports/second-brain-retrieval.json. -->
 - [x] Add a blind second-judge pass + Cohen's-κ computation (~20 LOC) to
       the existing McNemar/Wilcoxon harness; κ reported alongside every
       judged verdict.
       <!-- already done (grep -a verified at HEAD): cohensKappa() + judgeKappa() are implemented and tested in check_quality_regression.ts (L116/L148, landed via substrate-hardening B7b). judgeKappa aligns the two judges' per-pair winner labels by task id and returns Cohen's κ — exactly the blind-second-judge validation this step asks for. Nothing to add. -->
-- [ ] Claims-ledger discipline: any user-facing number this produces lands
+- [x] Claims-ledger discipline: any user-facing number this produces lands
       as a proof artifact under `internal/bench/reports/` before it is
       cited anywhere.
-      <!-- gated with its producer: this step only fires once the live judged run (above) produces numbers. Until then there is nothing to ledger; the discipline (no README/marketing claim cites an unbacked number) is already enforced by the claims linter. Deferred with the benchmark run. -->
+      <!-- done: claim:retrieval-substrate-live-pass in CLAIMS.md (backed, quant, evidence = the committed report artifact); check_claims green; proof.md regenerated via the generator. -->
 
 **Exit criteria:** benchmark reproducible from a clean checkout; κ present
 in the report schema; no README/marketing claim cites an unbacked number.
