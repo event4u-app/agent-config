@@ -5,6 +5,8 @@
  *
  * Given `--task <id>` and/or `--since <ISO date>`, renders one Markdown
  * report covering:
+ *   0. A plain-language `## Summary` — one line per section below, derived
+ *      from the same parsed values (no extra data sources).
  *   1. The resolved rule set for this repo — kernel (always-on) vs
  *      trigger-routed (tier_1 / tier_2), with each trigger-routed rule's
  *      full trigger set. Source: `dist/router.json`.
@@ -337,6 +339,50 @@ export function readHygieneState(candidates: string[]): HygieneReadResult {
 
 // ── Rendering helpers ─────────────────────────────────────────────────────
 
+/** One plain-language line per section, for a reader who has never seen the internals. */
+function renderSummarySection(
+    router: RouterFile | null,
+    engagementRead: EngagementReadResult,
+    filteredEngagement: EngagementEvent[],
+    engagementSummary: Record<string, KindSummary> | null,
+    dispatches: ExplainAuditLine[],
+    hygiene: HygieneReadResult,
+): string[] {
+    const out: string[] = [];
+    out.push('## Summary');
+    out.push('');
+    if (router === null) {
+        out.push('- Rules: no rule data (router file absent or malformed).');
+    } else {
+        const triggerRouted = router.tier_1.length + router.tier_2.length;
+        out.push(`- Rules: ${router.kernel.length} always-on (kernel), ${triggerRouted} available on triggers.`);
+    }
+    if (!engagementRead.exists || filteredEngagement.length === 0 || engagementSummary === null) {
+        out.push('- Skill usage: no engagement data recorded in this window (telemetry off or no boundaries logged).');
+    } else {
+        let consulted = 0;
+        let applied = 0;
+        for (const s of Object.values(engagementSummary)) {
+            consulted += s.consulted;
+            applied += s.applied;
+        }
+        out.push(`- Skill usage: ${consulted} artifact(s) consulted, ${applied} applied across ${filteredEngagement.length} task boundary(ies).`);
+    }
+    if (dispatches.length === 0) {
+        out.push('- Subagent dispatches: none in window.');
+    } else {
+        const totalDelta = dispatches.reduce((sum, l) => sum + (l.orchestration?.token_delta ?? 0), 0);
+        out.push(`- Subagent dispatches: ${dispatches.length} dispatch(es), total token delta ${totalDelta}.`);
+    }
+    if (hygiene.state === null) {
+        out.push('- Session health: no state recorded.');
+    } else {
+        const s = hygiene.state;
+        out.push(`- Session health: ${String(s['tool_calls'] ?? '(unset)')} tool call(s) recorded, loop detected: ${String(s['loop_detected'] ?? '(unset)')}.`);
+    }
+    return out;
+}
+
 function capList(ids: Iterable<string>): string {
     const arr = [...ids].sort();
     if (arr.length === 0) return '(none)';
@@ -387,7 +433,7 @@ function renderRulesSection(router: RouterFile | null, opts: Options, rulesTally
     return out;
 }
 
-function renderEngagementSection(opts: Options, read: EngagementReadResult, filtered: EngagementEvent[]): string[] {
+function renderEngagementSection(opts: Options, read: EngagementReadResult, filtered: EngagementEvent[], summary: Record<string, KindSummary> | null): string[] {
     const out: string[] = [];
     out.push('## Artefact engagement (consulted vs applied)');
     out.push(`_Source: \`${opts.engagement}\` (telemetry.artifact_engagement)_`);
@@ -396,11 +442,10 @@ function renderEngagementSection(opts: Options, read: EngagementReadResult, filt
         out.push(`no data — \`${opts.engagement}\` absent (telemetry.artifact_engagement is likely disabled, or nothing has been recorded yet)`);
         return out;
     }
-    if (filtered.length === 0) {
+    if (filtered.length === 0 || summary === null) {
         out.push(`no data — 0 event(s) match ${windowLabel(opts)} (${read.totalLines} total line(s) in file, ${read.skippedLines} skipped as malformed)`);
         return out;
     }
-    const summary = summarizeEngagement(filtered);
     out.push(`${filtered.length} event(s) match ${windowLabel(opts)} (of ${read.totalLines} total line(s), ${read.skippedLines} skipped as malformed).`);
     out.push('');
     out.push('| kind | consulted | applied | consulted ids |');
@@ -507,6 +552,7 @@ export function buildReport(opts: Options): string {
 
     const engagementRead = readEngagementEvents(opts.engagement);
     const filteredEngagement = filterEngagement(engagementRead.events, opts.task, since);
+    const engagementSummary = filteredEngagement.length > 0 ? summarizeEngagement(filteredEngagement) : null;
 
     const hygiene = readHygieneState(hygieneCandidates);
 
@@ -515,9 +561,11 @@ export function buildReport(opts: Options): string {
     out.push('');
     out.push(`Window: ${windowLabel(opts)} · generated_at: ${new Date().toISOString()}`);
     out.push('');
+    out.push(...renderSummarySection(router, engagementRead, filteredEngagement, engagementSummary, dispatches, hygiene));
+    out.push('');
     out.push(...renderRulesSection(router, opts, rulesTally, auditDirExists));
     out.push('');
-    out.push(...renderEngagementSection(opts, engagementRead, filteredEngagement));
+    out.push(...renderEngagementSection(opts, engagementRead, filteredEngagement, engagementSummary));
     out.push('');
     out.push(...renderOrchestrationSection(opts, auditDirExists, dispatches));
     out.push('');
