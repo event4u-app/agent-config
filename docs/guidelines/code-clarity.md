@@ -105,13 +105,47 @@ explains the change's history rather than the code's behavior, cut it.
 
 This is the canonical long-form behind the
 [`code-comment-discipline`](../../src/rules/code-comment-discipline.md)
-rule. External consensus in one line each: comments explain **why, never
+rule (whose body is merged here per P4 of `road-to-kernel-and-router.md`).
+External consensus in one line each: comments explain **why, never
 what** (competent readers get the what from the code); Google's style
 guides (C++/Go/Python/TS) ban stating the obvious — Go: prefer
 self-describing names over redundant comments; Python: "never describe
 the code"; modern PHP (framework-mainstream since PHP 8 typing) drops
 docblocks that only restate native type hints; TSDoc/JSDoc type
 annotations are redundant in typed TypeScript.
+
+### Banned comment classes
+
+| Banned | Example | Instead |
+|---|---|---|
+| What-narration | `// increment the counter` above `counter++` | Nothing — the code says it |
+| Signature-mirroring docblock | `@param string $name The name` on `string $name` | Nothing — the typehint says it |
+| Redundant `@return` | `@return bool` on `): bool` | Nothing |
+| Banner / section divider | `// ---------- Helpers ----------` | Structure the file; extract a class |
+| Change-log comment | `// added for the export feature`, `// per ticket #123` | Commit message / PR description |
+| Reviewer-directed justification | `// this is safe because my change …` | PR description |
+| Redundant property docblock | `/** @var LoggerInterface */` on a typed property | Nothing — the property type says it |
+| Type-restating JSDoc in typed TS | `/** @param {string} id */` on `id: string` | Nothing — TS carries the type |
+| Obvious docstring | `"""Return the user."""` on `get_user()` | Nothing, or a real contract note |
+| Commented-out code | dead code kept "for reference" | Delete — git history is the tombstone |
+
+### Carve-out — machine-relevant precision docblocks STAY
+
+A docblock that carries type information the native type system cannot express is **not** redundant — static analyzers and IDEs consume it. Keep (and write) these:
+
+- PHP generics / array shapes for PHPStan/Psalm: `@return Collection<int, Post>`, `@param array<string, User> $usersByEmail`, `@template T`, `@phpstan-type`.
+- Union/shape refinements the language can't express natively.
+- Tool-consumed markers: `@deprecated` (with the successor), `@internal`, `@throws` for checked flows the caller must handle.
+- Python typing that only a docstring/stub can carry in the project's toolchain.
+
+The line: the docblock must add information **beyond** the native signature. `@param array<int, Order> $orders` earns its place; `@param array $orders` does not.
+
+### Public-API carve-out — `code_style.docblocks`
+
+Read `code_style.docblocks` from `.agent-settings.yml` (missing → `minimal`):
+
+- `minimal` (default) — the full discipline above; exported/public symbols get no summary docblock unless one of the five legitimate jobs applies.
+- `full` — the **exported public surface of a library package** (published API consumers see in their IDE) MAY carry a one-line summary docblock per symbol. The redundancy ban still holds in `full`: no `@param`/`@return` lines that mirror the signature, ever.
 
 ### Per-language keep/drop tables
 
@@ -204,6 +238,57 @@ Before emitting a comment or docblock, all three must be true:
 3. It addresses the future reader of the file — not the reviewer of the diff.
 
 One "no" → drop it. When in doubt: no comment.
+
+### Additional worked examples
+
+(The TypeScript `formatPrice` pair above is the canonical TS example; these
+cover the remaining shapes.)
+
+```php
+// ❌ Redundant — every line restates the signature
+/**
+ * Get the user by id.
+ *
+ * @param int $id The user id.
+ * @return User|null The user or null.
+ */
+public function getUserById(int $id): ?User
+
+// ✅ Nothing to add — the signature is the documentation
+public function getUserById(int $id): ?User
+```
+
+```php
+// ✅ Docblock KEPT — the generic is machine-relevant (PHPStan), the native type can't carry it
+/** @return Collection<int, Post> */
+public function publishedPosts(): Collection
+```
+
+```python
+# ❌ Narration
+# loop over the items and sum the totals
+total = sum(item.total for item in items)
+
+# ✅ A why that survives
+# Stripe amounts are integer cents; convert once at the boundary, never downstream.
+total_cents = sum(item.total_cents for item in items)
+```
+
+### Scope boundary
+
+The comment discipline governs **new and edited code only**. It is never a
+license to strip comments from untouched code —
+[`minimal-safe-diff`](../../src/rules/minimal-safe-diff.md) wins on diff shape
+("no docstrings/comments on untouched code" cuts both ways: don't add, don't
+remove). Sweeping a file's existing comments is a separate,
+explicitly-requested cleanup task.
+
+### Fixtures
+
+Behavioral baseline: `tests/code-comments/eval-fixtures.md`
+(`ccd-php-class-generation`, `ccd-ts-module-generation`,
+`ccd-untouched-preservation`, `ccd-explicit-teaching-override`); the decidable
+criteria are proven by `tests/scripts/code_comment_fixtures.test.ts`.
 
 ## See also
 

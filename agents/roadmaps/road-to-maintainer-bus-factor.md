@@ -225,3 +225,11 @@ trailing-90-day reviewer count is tracked and reported truthfully.
   achievable solo.
 - **Resolved when:** ≥1 non-maintainer has reviewed a merged PR, or the phase is
   explicitly deferred pending adoption.
+
+## Routing note (feedback-8.11-2, 2026-07-12)
+
+The reviewers' "maintainer map" ask is split: the one-page orientation map
+shipped as `docs/maintainers/system-map.md` (a map, not a contract); the
+DEEP operating material (release runbook, incident playbooks, succession,
+per-subsystem ownership) stays owned by THIS roadmap's phases — the map
+links here, not the other way around.

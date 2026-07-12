@@ -6,7 +6,7 @@
 
 ## Overall
 
-**81 / 339 steps done · 24%**
+**82 / 339 steps done · 24%**
 
 ```text
 ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
@@ -36,7 +36,7 @@
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
 | 19 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 5 | 5 | 0 | 0 | 0 | █████░░░░░ 50% |
 | 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 21 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 9 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 76% |
+| 21 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 8 | 29 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 78% |
 | 22 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 23 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 34 | 4 | 1 | 0 | [2](#blockers-road-to-team-mode) | █░░░░░░░░░ 11% |
 | 24 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
@@ -272,7 +272,7 @@ _1 blocker resolved._
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
-**Road to request-scoped rule load — ship only what the request needs** — 28 / 37 done (76%)
+**Road to request-scoped rule load — ship only what the request needs** — 29 / 37 done (78%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -282,7 +282,7 @@ _1 blocker resolved._
 | 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | PARKED: rules-as-skills falsification probe (Claude Code) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | 🟡 in progress | 7 | 7 | 0 | 0 | 50% |
+| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | 🟡 in progress | 6 | 8 | 0 | 0 | 57% |
 
 <a id="blockers-road-to-request-scoped-rule-load"></a>
 **Blockers**

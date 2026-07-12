@@ -473,6 +473,15 @@ quality:
   # introduces a NEW CI gate, smoke test, or test file, the agent
   # MUST execute it locally to prove the gate works. Without that
   # execution the new gate is unverified evidence.
+  #
+  # Posture note (feedback-8.11-2): `false` is a DELIBERATE, documented
+  # design decision, not an omission — remote CI is the single
+  # authoritative gate; local full-pipeline runs duplicate it at
+  # wall-clock + token cost. It never suppresses (a) narrow diff-scoped
+  # probes (type-check/lint/tests over the agent's OWN changed files
+  # before pushing — those always run), (b) the new-gate carve-out
+  # above, (c) user-invoked runs. Run-end reports must say "quality
+  # gates delegated to remote CI", never claim an unrun pipeline passed.
   local_auto_run: false
 
   # Wait for remote CI to finish on the PR / pipeline (true, false)

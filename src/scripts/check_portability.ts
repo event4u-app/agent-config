@@ -468,6 +468,7 @@ const _TASK_DETECTOR_SKIP = [
     // CI-shaped literals; its mechanics doc and the execution loop +
     // authoring skill enumerate the same literals to detect them.
     'rules/roadmap-ci-steps-policy.md',
+    'contexts/execution/roadmap-ci-steps-mechanics.md',
     'contexts/execution/roadmap-process-loop.md',
     'skills/roadmap-writing/SKILL.md',
 ];

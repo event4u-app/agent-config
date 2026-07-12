@@ -7,11 +7,15 @@ Derived from rule frontmatter `routes_to:` + "Body migrated to" prose.
 No skill frontmatter carries this (council 2026-07-12: routed_from_rules
 REJECTED — linkage stays rule-side and derivable).
 
-70 routing targets · 77 backlinks
+76 routing targets · 84 backlinks
 
 ## contexts/execution/autonomy-mechanics.md
 
 - `autonomous-execution` (prose)
+
+## contexts/execution/roadmap-ci-steps-mechanics.md
+
+- `roadmap-ci-steps-policy` (prose)
 
 ## contexts/model-recommendations.md
 
@@ -37,6 +41,10 @@ REJECTED — linkage stays rule-side and derivable).
 
 - `linked-projects-onboarding-gate` (prose)
 
+## guideline:agent-infra/agent-interaction-and-decision-quality
+
+- `improve-before-implement` (frontmatter)
+
 ## guideline:agent-infra/linked-projects-onboarding-gate
 
 - `linked-projects-onboarding-gate` (frontmatter)
@@ -61,9 +69,17 @@ REJECTED — linkage stays rule-side and derivable).
 
 - `skill-quality` (frontmatter)
 
+## guideline:agent-infra/untrusted-input-spotlighting
+
+- `untrusted-input-defense` (prose)
+
 ## guideline:augment-portability-patterns
 
 - `augment-edit-discipline` (frontmatter)
+
+## guideline:code-clarity
+
+- `code-comment-discipline` (prose)
 
 ## guideline:php/php-coding-patterns
 
@@ -72,6 +88,7 @@ REJECTED — linkage stays rule-side and derivable).
 ## skill:agent-docs-writing
 
 - `augment-edit-discipline` (frontmatter)
+- `no-roadmap-references` (frontmatter)
 
 ## skill:ai-code-blindspots
 
@@ -139,6 +156,10 @@ REJECTED — linkage stays rule-side and derivable).
 
 - `domain-safety-disclaimer` (frontmatter)
 
+## skill:decision-review
+
+- `decision-revisit-gate` (frontmatter)
+
 ## skill:devcontainer
 
 - `devcontainer-routing` (frontmatter)
@@ -199,6 +220,10 @@ REJECTED — linkage stays rule-side and derivable).
 ## skill:memory-consolidation
 
 - `notes-first-reasoning` (frontmatter)
+
+## skill:module-detect-on-the-fly
+
+- `architecture` (frontmatter)
 
 ## skill:multi-tenancy
 

@@ -10,6 +10,8 @@ triggers:
   - keyword: "refactor"
   - keyword: "implement"
   - keyword: "migration"
+routes_to:
+  - "guideline:agent-infra/agent-interaction-and-decision-quality"
 validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
@@ -36,54 +38,12 @@ Before implementing:
 - Tasks where the user said "just do it" or "skip validation"
 - Trivial changes (rename, typo, formatting)
 
-## What to check
+## The three checks
 
-Before coding, quickly verify:
+Run, in order: **1. Is the request clear?** · **2. Does it fit the existing architecture?** · **3. Is the approach sound?**
 
-### 1. Is the request clear?
-
-- Are acceptance criteria defined or derivable?
-- Is the scope bounded? (not "make it better" but "add X to Y")
-- Are edge cases considered?
-
-**If unclear** → ask ONE focused question. Max 2 questions, never an interrogation.
-
-### 2. Does it fit the existing architecture?
-
-- Does similar functionality already exist?
-- Does it follow established patterns in the codebase?
-- Does it contradict existing conventions?
-- Do **multiple valid patterns/frameworks** already exist (e.g. Tailwind + Flux, multiple form libraries, competing state stores)? If yes, do NOT pick one arbitrarily — ask which to use.
-- Is the change a **second branch on the same discriminator** — second `match`/`switch` arm, second `if/elseif`, or second class hardcoded to one enum value (e.g. `Provider::FOO`, `'stripe'`)? If yes, run the Strategy sniff test before adding the branch — see [`docs/guidelines/php/patterns/strategy.md`](../docs/guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
-
-**If misfit** → show evidence (file references), propose alternative.
-**If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
-
-### 3. Is the approach sound?
-
-- Is there a simpler way to achieve the same result?
-- Are there known problems with the requested approach?
-- Does the scope match the stated goal? (not over-engineered, not under-specified)
-
-**If problematic** → explain the concern, propose a better approach.
-
-## How to challenge
-
-- **Be concise** — one sentence per concern, not paragraphs
-- **Show evidence** — reference existing code, patterns, or conventions
-- **Offer alternatives** — don't just say "this is wrong"
-- **Use numbered options** — let the user choose quickly
-- **Respect "just do it"** — if the user insists after your challenge, execute immediately
-
-Example:
-
-```
-> ⚠️ `UserService` already has a `deactivate()` method that covers this case.
->
-> 1. Use existing method — extend with new parameter
-> 2. Create new method anyway — I'll explain the overlap in a comment
-> 3. Skip validation — implement as requested
-```
+Body migrated to [`guideline:agent-infra/agent-interaction-and-decision-quality` § 8](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#8-improve-before-implement--pre-implementation-validation) (per P4 of `road-to-kernel-and-router.md`) — the three checks' detail, how-to-challenge example, scope limits, verify-with-concrete-tools, RDP intent-inference.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## The golden rule
 
@@ -95,29 +55,10 @@ The agent is a thought partner, not a gatekeeper. After presenting concerns:
 - Never argue twice about the same point
 - Never block work — delay is only justified if it prevents a clear mistake
 
-## Scope limits
-
-- **Max 1-2 challenges per task** — not every request needs validation
-- **Max 1 minute of analysis** — if the check takes longer, skip it
-- **Never validate simple tasks** — only features, architecture, significant changes
-- **Never validate after the user already explained their reasoning**
-
-## Verify with concrete tools, not prose
-
-If the challenge requires you to confirm current behavior before proposing an alternative, use a concrete probe — a `curl` against the endpoint, a Playwright spec, a debugger / `xdebug` step-through, or the project's test runner with a targeted filter. Asserting current behavior from memory is not validation.
-
-## Intent inference (RDP, standard host)
-
-When the literal request and the underlying goal may differ, **state the inferred
-goal in one line and give ONE recommendation** — do not spread 2–3 framings (that
-is the overplanning [`direct-answers`](direct-answers.md) suppresses). Standard
-host only; a strong-reasoning host self-infers, so skip it there. Engage per
-[`rdp-gate`](../contexts/execution/rdp-gate.md).
-
 ## Creating new agent artifacts
 
 When the request is to create or significantly rewrite a skill, rule, command,
-or guideline, the "fit the existing architecture" check above is handled by
+or guideline, the "fit the existing architecture" check is handled by
 [`artifact-drafting-protocol`](artifact-drafting-protocol.md)'s Phase B
 (Research). Follow that protocol instead of improvising a one-shot check — it
 scans `.agent-src.uncondensed/` for overlap and reports candidates to extend

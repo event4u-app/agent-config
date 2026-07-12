@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: module-detect-on-the-fly
-description: "Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config."
+description: "Use when editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference."
 domain: process
 workspaces:
   - agent-config-maintainer
@@ -118,6 +118,63 @@ Confirm both flags via `get_modules_config()` before running detection.
 - Do NOT block the original task on the prompt. If the user ignores
   the options block, continue the work and treat the project as flat
   for the rest of the session.
+
+## Project & module detection reference
+
+_Origin: migrated from `src/rules/architecture.md` per the P4 pattern of `road-to-kernel-and-router.md`. The rule keeps the Iron-Law block, General Principles, and the ADR paragraph; the detection mechanics live here._
+
+### Project detection
+
+Detect the current project type from the **Git remote URL**, **directory name**, or **project files**:
+
+- **PHP** — `composer.json` (framework slot: Laravel via `artisan`, Symfony via `bin/console`, standalone otherwise).
+- **JS / TS** — `package.json` (framework slot: Next.js via `next` dep, Nuxt via `nuxt`, Express / Fastify / NestJS via deps; plain Node otherwise).
+- **Python** — `pyproject.toml` / `requirements.txt` (framework slot: Django via `django`, FastAPI via `fastapi`, Flask via `flask`).
+- **Go** — `go.mod` (framework slot: `gin`, `echo`, `fiber`, stdlib `net/http`).
+- **Ruby** — `Gemfile` (framework slot: Rails via `rails` gem, Sinatra otherwise).
+- **Rust** — `Cargo.toml` (framework slot: `axum`, `actix-web`, `rocket`).
+- Check `AGENTS.md` or `agents/` for project-specific documentation.
+
+Tooling lives in a runner file at the project root — detect once and reuse the result:
+`Taskfile.yml` → `task`, `Makefile` → `make`, `package.json` `scripts:` → `npm` / `pnpm` / `yarn`, `pyproject.toml` `[tool.poetry.scripts]` or `[project.scripts]` → `poetry` / `uv`, framework CLIs (`artisan`, `bin/console`, `manage.py`, `bin/rails`) when the matching manifest is present.
+
+### Project-specific architecture docs
+
+Each project documents its own architecture in `./agents/` and/or `AGENTS.md`.
+**Always read those files** before making structural decisions. Do not rely on
+generic rules for project-specific directory layouts, database conventions, or
+module systems.
+
+### Module-level documentation
+
+Some projects use a module system (e.g. `app/Modules/` in Laravel, `apps/`/`packages/` in a Turborepo, `src/modules/` in NestJS, `internal/` in Go).
+Module roots and the per-module agent-docs folder are configured via
+`modules.root_paths` and `modules.agent_folder` in `.agent-settings.yml`
+(resolve at runtime via `scripts/_lib/agent_settings.ts::enumerate_modules()`).
+Modules may have their own agent docs under
+`{module_root}/*/{agent_folder}/` (Laravel shape: `app/Modules/*/agents/`) with:
+
+- Module descriptions and feature docs
+- Module-specific roadmaps (`agents/roadmaps/`)
+- Module-specific documentation (`Docs/`)
+
+When working on a module, **always check for module-level agent docs** first.
+
+### Packages
+
+Packages (Composer, npm, etc.) may also use `./agents/` in their root
+for package-specific docs and roadmaps. Treat them the same way as projects.
+
+### Build / task runner detection
+
+Projects use either `Makefile` or `Taskfile.yml` (or both) for common commands.
+**Always check which one exists** and read it to discover available targets for
+testing, quality checks, container access, migrations, etc.
+
+- `Makefile` → use `make <target>`
+- `Taskfile.yml` → use `task <target>`
+
+Prefer these targets over raw `docker compose exec` commands when available.
 
 ## See also
 

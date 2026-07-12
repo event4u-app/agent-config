@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "baselined_at": "2026-07-12",
+  "reason": "initial baseline (feedback-8.11-2 Phase 1)",
+  "metrics": {
+    "settings_axes_total": 108,
+    "runtime_state_surfaces": 12,
+    "dependency_edges": 83,
+    "always_rule_bytes": 30563,
+    "gate_mentions_total": 73,
+    "rule_skill_coupling_backlinks": 81
+  }
+}

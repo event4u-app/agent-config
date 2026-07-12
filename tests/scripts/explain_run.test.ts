@@ -263,6 +263,46 @@ describe('buildReport — end to end', () => {
         expect(report).toMatch(/no data — 0 dispatch\(es\) match task=TASK-1/);
     });
 
+    it('summary renders honest no-data one-liners when every source is absent', () => {
+        const report = buildReport(baseOpts());
+        const summary = report.split('## Resolved rule set')[0] ?? '';
+        expect(summary).toContain('## Summary');
+        expect(summary).toContain('- Rules: no rule data (router file absent or malformed).');
+        expect(summary).toContain('- Skill usage: no engagement data recorded in this window (telemetry off or no boundaries logged).');
+        expect(summary).toContain('- Subagent dispatches: none in window.');
+        expect(summary).toContain('- Session health: no state recorded.');
+    });
+
+    it('summary counts match the fixtures when every source is present', () => {
+        writeJson(p('router.json'), SAMPLE_ROUTER);
+        writeLines(p('.agent-engagement.jsonl'), [
+            JSON.stringify({
+                schema_version: 1,
+                ts: '2026-07-01T00:00:00Z',
+                task_id: 'TASK-1',
+                boundary_kind: 'task',
+                consulted: { skills: ['laravel', 'php-coder'] },
+                applied: { skills: ['laravel'] },
+            }),
+        ]);
+        writeLines(p('audit', '2026-07.jsonl'), [
+            JSON.stringify({
+                ts: '2026-07-01T00:05:00Z',
+                work_id: 'TASK-1-run',
+                orchestration: { spawn_count: 1, dispatch_mode: 'do-and-judge', tiers: ['lite'], token_delta: -1200 },
+            }),
+        ]);
+        const hygienePath = p('agents', 'state', 'context-hygiene.json');
+        writeJson(hygienePath, { tool_calls: 12, loop_detected: false });
+
+        const report = buildReport(baseOpts({ task: 'TASK-1', hygiene: hygienePath }));
+        const summary = report.split('## Resolved rule set')[0] ?? '';
+        expect(summary).toContain('- Rules: 2 always-on (kernel), 2 available on triggers.');
+        expect(summary).toContain('- Skill usage: 2 artifact(s) consulted, 1 applied across 1 task boundary(ies).');
+        expect(summary).toContain('- Subagent dispatches: 1 dispatch(es), total token delta -1200.');
+        expect(summary).toContain('- Session health: 12 tool call(s) recorded, loop detected: false.');
+    });
+
     it('--since filters out earlier rows', () => {
         writeLines(p('.agent-engagement.jsonl'), [
             JSON.stringify({ schema_version: 1, ts: '2026-01-01T00:00:00Z', task_id: 'T', boundary_kind: 'task', consulted: { skills: ['old-skill'] } }),
