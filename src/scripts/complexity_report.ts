@@ -35,6 +35,17 @@
  *                                     averaged per directive file. A rough,
  *                                     deterministic proxy — NOT a semantic
  *                                     gate-graph analysis.
+ *   6. Rule→skill coupling          — routing-target + backlink counts from
+ *                                     `rule_backlinks.ts`'s `collect()` over
+ *                                     `src/rules/*.md` (module reused as-is —
+ *                                     no new scanning logic here).
+ *
+ * Soft ratchet: when the checked-in baseline
+ * `internal/reports/complexity-baseline.json` exists, the report renders a
+ * `## Ratchet vs baseline` section — per metric baseline vs current vs Δ,
+ * with a WARN line for anything above baseline. Still report-only: the WARN
+ * asks for a justification-or-rebaseline in the raising PR, it never fails
+ * anything. Exit code stays ALWAYS 0.
  *
  * Every function below takes an explicit root/path argument (no hidden
  * module-level mutable state) so tests can point the counters at small
@@ -43,18 +54,17 @@
  * Usage:
  *   ./scripts-run src/scripts/complexity_report [--root <path>] [--out <path>] [--quiet]
  *
- * Wiring this into `task ci` / a GitHub Actions step is deliberately NOT part
- * of this change (see § "No CI wiring" below) — the rendered report itself
- * also states the one-line `Taskfile.yml` hook a maintainer would add.
- *
- * No CI wiring: do NOT add a Taskfile target or a workflow step for this —
- * that decision (and the exact hook) is left to a maintainer PR.
+ * CI wiring: `task complexity-report` (defined in `taskfiles/content.yml`,
+ * wired into both CI task lists in `Taskfile.yml` since PR #918) — report-only,
+ * exit code always 0, so it never fails the build.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML from 'yaml';
+
+import { collect as collectRuleBacklinks } from './rule_backlinks.js';
 
 const PROG = 'complexity_report';
 const _HERE = fileURLToPath(import.meta.url);
@@ -169,7 +179,9 @@ export function countRuntimeStateSurfaces(srcDir: string): RuntimeStateResult {
         `\`'agents','runtime','state','<x>'\` (path.join literal) across every ` +
         `.ts file under \`${path.relative(REPO_ROOT, srcDir) || srcDir}\`; counts the ` +
         `distinct first path segment after \`state/\` once per name, regardless of ` +
-        `call-site count. Proxy for "surfaces the shipped code writes", not a ` +
+        `call-site count. Tokens containing glob/template characters ` +
+        `(\`*\`, \`<\`, \`>\`) are dropped as grep artifacts, not surfaces. ` +
+        `Proxy for "surfaces the shipped code writes", not a ` +
         `runtime read/write trace.`;
     // Excludes this reporter's own source file — its docstrings quote the
     // `agents/runtime/state/<x>` literal shapes as documentation, which
@@ -186,7 +198,10 @@ export function countRuntimeStateSurfaces(srcDir: string): RuntimeStateResult {
                 // Requires at least one alphanumeric char — drops pure-prose
                 // punctuation artifacts (e.g. a doc comment ending "state/…")
                 // without trying to be clever about what counts as a "real" name.
-                if (seg && /[A-Za-z0-9]/.test(seg)) names.add(seg);
+                // Also drops glob/template placeholder tokens (`*.json`,
+                // `<concern>.json`, `<id>.json`) — grep artifacts from prose,
+                // patterns, and docstrings, not actual surfaces.
+                if (seg && /[A-Za-z0-9]/.test(seg) && !/[*<>]/.test(seg)) names.add(seg);
             }
         }
     }
@@ -388,6 +403,77 @@ export function countGateMentions(directivesDir: string): GateMentionsResult {
 }
 
 // ---------------------------------------------------------------------------
+// Metric 6 — rule→skill coupling
+// ---------------------------------------------------------------------------
+
+export interface RuleSkillCouplingResult {
+    targets: number;
+    backlinks: number;
+    method: string;
+}
+
+/**
+ * Distinct routing targets + total rule→target backlinks, computed by
+ * reusing `rule_backlinks.ts`'s `collect()` (frontmatter `routes_to:` +
+ * "Body migrated to" prose over `src/rules/*.md`) — no new scanning logic
+ * lives here. A target is a skill / guideline / context / contract a rule
+ * routes into; the backlink total is how many rule→target routes exist.
+ */
+export function countRuleSkillCoupling(rulesDir: string): RuleSkillCouplingResult {
+    const byTarget = collectRuleBacklinks(rulesDir);
+    let backlinks = 0;
+    for (const links of byTarget.values()) backlinks += links.length;
+    return {
+        targets: byTarget.size,
+        backlinks,
+        method:
+            "Reused `rule_backlinks.ts`'s `collect()` over `src/rules/*.md` — distinct routing " +
+            'targets (frontmatter `routes_to:` + "Body migrated to" prose) and total ' +
+            'rule→target backlinks. No new scanning logic.',
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Soft-ratchet baseline
+// ---------------------------------------------------------------------------
+
+export interface BaselineMetrics {
+    settings_axes_total: number;
+    runtime_state_surfaces: number;
+    dependency_edges: number;
+    always_rule_bytes: number;
+    gate_mentions_total: number;
+    rule_skill_coupling_backlinks: number;
+}
+
+export interface Baseline {
+    schema_version: 1;
+    baselined_at: string;
+    reason: string;
+    metrics: BaselineMetrics;
+}
+
+export const BASELINE_RELPATH = path.join('internal', 'reports', 'complexity-baseline.json');
+
+/**
+ * Read the checked-in soft-ratchet baseline. Returns null when the file is
+ * absent or unparseable — the report then skips the ratchet section instead
+ * of failing (report-only, exit 0 always).
+ */
+export function loadBaseline(baselinePath: string): Baseline | null {
+    if (!_isFile(baselinePath)) return null;
+    try {
+        const parsed = JSON.parse(fs.readFileSync(baselinePath, 'utf-8')) as Baseline;
+        if (parsed === null || typeof parsed !== 'object' || typeof parsed.metrics !== 'object' || parsed.metrics === null) {
+            return null;
+        }
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Snapshot assembly + rendering
 // ---------------------------------------------------------------------------
 
@@ -399,6 +485,7 @@ export interface Snapshot {
     dependency_edges: DependencyEdgesResult;
     always_rule_bytes: AlwaysRuleBytesResult;
     gate_mentions: GateMentionsResult;
+    rule_skill_coupling: RuleSkillCouplingResult;
 }
 
 export interface Roots {
@@ -406,6 +493,7 @@ export interface Roots {
     settingsTemplate: string;
     srcDir: string;
     directivesDir: string;
+    rulesDir: string;
 }
 
 export function defaultRoots(root: string): Roots {
@@ -414,6 +502,7 @@ export function defaultRoots(root: string): Roots {
         settingsTemplate: path.join(root, 'src', 'config', 'agent-settings.template.yml'),
         srcDir: path.join(root, 'src'),
         directivesDir: path.join(root, 'src', 'agent-src', 'templates', 'scripts', 'work_engine', 'directives'),
+        rulesDir: path.join(root, 'src', 'rules'),
     };
 }
 
@@ -426,6 +515,7 @@ export function collectSnapshot(roots: Roots, now: Date): Snapshot {
         dependency_edges: countDependencyEdges(roots.root),
         always_rule_bytes: countAlwaysRuleBytes(roots.root),
         gate_mentions: countGateMentions(roots.directivesDir),
+        rule_skill_coupling: countRuleSkillCoupling(roots.rulesDir),
     };
 }
 
@@ -453,7 +543,59 @@ function _deltaCell(curr: number, prev: number | undefined): string {
     return d > 0 ? `+${_fmt(d)}` : _fmt(d);
 }
 
-export function renderReport(current: Snapshot, previous: Snapshot | null): string {
+const RATCHET_INSTRUCTION =
+    'justify in the PR that raises it, or re-baseline deliberately ' +
+    '(update complexity-baseline.json in the same PR with a one-line reason field).';
+
+/**
+ * The soft-ratchet section: per metric, checked-in baseline vs current vs Δ.
+ * Metrics above baseline get a WARN line (justify-or-rebaseline instruction);
+ * metrics below baseline render as improvements. Never fails anything —
+ * the caller still always exits 0.
+ */
+function _renderRatchetSection(current: Snapshot, baseline: Baseline | null): string[] {
+    const lines: string[] = [];
+    lines.push('## Ratchet vs baseline');
+    lines.push('');
+    if (baseline === null) {
+        lines.push(`No baseline file found at \`${BASELINE_RELPATH}\` — ratchet comparison skipped.`);
+        return lines;
+    }
+    lines.push(`Baseline: \`${BASELINE_RELPATH}\` (baselined ${baseline.baselined_at} — "${baseline.reason}").`);
+    lines.push('');
+    const rows: Array<{ label: string; base: number; curr: number }> = [
+        { label: 'Active settings axes', base: baseline.metrics.settings_axes_total, curr: current.settings_axes.total },
+        { label: 'Runtime-state surfaces', base: baseline.metrics.runtime_state_surfaces, curr: current.runtime_state.count },
+        { label: 'Cross-subsystem dependency edges', base: baseline.metrics.dependency_edges, curr: current.dependency_edges.count },
+        { label: 'Always-loaded rule bytes', base: baseline.metrics.always_rule_bytes, curr: current.always_rule_bytes.bytes },
+        { label: 'Gate mentions (total)', base: baseline.metrics.gate_mentions_total, curr: current.gate_mentions.total },
+        {
+            label: 'Rule→skill coupling (backlinks)',
+            base: baseline.metrics.rule_skill_coupling_backlinks,
+            curr: current.rule_skill_coupling.backlinks,
+        },
+    ];
+    lines.push('| Metric | Baseline | Current | Δ |');
+    lines.push('|---|---|---|---|');
+    for (const r of rows) {
+        lines.push(`| ${r.label} | ${_fmt(r.base)} | ${_fmt(r.curr)} | ${_deltaCell(r.curr, r.base)} |`);
+    }
+    lines.push('');
+    const above = rows.filter((r) => r.curr > r.base);
+    const below = rows.filter((r) => r.curr < r.base);
+    for (const r of above) {
+        lines.push(`WARN: ${r.label} is above baseline (${_fmt(r.base)} → ${_fmt(r.curr)}, +${_fmt(r.curr - r.base)}) — ${RATCHET_INSTRUCTION}`);
+    }
+    for (const r of below) {
+        lines.push(`Improved: ${r.label} is below baseline (${_fmt(r.base)} → ${_fmt(r.curr)}, ${_fmt(r.curr - r.base)}).`);
+    }
+    if (above.length === 0 && below.length === 0) {
+        lines.push('All metrics at baseline.');
+    }
+    return lines;
+}
+
+export function renderReport(current: Snapshot, previous: Snapshot | null, baseline: Baseline | null = null): string {
     const lines: string[] = [];
     lines.push('# Complexity Report');
     lines.push('');
@@ -468,10 +610,9 @@ export function renderReport(current: Snapshot, previous: Snapshot | null): stri
     );
     lines.push('');
     lines.push(
-        '**Not wired into CI.** Regenerate manually with ' +
-            '`npx tsx src/scripts/complexity_report.ts`. The one-line hook a maintainer ' +
-            'would add to `Taskfile.yml` (report-only, exit 0 always, so it never blocks CI): ' +
-            '`complexity-report: npx tsx src/scripts/complexity_report.ts`.',
+        '**Wired into CI as `task complexity-report`** (report-only, exit 0 always — ' +
+            'it never fails the build). Regenerate manually with ' +
+            '`npx tsx src/scripts/complexity_report.ts` or `task complexity-report`.',
     );
     lines.push('');
     lines.push('## Metrics');
@@ -482,9 +623,10 @@ export function renderReport(current: Snapshot, previous: Snapshot | null): stri
         `| 1 | Active settings axes | ${_fmt(current.settings_axes.total)} ` +
             `(${current.settings_axes.top} top + ${current.settings_axes.second} second-level) | ${current.settings_axes.method} |`,
     );
-    lines.push(`| 2 | Runtime-state surfaces | ${_fmt(current.runtime_state.count)} | ${current.runtime_state.method} |`);
+    lines.push(`| 2 | Runtime-state surfaces (PROXY) | ${_fmt(current.runtime_state.count)} | ${current.runtime_state.method} |`);
+    const edgesProxy = current.dependency_edges.source === 'import-proxy' ? ' (PROXY)' : '';
     lines.push(
-        `| 3 | Cross-subsystem dependency edges | ${_fmt(current.dependency_edges.count)} (source: ${current.dependency_edges.source}) | ` +
+        `| 3 | Cross-subsystem dependency edges${edgesProxy} | ${_fmt(current.dependency_edges.count)} (source: ${current.dependency_edges.source}) | ` +
             `${current.dependency_edges.method} |`,
     );
     lines.push(
@@ -492,8 +634,12 @@ export function renderReport(current: Snapshot, previous: Snapshot | null): stri
             `${current.always_rule_bytes.method} |`,
     );
     lines.push(
-        `| 5 | Mandatory gates per core workflow | ${current.gate_mentions.perFile.toFixed(2)} avg/file ` +
+        `| 5 | Mandatory gates per core workflow (PROXY) | ${current.gate_mentions.perFile.toFixed(2)} avg/file ` +
             `(${current.gate_mentions.total} mentions across ${current.gate_mentions.files} files) | ${current.gate_mentions.method} |`,
+    );
+    lines.push(
+        `| 6 | Rule→skill coupling | ${_fmt(current.rule_skill_coupling.targets)} targets, ` +
+            `${_fmt(current.rule_skill_coupling.backlinks)} backlinks | ${current.rule_skill_coupling.method} |`,
     );
     lines.push('');
     lines.push(`**Runtime-state surfaces found:** ${current.runtime_state.names.map((n) => `\`${n}\``).join(', ') || '—'}`);
@@ -530,7 +676,17 @@ export function renderReport(current: Snapshot, previous: Snapshot | null): stri
             `| Gate mentions (total) | ${_fmt(previous.gate_mentions.total)} | ${_fmt(current.gate_mentions.total)} | ` +
                 `${_deltaCell(current.gate_mentions.total, previous.gate_mentions.total)} |`,
         );
+        // Reports rendered before metric 6 existed have no rule_skill_coupling
+        // in their embedded snapshot — degrade to an em-dash previous cell.
+        const prevCoupling = previous.rule_skill_coupling as RuleSkillCouplingResult | undefined;
+        lines.push(
+            `| Rule→skill coupling (backlinks) | ${prevCoupling ? _fmt(prevCoupling.backlinks) : '—'} | ` +
+                `${_fmt(current.rule_skill_coupling.backlinks)} | ` +
+                `${_deltaCell(current.rule_skill_coupling.backlinks, prevCoupling?.backlinks)} |`,
+        );
     }
+    lines.push('');
+    lines.push(..._renderRatchetSection(current, baseline));
     lines.push('');
     lines.push('## Raw metrics (machine-parseable — do not hand-edit)');
     lines.push('');
@@ -588,7 +744,8 @@ export function main(argv?: string[]): number {
         const snapshot = collectSnapshot(roots, new Date());
         const previousText = _exists(args.out) ? fs.readFileSync(args.out, 'utf-8') : null;
         const previous = previousText ? parsePreviousSnapshot(previousText) : null;
-        const report = renderReport(snapshot, previous);
+        const baseline = loadBaseline(path.join(args.root, BASELINE_RELPATH));
+        const report = renderReport(snapshot, previous, baseline);
         fs.mkdirSync(path.dirname(args.out), { recursive: true });
         fs.writeFileSync(args.out, report, 'utf-8');
         if (!args.quiet) {
