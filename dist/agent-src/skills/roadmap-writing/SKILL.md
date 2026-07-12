@@ -230,57 +230,18 @@ originally wrote it.
 
 ### 8. Source-derived & capability-adoption roadmaps (conditional)
 
-Fires **only** when roadmap originates from external input or adopts
-capabilities into the suite:
+Fires **only** when the roadmap originates from an external input
+(competitive/capability harvest, external suggestion, external LLM
+ideation) or adopts new skills/commands/a pack, or has genuinely
+contested trade-offs. For an ordinary internally-originated roadmap,
+**skip this section** — §§ 0–7 are the whole job.
 
-- competitive / capability harvest, external suggestion, or external
-  LLM ideation thread, **or**
-- decision to integrate/adopt new skills, commands, or a pack, **or**
-- plan whose design has genuinely contested, unresolved trade-offs.
-
-Ordinary internally-originated roadmap → **skip this section**; §§ 0–7
-are the whole job. Don't bolt a Provenance block or gap-table onto a
-plan needing neither (template rule 19).
-
-When it fires, add four moves to §§ 0–7:
-
-**A. Gap-table before drafting (don't adopt — integrate).** Audit each
-proposed item against the *existing* skill / command / rule surface;
-classify `KEEP` (verified gap), `FOLD` (into a named existing artefact),
-`CUT` (already covered). Only `KEEP` items become scope; `FOLD`/`CUT`
-recorded so the cut is auditable. Negative grep ≠ proof — open the
-nearest existing artefacts (per
-[`think-before-action`](../../rules/think-before-action.md); for an
-external source,
-[`external-reference-deep-dive`](../../rules/external-reference-deep-dive.md)).
-
-**B. Resolve contested design in council *first*, then author.** Default
-council flow (`/roadmap:ai-council`) *challenges a finished roadmap*. For
-a contested/source-derived plan, run council **up front** on the design
-questions (`/council:design`, or the
-[`ai-council`](../ai-council/SKILL.md) skill), converge, **then** write
-the roadmap encoding the verdicts — ships already-decided, not as open
-questions in prose. One run, converge; don't relitigate.
-
-**C. Encode the decision so it survives.**
-- Inline council convergence under `## Council notes (<date>, <depth>)`
-  — members + date, **never** a session filepath
-  ([`no-roadmap-references`](../../rules/no-roadmap-references.md)).
-- Add `## Provenance` — source by **neutral descriptor** (never the raw
-  competitor/tool name,
-  [`source-confidentiality`](../../rules/source-confidentiality.md));
-  retain the real link as an `ENC1:` token via
-  `src/scripts/_lib/link_crypto.ts encrypt --value <url>`.
-- Save the locked decision to memory (project type, "don't relitigate")
-  so a future session does not re-derive it.
-
-**D. Make "integration, not dump" a testable acceptance criterion.** AC
-encodes the anti-dump litmus, decidably: visible commands within the
-pack's `size_class` budget; each new visible command reuses ≥ 2 existing
-skills; no new artefact duplicates an existing one; governance preflight
-recorded — `domain-adoption-policy` (new domain?), `persona-governance`
-(new personas?), `framework-neutrality`, `size-enforcement` —
-disposition stated in the roadmap.
+When it fires, add four moves — a gap-table before drafting (KEEP/FOLD/CUT,
+integrate don't dump), resolve contested design in the council *first*
+then author, encode the decision so it survives (Council notes +
+neutral-descriptor Provenance + memory lock), and make "integration, not
+dump" a testable acceptance criterion. Full four-move detail →
+[`roadmap-writing-source-derived`](../../agent-src/contexts/execution/roadmap-writing-source-derived.md).
 
 ## Output format
 
