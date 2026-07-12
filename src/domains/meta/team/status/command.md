@@ -5,7 +5,7 @@ disable-model-invocation: true
 pack: meta
 tier: 2
 visibility: internal
-description: Thin wrapper — plugin job status via /codex:status plus a quota block showing the shared openai counter against both ceilings (team + council). Gated on ai_team.enabled; fails closed when the plugin is absent.
+description: Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on ai_team.enabled; fails closed without the plugin.
 cluster: team
 sub: status
 suggestion:
