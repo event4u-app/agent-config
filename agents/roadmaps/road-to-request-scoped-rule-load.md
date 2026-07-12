@@ -465,14 +465,20 @@ target files' added sections are additive.
 ## Blockers
 
 ### blocker: phase-0-golden-set (inherited)
-- **Status:** open — owned by `road-to-token-saving` / HUMAN-MEASUREMENT
+- **Status:** RESOLVED NEGATIVE upstream (2026-07-12) — the owning gate in
+  `road-to-token-saving` (now parked in `later/`) is CLOSED-BY-DIAGNOSIS:
+  two pre-registered length-neutral judge runs were inconclusive; LLM-paired
+  judging cannot render a trustworthy held-quality verdict on this corpus
+  (docs/benchmark.md § Length-neutral judge RERUN). The only re-open path is
+  deterministic anchor-scoring against `must_include`/`must_not`.
 - **Owner:** maintainer
-- **Blocks:** the held-quality verification arm of Phase 1's default flip.
-  Does **not** block Phases 0, 2, 3 or the opt-in build of Phase 1
-  (mechanical, CI-verified).
-- **What to do:** operator batch per `road-to-token-proof-and-story`
-  § Program tracking step 2 — label the golden stubs, run the live judge
-  at `--scope consumer`, tick the live canary on 3 hosts.
+- **Blocks:** the held-quality verification arm of Phase 1's default flip —
+  the flip therefore needs a DETERMINISTIC verification arm (anchor-scoring)
+  instead of the retired LLM-judge batch; it stays evidence-blocked until one
+  is built and run. Does **not** block Phases 0, 2, 3 or the opt-in build of
+  Phase 1 (mechanical, CI-verified).
+- **What to do:** build/run the deterministic anchor-scoring arm over the
+  labelled golden set; the live 3-host canary tick stays as the second half.
 - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a
   real (non-dry-run) report — hardened criterion per
   `road-to-token-proof-and-story` Phase 0.
