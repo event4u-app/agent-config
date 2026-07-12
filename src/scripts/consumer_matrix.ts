@@ -4,15 +4,25 @@
  *
  * Exercises the PUBLISHED TARBALL the way a consumer does: pack → fresh
  * global install (isolated prefix) → `init` into a fresh project → doctor →
- * conformance → MCP stdio handshake → hook health → projection presence →
- * uninstall. Optional upgrade leg: install the last published minor from the
- * registry, then upgrade to the packed tarball and assert doctor stays green.
+ * conformance → MCP stdio handshake → hook health → hook lifecycle →
+ * projection presence → uninstall. Optional upgrade leg: install the last
+ * published minor from the registry, then upgrade to the packed tarball and
+ * assert doctor stays green.
  *
  * Why this exists: the release-PR gate skips source-level matrices (soundly —
  * a version-bump diff cannot regress source behaviour), but nothing between
  * merge and tag exercised the tarball shape. Two published minors shipped
  * without `src/install/` while published code imported from it; `tsx` was
  * missing from the published package; each manifested only at publish time.
+ * A third bug (missing `dist/install/rule_scope.js`) shipped past every leg
+ * because none of them fired a REAL installed hook command — `conformance`'s
+ * dispatcher smoke calls `dispatch_hook.ts` directly via `tsx`, bypassing the
+ * `agent-config` binary (and its ESM import graph) entirely. The `hooks`
+ * (static doctor) and `hook-lifecycle` (this file's live leg, below) legs
+ * close that gap: the latter runs the EXACT shell command Claude installed in
+ * `~/.claude/settings.json`, so a crash anywhere in the binary's load path —
+ * including a missing compiled sibling module — fails the leg with the
+ * culprit's stderr, not silently at publish time.
  * Every leg here asserts exit code + an expected artifact, no LLM calls.
  *
  * Usage:
@@ -30,7 +40,9 @@ import { spawnSync, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { MANAGED_SIGNATURE } from './_lib/claude_settings_hooks.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -63,7 +75,7 @@ function log(msg: string): void {
 function run(
     cmd: string,
     args: string[],
-    opts: { cwd?: string; env?: NodeJS.ProcessEnv; timeoutMs?: number } = {},
+    opts: { cwd?: string; env?: NodeJS.ProcessEnv; timeoutMs?: number; input?: string } = {},
 ): { status: number; stdout: string; stderr: string } {
     const r = spawnSync(cmd, args, {
         cwd: opts.cwd ?? REPO_ROOT,
@@ -71,6 +83,7 @@ function run(
         encoding: 'utf8',
         timeout: opts.timeoutMs ?? 600_000,
         maxBuffer: 32 * 1024 * 1024,
+        input: opts.input,
     });
     return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
@@ -216,6 +229,210 @@ function legHooks(ctx: Ctx): string {
     return 'hooks:doctor green';
 }
 
+// ── hook-lifecycle leg ─────────────────────────────────────────────
+//
+// `hooks:doctor` (above) is a read-only static report — it never runs
+// anything. `conformance`'s dispatcher smoke calls `dispatch_hook.ts`
+// directly via `tsx`, bypassing the installed `agent-config` binary (and
+// its ESM import graph) entirely. Neither exercises what a real Claude
+// Code SessionStart/PreToolUse/PostToolUse/Stop event actually invokes:
+// the exact shell command the installer registered in
+// `~/.claude/settings.json`. This leg does — plus a deterministic
+// completeness check on the compiled entrypoint's module graph, so a
+// missing sibling `.js` (the historical `dist/install/rule_scope.js` bug)
+// fails with the exact culprit instead of a live crash.
+
+interface HookCommandEntry {
+    /** Native platform event name, e.g. `SessionStart`, `PreToolUse`. */
+    nativeEvent: string;
+    /** The exact managed shell command string installed for this event. */
+    command: string;
+}
+
+/**
+ * Read every agent-config-managed hook command out of an installed Claude
+ * settings file, keyed by native event. Mirrors the shape
+ * `ensure_managed_hooks` (src/scripts/_lib/claude_settings_hooks.ts) writes;
+ * a group is "managed" iff one of its commands contains `MANAGED_SIGNATURE`
+ * — the same identity check the installer itself uses, so this can never
+ * drift from what actually got registered.
+ */
+export function readInstalledClaudeHookCommands(settingsPath: string): HookCommandEntry[] {
+    if (!fs.existsSync(settingsPath)) return [];
+    const raw = JSON.parse(fs.readFileSync(settingsPath, 'utf8')) as {
+        hooks?: Record<string, Array<{ hooks?: Array<{ command?: unknown }> }>>;
+    };
+    const hooks = raw.hooks ?? {};
+    const out: HookCommandEntry[] = [];
+    for (const [nativeEvent, groups] of Object.entries(hooks)) {
+        if (!Array.isArray(groups)) continue;
+        for (const group of groups) {
+            for (const h of group.hooks ?? []) {
+                if (typeof h.command === 'string' && h.command.includes(MANAGED_SIGNATURE)) {
+                    out.push({ nativeEvent, command: h.command });
+                }
+            }
+        }
+    }
+    return out;
+}
+
+/** A representative Claude Code event envelope, shaped per native event. */
+export function buildHookEnvelope(nativeEvent: string, projectDir: string): string {
+    const base = {
+        session_id: 'consumer-matrix-fixture',
+        transcript_path: '',
+        cwd: projectDir,
+        hook_event_name: nativeEvent,
+    };
+    switch (nativeEvent) {
+        case 'PreToolUse':
+            return JSON.stringify({
+                ...base,
+                tool_name: 'Read',
+                tool_input: { file_path: path.join(projectDir, 'README.md') },
+            });
+        case 'PostToolUse':
+            return JSON.stringify({
+                ...base,
+                tool_name: 'Read',
+                tool_input: { file_path: path.join(projectDir, 'README.md') },
+                tool_response: { success: true },
+            });
+        case 'Stop':
+            return JSON.stringify({ ...base, stop_hook_active: false });
+        case 'UserPromptSubmit':
+            return JSON.stringify({ ...base, prompt: 'consumer-matrix smoke prompt' });
+        case 'SessionEnd':
+            return JSON.stringify({ ...base, reason: 'exit' });
+        case 'SessionStart':
+        default:
+            return JSON.stringify({ ...base, source: 'startup' });
+    }
+}
+
+/**
+ * Run one installed hook command exactly as the platform would — a shell
+ * invocation with the event envelope piped to stdin — and report whether it
+ * exited clean.
+ */
+export function invokeHookCommand(
+    entry: HookCommandEntry,
+    opts: { cwd: string; env: NodeJS.ProcessEnv; projectDir: string; timeoutMs?: number },
+): { ok: boolean; status: number; stderrTail: string } {
+    const payload = buildHookEnvelope(entry.nativeEvent, opts.projectDir);
+    const r = run('bash', ['-c', entry.command], {
+        cwd: opts.cwd,
+        env: opts.env,
+        timeoutMs: opts.timeoutMs ?? 30_000,
+        input: payload,
+    });
+    const stderrTail = r.stderr.trim().split('\n').slice(-5).join(' | ');
+    return { ok: r.status === 0, status: r.status, stderrTail };
+}
+
+interface MissingModule {
+    from: string;
+    spec: string;
+    resolved: string;
+}
+
+/**
+ * Extract relative (`./`, `../`) ESM specifiers from a compiled `.js` file —
+ * static `from "..."`, bare `import "...";`, and dynamic `import("...")`.
+ * Regex, not a full parser: good enough for tsc's fixed output shape, and
+ * deliberately ignores bare package specifiers (`from 'commander'`) so the
+ * walk never leaves the package's own `dist/` tree.
+ */
+export function parseRelativeSpecifiers(source: string): string[] {
+    const out = new Set<string>();
+    const patterns = [
+        /\bfrom\s*["']([^"']+)["']/g,
+        /^\s*import\s*["']([^"']+)["']\s*;/gm,
+        /\bimport\(\s*["']([^"']+)["']\s*\)/g,
+    ];
+    for (const re of patterns) {
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(source)) !== null) {
+            const spec = m[1];
+            if (spec && (spec.startsWith('./') || spec.startsWith('../'))) out.add(spec);
+        }
+    }
+    return [...out];
+}
+
+/**
+ * Walk the compiled ESM module graph reachable from `entryFile`, following
+ * every relative import/export/dynamic-import specifier, and report any
+ * resolved target that does not exist on disk — the deterministic twin of
+ * "does this crash at require time", without spawning a process.
+ */
+export function walkEsmModuleGraph(entryFile: string): { visited: string[]; missing: MissingModule[] } {
+    const visited = new Set<string>();
+    const missing: MissingModule[] = [];
+    const stack: string[] = [entryFile];
+    while (stack.length > 0) {
+        const file = stack.pop() as string;
+        if (visited.has(file)) continue;
+        visited.add(file);
+        let source: string;
+        try {
+            source = fs.readFileSync(file, 'utf8');
+        } catch {
+            missing.push({ from: '(entry)', spec: file, resolved: file });
+            continue;
+        }
+        for (const spec of parseRelativeSpecifiers(source)) {
+            const resolved = path.resolve(path.dirname(file), spec);
+            if (!fs.existsSync(resolved)) {
+                missing.push({ from: file, spec, resolved });
+                continue;
+            }
+            if (!visited.has(resolved)) stack.push(resolved);
+        }
+    }
+    return { visited: [...visited], missing };
+}
+
+/** Dist-manifest completeness gate — every module the entrypoint can reach exists. */
+export function checkDistManifestCompleteness(entryFile: string): { ok: boolean; message: string } {
+    const { visited, missing } = walkEsmModuleGraph(entryFile);
+    if (missing.length > 0) {
+        const detail = missing
+            .slice(0, 5)
+            .map((m) => `${path.relative(path.dirname(entryFile), m.from)} → missing ${m.spec}`)
+            .join('; ');
+        return { ok: false, message: `dist-manifest incomplete: ${missing.length} missing module(s): ${detail}` };
+    }
+    return {
+        ok: true,
+        message: `dist-manifest complete — ${visited.length} module(s) reachable from ${path.basename(entryFile)}`,
+    };
+}
+
+function legHookLifecycle(ctx: Ctx): string {
+    const settingsPath = path.join(ctx.tmpRoot, 'home', '.claude', 'settings.json');
+    const entries = readInstalledClaudeHookCommands(settingsPath);
+    if (entries.length === 0) {
+        throw new Error(`no managed Claude hook commands found in ${settingsPath} (did init register hooks?)`);
+    }
+
+    const entryScript = fs.realpathSync(ctx.bin);
+    const manifestCheck = checkDistManifestCompleteness(entryScript);
+    if (!manifestCheck.ok) throw new Error(manifestCheck.message);
+
+    const env = { ...binEnv(ctx), CLAUDE_PROJECT_DIR: ctx.projectDir };
+    const fired: string[] = [];
+    for (const entry of entries) {
+        const result = invokeHookCommand(entry, { cwd: ctx.projectDir, env, projectDir: ctx.projectDir });
+        if (!result.ok) {
+            throw new Error(`hook '${entry.nativeEvent}' exited ${result.status}: ${result.stderrTail}`);
+        }
+        fired.push(`${entry.nativeEvent}=${result.status}`);
+    }
+    return `${manifestCheck.message}; fired ${fired.length} live event(s): ${fired.join(', ')}`;
+}
+
 function legProjections(ctx: Ctx): string {
     const home = path.join(ctx.tmpRoot, 'home');
     const missing = ['.cursor/rules', '.codeium/windsurf', '.claude/skills']
@@ -278,6 +495,7 @@ const LEGS: Array<{ name: string; fn: (ctx: Ctx) => string | Promise<string> }> 
     { name: 'conformance', fn: legConformance },
     { name: 'mcp-handshake', fn: legMcpHandshake },
     { name: 'hooks', fn: legHooks },
+    { name: 'hook-lifecycle', fn: legHookLifecycle },
     { name: 'projections', fn: legProjections },
     { name: 'uninstall', fn: legUninstall },
     { name: 'upgrade', fn: legUpgrade },
@@ -383,10 +601,31 @@ async function main(): Promise<number> {
     return failed ? 1 : 0;
 }
 
-main().then(
-    (code) => process.exit(code),
-    (err) => {
-        log(`❌  consumer-matrix crashed: ${(err as Error).stack ?? err}`);
-        process.exit(2);
-    },
-);
+// Entry guard (mirrors src/scripts/hooks/dispatch_hook.ts): a test file
+// imports the pure helpers above (readInstalledClaudeHookCommands,
+// checkDistManifestCompleteness, invokeHookCommand, …) without wanting a
+// full `npm pack` + global-install run to fire as a side effect of the
+// import. `main()` only runs when this file is the process's actual entry
+// point (`npx tsx src/scripts/consumer_matrix.ts …`).
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) return false;
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) return true;
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
+if (_isCliEntry()) {
+    main().then(
+        (code) => process.exit(code),
+        (err) => {
+            log(`❌  consumer-matrix crashed: ${(err as Error).stack ?? err}`);
+            process.exit(2);
+        },
+    );
+}
