@@ -5,7 +5,7 @@ status: ready
 
 # Roadmap: Ecosystem-Harvest — Bug & Security Rigor
 
-**Trigger:** Ecosystem survey (see [`road-to-ecosystem-harvest-index`](road-to-ecosystem-harvest-index.md)).
+**Trigger:** Ecosystem survey (see [`road-to-ecosystem-harvest-index`](../road-to-ecosystem-harvest-index.md)).
 Sources cited source-anonymously (**G** = a security-firm skills repo, **A** = a
 multi-harness marketplace, **F** = a SaaS-pack marketplace); full provenance +
 `ENC1:` tokens in the index § Provenance.
@@ -36,15 +36,15 @@ named-coverage gaps — without duplicating the cluster the suite already ships.
 
 ## Phase 1 — Adopt-now plate (≤ 5 units)
 
-- [ ] **U1 — False-positive / over-reporting gate.** Fold a "Rationalizations to Reject" discipline into `bug-analyzer` + `judge-bug-hunter` + `security-audit`: a Step-0 that restates the claim + names the threat model (privilege level, sandbox, attacker precondition) and a short table of rejected rationalizations ("looks dangerous ⇒ pattern-recognition is not analysis; trace the full data flow first"; "clearly critical ⇒ complete a devil's-advocate pass — models overrate severity"), plus a Standard-vs-Deep verification routing. *Source G (fp-check).* Verify: a negative fixture (a benign pattern that *looks* vulnerable) must yield "not a finding" with a traced reason.
-- [ ] **U2 — Security-maturity scorecard.** A generic (not domain-specific) `security-maturity-assessment` skill: ~9 categories (input validation, authz, secrets, error handling, logging/audit, dependency hygiene, data boundaries, tenant isolation, test coverage) each rated Missing/Weak/Moderate/Satisfactory/Strong with deterministic roll-up logic (any "Missing" in a critical category caps the overall rating), every finding cited `file:line`. *Source G (code-maturity-assessor).* Verify: run on a sample module, assert every rating cites evidence.
-- [ ] **U3 — STRIDE matrix consolidation.** Add the explicit 6-category STRIDE→control-family table (Spoofing/Tampering/Repudiation/Info-disclosure/DoS/Elevation → question → control) into `threat-modeling` if not already a named table. *Source A.* Verify: the table renders and each row names a control the suite already teaches.
-- [ ] **U4 — Named-coverage gaps (pick the portable subset).** Evaluate adding: `insecure-defaults` (fail-open / hardcoded-cred detection), `variant-analysis` (find similar bugs across the codebase once one is found), and folding an `agentic-actions-auditor` angle (CI-workflow AI-agent security) into `agent-security-review`. *Source G.* Each lands only if it is not already covered by an existing skill — check first, adopt the residue. Verify per skill: one worked example with a real finding shape.
-- [ ] **U5 (rolling) — Active-probe authorization gate.** Latent-only today: if the suite ever adds active/external scanning, specify a two-step attestation (explicit in-chat confirmation **and** an `--authorized` flag, no env-var fallback since CI vars are attacker-settable; RFC1918/loopback carve-outs) as a specialization of `non-destructive-by-default`. *Source F/G.* Verify: documented as a design note; no code until an active-probe surface exists.
+- [x] **U1 — False-positive / over-reporting gate.** Fold a "Rationalizations to Reject" discipline into `bug-analyzer` + `judge-bug-hunter` + `security-audit`: a Step-0 that restates the claim + names the threat model (privilege level, sandbox, attacker precondition) and a short table of rejected rationalizations ("looks dangerous ⇒ pattern-recognition is not analysis; trace the full data flow first"; "clearly critical ⇒ complete a devil's-advocate pass — models overrate severity"), plus a Standard-vs-Deep verification routing. *Source G (fp-check).* Verify: a negative fixture (a benign pattern that *looks* vulnerable) must yield "not a finding" with a traced reason.
+- [x] **U2 — Security-maturity scorecard.** A generic (not domain-specific) `security-maturity-assessment` skill: ~9 categories (input validation, authz, secrets, error handling, logging/audit, dependency hygiene, data boundaries, tenant isolation, test coverage) each rated Missing/Weak/Moderate/Satisfactory/Strong with deterministic roll-up logic (any "Missing" in a critical category caps the overall rating), every finding cited `file:line`. *Source G (code-maturity-assessor).* Verify: run on a sample module, assert every rating cites evidence.
+- [x] **U3 — STRIDE matrix consolidation.** Add the explicit 6-category STRIDE→control-family table (Spoofing/Tampering/Repudiation/Info-disclosure/DoS/Elevation → question → control) into `threat-modeling` if not already a named table. *Source A.* Verify: the table renders and each row names a control the suite already teaches.
+- [x] **U4 — Named-coverage gaps (pick the portable subset).** Evaluate adding: `insecure-defaults` (fail-open / hardcoded-cred detection), `variant-analysis` (find similar bugs across the codebase once one is found), and folding an `agentic-actions-auditor` angle (CI-workflow AI-agent security) into `agent-security-review`. *Source G.* Each lands only if it is not already covered by an existing skill — check first, adopt the residue. Verify per skill: one worked example with a real finding shape.
+- [x] **U5 (rolling) — Active-probe authorization gate.** Latent-only today: if the suite ever adds active/external scanning, specify a two-step attestation (explicit in-chat confirmation **and** an `--authorized` flag, no env-var fallback since CI vars are attacker-settable; RFC1918/loopback carve-outs) as a specialization of `non-destructive-by-default`. *Source F/G.* Verify: documented as a design note; no code until an active-probe surface exists.
 
 ## Phase 2 — Gated / deferred
 
-- [ ] PCI-compliance / payment-integration security skill — portable and security-adjacent, complements the finance pack. **Deferred** pending a demand signal (no consumer currently ships payments through the suite). *Source A.*
+- [x] PCI-compliance / payment-integration security skill — portable and security-adjacent, complements the finance pack. **Deferred** pending a demand signal (no consumer currently ships payments through the suite). *Source A.* <!-- dispositioned 2026-07-12: demand gate not met; watch-note agents/settings/contexts/domain-watch/pci-payment-security.md carries the re-open trigger -->
 
 ## Council convergence (2026-07-11)
 
@@ -55,7 +55,7 @@ note; PCI is demand-gated.
 
 ## Acceptance criteria
 
-- [ ] U1 lands with a negative fixture proving a look-dangerous-but-benign pattern is NOT reported.
-- [ ] Each adopted skill/section cites evidence (`file:line`) in its output contract.
-- [ ] No overlap with existing security skills (checked before each unit).
-- [ ] Dashboard regenerated.
+- [x] U1 lands with a negative fixture proving a look-dangerous-but-benign pattern is NOT reported.
+- [x] Each adopted skill/section cites evidence (`file:line`) in its output contract.
+- [x] No overlap with existing security skills (checked before each unit).
+- [x] Dashboard regenerated.
