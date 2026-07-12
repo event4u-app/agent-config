@@ -90,11 +90,20 @@ export class LexicalIndex {
         return Math.max(0, Math.log(1 + (this.n - df + 0.5) / (df + 0.5)));
     }
 
-    /** BM25 score of one document against the tokenised query terms. */
+    /**
+     * BM25 score of one document against the tokenised query terms, weighted by
+     * **term coverage**: the raw BM25 sum is multiplied by `coverage²`, where
+     * `coverage = distinct-query-terms-matched / distinct-query-terms`. This
+     * stops a single generic, high-TF term match from outranking a document that
+     * matches several rarer query terms once each (Phase 1 refinement). A
+     * single-term query has `coverage == 1`, so its score is unchanged — the
+     * weighting only re-orders genuinely multi-term queries.
+     */
     score(queryTerms: readonly string[], docId: string): number {
         const doc = this.docs.get(docId);
         if (doc === undefined || doc.len === 0) return 0;
         let s = 0;
+        const matched = new Set<string>();
         for (const term of queryTerms) {
             const tf = doc.tf.get(term);
             if (tf === undefined) continue;
@@ -102,8 +111,12 @@ export class LexicalIndex {
             if (idf === 0) continue;
             const denom = tf + BM25_K1 * (1 - BM25_B + (BM25_B * doc.len) / (this.avgdl || 1));
             s += (idf * (tf * (BM25_K1 + 1))) / denom;
+            matched.add(term);
         }
-        return s;
+        if (s === 0) return 0;
+        const distinctQuery = new Set(queryTerms).size;
+        const coverage = distinctQuery > 0 ? matched.size / distinctQuery : 1;
+        return s * coverage * coverage;
     }
 
     /**

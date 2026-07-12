@@ -51,6 +51,32 @@ describe('LexicalIndex ranking', () => {
         expect(ranked.every((r) => r.score > 0)).toBe(true);
     });
 
+    it('term-coverage squaring: a multi-rare-term match beats a single generic-term spam (Phase 1)', () => {
+        // `spam` repeats the generic query word "system" many times but matches
+        // no other query term; `covered` matches two rarer terms once each.
+        // Plain BM25 would let `spam`'s high TF win; coverage² must favour the
+        // doc that covers more distinct query terms.
+        const corpus = [
+            { id: 'spam', text: 'system system system system system system system system system system system' },
+            { id: 'covered', text: 'the idempotency token guards the webhook system from replay' },
+            { id: 'filler', text: 'unrelated notes about caching and pagination strategies' },
+        ];
+        const li = new LexicalIndex(corpus);
+        const ranked = li.rank(['system', 'idempotency', 'webhook']);
+        expect(ranked[0]?.id).toBe('covered');
+        const spamRank = ranked.findIndex((r) => r.id === 'spam');
+        const coveredRank = ranked.findIndex((r) => r.id === 'covered');
+        expect(coveredRank).toBeLessThan(spamRank);
+    });
+
+    it('single-term queries are unchanged by coverage weighting (coverage == 1)', () => {
+        const li = new LexicalIndex(docs);
+        // Only "kafka" is a query term → coverage is 1 for every matching doc,
+        // so ordering is identical to plain BM25.
+        const ranked = li.rank(['Kafka']);
+        expect(ranked[0]?.id).toBe('queue');
+    });
+
     it('is deterministic — identical query yields identical order + scores', () => {
         const a = idx.rank(['REST', 'API']);
         const b = idx.rank(['REST', 'API']);
