@@ -35,6 +35,30 @@ import {
     run_peer_review,
 } from '../../../src/scripts/ai_council/orchestrator.js';
 import { load_prices } from '../../../src/scripts/ai_council/pricing.js';
+import { ANTI_CONFORMITY_DIRECTIVE } from '../../../src/scripts/ai_council/prompts.js';
+
+// Records the user_prompt each round so a test can observe what reached a member.
+class CapturingMock extends ExternalAIClient {
+    prompts: string[] = [];
+    private roundIdx = 0;
+    constructor(
+        name: string,
+        model: string,
+        private readonly replies: string[],
+    ) {
+        super();
+        this.name = name;
+        this.model = model;
+        this.billable = false;
+        this.transport = 'manual';
+    }
+    override ask(_system_prompt: string, user_prompt: string): CouncilResponse {
+        this.prompts.push(user_prompt);
+        const text = this.replies[Math.min(this.roundIdx, this.replies.length - 1)] ?? 'reply';
+        this.roundIdx += 1;
+        return new CouncilResponse({ provider: this.name, model: this.model, text, latency_ms: 1 });
+    }
+}
 
 // ── TS mock transport (mirrors the Python Mock) ──────────────────────────
 
@@ -240,6 +264,30 @@ describe('orchestrator — run_debate', () => {
         );
         expect(rounds[0]!.map((r) => r.text)).toEqual(['seed A', 'seed B']);
         expect(rounds[1]!.map((r) => r.text)).toEqual(['r2-A', 'r2-B']);
+    });
+
+    it('debate_gates injects the anti-conformity directive into round 2+; default off = byte-identical (Phase 3)', () => {
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'Adopt A or B?' });
+        const seed = [
+            new CouncilResponse({ provider: 'anthropic', model: 'm', text: 'seed A' }),
+            new CouncilResponse({ provider: 'openai', model: 'm', text: 'seed B' }),
+        ];
+        // Gates ON → the round-2 prompt (each member's first ask) carries the directive.
+        const onA = new CapturingMock('anthropic', 'm', ['r2-A']);
+        run_debate([onA, new CapturingMock('openai', 'm', ['r2-B'])], q, {
+            max_rounds: 2,
+            seed_round_1: seed,
+            debate_gates: true,
+        });
+        expect(onA.prompts[0]).toContain(ANTI_CONFORMITY_DIRECTIVE);
+
+        // Gates OFF (default) → the same run without the directive (byte-identical path).
+        const offA = new CapturingMock('anthropic', 'm', ['r2-A']);
+        run_debate([offA, new CapturingMock('openai', 'm', ['r2-B'])], q, {
+            max_rounds: 2,
+            seed_round_1: seed,
+        });
+        expect(offA.prompts[0]).not.toContain(ANTI_CONFORMITY_DIRECTIVE);
     });
 
     it('DebateCapExceeded thrown when next round breaches max_total_usd', () => {

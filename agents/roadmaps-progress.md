@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 26 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **8** open blockers
+> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**92 / 337 steps done · 27%**
+**102 / 375 steps done · 27%**
 
 ```text
 ███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
@@ -34,14 +34,15 @@
 | 16 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 17 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 19 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 21 | 8 | 0 | 0 | [2](#blockers-road-to-opt-council-deliberation) | ███░░░░░░░ 28% |
+| 19 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 15 | 14 | 0 | 0 | [2](#blockers-road-to-opt-council-deliberation) | █████░░░░░ 48% |
 | 20 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 8 | 2 | 0 | 0 | 0 | ██░░░░░░░░ 20% |
 | 21 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
 | 22 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 23 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
 | 24 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 25 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
-| 26 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
+| 25 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 34 | 4 | 1 | 0 | [2](#blockers-road-to-team-mode) | █░░░░░░░░░ 11% |
+| 26 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 27 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
 
 ---
 
@@ -242,14 +243,14 @@ _1 blocker resolved._
 
 ### [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md)
 
-**Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater** — 8 / 29 done (28%)
+**Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater** — 14 / 29 done (48%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Claims hygiene + verdict falsifiability | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1 | Option-level stance tally | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
-| 2 | Chairman synthesis (opt-in) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | Debate enforcement gates | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Chairman synthesis (opt-in) | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
+| 3 | Debate enforcement gates | 🟡 in progress | 2 | 3 | 0 | 0 | 60% |
 | 4 | Persona placebo benchmark (measure, don't adopt) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 5 | close out the source file | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
@@ -357,6 +358,38 @@ _1 blocker resolved._
     3. Once the count reaches ≥ 20, resume this roadmap
     (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
   - **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines for the current month.
+
+### [road-to-team-mode.md](roadmaps/road-to-team-mode.md)
+
+**Road to team mode — govern the official cross-model pair, don't rebuild it** — 4 / 38 done (11%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Facts, claims hygiene, boundary prose | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 1 | Detection + guided setup | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | `/team` command family (Claude-Code path) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 3 | Multi-host fallback (the gap only we can fill) | ⬜ not started | 4 | 0 | 1 | 0 | 0% |
+| 4 | Review-Gate governance | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | Defect-finding benchmark (measure the marketing) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 6 | Close-out | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-team-mode"></a>
+**Blockers**
+
+- **model-id-verification** (owner: maintainer) — blocks Phase 2 config-doc examples, Phase 5 arm pinning
+  - **What to do:**
+    1. At execution, list the actual codex CLI model IDs (`codex /model` or CLI
+    docs) and pin the benchmark arms to verified IDs.
+    2. The trigger guide's `gpt-5.6-sol` is unverified marketing copy — the
+    plugin's own prompting skill still targets `gpt-5-4`. Append the verified
+    list here.
+  - **Resolved when:** a dated model-ID list exists in this file.
+- **benchmark-spend-authorization** (owner: user) — blocks Phase 5 execution (authoring fixtures is unblocked)
+  - **What to do:**
+    1. Approve the run once the fixture count is fixed; three arms × N fixtures
+    land on the ChatGPT subscription quota (arms a/b) and the council budget
+    (arm c). Estimate rendered before the first call.
+  - **Resolved when:** the user confirms the run budget in-session.
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 

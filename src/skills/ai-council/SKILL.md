@@ -33,6 +33,12 @@ Do NOT use when:
 * The decision is internal-only and budget matters more than diversity
   of opinion → use `subagent-orchestration` (in-session, no network,
   no money).
+* The task is **iterated build → review → fix with full repo access by a
+  single strong model** (the reviewer needs to see the working diff and
+  return actionable fixes) → that is **team mode** (`/team`), the depth
+  complement to the council's breadth. The council is artefact-only and
+  never grants the external model repo access or the host's framing; team
+  mode deliberately does the opposite. Neither replaces the other.
 * The artefact contains secrets that cannot be redacted with the
   bundler's pattern set → ask the user before sending.
 * The user has not configured any council member → state that and stop;
