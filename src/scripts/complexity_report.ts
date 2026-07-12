@@ -240,8 +240,10 @@ export function countDependencyEdges(root: string): DependencyEdgesResult {
     }
     const topFiles = entries.filter((e) => e.isFile() && e.name.endsWith('.ts')).map((e) => e.name);
     const known = new Set(topFiles.map((f) => f.replace(/\.ts$/, '')));
-    // Matches both `import ... from './x.js'` and bare side-effect
-    // `import './x.js'` — both are real edges between top-level modules.
+    // Matches both from-imports and bare side-effect imports of a sibling
+    // `.js` specifier — both are real edges between top-level modules.
+    // (Wording avoids literal import-shaped strings: prepack-check's
+    // shipped-import scanner reads comments too.)
     const importRe = /(?:from|import)\s+['"]\.\/([A-Za-z0-9_-]+)\.js['"]/g;
     let edges = 0;
     for (const f of topFiles) {
@@ -260,7 +262,7 @@ export function countDependencyEdges(root: string): DependencyEdgesResult {
         method:
             'No usable discovery-graph cache found at `agents/runtime/state/discovery-graph-v1.json` ' +
             '(gitignored, rebuilding it here would spawn the full manifest builder) — counted ' +
-            "import edges of the shape `from './<sibling>.js'` between top-level " +
+            'relative sibling-`.js` import edges between top-level ' +
             '`src/scripts/*.ts` files instead (subdirectories like `_lib/`, `_cli/` excluded).',
     };
 }
