@@ -1024,6 +1024,34 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.13.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.13.0](https://github.com/event4u-app/agent-config/compare/8.12.0...8.13.0) (2026-07-12)
+
+### Features
+
+* **backlinks:** orphan-stub correctness check + fan-out info + gated hard-gate list ([fe88ff5](https://github.com/event4u-app/agent-config/commit/fe88ff5c42bd08338c0ab9c83f3e1fdf0f6f7d1c))
+* **team-doctor:** 'team' health check + suppressible setup hint ([22a5c14](https://github.com/event4u-app/agent-config/commit/22a5c141ddaa47994f7d9c150dafa36b0fcb38a8))
+* **team-commands:** /team family — thin fail-closed delegations under ai_team governance ([958c491](https://github.com/event4u-app/agent-config/commit/958c4910bf2276449a99ef2462e78caa718148a5))
+* **team-config:** ai_team contract — default-off block, fail-closed loader, shared quota ([f45c988](https://github.com/event4u-app/agent-config/commit/f45c98860a63d2c8c572a9e121ecaf05d4c34aa9))
+* **pr-create:** harden the freshness gate — regenerate-on-conflict + update freshness ([83104e0](https://github.com/event4u-app/agent-config/commit/83104e0a3a8666d8eb47044c9b9e028a1e60c913))
+
+### Bug Fixes
+
+* **rules:** restore the concrete verification-tool mapping in the improve-before-implement stub ([a54d89f](https://github.com/event4u-app/agent-config/commit/a54d89f852120e639f25aa059e33baf672255f66))
+
+### Documentation
+
+* **round4:** strict:false operating conditions + Batch B/C stub-necessity pre-questions ([7961ba4](https://github.com/event4u-app/agent-config/commit/7961ba4dda15d33fe4a8be6a92d4e71b7a4bedb6))
+* **team:** getting-started section — depth complement to the council, no value claims ([6c64fc3](https://github.com/event4u-app/agent-config/commit/6c64fc3acade96c3d1eff3c610677be5a852f18e))
+* **roadmap:** measurement-unblock Phase 2 — codex auth+smoke verified, paired run in flight ([489bdc1](https://github.com/event4u-app/agent-config/commit/489bdc168565c6b27eceeaca8384751e089378ef))
+
+### Chores
+
+* **counts:** hero badge + browse line 178 -> 183 after the 8.12.0 release merge ([ef396f5](https://github.com/event4u-app/agent-config/commit/ef396f55476ccfed53387a6fbe49201be8e312c0))
+* **counts:** featured-skills command count 178 -> 183 (update_counts anchor) ([13cb8de](https://github.com/event4u-app/agent-config/commit/13cb8de13373e66c26a21689b2a86427ee9ac043))
+* **roadmaps:** feedback-8.11-4 executed and archived; team-mode P1+P2 complete ([dd44aa6](https://github.com/event4u-app/agent-config/commit/dd44aa69fea35d95fadc00936c3ec23caaeb2c1b))
+
+Tests: 7558 (+49 since 8.12.0)
+
 ## [8.12.0](https://github.com/event4u-app/agent-config/compare/8.11.0...8.12.0) (2026-07-12)
 
 ### Features
