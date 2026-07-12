@@ -6,6 +6,10 @@
 
 ## Overall
 
+**102 / 338 steps done · 30%**
+
+```text
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 **94 / 328 steps done · 29%**
 
 ```text
@@ -309,15 +313,15 @@ _1 blocker resolved._
 
 ### [road-to-team-mode.md](roadmaps/road-to-team-mode.md)
 
-**Road to team mode — govern the official cross-model pair, don't rebuild it** — 15 / 38 done (39%)
+**Road to team mode — govern the official cross-model pair, don't rebuild it** — 23 / 38 done (61%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Facts, claims hygiene, boundary prose | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | Detection + guided setup | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | `/team` command family (Claude-Code path) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 3 | Multi-host fallback (the gap only we can fill) | ⬜ not started | 4 | 0 | 1 | 0 | 0% |
-| 4 | Review-Gate governance | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Multi-host fallback (the gap only we can fill) | ✅ done | 0 | 4 | 1 | 0 | 100% |
+| 4 | Review-Gate governance | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Defect-finding benchmark (measure the marketing) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 6 | Close-out | 🟡 in progress | 10 | 1 | 0 | 0 | 9% |
 

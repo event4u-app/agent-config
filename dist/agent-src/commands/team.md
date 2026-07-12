@@ -2,13 +2,13 @@
 model_tier: inherit
 name: team
 disable-model-invocation: true
-pack: product-reasoning
+pack: meta
 intent: "Route a cross-model team-mode request (review, adversarial, delegate, status) to the official plugin under ai_team governance"
 routes_to: [team-review, team-adversarial, team-delegate, team-status]
 replaces: []
 tier: 2
 visibility: internal
-description: Team orchestrator — cross-model depth review (one strong model builds, a second reviews the real diff); routes to review, adversarial, delegate, status
+description: Team orchestrator — governed cross-model access layer (a second strong model reviews the real diff; read-only multi-host fallback); routes to review, adversarial, delegate, status
 cluster: team
 type: orchestrator
 suggestion:
@@ -18,25 +18,27 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - product-reasoning
+  - meta
 ---
 
 # /team
 
-Top-level orchestrator for the `/team` family — governed **team mode**: the
-depth complement to the council. One strong model builds; a second strong
-model reviews the **real diff with repo access** and iterates. On Claude Code
-hosts every sub-command is a **thin delegation** to the official
+Top-level orchestrator for the `/team` family — governed **team mode**: a
+governed access layer with a read-only multi-host fallback, the depth
+complement to the council. A second strong model reviews the **real diff
+with repo access** and returns its findings. On Claude Code hosts every
+sub-command is a **thin delegation** to the official
 `openai/codex-plugin-cc` plugin (`/codex:*`) — this family adds governance
 (default-off gate, delegate opt-in, quota visibility, fail-closed setup
-checks), never a reimplementation.
+checks), never a reimplementation. An iterated build → review → fix loop is
+**gated future work** — it unlocks only with a positive verdict from the
+pre-registered benchmark (§ No-claims note).
 
 ## What team mode is — and is not
 
 - **Is:** a single strong reviewer running inside the working tree via the
-  Codex CLI under the user's subscription. It reads git state itself,
-  iterates build → review → fix, and returns an opinionated review of the
-  actual change.
+  Codex CLI under the user's subscription. It reads git state itself and
+  returns an opinionated review of the actual change.
 - **Is not:** the council. The council is breadth under a neutrality
   contract — N members see the artefact text only, never the repo, never the
   host's framing. Team mode is the inverse on every axis (table below). The
@@ -46,7 +48,7 @@ checks), never a reimplementation.
 
 | Axis | `/council` | `/team` |
 |---|---|---|
-| Shape | Breadth — N members, one round by default | Depth — one strong reviewer, iterated |
+| Shape | Breadth — N members, one round by default | Depth — one strong reviewer on the real diff |
 | Context | Artefact text only; never the repo, never host framing (neutrality contract) | Full repo access — the reviewer reads git state itself |
 | Cost model | Billable API members by default; USD cost gate | Subscription-authed Codex CLI; daily call quota (`cli_call_budget.max_calls_per_day.openai`) |
 | Model choice | Mid-tier default (cost decision) | Strongest available — `ai_team.model: 'auto'` defers to the CLI default |
@@ -79,7 +81,7 @@ a wrapper is invoked directly.
 | `/team review [--background]` | `/codex:review` | Cross-model review of the current working-tree / staged diff |
 | `/team adversarial <focus>` | `/codex:adversarial-review` | Adversarial cross-model review on a named focus — the escalation rung above the single-model `adversarial-review` skill |
 | `/team delegate <task>` | `/codex:rescue` | Hand a task to the second model as a native worker — the only write-access wrapper; gated behind `ai_team.allow_delegate` |
-| `/team status` | `/codex:status` + ledger line | Plugin job status plus today's `cli_call_budget` openai count |
+| `/team status` | `/codex:status` + quota block | Plugin job status plus the shared openai counter against both ceilings (team + council), naming any blocked path |
 
 ## Dispatch
 
@@ -110,9 +112,11 @@ never an inline reimplementation of the plugin:
 > agent-config doctor --check team
 > ```
 
-On non-Claude-Code hosts the fallback transport (repo-diff bundle via the
-council's `OpenAICliClient`) is a later phase; until it lands, wrappers state
-that plainly and stop — same fail-closed principle.
+On non-Claude-Code hosts the wrappers fall back to a **read-only** transport
+(repo-diff bundle via the council's `OpenAICliClient`) — no plugin job
+control, no background jobs, no delegate write path; the capability delta
+vs. the native plugin is stated in the output. When the codex CLI itself is
+absent, the same fail-closed principle applies: state it plainly and stop.
 
 ## No-claims note
 

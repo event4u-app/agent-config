@@ -1,0 +1,13 @@
+event4u/agent-config
+Copyright (c) 2026 event4u
+
+This product includes material derived from the following third-party
+projects:
+
+openai/codex-plugin-cc (https://github.com/openai/codex-plugin-cc)
+Copyright OpenAI
+Licensed under the Apache License, Version 2.0
+(http://www.apache.org/licenses/LICENSE-2.0)
+  - The team-review system prompt and findings shape in
+    src/scripts/ai_team/team_dispatch.ts are derived from the plugin's
+    adversarial-review findings shape.

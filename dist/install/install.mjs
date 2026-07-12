@@ -14248,8 +14248,16 @@ var settingsSchema = external_exports.object({
     ),
     suppress_setup_hint: external_exports.boolean().default(false).describe(
       "Suppress the one-line wizard/init recommendation to set up the codex plugin on Claude-Code hosts. Cosmetic only \u2014 never changes behavior."
-    )
-  }).default({ enabled: false, model: "auto", allow_delegate: false, max_calls_per_day: 50, suppress_setup_hint: false }),
+    ),
+    review_gate: external_exports.object({
+      managed: external_exports.boolean().default(false).describe(
+        "Managed governance of the codex plugin's Stop-hook Review Gate (road-to-team-mode Phase 4). false (default) = byte-identical pre-Phase-4 behavior: no counting, no circuit breaker. true = count consecutive BLOCK verdicts per session and trip the circuit breaker at max_consecutive_blocks."
+      ),
+      max_consecutive_blocks: external_exports.number().int().min(1).default(3).describe(
+        "Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts in one session, a visible notice is injected exactly once and the managed layer stops re-blocking \u2014 the user decides, never an infinite Claude\u2194Codex loop. An ALLOW verdict resets the counter. Positive integer."
+      )
+    }).default({ managed: false, max_consecutive_blocks: 3 })
+  }).default({ enabled: false, model: "auto", allow_delegate: false, max_calls_per_day: 50, suppress_setup_hint: false, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
   onboarding: external_exports.object({
     onboarded: external_exports.boolean().default(false).describe(
       "Set to true once the developer has completed `agent-config setup`. The onboarding-gate rule blocks the first turn of every chat until this is true. Toggle back to false to re-trigger the wizard."

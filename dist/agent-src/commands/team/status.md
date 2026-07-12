@@ -2,10 +2,10 @@
 model_tier: inherit
 name: team-status
 disable-model-invocation: true
-pack: product-reasoning
+pack: meta
 tier: 2
 visibility: internal
-description: Thin wrapper — plugin job status via /codex:status plus a ledger line with today's cli_call_budget openai count. Gated on ai_team.enabled; fails closed when the plugin is absent.
+description: Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on ai_team.enabled; fails closed without the plugin.
 cluster: team
 sub: status
 suggestion:
@@ -14,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - product-reasoning
+  - meta
 ---
 
 # /team status
@@ -22,7 +22,7 @@ packs:
 ## Instructions
 
 Thin wrapper: team-mode status. On Claude Code hosts it delegates to the
-official plugin's `/codex:status` and appends **our** quota ledger line —
+official plugin's `/codex:status` and appends **our** quota block —
 the one piece of state the plugin does not know about.
 
 ### 1. Gate — `ai_team.enabled`
@@ -38,7 +38,7 @@ print the fail-closed block from `/team` (master) § "Fail-closed contract"
 (`agent-config doctor --check team`) and **STOP** — never a silent no-op.
 
 On a non-Claude-Code host: state that plugin job status requires the Claude
-Code plugin, then still print the ledger line (Step 4) — the quota counter
+Code plugin, then still print the quota block (Step 4) — the quota counter
 is ours and host-independent.
 
 ### 3. Delegate
@@ -49,28 +49,59 @@ Invoke the plugin:
 
 Render its job/status output verbatim.
 
-### 4. Append the quota ledger line
+### 4. Append the quota block — two ceilings, one counter
 
-Read today's openai CLI-call count from the shared counter state at
-`~/.event4u/agent-config/cli-calls.json` (daily UTC reset — the same file
-the council's CLI transport maintains for
-`cli_call_budget.max_calls_per_day.openai`). Append one line:
+Team mode and the council share **one** daily counter but enforce **two
+independent ceilings** against it. The status output must show all three
+live numbers and say which path — if any — is currently blocked:
+
+1. **Counter** — today's openai CLI-call count from the shared counter
+   state at `~/.event4u/agent-config/cli-calls.json` (daily UTC reset —
+   the same file the council's CLI transport maintains). `0` when the
+   file or today's entry is absent.
+2. **Team ceiling** — `ai_team.max_calls_per_day` from
+   `.agent-settings.yml` (`unset` when absent).
+3. **Council ceiling** — `cli_call_budget.max_calls_per_day.openai` from
+   the council config (`unset` when absent).
+
+Render:
 
 ```
-Ledger: <N> openai CLI calls today (UTC) · cap: <max_calls_per_day or "unset">
+Quota: <N> openai CLI calls today (UTC) — one shared counter
+  team ceiling (ai_team.max_calls_per_day):                <T or "unset"> → <OPEN | BLOCKED>
+  council ceiling (cli_call_budget.max_calls_per_day.openai): <C or "unset"> → <OPEN | BLOCKED>
 ```
 
-- `<N>` = today's openai count from the counter file; `0` when the file or
-  today's entry is absent.
-- `<cap>` = `ai_team.max_calls_per_day` when set; fall back to
-  `cli_call_budget.max_calls_per_day.openai`; `unset` when neither exists.
+- A path is `BLOCKED` when the counter has reached its ceiling
+  (`N >= ceiling`); an `unset` ceiling is `OPEN`.
+- The two paths block **independently** — always name WHICH path is
+  blocked, never a bare "quota exhausted".
 - One counter, one subscription — never introduce a parallel team-only
   counting file.
+
+**Worked example.** Council ceiling 100, team ceiling 50, counter at 45:
+both paths are open. Five team calls later the shared counter reads 50 —
+team calls are now `BLOCKED` (50 >= 50) while council CLI calls continue
+until the counter reaches 100. Whichever path fires a call, the same
+counter moves; each surface only enforces its own ceiling against that
+shared count.
+
+### 5. Review-gate ledger lines (when present)
+
+When the council events ledger contains review-gate lines of the form
+`team.gate: BLOCK n/N`, render them verbatim after the quota block — they
+record how often the plugin's Stop-hook Review Gate blocked, out of N gate
+evaluations. Absent lines are not an error: print nothing (the review-gate
+envelope is a later team-mode phase; this step is read-only forward
+compatibility).
 
 ## Output format
 
 - The plugin's status output, verbatim.
-- Exactly one trailing `Ledger:` line in the format above.
+- Exactly one trailing `Quota:` block in the format above (counter + both
+  ceilings + per-path OPEN/BLOCKED verdict).
+- Any `team.gate: BLOCK n/N` ledger lines, verbatim, after the quota
+  block — only when present.
 - Gate failures print exactly one block (enable pointer or fail-closed
   block) and stop.
 
@@ -78,11 +109,11 @@ Ledger: <N> openai CLI calls today (UTC) · cap: <max_calls_per_day or "unset">
 
 - Do NOT run when `ai_team.enabled` is false — enable pointer, stop.
 - Do NOT fabricate a count when the counter file is unreadable — print
-  `Ledger: unavailable (<reason>)` instead of a guessed number.
+  `Quota: unavailable (<reason>)` instead of a guessed number.
 - Do NOT write to `cli-calls.json` — the transport owns the counter; this
   wrapper is read-only.
 - Do NOT reimplement job tracking inline when the plugin is absent — fail
-  closed with the doctor pointer (the ledger line alone is still printed on
+  closed with the doctor pointer (the quota block alone is still printed on
   non-Claude-Code hosts, per Step 2).
 
 ## See also

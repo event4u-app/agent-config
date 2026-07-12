@@ -99,6 +99,7 @@ import {
 } from '../_lib/agent_settings.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
+import { review_gate_doctor_signal } from '../ai_team/review_gate.js';
 
 type Dict = Record<string, unknown>;
 
@@ -2028,6 +2029,79 @@ function _settings_flag(val: unknown): boolean {
     return false;
 }
 
+/**
+ * Decode a JWT payload's `exp` claim (epoch seconds) — base64 decode only,
+ * NO signature verification, no network. Non-JWT / undecodable → null.
+ */
+function _jwt_exp(token: unknown): number | null {
+    if (typeof token !== 'string') return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    try {
+        const payload: unknown = JSON.parse(
+            Buffer.from(parts[1] as string, 'base64url').toString('utf-8'),
+        );
+        if (typeof payload !== 'object' || payload === null) return null;
+        const exp = (payload as Record<string, unknown>)['exp'];
+        return typeof exp === 'number' && Number.isFinite(exp) && exp > 0 ? exp : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Coerce an explicit expiry field to epoch seconds (number or ISO string). */
+function _epoch_seconds(value: unknown): number | null {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+        // Heuristic: values past ~2286 in seconds are epoch milliseconds.
+        return value > 1e12 ? value / 1000 : value;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+        const ms = Date.parse(value);
+        return Number.isNaN(ms) ? null : ms / 1000;
+    }
+    return null;
+}
+
+/**
+ * Latest locally-derivable expiry (epoch seconds) from a codex `auth.json`,
+ * or null when none is derivable. Sources, all offline:
+ *
+ * - explicit `expires_at` / `expiry` / `exp` fields (top level; numbers in
+ *   seconds or ms, or ISO date strings), and
+ * - the `exp` claim of JWT tokens under `tokens.{access_token,id_token}`
+ *   (or the same keys top-level) — base64 payload decode only, never
+ *   signature verification.
+ *
+ * LATEST wins: the real codex auth.json holds a refresh_token, so an
+ * expired id_token sitting next to a live access_token is not an auth
+ * failure — WARN only when everything derivable is past.
+ */
+function _codex_auth_expiry(auth_path: string): number | null {
+    let data: unknown;
+    try {
+        data = JSON.parse(fs.readFileSync(auth_path, 'utf-8'));
+    } catch {
+        return null;
+    }
+    if (typeof data !== 'object' || data === null) return null;
+    const d = data as Record<string, unknown>;
+    const candidates: number[] = [];
+    for (const key of ['expires_at', 'expiry', 'exp']) {
+        const v = _epoch_seconds(d[key]);
+        if (v !== null) candidates.push(v);
+    }
+    const tokens_raw = d['tokens'];
+    const tokens =
+        typeof tokens_raw === 'object' && tokens_raw !== null && !Array.isArray(tokens_raw)
+            ? (tokens_raw as Record<string, unknown>)
+            : {};
+    for (const key of ['access_token', 'id_token']) {
+        const v = _jwt_exp(tokens[key] ?? d[key]);
+        if (v !== null) candidates.push(v);
+    }
+    return candidates.length > 0 ? Math.max(...candidates) : null;
+}
+
 /** The `ai_team` block from `.agent-settings.yml` — lenient, `{}` when absent. */
 function _read_ai_team_block(project_root: string): Dict {
     const settings_file = project_settings_path(project_root);
@@ -2049,14 +2123,21 @@ function _read_ai_team_block(project_root: string): Dict {
  * `team` health check — three sub-signals folded into one result:
  *
  * (a) codex binary present (council-probe binary discovery reused) AND
- *     auth present. Auth is a READ-ONLY presence probe of
- *     `$CODEX_HOME/auth.json` (default `~/.codex/auth.json`) — token
- *     expiry cannot be validated without a billable call; runtime expiry
- *     is caught by `OpenAICliClient._AUTH_FAILURE_PATTERNS`.
+ *     auth present. Auth is a READ-ONLY probe of `$CODEX_HOME/auth.json`
+ *     (default `~/.codex/auth.json`): presence, plus locally-derivable
+ *     expiry evidence (`_codex_auth_expiry` — explicit expiry fields or
+ *     JWT `exp` payloads; no network, no signature verification). Past
+ *     expiry → WARN; no derivable expiry → presence-only note in the
+ *     detail. Runtime expiry is still caught authoritatively by
+ *     `OpenAICliClient._AUTH_FAILURE_PATTERNS`.
  * (b) on Claude-Code hosts (claude binary on PATH or the Claude config dir
  *     present): the official codex plugin recorded in
- *     `plugins/installed_plugins.json`. Detection is read-only — doctor
- *     never writes under `~/.claude/`.
+ *     `plugins/installed_plugins.json`, with namespace-resistant identity
+ *     via `codex_plugin_identity()` — a prefix match whose marketplace
+ *     source repo cannot be verified against `openai/codex-plugin-cc`
+ *     keeps ✅ but is annotated "identity not fully verified (prefix
+ *     match)". Detection is read-only — doctor never writes under
+ *     `~/.claude/`.
  * (c) Review-Gate consistency: `ai_team.review_gate.managed` on while the
  *     loop bound (`max_consecutive_blocks`, Phase 4 — unbuilt) is absent
  *     → WARN.
@@ -2074,8 +2155,6 @@ function _check_team(project_root: string): Dict {
             ? (gateRaw as Dict)
             : {};
     const gate_managed = _settings_flag(gate['managed']);
-    const bound = gate['max_consecutive_blocks'];
-    const bound_present = typeof bound === 'number' && Number.isInteger(bound) && bound > 0;
 
     if (!enabled) {
         if (gate_managed) {
@@ -2110,12 +2189,26 @@ function _check_team(project_root: string): Dict {
         remedies.push('install the codex CLI: `npm install -g @openai/codex`');
     }
 
-    // (a, cont.) codex auth — presence probe of $CODEX_HOME/auth.json.
+    // (a, cont.) codex auth — READ-ONLY probe of $CODEX_HOME/auth.json:
+    // presence + locally-derivable expiry evidence (no network).
     const auth_path = path.join(_codex_home(), 'auth.json');
     const authed = pathExists(auth_path);
-    const auth_glyph = authed ? '✅' : '❌';
+    let auth_str: string;
     if (!authed) {
+        auth_str = `codex auth ❌ (${auth_path})`;
         remedies.push('run `codex login`');
+    } else {
+        const expiry = _codex_auth_expiry(auth_path);
+        if (expiry !== null && expiry * 1000 < Date.now()) {
+            auth_str = `codex auth ⚠️ expired (${auth_path})`;
+            remedies.push('auth token appears expired — run `codex login`');
+        } else if (expiry === null) {
+            auth_str =
+                `codex auth ✅ (${auth_path}; ` +
+                'presence-only check — expiry not verifiable locally)';
+        } else {
+            auth_str = `codex auth ✅ (${auth_path})`;
+        }
     }
 
     // (b) official codex plugin — Claude-Code hosts only.
@@ -2123,34 +2216,33 @@ function _check_team(project_root: string): Dict {
         shutilWhich('claude') !== null || pathExists(claude_plugin.claude_config_dir());
     let plugin_str: string;
     if (is_claude_host) {
-        const plugin_present = claude_plugin.codex_plugin_installed();
-        plugin_str = `codex plugin ${plugin_present ? '✅' : '❌'}`;
-        if (!plugin_present) {
+        const identity = claude_plugin.codex_plugin_identity();
+        if (!identity.installed) {
+            plugin_str = 'codex plugin ❌';
             remedies.push(
                 'install the official codex plugin: ' +
                     claude_plugin.CODEX_PLUGIN_INSTALL_HINT.map((c) => `\`${c}\``).join(' then '),
             );
+        } else if (!identity.identity_verified) {
+            plugin_str = 'codex plugin ✅ — identity not fully verified (prefix match)';
+        } else {
+            plugin_str = 'codex plugin ✅';
         }
     } else {
         plugin_str = 'codex plugin — (not a Claude Code host; fallback path applies)';
     }
 
-    // (c) Review-Gate consistency.
-    let gate_str: string;
-    if (gate_managed && !bound_present) {
-        gate_str = 'review-gate ⚠️ on, loop bound absent';
-        remedies.push(
-            'set `ai_team.review_gate.max_consecutive_blocks` (loop bound; ' +
-                'ships with the Review-Gate governance phase) or set ' +
-                '`ai_team.review_gate.managed: false`',
-        );
-    } else {
-        gate_str = `review-gate ${gate_managed ? 'on' : 'off'}`;
-    }
+    // (c) Review-Gate governance (Phase 4) — logic lives in
+    // src/scripts/ai_team/review_gate.ts (upstream gate probe + WARN
+    // states, incl. plugin-gate-on-while-unmanaged with the quoted
+    // upstream cost warning).
+    const gate_signal = review_gate_doctor_signal(project_root, gate);
+    const gate_str = gate_signal.gate_str;
+    remedies.push(...gate_signal.remedies);
 
     const detail =
         `codex binary ${binary_glyph} (${binary_name}) · ` +
-        `codex auth ${auth_glyph} (${auth_path}) · ${plugin_str} · ${gate_str}`;
+        `${auth_str} · ${plugin_str} · ${gate_str}`;
     if (remedies.length > 0) {
         return {
             id: 'team',

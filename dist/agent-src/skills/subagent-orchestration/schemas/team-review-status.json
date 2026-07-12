@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "https://event4u.dev/agent-config/schemas/team-review-status.json",
+  "title": "Team Review Status Envelope",
+  "description": "Wire format for every /team:review return — plugin path and multi-host fallback alike. Extends the subagent-status.json frame (same status enum, same NEEDS_CONTEXT/BLOCKED semantics) with review findings, the reviewed ref, and quota visibility. Emitted by src/scripts/ai_team/team_dispatch.ts; contract prose in docs/contracts/ai-team-config.md.",
+  "type": "object",
+  "required": ["status", "findings", "reviewed_ref", "model", "quota"],
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["DONE", "DONE_WITH_CONCERNS", "NEEDS_CONTEXT", "BLOCKED"],
+      "description": "DONE = review ran, no findings above info. DONE_WITH_CONCERNS = review ran and findings[] needs the caller's attention, OR the model output was unparseable (raw carries the verbatim text — never silently dropped). NEEDS_CONTEXT = reviewer lacks context beyond the bundle; blocking_question must be answered. BLOCKED = no review was produced (auth, quota, transport); blocking_reason describes why."
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One- or two-sentence review outcome."
+    },
+    "findings": {
+      "type": "array",
+      "description": "Review findings. Empty for a clean DONE and for BLOCKED (no review happened).",
+      "items": {
+        "type": "object",
+        "required": ["severity", "evidence", "suggested_fix"],
+        "additionalProperties": false,
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "major", "minor", "info"],
+            "description": "critical = data loss / security / correctness on the main path. major = real defect, wrong under realistic input. minor = defect on an edge path or maintainability trap. info = observation, no action required."
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What is wrong, citing the exact hunk/line from the reviewed diff — never invented code."
+          },
+          "suggested_fix": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Concrete, minimal fix proposal."
+          },
+          "location": {
+            "type": "string",
+            "description": "file[:line] when known."
+          }
+        }
+      }
+    },
+    "reviewed_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "HEAD sha the repo-context bundle was built from — pins what was actually reviewed."
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reviewer model id, or the literal 'auto' when the codex CLI default was used (no --model flag passed)."
+    },
+    "quota": {
+      "type": "object",
+      "required": ["used", "ceiling"],
+      "additionalProperties": false,
+      "description": "Shared cli_call_budget openai-bucket visibility after this run.",
+      "properties": {
+        "used": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Today's openai-bucket call count (UTC-day, shared with the council)."
+        },
+        "ceiling": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "ai_team.max_calls_per_day — the team-side ceiling on the shared bucket."
+        }
+      }
+    },
+    "raw": {
+      "type": "string",
+      "description": "Verbatim model output, present ONLY when the findings contract could not be parsed (status is then DONE_WITH_CONCERNS). Preserved so a malformed review is loud, never dropped."
+    },
+    "blocking_question": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Single specific question whose answer would unblock. Required when status = NEEDS_CONTEXT."
+    },
+    "blocking_reason": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Why no review was produced (auth_expired → codex login, cli_quota_exhausted, transport error). Required when status = BLOCKED."
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "NEEDS_CONTEXT"}}, "required": ["status"]},
+      "then": {"required": ["blocking_question"]}
+    },
+    {
+      "if": {"properties": {"status": {"const": "BLOCKED"}}, "required": ["status"]},
+      "then": {"required": ["blocking_reason"]}
+    }
+  ]
+}

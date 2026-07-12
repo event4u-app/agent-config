@@ -180,18 +180,29 @@ Your agent now understands slash commands:
 
 ## Team mode — cross-model review (default off)
 
-Team mode pairs two strong models on one change: one model builds, a
-second reviews the **real diff** in your working tree and hands the
-findings back for a fix round. It is the depth complement to the
+Team mode is a governed access layer with a read-only multi-host
+fallback: a second strong model reviews the **real diff** in your
+working tree and returns its findings. It is the depth complement to the
 [AI council](../dist/agent-src/skills/ai-council/SKILL.md): the council
 collects many cheap, neutral opinions on an artefact's *text*; team mode
-puts one strong, opinionated reviewer *inside the repo*.
+puts one strong, opinionated reviewer *inside the repo*. An iterated
+build→review→fix loop is gated future work — it unlocks only with a
+positive verdict from the pre-registered benchmark.
 
 | Axis | Council | Team mode |
 |---|---|---|
 | Repo access | none — members see only the artefact text | full — the reviewer reads the real diff and git state |
-| Shape | breadth — N neutral opinions, one round | depth — one strong reviewer, build→review→fix iteration |
+| Shape | breadth — N neutral opinions, one round | depth — one strong reviewer on the real diff |
 | Cost model | API-billed members (per-token) | subscription-authed `codex` CLI (runs under your existing plan) |
+
+**Host support.** Only Claude Code with the Codex plugin gets the native
+path; every other host runs a reduced, read-only fallback — no host
+outside Claude Code has feature parity.
+
+| Host | Path | Capability |
+|---|---|---|
+| Claude Code + Codex plugin | native — wrappers delegate to the plugin's `/codex:*` commands | full wrapper set: review, adversarial, status (incl. plugin job view), delegate (double-opt-in write path) |
+| Any other host | read-only fallback via the `codex` CLI (repo-diff bundle) | review-shaped output only — no plugin job control, no background jobs, no delegate write path |
 
 **Setup.** Run `agent-config doctor --check team` — it verifies the
 `codex` binary + auth and, on Claude Code hosts, the Codex plugin, and

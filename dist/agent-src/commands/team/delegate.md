@@ -2,7 +2,7 @@
 model_tier: inherit
 name: team-delegate
 disable-model-invocation: true
-pack: product-reasoning
+pack: meta
 tier: 2
 visibility: internal
 description: Thin wrapper — hand a task to the second model as a native worker via the official plugin (/codex:rescue). The only write-access wrapper; double-gated behind ai_team.allow_delegate.
@@ -14,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - product-reasoning
+  - meta
 ---
 
 # /team delegate

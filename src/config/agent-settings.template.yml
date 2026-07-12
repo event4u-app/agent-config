@@ -665,9 +665,24 @@ ai_team:
   # plugin on Claude-Code hosts. Cosmetic only — never changes behavior.
   suppress_setup_hint: false
 
-  # NOTE for future keys: `review_gate` (managed loop-bound governance of
-  # the plugin's Stop-hook Review Gate) lands in a later team-mode phase
-  # (Phase 4) — do not add it here ahead of that phase.
+  # Managed governance of the codex plugin's Stop-hook Review Gate
+  # (road-to-team-mode Phase 4). The gate itself stays upstream's; these
+  # keys only govern it. Upstream's own warning: "The review gate can
+  # create a long-running Claude/Codex loop and may drain usage limits
+  # quickly."
+  review_gate:
+    # false (default) = byte-identical pre-Phase-4 behavior: no counting,
+    # no circuit breaker, our Stop path never touches the gate. true =
+    # count consecutive BLOCK verdicts per session and trip the circuit
+    # breaker at the bound below.
+    managed: false
+
+    # Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts
+    # in one session, a visible notice is injected exactly once and the
+    # managed layer stops re-blocking — the user decides, never an
+    # infinite Claude↔Codex loop. An ALLOW verdict resets the counter.
+    # Positive integer.
+    max_consecutive_blocks: 3
 
 # --- Onboarding ---
 #
