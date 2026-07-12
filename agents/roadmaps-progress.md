@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **9** open blockers
 
 ## Overall
 
-**102 / 375 steps done · 27%**
+**104 / 375 steps done · 28%**
 
 ```text
-███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
 ```
 
 ## Open roadmaps
@@ -34,7 +34,7 @@
 | 16 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 17 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 19 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 15 | 14 | 0 | 0 | [1](#blockers-road-to-opt-council-deliberation) | █████░░░░░ 48% |
+| 19 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 13 | 16 | 0 | 0 | [1](#blockers-road-to-opt-council-deliberation) | ██████░░░░ 55% |
 | 20 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 8 | 2 | 0 | 0 | 0 | ██░░░░░░░░ 20% |
 | 21 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
 | 22 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -243,12 +243,12 @@ _1 blocker resolved._
 
 ### [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md)
 
-**Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater** — 14 / 29 done (48%)
+**Road to council deliberation protocol — adopt the evidence-backed protocol layer, benchmark the persona theater** — 16 / 29 done (55%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Claims hygiene + verdict falsifiability | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Option-level stance tally | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
+| 1 | Option-level stance tally | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 | 2 | Chairman synthesis (opt-in) | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
 | 3 | Debate enforcement gates | 🟡 in progress | 2 | 3 | 0 | 0 | 60% |
 | 4 | Persona placebo benchmark (measure, don't adopt) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |

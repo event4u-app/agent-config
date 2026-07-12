@@ -351,3 +351,48 @@ describe('orchestrator — run_consensus_scoring', () => {
         expect(r.findings.map((f) => f.id).sort()).toEqual(['a', 'b']);
     });
 });
+
+describe('stance-tally integration (Phase 1)', () => {
+    const stanceText = (label: string): string =>
+        `Reasoning.\n\nSTANCE: ${label} | CONFIDENCE: high | DEALBREAKER: no`;
+
+    it('consult appends the STANCE contract to the FINAL round only; default off = untouched', () => {
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'A or B?' });
+        // rounds:2, on → round-1 prompt clean, round-2 (final) carries the contract.
+        const on = new CapturingMock('anthropic', 'm', ['pos', stanceText('A')]);
+        consult([on, new CapturingMock('openai', 'm', ['pos', stanceText('A')])], q, null, {
+            rounds: 2,
+            stance_tally: true,
+        });
+        expect(on.prompts[0]).not.toContain('STANCE:');
+        expect(on.prompts[1]).toContain('STANCE: <option-label>');
+        // rounds:1, on → the single (final) round carries it.
+        const single = new CapturingMock('anthropic', 'm', [stanceText('A')]);
+        consult([single], q, null, { rounds: 1, stance_tally: true });
+        expect(single.prompts[0]).toContain('STANCE: <option-label>');
+        // default off → byte-identical prompt.
+        const off = new CapturingMock('anthropic', 'm', ['pos']);
+        consult([off], q);
+        expect(off.prompts[0]).toBe(q.user_prompt);
+    });
+
+    it('render emits the Vote Tally block when stance_tally is on, none when off', () => {
+        const responses = [
+            new CouncilResponse({ provider: 'anthropic', model: 'm', text: stanceText('Adopt'), latency_ms: 1 }),
+            new CouncilResponse({ provider: 'openai', model: 'm', text: stanceText('Adopt'), latency_ms: 1 }),
+        ];
+        const withTally = render(responses, { stance_tally: true });
+        expect(withTally).toContain('### Vote Tally');
+        expect(withTally).toContain('Cleared: Adopt');
+        expect(render(responses, {})).not.toContain('### Vote Tally');
+    });
+
+    it('render Vote Tally escalates a split honestly (never a forced winner)', () => {
+        const responses = [
+            new CouncilResponse({ provider: 'anthropic', model: 'm', text: stanceText('A'), latency_ms: 1 }),
+            new CouncilResponse({ provider: 'openai', model: 'm', text: stanceText('B'), latency_ms: 1 }),
+        ];
+        const out = render(responses, { stance_tally: true });
+        expect(out).toContain('Escalated: no option cleared');
+    });
+});
