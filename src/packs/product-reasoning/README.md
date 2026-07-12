@@ -8,9 +8,9 @@ Interactive reasoning surfaces (council, challenge-me, grill-me) — classified 
 - **version**: `8.11.0`
 - **owner**: agent-config-maintainer
 - **requires**: meta
-- **artefacts**: 11
+- **artefacts**: 16
 
-## Commands (11)
+## Commands (16)
 
 - **`challenge-me`** — Challenge-me orchestrator — routes to vision, with-docs
 - **`challenge-me-vision`** — Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff.
@@ -23,3 +23,8 @@ Interactive reasoning surfaces (council, challenge-me, grill-me) — classified 
 - **`council-optimize`** — Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice.
 - **`council-pr`** — Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in.
 - **`grill-me`** — Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
+- **`team`** — Team orchestrator — cross-model depth review (one strong model builds, a second reviews the real diff); routes to review, adversarial, delegate, status
+- **`team-adversarial`** — Thin wrapper — adversarial cross-model review on a named focus via the official plugin (/codex:adversarial-review). Escalation rung above the single-model adversarial-review skill.
+- **`team-delegate`** — Thin wrapper — hand a task to the second model as a native worker via the official plugin (/codex:rescue). The only write-access wrapper; double-gated behind ai_team.allow_delegate.
+- **`team-review`** — Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on ai_team.enabled; fails closed when the plugin is absent.
+- **`team-status`** — Thin wrapper — plugin job status via /codex:status plus a ledger line with today's cli_call_budget openai count. Gated on ai_team.enabled; fails closed when the plugin is absent.
