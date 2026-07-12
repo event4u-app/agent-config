@@ -154,7 +154,18 @@ This is especially important for:
 - Create a **failing test** that reproduces the bug.
 - Implement a **single, focused fix** — not multiple changes.
 - Consider side effects — does the fix affect other code paths?
-- Check if similar patterns exist elsewhere that need the same fix.
+- Check if similar patterns exist elsewhere that need the same fix — run variant analysis below before closing.
+
+#### Variant analysis — one bug found, find its siblings
+
+Root cause confirmed → sweep for variants before closing:
+
+1. **Extract the signature** — minimal code shape that makes the bug (e.g. "optional relation accessed without null check after `first()`").
+2. **Sweep** — grep/`codebase-retrieval` for the shape, not the symptom: same API misuse, same copy-pasted block, same missing guard.
+3. **Verify each hit through the false-positive gate** (§ 4 proactive mode) — matching shape whose inputs cannot reach the bad state = rejected candidate, not a variant.
+4. **Report** — confirmed variants join the fix (same commit if within `minimal-safe-diff`'s remediation carve-out) or land as noted follow-up.
+
+Worked example: root cause `$order->customer->email` crashes when customer soft-deleted. Signature: `->customer->` after unguarded relation. Sweep finds 3 more sites; 2 are variants (same nullable relation), 1 rejected (eager-loaded with `whereHas`, cannot be null there).
 - Add validation/monitoring (e.g. `MonitoringHelper::captureException()`) for data quality issues.
 - Verify the fix with the test from step 1.
 
@@ -187,9 +198,17 @@ For each code path, test these scenarios mentally:
 
 → PHP/Laravel bug-pattern catalogue: see [`php-debugging`](../php-debugging/SKILL.md).
 
-### 4. Output format (proactive mode)
+### 4. False-positive gate (proactive mode)
+
+Before a candidate enters the report, restate as one falsifiable sentence: concrete input or state that triggers it + observable wrong behavior that follows. Candidate whose trigger you cannot name = **not a finding** — trace further or drop with one-line reason.
+
+Route verification by severity: Low/Medium finding with traced trigger reports normally (**Standard**); High/Critical finding gets devil's-advocate pass first (**Deep**) — actively try to refute (guard clause upstream? framework default? unreachable input?), report only what survives. List killed candidates one-line under *Rejected candidates* so triage is auditable.
+
+### 5. Output format (proactive mode)
 
 For each bug found: **Bug** → **Location** → **Severity** → **Root Cause** → **Trigger** → **Fix** → **Confidence**
+
+Close with **Rejected candidates** — one line per looks-broken-but-benign pattern the gate killed, with traced reason.
 
 ## Commands
 
@@ -229,6 +248,9 @@ Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? 
 | "One more fix attempt" (after 2+) | 3+ failures = architectural problem. Stop and discuss |
 | "Issue is simple, don't need process" | Simple issues have root causes too. Process is fast for simple bugs |
 | "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing |
+| "It looks broken" | Pattern-recognition is not analysis — name the concrete trigger or drop it |
+| "This is clearly critical" | Complete a devil's-advocate pass — models overrate severity |
+| "Report it just in case" | Over-reporting erodes trust; an unverifiable finding is noise |
 
 ## Output format
 

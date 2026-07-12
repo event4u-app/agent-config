@@ -93,6 +93,21 @@ For every distinct abuse case, answer:
 Prioritize by **impact × plausibility**, not by novelty. Skip generic
 OWASP bullets unless you can anchor them in a concrete file or line.
 
+### 3b. STRIDE coverage check
+
+Sweep the six STRIDE categories once against the change so no threat class is silently skipped. Each row names the question + control family the suite already teaches — anchor any hit in a concrete file per § 3.
+
+| STRIDE category | Ask about this change | Control family (suite reference) |
+|---|---|---|
+| **S**poofing | Can an actor claim another identity on this path? | Authentication at the boundary; token/session verification — [`security`](../security/SKILL.md) |
+| **T**ampering | Can the payload or stored state be modified in transit or at rest? | Request-boundary validation + signed webhooks + parameterized queries — [`laravel-validation`](../laravel-validation/SKILL.md) / [`sql-writing`](../sql-writing/SKILL.md) |
+| **R**epudiation | Could the actor later deny having performed the action? | Audit logging of security events (actor + outcome, no credentials) — [`logging-monitoring`](../logging-monitoring/SKILL.md) |
+| **I**nformation disclosure | What leaks if this path errors, over-serializes, or logs? | Field whitelisting + scrubbed errors/logs — [`domain-safety-pii`](../../rules/domain-safety-pii.md) |
+| **D**enial of service | Can this path be made expensive or unbounded by an attacker? | Rate limiting + bounded queries/uploads — [`security-audit`](../security-audit/SKILL.md) § rate limiting, [`performance`](../performance/SKILL.md) |
+| **E**levation of privilege | Can a lower-privilege actor reach a higher-privilege action or object? | Per-object authorization + tenant scope — [`authz-review`](../authz-review/SKILL.md), [`broken-access-control`](../../rules/broken-access-control.md) |
+
+Category with no plausible abuse case for this change → mark "n/a — no boundary crossed", never silently omit.
+
 ### 4. Convert risks to engineering actions
 
 For each prioritized abuse case, propose the **smallest effective control**
