@@ -298,3 +298,4 @@ internal/bench/corpora/*.local.yaml
 # council Q2: gitignored, no merge=union).
 /agents/memory/.agent-learning.json
 /agents/memory/LESSONS.md
+/fleet.yaml
