@@ -6,7 +6,7 @@
 
 ## Overall
 
-**81 / 339 steps done · 24%**
+**82 / 338 steps done · 24%**
 
 ```text
 ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
@@ -34,7 +34,7 @@
 | 16 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 17 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 19 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 5 | 5 | 0 | 0 | 0 | █████░░░░░ 50% |
+| 19 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 3 | 6 | 1 | 0 | 0 | ███████░░░ 67% |
 | 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 21 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 9 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 76% |
 | 22 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -241,12 +241,12 @@ _1 blocker resolved._
 
 ### [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md)
 
-**Road to opt measurement unblock — one judge run cascade-unblocks the token program** — 5 / 10 done (50%)
+**Road to opt measurement unblock — one judge run cascade-unblocks the token program** — 6 / 9 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | length-neutral judge rerun (the cascade key) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | non-Claude lift replication (discipline_profile auto flip gate) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | non-Claude lift replication (discipline_profile auto flip gate) | 🟡 in progress | 1 | 1 | 1 | 0 | 50% |
 | 3 | cross-model e2e parity eval: re-scope the keystone | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
