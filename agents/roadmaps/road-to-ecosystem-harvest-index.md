@@ -69,7 +69,7 @@ user decides when to run each plate).
 
 | Tier | Roadmap | Why here |
 |---|---|---|
-| **P1** | [`road-to-ecosystem-harvest-bug-security-rigor`](road-to-ecosystem-harvest-bug-security-rigor.md) | The over-reporting gate is a live credibility fire — an over-flagging bug/security cluster damages trust today. |
+| **P1** | [`road-to-ecosystem-harvest-bug-security-rigor`](archive/road-to-ecosystem-harvest-bug-security-rigor.md) ✅ shipped | The over-reporting gate is a live credibility fire — an over-flagging bug/security cluster damages trust today. |
 | **P1** | [`road-to-ecosystem-harvest-reliability-measurement`](road-to-ecosystem-harvest-reliability-measurement.md) | The loaded-vs-fired utilization report is the only mechanism that lets the suite **subtract** dead-weight skills — it enables the token-budget program. Golden-adversarial fixtures make review output testable. |
 | **P1** | [`road-to-ecosystem-harvest-review-mechanics`](road-to-ecosystem-harvest-review-mechanics.md) | Five verified upgrades to the review surface (ordering-bias, change-type routing, reasoned validation + dropped-FP transparency, two-tier triage, security deep-verify). *(Second sweep.)* |
 | **P2** | [`road-to-ecosystem-harvest-skill-authoring-rigor`](road-to-ecosystem-harvest-skill-authoring-rigor.md) | Spec alignment + a quantitative description-optimizer raise the quality floor of every future skill. |

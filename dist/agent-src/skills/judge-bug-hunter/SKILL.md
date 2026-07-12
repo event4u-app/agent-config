@@ -70,7 +70,13 @@ not reviewable — flag it and stop.
 - Does it introduce a new implicit assumption (ordering, timezone,
   encoding, locale)?
 
-### 4. Verdict
+### 4. False-positive gate — restate before you flag
+
+Before an issue enters the verdict, restate as one falsifiable sentence naming the concrete input or state that triggers it + wrong behavior that follows. Issue whose trigger you cannot name from the diff is not a finding — drop it (or return `revise` asking for missing context, never a speculative flag).
+
+For 🔴 findings, run devil's-advocate pass before finalizing: actively try to refute (guard upstream in same diff? caller already validates? branch unreachable for claimed input?). Models systematically overrate severity — a 🔴 that survives refutation is credible; one never challenged is noise. Reject rationalizations "it looks wrong" (pattern-recognition is not analysis) and "flag it just in case" (over-reporting erodes the verdict's trust).
+
+### 5. Verdict
 
 | Verdict  | When to return it |
 |---|---|

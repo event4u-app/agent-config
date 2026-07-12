@@ -2,7 +2,7 @@
 model_tier: inherit
 name: team-adversarial
 disable-model-invocation: true
-pack: product-reasoning
+pack: meta
 tier: 2
 visibility: internal
 skills: [adversarial-review]
@@ -16,7 +16,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - product-reasoning
+  - meta
 ---
 
 # /team adversarial

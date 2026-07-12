@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `8.13.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 265
+- **artefacts**: 270
 
-## Commands (135)
+## Commands (140)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -124,9 +124,14 @@ Artefacts that maintain this package (agent-config itself).
 - **`sync-agent-settings`** — Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 - **`sync-gitignore`** — Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
 - **`sync-gitignore-fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
+- **`team`** — Team orchestrator — governed cross-model access layer (a second strong model reviews the real diff; read-only multi-host fallback); routes to review, adversarial, delegate, status
+- **`team-adversarial`** — Thin wrapper — adversarial cross-model review on a named focus via the official plugin (/codex:adversarial-review). Escalation rung above the single-model adversarial-review skill.
+- **`team-delegate`** — Thin wrapper — hand a task to the second model as a native worker via the official plugin (/codex:rescue). The only write-access wrapper; double-gated behind ai_team.allow_delegate.
 - **`team-knowledge`** — Team-knowledge orchestrator — routes to consolidate and bootstrap
 - **`team-knowledge-bootstrap`** — One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit.
 - **`team-knowledge-consolidate`** — Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval.
+- **`team-review`** — Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on ai_team.enabled; fails closed when the plugin is absent.
+- **`team-status`** — Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on ai_team.enabled; fails closed without the plugin.
 - **`tests`** — Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal
 - **`tests-create`** — Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 - **`tests-e2e-heal`** — Find, debug, and fix failing Playwright E2E tests

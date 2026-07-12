@@ -40,6 +40,8 @@ describe('build_ai_team_config — defaults', () => {
         expect(c.allow_delegate).toBe(false);
         expect(c.max_calls_per_day).toBe(50);
         expect(c.suppress_setup_hint).toBe(false);
+        expect(c.review_gate.managed).toBe(false);
+        expect(c.review_gate.max_consecutive_blocks).toBe(3);
     });
 
     it('null block → shipped defaults (YAML `ai_team:` with no body)', () => {
@@ -57,6 +59,7 @@ describe('build_ai_team_config — defaults', () => {
         expect(c.allow_delegate).toBe(false);
         expect(c.max_calls_per_day).toBe(50);
         expect(c.suppress_setup_hint).toBe(false);
+        expect(c.review_gate).toEqual({ managed: false, max_consecutive_blocks: 3 });
     });
 
     it('full valid block round-trips', () => {
@@ -66,6 +69,7 @@ describe('build_ai_team_config — defaults', () => {
             allow_delegate: true,
             max_calls_per_day: 7,
             suppress_setup_hint: true,
+            review_gate: { managed: true, max_consecutive_blocks: 5 },
         });
         expect(c).toEqual({
             enabled: true,
@@ -73,6 +77,7 @@ describe('build_ai_team_config — defaults', () => {
             allow_delegate: true,
             max_calls_per_day: 7,
             suppress_setup_hint: true,
+            review_gate: { managed: true, max_consecutive_blocks: 5 },
         });
     });
 
@@ -90,6 +95,9 @@ describe('build_ai_team_config — defaults', () => {
         expect(template).toMatch(/^ {2}allow_delegate: false$/m);
         expect(template).toMatch(/^ {2}max_calls_per_day: 50$/m);
         expect(template).toMatch(/^ {2}suppress_setup_hint: false$/m);
+        expect(template).toMatch(/^ {2}review_gate:$/m);
+        expect(template).toMatch(/^ {4}managed: false$/m);
+        expect(template).toMatch(/^ {4}max_consecutive_blocks: 3$/m);
     });
 });
 
@@ -114,10 +122,79 @@ describe('build_ai_team_config — unknown keys', () => {
         );
     });
 
-    it('rejects review_gate ahead of its phase (reserved future key)', () => {
-        expect(() => build_ai_team_config({ review_gate: { managed: false } })).toThrow(
-            /ai_team\.review_gate: unknown key/,
+    it('rejects an unknown key INSIDE review_gate (fail-closed nesting)', () => {
+        expect(() =>
+            build_ai_team_config({ review_gate: { managed: true, max_blocks: 3 } }),
+        ).toThrow(/ai_team\.review_gate\.max_blocks: unknown key/);
+        // The canonical typo: a misspelled `managed` must fail the load,
+        // never leave the governance silently off.
+        expect(() => build_ai_team_config({ review_gate: { manged: true } })).toThrow(
+            TeamConfigError,
         );
+    });
+});
+
+// === review_gate (Phase 4) =================================================
+
+describe('build_ai_team_config — review_gate', () => {
+    it('absent / null / empty review_gate → shipped sub-defaults', () => {
+        expect(build_ai_team_config({}).review_gate).toEqual({
+            managed: false,
+            max_consecutive_blocks: 3,
+        });
+        expect(build_ai_team_config({ review_gate: null }).review_gate).toEqual({
+            managed: false,
+            max_consecutive_blocks: 3,
+        });
+        expect(build_ai_team_config({ review_gate: {} }).review_gate).toEqual({
+            managed: false,
+            max_consecutive_blocks: 3,
+        });
+    });
+
+    it('partial review_gate keeps sub-defaults', () => {
+        const c = build_ai_team_config({ review_gate: { managed: true } });
+        expect(c.review_gate.managed).toBe(true);
+        expect(c.review_gate.max_consecutive_blocks).toBe(3);
+    });
+
+    it('review_gate must be a mapping', () => {
+        expect(() => build_ai_team_config({ review_gate: 'on' })).toThrow(
+            /`ai_team\.review_gate` must be a mapping\./,
+        );
+        expect(() => build_ai_team_config({ review_gate: [1] })).toThrow(TeamConfigError);
+        expect(() => build_ai_team_config({ review_gate: true })).toThrow(TeamConfigError);
+    });
+
+    it('managed must be a boolean', () => {
+        expect(() => build_ai_team_config({ review_gate: { managed: 'true' } })).toThrow(
+            /`ai_team\.review_gate\.managed` must be a boolean/,
+        );
+        expect(() => build_ai_team_config({ review_gate: { managed: 1 } })).toThrow(
+            TeamConfigError,
+        );
+    });
+
+    it('max_consecutive_blocks must be a POSITIVE integer', () => {
+        expect(() =>
+            build_ai_team_config({ review_gate: { max_consecutive_blocks: 0 } }),
+        ).toThrow(/`ai_team\.review_gate\.max_consecutive_blocks` must be a positive integer/);
+        expect(() =>
+            build_ai_team_config({ review_gate: { max_consecutive_blocks: -1 } }),
+        ).toThrow(TeamConfigError);
+        expect(() =>
+            build_ai_team_config({ review_gate: { max_consecutive_blocks: 1.5 } }),
+        ).toThrow(TeamConfigError);
+        expect(() =>
+            build_ai_team_config({ review_gate: { max_consecutive_blocks: '3' } }),
+        ).toThrow(TeamConfigError);
+        expect(() =>
+            build_ai_team_config({ review_gate: { max_consecutive_blocks: true } }),
+        ).toThrow(TeamConfigError);
+        expect(
+            build_ai_team_config({ review_gate: { max_consecutive_blocks: 1 } }).review_gate
+                .max_consecutive_blocks,
+        ).toBe(1);
     });
 });
 
@@ -192,6 +269,69 @@ describe('load_ai_team_config', () => {
         expect(c.enabled).toBe(true);
         expect(c.max_calls_per_day).toBe(3);
         expect(c.model).toBe('auto');
+    });
+
+    // --- malformed-settings red paths (PR-#924 advisory finding) ----------
+    //
+    // Contract: a broken settings file must resolve to the SAFE defaults
+    // (enabled: false, allow_delegate: false) or fail loudly — team mode is
+    // NEVER silently enabled by unparseable or mis-typed input.
+
+    it('unparseable YAML settings file → safe defaults, feature stays off', () => {
+        const tmp = make_tmp();
+        // Unclosed flow sequence — the yaml parser rejects this outright;
+        // the settings cascade degrades the whole layer to {} (fail-safe).
+        fs.writeFileSync(
+            path.join(tmp, '.agent-settings.yml'),
+            'ai_team: [\n  enabled: true\n',
+            'utf-8',
+        );
+        const c = load_ai_team_config({ cwd: tmp });
+        expect(c).toEqual(AI_TEAM_DEFAULTS);
+        expect(c.enabled).toBe(false);
+        expect(c.allow_delegate).toBe(false);
+    });
+
+    it('ai_team as a scalar in the settings file → throws, never enabled', () => {
+        const tmp = make_tmp();
+        fs.writeFileSync(path.join(tmp, '.agent-settings.yml'), 'ai_team: "yes"\n', 'utf-8');
+        expect(() => load_ai_team_config({ cwd: tmp })).toThrow(/`ai_team` must be a mapping\./);
+    });
+
+    it('ai_team as an array in the settings file → throws, never enabled', () => {
+        const tmp = make_tmp();
+        fs.writeFileSync(
+            path.join(tmp, '.agent-settings.yml'),
+            'ai_team:\n  - enabled: true\n',
+            'utf-8',
+        );
+        expect(() => load_ai_team_config({ cwd: tmp })).toThrow(TeamConfigError);
+    });
+
+    it('allow_delegate as a truthy STRING → throws, gate never opens', () => {
+        const tmp = make_tmp();
+        // Quoted "true" survives YAML 1.1 as a string — the loader must
+        // reject it rather than coerce it into an open delegation gate.
+        fs.writeFileSync(
+            path.join(tmp, '.agent-settings.yml'),
+            'ai_team:\n  enabled: true\n  allow_delegate: "true"\n',
+            'utf-8',
+        );
+        expect(() => load_ai_team_config({ cwd: tmp })).toThrow(
+            /`ai_team\.allow_delegate` must be a boolean/,
+        );
+    });
+
+    it('enabled as a truthy STRING → throws, feature never turns on', () => {
+        const tmp = make_tmp();
+        fs.writeFileSync(
+            path.join(tmp, '.agent-settings.yml'),
+            'ai_team:\n  enabled: "on"\n',
+            'utf-8',
+        );
+        expect(() => load_ai_team_config({ cwd: tmp })).toThrow(
+            /`ai_team\.enabled` must be a boolean/,
+        );
     });
 
     it('invalid block in the settings file fails loudly', () => {

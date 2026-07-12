@@ -2,7 +2,7 @@
 model_tier: inherit
 name: team-review
 disable-model-invocation: true
-pack: product-reasoning
+pack: meta
 tier: 2
 visibility: internal
 description: Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on ai_team.enabled; fails closed when the plugin is absent.
@@ -15,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - product-reasoning
+  - meta
 ---
 
 # /team review
