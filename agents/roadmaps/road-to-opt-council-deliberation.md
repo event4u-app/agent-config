@@ -263,7 +263,7 @@ visible repair cost.
       named, specific flaw; naming the flaw is required to update).
       Identical text for `api`, `cli`, and `manual` transports.
       <!-- done + WIRED end-to-end: prompts.ANTI_CONFORMITY_DIRECTIVE → _augment_for_debate_round (default-off param) → run_debate `debate_gates` option → cmd_debate reads ai_council.debate_gates.enabled. Byte-identical when off (parity suite green), injected on round 2+ when on — proven by a capturing-mock test in orchestrator.test.ts. Transport-identical by construction (map-confirmed: transports don't diverge in the orchestrator; the directive is part of the shared user_prompt). -->
-- [ ] `ai_council.debate_gates.enabled` (default `false`) activating two
+- [x] `ai_council.debate_gates.enabled` (default `false`) activating two
       deterministic post-round checks on the debate path:
       **dissent quota** (≥ 2 members with non-identical objection
       markers; below quota → one targeted dissent re-prompt to the most
