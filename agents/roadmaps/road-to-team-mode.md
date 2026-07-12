@@ -382,11 +382,11 @@ the disposition step executed either way.
   `src/scripts/_lib/link_crypto.ts decrypt --value <token>`:
   `ENC1:z1BhY5gnVj5aoPYUUC0AriOaBezuWKiL3PXWf1y1SAIL3QafjzViF5FF7qf0D+XTGBdwXVVvyggrvFIIRe93vPfnVrvtQiwMTavTopPnum23SCb8PM8=`
 - Integrated tool (named, permitted): `openai/codex-plugin-cc` (Apache-2.0) —
-  verified at HEAD 2026-07-12: 8 commands (`setup`, `review`,
-  `adversarial-review`, `rescue`, `transfer`, `status`, `result`, `cancel`),
-  `agents/codex-rescue.md`, `scripts/stop-review-gate-hook.mjs` +
-  `prompts/stop-review-gate.md`, skills `codex-cli-runtime`,
-  `codex-result-handling`, `gpt-5-4-prompting`.
+  verified at HEAD 2026-07-12 (upstream tree under `plugins/codex/…`): 8
+  commands (`setup`, `review`, `adversarial-review`, `rescue`, `transfer`,
+  `status`, `result`, `cancel`), a proactive `codex-rescue` agent, a
+  `stop-review-gate-hook.mjs` Stop-hook + `stop-review-gate.md` prompt, and
+  skills `codex-cli-runtime`, `codex-result-handling`, `gpt-5-4-prompting`.
 - Council: not run. Phase 0 shipped its boundary prose as authored; a
   `/council:design` pass on the Phase 0 ADR (integration shape) is available
   for the still-open Phases 1–6 if the shape decision wants a second opinion.
