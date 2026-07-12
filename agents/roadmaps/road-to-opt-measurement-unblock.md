@@ -54,18 +54,18 @@ longer holds — turning the portfolio's measurement debt into verdicts.
       fix the sample size from the golden corpus before the first
       billable call.
       <!-- done: docs/design/length-neutral-judge-rerun.md — (a) ±15% length-matched pairs AND a length-partialed rubric with a Spearman-ρ confound flag; (b) strongest judge tier + blind second judge reported via the EXISTING cohensKappa/judgeKappa in check_quality_regression.ts (reuse, not rebuild), κ ≥ 0.60 floor; (c) pre-registered n for 80% power at ≥10pp, fixed before the first call, sign-test/McNemar. Report schema + disposition specified. -->
-- [ ] Render the cost estimate (`council:estimate`-class disclosure) and
+- [x] Render the cost estimate (`council:estimate`-class disclosure) and
       confirm the run budget in-session before executing.
-      <!-- GATED: billable run — needs an in-session estimate + the maintainer's budget confirmation (Hard-Floor money-moving). Not auto-fired. -->
-- [ ] Execute the paired judge run; write the verdict artifact under
+      <!-- done (2026-07-12): estimate disclosed in-session (~$40-45 expected, judges probed for $0.02, 1-task smoke $0.36) against the maintainer's confirmed EUR 250 cap; hard --max-usd 250 guard enforced in the runner. -->
+- [x] Execute the paired judge run; write the verdict artifact under
       `internal/bench/reports/` with κ and confound diagnostics inline.
-      <!-- GATED: the judged run is money-moving AND an interactive /dev/tty gate that hard-aborts under automation. Maintainer executes per the design doc above. -->
-- [ ] Disposition step: on a trustworthy verdict (either direction),
+      <!-- done (2026-07-12): bench_quality_rerun.ts executed live — n=90 pre-registered, ±15% token-band pairing (25 surviving / 65 dropped), double blind judges claude-opus-4-8 + gpt-4o both orders, kappa + Spearman diagnostics inline; artifact internal/bench/reports/quality-rerun-length-neutral.json; actual $34.80 (cap $250). -->
+- [x] Disposition step: on a trustworthy verdict (either direction),
       update the token-program tracking table in
       `road-to-token-proof-and-story.md` and unblock/close the dependent
       gates; on a second inconclusive, record WHY with the diagnostics
       and stop — no third run without a design change.
-      <!-- GATED: fires only once the run above produces a verdict. -->
+      <!-- done (2026-07-12): SECOND INCONCLUSIVE (kappa=0.46 < 0.60 floor; rho=0.45 flagged; 7 agreed decisive) -> per the pre-registered design: WHY recorded (docs/benchmark.md § Length-neutral judge RERUN — the signal is structurally length-dominated and judge-noise-dominated in BOTH designs) and STOP, no third run without a categorically different method. Token-program table updated: gate CLOSED-BY-DIAGNOSIS in road-to-token-proof-and-story.md. -->
       <!-- verify: test -f docs/design/length-neutral-judge-rerun.md -->
 
 **Exit criteria:** verdict artifact exists with κ ≥ agreed floor and no
