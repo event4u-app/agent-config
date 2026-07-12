@@ -1781,12 +1781,18 @@ function cmd_run(
         max_total_usd: _pyFloat(cost_cfg['max_total_usd'] ?? 0.0, 0.0) || 0.0,
     });
     const rounds = _resolve_rounds(args, ai_cfg);
+    // Phase 1: stance tally — defensive read; malformed/absent block reads as off.
+    const stance_tally_on =
+        _isDict(ai_cfg) &&
+        _isDict(ai_cfg['stance_tally']) &&
+        (ai_cfg['stance_tally'] as Dict)['enabled'] === true;
     const responses = consult(members, question, budget, {
         table,
         project,
         original_ask: args.original_ask,
         rounds,
         advisor_plans,
+        stance_tally: stance_tally_on,
     });
     const persona_labels = build_persona_labels(advisor_plans, billable);
     const peer_review = _maybe_run_peer_review(
@@ -1830,6 +1836,7 @@ function cmd_run(
         rounds,
         cost_usd_estimated: _pyRound(estimated_total, 6),
         cost_usd_actual: _pyRound(actual_total, 6),
+        stance_tally: stance_tally_on,
         responses: _serialise_responses(responses),
     };
     if (peer_review !== null) {
@@ -2199,6 +2206,7 @@ function cmd_render(args: Args): number {
         prose_synthesis: prose,
         consensus,
         peer_review,
+        stance_tally: payload['stance_tally'] === true,
     });
     if (_getattr<string | null>(args, 'output', null)) {
         const out_path = _validate_council_output_path(args.output as string, {

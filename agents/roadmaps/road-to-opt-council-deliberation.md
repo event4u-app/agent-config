@@ -155,12 +155,12 @@ schema or engine behaviour changed in this phase.
 
 Deterministic port of Source G's tally, engineered instead of prompted.
 
-- [ ] Final-round prompt (in `prompts.ts`) appends the mandatory closing
+- [x] Final-round prompt (in `prompts.ts`) appends the mandatory closing
       line contract:
       `STANCE: <label> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no`,
       with the label-matching instruction (peers backing the same option
       use the same label; `abstain` allowed).
-      <!-- partial: STANCE_LINE_CONTRACT constant authored in prompts.ts (with the label-matching + abstain instruction). The orchestrator wiring that APPENDS it to the final round (_augment_for_next_round, gated on next_round === rounds) is the remaining integration — see the halt note at the phase foot. -->
+      <!-- done (wiring PR, 2026-07-12): consult() appends STANCE_LINE_CONTRACT to the FINAL round when stance_tally is on (rounds:1 → round 1; rounds:N → round N); default-off byte-identical (original question object flows untouched). Proven by capturing-mock tests. -->
 - [x] New module `src/scripts/ai_council/stance_tally.ts`: parse stance
       lines (tolerant of whitespace/case, re-prompt-marker on
       unparseable — never infer from prose); canonicalise labels
@@ -176,10 +176,10 @@ Deterministic port of Source G's tally, engineered instead of prompted.
       any member call; surfaced in the estimate as a `may add up to N
       repair calls` row.
       <!-- BLOCKED on `blocker: contested-design-council-pass` — the repair-call auto-fire-vs-confirm policy is the design question that blocker reserves for a billable /council:design run. The tally already RETURNS needs_repair (parsed, tested); only the billable dispatch policy waits. -->
-- [ ] Verdict section **Vote Tally** in the synthesis template: one line
+- [x] Verdict section **Vote Tally** in the synthesis template: one line
       per option (`<option> — <weight> (<backers with confidence>)`),
       threshold stated, cleared-or-escalated stated.
-      <!-- partial: render_vote_tally() authored + tested in stance_tally.ts (exactly this shape). Injecting it into the live synthesis output is part of the same orchestrator integration as the final-round wiring — remaining. -->
+      <!-- done (wiring PR, 2026-07-12): render() emits the Vote Tally block (deterministic projection from final-round texts) when stance_tally is on; threaded cmd_run → payload.stance_tally → cmd_render. Split escalates honestly; off = byte-identical. -->
 - [x] Tests in `tests/scripts/ai_council/stance_tally.test.ts` including
       Source G's own worked example as a fixture (3-seat panel, one
       abstain; assert the abstain raises the bar and the split
