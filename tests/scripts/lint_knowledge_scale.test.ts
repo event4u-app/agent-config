@@ -48,6 +48,24 @@ describe('lint_knowledge_scale — tripwires', () => {
         expect(runChecks(mkRoot())).toEqual([]);
     });
 
+    it('contested-cards fires on a card flagged contested: true, silent otherwise', () => {
+        const root = mkRoot();
+        const cards = path.join(root, 'agents', 'knowledge');
+        fs.mkdirSync(cards, { recursive: true });
+        // A settled card → no warning.
+        fs.writeFileSync(path.join(cards, 'settled.md'), '---\ntitle: x\n---\nbody\n', 'utf-8');
+        expect(rules(root)).not.toContain('contested-cards');
+        // A contested card → the warning fires and names the card.
+        fs.writeFileSync(
+            path.join(cards, 'disputed.md'),
+            '---\ntitle: y\ncontested: true\ncontradictions: [abc123]\n---\nbody\n',
+            'utf-8',
+        );
+        const w = runChecks(root).find((x) => x.rule === 'contested-cards');
+        expect(w).toBeDefined();
+        expect(w!.message).toContain('disputed.md');
+    });
+
     it('intake-scale fires above the event threshold and names fold_intake', () => {
         const root = mkRoot();
         const dir = path.join(root, 'agents', 'knowledge', 'intake');

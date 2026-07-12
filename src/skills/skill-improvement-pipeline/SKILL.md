@@ -111,6 +111,14 @@ Decide what to create:
 
 ### Step 4: Create or Update
 
+> **Anchor exact commands to the transcript, not the journal.** A session
+> journal is a *lossy summary*; a command, path, or flag reconstructed from it
+> can be subtly wrong. Before writing a concrete step (a command, a file path, a
+> config key) into a rule or skill, confirm it against the anchored source
+> transcript — carry a `transcript:` / session anchor on the mined learning so
+> the exact wording is recoverable, and verify against it rather than trusting
+> the summary.
+
 - **New rule** → create in `.agent-src.uncondensed/rules/`, follow rule conventions
 - **New skill** → use `skill-writing` skill, create in `.agent-src.uncondensed/skills/`
 - **Update existing** → use `skill-management` skill
