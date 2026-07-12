@@ -7,6 +7,18 @@ trust: durable
 # Optional for project-local cards; required (plus a provenance footer) once a
 # card is promoted to the global store. Resolve via knowledge_global.classify_tier.
 tier: "<public | vendor | proprietary>"
+# sensitivity — orthogonal to tier: WHETHER this card may ever leave the
+# project at all (tier is WHERE it came from). Phase 1, road-to-feedback-8.11
+# / successor note to ADR-119. Three machine-anchored classes:
+#   prohibited = contains redaction-class content; never leaves the repo
+#                (machine-derived from the redaction scan — never hand-set).
+#   project    = DEFAULT. Stays project-local; promotion refused unless a
+#                human explicitly reclassifies the card to `shareable`.
+#   shareable  = eligible for the global store; must pass redaction AND
+#                carry full promotion provenance (see the footer once
+#                promoted: source_repo, owner, review_after, promotion_reason).
+# Required (and machine-checked) once a card is promoted to the global store.
+sensitivity: "project"
 origin: "<brief description — e.g. npm package / remote API / legacy DB>"
 url: "<canonical upstream URL>"
 ref: "<pinned version tag or commit SHA — never blind main>"
