@@ -6,10 +6,10 @@
 
 ## Overall
 
-**110 / 380 steps done · 29%**
+**113 / 375 steps done · 30%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 ```
 
 ## Open roadmaps
@@ -35,7 +35,7 @@
 | 17 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
 | 19 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 7 | 22 | 0 | 0 | [1](#blockers-road-to-opt-council-deliberation) | ████████░░ 76% |
-| 20 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 8 | 2 | 0 | 0 | 0 | ██░░░░░░░░ 20% |
+| 20 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 5 | 5 | 0 | 0 | 0 | █████░░░░░ 50% |
 | 21 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
 | 22 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 23 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 9 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 76% |
@@ -268,11 +268,11 @@ _1 blocker resolved._
 
 ### [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md)
 
-**Road to opt measurement unblock — one judge run cascade-unblocks the token program** — 2 / 10 done (20%)
+**Road to opt measurement unblock — one judge run cascade-unblocks the token program** — 5 / 10 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | length-neutral judge rerun (the cascade key) | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
+| 1 | length-neutral judge rerun (the cascade key) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | non-Claude lift replication (discipline_profile auto flip gate) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | cross-model e2e parity eval: re-scope the keystone | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 
