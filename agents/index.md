@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **643 artefacts** in this package.
+Maintainer-facing index of all **649 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -163,7 +163,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`messaging-architecture`](../src/skills/messaging-architecture/SKILL.md) |  | Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked positioning frame — before any copy or launch beat. Triggers on 'tighten the message stack'. |
 | skill | [`migration-architect`](../src/skills/migration-architect/SKILL.md) |  | Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked. |
 | skill | [`mobile-e2e-strategy`](../src/skills/mobile-e2e-strategy/SKILL.md) |  | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
-| skill | [`module-detect-on-the-fly`](../src/skills/module-detect-on-the-fly/SKILL.md) |  | Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config. |
+| skill | [`module-detect-on-the-fly`](../src/skills/module-detect-on-the-fly/SKILL.md) |  | Use when editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference. |
 | skill | [`module-management`](../src/skills/module-management/SKILL.md) |  | Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
 | skill | [`motion-choreographer`](../src/skills/motion-choreographer/SKILL.md) |  | Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
 | skill | [`multi-tenancy`](../src/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
@@ -392,7 +392,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (178)
+## Commands (183)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -554,6 +554,11 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`team-knowledge`](../src/domains/meta/team-knowledge/command.md) | cluster: team-knowledge | Team-knowledge orchestrator — routes to consolidate and bootstrap |
 | command | [`team-knowledge-bootstrap`](../src/domains/meta/team-knowledge/bootstrap/command.md) | cluster: team-knowledge | One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit. |
 | command | [`team-knowledge-consolidate`](../src/domains/meta/team-knowledge/consolidate/command.md) | cluster: team-knowledge | Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval. |
+| command | [`team`](../src/domains/meta/team/command.md) | cluster: team | Team orchestrator — cross-model depth review (one strong model builds, a second reviews the real diff); routes to review, adversarial, delegate, status |
+| command | [`team-adversarial`](../src/domains/meta/team/adversarial/command.md) | cluster: team | Thin wrapper — adversarial cross-model review on a named focus via the official plugin (/codex:adversarial-review). Escalation rung above the single-model adversarial-review skill. |
+| command | [`team-delegate`](../src/domains/meta/team/delegate/command.md) | cluster: team | Thin wrapper — hand a task to the second model as a native worker via the official plugin (/codex:rescue). The only write-access wrapper; double-gated behind ai_team.allow_delegate. |
+| command | [`team-review`](../src/domains/meta/team/review/command.md) | cluster: team | Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on ai_team.enabled; fails closed when the plugin is absent. |
+| command | [`team-status`](../src/domains/meta/team/status/command.md) | cluster: team | Thin wrapper — plugin job status via /codex:status plus a ledger line with today's cli_call_budget openai count. Gated on ai_team.enabled; fails closed when the plugin is absent. |
 | command | [`tests`](../src/domains/engineering-base/tests/command.md) | cluster: tests | Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal |
 | command | [`tests-create`](../src/domains/engineering-base/tests/create/command.md) | cluster: tests | Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
 | command | [`tests-e2e-heal`](../src/domains/engineering-base/tests/e2e-heal/command.md) | cluster: tests | Find, debug, and fix failing Playwright E2E tests |
@@ -575,7 +580,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (90)
+## Guidelines (91)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -614,6 +619,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`roadmap-progress-mechanics`](../docs/guidelines/agent-infra/roadmap-progress-mechanics.md) | agent-infra |  |
 | guideline | [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md) | agent-infra |  |
 | guideline | [`role-mode-router`](../docs/guidelines/agent-infra/role-mode-router.md) | agent-infra |  |
+| guideline | [`rule-body-migration-inventory`](../docs/guidelines/agent-infra/rule-body-migration-inventory.md) | agent-infra |  |
 | guideline | [`rule-type-governance`](../docs/guidelines/agent-infra/rule-type-governance.md) | agent-infra |  |
 | guideline | [`runtime-layer`](../docs/guidelines/agent-infra/runtime-layer.md) | agent-infra |  |
 | guideline | [`scqa-framework`](../docs/guidelines/agent-infra/scqa-framework.md) | agent-infra |  |

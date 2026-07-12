@@ -6,10 +6,10 @@
 
 ## Overall
 
-**84 / 339 steps done · 25%**
+**96 / 338 steps done · 28%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   25%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
 ```
 
 ## Open roadmaps
@@ -34,11 +34,11 @@
 | 16 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 17 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 19 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 3 | 7 | 0 | 0 | 0 | ███████░░░ 70% |
+| 19 | [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md) | 3 | 10 | 1 | 8 | 1 | 0 | 0 | █████████░ 89% |
 | 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 21 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 8 | 29 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 78% |
 | 22 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 23 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 34 | 4 | 1 | 0 | [2](#blockers-road-to-team-mode) | █░░░░░░░░░ 11% |
+| 23 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 23 | 15 | 1 | 0 | [2](#blockers-road-to-team-mode) | ████░░░░░░ 39% |
 | 24 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 | 25 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
 
@@ -241,12 +241,12 @@ _1 blocker resolved._
 
 ### [road-to-opt-measurement-unblock.md](roadmaps/road-to-opt-measurement-unblock.md)
 
-**Road to opt measurement unblock — one judge run cascade-unblocks the token program** — 7 / 10 done (70%)
+**Road to opt measurement unblock — one judge run cascade-unblocks the token program** — 8 / 9 done (89%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | length-neutral judge rerun (the cascade key) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | non-Claude lift replication (discipline_profile auto flip gate) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | non-Claude lift replication (discipline_profile auto flip gate) | 🟡 in progress | 1 | 1 | 1 | 0 | 50% |
 | 3 | cross-model e2e parity eval: re-scope the keystone | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
@@ -319,17 +319,17 @@ _1 blocker resolved._
 
 ### [road-to-team-mode.md](roadmaps/road-to-team-mode.md)
 
-**Road to team mode — govern the official cross-model pair, don't rebuild it** — 4 / 38 done (11%)
+**Road to team mode — govern the official cross-model pair, don't rebuild it** — 15 / 38 done (39%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Facts, claims hygiene, boundary prose | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | Detection + guided setup | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | `/team` command family (Claude-Code path) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Detection + guided setup | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | `/team` command family (Claude-Code path) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | Multi-host fallback (the gap only we can fill) | ⬜ not started | 4 | 0 | 1 | 0 | 0% |
 | 4 | Review-Gate governance | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | Defect-finding benchmark (measure the marketing) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | Close-out | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+| 6 | Close-out | 🟡 in progress | 10 | 1 | 0 | 0 | 9% |
 
 <a id="blockers-road-to-team-mode"></a>
 **Blockers**

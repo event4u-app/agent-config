@@ -29,7 +29,7 @@
  * scope · global-binary · claude-plugin · stale-orphans · manifest-integrity ·
  * lockfile-freshness · bridge-drift · mcp-mode · mcp-beta-readiness ·
  * offline-readiness · python-runtime · humanizer-runtime · tier-usage-readiness ·
- * council-cli ·
+ * council-cli · team ·
  * unsupported-combos · wizard-state.
  * Each emits a structured `{id, status, message, remedy}` record with
  * `status` ∈ `ok` / `warn` / `fail` / `skipped` (rendered
@@ -747,6 +747,7 @@ const CHECK_IDS = [
     'humanizer-runtime',
     'tier-usage-readiness',
     'council-cli',
+    'team',
     'unsupported-combos',
     'wizard-state',
     'settings-review-pending',
@@ -769,6 +770,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'humanizer-runtime',
     'tier-usage-readiness',
     'council-cli',
+    'team',
     'wizard-state',
     'settings-review-pending',
 ]);
@@ -1975,6 +1977,196 @@ function pyFloat(value: number): string {
     return String(value);
 }
 
+// ---------------------------------------------------------------------------
+// team check (road-to-team-mode Phase 1) — codex binary + auth, official
+// codex plugin on Claude-Code hosts, Review-Gate consistency.
+// ---------------------------------------------------------------------------
+
+/**
+ * Codex CLI home — `CODEX_HOME` env override (the codex CLI's own
+ * convention), else `~/.codex`.
+ */
+function _codex_home(): string {
+    const env = (process.env['CODEX_HOME'] ?? '').trim();
+    return env !== '' ? env : path.join(os.homedir(), '.codex');
+}
+
+/**
+ * Codex binary name for the team check — REUSES the council probe's binary
+ * discovery: when a council config exists and declares an enabled cli-mode
+ * `openai` member with a `binary` override, honour it; else the provider
+ * default from `_CLI_PROVIDER_META` (`codex`). Never throws — an unreadable
+ * or invalid council config falls back to the default binary (the council-cli
+ * check owns reporting that problem).
+ */
+function _team_codex_binary_name(project_root: string): string {
+    const default_bin = (_CLI_PROVIDER_META['openai'] as [string, boolean])[0];
+    const { load_council_config, resolve_config_path } = ai_council_config;
+    const council_path = resolve_config_path(project_root);
+    if (!pathExists(String(council_path))) {
+        return default_bin;
+    }
+    let cfg: ai_council_config.CouncilConfig;
+    try {
+        cfg = load_council_config(council_path);
+    } catch {
+        return default_bin;
+    }
+    const member = cfg.members.get('openai');
+    if (member && member.enabled && member.mode === 'cli' && member.binary) {
+        return member.binary;
+    }
+    return default_bin;
+}
+
+/** Settings-flag coercion shared with the tier-usage check (bool or string). */
+function _settings_flag(val: unknown): boolean {
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'string') {
+        return ['true', 'yes', 'on', '1'].includes(val.trim().toLowerCase());
+    }
+    return false;
+}
+
+/** The `ai_team` block from `.agent-settings.yml` — lenient, `{}` when absent. */
+function _read_ai_team_block(project_root: string): Dict {
+    const settings_file = project_settings_path(project_root);
+    if (!isFile(settings_file)) return {};
+    let content: string;
+    try {
+        content = readText0(settings_file);
+    } catch {
+        return {};
+    }
+    const loaded = yamlSafeLoad(content);
+    if (typeof loaded !== 'object' || loaded === null || Array.isArray(loaded)) return {};
+    const raw = (loaded as Dict)['ai_team'];
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return {};
+    return raw as Dict;
+}
+
+/**
+ * `team` health check — three sub-signals folded into one result:
+ *
+ * (a) codex binary present (council-probe binary discovery reused) AND
+ *     auth present. Auth is a READ-ONLY presence probe of
+ *     `$CODEX_HOME/auth.json` (default `~/.codex/auth.json`) — token
+ *     expiry cannot be validated without a billable call; runtime expiry
+ *     is caught by `OpenAICliClient._AUTH_FAILURE_PATTERNS`.
+ * (b) on Claude-Code hosts (claude binary on PATH or the Claude config dir
+ *     present): the official codex plugin recorded in
+ *     `plugins/installed_plugins.json`. Detection is read-only — doctor
+ *     never writes under `~/.claude/`.
+ * (c) Review-Gate consistency: `ai_team.review_gate.managed` on while the
+ *     loop bound (`max_consecutive_blocks`, Phase 4 — unbuilt) is absent
+ *     → WARN.
+ *
+ * Absent feature ≠ broken feature: with `ai_team` absent or disabled the
+ * check reports ok ("team mode not configured (default-off)"); WARN fires
+ * only on failing sub-signals or inconsistent half-configured states.
+ */
+function _check_team(project_root: string): Dict {
+    const ai_team = _read_ai_team_block(project_root);
+    const enabled = _settings_flag(ai_team['enabled']);
+    const gateRaw = ai_team['review_gate'];
+    const gate =
+        typeof gateRaw === 'object' && gateRaw !== null && !Array.isArray(gateRaw)
+            ? (gateRaw as Dict)
+            : {};
+    const gate_managed = _settings_flag(gate['managed']);
+    const bound = gate['max_consecutive_blocks'];
+    const bound_present = typeof bound === 'number' && Number.isInteger(bound) && bound > 0;
+
+    if (!enabled) {
+        if (gate_managed) {
+            return {
+                id: 'team',
+                status: 'warn',
+                message:
+                    'half-configured: ai_team.review_gate.managed is on but ' +
+                    'ai_team.enabled is false — the gate never runs',
+                remedy:
+                    'set `ai_team.enabled: true` in .agent-settings.yml, or ' +
+                    'remove `ai_team.review_gate.managed`',
+            };
+        }
+        return {
+            id: 'team',
+            status: 'ok',
+            message: 'team mode not configured (default-off)',
+            remedy:
+                'opt in via `ai_team.enabled: true` in .agent-settings.yml, ' +
+                'then re-run `agent-config doctor --check team`',
+        };
+    }
+
+    const remedies: string[] = [];
+
+    // (a) codex binary — council-probe discovery reused.
+    const binary_name = _team_codex_binary_name(project_root);
+    const binary_resolved = shutilWhich(binary_name);
+    const binary_glyph = binary_resolved !== null ? '✅' : '❌';
+    if (binary_resolved === null) {
+        remedies.push('install the codex CLI: `npm install -g @openai/codex`');
+    }
+
+    // (a, cont.) codex auth — presence probe of $CODEX_HOME/auth.json.
+    const auth_path = path.join(_codex_home(), 'auth.json');
+    const authed = pathExists(auth_path);
+    const auth_glyph = authed ? '✅' : '❌';
+    if (!authed) {
+        remedies.push('run `codex login`');
+    }
+
+    // (b) official codex plugin — Claude-Code hosts only.
+    const is_claude_host =
+        shutilWhich('claude') !== null || pathExists(claude_plugin.claude_config_dir());
+    let plugin_str: string;
+    if (is_claude_host) {
+        const plugin_present = claude_plugin.codex_plugin_installed();
+        plugin_str = `codex plugin ${plugin_present ? '✅' : '❌'}`;
+        if (!plugin_present) {
+            remedies.push(
+                'install the official codex plugin: ' +
+                    claude_plugin.CODEX_PLUGIN_INSTALL_HINT.map((c) => `\`${c}\``).join(' then '),
+            );
+        }
+    } else {
+        plugin_str = 'codex plugin — (not a Claude Code host; fallback path applies)';
+    }
+
+    // (c) Review-Gate consistency.
+    let gate_str: string;
+    if (gate_managed && !bound_present) {
+        gate_str = 'review-gate ⚠️ on, loop bound absent';
+        remedies.push(
+            'set `ai_team.review_gate.max_consecutive_blocks` (loop bound; ' +
+                'ships with the Review-Gate governance phase) or set ' +
+                '`ai_team.review_gate.managed: false`',
+        );
+    } else {
+        gate_str = `review-gate ${gate_managed ? 'on' : 'off'}`;
+    }
+
+    const detail =
+        `codex binary ${binary_glyph} (${binary_name}) · ` +
+        `codex auth ${auth_glyph} (${auth_path}) · ${plugin_str} · ${gate_str}`;
+    if (remedies.length > 0) {
+        return {
+            id: 'team',
+            status: 'warn',
+            message: `${remedies.length} team sub-signal(s) failing · ${detail}`,
+            remedy: remedies.join('; '),
+        };
+    }
+    return {
+        id: 'team',
+        status: 'ok',
+        message: `team mode enabled · ${detail}`,
+        remedy: '',
+    };
+}
+
 function _check_unsupported_combos(manifest: Dict): Dict {
     const global_only = new Set(['droid', 'qoder']);
     const bad: string[] = [];
@@ -2257,6 +2449,7 @@ function _run_checks(
         'humanizer-runtime': () => _check_humanizer_runtime(),
         'tier-usage-readiness': () => _check_tier_usage_readiness(project_root),
         'council-cli': () => _check_council_cli(project_root),
+        team: () => _check_team(project_root),
         'unsupported-combos': () => _check_unsupported_combos(manifest),
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
@@ -2329,6 +2522,7 @@ function _run_checks_no_manifest(
         'humanizer-runtime': () => _check_humanizer_runtime(),
         'tier-usage-readiness': () => _check_tier_usage_readiness(project_root),
         'council-cli': () => _check_council_cli(project_root),
+        team: () => _check_team(project_root),
         'unsupported-combos': () => _skipped_manifest_check('unsupported-combos'),
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
@@ -2818,6 +3012,7 @@ export {
     _check_mcp_beta_readiness,
     _check_tier_usage_readiness,
     _check_council_cli,
+    _check_team,
     _check_unsupported_combos,
     _check_wizard_state,
     _check_settings_review_pending,

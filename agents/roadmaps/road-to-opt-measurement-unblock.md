@@ -77,14 +77,14 @@ The `discipline_profile: auto` default has never shipped because lift
 was measured on one vendor only. The codex host adapter is built and
 unit-tested; the run is blocked on auth + spend.
 
-- [ ] Restore non-Claude host auth (codex or the cheapest available
+- [x] Restore non-Claude host auth (codex or the cheapest available
       non-Anthropic host with a built adapter); verify with a 1-task
       smoke before the paired run.
-      <!-- GATED: host auth is a human/repo-admin credential step — cannot be done autonomously. -->
-- [ ] Run the paired vanilla-vs-`essential` discipline benchmark on the
+      <!-- done (2026-07-12): codex CLI installed + logged in (ChatGPT); 1-task LIVE smoke green on --host codex (bench_ab_v2_run --limit 1 --arms vanilla, report written). Arm-mapping corrected against the parked design: the codex 'essential' arm is rules-kernel-dc (package-rdp is claude-host-only). -->
+- [~] Run the paired vanilla-vs-`essential` discipline benchmark on the
       non-Claude host per the parked design in
       `agents/tmp.old/road-to-alternatives/road-to-non-claude-lift-replication.md`.
-      <!-- GATED: billable paired benchmark on the non-Claude host — money-moving + depends on the auth step. Not auto-fired. -->
+      <!-- IN FLIGHT (2026-07-12): fired under in-session authorization (option 'Feuern', worst-case $180 hard-capped per-run, realistic $20-60) — bench_ab_v2_run --host codex --arms vanilla,rules-kernel-dc --seeds 3 --budget 3.5, exactly per the parked design. ~2h background; the report + disposition land in the follow-up PR. -->
 - [ ] Disposition: replicated lift → ship the `auto` default flip
       (settings template + install bundle regen + docs); null/negative →
       record the honest null and keep the current default, citing the

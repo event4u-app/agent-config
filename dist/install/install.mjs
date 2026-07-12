@@ -14233,6 +14233,23 @@ var settingsSchema = external_exports.object({
       "When the agent considers a parallel `git worktree` for risky / large work. ask (default) = surface a numbered option and wait. on = spawn worktrees autonomously. off = never use worktrees, edit in place."
     )
   }),
+  ai_team: external_exports.object({
+    enabled: external_exports.boolean().default(false).describe(
+      "Master switch for the /team cross-model review family (docs/contracts/ai-team-config.md). false (default) = commands are never suggested and every invocation refuses with an enable pointer. true = the family is live; individual gates (allow_delegate) still apply."
+    ),
+    model: external_exports.string().default("auto").describe(
+      "Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies \u2014 tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`."
+    ),
+    allow_delegate: external_exports.boolean().default(false).describe(
+      "Second opt-in for the only wrapper that delegates write access (/team:delegate). false (default) = delegate refuses even when ai_team.enabled is true. Both keys must be true before delegation is reachable."
+    ),
+    max_calls_per_day: external_exports.number().int().min(0).default(50).describe(
+      "Per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) \u2014 one subscription, one counter, never a parallel count. 0 = block all team calls."
+    ),
+    suppress_setup_hint: external_exports.boolean().default(false).describe(
+      "Suppress the one-line wizard/init recommendation to set up the codex plugin on Claude-Code hosts. Cosmetic only \u2014 never changes behavior."
+    )
+  }).default({ enabled: false, model: "auto", allow_delegate: false, max_calls_per_day: 50, suppress_setup_hint: false }),
   onboarding: external_exports.object({
     onboarded: external_exports.boolean().default(false).describe(
       "Set to true once the developer has completed `agent-config setup`. The onboarding-gate rule blocks the first turn of every chat until this is true. Toggle back to false to re-trigger the wizard."
@@ -19975,6 +19992,19 @@ function _read_consumer_auto_switch(project_root) {
   }
   return "suggest";
 }
+function _team_setup_hint_line(project_root) {
+  let data;
+  try {
+    data = load_agent_settings({ project_path: _resolve_settings_read(project_root) });
+  } catch {
+    data = {};
+  }
+  const ai_team = _isPlainObject2(data) ? data["ai_team"] : null;
+  const flag = _isPlainObject2(ai_team) ? ai_team["suppress_setup_hint"] : null;
+  const suppressed = flag === true || typeof flag === "string" && ["true", "yes", "on", "1"].includes(flag.trim().toLowerCase());
+  if (suppressed) return null;
+  return "  \u2022 Claude Code team mode (optional cross-model review via the official codex plugin): run `agent-config doctor --check team` for setup status.";
+}
 function finalize_claude_model_tiers(project_root) {
   const claude_skills = path11.join(project_root, ".claude", "skills");
   const augment_skills = path11.join(project_root, ".augment", "skills");
@@ -20144,6 +20174,13 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
       );
       process3.stdout.write("\n");
     }
+    if (_is_tool_enabled(tools, "claude-code")) {
+      const team_hint = _team_setup_hint_line(project_root);
+      if (team_hint !== null) {
+        process3.stdout.write(team_hint + "\n");
+        process3.stdout.write("\n");
+      }
+    }
   }
   _propose_modules_config(project_root, is_first_run);
   const will_launch = _wizard_should_launch(opts)[0];
@@ -20220,6 +20257,7 @@ export {
   _replace_template_value_raw,
   _resolve_scope,
   _resolve_settings_read,
+  _team_setup_hint_line,
   _tools_was_all,
   _validate_scope,
   _verify_deploy_targets,

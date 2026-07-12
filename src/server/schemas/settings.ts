@@ -288,6 +288,23 @@ export const settingsSchema = z.object({
             'When the agent considers a parallel `git worktree` for risky / large work. ask (default) = surface a numbered option and wait. on = spawn worktrees autonomously. off = never use worktrees, edit in place.',
         ),
     }),
+    ai_team: z.object({
+        enabled: z.boolean().default(false).describe(
+            'Master switch for the /team cross-model review family (docs/contracts/ai-team-config.md). false (default) = commands are never suggested and every invocation refuses with an enable pointer. true = the family is live; individual gates (allow_delegate) still apply.',
+        ),
+        model: z.string().default('auto').describe(
+            "Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies — tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`.",
+        ),
+        allow_delegate: z.boolean().default(false).describe(
+            'Second opt-in for the only wrapper that delegates write access (/team:delegate). false (default) = delegate refuses even when ai_team.enabled is true. Both keys must be true before delegation is reachable.',
+        ),
+        max_calls_per_day: z.number().int().min(0).default(50).describe(
+            'Per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) — one subscription, one counter, never a parallel count. 0 = block all team calls.',
+        ),
+        suppress_setup_hint: z.boolean().default(false).describe(
+            'Suppress the one-line wizard/init recommendation to set up the codex plugin on Claude-Code hosts. Cosmetic only — never changes behavior.',
+        ),
+    }).default({ enabled: false, model: 'auto', allow_delegate: false, max_calls_per_day: 50, suppress_setup_hint: false }),
     onboarding: z.object({
         onboarded: z.boolean().default(false).describe(
             'Set to true once the developer has completed `agent-config setup`. The onboarding-gate rule blocks the first turn of every chat until this is true. Toggle back to false to re-trigger the wizard.',

@@ -229,3 +229,75 @@ describe('install — source-repo detect + legacy migration detect', () => {
         expect([...found].sort()).toEqual(found);
     });
 });
+
+// ---------------------------------------------------------------------------
+// Team-mode setup hint (road-to-team-mode Phase 1 Step 2) — rendering +
+// suppression via `ai_team.suppress_setup_hint`. Hermetic EVENT4U_CONFIG_HOME
+// so the machine's user-global settings never bleed into the merge.
+// ---------------------------------------------------------------------------
+
+describe('install — team-mode setup hint', () => {
+    function withHome(fn: (root: string) => void): void {
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'install-team-hint-'));
+        const root = path.join(base, 'proj');
+        const home = path.join(base, 'e4u-home');
+        fs.mkdirSync(root, { recursive: true });
+        const prev = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = home;
+        try {
+            fn(root);
+        } finally {
+            if (prev === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = prev;
+            fs.rmSync(base, { recursive: true, force: true });
+        }
+    }
+
+    it('no settings file → hint rendered with the doctor pointer', () => {
+        withHome((root) => {
+            const line = inst._team_setup_hint_line(root);
+            expect(line).not.toBeNull();
+            expect(line).toContain('agent-config doctor --check team');
+            expect(line).toContain('codex plugin');
+        });
+    });
+
+    it('ai_team present without suppress key → hint rendered', () => {
+        withHome((root) => {
+            fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'ai_team:\n  enabled: true\n');
+            const line = inst._team_setup_hint_line(root);
+            expect(line).not.toBeNull();
+            expect(line).toContain('agent-config doctor --check team');
+        });
+    });
+
+    it('ai_team.suppress_setup_hint: true → suppressed (null)', () => {
+        withHome((root) => {
+            fs.writeFileSync(
+                path.join(root, '.agent-settings.yml'),
+                'ai_team:\n  suppress_setup_hint: true\n',
+            );
+            expect(inst._team_setup_hint_line(root)).toBeNull();
+        });
+    });
+
+    it('ai_team.suppress_setup_hint: "yes" (string coercion) → suppressed', () => {
+        withHome((root) => {
+            fs.writeFileSync(
+                path.join(root, '.agent-settings.yml'),
+                'ai_team:\n  suppress_setup_hint: "yes"\n',
+            );
+            expect(inst._team_setup_hint_line(root)).toBeNull();
+        });
+    });
+
+    it('ai_team.suppress_setup_hint: false → hint rendered', () => {
+        withHome((root) => {
+            fs.writeFileSync(
+                path.join(root, '.agent-settings.yml'),
+                'ai_team:\n  suppress_setup_hint: false\n',
+            );
+            expect(inst._team_setup_hint_line(root)).not.toBeNull();
+        });
+    });
+});
