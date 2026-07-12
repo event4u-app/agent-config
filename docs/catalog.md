@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **642 public artefacts** shipped by
+Consumer-facing catalog of all **648 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -179,7 +179,7 @@ are excluded.
 | skill | [`messaging-architecture`](../dist/agent-src/skills/messaging-architecture/SKILL.md) |  | Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked positioning frame — before any copy or launch beat. Triggers on 'tighten the message stack'. |
 | skill | [`migration-architect`](../dist/agent-src/skills/migration-architect/SKILL.md) |  | Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked. |
 | skill | [`mobile-e2e-strategy`](../dist/agent-src/skills/mobile-e2e-strategy/SKILL.md) |  | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
-| skill | [`module-detect-on-the-fly`](../dist/agent-src/skills/module-detect-on-the-fly/SKILL.md) |  | Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config. |
+| skill | [`module-detect-on-the-fly`](../dist/agent-src/skills/module-detect-on-the-fly/SKILL.md) |  | Use when editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference. |
 | skill | [`module-management`](../dist/agent-src/skills/module-management/SKILL.md) |  | Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
 | skill | [`motion-choreographer`](../dist/agent-src/skills/motion-choreographer/SKILL.md) |  | Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
 | skill | [`multi-tenancy`](../dist/agent-src/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
@@ -407,7 +407,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (178)
+## Commands (183)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -569,6 +569,11 @@ are excluded.
 | command | [`team-knowledge`](../dist/agent-src/commands/team-knowledge.md) | cluster: team-knowledge | Team-knowledge orchestrator — routes to consolidate and bootstrap |
 | command | [`team-knowledge-bootstrap`](../dist/agent-src/commands/team-knowledge/bootstrap.md) | cluster: team-knowledge | One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit. |
 | command | [`team-knowledge-consolidate`](../dist/agent-src/commands/team-knowledge/consolidate.md) | cluster: team-knowledge | Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval. |
+| command | [`team`](../dist/agent-src/commands/team.md) | cluster: team | Team orchestrator — cross-model depth review (one strong model builds, a second reviews the real diff); routes to review, adversarial, delegate, status |
+| command | [`team-adversarial`](../dist/agent-src/commands/team/adversarial.md) | cluster: team | Thin wrapper — adversarial cross-model review on a named focus via the official plugin (/codex:adversarial-review). Escalation rung above the single-model adversarial-review skill. |
+| command | [`team-delegate`](../dist/agent-src/commands/team/delegate.md) | cluster: team | Thin wrapper — hand a task to the second model as a native worker via the official plugin (/codex:rescue). The only write-access wrapper; double-gated behind ai_team.allow_delegate. |
+| command | [`team-review`](../dist/agent-src/commands/team/review.md) | cluster: team | Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on ai_team.enabled; fails closed when the plugin is absent. |
+| command | [`team-status`](../dist/agent-src/commands/team/status.md) | cluster: team | Thin wrapper — plugin job status via /codex:status plus a ledger line with today's cli_call_budget openai count. Gated on ai_team.enabled; fails closed when the plugin is absent. |
 | command | [`tests`](../dist/agent-src/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal |
 | command | [`tests-create`](../dist/agent-src/commands/tests/create.md) | cluster: tests | Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
 | command | [`tests-e2e-heal`](../dist/agent-src/commands/tests/e2e-heal.md) | cluster: tests | Find, debug, and fix failing Playwright E2E tests |
@@ -590,7 +595,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (90)
+## Guidelines (91)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -629,6 +634,7 @@ are excluded.
 | guideline | [`roadmap-progress-mechanics`](../docs/guidelines/agent-infra/roadmap-progress-mechanics.md) | agent-infra |  |
 | guideline | [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md) | agent-infra |  |
 | guideline | [`role-mode-router`](../docs/guidelines/agent-infra/role-mode-router.md) | agent-infra |  |
+| guideline | [`rule-body-migration-inventory`](../docs/guidelines/agent-infra/rule-body-migration-inventory.md) | agent-infra |  |
 | guideline | [`rule-type-governance`](../docs/guidelines/agent-infra/rule-type-governance.md) | agent-infra |  |
 | guideline | [`runtime-layer`](../docs/guidelines/agent-infra/runtime-layer.md) | agent-infra |  |
 | guideline | [`scqa-framework`](../docs/guidelines/agent-infra/scqa-framework.md) | agent-infra |  |

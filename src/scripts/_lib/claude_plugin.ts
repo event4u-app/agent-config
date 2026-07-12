@@ -27,6 +27,22 @@ export const CLAUDE_PLUGIN_INSTALL_HINT: readonly string[] = [
     `claude plugin install ${CLAUDE_PLUGIN_ID}@${CLAUDE_MARKETPLACE_NAME}`,
 ];
 
+/**
+ * Official OpenAI codex plugin for Claude Code (team mode's Claude-Code
+ * transport). Marketplace name verified against the upstream repo's
+ * `.claude-plugin/marketplace.json` (`name: "openai-codex"`, plugin
+ * `name: "codex"`) at HEAD 2026-07-12.
+ */
+export const CODEX_PLUGIN_ID = 'codex';
+export const CODEX_MARKETPLACE_NAME = 'openai-codex';
+export const CODEX_MARKETPLACE_REPO = 'openai/codex-plugin-cc';
+
+/** The one-time install commands surfaced when the codex plugin is missing. */
+export const CODEX_PLUGIN_INSTALL_HINT: readonly string[] = [
+    `claude plugin marketplace add ${CODEX_MARKETPLACE_REPO}`,
+    `claude plugin install ${CODEX_PLUGIN_ID}@${CODEX_MARKETPLACE_NAME}`,
+];
+
 /** Claude Code config dir — `CLAUDE_CONFIG_DIR` env override, else `~/.claude`. */
 export function claude_config_dir(): string {
     const env = (process.env['CLAUDE_CONFIG_DIR'] ?? '').trim();
@@ -34,11 +50,11 @@ export function claude_config_dir(): string {
 }
 
 /**
- * True when the agent-config plugin is recorded in Claude Code's
+ * True when a plugin with the given id is recorded in Claude Code's
  * `plugins/installed_plugins.json` (any marketplace — matched by the
- * `agent-config@` id prefix). Unreadable / absent file → false.
+ * `<id>@` key prefix). Unreadable / absent file → false. Read-only.
  */
-export function claude_plugin_installed(): boolean {
+function _plugin_id_recorded(plugin_id: string): boolean {
     const p = path.join(claude_config_dir(), 'plugins', 'installed_plugins.json');
     let data: unknown;
     try {
@@ -50,8 +66,27 @@ export function claude_plugin_installed(): boolean {
     const plugins = (data as { plugins?: unknown }).plugins;
     if (plugins === null || plugins === undefined || typeof plugins !== 'object') return false;
     return Object.keys(plugins as Record<string, unknown>).some((k) =>
-        k.startsWith(`${CLAUDE_PLUGIN_ID}@`),
+        k.startsWith(`${plugin_id}@`),
     );
+}
+
+/**
+ * True when the agent-config plugin is recorded in Claude Code's
+ * `plugins/installed_plugins.json` (any marketplace — matched by the
+ * `agent-config@` id prefix). Unreadable / absent file → false.
+ */
+export function claude_plugin_installed(): boolean {
+    return _plugin_id_recorded(CLAUDE_PLUGIN_ID);
+}
+
+/**
+ * True when the official OpenAI codex plugin is recorded in Claude Code's
+ * `plugins/installed_plugins.json` (any marketplace — matched by the
+ * `codex@` id prefix). Unreadable / absent file → false. Read-only:
+ * detection never writes under `~/.claude/`.
+ */
+export function codex_plugin_installed(): boolean {
+    return _plugin_id_recorded(CODEX_PLUGIN_ID);
 }
 
 /**
