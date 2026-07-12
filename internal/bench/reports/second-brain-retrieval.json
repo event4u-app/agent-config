@@ -8,8 +8,14 @@
   "k": 5,
   "store": "internal/bench/second-brain/retrieval-store/ (5 needed + 19 distractors, keyword-overlapping confusers)",
   "precision_at_k": 1,
+  "stale_hit_rate": 0.11428571428571428,
+  "stale_hits": 4,
+  "topk_slots": 35,
+  "poisoned_rejection_rate": 1,
+  "poisoned_retrieved": 1,
+  "poisoned_neutralized": 1,
   "precision_hits": 9,
-  "mean_tie_set_size": 3.3333333333333335,
+  "mean_tie_set_size": 4.111111111111111,
   "discrimination_note": "mean_tie_set_size > 1 means the keyword scorer gave the same top score to multiple entries and broke the tie by STORE ORDER, not relevance — precision@k reflects recall into the top-k, not relevance ranking. This is the ADR-116 (FTS5) signal.",
   "tasks": 9,
   "per_task": [
@@ -18,12 +24,13 @@
       "needed": "dec-api-style",
       "needed_rank": 0,
       "needed_in_top_k": true,
-      "tie_set_size": 4,
+      "tie_set_size": 6,
       "top_k_ids": [
         "dec-api-style",
         "dist-admin-api-graphql",
         "dist-api-versioning",
-        "dist-rest-webhooks"
+        "dist-rest-webhooks",
+        "stale-api-style-superseded"
       ]
     },
     {
@@ -31,11 +38,12 @@
       "needed": "dec-job-queue",
       "needed_rank": 0,
       "needed_in_top_k": true,
-      "tie_set_size": 3,
+      "tie_set_size": 4,
       "top_k_ids": [
         "dec-job-queue",
         "dist-event-stream-kafka",
-        "dist-cron-jobs"
+        "dist-cron-jobs",
+        "stale-job-queue-superseded"
       ]
     },
     {
@@ -90,12 +98,13 @@
       "needed": "dec-job-queue",
       "needed_rank": 0,
       "needed_in_top_k": true,
-      "tie_set_size": 4,
+      "tie_set_size": 5,
       "top_k_ids": [
         "dec-job-queue",
         "dist-event-stream-kafka",
         "dist-cron-jobs",
-        "dist-dead-letter-queue"
+        "dist-dead-letter-queue",
+        "stale-job-queue-superseded"
       ]
     },
     {
@@ -103,12 +112,13 @@
       "needed": "dec-api-style",
       "needed_rank": 0,
       "needed_in_top_k": true,
-      "tie_set_size": 4,
+      "tie_set_size": 6,
       "top_k_ids": [
         "dec-api-style",
         "dist-admin-api-graphql",
         "dist-api-versioning",
-        "dist-rest-webhooks"
+        "dist-rest-webhooks",
+        "stale-api-style-superseded"
       ]
     },
     {
@@ -116,18 +126,19 @@
       "needed": "dec-tenant-scope",
       "needed_rank": 0,
       "needed_in_top_k": true,
-      "tie_set_size": 4,
+      "tie_set_size": 5,
       "top_k_ids": [
         "dec-tenant-scope",
         "dist-tenant-billing",
         "dist-pk-strategy",
-        "dist-row-level-security"
+        "dist-row-level-security",
+        "poison-tenant-scope"
       ]
     }
   ],
   "aggregate": {
     "retrieval-off": {
-      "pass": 5,
+      "pass": 2,
       "total": 27
     },
     "retrieval-on": {
@@ -135,16 +146,16 @@
       "total": 27
     },
     "placebo": {
-      "pass": 5,
+      "pass": 4,
       "total": 27
     }
   },
   "paired": {
     "on-vs-off": {
-      "a_wins": 8,
+      "a_wins": 9,
       "b_wins": 0,
-      "ties": 1,
-      "sign_p": 0.0078125
+      "ties": 0,
+      "sign_p": 0.00390625
     },
     "on-vs-placebo": {
       "a_wins": 8,
@@ -157,7 +168,7 @@
   "note": "precision@k is deterministic (retrieval only, no spend); the arms are model-scored. A retrieval-on PASS means keyword retrieval both FOUND the right decision under confuser load AND the model used it; a NULL with high precision isolates a model-use gap, a NULL with low precision is evidence for the FTS5 activation path (ADR-116).",
   "cost": {
     "calls": 81,
-    "tokens_in": 8442,
-    "tokens_out": 7097
+    "tokens_in": 9009,
+    "tokens_out": 7254
   }
 }
