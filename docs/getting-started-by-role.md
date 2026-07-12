@@ -2,7 +2,7 @@
 
 > Pick the entry that matches what you do day-to-day. Each section names the three skills you will reach for first and shows whether MCP (no terminal) or CLI (terminal) is the simpler install path for that role.
 
-`agent-config` ships 271 skills, 104 governed rules, and 178 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
+`agent-config` ships 271 skills, 104 governed rules, and 183 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
 
 > **Taglines at a glance →** [`docs/role-experiences.md`](role-experiences.md) — the one-line pitch per role experience, in one table.
 
@@ -72,6 +72,8 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 - [`laravel`](../dist/agent-src/skills/laravel/SKILL.md) — Laravel-flavored PHP (Eloquent, Artisan, FormRequests, jobs, policies). See [`docs/getting-started-laravel.md`](getting-started-laravel.md) for the deep dive.
 - [`nextjs-patterns`](../dist/agent-src/skills/nextjs-patterns/SKILL.md) — App Router, Server Components, Server Actions, caching.
 - [`quality-tools`](../dist/agent-src/skills/quality-tools/SKILL.md) — PHPStan, Rector, ECS error triage and fix loop.
+
+Cross-model review of the real diff (**team mode**, default off) is documented in [Getting Started § Team mode](getting-started.md#team-mode--cross-model-review-default-off).
 
 **Install path:** **CLI.** Run `npx @event4u/agent-config init --tools=claude-code,cursor` in the project root. MCP works too but loses git / file-system tooling that the IDE-integrated path gives you.
 
