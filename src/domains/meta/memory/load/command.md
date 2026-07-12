@@ -179,6 +179,21 @@ expects continuity with prior sessions — consult memory before
 answering from scratch. Full guidance:
 [`memory-consolidation § Retrieval-trigger linguistics`](../../skills/memory-consolidation/SKILL.md#retrieval-trigger-linguistics).
 
+## Read-escalation ladder (cheap → precise)
+
+When resolving a knowledge/memory read — including cross-project access — climb
+the ladder and stop at the first rung that answers; do not jump straight to a
+full scan:
+
+1. **Hot cache** — the already-loaded session slice (`hot-context.md` / the
+   Tier-0 slice above); zero new reads.
+2. **Index** — the lexical index / `memory_lookup retrieve_v1` over the keys.
+3. **Type index** — narrow to the relevant type directory, then its entries.
+4. **Entry** — read the specific entry only once the first three located it.
+
+And **empty-result honesty**: when no rung returns a hit, say "the store has
+nothing on this" — never invent an entry to fill the gap.
+
 ## See also
 
 - [`memory-add`](memory-add.md) — add a single entry

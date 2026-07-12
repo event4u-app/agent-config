@@ -159,8 +159,21 @@ skills — github.com/ViktorAxelsen/MemSkill, Apache-2.0, commit `9907c35f8cc7`)
 
 - **Dedupe before insert.** Compare against retrieved entries; never add a
   fact already covered. Split distinct facts into separate entries.
+- **Threshold-tiered dedup decision** (enforced by `check_memory_similarity.ts`
+  / `_lib/text_similarity.ts` — reuse its `MERGE_THRESHOLD` / `WARN_THRESHOLD`
+  consts, never hardcode): similarity **≥ 0.80 → merge** into the existing
+  entry; **0.40–0.80 → read and judge**, merge as default; **< 0.40 → create**.
+  Cap new-entry creation per consolidation cycle. Rationale: over-merging is
+  cheap to undo; over-creating silently poisons downstream retrieval, so the
+  tie-break leans to merge.
 - **Merge on refresh, preserve what still holds.** When a fact updates an
   existing entry, merge into one item and keep the details that remain true.
+- **Fact-change: invalidate-old-then-add-new, never silent overwrite.** When a
+  fact genuinely changes, do not overwrite in place — mark the superseded entry
+  invalid (or record both positions under `contested: true` when
+  `check_memory_contradiction.ts` fires) and add the new fact as its own entry,
+  so the change is auditable. And **empty-result honesty**: when the store has
+  nothing on a query, say so plainly — never invent an entry to fill the gap.
 - **Delete only on explicit contradiction.** Remove a curated entry only when
   evidence directly contradicts or cancels it. If uncertain, keep it.
 - **Prefer no-op under uncertainty.** A chunk with no new, corrective, or

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 24 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **8** open blockers
+> 25 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **8** open blockers
 
 ## Overall
 
-**80 / 315 steps done · 25%**
+**90 / 327 steps done · 28%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   25%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
 ```
 
 ## Open roadmaps
@@ -35,11 +35,12 @@
 | 17 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
 | 19 | [road-to-opt-council-deliberation.md](roadmaps/road-to-opt-council-deliberation.md) | 6 | 29 | 21 | 8 | 0 | 0 | [2](#blockers-road-to-opt-council-deliberation) | ███░░░░░░░ 28% |
-| 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 21 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
-| 22 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 23 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
-| 24 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
+| 20 | [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md) | 4 | 12 | 2 | 10 | 0 | 0 | 0 | ████████░░ 83% |
+| 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 22 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 6 | 33 | 5 | 28 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 85% |
+| 23 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 24 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 25 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 37 | 5 | 28 | 0 | 4 | [1](#blockers-road-to-token-saving) | ████████░░ 85% |
 
 ---
 
@@ -267,6 +268,17 @@ _1 blocker resolved._
     the fixture count is fixed (estimate rendered by `council:estimate`
     across arms before the first billable call).
   - **Resolved when:** the user has confirmed the run budget in-session.
+
+### [road-to-opt-retrieval-and-memory.md](roadmaps/road-to-opt-retrieval-and-memory.md)
+
+**Road to opt retrieval and memory — wire the orphan, benchmark honestly, borrow the protocol discipline** — 10 / 12 done (83%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | resolve the orphaned retrieval surface | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | honest self-benchmark with a second judge | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 3 | protocol borrows (six small mechanisms, no engines) | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 4 | close out the source file | ✅ done | 0 | 1 | 0 | 0 | 100% |
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 

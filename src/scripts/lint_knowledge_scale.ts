@@ -166,6 +166,36 @@ export function runChecks(root: string): Warning[] {
         });
     }
 
+    // 6. Contested cards — surface knowledge cards flagged `contested: true`
+    //    (set when `check_memory_contradiction.ts` fires) so a weak / disputed
+    //    claim stays visibly weak across sessions instead of silently hardening.
+    const cardsDir = path.join(root, 'agents', 'knowledge');
+    const contested = listFiles(cardsDir, ['.md'])
+        .filter((f) => {
+            const base = path.basename(f).toLowerCase();
+            return base !== 'readme.md' && base !== 'index.md';
+        })
+        .filter((f) => {
+            let text: string;
+            try {
+                text = fs.readFileSync(f, 'utf-8');
+            } catch {
+                return false;
+            }
+            // frontmatter-scoped: `contested: true` on its own line near the top.
+            return /^\s*contested:\s*true\s*$/m.test(text.slice(0, 2000));
+        })
+        .map((f) => path.basename(f));
+    if (contested.length > 0) {
+        warnings.push({
+            rule: 'contested-cards',
+            metric: `${contested.length}/0`,
+            message:
+                `${contested.length} knowledge card(s) carry \`contested: true\`: ${contested.join(', ')}. ` +
+                'Resolution path: reconcile each against its `contradictions: [id]` list (human-judged) — a contested claim must not be cited as settled until resolved.',
+        });
+    }
+
     // 5. Hot-context budget.
     const hotContext = path.join(root, 'agents', 'runtime', 'state', 'hot-context.md');
     let hotText = '';
