@@ -24,6 +24,9 @@ import {
     bundle_prompt,
     bundle_roadmap,
 } from './ai_council/bundler.js';
+import { select_chairman } from './ai_council/chairman.js';
+import type { ChairmanCandidate } from './ai_council/chairman.js';
+import { synthesis_template } from './ai_council/prompts.js';
 import type {
     ExternalAIClient} from './ai_council/clients.js';
 import {
@@ -873,6 +876,8 @@ function format_estimate_table(
         consensus_extra_calls?: number;
         peer_review_delta_usd?: number;
         peer_review_extra_calls?: number;
+        chairman_delta_usd?: number;
+        chairman_extra_calls?: number;
     } = {},
 ): string {
     const consensus_delta_usd = opts.consensus_delta_usd ?? 0.0;
@@ -903,6 +908,12 @@ function format_estimate_table(
                 `(~+$${_pyFixed(peer_review_delta_usd, 4)})`,
         );
         total += peer_review_delta_usd;
+    }
+    if ((opts.chairman_extra_calls ?? 0) > 0) {
+        rows.push(
+            `  +chairman synthesis: +${opts.chairman_extra_calls} call (~+$${_pyFixed(opts.chairman_delta_usd ?? 0, 4)})`,
+        );
+        total += opts.chairman_delta_usd ?? 0;
     }
     rows.push(`  TOTAL:  $${_pyFixed(total, 4)}`);
     return rows.join('\n');
@@ -1054,6 +1065,21 @@ function _peer_review_active(ai_cfg: Dict, args: Args): boolean {
     return Boolean(_pyBool(pr_cfg['enabled']));
 }
 
+/** Chairman synthesis delta — one extra call when chairman.mode != host. */
+function _chairman_cost_delta(
+    ai_cfg: Dict,
+    estimates: CostEstimateLike[],
+): [number, number] {
+    const ch = (_isDict(ai_cfg) ? (ai_cfg['chairman'] as Dict) : null) || {};
+    const mode = typeof ch['mode'] === 'string' ? (ch['mode'] as string) : 'host';
+    if (mode === 'host' || estimates.length === 0) {
+        return [0, 0.0];
+    }
+    // Worst-case single call: the most expensive member estimate.
+    const maxUsd = Math.max(...estimates.map((e) => _total_usd(e)));
+    return [1, maxUsd];
+}
+
 function _peer_review_cost_delta(
     ai_cfg: Dict,
     args: Args,
@@ -1069,6 +1095,94 @@ function _peer_review_cost_delta(
     const extra_calls = n_billable;
     const extra_usd = estimates.reduce((acc, e) => acc + _total_usd(e), 0.0);
     return [extra_calls, extra_usd];
+}
+
+
+interface ChairmanResult {
+    member: string | null;
+    annotation: string;
+    text: string | null;
+    response: CouncilResponse | null;
+}
+
+/** Phase 2 chairman dispatch — optional extra billable pass after consult.
+ *  Gated on `ai_council.chairman.mode != host`; selection per the 2026-07-12
+ *  council decision (provider-difference primary, tier tie-break) via
+ *  `select_chairman`; the synthesis call reuses consult([client]) so the
+ *  projected-spend gate, ledger, and metadata stamping apply unchanged.
+ *  Never a silent substitution: fallbacks carry a visible annotation. */
+function _maybe_run_chairman(
+    ai_cfg: Dict,
+    question: CouncilQuestion,
+    members: ExternalAIClient[],
+    responses: CouncilResponse[],
+    budget: CostBudget,
+    table: PriceTable,
+    project: unknown,
+    args: Args,
+): ChairmanResult | null {
+    const ch = (_isDict(ai_cfg) ? (ai_cfg['chairman'] as Dict) : null) || {};
+    const mode = typeof ch['mode'] === 'string' ? (ch['mode'] as string) : 'host';
+    if (mode === 'host') {
+        return null;
+    }
+    const cfg_member = typeof ch['member'] === 'string' ? (ch['member'] as string) : null;
+    const membersRaw = (_isDict(ai_cfg) ? (ai_cfg['members'] as Dict) : null) || {};
+    const candidates: ChairmanCandidate[] = [];
+    for (const [name, raw] of Object.entries(membersRaw)) {
+        const md = (raw as Dict) || {};
+        if (md['enabled'] !== true) continue;
+        candidates.push({
+            name,
+            tier: typeof md['tier'] === 'number' ? (md['tier'] as number) : null,
+        });
+    }
+    const deliberated = new Set(
+        responses.filter((r) => r.error === null && r.text.trim() !== '').map((r) => r.provider),
+    );
+    const sel = select_chairman(mode, cfg_member, deliberated, candidates);
+    if (sel.member === null) {
+        return { member: null, annotation: sel.annotation, text: null, response: null };
+    }
+    const client = members.find((m) => m.name === sel.member);
+    if (client === undefined) {
+        return {
+            member: null,
+            annotation: `Chairman: host (member '${sel.member}' has no constructed client — host fallback)`,
+            text: null,
+            response: null,
+        };
+    }
+    // Transcript WITH identities (the chairman judges attributed positions) +
+    // the lens synthesis template as the authoring instruction.
+    const transcript = responses
+        .filter((r) => r.error === null && r.text.trim() !== '')
+        .map((r) => `## ${r.provider} - ${r.model}\n\n${r.text.trim()}`)
+        .join('\n\n---\n\n');
+    const synth_prompt =
+        `You are the council CHAIRMAN. You did not deliberate. Author the synthesis ` +
+        `of the attributed member positions below, following the template.\n\n` +
+        `${synthesis_template(question.mode)}\n\n---\n\n${transcript}`;
+    const synthQ = new CouncilQuestion({
+        mode: question.mode,
+        user_prompt: synth_prompt,
+        max_tokens: question.max_tokens,
+    });
+    const out = consult([client], synthQ, budget, {
+        table,
+        project: project as never,
+        original_ask: args.original_ask,
+    });
+    const r = out[0] ?? null;
+    if (r === null || r.error !== null || r.text.trim() === '') {
+        return {
+            member: null,
+            annotation: `Chairman: ${sel.member} (FAILED - host fallback)`,
+            text: null,
+            response: r,
+        };
+    }
+    return { member: sel.member, annotation: sel.annotation, text: r.text, response: r };
 }
 
 function _maybe_run_peer_review(
@@ -1204,6 +1318,7 @@ function cmd_estimate(
         return _emit_debate_estimate(args, ai_cfg, members, billable, estimates, advisor_plans, { skipped });
     }
     const [extra_calls, extra_usd] = _consensus_cost_delta(ai_cfg, question.mode, estimates, billable.length);
+    const [ch_calls, ch_usd] = _chairman_cost_delta(ai_cfg, estimates);
     const [pr_extra_calls, pr_extra_usd] = _peer_review_cost_delta(ai_cfg, args, estimates, billable.length);
     _stdout(
         `council:estimate · mode=${question.mode} · members=${members.length} ` +
@@ -1222,6 +1337,8 @@ function cmd_estimate(
             consensus_extra_calls: extra_calls,
             peer_review_delta_usd: pr_extra_usd,
             peer_review_extra_calls: pr_extra_calls,
+            chairman_delta_usd: ch_usd,
+            chairman_extra_calls: ch_calls,
         }) + '\n',
     );
     return 0;
@@ -1720,6 +1837,7 @@ function cmd_run(
         advisor_plans,
     });
     const [extra_calls, extra_usd] = _consensus_cost_delta(ai_cfg, question.mode, estimates, billable.length);
+    const [ch_calls, ch_usd] = _chairman_cost_delta(ai_cfg, estimates);
     const [pr_extra_calls, pr_extra_usd] = _peer_review_cost_delta(ai_cfg, args, estimates, billable.length);
     _stdout(
         `council:run · mode=${question.mode} · members=${members.length} ` +
@@ -1738,6 +1856,8 @@ function cmd_run(
             consensus_extra_calls: extra_calls,
             peer_review_delta_usd: pr_extra_usd,
             peer_review_extra_calls: pr_extra_calls,
+            chairman_delta_usd: ch_usd,
+            chairman_extra_calls: ch_calls,
         }) + '\n',
     );
 
@@ -1807,6 +1927,7 @@ function cmd_run(
         { persona_labels },
     );
     const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args);
+    const chairman = _maybe_run_chairman(ai_cfg, question, members, responses, budget, table, project, args);
     const estimated_total = estimates.reduce((acc, e) => acc + _total_usd(e), 0.0);
     let actual_total = 0.0;
     const all_responses: CouncilResponse[] = [...responses];
@@ -1816,6 +1937,9 @@ function cmd_run(
     if (consensus !== null) {
         all_responses.push(...consensus.extraction_responses);
         all_responses.push(...consensus.scoring_responses);
+    }
+    if (chairman !== null && chairman.response !== null) {
+        all_responses.push(chairman.response);
     }
     for (const r of all_responses) {
         if (r.error) {
@@ -1844,6 +1968,9 @@ function cmd_run(
     }
     if (consensus !== null) {
         payload['consensus'] = _serialise_consensus(consensus);
+    }
+    if (chairman !== null) {
+        payload['chairman'] = { member: chairman.member, annotation: chairman.annotation, text: chairman.text };
     }
     const out_path = _validate_council_output_path(args.output as string, {
         kind: 'responses',
@@ -2207,6 +2334,9 @@ function cmd_render(args: Args): number {
         consensus,
         peer_review,
         stance_tally: payload['stance_tally'] === true,
+        chairman: _isDict(payload['chairman'])
+            ? (payload['chairman'] as { member: string | null; annotation: string; text: string | null })
+            : null,
     });
     if (_getattr<string | null>(args, 'output', null)) {
         const out_path = _validate_council_output_path(args.output as string, {

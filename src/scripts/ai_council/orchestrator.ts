@@ -1471,6 +1471,12 @@ export interface RenderOptions {
      * before the Convergence / Divergence slot. Default `false` → byte-identical.
      */
     stance_tally?: boolean;
+    /**
+     * Phase 2 (chairman): when a chairman-authored synthesis exists (persisted
+     * in the payload), it REPLACES the template in the Convergence/Divergence
+     * slot, prefixed by the visible annotation. Absent/null → byte-identical.
+     */
+    chairman?: { member: string | null; annotation: string; text: string | null } | null;
 }
 
 /**
@@ -1542,6 +1548,14 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
         body = template;
     } else {
         body = '*to be summarised by the host agent*';
+    }
+    const chairman = opts.chairman ?? null;
+    if (chairman !== null && chairman.text !== null && chairman.text.trim() !== '') {
+        // Chairman-authored synthesis replaces the template; the annotation is
+        // always visible (never a silent substitution).
+        body = `_${chairman.annotation}_\n\n${chairman.text.trim()}`;
+    } else if (chairman !== null) {
+        body = `_${chairman.annotation}_\n\n${body}`;
     }
     if (opts.stance_tally === true) {
         // Phase 1: deterministic option-level tally from the final-round
