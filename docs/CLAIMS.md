@@ -202,3 +202,10 @@ visible, not hidden.
 - evidence: internal/bench/reports/humanizer-v1.md#prefers the humanized text
 - status: backed
 - last_verified: 2026-07-11
+
+### claim: persona-identity-placebo-null
+- claim: On a 12-fixture option-decision corpus (3 arms × 2 providers, blind rubric judge claude-opus-4-8, pre-registered hypotheses), famous-figure identity framing added nothing beyond the underlying method text (method 5.04 vs figure 4.88, Δ=0.17, sign-test p=0.607), and provider diversity moved judged quality ~15× more than persona identity (provider Δ=2.58 vs identity Δ=0.17); the whole persona layer lifted only +0.08 over bare prompts. Honest null — persona panel-mode stays CUT, evidence-closed.
+- kind: quant
+- evidence: internal/bench/reports/persona-placebo.json#honest-null
+- status: backed
+- last_verified: 2026-07-12

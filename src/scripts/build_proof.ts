@@ -105,6 +105,15 @@ function render(): string {
         L.push(`Benchmark results — **including the runs where the package changed nothing** —`);
         L.push(`live in [\`${BENCH_REL}\`](benchmark.md). We do not delete a measured null to`);
         L.push('make a number look better; the null is the evidence of honesty.');
+        L.push('');
+        L.push('The freshest example: the **persona-placebo benchmark** <!-- claim:persona-identity-placebo-null -->');
+        L.push('(2026-07-12, 3 arms × 2 providers, blind rubric judge, pre-registered');
+        L.push('hypotheses) measured whether famous-figure persona framing improves decision');
+        L.push('answers over the bare method text it wraps. It does not (Δ=0.17, p=0.607) —');
+        L.push('while provider diversity moved judged quality ~15× more than persona identity.');
+        L.push('The measured null closed a planned feature (persona panel-mode) instead of');
+        L.push('shipping theater; the full per-cell data is committed at');
+        L.push('`internal/bench/reports/persona-placebo.json`.');
     } else {
         L.push('Benchmark results are published under `docs/` including measured nulls.');
     }

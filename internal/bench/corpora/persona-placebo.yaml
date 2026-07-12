@@ -1,0 +1,49 @@
+# Persona-placebo benchmark fixtures (road-to-opt-council-deliberation Phase 4).
+#
+# 12 option-shaped decision questions (architecture forks / trade-offs), each
+# with a PRE-REGISTERED blind-judging rubric. The judge scores an answer 1-10
+# against the rubric without ever seeing which arm produced it.
+#
+# Pre-registered hypothesis (fixed before the first billable call):
+#   H1: method-persona (a) ≈ famous-figure persona (b) on judged quality —
+#       identity framing adds nothing beyond the method text.
+#   H2: provider diversity moves scores more than persona identity does.
+version: 1
+corpus_id: persona-placebo
+fixtures:
+  - id: pp-01
+    prompt: "Our multi-tenant SaaS needs per-tenant data isolation. Choose: (A) one shared Postgres schema with tenant_id row-level security, or (B) schema-per-tenant. 400 tenants today, doubling yearly, 3-person team. Recommend one and justify."
+    rubric: "Names the operational cost of migrations across N schemas vs the blast radius of a missed tenant_id predicate; commits to ONE option with a load-bearing reason tied to team size or growth; states a concrete revisit trigger."
+  - id: pp-02
+    prompt: "Event-driven order flow: (A) transactional outbox + poller, or (B) direct broker publish inside the request with retry. Broker is Kafka, orders must never be lost, p99 latency budget 300ms. Pick one."
+    rubric: "Identifies the dual-write hazard in B; weighs outbox lag vs latency budget; commits to one option; names the failure mode of the chosen option and its mitigation."
+  - id: pp-03
+    prompt: "Monorepo (A) vs polyrepo (B) for a 12-service platform, 25 engineers, shared proto contracts, CI minutes are the current bottleneck. Choose one."
+    rubric: "Connects the choice to the stated CI bottleneck (selective builds / caching vs isolated pipelines); addresses contract-sharing mechanics concretely; one recommendation with a migration-cost acknowledgement."
+  - id: pp-04
+    prompt: "Feature flags: (A) build a minimal in-house flag service on our existing Redis, or (B) adopt a SaaS flag provider. Fintech, SOC2 audit in 6 months, 8 engineers. Decide."
+    rubric: "Raises audit/compliance evidence trail explicitly; estimates the in-house maintenance tail honestly; one recommendation; names what would flip the decision."
+  - id: pp-05
+    prompt: "Our REST API is at v3 with breaking-change pressure. (A) GraphQL migration, or (B) v4 REST with additive-only policy + sunset headers. Mobile clients update slowly (90-day tail). Choose."
+    rubric: "Ties the slow-client tail to versioning strategy; addresses over-fetching claims with skepticism rather than hype; one recommendation with a rollout sketch respecting the 90-day tail."
+  - id: pp-06
+    prompt: "Background jobs: (A) Postgres-backed queue (SKIP LOCKED) on the existing DB, or (B) introduce Redis+Sidekiq-style broker. 200 jobs/min peak, ops team of 1. Pick one."
+    rubric: "Right-sizes for 200 jobs/min (names that this is low volume); weighs new-infra ops cost against DB contention risk with numbers or bounds; one recommendation; a concrete threshold to revisit."
+  - id: pp-07
+    prompt: "Search: (A) Postgres full-text + trigram indexes, or (B) Elasticsearch cluster. Catalog of 2M products, relevance matters for conversion, no dedicated search team. Choose."
+    rubric: "Separates relevance-quality needs from scale needs; acknowledges the operational weight of ES without a team; one recommendation with an explicit quality-ceiling statement and an escape hatch."
+  - id: pp-08
+    prompt: "Cache invalidation for a product-detail page composed from 4 services: (A) short TTL only (30s), or (B) event-driven purge with a TTL safety net. Freshness SLA: price changes visible within 5s. Decide."
+    rubric: "Confronts the 5s SLA vs 30s TTL contradiction head-on; designs the purge path only for the SLA-bearing field(s); one recommendation; names the consistency failure mode that remains."
+  - id: pp-09
+    prompt: "Auth session strategy for a web+mobile product: (A) stateless JWT with 15-min expiry + refresh tokens, or (B) server-side sessions in Redis with sliding expiry. Must support instant revocation on account compromise. Choose."
+    rubric: "Recognises instant-revocation is the deciding constraint and JWTs fail it without a denylist (which erodes statelessness); one recommendation; names the operational cost of the chosen path."
+  - id: pp-10
+    prompt: "Analytics pipeline: (A) ship events through the existing Postgres + nightly batch, or (B) introduce a streaming pipeline (Kinesis/Flink). Product team wants day-old dashboards; ML team 'eventually' wants real-time features. Decide for THIS quarter."
+    rubric: "Anchors on the stated day-old requirement rather than the speculative real-time want; defers streaming with a named trigger instead of building ahead; one recommendation."
+  - id: pp-11
+    prompt: "Deployment: (A) blue-green with instant cutover, or (B) progressive canary at 1/10/50/100%. Stateful websocket service, 40k concurrent connections, deploys 3x/week. Choose."
+    rubric: "Addresses connection draining/rebalancing for websockets explicitly; ties verdict to deploy frequency and blast-radius math; one recommendation with a rollback story."
+  - id: pp-12
+    prompt: "Error tracking data residency: (A) keep the SaaS tracker with EU data processing addendum, or (B) self-host an open-source tracker in our EU VPC. Healthcare customers, DPAs pending, 6-person platform team. Decide."
+    rubric: "Weighs contractual (DPA) sufficiency against the self-host maintenance tail; flags PII-scrubbing as required in BOTH options; one recommendation; names the compliance event that would force the other option."
