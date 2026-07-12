@@ -64,6 +64,15 @@ Benchmark results — **including the runs where the package changed nothing** �
 live in [`docs/benchmark.md`](benchmark.md). We do not delete a measured null to
 make a number look better; the null is the evidence of honesty.
 
+The freshest example: the **persona-placebo benchmark** <!-- claim:persona-identity-placebo-null -->
+(2026-07-12, 3 arms × 2 providers, blind rubric judge, pre-registered
+hypotheses) measured whether famous-figure persona framing improves decision
+answers over the bare method text it wraps. It does not (Δ=0.17, p=0.607) —
+while provider diversity moved judged quality ~15× more than persona identity.
+The measured null closed a planned feature (persona panel-mode) instead of
+shipping theater; the full per-cell data is committed at
+`internal/bench/reports/persona-placebo.json`.
+
 **Behavioural-eval coverage — the honest baseline.** Skill *quality* is only
 as good as its measurement. Today **39 of 271** skills carry a behavioural
 `evals.json`; the highest-traffic / highest-cost tiers (default-surface +
