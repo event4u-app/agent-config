@@ -396,3 +396,28 @@ describe('stance-tally integration (Phase 1)', () => {
         expect(out).toContain('Escalated: no option cleared');
     });
 });
+
+describe('chairman synthesis injection (Phase 2 wiring)', () => {
+    const rs = [
+        new CouncilResponse({ provider: 'anthropic', model: 'm', text: 'pos A', latency_ms: 1 }),
+        new CouncilResponse({ provider: 'openai', model: 'm', text: 'pos B', latency_ms: 1 }),
+    ];
+
+    it('a chairman-authored text replaces the template, annotation visible', () => {
+        const out = render(rs, {
+            chairman: { member: 'google', annotation: 'Chairman: google (auto)', text: '### Recommendation\nShip A.\n\n### Kill criteria\n- x\n\n### Concrete next step\nDo y.' },
+        });
+        expect(out).toContain('_Chairman: google (auto)_');
+        expect(out).toContain('Ship A.');
+        expect(out).not.toContain('*to be summarised by the host agent*');
+    });
+
+    it('a fallback (text null) keeps the template but shows the annotation; absent = byte-identical', () => {
+        const withFallback = render(rs, {
+            chairman: { member: null, annotation: 'Chairman: host (no non-panel member available)', text: null },
+        });
+        expect(withFallback).toContain('_Chairman: host (no non-panel member available)_');
+        const plain = render(rs, {});
+        expect(plain).not.toContain('Chairman:');
+    });
+});

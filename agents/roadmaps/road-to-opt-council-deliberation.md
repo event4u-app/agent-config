@@ -221,7 +221,7 @@ Applies our own host-bias argument to the synthesis step.
       `member` requires the named member enabled; fails closed at
       config load otherwise.
       <!-- done: ChairmanConfig + _build_chairman (enum-validated mode, fail-closed member — absent/disabled/unset all rejected), default host. `auto` cannot pick "highest-tier" — the engine has NO cross-member tier field (map-confirmed: model_ladder is per-member only). Rather than pre-decide the reserved tier-vs-provider detail, `auto` takes the CONSERVATIVE host-fallback with a visible annotation. -->
-- [ ] Orchestrator dispatch: after consensus scoring (and stance tally,
+- [x] Orchestrator dispatch: after consensus scoring (and stance tally,
       when on), render the chairman prompt (transcript with identities
       restored + the lens synthesis template) and send as one member
       call through the existing client/transport layer; billable rules,
@@ -231,9 +231,9 @@ Applies our own host-bias argument to the synthesis step.
       annotation `Chairman: <member> (FAILED — host fallback)`; never a
       silent substitution.
       <!-- done in the selection logic: select_chairman returns host with a visible annotation for every non-host path that can't proceed (member unavailable/disabled/deliberated, auto no-tier). The dispatch-time call-FAILURE annotation ships with the dispatch. -->
-- [ ] `council:estimate` shows the chairman call as its own row when
+- [x] `council:estimate` shows the chairman call as its own row when
       `mode != host`.
-      <!-- GATED: the estimate row lands with the billable dispatch (the row's cost delta = the chairman call it estimates). -->
+      <!-- done (dispatch PR): _chairman_cost_delta (worst-case single-member estimate) + a '+chairman synthesis' row in format_estimate_table, threaded at both cmd_run and cmd_estimate call sites. -->
 - [ ] ADR via `adr-create`: chairman-mode supersedes the
       always-host-synthesis stance in the council skill; records the
       bias argument and the default-`host` compatibility guarantee.
