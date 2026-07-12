@@ -493,3 +493,40 @@ anchor-scoring against `must_include`/`must_not`, not pairwise LLM judging).
 - Runner: `src/scripts/bench_quality_rerun.ts` (design-pinned constants:
   band ±15%, κ floor 0.60, ρ flag 0.3, effect floor 10pp; `--max-usd` guard).
 - Roadmap: `agents/roadmaps/road-to-opt-measurement-unblock.md` Phase 1.
+
+## Cross-model parity count (2026-07-12) — PASS, `finding_floor` armed
+
+The most-deferred portfolio item (cross-model parity eval, deferred across 4+
+roadmaps) landed in its re-scoped form: council-transport execution instead of
+an in-host subagent harness (`docs/design/cross-model-parity-eval.md`). Each
+orchestration-corpus task is rendered self-contained (fixture files inlined)
+and dispatched identically to two vendors; the output contract forces a
+numbered findings list (or `NO FINDINGS`), counted with the **same**
+`_count_findings` the `finding_floor` eval gate uses.
+
+| Task | sonnet median | gpt-4o median | Calibrated floor |
+|---|---|---|---|
+| orch-01 multi-file analysis | 11 | 5 | 5 |
+| orch-02 ordered refactor | 5 | 3 | 3 |
+| orch-03 competitive impl | 3 | 0 | 1 (clamp) |
+| pv-01 hollow detection | 2 | 2 | 2 |
+| pv-02 negative control | 0 | 0 | — (control, excluded) |
+
+Signal, honestly stated:
+
+- **Real cross-vendor gap** — sonnet surfaces ~2× gpt-4o's findings on the
+  multi-file analysis task. A floor calibrated on sonnet alone would
+  systematically fail gpt-4o; the cross-host lower envelope
+  (`max(1, min over hosts of median)`) is the correct floor shape.
+- **Planted defect is vendor-stable** — both vendors cite the hollow
+  `charge.ts` (2 findings each, zero variance across repeats).
+- **Negative control perfect** — 0 findings from both vendors on clean code
+  across all repeats; the counting contract does not reward spurious findings.
+
+Cost: $0.16 actual (30 calls; ceiling $8 authorized). `finding_floor` is now an
+**enforcing** gate (comment flipped in `run_skill_evals.ts`); calibration data
+in `internal/bench/reports/parity-count.json`.
+
+- Runner: `src/scripts/bench_parity_count.ts` (pre-registered: 3 repeats,
+  2 vendors, envelope floor rule, controls excluded, `--max-usd` abort).
+- Roadmap: `agents/roadmaps/road-to-opt-measurement-unblock.md` Phase 3.

@@ -223,3 +223,10 @@ visible, not hidden.
 - evidence: internal/bench/reports/second-brain-retrieval.json#retrieval-on
 - status: backed
 - last_verified: 2026-07-12
+
+### claim: cross-model-parity-count
+- claim: The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts via the council transport, $0.16) measured real per-host finding-count differences — claude-sonnet-4-5 surfaced ~2× the findings of gpt-4o on the multi-file analysis task (median 11 vs 5) while both vendors were identical on the planted hollow-implementation task (2 vs 2) and perfectly silent on the clean-code negative control (0 vs 0, no spurious findings). The per-task `finding_floor` values are calibrated from the cross-host lower envelope and the gate is armed.
+- kind: quant
+- evidence: internal/bench/reports/parity-count.json#min over hosts of median
+- status: backed
+- last_verified: 2026-07-12
