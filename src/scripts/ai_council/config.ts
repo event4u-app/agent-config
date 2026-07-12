@@ -456,6 +456,27 @@ export interface StanceTallyConfig {
     readonly enabled: boolean;
 }
 
+/** Chairman synthesis (road-to-opt-council-deliberation Phase 2). Default
+ *  `host` = today's host-synthesis behaviour, byte-identical. */
+export interface ChairmanConfig {
+    readonly mode: string; // one of _VALID_CHAIRMAN_MODES
+    readonly member: string | null; // required (and validated) when mode === 'member'
+}
+
+/** Debate enforcement gates (road-to-opt-council-deliberation Phase 3).
+ *  Enables the anti-conformity directive + the deterministic post-round
+ *  dissent-quota / novelty checks on the debate path. */
+export interface DebateGatesConfig {
+    readonly enabled: boolean;
+}
+
+/** Pre-round-1 restatement pass (road-to-opt-council-deliberation Phase 3). */
+export interface RestateConfig {
+    readonly enabled: boolean;
+}
+
+const _VALID_CHAIRMAN_MODES: ReadonlySet<string> = new Set(['host', 'member', 'auto']);
+
 /** Routing entry for one impact class (Phase 10). */
 export interface DecisionResolutionEntry {
     readonly mode: string;
@@ -525,6 +546,9 @@ export interface CouncilConfig {
     readonly debate: DebateConfig;
     readonly decision_replay: DecisionReplayConfig;
     readonly stance_tally: StanceTallyConfig;
+    readonly chairman: ChairmanConfig;
+    readonly debate_gates: DebateGatesConfig;
+    readonly restate: RestateConfig;
     readonly decision_resolution: DecisionResolutionConfig;
     readonly routing: RoutingConfig;
     readonly low_impact: LowImpactConfig;
@@ -758,6 +782,16 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         _asDict(_getOr(raw, 'stance_tally', {})),
         'stance_tally',
     );
+    const chairman = _build_chairman(
+        _asDict(_getOr(raw, 'chairman', {})),
+        'chairman',
+        members,
+    );
+    const debate_gates = _build_debate_gates(
+        _asDict(_getOr(raw, 'debate_gates', {})),
+        'debate_gates',
+    );
+    const restate = _build_restate(_asDict(_getOr(raw, 'restate', {})), 'restate');
     const decision_resolution = _build_decision_resolution(
         _asDict(_getOr(raw, 'decision_resolution', {})),
     );
@@ -785,6 +819,9 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         debate,
         decision_replay,
         stance_tally,
+        chairman,
+        debate_gates,
+        restate,
         decision_resolution,
         routing,
         low_impact,
@@ -945,6 +982,79 @@ function _build_decision_replay(d: Dict, scope: string): DecisionReplayConfig {
  * a non-bool `enabled` is rejected rather than silently coerced.
  */
 function _build_stance_tally(d: Dict, scope: string): StanceTallyConfig {
+    if (!_isDict(d)) {
+        throw new CouncilConfigError(`\`${scope}\` must be a mapping.`);
+    }
+    const enabled = _get(d, 'enabled', false);
+    if (!_isBool(enabled)) {
+        throw new CouncilConfigError(`\`${scope}.enabled\` must be a bool.`);
+    }
+    return { enabled: Boolean(enabled) };
+}
+
+/**
+ * `ai_council.chairman` (Phase 2). Default `{ mode: 'host', member: null }` =
+ * today's host synthesis, byte-identical. Enum-validates `mode`; when
+ * `mode: 'member'` the named member must exist AND be enabled (fail-closed at
+ * load, mirroring the advisor cross-validation). `mode: 'auto'` needs no member.
+ */
+function _build_chairman(
+    d: Dict,
+    scope: string,
+    members: ReadonlyMap<string, MemberConfig>,
+): ChairmanConfig {
+    if (!_isDict(d)) {
+        throw new CouncilConfigError(`\`${scope}\` must be a mapping.`);
+    }
+    const mode = _get(d, 'mode', 'host');
+    if (!(_isStr(mode) && _VALID_CHAIRMAN_MODES.has(mode))) {
+        throw new CouncilConfigError(
+            `\`${scope}.mode\`=${_pyRepr(mode)} not in ${_sortedListRepr(_VALID_CHAIRMAN_MODES)}.`,
+        );
+    }
+    let member: string | null = null;
+    const rawMember = _get(d, 'member', null);
+    if (rawMember !== null && rawMember !== undefined) {
+        if (!_isStr(rawMember)) {
+            throw new CouncilConfigError(`\`${scope}.member\` must be a string.`);
+        }
+        member = rawMember;
+    }
+    if (mode === 'member') {
+        if (member === null) {
+            throw new CouncilConfigError(
+                `\`${scope}.mode\` is 'member' but \`${scope}.member\` is unset.`,
+            );
+        }
+        const bound = members.get(member);
+        if (bound === undefined) {
+            throw new CouncilConfigError(
+                `\`${scope}.member\`=${_pyReprStr(member)}: no such member in the \`members\` block.`,
+            );
+        }
+        if (!bound.enabled) {
+            throw new CouncilConfigError(
+                `\`${scope}.member\`=${_pyReprStr(member)}: member exists but is disabled.`,
+            );
+        }
+    }
+    return { mode, member };
+}
+
+/** `ai_council.debate_gates` (Phase 3). `{enabled}`, default false. */
+function _build_debate_gates(d: Dict, scope: string): DebateGatesConfig {
+    if (!_isDict(d)) {
+        throw new CouncilConfigError(`\`${scope}\` must be a mapping.`);
+    }
+    const enabled = _get(d, 'enabled', false);
+    if (!_isBool(enabled)) {
+        throw new CouncilConfigError(`\`${scope}.enabled\` must be a bool.`);
+    }
+    return { enabled: Boolean(enabled) };
+}
+
+/** `ai_council.restate` (Phase 3). `{enabled}`, default false. */
+function _build_restate(d: Dict, scope: string): RestateConfig {
     if (!_isDict(d)) {
         throw new CouncilConfigError(`\`${scope}\` must be a mapping.`);
     }
