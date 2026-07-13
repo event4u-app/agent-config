@@ -391,7 +391,18 @@ roadmap's request-scoped load — not by new apparatus.
       provider-lifecycle-discipline → provider-lifecycle contract.
       Per-rule: migrate body, keep stub, run preservation check + trigger evals.
       <!-- verify: ./scripts-run src/scripts/check_condensation -->
-- [ ] **Batch B — new-guideline homes (7 rules):** context-hygiene,
+- [x] <!-- done 2026-07-12: 7/7 migrated, 0 removed; src stub lines
+      995→514 (−48%). Stub-necessity pre-questions answered KEEP for all
+      7 (each fires on a live authoring/editing/session surface; none
+      merely historical; router-entry-alone insufficient because Iron
+      Laws + load-bearing tables must be visible on fire). Notable keeps:
+      own-orphan-cleanup stays in the minimal-safe-diff stub (anchor-
+      referenced by kernel rule downstream-changes — no kernel edit);
+      3-failure/hard-blocker/read-loop cores stay in context-hygiene.
+      Gates green: check_condensation, condense --check, frontmatter
+      407/0, check-trigger-evals, presence (fe-design grandfather
+      shrink), lint-rule-tiers, check-refs. -->
+      **Batch B — new-guideline homes (7 rules):** context-hygiene,
       minimal-safe-diff, domain-adoption-policy, design-fidelity,
       framework-neutrality-in-generic-skills, artifact-drafting-protocol,
       active-remediation → each gets its named
@@ -403,7 +414,16 @@ roadmap's request-scoped load — not by new apparatus.
       alone sufficient? is the rule merely historical? A rule answered
       as a full-removal candidate gets its own disposition note instead
       of a mechanical migrate-and-keep-stub pass.
-- [ ] **Batch C — safety-floor template application (review-heavy, optional):**
+- [-] <!-- skipped 2026-07-12 (trade-off negative, per the step's own
+      allowance): the legal exemplar worked because legal-practice-profile
+      already existed as a natural mechanics home; the other 6 floors have
+      no profile skill, and their bodies are FIRE-TIME PAYLOADS (verbatim
+      disclaimer footers, PII placeholder matrices, retention floors) that
+      must be present the moment the floor fires — splitting them adds a
+      load hop on a safety surface for pack-scoped token cost. Pre-questions:
+      all 6 floors must-stay (classification), none removable, none
+      historical. No floor internals touched (security-sensitive-stop). -->
+      **Batch C — safety-floor template application (review-heavy, optional):**
       the inventory found `legal-safety-floor` is the exemplar of P4 applied
       INSIDE a safety floor (Iron Laws inline, mechanics in the profile
       skill). Evaluate applying the same shape to the other 6 domain-safety
@@ -415,10 +435,12 @@ roadmap's request-scoped load — not by new apparatus.
       router-entry-alone / merely-historical) — floors are must-stay by
       classification, so a "remove" answer here means escalate with a
       disposition note, never a silent cut.
-- [ ] **Backlink report** — regenerate the derived per-skill inbound-routes
+- [x] **Backlink report** — regenerate the derived per-skill inbound-routes
       report after each batch (see `rule_backlinks` generator, feedback-8.11
       Phase 6) so skill authors see which rules route to them; no
       frontmatter key (council: routed_from_rules REJECTED).
+      <!-- done 2026-07-12: regenerated after Batch B — 83 targets, 0 orphans,
+      0 unknown-shape (internal/reports/rule-backlinks.md). -->
 
 **Exit criteria:** the 16 should-migrate rules are thin stubs; preservation
 checks green per batch; trigger-eval coverage not regressed; backlink report

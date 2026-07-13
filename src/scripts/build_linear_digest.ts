@@ -41,7 +41,9 @@ export function RuleEntry(name: string, mode = 'as-is', strip_sections: string[]
 export const WORKSPACE: RuleEntry[] = [
     RuleEntry('ask-when-uncertain'),
     RuleEntry('commit-conventions'),
-    RuleEntry('context-hygiene', 'degraded', ['Augment-specific: Ignored Skills Recovery']),
+    // P4 Batch B (2026-07-12): the Augment-specific section migrated to
+    // guideline:agent-infra/context-hygiene-mechanics — nothing left to strip.
+    RuleEntry('context-hygiene', 'degraded'),
     RuleEntry('direct-answers'),
     RuleEntry('markdown-safe-codeblocks'),
     RuleEntry('minimal-safe-diff'),

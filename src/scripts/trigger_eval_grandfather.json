@@ -1,5 +1,5 @@
 {
-    "_note": "Shrink-only grandfather allowlist for check_trigger_eval_presence (road-to-composition-ratchet). Skills listed here predate the trigger-eval presence gate and may lack evals/triggers.json. Entries may ONLY be removed (when the skill gains a triggers.json or is deleted) — never added. Frozen 2026-07-08 at 221 of 264 skills.",
+    "_note": "Shrink-only grandfather allowlist for check_trigger_eval_presence (road-to-composition-ratchet). Skills listed here predate the trigger-eval presence gate and may lack evals/triggers.json. Entries may ONLY be removed (when the skill gains a triggers.json or is deleted) \u2014 never added. Frozen 2026-07-08 at 221 of 264 skills.",
     "skills": [
         "accessibility-auditor",
         "activation-design",
@@ -64,7 +64,6 @@
         "emit-tickets",
         "error-handling-patterns",
         "expansion-playbook",
-        "fe-design",
         "feature-planning",
         "file-editor",
         "finishing-a-development-branch",
