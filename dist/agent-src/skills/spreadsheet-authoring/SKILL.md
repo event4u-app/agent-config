@@ -41,9 +41,17 @@ prose document/table (that is the document surface, `doc-coauthoring`).
 2. **Formulas over hardcoded values.** Any computed cell holds a **formula**
    (`=SUM(...)`, `=B2*C2`), never the typed-in result. Hardcoding a computed
    value is the cardinal spreadsheet defect — it does not recalculate.
-3. **Read back after every write.** After writing a formula, read the cell back
-   and confirm no formula error (`#REF!`, `#DIV/0!`, `#VALUE!`). The read-back is
-   the spreadsheet's verification truth source.
+3. **Read back after every write, and RECALCULATE first.** After writing a
+   formula, force a recalculation, then read the cell back — a library that
+   writes formulas without recalculating leaves the cached value stale, so a
+   read-back before recalc proves nothing. The **zero-formula-error contract**:
+   any of `#REF!` / `#DIV/0!` / `#VALUE!` / `#N/A` / `#NAME?` in a written cell
+   is a **failure**, not a warning — reject the output and fix the formula. The
+   recalc'd read-back is the spreadsheet's verification truth source.
+   **Formulas, never hardcoded computed values** — a library that writes the
+   Python-computed number into the cell instead of the `=` formula has produced
+   a dead spreadsheet that will not update when inputs change; write the formula
+   string and let the recalc compute it.
 4. **Source-comment web-sourced cells.** Any figure taken from the web carries a
    cell comment with its source. Financial figures follow the
    [`spreadsheet-source-quality`](../../rules/spreadsheet-source-quality.md) rule
