@@ -1,5 +1,14 @@
 # --- AI Council (external second-opinion network) ---
 #
+# WHERE THIS FILE GOES: copy it to the USER-GLOBAL path
+#   ~/.event4u/agent-config/settings/.ai-council.yml
+# and edit it there. This is the ONLY location the council reads (ADR-104,
+# superseding ADR-093) — one global file serves every project, worktree,
+# and CWD. Do NOT place it in a project's `agents/` tree: the project tree
+# is never searched and a `.ai-council.yml` found there is ignored. The
+# only other accepted source is an explicit absolute path in the
+# `$AI_COUNCIL_CONFIG` env var (tests / power users).
+#
 # When enabled, the /council command lets the agent poll independent
 # external models (Anthropic, OpenAI, Gemini, xAI, Perplexity) for a
 # neutral critique of a roadmap, diff, prompt, or file set. Council
