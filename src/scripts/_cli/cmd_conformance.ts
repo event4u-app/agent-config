@@ -47,7 +47,7 @@ import {
     _run_checks_no_manifest,
     _scan_foreign,
     ArgparseExit,
-    BRIDGE_MARKER_RELATIVE,
+    _is_global_only_consumer,
     STATUS_SYMBOLS,
 } from './cmd_doctor.js';
 
@@ -630,7 +630,7 @@ function main(argv: string[] | null = null): number {
     let doctorChecks: Dict[];
     let drift: Record<string, Dict[]> = { missing: [], modified: [], foreign: [], tag_drift: [] };
     if (manifest === null) {
-        const bridge_present = fs.existsSync(path.join(project_root, BRIDGE_MARKER_RELATIVE));
+        const bridge_present = _is_global_only_consumer(project_root);
         doctorChecks = _run_checks_no_manifest(project_root, bridge_present, null);
     } else {
         const [records, known] = _collect_manifest_entries(project_root, manifest);

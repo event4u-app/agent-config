@@ -395,7 +395,6 @@ Consumer projects can maintain their own agent documentation:
 ```
 agents/
 ├── overrides/               ← Skill/rule/command overrides (required after migrate)
-├── .event4u-bridge.yml      ← Global-only bridge marker (ADR-020)
 ├── knowledge/               ← Optional: curated project-specific knowledge pages
 ├── memory/                  ← Optional: memory promotion pipeline
 ├── roadmaps/                ← Optional: project-local roadmaps

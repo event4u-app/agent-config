@@ -126,6 +126,40 @@ This amendment narrows ADR-020's wording; the global-only **consumer install**
 decision (distributed content writes only to `~/.event4u/agent-config/`) is
 unchanged.
 
+## Amendment — 2026-07-13 · bridge marker retired
+
+The 2026-05-30 amendment restated `agents/.event4u-bridge.yml` as a mandated
+consumer metadata artefact. Field use showed the marker was a design mistake:
+it was **committed** to the shared project tree yet carried **no
+project-specific data**. `global_root` is always the well-known
+`~/.event4u/agent-config` (one global install per machine), and no code ever
+read the field — the loader, doctor, and conformance checks resolve the global
+root independently via `user_global_paths.event4u_root()`. Its only volatile
+content (`installed_at`, `installer_version`) meant every developer's install
+produced a diff and overwrote every other developer's committed copy. Scope
+(global) did not match location (per-project, committed).
+
+AI-council-converged (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-07-13,
+2-round debate): **Option B — eliminate the project marker; resolve the global
+root from the well-known path.** Changes:
+
+- The installer and `agent-config refresh --project` no longer write
+  `agents/.event4u-bridge.yml`; they **delete** any legacy committed copy. The
+  managed `.gitignore` block ignores it so a stale copy is never re-committed.
+- The global root is resolved from `~/.event4u/agent-config`
+  (`EVENT4U_CONFIG_HOME`-overridable), failing closed when absent.
+- Migration idempotency moved from the marker's presence to
+  `agents/.agent-state/install-mode.txt` (written on every install);
+  project-anchor detection keys on `agents/overrides/`.
+- The Windsurf / Cline / Gemini-CLI per-tool anchors stay (those tools cannot
+  read user scope) but now resolve the well-known path directly (no `bridge:`
+  back-pointer) and are **gitignored** — regenerated per-install, never shared.
+
+The single project-local agent surface is now **`agents/overrides/`** alone.
+This narrows the 2026-05-30 amendment; the global-only **consumer install**
+decision is unchanged. See [`consumer-bridge`](../contracts/consumer-bridge.md)
+(retired) for the reader/writer detail.
+
 ## Alternatives considered
 
 - **Status quo (project default + global opt-in).** Keeps the drift

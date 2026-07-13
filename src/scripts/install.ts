@@ -2494,7 +2494,11 @@ function _detect_legacy_for_migration(project_root: string): string[] {
         return [];
     }
 
-    if (isFile(path.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH))) return [];
+    // Migration-idempotency sentinel. Previously the consumer bridge marker;
+    // that file was retired (ADR-020 amendment 2026-07-13), so the durable
+    // "this project has already been installed / migrated" signal is now the
+    // install-mode marker, written on every full or minimal install.
+    if (isFile(path.join(project_root, INSTALL_MODE_MARKER_REL))) return [];
 
     const found: string[] = [];
     for (const name of MIGRATE_LEGACY_YAML_FILES) {
@@ -2573,38 +2577,34 @@ function _format_global_root_for_marker(global_root: string): string {
 }
 
 /**
- * Write `agents/.event4u-bridge.yml`. Skipped under `AGENT_CONFIG_DEV_MODE=1`
- * and when the project root is the agent-config source repo
- * (`.agent-src.uncondensed/` present) — same rationale. Atomic write.
+ * Remove a legacy `agents/.event4u-bridge.yml` if a previous install wrote
+ * one. The bridge marker was retired (ADR-020 dated amendment 2026-07-13):
+ * it carried no project-specific data — `global_root` is derived directly
+ * from the well-known `~/.event4u/agent-config` path — yet was committed to
+ * the shared project tree, so every developer's install rewrote its volatile
+ * `installed_at` / `installer_version` fields and overwrote each other's.
+ * The global root is now resolved from the well-known path; the migration
+ * idempotency sentinel moved to `agents/.agent-state/install-mode.txt`.
+ *
+ * Skipped under `AGENT_CONFIG_DEV_MODE=1` and inside the agent-config source
+ * repo (`.agent-src.uncondensed/` present) — the same gate the writer used.
+ * Returns the removed path (so the caller can report it) or null.
  */
-function _write_consumer_bridge_marker(
+function _remove_legacy_consumer_bridge_marker(
     project_root: string,
-    installer_version: string,
     env: NodeJS.ProcessEnv | null = null,
-    now: Date | null = null,
 ): string | null {
     const env_map = env ?? process.env;
     if (env_map['AGENT_CONFIG_DEV_MODE'] === '1') return null;
     if (isDir(path.join(project_root, '.agent-src.uncondensed'))) return null;
 
-    const global_root_str = _format_global_root_for_marker(
-        user_global_paths.event4u_root(env_map),
-    );
-    const stamp = utcStamp(now ?? undefined);
-
-    const body =
-        '# event4u/agent-config — consumer bridge marker (auto-written).\n' +
-        '# Spec: docs/contracts/consumer-bridge.md (event4u-bridge/v1).\n' +
-        '# Reader contract: expand ~ against the current $HOME; fail closed\n' +
-        '# when global_root is missing on disk; never write back through it.\n' +
-        'schema: event4u-bridge/v1\n' +
-        `global_root: ${global_root_str}\n` +
-        `installed_at: ${stamp}\n` +
-        `installer_version: ${installer_version}\n`;
-
     const target = path.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
-    mkdirp(path.dirname(target));
-    atomicWrite0644(target, body, '.event4u-bridge.');
+    if (!isFile(target)) return null;
+    try {
+        fs.rmSync(target);
+    } catch {
+        return null;
+    }
     return target;
 }
 
@@ -2641,16 +2641,14 @@ function _write_per_tool_project_anchors(
         const target = path.join(project_root, rel_path);
         mkdirp(path.dirname(target));
 
-        const bridge_abs = path.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
-        const bridge_rel = path.relative(path.dirname(target), bridge_abs);
-
         const body =
             '# event4u/agent-config — per-tool project anchor (auto-written).\n' +
             '# Spec: docs/contracts/consumer-bridge.md § Per-tool anchor strategy.\n' +
-            `# Tool: ${tool_id}. Bridge marker: agents/.event4u-bridge.yml.\n` +
+            `# Tool: ${tool_id}. Resolves the global install directly — no\n` +
+            '# project-local bridge marker (retired, ADR-020 amendment 2026-07-13).\n' +
+            '# This anchor is gitignored: each developer regenerates it on install.\n' +
             'schema: event4u-bridge/v1\n' +
             `tool: ${tool_id}\n` +
-            `bridge: ${bridge_rel}\n` +
             `global_root: ${global_root_str}\n` +
             `installed_at: ${stamp}\n`;
 
@@ -3377,15 +3375,15 @@ function install_global(
         const rc = _update_installed_tools_manifest(project_root, tools, 'global', force, files_by_tool);
         if (rc !== 0) return rc;
 
-        // Consumer bridge marker (Phase 4.2). The surrounding
-        // `.agent-src.uncondensed` guard already covers the source-repo case;
-        // the dev-mode skip is enforced inside the writer.
-        const marker_path = _write_consumer_bridge_marker(project_root, installed_version);
-        if (marker_path !== null && !state.QUIET) {
-            const rel = isRelativeTo(marker_path, project_root)
-                ? path.relative(project_root, marker_path)
-                : marker_path;
-            info(`Bridge marker written: ${rel}`);
+        // Consumer bridge marker retired (ADR-020 amendment 2026-07-13):
+        // clean up any legacy `agents/.event4u-bridge.yml` a prior install
+        // committed. The global root is resolved from the well-known path.
+        const removed_marker = _remove_legacy_consumer_bridge_marker(project_root);
+        if (removed_marker !== null && !state.QUIET) {
+            const rel = isRelativeTo(removed_marker, project_root)
+                ? path.relative(project_root, removed_marker)
+                : removed_marker;
+            info(`Removed legacy bridge marker: ${rel}`);
         }
 
         const anchor_paths = _write_per_tool_project_anchors(project_root, tools);
@@ -3800,13 +3798,14 @@ function install_minimal(target_root_in: string, force: boolean, user_type: stri
         }
     }
 
-    const installed_version = installed_lock.current_package_version();
-    const marker_path = _write_consumer_bridge_marker(target_root, installed_version);
-    if (marker_path !== null) {
-        const rel = isRelativeTo(marker_path, target_root)
-            ? path.relative(target_root, marker_path)
-            : marker_path;
-        success(`Wrote ${rel}`);
+    // Bridge marker retired (ADR-020 amendment 2026-07-13) — clean up any
+    // legacy `agents/.event4u-bridge.yml` a prior install left behind.
+    const removed_marker = _remove_legacy_consumer_bridge_marker(target_root);
+    if (removed_marker !== null) {
+        const rel = isRelativeTo(removed_marker, target_root)
+            ? path.relative(target_root, removed_marker)
+            : removed_marker;
+        success(`Removed legacy bridge marker: ${rel}`);
     }
 
     _write_install_mode_marker(target_root, 'minimal');
