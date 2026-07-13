@@ -25,6 +25,16 @@ packs: [meta]
 
 - If a component grows too large, mixes responsibilities, or becomes hard to scan → split or refactor.
 
+## Per-tool pitfall content
+
+Known-pitfall / troubleshooting content for a tool is a **`## Known pitfalls`
+section on that tool's existing skill** (format: `skill-writing` § Known-pitfalls
+section) — **never** a new skill per pitfall, and **never** a generated per-tool
+grid. A per-vendor pitfall generator (N slots × M tools) is exactly the
+skill-sprawl this rule exists to prevent; the topic taxonomy is a *checklist for
+authoring one good section*, not a template for many thin skills. Cap: **≤ 5
+real, sourced entries** per skill.
+
 - Prefer small files:
   - Rules and system instructions should stay well below 200 lines
   - Smaller (≈60 lines) is strongly preferred

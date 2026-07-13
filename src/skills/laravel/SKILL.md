@@ -188,6 +188,16 @@ When generating Laravel code:
 - Do NOT use facades in service classes — use dependency injection.
 - Do NOT skip middleware for route groups that need authentication.
 
+## Known pitfalls
+
+| Symptom | Root cause | Fix |
+|---|---|---|
+| A list endpoint fires hundreds of queries / is slow under load | N+1: a relation is accessed inside a loop without eager loading | Eager-load with `with('relation')`; enable `Model::preventLazyLoading()` in non-prod to catch it early |
+| Config changes / new env vars have no effect in production | `config:cache` cached the old config, and `env()` returns `null` once config is cached | Read env only in `config/*`, use `config()` elsewhere; re-run `config:cache` on deploy |
+| A form field silently isn't saved | The attribute isn't in `$fillable` and mass-assignment drops it | Add it to `$fillable` (or set it explicitly); never blanket-`$guarded = []` on user input |
+| Queued jobs never run / run with stale code | No worker is running, or workers weren't restarted after a deploy so they hold the old code in memory | Run/supervise `queue:work`; `queue:restart` on every deploy |
+| Timestamps or times are off by hours | Comparing/formatting a Carbon instance without honoring `config('app.timezone')` vs the DB's UTC storage | Store UTC; convert for display; set the app timezone explicitly, don't assume server local time |
+
 ## Gotcha
 
 - `env()` only works in config files — use `config()` everywhere else.
