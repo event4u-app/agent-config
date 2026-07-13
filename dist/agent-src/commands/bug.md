@@ -2,6 +2,7 @@
 model_tier: medium
 name: bug
 disable-model-invocation: true
+argument-hint: "[investigate|fix] [args]"
 pack: engineering-base
 intent: "Bug dispatcher — investigate the root cause or implement the fix"
 routes_to: [bug-investigate, bug-fix]
@@ -34,7 +35,7 @@ user knows they have a defect but has not picked a workflow yet.
 | `/bug fix` | `commands/bug/fix.md` | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

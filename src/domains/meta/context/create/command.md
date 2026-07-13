@@ -8,6 +8,7 @@ cluster: context
 sub: create
 skills: [agent-docs-writing]
 description: Analyze a codebase area and create a structured context document
+argument-hint: "[topic]"
 suggestion:
   eligible: true
   trigger_description: "document this part of the codebase, create a context doc for X"

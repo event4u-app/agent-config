@@ -6,6 +6,7 @@ tier: 2
 visibility: internal
 skills: [judge-security-auditor, threat-modeling, security-audit]
 description: Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injection / supply-chain risk — A–F score per category, mapped to OWASP Agentic Top 10
+argument-hint: "[repo-root]"
 council_depth: deep
 suggestion:
   eligible: true
@@ -35,7 +36,7 @@ suite's own `lint_agent_security` self-audit gate.
 
 (omit `--root` to audit the current repo). The script reuses the Phase-1
 detection library under the false-positive containment convention
-([`security-lint-containment`](../../../docs/guidelines/agent-infra/security-lint-containment.md)),
+([`security-lint-containment`](../../docs/guidelines/agent-infra/security-lint-containment.md)),
 so doc/example files do not tank the score. It scans instruction files
 (`CLAUDE.md`, `AGENTS.md`, `.cursor/rules`, `.github/copilot-instructions.md`,
 `.clinerules`, `.windsurfrules`), MCP configs (`.mcp.json`, `.cursor/mcp.json`,

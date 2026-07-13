@@ -8,6 +8,7 @@ cluster: post-as
 sub: me
 skills: [post-as]
 description: Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author.
+argument-hint: "[topic] [--tone] [--length] [--channel] [--audience]"
 suggestion:
   eligible: true
   trigger_description: "write as me, draft in my own voice, post as myself, draft from .agent-user.md"

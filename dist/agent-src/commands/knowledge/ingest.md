@@ -7,6 +7,7 @@ visibility: internal
 cluster: knowledge
 sub: ingest
 description: Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`.
+argument-hint: "<path> [--no-redact] [--markitdown=<bin>]"
 skills: [file-editor]
 suggestion:
   eligible: true

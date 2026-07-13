@@ -46,7 +46,15 @@ export function check_cursor_rules(root: string, errors: string[]): void {
         const src = fs.readFileSync(p, 'utf-8');
         const m = src.match(/^---\n([\s\S]*?)\n---/);
         if (!m) { errors.push(`${p}: no frontmatter`); continue; }
-        try { parseYaml(m[1] ?? ''); }
+        // Cursor's documented .mdc format writes `globs: *.php` UNQUOTED —
+        // valid for Cursor's parser, invalid strict YAML (`*` starts an
+        // alias). Quote the globs value before the strict parse so the check
+        // mirrors the host's acceptance, not the YAML spec's.
+        const lenient = (m[1] ?? '').replace(
+            /^(globs:[ \t]*)([^"'\s[][^\n]*)$/m,
+            (_all, key: string, val: string) => `${key}"${val.trim()}"`,
+        );
+        try { parseYaml(lenient); }
         catch (e) { errors.push(`${p}: frontmatter YAML invalid (${(e as Error).message})`); }
     }
 }

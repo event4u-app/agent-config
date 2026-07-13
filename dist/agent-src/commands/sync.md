@@ -2,6 +2,7 @@
 model_tier: medium
 name: sync
 disable-model-invocation: true
+argument-hint: "[agent-settings|gitignore|gitignore-fix]"
 pack: meta
 intent: "Sync dispatcher — agent settings or the managed .gitignore block"
 routes_to: [sync-agent-settings, sync-gitignore, sync-gitignore-fix]
@@ -34,7 +35,7 @@ managed files in step with the package templates.
 | `/sync gitignore-fix` | `commands/sync/gitignore/fix.md` | Scrub legacy pre-`/agents/` patterns anywhere in the `.gitignore`, then re-sync the canonical entries |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

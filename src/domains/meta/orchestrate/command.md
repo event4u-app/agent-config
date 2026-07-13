@@ -7,6 +7,7 @@ visibility: internal
 cluster: orchestrate
 skills: [subagent-orchestration]
 description: Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract
+argument-hint: "<pipeline-name | path> [key=value ...]"
 suggestion:
   eligible: true
   trigger_description: "run a saved orchestration / pipeline / chain"

@@ -7,6 +7,7 @@ visibility: internal
 cluster: video
 sub: from-script
 description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview default; --mode commit spends behind the cost gate.
+argument-hint: "<path-to-script.md> [--mode preview|commit] [--max-spend-usd <usd>] [--image-provider <id>] [--video-provider <id>]"
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, pixar-storyteller, character-consistency, motion-choreographer]
 suggestion:
@@ -146,8 +147,8 @@ cost (commit) or summed modeled `cost_estimate` labeled *modeled*
 - **One project per invocation.** Re-running on the same project
   resumes from existing artefacts (skips completed scenes) via the
   ADR-059 resume scan: `scripts/ai-video/lib/resume-scan.sh scan
-  <project> --plan <project>/plan.json` — `green` reused, `stale` /
-  `missing` re-render, `failed` surfaces its `error.json`. State =
+  <project> --plan <project>/plan.json` — `green` is reused, `stale` /
+  `missing` re-render, `failed` surfaces its `error.json`. State is the
   per-scene sentinel set (`prompt.json` with `input_sha256`, the clip,
   `error.json`, `cost.json`) — no central checkpoint file.
 

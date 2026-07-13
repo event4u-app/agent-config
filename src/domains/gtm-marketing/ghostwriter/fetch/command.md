@@ -7,6 +7,7 @@ visibility: internal
 cluster: ghostwriter
 sub: fetch
 description: Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch/web-search to host.
+argument-hint: "<url | name> [--force-refresh]"
 suggestion:
   eligible: true
   trigger_description: "fetch public figure writing voice, capture LinkedIn / blog / Substack style, build ghostwriter profile from name, refresh stale profile"

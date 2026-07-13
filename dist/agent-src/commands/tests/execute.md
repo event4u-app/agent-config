@@ -8,6 +8,7 @@ cluster: tests
 sub: execute
 skills: [pest-testing, quality-tools]
 description: Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
+argument-hint: "[file | filter] [--include-e2e] [--include-slow] [--php]"
 suggestion:
   eligible: true
   trigger_description: "run the tests, execute the test suite"

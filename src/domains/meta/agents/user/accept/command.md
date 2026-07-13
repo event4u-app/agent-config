@@ -8,6 +8,7 @@ cluster: agents
 sub: user
 skills: [agents]
 description: Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer.
+argument-hint: "[field]"
 suggestion:
   eligible: false
   rationale: "Mutates .agent-user.md — only run from /agents user review or explicit user invocation."

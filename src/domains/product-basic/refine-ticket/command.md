@@ -9,6 +9,7 @@ tier: 1
 visibility: advanced
 skills: [refine-ticket]
 description: Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt
+argument-hint: "[ticket-key | url | text] [--personas=<list>] [--user-type=<id>] [--fresh-eyes]"
 suggestion:
   eligible: true
   trigger_description: "refine PROJ-123, tighten the acceptance criteria, is this ticket clear"

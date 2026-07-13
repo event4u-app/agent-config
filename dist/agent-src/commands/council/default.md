@@ -8,6 +8,7 @@ cluster: council
 sub: default
 skills: [ai-council]
 description: Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare.
+argument-hint: "[prompt:\"…\" | roadmap:<path> | diff:<a>..<b> | files:<paths>] [rounds:N] [depth:deep]"
 suggestion:
   eligible: false
   rationale: "Default lens — invoked via /council dispatcher; no direct trigger."
@@ -93,19 +94,19 @@ NOT in `.agent-settings.yml`, NOT in the project tree. The CLI
 (`scripts/ai_council/config.ts:resolve_config_path`, per
 [ADR-104](../../../docs/decisions/ADR-104-ai-council-config-global-only.md),
 superseding [ADR-093](../../../docs/decisions/ADR-093-ai-council-config-user-global.md))
-resolves it — first hit wins:
+resolves it in this order — first hit wins:
 
 1. `$AI_COUNCIL_CONFIG` — explicit absolute path (tests / power users),
-   honoured even when absent. Explicit path, never a project search.
-2. User-global `~/.event4u/agent-config/settings/.ai-council.yml` — the one
-   and only home; this single global config serves every project.
+   honoured even when absent. An explicit path, never a project search.
+2. User-global `~/.event4u/agent-config/settings/.ai-council.yml` — the
+   one and only home; this single global config serves every project.
 
-No project-local lookup. The council never reads
-`<project_root>/agents/settings/.ai-council.yml`, `scripts/ai_council`, or any
-project file. Keys are **top-level** (`enabled`, `defaults:`, `members:`). No
-`ai_council:` parent block; the legacy `ai_council.*` block under
-`.agent-settings.yml` was removed in ADR-093 — never read or recommend that
-path for council config.
+There is **no project-local lookup.** The council never reads
+`<project_root>/agents/settings/.ai-council.yml`, `scripts/ai_council`, or
+any project file. Keys are **top-level** in the global file (`enabled`,
+`defaults:`, `members:`). There is no `ai_council:` parent block, and the
+legacy `ai_council.*` block under `.agent-settings.yml` was removed in
+ADR-093 — never read or recommend that path for council config.
 
 ```
 THE COUNCIL CONFIG IS ALWAYS GLOBAL. NEVER SEARCH THE PROJECT FOR IT.
@@ -119,18 +120,18 @@ is authoritative: run `council:estimate` (Step 3) and read its exit code
 consumer repos, fresh worktrees, any CWD — with zero per-project setup.
 ```
 
-CLI is the single source of truth for the configured-check — do not hand-parse
-the YAML, and never eyeball the project tree, to second-guess it. Map its outcomes (Step 4 exit codes + the
-**CLI exits 2** cases below):
+The CLI is the single source of truth for the configured-check — do not
+hand-parse the YAML, and never eyeball the project tree, to second-guess it. Map its outcomes (Step 4 exit
+codes, plus the **CLI exits 2** cases below):
 
-- `enabled: false` (top-level in resolved `.ai-council.yml`) → CLI exits 2 with
-  `ai_council.enabled is false`. State that, offer to flip it on. Do not flip
-  it autonomously.
-- No member has `enabled: true` (under top-level `members:`) → list install
-  commands (`./agent-config keys:install-anthropic`,
+- `enabled: false` (top-level in the resolved `.ai-council.yml`) → CLI exits 2
+  with `ai_council.enabled is false`. State that and offer to flip it on. Do
+  not flip it autonomously.
+- No member has `enabled: true` (under top-level `members:`) → list the
+  install commands (`./agent-config keys:install-anthropic`,
   `./agent-config keys:install-openai`) and stop.
-- A member is enabled but its `*.key` file is missing or wrong-mode → tell the
-  user which key to install. Do not fall back to env vars. Ever.
+- A member is enabled but its `*.key` file is missing or has the wrong mode
+  → tell the user which key to install. Do not fall back to env vars. Ever.
 
 Load the price table via `scripts.ai_council.pricing.load_prices()`
 (auto-bootstraps `agents/runtime/.agent-prices.md` from defaults if missing). Run

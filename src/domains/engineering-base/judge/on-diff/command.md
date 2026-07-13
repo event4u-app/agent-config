@@ -8,6 +8,7 @@ cluster: judge
 sub: on-diff
 skills: [subagent-orchestration, verify-completion-evidence]
 description: Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
+argument-hint: "<task-description | draft-pointer>"
 suggestion:
   eligible: false
   rationale: "Subagent orchestration — overlaps /work and judge skills; keep explicit."

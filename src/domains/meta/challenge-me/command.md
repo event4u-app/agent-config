@@ -5,6 +5,7 @@ pack: product-reasoning
 tier: 2
 visibility: internal
 description: Challenge-me orchestrator — routes to vision, with-docs
+argument-hint: "[vision|with-docs] [flags] [seed]"
 cluster: challenge-me
 type: orchestrator
 suggestion:

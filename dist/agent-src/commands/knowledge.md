@@ -5,6 +5,7 @@ pack: product-discovery
 tier: 2
 visibility: internal
 description: Knowledge orchestrator — routes to ingest, list, forget. Local-only file ingestion into the agent memory namespace.
+argument-hint: "[ingest|list|forget|cross-repo] [args]"
 cluster: knowledge
 type: orchestrator
 suggestion:

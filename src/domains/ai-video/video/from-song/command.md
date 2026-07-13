@@ -7,6 +7,7 @@ visibility: internal
 cluster: video
 sub: from-song
 description: Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit gates the spend.
+argument-hint: "<images-dir> <song-file> [--mode preview|commit] [--brief <text>|--auto-script] [--max-spend-usd <usd>]"
 personas: [hollywood-director, ai-video-technical-director]
 skills: [song-to-script, scene-expander, video-director, character-consistency, motion-choreographer, prompt-validator]
 suggestion:

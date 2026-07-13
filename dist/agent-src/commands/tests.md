@@ -2,6 +2,7 @@
 model_tier: medium
 name: tests
 disable-model-invocation: true
+argument-hint: "[create|execute|e2e-plan|e2e-heal] [args]"
 pack: engineering-base
 tier: 2
 visibility: internal
@@ -34,7 +35,7 @@ commands with a single entry point + sub-command dispatch.
 | `/tests e2e-heal` | `commands/tests/e2e-heal.md` | Find, debug, and fix failing Playwright E2E tests |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 Both sub-commands resolve the runner via the
 [`toolchain-resolver`](../contexts/execution/toolchain-resolver.md) — they
 adapt to the consumer's stack instead of assuming one.

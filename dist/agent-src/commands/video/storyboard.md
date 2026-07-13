@@ -7,6 +7,7 @@ visibility: internal
 cluster: video
 sub: storyboard
 description: Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
+argument-hint: "<path-to-script.md> [--image-provider <id>]"
 personas: [hollywood-director]
 skills: [scene-expander, video-director, character-consistency]
 suggestion:

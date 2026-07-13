@@ -2,6 +2,7 @@
 model_tier: medium
 name: fix
 disable-model-invocation: true
+argument-hint: "[ci|refs|portability|seeder|pr-comments|comments|quality] [args]"
 pack: engineering-base
 intent: "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability, comments, quality"
 routes_to: [fix-ci, fix-pr-comments, fix-refs, fix-seeder, fix-portability, fix-comments, fix-quality]

@@ -2,6 +2,7 @@
 model_tier: medium
 name: package
 disable-model-invocation: true
+argument-hint: "[test|reset]"
 pack: meta
 intent: "Package dispatcher — test the package install or reset the installed state"
 routes_to: [package-test, package-reset]

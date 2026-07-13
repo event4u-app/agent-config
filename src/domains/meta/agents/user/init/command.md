@@ -8,6 +8,7 @@ cluster: agents
 sub: user
 skills: [agents]
 description: Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample).
+argument-hint: "[--force]"
 suggestion:
   eligible: false
   rationale: "User-persona bootstrap — only deliberately, never auto-suggested."

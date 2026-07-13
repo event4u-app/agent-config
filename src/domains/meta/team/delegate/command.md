@@ -2,6 +2,7 @@
 model_tier: inherit
 name: team-delegate
 disable-model-invocation: true
+argument-hint: "<task>"
 pack: meta
 tier: 2
 visibility: internal

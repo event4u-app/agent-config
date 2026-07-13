@@ -7,6 +7,7 @@ visibility: internal
 cluster: analytics
 sub: show
 description: Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log.
+argument-hint: "[--window 24h|7d|30d] [--event <name>] [--role <slug>] [--format markdown|csv|json]"
 skills: [file-editor]
 suggestion:
   eligible: true

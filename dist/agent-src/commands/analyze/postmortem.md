@@ -8,6 +8,7 @@ cluster: analyze
 sub: postmortem
 skills: [blameless-post-mortem, root-cause-frameworks]
 description: Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate.
+argument-hint: "[incident-description]"
 suggestion:
   eligible: true
   trigger_description: "post-mortem, Nachbesprechung, incident review, was ist schiefgelaufen"

@@ -8,6 +8,7 @@ cluster: analyze
 sub: near-miss
 skills: [blameless-post-mortem]
 description: Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident.
+argument-hint: "[event-description]"
 suggestion:
   eligible: true
   trigger_description: "near-miss, almost failed, beinahe-Vorfall, close call, we almost had an outage"

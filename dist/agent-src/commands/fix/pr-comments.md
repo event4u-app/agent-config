@@ -8,6 +8,7 @@ cluster: fix
 sub: pr-comments
 skills: [php-coder, quality-tools]
 description: Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
+argument-hint: "[pr-url]"
 suggestion:
   eligible: true
   trigger_description: "fix all PR review comments, resolve the review feedback"

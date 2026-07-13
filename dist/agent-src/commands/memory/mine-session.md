@@ -7,6 +7,7 @@ visibility: internal
 cluster: memory
 sub: mine-session
 description: Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-default, opt-in. Folds in /chat-history learn.
+argument-hint: "[--mode signals|proposals|both] [--since <date>] [--confirm-transcript-access] [--commit-intake]"
 skills: [memory-consolidation, file-editor]
 suggestion:
   eligible: false

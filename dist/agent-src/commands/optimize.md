@@ -2,6 +2,7 @@
 model_tier: medium
 name: optimize
 disable-model-invocation: true
+argument-hint: "[skills|agents-dir|augmentignore|rtk|project|prompt] [args]"
 pack: meta
 intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir, project sweep, prompt"
 routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agents-dir, optimize-project, optimize-prompt]
@@ -43,7 +44,7 @@ the **agent layer** (skills, agents-dir, augmentignore, rtk), the **project**
 | `/optimize prompt` | `commands/optimize/prompt.md` | Optimize a raw prompt for ChatGPT/Claude/Gemini via the 4-D methodology |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

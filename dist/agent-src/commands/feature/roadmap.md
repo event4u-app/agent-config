@@ -8,6 +8,7 @@ cluster: feature
 sub: roadmap
 skills: [agent-docs-writing]
 description: Generate implementation roadmap(s) from a feature plan and link them
+argument-hint: "[feature-name]"
 suggestion:
   eligible: true
   trigger_description: "turn this feature into a roadmap, generate the implementation roadmap"

@@ -5,6 +5,7 @@ pack: fun
 tier: 2
 visibility: internal
 description: "Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'."
+argument-hint: "[event] [--pool-url <url>] [--council off|event|match] [--submit] [--fresh|--continue]"
 skills: [prediction-pool-optimizer]
 suggestion:
   eligible: true

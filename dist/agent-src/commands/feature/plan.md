@@ -8,6 +8,7 @@ cluster: feature
 sub: plan
 skills: [feature-planning]
 description: Interactively plan a feature — research, discuss, and create a structured feature document
+argument-hint: "[description]"
 suggestion:
   eligible: true
   trigger_description: "plan this feature, create a feature spec for X"

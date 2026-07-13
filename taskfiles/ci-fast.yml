@@ -932,6 +932,21 @@ tasks:
     desc: Validate artefact frontmatter against JSON-Schema (scripts/schemas/)
     cmd: ./scripts-run src/scripts/validate_frontmatter
 
+  lint-supported-tools-matrix:
+    silent: true
+    desc: README Supported-tools matrix ↔ adapter registry ↔ generator roots (fail on drift either direction — skill-quality-gates Phase 4)
+    cmd: ./scripts-run src/scripts/lint_supported_tools_matrix
+
+  check-bridge-derivation:
+    silent: true
+    desc: Generated bridge trees derive from src/ — symlink targets valid, regeneration is a fixpoint (skill-quality-gates Phase 4). Regenerates .claude/.cursor/.windsurf/.augment as a side effect.
+    cmd: ./scripts-run src/scripts/check_bridge_derivation
+
+  smoke-host-loadability:
+    silent: true
+    desc: Real-host loadability smoke — claude plugin validate + temp-home install + metadata cross-consistency. Self-skips (static checks only) when the claude CLI is absent; pass REQUIRE=1 for the release gate.
+    cmd: bash src/scripts/smoke_host_loadability.sh {{if eq .REQUIRE "1"}}--require{{end}}
+
   quality-report:
     silent: true
     desc: Generate quality score report (per artifact type)

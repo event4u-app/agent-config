@@ -7,6 +7,7 @@ visibility: internal
 cluster: video
 sub: stitch
 description: Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.
+argument-hint: "<project-slug> [--skip-scene <id>] [--continue]"
 personas: [ai-video-technical-director]
 skills: []
 suggestion:
@@ -86,4 +87,4 @@ No live cost (no network calls happened). No commit. No push.
 - [`/video:from-script`](from-script.md) — full pipeline including
   initial stitch
 - [`/video:scene`](scene.md) — render one scene
-- [`scripts/ai-video/stitch.sh`](../../scripts/ai-video/stitch.sh) — the underlying tool
+- [`scripts/ai-video/stitch.sh`](../../../scripts/ai-video/stitch.sh) — the underlying tool

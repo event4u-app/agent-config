@@ -2,6 +2,7 @@
 model_tier: medium
 name: team-knowledge
 disable-model-invocation: true
+argument-hint: "[consolidate|bootstrap]"
 pack: meta
 intent: "Manage the repo-tracked team-knowledge layer — consolidate typed observation events into agents/knowledge/ pages, bootstrap a project baseline"
 routes_to: [team-knowledge-consolidate, team-knowledge-bootstrap]

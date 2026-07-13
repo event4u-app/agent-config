@@ -7,6 +7,7 @@ visibility: internal
 cluster: optimize
 sub: agents-dir
 description: Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard.
+argument-hint: "[--scaffold|--audit|--fix]"
 skills: [agents-audit, agent-docs-writing, override-management, module-management]
 suggestion:
   eligible: true

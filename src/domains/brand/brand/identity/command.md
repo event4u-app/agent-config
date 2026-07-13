@@ -8,6 +8,7 @@ cluster: brand
 sub: identity
 skills: [brand-identity]
 description: Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes.
+argument-hint: "<strategy-ref | brief>"
 suggestion:
   eligible: true
   trigger_description: "define our brand identity, logo and colour direction, type story, visual identity system"

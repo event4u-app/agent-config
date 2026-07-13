@@ -8,6 +8,7 @@ cluster: council
 sub: default
 skills: [ai-council]
 description: Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare.
+argument-hint: "[prompt:\"…\" | roadmap:<path> | diff:<a>..<b> | files:<paths>] [rounds:N] [depth:deep]"
 suggestion:
   eligible: false
   rationale: "Default lens — invoked via /council dispatcher; no direct trigger."

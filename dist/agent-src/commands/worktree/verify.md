@@ -8,6 +8,7 @@ cluster: worktree
 sub: verify
 skills: [worktree-lifecycle, verify-completion-evidence]
 description: Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
+argument-hint: "[worktree-path | branch]"
 suggestion:
   eligible: true
   trigger_description: "verify the worktree change, prove this worktree is ready"

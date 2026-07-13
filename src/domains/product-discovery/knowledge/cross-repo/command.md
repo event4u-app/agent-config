@@ -7,6 +7,7 @@ visibility: internal
 cluster: knowledge
 sub: cross-repo
 description: Targeted, read-only retrieval over opted-in linked-project siblings (ADR-032 Option A). Pulls a shared type / API contract / config without bulk-including sibling files.
+argument-hint: "<query> [--path-scope <glob>]"
 skills: [file-editor]
 suggestion:
   eligible: true

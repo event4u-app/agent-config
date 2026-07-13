@@ -2,6 +2,7 @@
 model_tier: medium
 name: optimize
 disable-model-invocation: true
+argument-hint: "[skills|agents-dir|augmentignore|rtk|project|prompt] [args]"
 pack: meta
 intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir, project sweep, prompt"
 routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agents-dir, optimize-project, optimize-prompt]

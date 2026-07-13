@@ -7,6 +7,7 @@ visibility: internal
 cluster: image
 sub: verify
 description: Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass.
+argument-hint: "<path-or-url> <character-id>"
 personas: [hollywood-director]
 skills: [image-analyser]
 suggestion:

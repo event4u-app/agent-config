@@ -8,6 +8,7 @@ cluster: brand
 sub: identity
 skills: [brand-identity]
 description: Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes.
+argument-hint: "<strategy-ref | brief>"
 suggestion:
   eligible: true
   trigger_description: "define our brand identity, logo and colour direction, type story, visual identity system"
@@ -20,8 +21,8 @@ packs:
 
 # /brand:identity
 
-Run the [`brand-identity`](../../skills/brand-identity/SKILL.md) skill — logo
-direction, colour story, type story, imagery direction. brand-identity
-**defines** the tokens/constraints; pack-ai-image's brand-asset generation
-**generates** the marks from them (B → A). Args: `"<strategy ref or brief>"`.
-Run `/brand:strategy` first when no positioning exists.
+Run the [`brand-identity`](../../skills/brand-identity/SKILL.md) skill —
+logo direction, colour story, type story, imagery direction. brand-identity
+**defines** the tokens/constraints; `pack-ai-image`'s brand-asset generation
+**generates** the marks from them (B → A dependency). Args: `"<strategy ref or
+brief>"`. Run `/brand:strategy` first when no positioning exists.

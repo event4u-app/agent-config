@@ -5,6 +5,7 @@ pack: fun
 tier: 2
 visibility: internal
 description: "Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'."
+argument-hint: "[event] [--pool-url <url>] [--council off|event|match] [--submit] [--fresh|--continue]"
 skills: [prediction-pool-optimizer]
 suggestion:
   eligible: true
@@ -109,12 +110,12 @@ Run [`prediction-pool-optimizer`](../skills/prediction-pool-optimizer/SKILL.md),
 adapted to the event's sport (football / basketball / …): a **de-vigged
 consensus across the 5–10 biggest publicly-viewable bookmakers**
 (sharp-weighted, never one portal) as the primary signal → expected value
-under the Step-3 rules → participant field → tip. **Answer every entry on the
-Step-3 checklist** — scores AND every bonus / award / special question (top
-scorer, "team of the top scorer", group winners, most cards …); none blank.
-Tournament/outright/award probabilities come from real markets **or** the
-skill's executed Poisson helper — **never** a hallucinated "I simulated
-10,000 runs".
+under the Step-3 rules → participant field → tip. **Answer every entry on
+the Step-3 checklist** — scores AND every bonus / award / special question
+(top scorer, "team of the top scorer", group winners, most cards …); none
+left blank. Tournament/outright/award probabilities come from real markets
+**or** the skill's executed Poisson helper — **never** a hallucinated
+"I simulated 10,000 runs".
 
 **Offer the AI-council pass (default off).** Unless `--council` is set,
 ask once:

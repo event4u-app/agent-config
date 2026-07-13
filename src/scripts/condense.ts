@@ -1670,6 +1670,10 @@ export function generate_claude_subagents(): number {
         const tools = Array.isArray(toolsRaw) ? toolsRaw.map((t) => String(t)).join(', ') : String(toolsRaw ?? '');
         const tier = typeof fm['model_tier'] === 'string' ? (fm['model_tier'] as string) : 'inherit';
         const model = tier === 'inherit' ? 'inherit' : (_TIER_TO_CLAUDE_MODEL[tier] ?? 'inherit');
+        // Optional pinned reasoning effort (skill-quality-gates Phase 4, Source S):
+        // pass through to the native frontmatter only when the source declares it —
+        // hosts without an effort knob never see the key.
+        const effort = typeof fm['effort'] === 'string' ? (fm['effort'] as string) : null;
 
         const guardedBody =
             defense !== '' && !body.includes('prompt-defense-preamble')
@@ -1681,6 +1685,7 @@ export function generate_claude_subagents(): number {
             `description: ${description}\n` +
             `tools: ${tools}\n` +
             `model: ${model}\n` +
+            (effort !== null ? `effort: ${effort}\n` : '') +
             '---\n' +
             guardedBody;
 

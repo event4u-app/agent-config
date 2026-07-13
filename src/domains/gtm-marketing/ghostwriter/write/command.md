@@ -7,6 +7,7 @@ visibility: internal
 cluster: ghostwriter
 sub: write
 description: Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.
+argument-hint: "[slug | --as=<slug>] [--tone] [--length] [--channel] [--audience]"
 suggestion:
   eligible: true
   trigger_description: "draft post in style of public figure, write in someone's voice, ghostwriter draft, LinkedIn post in style of X"

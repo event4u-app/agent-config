@@ -2,6 +2,7 @@
 model_tier: inherit
 name: team-adversarial
 disable-model-invocation: true
+argument-hint: "<focus>"
 pack: meta
 tier: 2
 visibility: internal

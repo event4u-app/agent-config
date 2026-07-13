@@ -204,6 +204,7 @@ interface RunLiveOpts {
     setting_sources?: string | null;
     max_budget?: number | null;
     model?: string | null;
+    effort?: string | null;
 }
 
 /**
@@ -219,7 +220,7 @@ export function run_live(
     timeoutS: number,
     opts: RunLiveOpts = {},
 ): RunResult {
-    const { sysprompt_file = null, setting_sources = null, max_budget = null, model = null } = opts;
+    const { sysprompt_file = null, setting_sources = null, max_budget = null, model = null, effort = null } = opts;
     const binary = claude_executable();
     if (binary === null) {
         return {
@@ -252,6 +253,12 @@ export function run_live(
         // Caps per-task API spend so one runaway agentic loop can't exhaust the
         // account quota (the failure mode that starved later arms on the first run).
         cmd.push('--max-budget-usd', _pyStrNum(max_budget));
+    }
+    if (effort) {
+        // Pin the reasoning effort for the run (skill-quality-gates Phase 4):
+        // a task or run that declares `effort` gets a reproducible knob setting
+        // instead of the host's session default drifting between runs.
+        cmd.push('--effort', effort);
     }
     if (setting_sources) {
         cmd.push('--setting-sources', setting_sources);
@@ -805,6 +812,9 @@ export function run_variant(
                 setting_sources: setting_sources_for(variant),
                 max_budget,
                 model,
+                // Per-task effort pin (skill-quality-gates Phase 4): a corpus task
+                // may declare `effort` to hold the reasoning knob constant.
+                effort: typeof task['effort'] === 'string' ? (task['effort'] as string) : null,
             });
         } else {
             runResult = run_dry(task as Record<string, unknown>, cloneRoot, variant);

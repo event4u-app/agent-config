@@ -2,6 +2,7 @@
 model_tier: medium
 name: memory
 disable-model-invocation: true
+argument-hint: "[add|load|mine-session|promote|propose] [args]"
 pack: memory
 intent: "Manage the agent memory layer — add, load, promote, propose"
 routes_to: [memory-add, memory-load, memory-promote, memory-propose]

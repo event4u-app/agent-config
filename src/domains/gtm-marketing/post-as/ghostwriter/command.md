@@ -8,6 +8,7 @@ cluster: post-as
 sub: ghostwriter
 skills: [post-as, ghostwriter]
 description: Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer.
+argument-hint: "[slug | --as=<slug>] [--tone] [--length] [--channel] [--audience]"
 suggestion:
   eligible: true
   trigger_description: "post as ghostwriter, draft as a public figure, write in style of X, post-as alias for ghostwriter:write"

@@ -7,6 +7,7 @@ visibility: internal
 cluster: skill
 sub: preview
 description: Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution.
+argument-hint: "<skill-name> [--technical]"
 skills: [file-editor]
 suggestion:
   eligible: true
