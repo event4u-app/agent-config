@@ -183,8 +183,14 @@ export function renderReview(findings: Finding[], enforce: boolean): string {
         return `${banner}\n\n✅ Self-review gate: no findings.`;
     }
     const blocking = findings.filter(classifyBlocking);
+    // Each row carries an explicit (Blocking)/(Advisory) marker so a
+    // critical-but-non-blocking finding (e.g. critical × correctness) can never
+    // read as inconsistent with the narrow `blocking.length` verdict count.
     const rows = findings
-        .map((f) => `| ${f.severity} | ${f.kind} | ${f.file ?? '—'} | ${f.title} |`)
+        .map((f) => {
+            const marker = classifyBlocking(f) ? 'Blocking' : 'Advisory';
+            return `| ${f.severity} (${marker}) | ${f.kind} | ${f.file ?? '—'} | ${f.title} |`;
+        })
         .join('\n');
     const verdictLine = blocking.length
         ? enforce

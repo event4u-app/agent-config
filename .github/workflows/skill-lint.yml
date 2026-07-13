@@ -186,12 +186,13 @@ jobs:
           const results = data.results || [];
           const summary = data.summary || {};
           const p = summary.pass || 0;
-          const w = summary.warn || 0;
+          const w = summary.pass_with_warnings || 0;
           const f = summary.fail || 0;
+          const total = summary.total != null ? summary.total : p + w + f;
           const lines = ["## 🔍 Skill Lint Summary", ""];
           lines.push("| Pass | Warn | Fail | Total |");
           lines.push("|---|---|---|---|");
-          lines.push(`| ${p} | ${w} | ${f} | ${p + w + f} |`);
+          lines.push(`| ${p} | ${w} | ${f} | ${total} |`);
           if (f > 0) {
             lines.push("", "<details>", "<summary>❌ Failures</summary>", "");
             for (const r of results) {
@@ -218,7 +219,9 @@ jobs:
               lines.push("", "</details>");
             }
           }
-          if (f === 0 && w === 0) {
+          if (total === 0) {
+            lines.push("", "⚠️ INCONCLUSIVE — 0 changed skill files were checked; this is not a pass.");
+          } else if (f === 0 && w === 0) {
             lines.push("", "✅ All changed files pass cleanly.");
           }
           lines.push("", "---", "*Full report available as artifact.*");
