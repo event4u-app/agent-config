@@ -59,10 +59,14 @@ smoke test — all deterministic, all with must-fail/must-pass fixtures.
 
 ## Phase 4 — Frontmatter conformance + bridge-verify hardening + loadability
 
-- [ ] Command audit against the official field standard: add `argument-hint` to argument-taking commands; verify user-invocable / disable-model-invocation semantics project correctly per host bridge; document deliberate divergences in `docs/parity/`. Do NOT chase host-specific fields into the neutral source. *Source C.*
-- [ ] Optional `effort:` key: schema + projection to hosts with an effort knob (ignored elsewhere); picked up by the bench harness so runs pin it. *Source S.*
-- [ ] Bridge-verify hardening: every generated bridge file must hash-derive from its `src/` source; the supported-tools matrix in docs equals the generated adapter set (fail on drift either direction). *Source AA.*
-- [ ] **Host-loadability smoke job:** temp-home install of the Claude-Code plugin + a real host-CLI load assertion; metadata cross-consistency (marketplace ↔ plugin dirs ↔ docs). Optional in CI, required before releases. *Source G.*
+- [x] Command audit against the official field standard: add `argument-hint` to argument-taking commands; verify user-invocable / disable-model-invocation semantics project correctly per host bridge; document deliberate divergences in `docs/parity/`. Do NOT chase host-specific fields into the neutral source. *Source C.* <!-- done: schema field + 140/183 commands hinted + docs/parity/command-frontmatter.md; validate_frontmatter green -->
+
+- [x] Optional `effort:` key: schema + projection to hosts with an effort knob (ignored elsewhere); picked up by the bench harness so runs pin it. *Source S.* <!-- done: skill+subagent schema enum, .claude/agents projection, bench_ab_task_runner --effort pin; 8 tests green -->
+
+- [x] Bridge-verify hardening: every generated bridge file must hash-derive from its `src/` source; the supported-tools matrix in docs equals the generated adapter set (fail on drift either direction). *Source AA.* <!-- done: check_bridge_derivation (symlink leg + regeneration fixpoint) + lint_supported_tools_matrix (README ↔ registry ↔ generator roots); 12 must-fail/must-pass tests; wired into task ci + consistency.yml -->
+
+- [x] **Host-loadability smoke job:** temp-home install of the Claude-Code plugin + a real host-CLI load assertion; metadata cross-consistency (marketplace ↔ plugin dirs ↔ docs). Optional in CI, required before releases. *Source G.* <!-- done: smoke_host_loadability.sh (claude plugin validate + temp-home install + list assertion + 4 cross-consistency lints); Cursor-globs false-positive in check_host_loadability fixed; wired into consistency.yml (self-skipping) + release contract (REQUIRE=1) -->
+
 
 ## Council convergence (2026-07-11)
 
@@ -73,8 +77,8 @@ the eval schema + the verify-assertion pattern transfer.
 
 ## Acceptance criteria (anti-dump)
 
-- [ ] Every new lint ships with must-fail + must-pass fixtures; nothing warn-only.
-- [ ] Eval schema changes are additive; all existing `evals.json` stay valid unmodified.
-- [ ] No new runtime dependency (static-config + Node/TS scripts only).
-- [ ] A seeded doc/adapter drift turns CI red in a test; the farm specimen fails the description lint.
-- [ ] Dashboard regenerated.
+- [x] Every new lint ships with must-fail + must-pass fixtures; nothing warn-only. <!-- Phase 1-3 lints: PR #934; Phase 4: lint_supported_tools_matrix (4 tests) + check_bridge_derivation (8 tests), both hard-fail -->
+- [x] Eval schema changes are additive; all existing `evals.json` stay valid unmodified. <!-- Phase 2 (PR #934); run_skill_evals_toolchoice tests green; Phase 4 touched no eval schema -->
+- [x] No new runtime dependency (static-config + Node/TS scripts only). <!-- package.json/package-lock.json untouched across all phases -->
+- [x] A seeded doc/adapter drift turns CI red in a test; the farm specimen fails the description lint. <!-- seeded README-row drift + seeded bridge-file drift both red in tests; farm specimen must-fail in lint_skill_descriptions.test.ts -->
+- [x] Dashboard regenerated.
