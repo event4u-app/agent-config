@@ -14,6 +14,8 @@ triggers:
   - phrase: "new guideline"
   - phrase: "neue Regel"
   - phrase: "bau mir ein Skill"
+routes_to:
+  - "guideline:agent-infra/artifact-drafting-protocol-mechanics"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 ---

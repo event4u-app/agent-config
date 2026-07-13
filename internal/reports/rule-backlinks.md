@@ -66,7 +66,7 @@ Rules with >2 targets are listed as info, NOT failures.
 
 ## guideline:agent-infra/active-remediation-mechanics
 
-- `active-remediation` (prose)
+- `active-remediation` (frontmatter)
 
 ## guideline:agent-infra/agent-interaction-and-decision-quality
 
@@ -74,19 +74,19 @@ Rules with >2 targets are listed as info, NOT failures.
 
 ## guideline:agent-infra/artifact-drafting-protocol-mechanics
 
-- `artifact-drafting-protocol` (prose)
+- `artifact-drafting-protocol` (frontmatter)
 
 ## guideline:agent-infra/context-hygiene-mechanics
 
-- `context-hygiene` (prose)
+- `context-hygiene` (frontmatter)
 
 ## guideline:agent-infra/domain-adoption-gates
 
-- `domain-adoption-policy` (prose)
+- `domain-adoption-policy` (frontmatter)
 
 ## guideline:agent-infra/framework-neutrality-patterns
 
-- `framework-neutrality-in-generic-skills` (prose)
+- `framework-neutrality-in-generic-skills` (frontmatter)
 
 ## guideline:agent-infra/linked-projects-onboarding-gate
 
@@ -94,7 +94,7 @@ Rules with >2 targets are listed as info, NOT failures.
 
 ## guideline:agent-infra/minimal-safe-diff-mechanics
 
-- `minimal-safe-diff` (prose)
+- `minimal-safe-diff` (frontmatter)
 
 ## guideline:agent-infra/missing-tool-handling
 
@@ -130,7 +130,7 @@ Rules with >2 targets are listed as info, NOT failures.
 
 ## guideline:design-fidelity-mechanics
 
-- `design-fidelity` (prose)
+- `design-fidelity` (frontmatter)
 
 ## guideline:php/php-coding-patterns
 
