@@ -1,106 +1,102 @@
 ---
 model_tier: medium
 name: docx-authoring
-description: "Create or edit a Word (.docx) document — skeleton-create, unpack→edit-XML→pack-with-validate, page-size and list gotchas. Use for 'generate a docx', 'edit this Word file', 'fill a Word template'."
-compatibility: "Requires zip + unzip on PATH; XML validation uses xmllint or python3 (either suffices). No LibreOffice/Word needed."
+description: "Use when generating or editing a Word .docx — create, fill a template, or edit body XML via a consumer library; round-trip validated. Triggers on 'generate a docx', 'fill this Word template'."
+status: active
+tier: senior
 domain: process
+compatibility: "Requires a consumer-installed OOXML library (python-docx for create/fill; a zip+xml toolchain for the unpack→edit→pack path). No LibreOffice/soffice dependency — that surface is gated (see pptx, road-to-ecosystem-harvest-document-skills Phase 2). Ships zero runtime in this package."
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-trust:
-  level: professional
-install:
-  removable: true
-execution:
-  type: manual
 ---
 
 # docx-authoring
 
-Write-side completion of the document cycle: `markitdown` reads docx → markdown;
-this skill creates and edits the docx itself. A `.docx` is a ZIP of XML parts
-(OOXML) — every operation reduces to unpack → edit XML → pack → validate.
+Wing-1 engineering skill for **writing** Word documents — the generation half of
+the read→write cycle whose read side is [`markitdown`](../markitdown/SKILL.md).
+Ships zero runtime in this package: the agent drives a library the consumer
+already has (python-docx, or a zip+XML toolchain), exactly as `markitdown` wraps
+a consumer-installed converter. Re-implements the **pattern**, never any
+proprietary source.
 
 ## When to use
 
-- Generating a new Word document (report, letter, filled template).
-- Editing an existing `.docx` — text changes, structure changes, template
-  placeholder filling.
-- Converting authored content (markdown, data) into a `.docx` deliverable.
+- "Generate a .docx report / letter / contract from this content."
+- "Fill this Word template with these values."
+- "Edit the body of this .docx" (a heading, a table cell, a style).
 
-Do NOT use for: *reading* a docx (route to `markitdown`), slide decks (route to
-`html-deck`; pptx generation is gated), spreadsheets (`spreadsheet-authoring`),
-or PDFs (`pdf-tools`).
+Do NOT use for: reading a docx → Markdown (that is `markitdown`); slide decks
+(`html-deck`, or the gated pptx surface); PDFs (`pdf-tools`).
 
 ## Procedure
 
-1. **Pick the path.**
-   - **New document** → `scripts/docx_new.sh <out.docx> [title]` creates a
-     minimal valid skeleton; then unpack and build the body in
-     `word/document.xml`. When a real docx library is available in the
-     environment (`docx` on npm, `python-docx`), prefer it for rich documents —
-     the skeleton path is the zero-dependency fallback that always works.
-   - **Existing document / template** → never regenerate from scratch; edit in
-     place via unpack → edit → pack so styles, headers, numbering, and images
-     survive.
-2. **Unpack.** `scripts/docx_unpack.sh <file.docx> <dir>`. Body text lives in
-   `word/document.xml`; styles in `word/styles.xml`; list definitions in
-   `word/numbering.xml`; relationships in `word/_rels/document.xml.rels`.
-3. **Edit the XML.** Make the smallest edit that achieves the change. Keep
-   existing namespaces and attribute order; new parts must be registered in
-   `[Content_Types].xml` and (where referenced) in the rels file.
-4. **Pack + validate.** `scripts/docx_pack.sh <dir> <out.docx>` — packs and
-   runs `docx_validate.sh` (ZIP integrity, required OPC parts, XML
-   well-formedness of every part). A pack without validation is not done.
-5. **Round-trip proof.** Confirm the output opens: extract its text back
-   (`markitdown`, `textutil` on macOS, or unpack + read `document.xml`) and
-   check the intended content is present. For template filling, grep the
-   output for leftover placeholders — zero remaining is the pass condition.
+### 1. Pick the path by task
 
-## Hard-won XML rules
+| Task | Path |
+|---|---|
+| Create from scratch / structured content | Library create (python-docx `Document()`) — build paragraphs, tables, styles programmatically |
+| Fill a supplied template | Open the template, replace placeholder runs in place, save a copy — never mutate the original |
+| Surgical edit of existing body | **unpack → edit XML → pack-with-validate**: a `.docx` is a ZIP of XML; unzip, edit `word/document.xml`, re-zip preserving the archive structure |
 
-- **Page size is never implicit.** A `document.xml` without
-  `<w:sectPr><w:pgSz .../>` silently defaults to US Letter in Word. Always set
-  `w:pgSz` explicitly (A4 = `w:w="11906" w:h="16838"`; Letter = `w:w="12240"
-  w:h="15840"`).
-- **Tables need dual widths.** Renderers disagree on which width wins: set both
-  the table-level `<w:tblW>` + `<w:gridCol>` and the per-cell `<w:tcW>` values.
-  A table with only one of the two renders correctly in one app and collapses
-  in another.
-- **No unicode bullets.** A `•` character pasted into run text *looks* like a
-  list but is not one — it breaks indentation, continuation, and screen
-  readers. Real lists use `<w:numPr>` referencing a definition in
-  `word/numbering.xml` (register it in `[Content_Types].xml` if newly added).
-- **Escape text content.** `&`, `<`, `>` in body text must be XML-escaped —
-  the classic corruption source when injecting user content into `<w:t>`.
+### 2. Honor the hard-won gotchas (encode as rules, not hope)
+
+- **Page size defaults to US Letter** in most libraries — set A4 explicitly when the locale needs it; never assume.
+- **Table columns need dual widths** — set BOTH the table grid width and each cell width, or renderers ignore one and collapse the layout.
+- **No Unicode bullet glyphs** as literal characters (`•`, `‣`) — use the list-style paragraph, or the document loses its list semantics and screen readers skip it.
+- **Runs, not paragraphs, carry formatting** — a placeholder that spans two runs will not match a naive whole-paragraph replace; split/merge runs first.
+
+### 3. Validate — round-trip, do not trust the write
+
+1. Re-open the generated file with the SAME library; assert it parses (a corrupt ZIP or malformed XML throws here).
+2. Read back one written value (a heading text, a table cell) and assert it equals what was written.
+3. For the unpack→pack path: confirm the archive still contains `[Content_Types].xml` and `word/document.xml` (dropping either produces a file Word refuses to open).
 
 ## Output format
 
-1. **The `.docx` file** — packed via `docx_pack.sh`, i.e. validation has
-   already passed (ZIP + required parts + well-formed XML).
-2. **A round-trip note** — one line stating how the output was re-read
-   (markitdown / textutil / unpack) and that the intended content (and zero
-   leftover placeholders, for templates) was confirmed.
+1. The generated/edited `.docx` path.
+2. The validation result: parses ✅, read-back value matched ✅, required parts present ✅.
+3. Any gotcha that applied (e.g. "set A4 explicitly; template used Letter").
 
 ## Gotcha
 
-- Regenerating an existing document from scratch instead of editing in place
-  destroys styles, numbering, headers, and embedded images — template edits are
-  always unpack → edit → pack.
-- Word repairs some malformed files silently; LibreOffice and converters do
-  not. "It opened in Word" is not validation — run `docx_validate.sh`.
-- Adding a new part (image, numbering) without registering it in
-  `[Content_Types].xml` produces a file that validates as ZIP+XML but fails to
-  open — content-type registration is part of the edit, not an afterthought.
-- Unescaped `&` in injected text is the most common corruption: the XML stays
-  parseable-looking but the file is rejected on open.
+The most common silent failure is a file that **saves without error but Word
+refuses to open**: an unpack→pack cycle that re-zipped with a directory entry,
+wrong compression, or a dropped `[Content_Types].xml`. The round-trip re-open in
+step 3 is the only check that catches it — a green "file written" line does not.
+
+- **Silent corruption:** an unpack→pack cycle re-zipped with a directory entry or a dropped `[Content_Types].xml` → saves fine, Word shows "file is corrupt". Only the round-trip re-open catches it.
 
 ## Do NOT
 
-- Do NOT ship a packed docx without running `docx_validate.sh` (or an
-  equivalent open-check) — a broken deliverable is worse than none.
-- Do NOT copy code from proprietary document-skill sources — this skill
-  re-implements the pattern only.
-- Do NOT hand-build pptx here — pptx generation is gated (CI-tooling decision +
-  demand signal, per `domain-adoption-policy`).
+- Do NOT bundle or ship a Python toolkit in this package — drive the consumer's library (zero-runtime posture, like `markitdown`).
+- Do NOT mutate a supplied template in place — always write a copy.
+- Do NOT claim success on "file written"; claim it only after the round-trip re-open.
+- Do NOT reach for LibreOffice/soffice — that dependency is gated (pptx surface).
+
+## Related Skills
+
+**WHEN to use this**
+
+- The target artifact is a Word `.docx` — a report, letter, contract, or a filled template.
+- A `.docx` body needs a surgical edit (heading, table cell, style) via the unpack→edit→pack path.
+
+**WHEN NOT to use this**
+
+- Reading a docx into the conversation → [`markitdown`](../markitdown/SKILL.md).
+- PDFs → [`pdf-tools`](../pdf-tools/SKILL.md); spreadsheets → [`spreadsheet-authoring`](../spreadsheet-authoring/SKILL.md); slide decks → [`html-deck`](../html-deck/SKILL.md).
+- The task needs LibreOffice-backed rendering (pptx) — that surface is gated, do not reach for it here.
+
+## When the agent should load this
+
+- "Generate a Word report from this content."
+- "Fill this .docx template with these values."
+- "Edit the heading / a table cell in this .docx."
+- "Produce a contract as a .docx."
+
+## Output
+
+1. **Generated document** — the `.docx` path. Cite as `docx-output`.
+2. **Validation receipt** — parses on re-open ✅, read-back value matched ✅, required OOXML parts present ✅. Cite as `docx-validation`.
+3. **Gotcha log** — present only when a gotcha applied (page-size override, run-split for a template placeholder). Cite as `docx-gotchas`.

@@ -116,6 +116,81 @@ describe('check_council_config_location — golden parity (tmp fixtures)', () =>
     });
 });
 
+describe('check_council_config_location — §3 project-tree placement (ADR-104)', () => {
+    let tmp: string;
+    beforeEach(() => {
+        tmp = mkTmp();
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    it('violation: un-negated agents/.ai-council.yml placement → exit 1', () => {
+        write(
+            tmp,
+            'src/skills/ai-council/SKILL.md',
+            'Copy the reference into your own `agents/.ai-council.yml`.\n',
+        );
+        const a = runTs(tmp);
+        expect(a.status).toBe(1);
+        expect(a.stdout).toContain('user-global ONLY');
+    });
+
+    it('violation: placement drift in the settings template is scanned (§3 only) → exit 1', () => {
+        write(
+            tmp,
+            'src/config/agent-settings.template.yml',
+            '# copy the file to `agents/settings/.ai-council.yml`\n',
+        );
+        expect(runTs(tmp).status).toBe(1);
+    });
+
+    it('clean: a negated placement mention on the same line → exit 0', () => {
+        write(
+            tmp,
+            'docs/contracts/ai-council-config.md',
+            'A `<project_root>/agents/settings/.ai-council.yml` is ignored (ADR-104).\n',
+        );
+        expect(runTs(tmp).status).toBe(0);
+    });
+
+    it('clean: negation wraps to the previous line → exit 0', () => {
+        write(
+            tmp,
+            'src/domains/meta/council/default/command.md',
+            'The council never reads\n`<project_root>/agents/settings/.ai-council.yml` or any project file.\n',
+        );
+        expect(runTs(tmp).status).toBe(0);
+    });
+
+    it('clean: the user-global path is not project-tree drift → exit 0', () => {
+        write(
+            tmp,
+            'src/skills/ai-council/SKILL.md',
+            'Config lives at `~/.event4u/agent-config/settings/.ai-council.yml`.\n',
+        );
+        expect(runTs(tmp).status).toBe(0);
+    });
+
+    it('clean: the copy-from .example path is not flagged → exit 0', () => {
+        write(
+            tmp,
+            'src/skills/ai-council/SKILL.md',
+            'Copy the shape from `agents/templates/.ai-council.yml.example`.\n',
+        );
+        expect(runTs(tmp).status).toBe(0);
+    });
+
+    it('clean: an allow-pragma exempts a historical placement line → exit 0', () => {
+        write(
+            tmp,
+            'docs/contracts/ai-council-config.md',
+            'New file `agents/settings/.ai-council.yml` checked in <!-- council-config-allowed -->\n',
+        );
+        expect(runTs(tmp).status).toBe(0);
+    });
+});
+
 describe('check_council_config_location — golden parity (real repo)', () => {
     it('runs deterministically on the live council surfaces', () => {
         const a = runTs(REPO_ROOT);

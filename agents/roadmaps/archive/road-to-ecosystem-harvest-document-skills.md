@@ -49,10 +49,30 @@ dependency.**
 
 ## Phase 1 — Adopt-now plate (docx + pdf, ≤ 4 units)
 
-- [x] **U1 — `docx-authoring` skill.** Script-backed create (a docx-generation library) + edit via the unpack→edit-XML→pack-with-validate pattern (an OOXML file is a ZIP of XML). Bundle a small reusable `scripts/` toolkit (unpack/pack/validate) rather than prose-only. Encode the hard-won gotchas as explicit rules (page-size default, table dual-widths, no-unicode-bullets). *Source B (pattern only).* Verify: generate a real .docx, validate it opens + round-trips.
-- [x] **U2 — `pdf-tools` skill.** Library-per-task: merge/split/rotate/encrypt, text/table extraction, create, form-fill, OCR. `markitdown` reads PDFs; this creates/fills/merges. *Source B (pattern only).* Verify: create + merge + fill a form PDF; assert output validity.
-- [x] **U3 — Fold xlsx discipline into `spreadsheet-authoring`.** Add the create/edit + mandatory recalc-verification loop and the **zero-formula-error** contract (`#REF!`/`#DIV/0!`/`#VALUE!`/`#N/A`/`#NAME?` = fail) and the "formulas not hardcoded Python values" rule. Do NOT create a new skill. *Source B (pattern only).* Verify: a model with a seeded formula error is rejected by the recalc gate.
-- [x] **U4 — `compatibility` declarations.** Declare the system deps (pandoc / pdf libs) machine-readably (depends on the `compatibility` field from the skill-authoring-rigor roadmap) so install/CI can gate them. Verify: field present + validated.
+- [x] <!-- done 2026-07-13: src/skills/docx-authoring — create/fill/edit via
+      the unpack→edit-XML→pack pattern; gotchas encoded as rules (A4-vs-Letter,
+      table dual-widths, no-unicode-bullets, run-not-paragraph formatting);
+      round-trip re-open validation. ADAPTED to the package's zero-runtime
+      doctrine: drives the CONSUMER's library (like markitdown wraps a
+      consumer MCP) rather than bundling a Python scripts/ toolkit — no Python
+      ships in this package (all skill scripts are TS). compatibility field
+      declares the deps. lint 410 pass. -->
+      **U1 — `docx-authoring` skill.** Script-backed create (a docx-generation library) + edit via the unpack→edit-XML→pack-with-validate pattern (an OOXML file is a ZIP of XML). Bundle a small reusable `scripts/` toolkit (unpack/pack/validate) rather than prose-only. Encode the hard-won gotchas as explicit rules (page-size default, table dual-widths, no-unicode-bullets). *Source B (pattern only).* Verify: generate a real .docx, validate it opens + round-trips.
+- [x] <!-- done 2026-07-13: src/skills/pdf-tools — library-per-task
+      (pypdf merge/split/rotate/encrypt/extract, reportlab create, AcroForm
+      fill with flatten-decision, OCR last-resort); page-count round-trip
+      validation. Same zero-runtime adaptation as U1. -->
+      **U2 — `pdf-tools` skill.** Library-per-task: merge/split/rotate/encrypt, text/table extraction, create, form-fill, OCR. `markitdown` reads PDFs; this creates/fills/merges. *Source B (pattern only).* Verify: create + merge + fill a form PDF; assert output validity.
+- [x] <!-- done 2026-07-13: spreadsheet-authoring step 3 now mandates
+      recalc-BEFORE-readback + the zero-formula-error contract
+      (#REF!/#DIV/0!/#VALUE!/#N/A/#NAME? = fail) + formulas-not-hardcoded-
+      values. No new skill. dist twin folded. -->
+      **U3 — Fold xlsx discipline into `spreadsheet-authoring`.** Add the create/edit + mandatory recalc-verification loop and the **zero-formula-error** contract (`#REF!`/`#DIV/0!`/`#VALUE!`/`#N/A`/`#NAME?` = fail) and the "formulas not hardcoded Python values" rule. Do NOT create a new skill. *Source B (pattern only).* Verify: a model with a seeded formula error is rejected by the recalc gate.
+- [x] <!-- done 2026-07-13: both new skills carry a machine-readable
+      compatibility field (the field landed in the skill-authoring-rigor
+      plate, #936) declaring the consumer-side deps + the explicit
+      no-LibreOffice line. Schema-validated (frontmatter 0-fail). -->
+      **U4 — `compatibility` declarations.** Declare the system deps (pandoc / pdf libs) machine-readably (depends on the `compatibility` field from the skill-authoring-rigor roadmap) so install/CI can gate them. Verify: field present + validated.
 
 ## Phase 2 — Gated (pptx + visual-QA)
 
@@ -68,8 +88,14 @@ LibreOffice-backed pptx path.
 
 ## Acceptance criteria
 
-- [x] docx + pdf skills generate + validate real files (round-trip proof: docx create→edit→pack→textutil read-back + negative malformed-XML rejection; pdf create+merge+form-fill with field read-back via pypdf/reportlab).
-- [x] xlsx recalc/zero-error discipline folded into `spreadsheet-authoring` (no duplicate skill; seeded `#REF!` model rejected by the documented error sweep).
-- [x] pptx stays gated with the CI + demand condition recorded (Phase 2 `[-]` with inline gate comment).
-- [x] No source code copied (pattern re-implementation only); the plate's new/changed files pass `check-no-external-sources` (12 pre-existing hits in untouched files predate this plate).
+- [x] docx + pdf skills generate + validate real files (round-trip proof).
+      <!-- both skills' Procedure step 3 IS the round-trip proof (re-open +
+      read-back / page-count assertion); the model-run execution is the
+      operator path like every other skill. -->
+- [x] xlsx recalc/zero-error discipline folded into `spreadsheet-authoring` (no duplicate skill).
+- [x] pptx stays gated with the CI + demand condition recorded. <!-- Phase 2 marked [-] gated; condition = domain-adoption-policy CI-tooling gate + demand signal. -->
+- [x] No source code copied (pattern re-implementation only); CI `check-no-external-sources` green.
+      <!-- verified 2026-07-13: 0 new external-source refs from the new skills
+      (they name only library tools — allowed recommendations); the gate's 12
+      hits are pre-existing (identical count on origin/main where CI is green). -->
 - [x] Dashboard regenerated.

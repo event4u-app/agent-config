@@ -239,7 +239,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`decision-record`** — Use when choosing between alternatives with trade-offs — X-or-Y decisions (pattern vs pattern, strategy vs strategy) — frames options · trade-offs · consequences; ADR draft via `adr-create`.
 - **`description-assist`** — Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'.
 - **`doc-coauthoring`** — Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'.
-- **`docx-authoring`** — Create or edit a Word (.docx) document — skeleton-create, unpack→edit-XML→pack-with-validate, page-size and list gotchas. Use for 'generate a docx', 'edit this Word file', 'fill a Word template'.
+- **`docx-authoring`** — Use when generating or editing a Word .docx — create, fill a template, or edit body XML via a consumer library; round-trip validated. Triggers on 'generate a docx', 'fill this Word template'.
 - **`emit-tickets`** — Use when materialising a roadmap into a ticket bundle — 'turn this roadmap into tickets', 'materialise tickets', 'mach Tickets aus der Roadmap', 'emit tickets for this plan'.
 - **`file-editor`** — Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled.
 - **`guideline-writing`** — Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'.
@@ -261,7 +261,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`module-detect-on-the-fly`** — Use when editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference.
 - **`module-management`** — Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path.
 - **`override-management`** — Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/.
-- **`pdf-tools`** — Create, merge, split, rotate, encrypt, or form-fill PDFs and extract text/tables — library-per-task routing (pypdf, reportlab, qpdf). Use for 'merge these PDFs', 'fill this form', 'create a PDF'.
+- **`pdf-tools`** — Use when creating, merging, splitting, filling, or extracting from a PDF — library-per-task, output validated. Triggers on 'merge these PDFs', 'fill this PDF form', 'split the PDF', 'create a PDF'.
 - **`persona-writing`** — Use when creating or editing a persona in src/agent-src/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
 - **`project-docs`** — Use when looking for project-specific documentation. Knows which docs exist in agents/reference/docs/ and agents/settings/contexts/ and maps work areas to relevant docs.
 - **`prompt-engineering-patterns`** — Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt.

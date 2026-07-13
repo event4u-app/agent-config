@@ -1,104 +1,101 @@
 ---
 model_tier: medium
 name: pdf-tools
-description: "Create, merge, split, rotate, encrypt, or form-fill PDFs and extract text/tables — library-per-task routing (pypdf, reportlab, qpdf). Use for 'merge these PDFs', 'fill this form', 'create a PDF'."
-compatibility: "Needs one PDF library in the environment per task — pypdf/reportlab (Python), pdf-lib (Node), or qpdf/ocrmypdf CLIs. A throwaway venv/npx install is acceptable; nothing is bundled."
+description: "Use when creating, merging, splitting, filling, or extracting from a PDF — library-per-task, output validated. Triggers on 'merge these PDFs', 'fill this PDF form', 'split the PDF', 'create a PDF'."
+status: active
+tier: senior
 domain: process
+compatibility: "Requires consumer-installed PDF libraries: pypdf (merge/split/rotate/encrypt/extract), reportlab (create), a form library for AcroForm fill; an OCR engine (e.g. tesseract) only for the OCR task. No LibreOffice dependency. Ships zero runtime in this package."
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-trust:
-  level: professional
-install:
-  removable: true
-execution:
-  type: manual
 ---
 
 # pdf-tools
 
-Write-side PDF operations. `markitdown` *reads* PDFs (text/OCR → markdown);
-this skill **creates, transforms, and fills** them. PDF is a binary-ish format
-with an object graph — never hand-edit bytes; always go through a library, and
-pick the library per task.
+Wing-1 engineering skill for **PDF write/transform** — `markitdown` reads a PDF
+to Markdown; this creates, merges, fills, and extracts. Ships zero runtime: the
+agent drives libraries the consumer has. Pattern re-implementation only.
 
 ## When to use
 
-- Merging, splitting, rotating, or re-ordering PDF pages.
-- Encrypting / decrypting a PDF or stripping permissions.
-- Creating a PDF from content (report, letter, invoice).
-- Filling PDF form fields (AcroForm) programmatically.
-- Extracting text or tables when `markitdown` output is not enough (page-scoped
-  extraction, coordinates, tables).
-- OCR on scanned PDFs to make them searchable.
+- "Merge / split / rotate / encrypt these PDFs."
+- "Fill this PDF form (AcroForm) with these values."
+- "Create a PDF from this content."
+- "Extract the text / tables from this PDF" (structured extraction beyond `markitdown`'s Markdown).
+- "OCR this scanned PDF."
 
-Do NOT use for: plain PDF→markdown conversion (route to `markitdown`), Word
-documents (`docx-authoring`), or slide decks (`html-deck`).
-
-## Library-per-task routing
-
-| Task | First choice | Fallback |
-|---|---|---|
-| Merge / split / rotate / re-order | `pypdf` (Python) | `pdf-lib` (Node), `qpdf` CLI |
-| Encrypt / decrypt / permissions | `pypdf` | `qpdf` CLI |
-| Create from scratch | `reportlab` (Python) | `pdf-lib`; HTML→PDF via headless browser for layout-heavy docs |
-| Form-fill (AcroForm) | `pypdf` (`update_page_form_field_values`) | `pdf-lib` |
-| Text extraction (page-scoped) | `pypdf` | `pdfplumber` for coordinates |
-| Table extraction | `pdfplumber` | `camelot` (needs ghostscript) |
-| OCR (scanned → searchable) | `ocrmypdf` CLI | `tesseract` + rebuild |
-
-One library per task — do not chain three libraries where one covers the job.
-If none is installed, a **throwaway venv** (`python3 -m venv … && pip install
-pypdf reportlab`) or `npx`-scoped install is the standard move; ask before any
-global/system install per `missing-tool-handling`.
+Do NOT use for: PDF → Markdown ingestion (`markitdown`); Word (`docx-authoring`).
 
 ## Procedure
 
-1. **Classify the task** against the routing table; confirm (or provision) the
-   one library it needs.
-2. **Inspect before transforming.** For merge/split/fill, read the input first
-   — page count, encryption status, form-field names (`reader.get_fields()`).
-   Filling field names you guessed instead of read is the #1 form-fill failure.
-3. **Operate via the library** — never regex/byte-patch a PDF.
-4. **Validate the output.** Re-open the result with the same library: page
-   count matches expectation, text extraction returns the expected content,
-   filled fields read back with the written values. An output that cannot be
-   re-opened is a failed run, not a deliverable.
-5. **Report** what was produced and how it was validated (page counts,
-   field read-back).
+### 1. Library per task — do not force one tool
+
+| Task | Library path |
+|---|---|
+| merge / split / rotate / encrypt | pypdf — page-level operations, no rendering |
+| create from content | reportlab (canvas / platypus) |
+| form-fill (AcroForm) | a form-aware library; map field name → value, then flatten if the form must not be re-editable |
+| text / table extraction | a text-layer extractor; tables need a layout-aware pass, not naive text |
+| OCR (scanned/image PDF) | an OCR engine over rasterized pages — ONLY when there is no text layer |
+
+### 2. Decide flatten-or-keep on form fills
+
+A filled AcroForm stays editable unless flattened. Flatten when the PDF is a
+final artifact (an invoice, a signed form); keep fields when the recipient must
+edit further. State which you chose — a silently-editable "final" form is a
+correctness bug.
+
+### 3. Validate — assert output validity, do not trust the write
+
+1. Re-open the output with pypdf; assert `len(reader.pages)` matches the expected count (merge = sum; split = 1 per part).
+2. For a form-fill: read back one field value (pre-flatten) or extract the rendered text (post-flatten) and assert the value is present.
+3. For create: assert the file opens and page 1 carries expected text.
 
 ## Output format
 
-1. **The PDF file(s)** — produced by the routed library, re-opened
-   successfully as part of the run.
-2. **A validation line per output** — page count + (for form-fill) the
-   read-back of every written field; (for extraction) the page-scoped source
-   of each extracted value.
+1. The output PDF path(s).
+2. Validation: page count matches expected ✅, read-back value/text present ✅.
+3. For fills: flatten decision stated (flattened / kept-editable + why).
 
 ## Gotcha
 
-- Form fields often don't render their filled values in every viewer unless
-  `NeedAppearances` is set (pypdf: `auto_regenerate=False` pitfalls) — verify
-  by field read-back, not by eyeballing a viewer.
-- Merging encrypted PDFs silently fails or throws late — check
-  `reader.is_encrypted` first and decrypt with the known password before
-  merging.
-- Page indices are 0-based in pypdf but humans speak 1-based — off-by-one
-  splits are the classic defect; restate the requested range in both forms
-  before cutting.
-- Text extraction on a scanned PDF returns empty strings, not an error — an
-  empty extraction on a non-empty page means OCR is needed (`ocrmypdf`), not
-  that the page is blank.
-- `reportlab` coordinates are points from the **bottom-left** — top-left
-  assumptions place content off-page.
+**OCR is a last resort, not the default extraction path.** Running OCR over a
+PDF that already has a text layer produces worse output (OCR errors) than the
+existing text and burns time. Check for a text layer first; OCR only when it is
+genuinely absent.
+
+- **Editable "final" form:** a filled AcroForm left un-flattened ships as a "signed invoice" the recipient can silently alter → flatten when the artifact is final.
 
 ## Do NOT
 
-- Do NOT byte-edit or regex-patch a PDF file directly.
-- Do NOT claim a form was filled without reading the field values back from
-  the written file.
-- Do NOT install PDF tooling system-wide without asking — throwaway
-  venv / npx scope first (`missing-tool-handling`).
-- Do NOT copy code from proprietary document-skill sources — pattern
-  re-implementation only.
+- Do NOT bundle a Python toolkit in this package — drive the consumer's libraries (zero-runtime posture).
+- Do NOT OCR a PDF that has a text layer.
+- Do NOT leave a "final" filled form editable without saying so.
+- Do NOT claim success on "file written"; claim it only after the re-open + page-count assertion.
+
+## Related Skills
+
+**WHEN to use this**
+
+- The task creates, merges, splits, rotates, encrypts, or form-fills a PDF.
+- Structured text/table extraction beyond `markitdown`'s Markdown, or OCR of a scanned PDF.
+
+**WHEN NOT to use this**
+
+- PDF → Markdown ingestion → [`markitdown`](../markitdown/SKILL.md).
+- Word documents → [`docx-authoring`](../docx-authoring/SKILL.md); spreadsheets → [`spreadsheet-authoring`](../spreadsheet-authoring/SKILL.md).
+
+## When the agent should load this
+
+- "Merge / split / rotate these PDFs."
+- "Fill this PDF form."
+- "Create a PDF from this content."
+- "Extract the tables from this PDF / OCR this scan."
+
+## Output
+
+1. **Output PDF(s)** — the path(s). Cite as `pdf-output`.
+2. **Validation receipt** — page count matches expected ✅, read-back value/text present ✅. Cite as `pdf-validation`.
+3. **Fill decision** — present on form-fills: flattened / kept-editable + why. Cite as `pdf-fill-decision`.

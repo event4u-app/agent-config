@@ -44,7 +44,9 @@ filtered** to a small curated set (`MERGEABLE_KEYS` = `name`, `ide`,
 ignored. `ai_council` is not on the whitelist, and council configuration lives
 project-local in `agents/settings/.ai-council.yml` (per
 [`ai-council-config`](../contracts/ai-council-config.md), the Phase-0 single
-source of truth).
+source of truth). <!-- Council placement superseded by ADR-104: the config is
+now user-global only (`~/.event4u/agent-config/settings/.ai-council.yml`),
+never project-local. The trust-boundary reasoning below is unaffected. -->
 
 The maintainer questioned whether that project-local placement is a bug. The AI
 council was asked to decide and **converged** that it is **not** a bug — the
@@ -72,6 +74,12 @@ personas, rule tier) **belongs in version control**, and onboarding stays clean
    for council config is `agents/settings/.ai-council.yml`
    ([`ai-council-config`](../contracts/ai-council-config.md)); personas live in
    the project surface. Neither is a user-global concern.
+   <!-- Superseded for the COUNCIL part by ADR-104: council config is now
+   user-global only, never project-local (personas are unaffected). -->
+   **Update (ADR-104):** the council half of this decision was reversed — the
+   council config now lives user-global only
+   (`~/.event4u/agent-config/settings/.ai-council.yml`) and the project tree is
+   never read. Personas stay project-local as stated.
 
 3. **Only secrets and the curated identity whitelist are global.** Provider API
    keys already live global in `~/.event4u/agent-config/<provider>.key` (0600);

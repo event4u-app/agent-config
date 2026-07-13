@@ -627,10 +627,14 @@ worktrees:
 
 # --- AI Council (external second-opinion network) ---
 #
-# Configuration moved to `agents/.ai-council.yml` as of the Step-2
-# consolidation roadmap. Consumer projects opt in by copying the
-# reference file from the package (`agents/.ai-council.yml`) into their
-# own `agents/` tree and flipping `enabled: true` per provider.
+# The council config is NOT here and is NOT project-local. It lives ONLY
+# user-global at `~/.event4u/agent-config/settings/.ai-council.yml` — one
+# file, configured once, serving every project / worktree / CWD (ADR-104,
+# superseding ADR-093). The project tree is NEVER searched; a
+# `.ai-council.yml` under any `agents/` tree is ignored. To opt in, copy
+# the shape from `agents/templates/.ai-council.yml.example` to that
+# user-global path and flip `enabled: true` per provider — do NOT drop it
+# into a project's `agents/` tree.
 #
 # See `docs/contracts/ai-council-config.md` for the schema.
 

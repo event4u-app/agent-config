@@ -787,11 +787,18 @@ error) when any of these hold:
 
 ## Migration footprint (Phase 0)
 
+> Historical record of the Step-2 consolidation. **The project-local file
+> described below is no longer read** — ADR-104 (superseding ADR-093) moved
+> the council config to the user-global location documented at the top of
+> this contract. A `.ai-council.yml` under any project `agents/` tree is
+> ignored. Read this section for provenance only, not for placement.
+
 - `.agent-settings.yml` → 14-key inventory under `ai_council:` removed
   after a one-line breadcrumb comment is in place pointing at this
   contract.
 - `.agent-settings.template.yml` → same removal.
-- New file `agents/settings/.ai-council.yml` checked in with two enabled
+- New file `agents/settings/.ai-council.yml` checked in with two enabled <!-- council-config-allowed -->
   providers (anthropic + openai) and three disabled
   (gemini + xai + perplexity). Models pre-filled from the Phase 0
-  default set; comments mirror this contract.
+  default set; comments mirror this contract. *(This project-tracked file
+  was later removed; per ADR-104 the config is user-global only.)*
