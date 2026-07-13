@@ -92,4 +92,4 @@ size_class: core
 suggests: []
 surface_tier: core
 trust_level_default: core
-version: 8.13.0
+version: 9.0.0
