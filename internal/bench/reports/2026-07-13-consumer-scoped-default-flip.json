@@ -1,0 +1,58 @@
+{
+ "schema_version": 1,
+ "kind": "consumer-scoped-default-flip-verification",
+ "date": "2026-07-13",
+ "roadmap": "road-to-request-scoped-rule-load Phase 1 (human gate, approved in-session)",
+ "tokenizer": "cl100k_base (js-tiktoken via _lib/token_count.ts)",
+ "held_quality_arm": "deterministic set-inclusion (LLM judging closed-by-diagnosis): scoping removes whole rules only; verified that every removed rule is exclusively-maintainer (+ the recorded source-of-truth compat exclusion) and that zero golden-set-exercised consumer rules drop — consumer-surface quality held by construction.",
+ "scope": {
+  "rule_workspaces": [
+   "engineering",
+   "product",
+   "finance",
+   "founder",
+   "gtm",
+   "ops",
+   "small-business",
+   "construction",
+   "legal-review-prep"
+  ]
+ },
+ "excluded_rules": [
+  "augment-edit-discipline.md",
+  "domain-adoption-policy.md",
+  "framework-neutrality-in-generic-skills.md",
+  "low-impact-corpus-privacy-floor.md",
+  "no-roadmap-references.md",
+  "package-ci-checks.md",
+  "persona-governance.md",
+  "preservation-guard.md",
+  "rule-type-governance.md",
+  "size-enforcement.md",
+  "skill-quality.md",
+  "source-confidentiality.md",
+  "source-of-truth.md",
+  "telegraph-speak.md",
+  "token-budget-discipline.md",
+  "token-optimizer-maintenance.md"
+ ],
+ "violations": [],
+ "golden": {
+  "rules_tagged": 86,
+  "dropped_non_maintainer": []
+ },
+ "legacy_all": {
+  "rules": 103,
+  "gpt_tokens": 75316
+ },
+ "scoped": {
+  "rules": 88,
+  "gpt_tokens": 65436
+ },
+ "delta": {
+  "rules": 15,
+  "gpt_tokens": 9880,
+  "tokens_pct": 13.1
+ },
+ "pass": true
+}
