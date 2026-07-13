@@ -23,6 +23,11 @@
       "maxLength": 220,
       "description": "Trigger phrase; ≤ 200 chars recommended, 220 is the ceiling (lean-initial-context: descriptions load eagerly via progressive disclosure). Over-cap is a soft warning, not a hard fail — a warning window so authors adapt."
     },
+    "compatibility": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Agent-Skills spec field (optional): machine-readable declaration of environment requirements — system packages, network access, product/host constraints. Mirrors the public spec so media/doc skills can state requirements outside prose."
+    },
     "source": {
       "type": "string",
       "enum": ["package", "project"],
@@ -130,7 +135,13 @@
         },
         "allowed_tools": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string" },
+          "description": "Allow-list of tool grants. Prefer the scoped-grant syntax over bare tool names where the host supports it — e.g. Bash(npm test:*) instead of Bash — per tool-safety Least Agency."
+        },
+        "disallowed_tools": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "U3 (ecosystem harvest): optional deny-list layered UNDER allowed_tools — defense-in-depth; a tool matching here is refused even if a broad allow pattern would admit it. Supports the scoped-grant syntax (e.g. Bash(git push:*))."
         },
         "command": {
           "type": "array",

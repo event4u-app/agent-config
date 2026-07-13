@@ -27,6 +27,20 @@ Tools are permissions, not abilities. Every tool access must be declared and rev
 - **No arbitrary execution** — tool adapters have fixed interfaces, not free-form calls
 - **Audit trail** — tool usage should be observable and logged
 
+## Scoped grants + deny-list (U3, ecosystem harvest 2026-07-13)
+
+- **Prefer scoped-grant syntax over bare tool names** where the host supports
+  it: `Bash(npm test:*)` grants one command family; a bare `Bash` grants a
+  shell. The narrowest grant that satisfies the task is the Least-Agency
+  default.
+- **Optional `disallowed_tools` deny-list** (execution block, schema-backed):
+  layered UNDER `allowed_tools` as defense-in-depth — a tool matching the
+  deny-list is refused even when a broad allow pattern would admit it
+  (e.g. allow `Bash(git:*)` while denying `Bash(git push:*)`).
+- **Falsifiable numeric activation thresholds** belong in descriptions where
+  they apply — "fires when TLS < v1.2 OR cert expires < 30 days" beats
+  "fires on TLS problems": the threshold is testable, the vibe is not.
+
 ## When this applies
 
 - Skills that declare `allowed_tools` in their execution block
