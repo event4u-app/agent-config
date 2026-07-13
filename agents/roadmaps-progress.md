@@ -6,7 +6,7 @@
 
 ## Overall
 
-**82 / 268 steps done · 31%**
+**83 / 268 steps done · 31%**
 
 ```text
 ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   31%
@@ -25,7 +25,7 @@
 | 7 | [road-to-ecosystem-harvest-prelaunch-diagnostics.md](roadmaps/road-to-ecosystem-harvest-prelaunch-diagnostics.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 8 | [road-to-ecosystem-harvest-product-gate.md](roadmaps/road-to-ecosystem-harvest-product-gate.md) | 1 | 5 | 5 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-ecosystem-harvest-reliability-measurement.md](roadmaps/road-to-ecosystem-harvest-reliability-measurement.md) | 1 | 11 | 2 | 9 | 0 | 0 | 0 | ████████░░ 82% |
+| 10 | [road-to-ecosystem-harvest-reliability-measurement.md](roadmaps/road-to-ecosystem-harvest-reliability-measurement.md) | 1 | 11 | 1 | 10 | 0 | 0 | 0 | █████████░ 91% |
 | 11 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 12 | [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md) | 1 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 13 | [road-to-ecosystem-harvest-skill-quality-gates.md](roadmaps/road-to-ecosystem-harvest-skill-quality-gates.md) | 4 | 18 | 18 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -139,11 +139,11 @@ _2 blockers resolved._
 
 ### [road-to-ecosystem-harvest-reliability-measurement.md](roadmaps/road-to-ecosystem-harvest-reliability-measurement.md)
 
-**Ecosystem-Harvest — Reliability & Measurement** — 9 / 11 done (82%)
+**Ecosystem-Harvest — Reliability & Measurement** — 10 / 11 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Adopt-now plate (≤ 5 units) | 🟡 in progress | 2 | 9 | 0 | 0 | 82% |
+| 1 | Adopt-now plate (≤ 5 units) | 🟡 in progress | 1 | 10 | 0 | 0 | 91% |
 
 ### [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md)
 

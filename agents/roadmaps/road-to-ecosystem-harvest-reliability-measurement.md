@@ -85,7 +85,13 @@ useful" into "the transcripts say so".
       exactly the loadability class the shape gates miss. Run post-generation
       (CI sync-consistency job or locally after task generate-tools). -->
       **U4 — Real-host loadability smoke test.** A CI check that boots each projected host against the generated tree and asserts skills/rules actually load (complements the existing condensation-hash + linter gates, which prove *shape* not *loadability*). *Source G.* Verify: the check catches a deliberately-malformed projection.
-- [ ] **U5 (rolling) — Agent-coordination-history facet.** Extend `orchestration-telemetry` to record *which subagent combinations* completed successfully (not just counts) so the orchestrator can prefer combos that worked. *Source E.* Verify: after a multi-agent run, the record names the combo + outcome.
+- [x] <!-- done 2026-07-13: agent_combo (ordered agent-type ids, ids-only)
+      in RecordInput + the emitted orchestration line + --agent-combo CLI
+      flag; with the existing outcome/first_pass_success fields the record
+      now names WHICH combo completed how — verified via dry-run line
+      (agent_combo:["implementer","judge"] + DONE). Orchestration suites
+      31/31 green. -->
+      **U5 (rolling) — Agent-coordination-history facet.** Extend `orchestration-telemetry` to record *which subagent combinations* completed successfully (not just counts) so the orchestrator can prefer combos that worked. *Source E.* Verify: after a multi-agent run, the record names the combo + outcome.
 
 ## Dropped (council)
 
