@@ -29,6 +29,17 @@ import {
 import { runTs } from './_wave8e.js';
 
 describe('run_skill_evals — _grade_assertions (pure)', () => {
+    it('not_contains passes when the anchor is absent and fails when present (U2)', () => {
+        const [ok] = _grade_assertions('clean review, no findings', '/tmp', [
+            { kind: 'not_contains', value: 'SQL injection' },
+        ]);
+        expect(ok?.['pass']).toBe(true);
+        const [bad] = _grade_assertions('possible SQL injection here', '/tmp', [
+            { kind: 'not_contains', value: 'SQL injection' },
+        ]);
+        expect(bad?.['pass']).toBe(false);
+    });
+
     it('contains hit / miss', () => {
         const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'grade-'));
         try {
