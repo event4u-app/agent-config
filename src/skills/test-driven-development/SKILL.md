@@ -83,6 +83,35 @@ talked-around. Externalized to
 [`testing-anti-patterns/process-anti-patterns.md`](../testing-anti-patterns/process-anti-patterns.md)
 to keep this skill under the 400-line sunset trigger.
 
+## Mode contracts — Goal / Activities / Forbidden / Output
+
+The flow runs as four modes. Each Forbidden item names **how a reviewer
+checks it from the diff** — an unverifiable prohibition does not ship.
+
+| Mode | Goal | Activities | Forbidden (diff check) | Output contract |
+|---|---|---|---|---|
+| **Design** | One-sentence behavior + enumerated cases | Steps 1–2 | **No production code** (diff touches no `src/**` production path) · no test bodies yet | Case list (happy/boundary/error) |
+| **Test-Red** | A failing test that fails RIGHT | Steps 3–4 | **No production edits** (diff = `tests/**` only) · test must fail at an **assertion, not an import/setup error** (failure output cites the assertion line) | Failing test + its observed failure reason |
+| **Implement** | Minimum code to green | Steps 5–6 | **No test edits** (no `tests/**` paths in Implement-phase diffs — changing the assertion to fit the code is the canonical violation; genuinely-wrong test → STOP and ask, never silently edit) · no scope beyond the one case | Green run output |
+| **Debug** | Fix a defect found later | (re-enter at 3) | **No bugfix before a reproducing regression test exists** (the fix commit contains a `tests/**` addition that fails without the fix) | Regression test + fix, verified red→green |
+
+### Mode inference on resume
+
+Entering mid-flow (fresh session, handoff, interrupted run), infer the mode
+from observable state — never assume Design:
+
+| Observed state | Resume in |
+|---|---|
+| No test for the target behavior | Design |
+| Test exists, currently failing at an assertion | Implement |
+| Test exists + passing, defect reported | Debug |
+| Test failing at import/collection error | Test-Red (fix the test, not the code) |
+
+At every mode transition, one consent-checkpoint sentence (per
+`ask-when-uncertain` / `autonomous-execution` — no new mechanism): name the
+mode you are leaving, the output contract you hand over, and the mode you
+enter; under an autonomous mandate the sentence is stated, not asked.
+
 ## Procedure
 
 ### 1. Identify the behavior to test

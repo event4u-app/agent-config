@@ -38,10 +38,18 @@ explanation log.
 
 ## Phase 1 — Mode-contract pattern on the TDD/feature flow
 
-- [ ] Restructure the canonical TDD/feature carrier (confirm at HEAD) into the 4-block mode shape — content stays, the **contract framing** lands. *Source U.*
-- [ ] Forbidden blocks with the checkable negatives: no code in Design; **no test edits in Implement** (stop-and-ask escape hatch); no bugfix before a reproducing regression test in Debug; "tests fail at assertions, not imports" in Test-Red. *Source U.*
-- [ ] Each Forbidden item states **how a reviewer checks it from the diff** (e.g. "no `tests/**` paths in Implement-phase commits") — the falsifiability hook for a later review-checklist item, not an enforced hook yet.
-- [ ] Mode-inference resume table + a consent-checkpoint sentence at each transition (rides `ask-when-uncertain` / `autonomous-execution`; no new mechanism).
+- [x] Restructure the canonical TDD/feature carrier (confirm at HEAD) into the 4-block mode shape — content stays, the **contract framing** lands. *Source U.*
+      <!-- done 2026-07-13: § Mode contracts in test-driven-development — 4-block
+      Goal/Activities/Forbidden/Output table (Design/Test-Red/Implement/Debug),
+      every Forbidden item carries its diff-level check (no src/** in Design;
+      tests/**-only in Test-Red + fails-at-assertion; no tests/** in Implement
+      with STOP-and-ask escape; regression-test-before-fix in Debug),
+      mode-inference resume table + consent-checkpoint sentence riding
+      ask-when-uncertain/autonomous-execution. 350 lines (under the 400
+      sunset trigger); lint 408 pass; dist twin synced. -->
+- [x] Forbidden blocks with the checkable negatives: no code in Design; **no test edits in Implement** (stop-and-ask escape hatch); no bugfix before a reproducing regression test in Debug; "tests fail at assertions, not imports" in Test-Red. *Source U.*
+- [x] Each Forbidden item states **how a reviewer checks it from the diff** (e.g. "no `tests/**` paths in Implement-phase commits") — the falsifiability hook for a later review-checklist item, not an enforced hook yet.
+- [x] Mode-inference resume table + a consent-checkpoint sentence at each transition (rides `ask-when-uncertain` / `autonomous-execution`; no new mechanism).
 
 ## Phase 2 — HANDOFF convention
 

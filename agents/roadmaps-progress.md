@@ -6,10 +6,10 @@
 
 ## Overall
 
-**82 / 248 steps done · 33%**
+**86 / 248 steps done · 35%**
 
 ```text
-█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
 ```
 
 ## Open roadmaps
@@ -28,7 +28,7 @@
 | 10 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 11 | [road-to-ecosystem-harvest-skill-quality-gates.md](roadmaps/road-to-ecosystem-harvest-skill-quality-gates.md) | 4 | 18 | 9 | 9 | 0 | 0 | 0 | █████░░░░░ 50% |
 | 12 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 13 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 13 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 24% |
 | 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
 | 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 16 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
@@ -166,11 +166,11 @@ _2 blockers resolved._
 
 ### [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md)
 
-**Ecosystem-Harvest — Workflow Contracts** — 0 / 17 done (0%)
+**Ecosystem-Harvest — Workflow Contracts** — 4 / 17 done (24%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Mode-contract pattern on the TDD/feature flow | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Mode-contract pattern on the TDD/feature flow | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | HANDOFF convention | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | merge-conflicts plan-first upgrade | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
