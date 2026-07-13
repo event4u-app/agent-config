@@ -128,6 +128,16 @@ Each env has a GitHub IAM role with:
 - resources
 - state management
 
+## Known pitfalls
+
+| Symptom | Root cause | Fix |
+|---|---|---|
+| `Error acquiring the state lock` blocks every command | A prior `apply` crashed / was killed and left the lock held (DynamoDB / backend lock) | Confirm no apply is actually running, then `terraform force-unlock <lock-id>` — never delete the lock table |
+| `plan` wants to destroy+recreate a resource after a rename | Renaming a resource block changes its address; Terraform sees the old address gone and a new one added | `terraform state mv <old.addr> <new.addr>` (or a `moved {}` block) so it tracks the same object |
+| `count`/`for_each` errors with "value depends on resource attributes that cannot be determined until apply" | The count/for_each expression reads an unknown (not-yet-created) value | Key `for_each` off a static/known map, or split into a two-stage apply with `-target` |
+| A change applies but the next `plan` shows the same diff again (perpetual diff) | The provider normalizes/computes the attribute differently than written (ordering, defaults, case) | Match the provider's canonical form, or `ignore_changes` on that attribute in `lifecycle` |
+| `plan` shows a resource as tainted/replaced after a manual console change | Out-of-band drift — someone edited the resource outside Terraform | `terraform apply -refresh-only` to reconcile state, then decide code-vs-cloud; stop the manual edits |
+
 ## Gotcha
 
 - `terraform apply` without `-auto-approve` requires interactive confirmation — don't use in CI without the flag.

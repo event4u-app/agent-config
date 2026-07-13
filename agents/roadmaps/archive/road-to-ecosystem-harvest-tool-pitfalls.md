@@ -31,9 +31,9 @@ auto-generator that would sprawl 30 near-identical skills per tool.
 
 ## Phase 1 — Adopt-now plate (3 tools, bounded)
 
-- [ ] **U1 — Author a `## Known pitfalls` section standard.** Define the micro-format once: a short **Symptom → Root-cause → Fix** table + a "Quick-reference anti-pattern checklist" (Anti-pattern | cost/impact | fix difficulty). *Source F (hand-tuned instances), G.* Verify: the format documented in `skill-writing` as an optional section.
-- [ ] **U2 — Retrofit the 3 highest-burden tool skills.** Pick the 3 tools with the largest real support surface (candidates: `docker`, `terraform`, `laravel`); add **≤ 5 entries each**, each sourced from a genuinely common failure (a high-vote community question is the demand signal — not invented pitfalls). *Source F.* Verify: each entry names a concrete symptom + a fix a user can act on.
-- [ ] **U3 — Guard against sprawl.** Record in `size-enforcement` / `domain-adoption-policy` context that per-tool pitfall content is a **section on an existing skill**, never a new skill per pitfall and never generated. Verify: the guard note exists so the pattern can't be abused into the rejected generator.
+- [x] **U1 — Author a `## Known pitfalls` section standard.** Define the micro-format once: a short **Symptom → Root-cause → Fix** table + a "Quick-reference anti-pattern checklist" (Anti-pattern | cost/impact | fix difficulty). *Source F (hand-tuned instances), G.* Verify: the format documented in `skill-writing` as an optional section.
+- [x] **U2 — Retrofit the 3 highest-burden tool skills.** Pick the 3 tools with the largest real support surface (candidates: `docker`, `terraform`, `laravel`); add **≤ 5 entries each**, each sourced from a genuinely common failure (a high-vote community question is the demand signal — not invented pitfalls). *Source F.* Verify: each entry names a concrete symptom + a fix a user can act on.
+- [x] **U3 — Guard against sprawl.** Record in `size-enforcement` / `domain-adoption-policy` context that per-tool pitfall content is a **section on an existing skill**, never a new skill per pitfall and never generated. Verify: the guard note exists so the pattern can't be abused into the rejected generator.
 
 ## Rejected (council)
 
@@ -50,6 +50,6 @@ signal); reject the generator outright.
 
 ## Acceptance criteria
 
-- [ ] `## Known pitfalls` format documented once; 3 tool skills carry ≤ 5 real, sourced entries each.
-- [ ] No new pitfall-only skills created; no generator introduced.
-- [ ] Dashboard regenerated.
+- [x] `## Known pitfalls` format documented once (`skill-writing` § Known-pitfalls section); 3 tool skills (`docker`, `terraform`, `laravel`) carry 5 real, sourced entries each.
+- [x] No new pitfall-only skills created; no generator introduced (sprawl guard in `size-enforcement` § Per-tool pitfall content).
+- [x] Dashboard regenerated.

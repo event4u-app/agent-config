@@ -501,6 +501,34 @@ claim); this pattern is HOW to get the fresh evidence for artifacts where no
 deterministic checker exists. Skip it when a real validator covers the
 surface (linter, schema, test) — deterministic checks beat judge passes.
 
+## Known-pitfalls section (optional pattern, tool skills)
+
+Tool/integration skills teach the happy path; the recurring support burden is
+the *silent* failures — the ones that cost money, corrupt state, or fail with no
+error. For a high-support-burden tool skill, add a `## Known pitfalls` section
+in this micro-format:
+
+1. **A Symptom → Root cause → Fix table.** Each row starts from the *observable
+   symptom* (what the user sees), not the internal cause — the user greps for
+   the symptom, not the fix.
+
+   | Symptom | Root cause | Fix |
+   |---|---|---|
+   | `<what the user observes>` | `<why it happens>` | `<the concrete action>` |
+
+2. **Optionally, a quick-reference anti-pattern checklist** (Anti-pattern ·
+   cost/impact · fix difficulty) for traps worth scanning before shipping — add
+   it only when it does not restate the skill's existing `## Gotcha` / `## Do
+   NOT`; the table is the load-bearing part.
+
+Sourcing floor — **real, not invented**: every entry names a genuinely common
+failure (a high-vote community question, a documented incident class), never a
+hypothetical. **≤ 5 entries per skill.** The value is a short, sourced,
+high-signal list; a long one is noise. A pitfall is a *section on the existing
+tool skill*, **never** a new skill per pitfall and never a generated grid (see
+[`size-enforcement`](../../rules/size-enforcement.md) § Per-tool pitfall
+content).
+
 ## Do NOT
 
 * Write documentation-style, pointer-only, or too-broad skills ("Laravel skill")
