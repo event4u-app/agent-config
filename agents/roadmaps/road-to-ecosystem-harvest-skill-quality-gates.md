@@ -41,21 +41,21 @@ smoke test — all deterministic, all with must-fail/must-pass fixtures.
 
 ## Phase 1 — Description-quality lint
 
-- [ ] `lint_skill_descriptions.ts`: fail on (a) normalized description ≡ name, (b) duplicated trigger phrases, (c) all trigger phrases substrings of the name, (d) no condition clause (`use when|when the user|before|after|triggers on <non-name phrase>`). Allowlist file, same pattern as originality-lint. *Source C (positive norm), F (must-fail specimen).*
-- [ ] Fixture suite: the farm specimen's circular frontmatter verbatim as must-fail; 3 shipped skills as must-pass. Optional reward: a `When-NOT-to-Use` section where routing confusion is known (decision note, not a requirement).
-- [ ] Wire into `task lint-skills`; fix in-repo violations (each fix is a routing improvement — list before/after in the PR body).
+- [x] `lint_skill_descriptions.ts`: fail on (a) normalized description ≡ name, (b) duplicated trigger phrases, (c) all trigger phrases substrings of the name, (d) no condition clause (`use when|when the user|before|after|triggers on <non-name phrase>`). Allowlist file, same pattern as originality-lint. *Source C (positive norm), F (must-fail specimen).*
+- [x] Fixture suite: the farm specimen's circular frontmatter verbatim as must-fail; 3 shipped skills as must-pass. Optional reward: a `When-NOT-to-Use` section where routing confusion is known (decision note, not a requirement).
+- [x] Wire into `task lint-skills`; fix in-repo violations (each fix is a routing improvement — list before/after in the PR body).
 
 ## Phase 2 — Eval schema v2 (tool-choice, trajectory, environment)
 
-- [ ] Additive schema: `{"kind":"tool-choice","must_use":[…],"must_not_use":[…]}`; optional `environment`, `trajectory_budget` (integer meaningful-step ceiling, "meaningful step" defined), `requires_human` + `human_instructions`. *Source R.*
-- [ ] Harness: tool-choice evaluated against the recorded tool trace; trajectory counts tool calls net of retries; `requires_human` scenarios skipped in CI + reported `manual-pending` (never silently passed).
-- [ ] Seed 3 mis-routing-risk skills: `commit` (must use the conventional-commit flow, not raw `git commit`); `quality-fix` (must run the project's pinned tools); `fix-ci` (must fetch real CI logs, not guess). Numbers are conservative floors, not calibrated claims.
-- [ ] Update eval-freshness linters to recognize the new fields.
+- [x] Additive schema: `{"kind":"tool-choice","must_use":[…],"must_not_use":[…]}`; optional `environment`, `trajectory_budget` (integer meaningful-step ceiling, "meaningful step" defined), `requires_human` + `human_instructions`. *Source R.*
+- [x] Harness: tool-choice evaluated against the recorded tool trace; trajectory counts tool calls net of retries; `requires_human` scenarios skipped in CI + reported `manual-pending` (never silently passed).
+- [x] Seed 3 mis-routing-risk skills: `commit` (must use the conventional-commit flow, not raw `git commit`); `quality-fix` (must run the project's pinned tools); `fix-ci` (must fetch real CI logs, not guess). Numbers are conservative floors, not calibrated claims.
+- [x] Update eval-freshness linters to recognize the new fields.
 
 ## Phase 3 — Read-only-by-default script convention
 
-- [ ] Guideline text: a script shipped inside a skill is side-effect-free by default; mutation requires an explicit flag (`--writable`/`--apply`) named in SKILL.md. *Source T.*
-- [ ] `lint_skill_scripts_readonly.ts`: scripts containing write primitives (`fs.write`, `unlink`, `rm `, `> `, `DELETE`, `DROP`) must gate them behind a flag-parse branch or be allowlisted with a rationale. Audit + retrofit existing script-bearing skills (table in PR body).
+- [x] Guideline text: a script shipped inside a skill is side-effect-free by default; mutation requires an explicit flag (`--writable`/`--apply`) named in SKILL.md. *Source T.*
+- [x] `lint_skill_scripts_readonly.ts`: scripts containing write primitives (`fs.write`, `unlink`, `rm `, `> `, `DELETE`, `DROP`) must gate them behind a flag-parse branch or be allowlisted with a rationale. Audit + retrofit existing script-bearing skills (table in PR body).
 
 ## Phase 4 — Frontmatter conformance + bridge-verify hardening + loadability
 
