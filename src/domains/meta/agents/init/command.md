@@ -7,6 +7,7 @@ visibility: internal
 cluster: agents
 sub: init
 description: Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers.
+argument-hint: "[--force]"
 skills: [copilot-config, copilot-agents-optimization, agent-docs-writing, agents-md-thin-root]
 suggestion:
   eligible: false

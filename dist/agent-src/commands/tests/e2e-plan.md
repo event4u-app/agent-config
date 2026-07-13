@@ -9,6 +9,7 @@ sub: e2e-plan
 cluster: tests
 skills: [playwright-testing]
 description: Explore the application and create a structured E2E test plan in Markdown
+argument-hint: "[url | feature-area]"
 suggestion:
   eligible: true
   trigger_description: "plan E2E tests for this feature, what should we cover in playwright"

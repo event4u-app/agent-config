@@ -7,6 +7,7 @@ visibility: internal
 cluster: video
 sub: scene
 description: Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate.
+argument-hint: "<idea> [--mode preview|commit] [--image-provider <id>] [--video-provider <id>] [--project <slug>]"
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, character-consistency, motion-choreographer]
 suggestion:

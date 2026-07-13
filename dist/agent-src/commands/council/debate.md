@@ -8,6 +8,7 @@ cluster: council
 sub: debate
 skills: [ai-council]
 description: Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds.
+argument-hint: "[topic | path] [--rounds N] [--auto-continue]"
 suggestion:
   eligible: true
   trigger_description: "council debate on X, multi-round rebuttal, escalate council to debate mode, push the council to argue not synthesize"

@@ -7,6 +7,7 @@ visibility: internal
 cluster: skills
 sub: discover
 description: Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why.
+argument-hint: "[role]"
 skills: [file-editor]
 suggestion:
   eligible: true

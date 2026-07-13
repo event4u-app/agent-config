@@ -7,6 +7,7 @@ visibility: internal
 cluster: video
 sub: from-song
 description: Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit gates the spend.
+argument-hint: "<images-dir> <song-file> [--mode preview|commit] [--brief <text>|--auto-script] [--max-spend-usd <usd>]"
 personas: [hollywood-director, ai-video-technical-director]
 skills: [song-to-script, scene-expander, video-director, character-consistency, motion-choreographer, prompt-validator]
 suggestion:
@@ -61,7 +62,7 @@ silent best-guess.
 | Input | Required | Meaning |
 |---|---|---|
 | `<images-dir>` | yes | Folder of reference stills (`.png` / `.jpg`). When they contain a consistent human subject the on-screen identity is locked from them; otherwise the run is style-only (Step 6). |
-| `<song-file>` | yes | Audio track (`.mp3` / `.wav` / `.m4a`) — or an `https://` song link (Suno / Udio / YouTube / any yt-dlp-supported page): ingested to a local file first via `scripts/ai-video/lib/ingest-song.sh <url> <project>` (operator-installed `yt-dlp` + `ffmpeg`; rights note surfaced; size-capped; never a silent overwrite); pipeline continues on `<project>/song.m4a`. Defines total duration and, in `--auto-script` mode, the scene structure. |
+| `<song-file>` | yes | Audio track (`.mp3` / `.wav` / `.m4a`) — or an `https://` song link (Suno / Udio / YouTube / any yt-dlp-supported page): the link is ingested to a local file first via `scripts/ai-video/lib/ingest-song.sh <url> <project>` (operator-installed `yt-dlp` + `ffmpeg`; rights note surfaced; size-capped; never a silent overwrite) and the pipeline continues on `<project>/song.m4a`. Defines total duration and, in `--auto-script` mode, the scene structure. |
 | `--brief "<text>"` | one of brief/auto | Operator-written description of the video (mood, story, settings). |
 | `--auto-script` | one of brief/auto | Derive the script from the song via the `song-to-script` skill. |
 | `--scene-durations <list>` | no | Manual cut points (e.g. `0:00-0:15,0:15-0:30,…`). Overrides probe timing — the honest path when the track is flat (probe `method: interval`). |
@@ -95,28 +96,28 @@ with usage, never a deadlocked prompt.
 
 - `<images-dir>` exists and holds ≥1 `.png`/`.jpg`. Empty or missing →
   halt, list what was found.
-- `<song-file>` given as an `https://` link → ingest first:
+- `<song-file>` given as an `https://` link → ingest it first:
   `scripts/ai-video/lib/ingest-song.sh <url> <project>` (exit 3 names
-  the missing tool; exit 75 = retryable download failure). The ingested
-  local file replaces the URL for every later step — ground truth stays
-  the real bytes, and the media-governance gate below runs on the
-  ingested file (a platform link is *more* likely a recognisable
-  commercial song — check `voice-cloning` deliberately).
+  the missing tool; exit 75 is a retryable download failure). The
+  ingested local file replaces the URL for every later step — ground
+  truth stays the real bytes, and the media-governance gate below runs
+  on the ingested file (a platform link is *more* likely to be a
+  recognisable commercial song — check `voice-cloning` deliberately).
 - `<song-file>` exists and is a readable audio container (`ffprobe`
   returns an audio stream). Derive its length + structure now,
   **adapter-first with the probe as the floor** (fallback semantics per
   [`audio-adapter-contract.md § Fallback`](../../../scripts/ai-video/lib/audio-adapter-contract.md)):
-  1. An `audio-analysis` provider configured in `agents/.ai-video.xml`
+  1. An `audio-analysis` provider is configured in `agents/.ai-video.xml`
      **and** `scripts/ai-video/audio-adapters/<id>.sh` exists → run
      ```bash
      echo '{"audio_path":"<song-file>"}' | scripts/ai-video/audio-adapters/<id>.sh analyze
      ```
      Real `{bpm, beats, downbeats, sections:[{start,end,label}]}` drives
-     the cut; report names the `source`. **Transient** failure (exit 75)
-     → retry once, then fall back to the probe with ONE warning line.
-     **Config** failure (exit 3/6/7 — CLI missing, disabled, bad key) →
-     **halt with the actionable message** — a configured adapter never
-     silently degrades.
+     the cut; the report names the `source`. On a **transient** failure
+     (exit 75) retry once, then fall back to the probe with ONE warning
+     line. On a **config** failure (exit 3/6/7 — CLI missing, disabled,
+     bad key) **halt with the actionable message** — a configured
+     adapter never silently degrades.
   2. No audio-analysis provider configured → run the zero-dependency
      probe (the normal path, not a degradation):
      ```bash
@@ -224,7 +225,7 @@ When the track has vocals **and** the run assigns singers / lip-sync:
    scripts/ai-video/lib/validate-vocal-map.sh <project>/vocal-map.json \
      <project>/transcript.json --roster "<cast>"
    ```
-   — mechanically rejects re-timed lines, lyrics absent from the
+   — it mechanically rejects re-timed lines, lyrics absent from the
    transcript, and missing singers (exit 7 with the offending line). A
    skeleton-derived map cannot reach the operator, let alone a render.
 3. **Each vocal line maps to its OWN singer.** Never put one character's
@@ -363,20 +364,20 @@ Before rendering, run the mechanical scan:
 scripts/ai-video/lib/resume-scan.sh scan <project> --plan <project>/plan.json
 ```
 
-`plan.json` holds each scene's current `input_sha256`
+where `plan.json` holds each scene's current `input_sha256`
 (`resume-scan.sh hash < scenes/<id>/prompt.json` — same canonicalization
-the render path stamps). `green` scenes skipped verbatim; `stale`
-(prompt edited, provider/model switched, hash tampered) + `missing`
-re-render; `failed` surfaces its `error.json` reason. After each live
-scene completes, write `scenes/<id>/cost.json`
+the render path stamps). `green` scenes are skipped verbatim; `stale`
+(prompt edited, provider/model switched, hash tampered) and `missing`
+scenes re-render; `failed` scenes surface their `error.json` reason.
+After each live scene completes, write `scenes/<id>/cost.json`
 (`{charged_usd, adapter, model}`, atomic `tmp`+`mv`) — the scan sums it
 as `spent_usd` and the batch loop re-checks `--max-spend-usd` against it
 before **every** live submit, not only at the upfront gate. Per-scene
 kill-switch (ADR-059 §6): max one surfaced auto-retry on
-`retryable: true`; content-policy refusals always halt. Rollback =
+`retryable: true`, content-policy refusals always halt. Rollback is
 deletion (`rm -rf scenes/<id>/` → re-render); `--clean`
 (`resume-scan.sh clean <project>`) removes failed-scene residue only —
-green artifacts never auto-deleted.
+green artifacts are never auto-deleted.
 
 ### 9. Stitch + master-audio mux + duration reconciliation
 

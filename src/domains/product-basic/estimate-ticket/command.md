@@ -9,6 +9,7 @@ tier: 1
 visibility: advanced
 skills: [estimate-ticket]
 description: Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
+argument-hint: "[ticket-key | url | text] [--personas=<list>] [--scale=<map>]"
 suggestion:
   eligible: true
   trigger_description: "how big is this ticket, estimate PROJ-123, should we split this"

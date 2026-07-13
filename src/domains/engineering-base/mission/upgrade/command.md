@@ -10,6 +10,7 @@ visibility: advanced
 skills: [dependency-upgrade]
 framework: laravel
 description: Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs.
+argument-hint: "<target-version> [framework=<slug>]"
 suggestion:
   eligible: true
   trigger_description: "upgrade Laravel to version X, Laravel 10 to 11 upgrade, bump framework major version"

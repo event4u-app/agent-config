@@ -8,6 +8,7 @@ cluster: agents
 sub: user
 skills: [agents]
 description: Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer.
+argument-hint: "[field]"
 suggestion:
   eligible: false
   rationale: "Mutates .agent-user.md — only run from /agents user review or explicit user invocation."
@@ -20,7 +21,7 @@ packs:
 # /agents user accept
 
 Apply a buffered observation from
-[`.agent-user.observations.jsonl`](../../../../../../../docs/contracts/agent-user-schema.md#observation-buffer)
+[`.agent-user.observations.jsonl`](../../../../../docs/contracts/agent-user-schema.md#observation-buffer)
 to `.agent-user.md` after explicit confirmation.
 
 Use when:
@@ -119,6 +120,6 @@ Do NOT commit. Do NOT auto-chain to a second field.
 
 ## See also
 
-- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
+- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user review`](review.md), [`/agents user update`](update.md).

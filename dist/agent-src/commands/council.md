@@ -2,6 +2,7 @@
 model_tier: medium
 name: council
 disable-model-invocation: true
+argument-hint: "[default|pr|design|optimize|analysis|debate] [args]"
 pack: product-reasoning
 intent: "Poll external AIs for a neutral second opinion (pr/design/optimize/analysis lenses)"
 routes_to: [council-default, council-pr, council-design, council-analysis]

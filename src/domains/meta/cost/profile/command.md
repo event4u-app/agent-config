@@ -8,6 +8,7 @@ replaces: [set-cost-profile]
 sub: profile
 cluster: cost
 description: Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
+argument-hint: "[minimal|balanced|full|custom]"
 skills: [file-editor]
 suggestion:
   eligible: false

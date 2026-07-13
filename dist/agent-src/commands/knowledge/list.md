@@ -7,6 +7,7 @@ visibility: internal
 cluster: knowledge
 sub: list
 description: List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.
+argument-hint: "[--format=table|json] [--pin <id-prefix>] [--unpin <id-prefix>]"
 skills: [file-editor]
 suggestion:
   eligible: true
@@ -87,6 +88,15 @@ Print `(no ingests)` and offer the next step:
 - The id prefix must be **unambiguous** — if it matches more than one
   ingest, the command rejects with a structured error and asks for a
   longer prefix.
+
+## Retrieval-trigger signals
+
+Possessives ("my/our X"), definite references to unnamed prior work
+("that document", "the spec"), and past-time cues ("you ingested this
+last week") are signals the user expects knowledge to be available. Check
+`/knowledge list` before declaring the agent unaware of material the
+user has already provided. See also
+[`memory-consolidation § Retrieval-trigger linguistics`](../../../../skills/memory-consolidation/SKILL.md#retrieval-trigger-linguistics).
 
 ## See also
 

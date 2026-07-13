@@ -2,6 +2,7 @@
 model_tier: medium
 name: context
 disable-model-invocation: true
+argument-hint: "[create|refactor] [args]"
 pack: meta
 tier: 2
 visibility: internal

@@ -5,6 +5,7 @@ pack: meta
 tier: 2
 visibility: internal
 description: Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics.
+argument-hint: "[discover] [role]"
 cluster: skills
 type: orchestrator
 suggestion:

@@ -6,6 +6,7 @@ tier: 2
 visibility: internal
 skills: [upstream-contribute, skill-writing, learning-to-rule-or-skill]
 description: Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package
+argument-hint: "[path | description]"
 suggestion:
   eligible: true
   trigger_description: "contribute this back to agent-config, upstream this learning"

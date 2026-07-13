@@ -8,6 +8,7 @@ cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
+argument-hint: "[roadmap]"
 suggestion:
   eligible: true
   trigger_description: "process the whole roadmap, finish the roadmap, komplette roadmap abarbeiten"

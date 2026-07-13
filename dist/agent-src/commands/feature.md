@@ -2,6 +2,7 @@
 model_tier: medium
 name: feature
 disable-model-invocation: true
+argument-hint: "[explore|plan|refactor|roadmap|dev] [args]"
 pack: engineering-base
 intent: "Feature-workflow dispatcher — explore, plan, refactor, roadmap, dev"
 routes_to: [feature-explore, feature-plan, feature-refactor, feature-roadmap, feature-dev]
@@ -39,7 +40,7 @@ commands with a single entry point + sub-command dispatch.
 ## Workflow ordering
 
 Typical sequence: `explore` → `plan` → `roadmap` → `dev` (or per-step
-impl). Use `refactor` whenever an existing plan needs an update.
+implementation). Use `refactor` whenever an existing plan needs an update.
 
 ## Dispatch
 

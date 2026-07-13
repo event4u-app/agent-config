@@ -8,6 +8,7 @@ cluster: worktree
 sub: cleanup
 skills: [worktree-lifecycle, git-workflow]
 description: Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes
+argument-hint: "[worktree-path]"
 suggestion:
   eligible: true
   trigger_description: "clean up the worktrees, remove the finished worktree"

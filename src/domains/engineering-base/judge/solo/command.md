@@ -8,6 +8,7 @@ cluster: judge
 sub: solo
 skills: [subagent-orchestration]
 description: Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
+argument-hint: "[diff | commit-range | pr | files]"
 suggestion:
   eligible: false
   rationale: "Sibling of /review-changes — eligibility routed there; keep this explicit."

@@ -8,6 +8,7 @@ sub: project
 cluster: optimize
 skills: [project-analyzer, decision-review, roadmap-writing]
 description: "Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'."
+argument-hint: "[--max-questions=N]"
 suggestion:
   eligible: true
   trigger_description: "optimize this project, optimize the project, what should we improve based on current state, challenge our old decisions, are our roadmaps and ADRs still right, optimiere das Projekt, hinterfrag unsere alten Entscheidungen"

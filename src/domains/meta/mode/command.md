@@ -8,6 +8,7 @@ replaces: []
 tier: 1
 visibility: advanced
 description: Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts)
+argument-hint: "[developer|reviewer|tester|po|incident|planner|none]"
 suggestion:
   eligible: false
   rationale: "Role-mode switch is a deliberate context change."

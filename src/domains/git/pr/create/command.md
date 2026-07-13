@@ -2,6 +2,7 @@
 model_tier: medium
 name: git-pr-create
 disable-model-invocation: true
+argument-hint: "[description-only] [:draft|:ready|:final]"
 pack: git
 intent: "Open a pull request with a generated description and stripped attribution footers"
 routes_to: [git-workflow]

@@ -2,6 +2,7 @@
 model_tier: medium
 name: project
 disable-model-invocation: true
+argument-hint: "[analyze|health]"
 pack: engineering-base
 intent: "Project dispatcher — full analysis or quick health check"
 routes_to: [project-analyze, project-health]
@@ -37,7 +38,7 @@ Top-level orchestrator for the `/project` family — project-wide inspection.
 | `/project health` | `commands/project/health.md` | Quick health check — status of docs, modules, contexts, roadmaps; creates nothing |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

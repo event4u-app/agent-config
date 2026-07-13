@@ -7,6 +7,7 @@ visibility: internal
 cluster: agents
 sub: user
 description: Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
+argument-hint: "[--validate]"
 suggestion:
   eligible: true
   trigger_description: "edit user persona, update .agent-user.md, change nickname, change language, refresh voice sample"

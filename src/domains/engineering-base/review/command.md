@@ -2,6 +2,7 @@
 model_tier: medium
 name: review
 disable-model-invocation: true
+argument-hint: "[changes|routing]"
 pack: engineering-base
 intent: "Review dispatcher — multi-judge self-review of the current diff, or reviewer routing"
 routes_to: [review-changes, review-routing]

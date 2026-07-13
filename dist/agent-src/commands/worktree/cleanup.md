@@ -8,6 +8,7 @@ cluster: worktree
 sub: cleanup
 skills: [worktree-lifecycle, git-workflow]
 description: Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes
+argument-hint: "[worktree-path]"
 suggestion:
   eligible: true
   trigger_description: "clean up the worktrees, remove the finished worktree"
@@ -41,8 +42,8 @@ untracked files, paths with spaces — `tests/scripts/worktree_cleanup_check.tes
 ./scripts-run src/scripts/worktree_cleanup_check check <worktree-path>
 ```
 
-Exit `0` → removal allowed. Exit `1` → **refuse** that candidate; output
-names the exact gate:
+Exit `0` → removal allowed. Exit `1` → **refuse** that candidate; the
+output names the exact gate:
 
 1. **Detached HEAD** — no branch to judge reachability for; resolve the
    state manually first.
@@ -50,11 +51,11 @@ names the exact gate:
    files count as work). Never `git worktree remove --force`.
 3. **Unique commits** — commits reachable from the worktree branch but
    from no other ref (branches, remotes, AND tags — a tag counts as
-   reachability). Branch holds work that exists nowhere else: surface
-   the commit list and hand the decision back — dropping commits the
-   session did not author is forbidden by the `git-history-discipline`
-   rule (shared-branch Iron Law); merging or preserving them is the
-   user's call.
+   reachability). The branch holds work that exists nowhere else:
+   surface the commit list and hand the decision back — dropping
+   commits the session did not author is forbidden by the
+   `git-history-discipline` rule (shared-branch Iron Law); merging or
+   preserving them is the user's call.
 
 ### 3. Remove the allowed candidates
 

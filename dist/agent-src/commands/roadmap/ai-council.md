@@ -8,6 +8,7 @@ cluster: roadmap
 sub: ai-council
 skills: [ai-council, agent-docs-writing, roadmap-management]
 description: Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.
+argument-hint: "[roadmap-name | path]"
 council_depth: deep
 suggestion:
   eligible: true

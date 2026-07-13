@@ -7,6 +7,7 @@ visibility: internal
 cluster: agents
 sub: user
 description: User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed.
+argument-hint: "[init|show|review|accept|update] [args]"
 type: orchestrator
 suggestion:
   eligible: true

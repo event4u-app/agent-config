@@ -7,6 +7,7 @@ visibility: internal
 sub: prompt
 cluster: optimize
 description: "Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt."
+argument-hint: "[DETAIL|BASIC] [using <ai>] [prompt]"
 skills: [prompt-optimizer]
 suggestion:
   eligible: true

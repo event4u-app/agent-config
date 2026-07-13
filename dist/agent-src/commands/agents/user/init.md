@@ -8,6 +8,7 @@ cluster: agents
 sub: user
 skills: [agents]
 description: Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample).
+argument-hint: "[--force]"
 suggestion:
   eligible: false
   rationale: "User-persona bootstrap — only deliberately, never auto-suggested."
@@ -21,7 +22,7 @@ packs:
 
 Short interactive interview that creates **`.agent-user.md`** at the
 project root from the locked v1 schema in
-[`docs/contracts/agent-user-schema.md`](../../../../../../../../../../docs/contracts/agent-user-schema.md).
+[`docs/contracts/agent-user-schema.md`](../../../../../docs/contracts/agent-user-schema.md).
 
 Use when:
 
@@ -85,7 +86,7 @@ Ask in this order. Each answer drives one frontmatter field.
    ```
 
 6. **Voice sample** — required.
-   `Paste eine typische Nachricht von dir (1–3 Sätze, im normalen Schreibstil)` /
+   `Paste eine typische Nachricht von dir (1-3 Sätze, im normalen Schreibstil)` /
    `Paste one typical message of yours (1–3 sentences, your normal style)`
 
 ### 4. Privacy-floor sanity check
@@ -98,7 +99,7 @@ Before writing, scan the collected `voice_sample` and `role` for:
 - Health/legal status keywords.
 
 Hit → surface the line and ask the user to redact before proceeding.
-Per [`agent-user-schema § Explicit exclusions`](../../../../../../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
+Per [`agent-user-schema § Explicit exclusions`](../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
 
 ### 5. Render and write
 
@@ -160,5 +161,5 @@ Do NOT commit. Do NOT run any other `/agents user` sub-sub-command.
 
 ## See also
 
-- Schema: [`agent-user-schema`](../../../../../../../../../../docs/contracts/agent-user-schema.md).
+- Schema: [`agent-user-schema`](../../../../../docs/contracts/agent-user-schema.md).
 - Parent: [`/agents user`](../user.md).

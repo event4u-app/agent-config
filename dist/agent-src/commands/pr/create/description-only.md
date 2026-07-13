@@ -9,6 +9,7 @@ cluster: git-pr-create
 sub: description-only
 skills: [git-workflow]
 description: Generate a PR description as a copyable markdown block — used standalone or by create-pr
+argument-hint: "[pr-url | branch]"
 suggestion:
   eligible: true
   trigger_description: "write a PR description, draft the PR text"

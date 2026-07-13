@@ -2,6 +2,7 @@
 model_tier: medium
 name: analyze
 disable-model-invocation: true
+argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference-repo] [subject]"
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
 routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference-repo]

@@ -7,6 +7,7 @@ visibility: internal
 cluster: image
 sub: create
 description: Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default.
+argument-hint: "<character-id> <scene> [analyse-diff]"
 personas: [hollywood-director]
 skills: [image-creator, character-consistency]
 suggestion:

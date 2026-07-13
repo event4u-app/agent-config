@@ -7,6 +7,7 @@ visibility: internal
 cluster: image
 sub: analyse
 description: Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report.
+argument-hint: "<path-or-url> [character-id]"
 personas: [hollywood-director]
 skills: [image-analyser]
 suggestion:
@@ -29,7 +30,7 @@ to diff against, e.g. `veikko`).
 
 1. **Resolve the image** — accept a path or public URL. Apply the input gate
    (refuse blurry / sub-resolution / unreadable; per the `image-ocr` contract).
-2. **Governance check** — real-person likeness → route through
+2. **Governance check** — if the image is a real-person likeness, route through
    [`media-governance-routing`](../rules/media-governance-routing.md) first.
 3. **Run `image-analyser`** — section-by-section extraction (the "down to the
    smallest mole" pass), OCR sub-pass for lettered tattoos, hard-feature

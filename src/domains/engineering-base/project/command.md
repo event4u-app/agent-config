@@ -2,6 +2,7 @@
 model_tier: medium
 name: project
 disable-model-invocation: true
+argument-hint: "[analyze|health]"
 pack: engineering-base
 intent: "Project dispatcher — full analysis or quick health check"
 routes_to: [project-analyze, project-health]

@@ -8,6 +8,7 @@ sub: fix
 cluster: bug
 skills: [bug-analyzer, pest-testing]
 description: Plan and implement a bug fix — based on investigation, with quality checks and test verification
+argument-hint: "[bug-description]"
 council_depth: deep
 suggestion:
   eligible: true

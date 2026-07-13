@@ -2,6 +2,7 @@
 model_tier: medium
 name: analyze
 disable-model-invocation: true
+argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference-repo] [subject]"
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
 routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference-repo]
@@ -115,11 +116,11 @@ and ask which one was intended. One question, no guessing.
 - **Memory loop applies** — every sub-command that produces an
   analysis output MUST draft a memory candidate via
   `/memory propose` per
-  [`docs/contracts/analysis-memory-loop.md`](../../../docs/contracts/analysis-memory-loop.md).
+  [`docs/contracts/analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md).
 
 ## See also
 
-- [`docs/contracts/analysis-memory-loop.md`](../../../docs/contracts/analysis-memory-loop.md) — produce → propose → promote → retrieve contract
+- [`docs/contracts/analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md) — produce → propose → promote → retrieve contract
 - [`blameless-post-mortem`](../../../skills/blameless-post-mortem/SKILL.md) — post-mortem + near-miss skill
 - [`root-cause-frameworks`](../../../skills/root-cause-frameworks/SKILL.md) — RCA engine
 - [`premortem`](../../../skills/premortem/SKILL.md) — forward-looking imagined-failure skill

@@ -5,6 +5,7 @@ pack: product-reasoning
 tier: 2
 visibility: internal
 description: Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
+argument-hint: "[vision|with-docs] [flags] [seed]"
 cluster: challenge-me
 type: orchestrator
 suggestion:
@@ -20,27 +21,31 @@ packs:
 # /grill-me
 
 Alias for [`/challenge-me`](challenge-me.md). Identical behaviour,
-sub-commands (`vision`, `with-docs`), and in-interview triggers
-(`!pitch`, `!roadmap`, `!ai`).
+identical sub-commands (`vision`, `with-docs`), identical in-interview
+triggers (`!pitch`, `!roadmap`, `!ai`). Provided so users who think of
+the workflow as "grill me" rather than "challenge me" land on the same
+dispatcher without a second hop.
 
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/grill-me vision` | `commands/challenge-me/vision.md` | 95%-confidence interview, emits a vision pitch |
-| `/grill-me with-docs` | `commands/challenge-me/with-docs.md` | Same flow plus glossary + claim-vs-code check vs `CONTEXT.md` / ADRs |
+| `/grill-me vision` | `commands/challenge-me/vision.md` | Standard variant — interrogate to 95 % confidence, emit a vision pitch |
+| `/grill-me with-docs` | `commands/challenge-me/with-docs.md` | Doc-aware variant — same flow plus glossary + claim-vs-code verification against `CONTEXT.md` / ADRs |
 
 ## Dispatch
 
-1. Parse: `/grill-me <sub-command> [flags] [seed]`.
+1. Parse the user's argument: `/grill-me <sub-command> [flags] [seed]`.
 2. Load [`commands/challenge-me.md`](challenge-me.md) and follow its
-   `## Dispatch` verbatim with the same sub-command + flags + seed.
-3. Unknown / missing sub-command → print menu from `challenge-me.md`.
+   `## Dispatch` section verbatim with the same sub-command + flags + seed.
+3. If the sub-command is unknown or missing, print the menu from
+   `challenge-me.md` (do not guess).
 
 ## Rules
 
-- Thin alias — all behaviour, triggers, cost-gate, file-write rules
-  live in [`challenge-me.md`](challenge-me.md) and the routed sub-commands.
-  Do not duplicate them here; edit them there.
-- Suggestion engine surfaces this for free-form "grill me" prompts;
-  `/grill-me` is the direct invocation path.
+- This file is a **thin alias** — all behaviour, in-interview triggers,
+  cost-gate semantics, and file-write rules live in
+  [`commands/challenge-me.md`](challenge-me.md) and the routed
+  sub-command files. Do not duplicate them here; edit them there.
+- The suggestion engine surfaces this command for free-form "grill me"
+  prompts; the slash form `/grill-me` is the direct invocation path.

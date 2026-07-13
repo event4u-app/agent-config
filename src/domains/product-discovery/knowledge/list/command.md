@@ -7,6 +7,7 @@ visibility: internal
 cluster: knowledge
 sub: list
 description: List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.
+argument-hint: "[--format=table|json] [--pin <id-prefix>] [--unpin <id-prefix>]"
 skills: [file-editor]
 suggestion:
   eligible: true

@@ -2,6 +2,7 @@
 model_tier: medium
 name: agents
 disable-model-invocation: true
+argument-hint: "[init|optimize|audit|user] [args]"
 pack: meta
 intent: "Manage the AGENTS.md file family — init, optimize, audit, user persona"
 routes_to: [agents-init, agents-optimize, agents-audit, agents-user]

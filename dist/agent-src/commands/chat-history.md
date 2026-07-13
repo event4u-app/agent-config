@@ -2,6 +2,7 @@
 model_tier: medium
 name: chat-history
 disable-model-invocation: true
+argument-hint: "[import]"
 pack: memory
 tier: 2
 visibility: internal

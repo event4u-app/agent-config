@@ -8,6 +8,7 @@ cluster: roadmap
 sub: process-phase
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster.
+argument-hint: "[roadmap]"
 suggestion:
   eligible: true
   trigger_description: "process the next phase, finish this phase autonomously, eine phase abarbeiten"

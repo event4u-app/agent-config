@@ -2,6 +2,7 @@
 model_tier: medium
 name: cost
 disable-model-invocation: true
+argument-hint: "[report|profile] [args]"
 pack: meta
 intent: "Cost dispatcher — session cost report or rule-loading cost profile"
 routes_to: [cost-report, cost-profile]
@@ -34,7 +35,7 @@ and configuration.
 | `/cost profile` | `commands/cost/profile.md` | Change the `rule_loading_tier` in `.agent-settings.yml` — shows each profile's meaning, applies the selection |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

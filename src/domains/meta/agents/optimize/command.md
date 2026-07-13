@@ -7,6 +7,7 @@ visibility: internal
 cluster: agents
 sub: optimize
 description: Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply.
+argument-hint: "[path-to-AGENTS.md]"
 skills: [agents-md-thin-root, copilot-agents-optimization, copilot-config, agent-docs-writing]
 suggestion:
   eligible: true
