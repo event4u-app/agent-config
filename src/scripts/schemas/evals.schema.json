@@ -3,10 +3,13 @@
   "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/evals.schema.json",
   "x-schemaVersion": "1.0.0",
   "title": "Skill behavioural evals (evals.json)",
-  "$comment": "Behavioural-eval spec consumed by run_skill_evals.ts (scaffold/aggregate/report) and counted by skill_eval_coverage.ts. Distinct from triggers.json (activation/routing axis). Roadmap: road-to-skill-eval-coverage Phase 1. Assertion kinds mirror _grade_assertions() in run_skill_evals.ts exactly — add a kind there before adding it here.",
+  "$comment": "Behavioural-eval spec consumed by run_skill_evals.ts (scaffold/aggregate/report) and counted by skill_eval_coverage.ts. Distinct from triggers.json (activation/routing axis). Roadmap: road-to-skill-eval-coverage Phase 1. Assertion kinds mirror _grade_assertions() in run_skill_evals.ts exactly \u2014 add a kind there before adding it here.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["skill", "scenarios"],
+  "required": [
+    "skill",
+    "scenarios"
+  ],
   "properties": {
     "skill": {
       "type": "string",
@@ -20,7 +23,7 @@
     "skill_body_sha": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$",
-      "description": "Optional SHA-256 of the skill's SKILL.md body at the time these evals were authored/last verified. When present, lint_behavioural_eval_freshness flags the eval stale if the current SKILL.md sha differs — the body changed, so the eval may no longer exercise it. Absent = unpinned (out of scope for the staleness gate), mirroring lint_eval_freshness's upstream:null handling."
+      "description": "Optional SHA-256 of the skill's SKILL.md body at the time these evals were authored/last verified. When present, lint_behavioural_eval_freshness flags the eval stale if the current SKILL.md sha differs \u2014 the body changed, so the eval may no longer exercise it. Absent = unpinned (out of scope for the staleness gate), mirroring lint_eval_freshness's upstream:null handling."
     },
     "scenarios": {
       "type": "array",
@@ -29,7 +32,11 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "prompt", "assertions"],
+        "required": [
+          "id",
+          "prompt",
+          "assertions"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -50,9 +57,14 @@
                 {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["kind", "value"],
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
                   "properties": {
-                    "kind": { "const": "contains" },
+                    "kind": {
+                      "const": "contains"
+                    },
                     "value": {
                       "type": "string",
                       "minLength": 1,
@@ -63,9 +75,14 @@
                 {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["kind", "path"],
+                  "required": [
+                    "kind",
+                    "path"
+                  ],
                   "properties": {
-                    "kind": { "const": "file_exists" },
+                    "kind": {
+                      "const": "file_exists"
+                    },
                     "path": {
                       "type": "string",
                       "minLength": 1,
@@ -76,13 +93,18 @@
                 {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["kind", "n"],
+                  "required": [
+                    "kind",
+                    "n"
+                  ],
                   "properties": {
-                    "kind": { "const": "finding_floor" },
+                    "kind": {
+                      "const": "finding_floor"
+                    },
                     "n": {
                       "type": "integer",
                       "minimum": 0,
-                      "description": "Minimum number of findings the output must carry (counted deterministically). 0 is a trivially-passing floor (the grader passes when count >= n) — used where the case only guards against over-reporting."
+                      "description": "Minimum number of findings the output must carry (counted deterministically). 0 is a trivially-passing floor (the grader passes when count >= n) \u2014 used where the case only guards against over-reporting."
                     },
                     "pattern": {
                       "type": "string",
@@ -93,13 +115,36 @@
                 {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["kind", "criterion"],
+                  "required": [
+                    "kind",
+                    "criterion"
+                  ],
                   "properties": {
-                    "kind": { "const": "rubric" },
+                    "kind": {
+                      "const": "rubric"
+                    },
                     "criterion": {
                       "type": "string",
                       "minLength": 1,
-                      "description": "Natural-language pass criterion graded by a sub-agent. NON-deterministic — the grader returns pass:null until a pinned judge fills it. Use only where no deterministic check exists; record the judge as a known limit."
+                      "description": "Natural-language pass criterion graded by a sub-agent. NON-deterministic \u2014 the grader returns pass:null until a pinned judge fills it. Use only where no deterministic check exists; record the judge as a known limit."
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "not_contains"
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Substring the output must contain (deterministic)."
                     }
                   }
                 }

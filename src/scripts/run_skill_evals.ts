@@ -146,6 +146,10 @@ export function _grade_assertions(
         if (kind === 'contains') {
             const ok = output.includes(a['value'] as string);
             results.push({ kind, value: a['value'] as JsonValue, pass: ok });
+        } else if (kind === 'not_contains') {
+            // U2 golden-adversarial negative: benign look-alikes must NOT be flagged.
+            const ok = !output.includes(a['value'] as string);
+            results.push({ kind, value: a['value'] as JsonValue, pass: ok });
         } else if (kind === 'file_exists') {
             const apath = a['path'] as string;
             const ok = _exists(path.join(run_dir, apath)) || _exists(apath);

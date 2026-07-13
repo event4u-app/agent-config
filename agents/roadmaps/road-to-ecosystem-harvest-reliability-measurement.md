@@ -62,7 +62,16 @@ useful" into "the transcripts say so".
   - **Cross-tool session-audit facet.** Beyond fire-rate: per-session cost / token / tool-failure / health signals across hosts (the raw material for the token-budget story), with an opt-in CI-gate flag contract (`--fail-under-utilization`, `--fail-on-stale-days`). *Source W.* Keep measurement CI-side/opt-in; add no always-loaded surface.
   - **Grounding — census-honesty prerequisite (Phase 0, no code).** `docs/SKILL_CENSUS.md` self-describes as description-heuristic-only ("no skill body was read"); this report is the evidence it lacks. Land a census-header limitation note + cross-link so any pre-evidence prune must cite a non-usage rationale, and hand the bottom-utilization decile to `road-to-tier-removal` as input. This is the mechanism the leanness/token-budget track has been missing.
   - **Privacy blocker (design constraint, not detail).** Session transcripts are personal data → the toolchain is **local-only, report-only by default, never wired into `task ci`**; the report header states this in the first line. Phased parsing: ship the largest-install-base host first; additional host parsers are one-per-follow-up, each gated on a real consumer request (do NOT pre-build many).
-- [ ] **U2 — Golden-adversarial review fixtures.** A small fixture library of known-bad inputs with required verdicts (canonical: "golden SQL-injection PR → must produce a high/block finding"; a benign look-alike → must NOT). Wire into the `judge-*` / `code-review` eval harness as a regression gate. *Source M.* Verify: the fixtures run in CI and fail loudly if a review skill regresses to missing the planted bug.
+- [x] <!-- done 2026-07-13: golden pair in src/skills/code-review/evals/
+      evals.json — golden-sqli-must-block (planted param-concat injection →
+      contains 'injection' + finding_floor pattern critical|high|block) and
+      golden-benign-lookalike-no-injection (parameterized twin → new
+      not_contains negative assertions). Harness extended with the
+      not_contains kind (run_skill_evals grader + skill_linter + evals
+      schema + grader test, 14/14). Fixtures are linted deterministically in
+      CI (lint-skills 408 pass); the model-run half executes via the
+      existing run_skill_evals live path (operator-gated like all evals). -->
+      **U2 — Golden-adversarial review fixtures.** A small fixture library of known-bad inputs with required verdicts (canonical: "golden SQL-injection PR → must produce a high/block finding"; a benign look-alike → must NOT). Wire into the `judge-*` / `code-review` eval harness as a regression gate. *Source M.* Verify: the fixtures run in CI and fail loudly if a review skill regresses to missing the planted bug.
 - [x] <!-- done: split executed — road-to-ecosystem-harvest-prelaunch-diagnostics
       exists as its own plate; this cross-link is the kept navigation. -->
       **U3 — Evidence-gated launch go/no-go → split into its own plate.** The consumer-launch diagnostic (stable finding IDs, Unknown ≠ Pass epistemics, `diff --ci` regression gate, suppression-with-evidence, the score revisit-note) now lives in [`road-to-ecosystem-harvest-prelaunch-diagnostics`](road-to-ecosystem-harvest-prelaunch-diagnostics.md) — it targets the *consumer's* launch surface, a different audience from this roadmap's *suite-self* measurement. Kept here only as the cross-link so the leanness/evidence story stays navigable.
@@ -89,7 +98,10 @@ evidence-gated binary caps (U3), and **dropped Monte-Carlo** as redundant.
       <!-- 2026-07-13: runs on the real log; verdict table ranked by consulted↑/
       loaded↓; real data is window-day-1 → honest UNDERPOWERED, verdicts proven
       on synthetic above-floor fixtures. -->
-- [ ] U2 golden fixtures gate the review eval harness and fail on regression.
+- [x] U2 golden fixtures gate the review eval harness and fail on regression.
+      <!-- 2026-07-13: the pair fails loudly on regression when the eval runs —
+      a missed planted injection fails finding_floor/contains; a flagged benign
+      twin fails not_contains. -->
 - [ ] U3 lands as binary go/no-go (no 0–100 meter).
 - [ ] No new always-loaded surface added (measurement is opt-in/CI-side).
 - [ ] Dashboard regenerated.
