@@ -117,7 +117,11 @@ evidence-gated binary caps (U3), and **dropped Monte-Carlo** as redundant.
       <!-- 2026-07-13: the pair fails loudly on regression when the eval runs —
       a missed planted injection fails finding_floor/contains; a flagged benign
       twin fails not_contains. -->
-- [ ] U3 lands as binary go/no-go (no 0–100 meter).
+- [-] U3 lands as binary go/no-go (no 0–100 meter).
+      <!-- transferred 2026-07-13: U3 was split to
+      road-to-ecosystem-harvest-prelaunch-diagnostics (its own plate); the
+      binary go/no-go acceptance is owned + tracked THERE. Kept here as [-]
+      so this plate can close without double-tracking a foreign criterion. -->
 - [x] No new always-loaded surface added (measurement is opt-in/CI-side).
       <!-- verified 2026-07-13: report + smoke are scripts; loaded field is
       optional; golden fixtures live in evals; nothing added to kernel/rules. -->
