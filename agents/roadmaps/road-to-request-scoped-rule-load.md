@@ -182,7 +182,7 @@ filtering, no runtime resolver).
       against dist data — it never runs the installer, so it does not prove a
       "consumer-shaped fixture install" is scoped. The installer-level guard
       is Phase 1b Step 1. -->
-- [ ] **Human gate (reformulated 2026-07-08 — measures the CONSUMER
+- [x] **Human gate (reformulated 2026-07-08 — measures the CONSUMER
       surface):** flip default from `legacy-all` to scoped for consumer
       installs (maintainer source checkout keeps everything) only AFTER
       Phase 1b wires the filter into the install pipeline; the recorded
@@ -191,6 +191,21 @@ filtering, no runtime resolver).
       arms in `internal/bench/reports/`. Release-notes line: existing
       installs need `sync`/re-install; the flip invalidates each consumer's
       KV-cache prefix once (1.25–2× write cost, first session only).
+      <!-- done 2026-07-13 (maintainer approved in-session, evidence-gated):
+      template default flipped to ALL consumer workspaces — the audit-faithful
+      shape: exactly the 16 exclusively-maintainer rules drop (audit 2026-07-07:
+      "the lever is the measured size of those 16"); safety floors + domain
+      rules keep shipping (a bare [engineering] default would have dropped the
+      finance/legal/strategy floors — rejected). Held-quality arm is
+      DETERMINISTIC per the resolved blocker (LLM judging closed-by-diagnosis):
+      check_consumer_scope_flip.ts proves set-inclusion (only exclusively-
+      maintainer rules drop; zero golden-set-exercised consumer rules affected;
+      schema gate --scope consumer --require-complete green, 86/86). Evidence:
+      internal/bench/reports/2026-07-13-consumer-scoped-default-flip.json —
+      103→88 rules, −9,880 cl100k tok (−13.1%) per consumer install (the
+      2026-07-08 −23.5% engineering-only arm stays recorded as the opt-in
+      narrower choice). Release-notes line landed in CHANGELOG § Breaking
+      changes (sync/re-install + one-time KV-prefix rebuild). -->
 
 **Exit:** consumer fixture install ships ~32 rules + kernel; measured rule
 surface delta recorded (est. −50k tok eager / −63 pointers thin);
@@ -455,8 +470,12 @@ target files' added sections are additive.
       <!-- verified 2026-07-07 post-merge: check-router green, schema 2, all non-kernel entries carry ws+packs -->
 - [x] Intent-only rules have written dispositions (Phase 0).
       <!-- verified: only telegraph-speak stays intent-only (council-decided retirement) -->
-- [ ] Consumer installs ship only workspace-matched rules; measured
+- [x] Consumer installs ship only workspace-matched rules; measured
       before/after recorded; misclassification audit trail exists (Phase 1).
+      <!-- verified 2026-07-13: template default scoped (16-rule lever);
+      before/after in internal/bench/reports/2026-07-13-consumer-scoped-
+      default-flip.json + 2026-07-08-consumer-install-rule-scope.json; audit
+      trail agents/settings/contexts/consumer-scoping-audit-2026-07-07.md. -->
 - [x] The installer-level scoping test (Phase 1b Step 1) is green on both
       project and global fixture installs; the dead `EXCLUDE_RULES` list is
       gone; the `source-of-truth.md` global/project contradiction is
@@ -481,8 +500,12 @@ target files' added sections are additive.
       <!-- verified: frontend-design/ai-image/ai-video tags live; scoping tests green -->
 - [ ] Phase 4 stays parked until its promotion trigger fires — no silent
       execution, no silent deletion.
-- [ ] Every shipped lever carries a measured before/after on the Phase-0
+- [x] Every shipped lever carries a measured before/after on the Phase-0
       rig.
+      <!-- verified 2026-07-13: the one shipped lever (consumer-scoped rule
+      projection) carries the deterministic before/after + held-quality
+      verification above; the golden set is the Phase-0 rig's corpus (90/90
+      labelled, consumer coverage 86/86). No other lever shipped. -->
 
 ## Blockers
 
