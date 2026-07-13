@@ -464,6 +464,21 @@ to a caller-supplied path) is allowlisted with a rationale in
 redundant flag. `lint_skill_scripts_readonly` enforces this: an ungated,
 non-allowlisted write fails the build.
 
+## Description-optimizer loop (U1 — held-out, not vibes)
+
+Descriptions are the trigger surface; tune them like a model, not like prose:
+
+1. Draft 2-3 candidate descriptions for the skill.
+2. Ensure `evals/triggers.json` has should- AND should-not-trigger queries
+   (grow beyond the 5+5 stub when optimizing — more queries = a real test split).
+3. Run the helper: `npx tsx src/scripts/optimize_skill_description.ts
+   --skill <id> --candidate "…" [--candidate "…"] [--live]` — it splits the
+   queries deterministically into train/held-out, scores every candidate
+   (deterministic token-overlap proxy by default; `--live` = haiku judge,
+   ~$0.001 per query·candidate), and picks the best **held-out** accuracy.
+4. Adopt the pick ONLY if it beats the current description on the held-out
+   split — a train-only win is overfitting to the queries you wrote.
+
 ## Self-QA loop for output-producing skills (optional pattern)
 
 For skills whose product is a rendered/structural artifact (decks, docs,
