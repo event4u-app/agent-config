@@ -1,5 +1,5 @@
 {
-  "commands/agent-handoff.md": "916d6fe377ced3ff904ce47298323c011978e77b4ae39b0dc0523ce0914ae741",
+  "commands/agent-handoff.md": "2fd486383d8294abb9f27f8c025ba1d3b20f3d6218f1aeb59aba79fc5e5753aa",
   "commands/agent-status.md": "27e17ce16782fe0a0aec223ba55a8981e84c69dbae48e8b99ea232339289f5dc",
   "commands/agents.md": "9d55e456561ead78bd4c60e7f870a5440be2d5759c70b44bca10116177ddda5d",
   "commands/agents/audit.md": "512f07730defdcd83c3123208323ad2beb8841a4b6b8b1ab3804f1eb74b006e4",
@@ -654,7 +654,7 @@
   "skills/terraform/SKILL.md": "0be2c44e79a0df5db8a0e67262fcb0e3ff894d186b7a71d05372bba188ae23fe",
   "skills/terragrunt/SKILL.md": "3b4a7432d4c4ebc99686a2e6cecaa327c5cd0775ee374c70b9400058946a6d5d",
   "skills/test-case-discovery/SKILL.md": "7bb5c3d54b3c0a23d22022ce0a8b26b4454bcfe2adb04c064aa25c8d45b46e98",
-  "skills/test-driven-development/SKILL.md": "65ca221e0936e6ee13acf6c62d4b79fb421cd404ad35c8b69c385fb6169fbe1c",
+  "skills/test-driven-development/SKILL.md": "1a374c7f4b3e148daddbf9b054ae26356c98c47d47ad73de4928429c6a1f4ab2",
   "skills/test-performance/SKILL.md": "01e6362c4ab0ef9b00de3e8a5dc3e88c66d019a3c65096f3a349e3b719eedb02",
   "skills/testing-anti-patterns/SKILL.md": "05316d7586d94a92072412d8fac7ea59e2d25b2eac7dba6d479af48c00851b3a",
   "skills/testing-anti-patterns/process-anti-patterns.md": "b4d912f332e2c481f67bd983065147d7b7ae0fff042bd596c5b81d4351b22e25",

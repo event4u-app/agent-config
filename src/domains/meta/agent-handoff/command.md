@@ -84,6 +84,40 @@ Roadmap: {roadmap file if active, or "none"}
 lossy re-summarization of the user's own constraints is the exact failure this
 template prevents. Everything else (Done / Key decisions) stays concise.
 
+### 2b. File-artifact mode — `HANDOFF.md` (optional, host-neutral)
+
+On `/agent-handoff --file` (or when a workflow skill's phase boundary asks
+for a standing handoff), ALSO write the contract to
+`agents/runtime/state/HANDOFF.md` (gitignored runtime state — plain
+Markdown, no host API). Required fields, in order:
+
+```
+# HANDOFF
+## Mode
+{current workflow mode/phase, e.g. Implement (TDD)}
+## Contract received
+{what the previous phase handed over}
+## Contract owed
+{what the current phase must produce before yielding}
+## Decisions
+- {decisions taken, with one-line rationale}
+## Open questions
+- {unresolved items the next session must not silently drop}
+## Next command
+{the single command or step to run first on resume}
+```
+
+**Resume rule:** a workflow skill's step 0 checks for this file and resumes
+from its contract (mode-inference table) instead of re-deriving state; a
+long phase refreshes the file before yielding. Validated by
+`lint_handoffs.ts` when present — a missing required field is red.
+
+**Critical-planning-file safety protocol** (applies to HANDOFF.md and agent
+roadmap edits): read the current file FIRST; take a timestamped backup copy
+next to it (`HANDOFF.md.<ts>.bak`) before overwrite; duplicate-check before
+appending (never double-append a section); preserve the section structure;
+post-verify the write by re-reading the required fields.
+
 ### 3. Present to user
 
 Show the handoff prompt in a fenced code block and say:

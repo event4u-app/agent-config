@@ -97,8 +97,10 @@ checks it from the diff** — an unverifiable prohibition does not ship.
 
 ### Mode inference on resume
 
-Entering mid-flow (fresh session, handoff, interrupted run), infer the mode
-from observable state — never assume Design:
+Step 0 of any resume: if `agents/runtime/state/HANDOFF.md` exists, resume
+from its Mode + Contract-owed fields (see `/agent-handoff` file mode) instead
+of re-deriving. Otherwise infer the mode from observable state — never
+assume Design:
 
 | Observed state | Resume in |
 |---|---|

@@ -53,10 +53,21 @@ explanation log.
 
 ## Phase 2 — HANDOFF convention
 
-- [ ] Define `HANDOFF.md` (location decided against the existing session-artifact layout): current mode/phase, contract received, contract owed, decisions taken, open questions, next command. Host-neutral plain Markdown, no host API. *Source U.*
-- [ ] Resume rule: a workflow skill's step 0 checks for a HANDOFF and resumes from its contract instead of re-deriving state; long phase boundaries refresh it before yielding.
-- [ ] Reconcile naming with `lint_handoffs.ts` (extend it to validate the artifact's required fields when present — avoid a collision).
-- [ ] Apply a critical-planning-file safety protocol to HANDOFF.md and agent roadmap edits: read-first, timestamped backup, duplicate-check before append, structure-preserve, post-verify. *Source Z.*
+- [x] Define `HANDOFF.md` (location decided against the existing session-artifact layout): current mode/phase, contract received, contract owed, decisions taken, open questions, next command. Host-neutral plain Markdown, no host API. *Source U.*
+      <!-- done 2026-07-13: agents/runtime/state/HANDOFF.md (gitignored runtime,
+      sibling of hot-context.md); template + 6 required fields in
+      /agent-handoff § 2b file-artifact mode. -->
+- [x] Resume rule: a workflow skill's step 0 checks for a HANDOFF and resumes from its contract instead of re-deriving state; long phase boundaries refresh it before yielding.
+      <!-- done 2026-07-13: step-0 line in test-driven-development § Mode
+      inference + the refresh rule in /agent-handoff § 2b. -->
+- [x] Reconcile naming with `lint_handoffs.ts` (extend it to validate the artifact's required fields when present — avoid a collision).
+      <!-- done 2026-07-13: validate_handoff_artifact() + CLI artifact mode
+      (path ending HANDOFF.md) in lint_handoffs.ts, reconciliation comment
+      in-file; fixture test red on missing 'Contract owed' (live CLI probe
+      exit 1). -->
+- [x] Apply a critical-planning-file safety protocol to HANDOFF.md and agent roadmap edits: read-first, timestamped backup, duplicate-check before append, structure-preserve, post-verify. *Source Z.*
+      <!-- done 2026-07-13: protocol block in /agent-handoff § 2b (names both
+      HANDOFF.md and agent roadmap edits). -->
 
 ## Phase 3 — merge-conflicts plan-first upgrade
 
