@@ -68,6 +68,41 @@ Walk the diff with the following gates:
 Cells without evidence block the launch — surface, do not
 hand-wave.
 
+### 2b. Epistemics block — the diagnostic report (contract-backed)
+
+For a consumer-facing diagnostic (not just the merge decision), emit a
+report per [`docs/contracts/prelaunch-diagnostics.md`](../../../docs/contracts/prelaunch-diagnostics.md)
+(schema: `prelaunch-report.schema.json`). Rules:
+
+- **Coverage backbone** — diagnose exactly the fixed area vocabulary
+  (`prelaunch-areas.yml`): auth · migrations · secrets · observability ·
+  rollback · agent-governance. No ad-hoc areas.
+- **Every area gets one state:** `pass` (cited evidence REQUIRED) ·
+  `finding` (IDs listed) · `unknown` (honest default — **absence of
+  findings is Unknown, never an automatic Pass**) · `not-applicable`
+  (reason required).
+- **Findings carry immutable IDs** (`AC-<AREA>-NNN`) — retitle freely,
+  never re-assign; the ID is the diff key across runs.
+- **Verdict:** any open P0 → NOT ready, regardless of every other area;
+  any open P1 or a launch-gate area not at pass/N-A → NOT ready. Ready is
+  the residual state, never the default.
+- **Questions section** — list the questions that would change the
+  diagnosis; the next run converts them into evidence or findings.
+- Validate + verdict via
+  `./scripts-run src/scripts/prelaunch_diagnostics validate <report.json>`;
+  regression-gate against the committed baseline via
+  `… diff <baseline> <current> --ci` (contract § 4–6).
+
+### 2c. Fix loop (approval-gated, read-only diagnostic)
+
+Rank open findings by severity, then launch-gate membership; propose the
+**safest first approval batch** (reversible, small blast radius — explicitly
+not the full backlog). Status vocabulary per finding: `open · fixed ·
+accepted-risk · deferred-with-reason · suppressed-with-evidence ·
+not-applicable` — everything except open/fixed carries a reason. Rescore
+whenever evidence changes. The diagnostic itself never mutates the project;
+fixes flow through the normal approval-gated engines.
+
 ### 3. Plan the rollout
 
 - **Mechanism** — flag, canary cohort, blue-green, immediate.

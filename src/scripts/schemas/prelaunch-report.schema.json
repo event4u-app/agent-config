@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/prelaunch-report.schema.json",
+  "x-schemaVersion": "1.0.0",
+  "title": "Pre-launch diagnostic report",
+  "$comment": "road-to-ecosystem-harvest-prelaunch-diagnostics Phase 1 (Source L). Contract: docs/contracts/prelaunch-diagnostics.md. Area vocabulary: src/config/prelaunch-areas.yml. Epistemics: pass requires evidence; absence of findings is unknown, never an automatic pass; not-applicable requires a reason. NO numeric score field — the 0-100 score is council-locked (revisit note in the roadmap); adding one here is a contract violation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project", "run_at", "areas", "findings"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["prelaunch-report-v1"]
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Consumer project identifier (repo slug or name)."
+    },
+    "run_at": {
+      "type": "string",
+      "minLength": 1,
+      "description": "ISO-8601 timestamp of the diagnostic run."
+    },
+    "areas": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-area epistemic state. Keys come from src/config/prelaunch-areas.yml. An area missing here is UNKNOWN by definition.",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state"],
+          "properties": {
+            "state": {
+              "type": "string",
+              "enum": ["pass", "finding", "unknown", "not-applicable"],
+              "description": "pass = evidence-cited clean; finding = at least one open finding (IDs in findings[]); unknown = not diagnosed — NEVER an automatic pass; not-applicable = does not exist on this launch surface (reason required)."
+            },
+            "evidence": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Citation proving the state — file:line, command output, run URL. REQUIRED when state is pass (enforced by the validator; a pass without evidence is assertion, not diagnosis)."
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "description": "REQUIRED when state is not-applicable — why the area does not exist on this surface."
+            }
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "description": "Every finding ever assigned in this project, open or resolved — IDs are immutable and never re-assigned, so resolved findings stay (status flips, the entry never disappears).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "area", "severity", "title", "status"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^AC-[A-Z][A-Z0-9]{1,7}-[0-9]{3}$",
+            "description": "Immutable finding ID: AC-<AREA-CODE>-NNN. The AREA code comes from prelaunch-areas.yml; NNN is zero-padded, monotonically assigned, NEVER re-used — a retitled or re-scoped finding keeps its ID; a genuinely new problem gets the next number."
+          },
+          "area": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Area key (prelaunch-areas.yml) the finding belongs to; must agree with the ID's area code (validator-enforced)."
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["P0", "P1", "P2", "P3"],
+            "description": "P0 = launch-blocking; P1 = fix-before-general-rollout; P2 = fix-soon; P3 = nice-to-have. Any OPEN P0 refuses a ready verdict regardless of every other area."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Human title. Mutable — the ID, not the title, is the diff key."
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Citation locating the finding (file:line, endpoint, config key)."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "fixed", "accepted-risk", "deferred-with-reason", "suppressed-with-evidence", "not-applicable"],
+            "description": "Fix-loop status vocabulary (Phase 3). Everything except open/fixed requires `reason`; suppressed-with-evidence additionally requires a matching entry in the project suppression file."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "description": "REQUIRED for accepted-risk / deferred-with-reason / suppressed-with-evidence / not-applicable."
+          }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "description": "Questions that would change the diagnosis — open information gaps the next run should answer; the honest sibling of the unknowns."
+    }
+  }
+}
