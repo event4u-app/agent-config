@@ -321,9 +321,51 @@ function _pyRepr(s: string): string {
     return `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 }
 
+// ── HANDOFF.md artifact validation (workflow-contracts Phase 2) ─────────
+// SEPARATE concern from the cross-wing skill-handoff lint above: this
+// validates the OPTIONAL standing workflow-resume artifact
+// (agents/runtime/state/HANDOFF.md, written by /agent-handoff --file).
+// Same file on purpose — one linter owns everything named "handoff";
+// the naming reconciliation is this comment.
+
+export const HANDOFF_ARTIFACT_REQUIRED = [
+    'Mode',
+    'Contract received',
+    'Contract owed',
+    'Decisions',
+    'Open questions',
+    'Next command',
+] as const;
+
+/** Returns missing required section headings ([] = valid). */
+export function validate_handoff_artifact(text: string): string[] {
+    const missing: string[] = [];
+    for (const heading of HANDOFF_ARTIFACT_REQUIRED) {
+        const re = new RegExp(`^##\\s+${heading}\\s*$`, 'mi');
+        if (!re.test(text)) {
+            missing.push(heading);
+        }
+    }
+    return missing;
+}
+
 export function main(argv?: readonly string[]): number {
     let skills_dir = SKILLS_DIR;
     const args = argv ?? process.argv.slice(2);
+    if (args.length > 0 && String(args[0]).endsWith('HANDOFF.md')) {
+        // artifact mode — validate the workflow-resume file's required fields
+        const text = fs.readFileSync(_resolve(args[0] as string), 'utf-8');
+        const missing = validate_handoff_artifact(text);
+        if (missing.length === 0) {
+            if (!QUIET) process.stdout.write('✅  HANDOFF artifact: all required fields present\n');
+            return 0;
+        }
+        for (const m of missing) {
+            process.stdout.write(`${args[0]}:1:handoff-artifact-missing-field: missing required section \`## ${m}\`\n`);
+        }
+        process.stderr.write(`❌  ${missing.length} missing HANDOFF field(s)\n`);
+        return 1;
+    }
     if (args.length > 0) {
         skills_dir = _resolve(args[0] as string);
     }

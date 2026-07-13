@@ -43,6 +43,27 @@ For each conflicted file:
 3. **Understand "theirs"** — what does the incoming branch intend?
 4. **Check if both changes are needed** — often both sides added different things.
 
+### 2b. Merge Resolution Plan — mandatory before touching a conflict
+
+After reading both sides, write the plan; under `autonomous-execution` the
+approval gate applies (a standing mandate states the plan and proceeds; an
+interactive session surfaces it and waits):
+
+```
+## Merge Resolution Plan
+- Conflicts: {N files / M hunks}
+- Execution order: {dependency leaves first — a file nothing else imports
+  resolves before the files that import it}
+| file | strategy | rationale |
+|---|---|---|
+- Decisions needed from the user: {semantic/deleted-modified items, or none}
+- Validation: {targeted checks to run after resolution}
+```
+
+**Backup before resolution:** every deleted-modified file is copied to a
+temp path (`$TMPDIR/merge-backup-<ts>/<file>`) and the path noted in the
+plan BEFORE any resolution touches it.
+
 ### 3. Resolution strategies
 
 | Situation | Strategy |
@@ -54,6 +75,8 @@ For each conflicted file:
 | Migration conflicts (same timestamp) | **Rename** — adjust timestamp to avoid collision |
 | Auto-generated files (OpenAPI spec, baselines) | **Regenerate** — resolve source, then regenerate the output |
 | Formatting-only conflicts | **Accept either** — then run quality tools to normalize |
+| Import-block conflicts (both sides added imports) | **Keep both** — union the imports, drop duplicates, let the linter order them |
+| Binary files (images, archives, compiled assets) | **Pick one side whole** — never splice; regenerate from source if generated, else ask which side wins |
 
 ### 4. File-type specific rules (stack-aware)
 
@@ -103,6 +126,13 @@ For each conflicted file:
 - Lock file / auto-generated file conflicts
 - Import statement ordering
 - Formatting-only differences
+
+### 5b. Resolution log — one line per conflict
+
+Every resolved conflict gets a one-line explanation ("kept both — additive
+imports"; "took theirs — lockfile regenerated") collected into the final
+summary: the auditable log the reviewer reads instead of re-deriving each
+hunk decision.
 
 ### 6. Verify after resolution
 
