@@ -1,11 +1,11 @@
 {
-  "_comment": "Behavioural-eval coverage ratchet floor (road-to-skill-eval-coverage Phase 3). skill_eval_coverage --check fails if coverage drops below these counts. Regenerate with `--write-floor` ONLY after authoring evals — the floor only rises.",
-  "overall": 2,
+  "_comment": "Behavioural-eval coverage ratchet floor (road-to-skill-eval-coverage Phase 3). skill_eval_coverage --check fails if coverage drops below these counts. Regenerate with `--write-floor` ONLY after authoring evals — the floor only rises. LOWERING POLICY: a legitimate drop (skills merged, redundant eval removed) is allowed ONLY by editing a count downward WITH a logged reason in coverage-floor.README.md — never by deleting the floor file or a tier key. See coverage-floor.README.md.",
+  "overall": 42,
   "tiers": {
-    "rich": 0,
-    "default-surface": 0,
-    "router": 0,
-    "priority": 0,
-    "other": 2
+    "rich": 4,
+    "default-surface": 29,
+    "router": 2,
+    "priority": 35,
+    "other": 7
   }
 }
