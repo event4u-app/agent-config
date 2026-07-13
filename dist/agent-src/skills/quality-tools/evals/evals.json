@@ -1,0 +1,15 @@
+{
+  "skill": "quality-tools",
+  "_calibration": "Seed for eval-schema v2 (ecosystem-harvest skill-quality-gates Phase 2). tool-choice + trajectory assertions are trace-gated: pass:null (manual-pending) in CI until a recorded tool-trace.json exists.",
+  "scenarios": [
+    {
+      "id": "runs-project-pinned-tools",
+      "prompt": "Fix the failing lint on the changed files.",
+      "environment": "a project whose pinned quality CLI is defined in its task runner",
+      "assertions": [
+        { "kind": "tool-choice", "must_use": ["bash"], "must_not_use": [] },
+        { "kind": "trajectory_budget", "n": 8 }
+      ]
+    }
+  ]
+}

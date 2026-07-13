@@ -1,0 +1,25 @@
+{
+  "skill": "github-ci",
+  "_calibration": "Seed for eval-schema v2 (ecosystem-harvest skill-quality-gates Phase 2). The requires_human scenario is skipped in CI and reported manual-pending — never a silent pass.",
+  "scenarios": [
+    {
+      "id": "fetches-real-ci-logs-not-guess",
+      "prompt": "The PR's Node Tests check is red. Diagnose why.",
+      "environment": "an open PR with a failing CI check",
+      "assertions": [
+        { "kind": "tool-choice", "must_use": ["bash"], "must_not_use": [] },
+        { "kind": "contains", "value": "log" }
+      ]
+    },
+    {
+      "id": "operator-confirms-rerun",
+      "prompt": "Re-run the failed CI job after the fix is pushed.",
+      "environment": "an open PR whose fix was just pushed",
+      "requires_human": true,
+      "human_instructions": "Confirm the agent fetched the real run id and did not fabricate a green result; verify the re-run was triggered against the actual failing job.",
+      "assertions": [
+        { "kind": "contains", "value": "run" }
+      ]
+    }
+  ]
+}

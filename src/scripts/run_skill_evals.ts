@@ -135,6 +135,31 @@ export function _count_findings(output: string, pattern?: string): number {
     return count;
 }
 
+/**
+ * Load the recorded tool trace from `<run_dir>/tool-trace.json` — an array of
+ * tool-call names (strings) or `{tool: string}` objects. Returns null when the
+ * file is absent (→ tool-choice / trajectory assertions report manual-pending).
+ */
+export function _load_tool_trace(run_dir: string): string[] | null {
+    const p = path.join(run_dir, 'tool-trace.json');
+    if (!_exists(p)) return null;
+    const raw = JSON.parse(fs.readFileSync(p, 'utf-8')) as Array<string | { tool?: string }>;
+    if (!Array.isArray(raw)) return null;
+    return raw.map((e) => (typeof e === 'string' ? e : (e.tool ?? ''))).filter((s) => s !== '');
+}
+
+/** Count meaningful steps: tool calls net of retries (a call whose name equals
+ * the immediately-preceding call name is a retry, not a new step). */
+export function _count_meaningful_steps(trace: string[]): number {
+    let steps = 0;
+    let prev: string | null = null;
+    for (const t of trace) {
+        if (t !== prev) steps += 1;
+        prev = t;
+    }
+    return steps;
+}
+
 export function _grade_assertions(
     output: string,
     run_dir: string,
@@ -166,6 +191,38 @@ export function _grade_assertions(
             const pattern = a['pattern'] as string | undefined;
             const count = _count_findings(output, pattern);
             results.push({ kind, n, count, pass: count >= n });
+        } else if (kind === 'tool-choice') {
+            // Evaluated against the recorded tool trace (<run_dir>/tool-trace.json).
+            // No trace (e.g. scaffold-only / CI without a live run) → manual-pending,
+            // NEVER a silent pass.
+            const mustUse = (a['must_use'] as string[] | undefined) ?? [];
+            const mustNot = (a['must_not_use'] as string[] | undefined) ?? [];
+            const trace = _load_tool_trace(run_dir);
+            if (trace === null) {
+                results.push({
+                    kind, must_use: mustUse, must_not_use: mustNot, pass: null,
+                    note: 'manual-pending: no tool-trace.json in run dir — record a trace or grade manually',
+                });
+            } else {
+                const used = new Set(trace);
+                const missing = mustUse.filter((t) => !used.has(t));
+                const forbidden = mustNot.filter((t) => used.has(t));
+                results.push({
+                    kind, must_use: mustUse, must_not_use: mustNot,
+                    missing, forbidden, pass: missing.length === 0 && forbidden.length === 0,
+                });
+            }
+        } else if (kind === 'trajectory_budget') {
+            // Meaningful step = one tool call net of retries (a retry is a call whose
+            // tool name repeats the immediately-preceding call). No trace → manual-pending.
+            const budget = a['n'] as number;
+            const trace = _load_tool_trace(run_dir);
+            if (trace === null) {
+                results.push({ kind, n: budget, pass: null, note: 'manual-pending: no tool-trace.json in run dir' });
+            } else {
+                const steps = _count_meaningful_steps(trace);
+                results.push({ kind, n: budget, steps, pass: steps <= budget });
+            }
         } else {
             results.push({ kind: kind ?? null, pass: false, note: `unknown assertion kind ${_pyRepr(kind)}` });
         }

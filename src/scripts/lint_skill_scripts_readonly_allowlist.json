@@ -1,0 +1,8 @@
+{
+  "entries": [
+    {
+      "path": "corpus-grounding/scripts/decision_engine.ts",
+      "reason": "Generator whose declared purpose IS to materialize the grounded design-system MASTER.md (and optional page-override files) into a caller-supplied output_dir; the caller (ground.ts) controls the path. Writing is the feature, not a side effect."
+    }
+  ]
+}
