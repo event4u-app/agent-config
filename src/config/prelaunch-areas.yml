@@ -1,0 +1,36 @@
+# Pre-launch diagnostic — fixed coverage-area vocabulary
+# (road-to-ecosystem-harvest-prelaunch-diagnostics Phase 1, Source L).
+#
+# The AREA code is the middle segment of the immutable finding-ID grammar
+# `AC-<AREA>-NNN` (docs/contracts/prelaunch-diagnostics.md). Codes are
+# append-only: renaming or re-using a code would re-assign IDs and break
+# every committed baseline. Add new areas at the end; never delete.
+#
+# `launch_gate: true` areas participate in the regression gate's
+# Pass→Finding CI trigger and block a "ready" verdict while Unknown.
+schema_version: prelaunch-areas-v1
+areas:
+  auth:
+    code: AUTH
+    launch_gate: true
+    description: Authentication, authorization, tenancy boundaries on the launch surface.
+  migrations:
+    code: MIG
+    launch_gate: true
+    description: Schema/data migrations shipped with the launch — reversibility, expand-contract, backfill safety.
+  secrets:
+    code: SEC
+    launch_gate: true
+    description: Secrets, tokens, key handling touched by the launch — storage, rotation, exposure paths.
+  observability:
+    code: OBS
+    launch_gate: false
+    description: Telemetry proving rollout health — the metric, alert, and pager path for the new surface.
+  rollback:
+    code: RBK
+    launch_gate: true
+    description: Rollback contract — trip wires, decision windows, abort paths, named irreversible steps.
+  agent-governance:
+    code: AGOV
+    launch_gate: false
+    description: AI/agent surfaces shipped with the launch — tool grants, egress paths, injection exposure.
