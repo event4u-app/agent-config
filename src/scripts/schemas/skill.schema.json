@@ -188,7 +188,8 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "Allow-list of tool grants. Prefer the scoped-grant syntax over bare tool names where the host supports it \u2014 e.g. Bash(npm test:*) instead of Bash \u2014 per tool-safety Least Agency."
         },
         "command": {
           "type": "array",
@@ -196,6 +197,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "disallowed_tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "U3 (ecosystem harvest): optional deny-list layered UNDER allowed_tools \u2014 defense-in-depth; a tool matching here is refused even if a broad allow pattern would admit it. Supports the scoped-grant syntax (e.g. Bash(git push:*))."
         }
       }
     },

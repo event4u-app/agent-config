@@ -16,7 +16,7 @@ packs: [meta]
 
 Tools are permissions, not abilities. Every tool access must be declared and reviewable.
 
-**Least Agency** — grant the narrowest set of tools, scopes, and consequential actions the task needs; fewer capabilities per path = smaller blast radius when something (prompt injection, confused-deputy step, bug) goes wrong. Agent-tool application of least-privilege; maps to OWASP Agentic Security Initiative (ASI) excessive-agency / permission-management risks. In doubt, deny and ask — don't grant and hope.
+**Least Agency** — grant the narrowest set of tools, scopes, and consequential actions the task actually needs; fewer capabilities on any path means a smaller blast radius when something (a prompt injection, a confused-deputy step, a bug) goes wrong. This is the agent-tool application of least-privilege and maps to OWASP's Agentic Security Initiative (ASI) excessive-agency / permission-management risks. When in doubt, deny and ask, don't grant and hope.
 
 ## Constraints
 
@@ -26,6 +26,20 @@ Tools are permissions, not abilities. Every tool access must be declared and rev
 - **No hidden credentials** — tools must not embed API keys or tokens in skill files
 - **No arbitrary execution** — tool adapters have fixed interfaces, not free-form calls
 - **Audit trail** — tool usage should be observable and logged
+
+## Scoped grants + deny-list (U3, ecosystem harvest 2026-07-13)
+
+- **Prefer scoped-grant syntax over bare tool names** where the host supports
+  it: `Bash(npm test:*)` grants one command family; a bare `Bash` grants a
+  shell. The narrowest grant that satisfies the task is the Least-Agency
+  default.
+- **Optional `disallowed_tools` deny-list** (execution block, schema-backed):
+  layered UNDER `allowed_tools` as defense-in-depth — a tool matching the
+  deny-list is refused even when a broad allow pattern would admit it
+  (e.g. allow `Bash(git:*)` while denying `Bash(git push:*)`).
+- **Falsifiable numeric activation thresholds** belong in descriptions where
+  they apply — "fires when TLS < v1.2 OR cert expires < 30 days" beats
+  "fires on TLS problems": the threshold is testable, the vibe is not.
 
 ## When this applies
 
@@ -48,6 +62,6 @@ If a skill needs a tool that is not in the registry:
 
 ## See also
 
-- [`lethal-trifecta-guard`](lethal-trifecta-guard.md) — an over-broad tool grant is the standing egress leg of the lethal trifecta (OWASP ASI). Least Agency breaks that leg by construction.
-- [`supply-chain-intake`](../skills/supply-chain-intake/SKILL.md) — the MCP-server intake gate applies this Least-Agency tool-grant review before a new server is connected.
+- [`lethal-trifecta-guard`](lethal-trifecta-guard.md) — an over-broad tool grant is the standing egress leg of the lethal trifecta (OWASP ASI). Least Agency here breaks that leg by construction.
+- [`supply-chain-intake`](../skills/supply-chain-intake/SKILL.md) — the MCP-server intake gate applies this rule's Least-Agency tool-grant review before a new server is connected.
 - [`untrusted-input-defense`](untrusted-input-defense.md) — the least-agency + human-approval controls (OWASP LLM06 / ASI excessive-agency) that bound an untrusted-content path.

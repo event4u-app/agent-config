@@ -41,7 +41,15 @@ personas, condensation pipeline) intact.
       optional 'compatibility' string field (max 500) in skill.schema.json.
       408 skills pass unchanged; frontmatter 407/0. -->
       **U2 — Agent-Skills spec alignment.** Confirm/extend the `skill_linter` to enforce the two public-spec `name` rules (**must match parent directory**; **no consecutive hyphens**) for any skill the suite wants spec-portable, and add an optional machine-readable `compatibility` frontmatter field (declares system-package / network / product requirements — today those live only in prose for the media/doc skills). *Source B-spec.* Verify: linter flags a deliberately-mismatched name; a skill with `compatibility` passes schema validation.
-- [ ] **U3 — Tool-grant surface uplift.** Adopt the `Bash(cmd:*)`-style scoped-grant syntax and an optional per-skill `disallowed-tools` deny-list (defense-in-depth over the current allow-list-only model), and add falsifiable numeric activation thresholds to descriptions where they apply (e.g. "fires when TLS < v1.2 OR cert < 30 days"). *Source B-spec, C, G.* Verify: `tool-safety` + `skill-quality` docs updated; one skill carries a deny-list and a threshold; projections still emit correctly.
+- [x] <!-- done 2026-07-13: execution.disallowed_tools in skill schema +
+      linter field allowlist (deny-list layered UNDER allowed_tools,
+      defense-in-depth); scoped-grant syntax + deny-list + numeric-threshold
+      guidance in tool-safety § Scoped grants; exemplar condense-memory
+      carries scoped grants (Bash(scripts-run:*), Bash(diff:*)), a deny-list
+      (Bash(rm:*), Bash(git push:*)) and a numeric activation threshold
+      (~150 lines / ~4,000 chars) in its description. lint-skills 408 pass,
+      frontmatter 407/0, condensation in sync. -->
+      **U3 — Tool-grant surface uplift.** Adopt the `Bash(cmd:*)`-style scoped-grant syntax and an optional per-skill `disallowed-tools` deny-list (defense-in-depth over the current allow-list-only model), and add falsifiable numeric activation thresholds to descriptions where they apply (e.g. "fires when TLS < v1.2 OR cert < 30 days"). *Source B-spec, C, G.* Verify: `tool-safety` + `skill-quality` docs updated; one skill carries a deny-list and a threshold; projections still emit correctly.
 - [x] <!-- done 2026-07-13: § Register in
       docs/guidelines/agent-infra/skill-quality-checklist.md — capability
       skills explain the trade-off; kernel rules + *-safety-floor +

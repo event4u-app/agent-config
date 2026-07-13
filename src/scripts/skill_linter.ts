@@ -196,7 +196,7 @@ const VALID_EXECUTION_FIELDS = new Set([
     'timeout_seconds',
     'safety_mode',
     'allowed_tools',
-    'command',
+    'command', 'disallowed_tools',
 ]);
 
 // --- Wing-3 GTM cognition-boundary patterns ---

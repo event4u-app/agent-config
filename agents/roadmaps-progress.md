@@ -6,10 +6,10 @@
 
 ## Overall
 
-**86 / 257 steps done · 33%**
+**87 / 257 steps done · 34%**
 
 ```text
-█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
@@ -26,7 +26,7 @@
 | 8 | [road-to-ecosystem-harvest-product-gate.md](roadmaps/road-to-ecosystem-harvest-product-gate.md) | 1 | 5 | 5 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 11 | [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md) | 1 | 9 | 5 | 4 | 0 | 0 | 0 | ████░░░░░░ 44% |
+| 11 | [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md) | 1 | 9 | 4 | 5 | 0 | 0 | 0 | ██████░░░░ 56% |
 | 12 | [road-to-ecosystem-harvest-skill-quality-gates.md](roadmaps/road-to-ecosystem-harvest-skill-quality-gates.md) | 4 | 18 | 9 | 9 | 0 | 0 | 0 | █████░░░░░ 50% |
 | 13 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 14 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -148,11 +148,11 @@ _2 blockers resolved._
 
 ### [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md)
 
-**Ecosystem-Harvest — Skill-Authoring Rigor** — 4 / 9 done (44%)
+**Ecosystem-Harvest — Skill-Authoring Rigor** — 5 / 9 done (56%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Adopt-now plate (≤ 5 units) | 🟡 in progress | 5 | 4 | 0 | 0 | 44% |
+| 1 | Adopt-now plate (≤ 5 units) | 🟡 in progress | 4 | 5 | 0 | 0 | 56% |
 
 ### [road-to-ecosystem-harvest-skill-quality-gates.md](roadmaps/road-to-ecosystem-harvest-skill-quality-gates.md)
 
