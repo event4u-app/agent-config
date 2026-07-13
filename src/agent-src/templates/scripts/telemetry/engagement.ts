@@ -15,6 +15,10 @@
  *       "boundary_kind": "task" | "phase-step" | "tool-call",
  *       "consulted": {"skills": [...], "rules": [...], ...},
  *       "applied":   {"skills": [...], "rules": [...], ...},
+ *       "loaded":    {"skills": [...], "rules": [...], ...}  # optional (U1a):
+ *              what was AVAILABLE/INJECTED at the boundary — the Fired/Loaded
+ *              denominator. Superset contract: consulted ⊆ loaded. Ids only
+ *              (same PII-exclusion-by-construction shape as consulted).
  *       "outcomes":  ["blocked", "verification_failed", ...]  # optional
  *       "tokens_estimate": {"consulted_load": <int>}   # optional
  *     }
@@ -127,6 +131,7 @@ export interface EngagementEventInit {
     boundary_kind: string;
     consulted?: Record<string, string[]>;
     applied?: Record<string, string[]>;
+    loaded?: Record<string, string[]> | null;
     outcomes?: string[] | null;
     tokens_estimate?: Record<string, number> | null;
     schema_version?: number;
@@ -138,6 +143,7 @@ export class EngagementEvent {
     boundary_kind: string;
     consulted: Record<string, string[]>;
     applied: Record<string, string[]>;
+    loaded: Record<string, string[]> | null;
     outcomes: string[] | null;
     tokens_estimate: Record<string, number> | null;
     schema_version: number;
@@ -148,6 +154,7 @@ export class EngagementEvent {
         this.boundary_kind = init.boundary_kind;
         this.consulted = init.consulted ?? {};
         this.applied = init.applied ?? {};
+        this.loaded = init.loaded ?? null;
         this.outcomes = init.outcomes ?? null;
         this.tokens_estimate = init.tokens_estimate ?? null;
         this.schema_version = init.schema_version ?? SCHEMA_VERSION;
@@ -171,6 +178,20 @@ export class EngagementEvent {
         }
         _validate_artefact_dict('consulted', this.consulted);
         _validate_artefact_dict('applied', this.applied);
+        if (this.loaded !== null) {
+            _validate_artefact_dict('loaded', this.loaded);
+            for (const [kind, ids] of Object.entries(this.consulted)) {
+                const avail = new Set(this.loaded[kind] ?? []);
+                for (const art_id of ids) {
+                    if (!avail.has(art_id)) {
+                        throw new EngagementSchemaError(
+                            `consulted.${kind} id '${art_id}' missing from loaded.${kind}; `
+                            + 'superset contract: consulted \u2286 loaded',
+                        );
+                    }
+                }
+            }
+        }
         if (this.outcomes !== null) {
             _validate_outcomes(this.outcomes);
         }
@@ -206,6 +227,12 @@ export class EngagementEvent {
             consulted: _normalise_artefact_dict(this.consulted),
             applied: _normalise_artefact_dict(this.applied),
         };
+        if (this.loaded !== null) {
+            const norm = _normalise_artefact_dict(this.loaded);
+            if (Object.keys(norm).length > 0) {
+                out['loaded'] = norm;
+            }
+        }
         if (this.outcomes && this.outcomes.length > 0) {
             out['outcomes'] = [...this.outcomes];
         }
@@ -310,6 +337,9 @@ export function parse_event(line: string): EngagementEvent {
         boundary_kind: (r['boundary_kind'] as string) ?? '',
         consulted: _orEmptyDict(r['consulted']),
         applied: _orEmptyDict(r['applied']),
+        loaded: r['loaded'] === undefined || r['loaded'] === null
+            ? null
+            : _orEmptyDict(r['loaded']),
         outcomes: (r['outcomes'] as string[] | null | undefined) ?? null,
         tokens_estimate: (r['tokens_estimate'] as Record<string, number> | null | undefined) ?? null,
         schema_version: r['schema_version'] === undefined

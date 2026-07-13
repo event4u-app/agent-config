@@ -10,7 +10,7 @@
  *   ./scripts-run src/scripts/orchestration_record \
  *     --spawn-count 1 --token-delta -72000 --provenance measured \
  *     --tier-chosen lite --tier-source inferred --task-class read-only-fanout \
- *     [--tiers sonnet,opus] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
+ *     [--tiers sonnet,opus] [--agent-combo implementer,judge] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
  *     [--first-pass-success true|false] [--escalated true|false] \
  *     [--dir <audit-dir>] [--dry-run]
  *
@@ -109,6 +109,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         token_delta: int(flags, 'token-delta') ?? NaN,
         token_delta_provenance: str(flags, 'provenance') as Provenance | undefined,
         tiers: str(flags, 'tiers')?.split(',').map((s) => s.trim()).filter(Boolean),
+        agent_combo: str(flags, 'agent-combo')?.split(',').map((s) => s.trim()).filter(Boolean),
         tier_chosen: str(flags, 'tier-chosen') as TierChosen | undefined,
         tier_source: str(flags, 'tier-source') as TierSource | undefined,
         task_class: str(flags, 'task-class'),

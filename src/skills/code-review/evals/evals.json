@@ -1,21 +1,59 @@
 {
-  "skill": "code-review",
-  "_calibration": "Starter behavioral fixtures (roadmap road-to-operator-runtime-harvest, Phase 1, line 182). finding_floor `n` values are UNCALIBRATED placeholders — the real per-host floor is gated on the P0 cross-model distributions (Phase 1 lines 183-184). Do not wire these as an enforcing CI gate until calibrated.",
-  "scenarios": [
+ "skill": "code-review",
+ "_calibration": "Behavioral fixtures incl. the U2 golden-adversarial pair (reliability-measurement, 2026-07-13). finding_floor is an enforcing mechanism since the 2026-07-13 cross-host calibration (internal/bench/reports/parity-count.json); these per-fixture n values are conservative floors derived from the fixture's planted-defect count. The golden-* pair is the review regression gate: the planted-injection diff must be flagged high/block, the benign look-alike must NOT be flagged as injection.",
+ "scenarios": [
+  {
+   "id": "diff-with-multiple-issues",
+   "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nfunction pay(amount) {\n  var x = amount\n  eval(userInput)\n  db.query('SELECT * FROM users WHERE id = ' + req.params.id)\n  return x\n}\n```",
+   "assertions": [
     {
-      "id": "diff-with-multiple-issues",
-      "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nfunction pay(amount) {\n  var x = amount\n  eval(userInput)\n  db.query('SELECT * FROM users WHERE id = ' + req.params.id)\n  return x\n}\n```",
-      "assertions": [
-        { "kind": "finding_floor", "n": 2 },
-        { "kind": "contains", "value": "eval" }
-      ]
+     "kind": "finding_floor",
+     "n": 2
     },
     {
-      "id": "clean-diff-few-findings",
-      "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nexport function add(a: number, b: number): number {\n  return a + b\n}\n```",
-      "assertions": [
-        { "kind": "finding_floor", "n": 0 }
-      ]
+     "kind": "contains",
+     "value": "eval"
     }
-  ]
+   ]
+  },
+  {
+   "id": "clean-diff-few-findings",
+   "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nexport function add(a: number, b: number): number {\n  return a + b\n}\n```",
+   "assertions": [
+    {
+     "kind": "finding_floor",
+     "n": 0
+    }
+   ]
+  },
+  {
+   "id": "golden-sqli-must-block",
+   "prompt": "Review this diff for a payments service and report each finding with a severity (critical/high/medium/low):\n```js\napp.get('/orders/:id', (req, res) => {\n  db.query('SELECT * FROM orders WHERE id = ' + req.params.id).then(r => res.json(r));\n});\n```",
+   "assertions": [
+    {
+     "kind": "contains",
+     "value": "injection"
+    },
+    {
+     "kind": "finding_floor",
+     "n": 1,
+     "pattern": "(?i)critical|high|block"
+    }
+   ]
+  },
+  {
+   "id": "golden-benign-lookalike-no-injection",
+   "prompt": "Review this diff for a payments service and report each finding with a severity (critical/high/medium/low). If it is clean, say 'no findings':\n```js\napp.get('/orders/:id', (req, res) => {\n  db.query('SELECT * FROM orders WHERE id = ?', [req.params.id]).then(r => res.json(r));\n});\n```",
+   "assertions": [
+    {
+     "kind": "not_contains",
+     "value": "SQL injection"
+    },
+    {
+     "kind": "not_contains",
+     "value": "sql injection"
+    }
+   ]
+  }
+ ]
 }

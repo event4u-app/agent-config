@@ -63,6 +63,7 @@ interface RecordArgs {
     boundary: string;
     consulted: string[] | null;
     applied: string[] | null;
+    loaded: string[] | null;
     outcome: string[] | null;
     ts: string;
     payload_file: string | null;
@@ -78,6 +79,7 @@ function _build_event_from_args(args: RecordArgs): EngagementEvent {
         boundary_kind: args.boundary,
         consulted: _parse_kv_list(args.consulted ?? []),
         applied: _parse_kv_list(args.applied ?? []),
+        loaded: args.loaded && args.loaded.length > 0 ? _parse_kv_list(args.loaded) : null,
         outcomes: args.outcome && args.outcome.length > 0 ? [...args.outcome] : null,
     });
 }
@@ -101,6 +103,7 @@ function _build_event_from_payload(raw: string): EngagementEvent {
         boundary_kind: (d['boundary_kind'] as string) ?? '',
         consulted: _orEmpty(d['consulted']),
         applied: _orEmpty(d['applied']),
+        loaded: d['loaded'] === undefined || d['loaded'] === null ? null : _orEmpty(d['loaded']),
         outcomes: (d['outcomes'] as string[] | null | undefined) ?? null,
         tokens_estimate: (d['tokens_estimate'] as Record<string, number> | null | undefined) ?? null,
     });
@@ -121,6 +124,7 @@ function _parseArgs(argv: string[]): RecordArgs {
         boundary: 'task',
         consulted: null,
         applied: null,
+        loaded: null,
         outcome: null,
         ts: '',
         payload_file: null,
@@ -155,6 +159,7 @@ function _parseArgs(argv: string[]): RecordArgs {
             }
             a.boundary = v;
         } else if (tok === '--consulted') (a.consulted ??= []).push(next());
+        else if (tok === '--loaded') (a.loaded ??= []).push(next());
         else if (tok === '--applied') (a.applied ??= []).push(next());
         else if (tok === '--outcome') {
             const v = next();

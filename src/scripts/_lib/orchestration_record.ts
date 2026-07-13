@@ -62,6 +62,10 @@ export interface RecordInput {
     first_pass_success?: boolean | undefined;
     /** QUALITY: slice retried on a higher tier after a verification failure. Optional boolean (null = not measured). */
     escalated?: boolean | undefined;
+    /** U5 (reliability-measurement): the subagent-type combination this dispatch
+     *  ran (ordered agent-type ids, e.g. ['implementer','implementer','judge']) —
+     *  with `outcome`, lets the orchestrator prefer combos that worked. Ids only. */
+    agent_combo?: string[] | undefined;
     // Audit-log envelope (sensible defaults for a dispatch record)
     phase?: LinePhase | undefined;
     outcome?: LineOutcome | undefined;
@@ -173,6 +177,7 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         session_tier: input.session_tier ?? null,
         first_pass_success: input.first_pass_success ?? null,
         escalated: input.escalated ?? null,
+        agent_combo: input.agent_combo ?? [],
     };
 
     const line: Record<string, unknown> = {

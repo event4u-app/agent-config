@@ -121,15 +121,19 @@ export function render_markdown(aggregate: AggregateResult, opts: RenderOptions 
             lines.push('');
             continue;
         }
-        lines.push('| kind | id | consulted | applied | applied/consulted | last seen |');
-        lines.push('|---|---|---:|---:|---:|---|');
+        const withLoaded = aggregate.loaded_events > 0;
+        lines.push(withLoaded
+            ? '| kind | id | loaded | consulted | applied | fired/loaded | applied/consulted | last seen |'
+            : '| kind | id | consulted | applied | applied/consulted | last seen |');
+        lines.push(withLoaded ? '|---|---|---:|---:|---:|---:|---:|---|' : '|---|---|---:|---:|---:|---|');
         for (const entry of rows) {
             const s = entry.stat;
             check_id_redaction(`buckets.${s.kind}.id`, s.artefact_id);
-            lines.push(
-                `| ${s.kind} | \`${s.artefact_id}\` | ${s.consulted} | ${s.applied} `
-                + `| ${_pyFixed(s.applied_ratio, 2)} | \`${s.last_seen_ts}\` |`,
-            );
+            lines.push(withLoaded
+                ? `| ${s.kind} | \`${s.artefact_id}\` | ${s.loaded} | ${s.consulted} | ${s.applied} `
+                    + `| ${_pyFixed(s.fired_ratio, 2)} | ${_pyFixed(s.applied_ratio, 2)} | \`${s.last_seen_ts}\` |`
+                : `| ${s.kind} | \`${s.artefact_id}\` | ${s.consulted} | ${s.applied} `
+                    + `| ${_pyFixed(s.applied_ratio, 2)} | \`${s.last_seen_ts}\` |`);
         }
         lines.push('');
     }
@@ -147,7 +151,9 @@ export function render_json(aggregate: AggregateResult, opts: RenderOptions = {}
         [BUCKET_BOTTOM]: [],
     };
     for (const entry of bucketed) {
-        (grouped[entry.bucket] as Array<Record<string, unknown>>).push(_stat_to_dict(entry.stat));
+        (grouped[entry.bucket] as Array<Record<string, unknown>>).push(
+            _stat_to_dict(entry.stat, aggregate.loaded_events > 0),
+        );
     }
     if (top !== null) {
         for (const bucket of Object.keys(grouped)) {
@@ -179,9 +185,9 @@ export function render_json(aggregate: AggregateResult, opts: RenderOptions = {}
     return `${_py_json_dumps_indent2_sorted(payload)}\n`;
 }
 
-function _stat_to_dict(stat: ArtefactStat): Record<string, unknown> {
+function _stat_to_dict(stat: ArtefactStat, withLoaded = false): Record<string, unknown> {
     check_id_redaction(`buckets.${stat.kind}.id`, stat.artefact_id);
-    return {
+    const out: Record<string, unknown> = {
         kind: stat.kind,
         id: stat.artefact_id,
         consulted: stat.consulted,
@@ -189,6 +195,13 @@ function _stat_to_dict(stat: ArtefactStat): Record<string, unknown> {
         applied_ratio: new PyFloat(_pyRound(stat.applied_ratio, 4)),
         last_seen_ts: stat.last_seen_ts,
     };
+    // U1a: emitted only when the log carries the loaded denominator, so
+    // pre-U1a logs render byte-identically to the frozen parity oracle.
+    if (withLoaded) {
+        out['loaded'] = stat.loaded;
+        out['fired_ratio'] = new PyFloat(_pyRound(stat.fired_ratio, 4));
+    }
+    return out;
 }
 
 // ── Python-parity helpers ───────────────────────────────────────────────

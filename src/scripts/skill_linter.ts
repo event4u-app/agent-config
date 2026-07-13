@@ -1670,7 +1670,7 @@ export function validate_evals_json(skillPath: string): Issue[] {
         );
         return issues;
     }
-    const validKinds = ['contains', 'file_exists', 'rubric', 'finding_floor'];
+    const validKinds = ['contains', 'not_contains', 'file_exists', 'rubric', 'finding_floor'];
     const validKindsSet = new Set(validKinds);
     scenarios.forEach((scenario, idx) => {
         const loc = `scenarios[${idx}]`;
@@ -1727,7 +1727,7 @@ export function validate_evals_json(skillPath: string): Issue[] {
                     );
                 }
             } else {
-                const requiredField = { contains: 'value', file_exists: 'path', rubric: 'criterion' }[kind] as string;
+                const requiredField = { contains: 'value', not_contains: 'value', file_exists: 'path', rubric: 'criterion' }[kind] as string;
                 if (!(requiredField in a) || typeof a[requiredField] !== 'string') {
                     issues.push(
                         new Issue(
