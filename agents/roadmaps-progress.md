@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers
+> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers
 
 ## Overall
 
@@ -145,17 +145,6 @@ _2 blockers resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Adopt-now plate (≤ 5 units) | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
-
-### [road-to-ecosystem-harvest-review-mechanics.md](roadmaps/road-to-ecosystem-harvest-review-mechanics.md)
-
-**Ecosystem-Harvest — Review Mechanics** — 0 / 17 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Change-type routing + per-type checklists | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Two-tier triage + governance-conflict flag | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Parallel-review de-biasing + reasoned aggregation | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | fix-pr-comments: dedup + scope discipline | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
 ### [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md)
 

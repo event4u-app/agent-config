@@ -26,84 +26,88 @@ Use this skill when:
 
 ### Mindset
 
-- **Be thorough but pragmatic** — catch real bugs, not style nitpicks that tools handle.
-- **Understand intent first** — read the PR description, linked ticket, and commit messages before looking at code.
-- **Check the full picture** — a change in a service may require changes in tests, migrations, docs.
+- **Be thorough but pragmatic** — catch real bugs, not style nitpicks tools handle.
+- **Understand intent first** — read PR description, linked ticket, commit messages before code.
+- **Check the full picture** — a service change may require test / migration / doc changes.
 - **Assume good intent** — suggest improvements, don't criticize.
 
 ### Review order
 
 1. **Understand the goal** — what is this change trying to achieve?
-2. **Architecture** — does the approach make sense? Right layer? Right pattern?
-3. **Correctness** — does it actually work? Edge cases? Error handling?
-4. **Quality** — types, naming, readability, DRY, SOLID?
-5. **Security** — input validation, authorization, injection?
-6. **Performance** — N+1 queries, missing indexes, unbounded queries?
-7. **Tests** — are new paths covered? Are existing tests still valid?
-8. **Conventions** — does it follow project standards?
+2. **Detect the change-type + depth** — route to the right checklist, pick review depth (below).
+3. **Architecture** — approach sound? Right layer? Right pattern?
+4. **Correctness** — does it work? Edge cases? Error handling?
+5. **Quality** — types, naming, readability, DRY, SOLID?
+6. **Security** — input validation, authorization, injection?
+7. **Performance** — N+1 queries, missing indexes, unbounded queries?
+8. **Tests** — are new paths covered? Are existing tests still valid?
+9. **Conventions** — does it follow project standards?
 
-## Review checklist
+## Change-type routing — load only the checklist the diff needs
 
-The checks below are stack-agnostic. For framework-specific conventions (PSR-12 + `declare(strict_types=1)`, FormRequest, single-action `__invoke`, API Resources, Pest, Blade escaping, Eloquent N+1) defer to the carve-outs:
-- PHP / Laravel → [`laravel`](../laravel/SKILL.md), [`laravel-validation`](../laravel-validation/SKILL.md), [`eloquent`](../eloquent/SKILL.md), [`pest-testing`](../pest-testing/SKILL.md), [`blade-ui`](../blade-ui/SKILL.md), [`php-coder`](../php-coder/SKILL.md)
-- Symfony → [`symfony-workflow`](../symfony-workflow/SKILL.md)
-- Next.js / TS → [`nextjs-patterns`](../nextjs-patterns/SKILL.md), [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md)
+Per-domain checklists live in `checklists/`, loaded **on demand** — a review
+carries only the depth the change needs (progressive disclosure; a dependency
+bump does not pay for the backend security table). Detect the change-type from
+the diff's file paths, then read the matching file:
 
-### Code quality
+| Change-type | File-pattern signal (any match) | Checklist |
+|---|---|---|
+| **dependency** (expedited) | ONLY `composer.json`/`*.lock`, `package.json`/lockfiles, `pyproject.toml`, `go.mod`/`go.sum`, `Cargo.toml`/`*.lock` | [`checklists/dependency.md`](checklists/dependency.md) |
+| **migration / database** | `**/migrations/**`, `**/*migration*`, schema files, query-heavy data-access code | [`checklists/database.md`](checklists/database.md) |
+| **frontend / UI** | `*.tsx`, `*.jsx`, `*.vue`, `*.blade.php`, `*.css`, `components/**`, `resources/views/**` | [`checklists/frontend.md`](checklists/frontend.md) |
+| **infra / IaC / CI** | `*.tf`, `Dockerfile*`, `k8s/**`, `*.yaml` under `.github/workflows/`, Pulumi/Ansible | [`checklists/infra.md`](checklists/infra.md) |
+| **test-only** | ONLY `tests/**`, `*.test.*`, `*.spec.*`, `*Test.php` | [`checklists/test-only.md`](checklists/test-only.md) |
+| **docs-only** | ONLY `*.md`, `docs/**` | [`checklists/docs.md`](checklists/docs.md) |
+| **backend / default** | anything else (server-side logic) | [`checklists/backend.md`](checklists/backend.md) |
 
-| Check | What to look for |
-|---|---|
-| **Type discipline** | New code is fully typed in the project's idiom (PHP typed properties + `declare(strict_types=1)`, TS strict, Python type hints, Go / Rust by construction). |
-| **Style conformance** | Matches the project's formatter / linter output — no reformatting battles, no out-of-band style. |
-| **Naming** | Clear, descriptive names; matches the dominant casing in the surrounding code (camelCase / snake_case / PascalCase per the language's idiom). |
-| **Early returns** | No deep nesting. Guard clauses at the top. |
-| **Single responsibility** | Each class / module / function does one thing. HTTP handlers stay thin. |
-| **No magic** | No reach-through to globals (`app()`, `$_GET`, ambient context). No untyped data shapes leaking out of the I/O boundary. |
-| **Doc comments** | Only where the type system is insufficient (generics, complex shapes). No redundant docblocks. |
+A diff spanning several types loads each matching checklist; a mixed diff is
+never downgraded to the expedited path (a lockfile bump *plus* code is backend
++ dependency). Every `checklists/*.md` file MUST be reachable from a row above.
 
-### Architecture
+Framework-specific conventions defer to the carve-outs: PHP / Laravel →
+[`laravel`](../laravel/SKILL.md), [`laravel-validation`](../laravel-validation/SKILL.md),
+[`eloquent`](../eloquent/SKILL.md), [`pest-testing`](../pest-testing/SKILL.md),
+[`blade-ui`](../blade-ui/SKILL.md), [`php-coder`](../php-coder/SKILL.md);
+Symfony → [`symfony-workflow`](../symfony-workflow/SKILL.md); Next.js / TS →
+[`nextjs-patterns`](../nextjs-patterns/SKILL.md), [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md).
 
-| Check | What to look for |
-|---|---|
-| **Layer separation** | Business logic in services / use-cases, not in HTTP handlers. Domain models stay I/O-free. |
-| **Handler shape** | New handlers follow the framework's recommended shape (Laravel single-action `__invoke`, Next.js route handler, Express handler-per-route). See the stack carve-out. |
-| **Input validation** | Validated at the request boundary via the framework's primitive (Laravel `FormRequest`, Zod / class-validator, Pydantic, struct-tag validators). No ad-hoc inline `if` checks. |
-| **Response shaping** | Returns through a transformer / serializer / DTO. Never returns raw ORM entities. |
-| **DTOs / value objects** | Structured data between layers, not raw associative arrays / `any` / `dict[str, Any]`. |
-| **Dependency injection** | Constructor injection (or framework-idiomatic equivalent). No service-locator calls in business logic. |
+### Metadata gates — verdict `❓` until satisfied
 
-### Database & Performance
+Some changes are unverifiable from source; when a gate fires the verdict is
+`❓`, not approval — ask for the missing evidence:
 
-| Check | What to look for |
-|---|---|
-| **N+1 queries** | Relationship / association access in loops without eager / batch loading. |
-| **Missing indexes** | New columns used in `WHERE` / `JOIN` without a supporting index. |
-| **Unbounded queries** | Full-table reads (`Model::all()`, `SELECT *` without `LIMIT`, unpaged list endpoints). |
-| **Raw SQL** | Parameterised queries only. No string concatenation with user input. |
-| **Migrations** | Reversible. Targets the right connection / schema. Idempotent where the platform supports it. |
-| **Money / precision** | Uses an exact-precision type (PHP `decimal` / `Math` helper, TS bigint / decimal lib, Python `Decimal`), never `float`. |
+- **UI diff without a screenshot / visual check** → `❓` (rendered result unverifiable from source).
+- **New module / feature without a test plan** → `❓` (behaviour coverage unconfirmable).
+- **Optional cross-cutting gate** (per-project): a new state-changing op without a telemetry OR authz touch → `❓`.
 
-### Security
+### Adaptive review depth
 
-| Check | What to look for |
-|---|---|
-| **Authorization** | Authz check at every state-changing endpoint (Laravel Policy, Symfony voter, NestJS guard, framework middleware). No unprotected mutating routes. |
-| **Input validation** | All user input validated at the boundary via the framework's primitive. |
-| **Mass assignment** | No bulk-binding raw request payloads to ORM entities without an explicit allow-list (`$fillable` / `$guarded` in Laravel, DTO mapping in TS / Python). |
-| **Injection** | No raw queries / command lines / template strings with unescaped user input. |
-| **Output encoding** | Template output is escaped by default; raw / unescaped output is intentional and reviewed (Blade `{{ }}` vs `{!! !!}`, React `dangerouslySetInnerHTML`, Jinja `\|safe`). |
-| **Sensitive data** | No secrets, tokens, or passwords in code, logs, or error responses. |
+Pick depth from diff size, override upward on risk:
 
-### Tests
+| Diff / surface size | Depth | What it means |
+|---|---|---|
+| **SMALL** (single file / few lines) | DEEP | Read every line; trace each branch. |
+| **MEDIUM** (a feature, several files) | FOCUSED | Deep on changed logic + its callers; skim the rest. |
+| **LARGE** (sweeping / many files) | SURGICAL | Deep on the risk-bearing files; explicitly bound the rest as un-deep-reviewed. |
 
-| Check | What to look for |
-|---|---|
-| **Coverage** | New code paths have tests. Bug fixes have regression tests (RED → GREEN). |
-| **Test quality** | Tests verify behaviour, not implementation details. |
-| **Framework idiom** | Correct conventions for the project's test framework (Pest / PHPUnit, Jest / Vitest, pytest, `go test`, `cargo test`) — see the stack carve-out for specifics. |
-| **Test data** | Provisioned via the project's idiom (seeders, factories, fixtures, builders). |
-| **Assertions** | Meaningful assertions. Not just "no exception thrown". |
-| **Flaky risks** | Time-dependent tests freeze the clock (`travel()`, `jest.useFakeTimers()`, `freezegun`). No reliance on execution speed. |
+**Risk triggers force HIGH depth regardless of diff size:** auth / crypto,
+external calls / SSRF, removal of a validation or authz check, money /
+tenant-boundary code. [`blast-radius-analyzer`](../blast-radius-analyzer/SKILL.md)
+is one input to sizing; the depth policy + coverage-honesty line are this
+skill's addition. Every review ends with a **Coverage & confidence** line
+(deep-reviewed vs skimmed/bounded-out files + confidence) — silent partial
+coverage reads as full coverage.
+
+## Re-review scoping + parallel-review de-biasing
+
+- **Re-review scoping** — on a follow-up push, scope to the **changed lines
+  only**; never flag new issues in untouched code (note pre-existing issues
+  separately, never in the blocking set). Same discipline `fix-pr-comments`
+  reply rounds apply.
+- **Ordering-bias** — when N reviewers/lenses get the **same file set**
+  (`parallelizable: files`; council lenses), give each an independently
+  shuffled file order (deterministic seed per session, logged for replay) so
+  a fixed order does not correlate their blind spots. Single-reviewer → no shuffle.
 
 ## Before creating a PR
 
@@ -166,29 +170,37 @@ gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/replies \
 
 ## Rubric pass (optional, surfacing-only)
 
-After completing review, run [`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md) with rubric `pr-review-score` to verify evidence-fit, risk/blast-radius, migration/rollback completeness. Invoke for high-risk or when user asks — not by default.
+After completing a review, run
+[`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md)
+with rubric `pr-review-score` to verify evidence-fit, risk/blast-radius
+coverage, and migration/rollback completeness. Invoke when the review is
+high-risk or the user asks for a completeness check — not by default.
 
 ## Output format
 
-1. Structure every finding by severity (Blocker / Suggestion / Nit) using the block below; never mix severities in one block.
-2. Group related findings; skip anything the project's linter or type-checker already catches — focus on logic, architecture, and judgment.
-3. End with a one-line verdict (approve / request-changes / comment) and a count of Blockers vs. Suggestions.
+Validate, then emit these parts in order:
 
-When reviewing code, structure feedback by severity:
+1. **Reasoned validation first** — group candidates by file + line range,
+   disposition each CONFIRMED / adjusted / DROPPED with a one-line reason (not
+   vote-counting).
+2. **Tier 1 — Mechanical** — enumerated, fix-ready findings by severity blocks, never mixed.
+3. **Tier 2 — Alignment** — each flag names the principle/ADR at stake + the concern (from the governance-conflict scan); not fix-ready by construction.
+4. **Dropped false positives** — collapsible; each DROPPED candidate + reason. Empty is fine, but the section is mandatory (its presence proves validation ran).
+5. **Verdict line** — `YES` / `NOT-SURE` (`❓`, a metadata gate fired or coverage bounded) / `NO`, plus Tier-1 blocker/suggestion counts.
+6. **Coverage & confidence line** — deep vs skimmed/bounded-out files + confidence.
 
-```
-🔴 **Blocker** — must fix before merge
-Description of the issue and why it's critical.
+Full template, governance-conflict scan (status-aware over `docs/decisions/`,
+incl. draft ADRs; guarded `git blame` reviewer hint), and the security-class
+deep-verify path → [`checklists/producing-the-review.md`](checklists/producing-the-review.md).
 
-🟡 **Suggestion** — should fix, improves quality
-Description and suggested improvement.
+> **Tally-vs-reasoned boundary.** Finding-level review uses reasoned validation
+> (each finding stands on its own traced reason); option-level decisions use
+> the council **stance tally** ([`ai-council`](../ai-council/SKILL.md)). Never
+> cross-apply — no resolving a bug finding by counting votes, no resolving a
+> design option by reasoned-validating one take. Mirrored in `ai-council` so
+> the boundary is grep-checkable from both sides.
 
-🟢 **Nit** — optional, minor improvement
-Description.
-```
-
-Group related findings. Don't repeat what the project's linter / type-checker already catches — focus on
-logic, architecture, and things tools can't detect.
+Group related findings; skip what the linter / type-checker already catches.
 
 ## Adversarial review
 

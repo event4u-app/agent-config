@@ -458,6 +458,17 @@ NEVER ships the host verdict as council output. Provider attribution
 stays visible in the per-member sections; host verdicts stay
 attributed to the host.
 
+> **Tally-vs-reasoned boundary.** Option-level decisions (which design /
+> approach to take) use the council **stance tally** — the Convergence /
+> Divergence summary aggregates member stances across the option set.
+> Finding-level review (is this specific bug/line real) uses the
+> **reasoned validation** in [`code-review`](../code-review/SKILL.md)
+> (each finding stands on its own traced reason, never a vote count). The
+> two never cross-apply — no resolving a design option by
+> reasoned-validating one member's take, no resolving a bug finding by
+> counting council votes. Mirrored in `code-review` so the boundary is
+> grep-checkable from both sides.
+
 ## Synthesis templates (lens-aware)
 
 The **Convergence / Divergence** slot in `council:render` output is

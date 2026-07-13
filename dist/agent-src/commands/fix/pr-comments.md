@@ -194,6 +194,24 @@ Example: `🤖 Good catch, fixed.`
 
 If `false` or `.agent-settings.yml` doesn't exist, do NOT add the prefix.
 
+## Dedup + re-review scoping — before posting anything
+
+Two guards run before any reply/comment is posted:
+
+1. **Dedup against existing comments (fuzzy, not just id).** Fetch **all**
+   existing PR comments paginated (`per_page: 100`, follow `Link` headers).
+   Beyond the exact comment-id + reply-marker check, suppress a would-be new
+   comment when it **matches an existing one** on: same file **and** within
+   **±3 lines** **and** overlapping title keywords. Log every suppressed item
+   ("suppressed: <file>:<line> — already raised by @<login> in #<id>") so the
+   suppression is auditable — never silently drop. This stops the bot from
+   re-raising a point a human reviewer already made three lines away.
+2. **Re-review scoping on reply rounds.** A reply round scopes to the
+   **changed lines** of the push it responds to; never raise **new** issues in
+   code the round did not touch (mirrors the `code-review` re-review-scoping
+   rule). A pre-existing issue you notice in untouched code is noted to the
+   user, not posted as a fresh blocking comment on someone else's PR.
+
 ## Replying via GitHub API
 
 Read `github.pr_reply_method` from `.agent-settings.yml` to determine the correct endpoint.
