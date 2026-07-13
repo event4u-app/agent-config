@@ -2587,8 +2587,8 @@ function _format_global_root_for_marker(global_root: string): string {
  * idempotency sentinel moved to `agents/.agent-state/install-mode.txt`.
  *
  * Skipped under `AGENT_CONFIG_DEV_MODE=1` and inside the agent-config source
- * repo (`.agent-src.uncondensed/` present) — the same gate the writer used.
- * Returns the removed path (so the caller can report it) or null.
+ * repo (detected by the uncondensed-source marker dir) — the same gate the
+ * writer used. Returns the removed path (so the caller can report it) or null.
  */
 function _remove_legacy_consumer_bridge_marker(
     project_root: string,
