@@ -79,7 +79,7 @@ human voice there; don't inject personality or restructure.
    number, date, name, quantity, or claim, emit
    `[VERIFY: <original> → <rewritten>]` — a humanizing pass changes *how*
    something is said, never *what is true*; a silent factual edit is a
-   defect, not a style win. **Long-rewrite drift re-anchor:** before
+   defect, not a style win. **Long-rewrite re-anchor (guards against style slippage):** before
    finishing a long rewrite, re-state the active style ruleset (intensity
    level + voice precedence) so late paragraphs match early ones.
    (`context-hygiene` may later own the generic re-anchor primitive; here
