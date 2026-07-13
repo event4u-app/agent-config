@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers
+> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers
 
 ## Overall
 
-**82 / 192 steps done · 43%**
+**82 / 187 steps done · 44%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
@@ -21,16 +21,15 @@
 | 3 | [road-to-ecosystem-harvest-domain-watch.md](roadmaps/road-to-ecosystem-harvest-domain-watch.md) | 3 | 8 | 6 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-ecosystem-harvest-ergonomics.md](roadmaps/road-to-ecosystem-harvest-ergonomics.md) | 1 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-ecosystem-harvest-index.md](roadmaps/road-to-ecosystem-harvest-index.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-ecosystem-harvest-product-gate.md](roadmaps/road-to-ecosystem-harvest-product-gate.md) | 1 | 5 | 5 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
-| 8 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 9 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 14 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 15 | 23 | 1 | 0 | [2](#blockers-road-to-team-mode) | ██████░░░░ 61% |
-| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 6 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
+| 7 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
+| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 11 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
+| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 13 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 15 | 23 | 1 | 0 | [2](#blockers-road-to-team-mode) | ██████░░░░ 61% |
+| 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -95,14 +94,6 @@ _2 blockers resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Adoption sequencing (accept plates in priority order) | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-
-### [road-to-ecosystem-harvest-product-gate.md](roadmaps/road-to-ecosystem-harvest-product-gate.md)
-
-**Ecosystem-Harvest — Pre-Build Product-Demand Gate** — 0 / 5 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Adopt-now plate (kept deliberately tiny) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
 ### [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md)
 

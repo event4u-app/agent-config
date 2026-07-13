@@ -101,6 +101,34 @@ _Origin: migrated from `src/rules/improve-before-implement.md` per the P4 patter
 
 Before coding a new feature, refactor, module, or behavior-altering change, quickly verify:
 
+### 8-pre. Demand gate — should this exist at all? (build / defer)
+
+One altitude ABOVE engineering-fit. Fires on a "build me an app / add this
+feature" ask, before checks 8a–8c. It is a three-question advisor, NOT a
+product-management framework — surface it in one short block, then proceed on
+the user's answer (never block; `improve-before-implement`'s golden rule holds).
+
+Three questions:
+
+1. **Who requested this?** (a real user / segment, or an internal hunch?)
+2. **What happens if you DON'T build it?** (churn / blocked deal, or nothing measurable?)
+3. **What's the demand evidence?** (requests, usage data, lost revenue — or a feeling?)
+
+Map the answers to a compressed feature-demand hierarchy and recommend:
+
+| Level | Signal | Recommendation |
+|---|---|---|
+| L0 | Founder/agent anxiety — "it feels missing" | **Defer** — validate demand first |
+| L1 | One anecdotal request, no pattern | **Defer** — watch for repetition |
+| L2 | Repeated requests, no measured impact | **Validate** — instrument before building |
+| L3 | Blocks activation/retention for a real segment | **Build** |
+| L4 | Users are churning / deals lost without it | **Build now** |
+
+Build only at **L3–L4**; L0–L2 get a defer/validate recommendation with the
+one missing evidence named. This is advisory — the user decides; a "just build
+it" answer proceeds immediately to 8a. No network, no case-memory API (the
+source's remote lookup is dropped — a lethal-trifecta egress concern).
+
 ### 8a. Is the request clear?
 
 - Are acceptance criteria defined or derivable?

@@ -38,6 +38,10 @@ Before implementing:
 - Tasks where the user said "just do it" or "skip validation"
 - Trivial changes (rename, typo, formatting)
 
+## Demand gate — should this exist? (build / defer)
+
+On a "build me an app / add this feature" ask, ONE reflexive pre-check before the three checks: **who asked · what breaks if unbuilt · what's the evidence?** Recommend **build** only at a real retention/activation blocker (evidence, not anxiety); else **defer/validate**, naming the missing evidence. Advisory — "just build it" proceeds immediately; no network lookup. Hierarchy + build/defer table: guideline § 8-pre.
+
 ## The three checks
 
 Run, in order: **1. Is the request clear?** · **2. Does it fit the existing architecture?** · **3. Is the approach sound?**
