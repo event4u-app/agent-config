@@ -463,6 +463,29 @@ artifact to a caller-supplied path) is allowlisted with a rationale in
 flag. `lint_skill_scripts_readonly` enforces this: an ungated, non-allowlisted
 write fails the build.
 
+## Self-QA loop for output-producing skills (optional pattern)
+
+For skills whose product is a rendered/structural artifact (decks, docs,
+diagrams, dashboards, generated UI): **assume there are problems** and have a
+fresh-eyes pass find them before handing back. The author-context is blind to
+its own omissions; a context-free verifier is not.
+
+1. Produce the artifact.
+2. Dispatch a fresh subagent (no authoring context) with ONLY the artifact +
+   the acceptance criteria: "list every visual/structural defect; assume at
+   least one exists."
+3. Fix what it finds; re-run once. Two clean passes → done.
+
+Worked example (deck skill): the author renders 12 slides; the fresh-eyes
+pass gets the PDF + "check overflow, contrast, orphaned bullets, broken
+images" — it flags a clipped title on slide 7 the author never re-read.
+One fix, one re-check, done.
+
+Scope: complements `verify-before-complete` (which gates the completion
+claim); this pattern is HOW to get the fresh evidence for artifacts where no
+deterministic checker exists. Skip it when a real validator covers the
+surface (linter, schema, test) — deterministic checks beat judge passes.
+
 ## Do NOT
 
 * Write documentation-style, pointer-only, or too-broad skills ("Laravel skill")

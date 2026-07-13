@@ -56,7 +56,11 @@ personas, condensation pipeline) intact.
       Hard-Floor surfaces stay imperative Iron-Law register
       (preservation-guard cited as the byte-level enforcement). -->
       **U4 — Register note (scoped).** A ~3-line addition to `skill-quality`: capability skills should **explain the trade-off** rather than shout ALL-CAPS MUSTs; the **safety kernel keeps its imperative Iron-Law register** (non-negotiable). *Source B.* Verify: the note names both registers and cites which artifacts stay imperative.
-- [ ] **U5 (rolling) — Self-QA loop pattern.** Generalize the "assume there are problems; use fresh-eyes subagents to verify visual/structural output" loop as an optional pattern in `skill-writing` for output-producing skills (design/doc/deck). *Source B (pptx QA).* Verify: documented with one worked example; complements `verify-before-complete`.
+- [x] <!-- done 2026-07-13: § Self-QA loop in skill-writing — assume-problems
+      fresh-eyes subagent pass for rendered/structural artifacts, worked deck
+      example, explicit verify-before-complete complement + deterministic-
+      checker-first scope guard. lint-skills 408 pass; dist twin synced. -->
+      **U5 (rolling) — Self-QA loop pattern.** Generalize the "assume there are problems; use fresh-eyes subagents to verify visual/structural output" loop as an optional pattern in `skill-writing` for output-producing skills (design/doc/deck). *Source B (pptx QA).* Verify: documented with one worked example; complements `verify-before-complete`.
 
 ## Council convergence (2026-07-11)
 

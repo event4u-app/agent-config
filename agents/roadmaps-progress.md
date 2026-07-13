@@ -6,7 +6,7 @@
 
 ## Overall
 
-**87 / 257 steps done · 34%**
+**88 / 257 steps done · 34%**
 
 ```text
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
@@ -26,7 +26,7 @@
 | 8 | [road-to-ecosystem-harvest-product-gate.md](roadmaps/road-to-ecosystem-harvest-product-gate.md) | 1 | 5 | 5 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 11 | [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md) | 1 | 9 | 4 | 5 | 0 | 0 | 0 | ██████░░░░ 56% |
+| 11 | [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md) | 1 | 9 | 3 | 6 | 0 | 0 | 0 | ███████░░░ 67% |
 | 12 | [road-to-ecosystem-harvest-skill-quality-gates.md](roadmaps/road-to-ecosystem-harvest-skill-quality-gates.md) | 4 | 18 | 9 | 9 | 0 | 0 | 0 | █████░░░░░ 50% |
 | 13 | [road-to-ecosystem-harvest-tool-pitfalls.md](roadmaps/road-to-ecosystem-harvest-tool-pitfalls.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 14 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -148,11 +148,11 @@ _2 blockers resolved._
 
 ### [road-to-ecosystem-harvest-skill-authoring-rigor.md](roadmaps/road-to-ecosystem-harvest-skill-authoring-rigor.md)
 
-**Ecosystem-Harvest — Skill-Authoring Rigor** — 5 / 9 done (56%)
+**Ecosystem-Harvest — Skill-Authoring Rigor** — 6 / 9 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Adopt-now plate (≤ 5 units) | 🟡 in progress | 4 | 5 | 0 | 0 | 56% |
+| 1 | Adopt-now plate (≤ 5 units) | 🟡 in progress | 3 | 6 | 0 | 0 | 67% |
 
 ### [road-to-ecosystem-harvest-skill-quality-gates.md](roadmaps/road-to-ecosystem-harvest-skill-quality-gates.md)
 
