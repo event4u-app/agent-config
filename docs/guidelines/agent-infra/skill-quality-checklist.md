@@ -17,6 +17,19 @@ Every skill must answer four questions. If ANY answer is weak, the skill is not 
 | 3 | How do I verify it worked? | `Procedure` (validation step) | Concrete checks, not "verify it works" |
 | 4 | What common failure must I avoid? | `Gotcha` + `Do NOT` | Real failure patterns, not platitudes |
 
+## Register — explain the trade-off, except in the safety kernel
+
+Two registers, chosen by artifact class (U4, ecosystem harvest 2026-07-13):
+
+- **Capability skills** (workflows, analyses, generators) **explain the
+  trade-off** — say *why* the recommended path beats the alternative instead of
+  shouting ALL-CAPS MUSTs; an agent that understands the why generalizes to
+  cases the skill never enumerated.
+- **The safety kernel keeps its imperative Iron-Law register** — kernel rules,
+  safety floors (`*-safety-floor`), and Hard-Floor surfaces stay ALL-CAPS
+  fenced-law imperative, non-negotiable (`preservation-guard` enforces the
+  byte-level protection). Never downgrade an Iron Law to friendly prose.
+
 ## Required Sections
 
 Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `Do NOT`.

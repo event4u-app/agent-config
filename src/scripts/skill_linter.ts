@@ -196,7 +196,7 @@ const VALID_EXECUTION_FIELDS = new Set([
     'timeout_seconds',
     'safety_mode',
     'allowed_tools',
-    'command',
+    'command', 'disallowed_tools',
 ]);
 
 // --- Wing-3 GTM cognition-boundary patterns ---
@@ -1402,6 +1402,29 @@ export function lint_skill(p: string, text: string): LintResult {
         }
     } else {
         issues.push(new Issue('warning', 'missing_description', 'Frontmatter description is missing or unreadable'));
+    }
+
+    // --- Agent-Skills spec alignment (U2, ecosystem harvest 2026-07-13) ---
+    // Public-spec name rules for spec-portable skills: frontmatter `name`
+    // must match the parent directory; no consecutive hyphens.
+    {
+        const fmNameMatch = text.match(/^name:\s*["']?([A-Za-z0-9-]+)["']?\s*$/m);
+        const fmName = fmNameMatch ? fmNameMatch[1] : null;
+        if (basename(p) === 'SKILL.md' && fmName && fmName !== parentName(p)) {
+            issues.push(new Issue(
+                'error',
+                'spec_name_dir_mismatch',
+                `Frontmatter name \`${fmName}\` must match the parent directory \`${parentName(p)}\` (Agent-Skills spec)`,
+            ));
+        }
+        const nameForHyphens = fmName ?? (basename(p) === 'SKILL.md' ? parentName(p) : stem(p));
+        if (nameForHyphens && nameForHyphens.includes('--')) {
+            issues.push(new Issue(
+                'error',
+                'spec_name_consecutive_hyphens',
+                `Skill name \`${nameForHyphens}\` contains consecutive hyphens (Agent-Skills spec forbids them)`,
+            ));
+        }
     }
 
     // --- Bare-noun name check ---

@@ -231,7 +231,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`command-routing`** — Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
 - **`command-writing`** — Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
 - **`complexity-first-planning`** — Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first.
-- **`condense-memory`** — Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup.
+- **`condense-memory`** — Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) exceeding ~150 lines or ~4,000 chars — telegraph grammar, refuses sensitive paths, .original.md round-trip.
 - **`context-authoring`** — Use when filling knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive template walkthrough.
 - **`context-document`** — Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation.
 - **`copilot-agents-optimization`** — Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.

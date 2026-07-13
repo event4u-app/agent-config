@@ -1,12 +1,13 @@
 ---
 model_tier: inherit
 name: condense-memory
-description: "Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup."
+description: "Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) exceeding ~150 lines or ~4,000 chars — telegraph grammar, refuses sensitive paths, .original.md round-trip."
 domain: process
 execution:
   type: assisted
   handler: internal
-  allowed_tools: [Bash]
+  allowed_tools: ["Bash(scripts-run:*)", "Bash(diff:*)"]
+  disallowed_tools: ["Bash(rm:*)", "Bash(git push:*)"]
 workspaces:
   - agent-config-maintainer
 packs:
