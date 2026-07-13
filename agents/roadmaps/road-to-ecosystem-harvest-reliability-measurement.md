@@ -75,7 +75,16 @@ useful" into "the transcripts say so".
 - [x] <!-- done: split executed — road-to-ecosystem-harvest-prelaunch-diagnostics
       exists as its own plate; this cross-link is the kept navigation. -->
       **U3 — Evidence-gated launch go/no-go → split into its own plate.** The consumer-launch diagnostic (stable finding IDs, Unknown ≠ Pass epistemics, `diff --ci` regression gate, suppression-with-evidence, the score revisit-note) now lives in [`road-to-ecosystem-harvest-prelaunch-diagnostics`](road-to-ecosystem-harvest-prelaunch-diagnostics.md) — it targets the *consumer's* launch surface, a different audience from this roadmap's *suite-self* measurement. Kept here only as the cross-link so the leanness/evidence story stays navigable.
-- [ ] **U4 — Real-host loadability smoke test.** A CI check that boots each projected host against the generated tree and asserts skills/rules actually load (complements the existing condensation-hash + linter gates, which prove *shape* not *loadability*). *Source G.* Verify: the check catches a deliberately-malformed projection.
+- [x] <!-- done 2026-07-13: src/scripts/check_host_loadability.ts — validates
+      the GENERATED host trees load (Claude skills: SKILL.md present via
+      symlink-following existsSync, frontmatter parses, name==dir,
+      description present; Cursor .mdc: frontmatter parses). Test proves the
+      verify criterion (deliberately-malformed projection caught). First
+      LIVE run immediately caught a real defect: a broken SKILL.md symlink
+      in the local generated tree (optimize-prompt → removed source path) —
+      exactly the loadability class the shape gates miss. Run post-generation
+      (CI sync-consistency job or locally after task generate-tools). -->
+      **U4 — Real-host loadability smoke test.** A CI check that boots each projected host against the generated tree and asserts skills/rules actually load (complements the existing condensation-hash + linter gates, which prove *shape* not *loadability*). *Source G.* Verify: the check catches a deliberately-malformed projection.
 - [ ] **U5 (rolling) — Agent-coordination-history facet.** Extend `orchestration-telemetry` to record *which subagent combinations* completed successfully (not just counts) so the orchestrator can prefer combos that worked. *Source E.* Verify: after a multi-agent run, the record names the combo + outcome.
 
 ## Dropped (council)
@@ -103,5 +112,8 @@ evidence-gated binary caps (U3), and **dropped Monte-Carlo** as redundant.
       a missed planted injection fails finding_floor/contains; a flagged benign
       twin fails not_contains. -->
 - [ ] U3 lands as binary go/no-go (no 0–100 meter).
-- [ ] No new always-loaded surface added (measurement is opt-in/CI-side).
-- [ ] Dashboard regenerated.
+- [x] No new always-loaded surface added (measurement is opt-in/CI-side).
+      <!-- verified 2026-07-13: report + smoke are scripts; loaded field is
+      optional; golden fixtures live in evals; nothing added to kernel/rules. -->
+- [x] Dashboard regenerated.
+      <!-- per-reply regen throughout the run. -->
