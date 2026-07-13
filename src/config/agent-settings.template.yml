@@ -62,10 +62,15 @@ projection:
   # rules ALWAYS project (unconditional by definition); untagged rules fail
   # safe and ship. Example consumer scope:
   #   rule_workspaces: [engineering]
-  # Default flip to a scoped value is a human release gate — see
-  # agents/settings/contexts/consumer-scoping-audit-2026-07-07.md.
+  # DEFAULT FLIPPED 2026-07-13 (the Phase-1 human gate, maintainer-approved,
+  # evidence-gated): the default below lists EVERY consumer workspace, so
+  # exactly the exclusively-maintainer specification rules drop from consumer
+  # installs (the audited 16-rule lever — see
+  # agents/settings/contexts/consumer-scoping-audit-2026-07-07.md) while all
+  # domain safety floors and domain rules keep shipping. Narrowing further
+  # (e.g. [engineering] only) stays a per-install user choice.
   # An EMPTY list is inactive (= legacy-all); only a non-empty list scopes.
-  rule_workspaces: []
+  rule_workspaces: [engineering, product, finance, founder, gtm, ops, small-business, construction, legal-review-prep]
   #
   # Optional second axis, same semantics per pack ids (packs.yml). When set,
   # a non-kernel rule also needs a `packs:` intersection to project — e.g.
