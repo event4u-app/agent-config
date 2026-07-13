@@ -1,5 +1,13 @@
 # Skill-Family Census
 
+> **Limitation (census-honesty, 2026-07-13):** everything below is
+> description-heuristic-only — no skill body was read and NO usage evidence
+> backs any Keep/Prune/Merge call. The evidence this census lacks is the
+> loaded-vs-fired utilization report (`src/scripts/utilization_report.ts`,
+> window criteria in `docs/design/utilization-window-criteria.md`): any
+> pre-evidence prune must cite a non-usage rationale, and the report's
+> bottom-utilization decile is the designated input for `road-to-tier-removal`.
+
 > **Status: provisional.** First-pass family assignment; the Keep / Prune / Merge
 > calls are description-overlap heuristics, not decisions. This document is input
 > for the leanness track (`road-to-tier-removal` and the command-surface-leanness
