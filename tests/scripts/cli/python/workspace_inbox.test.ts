@@ -398,6 +398,16 @@ describe('workspace_inbox — write + read + list + forget', () => {
           - Dockerfile
           - PHP container
 
+          ## Known pitfalls
+
+          | Symptom | Root cause | Fix |
+          |---|---|---|
+          | Every build reinstalls all dependencies (builds are slow) | \`COPY . .\` runs before the dependency install, so any source edit busts the dependency layer's cache | Copy only the manifest + lockfile (\`composer.json\`+\`composer.lock\` / \`package.json\`+lock), install deps, THEN \`COPY . .\` |
+          | Image is much larger / slower to push than expected | No \`.dockerignore\`, so \`.git\`, \`vendor/\`, \`node_modules/\`, and local env files enter the build context and image | Add a \`.dockerignore\` excluding VCS, installed deps, build output, and secrets |
+          | \`vendor/\` or \`node_modules/\` is empty inside the container even though install ran | A bind-mount of the project directory shadows the image's installed-deps directory | Put a named/anonymous volume over the deps dir, or don't bind-mount over it |
+          | Files the container writes are owned by \`root\` on the host | The container process runs as UID 0; bind-mounted writes inherit that owner | Run as a non-root \`USER\` whose UID matches the host user, or \`chown\` on entry |
+          | Container exits immediately with code 0 | The \`CMD\` process daemonizes/backgrounds, so PID 1 has nothing to keep alive | Run the long-lived process in the foreground as PID 1 (no \`&\`, no daemonize flag) |
+
           ## Gotcha
 
           - All PHP commands (artisan, composer, phpunit) must run INSIDE the PHP container — never on the host.
