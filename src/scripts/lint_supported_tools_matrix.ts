@@ -11,7 +11,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { lint_matrix } from './_lib/tool_adapter_registry.ts';
+import { lint_matrix } from './_lib/tool_adapter_registry.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.join(path.dirname(_HERE), '..', '..');

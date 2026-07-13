@@ -14,7 +14,7 @@
  * covering its root. Adding/removing a supported tool therefore requires
  * touching README + registry (+ generator roots when native) in one commit.
  */
-import { GENERATOR_OUTPUT_ROOTS } from '../check_generator_output_coverage.ts';
+import { GENERATOR_OUTPUT_ROOTS } from '../check_generator_output_coverage.js';
 
 export interface AdapterEntry {
     /** Tool name exactly as the README matrix first column renders it (without bold markers / parenthetical). */
