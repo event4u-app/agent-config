@@ -451,12 +451,26 @@ to every skill you author.
 4. Does the description carry filler ("comprehensive", "advanced",
    "powerful")?
 
+## Read-only-by-default scripts
+
+A script shipped inside a skill (`scripts/**`) is **side-effect-free by
+default** — it inspects, computes, and prints; it does not mutate the
+filesystem. Any mutation (writing a file, deleting, rename/copy) must be gated
+behind an explicit flag named in this SKILL.md — `--writable` / `--apply` /
+`--write` / `--output` / `--fix` — so the default invocation is safe to run
+blind. A generator whose *declared purpose* is to write (it emits an artifact
+to a caller-supplied path) is allowlisted with a rationale in
+`src/scripts/lint_skill_scripts_readonly_allowlist.json` rather than carrying a
+redundant flag. `lint_skill_scripts_readonly` enforces this: an ungated,
+non-allowlisted write fails the build.
+
 ## Do NOT
 
 * Write documentation-style, pointer-only, or too-broad skills ("Laravel skill")
 * Skip Procedure or use vague validation
 * Exceed size limits (see `docs/guidelines/agent-infra/size-and-scope.md`)
 * Duplicate rules
+* Ship a skill script that mutates the filesystem on its default invocation — gate it behind a flag or allowlist it with a rationale
 
 ## Encode usage policy in the description
 
