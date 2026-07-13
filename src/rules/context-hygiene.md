@@ -8,6 +8,8 @@ triggers:
   - intent: "tool loop"
   - intent: "fresh chat"
   - keyword: "3-failure"
+routes_to:
+  - "guideline:agent-infra/context-hygiene-mechanics"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
 ---
