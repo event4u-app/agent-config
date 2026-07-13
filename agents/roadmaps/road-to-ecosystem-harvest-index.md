@@ -79,7 +79,7 @@ user decides when to run each plate).
 | **P2** | [`road-to-ecosystem-harvest-document-skills`](archive/road-to-ecosystem-harvest-document-skills.md) ✅ shipped | Completes the document read→write cycle (a read skill already ships); scoped v1, CI-gated pptx. |
 | **P2** | [`road-to-ecosystem-harvest-prose-authenticity`](road-to-ecosystem-harvest-prose-authenticity.md) | A prose-level AI-ism taxonomy fills a real hole the code/UI slop rules don't cover. |
 | **P2** | [`road-to-ecosystem-harvest-tool-pitfalls`](archive/road-to-ecosystem-harvest-tool-pitfalls.md) ✅ shipped | Cheap, high-signal troubleshooting sections on the highest-burden shipped tool skills. |
-| **P3** | [`road-to-ecosystem-harvest-product-gate`](road-to-ecosystem-harvest-product-gate.md) | A tiny "should this exist?" demand check, one altitude above the engineering-fit gate. |
+| **P3** | [`road-to-ecosystem-harvest-product-gate`](archive/road-to-ecosystem-harvest-product-gate.md) ✅ shipped | A tiny "should this exist?" demand check, one altitude above the engineering-fit gate. |
 | **P3** | [`road-to-ecosystem-harvest-ergonomics`](road-to-ecosystem-harvest-ergonomics.md) | Ergonomic dispatch + per-phase commands; nice-to-have, low risk. |
 | **Watch** | [`road-to-ecosystem-harvest-domain-watch`](road-to-ecosystem-harvest-domain-watch.md) | New verticals (LLM-app engineering, cloud-native) — gated by `domain-adoption-policy`; one narrow exception adopted. |
 | **Coverage** | [`road-to-ecosystem-harvest-second-sweep`](road-to-ecosystem-harvest-second-sweep.md) | Closes disposition on **every** remaining catalog entry (the backing repo == this directory); fold-in patch list; introduces zero new workstreams. |
