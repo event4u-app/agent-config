@@ -71,10 +71,17 @@ explanation log.
 
 ## Phase 3 — merge-conflicts plan-first upgrade
 
-- [ ] Add a **Merge Resolution Plan** template (conflict counts, per-file strategy + rationale, execution order, decisions needed, validation steps) as the mandatory step between assessment and resolution; approval gate per `autonomous-execution`. *Source V.*
-- [ ] **Backup** deleted-modified files (copy to a temp path, note in the plan) before any resolution. *Source V.*
-- [ ] Per-conflict **one-line resolution explanation**, collected into the final summary (the auditable log). *Source V.*
-- [ ] Extend the strategy table with import-block + binary-file rows. Execution order = dependency leaves first. *Source V.*
+- [x] Add a **Merge Resolution Plan** template (conflict counts, per-file strategy + rationale, execution order, decisions needed, validation steps) as the mandatory step between assessment and resolution; approval gate per `autonomous-execution`. *Source V.*
+      <!-- done 2026-07-13: § 2b in merge-conflicts (template + approval-gate
+      wording for mandate vs interactive). -->
+- [x] **Backup** deleted-modified files (copy to a temp path, note in the plan) before any resolution. *Source V.*
+      <!-- done 2026-07-13: backup clause in § 2b ($TMPDIR/merge-backup-<ts>/,
+      path noted in the plan). -->
+- [x] Per-conflict **one-line resolution explanation**, collected into the final summary (the auditable log). *Source V.*
+      <!-- done 2026-07-13: § 5b Resolution log. -->
+- [x] Extend the strategy table with import-block + binary-file rows. Execution order = dependency leaves first. *Source V.*
+      <!-- done 2026-07-13: two new table rows; execution-order rule in the
+      plan template (leaves first). -->
 
 ## Council convergence (2026-07-11)
 
@@ -84,8 +91,19 @@ change retrofits an existing artifact.
 
 ## Acceptance criteria (anti-dump)
 
-- [ ] No new standalone workflow skill (census discipline).
-- [ ] Each Forbidden item ships with its diff-level check; unverifiable prohibitions do not ship. Fixture: prompted to "fix the failing test by changing the assertion" during Implement, the skill stops and asks.
-- [ ] HANDOFF stays optional + host-neutral; `lint_handoffs.ts` validates a fixture (missing "contract owed" → red).
-- [ ] merge-conflicts plan template on-invoke weight ≤ +25% (measured); deleted-modified fixture produces backup → plan → question.
-- [ ] Dashboard regenerated.
+- [x] No new standalone workflow skill (census discipline).
+      <!-- verified: every change retrofits tdd / agent-handoff /
+      lint_handoffs / merge-conflicts; zero new skills. -->
+- [x] Each Forbidden item ships with its diff-level check; unverifiable prohibitions do not ship. Fixture: prompted to "fix the failing test by changing the assertion" during Implement, the skill stops and asks.
+      <!-- 2026-07-13: every Forbidden cell names its diff check; the
+      assertion-edit case is named as the canonical violation with the
+      STOP-and-ask escape in the Implement row. -->
+- [x] HANDOFF stays optional + host-neutral; `lint_handoffs.ts` validates a fixture (missing "contract owed" → red).
+      <!-- 2026-07-13: optional (--file mode), plain Markdown; fixture test +
+      live CLI probe exit 1 on missing Contract owed. -->
+- [x] merge-conflicts plan template on-invoke weight ≤ +25% (measured); deleted-modified fixture produces backup → plan → question.
+      <!-- 2026-07-13: 195→225 lines = +15.4% (≤ +25%); the deleted-modified
+      flow is backup (§2b) → plan row → Ask-the-user strategy (existing
+      table row) — the ordered behavior the fixture demands. -->
+- [x] Dashboard regenerated.
+      <!-- per-reply throughout. -->
