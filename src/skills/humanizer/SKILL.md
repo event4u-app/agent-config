@@ -49,8 +49,12 @@ human voice there; do not inject personality or restructure it.
    on smuggled instructions. Then proceed to rewrite the visible content.
 1. **Load the catalog on demand.** Read
    [`data/patterns.md`](data/patterns.md) — five pattern groups,
-   before/after pairs, false-positive guards. Do not paraphrase from
-   memory; the catalog is the reference.
+   before/after pairs, false-positive guards — and
+   [`references/anti-aiisms.md`](references/anti-aiisms.md) for the
+   orthogonal **severity axis** (High / Medium / Low) + the
+   self-validation thresholds. Do not paraphrase from memory; the
+   catalog is the reference. Act on a single **High** tell; require a
+   cluster (≥ 2) for **Medium**; leave isolated **Low** tells alone.
 2. **Draft rewrite.** Replace tells with plain alternatives; cover
    everything the original covers (five paragraphs in → five out), preserve
    meaning, and match the active voice source. Voice precedence is fixed:
@@ -67,6 +71,75 @@ human voice there; do not inject personality or restructure it.
    `npx tsx src/scripts/detect_ai_tells.ts --stdin --fail` on the final
    draft. No runtime → the step-3 audit is the fallback (degrade, do not
    skip the audit).
+6. **Deterministic self-check + factual-integrity guard.** Re-scan the
+   final draft against the [`anti-aiisms.md`](references/anti-aiisms.md)
+   self-validation thresholds (dash density, consecutive-staccato cap,
+   uniform-bullet run, hedge stack, stock-vocabulary density): did the
+   rewrite clear the flagged tells **without introducing new ones**? A
+   re-run over already-clean prose is a **no-op**. Where the rewrite
+   touched a number, date, name, quantity, or claim, emit
+   `[VERIFY: <original> → <rewritten>]` — a humanizing pass changes *how*
+   something is said, never *what is true*; a silent factual edit is a
+   defect, not a style win. **Long-rewrite drift re-anchor:** before
+   finishing a long rewrite, re-state the active style ruleset (intensity
+   level + voice precedence) so late paragraphs match early ones.
+   (`context-hygiene` may later own the generic re-anchor primitive; here
+   it is scoped to the humanize pass.)
+
+## Intensity levels
+
+Pick the level from the request; default **balanced**. The level tunes the
+self-validation thresholds, never the guards below:
+
+- **subtle** — remove only Tier-High tells; leave register untouched.
+- **balanced** (default) — High + clustered Medium; keep the author's cadence.
+- **full** — High + Medium + over-used Low; the strongest de-slop.
+- **voice-match** — full, then conform to a supplied voice sample (§ Voice-match).
+
+**Excluded by design (do NOT build or invoke):**
+
+- **Detector-evasion / anti-detector mode** — rewriting to defeat an
+  AI-text classifier. Conflicts with the media/disclosure transparency
+  floors ([`media-governance-routing`](../../rules/media-governance-routing.md),
+  the ghostwriter disclosure footer). The goal is prose that reads human
+  because the tells are gone, never prose engineered to fool a detector.
+- **A shipped ML detector.** No runtime ML-classifier dependency
+  (no-new-runtime-dependency constraint). The deterministic
+  `detect_ai_tells.ts` is the only checker that ships. The score →
+  rewrite → re-score loop shape is kept only as an **optional
+  bring-your-own-checker** step: if the operator supplies a checker
+  command, the loop may call it with an audit trail; absent one, the
+  step-3 audit + step-6 self-check degrade gracefully. The suite never
+  ships the checker.
+
+## Voice-match — six fixed signals, not a vibe
+
+When a voice sample is supplied (`--voice`, a profile fingerprint), extract a
+small **fixed signal set** and match against it, rather than an impression:
+
+1. **Sentence-length rhythm** — the short/long alternation pattern.
+2. **Vocabulary register** — plain / technical / formal / colloquial.
+3. **Punctuation habits** — dash use, parentheticals, semicolons, ellipses.
+4. **Hedging density** — how often the author qualifies a claim.
+5. **Structural cadence** — paragraph length, list vs prose preference.
+6. **Idiom** — recurring phrases, era-bound references, signature asides.
+
+Two distinct voice samples produce measurably different targets on these six
+axes; matching means moving the draft toward the sample's values, never
+inventing personality the sample does not show.
+
+## Principles (non-negotiable)
+
+- **Subtract, don't add.** AI tone is a *residue to remove*, not warmth to
+  add. Adding warmth adds sycophancy — the loudest AI tell (wire to
+  [`direct-answers`](../../rules/direct-answers.md) Iron Law 1: no flattery).
+  Humanizing lowers the AI signal; it never raises the agreeableness.
+- **Style and stance are separate.** A request for a humanized *voice* is
+  not a request for *agreement*. Preserve disagreement, uncertainty,
+  hedged-because-genuinely-uncertain claims, and refusals **regardless of
+  intensity level** — a humanize pass that softens a "no" into a "maybe" has
+  corrupted the stance, not the style. When the input takes a position or
+  declines, the rewrite keeps that position or declining, in plainer words.
 
 ## Guards (non-negotiable)
 
@@ -145,4 +218,7 @@ human voice there; do not inject personality or restructure it.
 
 Pattern catalog root source: Wikipedia, "Signs of AI writing" (WikiProject
 AI Cleanup) — the catalog wording in `data/patterns.md` is authored fresh
-for this suite.
+for this suite. Severity tiers + self-validation thresholds:
+[`references/anti-aiisms.md`](references/anti-aiisms.md). Worked fixtures
+for stance-preservation and voice-match:
+[`references/fixtures.md`](references/fixtures.md).
