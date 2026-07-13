@@ -37,6 +37,12 @@
       "enum": ["lite", "medium", "high", "inherit"],
       "description": "Vendor-neutral capability band (ADR-034/035). high/medium/lite project to a native Claude `model:` (high→opus, medium→sonnet, lite→haiku) via model_tier.ts; `inherit` is a documented passthrough sentinel (→ CC `model: inherit`), not a new mapping."
     },
+    "effort": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "max"],
+      "description": "Optional pinned reasoning-effort level. Projects into the generated .claude/agents/<name>.md frontmatter (`effort:`) on hosts with an effort knob; ignored elsewhere. Orthogonal to `model_tier`. Omit for host-default effort.",
+      "$comment": "road-to-ecosystem-harvest-skill-quality-gates Phase 4, Source S."
+    },
     "tools": {
       "type": "array",
       "minItems": 1,

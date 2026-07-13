@@ -87,6 +87,12 @@
       "enum": ["large"],
       "description": "Optional orthogonal modifier (ADR-035): the skill needs a large-context model regardless of reasoning tier (e.g. summarising a 500-page log). Sparse — most skills omit it. Metadata only; does not change the native Claude `model:` (the tier owns the model choice)."
     },
+    "effort": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "max"],
+      "description": "Optional pinned reasoning-effort level for hosts with an effort knob (Claude Code `--effort` / agent frontmatter). Passthrough: skills project verbatim, so the key reaches Claude Code as-is and is inert on hosts without the knob. The bench harness pins it per run (bench_ab_task_runner `--effort`) so measurements are reproducible. Orthogonal to `model_tier` (capability band) — effort tunes how hard the model thinks, not which model runs. Omit unless the skill measurably needs a non-default effort.",
+      "$comment": "road-to-ecosystem-harvest-skill-quality-gates Phase 4, Source S (pinned effort frontmatter)."
+    },
     "council_depth": {
       "type": "string",
       "enum": ["deep"],
