@@ -3,11 +3,17 @@
  * CI guard: council config lives in `.ai-council.yml`, never `.agent-settings.yml`.
  *
  * Ported from the retired Python `src/scripts/check_council_config_location.py` (ADR-200).
- * The CLI contract is pinned — `--quiet` flag, exit codes (0 clean,
- * 1 at least one violation), byte-identical finding messages, same scan globs
- * (sorted), same fence tracking, same negation / `ai_council:` block detection,
- * and the same `<!-- council-config-allowed -->` escape pragma. No behaviour
- * changes — historical quirks preserved (consumers pin the exact behaviour).
+ * The original two checks keep their pinned CLI contract — `--quiet` flag,
+ * exit codes (0 clean, 1 at least one violation), byte-identical finding
+ * messages, same `SCAN_GLOBS` (sorted), same fence tracking, same negation /
+ * `ai_council:` block detection, and the same `<!-- council-config-allowed -->`
+ * escape pragma.
+ *
+ * Additive since ADR-104: a third check (§3 below) flags project-tree
+ * *placement* of the council file. The original two checks are unchanged; the
+ * path check runs over its own `PATH_CHECK_GLOBS` (the council surfaces + the
+ * settings template + the `.ai-council.yml.example`) so the settings template's
+ * many legitimate `.agent-settings.yml` self-references never trip check §1.
  *
  * Per ADR-104 (superseding ADR-093) the council reads a dedicated
  * `.ai-council.yml` resolved ALWAYS from the user-global location
@@ -16,19 +22,26 @@
  * path). Keys are top-level in that file; the legacy `ai_council.*` block
  * under `.agent-settings.yml` was removed in Phase 0.
  *
- * What it flags, in the council command/skill surfaces + the config contract:
+ * What it flags:
  *
  *   1. A `.agent-settings.yml` reference that is NOT negated — i.e. an
  *      instruction to read/use it for council config. Corrective mentions
  *      ("NOT in `.agent-settings.yml`", "was removed", "never read") carry a
- *      negation marker on the same line and are allowed.
+ *      negation marker on the same line and are allowed. (SCAN_GLOBS)
  *   2. A bare `ai_council:` YAML parent-block declaration — post-ADR-093 the
  *      keys are top-level in `.ai-council.yml`; there is no `ai_council:`
- *      namespace to nest under.
+ *      namespace to nest under. (SCAN_GLOBS)
+ *   3. A project-tree PLACEMENT of the council file — `agents/.ai-council.yml`,
+ *      `agents/settings/.ai-council.yml`, or a `<project_root>/…/.ai-council.yml`
+ *      path — that is NOT negated. The council file is user-global ONLY
+ *      (ADR-104); any project-tree path is drift. Corrective mentions ("is
+ *      ignored", "never read", "no project-local", "superseded") pass on the
+ *      same line. (PATH_CHECK_GLOBS)
  *
  * Escape hatch: a line carrying `<!-- council-config-allowed -->` is exempt
  * (for a legitimate non-council `.agent-settings.yml` reference, e.g.
- * `personal.autonomy`).
+ * `personal.autonomy`, or a historical placement mention in a section
+ * explicitly marked superseded).
  *
  * Exit codes:
  *   0 — clean.
@@ -61,6 +74,35 @@ const NEGATION_RE = /\b(not|never|removed|no\s+longer|neither|instead)\b/i;
 const AI_COUNCIL_BLOCK_RE = /^\s*ai_council:\s*(#.*)?$/;
 const ALLOW_PRAGMA = '<!-- council-config-allowed -->';
 
+// ── §3 project-tree placement check (ADR-104) ──────────────────────
+// The council file is user-global ONLY. These are the surfaces where a
+// stray project-tree placement instruction does real damage — the council
+// command/skill surfaces + contract (SCAN_GLOBS) PLUS the settings template
+// and the copy-from example. The template carries countless legitimate
+// `.agent-settings.yml` self-references, so it is scanned ONLY by §3, never
+// by §1.
+const PATH_CHECK_GLOBS = [
+    ...SCAN_GLOBS,
+    'src/config/agent-settings.template.yml',
+    'agents/templates/.ai-council.yml.example',
+] as const;
+
+// A project-tree PLACEMENT of the council file: `agents/.ai-council.yml`,
+// `agents/settings/.ai-council.yml`, or any `<project_root>/…/.ai-council.yml`.
+// Deliberately does NOT match the user-global `…/agent-config/settings/
+// .ai-council.yml` (no literal `agents/` segment) nor the copy-from
+// `agents/templates/.ai-council.yml.example` (segment is `templates/`, and
+// `.example` is not the config file).
+const PROJECT_PATH_COUNCIL_RE =
+    /(?:agents\/(?:settings\/)?\.ai-council\.yml(?!\.example)|<project[_-]?root>[^\n`]*\.ai-council\.yml)/;
+
+// Broader negation set for §3 — corrective placement mentions use vocabulary
+// the §1 NEGATION_RE does not cover ("is ignored", "no project-local
+// lookup", "superseded"). A match on the same line marks the reference
+// corrective and is allowed.
+const PATH_NEGATION_RE =
+    /\b(not|never|removed|no\s+longer|neither|instead|ignored|superseded|no\s+project-local|not\s+read|does\s+not\s+read)\b/i;
+
 /**
  * Mirror Python `str.lstrip()` — strips all leading Unicode whitespace.
  * Python's `str.lstrip()` (no args) strips the Unicode whitespace class;
@@ -79,9 +121,12 @@ function _lstrip(s: string): string {
  * the same sort (component-wise via Path comparison). We approximate with a
  * recursive walk per glob pattern, sorting POSIX paths.
  */
-function* iter_files(root: string): Generator<string> {
+function* iter_files(
+    root: string,
+    globs: readonly string[] = SCAN_GLOBS,
+): Generator<string> {
     const seen = new Set<string>();
-    for (const pattern of SCAN_GLOBS) {
+    for (const pattern of globs) {
         for (const p of _glob(root, pattern)) {
             if (_isFile(p) && !seen.has(p)) {
                 seen.add(p);
@@ -220,18 +265,69 @@ function find_violations(root: string): string[] {
     return findings;
 }
 
+/**
+ * §3 — flag project-tree PLACEMENT of the council config file (ADR-104).
+ *
+ * The council file is user-global only; any `agents/(settings/)?.ai-council.yml`
+ * or `<project_root>/…/.ai-council.yml` path is drift. Corrective mentions
+ * (same-line `PATH_NEGATION_RE`) and the `<!-- council-config-allowed -->`
+ * pragma pass. Fenced code is skipped, mirroring §1/§2.
+ */
+function find_path_violations(root: string): string[] {
+    const findings: string[] = [];
+    for (const p of iter_files(root, PATH_CHECK_GLOBS)) {
+        const rel = _relPosix(root, p);
+        let in_fence = false;
+        const lines = fs.readFileSync(p, 'utf-8').split('\n');
+        if (lines.length > 0 && lines[lines.length - 1] === '') {
+            lines.pop();
+        }
+        for (let i = 0; i < lines.length; i++) {
+            const lineno = i + 1;
+            const raw = lines[i]!;
+            const stripped = _lstrip(raw);
+            if (stripped.startsWith('```') || stripped.startsWith('~~~')) {
+                in_fence = !in_fence;
+                continue;
+            }
+            if (in_fence || raw.includes(ALLOW_PRAGMA)) {
+                continue;
+            }
+            // Corrective sentences often wrap, leaving the negation
+            // ("never reads", "no project-local lookup") on the previous
+            // line and the path on this one. Check both lines for negation
+            // so a correctly-negated wrapped mention is not flagged. A real
+            // "place it here" instruction never carries a negation one line up.
+            const prev = i > 0 ? lines[i - 1]! : '';
+            const negated =
+                PATH_NEGATION_RE.test(raw) || PATH_NEGATION_RE.test(prev);
+            if (PROJECT_PATH_COUNCIL_RE.test(raw) && !negated) {
+                findings.push(
+                    `${rel}:${lineno}: council config placed in the project tree ` +
+                        '— the `.ai-council.yml` file is user-global ONLY ' +
+                        '(`~/.event4u/agent-config/settings/.ai-council.yml`, ADR-104). ' +
+                        'The project tree is never searched. Point at the user-global ' +
+                        'path, add a negation marker, or add ' +
+                        `\`${ALLOW_PRAGMA}\` for a historical/superseded reference.`,
+                );
+            }
+        }
+    }
+    return findings;
+}
+
 function main(): number {
     const root = process.cwd();
-    const findings = find_violations(root);
+    const findings = [...find_violations(root), ...find_path_violations(root)];
     if (findings.length) {
         process.stdout.write('❌  Council config-location violations:\n\n');
         for (const f of findings) {
             process.stdout.write(`  - ${f}\n`);
         }
         process.stdout.write(
-            '\nRule: council config lives in `.ai-council.yml` ' +
-                '(docs/contracts/ai-council-config.md + ADR-093), never in ' +
-                '`.agent-settings.yml`.\n',
+            '\nRule: council config lives in the user-global `.ai-council.yml` ' +
+                '(`~/.event4u/agent-config/settings/.ai-council.yml`, ADR-104) — ' +
+                'never in `.agent-settings.yml`, never in a project `agents/` tree.\n',
         );
         return 1;
     }
@@ -270,11 +366,15 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 
 export {
     SCAN_GLOBS,
+    PATH_CHECK_GLOBS,
     AGENT_SETTINGS_RE,
     NEGATION_RE,
     AI_COUNCIL_BLOCK_RE,
+    PROJECT_PATH_COUNCIL_RE,
+    PATH_NEGATION_RE,
     ALLOW_PRAGMA,
     iter_files,
     find_violations,
+    find_path_violations,
     main,
 };
