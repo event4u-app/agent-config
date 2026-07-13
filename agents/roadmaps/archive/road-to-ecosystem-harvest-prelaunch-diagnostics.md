@@ -39,19 +39,19 @@ device only** (see the revisit note), never a published number.
 
 ## Phase 1 — Finding-ID scheme + evidence epistemics + report schema
 
-- [ ] Define an immutable finding-ID grammar (`AC-<AREA>-NNN`; area vocabulary fixed in YAML; IDs never re-assigned) and a report JSON schema (findings, coverage, unknowns, questions) under `docs/contracts/` per house pattern. *Source L.*
-- [ ] `launch-readiness` gains an epistemics block: each coverage area is Pass / Finding / Unknown / Not-applicable — **Pass requires cited evidence; absence of findings is Unknown, never an automatic Pass; N/A requires a reason**. Same epistemics as `docs/proof.md`, applied to a consumer report. *Source L.*
-- [ ] Coverage backbone pruned to the stacks the suite targets (auth, migrations, secrets, observability, rollback, AI/agent governance) + a "questions that would change the diagnosis" report section. *Source L.*
+- [x] Define an immutable finding-ID grammar (`AC-<AREA>-NNN`; area vocabulary fixed in YAML; IDs never re-assigned) and a report JSON schema (findings, coverage, unknowns, questions) under `docs/contracts/` per house pattern. *Source L.*
+- [x] `launch-readiness` gains an epistemics block: each coverage area is Pass / Finding / Unknown / Not-applicable — **Pass requires cited evidence; absence of findings is Unknown, never an automatic Pass; N/A requires a reason**. Same epistemics as `docs/proof.md`, applied to a consumer report. *Source L.*
+- [x] Coverage backbone pruned to the stacks the suite targets (auth, migrations, secrets, observability, rollback, AI/agent governance) + a "questions that would change the diagnosis" report section. *Source L.*
 
 ## Phase 2 — Regression gate + suppression
 
-- [ ] A findings diff (old baseline vs current, by ID) with a `--ci` mode that exits non-zero on a new P0/P1 or a Pass→Finding flip in a launch-gate area — the consumer-side sibling of the suite's own claims-ledger CI. *Source L.*
-- [ ] Project-local suppression file (finding ID + reason + evidence link); suppressed findings render in a collapsible section (mirrors the dropped-false-positives transparency in the review-mechanics roadmap). *Source L.*
-- [ ] Consumer recipe: commit a launch baseline, gate in CI (opt-in).
+- [x] A findings diff (old baseline vs current, by ID) with a `--ci` mode that exits non-zero on a new P0/P1 or a Pass→Finding flip in a launch-gate area — the consumer-side sibling of the suite's own claims-ledger CI. *Source L.*
+- [x] Project-local suppression file (finding ID + reason + evidence link); suppressed findings render in a collapsible section (mirrors the dropped-false-positives transparency in the review-mechanics roadmap). *Source L.*
+- [x] Consumer recipe: commit a launch baseline, gate in CI (opt-in).
 
 ## Phase 3 — Fix-loop discipline
 
-- [ ] Ranked backlog → **"safest first approval batch"** (explicitly the first safe batch, not the full scope) + a per-finding status vocabulary (fixed / accepted-risk / deferred-with-reason / suppressed-with-evidence / not-applicable); rescore whenever evidence changes. Rides the existing `autonomous-execution` + reversibility rules; read-only first. *Source L.*
+- [x] Ranked backlog → **"safest first approval batch"** (explicitly the first safe batch, not the full scope) + a per-finding status vocabulary (fixed / accepted-risk / deferred-with-reason / suppressed-with-evidence / not-applicable); rescore whenever evidence changes. Rides the existing `autonomous-execution` + reversibility rules; read-only first. *Source L.*
 
 ## Score — decision-revisit note (NOT adopted unilaterally)
 
@@ -75,8 +75,8 @@ silently adopted or silently rejected.
 
 ## Acceptance criteria (anti-dump)
 
-- [ ] Finding IDs are immutable + diff-stable (a test renames a finding's title, asserts the ID survives).
-- [ ] Every schema'd artifact has a fixture + validation test; a fixture with an open P0 refuses a "ready" verdict regardless of other areas.
-- [ ] Nothing mutates a consumer project; the diagnostic is read-only, the fix loop approval-gated (existing rules referenced, not restated).
-- [ ] No numeric score published anywhere until the revisit note is resolved.
-- [ ] Dashboard regenerated.
+- [x] Finding IDs are immutable + diff-stable (a test renames a finding's title, asserts the ID survives). <!-- prelaunch_diagnostics.test.ts: retitled finding -> empty diff -->
+- [x] Every schema'd artifact has a fixture + validation test; a fixture with an open P0 refuses a "ready" verdict regardless of other areas. <!-- 18 tests green; live CLI fixture: open P0 -> NOT ready + ci-exit 1 -->
+- [x] Nothing mutates a consumer project; the diagnostic is read-only, the fix loop approval-gated (existing rules referenced, not restated). <!-- tool reads reports only; contract §7-8 reference autonomous-execution/reversibility -->
+- [x] No numeric score published anywhere until the revisit note is resolved. <!-- schema $comment forbids a score field; no score in tool output; revisit note stands for council re-evaluation -->
+- [x] Dashboard regenerated.
