@@ -1670,7 +1670,7 @@ export function validate_evals_json(skillPath: string): Issue[] {
         );
         return issues;
     }
-    const validKinds = ['contains', 'file_exists', 'rubric', 'finding_floor'];
+    const validKinds = ['contains', 'file_exists', 'rubric', 'finding_floor', 'tool-choice', 'trajectory_budget'];
     const validKindsSet = new Set(validKinds);
     scenarios.forEach((scenario, idx) => {
         const loc = `scenarios[${idx}]`;
@@ -1724,6 +1724,23 @@ export function validate_evals_json(skillPath: string): Issue[] {
                 if ('pattern' in a && typeof a.pattern !== 'string') {
                     issues.push(
                         new Issue('warning', 'evals_json_assertion_field_type', `${aLoc} (kind=finding_floor) 'pattern' must be a string`),
+                    );
+                }
+            } else if (kind === 'tool-choice') {
+                // tool-choice (eval-schema v2): `must_use` / `must_not_use` are both
+                // OPTIONAL string arrays — validate type only when present.
+                for (const f of ['must_use', 'must_not_use']) {
+                    if (f in a && !(Array.isArray(a[f]) && (a[f] as unknown[]).every((x) => typeof x === 'string'))) {
+                        issues.push(
+                            new Issue('warning', 'evals_json_assertion_field_type', `${aLoc} (kind=tool-choice) '${f}' must be an array of strings`),
+                        );
+                    }
+                }
+            } else if (kind === 'trajectory_budget') {
+                // trajectory_budget (eval-schema v2): required integer `n` >= 1.
+                if (typeof a.n !== 'number' || !Number.isInteger(a.n) || (a.n as number) < 1) {
+                    issues.push(
+                        new Issue('warning', 'evals_json_assertion_field_type', `${aLoc} (kind=trajectory_budget) 'n' must be an integer >= 1`),
                     );
                 }
             } else {

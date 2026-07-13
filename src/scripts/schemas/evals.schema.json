@@ -41,6 +41,20 @@
             "minLength": 1,
             "description": "The input fixture handed to the skill under test."
           },
+          "environment": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional precondition note (v2, additive) — the environment the scenario assumes (e.g. 'a git repo with an open PR', 'quality.local_auto_run: true'). Advisory context for the runner/operator; not graded."
+          },
+          "requires_human": {
+            "type": "boolean",
+            "description": "Optional (v2, additive). When true, the scenario cannot be auto-graded in CI — the runner skips it and reports `manual-pending` (NEVER a silent pass). Pair with human_instructions."
+          },
+          "human_instructions": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional (v2, additive). Steps for a human to grade a requires_human scenario."
+          },
           "assertions": {
             "type": "array",
             "minItems": 1,
@@ -100,6 +114,38 @@
                       "type": "string",
                       "minLength": 1,
                       "description": "Natural-language pass criterion graded by a sub-agent. NON-deterministic — the grader returns pass:null until a pinned judge fills it. Use only where no deterministic check exists; record the judge as a known limit."
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind"],
+                  "properties": {
+                    "kind": { "const": "tool-choice" },
+                    "must_use": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 },
+                      "description": "Tool names the run MUST have called (checked against <run_dir>/tool-trace.json). v2, additive."
+                    },
+                    "must_not_use": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 },
+                      "description": "Tool names the run MUST NOT have called. v2, additive."
+                    }
+                  },
+                  "$comment": "Evaluated against the recorded tool trace. No trace present → pass:null manual-pending, never a silent pass."
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "n"],
+                  "properties": {
+                    "kind": { "const": "trajectory_budget" },
+                    "n": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Ceiling on meaningful steps = tool calls net of retries (a call repeating the immediately-preceding call name is a retry, not a step). Counted from <run_dir>/tool-trace.json; no trace → manual-pending. v2, additive."
                     }
                   }
                 }

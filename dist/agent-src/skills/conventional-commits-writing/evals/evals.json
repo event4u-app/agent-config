@@ -1,0 +1,15 @@
+{
+  "skill": "conventional-commits-writing",
+  "_calibration": "Seed for eval-schema v2 (ecosystem-harvest skill-quality-gates Phase 2). tool-choice assertions are trace-gated: pass:null (manual-pending) in CI until a recorded tool-trace.json exists. Numbers are conservative floors, not calibrated claims.",
+  "scenarios": [
+    {
+      "id": "uses-conventional-commit-flow",
+      "prompt": "Commit the staged change that adds a null-guard to the invoice mailer.",
+      "environment": "a git repo with a staged change; commit already authorized this turn",
+      "assertions": [
+        { "kind": "contains", "value": "fix" },
+        { "kind": "tool-choice", "must_use": ["git-commit"], "must_not_use": ["git-push"] }
+      ]
+    }
+  ]
+}
