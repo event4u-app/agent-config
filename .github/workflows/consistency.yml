@@ -126,6 +126,23 @@ jobs:
       - name: Regenerate tool-specific outputs
         run: task generate-tools
 
+      - name: Bridge derivation — generated trees are a fixpoint of src/
+        # skill-quality-gates Phase 4: symlink targets stay inside the
+        # derivation sources; a second regeneration changes nothing.
+        run: ./scripts-run src/scripts/check_bridge_derivation
+
+      - name: Supported-tools matrix ↔ adapter registry
+        run: ./scripts-run src/scripts/lint_supported_tools_matrix
+
+      - name: Host loadability — generated trees actually load
+        run: ./scripts-run src/scripts/check_host_loadability --root .
+
+      - name: Host loadability smoke (optional — self-skips without the claude CLI)
+        # Real-host leg: claude plugin validate + temp-home install +
+        # metadata cross-consistency. Required before releases via
+        # `task smoke-host-loadability REQUIRE=1` (release flow).
+        run: bash src/scripts/smoke_host_loadability.sh
+
       - name: Check cross-references
         run: ./scripts-run src/scripts/check_references
 

@@ -81,6 +81,7 @@ the feature-PR floor by adding:
 | `release-validation.yml` (Phase B) | `changelog-entry` | CHANGELOG carries an entry matching the head-branch version |
 | `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` / pack manifests agree on the version |
 | `consumer-matrix.yml` | `consumer-matrix` · `publish-dry-run` · `mcp-worker-dry-run` · `plugin-bootstrap` | pack-based consumer E2E + pre-tag dry-runs of the release-adjacent workflows — see the exemption note below |
+| (maintainer-local) | `task smoke-host-loadability REQUIRE=1` | real-host loadability — `claude plugin validate` + temp-home plugin install + metadata cross-consistency (marketplace ↔ plugin dirs ↔ docs). Optional in CI (runners lack the claude CLI, the step self-skips); **required before a release is cut** — `REQUIRE=1` turns a missing CLI into a failure |
 
 ## Consumer-matrix exemption — the tarball window
 
