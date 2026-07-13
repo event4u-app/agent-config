@@ -114,6 +114,27 @@ tasks:
       Promotion path: add --strict once thresholds are confirmed stable.
     cmd: ./scripts-run src/scripts/lint_skill_originality {{.QUIET_FLAG}}
 
+  lint-skill-descriptions:
+    silent: true
+    desc: |
+      Description-quality gate (ecosystem-harvest skill-quality-gates P1).
+      Scans src/skills/*/SKILL.md for the four routing-breaking description
+      defects: desc≡name, verbatim duplicated trigger phrase, triggers all
+      substrings of the name, and no routing signal (no condition marker /
+      imperative-verb lead / specifics enumeration / example query).
+      Allowlist: src/scripts/lint_skill_descriptions_allowlist.json (capped 20).
+    cmd: ./scripts-run src/scripts/lint_skill_descriptions {{.QUIET_FLAG}}
+
+  lint-skill-scripts-readonly:
+    silent: true
+    desc: |
+      Read-only-by-default script gate (ecosystem-harvest skill-quality-gates P3).
+      A script under src/skills/*/scripts/** that mutates the filesystem must gate
+      the mutation behind an explicit flag (--writable/--apply/--write/--output/
+      --fix) or be allowlisted with a rationale
+      (src/scripts/lint_skill_scripts_readonly_allowlist.json, capped 20).
+    cmd: ./scripts-run src/scripts/lint_skill_scripts_readonly {{.QUIET_FLAG}}
+
   lint-archived-skills:
     silent: true
     desc: |

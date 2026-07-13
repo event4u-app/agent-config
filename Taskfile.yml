@@ -146,6 +146,8 @@ tasks:
       - task: lint-skill-names
       - task: lint-new-skill-gate
       - task: lint-skill-originality
+      - task: lint-skill-descriptions
+      - task: lint-skill-scripts-readonly
       - task: check-cluster-patterns
       - task: lint-orchestrator-auto-detect
       - task: lint-rule-interactions
@@ -324,6 +326,8 @@ tasks:
       - task: lint-skill-names
       - task: lint-new-skill-gate
       - task: lint-skill-originality
+      - task: lint-skill-descriptions
+      - task: lint-skill-scripts-readonly
       - task: check-cluster-patterns
       - task: lint-orchestrator-auto-detect
       - task: lint-rule-interactions
