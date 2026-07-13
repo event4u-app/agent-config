@@ -6,6 +6,26 @@ only the version you are upgrading to.
 
 > Symbol legend — 🔄 automatic, ✋ manual, 💡 advisory.
 
+## 8.x → 9.0.0 — consumer rule projection scoped by default
+
+9.0.0 flips the consumer rule-projection default to **scoped**: fresh
+installs ship `projection.rule_workspaces` pre-filled with every consumer
+workspace, dropping the 16 exclusively-maintainer specification rules from
+what consumers receive — **103 → 88 rules** per install. Domain safety
+floors, domain rules, and kernel rules are unaffected. Full breaking-change
+detail: [`CHANGELOG.md` § 9.0.0](../CHANGELOG.md).
+
+### Required action
+
+🔄 **Automatic on sync.** Existing installs are unchanged until you run
+`agent-config sync` / re-install; settings sync preserves your current
+`projection.rule_workspaces` value. The first session after opting in
+rebuilds the KV-cache prefix once (one session only).
+
+### Rolling back
+
+✋ Set `projection.rule_workspaces: []` (= legacy every-rule projection).
+
 ## 1.14.x → 1.15.0 — `implement_ticket` → `work_engine`
 
 1.15.0 finishes the rename started with PR #29: the orchestration

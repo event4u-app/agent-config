@@ -48,26 +48,6 @@ foundation also land — both non-breaking by default.
 
 ### Breaking changes (6.0.0)
 
-**0. Consumer rule projection is scoped by default** (`road-to-request-scoped-rule-load` Phase 1 human gate, 2026-07-13)
-
-- **Who is affected:** fresh consumer installs — the settings template now
-  ships `projection.rule_workspaces` filled with every consumer workspace, so
-  the 16 exclusively-maintainer specification rules (plus the recorded
-  `source-of-truth.md` compat exclusion) no longer arrive: 103 → 88 rules,
-  −9,880 cl100k tokens (−13.1%) per install. All domain safety floors and
-  domain rules keep shipping; kernel rules always ship.
-- **Existing installs:** unchanged until you run `agent-config sync` /
-  re-install (settings sync preserves your current value; fill the list to
-  opt in). The first session after opting in rebuilds the KV-cache prefix
-  once (1.25–2× write cost, one session only).
-- **Quality evidence:** deterministic set-inclusion verification
-  (`src/scripts/check_consumer_scope_flip.ts` →
-  `internal/bench/reports/2026-07-13-consumer-scoped-default-flip.json`):
-  only exclusively-maintainer rules drop; zero golden-set-exercised consumer
-  rules affected (90/90 labelled tasks, coverage 86/86).
-- **Rollback:** set `projection.rule_workspaces: []` (= legacy-all).
-
-
 **1. Condensed output moved: root `.agent-src/` → `dist/agent-src/`** ([ADR-058])
 
 - **Who is affected:** consumers whose scripts or tool configs hard-code
@@ -1049,6 +1029,25 @@ our recommendation order, not its support status.
 ### BREAKING CHANGES
 
 * **scoping:** flip consumer rule projection default to scoped (Phase-1 human gate, approved) ([565c91a](https://github.com/event4u-app/agent-config/commit/565c91aa25e4c970d5b37258f497366f33e7a7a9))
+
+**Consumer rule projection is scoped by default** (`road-to-request-scoped-rule-load` Phase 1 human gate, 2026-07-13)
+
+- **Who is affected:** fresh consumer installs — the settings template now
+  ships `projection.rule_workspaces` filled with every consumer workspace, so
+  the 16 exclusively-maintainer specification rules (plus the recorded
+  `source-of-truth.md` compat exclusion) no longer arrive: 103 → 88 rules,
+  −9,880 cl100k tokens (−13.1%) per install. All domain safety floors and
+  domain rules keep shipping; kernel rules always ship.
+- **Existing installs:** unchanged until you run `agent-config sync` /
+  re-install (settings sync preserves your current value; fill the list to
+  opt in). The first session after opting in rebuilds the KV-cache prefix
+  once (1.25–2× write cost, one session only).
+- **Quality evidence:** deterministic set-inclusion verification
+  (`src/scripts/check_consumer_scope_flip.ts` →
+  `internal/bench/reports/2026-07-13-consumer-scoped-default-flip.json`):
+  only exclusively-maintainer rules drop; zero golden-set-exercised consumer
+  rules affected (90/90 labelled tasks, coverage 86/86).
+- **Rollback:** set `projection.rule_workspaces: []` (= legacy-all).
 
 ### Features
 

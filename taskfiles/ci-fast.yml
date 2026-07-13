@@ -897,6 +897,11 @@ tasks:
     desc: New minor/major CHANGELOG sections above the current version must carry a `Rollback:` line (docs/contracts/release-sizing.md)
     cmd: ./scripts-run src/scripts/lint_changelog_rollback
 
+  lint-breaking-changes-index:
+    silent: true
+    desc: A released `### BREAKING` CHANGELOG entry must be mirrored in BREAKING_CHANGES.md in the same diff (override trailer breaking-index-override)
+    cmd: ./scripts-run src/scripts/lint_breaking_changes_index {{.QUIET_FLAG}}
+
   check-always-budget:
     silent: true
     desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
