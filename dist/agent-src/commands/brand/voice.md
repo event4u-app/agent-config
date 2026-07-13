@@ -8,6 +8,7 @@ cluster: brand
 sub: voice
 skills: [voice-and-tone-design]
 description: Define the brand voice-and-tone profile — register, do/don't lexicon, and tone shifts by context — the profile the brand-consistency gate checks copy against.
+argument-hint: "<brand-ref | strategy-ref>"
 suggestion:
   eligible: true
   trigger_description: "define our brand voice, voice and tone guide, how should our copy sound, tone of voice profile"
@@ -21,7 +22,7 @@ packs:
 # /brand:voice
 
 Run the [`voice-and-tone-design`](../../skills/voice-and-tone-design/SKILL.md)
-skill — register, do/don't lexicon, per-context tone shifts. The voice profile
-is what `/brand:review` and the `brand-consistency` gate check emitted copy
-against. Args: `"<brand/strategy ref>"`. Run `/brand:strategy` first when the
-archetype/positioning is not yet set.
+skill — register, do/don't lexicon, and per-context tone shifts. The resulting
+voice profile is what `/brand:review` and the `brand-consistency` gate check
+emitted copy against. Args: `"<brand/strategy ref>"`. Run `/brand:strategy`
+first when the archetype/positioning is not yet set.

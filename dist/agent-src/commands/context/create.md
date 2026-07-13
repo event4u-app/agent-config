@@ -8,6 +8,7 @@ cluster: context
 sub: create
 skills: [agent-docs-writing]
 description: Analyze a codebase area and create a structured context document
+argument-hint: "[topic]"
 suggestion:
   eligible: true
   trigger_description: "document this part of the codebase, create a context doc for X"
@@ -86,9 +87,9 @@ Based on the type, analyze the relevant code area:
 - Identify all models and tables involved
 
 **Service context:**
-- Read the service class and its deps
+- Read the service class and its dependencies
 - Trace call chain (who calls it, what it calls)
-- Identify configuration and env deps
+- Identify configuration and env dependencies
 
 **Integration context:**
 - Find API client classes, HTTP calls

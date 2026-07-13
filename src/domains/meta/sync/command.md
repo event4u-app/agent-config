@@ -2,6 +2,7 @@
 model_tier: medium
 name: sync
 disable-model-invocation: true
+argument-hint: "[agent-settings|gitignore|gitignore-fix]"
 pack: meta
 intent: "Sync dispatcher — agent settings or the managed .gitignore block"
 routes_to: [sync-agent-settings, sync-gitignore, sync-gitignore-fix]

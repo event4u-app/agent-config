@@ -7,6 +7,7 @@ visibility: internal
 cluster: video
 sub: stitch
 description: Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.
+argument-hint: "<project-slug> [--skip-scene <id>] [--continue]"
 personas: [ai-video-technical-director]
 skills: []
 suggestion:

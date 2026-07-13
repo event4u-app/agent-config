@@ -2,6 +2,7 @@
 model_tier: medium
 name: review
 disable-model-invocation: true
+argument-hint: "[changes|routing]"
 pack: engineering-base
 intent: "Review dispatcher — multi-judge self-review of the current diff, or reviewer routing"
 routes_to: [review-changes, review-routing]
@@ -38,7 +39,7 @@ reviewer selection.
 | `/review routing` | `commands/review/routing.md` | Compute reviewer roles + matched historical bug patterns for the current diff (ownership-map.yml, historical-bug-patterns.yml) |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

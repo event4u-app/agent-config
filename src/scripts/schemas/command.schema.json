@@ -35,6 +35,13 @@
       "default": true,
       "description": "Commands are always user-invoked; model-invocation is disabled."
     },
+    "argument-hint": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "description": "Official-spec argument hint shown next to the slash command in hosts that render one (Claude Code). Bracket notation: `<required>` / `[optional]`, e.g. '<ticket-key | url> [notes]'. Set on every command whose body documents an invocation argument; omit on zero-argument commands. Projection: commands symlink into .claude/skills/<slug>/SKILL.md, so the field reaches Claude Code verbatim; other hosts ignore it (see docs/parity/command-frontmatter.md).",
+      "$comment": "road-to-ecosystem-harvest-skill-quality-gates Phase 4, Source C (official CLI command-authoring standard)."
+    },
     "skills": {
       "type": "array",
       "items": {

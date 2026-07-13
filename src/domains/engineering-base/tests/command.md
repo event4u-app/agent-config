@@ -2,6 +2,7 @@
 model_tier: medium
 name: tests
 disable-model-invocation: true
+argument-hint: "[create|execute|e2e-plan|e2e-heal] [args]"
 pack: engineering-base
 tier: 2
 visibility: internal

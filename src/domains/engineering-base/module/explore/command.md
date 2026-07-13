@@ -8,6 +8,7 @@ cluster: module
 sub: explore
 skills: [laravel, symfony-workflow, php-coder]
 description: Explore a module — load its structure, docs, and context into the current conversation
+argument-hint: "[module-name]"
 suggestion:
   eligible: true
   trigger_description: "show me the X module, load the module context"

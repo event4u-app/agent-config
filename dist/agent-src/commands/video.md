@@ -6,6 +6,7 @@ tier: 2
 visibility: internal
 cluster: video
 description: Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, from-song, scene, storyboard, stitch.
+argument-hint: "[from-script|from-song|scene|storyboard|stitch] [args]"
 type: orchestrator
 suggestion:
   eligible: true

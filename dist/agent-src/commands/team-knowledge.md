@@ -2,6 +2,7 @@
 model_tier: medium
 name: team-knowledge
 disable-model-invocation: true
+argument-hint: "[consolidate|bootstrap]"
 pack: meta
 intent: "Manage the repo-tracked team-knowledge layer — consolidate typed observation events into agents/knowledge/ pages, bootstrap a project baseline"
 routes_to: [team-knowledge-consolidate, team-knowledge-bootstrap]
@@ -26,13 +27,14 @@ packs:
 Top-level orchestrator for the `/team-knowledge` family — the
 consolidation gate over the typed knowledge-observation events
 captured during normal task work (see
-[`knowledge-pages`](../templates/contexts/knowledge-pages.md) and the
-event schema in `src/scripts/_lib/knowledge_events.ts`).
+[`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)
+and the event schema in `src/scripts/_lib/knowledge_events.ts`).
 
-Not to be confused with the pre-existing `/knowledge` cluster (local
-file ingestion into `agents/memory/knowledge/`) — different concern
-(arbitrary local documents), unrelated to this repo-tracked,
-lifecycle-typed team-knowledge layer under `agents/knowledge/`.
+Not to be confused with the pre-existing [`/knowledge`](../../product-discovery/knowledge/command.md)
+cluster (local file ingestion into `agents/memory/knowledge/`) — that
+is a different concern (arbitrary local documents), unrelated to this
+repo-tracked, lifecycle-typed team-knowledge layer under
+`agents/knowledge/`.
 
 ## Sub-commands
 

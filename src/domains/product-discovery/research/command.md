@@ -2,6 +2,7 @@
 model_tier: high
 name: research
 disable-model-invocation: true
+argument-hint: "[<topic>|deep|report] [args]"
 pack: product-discovery
 tier: 2
 visibility: internal

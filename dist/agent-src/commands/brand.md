@@ -7,6 +7,7 @@ visibility: internal
 cluster: brand
 type: orchestrator
 description: Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer.
+argument-hint: "[strategy|identity|tokens|review|voice] [args]"
 suggestion:
   eligible: true
   trigger_description: "work on our brand, define brand strategy/identity/voice, derive brand tokens, audit brand consistency"
@@ -20,11 +21,12 @@ packs:
 # /brand
 
 Top-level orchestrator for the `/brand:*` family — brand as a first-class UX
-layer that **constrains** the UI. Consulted **before**
+layer that **constrains** the UI. The brand layer is consulted **before**
 [`design-intelligence`](../../skills/design-intelligence/SKILL.md) so brand
-bounds style selection. Designer flow: discover → strategy → identity → tokens →
-application → governance. Derived brand tokens are the export pack-ai-image's
-brand-asset generation and the greenfield scaffold seed consume (B → A).
+decisions bound style selection. Walk the designer flow: discover → strategy →
+identity → tokens → application → governance. Brand tokens, once derived, are
+the export that pack-ai-image's brand-asset generation and the greenfield
+scaffold seed consume (B → A dependency).
 
 ## Sub-commands
 
@@ -47,9 +49,9 @@ brand-asset generation and the greenfield scaffold seed consume (B → A).
 
 - **Do NOT commit, push, or open a PR** — subcommands never do this.
 - **Do NOT chain subcommands.** One `/brand <sub>` per turn.
-- **Consumer brand tokens are the source of truth.** Corpus only fills gaps; a
-  value not traceable to a brand token or voice rule is off-brand (per
-  [`brand-consistency`](../rules/brand-consistency.md)).
+- **Consumer brand tokens are the source of truth.** The brand corpus only
+  fills gaps; a value not traceable to a brand token or voice rule is off-brand
+  (per [`brand-consistency`](../rules/brand-consistency.md)).
 - **Edit `src/` only.** Generated mirrors regenerate.
 
 ## See also

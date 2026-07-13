@@ -8,6 +8,7 @@ sub: agent-settings
 cluster: sync
 skills: [sync-agent-settings]
 description: Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
+argument-hint: "[--path <file>] [--profile minimal|balanced|full] [--check]"
 suggestion:
   eligible: false
   rationale: "Settings sync — must be deliberate."

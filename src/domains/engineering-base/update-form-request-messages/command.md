@@ -7,6 +7,7 @@ visibility: internal
 framework: laravel
 skills: [laravel-validation]
 description: "Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones."
+argument-hint: "[ClassName | file-path]"
 suggestion:
   eligible: true
   trigger_description: "sync the form request messages, update the validation messages"

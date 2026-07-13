@@ -2,6 +2,7 @@
 model_tier: medium
 name: package
 disable-model-invocation: true
+argument-hint: "[test|reset]"
 pack: meta
 intent: "Package dispatcher — test the package install or reset the installed state"
 routes_to: [package-test, package-reset]
@@ -33,7 +34,7 @@ agent-config package installation itself.
 | `/package reset` | `commands/package/reset.md` | Reset the installed package state (destructive — confirmation-gated) |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

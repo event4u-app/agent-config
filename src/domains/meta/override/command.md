@@ -2,6 +2,7 @@
 model_tier: medium
 name: override
 disable-model-invocation: true
+argument-hint: "[create|manage] [args]"
 pack: meta
 tier: 2
 visibility: internal

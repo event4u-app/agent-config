@@ -8,6 +8,7 @@ cluster: roadmap
 sub: materialize
 skills: [emit-tickets]
 description: Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/
+argument-hint: "[roadmap-path]"
 suggestion:
   eligible: true
   trigger_description: "turn this roadmap into tickets, materialise the roadmap, mach Tickets aus der Roadmap"

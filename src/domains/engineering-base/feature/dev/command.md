@@ -7,6 +7,7 @@ visibility: internal
 cluster: feature
 sub: dev
 description: Full 7-phase feature development workflow for complex features.
+argument-hint: "[description]"
 skills: [laravel, php-coder]
 suggestion:
   eligible: true

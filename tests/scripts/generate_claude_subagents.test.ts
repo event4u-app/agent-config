@@ -133,6 +133,21 @@ describe('generate_claude_subagents', () => {
         }
     });
 
+    it('projects a declared effort: pin into the CC frontmatter', () => {
+        // skill-quality-gates Phase 4 (Source S): pinned reasoning effort
+        // passes through to hosts with an effort knob.
+        const withEffort = _UNIT().replace('model_tier: inherit', 'model_tier: inherit\neffort: high');
+        fs.writeFileSync(path.join(srcDir, 'demo-agent.md'), withEffort, 'utf-8');
+        expect(condense.generate_claude_subagents()).toBe(1);
+        expect(_fm(path.join(agentsDir, 'demo-agent.md')).effort).toBe('high');
+    });
+
+    it('emits no effort key when the source omits it', () => {
+        fs.writeFileSync(path.join(srcDir, 'demo-agent.md'), _UNIT(), 'utf-8');
+        expect(condense.generate_claude_subagents()).toBe(1);
+        expect(_fm(path.join(agentsDir, 'demo-agent.md')).effort).toBeUndefined();
+    });
+
     it('reaps a stale generated agent whose source was removed', () => {
         fs.writeFileSync(path.join(srcDir, 'demo-agent.md'), _UNIT(), 'utf-8');
         condense.generate_claude_subagents();

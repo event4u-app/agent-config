@@ -8,6 +8,7 @@ cluster: brand
 sub: tokens
 skills: [brand-to-tokens]
 description: Derive a DTCG .tokens.json source of truth from brand decisions, then emit CSS vars + Tailwind via the no-Node token generator.
+argument-hint: "<identity-ref>"
 suggestion:
   eligible: true
   trigger_description: "derive brand tokens, turn our brand into design tokens, generate a .tokens.json from the brand"

@@ -5,6 +5,7 @@ pack: meta
 tier: 2
 visibility: internal
 description: Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence)
+argument-hint: "[activate|deactivate|show] [args]"
 cluster: profile
 type: orchestrator
 suggestion:

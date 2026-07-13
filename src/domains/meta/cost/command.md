@@ -2,6 +2,7 @@
 model_tier: medium
 name: cost
 disable-model-invocation: true
+argument-hint: "[report|profile] [args]"
 pack: meta
 intent: "Cost dispatcher — session cost report or rule-loading cost profile"
 routes_to: [cost-report, cost-profile]

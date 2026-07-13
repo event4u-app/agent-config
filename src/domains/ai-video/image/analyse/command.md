@@ -7,6 +7,7 @@ visibility: internal
 cluster: image
 sub: analyse
 description: Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report.
+argument-hint: "<path-or-url> [character-id]"
 personas: [hollywood-director]
 skills: [image-analyser]
 suggestion:

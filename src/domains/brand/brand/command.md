@@ -7,6 +7,7 @@ visibility: internal
 cluster: brand
 type: orchestrator
 description: Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer.
+argument-hint: "[strategy|identity|tokens|review|voice] [args]"
 suggestion:
   eligible: true
   trigger_description: "work on our brand, define brand strategy/identity/voice, derive brand tokens, audit brand consistency"

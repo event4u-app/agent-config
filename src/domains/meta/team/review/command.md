@@ -2,6 +2,7 @@
 model_tier: inherit
 name: team-review
 disable-model-invocation: true
+argument-hint: "[--background]"
 pack: meta
 tier: 2
 visibility: internal

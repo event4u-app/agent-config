@@ -8,6 +8,7 @@ sub: investigate
 cluster: bug
 skills: [bug-analyzer, sentry-integration]
 description: Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
+argument-hint: "[ticket-key | sentry-url | error-message | description]"
 council_depth: deep
 suggestion:
   eligible: true

@@ -8,6 +8,7 @@ cluster: judge
 sub: steps
 skills: [subagent-orchestration, verify-completion-evidence]
 description: Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
+argument-hint: "<plan-file | roadmap-phase | inline-step-list>"
 suggestion:
   eligible: false
   rationale: "Subagent orchestration — overlaps /work and /roadmap:process-*; keep explicit."

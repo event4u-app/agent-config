@@ -7,6 +7,7 @@ visibility: internal
 cluster: research
 sub: deep
 description: "Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths."
+argument-hint: "[--batch-confirm=each|once|auto]"
 skills: [deep-reading-analyst]
 suggestion:
   eligible: true

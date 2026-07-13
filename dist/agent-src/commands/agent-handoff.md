@@ -9,6 +9,7 @@ tier: 0
 visibility: visible
 skills: [agent-docs-writing]
 description: Generate a context summary for continuing work in a fresh chat. Replaces the session system.
+argument-hint: "[with tasks]"
 suggestion:
   eligible: true
   trigger_description: "user asks for an agent handoff, fresh-chat summary, or context-summary to paste into a new chat"

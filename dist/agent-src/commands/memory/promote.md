@@ -7,6 +7,7 @@ visibility: internal
 cluster: memory
 sub: promote
 description: Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
+argument-hint: "[sig-id]"
 skills: [file-editor]
 suggestion:
   eligible: false
@@ -141,8 +142,8 @@ detector before writing (same primary key + Jaccard body similarity
   > 3. Both are valid in different scopes — narrow the new entry's key and re-check
   ```
 
-Warning surface, not a gate — the human's pick resolves it; the
-detector never blocks a promote on its own. Non-durable types
+This is a warning surface, not a gate — the human's pick resolves it;
+the detector never blocks a promote on its own. Non-durable types
 (`sessions`-style exploratory content, `recurring-patterns`, …) are
 deliberately not checked — they evolve legitimately.
 

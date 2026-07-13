@@ -6,6 +6,7 @@ tier: 2
 visibility: internal
 cluster: image
 description: Character-image fidelity orchestrator — analyse, create, and verify a character image against its canon. Routes to analyse, create, verify.
+argument-hint: "[analyse|create|verify] [args]"
 type: orchestrator
 suggestion:
   eligible: true

@@ -2,6 +2,7 @@
 model_tier: medium
 name: fix
 disable-model-invocation: true
+argument-hint: "[ci|refs|portability|seeder|pr-comments|comments|quality] [args]"
 pack: engineering-base
 intent: "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability, comments, quality"
 routes_to: [fix-ci, fix-pr-comments, fix-refs, fix-seeder, fix-portability, fix-comments, fix-quality]
@@ -40,7 +41,7 @@ with a single entry point + sub-command dispatch.
 | `/fix quality` | `commands/fix/quality.md` | Run the quality pipeline (type-checker / linter / formatter, PHP and/or JS/TS) and fix every error — auto-detects language from changed files |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Non-interactive & auto-detection
 

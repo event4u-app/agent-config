@@ -5,6 +5,7 @@ pack: meta
 tier: 2
 visibility: internal
 description: "Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes."
+argument-hint: "[path...]"
 suggestion:
   eligible: false
   rationale: "Package-internal — only the event4u/agent-config repo runs this."

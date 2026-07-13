@@ -2,6 +2,7 @@
 model_tier: medium
 name: git-commit
 disable-model-invocation: true
+argument-hint: "[in-chunks] [args]"
 pack: git
 intent: "Stage and commit changes in logical chunks with a Conventional Commits message"
 routes_to: [git-workflow, conventional-commits-writing]

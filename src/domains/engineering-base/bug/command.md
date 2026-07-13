@@ -2,6 +2,7 @@
 model_tier: medium
 name: bug
 disable-model-invocation: true
+argument-hint: "[investigate|fix] [args]"
 pack: engineering-base
 intent: "Bug dispatcher — investigate the root cause or implement the fix"
 routes_to: [bug-investigate, bug-fix]

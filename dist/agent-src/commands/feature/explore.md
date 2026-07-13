@@ -8,6 +8,7 @@ cluster: feature
 sub: explore
 skills: [laravel]
 description: Brainstorm and explore a feature idea before committing to a full plan
+argument-hint: "[idea]"
 suggestion:
   eligible: true
   trigger_description: "brainstorm this idea, explore this feature concept"

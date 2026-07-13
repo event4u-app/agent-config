@@ -10,6 +10,7 @@ visibility: advanced
 skills: [dependency-upgrade]
 framework: laravel
 description: Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs.
+argument-hint: "<target-version> [framework=<slug>]"
 suggestion:
   eligible: true
   trigger_description: "upgrade Laravel to version X, Laravel 10 to 11 upgrade, bump framework major version"
@@ -25,21 +26,24 @@ disable-model-invocation: true
 
 ## Overview
 
-Structured, catalog-driven Laravel major-version upgrade through the existing gated `/work` engine. **Not** a new autonomous runtime:
+`/mission:upgrade` runs a structured, catalog-driven Laravel major-version upgrade
+through the existing gated `/work` engine. It is **not** a new autonomous runtime:
 
-- Every phase uses `/work`'s confidence-band gating, N=3 retry budget, persisted `.work-state.json`.
-- Rollback = git. Changes land on a provisional branch (`mission/upgrade-…`); revert is `git reset` or `git revert`, never a daemon.
-- No auto-commit, no auto-PR. User reviews before anything is staged.
+- Every phase uses the `/work` engine's confidence-band gating, N=3 retry budget,
+  and persisted `.work-state.json`.
+- Rollback = git. Changes land on a provisional branch (`mission/upgrade-…`);
+  revert is `git reset` or `git revert`, never a daemon.
+- No auto-commit, no auto-PR. The user reviews before anything is staged.
 
 ## Single-mission-per-branch guard
 
 Before starting, confirm:
 
-1. Working tree clean (`git status --porcelain` empty).
-2. No other `mission/*` branch checked out.
-3. No `.work-state.json` with a mission envelope present.
+1. The working tree is clean (`git status --porcelain` returns empty).
+2. No other `mission/*` branch is already checked out.
+3. No `.work-state.json` with a mission envelope is present.
 
-Any fail → surface the conflict and stop. Run:
+If any of these fail, surface the conflict and stop. Run:
 
 ```bash
 ./scripts-run src/scripts/lint_missions --check-precondition upgrade .
@@ -65,11 +69,13 @@ Accept inline arguments:
 /mission:upgrade target_version=11 framework=laravel
 ```
 
-`target_version` missing → ask once (numbered options per [`user-interaction`](../../rules/user-interaction.md)).
+If `target_version` is missing, ask once (numbered options per
+[`user-interaction`](../../rules/user-interaction.md)).
 
 ### 2. Surface the size tier
 
-Read `size_tier` from `src/missions/upgrade/mission.yaml`; display before starting:
+Read `size_tier` from `src/missions/upgrade/mission.yaml` and display it before
+starting:
 
 ```
 > Mission: upgrade Laravel {from} → {target_version}
@@ -89,11 +95,15 @@ Read `size_tier` from `src/missions/upgrade/mission.yaml`; display before starti
 git checkout -b mission/upgrade-laravel-{from}-to-{target_version}
 ```
 
-Per [`scope-control`](../../rules/scope-control.md), requires explicit user confirmation (step 2 provides it).
+Per [`scope-control`](../../rules/scope-control.md), this requires explicit user
+confirmation (step 2 above provides it).
 
 ### 4. Load the breaking-change catalog
 
-Read `src/missions/upgrade/laravel-10-to-11.yaml` (or the matching version). Lists breaking changes with `detection`, `fix`, `verification` command blocks restricted to safe prefixes (`composer`, `php`, `php artisan`, `git`, `sed`, `rector`, `vendor/bin/*`).
+Read `src/missions/upgrade/laravel-10-to-11.yaml` (or the matching version).
+The catalog lists breaking changes with `detection`, `fix`, and `verification`
+command blocks restricted to safe prefixes
+(`composer`, `php`, `php artisan`, `git`, `sed`, `rector`, `vendor/bin/*`).
 
 ### 5. Drive the /work engine
 
@@ -103,16 +113,18 @@ Read `src/missions/upgrade/laravel-10-to-11.yaml` (or the matching version). Lis
     --prompt-file prompt.txt
 ```
 
-Write a structured prompt to `prompt.txt` describing the mission phases (`analyze` → `plan` → `implement` → `test` → `verify` → `report`) referencing the catalog entries the engine should address.
+Write a structured prompt to `prompt.txt` that describes the mission phases
+(`analyze` → `plan` → `implement` → `test` → `verify` → `report`) and references
+the catalog entries the engine should address.
 
 **Candidate phase (opt-in, never auto-on):** the `test` → `verify` step MAY use
 [`verify-repair-loop`](../../skills/verify-repair-loop/SKILL.md) when the upgrade's
 catalog fixes are test-driven — a bounded generate→run→revise→re-run loop gated by
 a numeric threshold (then a judge confirms), reusing the same N=3 cap. Use
 test/quality verdicts only; the live-app Playwright verdict stays deferred. The
-loop is multi-turn reasoning, not a runtime — honors
-[`no-runtime-boundary`](../../docs/contracts/no-runtime-boundary.md) exactly as the
-mission does.
+loop is multi-turn reasoning, not a runtime — it honors
+[`no-runtime-boundary`](../../docs/contracts/no-runtime-boundary.md) exactly as
+the mission does.
 
 Handle exit codes per the `/work` contract:
 
@@ -124,7 +136,7 @@ Handle exit codes per the `/work` contract:
 
 ### 6. Rollback path
 
-Fix step fails beyond the N=3 budget:
+If a fix step fails beyond the N=3 budget:
 
 ```bash
 git revert HEAD        # revert the last mission commit
@@ -132,7 +144,7 @@ git revert HEAD        # revert the last mission commit
 git reset --hard HEAD~1  # if no remote tracking the branch yet
 ```
 
-Rollback is always manual — the mission surfaces the command, never auto-runs it.
+The rollback is always manual — the mission surfaces the command, never auto-runs it.
 
 ### 7. Final report and close-prompt
 
@@ -147,18 +159,27 @@ On `/work` exit `0`, surface the delivery report unchanged, then append:
 > 4. Discard — delete .work-state.json and reset the branch
 ```
 
-Per [`scope-control`](../../rules/scope-control.md), git operations are permission-gated. Never run `/commit` or `/create-pr` without the user choosing them.
+Per [`scope-control`](../../rules/scope-control.md), git operations are
+permission-gated. Never run `/commit` or `/create-pr` without the user choosing
+them.
 
 ## Rules
 
-- Honour [`scope-control`](../../rules/scope-control.md), [`non-destructive-by-default`](../../rules/non-destructive-by-default.md), [`minimal-safe-diff`](../../rules/minimal-safe-diff.md), [`verify-before-complete`](../../rules/verify-before-complete.md).
-- Every catalog `command:` field is restricted to the safe-prefix allowlist. Never run arbitrary shell from the catalog.
-- The N=3 retry budget from [`autonomous-execution`](../../rules/autonomous-execution.md) applies per breaking-change fix step, not per mission.
-- Never skip the size-tier surface step — user must see scope before the provisional branch is created.
+- Honour [`scope-control`](../../rules/scope-control.md),
+  [`non-destructive-by-default`](../../rules/non-destructive-by-default.md),
+  [`minimal-safe-diff`](../../rules/minimal-safe-diff.md), and
+  [`verify-before-complete`](../../rules/verify-before-complete.md).
+- Every catalog `command:` field is restricted to the safe-prefix allowlist.
+  Never run arbitrary shell commands from the catalog.
+- The N=3 retry budget from [`autonomous-execution`](../../rules/autonomous-execution.md)
+  applies per breaking-change fix step, not per mission.
+- Never skip the size-tier surface step — the user must see the scope before the
+  provisional branch is created.
 
 ## Breaking-change catalog
 
-Knowledge source: `src/missions/upgrade/laravel-10-to-11.yaml`. Versionable, diffable, CI-tested via `lint_missions.ts`. Each entry carries:
+The knowledge source is `src/missions/upgrade/laravel-10-to-11.yaml`. It is
+versionable, diffable, and CI-tested via `lint_missions.ts`. Each entry carries:
 
 - `id` — unique checkpoint key (used in `.work-state.json`)
 - `severity` — `critical` / `high` / `medium` / `low`

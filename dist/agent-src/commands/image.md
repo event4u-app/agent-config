@@ -6,6 +6,7 @@ tier: 2
 visibility: internal
 cluster: image
 description: Character-image fidelity orchestrator — analyse, create, and verify a character image against its canon. Routes to analyse, create, verify.
+argument-hint: "[analyse|create|verify] [args]"
 type: orchestrator
 suggestion:
   eligible: true
@@ -21,10 +22,11 @@ packs:
 
 Top-level orchestrator for the `/image:*` family — character-image
 **fidelity** work: analyse an image down to the smallest mole, generate one
-to spec, verify a candidate against its **Canon Spec**. Schema, rubric, and
-the create→analyse→regenerate loop: [`canon-spec.md`](../../skills/image-analyser/canon-spec.md).
-Generation is a paid surface: every live provider call is **dry-run /
-refuse-and-surface by default** and needs explicit per-turn confirmation per
+to spec, and verify a candidate against its **Canon Spec**. Schema, rubric,
+and the create→analyse→regenerate loop are defined in
+[`canon-spec.md`](../../skills/image-analyser/canon-spec.md). Generation is a
+paid surface: every live provider call is **dry-run / refuse-and-surface by
+default** and requires explicit per-turn confirmation per
 [`provider-lifecycle-discipline`](../rules/provider-lifecycle-discipline.md).
 
 ## Sub-commands
@@ -37,13 +39,15 @@ refuse-and-surface by default** and needs explicit per-turn confirmation per
 
 ## Dispatch
 
-1. Parse `/image <sub-command> [args]`. Sub-command = first token; match
-   against the table's exact names only. A token that is a **file path or
-   URL** (contains `/`, `.`, or a known image extension — e.g. `img_2.png`,
-   `shots/veikko.jpg`) is NOT a sub-command: it is the image argument for
-   `analyse` / `verify`. Never treat `img_2.png` as the `analyse`
-   sub-command. On this ambiguity → ask rather than best-guess.
-2. Look up the sub-command and execute its file verbatim with the remaining args.
+1. Parse `/image <sub-command> [args]`. The sub-command is the first
+   token; match it against the table's exact sub-command names only. A
+   token that is a **file path or URL** (contains `/`, `.`, or a known
+   image extension — e.g. `img_2.png`, `shots/veikko.jpg`) is NOT a
+   sub-command: it belongs to `analyse` / `verify` as the image argument.
+   Never treat `img_2.png` as the `analyse` sub-command. On this
+   ambiguity → ask rather than best-guess.
+2. Look up the sub-command in the table above and execute its file
+   verbatim with the remaining args.
 3. Unknown / missing sub-command → print the table and ask:
 
    > 1. analyse — extract + diff an image against a canon
@@ -68,4 +72,4 @@ refuse-and-surface by default** and needs explicit per-turn confirmation per
 
 - [`image-analyser`](../../skills/image-analyser/SKILL.md) · [`image-creator`](../../skills/image-creator/SKILL.md) — the skills these commands invoke.
 - [`canon-spec.md`](../../skills/image-analyser/canon-spec.md) — schema, fidelity rubric, fidelity loop.
-- [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md) — `image` cluster registration.
+- [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md) — `image` cluster registration.

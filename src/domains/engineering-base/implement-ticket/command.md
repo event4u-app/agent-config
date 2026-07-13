@@ -9,6 +9,7 @@ tier: 0
 visibility: visible
 skills: [refine-ticket, feature-planning]
 description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git.
+argument-hint: "[ticket-key | url | bundle-path | pasted-text]"
 suggestion:
   eligible: true
   trigger_description: "implement this ticket, setze ticket X um, build PROJ-123"

@@ -6,6 +6,7 @@ tier: 2
 visibility: internal
 skills: [judge-security-auditor, threat-modeling, security-audit]
 description: Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injection / supply-chain risk — A–F score per category, mapped to OWASP Agentic Top 10
+argument-hint: "[repo-root]"
 council_depth: deep
 suggestion:
   eligible: true

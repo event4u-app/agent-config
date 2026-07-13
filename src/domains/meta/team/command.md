@@ -2,6 +2,7 @@
 model_tier: inherit
 name: team
 disable-model-invocation: true
+argument-hint: "[review|adversarial|delegate|status] [args]"
 pack: meta
 intent: "Route a cross-model team-mode request (review, adversarial, delegate, status) to the official plugin under ai_team governance"
 routes_to: [team-review, team-adversarial, team-delegate, team-status]
