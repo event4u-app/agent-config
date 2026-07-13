@@ -9,6 +9,8 @@ triggers:
   - keyword: "drive-by"
   - keyword: "rewrite"
   - keyword: "fix"
+routes_to:
+  - "guideline:agent-infra/minimal-safe-diff-mechanics"
 workspaces: [engineering]
 packs: [engineering-base]
 ---

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**79 / 268 steps done · 29%**
+**82 / 268 steps done · 31%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   31%
 ```
 
 ## Open roadmaps
@@ -33,7 +33,7 @@
 | 15 | [road-to-ecosystem-harvest-workflow-contracts.md](roadmaps/road-to-ecosystem-harvest-workflow-contracts.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
 | 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 18 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 5 | 31 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 86% |
+| 18 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
 | 19 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 20 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 15 | 23 | 1 | 0 | [2](#blockers-road-to-team-mode) | ██████░░░░ 61% |
 | 21 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
@@ -238,17 +238,17 @@ _1 blocker resolved._
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
-**Road to request-scoped rule load — ship only what the request needs** — 31 / 36 done (86%)
+**Road to request-scoped rule load — ship only what the request needs** — 34 / 36 done (94%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Workspace/pack fields into the router (schema, additive) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Consumer-scoped rule projection (the ~50k lever) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
+| 1 | Consumer-scoped rule projection (the ~50k lever) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1b | Pipeline B: make scoping reach actual consumer installs | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | PARKED: rules-as-skills falsification probe (Claude Code) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | 🟡 in progress | 3 | 10 | 0 | 1 | 77% |
+| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | 🟡 in progress | 1 | 12 | 0 | 1 | 92% |
 
 <a id="blockers-road-to-request-scoped-rule-load"></a>
 **Blockers**
