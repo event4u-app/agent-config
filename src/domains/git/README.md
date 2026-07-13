@@ -5,7 +5,7 @@
 Git workflow — commit, pull requests, branch sync.
 
 - **id**: `git`
-- **version**: `8.13.0`
+- **version**: `9.0.0`
 - **owner**: engineering
 - **requires**: engineering-base
 - **artefacts**: 4
