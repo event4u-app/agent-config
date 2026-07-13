@@ -71,66 +71,8 @@ porting, or modifying UI to match it.
 - The user explicitly invites exploration ("show me options", "redesign this", "improve the layout") — that authorises deviation for that turn.
 - Non-UI surfaces (scripts, CLI, backend).
 
-## How to surface a deviation — do NOT execute it
-
-Name what the spec shows, what you would change, and why — as a numbered option
-per [`user-interaction`](user-interaction.md). The user picks. Honesty about
-**behaviour** (a control not yet wired) never licenses changing the **design**:
-a faithful visual plus a labelled "not wired yet" note beats an invented
-redesign.
-
-## Failure modes
-
-- Swapping the prototype's font / typeface because another "reads better".
-- Replacing a specified control (slider, stepper, chip) with a different control.
-- Dropping or adding an element the prototype shows ("+", a send→stop toggle, a warning chip).
-- Restructuring layout or moving sections "because the flow is better".
-- Treating an internal "honesty gate" or "stub" concern as licence to redesign the UI.
-- Re-running a redesign after the user already said "match the prototype".
-
-## Surgical visual edits
-
-A request to change one visual thing — a colour, a label, a single element — is
-a **targeted edit**, not a redesign licence. Apply the same
-[`minimal-safe-diff`](minimal-safe-diff.md) discipline to design work that
-backend edits have always owed.
-
-- **Change only the semantic target.** Preserve the surrounding layout,
-  spacing, typography, dimensions, content, animation, and interaction states.
-  Do not rewrite the component, reflow the section, or "modernise" neighbours
-  while you are in there. (fixtures: `daf-edit-preservation`, `daf-unwanted-variations`.)
-- **A broader redesign needs an explicit trigger.** Only phrases like *"new
-  direction"*, *"from scratch"*, *"make it feel premium"*, *"rework the flow"*,
-  or *"give me variations / options"* license a from-scratch rework. Absent such
-  a phrase, a "fix / change / update the X" request is surgical — when unsure
-  which, ask ([`ask-when-uncertain`](ask-when-uncertain.md)). (fixture: `daf-redesign-trigger`.)
-- **Preserve stable anchors.** Where the host exposes DOM/comment metadata, keep
-  comment anchors and screen labels intact so the edit stays locatable. Where
-  the host has no such surface, preserve stable semantic anchors already present
-  in source comments / `data-*` attributes — never strip them, and do not invent
-  new ones.
-
-## Asset & imagery discipline
-
-Visual artifacts carry **real assets or honest placeholders — never fabricated
-brand evidence**. The design-surface instance of the no-invented-facts floor.
-
-- **Copy owned assets through the project's accepted path.** Reference or copy
-  project-owned assets (logos, icons, fonts, images) via the target project's
-  asset directory/pipeline — never hotlink a design-system's internal URL, never
-  bulk-copy a huge source folder. (fixtures: `daf-missing-asset`, `daf-external-asset-url`.)
-- **Real imagery where inspection matters.** On visual pages/decks, use actual
-  product / place / object / state imagery where the image IS the proof (a
-  product screenshot, a real dashboard state). Decorative atmosphere is not proof
-  — never pass a stock-like or invented image off as the real product. An
-  invented product screenshot is fabricated evidence. (fixture: `daf-invented-screenshot`.)
-- **Icons follow the iconography floor** — no emoji-as-icon in serious UI, no
-  hand-rolled icon when a set exists; see
-  [`iconography`](../skills/iconography/SKILL.md) § Iconography floor.
-- **Ask before adding material — no unrequested filler.** Do not generate copy,
-  placeholder sections, or decorative blocks the user did not ask for to "complete"
-  a design. Where the brief is silent on a region, surface the gap ([`ask-when-uncertain`](ask-when-uncertain.md))
-  or leave an honest placeholder — never invent filler content to fill space.
+Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also
 

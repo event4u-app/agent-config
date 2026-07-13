@@ -24,31 +24,13 @@ packs: [meta]
 
 Monitor for **context decay** — long conversations degrade quality and waste tokens.
 
-**Suggest a new chat when:**
-
-- Conversation exceeds **~20 user messages**
-- Topic **changes completely**
-- Re-reading files already in context
-- **15+ completed tasks** and new unrelated topic
-- Branch changed since start
-- ~24 hours passed
+**Suggest a new chat when:** ~20+ user messages · complete topic change ·
+re-reading files already in context · 15+ completed tasks and a new unrelated
+topic · branch changed since start · ~24 hours passed.
 
 **Repeat** at multiples: messages 20/40/60, tasks 15/30/45.
-**ONLY at exact thresholds.** Between: silence.
-
-**How to suggest:**
-
-Estimate token cost: responses × ~1,500 tokens.
-
-```
-> ⚡ This conversation has ~{N} messages (~{N×1500} tokens history cost — charged on EVERY request).
-> A fresh chat saves ~{N×1500} input tokens per request.
->
-> 1. Start fresh — I'll initiate a session handoff
-> 2. Continue here
-```
-
-**If the user picks 1:** Initiate a session handoff or start fresh.
+**ONLY at exact thresholds.** Between: silence. Suggestion template
+(token-cost estimate + numbered options): the mechanics guideline below.
 
 ## The 3-Failure Rule
 
@@ -58,40 +40,20 @@ When **3 consecutive attempts** at the same task fail (code fix, test fix, confi
 2. **State dump** — summarize what was tried, what failed, and what you know so far.
 3. **Recommend fresh start** — suggest a fresh session with the state dump as context, or ask for a different approach.
 
-**What counts as a failure:**
-
-- Code change that doesn't fix the problem
-- Test that still fails after the fix
-- Quality check (type-checker, linter, formatter) that still errors
-- Build/deploy that fails after config change
-
-**Does NOT reset the counter:** Unrelated tasks. User providing new information (course correction).
+**What counts as a failure:** a change that doesn't fix the problem · a test still failing after the fix · a quality check still erroring · a build/deploy failing after a config change. **Does NOT reset the counter:** unrelated tasks; the user providing new information (course correction).
 
 **Failure identity — same error vs new error.** Failure signature = **same target + same error class** (same failing test + same assertion/exception, same lint rule id, same build error).
 
 - **Same failure signature twice → stop and pivot now.** Don't burn the third attempt on a near-identical retry of a fix that already failed the same way — a repeated identical signature means the hypothesis is wrong, not under-applied. Change strategy (re-read source, new hypothesis, ask).
 - **New error signature each attempt = progress.** Peeling one error to reveal a different one is forward motion; counter continues — learning, not looping.
 
-**Hard-blocker classes — skip retries, go straight to ask/surface.** On the **first** occurrence, do not count toward the 3 — stop and surface:
-
-- Missing credentials / unset required secret or token.
-- Permission denied (auth/authz, file mode, protected branch, scope).
-- Spend / quota / rate limit reached (billing cap, API quota, 429 that won't self-clear).
-- External-service `5xx` / outage / DNS-unreachable — a dependency is down, not your code.
-
-Retrying a hard-blocker is the canonical wasted-attempt; the fix is a decision or external change only the user/environment can make.
+**Hard-blocker classes — skip retries, go straight to ask/surface.** On the **first** occurrence, do not count toward the 3 — stop and surface: missing credentials / unset secret · permission denied · spend / quota / rate limit reached · external-service 5xx / outage. Retrying a hard-blocker is the canonical wasted attempt; the fix is a decision or external change only the user/environment can make.
 
 ## Tool Loop Detection
 
 Calling the **same tool** more than **2 times in a row** with similar parameters = loop.
-
-**Immediate action:**
-1. **STOP** all tool calls.
-2. **Do the task directly** — write the code, run the command, answer the question.
-3. If you can't proceed — ask the user for help.
-
-`sequentialthinking` is especially prone to loops. Use at most **once** per task,
-NEVER for simple file operations, command execution, or straightforward edits.
+**Immediate action:** 1. STOP all tool calls. 2. Do the task directly. 3. Can't proceed → ask the user.
+`sequentialthinking` is especially prone to loops: at most **once** per task, NEVER for simple file operations, command execution, or straightforward edits.
 
 ## Read-Loop Detection — the 15 / 25 rule
 
@@ -101,74 +63,16 @@ EVERY TURN MUST EDIT, RUN, OR ASK.
 ```
 
 **Read-only turn:** only `view` / `codebase-retrieval` / `grep` /
-`git log` / `git show`. No `str-replace-editor`, `save-file`, no
-test/build/quality run, no `git commit`.
+`git log` / `git show`. No edit/save, no test/build/quality run, no `git commit`.
 
-**15-min warning (3 read-only turns in a row) — change approach.**
-Next turn MUST contain at least one of: an edit, a test/build/quality
-command, or an explicit user question. Self-check:
+**15-min warning (3 read-only turns in a row) — change approach.** The next turn MUST contain at least one of: an edit, a test/build/quality command, or an explicit user question (self-check in the mechanics guideline).
 
-1. Source expectation known? If no → read **once**, then act.
-2. Can a single failing test name the error? If yes → run it now.
-3. Regression in working code? → `git log` + `git show <sha> -- <file>`.
-4. Guessing at mock / payload shape? → read the producer **once**.
+**25-min abort (5 read-only turns) — STOP and ask** with the abort block (template in the mechanics guideline). Non-bypassable: an autonomous mandate does **not** lift the abort — it is the safety net that protects autonomy from becoming a token sink.
 
-**25-min abort (5 read-only turns) — STOP and ask:**
+Body migrated to [`guideline:agent-infra/context-hygiene-mechanics`](../docs/guidelines/agent-infra/context-hygiene-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — the freshness-suggestion template, the read-loop self-check + abort block, the state-dump format + `/agent-handoff` pointer, the Augment ignored-skills recovery flow, and the Copilot no-hook fallback (manual `context_hygiene_hook` refresh).
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
-```
-> ⛔ Loop: N read-only turns, ~M min. Read: <files>. Hypothesis: <X>.
-> 1. Different approach (suggestion: <Y>)
-> 2. Point me at the right spot
-> 3. Fresh chat with state dump
-```
+## See also
 
-Non-bypassable. Autonomous mandate (`/work`, `/roadmap:process-*`,
-"entscheide selbst") does **not** lift the abort — it is the safety
-net that protects autonomy from becoming a token sink.
-
-Debug procedure for "I'm in a read loop fixing tests" →
-[`systematic-debugging § Debug micro-loop`](../skills/systematic-debugging/SKILL.md#debug-micro-loop--one-test-one-fix-one-re-run).
-
-## State dump format
-
-```
-## State Dump: [Task]
-### Tried: 1. [Approach] → [Why failed] 2. ... 3. ...
-### Known: [Key facts]
-### Hypothesis: [Best guess for root cause]
-### Recommendation: [Next approach for fresh session]
-```
-
-Use `/agent-handoff` to generate a context summary for a fresh conversation.
-
-## Augment-specific: Ignored Skills Recovery
-
-Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
-If you need an ignored skill: read its SKILL.md directly, apply guidance, then ask:
-
-```
-> 💡 I loaded `{name}` manually — currently ignored in `.augmentignore`.
-> 1. Remove from ignore — relevant for this project
-> 2. Keep ignored — one-off
-```
-
-## Copilot fallback
-
-GitHub Copilot has no `PostToolUse` hook surface, so
-`scripts/context_hygiene_hook.ts` cannot run structurally and
-`agents/runtime/state/context-hygiene.json` is not maintained automatically
-(turn count, loop signal, freshness milestones at 20/40/60).
-
-The cooperative path: track turns and tool-loop signals from memory
-during the conversation and apply the suggest-a-new-chat / 3-failure
-stop / loop-detection rules above. To refresh the state file
-manually so the dashboard or another tool can read the latest
-counters, run:
-
-```bash
-./scripts-run src/scripts/context_hygiene_hook < /dev/null
-```
-
-The script reads from stdin if a JSON envelope is provided and
-otherwise writes a no-op snapshot under the shared dispatcher lock.
-Exit code is always 0 — hooks must never block the agent loop.
+- [`guideline:agent-infra/context-hygiene-mechanics`](../docs/guidelines/agent-infra/context-hygiene-mechanics.md) — templates + per-host procedures.
+- [`systematic-debugging § Debug micro-loop`](../skills/systematic-debugging/SKILL.md) — the read-loop debug procedure.
