@@ -208,6 +208,18 @@ over model memory).
 > pure-write run is ~1.25× input on the cached span (≈ $0.008/call) — negligible,
 > and the estimator's conservative 0%-hit default keeps the budget gate honest.
 
+> **Follow-up council (2026-07-14, deep; sonnet-4-5 + gpt-4o, $0.039):** asked
+> whether to extend caching code-side to teams/subagents. Verdict: **not worth
+> it** — teams default to flat-rate CLI, subagents are host-run (unreachable by
+> this code); only the A3 read-unlock has ROI. It DID surface that the shipped
+> caching was **default-on for every `AnthropicClient` caller** while the
+> kill-switch only reached council members — a silent-activation risk. Fixed
+> here: caching is now **explicit opt-in (client-default OFF)**; the council opts
+> in via `_construct_api_member` (unchanged council behaviour, kill-switch
+> intact), so a stray/future single-shot caller never pays the write premium by
+> surprise. Also documented the subagent prompt-cache break-even + failure modes
+> in `subagent-orchestration/prompts/README.md`.
+
 ## Phase A3 — (follow-up, sequenced AFTER A1 ships + is measured) cache-coupling-gated auto model-tiering
 
 - [ ] PRECONDITION: verify how `necessity.ts:334-526` defines "small" (byte vs

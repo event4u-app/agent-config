@@ -33,6 +33,17 @@ hits (Anthropic `cache_control: ephemeral`) across the cohort — the prefix is
 cached after the first sibling and served from cache for the rest, cutting
 input-token cost proportionally to cohort size.
 
+**Break-even + failure modes.** A cache write costs ~1.25× the base input rate
+(5-min TTL); a read costs ~0.1×. So the prefix pays off once **≥ 2** siblings
+read it — a lone subagent with no sibling reuse only pays the write premium and
+saves nothing. The cache is a **byte-exact prefix match**: any drift in the
+shared prefix (a timestamp, a per-sibling id, reordered text) forces a re-write
+instead of a read, and the prefix must be re-hit within the **5-minute TTL**, so
+dispatch siblings promptly rather than trickling them. This is why the win is
+real for **fan-out** (many siblings, one prefix) and marginal for one-shot
+dispatch. Verify a cohort is actually reading, not re-writing, by checking
+`usage.cache_read_input_tokens > 0` on the 2nd+ sibling.
+
 ## Loading
 
 `tests/test_subagent_prompt_loading.py` asserts that every mode named
