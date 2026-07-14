@@ -1,6 +1,6 @@
 # Subagent dispatch prompts
 
-One file per mode in [`SKILL.md`](../SKILL.md) § *The seven modes*. Each
+One file per mode in [`SKILL.md`](../SKILL.md) § *The nine modes*. Each
 prompt is the **literal template** the orchestrator hands to the
 subagent on dispatch — externalized so prompt edits do not bloat the
 skill above the 400-line sunset trigger.
@@ -14,6 +14,7 @@ skill above the 400-line sunset trigger.
 | do-competitively | [`do-competitively.md`](do-competitively.md) |
 | judge-with-debate | [`judge-with-debate.md`](judge-with-debate.md) |
 | do-in-worktrees | [`do-in-worktrees.md`](do-in-worktrees.md) |
+| adversarial-verification-council | [`adversarial-verification-council.md`](adversarial-verification-council.md) |
 
 ## Contract
 
@@ -47,5 +48,5 @@ dispatch. Verify a cohort is actually reading, not re-writing, by checking
 ## Loading
 
 `tests/test_subagent_prompt_loading.py` asserts that every mode named
-in `SKILL.md` § *The seven modes* has a loadable prompt file under this
+in `SKILL.md` § *The nine modes* has a loadable prompt file under this
 directory and that each prompt mentions all four status enum values.

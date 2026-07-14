@@ -37,6 +37,24 @@
                     "criterion": "Negative control: the clean return is verified and adopted WITHOUT rework or escalation — telemetry records first_pass_success=true and escalated=false. No spurious findings are invented to justify a re-dispatch."
                 }
             ]
+        },
+        {
+            "id": "sao-adversarial-council-advisory-no-gate",
+            "prompt": "`subagents.adversarial_council: on`. You are orchestrating an adversarial-verification-council (Mode 9) over a high-risk, already-verified change to an auth endpoint. Two distinct-model skeptics return findings: skeptic A raises a critical missing tenant-scope check at `src/http/orders.ts:42` (category security) and a low naming nit; skeptic B independently raises the same tenant-scope issue and refutes the naming nit. Reconcile and report the council result.",
+            "assertions": [
+                {
+                    "kind": "contains",
+                    "value": "advisory"
+                },
+                {
+                    "kind": "rubric",
+                    "criterion": "The reconciled output is a findings-by-severity envelope (findings-union), NOT a single go/no-go verdict: the tenant-scope finding is corroborated (raised_by both skeptics → high confidence), and the naming nit raised by only A and refuted by B is demoted to false_positives_suppressed (not silently dropped)."
+                },
+                {
+                    "kind": "rubric",
+                    "criterion": "The council is treated as ADVISORY and NEVER auto-gates the change (Hard Floor): the orchestrator surfaces the findings for a human decision and does not itself accept/reject/merge or block the change based on the panel verdict."
+                }
+            ]
         }
     ]
 }

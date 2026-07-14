@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: subagent-orchestration
-description: "Use when orchestrating implementer/judge subagents — form gate + eight modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge)."
+description: "Use when orchestrating implementer/judge subagents — form gate + nine modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge, adversarial-council)."
 domain: process
 workspaces:
   - agent-config-maintainer
@@ -108,6 +108,7 @@ no learned routing, no self-modifying selector (rejected, stays rejected).
 | Multi-step cross-wing chain needing filesystem isolation | worktrees | `do-in-worktrees` |
 | Ordered steps with declared dependencies | steps | `do-in-steps` |
 | Single change with non-trivial risk / contested spec / decision | judge | `do-and-judge`, `do-and-judge-two-stage`, `judge-with-debate`, `do-with-live-app-judge` |
+| High-risk change needing defect-FINDING coverage (opt-in, advisory) | verify-council | `adversarial-verification-council` (default-off; `subagents.adversarial_council`) |
 | Single slice below the delegability floor, unstructured, or frontier-priced | none | no dispatch — run in-session |
 
 Rules:
@@ -121,7 +122,7 @@ Rules:
   or `none`) so the gate's value is measurable inside the ADR-117
   prove-or-drop window.
 
-## The eight modes
+## The nine modes
 
 Each mode has a decision row: when to use, when not, and the expected
 model pairing. Defaults come from
@@ -211,6 +212,9 @@ migration, public API) where a single judge is too easy to fool.
 |---|---|---|
 | Security, data integrity, public API change | Routine internal refactor | judges = same tier (2x); meta-judge = one tier up |
 
+Mode 6 = **go/no-go** (strict-er verdict wins); for defect-FINDING coverage (the
+*union* of what diverse models catch) use Mode 9.
+
 ### 7. do-in-worktrees
 
 Cross-wing or cross-skill chain executed across isolated git worktrees —
@@ -230,6 +234,22 @@ reading the diff. Use for UI-heavy change where "looks right in the diff"
 Experimental until `verdict_changed_outcome` telemetry proves it. Rubric,
 adoption gate, and the async-verifier future candidate →
 [`subagent-modes-detail`](../../agent-src/contexts/execution/subagent-modes-detail.md) § Mode 8.
+
+### 9. adversarial-verification-council (gated — opt-in, advisory)
+
+A panel of N (default 2) **distinct-model** skeptics red-teams a real,
+already-verified change through the `judge-*` lenses — each prompted to *break*
+it. Returns reconcile deterministically
+([`_lib/adversarial_reconcile.ts`](../../scripts/_lib/adversarial_reconcile.ts))
+into one findings-by-severity envelope with provenance + cross-model confidence
+([`schemas/adversarial-findings.json`](schemas/adversarial-findings.json)). Unlike
+Mode 6 it emits a **findings-union**, not a go/no-go verdict. **Advisory only —
+never auto-gates (Hard Floor).** Default-off (`subagents.adversarial_council`);
+opt-in high-risk changes only; registered claim + high-risk tier need
+cross-*vendor* skeptics. Invariants, skeptic prompt, reconciliation, prove-or-drop
+gate → [`subagent-modes-detail`](../../agent-src/contexts/execution/subagent-modes-detail.md) § Mode 9
++ [`prompts/adversarial-verification-council.md`](prompts/adversarial-verification-council.md)
+(ADR-122).
 
 ## Status taxonomy — every subagent return uses one envelope
 
@@ -265,7 +285,7 @@ Each mode's literal dispatch template lives under
 matching prompt at dispatch time and substitutes `{{placeholders}}`.
 Edits to a prompt do not bloat this skill against the 400-line sunset
 trigger; `tests/test_subagent_prompt_loading.py` confirms each of the
-eight modes resolves to a loadable prompt that cites all four taxonomy
+nine modes resolves to a loadable prompt that cites all four taxonomy
 statuses.
 
 ## Procedure
@@ -294,7 +314,7 @@ same context, **stop** and report. Do not improvise.
 
 ### 3. Pick the mode
 
-Run the form gate first, then match task shape to one of the eight modes. When two modes could fit,
+Run the form gate first, then match task shape to one of the nine modes. When two modes could fit,
 prefer the cheaper one (`do-and-judge` < `do-and-judge-two-stage` <
 `do-in-steps` < `do-in-parallel` < `do-competitively` <
 `judge-with-debate` < `do-in-worktrees`).
@@ -320,6 +340,7 @@ Describe each dispatch step explicitly in chat so the user can follow it.
 * `do-competitively` → [`prompts/do-competitively.md`](prompts/do-competitively.md)
 * `judge-with-debate` → [`prompts/judge-with-debate.md`](prompts/judge-with-debate.md)
 * `do-in-worktrees` → [`prompts/do-in-worktrees.md`](prompts/do-in-worktrees.md)
+* `adversarial-verification-council` → [`prompts/adversarial-verification-council.md`](prompts/adversarial-verification-council.md)
 * Standalone judge → judge prompt in [`prompts/do-and-judge.md`](prompts/do-and-judge.md)
 
 ### 5. Report
@@ -360,7 +381,7 @@ Skip emit when `subagents.enabled: false` or `spawn_count == 0` (in-session run)
 
 ## Output format
 
-1. **Mode chosen** — one of the seven, with the one-line reason
+1. **Mode chosen** — one of the nine, with the one-line reason
 2. **Model pairing** — implementer model / judge model (resolved)
 3. **Verdict** — applied / revised / handed back
 4. **Evidence** — diff summary, test output, or judge transcript

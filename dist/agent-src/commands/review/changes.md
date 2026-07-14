@@ -130,6 +130,28 @@ If picked **1**:
 
 If picked **2** → continue with internal judges only.
 
+### 4c. Optional adversarial verification council (opt-in, high-risk)
+
+Read `subagents.adversarial_council` from `.agent-settings.yml` (default
+`off`):
+
+- `off` (default): skip silently.
+- `ask`: when the diff is explicitly high-risk (security, tenant, migration,
+  public API), offer it (in the user's language):
+
+  > 1. Run the adversarial verification council on this high-risk diff? (distinct-model skeptics red-team for finding coverage)
+  > 2. Skip — the five internal judges are enough
+
+- `on`: run it automatically on a high-risk diff.
+
+When run, dispatch the
+[`adversarial-verification-council`](../../skills/subagent-orchestration/SKILL.md)
+mode (Mode 9): distinct-model skeptics red-team the diff for defect FINDING
+coverage; the reconciled findings-by-severity envelope is folded into step 5 as
+an **advisory** input, clearly marked. Like the external council it **never
+auto-gates** — a human decides what is actionable. This is defect coverage, not
+a go/no-go verdict.
+
 ### 5. Consolidate
 
 Consolidate via [`judge-synthesis`](../../skills/judge-synthesis/SKILL.md) — the
