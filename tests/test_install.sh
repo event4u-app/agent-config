@@ -353,9 +353,17 @@ test_cli_wrapper_overwrites_on_reinstall() {
 
 test_cli_wrapper_delegates_to_master() {
     setup; run_install
-    # Simulate node_modules layout so the wrapper can find the master CLI.
-    mkdir -p "$TMPDIR/node_modules/@event4u"
-    ln -sf "$SCRIPT_DIR" "$TMPDIR/node_modules/@event4u/agent-config"
+    # Simulate the npm-install layout at the EXACT path the wrapper probes
+    # (node_modules/@event4u/agent-config/scripts/agent-config → master
+    # shim). Symlinking the whole package dir to $SCRIPT_DIR does not expose
+    # that path (the repo ships src/scripts/, not top-level scripts/), so
+    # the wrapper silently fell through to the npx network fallback — which
+    # flakes during a release when the @latest dist-tag briefly outruns
+    # tarball propagation. Point at the real shim so this exercises LOCAL
+    # delegation deterministically, offline.
+    mkdir -p "$TMPDIR/node_modules/@event4u/agent-config/scripts"
+    ln -sf "$SCRIPT_DIR/src/scripts/agent-config" \
+        "$TMPDIR/node_modules/@event4u/agent-config/scripts/agent-config"
     local out
     out="$(cd "$TMPDIR" && ./agent-config help 2>&1)"
     if printf '%s' "$out" | grep -q "agent-config — event4u/agent-config CLI"; then

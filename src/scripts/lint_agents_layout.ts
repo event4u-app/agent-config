@@ -42,7 +42,11 @@ const ALLOWED_FLAT_FILES: ReadonlySet<string> = new Set([
     // separate violation caught by check_tracked_but_ignored.ts.
     '.ai-video.xml',       // operator AI-video config; gitignored per .gitignore § AI Video
     'installed-tools.lock', // installer per-user inventory; gitignored per ADR-020
-    '.event4u-bridge.yml',  // consumer bridge marker; ADR-020 (should only be in consumers)
+    // Retired marker (ADR-020 amendment 2026-07-13). No longer written; the
+    // global root resolves from `~/.event4u/agent-config`. Kept tolerated so a
+    // legacy leftover in a not-yet-reinstalled consumer is not flagged as a
+    // violation — the next install deletes it.
+    '.event4u-bridge.yml',
 ]);
 
 // All directories allowed at the agents/ root in the SOURCE REPO.
@@ -75,6 +79,8 @@ const ALLOWED_SOURCE_DIRS: ReadonlySet<string> = new Set([
 const CONSUMER_EXPECTED_ENTRIES: ReadonlySet<string> = new Set([
     // Required consumer entries
     'overrides',
+    // Retired marker (ADR-020 amendment 2026-07-13) — no longer written, but
+    // kept in the tolerated set so a legacy leftover does not warn.
     '.event4u-bridge.yml',
     '.gitkeep',
     // Optional but legitimate consumer entries (will not trigger warnings)
@@ -93,9 +99,9 @@ const CONSUMER_EXPECTED_ENTRIES: ReadonlySet<string> = new Set([
 const MIGRATE_HINT =
     'Run `npx @event4u/agent-config migrate` to sweep legacy project-scope ' +
     'artefacts in one pass. The unified `migrate` command (see ' +
-    '`docs/contracts/migrate-command.md`) leaves `agents/overrides/` + ' +
-    '`agents/.event4u-bridge.yml` as the only consumer-side files; the ' +
-    'wizard recreates fresh config on `agent-config setup`.';
+    '`docs/contracts/migrate-command.md`) leaves `agents/overrides/` as the ' +
+    'only consumer-side agent surface; the wizard recreates fresh config on ' +
+    '`agent-config setup`.';
 
 function _isDir(p: string): boolean {
     try {

@@ -119,10 +119,12 @@ afterEach(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// A global-only consumer fixture. The `.event4u-bridge.yml` marker was retired
+// (ADR-020 amendment 2026-07-13); the doctor now recognises a global-only
+// consumer by the `agents/overrides/` scaffold (or the install-mode marker).
 function bridgeRepo(): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-bridge-'));
-    fs.mkdirSync(path.join(dir, 'agents'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'agents', '.event4u-bridge.yml'), 'x: 1\n');
+    fs.mkdirSync(path.join(dir, 'agents', 'overrides'), { recursive: true });
     return dir;
 }
 
