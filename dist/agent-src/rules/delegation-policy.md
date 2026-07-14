@@ -90,7 +90,7 @@ primitive → run in-session (clean no-op).
 
 ## See also
 
-- [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — the form gate + 8 modes this selects.
+- [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — the form gate + 9 modes this selects.
 - [`subagent-boundary`](../docs/contracts/subagent-boundary.md) — what a subagent owns vs never owns (task-meaning, memory, pack-surface, safety-floor bypass).
 - [`auto-orchestration-activation`](../contexts/execution/auto-orchestration-activation.md) — the gate.
 - [`reasoning-orchestrator`](../skills/reasoning-orchestrator/SKILL.md) — RDP dispatch, now gated here.

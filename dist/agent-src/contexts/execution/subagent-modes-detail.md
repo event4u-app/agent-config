@@ -1,10 +1,11 @@
-# Subagent Modes — worktree + live-app-judge detail
+# Subagent Modes — worktree + live-app-judge + adversarial-council detail
 
-Extended detail for the two heaviest [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md)
-modes — `do-in-worktrees` (mode 7) and `do-with-live-app-judge` (mode 8).
-Split out of the skill body to keep it under the size budget; the mode list,
-selection rules, and the six common modes stay inline in the skill. Pull this
-when you actually dispatch one of these two modes.
+Extended detail for the heaviest [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md)
+modes — `do-in-worktrees` (mode 7), `do-with-live-app-judge` (mode 8), and
+`adversarial-verification-council` (mode 9). Split out of the skill body to keep
+it under the size budget; the mode list, selection rules, and the six common
+modes stay inline in the skill. Pull this when you actually dispatch one of these
+modes.
 
 ## Mode 7 — do-in-worktrees
 
@@ -82,3 +83,37 @@ Rules:
   mechanism for this mode's judge once dependable screenshot tooling lands.
   Recorded from road-to-opt-design-polish; gate it behind the same
   `verdict_changed_outcome` adoption evidence above.
+
+## Mode 9 — adversarial-verification-council (gated — opt-in, advisory)
+
+A panel of N (default 2) **distinct-model** skeptics red-teams a real,
+already-verified change through the `judge-*` lenses. Each skeptic is prompted to
+*break* the change, returns a structured findings array (+ optional refutations),
+and the returns are reconciled by
+[`_lib/adversarial_reconcile.ts`](../../../scripts/_lib/adversarial_reconcile.ts)
+into one [`adversarial-findings.json`](../../../skills/subagent-orchestration/schemas/adversarial-findings.json)
+envelope. Scope: defect **finding coverage**, not a go/no-go decision (that is
+mode 6). Full contract: ADR-122; skeptic prompt:
+[`prompts/adversarial-verification-council.md`](../../../skills/subagent-orchestration/prompts/adversarial-verification-council.md).
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| High-risk change (security, tenant, migration, public API) where finding coverage matters, opted-in | Default flow, routine change, `subagents.adversarial_council: off`, or a plain go/no-go (use mode 6) | skeptics = ≥2 distinct models; cross-*vendor* for the registered claim + high-risk tier; cross-model Iron Law across all |
+
+Invariants:
+
+- **Advisory only — never auto-gates the change (Hard Floor).** The reconciler
+  ranks and annotates findings; a human decides what is actionable.
+- **Default-off.** `subagents.adversarial_council` (`off|ask|on`, default `off`).
+  Fires only on an explicit high-risk change under an opted-in setting.
+- **Cross-model Iron Law** across all skeptics; the registered finding-coverage
+  claim and the high-risk tier require cross-*vendor* skeptics (the backed
+  `cross-vendor-parity` signal is provider-level).
+- **Reconciliation is deterministic TS with tests** — dedup, severity-quorum
+  confidence, false-positive suppression (demote, never drop). Never
+  LLM-computed prose (ADR-122 anti-lesson).
+- **N cap** from the verify budget; no daemon / no persistent runtime; each
+  skeptic return uses the `subagent-status.json` envelope before reconciliation.
+- **Prove-or-drop.** The mode stays default-off until the
+  `adversarial-council-finding-coverage` claim is `backed` by the two-stage
+  residual-detection benchmark (roadmap Phase 4); honest-null keeps it inert.
