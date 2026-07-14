@@ -62,4 +62,15 @@ describe('renderReview', () => {
         expect(renderReview(blocking, false)).toContain('WOULD block');
         expect(renderReview(blocking, true)).toContain('merge-blocking');
     });
+    it('labels each row (Blocking)/(Advisory) so a critical-but-non-blocking row never reads as inconsistent with the count', () => {
+        const findings = [f('critical', 'correctness'), f('critical', 'security')];
+        const out = renderReview(findings, false);
+        // critical × correctness is NOT blocking → labelled Advisory
+        expect(out).toContain('| critical (Advisory) | correctness |');
+        // critical × security IS blocking → labelled Blocking
+        expect(out).toContain('| critical (Blocking) | security |');
+        // verdict count matches the number of (Blocking) rows (exactly 1)
+        expect(out).toContain('1 finding(s) WOULD block');
+        expect((out.match(/\(Blocking\)/g) ?? []).length).toBe(1);
+    });
 });

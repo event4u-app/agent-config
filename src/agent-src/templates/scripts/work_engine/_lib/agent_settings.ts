@@ -252,7 +252,10 @@ const _AGENTS_DIR_MARKERS: readonly string[] = [
     'roadmaps',
     'settings/.ai-council.yml',
     'roadmaps-progress.md',
-    '.event4u-bridge.yml',
+    // `overrides/` is the guaranteed minimal-consumer surface (ADR-020).
+    // Replaced the retired `.event4u-bridge.yml` marker (ADR-020 amendment
+    // 2026-07-13) so a bare consumer `agents/` dir stays anchorable.
+    'overrides',
 ];
 
 /**

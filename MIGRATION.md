@@ -16,6 +16,20 @@ firing (now from `settings.json`), skills/commands stop listing twice, and
 `claude-plugin` no longer reporting a duplicate surface). Augment CLI and
 Copilot CLI plugins are unaffected.
 
+# Migrating to 9.0
+
+> Consumer rule projection is **scoped by default** in 9.0. Full
+> breaking-change detail: [`CHANGELOG.md` § 9.0.0](CHANGELOG.md).
+
+Fresh installs now ship `projection.rule_workspaces` pre-filled with every
+consumer workspace, so the 16 exclusively-maintainer specification rules no
+longer arrive: **103 → 88 rules** per install. All domain safety floors,
+domain rules, and kernel rules keep shipping.
+
+Existing installs are unchanged until you run `agent-config sync` /
+re-install (settings sync preserves your current value). To stay on the
+legacy every-rule behaviour, set `projection.rule_workspaces: []`.
+
 # Migrating to 6.0
 
 > Upgrading an existing install to the **6.0 experience-first** layout.

@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `9.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 273
+- **artefacts**: 274
 
-## Commands (140)
+## Commands (141)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -36,6 +36,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`cost`** — Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_loading_tier)
 - **`cost-profile`** — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 - **`estimate-ticket`** — Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
+- **`explain-run`** — Read-only 'why did that happen' run report — resolved rule set, rules fired, artefact engagement, subagent dispatches, hook/loop/freshness state — even when the user just says 'explain the last run'.
 - **`feature`** — Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
 - **`feature-dev`** — Full 7-phase feature development workflow for complex features.
 - **`feature-explore`** — Brainstorm and explore a feature idea before committing to a full plan

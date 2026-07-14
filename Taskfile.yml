@@ -166,6 +166,7 @@ tasks:
       - task: check-iron-law-prominence
       - task: check-rule-invariants
       - task: lint-changelog-rollback
+      - task: lint-breaking-changes-index
       - task: check-always-budget
       - task: check-augment-description-cap
       - task: check-augment-budget-strict
@@ -347,6 +348,7 @@ tasks:
       - task: check-iron-law-prominence
       - task: check-rule-invariants
       - task: lint-changelog-rollback
+      - task: lint-breaking-changes-index
       - task: check-always-budget
       - task: check-augment-description-cap
       - task: check-augment-budget-strict

@@ -23,8 +23,9 @@ With the flag set, the installer:
 1. Allows project-scope writes back into the repo tree (so a
    maintainer can run `task dev:install-global` and iterate on the
    working copy).
-2. **Skips** writing `agents/.event4u-bridge.yml` into the package
-   repo (per `consumer-bridge § Writer contract`). The repo is the
+2. **Skips** consumer-surface writes into the package repo. (The
+   `agents/.event4u-bridge.yml` marker is retired — ADR-020 amendment
+   2026-07-13 — and no longer written at all.) The repo is the
    source, not a consumer of itself.
 3. Treats `~/.event4u/agent-config/` as a peer install — touches are
    limited to the working-copy projection.

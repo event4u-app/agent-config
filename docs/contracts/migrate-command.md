@@ -178,7 +178,7 @@ intentionally **outside** the unified `migrate` command:
 | Write a fresh `.agent-settings.yml` | wizard (`agent-config setup`) | Same as above — the wizard is the source of truth for new project config. |
 | Run the perms gate (`lint_global_paths.py`) | `agent-config doctor` | Migration deletes project-local state; the perms audit is a separate diagnostic on the global tree. |
 | `.legacy-pre-global-only/<stamp>/` snapshot | (removed) | Snapshot-and-rollback was a `migrate-to-global` semantic. The deletion path needs no snapshot — git history is the rollback surface. |
-| `agents/.event4u-bridge.yml` bridge marker write | `install.py` | Bridge marker is an install-time artefact, not a migration concern. |
+| `agents/.event4u-bridge.yml` legacy marker removal | `install.py` | Marker is retired (ADR-020 amendment 2026-07-13); install now deletes any legacy leftover instead of writing it. Global root resolves from `~/.event4u/agent-config`. |
 | `settings:migrate` (read-only copy of project YAML into global) | (removed; superseded by wizard) | The read-only copy was a stepping stone for the destructive move. With the deletion policy, neither step survives. |
 
 ## Exit codes

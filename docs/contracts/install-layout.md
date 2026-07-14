@@ -72,7 +72,7 @@ run writes only the subset for the selected scope + tools.
 |---|---|---|
 | `<root>/agents/settings/.agent-settings.yml` | deployed | canonical YAML settings (ADR-038) |
 | `<root>/.agent-settings.yml` | deployed | legacy fallback; migrated then removed on first run |
-| `<root>/agents/.event4u-bridge.yml` | bridge | project → `~/.event4u/agent-config/` pointer; schema `event4u-bridge/v1` |
+| `<root>/agents/.event4u-bridge.yml` | retired | Retired (ADR-020 amendment 2026-07-13); no longer written. Global root resolves from `~/.event4u/agent-config`; installer / `refresh --project` delete any legacy leftover. |
 | `<root>/agents/.agent-state/install-mode.txt` | marker | `minimal\n` or `full\n` |
 
 Minimal-install scaffold (override layer): `agents/overrides/{rules,skills,commands}/.gitkeep`,

@@ -9536,7 +9536,10 @@ var _AGENTS_DIR_MARKERS = [
   "roadmaps",
   "settings/.ai-council.yml",
   "roadmaps-progress.md",
-  ".event4u-bridge.yml"
+  // `overrides/` is the guaranteed minimal-consumer surface (ADR-020).
+  // Replaced the retired `.event4u-bridge.yml` marker (ADR-020 amendment
+  // 2026-07-13) so a bare consumer `agents/` dir stays anchorable.
+  "overrides"
 ];
 var _LEGACY_ANCHOR_ENV = "AGENT_CONFIG_LEGACY_ANCHOR";
 function _exists(p) {
@@ -18387,7 +18390,7 @@ function _detect_legacy_for_migration(project_root) {
     }
     return [];
   }
-  if (isFile(path11.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH))) return [];
+  if (isFile(path11.join(project_root, INSTALL_MODE_MARKER_REL))) return [];
   const found = [];
   for (const name of MIGRATE_LEGACY_YAML_FILES) {
     if (isFile(path11.join(project_root, name))) {
@@ -18446,26 +18449,17 @@ function _format_global_root_for_marker(global_root) {
   }
   return `~/${rel.split(path11.sep).join("/")}`;
 }
-function _write_consumer_bridge_marker(project_root, installer_version, env = null, now = null) {
+function _remove_legacy_consumer_bridge_marker(project_root, env = null) {
   const env_map = env ?? process3.env;
   if (env_map["AGENT_CONFIG_DEV_MODE"] === "1") return null;
   if (isDir(path11.join(project_root, ".agent-src.uncondensed"))) return null;
-  const global_root_str = _format_global_root_for_marker(
-    event4u_root(env_map)
-  );
-  const stamp = utcStamp(now ?? void 0);
-  const body = `# event4u/agent-config \u2014 consumer bridge marker (auto-written).
-# Spec: docs/contracts/consumer-bridge.md (event4u-bridge/v1).
-# Reader contract: expand ~ against the current $HOME; fail closed
-# when global_root is missing on disk; never write back through it.
-schema: event4u-bridge/v1
-global_root: ${global_root_str}
-installed_at: ${stamp}
-installer_version: ${installer_version}
-`;
   const target = path11.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
-  mkdirp(path11.dirname(target));
-  atomicWrite0644(target, body, ".event4u-bridge.");
+  if (!isFile(target)) return null;
+  try {
+    fs13.rmSync(target);
+  } catch {
+    return null;
+  }
   return target;
 }
 var PROJECT_ANCHOR_TOOLS = {
@@ -18487,14 +18481,13 @@ function _write_per_tool_project_anchors(project_root, tools, env = null, now = 
     if (!tools.has(tool_id)) continue;
     const target = path11.join(project_root, rel_path);
     mkdirp(path11.dirname(target));
-    const bridge_abs = path11.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
-    const bridge_rel = path11.relative(path11.dirname(target), bridge_abs);
     const body = `# event4u/agent-config \u2014 per-tool project anchor (auto-written).
 # Spec: docs/contracts/consumer-bridge.md \xA7 Per-tool anchor strategy.
-# Tool: ${tool_id}. Bridge marker: agents/.event4u-bridge.yml.
+# Tool: ${tool_id}. Resolves the global install directly \u2014 no
+# project-local bridge marker (retired, ADR-020 amendment 2026-07-13).
+# This anchor is gitignored: each developer regenerates it on install.
 schema: event4u-bridge/v1
 tool: ${tool_id}
-bridge: ${bridge_rel}
 global_root: ${global_root_str}
 installed_at: ${stamp}
 `;
@@ -19067,10 +19060,10 @@ function install_global(tools, force, project_root = null, core_only = false) {
     const files_by_tool = _files_by_tool_from_deploy(deploy_results);
     const rc = _update_installed_tools_manifest(project_root, tools, "global", force, files_by_tool);
     if (rc !== 0) return rc;
-    const marker_path = _write_consumer_bridge_marker(project_root, installed_version);
-    if (marker_path !== null && !state.QUIET) {
-      const rel = isRelativeTo(marker_path, project_root) ? path11.relative(project_root, marker_path) : marker_path;
-      info(`Bridge marker written: ${rel}`);
+    const removed_marker = _remove_legacy_consumer_bridge_marker(project_root);
+    if (removed_marker !== null && !state.QUIET) {
+      const rel = isRelativeTo(removed_marker, project_root) ? path11.relative(project_root, removed_marker) : removed_marker;
+      info(`Removed legacy bridge marker: ${rel}`);
     }
     const anchor_paths = _write_per_tool_project_anchors(project_root, tools);
     if (anchor_paths.length > 0 && !state.QUIET) {
@@ -19423,11 +19416,10 @@ personal:
       success(`Wrote ${SETTINGS_FILE} (user_type=${user_type})`);
     }
   }
-  const installed_version = current_package_version();
-  const marker_path = _write_consumer_bridge_marker(target_root, installed_version);
-  if (marker_path !== null) {
-    const rel = isRelativeTo(marker_path, target_root) ? path11.relative(target_root, marker_path) : marker_path;
-    success(`Wrote ${rel}`);
+  const removed_marker = _remove_legacy_consumer_bridge_marker(target_root);
+  if (removed_marker !== null) {
+    const rel = isRelativeTo(removed_marker, target_root) ? path11.relative(target_root, removed_marker) : removed_marker;
+    success(`Removed legacy bridge marker: ${rel}`);
   }
   _write_install_mode_marker(target_root, "minimal");
   if (!state.QUIET) {
