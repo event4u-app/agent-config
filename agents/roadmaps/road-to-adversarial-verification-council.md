@@ -274,15 +274,16 @@ below. Do NOT run the registered arm until the corpus-validity gate passes.
   RELATIVE_LIFT_THRESHOLD 0.25, ABSOLUTE_LIFT_THRESHOLD_PP 0.08, FP-not-worse),
   8 tests green (incl. the base-rate-compression + FP-regression cases). Threshold
   locked at pre-registration.
-- [ ] Run the arm (spend-gated) + resolve CLAIMS. **OPEN — blocked on the
-  corpus-validity gate:** needs a curated judge-survivable-subtlety corpus (with
-  published distribution) before a maintainer-gated paid cross-vendor run.
-  Running on the parity corpus would be the measurement artifact the council
-  warned against, so this stays open by design. Claim stays `unbacked` (no false
-  `backed`); honest-null on the eventual run keeps the surface default-off
-  permanently. **Maintainer disposition** (keep open here / spawn a follow-up
-  roadmap / move to `later/`) is a user decision surfaced with the PR.
-  <!-- blocked: registered paid cross-vendor run needs a curated residual-defect corpus first (docs/design/adversarial-council-eval.md § corpus-validity) -->
+- [-] Run the arm (spend-gated) + resolve CLAIMS. **MOVED to follow-up roadmap.**
+  Blocked by design on the corpus-validity gate (needs a curated
+  judge-survivable-subtlety corpus with a published distribution before a
+  maintainer-gated paid cross-vendor run) and the claim stays `unbacked`. Per the
+  maintainer disposition, this deferred item is carried into a dedicated follow-up
+  roadmap so the build phases above can archive complete. See
+  `road-to-adversarial-council-benchmark.md` (corpus curation → registered run →
+  claim resolution).
+  <!-- moved: carried into road-to-adversarial-council-benchmark.md per maintainer disposition (spawn follow-up + archive) -->
+  <!-- was: blocked — registered paid cross-vendor run needs a curated residual-defect corpus first (docs/design/adversarial-council-eval.md § corpus-validity) -->
 
 
 **Acceptance:** corpus-validity gate documented with a published subtlety
