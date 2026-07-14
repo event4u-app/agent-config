@@ -145,6 +145,17 @@ concerns:
     script: src/scripts/team_review_gate_hook.ts
     args: []
     fail_closed: false
+  # Reply-shape backstop for the direct-answers rule (reply-close): a PR
+  # created THIS turn must end the reply as the literal last raw URL. This
+  # PostToolUse hook fires right after a PR *create* (gh pr create, or a
+  # github create-pull-request tool) that produced a `…/pull/<n>` URL, and
+  # WARNS in context (exit 2) so the reminder lands before the reply closes.
+  # Never blocks; unconditional (reinforces an always-on rule, fires only on
+  # the rare create event, so no settings gate). fail_closed: false.
+  pr-url-reminder:
+    script: src/scripts/pr_url_reminder_hook.ts
+    args: []
+    fail_closed: false
 
 platforms:
   augment:
@@ -152,7 +163,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, hot-context, verify-before-complete]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   claude:
     session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
@@ -160,7 +171,7 @@ platforms:
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
@@ -182,7 +193,7 @@ platforms:
     stop:             [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
   # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
@@ -196,7 +207,7 @@ platforms:
     session_end:        [chat-history]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
   # (project, no file extension, must be executable per Cline docs) or
@@ -211,7 +222,7 @@ platforms:
     session_end:        [chat-history]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
   # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
@@ -245,7 +256,7 @@ platforms:
     session_end:        [chat-history]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through
   # rule-only fallback; the dispatcher silently no-ops on --platform copilot.
