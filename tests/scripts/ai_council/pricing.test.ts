@@ -23,6 +23,7 @@ import {
     last_monday_utc,
     load_prices,
     lookup,
+    reprice_with_cache,
 } from '../../../src/scripts/ai_council/pricing.js';
 
 const _tmpDirs: string[] = [];
@@ -142,6 +143,92 @@ describe('estimate_cost', () => {
         const e = estimate_cost('anthropic', 'no-such-model', 100, 100, table);
         expect(e.input_usd).toBe(0.0);
         expect(e.output_usd).toBe(0.0);
+    });
+});
+
+// ── prompt-cache repricing (realized cost) ───────────────────────────
+
+describe('reprice_with_cache', () => {
+    it('cache reads bill at 0.1x, writes at 1.25x (5m) / 2x (1h) of input', () => {
+        const p = path.join(mkTmp(), 'prices.md');
+        bootstrap_from_defaults(p);
+        const table = load_prices(p); // sonnet-4-5 input = $3/1M
+        const rd = reprice_with_cache(
+            'anthropic',
+            'claude-sonnet-4-5',
+            { input_tokens: 0, cache_read_input_tokens: 1_000_000, output_tokens: 0 },
+            table,
+        );
+        expect(rd.input_usd).toBeCloseTo(0.3, 10); // 3.0 × 0.1
+        const w5 = reprice_with_cache(
+            'anthropic',
+            'claude-sonnet-4-5',
+            { input_tokens: 0, cache_creation_input_tokens: 1_000_000, output_tokens: 0 },
+            table,
+            '5m',
+        );
+        expect(w5.input_usd).toBeCloseTo(3.75, 10); // 3.0 × 1.25
+        const w1 = reprice_with_cache(
+            'anthropic',
+            'claude-sonnet-4-5',
+            { input_tokens: 0, cache_creation_input_tokens: 1_000_000, output_tokens: 0 },
+            table,
+            '1h',
+        );
+        expect(w1.input_usd).toBeCloseTo(6.0, 10); // 3.0 × 2
+    });
+
+    it('mixed uncached + read + write + output; input_tokens sums all three', () => {
+        const p = path.join(mkTmp(), 'prices.md');
+        bootstrap_from_defaults(p);
+        const table = load_prices(p);
+        const e = reprice_with_cache(
+            'anthropic',
+            'claude-sonnet-4-5',
+            {
+                input_tokens: 1_000_000,
+                cache_read_input_tokens: 1_000_000,
+                cache_creation_input_tokens: 1_000_000,
+                output_tokens: 1_000_000,
+            },
+            table,
+            '5m',
+        );
+        expect(e.input_usd).toBeCloseTo(7.05, 10); // 3.0 + 0.30 + 3.75
+        expect(e.output_usd).toBe(15.0);
+        expect(e.input_tokens).toBe(3_000_000);
+    });
+
+    it('conservative pre-flight: estimate_cost applies no cache discount', () => {
+        const p = path.join(mkTmp(), 'prices.md');
+        bootstrap_from_defaults(p);
+        const table = load_prices(p);
+        // Pre-flight bills full input up-front (0% cache-hit assumed) so the
+        // budget gate can never under-predict; the realized cost is the lower
+        // actual once cache reads are observed.
+        const est = estimate_cost('anthropic', 'claude-sonnet-4-5', 1_000_000, 0, table);
+        const actual = reprice_with_cache(
+            'anthropic',
+            'claude-sonnet-4-5',
+            { input_tokens: 0, cache_read_input_tokens: 1_000_000, output_tokens: 0 },
+            table,
+        );
+        expect(est.input_usd).toBe(3.0);
+        expect(actual.input_usd).toBeLessThan(est.input_usd);
+    });
+
+    it('unknown model returns zero but still sums input tokens', () => {
+        const p = path.join(mkTmp(), 'prices.md');
+        bootstrap_from_defaults(p);
+        const table = load_prices(p);
+        const e = reprice_with_cache(
+            'anthropic',
+            'no-such-model',
+            { input_tokens: 10, cache_read_input_tokens: 20, output_tokens: 5 },
+            table,
+        );
+        expect(e.input_usd).toBe(0.0);
+        expect(e.input_tokens).toBe(30);
     });
 });
 

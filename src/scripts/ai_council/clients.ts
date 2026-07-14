@@ -138,6 +138,12 @@ export class CouncilResponse {
     text: string;
     input_tokens: number;
     output_tokens: number;
+    // Prompt-cache accounting (Anthropic). `cache_read_input_tokens` bill at
+    // ~0.1× input; `cache_creation_input_tokens` at 1.25×/2×. Both default 0
+    // (no cache, or a provider that does not report them) so existing callers
+    // and the persisted response JSON stay backward-compatible.
+    cache_creation_input_tokens: number;
+    cache_read_input_tokens: number;
     latency_ms: number;
     error: string | null;
     metadata: Record<string, unknown>;
@@ -148,6 +154,8 @@ export class CouncilResponse {
         text: string;
         input_tokens?: number;
         output_tokens?: number;
+        cache_creation_input_tokens?: number;
+        cache_read_input_tokens?: number;
         latency_ms?: number;
         error?: string | null;
         metadata?: Record<string, unknown>;
@@ -157,6 +165,8 @@ export class CouncilResponse {
         this.text = opts.text;
         this.input_tokens = opts.input_tokens ?? 0;
         this.output_tokens = opts.output_tokens ?? 0;
+        this.cache_creation_input_tokens = opts.cache_creation_input_tokens ?? 0;
+        this.cache_read_input_tokens = opts.cache_read_input_tokens ?? 0;
         this.latency_ms = opts.latency_ms ?? 0;
         this.error = opts.error ?? null;
         // Python dataclass uses `field(default_factory=dict)` — each instance
@@ -278,6 +288,13 @@ interface ApiClientOptions {
     model?: string | undefined;
     client?: unknown;
     api_key?: string | null | undefined;
+    // Anthropic prompt caching (GA — no beta header). When true (default), the
+    // stable `system` prefix is sent as a cache-controlled block so member 2..N
+    // in a round (and round-2+ within the 5-min TTL) read it at ~0.1× input
+    // cost. Only AnthropicClient consumes this; other providers ignore it.
+    // Kill-switch: set `prompt_cache: false` on the anthropic member in
+    // `.ai-council.yml`. Failure mode is benign — a miss just bills full input.
+    enable_prompt_cache?: boolean | undefined;
 }
 
 /** Shared ctor-options shape for the CLI clients. */
@@ -335,10 +352,14 @@ export class AnthropicClient extends ExternalAIClient {
     override name = 'anthropic';
     override billable = true;
     private _client: unknown;
+    // Prompt caching on by default; the benign failure mode (cache miss → full
+    // input billing) makes default-on safe. See ApiClientOptions.enable_prompt_cache.
+    private _enablePromptCache: boolean;
 
     constructor(opts: ApiClientOptions = {}) {
         super();
         this.model = opts.model ?? DEFAULT_ANTHROPIC_MODEL;
+        this._enablePromptCache = opts.enable_prompt_cache ?? true;
         if (opts.client !== undefined && opts.client !== null) {
             this._client = opts.client;
             return;
@@ -381,12 +402,44 @@ export class AnthropicClient extends ExternalAIClient {
             if (typeof create !== 'function') {
                 throw new TypeError("'messages.create' is not callable");
             }
-            response = create.call(messages, {
-                model: this.model,
-                max_tokens,
-                system: system_prompt,
-                messages: [{ role: 'user', content: user_prompt }],
-            });
+            // Prompt caching (GA — no beta header). Breakpoints on BOTH the
+            // system block (stable across rounds) and the user artefact block
+            // (the large system+artefact prefix is byte-identical across
+            // members 2..N within a round, so they read it at ~0.1× input).
+            // base_system_prompt alone is often below the model's min cacheable
+            // prefix and would never cache solo — the artefact block is where
+            // the real saving lands. Two breakpoints (≤ the 4 allowed).
+            const kwargs: Record<string, unknown> = this._enablePromptCache
+                ? {
+                      model: this.model,
+                      max_tokens,
+                      system: [
+                          {
+                              type: 'text',
+                              text: system_prompt,
+                              cache_control: { type: 'ephemeral' },
+                          },
+                      ],
+                      messages: [
+                          {
+                              role: 'user',
+                              content: [
+                                  {
+                                      type: 'text',
+                                      text: user_prompt,
+                                      cache_control: { type: 'ephemeral' },
+                                  },
+                              ],
+                          },
+                      ],
+                  }
+                : {
+                      model: this.model,
+                      max_tokens,
+                      system: system_prompt,
+                      messages: [{ role: 'user', content: user_prompt }],
+                  };
+            response = create.call(messages, kwargs);
         } catch (exc) {
             return new CouncilResponse({
                 provider: this.name,
@@ -426,6 +479,12 @@ export class AnthropicClient extends ExternalAIClient {
             text,
             input_tokens: usage ? (_getattr(usage, 'input_tokens', 0) as number) : 0,
             output_tokens: usage ? (_getattr(usage, 'output_tokens', 0) as number) : 0,
+            cache_creation_input_tokens: usage
+                ? (_getattr(usage, 'cache_creation_input_tokens', 0) as number)
+                : 0,
+            cache_read_input_tokens: usage
+                ? (_getattr(usage, 'cache_read_input_tokens', 0) as number)
+                : 0,
             latency_ms,
         });
     }

@@ -603,8 +603,11 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 );
             }
             const api_key_ref = (cfg['api_key_ref'] as string | null) ?? null;
+            const enable_prompt_cache = cfg['prompt_cache'] === false ? false : undefined;
             for (const sib_model of siblings[name] as string[]) {
-                members.push(_construct_api_member(name, sib_model, { api_key_ref }));
+                members.push(
+                    _construct_api_member(name, sib_model, { api_key_ref, enable_prompt_cache }),
+                );
             }
             continue;
         }
@@ -613,6 +616,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             members.push(
                 _construct_api_member(name, model, {
                     api_key_ref: (cfg['api_key_ref'] as string | null) ?? null,
+                    enable_prompt_cache: cfg['prompt_cache'] === false ? false : undefined,
                 }),
             );
         } else if (mode === 'cli' && _CLI_PROVIDERS.has(name)) {
@@ -747,14 +751,18 @@ function _format_advisor_summary(
 function _construct_api_member(
     name: string,
     model: string | null,
-    opts: { api_key_ref?: string | null } = {},
+    opts: { api_key_ref?: string | null; enable_prompt_cache?: boolean | undefined } = {},
 ): ExternalAIClient {
     const api_key_ref = opts.api_key_ref ?? null;
     if (name === 'anthropic') {
         const api_key = api_key_ref
             ? resolve_api_key(api_key_ref, 'ai_council.members.anthropic')
             : load_anthropic_key();
-        return new AnthropicClient({ model: model || 'claude-sonnet-4-5', api_key });
+        return new AnthropicClient({
+            model: model || 'claude-sonnet-4-5',
+            api_key,
+            enable_prompt_cache: opts.enable_prompt_cache,
+        });
     }
     if (name === 'openai') {
         const api_key = api_key_ref
@@ -1409,6 +1417,8 @@ function _serialise_responses(responses: CouncilResponse[]): Dict[] {
             text: r.text,
             input_tokens: r.input_tokens,
             output_tokens: r.output_tokens,
+            cache_creation_input_tokens: r.cache_creation_input_tokens,
+            cache_read_input_tokens: r.cache_read_input_tokens,
             latency_ms: r.latency_ms,
             error: r.error,
             metadata,
@@ -1427,6 +1437,8 @@ function _deserialise_responses(items: Dict[]): CouncilResponse[] {
                 text: (d['text'] as string) ?? '',
                 input_tokens: _pyInt(d['input_tokens'] ?? 0, 0),
                 output_tokens: _pyInt(d['output_tokens'] ?? 0, 0),
+                cache_creation_input_tokens: _pyInt(d['cache_creation_input_tokens'] ?? 0, 0),
+                cache_read_input_tokens: _pyInt(d['cache_read_input_tokens'] ?? 0, 0),
                 latency_ms: _pyInt(d['latency_ms'] ?? 0, 0),
                 error: (d['error'] as string | null) ?? null,
                 metadata: (d['metadata'] as Dict) || {},

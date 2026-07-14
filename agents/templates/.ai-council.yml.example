@@ -81,9 +81,13 @@ defaults:
   # `--max-tokens` flag overrides this on a single invocation; the
   # cost estimator uses the same value as its worst-case ceiling.
   # `0` means "unlimited" — internally widened to the safe provider
-  # ceiling (16384) because Anthropic rejects max_tokens=0. Default
-  # in the project template is 2048.
-  max_output_tokens: 0
+  # ceiling (16384) because Anthropic rejects max_tokens=0. This
+  # template ships a right-sized 4096 as a cost lever: council member
+  # positions rarely exceed it, and the estimator uses this value as
+  # its worst-case ceiling, so a tight default stops the pre-flight
+  # gate over-charging. Raise per-run with `--max-tokens`, bump here
+  # for consistently long syntheses, or set `0` for the full ceiling.
+  max_output_tokens: 4096
 
   # Retention for `agents/council-sessions/` audit folders. Sessions
   # older than this are pruned automatically on the next `save()`.
@@ -203,6 +207,11 @@ members:
       - claude-haiku-4-5
       - claude-sonnet-4-5
       - claude-opus-4-5
+    # Prompt caching (GA — no beta header) is ON by default: the stable
+    # system + artefact prefix is sent as a cache-controlled block, so
+    # members 2..N in a round (and round-2+ within the 5-min TTL) read
+    # it at ~0.1x input cost. Kill-switch — uncomment to disable:
+    # prompt_cache: false
     # Phase 11 — opt this member in to the lightweight-QA fast-path.
     # Only opted-in members run when a `low_impact` question routes
     # to `council`. Defaults to false; flipping requires explicit
