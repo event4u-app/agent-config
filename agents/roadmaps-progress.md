@@ -2,43 +2,34 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers
+> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers
 
 ## Overall
 
-**116 / 219 steps done · 53%**
+**91 / 194 steps done · 47%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
 ```
-
-## ✅ Completed — pending archival
-
-These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
-
-| Roadmap | Done | Total |
-|---|---:|---:|
-| [road-to-adversarial-verification-council.md](roadmaps/road-to-adversarial-verification-council.md) | 25 | 25 |
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 15 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 6% |
-| 2 | [road-to-adversarial-verification-council.md](roadmaps/road-to-adversarial-verification-council.md) | 6 | 27 | 0 | 25 | 0 | 2 | 0 | ██████████ 100% |
-| 3 | [road-to-api-cost-optimization.md](roadmaps/road-to-api-cost-optimization.md) | 4 | 14 | 4 | 9 | 1 | 0 | 0 | ███████░░░ 69% |
-| 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-ecosystem-harvest-domain-watch.md](roadmaps/road-to-ecosystem-harvest-domain-watch.md) | 3 | 8 | 6 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-ecosystem-harvest-ergonomics.md](roadmaps/road-to-ecosystem-harvest-ergonomics.md) | 1 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-ecosystem-harvest-index.md](roadmaps/road-to-ecosystem-harvest-index.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 8 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
-| 9 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 14 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 15 | 23 | 1 | 0 | [2](#blockers-road-to-team-mode) | ██████░░░░ 61% |
-| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 2 | [road-to-api-cost-optimization.md](roadmaps/road-to-api-cost-optimization.md) | 4 | 14 | 4 | 9 | 1 | 0 | 0 | ███████░░░ 69% |
+| 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-ecosystem-harvest-domain-watch.md](roadmaps/road-to-ecosystem-harvest-domain-watch.md) | 3 | 8 | 6 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-ecosystem-harvest-ergonomics.md](roadmaps/road-to-ecosystem-harvest-ergonomics.md) | 1 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-ecosystem-harvest-index.md](roadmaps/road-to-ecosystem-harvest-index.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 7 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
+| 8 | [road-to-ecosystem-harvest-second-sweep.md](roadmaps/road-to-ecosystem-harvest-second-sweep.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
+| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 11 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
+| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 13 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 15 | 23 | 1 | 0 | [2](#blockers-road-to-team-mode) | ██████░░░░ 61% |
+| 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -68,19 +59,6 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
   - **Resolved when:** ≥1 completed session record exists under `agents/recruit-sessions/` with findings distributed per `_findings-distribution.md`.
 
 _2 blockers resolved._
-
-### [road-to-adversarial-verification-council.md](roadmaps/road-to-adversarial-verification-council.md)
-
-**Road to an adversarial verification council — a cross-model skeptic panel that maximizes defect-finding coverage on a real change** — 25 / 25 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Decision record, claim pre-registration, landmine clearance | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | TS core: findings schema + reconciliation tally + tests | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | The orchestration mode + skeptic prompts | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | Opt-in wiring + settings (advisory, default-off) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Benchmark arm + prove-or-drop gate (council-hardened) | ✅ done | 0 | 5 | 0 | 1 | 100% |
-| 5 | Evals, triggers, docs, CI/sync green, PR | ✅ done | 0 | 4 | 0 | 1 | 100% |
 
 ### [road-to-api-cost-optimization.md](roadmaps/road-to-api-cost-optimization.md)
 
