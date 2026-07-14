@@ -1,0 +1,20 @@
+{
+  "skill": "llm-provider-knowledge",
+  "last_eval": "2026-07-14",
+  "description": "7 should-trigger + 6 should-not-trigger. Should-trigger covers specific product-fact claims (context window, pricing, rate limit, API detail, model spec, consumer-app plan limit) across OpenAI, Google, Anthropic, Mistral, DeepSeek, Cohere. Should-not-trigger covers near-misses: SDK wiring with a user-supplied model, prompt authoring (prompt-engineering-patterns), model choice for the host (model-recommendation), image-provider selection (image-provider-routing), a user-supplied fact, and a plain SDK refactor.",
+  "queries": [
+    {"q": "what's the context window of GPT-5?", "trigger": true},
+    {"q": "how much does Gemini 2.5 Pro cost per million input tokens?", "trigger": true},
+    {"q": "what are the rate limits on the Anthropic API for tier 1?", "trigger": true},
+    {"q": "does the Mistral API support function calling, and what parameter enables it?", "trigger": true},
+    {"q": "what's the max output length for DeepSeek's chat model?", "trigger": true},
+    {"q": "how many messages does ChatGPT Plus allow in the app per window?", "trigger": true},
+    {"q": "what embedding dimension does Cohere's embed model return?", "trigger": true},
+    {"q": "wire up an openai chat completions call using the model id I already gave you", "trigger": false, "note": "SDK wiring; user supplied the model — no unverified product fact asserted"},
+    {"q": "write a good prompt to make Gemini summarize this document", "trigger": false, "note": "prompt authoring → prompt-engineering-patterns"},
+    {"q": "which model should I use for this task on my current host?", "trigger": false, "note": "model choice → model-recommendation (never steer to another vendor)"},
+    {"q": "route this logo-with-text image to the right generation provider", "trigger": false, "note": "image-provider selection → image-provider-routing"},
+    {"q": "I already know Claude Sonnet has a 200k context window — just use that number", "trigger": false, "note": "user supplied the verified fact; use it, do not re-litigate"},
+    {"q": "refactor this function that calls the Anthropic SDK to add retries", "trigger": false, "note": "plain code refactor; asserts no product fact"}
+  ]
+}
