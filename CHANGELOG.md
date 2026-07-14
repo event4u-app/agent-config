@@ -1024,6 +1024,54 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.13.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.1.0](https://github.com/event4u-app/agent-config/compare/9.0.0...9.1.0) (2026-07-14)
+
+### Features
+
+* **create-pr:** tier-driven body, grounded API examples, capability-gated screenshots ([306f7d5](https://github.com/event4u-app/agent-config/commit/306f7d59e6e7dee4a22e9c34aad4fbc89a75e3e2))
+* **create-pr:** settings for description detail level, API examples, screenshots ([65275bb](https://github.com/event4u-app/agent-config/commit/65275bb1237fc4dfbbcefd86d27bc45ef4be257c))
+* **ai-council:** prompt caching + right-sized output on the paid Anthropic path ([3ec7ff0](https://github.com/event4u-app/agent-config/commit/3ec7ff09d49283b096901e5d4716cc529fef1609))
+* **skills:** add llm-provider-knowledge — verify LLM product facts against official docs ([ba34d94](https://github.com/event4u-app/agent-config/commit/ba34d94530d1b30066470a0316f247be84b5ac2d))
+* **commands:** register discoverable /explain-run command ([13955a1](https://github.com/event4u-app/agent-config/commit/13955a1e7ab40a658ed0879e21266fe49a54c6a0))
+* **doctor:** add rule-scope-drift check for the scoped-projection flip ([71353f8](https://github.com/event4u-app/agent-config/commit/71353f8c6bb66b404916f599c5e168bef1f85601))
+
+### Bug Fixes
+
+* **ai-council:** make prompt caching explicit opt-in (default off) ([bad8070](https://github.com/event4u-app/agent-config/commit/bad80707eda42aacbd3698575e1d22383dbea8b3))
+* **refs:** treat external claude-api plugin as non-repo reference ([75a3431](https://github.com/event4u-app/agent-config/commit/75a34314ca802e8cda39df8ff6b375c52621ae63))
+* **commands:** reference agent-docs-writing skill in /explain-run ([c104279](https://github.com/event4u-app/agent-config/commit/c104279abaaad1035758cc86140be847ed4f4a06))
+* **ci:** honest gate status in skill-lint + self-review comments ([5098465](https://github.com/event4u-app/agent-config/commit/50984659e028c8c0029b1cd1deb8a69bf1c4e61b))
+* **install:** rebuild install bundle with real node_modules paths ([f875244](https://github.com/event4u-app/agent-config/commit/f8752443b1b27bd9471dbf056a65097d898e15de))
+* **install:** rebuild install bundle + reword source-repo comment ([48e9dc2](https://github.com/event4u-app/agent-config/commit/48e9dc2a6f694610322d533b0196346cf07a151d))
+* **tests:** make wrapper-delegation install test hermetic ([8ef5ea2](https://github.com/event4u-app/agent-config/commit/8ef5ea2bdc60f90fde7979bee2dca3d15a2e118e))
+
+### Documentation
+
+* **create-pr:** document PR-description content settings ([812ae6b](https://github.com/event4u-app/agent-config/commit/812ae6ba84ba5508a71b3ab02c351cad4a3a2e55))
+* subagent prompt-cache break-even + record the follow-up council verdict ([fdba56d](https://github.com/event4u-app/agent-config/commit/fdba56dbe06818c4bc50c5b3e94322e10b34bd0d))
+* **roadmap:** API cost-optimization roadmap + dashboard ([3d1b313](https://github.com/event4u-app/agent-config/commit/3d1b3132b0d0d3a52c7eba555b1e3afd95d5750e))
+* **agent-infra:** API cost-levers guideline + token-optimizer index wiring ([a97d0e7](https://github.com/event4u-app/agent-config/commit/a97d0e7eaa4c61eb4db59f8bdf469d112595b1b5))
+* **roadmap:** archive completed road-to-llm-provider-knowledge-skill ([059aa10](https://github.com/event4u-app/agent-config/commit/059aa10b3405597986c12c0de3da6c767385bb97))
+* **roadmap:** add + archive feedback-9.0-followups roadmap ([c8aa510](https://github.com/event4u-app/agent-config/commit/c8aa5104ac774f77f1354ac9c6c3816096b769fe))
+* **changelog:** repair breaking-surface index + add sync lint ([e333d71](https://github.com/event4u-app/agent-config/commit/e333d7150254310fe569dcb6e0fad2c487568d32))
+
+### Refactoring
+
+* **install:** retire the consumer bridge marker (ADR-020 amendment) ([2737b04](https://github.com/event4u-app/agent-config/commit/2737b04441b7e807240c979e874d8e2bb3967b9b))
+
+### Build
+
+* **install:** rebuild bundle with repo-relative module paths ([f30adb5](https://github.com/event4u-app/agent-config/commit/f30adb5a109ac6aee9777bad722ef0146fc208fa))
+* **install:** rebuild install bundle after create_pr settings addition ([a760b9f](https://github.com/event4u-app/agent-config/commit/a760b9f39a41a9621b21ad2fb92851c4a1ea66b2))
+
+### Chores
+
+* **roadmaps:** archive completed pr-description-tiers roadmap ([2c4615f](https://github.com/event4u-app/agent-config/commit/2c4615fe42129eb8bd33e87a368cbed8f5f1ded7))
+* sync generated guideline count (98 -> 99) for api-cost-levers ([17ce22b](https://github.com/event4u-app/agent-config/commit/17ce22bdfc2d99341d7a3edeaaf80554f4d75f33))
+* **evals:** ratchet behavioural-eval coverage floor to current ([84f42fa](https://github.com/event4u-app/agent-config/commit/84f42fab93d77ad8b0b28ce430b79ae222748719))
+
+Tests: 7737 (+21 since 9.0.0)
+
 ## [9.0.0](https://github.com/event4u-app/agent-config/compare/8.13.0...9.0.0) (2026-07-13)
 
 ### BREAKING CHANGES
