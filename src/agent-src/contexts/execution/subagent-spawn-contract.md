@@ -68,6 +68,34 @@ only, never bodies.
 [`tests/scripts/_lib_subagent_spawn.test.ts`](../../../../tests/scripts/_lib_subagent_spawn.test.ts)
 + [`tests/scripts/_lib_subagent_bundle.test.ts`](../../../../tests/scripts/_lib_subagent_bundle.test.ts).
 
+## Worker-prompt rules — verbatim at spawn
+
+Relocated from the `subagent-orchestration` skill body (road-to-feedback-9.2.0
+Phase 2, size-budget split). Every dispatched worker prompt obeys these rules —
+they prevent the two classic handoff failures: lossy re-summarization dropping
+the user's requirements, and over-scripted prompts that break on first
+contingency.
+
+- **(a) User constraints verbatim.** Pass the user's
+  constraints/exclusions/preferences into the worker prompt **verbatim** — never
+  a paraphrase (a paraphrase silently drops requirements).
+- **(b) Describe the goal, don't script the approach.** State the outcome and
+  let the worker choose the path; over-scripting breaks on contingencies.
+- **(c) Translate environment paths.** Orchestrator-local paths do not exist in
+  the worker's sandbox — resolve/translate them at spawn.
+- **(d) Pre-declared check-in conditions.** The worker names, at spawn time, the
+  conditions under which it will halt and ask ("if login required", "if
+  multiple candidates found") — so interrupts are predictable, not surprises.
+- **(e) Attach relevant knowledge — read-only (road-to-opt-subagent-harvest
+  P3).** Before dispatch, look up the slice's key identifiers via
+  `memory_lookup` / the knowledge cards and attach the top hits to the
+  worker prompt AS LEADS — labelled per the source-discovery discipline
+  (negative facts + pointers durable; positive structure = hypothesis to
+  re-confirm, never a build input). The WRITE half stays forbidden: a
+  subagent's output is never auto-persisted into memory — promotion is
+  always the human-gated flow (ADR-098 floor). Auto-surface, never
+  auto-write.
+
 ## Related
 
 - [`auto-orchestration-activation`](auto-orchestration-activation.md) — runs before this; decides IF a subagent spawns.
