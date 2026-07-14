@@ -288,12 +288,14 @@ interface ApiClientOptions {
     model?: string | undefined;
     client?: unknown;
     api_key?: string | null | undefined;
-    // Anthropic prompt caching (GA — no beta header). When true (default), the
-    // stable `system` prefix is sent as a cache-controlled block so member 2..N
-    // in a round (and round-2+ within the 5-min TTL) read it at ~0.1× input
-    // cost. Only AnthropicClient consumes this; other providers ignore it.
-    // Kill-switch: set `prompt_cache: false` on the anthropic member in
-    // `.ai-council.yml`. Failure mode is benign — a miss just bills full input.
+    // Anthropic prompt caching (GA — no beta header). **Explicit opt-in,
+    // default OFF** — a caller must pass `true` to send the stable `system` +
+    // artefact prefix as cache-controlled blocks (member 2..N in a round, and
+    // round-2+ within the 5-min TTL, then read it at ~0.1× input). The council
+    // builder opts in via `_construct_api_member`; any other `AnthropicClient`
+    // caller (e.g. an API-mode team, a single-shot feature) gets NO caching
+    // unless it asks — so a single call never pays the ~1.25× write premium by
+    // surprise. Only AnthropicClient consumes this; other providers ignore it.
     enable_prompt_cache?: boolean | undefined;
 }
 
@@ -352,14 +354,15 @@ export class AnthropicClient extends ExternalAIClient {
     override name = 'anthropic';
     override billable = true;
     private _client: unknown;
-    // Prompt caching on by default; the benign failure mode (cache miss → full
-    // input billing) makes default-on safe. See ApiClientOptions.enable_prompt_cache.
+    // Prompt caching is explicit opt-in (default OFF) — see
+    // ApiClientOptions.enable_prompt_cache. Prevents silent activation (and the
+    // write premium) for callers that don't benefit from a shared-prefix cache.
     private _enablePromptCache: boolean;
 
     constructor(opts: ApiClientOptions = {}) {
         super();
         this.model = opts.model ?? DEFAULT_ANTHROPIC_MODEL;
-        this._enablePromptCache = opts.enable_prompt_cache ?? true;
+        this._enablePromptCache = opts.enable_prompt_cache ?? false;
         if (opts.client !== undefined && opts.client !== null) {
             this._client = opts.client;
             return;

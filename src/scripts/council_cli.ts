@@ -603,7 +603,9 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 );
             }
             const api_key_ref = (cfg['api_key_ref'] as string | null) ?? null;
-            const enable_prompt_cache = cfg['prompt_cache'] === false ? false : undefined;
+            // Council opts in explicitly (caching is client-default OFF): on
+            // unless the operator sets `prompt_cache: false` on the member.
+            const enable_prompt_cache = cfg['prompt_cache'] !== false;
             for (const sib_model of siblings[name] as string[]) {
                 members.push(
                     _construct_api_member(name, sib_model, { api_key_ref, enable_prompt_cache }),
@@ -616,7 +618,9 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             members.push(
                 _construct_api_member(name, model, {
                     api_key_ref: (cfg['api_key_ref'] as string | null) ?? null,
-                    enable_prompt_cache: cfg['prompt_cache'] === false ? false : undefined,
+                    // Council opts in explicitly (client-default OFF); on unless
+                    // the operator sets `prompt_cache: false`.
+                    enable_prompt_cache: cfg['prompt_cache'] !== false,
                 }),
             );
         } else if (mode === 'cli' && _CLI_PROVIDERS.has(name)) {

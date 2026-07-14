@@ -644,6 +644,7 @@
   "skills/stakeholder-tradeoff/SKILL.md": "144cb796d7168b5d8c50df8cadd78ed23b8c92664b4bebe23563157dda44a895",
   "skills/standards-from-config/SKILL.md": "895ab389c68b899135e15528fa8cfa0eb54db246666c782067a30407e86b7719",
   "skills/subagent-orchestration/SKILL.md": "d7c80f1244ddb463783e1a28eeab76c7560d17532a85ad471c16e996addbc253",
+  "skills/subagent-orchestration/prompts/README.md": "8b969c35aec5bd1a62c318aaaae0ea0c0c297c57a543a0e44954a3985a71fe27",
   "skills/subagent-orchestration/prompts/do-and-judge-two-stage.md": "652fe778ed1ff1b5b062b42a5200b60ec9137fd1a5b18fed7d113744e32a12ee",
   "skills/subagent-orchestration/prompts/do-and-judge.md": "ebe24bd9f0f306a33ce4198f7f8b9801c8cf2ca6a0809973a9db6f48b616e095",
   "skills/subagent-orchestration/prompts/do-competitively.md": "6478a6c96a5ef2afa6aae722932b2ecdf84d716509424f4094c1dcdbd58a05f3",
