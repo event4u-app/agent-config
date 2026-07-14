@@ -1033,6 +1033,30 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 9.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.2.0](https://github.com/event4u-app/agent-config/compare/9.1.0...9.2.0) (2026-07-14)
+
+### Features
+
+* **rules:** cross-source-consistency — detect discrepancies, ask before guessing ([63b8049](https://github.com/event4u-app/agent-config/commit/63b804981e70045f138af4bd4a5546b62b135d24))
+* **settings:** add consistency.cross_source toggle (default on) ([2f41bbb](https://github.com/event4u-app/agent-config/commit/2f41bbbf52737f12401eb7ccfed104d3b4a9b4a6))
+* **settings:** opt-in subagents.adversarial_council + verify-budget escalation ([fa68dbc](https://github.com/event4u-app/agent-config/commit/fa68dbc514a6cc2def90f7f4b8b031e5c872747f))
+* **subagent:** Mode 9 adversarial-verification-council + skeptic prompt ([26501a1](https://github.com/event4u-app/agent-config/commit/26501a18a1ab53d3eb54a06230086e0c4508bfee))
+* **subagent:** adversarial-findings schema + deterministic reconciliation core ([12c64f2](https://github.com/event4u-app/agent-config/commit/12c64f26bcc92d4472935badc41b64fe563f98b2))
+
+### Bug Fixes
+
+* **proof:** regenerate docs/proof.md after the pre-registered claim ([a24fb54](https://github.com/event4u-app/agent-config/commit/a24fb54574379aaf90061beee2df4d21e3d55a9a))
+
+### Documentation
+
+* **adr:** ADR-122 + pre-registered finding-coverage claim + eval design ([0123cd2](https://github.com/event4u-app/agent-config/commit/0123cd298d0587fd1eb98f82c7e40f41e912ee05))
+
+### Chores
+
+* regenerate derived artefacts for the new rule ([5268766](https://github.com/event4u-app/agent-config/commit/5268766dd6aca34efbac77660ecf3fa9d1553814))
+
+Tests: 7764 (+27 since 9.1.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
