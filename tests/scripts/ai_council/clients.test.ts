@@ -266,8 +266,33 @@ describe('clients — AnthropicClient (mock transport)', () => {
         };
         const c = new AnthropicClient({ client: mock });
         const r = c.ask('SYS', 'USER', 99);
-        // Prompt caching is ON by default: system + user artefact ship as
-        // cache-controlled blocks (GA — no beta header).
+        // Caching is explicit opt-in (default OFF): a plain client sends plain
+        // string system + user — no cache_control, no surprise write premium.
+        expect(captured).toEqual({
+            model: 'claude-sonnet-4-5',
+            max_tokens: 99,
+            system: 'SYS',
+            messages: [{ role: 'user', content: 'USER' }],
+        });
+        expect(r.provider).toBe('anthropic');
+        expect(r.text).toBe('hi there');
+        expect(r.input_tokens).toBe(11);
+        expect(r.output_tokens).toBe(22);
+        expect(r.error).toBeNull();
+        expect(Number.isInteger(r.latency_ms)).toBe(true);
+    });
+
+    it('opt-in: enable_prompt_cache=true sends cache-controlled system + user blocks', () => {
+        let captured: Record<string, unknown> | null = null;
+        const mock = {
+            messages: {
+                create(kwargs: Record<string, unknown>) {
+                    captured = kwargs;
+                    return fakeAnthropicResponse('ok', 1, 2);
+                },
+            },
+        };
+        new AnthropicClient({ client: mock, enable_prompt_cache: true }).ask('SYS', 'USER', 99);
         expect(captured).toEqual({
             model: 'claude-sonnet-4-5',
             max_tokens: 99,
@@ -280,31 +305,6 @@ describe('clients — AnthropicClient (mock transport)', () => {
                     ],
                 },
             ],
-        });
-        expect(r.provider).toBe('anthropic');
-        expect(r.text).toBe('hi there');
-        expect(r.input_tokens).toBe(11);
-        expect(r.output_tokens).toBe(22);
-        expect(r.error).toBeNull();
-        expect(Number.isInteger(r.latency_ms)).toBe(true);
-    });
-
-    it('kill-switch: enable_prompt_cache=false sends plain string system + user', () => {
-        let captured: Record<string, unknown> | null = null;
-        const mock = {
-            messages: {
-                create(kwargs: Record<string, unknown>) {
-                    captured = kwargs;
-                    return fakeAnthropicResponse('ok', 1, 2);
-                },
-            },
-        };
-        new AnthropicClient({ client: mock, enable_prompt_cache: false }).ask('SYS', 'USER', 99);
-        expect(captured).toEqual({
-            model: 'claude-sonnet-4-5',
-            max_tokens: 99,
-            system: 'SYS',
-            messages: [{ role: 'user', content: 'USER' }],
         });
     });
 
