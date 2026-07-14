@@ -402,8 +402,31 @@ commands:
   # When `true`: show title and body in copyable code blocks and ask
   # for adjustments before creating the PR.
   # `/create-pr:description-only` always previews — that is its sole purpose.
+  #
+  # detail_level: verbosity tier of the PR Description body.
+  #   min (default) = title + 2-3 sentence what/why/impact + linked ticket;
+  #   med           = min + grouped changes + tests note;
+  #   max           = med + how-to-test + edge cases + reviewer guidance.
+  # Critical info (breaking changes, migrations, security, rollback) is
+  # ALWAYS included at every tier — the tier governs explanatory depth only.
+  #
+  # api_examples (default true): add a fenced JSON example for API-endpoint
+  #   changes ONLY when grounded in a real source (DTO/resource, OpenAPI,
+  #   fixture, probe); else a one-line pointer, never an invented example.
+  #
+  # screenshots (default false): capability-gated frontend screenshots.
+  #   true attempts capture only when the host has browser/preview tooling;
+  #   emits a note and leaves the placeholder when absent — never blocks the PR.
+  #
+  # ui_paths / api_paths: optional globs to make frontend / API detection
+  #   explicit; empty = a light heuristic that fails open.
   create_pr:
     preview_description: false
+    detail_level: min
+    api_examples: true
+    screenshots: false
+    ui_paths: []
+    api_paths: []
 
 # --- Telemetry (artefact engagement, default-off) ---
 #
@@ -582,6 +605,11 @@ the canonical narrative lives in
 | `commands.suggestion.max_options` | integer | `4` | Max number of command suggestions before the always-present "run as-is" option (total rendered = `max_options + 1`). |
 | `commands.suggestion.blocklist` | list of command names | `[]` | Commands that never appear as a suggestion. They still work when typed explicitly. |
 | `commands.create_pr.preview_description` | `true`, `false` | `false` | When `false`: `/create-pr` skips the title/body preview + adjust loop and uses the generated content directly. Saves agent tokens. When `true`: show title and body before creating and ask for adjustments. `/create-pr:description-only` always previews regardless of this setting. |
+| `commands.create_pr.detail_level` | `min`, `med`, `max` | `min` | Verbosity tier of the PR Description body. `min` = title + 2-3 sentence what/why/impact + ticket; `med` = + grouped changes + tests note; `max` = + how-to-test + edge cases + reviewer guidance. Critical info (breaking / migration / security / rollback) is included at every tier. |
+| `commands.create_pr.api_examples` | `true`, `false` | `true` | Add a grounded JSON example for API-endpoint changes; `true` includes one only from a real source (DTO/OpenAPI/fixture/probe), else a pointer, never invented; `false` = never. |
+| `commands.create_pr.screenshots` | `true`, `false` | `false` | Capability-gated frontend screenshots. `true` attempts capture when browser/preview tooling is present; notes-and-skips otherwise, never blocks the PR. Before/after is best-effort. |
+| `commands.create_pr.ui_paths` | glob list | `[]` | Optional globs pinning frontend detection; empty = light heuristic, fail-open. |
+| `commands.create_pr.api_paths` | glob list | `[]` | Optional globs pinning API-endpoint detection; empty = light heuristic, fail-open. |
 | `verbosity.preview_artifacts` | `true`, `false` | `false` | Show generated commit messages, PR titles/bodies, branch names before acting. `false` = use generated content directly. See the token-frugality plate under `agents/roadmaps/` (Phase 2/3). |
 | `verbosity.routine_confirmations` | `true`, `false` | `false` | Confirmation prompts for routine workflow steps when there is one obvious answer ("looks good — commit?"). Iron-Law gates (`commit-policy`, `scope-control` git-ops, `non-destructive-by-default`) ALWAYS ask regardless. |
 | `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`, `/roadmap-create`). Council commands themselves are unaffected. |

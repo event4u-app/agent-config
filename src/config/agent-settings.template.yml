@@ -761,6 +761,45 @@ commands:
   create_pr:
     preview_description: false
 
+    # Verbosity tier for the generated PR description body.
+    #   min (default) = title + 2-3 sentence what/why/impact + linked ticket.
+    #                   Token-frugal. Critical info (breaking changes,
+    #                   migrations, security, rollback) is ALWAYS included
+    #                   regardless of tier — the tier governs explanatory
+    #                   depth, never whether a critical callout appears.
+    #   med           = min + grouped logical changes + tests note.
+    #   max           = med + how-to-test + edge cases / trade-offs +
+    #                   reviewer guidance (the richest, ~legacy output).
+    detail_level: min
+
+    # JSON request/response examples for API-endpoint changes.
+    #   true (default) = include a fenced example ONLY when it can be
+    #                    grounded in a real source (response DTO/resource,
+    #                    OpenAPI/schema, test fixture, or an actual probe).
+    #                    No grounded source → a one-line pointer, never an
+    #                    invented example (a hallucinated contract misleads
+    #                    reviewers, so it is worse than none).
+    #   false          = never add API examples.
+    api_examples: true
+
+    # Screenshots for frontend changes. Default false (off). Capability-gated:
+    # requires the host to have browser/preview tooling (Playwright / a
+    # dev-server URL). When true + a frontend change + no such tooling, the
+    # agent emits a one-line note and leaves the template placeholder — it
+    # never fails or blocks PR creation, and never claims an embed that did
+    # not happen. Before/after + changed-region highlighting is best-effort.
+    #   false (default) = never attempt screenshots.
+    #   true            = attempt when capable (see command contract).
+    screenshots: false
+
+    # Optional glob lists that make frontend / API-endpoint detection
+    # explicit instead of heuristic. Empty (default) = the command uses a
+    # light path/extension heuristic and fails open (no false enrichment
+    # when the surface is ambiguous). Populate to pin your project's paths,
+    # e.g. ui_paths: ["resources/views/**", "src/pages/**"].
+    ui_paths: []
+    api_paths: []
+
 # --- Memory ---
 #
 # Engineering memory consolidation behaviour. Memory is entirely

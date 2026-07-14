@@ -106,6 +106,23 @@
           "description": "Controls whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak and thin-projector trimming). on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask the user once per session before loading."
         }
       }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "create_pr": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "detail_level": {
+              "type": "string",
+              "enum": ["min", "med", "max"],
+              "description": "Verbosity tier for the generated PR description body, consumed by /create-pr. min (default) = title + 2-3 sentence what/why/impact + linked ticket; med = min + grouped changes + tests note; max = med + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is always included at every tier."
+            }
+          }
+        }
+      }
     }
   }
 }
