@@ -51,18 +51,23 @@ over-firing (ask-inflation) failure mode it exposes — is Phase 1.
 
 ---
 
-## Phase 1 — A situational-rule behavioral eval, proven first on `cross-source-consistency`
+## Phase 1 — A behavioral eval for `cross-source-consistency` (minimal-first)
 
 The reviewers' most-repeated P0. The existing harnesses do not fit: trigger-evals
 are skill-scoped (rules are unsupported), and golden-outcome baselines fit only
-sharp Iron-Law rules — a situation-dependent rule has no home. Build the generic
-harness once, then use it to close the `cross_source` evidence gap.
+sharp Iron-Law rules — a situation-dependent rule has no home. **Council correction
+(accepted):** build the *minimal apparatus that gets the evidence for this one rule*
+first — do **not** build a generic situational-rule harness up front on the strength
+of five named-but-unfixtured future rules (premature abstraction; the package's own
+`minimal-safe-diff` / evidence discipline). The generic harness is extracted later,
+once a **second** situational rule proves the abstraction boundary (step 1.5).
 
-- [ ] **1.1 Add a generic situational-rule eval format + runner.** A fixture
+- [ ] **1.1 Add a `cross_source`-specific eval fixture format + runner.** A fixture
       declares `sources:` (ticket / mockup_description / spec / code_state / api_contract)
       and `expected:` (`action: ask | proceed | warn`, `question_contains`,
-      `forbidden_assumptions`). Reusable beyond this rule (scope-control,
-      design-fidelity, ask-when-uncertain, evidence-freshness, demand-gate later).
+      `forbidden_assumptions`). Scope the runner to what `cross_source` needs — no
+      speculative generalization; keep the fixture shape simple enough that a second
+      rule could later reuse it, but do not build the generic abstraction yet.
       verify: the runner loads a fixture and produces a pass/fail against the
       `expected` block on a hand-written sample; runs under the repo's TS test tool.
 - [ ] **1.2 Author the `cross-source-consistency` fixture set — positives AND the
@@ -86,22 +91,37 @@ harness once, then use it to close the `cross_source` evidence gap.
       is measurable before a user disables the rule out of friction. verify: a
       simulated task with one real discrepancy records exactly one surfaced-discrepancy
       event; a consistent-sources task records zero.
+- [ ] **1.5 (gated — do not start until a 2nd situational rule exists) Extract the
+      generic situational-rule harness.** When a second rule of this class actually
+      needs the same fixture shape (e.g. a future scope-control / design-fidelity /
+      evidence-freshness eval), extract the common format from the *two concrete
+      instances* — proven need, not anticipated need. Until then this stays open by
+      design; the `cross_source` eval (1.1–1.2) is the only apparatus built now.
+      verify: two real fixtures (cross_source + the second rule) share the extracted
+      format without per-rule special-casing.
 
-## Phase 2 — Split the oversized `subagent-orchestration` skill
+## Phase 2 — Bring `subagent-orchestration` back under its size budget
 
-The project's own `skill_linter` already emits `pass_with_warnings: skill_too_large`
-for this skill (9 modes + contracts + prompts + schemas in one file). The reviewers
-name the decomposition: the central skill should only route; detail contracts move
-to contexts / specialized surfaces.
+The project's own `skill_linter` emits `pass_with_warnings: skill_too_large` for
+this skill (9 modes + contracts + prompts + schemas in one file) — a real
+`size-enforcement` budget breach, not an invented one. **Council correction
+(accepted):** this is **size-budget / split-by-responsibility hygiene**, not a
+claimed maintainability or scalability win — the skill still routes all 9 modes, so
+the routing cognitive load is unchanged; what improves is that detail no longer
+sits in the router. Frame and verify it as exactly that, and require the split to
+*genuinely relocate* detail (not relabel), losing no invariant.
 
-- [ ] **2.1 Extract the mode detail out of `SKILL.md`.** Keep routing / mode
-      selection (the form gate + the mode-picker) in the skill; move the per-mode
-      execution contracts, council-mode detail, and telemetry/reporting detail into
-      `contexts/` (or sibling skills) that the skill points to. Preserve every Iron
-      Law, cross-model invariant, and the advisory/Hard-Floor boundary verbatim
-      (preservation-guard). verify: `skill_linter` on `subagent-orchestration` no
-      longer warns `skill_too_large`; all 9 modes still resolve from the skill;
-      `check_references` + host-loadability green.
+- [ ] **2.1 Move the mode detail out of `SKILL.md`.** Keep routing / mode selection
+      (the form gate + the mode-picker) in the skill; relocate the per-mode execution
+      contracts, council-mode detail, and telemetry/reporting detail into `contexts/`
+      (or sibling skills) the skill points to. Preserve every Iron Law, cross-model
+      invariant, and the advisory/Hard-Floor boundary **verbatim** (`preservation-guard`).
+      verify: (a) `skill_linter` on `subagent-orchestration` no longer warns
+      `skill_too_large`; **AND** (b) all 9 modes still resolve from the skill; **AND**
+      (c) `preservation-guard` holds — every Iron Law / invariant present pre-split is
+      present post-split (a diff shows relocation, not deletion); `check_references` +
+      host-loadability green. Passing the linter alone is **not** sufficient — (b)+(c)
+      are the real success criteria.
 - [ ] **2.2 Re-sync projections + descriptions.** Run `task sync` +
       `task generate-tools` + `/condense` for the touched surfaces; the skill
       description still carries the mode list; `validate_frontmatter` clean. verify:
@@ -111,17 +131,25 @@ to contexts / specialized surfaces.
 ## Phase 3 — Tag-aware release-PR review
 
 On a release PR the review bot diffs `release-branch → main` and then reports the
-release's own features as "not in the diff" (they merged before the cut) — the
-false-advisory the reviewers flagged as the most visible current operational
-weakness. Release PRs need the `previous_tag...release_head` base.
+release's own features as "not in the diff" (they merged before the cut). **Council
+correction (accepted):** anchor this to the concrete instance rather than "most
+visible" — the `feedback-9.2.0-1.txt` review documents PR #957 (the 9.2.0 release
+PR) emitting exactly these false findings ("the new rule is not in the diff",
+"ADR-122 is not in the diff", "the test delta is not explained by new test files").
+Release PRs need the `previous_tag...release_head` base.
 
+- [ ] **3.0 Record the concrete failure instance as the justification.** Capture the
+      PR #957 false-advisory case (the three findings above) as the anchoring evidence
+      in the fix's design note, so the phase is grounded in an observed defect, not a
+      "most visible" assertion. verify: the design note cites PR #957's false findings
+      as the reproduction case.
 - [ ] **3.1 Add a release-mode to the PR-review path.** Detect a release PR
       (version in title / changelog block), resolve the previous tag, analyze
       `previous_tag...release_head` as the feature range, and treat the release-PR
       diff only as an additional packaging diff. Validate claims against the full
       release commit range, not the packaging diff. verify: on a synthetic release
-      PR whose feature merged pre-cut, the review no longer emits "feature/ADR not
-      in diff"; a normal feature PR's review base is unchanged.
+      PR whose feature merged pre-cut (the PR #957 shape), the review no longer emits
+      "feature/ADR not in diff"; a normal feature PR's review base is unchanged.
 
 ## Phase 4 — Hermetic, reproducible install-bundle build
 
@@ -160,14 +188,18 @@ than patched per PR.
 
 ## Acceptance criteria
 
-- Phase 1 delivers a reusable situational-rule eval harness + the `cross_source`
-  fixture set (positives + negative controls) + a `docs/CLAIMS.md` entry + an
-  ask-rate telemetry facet; the eval runs and the claim is either `backed` or a
-  documented honest-null.
-- Phase 2: `skill_linter` no longer warns `skill_too_large` on
-  `subagent-orchestration`; all 9 modes resolve; projections re-synced.
-- Phase 3: release-PR review uses the previous-tag feature range; the
-  "feature not in diff" false-advisory does not recur on a release PR.
+- Phase 1 delivers a `cross_source`-specific eval (fixtures: positives + negative
+  controls) + a `docs/CLAIMS.md` entry + an ask-rate telemetry facet; the eval runs
+  and the claim is either `backed` or a documented honest-null. The **generic**
+  situational-rule harness (1.5) is explicitly **not** required for Phase 1 — it is
+  gated on a second situational rule proving the pattern.
+- Phase 2: `subagent-orchestration` is back under its `size-enforcement` budget
+  (`skill_too_large` cleared) **with every Iron Law / invariant preserved**
+  (`preservation-guard`, relocation-not-deletion) and all 9 modes resolving;
+  projections re-synced. Linter-green alone does not satisfy this criterion.
+- Phase 3: the PR #957 false-advisory case is recorded as the anchoring evidence;
+  release-PR review uses the previous-tag feature range; the "feature not in diff"
+  false-advisory does not recur on a release PR.
 - Phase 4: a path-leakage guard fails on a synthetic leak and is wired into the build gate.
 - `task ci` green (remote CI is the authoritative gate).
 - No duplicate roadmap created for any § Disposition item.
@@ -181,3 +213,60 @@ State-dependent note: the Phase-1 CLAIMS entry is a debt marker; reverting it
 un-registers the measurement rather than breaking behavior. The Phase-2 split must
 preserve every Iron Law and invariant verbatim (preservation-guard) — a revert
 restores the single-file skill unchanged.
+
+## Council review (2026-07-14)
+
+Deep debate, 3 rounds, cross-vendor (`anthropic/claude-sonnet-4-5` +
+`openai/gpt-4o`), roadmap input-mode, actual **$0.15**
+(`agents/runtime/council/responses/road-to-feedback-9.2.0-followups-roadmap.json/`).
+
+**Convergence — one load-bearing finding (both members).** The roadmap
+**over-builds and is internally inconsistent with its own evidence discipline**:
+it holds *deferred* items to a measurement/evidence bar while exempting its *own
+build-now phases* from the same bar. Phase 1 builds a **generic** situational-rule
+harness justified only by five *named-but-unfixtured* future rules (premature
+abstraction — no second instance proves the boundary); Phase 2's sole success
+criterion is silencing a `skill_too_large` linter warning with no evidence the
+warning tracks real maintenance burden (moving prose out does not reduce the
+routing cognitive load — the skill still must know all 9 modes); Phase 3 asserts
+"most visible operational weakness" without documenting concrete harm from the
+false advisory.
+
+### Convergence findings
+
+1. **Phase 1 is speculative abstraction** — build the *minimal `cross_source`-specific*
+   eval first, back the claim, and extract the generic harness only when a second
+   situational rule proves the pattern (YAGNI / two-instances-before-abstraction) ·
+   trace: §claude-sonnet-4-5, §gpt-4o.
+2. **Phase 2 is linter-appeasement framed as architecture** — the split moves
+   documentation, not the routing load; drop any maintainability claim and justify
+   it honestly (size-budget hygiene) or measure the friction first · trace: both.
+3. **Phase 3 lacks documented operational harm** — anchor it to a concrete instance
+   of the false advisory before prioritizing, or demote it · trace: both.
+4. **Meta: double standard** — apply the same evidence bar to the build-now phases
+   that the disposition applies to deferred items · trace: §claude-sonnet-4-5.
+
+### Divergences (no consensus)
+
+- **Council vs. the review *source*** — the `feedback-9.2.0-1.txt` author explicitly
+  asked for a **generic** situational-rule harness (P0); the council calls that
+  premature. Host resolves toward the package's own anti-over-engineering doctrine
+  (`minimal-safe-diff`, evidence-discipline) while keeping the generic harness as
+  the *eventual* target, not the first step — see Host verdict finding 1.
+
+### Host verdict
+
+The council never saw the codebase; each finding is checked against the roadmap
+and repo before acceptance.
+
+| # | Finding | Verdict | Reason |
+|---|---|---|---|
+| 1 | Phase 1 generic harness is speculative | `accept-with-modification` | Matches Phase 1.1 (5 unfixtured future rules). Aligns with `minimal-safe-diff` anti-premature-abstraction. BUT the feedback source asked for generic → reframe: `cross_source`-specific eval + claim FIRST; generic extraction becomes a later step gated on a 2nd situational rule. |
+| 2 | Phase 2 is linter-appeasement | `accept-with-modification` | `skill_too_large` is a *real* project budget (`size-enforcement`), not invented — keep the phase, but drop the implied maintainability win, frame as size-budget/responsibility-split hygiene, and require genuine detail relocation under `preservation-guard`. |
+| 3 | Phase 3 lacks documented harm | `accept-with-modification` | The concrete instance exists — the feedback cites PR #957's false "feature/ADR not in diff" advisory. Add a step to capture that evidence as the justification; do not demote (cheap fix, real trust cost). |
+| 4 | Meta double standard | `accept` | Resolved by applying findings 1–3's evidence-anchoring; no separate patch. |
+
+### Predecessor council trace
+
+`agents/runtime/council/responses/road-to-feedback-9.2.0-followups-roadmap.json/`
+(this run — gitignored, local-only).
