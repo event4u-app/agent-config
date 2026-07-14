@@ -14290,6 +14290,21 @@ var settingsSchema = external_exports.object({
     create_pr: external_exports.object({
       preview_description: external_exports.boolean().default(false).describe(
         "When /create-pr runs, show the generated title and body and wait for confirmation before opening the PR. Off by default (zero-friction PR creation); turn on if you want a last-look gate."
+      ),
+      detail_level: external_exports.enum(["min", "med", "max"]).default("min").describe(
+        "Verbosity tier for the generated PR description body. min (default) = title + 2-3 sentence what/why/impact + linked ticket (token-frugal); med = min + grouped changes + tests note; max = med + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is ALWAYS included at every tier \u2014 the tier governs explanatory depth, never whether a critical callout appears."
+      ),
+      api_examples: external_exports.boolean().default(true).describe(
+        "JSON request/response examples for API-endpoint changes. true (default) = include a fenced example ONLY when grounded in a real source (response DTO/resource, OpenAPI/schema, test fixture, or an actual probe); no grounded source \u2192 a one-line pointer, never an invented example. false = never add API examples."
+      ),
+      screenshots: external_exports.boolean().default(false).describe(
+        "Screenshots for frontend changes. false (default) = never attempt. true = attempt when the host has browser/preview tooling and the diff touches a frontend surface; capability-gated (emits a one-line note and leaves the placeholder when tooling is absent, never fails or blocks the PR). Before/after + changed-region highlighting is best-effort."
+      ),
+      ui_paths: external_exports.array(external_exports.string()).default([]).describe(
+        'Optional glob list that makes frontend detection explicit instead of heuristic (e.g. ["resources/views/**", "src/pages/**"]). Empty (default) = a light path/extension heuristic that fails open (no false enrichment when the surface is ambiguous).'
+      ),
+      api_paths: external_exports.array(external_exports.string()).default([]).describe(
+        'Optional glob list that makes API-endpoint detection explicit instead of heuristic (e.g. ["app/Http/Controllers/Api/**", "src/pages/api/**"]). Empty (default) = a light path/extension heuristic that fails open.'
       )
     })
   }),

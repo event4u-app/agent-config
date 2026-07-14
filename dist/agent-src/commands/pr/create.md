@@ -140,6 +140,12 @@ completion is read from the checkbox counts.
 Run `/create-pr:description-only` Steps 1–4 to generate the PR title and body.
 This handles: Jira ticket extraction, diff analysis, commit messages, **PR template filling**.
 
+The generation honors the cached content flags from step 1 (§4e):
+`detail_level` sets the Description tier (default `min`), `api_examples`
+adds a grounded JSON block for API-endpoint changes, and `screenshots`
+(capability-gated) adds frontend screenshots. Critical-info callouts
+(breaking changes / migrations / security / rollback) appear at every tier.
+
 **CRITICAL**: The PR body MUST use the project's PR template (`.github/pull_request_template.md`).
 Read the template file and fill in its sections. If the template does not exist, use the
 fallback structure defined in `/create-pr:description-only`. NEVER invent a custom body structure.
@@ -316,11 +322,16 @@ an actual Jira API call succeeded** — never announce "skipped".
 
 #### 4e. Settings short-circuit — single read per run
 
-`verbosity.routine_confirmations`, `verbosity.post_action_reports`, and
-`commands.create_pr.preview_description` are read **once** at the top
-of the run and cached for the whole `/create-pr` invocation. Do **not**
-re-read `.agent-settings.yml` in 4b / 4d — both branches resolve from
-the cached values from step 1.
+`verbosity.routine_confirmations`, `verbosity.post_action_reports`,
+`commands.create_pr.preview_description`, `commands.create_pr.detail_level`,
+`commands.create_pr.api_examples`, `commands.create_pr.screenshots`,
+`commands.create_pr.ui_paths`, and `commands.create_pr.api_paths` are read
+**once** at the top of the run and cached for the whole `/create-pr`
+invocation. Do **not** re-read `.agent-settings.yml` in Step 2 or 4b / 4d —
+every branch resolves from the cached values from step 1. The content flags
+(`detail_level`, `api_examples`, `screenshots`, `ui_paths`, `api_paths`) are
+consumed by the `/create-pr:description-only` generation step (Step 2); the
+confirmation/report flags by steps 3–4.
 
 When all three resolve to their silent defaults (`false` / `minimal` /
 `false`), steps 4b + 4d collapse to the single `→ #N opened: <url>` line
