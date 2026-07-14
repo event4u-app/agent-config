@@ -64,10 +64,15 @@ INTENT
 │     → cite [agent-handoff](../../../.claude/skills/agent-handoff/SKILL.md)
 │       (structured handoff envelope; resume in fresh chat)
 │
-└── Cost-aware decision (model pick, budget, stop-criterion)
-      → cite /cost:report (when shipped) — until then, fall back to
-        [token-efficiency](../../rules/token-efficiency.md) and
-        [direct-answers § Brevity by Default](../../rules/direct-answers.md)
+├── Cost-aware decision (model pick, budget, stop-criterion)
+│     → cite /cost:report (when shipped) — until then, fall back to
+│       [token-efficiency](../../rules/token-efficiency.md) and
+│       [direct-answers § Brevity by Default](../../rules/direct-answers.md)
+│
+└── API-bill lever (stable prefix reused across calls · non-interactive
+    bulk cohort · model/effort pick against the paid Anthropic bill)
+      → cite [api-cost-levers](../../../docs/guidelines/agent-infra/api-cost-levers.md)
+        (prompt caching ~0.1x reads · Batch -50% · model tiering · effort)
 ```
 
 ## Catalog
@@ -81,6 +86,7 @@ INTENT
 | `direct-answers` | `.agent-src.uncondensed/rules/direct-answers.md` | `brevity`, `flattery`, `severity`, `tiered` | Iron-Law brevity floor (kernel) |
 | `markitdown` | upstream: github.com/microsoft/markitdown | `PDF`, `DOCX`, `HTML`, `convert` | Document → markdown converter (authoritative-link only) |
 | `/cost:report` | TBD — an internal roadmap (local-only) | `cost`, `model spend`, `budget` | Per-session cost telemetry (planned) |
+| `api-cost-levers` | `docs/guidelines/agent-infra/api-cost-levers.md` | `cache`, `caching`, `batch`, `tiering`, `effort` | Anthropic billing levers: prompt caching, Batch API, model tiering, effort/output right-sizing |
 
 ## Output format
 

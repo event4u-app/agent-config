@@ -266,11 +266,20 @@ describe('clients — AnthropicClient (mock transport)', () => {
         };
         const c = new AnthropicClient({ client: mock });
         const r = c.ask('SYS', 'USER', 99);
+        // Prompt caching is ON by default: system + user artefact ship as
+        // cache-controlled blocks (GA — no beta header).
         expect(captured).toEqual({
             model: 'claude-sonnet-4-5',
             max_tokens: 99,
-            system: 'SYS',
-            messages: [{ role: 'user', content: 'USER' }],
+            system: [{ type: 'text', text: 'SYS', cache_control: { type: 'ephemeral' } }],
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        { type: 'text', text: 'USER', cache_control: { type: 'ephemeral' } },
+                    ],
+                },
+            ],
         });
         expect(r.provider).toBe('anthropic');
         expect(r.text).toBe('hi there');
@@ -278,6 +287,50 @@ describe('clients — AnthropicClient (mock transport)', () => {
         expect(r.output_tokens).toBe(22);
         expect(r.error).toBeNull();
         expect(Number.isInteger(r.latency_ms)).toBe(true);
+    });
+
+    it('kill-switch: enable_prompt_cache=false sends plain string system + user', () => {
+        let captured: Record<string, unknown> | null = null;
+        const mock = {
+            messages: {
+                create(kwargs: Record<string, unknown>) {
+                    captured = kwargs;
+                    return fakeAnthropicResponse('ok', 1, 2);
+                },
+            },
+        };
+        new AnthropicClient({ client: mock, enable_prompt_cache: false }).ask('SYS', 'USER', 99);
+        expect(captured).toEqual({
+            model: 'claude-sonnet-4-5',
+            max_tokens: 99,
+            system: 'SYS',
+            messages: [{ role: 'user', content: 'USER' }],
+        });
+    });
+
+    it('parses cache_creation/cache_read tokens from usage (0 when absent)', () => {
+        const mockCached = {
+            messages: {
+                create: () => ({
+                    content: [{ type: 'text', text: 'ok' }],
+                    usage: {
+                        input_tokens: 100,
+                        output_tokens: 20,
+                        cache_creation_input_tokens: 300,
+                        cache_read_input_tokens: 1200,
+                    },
+                }),
+            },
+        };
+        const r = new AnthropicClient({ client: mockCached }).ask('s', 'u');
+        expect(r.cache_creation_input_tokens).toBe(300);
+        expect(r.cache_read_input_tokens).toBe(1200);
+        // Absent cache fields default to 0.
+        const r0 = new AnthropicClient({
+            client: { messages: { create: () => fakeAnthropicResponse('ok', 5, 6) } },
+        }).ask('s', 'u');
+        expect(r0.cache_creation_input_tokens).toBe(0);
+        expect(r0.cache_read_input_tokens).toBe(0);
     });
 
     it('joins text blocks and skips a leading thinking block (extended-thinking models)', () => {

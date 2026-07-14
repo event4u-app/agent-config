@@ -101,6 +101,68 @@ export function estimate_cost(
     };
 }
 
+// ── prompt-cache repricing ─────────────────────────────────────────
+//
+// Prompt-cache multipliers derived from the base input rate (Anthropic, GA —
+// no beta header): cache reads bill at ~0.1× input; cache writes at 1.25×
+// (5-min TTL) / 2× (1-h TTL). Kept as CONSTANTS, not columns in
+// `.agent-prices.md`, because that table's row format is byte-frozen (see the
+// file header) and downstream tests pin it.
+export const CACHE_READ_MULTIPLIER = 0.1;
+export const CACHE_WRITE_MULTIPLIER_5M = 1.25;
+export const CACHE_WRITE_MULTIPLIER_1H = 2.0;
+
+export interface CacheTokenBreakdown {
+    input_tokens: number; // uncached input, billed at the full rate
+    cache_read_input_tokens?: number; // billed at CACHE_READ_MULTIPLIER × input
+    cache_creation_input_tokens?: number; // billed at the write multiplier
+    output_tokens: number;
+}
+
+/**
+ * Realized cost of a call given OBSERVED cache-token counts (from
+ * `CouncilResponse.usage`). Deliberately separate from `estimate_cost`, which
+ * stays cache-agnostic (a conservative 0%-cache-hit pre-flight) so the budget
+ * gate never under-predicts. This function is the post-hoc actual that surfaces
+ * the saving. `ttl` selects the write multiplier (default 5-min).
+ */
+export function reprice_with_cache(
+    provider: string,
+    model: string,
+    tokens: CacheTokenBreakdown,
+    table: PriceTable,
+    ttl: '5m' | '1h' = '5m',
+): CostEstimate {
+    const price = lookup(table, provider, model);
+    const read = tokens.cache_read_input_tokens ?? 0;
+    const write = tokens.cache_creation_input_tokens ?? 0;
+    const totalInput = tokens.input_tokens + read + write;
+    if (price === null) {
+        return {
+            provider,
+            model,
+            input_tokens: totalInput,
+            output_tokens: tokens.output_tokens,
+            input_usd: 0.0,
+            output_usd: 0.0,
+        };
+    }
+    const writeMult = ttl === '1h' ? CACHE_WRITE_MULTIPLIER_1H : CACHE_WRITE_MULTIPLIER_5M;
+    const inputUsd =
+        (tokens.input_tokens / 1_000_000) * price.input_per_1m_usd +
+        (read / 1_000_000) * price.input_per_1m_usd * CACHE_READ_MULTIPLIER +
+        (write / 1_000_000) * price.input_per_1m_usd * writeMult;
+    const outputUsd = (tokens.output_tokens / 1_000_000) * price.output_per_1m_usd;
+    return {
+        provider,
+        model,
+        input_tokens: totalInput,
+        output_tokens: tokens.output_tokens,
+        input_usd: inputUsd,
+        output_usd: outputUsd,
+    };
+}
+
 // ── staleness ──────────────────────────────────────────────────────
 
 /** Return the most recent Monday 00:00 UTC as a date (YYYY-MM-DD). */
