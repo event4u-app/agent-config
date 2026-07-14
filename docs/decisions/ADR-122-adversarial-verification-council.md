@@ -129,7 +129,7 @@ Each settled decision this roadmap does NOT touch:
 
 ## References
 
-- `agents/roadmaps/road-to-adversarial-verification-council.md` — the roadmap.
+- `agents/roadmaps/archive/road-to-adversarial-verification-council.md` — the roadmap.
 - ADR-106 (recursive-verification honest-null), ADR-117 (subagents.auto flip),
   ADR-120 (council chairman mode), ADR-109 (subagent-v1 contract).
 - `docs/CLAIMS.md#adversarial-council-finding-coverage` — the pre-registered claim.
