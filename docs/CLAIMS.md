@@ -230,3 +230,10 @@ visible, not hidden.
 - evidence: internal/bench/reports/parity-count.json#min over hosts of median
 - status: backed
 - last_verified: 2026-07-12
+
+### claim: adversarial-council-finding-coverage
+- claim: On the residual defect pool (planted defects that survive a single strong cross-model judge), an adversarial panel of >=2 distinct-vendor skeptics finds materially more residual defects than that single judge — relative residual-recall lift >= +25% AND absolute >= +8 percentage points — at a false-positive rate on a controversial-but-correct control no worse than the single-judge baseline (within noise). Scope: finding coverage, NOT decision quality (the separate, unbacked council-vs-solo-baseline question). Pre-registered; honest-null (either threshold missed or FP worse) keeps the surface off by default permanently.
+- kind: quant
+- evidence: docs/benchmark.md#adversarial-verification-council
+- status: unbacked
+- last_verified:

@@ -558,3 +558,27 @@ replication on a per-token-billed key.
 
 - Runner: `src/scripts/bench_ab_v2_run.ts --host codex` (checkpoint-resumable).
 - Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 2.
+
+## adversarial-verification-council finding coverage — UNBACKED (pending corpus + run)
+
+Pre-registered claim `adversarial-council-finding-coverage` (docs/CLAIMS.md,
+ADR-122): on the RESIDUAL defect pool — defects that survive a single strong
+cross-model judge — a cross-vendor skeptic panel (subagent-orchestration Mode 9,
+`adversarial-verification-council`) finds materially more residual defects than
+that judge, at a false-positive rate no worse than baseline on a
+controversial-but-correct control.
+
+- **Design (two-stage residual protocol, corpus-validity bar, dual threshold,
+  controversial-clean FP control):** [`docs/design/adversarial-council-eval.md`](design/adversarial-council-eval.md).
+- **Gate (locked at pre-registration):** relative residual-recall lift >= +25%
+  **AND** absolute >= +8 pp, **AND** panel FP not worse than baseline within
+  noise — encoded + tested in
+  [`src/scripts/_lib/adversarial_council_gate.ts`](../src/scripts/_lib/adversarial_council_gate.ts).
+- **Status: UNBACKED.** The corpus-validity gate BLOCKS the registered run: the
+  existing `internal/bench/orchestration/corpus/` was built for cross-vendor
+  *parity* (obvious, model-differentiating defects), not judge-survivable
+  residual subtleties, so a run on it would be a measurement artifact (the
+  council's Round-1 critique). Resolving the claim needs (1) a curated
+  judge-survivable-subtlety corpus with a published distribution, then (2) a
+  maintainer-gated paid cross-vendor run. Honest-null on that run keeps the
+  surface default-off permanently, like recursive-verification.

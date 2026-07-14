@@ -14229,6 +14229,9 @@ var settingsSchema = external_exports.object({
     ),
     max_parallel: external_exports.number().int().min(1).default(3).describe(
       "Hard cap on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. Raise for faster fan-out, lower if you hit rate limits or want lower token spend."
+    ),
+    adversarial_council: external_exports.enum(["off", "ask", "on"]).default("off").describe(
+      "Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only \u2014 a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed."
     )
   }),
   worktrees: external_exports.object({

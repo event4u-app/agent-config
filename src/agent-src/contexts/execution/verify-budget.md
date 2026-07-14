@@ -30,6 +30,20 @@ verification recorded as `none`, or a non-trivial change verified only
 deterministically, is a **gap** that is surfaced to the user — it never passes
 silently. This is the audit-visible enforcement of the Iron Law.
 
+## Opt-in escalation — adversarial verification council (default-off)
+
+For an explicitly high-risk change (security, tenant, migration, public API)
+AND `subagents.adversarial_council != off`, the verify step MAY escalate from a
+single cross-model judge to the **adversarial-verification-council** panel
+(subagent-orchestration Mode 9, ADR-122) — recorded as `verify_mode: council`.
+
+This escalation is **strictly opt-in and advisory**: it never fires when the
+setting is `off` (the default), and the panel finds defects but **never
+auto-gates the change** (Hard Floor). It replaces neither the deterministic
+floor nor the standard judge — it adds finding-coverage on top for changes where
+a single judge is too easy to fool. Stays default-off until the
+`adversarial-council-finding-coverage` claim is `backed` (prove-or-drop).
+
 ## Why this does not weaken the floor
 
 `deterministic` is still verification — a real diff + dry-run + structural
