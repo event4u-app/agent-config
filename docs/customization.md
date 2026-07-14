@@ -332,6 +332,28 @@ Per-invocation overrides (no settings change required):
 existing carve-out — `verbosity.offer_council_in_delivery` does not
 re-enable it. Use `/council diff:<base>..<head>` separately.
 
+#### PR description content — tier + enrichments
+
+The `commands.create_pr.*` block controls how much the generated PR
+**description body** carries. Defaults are tuned for token frugality: the
+description defaults to `min`, and the two enrichments are additive and
+self-limiting (grounded / capability-gated), so `min` stays genuinely
+minimal without ever dropping a critical callout.
+
+| Setting | Values | Default | Description |
+|---|---|---|---|
+| `commands.create_pr.detail_level` | `min`, `med`, `max` | `min` | Verbosity tier of the Description section. `min` = title + 2-3 sentence what/why/impact + linked ticket; `med` = `min` + grouped changes + tests note; `max` = `med` + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is included at **every** tier — the tier governs explanatory depth, never whether a critical callout appears. |
+| `commands.create_pr.api_examples` | `true`, `false` | `true` | Add a fenced JSON request/response example for API-endpoint changes. `true` = include **only** when grounded in a real source (DTO/resource, OpenAPI, test fixture, or an actual probe); otherwise a one-line pointer, never an invented example. `false` = never. |
+| `commands.create_pr.screenshots` | `true`, `false` | `false` | Capture frontend screenshots for UI changes. `false` = never. `true` = attempt when the host has browser/preview tooling and the diff touches a frontend surface; capability-gated (emits a one-line note and leaves the placeholder when tooling is absent, never fails or blocks the PR). Before/after + region-highlighting is best-effort; byte-embedding into the PR body is not possible via the GitHub API (host image-upload or manual attach). |
+| `commands.create_pr.ui_paths` | glob list | `[]` | Optional globs that make frontend detection explicit (e.g. `["resources/views/**", "src/pages/**"]`). Empty = a light path/extension heuristic that fails open. |
+| `commands.create_pr.api_paths` | glob list | `[]` | Optional globs that make API-endpoint detection explicit (e.g. `["app/Http/Controllers/Api/**", "src/pages/api/**"]`). Empty = a light heuristic that fails open. |
+
+These flags are read once at the top of the `/create-pr` run and cached; the
+content flags feed `/create-pr:description-only` generation. `min` is the
+default precisely because a shorter description costs fewer output tokens on
+every PR — turn it up per-project (or per-invocation via the settings file)
+when reviewers want the richer context.
+
 #### Script-output level — env-var overrides
 
 `verbosity.script_output` is read by `scripts/_lib/script_output.py`.
