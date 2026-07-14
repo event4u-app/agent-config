@@ -13,7 +13,7 @@ status: ready
 > suggestion-only model-tiering**; **(B) the consumer cost-guidance surface** —
 > what the package teaches downstream agents about cutting *their* API bill
 > (prompt caching, Batch-for-non-interactive, model-tiering, effort/output
-> budgets). Grounded in the `claude-api` skill (authoritative, cache 2026-06-24)
+> budgets). Grounded in the `claude-api` plugin skill (authoritative, cache 2026-06-24)
 > + web research 2026-07-14, and in a live code scout of `ai_council/` and the
 > cost-guidance surface.
 
@@ -129,7 +129,7 @@ ships on an estimate alone.
   "wastes tokens"), never as a cost-down lever. Model-tiering is quality-framed
   in `model-recommendations.md`, not cross-linked to `/cost:report`'s
   lever-order note. There is **no consolidated Claude-API-cost reference** — the
-  `claude-api` skill in-session is an external Claude Code plugin, **not**
+  `claude-api` plugin skill in-session is an external Claude Code plugin, **not**
   authored by this package.
 - **Sprawl-free landing (scout recommendation):** extend the `token-optimizer`
   decision-tree + catalog (the repo's own designated index) to cite **one new
@@ -162,7 +162,7 @@ Both members converged; the roadmap below folds their findings in:
 
 **One council fact overridden by the authoritative source:** both members
 (2024-era training) asserted caching needs `anthropic-beta:
-prompt-caching-2024-07-31`. The current `claude-api` skill (authoritative, 2026)
+prompt-caching-2024-07-31`. The current `claude-api` plugin skill (authoritative, 2026)
 states prompt caching is **GA — no beta header**. Implementation follows the
 skill; **no beta header is added** (per source-discovery: real current source
 over model memory).
@@ -250,7 +250,7 @@ over model memory).
 
 - [x] Author `docs/guidelines/agent-infra/api-cost-levers.md` (English, per the
       `.md`-language rule): the four platform billing levers with the concrete
-      economics from the `claude-api` skill — (1) **prompt caching** (put stable/
+      economics from the `claude-api` plugin skill — (1) **prompt caching** (put stable/
       large context — system prompt, tool defs, corpus, repo map — behind a cache
       breakpoint, volatile tail last; reads ~0.1×, writes 1.25×/2×, break-even
       after 1 read, workspace-isolated); (2) **Batch API** for non-interactive/

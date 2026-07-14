@@ -4,7 +4,7 @@ Reference material for a downstream AI-coding agent that wants to cut its own
 Claude API dollar bill. Four platform-level billing levers, the exact economics
 of each, and how they interact. Read on demand — not always-loaded.
 
-Facts sourced from the in-repo `claude-api` skill plus platform research
+Facts sourced from the in-repo `claude-api` plugin skill plus platform research
 (2026-07-14). Do not invent an API shape beyond what is stated here.
 
 ## The four levers at a glance
