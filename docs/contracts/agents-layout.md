@@ -100,7 +100,7 @@ After `agent-config migrate`, a consumer project's `agents/` contains only:
 | Entry | Rationale |
 |---|---|
 | `overrides/` | Per-project skill/rule customisation |
-| `.event4u-bridge.yml` | ADR-020 bridge marker (global-only install) |
+| `.event4u-bridge.yml` | Retired (ADR-020 amendment 2026-07-13); global root resolves from `~/.event4u/agent-config`. Legacy leftover only — deleted by installer / `refresh --project`. |
 | `.gitkeep` | Keeps `agents/` in the tree |
 | `knowledge/` | Optional: curated project-specific knowledge pages |
 | `memory/` | Optional: promotion pipeline (intake gitignored, curated YAML committed) |

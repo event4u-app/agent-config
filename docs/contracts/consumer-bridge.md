@@ -1,81 +1,73 @@
 ---
-stability: beta
-keep-beta-until: 2026-08-21
+stability: stable
 ---
 
-# Consumer Bridge Marker
+# Consumer Bridge Marker (retired)
 
-**Status:** Proposed — road-to-global-only-install Phase 4.1.
+**Status:** Retired — [`ADR-020 § Amendment 2026-07-13`](../decisions/ADR-020-global-only-consumer-scope.md#amendment--2026-07-13--bridge-marker-retired).
 **Pairs with:** [`ADR-020 — global-only consumer scope`](../decisions/ADR-020-global-only-consumer-scope.md), [`ADR-007 § Amendment 2026-05-13`](../decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only).
 
-## Purpose
+## Why it was retired
 
-After Phase 3 of `road-to-global-only-install` lands, a consumer
-project carries **only** `agents/overrides/` plus this bridge marker.
-Every other agent artefact (rules, skills, commands, personas,
-settings, user identity) is read from `~/.event4u/agent-config/`. The
-bridge marker is the single, declarative pointer that lets per-tool
-adapters (Windsurf, Cline, Gemini-CLI, the Augment workspace
-projector) locate the global root from inside the repo.
+The bridge marker `agents/.event4u-bridge.yml` was a per-project file that
+pointed at the global install. It carried **no project-specific data**:
+`global_root` is always the well-known `~/.event4u/agent-config` (one global
+install per machine), and nothing in the codebase ever read the field — the
+loader, doctor, and conformance checks all derive the global root independently
+via `user_global_paths.event4u_root()`. Yet the marker was **committed** to the
+shared project tree and rewrote its volatile `installed_at` / `installer_version`
+fields on every install, so each developer's install produced a diff and
+overwrote every other developer's committed copy. A file whose scope (global)
+did not match its location (per-project, committed) — pure churn.
 
-## File
+It is retired: the global root is resolved directly from the well-known path.
 
-`agents/.event4u-bridge.yml` at the consumer project root. <!-- ref-ignore -->
-Written by `scripts/install.py` on every successful consumer install
-(global scope). Idempotent — same file, refreshed `installed_at`.
+## What replaced it
 
-## Schema
+- **Global-root resolution** — `user_global_paths.event4u_root()` returns
+  `~/.event4u/agent-config` (overridable via `EVENT4U_CONFIG_HOME`). Readers fail
+  closed when that path is missing on disk. No per-project pointer is consulted.
+- **Migration-idempotency sentinel** — moved to
+  `agents/.agent-state/install-mode.txt` (written on every full / minimal
+  install), which the installer's legacy-detection and the doctor's
+  "global-only consumer" branch key on. `agents/overrides/` is an equivalent
+  signal.
+- **Project anchor** — a bare consumer `agents/` directory is anchored on
+  `agents/overrides/` (the guaranteed minimal-consumer surface), not the marker.
+- **Cleanup** — the installer and `agent-config refresh --project` delete any
+  legacy `agents/.event4u-bridge.yml` a prior install committed; the managed
+  `.gitignore` block also ignores it so a stale copy is never re-committed.
+
+## Per-tool anchor strategy (still active)
+
+Some AI tools only load rules when an anchor file is **inside** the workspace
+(Windsurf, Cline, Gemini-CLI). For those IDs the installer plants a thin pointer
+file under the tool's per-project directory:
 
 ```yaml
 schema: event4u-bridge/v1
+tool: windsurf
 global_root: ~/.event4u/agent-config
-installed_at: 2026-05-23T14:00:00Z
-installer_version: 2.4.0
+installed_at: 2026-07-13T00:00:00Z
 ```
 
-### Fields
+- Files: `.windsurf/agent-config.bridge.yml`, `.clinerules/agent-config.bridge.yml`,
+  `.gemini/agent-config.bridge.yml`.
+- `global_root` is the well-known path (readers expand `~` against the current
+  `$HOME`, never the writer's). There is no `bridge:` back-pointer — the retired
+  marker no longer exists to point at.
+- These anchors are **gitignored**: each developer regenerates them on install,
+  so they never churn in version control. Tools that load purely from user scope
+  (Claude Code, Cursor, Augment) need no per-tool file.
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `schema` | string | yes | Must equal `event4u-bridge/v1`. Bumped on breaking field changes. |
-| `global_root` | string | yes | Absolute path or `~`-prefixed path to the global install. Readers MUST expand `~` against the current user's `$HOME`. |
-| `installed_at` | string (ISO-8601 UTC) | yes | Timestamp of the last successful install or refresh. |
-| `installer_version` | string (semver) | yes | Version of `@event4u/agent-config` that produced the marker. |
+## Legacy reader note
 
-Unknown fields are ignored by `v1` readers (forward-compat).
-
-## Reader contract
-
-Per-tool adapters MUST:
-
-1. Read `agents/.event4u-bridge.yml` from the project root. <!-- ref-ignore -->
-2. Reject `schema != event4u-bridge/v1` with a clear error pointing at this contract.
-3. Expand `~` in `global_root` against the **current process's** `$HOME` (not the writer's).
-4. Fail closed if `global_root` is missing on disk — never silently fall back to project-local lookup.
-5. Treat the marker as **read-only data**. Adapters MUST NOT write back through it.
-
-## Writer contract
-
-`scripts/install.py` MUST:
-
-1. Write the marker atomically (temp file + rename) so a crash never leaves a half-formed pointer.
-2. Refresh `installed_at` + `installer_version` on every consumer-scope install.
-3. Use `0644` permissions (world-readable, owner-writable). The marker contains no secrets.
-4. Skip the write under `AGENT_CONFIG_DEV_MODE=1` — maintainer dev installs never lay the bridge into the source repo (this repo's `agents/` directory is the project surface, not a consumer surface).
-
-The marker is (re-)written by the consumer install, by the wizard's apply step, and by `agent-config refresh --project` — which also scaffolds `agents/overrides/` and syncs the managed `agents/` block in `.gitignore` (the full minimal project surface, no wizard). `refresh --project` no-ops inside an agent-config checkout (same source-repo guard as rule 4).
-
-## Per-tool anchor strategy
-
-Some AI tools only load rules when an anchor file is **inside** the workspace (Windsurf, Cline, Gemini-CLI). For those IDs, Phase 4.3 plants a thin pointer file under the tool's per-project directory whose body resolves to the bridge marker. Tools that load purely from user-scope (Claude Code, Cursor, Augment) read the marker once and need no per-tool file.
-
-## Out of scope
-
-- Cross-machine sync of `~/.event4u/agent-config/` (the marker is local-only).
-- Editing the marker by hand to swap installs (use `agent-config init --global-root=…` instead, once that flag ships in Phase 5).
-- Multi-tenant `global_root` (one marker = one global install per project).
+A `v1` marker left in an un-migrated consumer repo still parses as before
+(`schema: event4u-bridge/v1`, `~`-expanded `global_root`). Do not add new readers
+of it — resolve the global root from the well-known path instead. The next
+install removes it.
 
 ## References
 
-- [`ADR-020`](../decisions/ADR-020-global-only-consumer-scope.md) — global-only consumer scope; cites the in-flight roadmap for Phase 4 surface design + Phase 5 migration order.
+- [`ADR-020`](../decisions/ADR-020-global-only-consumer-scope.md) — global-only consumer scope + the 2026-07-13 retirement amendment.
 - [`ADR-007`](../decisions/ADR-007-agent-discovery-scopes.md) — scope precedence and the global-default amendment.

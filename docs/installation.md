@@ -3,7 +3,8 @@
 **Principle:** Global is the only consumer scope. `init` writes to
 user-scope paths (`~/.event4u/agent-config/`, `~/.claude/`,
 `~/.cursor/`, …); the project tree only gets `agents/overrides/`
-and `agents/.event4u-bridge.yml`. Opt-in `export` if a team wants
+(the bridge marker was retired — ADR-020 amendment 2026-07-13; the
+global root resolves from `~/.event4u/agent-config`). Opt-in `export` if a team wants
 a tool's config committed to a repo. No Task, no Make, no build
 tools required.
 

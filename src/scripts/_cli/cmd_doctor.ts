@@ -791,8 +791,20 @@ const MANIFEST_REQUIRED_CHECK_IDS: ReadonlySet<string> = new Set([
     'unsupported-combos',
 ]);
 
-/** Project-root-relative path of the ADR-020 global-only consumer marker. */
-const BRIDGE_MARKER_RELATIVE = 'agents/.event4u-bridge.yml';
+/**
+ * Signals a set-up global-only consumer. The `.event4u-bridge.yml` marker was
+ * retired (ADR-020 amendment 2026-07-13); the durable project-side signal is
+ * the install-mode marker (written on every install) or the `agents/overrides/`
+ * scaffold. Either is sufficient.
+ */
+const INSTALL_MODE_MARKER_RELATIVE = 'agents/.agent-state/install-mode.txt';
+
+function _is_global_only_consumer(project_root: string): boolean {
+    return (
+        isFile(path.join(project_root, INSTALL_MODE_MARKER_RELATIVE)) ||
+        isDir(path.join(project_root, 'agents', 'overrides'))
+    );
+}
 
 /** Repair targets that `--repair <id>` accepts. */
 const REPAIR_IDS = ['wizard-state'] as const;
@@ -1099,15 +1111,16 @@ function _check_global_binary(project_root: string): Dict {
             remedy: 'agent-config upgrade (refresh the global install + plugin)',
         };
     }
-    const bridge = path.join(project_root, 'agents', '.event4u-bridge.yml');
-    const bridge_note = isFile(bridge) ? '' : ' · no project bridge marker';
+    const consumer_note = _is_global_only_consumer(project_root)
+        ? ''
+        : ' · no project install marker';
     return {
         id: 'global-binary',
         status: 'ok',
-        message: `on PATH (${binary}); version ${binary_v || 'unknown'}${bridge_note}`,
-        remedy: !bridge_note
+        message: `on PATH (${binary}); version ${binary_v || 'unknown'}${consumer_note}`,
+        remedy: !consumer_note
             ? ''
-            : 'agent-config refresh --project (scaffold the bridge marker)',
+            : 'agent-config refresh --project (scaffold agents/overrides/)',
     };
 }
 
@@ -2715,8 +2728,8 @@ function _check_bridge_drift_no_manifest(bridge_present: boolean): Dict {
         id: 'bridge-drift',
         status: 'skipped',
         message:
-            'no project lockfile and no bridge marker → drift check ' +
-            'not applicable',
+            'no project lockfile and no consumer install marker → drift ' +
+            'check not applicable',
         remedy:
             'run `agent-config init` (project install) or ' +
             '`agent-config refresh --project` (global-only consumer)',
@@ -2781,7 +2794,7 @@ function _run_no_manifest(
         print(`  📍  project_root: ${project_root} (origin: ${origin})`);
         if (bridge_present) {
             print(
-                '  ℹ️   global-only consumer: bridge marker present, no ' +
+                '  ℹ️   global-only consumer: install marker present, no ' +
                     'project lockfile (expected under ADR-020)',
             );
             print(
@@ -2789,7 +2802,7 @@ function _run_no_manifest(
                     'to project-local distributed tools',
             );
         } else {
-            eprint(`  ⚠️   no project lockfile and no bridge marker at ${project_root}`);
+            eprint(`  ⚠️   no project lockfile and no consumer install marker at ${project_root}`);
             eprint(
                 '      run `agent-config init` (project install) or ' +
                     '`agent-config refresh --project` (global-only consumer)',
@@ -3132,7 +3145,7 @@ function main(argv: string[] | null = null): number {
     const manifest_pth = installed_tools.manifest_path(project_root);
     const manifest = installed_tools.read_manifest(manifest_pth);
     if (manifest === null) {
-        const bridge_present = isFile(path.join(project_root, BRIDGE_MARKER_RELATIVE));
+        const bridge_present = _is_global_only_consumer(project_root);
         return _run_no_manifest(opts, project_root, origin, bridge_present);
     }
 
@@ -3257,7 +3270,8 @@ export {
     CHECK_IDS,
     GLOBAL_CHECK_IDS,
     MANIFEST_REQUIRED_CHECK_IDS,
-    BRIDGE_MARKER_RELATIVE,
+    INSTALL_MODE_MARKER_RELATIVE,
+    _is_global_only_consumer,
     REPAIR_IDS,
     MCP_BETA_GATES,
     STATUS_SYMBOLS,

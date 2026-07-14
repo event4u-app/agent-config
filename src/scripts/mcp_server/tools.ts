@@ -775,9 +775,7 @@ async function _runDoctorLeg(consumerRoot: string): Promise<{
         let tagDrift: Record<string, unknown>[] = [];
         let checks: Record<string, unknown>[];
         if (manifest === null) {
-            const bridgePresent = fs.existsSync(
-                path.join(projectRoot, doctor.BRIDGE_MARKER_RELATIVE),
-            );
+            const bridgePresent = doctor._is_global_only_consumer(projectRoot);
             checks = doctor._run_checks_no_manifest(projectRoot, bridgePresent, null);
         } else {
             const [records, known] = doctor._collect_manifest_entries(projectRoot, manifest);

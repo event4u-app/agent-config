@@ -112,7 +112,7 @@ describe('refresh — argument errors', () => {
 // ---------------------------------------------------------------------------
 
 describe('refresh --project — fresh consumer', () => {
-    it('scaffolds bridge marker + overrides + gitignore; output parity, exit 0', () => {
+    it('scaffolds overrides + gitignore (no bridge marker); output parity, exit 0', () => {
         // Independent fixtures so neither side observes the other's writes.
         const pcwd = fs.mkdtempSync(path.join(os.tmpdir(), 'refresh-py-'));
         const tcwd = fs.mkdtempSync(path.join(os.tmpdir(), 'refresh-ts-'));
@@ -126,7 +126,10 @@ describe('refresh --project — fresh consumer', () => {
                     .map((e) => path.relative(d, path.join((e as fs.Dirent).parentPath ?? d, e.name)))
                     .sort();
             const scaffolded = tree(tcwd);
-            expect(scaffolded).toContain('agents/.event4u-bridge.yml');
+            // Bridge marker retired (ADR-020 amendment 2026-07-13) — refresh
+            // no longer scaffolds it; the global root resolves from the
+            // well-known path. Only the overrides scaffold lands.
+            expect(scaffolded).not.toContain('agents/.event4u-bridge.yml');
             expect(scaffolded).toContain('agents/overrides/README.md');
         } finally {
             fs.rmSync(pcwd, { recursive: true, force: true });

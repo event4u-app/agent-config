@@ -16,9 +16,11 @@
  *   global root + Claude plugin hooks are rewritten from the
  *   currently-installed package. Idempotent: a second run is a no-op diff.
  * - `--project` — refresh the **minimal** project surface ADR-020 permits for
- *   a consumer: the `agents/.event4u-bridge.yml` marker, an `agents/overrides/`
- *   scaffold, and the managed `agents/` block in `.gitignore`. Writes **no**
- *   distributed content. No wizard.
+ *   a consumer: an `agents/overrides/` scaffold and the managed `agents/`
+ *   block in `.gitignore`, plus cleanup of any legacy
+ *   `agents/.event4u-bridge.yml` (the marker was retired — ADR-020 amendment
+ *   2026-07-13; the global root is resolved from `~/.event4u/agent-config`).
+ *   Writes **no** distributed content. No wizard.
  *
  * Bare `agent-config refresh` (no scope flag) errors — never a silent global
  * default (council 2026-05-30).
@@ -39,17 +41,15 @@
  *   `cannot run <cmd[0]>: <err>` line to stderr and returns 1, mirroring the
  *   Python `except OSError`. The runner is injectable for tests.
  * - `_lib.*` / `scripts.install` / `scripts.sync_gitignore` imports resolve to
- *   the `.ts` twins. `scripts.install._write_consumer_bridge_marker` is
- *   module-private in the install twin (not exported); it is replicated here
- *   byte-for-byte from the install-twin source — its helper chain
- *   (`_format_global_root_for_marker`, the atomic 0644 write, the UTC stamp,
- *   `user_global_paths.event4u_root`) is replicated alongside, keeping the
- *   shared import surface unchanged (same approach as `cmd_update.ts`).
+ *   the `.ts` twins. `scripts.install._remove_legacy_consumer_bridge_marker`
+ *   is module-private in the install twin (not exported); it is replicated
+ *   here — a small `isFile` + `fs.rmSync` guard gated on dev-mode / source
+ *   repo, matching the install-twin source.
  * - `Path(__file__).resolve().parents[3]` → `path.resolve(_HERE_DIR, '..',
  *   '..', '..')`. `.is_file()` / `.is_dir()` / `.exists()` →
  *   `_isFile` / `_isDir` / `_exists`. The `packages/` source-marker glob probe
  *   becomes a `readdirSync` scan of `packages/` (the source-marker dir name is
- *   the `SRC_MARKER_DIR` constant, shared with the bridge-marker guard).
+ *   the `SRC_MARKER_DIR` constant, shared with the marker-cleanup guard).
  * - `print(..., file=out/err)` → an injectable `OutSink` defaulting to
  *   `process.stdout` / `process.stderr`. The Python `out`/`err` kwargs default
  *   to `sys.stdout` / `sys.stderr`.
@@ -60,17 +60,13 @@
  *   `except ImportError` branch wording.
  */
 
-import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import * as installed_lock from '../_lib/installed_lock.js';
 import * as cli_wrapper from '../_lib/cli_wrapper.js';
-import * as user_global_paths from '../_lib/user_global_paths.js';
 import * as sync_gitignore from '../sync_gitignore.js';
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -149,103 +145,30 @@ const CONSUMER_BRIDGE_MARKER_RELPATH = path.join('agents', '.event4u-bridge.yml'
  */
 const SRC_MARKER_DIR = '.agent-src.uncondensed';
 
-/** `Path.resolve()` — absolute, symlink-resolved where possible. */
-function resolvePath(p: string): string {
-    try {
-        return fs.realpathSync(path.resolve(p));
-    } catch {
-        return path.resolve(p);
-    }
-}
-
-function _format_global_root_for_marker(global_root: string): string {
-    const home = resolvePath(os.homedir());
-    const resolved = resolvePath(global_root);
-    const rel = path.relative(home, resolved);
-    if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) {
-        return global_root;
-    }
-    return `~/${rel.split(path.sep).join('/')}`;
-}
-
-/** `datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")`. */
-function utcStamp(now?: Date): string {
-    const d = now ?? new Date();
-    const pad = (n: number, w = 2): string => String(n).padStart(w, '0');
-    return (
-        `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}` +
-        `T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}Z`
-    );
-}
-
-function mkdirp(p: string): void {
-    fs.mkdirSync(p, { recursive: true });
-}
-
-/** `tempfile.mkstemp` + write + `os.chmod(0o644)` + `os.replace` (atomic). */
-function atomicWrite0644(target: string, body: string, prefix: string): void {
-    const dir = path.dirname(target);
-    const tmpName = path.join(
-        dir,
-        `${prefix}${process.pid}.${crypto.randomBytes(6).toString('hex')}.yml.tmp`,
-    );
-    let fd: number | null = null;
-    try {
-        fd = fs.openSync(tmpName, 'wx', 0o644);
-        fs.writeFileSync(fd, body, 'utf-8');
-        fs.closeSync(fd);
-        fd = null;
-        fs.chmodSync(tmpName, 0o644);
-        fs.renameSync(tmpName, target);
-    } catch (err) {
-        if (fd !== null) {
-            try {
-                fs.closeSync(fd);
-            } catch {
-                /* fd may already be closed */
-            }
-        }
-        try {
-            fs.unlinkSync(tmpName);
-        } catch {
-            /* best-effort cleanup */
-        }
-        throw err;
-    }
-}
 
 /**
- * Mirrors `install._write_consumer_bridge_marker` (module-private). Returns the
- * written path, or `null` when skipped (dev mode / source repo).
+ * Mirrors `install._remove_legacy_consumer_bridge_marker` (module-private).
+ * The consumer bridge marker was retired (ADR-020 amendment 2026-07-13); the
+ * global root is resolved from the well-known `~/.event4u/agent-config` path.
+ * `refresh --project` deletes any legacy `agents/.event4u-bridge.yml` a prior
+ * install committed. Returns the removed path, or `null` when nothing to do
+ * (no marker / dev mode / source repo).
  */
-function _write_consumer_bridge_marker(
+function _remove_legacy_consumer_bridge_marker(
     project_root: string,
-    installer_version: string,
     env: NodeJS.ProcessEnv | null = null,
-    now: Date | null = null,
 ): string | null {
     const env_map = env ?? process.env;
     if (env_map['AGENT_CONFIG_DEV_MODE'] === '1') return null;
     if (_isDir(path.join(project_root, SRC_MARKER_DIR))) return null;
 
-    const global_root_str = _format_global_root_for_marker(
-        user_global_paths.event4u_root(env_map),
-    );
-    const stamp = utcStamp(now ?? undefined);
-
-    const body =
-        '# event4u/agent-config — consumer bridge marker (auto-written).\n' +
-        '# Spec: docs/contracts/consumer-bridge.md (event4u-bridge/v1).\n' +
-        '# Reader contract: expand ~ against the current $HOME; fail closed\n' +
-        '# when global_root is missing on disk; never write back through it.\n' +
-        'schema: event4u-bridge/v1\n' +
-        `global_root: ${global_root_str}\n` +
-        `installed_at: ${stamp}\n` +
-        `installer_version: ${installer_version}\n`;
-
     const target = path.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
-    mkdirp(path.dirname(target));
-    atomicWrite0644(target, body, '.event4u-bridge.');
+    if (!_isFile(target)) return null;
+    try {
+        fs.rmSync(target);
+    } catch {
+        return null;
+    }
     return target;
 }
 
@@ -292,10 +215,10 @@ function _refresh_global(runner: Runner, out: OutSink, err: OutSink): number {
 /**
  * True when `project_root` is the agent-config package itself.
  *
- * `_write_consumer_bridge_marker` only guards on a root-level
+ * `_remove_legacy_consumer_bridge_marker` only guards on a root-level
  * `.agent-src.uncondensed/`, which the monorepo keeps under `packages/<pkg>/`
- * instead — so the narrow guard misses here and would write a consumer marker
- * into the maintainer tree. This broader check (condensed output, packaged
+ * instead — so the narrow guard misses here and would touch the maintainer
+ * tree. This broader check (condensed output, packaged
  * source, or the package's own `package.json` name) makes `refresh --project`
  * a no-op in any agent-config checkout. Consumers use dev-mode, not refresh.
  */
@@ -350,19 +273,13 @@ function _refresh_project(project_root: string, out: OutSink, err: OutSink): num
         return 0;
     }
 
-    const version = installed_lock.current_package_version() || '0.0.0';
-    const marker = _write_consumer_bridge_marker(project_root, version);
-    if (marker === null) {
-        _print(
-            out,
-            'ℹ️  refresh --project skipped the bridge marker: this is the ' +
-                'agent-config source repo (or AGENT_CONFIG_DEV_MODE=1). Nothing ' +
-                'to scaffold in a maintainer checkout.',
-        );
-        return 0;
+    // Bridge marker retired (ADR-020 amendment 2026-07-13). The global root is
+    // resolved from the well-known `~/.event4u/agent-config` path, so there is
+    // no per-project marker to scaffold — clean up any legacy one instead.
+    const removed = _remove_legacy_consumer_bridge_marker(project_root);
+    if (removed !== null) {
+        _print(out, `✅  removed legacy bridge marker: ${removed}`);
     }
-
-    _print(out, `✅  bridge marker: ${marker}`);
 
     const overrides = path.join(project_root, 'agents', 'overrides');
     fs.mkdirSync(overrides, { recursive: true });
@@ -372,8 +289,8 @@ function _refresh_project(project_root: string, out: OutSink, err: OutSink): num
             keep,
             '# Project overrides\n\n' +
                 'Project-local overrides/extensions of shared skills, rules, and ' +
-                'commands. The only project-side agent surface ADR-020 permits ' +
-                'besides the bridge marker. See the `override-management` skill.\n',
+                'commands. The only project-side agent surface ADR-020 permits. ' +
+                'See the `override-management` skill.\n',
         );
     }
     _print(out, `✅  overrides scaffold: ${overrides}`);
@@ -543,7 +460,7 @@ export {
     _is_source_repo,
     _refresh_project,
     _sync_gitignore,
-    _write_consumer_bridge_marker,
+    _remove_legacy_consumer_bridge_marker,
     ArgparseExit,
 };
 export type { Args, Runner };
