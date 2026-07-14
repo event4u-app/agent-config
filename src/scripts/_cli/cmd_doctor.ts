@@ -100,6 +100,12 @@ import {
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
 import { review_gate_doctor_signal } from '../ai_team/review_gate.js';
+import {
+    LEGACY_ALL,
+    excludedRuleBasenames,
+    ruleScopeFromSettings,
+    type RuleScope,
+} from '../../install/rule_scope.js';
 
 type Dict = Record<string, unknown>;
 
@@ -738,6 +744,7 @@ const CHECK_IDS = [
     'surface-state',
     'hook-wiring',
     'stale-orphans',
+    'rule-scope-drift',
     'manifest-integrity',
     'lockfile-freshness',
     'bridge-drift',
@@ -764,6 +771,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'surface-state',
     'hook-wiring',
     'stale-orphans',
+    'rule-scope-drift',
     'mcp-mode',
     'mcp-beta-readiness',
     'offline-readiness',
@@ -1600,6 +1608,130 @@ function _check_stale_orphans(): Dict {
         remedy:
             'run `agent-config global` to reap them ' +
             '(the tag sweep reconciles on every deploy)',
+    };
+}
+
+/**
+ * Per-file rule projection trees a consumer install writes (basenames match
+ * the shipped `dist/agent-src/rules` tree). The first one that exists and
+ * holds ≥ 1 `.md` rule is the surface we diff against the consumer's scope.
+ */
+const _RULE_PROJECTION_DIRS: readonly string[] = [
+    '.augment/rules',
+    '.windsurf/rules',
+    '.cursor/rules',
+    '.clinerules',
+];
+
+/**
+ * Rule-scope drift (road-to-request-scoped-rule-load, 9.0 consumer flip).
+ *
+ * After the 9.0 default flip to consumer-scoped rule projection, a consumer
+ * whose settings now exclude maintainer-only workspaces may still carry a
+ * pre-flip FULL/GLOBAL rule projection on disk. This check diffs the scope
+ * the consumer's settings imply against the rules actually projected and
+ * reports the leftover set as an ACTIONABLE diff (not a bare boolean).
+ *
+ * The scope-derived expected set reuses the ONE install-time scoping surface
+ * (`rule_scope.ts`), so doctor's diagnosis can never drift from the install
+ * semantics. `excludedRuleBasenames` returns exactly the rules PRESENT in the
+ * projected tree that the current scope says should NOT arrive.
+ *
+ * Degrades gracefully: `skipped` in the agent-config source repo (the in-repo
+ * `.augment/rules` is the full generated projection, not a consumer surface)
+ * and `skipped` when no projected rule tree is present to inspect.
+ */
+function _check_rule_scope_drift(project_root: string): Dict {
+    if (_is_source_repo(project_root)) {
+        return {
+            id: 'rule-scope-drift',
+            status: 'skipped',
+            message: 'agent-config source repo — no consumer rule projection to inspect',
+            remedy: '',
+        };
+    }
+
+    // Consumer projection scope (absent / empty settings → legacy-all: every
+    // rule ships, so nothing is ever out of scope).
+    let scope: RuleScope = LEGACY_ALL;
+    const settings_file = project_settings_path(project_root);
+    if (isFile(settings_file)) {
+        const loaded = yamlSafeLoad(readText0(settings_file));
+        const raw =
+            typeof loaded === 'object' && loaded !== null && !Array.isArray(loaded)
+                ? (loaded as Dict)
+                : {};
+        scope = ruleScopeFromSettings(raw);
+    }
+
+    // First projected rule tree that exists and holds a `.md` rule.
+    let rules_dir: string | null = null;
+    let found = 0;
+    for (const rel of _RULE_PROJECTION_DIRS) {
+        const cand = path.join(project_root, rel);
+        if (!isDir(cand)) {
+            continue;
+        }
+        let count = 0;
+        try {
+            for (const name of fs.readdirSync(cand)) {
+                if (name.endsWith('.md') && isFile(path.join(cand, name))) {
+                    count += 1;
+                }
+            }
+        } catch {
+            continue;
+        }
+        if (count > 0) {
+            rules_dir = cand;
+            found = count;
+            break;
+        }
+    }
+    if (rules_dir === null) {
+        return {
+            id: 'rule-scope-drift',
+            status: 'skipped',
+            message: 'no projected rule tree found (.augment/rules, .windsurf/rules, …) — nothing to inspect',
+            remedy: '',
+        };
+    }
+
+    let unexpected: string[];
+    try {
+        unexpected = excludedRuleBasenames(rules_dir, scope);
+    } catch (exc) {
+        const rel = relativeTo(rules_dir, project_root) ?? rules_dir;
+        return {
+            id: 'rule-scope-drift',
+            status: 'fail',
+            message: `cannot inspect ${rel}: ${osErrorStr(exc)}`,
+            remedy: 'check read permissions on the projected rule tree',
+        };
+    }
+
+    const rel_dir = relativeTo(rules_dir, project_root) ?? rules_dir;
+    if (unexpected.length === 0) {
+        return {
+            id: 'rule-scope-drift',
+            status: 'ok',
+            message: `rule projection matches scope (${found} rules in ${rel_dir})`,
+            remedy: '',
+        };
+    }
+    const expected = found - unexpected.length;
+    const sample = unexpected.slice(0, 8);
+    const more = unexpected.length - sample.length;
+    const names = sample.join(', ') + (more > 0 ? `, +${more} more` : '');
+    return {
+        id: 'rule-scope-drift',
+        status: 'warn',
+        message:
+            `rule-scope drift in ${rel_dir}: expected ${expected} rules, found ${found} — ` +
+            `${unexpected.length} unexpected (out of scope): ${names}`,
+        remedy:
+            're-run `agent-config init --project` (or `agent-config global`) to re-project rules ' +
+            'under the current scope — these are leftover from a pre-9.0 full/global projection',
     };
 }
 
@@ -2538,6 +2670,7 @@ function _run_checks(
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
+        'rule-scope-drift': () => _check_rule_scope_drift(project_root),
         'manifest-integrity': () => _check_manifest_integrity(manifest),
         'lockfile-freshness': () => _check_lockfile_freshness(manifest),
         'bridge-drift': () =>
@@ -2617,6 +2750,7 @@ function _run_checks_no_manifest(
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
+        'rule-scope-drift': () => _check_rule_scope_drift(project_root),
         'manifest-integrity': () => _skipped_manifest_check('manifest-integrity'),
         'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness'),
         'bridge-drift': () => _check_bridge_drift_no_manifest(bridge_present),
@@ -3112,6 +3246,7 @@ export {
     _check_mcp_mode,
     _check_offline_readiness,
     _check_stale_orphans,
+    _check_rule_scope_drift,
     _check_python_runtime,
     _check_humanizer_runtime,
     _check_mcp_beta_readiness,

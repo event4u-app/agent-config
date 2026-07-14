@@ -53,6 +53,7 @@
   "commands/council/optimize.md": "5db9e55f4c9981699e4f0c7956e4a2ba6b2c1bad5f1c5ce6c0866c3e3c9497ce",
   "commands/council/pr.md": "6cbd2add3a573b2cae351334bab3bb4d17a6fa1cd4550e064da59022ad5b1668",
   "commands/estimate-ticket.md": "34d1f3afc3e9373326f9fc1e63f95222584561aa24f2ba383348121d80090cf4",
+  "commands/explain-run.md": "c3c04293874570ad933982ec6d46112e4026243e0d8b80d009e3640dcf526f35",
   "commands/feature.md": "f74027b3eb1350a7960547ba16f20c05db5c7f6209fadf0adf7b83255d4f2335",
   "commands/feature/dev.md": "e6d72c9ab4e1cc2a910e66fa0a405d9aff0479c4ba2f990b222bd017eabfad75",
   "commands/feature/explore.md": "6363be49747a9af9088d93af42e644097e8e7e7e4f81db6b2dd469bc1b91ffd4",
