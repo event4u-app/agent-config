@@ -26,6 +26,7 @@ const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
 const regenCadence = z.enum(['per_step', 'every_5_steps', 'phase_boundary']);
 const worktreeMode = z.enum(['off', 'on', 'ask']);
 const fidelityMode = z.enum(['strict', 'structural', 'hard-floor']);
+const crossSourceMode = z.enum(['on', 'auto', 'off']);
 const richSkillsMode = z.enum(['on', 'ask', 'off']);
 const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']);
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
@@ -203,6 +204,11 @@ export const settingsSchema = z.object({
             'How strictly the agent must follow a user-provided prototype / mockup / design system (consumed by the design-fidelity rule). strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous.',
         ),
     }).default({ fidelity_mode: 'strict' }),
+    consistency: z.object({
+        cross_source: crossSourceMode.default('on').describe(
+            'Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy — instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking.',
+        ),
+    }).default({ cross_source: 'on' }),
     tokens: z.object({
         rich_skills: richSkillsMode.default('on').describe(
             'Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading.',
