@@ -518,6 +518,34 @@ design:
   #              autonomy setting, roadmap, or standing instruction lifts it).
   fidelity_mode: strict
 
+# --- Cross-source consistency ---
+#
+# When the agent plans, refines, roadmaps, or implements from multiple
+# sources — ticket text, an attached image / mockup / screenshot, the spec,
+# the codebase — it actively checks them AGAINST each other and STOPS to ask
+# before proceeding on a detected discrepancy, instead of silently guessing
+# (even a correct guess). Consumed by the `cross-source-consistency` rule.
+# Catches: (a) ticket text vs an attached image/mockup, (b) a spec silent on
+# a clearly-needed behavior (weekend/holiday shifting, empty/error states),
+# (c) spec vs the codebase, (d) intra-ticket contradiction (AC vs description).
+#
+# The discipline is deliberately subordinate to `ask-when-uncertain` (it folds
+# a detected discrepancy into the same turn's single question — never a second
+# prompt) and defers to `scope-control` for the permission to expand scope.
+consistency:
+  # on | auto | off  (default: on)
+  #
+  # on   = default. Detect discrepancies across sources and surface ONE
+  #        numbered-options question before proceeding. A silent guess on a
+  #        real contradiction is a rule violation, even when the guess is
+  #        correct. An inferred-but-unspecified behavior is a scope expansion:
+  #        ask before implementing it.
+  # auto = detect + surface only HIGH-confidence contradictions; low-confidence
+  #        ones are stated as an assumption and proceed (noise control).
+  # off  = no cross-source checking (legacy: the agent may proceed on its own
+  #        reading of whichever source it happened to read).
+  cross_source: "on"
+
 code_style:
   # minimal | full  (default: minimal)
   #

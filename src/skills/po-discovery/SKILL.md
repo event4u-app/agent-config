@@ -81,6 +81,8 @@ not name an implementation**. Use Given / When / Then or a numbered
 list. Reject ACs that hide assumptions ("works correctly", "is fast
 enough") — replace with measurable thresholds or strike them.
 
+**Cross-source discrepancy scan** (per [`cross-source-consistency`](../../rules/cross-source-consistency.md), gated by `consistency.cross_source`): when the raw input includes a screenshot / mockup alongside the story text, check the sources against each other and surface any conflict as a `gap` / open question — never resolve it silently. Watch for: story text contradicting an attached screenshot; the AC contradicting the description; a clearly-needed behavior the input never states (weekend/holiday shift, empty/error state). Batch them into one clarifying question. Taxonomy: [`cross-source-consistency-mechanics`](../../../docs/guidelines/agent-infra/cross-source-consistency-mechanics.md).
+
 ### 5. Surface non-functional gaps
 
 Flag anything missing that downstream skills will need: success

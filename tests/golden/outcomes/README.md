@@ -66,6 +66,18 @@ maintainers don't re-attempt the same evaluation.)
 
 - _none yet — first re-evaluation due after two release cycles past
   Phase 2.4 lock-in._
+- **`cross-source-consistency`** — fails criterion 2 (scorable in the
+  cap). Its signal ("did the agent detect that ticket text contradicts
+  an attached mockup, or that a needed behavior is unstated, and ask
+  rather than silently proceed?") needs semantic understanding of the
+  ticket + attachment, not a ≤ 50-LOC regex shape-check over reply text
+  — the same disqualifier that keeps `scope-control` out. A shallow
+  "did the reply contain a numbered question?" proxy would trivially
+  pass without proving the rule actually caught the contradiction. The
+  falsifiable specification for this rule lives instead as the two
+  worked examples (birthday text↔image; weekend→holiday silent
+  expansion) in `docs/guidelines/agent-infra/cross-source-consistency-mechanics.md`.
+  Re-evaluate only if a cap-fitting observable signal emerges.
 
 ## Adding a baseline (procedure)
 

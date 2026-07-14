@@ -84,6 +84,17 @@
         }
       }
     },
+    "consistency": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "cross_source": {
+          "type": "string",
+          "enum": ["on", "auto", "off"],
+          "description": "Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking."
+        }
+      }
+    },
     "code_style": {
       "type": "object",
       "additionalProperties": true,

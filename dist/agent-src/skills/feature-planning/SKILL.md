@@ -28,7 +28,7 @@ Do NOT use when:
 
 ## Procedure: Plan a feature
 
-1. **Gather requirements** — What problem does this solve? Who benefits? What's the expected outcome?
+1. **Gather requirements** — What problem does this solve? Who benefits? What's the expected outcome? Run a **cross-source discrepancy scan** (per [`cross-source-consistency`](../../rules/cross-source-consistency.md), gated by `consistency.cross_source`): where the source ticket carries text + an attachment/mockup, or leaves a clearly-needed behavior unstated (weekend/holiday shift, empty/error state, timezone), surface the conflict/gap as an *Open question* before drafting phases — an inferred behavior is a scope expansion to confirm, not to bake in. See [`cross-source-consistency-mechanics`](../../../docs/guidelines/agent-infra/cross-source-consistency-mechanics.md).
 2. **Analyze scope** — Which modules, routes, models, services are affected?
 3. **Write the plan** — Create a feature plan document (see template below).
 4. **Verify** — Confirm all affected areas are identified, no missing dependencies.

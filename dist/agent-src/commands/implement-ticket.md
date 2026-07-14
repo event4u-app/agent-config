@@ -131,6 +131,8 @@ On exit `1`, look at the first line after `[halt] outcome=… step=…`:
   options verbatim, wait for the user, write their answer back onto the
   matching state slice, then re-run the engine. Never guess.
 
+A **cross-source discrepancy** discovered while planning or applying — ticket text contradicting an attached mockup, a spec silent on a clearly-needed behavior, or a spec-vs-codebase conflict (per [`cross-source-consistency`](../rules/cross-source-consistency.md), gated by `consistency.cross_source`) — is a blocking user question, not a silent resolution: surface it as the `questions[0]` halt and wait, never expand scope on a plausible inference.
+
 ### 4. Directive mapping
 
 When `questions[0]` is `@agent-directive: <verb> [key=value …]`, dispatch:

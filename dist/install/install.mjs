@@ -13975,6 +13975,7 @@ var qualityCadence = external_exports.enum(["end_of_roadmap", "per_phase", "per_
 var regenCadence = external_exports.enum(["per_step", "every_5_steps", "phase_boundary"]);
 var worktreeMode = external_exports.enum(["off", "on", "ask"]);
 var fidelityMode = external_exports.enum(["strict", "structural", "hard-floor"]);
+var crossSourceMode = external_exports.enum(["on", "auto", "off"]);
 var richSkillsMode = external_exports.enum(["on", "ask", "off"]);
 var replyMethod = external_exports.enum(["replies_endpoint", "create_review_comment", "auto"]);
 var confidenceBand = external_exports.enum(["off", "low", "medium", "high"]);
@@ -14151,6 +14152,11 @@ var settingsSchema = external_exports.object({
       "How strictly the agent must follow a user-provided prototype / mockup / design system (consumed by the design-fidelity rule). strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous."
     )
   }).default({ fidelity_mode: "strict" }),
+  consistency: external_exports.object({
+    cross_source: crossSourceMode.default("on").describe(
+      "Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy \u2014 instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking."
+    )
+  }).default({ cross_source: "on" }),
   tokens: external_exports.object({
     rich_skills: richSkillsMode.default("on").describe(
       "Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading."

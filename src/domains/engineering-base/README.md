@@ -8,19 +8,20 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **version**: `9.1.0`
 - **owner**: engineering
 - **requires**: —
-- **artefacts**: 106
+- **artefacts**: 107
 
 ## Commands (1)
 
 - **`mission-upgrade`** — Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs.
 
-## Rules (24)
+## Rules (25)
 
 - **`active-remediation`** — Spotted an issue while working (security gap, missing test, bad code, duplication, stale idiom) — never ignore; fix small+aligned inline, ask on bigger, propose a follow-up PR for many
 - **`broken-access-control`** — Endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant/role check + the three negative tests (401/non-owner/cross-tenant)
 - **`code-comment-discipline`** — Writing/editing code in any language — a comment states a WHY or a constraint the code cannot show; never restate what names/types already say; no signature-mirroring docblocks
 - **`commit-conventions`** — Git commit format, branch naming, conventional commits, committing, pushing, creating PRs
 - **`commit-policy`** — Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked
+- **`cross-source-consistency`** — Two sources disagree (ticket text vs mockup, spec silent on a needed behavior, spec vs code) → surface + ask before proceeding, never silently guess
 - **`delegation-policy`** — Delegable multi-part work + auto-orchestration on — decompose, tier-size, dispatch to subagents instead of in-session
 - **`docker-commands`** — Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool
 - **`downstream-changes`** — After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation
