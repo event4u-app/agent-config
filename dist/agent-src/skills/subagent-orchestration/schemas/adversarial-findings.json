@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "https://event4u.dev/agent-config/schemas/adversarial-findings.json",
+  "title": "Adversarial Findings Envelope",
+  "description": "Reconciled output of the adversarial-verification-council mode (subagent-orchestration Mode 9). A model-diverse skeptic panel red-teams a real, already-verified change; each skeptic returns findings; reconciliation (src/scripts/_lib/adversarial_reconcile.ts) dedups them into this envelope with per-finding provenance and a cross-model confidence signal. ADVISORY ONLY — never gates a change (Hard Floor). Hand-validated by adversarial_reconcile.test.ts (no jsonschema runtime dep).",
+  "type": "object",
+  "required": ["panel", "findings", "false_positives_suppressed"],
+  "additionalProperties": false,
+  "properties": {
+    "panel": {
+      "type": "object",
+      "required": ["models", "skeptic_count"],
+      "additionalProperties": false,
+      "properties": {
+        "models": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "description": "Distinct model ids of the skeptics. For the registered claim + high-risk tier these are cross-vendor (provider-level diversity)."
+        },
+        "skeptic_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of skeptics on the panel (== models.length)."
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "description": "Surviving findings, most-severe first. Advisory — a human decides what is actionable.",
+      "items": {"$ref": "#/definitions/finding"}
+    },
+    "false_positives_suppressed": {
+      "type": "array",
+      "description": "Findings raised by one skeptic and refuted by a majority of the rest. Demoted here (not dropped) for auditability.",
+      "items": {"$ref": "#/definitions/finding"}
+    }
+  },
+  "definitions": {
+    "finding": {
+      "type": "object",
+      "required": ["id", "severity", "category", "location", "description", "raised_by", "refuted_by", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "description": "Stable id, deterministic from the reconciled key order (avc-NNN)."},
+        "severity": {"type": "string", "enum": ["critical", "high", "medium", "low"], "description": "Most-severe severity among the skeptics that raised it (strict-er wins)."},
+        "category": {"type": "string", "minLength": 1, "description": "Defect class: correctness | security | test-coverage | quality | injection | completeness | ..."},
+        "location": {"type": "string", "minLength": 1, "description": "file:line (or the closest anchor the skeptic could give)."},
+        "description": {"type": "string", "minLength": 1, "description": "What the defect is and why it breaks."},
+        "raised_by": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "description": "Model ids that independently raised this finding — the provenance + corroboration signal."},
+        "refuted_by": {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "Model ids that examined this finding and judged it NOT a defect."},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"], "description": "high = corroborated by a panel quorum; medium = corroborated below quorum (or lone raiser on a solo panel); low = single raiser on a multi-skeptic panel."}
+      }
+    }
+  }
+}

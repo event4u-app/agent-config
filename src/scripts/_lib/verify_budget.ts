@@ -13,7 +13,10 @@
  *   silent pass.
  */
 
-export type VerifyMode = 'deterministic' | 'judge' | 'none';
+// 'council' is the opt-in adversarial-verification-council escalation (Mode 9,
+// ADR-122): default-off, advisory, recorded but never returned by
+// selectVerifyMode — the orchestrator chooses it for high-risk changes.
+export type VerifyMode = 'deterministic' | 'judge' | 'none' | 'council';
 
 /** Max changed-line count (inclusive) that still counts as trivial. */
 export const TRIVIAL_CHANGE_FLOOR = 20;
