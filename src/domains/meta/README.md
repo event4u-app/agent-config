@@ -287,7 +287,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`skill-management`** — Use when condensing, decondenseing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained.
 - **`skill-reviewer`** — Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations.
 - **`skill-writing`** — Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'.
-- **`subagent-orchestration`** — Use when orchestrating implementer/judge subagents — form gate + eight modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge).
+- **`subagent-orchestration`** — Use when orchestrating implementer/judge subagents — form gate + nine modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge, adversarial-council).
 - **`token-optimizer`** — Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset.
 - **`upstream-contribute`** — Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package.
 - **`verify-repair-loop`** — Use to iterate a change until tests/quality checks pass — bounded run→revise→re-run gated by a numeric threshold, then a judge confirms. Triggers 'iterate to green', 'keep fixing until tests pass'.
