@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `9.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 273
+- **artefacts**: 274
 
 ## Commands (141)
 
@@ -220,7 +220,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Questions, options, progress summaries — numbered-options Iron Law, single-recommendation rule
 - **`user-interrupt-priority`** — New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming
 
-## Skills (68)
+## Skills (69)
 
 - **`adr-create`** — Use when capturing an architectural decision — file naming, next ADR number, Status / Context / Decision / Consequences, index regen; fires even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -254,6 +254,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`judge-test-coverage`** — Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'.
 - **`learning-to-rule-or-skill`** — Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work.
 - **`lint-skills`** — Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata.
+- **`llm-provider-knowledge`** — Before stating any specific fact about an LLM provider's product — models, pricing, limits, context windows, SDK/API — for OpenAI, Gemini, Claude & others, verify against official docs, not memory.
 - **`markitdown`** — Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
 - **`mcp`** — Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
 - **`mcp-builder`** — Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness.
