@@ -6,6 +6,7 @@ tier: 2
 visibility: internal
 description: "Read-only 'why did that happen' run report — resolved rule set, rules fired, artefact engagement, subagent dispatches, hook/loop/freshness state — even when the user just says 'explain the last run'."
 argument-hint: "[--task <id>] [--since <ref>]"
+skills: [agent-docs-writing]
 suggestion:
   eligible: false
   rationale: "Package-internal maintainer diagnostic — only the event4u/agent-config repo runs this."
