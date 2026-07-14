@@ -8,7 +8,11 @@ Core PO/PM artefacts (ticket refinement, AC, estimation).
 - **version**: `9.1.0`
 - **owner**: product
 - **requires**: engineering-base
-- **artefacts**: 11
+- **artefacts**: 12
+
+## Rules (1)
+
+- **`cross-source-consistency`** — Two sources disagree (ticket text vs mockup, spec silent on a needed behavior, spec vs code) → surface + ask before proceeding, never silently guess
 
 ## Skills (11)
 
