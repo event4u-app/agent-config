@@ -112,8 +112,17 @@ task tool-validate             # Validate tool declarations
 
 ```bash
 task install -- --target <dir> # Run the installer orchestrator on a target
-task install-hooks             # Install git hooks (pre-commit marketplace lint, pre-push sync check, chat-history bridges)
+task install-hooks             # Install git hooks (pre-commit marketplace lint, pre-push consistency gate, chat-history bridges)
 ```
+
+The **pre-push hook runs `task consistency`** — the exact local mirror of the CI
+"Sync + Generate Tools Consistency" gate (sync + hashes + generate-tools +
+router + corpus + `git diff --quiet`). Any derived-output drift (counts, dist,
+generated tool trees) is blocked **before** the push instead of failing remote
+CI; the fix is `task consistency-fix`, stage, re-push. The hook auto-installs on
+`npm install` in a git clone (the `prepare` script); run `task install-hooks`
+manually if you skipped install scripts. Bypass a genuine WIP push with
+`git push --no-verify`.
 
 ### Local dev install (no release)
 
