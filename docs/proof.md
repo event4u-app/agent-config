@@ -27,7 +27,7 @@ evidence pointer, or `task check-claims` fails the build.
 | Claim | Kind | Evidence | Resolves |
 |---|---|---|---|
 | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. | qual | `docs/succession.md#trailing 90 days` | ✅ |
-| 184 commands. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
+| 189 commands. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | A MEASURED-BUT-NOT-SHIPPED experiment — the thin rule projection reduced eager rule load 78,513 → 13,881 GPT-tokens (whole always-loaded projection 98,529 → 33,897, ~65.6%), but FAILED the quality gate (thin win-rate 36.2% vs required 48%) and does not ship; it un-defers only behind `discipline_profile: essential`. Shipped behavior does NOT include this reduction. Method: `agent-config benchmark` over the pinned token baseline; the baseline is the honest "what the user pays if everything loads eagerly", NOT a synthetic full-corpus strawman (council Q4); quality gate per the Phase-0 paired judge run. | quant | `internal/bench/reports/token-baseline.json#eager_rule_load` | ✅ |
 | The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts via the council transport, $0.16) measured real per-host finding-count differences — claude-sonnet-4-5 surfaced ~2× the findings of gpt-4o on the multi-file analysis task (median 11 vs 5) while both vendors were identical on the planted hollow-implementation task (2 vs 2) and perfectly silent on the clean-code negative control (0 vs 0, no spurious findings). The per-task `finding_floor` values are calibrated from the cross-host lower envelope and the gate is armed. | quant | `internal/bench/reports/parity-count.json#min over hosts of median` | ✅ |
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
@@ -45,7 +45,7 @@ evidence pointer, or `task check-claims` fails the build.
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
 | Removing the perfect-retrieval assumption, the substrate's REAL keyword retrieval recalls the needed decision into the top-5 under keyword-overlapping confusers (precision@5 9/9) and the model disambiguates it from the co-injected confusers — retrieval-on 27/27 vs no-memory 5/27 and vs equal-count placebo 5/27 (claude-haiku-4-5, 9 tasks x 3 seeds, sign test p=0.008 both). Named limit: retrieval RECALLS but does not RANK (mean tie-set 3.3, ties broken by store order, not relevance) — the discrimination gap that motivates the SQLite-FTS5 activation path (ADR-116) at larger scale. | quant | `internal/bench/reports/second-brain-retrieval.json` | ✅ |
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `.github/workflows/publish-npm.yml#lint_agent_security` | ✅ |
-| 275 skills. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
+| 276 skills. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 
 **21 backed claim(s)** — all evidence pointers resolve in CI.
@@ -77,11 +77,11 @@ shipping theater; the full per-cell data is committed at
 `internal/bench/reports/persona-placebo.json`.
 
 **Behavioural-eval coverage — the honest baseline.** Skill *quality* is only
-as good as its measurement. Today **42 of 275** skills carry a behavioural
+as good as its measurement. Today **42 of 276** skills carry a behavioural
 `evals.json`; the highest-traffic / highest-cost tiers (default-surface +
 `rich` + routers) are **fully covered (35 of 35)**, the long tail
-(7 of 240) is not. We publish that gap rather than imply
-"275 evaluated skills": coverage is measured per tier
+(7 of 241) is not. We publish that gap rather than imply
+"276 evaluated skills": coverage is measured per tier
 (`./scripts-run src/scripts/skill_eval_coverage`), **CI-ratcheted so it can
 only rise**, and the priority tiers carry a hard **tier floor**: every
 rich / default-surface / router skill MUST have a behavioural eval or an

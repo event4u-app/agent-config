@@ -80,6 +80,10 @@ never auto-write — ADR-098 floor). The five rules verbatim:
 When to delegate at all is [`delegation-policy`](../../rules/delegation-policy.md);
 the spawn boundary is the [`subagent-spawn-contract`](../../contexts/execution/subagent-spawn-contract.md).
 
+## Hand-off worked examples
+
+Ordered / fan-out hand-offs embed each step's return **verbatim** in the next prompt and state what to do with it (never "continue from before" — the lossy re-summarization failure). Two worked shapes: [`subagent-spawn-contract` § Hand-off worked examples](../../contexts/execution/subagent-spawn-contract.md).
+
 ## Form gate — deterministic, BEFORE mode selection
 
 With auto-dispatch on by default (ADR-117), mode selection happens without

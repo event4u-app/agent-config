@@ -155,14 +155,14 @@ claims below are `backed`. Remaining entries are listed so the debt is
 visible, not hidden.
 
 ### claim: skill-count
-- claim: 275 skills.
+- claim: 276 skills.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 184 commands.
+- claim: 189 commands.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed

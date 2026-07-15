@@ -2,10 +2,10 @@
 model_tier: medium
 name: fix
 disable-model-invocation: true
-argument-hint: "[ci|refs|portability|seeder|pr-comments|comments|quality] [args]"
+argument-hint: "[ci|refs|portability|seeder|pr-comments|comments|quality|route] [args]"
 pack: engineering-base
 intent: "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability, comments, quality"
-routes_to: [fix-ci, fix-pr-comments, fix-refs, fix-seeder, fix-portability, fix-comments, fix-quality]
+routes_to: [fix-ci, fix-pr-comments, fix-refs, fix-seeder, fix-portability, fix-comments, fix-quality, fix-route]
 replaces: []
 tier: 1
 visibility: advanced
@@ -39,6 +39,7 @@ with a single entry point + sub-command dispatch.
 | `/fix pr-comments` | `commands/fix/pr-comments.md` | Fix and reply to all open review comments — **bot + human, classified per comment**; dedupes by comment id + reply marker |
 | `/fix comments` | `commands/fix/comments.md` | Review the **code comments** in the current branch's diff and simplify, shorten, or remove each one (≠ `pr-comments`, which targets GitHub review threads) |
 | `/fix quality` | `commands/fix/quality.md` | Run the quality pipeline (type-checker / linter / formatter, PHP and/or JS/TS) and fix every error — auto-detects language from changed files |
+| `/fix route` | `commands/fix/route.md` | Classify a vaguely-described problem and dispatch to the right fix sub (or name the specialist when it is not a fix task) — the `/smart-fix` front door, folded into the `fix` verb |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
@@ -84,6 +85,7 @@ into it and removed.
    > 5. pr-comments — address open review comments (bot / human / both)
    > 6. comments — simplify / shorten / remove code comments in the branch diff
    > 7. quality — run the quality pipeline and fix every error
+   > 8. route — describe the problem; I classify and dispatch
 
 ## Rules
 

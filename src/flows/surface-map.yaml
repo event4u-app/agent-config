@@ -64,6 +64,10 @@ commands:
     - jira-ticket
     - mission/upgrade
     - module/create
+    - tdd
+    - tdd/green
+    - tdd/red
+    - tdd/refactor
     - tests
     - tests/create
     - tests/execute
@@ -77,6 +81,7 @@ commands:
 
   review:
     - fix/ci
+    - fix/route
     - judge
     - judge/on-diff
     - judge/solo
@@ -146,6 +151,7 @@ commands:
     - analytics
     - analytics/prune
     - analytics/show
+    - explain-run
     - chat-history
     - chat-history/import
     - check-current-md
