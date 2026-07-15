@@ -41,35 +41,90 @@ private-data leg stays narrow: the composer rejects inline bodies (multi-line /
 oversized entries), accepts only ref-like tokens, and caps the count. Anything
 dropped is recorded in `warnings` and surfaced — never silently widened.
 
+## Bundle resolver — bind to the existing surfaces
+
+The brief is **resolved**, not hand-built. `resolveBundle(slice)` maps a task
+slice to a concrete bundle by selecting from what the package already ships — no
+parallel registry:
+
+- **Role-profile via reused `judge-*` lenses** — a review slice → `judge-code-quality`,
+  security → `judge-security-auditor`, tests → `judge-test-coverage`, bug-hunt →
+  `judge-bug-hunter`. The lens rides as the leading persona so the subagent loads it.
+- **Role-mode** per slice kind (review → `reviewer`, tests → `tester`, plan → `planner`, …).
+- **Tier** per slice kind (`lite|medium|high`), consumed by `subagent-routing`.
+- **Knowledge refs** filtered by the **ADR-100 guard** (`filterKnowledgeByPolicy`):
+  a cross-project bundle drops `proprietary` refs; the drop is recorded.
+
+Every resolved bundle emits an auditable `(role_mode, judge_lens, tier,
+knowledge_ref_count, dropped_proprietary)` signature (`bundleAuditLine`) into the
+[`orchestration-telemetry`](orchestration-telemetry.md) object — counts + ids
+only, never bodies.
+
 ## Reference implementation
 
 [`src/scripts/_lib/subagent_spawn.ts`](../../../../src/scripts/_lib/subagent_spawn.ts)
-(`composeSpawnBrief`), covered by
-[`tests/scripts/_lib_subagent_spawn.test.ts`](../../../../tests/scripts/_lib_subagent_spawn.test.ts).
+(`composeSpawnBrief`) + [`src/scripts/_lib/subagent_bundle.ts`](../../../../src/scripts/_lib/subagent_bundle.ts)
+(`resolveBundle`, `filterKnowledgeByPolicy`, `bundleAuditLine`), covered by
+[`tests/scripts/_lib_subagent_spawn.test.ts`](../../../../tests/scripts/_lib_subagent_spawn.test.ts)
++ [`tests/scripts/_lib_subagent_bundle.test.ts`](../../../../tests/scripts/_lib_subagent_bundle.test.ts).
 
 ## Worker-prompt rules — verbatim at spawn
 
-Relocated from `subagent-orchestration` skill body (road-to-feedback-9.2.0 Phase 2,
-size-budget split). Every dispatched worker prompt obeys these rules — prevent two
-classic handoff failures: lossy re-summarization dropping user's requirements;
-over-scripted prompts breaking on first contingency.
+Relocated from the `subagent-orchestration` skill body (road-to-feedback-9.2.0
+Phase 2, size-budget split). Every dispatched worker prompt obeys these rules —
+they prevent the two classic handoff failures: lossy re-summarization dropping
+the user's requirements, and over-scripted prompts that break on first
+contingency.
 
-- **(a) User constraints verbatim.** Pass user's constraints/exclusions/preferences
-  into worker prompt **verbatim** — never paraphrase (silently drops requirements).
-- **(b) Describe goal, don't script approach.** State outcome; worker chooses path;
-  over-scripting breaks on contingencies.
-- **(c) Translate environment paths.** Orchestrator-local paths don't exist in the
-  worker's sandbox — resolve/translate at spawn.
-- **(d) Pre-declared check-in conditions.** Worker names, at spawn, conditions it
-  halts and asks ("if login required", "if multiple candidates found") — interrupts
-  predictable, not surprises.
-- **(e) Attach relevant knowledge — read-only (road-to-opt-subagent-harvest P3).**
-  Before dispatch, look up the slice's key identifiers via `memory_lookup` / the
-  knowledge cards, attach top hits to the worker prompt AS LEADS — labelled per the
-  source-discovery discipline (negative facts + pointers durable; positive structure
-  = hypothesis to re-confirm, never a build input). WRITE half forbidden: a
-  subagent's output is never auto-persisted into memory — promotion is always the
-  human-gated flow (ADR-098 floor). Auto-surface, never auto-write.
+- **(a) User constraints verbatim.** Pass the user's
+  constraints/exclusions/preferences into the worker prompt **verbatim** — never
+  a paraphrase (a paraphrase silently drops requirements).
+- **(b) Describe the goal, don't script the approach.** State the outcome and
+  let the worker choose the path; over-scripting breaks on contingencies.
+- **(c) Translate environment paths.** Orchestrator-local paths do not exist in
+  the worker's sandbox — resolve/translate them at spawn.
+- **(d) Pre-declared check-in conditions.** The worker names, at spawn time, the
+  conditions under which it will halt and ask ("if login required", "if
+  multiple candidates found") — so interrupts are predictable, not surprises.
+- **(e) Attach relevant knowledge — read-only (road-to-opt-subagent-harvest
+  P3).** Before dispatch, look up the slice's key identifiers via
+  `memory_lookup` / the knowledge cards and attach the top hits to the
+  worker prompt AS LEADS — labelled per the source-discovery discipline
+  (negative facts + pointers durable; positive structure = hypothesis to
+  re-confirm, never a build input). The WRITE half stays forbidden: a
+  subagent's output is never auto-persisted into memory — promotion is
+  always the human-gated flow (ADR-098 floor). Auto-surface, never
+  auto-write.
+
+## Hand-off worked examples — step N output feeds step N+1
+
+Relocated from the `subagent-orchestration` skill (ecosystem-harvest ergonomics
+U4, size-budget split). Ordered modes (`do-in-steps`) pass each step's return
+as the next step's context; the failure this prevents is re-deriving state the
+previous step established, or dropping a decision it made.
+
+**Ordered chain (do-in-steps).** Step 1 returns a structured result; step 2's
+worker prompt embeds it verbatim as "context from step 1", never a paraphrase:
+
+```
+Step 1 (analyze) → returns: { entrypoints: [...], risk_notes: "..." }
+Step 2 (implement) worker prompt:
+  "Context from step 1 (verbatim, do not re-derive):
+     entrypoints = [...]; risk_notes = '...'
+   Your task: <goal>. Use the entrypoints above; do not re-scan."
+Step 3 (verify) worker prompt:
+  "Context: step 2 changed <files>. Assert <invariant>."
+```
+
+**Fan-out → synthesis (do-in-parallel + a synthesis step).** Each parallel
+worker returns one envelope; the synthesis step receives ALL of them as an
+ordered list and is told what to reconcile ("merge the N findings; a finding
+present in ≥2 returns is high-confidence"). The synthesis prompt names the
+cross-item comparison — it does not just concatenate.
+
+The rule both encode: **the receiving prompt embeds the prior return verbatim
+and states what to do with it** — the same verbatim-first discipline as the
+worker-prompt rules above, applied across a step boundary.
 
 ## Related
 

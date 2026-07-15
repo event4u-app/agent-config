@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `9.2.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 274
+- **artefacts**: 280
 
-## Commands (141)
+## Commands (146)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -50,6 +50,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`fix-pr-comments`** — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
 - **`fix-quality`** — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - **`fix-refs`** — Find and fix broken cross-references in .augment/ and agents/ files
+- **`fix-route`** — Classify a vaguely-described problem and dispatch to the right fix sub-command (or name the specialist skill when it is not a fix task)
 - **`fix-seeder`** — Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
 - **`ghostwriter`** — Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md).
 - **`ghostwriter-delete`** — Hard-delete a ghostwriter profile at agents/reference/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance.
@@ -125,6 +126,10 @@ Artefacts that maintain this package (agent-config itself).
 - **`sync-agent-settings`** — Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 - **`sync-gitignore`** — Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
 - **`sync-gitignore-fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
+- **`tdd`** — TDD orchestrator — routes to red (failing test), green (minimum code), refactor (clean while green)
+- **`tdd-green`** — TDD green phase — write the minimum production code to make the failing test pass; no test edits
+- **`tdd-red`** — TDD red phase — enumerate cases, write ONE failing test, watch it fail at an assertion (not an import error)
+- **`tdd-refactor`** — TDD refactor phase — clean up (rename, deduplicate) while keeping the test green
 - **`team`** — Team orchestrator — governed cross-model access layer (a second strong model reviews the real diff; read-only multi-host fallback); routes to review, adversarial, delegate, status
 - **`team-adversarial`** — Thin wrapper — adversarial cross-model review on a named focus via the official plugin (/codex:adversarial-review). Escalation rung above the single-model adversarial-review skill.
 - **`team-delegate`** — Thin wrapper — hand a task to the second model as a native worker via the official plugin (/codex:rescue). The only write-access wrapper; double-gated behind ai_team.allow_delegate.
@@ -220,7 +225,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Questions, options, progress summaries — numbered-options Iron Law, single-recommendation rule
 - **`user-interrupt-priority`** — New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming
 
-## Skills (69)
+## Skills (70)
 
 - **`adr-create`** — Use when capturing an architectural decision — file naming, next ADR number, Status / Context / Decision / Consequences, index regen; fires even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -264,6 +269,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`module-management`** — Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path.
 - **`override-management`** — Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/.
 - **`pdf-tools`** — Use when creating, merging, splitting, filling, or extracting from a PDF — library-per-task, output validated. Triggers on 'merge these PDFs', 'fill this PDF form', 'split the PDF', 'create a PDF'.
+- **`persona-improvement`** — ONLY when the user explicitly asks to refine a persona from recent corrections — persona analog of skill-improvement-pipeline; tightens a persona's Unique Questions, governance-gated.
 - **`persona-writing`** — Use when creating or editing a persona in src/agent-src/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
 - **`project-docs`** — Use when looking for project-specific documentation. Knows which docs exist in agents/reference/docs/ and agents/settings/contexts/ and maps work areas to relevant docs.
 - **`prompt-engineering-patterns`** — Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt.

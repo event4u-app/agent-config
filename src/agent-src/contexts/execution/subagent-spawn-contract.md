@@ -96,6 +96,36 @@ contingency.
   always the human-gated flow (ADR-098 floor). Auto-surface, never
   auto-write.
 
+## Hand-off worked examples — step N output feeds step N+1
+
+Relocated from the `subagent-orchestration` skill (ecosystem-harvest ergonomics
+U4, size-budget split). Ordered modes (`do-in-steps`) pass each step's return
+as the next step's context; the failure this prevents is re-deriving state the
+previous step established, or dropping a decision it made.
+
+**Ordered chain (do-in-steps).** Step 1 returns a structured result; step 2's
+worker prompt embeds it verbatim as "context from step 1", never a paraphrase:
+
+```
+Step 1 (analyze) → returns: { entrypoints: [...], risk_notes: "..." }
+Step 2 (implement) worker prompt:
+  "Context from step 1 (verbatim, do not re-derive):
+     entrypoints = [...]; risk_notes = '...'
+   Your task: <goal>. Use the entrypoints above; do not re-scan."
+Step 3 (verify) worker prompt:
+  "Context: step 2 changed <files>. Assert <invariant>."
+```
+
+**Fan-out → synthesis (do-in-parallel + a synthesis step).** Each parallel
+worker returns one envelope; the synthesis step receives ALL of them as an
+ordered list and is told what to reconcile ("merge the N findings; a finding
+present in ≥2 returns is high-confidence"). The synthesis prompt names the
+cross-item comparison — it does not just concatenate.
+
+The rule both encode: **the receiving prompt embeds the prior return verbatim
+and states what to do with it** — the same verbatim-first discipline as the
+worker-prompt rules above, applied across a step boundary.
+
 ## Related
 
 - [`auto-orchestration-activation`](auto-orchestration-activation.md) — runs before this; decides IF a subagent spawns.
