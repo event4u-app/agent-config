@@ -92,7 +92,9 @@ correctness lens AND a shipping-risk lens:
    or abstraction the codebase likely already provides (should compose
    / reuse instead), and where it adds structure, is the OO shape
    (encapsulation, composition over inheritance) justified by
-   complexity it removes rather than speculative abstraction?
+   complexity it removes rather than speculative abstraction? Judge in
+   the codebase's own paradigm — do not push classes onto functional /
+   pipeline code; smallest-change still wins over OO advocacy.
 End with: APPROVE / REQUEST_CHANGES / REJECT, one sentence why, and
 the single highest-leverage change the PR author should make before
 merge.`;

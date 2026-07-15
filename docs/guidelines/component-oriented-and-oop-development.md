@@ -1,19 +1,34 @@
 # Component-Oriented & Object-Oriented Development
 
-> Cross-cutting development standard: **think in reusable units, and prefer
-> object-oriented design where it reduces complexity.** Split by surface below
+> Cross-cutting development standard: **think in reusable units, and — in an
+> object-oriented / class-based codebase — treat object-oriented design as a
+> high-priority default where it reduces complexity.** Split by surface below
 > (frontend / backend), each pointing to the stack-specific carve-outs rather
 > than restating them. Framework-neutral by construction — React / Storybook /
 > Laravel / Symfony specifics live in their own skills, never here.
 
+## Paradigm-appropriate first — detect, then apply
+
+**Reuse is universal; OOP is paradigm-scoped.** Detect the codebase's paradigm
+before applying the object-oriented half: class-based / OO code (PHP, Java, C#,
+typical TS/React service layers) → this standard's OOP guidance is the
+high-priority default. A **functional / pipeline / actor-model** codebase
+(Elixir/Phoenix, Clojure, Haskell, Go-idiomatic, heavy FP-in-TS) → apply *that*
+paradigm's principles (immutability, pure functions, pattern-matching,
+composition of functions), and read the OOP bullets as "the same rigor, its
+paradigm's shape." **Never impose classes on functional code to satisfy this
+standard** — consistency with the codebase's chosen paradigm wins over OOP
+advocacy, always.
+
 ## The standard, in one breath
 
-- **Reuse before you build.** Compose from units that already exist — audit
-  first, reuse the design system / shared abstractions, extract a new unit only
-  when the same shape repeats.
-- **Object-oriented where it fits.** Encapsulation, single responsibility,
-  composition over inheritance, and behavior-rich objects are the default *when
-  they reduce complexity* — not a quota to hit.
+- **Reuse before you build** (every paradigm). Compose from units that already
+  exist — audit first, reuse the design system / shared abstractions, extract a
+  new unit only when the same shape repeats.
+- **Object-oriented where it fits** (in an OO codebase). Encapsulation, single
+  responsibility, composition over inheritance, and behavior-rich objects are
+  the high-priority default *when they reduce complexity* — not a quota to hit,
+  and not imposed on a codebase that has chosen a different paradigm.
 
 ## The load-bearing caveat — reuse/OOP is a tool, never a mandate to abstract
 
@@ -36,6 +51,13 @@ Rule of thumb: **two real repetitions (or a genuine second axis of change)
 before you extract.** One occurrence is not a component; one branch is not a
 Strategy. A reviewer should be able to name the concrete duplication or the
 concrete change-axis the abstraction removes.
+
+**Precedence (explicit): `minimal-safe-diff` / YAGNI always trump OOP
+advocacy.** When "prefer OO shape" and "smallest change" conflict, the smallest
+change wins — this standard adds a *consideration*, never a competing objective
+that pressures preemptive abstraction. The review lens (below) may flag OO shape
+only where the duplication or the growing branch is **already present in the
+diff**, never as "this could grow later."
 
 ## Frontend — think in reusable components
 
@@ -78,10 +100,15 @@ server/client component boundary →
 
 ## Backend — object-oriented where it reduces complexity
 
-The structural half is owned by [`architecture`](../../src/rules/architecture.md):
-thin HTTP handlers, business logic in services / use-cases, behavior-rich but
-I/O-free domain models, validation at the boundary. Layer the OO principles on
-top of that structure, each applied only where it earns its place:
+The structural half — thin handlers, business logic in services / use-cases,
+behavior-rich domain models, validation at the boundary — is owned by
+[`architecture`](../../src/rules/architecture.md) and holds across paradigms. In
+an **object-oriented / class-based** service layer, layer the OO principles below
+on top of it, each applied only where it earns its place. In a **functional /
+pipeline** codebase, apply that paradigm's equivalent (pure functions +
+composition instead of behavior-rich objects; a dispatch map / pattern-match
+instead of a Strategy class) — the goal (encapsulate change, one responsibility,
+compose don't duplicate) is paradigm-independent; only its *shape* is OO here:
 
 - **Encapsulation** — objects own their data + the behavior over it; no anemic
   bags mutated from the outside.
@@ -119,9 +146,33 @@ change. Full rule + the defer-and-ask flow for pre-existing literals:
 complexity)" is a check on the code-quality review lens
 ([`judge-code-quality`](../../src/skills/judge-code-quality/SKILL.md)), so it
 reaches `/review-changes`, `/judge`, the subagent judge modes, and team-mode's
-fallback review frame. It stays a human-judgment call that defers to the
-codebase's own conventions — never a generic SOLID dogma imposed over a project
-that has chosen differently.
+fallback review frame. It fires **only where the duplication or the growing
+branch is already present in the diff** — never "this could grow later" — and
+in the **codebase's own paradigm** (it will not tell a functional service to
+grow a class). It stays a human-judgment call that defers to the codebase's own
+conventions — never a generic SOLID dogma imposed over a project that has chosen
+differently.
+
+## Council review (2026-07-15)
+
+Deep debate, 3 rounds, cross-vendor (`anthropic/claude-sonnet-4-5` +
+`openai/gpt-4o`), $0.16. Split verdict; the load-bearing (anthropic) critique —
+that an "OOP-supreme default" over-indexes on OOP for a multi-paradigm consumer
+base and can conflict with `minimal-safe-diff` — was applied, bounded by this
+standard's stated purpose (OOP *is* a deliberate high priority for the operator):
+
+- **Paradigm-appropriate framing** — OOP is the high-priority default *within an
+  OO / class-based codebase*; detect and defer to a functional / pipeline /
+  actor paradigm; never impose classes on functional code (§ Paradigm-appropriate).
+- **Explicit precedence** — `minimal-safe-diff` / YAGNI win on conflict; the
+  review lens flags only *already-present* duplication / complexity, never
+  preemptive (§ caveat, § How this is reviewed).
+
+Divergence held: the frontend section stays (an intentional FE / backend
+entry-point + carve-out index, per the operator's explicit "split by FE /
+backend" ask) — against the anthropic "delete as redundant"; it is a cohesive
+index of the existing FE surfaces, not a claim of novel guidance. Trace:
+`agents/runtime/council/responses/component-oop-standard.json/` (gitignored, local-only).
 
 ## See also
 
