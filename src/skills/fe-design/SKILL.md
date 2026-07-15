@@ -98,6 +98,7 @@ React island vs. Vue SFC) is the apply-step's concern, not this skill's.
 - **Compose with reusable UI components** for shared shells, headers, fields.
 - **Use the project's library primitives first** — never rebuild what the design system already provides (audit findings tell you which).
 - **Extract when used 3+ times** — DRY applies to UI too.
+- **Component workshop when the project is large enough** — for a real, growing shared-component library, isolate and document each reusable component in a component workshop so it stays discoverable and reused, not re-invented; skip it for a small surface of one-offs. Tool-specific setup is a carve-out (Storybook et al.) — see the implementation skill (e.g. [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) § Component workshop), never a generic mandate.
 
 ## Form Design
 

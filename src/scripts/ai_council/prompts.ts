@@ -88,6 +88,13 @@ correctness lens AND a shipping-risk lens:
    Is the blast radius bigger than the title implies?
 5. Reviewer fatigue — is anything in the diff that a tired reviewer
    would rubber-stamp but should not?
+6. Reuse & object-oriented shape — does the diff reinvent a component
+   or abstraction the codebase likely already provides (should compose
+   / reuse instead), and where it adds structure, is the OO shape
+   (encapsulation, composition over inheritance) justified by
+   complexity it removes rather than speculative abstraction? Judge in
+   the codebase's own paradigm — do not push classes onto functional /
+   pipeline code; smallest-change still wins over OO advocacy.
 End with: APPROVE / REQUEST_CHANGES / REJECT, one sentence why, and
 the single highest-leverage change the PR author should make before
 merge.`;

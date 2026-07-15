@@ -38,6 +38,13 @@ Fires on new files, classes, controllers, modules, or any structural decision ab
 → Symfony: see [`symfony-workflow`](../skills/symfony-workflow/SKILL.md).
 → Next.js / TypeScript backends: see [`nextjs-patterns`](../skills/nextjs-patterns/SKILL.md).
 
+## Reusable components + object-oriented design
+
+- **Think in reusable units** — decompose UI into composable components; reuse the project's primitives / shared abstractions before building; extract a new unit only when the same shape repeats (audit existing first, per [`ui-audit-gate`](ui-audit-gate.md)).
+- **Object-oriented where it reduces complexity** — in an object-oriented / class-based codebase, encapsulation, single responsibility, composition over inheritance, behavior-rich domain objects, and design patterns *where they earn their place* are the high-priority default — never speculative abstraction, and never imposed on a functional / pipeline codebase (detect + defer to its paradigm). Bounded by [`minimal-safe-diff`](minimal-safe-diff.md) + [`senior-engineering-discipline`](senior-engineering-discipline.md), which **win on conflict**: a reviewer should be able to name the concrete duplication or second axis of change the abstraction removes (rule of thumb: two real repetitions before you extract).
+
+Full standard — split FE / backend, with the stack carve-out index and the anti-over-engineering deference: [`component-oriented-and-oop-development`](../docs/guidelines/component-oriented-and-oop-development.md).
+
 ## Architectural Decision Records (ADRs)
 
 When a structural decision is non-trivial (kernel membership, contract change, library swap,
