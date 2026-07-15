@@ -63,6 +63,7 @@ if the neighbors are unfashionable.
 | **Comments** | Explain *why*, not *what*. Remove comments that restate the code |
 | **Error-shape consistency** | Exceptions/results follow the same pattern as the rest of the module |
 | **Public surface** | New public API matches module's existing style and is minimal |
+| **Reuse & OO shape** | A new unit reinvents a component/abstraction the codebase already has (should compose/reuse instead); OR encapsulation/composition would genuinely cut complexity here (anemic object mutated from outside; an `if`/`switch` on a type-discriminator that a polymorphic shape would absorb) — flag **only where it reduces complexity**, never speculative abstraction (defers to `minimal-safe-diff` / the codebase's own conventions) |
 
 ### 3. Filter out linter-land
 
