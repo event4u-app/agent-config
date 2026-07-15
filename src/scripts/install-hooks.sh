@@ -8,32 +8,47 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This installer lives at src/scripts/install-hooks.sh, so the repo root
 # (which owns .git/) is two levels up.
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-HOOKS_DIR="$PROJECT_ROOT/.git/hooks"
+# Resolve the SHARED hooks dir via git so this also works from a linked worktree
+# (where $PROJECT_ROOT/.git is a file, not a dir, and a literal .git/hooks path
+# would break under `set -e`). --git-common-dir points at the main .git even from
+# a worktree; fall back to the literal path only outside a git repo.
+if COMMON_GIT_DIR="$(git -C "$PROJECT_ROOT" rev-parse --git-common-dir 2>/dev/null)"; then
+    case "$COMMON_GIT_DIR" in /*) : ;; *) COMMON_GIT_DIR="$PROJECT_ROOT/$COMMON_GIT_DIR" ;; esac
+    HOOKS_DIR="$COMMON_GIT_DIR/hooks"
+else
+    HOOKS_DIR="$PROJECT_ROOT/.git/hooks"
+fi
 
 mkdir -p "$HOOKS_DIR"
 
 cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #!/usr/bin/env bash
-# Pre-push hook: verify dist/agent-src/ is in sync with .agent-src.uncondensed/
-# and that the canonical command count matches README + getting-started docs.
+# Pre-push hook: mirror the CI "Sync + Generate Tools Consistency" gate LOCALLY
+# so derived-output drift is caught BEFORE push, not in remote CI.
 #
-# The command-count gate exists because three consecutive PRs landed
-# post-CI count-drift fixes (e.g. f2fb0026 "bump command count
-# 101→103"). Catching the drift pre-push stops it from flooding remote
-# CI. Runtime ~0.1s.
+# History: the remote "Consistency" check failed in a large share of PRs because
+# the old hook only verified dist sync + the COMMAND count — it missed
+# guideline/skill/rule count drift and the generate-tools / router / corpus
+# outputs (e.g. a new guideline bumping the count in README + docs/architecture).
+# `task consistency` is the EXACT CI mirror (sync-check + sync-check-hashes +
+# sync + generate-tools + compile-router + compile-corpus + `git diff --quiet`),
+# so any derived-output drift blocks the push here. Runtime ~15-40s (it
+# regenerates the tool trees) — cheaper than a red CI run and a fixup re-push.
 
 fail=0
 
-echo "🔍 Checking dist/agent-src/ sync..."
-if ! ./scripts-run src/scripts/condense --check; then
-    echo "❌  dist/agent-src/ is out of sync. Run 'task sync' and condense changed .md files, then commit."
-    fail=1
-fi
-
-echo "🔍 Checking command count messaging..."
-if ! ./scripts-run src/scripts/check_command_count_messaging; then
-    echo "❌  Command-count drift in README / AGENTS.md / getting-started. Run 'task counts-update', stage the changes, then re-commit."
-    fail=1
+if ! command -v task >/dev/null 2>&1; then
+    echo "⚠️  'task' (go-task) not found — cannot run the consistency gate locally."
+    echo "    Install it (https://taskfile.dev) so pre-push can mirror the CI check;"
+    echo "    skipping the consistency check for this push."
+else
+    echo "🔍 Consistency — mirroring the CI 'Sync + Generate Tools Consistency' gate..."
+    if ! task consistency; then
+        echo "❌  Derived outputs drifted (counts / dist / generated tool trees / router / corpus)."
+        echo "    'task consistency' just regenerated them into your working tree —"
+        echo "    review + 'git add' the changes (or run 'task consistency-fix'), commit, then re-push."
+        fail=1
+    fi
 fi
 
 echo "🔍 Checking for leftover conflict markers / unmerged paths..."
