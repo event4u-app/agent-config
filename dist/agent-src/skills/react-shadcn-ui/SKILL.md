@@ -253,6 +253,16 @@ current state on the next polish round.
 
 `DESIGN.md` `## Taste Dials` → honour: Variance → layout-family spread + asymmetry; Motion → animation budget + reduced-motion posture; Density → spacing scale + info-per-viewport. Absent → follow brief's inferred dials.
 
+## Component workshop (Storybook) — when the library is large enough
+
+Generic "isolate + document reusable components" principle → [`fe-design`](../fe-design/SKILL.md) § Component Architecture; this is the React carve-out for the tool-specific part.
+
+- **When it pays off** — real, growing shared-component library (more than a handful of reused primitives, multiple consumers, ongoing UI work): Storybook makes each component discoverable, reviewable in isolation, reused not re-invented. **Skip** for a small surface of one-offs — setup + maintenance not worth it yet.
+- **Story per reusable primitive, not per screen** — a story covers a component + its states (default / loading / empty / error / dark), mirroring the Step 3 state-coverage matrix. Screens composed, not story-fied.
+- **Reuse the token layer** — stories render under the same semantic tokens + `.dark` class; never hardcode a preview theme (Step 2 token discipline).
+- **A11y in-workshop** — run the a11y addon so isolation catches contrast / role / focus before the component reaches a screen.
+- Do NOT let stories drift from the component API — a story props-drilling values the component no longer accepts is stale documentation; keep beside the component, update in the same change.
+
 ## Do NOT
 
 - Do NOT install `shadcn-ui` from npm — primitives are scaffolded.

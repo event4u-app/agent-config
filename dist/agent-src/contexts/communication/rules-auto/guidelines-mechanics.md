@@ -10,6 +10,7 @@ before writing or reviewing code); this file is the catalog.
 | File | Topic |
 |---|---|
 | `code-clarity.md` | Cross-language clarity rules — inline single-use values, carve-outs (side effects, loops, type narrowing, debugger) |
+| `component-oriented-and-oop-development.md` | Reuse-first components (FE) + OOP-where-it-reduces-complexity (backend); carve-out index; bounded by the anti-over-engineering anchors |
 
 ## PHP (`docs/guidelines/php/`)
 
