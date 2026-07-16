@@ -1033,6 +1033,39 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 9.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.3.0](https://github.com/event4u-app/agent-config/compare/9.2.0...9.3.0) (2026-07-16)
+
+### Features
+
+* **ergonomics:** harvest ergonomics plate — tdd cluster, fix:route, persona-improvement, hand-off examples ([e8be16f](https://github.com/event4u-app/agent-config/commit/e8be16f2a0194a6b6cb3b2ed4a9899db31067d1d))
+* **review:** wire reuse + OOP-shape lens into the review/orchestration surfaces ([067175a](https://github.com/event4u-app/agent-config/commit/067175a04c1d49c356bf8e42c4cb0f23b3d91473))
+* **hooks:** PostToolUse PR-URL reminder — reply-shape backstop for direct-answers ([1bf82a1](https://github.com/event4u-app/agent-config/commit/1bf82a1f23fd2fac7ae86fe1fae3cc6b3e0da657))
+
+### Bug Fixes
+
+* **counts:** regenerate command-flows.md (+5 commands) + map explain-run orphan into surface-map ([a6254e4](https://github.com/event4u-app/agent-config/commit/a6254e434e966eaca9e697093980dfc3cc04a8d8))
+* **hooks:** pre-push gate mirrors the full CI consistency check locally ([ebd706f](https://github.com/event4u-app/agent-config/commit/ebd706fb1e978189954ca838bc41bd3f536ee560))
+
+### Documentation
+
+* refresh guideline counts (100 -> 101) after the new dev-standard guideline ([02ac1a5](https://github.com/event4u-app/agent-config/commit/02ac1a53214b5cd22eecee873e2b81286c01a6b2))
+* **standards:** apply council findings — paradigm-appropriate + minimal-diff precedence ([474b1c6](https://github.com/event4u-app/agent-config/commit/474b1c68b8a28dd1f5302b135fbe69876696ea6f))
+* **standards:** component-oriented + OOP-first development standard ([5bd62bd](https://github.com/event4u-app/agent-config/commit/5bd62bdf14208f65ae166b954a5c7b4e49211ffa))
+* **roadmaps:** council-review + apply findings to feedback-9.2.0 followups ([dc187d4](https://github.com/event4u-app/agent-config/commit/dc187d4b83debda1c4f8c551acfc6400149da520))
+* **roadmaps:** draft feedback-9.2.0 follow-ups roadmap ([69d363d](https://github.com/event4u-app/agent-config/commit/69d363df10f5e9dd6605ba6af370ac1d477a5a92))
+* **roadmaps:** spawn adversarial-council benchmark follow-up; mark deferred arm moved ([36a69d9](https://github.com/event4u-app/agent-config/commit/36a69d9f00b4a236535ea01bf8dd36a4d82f1293))
+
+### Refactoring
+
+* **subagent-orchestration:** relocate worker-prompt contract to spawn-contract context ([de38ce1](https://github.com/event4u-app/agent-config/commit/de38ce12ff167eafe7a0631f1088ed244e2b85bf))
+
+### Chores
+
+* **harvest:** close second-sweep coverage plate — all folds verified, proposals parked, archived ([7af8a75](https://github.com/event4u-app/agent-config/commit/7af8a75305289bd1f2d36498bea362b789b0f610))
+* **roadmaps:** archive completed adversarial-verification-council roadmap ([fc34874](https://github.com/event4u-app/agent-config/commit/fc34874a608644d89ab12aa0147d5f6237a4f9ca))
+
+Tests: 7770 (+6 since 9.2.0)
+
 ## [9.2.0](https://github.com/event4u-app/agent-config/compare/9.1.0...9.2.0) (2026-07-14)
 
 ### Features
