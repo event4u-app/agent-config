@@ -12,7 +12,7 @@
 
 **Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
-**A deep library of skills, commands, and governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
+**A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
 ### What's different
 
@@ -25,13 +25,13 @@ It is both deep **and** disciplined — and honest about what it deliberately is
 
 **What it deliberately is *not*** — a content + governance layer, not a runtime: **no background daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
 
-> **Where this comes from (honest provenance).** The skills, rules, and personas
+> **Where this comes from (honest provenance).** The skills, rules and personas
 > are distilled from real production work on TypeScript and PHP codebases. The
 > governance mechanics are stack-agnostic, but the domain heuristics are richest
 > where they were forged — treat coverage on other stacks as promising, not
-> proven, and tell us where it falls short.
+> proven and tell us where it falls short.
 
-See exactly [what works on which host](docs/capability-matrix.md), or jump to [things you can do in a minute](docs/cookbook.md).
+See exactly [what works on which host](docs/capability-matrix.md) or jump to [things you can do in a minute](docs/cookbook.md).
 
 ### Pick your profile — six entry paths
 
@@ -98,14 +98,14 @@ is platform operation, not a user-work flow.)
 
 > **Creative Pack — cinematic AI video.** script → character-locked image → motion+audio prompt → provider render → stitched clip, with `AIV_DRYRUN=true` as the cost-safety default. A first-class capability inside the **content / creator** experience — no longer the package's headline. See [`/video:from-script`](.augment/commands/video/from-script.md).
 
-> **Legal Pack — not legal advice.** The EU/DE legal pack (contract/NDA/DPA review, triage) is a **research-and-drafting aid only** — it does not provide legal advice, does not replace a qualified lawyer, and must not be relied on for any concrete matter. It produces general information and general templates, never individual-case examination. Read [`LEGAL_NOTICE.md`](LEGAL_NOTICE.md) before use.
+> **Legal Pack — not legal advice.** The EU/DE legal pack (contract/NDA/DPA review, triage) is a **research-and-drafting aid only** — it does not provide legal advice, does not replace a qualified lawyer and must not be relied on for any concrete matter. It produces general information and general templates, never individual-case examination. Read [`LEGAL_NOTICE.md`](LEGAL_NOTICE.md) before use.
 
 > Full catalog — every skill, rule, command, guideline: [`docs/catalog.md`](docs/catalog.md). The headline is the **experience** (profile + packs) **and** the depth behind it.
 
 ## Use it in your project
 
 Run from a consumer repo — bootstrap via `npx`, the agent picks up
-your stack, and you ship work end-to-end. New install? Start with the
+your stack and you ship work end-to-end. New install? Start with the
 [Quickstart](#quickstart). Already installed? [Supported tools](#supported-tools)
 shows the wired AIs; [`docs/featured-commands.md`](docs/featured-commands.md)
 lists the end-to-end workflows (`/implement-ticket`, `/work`,
@@ -117,14 +117,14 @@ lists the end-to-end workflows (`/implement-ticket`, `/work`,
 
 Don't take the claims on trust — **verify them.** [`docs/proof.md`](docs/proof.md)
 is generated from source: a claim→evidence table (every public claim binds to a
-resolvable pointer, or CI fails), honest-null benchmarks *including the runs where
-the package changed nothing*, and a "verify it yourself" block you run on a fresh
+resolvable pointer or CI fails), honest-null benchmarks *including the runs where
+the package changed nothing* and a "verify it yourself" block you run on a fresh
 checkout. The proof page fails CI if it drifts from its sources — reproducibility
 is the proof. Browse it on the deployed docs site:
 [event4u-app.github.io/agent-config](https://event4u-app.github.io/agent-config).
 
 Audit-disciplined by construction — every memory consult, decision
-key, and hook concern lands in `agents/runtime/state/` so you can replay it.
+key and hook concern lands in `agents/runtime/state/` so you can replay it.
 [Core principles](#core-principles) names the four invariants;
 [What `agent-config` is — and what it isn't](#what-agent-config-is--and-what-it-isnt)
 draws the scope boundary.
@@ -199,7 +199,7 @@ Migrating from a v1.x install? `npx @event4u/agent-config migrate` — full note
 
 A **content layer** — skills, rules, commands, guidelines, personas — distributed via npm and projected into every supported AI tool's native config format. It follows the [Agent Skills open standard](https://agentskills.io).
 
-It is **not** an agent runtime. The agent loop, the LLM dispatcher, and tool orchestration stay with the host tool (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI, Copilot). Think of it as a playbook and style guide for those tools — not a replacement.
+It is **not** an agent runtime. The agent loop, the LLM dispatcher and tool orchestration stay with the host tool (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI, Copilot). Think of it as a playbook and style guide for those tools — not a replacement.
 
 | In scope | Out of scope |
 |---|---|
@@ -246,7 +246,7 @@ refine → memory → analyze → plan → implement → test → verify → rep
 - **Reviews** the diff through four judges (bugs, security, tests, code quality).
 - **Reports** changes, verdicts, follow-ups — then stops. `/commit` and `/pr:create` are suggestions, never auto-run.
 
-Any ambiguity halts the flow with numbered options — never a silent guess. Persona comes from `.agent-settings.yml` (`roles.active_role`): `senior-engineer` (default), `qa`, or `advisory` (plan-only).
+Any ambiguity halts the flow with numbered options — never a silent guess. Persona comes from `.agent-settings.yml` (`roles.active_role`): `senior-engineer` (default), `qa` or `advisory` (plan-only).
 
 → [Command reference](dist/agent-src/commands/implement-ticket.md) · [Flow contract](docs/contracts/implement-ticket-flow.md)
 
@@ -308,7 +308,7 @@ Create the user file interactively: `/agents user init` ([schema](docs/contracts
 
 ### Self-hosted MCP on Cloudflare — zero local install
 
-Skills, commands, rules, and guidelines can be served as an MCP endpoint from your own Cloudflare Worker — any MCP client (Claude Desktop, Claude Code, Cursor, Zed, Continue, hosted agents) talks to it over HTTP. Two auth modes: `public` (default, OSS read-only deploys) and `bearer-auth` (operator opt-in, `MCP-Token` Wrangler secret).
+Skills, commands, rules and guidelines can be served as an MCP endpoint from your own Cloudflare Worker — any MCP client (Claude Desktop, Claude Code, Cursor, Zed, Continue, hosted agents) talks to it over HTTP. Two auth modes: `public` (default, OSS read-only deploys) and `bearer-auth` (operator opt-in, `MCP-Token` Wrangler secret).
 
 ```bash
 task mcp:cloud:login         # one-time, opens browser
@@ -332,13 +332,13 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 
 The Hard Floor on organization-mode features (SSO, central policy, OAuth connectors, team-context) is preserved by design — they stay cancelled until a real first customer + funded security audit lifts them. The small-team recipe is the supported path in the meantime.
 
-> *The 9.3/10 feedback round (2026-05-25) re-asked for OAuth knowledge connectors, IAM / org governance, and organization-shared memory. Each is a stable cancellation row in [`team-deployment-posture`](docs/deploy/team-deployment-posture.md) under the same three release gates — recruited team customer · funded audit · maintainer ADR.*
+> *The 9.3/10 feedback round (2026-05-25) re-asked for OAuth knowledge connectors, IAM / org governance and organization-shared memory. Each is a stable cancellation row in [`team-deployment-posture`](docs/deploy/team-deployment-posture.md) under the same three release gates — recruited team customer · funded audit · maintainer ADR.*
 
 ---
 
 ## Harness expectations
 
-Three classes of install/runtime behaviour look like package bugs but are host-harness behaviour the package cannot control — sibling-plugin namespaces (`codex:*`, `cc-gemini-plugin:*`), deferred tools surfaced via `ToolSearch`, and cross-scope skill drift (real bug, fixed in the distribution-channels track). Diagnostics + the package's response: [`docs/contracts/harness-expectations.md`](docs/contracts/harness-expectations.md). First step when a skill appears twice: `task probe:skills`.
+Three classes of install/runtime behaviour look like package bugs but are host-harness behaviour the package cannot control — sibling-plugin namespaces (`codex:*`, `cc-gemini-plugin:*`), deferred tools surfaced via `ToolSearch` and cross-scope skill drift (real bug, fixed in the distribution-channels track). Diagnostics + the package's response: [`docs/contracts/harness-expectations.md`](docs/contracts/harness-expectations.md). First step when a skill appears twice: `task probe:skills`.
 
 ## Supported tools
 
@@ -469,7 +469,7 @@ Browse content: [all commands](dist/agent-src/commands/) · [skills catalog](doc
 ## Troubleshooting
 
 First stop for any install problem: `agent-config doctor` — it flags a
-missing-from-`PATH` binary, binary↔plugin version drift, stale orphans, and
+missing-from-`PATH` binary, binary↔plugin version drift, stale orphans and
 manifest issues, each with a one-line fix hint.
 
 ### A new command / skill is missing in Claude Code after an upgrade
@@ -478,7 +478,7 @@ Under the single-surface model, `agent-config upgrade` refreshes the
 `~/.claude/` file projection — that IS the content surface, so a fresh
 session picks the new commands up directly. If commands are still missing,
 the usual cause is a leftover **marketplace plugin**: it is a git-SHA
-snapshot that never moves with the npm upgrade, and it shadows nothing —
+snapshot that never moves with the npm upgrade and it shadows nothing —
 it just lists everything twice while lagging behind. Remove it:
 
 ```bash
@@ -513,7 +513,7 @@ Only the initial `npm install -g` hard-aborts an upgrade. Every later step
 (global re-deploy with hook registration, settings sync, wrapper + git-hook
 refresh) runs independently — a single failed step is reported in the
 end-of-run summary instead of silently skipping the rest. Re-run
-`agent-config upgrade` to converge, and use `agent-config doctor` to name
+`agent-config upgrade` to converge and use `agent-config doctor` to name
 anything left in a mixed state.
 
 ### `agent-config: command not found` / hooks stopped firing
