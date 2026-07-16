@@ -339,6 +339,16 @@ tasks:
       (road-to-role-first-onboarding Phase 2 Step 3).
     cmd: ./scripts-run src/scripts/lint_readme_jargon {{.QUIET_FLAG}}
 
+  lint-readme-serial-comma:
+    silent: true
+    desc: |
+      Enforce the no-serial-comma house style in README.md prose — no comma
+      directly before a final "and" / "or". README is the public claim
+      surface, so copy-style drift is guarded like a drifting number.
+      Prose only: fenced code, inline backticks, HTML comments, URLs, and
+      table rows are masked before matching.
+    cmd: ./scripts-run src/scripts/lint_readme_serial_comma {{.QUIET_FLAG}}
+
   lint-workspace-boundary:
     silent: true
     desc: |
