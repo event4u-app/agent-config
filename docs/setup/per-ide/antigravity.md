@@ -2,8 +2,9 @@
 
 Antigravity (Google's agentic IDE) reads the Anthropic-shaped
 markdown skill bundle from its user-scope anchor `~/.agents/`. The
-package deploys via the universal skill convention; project-scope
-bridge is not yet wired (Phase 2.4 anchor).
+package deploys the universal skill bundle at global scope, the same
+projection its other bundle hosts get (codex, continue, roocode and
+the rest) — global-only by design, not a pending gap.
 
 ## Prerequisites
 
@@ -25,7 +26,11 @@ Populates:
 - `~/.agents/personas/` — review-lens personas
 
 (Project-scope `--tools=antigravity` is rejected with exit code 1
-— Antigravity has no documented project-discovery convention yet.)
+— every bundle host is global-only; the package writes the shared
+bundle to a user-scope anchor, not into the project. Antigravity does
+have a native project `.agents/` convention (`skills/`, `agents.md`,
+`workflows/`), but a project-scope projection is not part of the
+shipped surface.)
 
 ## How to use
 
