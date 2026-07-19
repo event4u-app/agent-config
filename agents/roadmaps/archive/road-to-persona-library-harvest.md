@@ -101,6 +101,24 @@ converged; verdicts locked into this roadmap:
   NOTHING") and `src/scripts/_lib/text_similarity.ts` (Jaccard,
   `MERGE_THRESHOLD = 0.8` / `WARN_THRESHOLD = 0.4`). **No shingles, no entity
   neutralization, no CI-blocking contribution gate.** Verified.
+
+> **CORRECTION (2026-07-19, post-review).** The line above was WRONG. A
+> shingle + entity-neutralization gate already existed at `1c7f6a6`:
+> `src/scripts/lint_originality_shingles.ts` (entity-masked 8-word shingles over
+> skills/personas/subagents, `road-to-opt-subagent-harvest P1.3`, wired in
+> `ci-fast.yml`) — report-only (never armed with `--threshold`), plus
+> `lint_skill_originality.ts` (Jaccard + pack-domain severity). My gap-table's
+> "no shingles, no entity neutralization" was a false baseline: I grepped
+> `shingle|originality|dedup` and truncated the output with `head -10`, missing
+> the hits, then asserted the gap instead of verifying it — and the council
+> converged on that false premise. **Phase 1 was therefore CONSOLIDATION + an
+> upgrade, not adoption of a missing capability.** The upgrade is real
+> (containment vs Jaccard, class-scoped, commands in corpus, DF subtraction vs
+> manual allowlist, `--changed` batch guard + a raw full-audit batch guard,
+> armed thresholds vs a never-armed `--threshold`), but it shipped as a third
+> parallel gate. Resolved in the review follow-up: `lint_originality_shingles`
+> retired (its subagent coverage folded into the new gate); `lint_skill_originality`
+> kept (different mechanism).
 - **MCP stdio server with ALLOWLIST + stub envelope**:
   `src/scripts/mcp_server/tools.ts` — real tools today are `lint_skills` +
   `chat_history_append`; all other catalog names are discovery stubs
