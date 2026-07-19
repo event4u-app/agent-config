@@ -3,7 +3,7 @@
  * `catalog_load`.
  *
  * Read-only discovery over the package's own artifact catalog
- * (`dist/catalog-index.json`), so a host can find and load ONE skill / persona
+ * (`dist/catalog-index-v1.json`), so a host can find and load ONE skill / persona
  * / command body on demand instead of carrying all ~495 descriptions in its
  * initial context. Reuses `_lib/catalog_score` (BM25 via the shared
  * LexicalIndex).
@@ -29,7 +29,7 @@ import { searchCatalog, type CatalogFilter } from '../_lib/catalog_score.js';
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/mcp_server → repo root is three dirs up.
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
-const INDEX_PATH = path.join(ROOT, 'dist', 'catalog-index.json');
+const INDEX_PATH = path.join(ROOT, 'dist', 'catalog-index-v1.json');
 
 /**
  * Neutral preamble wrapping a loaded body. Adapted from the upstream

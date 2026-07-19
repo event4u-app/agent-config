@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Build the lazy-catalog index — `dist/catalog-index.json`.
+ * Build the lazy-catalog index — `dist/catalog-index-v1.json`.
  *
  * A queryable metadata index over every skill, persona, and domain command:
  * `{ id, cls, name, description, tags, path }` — **metadata only, no bodies**.
@@ -22,7 +22,10 @@ import { parse as parseYaml } from 'yaml';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-export const OUT = path.join(ROOT, 'dist', 'catalog-index.json');
+// The `-v1` namespace tracks `schema_version` below (per lint_versioned_cache):
+// bump both together on a shape change so any stale cached copy self-invalidates
+// by name rather than being read as the new shape.
+export const OUT = path.join(ROOT, 'dist', 'catalog-index-v1.json');
 
 export type CatalogClass = 'skill' | 'persona' | 'command';
 
