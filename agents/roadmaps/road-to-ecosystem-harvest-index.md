@@ -81,7 +81,7 @@ user decides when to run each plate).
 | **P2** | [`road-to-ecosystem-harvest-tool-pitfalls`](archive/road-to-ecosystem-harvest-tool-pitfalls.md) ✅ shipped | Cheap, high-signal troubleshooting sections on the highest-burden shipped tool skills. |
 | **P3** | [`road-to-ecosystem-harvest-product-gate`](archive/road-to-ecosystem-harvest-product-gate.md) ✅ shipped | A tiny "should this exist?" demand check, one altitude above the engineering-fit gate. |
 | **P3** | [`road-to-ecosystem-harvest-ergonomics`](archive/road-to-ecosystem-harvest-ergonomics.md) ✅ shipped | Ergonomic dispatch + per-phase commands; nice-to-have, low risk. |
-| **Watch** | [`road-to-ecosystem-harvest-domain-watch`](road-to-ecosystem-harvest-domain-watch.md) | New verticals (LLM-app engineering, cloud-native) — gated by `domain-adoption-policy`; one narrow exception adopted. |
+| **Watch** | [`road-to-ecosystem-harvest-domain-watch`](archive/road-to-ecosystem-harvest-domain-watch.md) | New verticals (LLM-app engineering, cloud-native) — gated by `domain-adoption-policy`; one narrow exception adopted. |
 | **Coverage** | [`road-to-ecosystem-harvest-second-sweep`](archive/road-to-ecosystem-harvest-second-sweep.md) ✅ shipped | Closes disposition on **every** remaining catalog entry (the backing repo == this directory); fold-in patch list; introduces zero new workstreams. |
 
 ---
