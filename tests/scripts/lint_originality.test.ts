@@ -90,3 +90,39 @@ describe('lint_originality — integration against the real corpus', () => {
         expect(main(['--changed', 'src/skills/__origtest_reskin_fixture/SKILL.md', '--quiet'])).toBe(1);
     });
 });
+
+describe('lint_originality — adversarial batch masking is closed', () => {
+    // A batch of >= _dfFloor near-identical NEW command files submitted together.
+    // With the pre-fix DF pass (boilerplate computed INCLUDING the change set)
+    // their shared shingles reach the floor, get classified as boilerplate,
+    // subtracted, and score 0 against each other — the gate blinds itself. The
+    // fix excludes the change set from the boilerplate baseline, so the batch is
+    // caught. Commands floor = max(4, 3% of ~189) = 6, so 7 copies exercises it.
+    const BATCH_DIR = path.join(ROOT, 'src', 'domains', '__origtest_batch');
+    // A novel body (not in the corpus), long enough to shingle at k=8.
+    const NOVEL = `---
+name: batchcmd
+pack: __origtest
+---
+
+# /batchcmd
+
+This orchestrator coordinates a bespoke reconciliation sweep across every
+ledger partition, folding divergent snapshots into a single authoritative
+manifest before the downstream settlement window opens for the trading desk.
+It never mutates a partition in place; it stages a shadow copy, diffs the
+delta, and promotes only once the invariant checker signs off on the merge.`;
+
+    afterEach(() => { fs.rmSync(BATCH_DIR, { recursive: true, force: true }); });
+
+    it('flags a batch of 7 near-identical new commands (exit 1)', () => {
+        const rel: string[] = [];
+        for (let i = 1; i <= 7; i++) {
+            const dir = path.join(BATCH_DIR, `c${i}`);
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, 'command.md'), NOVEL, 'utf-8');
+            rel.push(`src/domains/__origtest_batch/c${i}/command.md`);
+        }
+        expect(main(['--changed', ...rel, '--quiet'])).toBe(1);
+    });
+});

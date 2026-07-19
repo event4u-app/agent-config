@@ -26,11 +26,29 @@
  * Thresholds (env-overridable): ORIGINALITY_FAIL (60), ORIGINALITY_WARN (40).
  * Calibrated 2026-07-19 over 495 artifacts / 56 151 comparisons: after the
  * template + document-frequency boilerplate subtraction the worst legitimate
- * pair is 40 % (a single command pair sharing residual cluster-orchestrator
- * prose), p95 and median 0 %. A find-replace re-skin scores ~100 % (entities
- * neutralize away), so FAIL 60 blocks every real re-skin with a 20-point margin
- * above the legitimate floor and 40-point margin below a re-skin. Distribution
- * recorded in agents/reports/originality.md. Exit 0 clean/warn · 1 fail · 2 usage.
+ * pair is 40 % (`domains/engineering-base/tests` ~ `domains/meta/override` —
+ * two cluster-orchestrator commands sharing the family template's
+ * "Top-level orchestrator … / Non-interactive & auto-detection" scaffold;
+ * triaged as legitimate, not a merge candidate), p95 and median 0 %. A
+ * find-replace re-skin scores ~100 % (entities neutralize away), so FAIL 60
+ * blocks every real re-skin with a 20-point margin above the legitimate floor
+ * and 40-point margin below a re-skin. Distribution in agents/reports/originality.md.
+ *
+ * TWO PROPERTIES OF THE DF PASS A LATER READER MUST NOT MISTAKE FOR CONSTANTS:
+ *   1. Scores are CORPUS-RELATIVE. The DF floor subtracts what is common across
+ *      the class, so every overlap number is measured against the corpus as it
+ *      stands. The 40 % floor is a 2026-07-19 SNAPSHOT, not a fixed constant —
+ *      it drifts as commands/skills are added or removed. Re-run the full audit
+ *      after any large corpus change; do not treat 40 % as invariant.
+ *   2. Adversarial batch masking. In `--changed` mode the boilerplate set is
+ *      computed from the corpus MINUS the change set, so a batch of ≥ _dfFloor
+ *      near-identical re-skins submitted together cannot classify its own shared
+ *      shingles as boilerplate (see `_changed`). The full-audit sweep (no
+ *      "changed" notion) does NOT have this guard — a batch of ≥ floor identical
+ *      NEW files committed at once would mutually mask there; the `--changed` PR
+ *      gate, not the sweep, is the adversarial defense.
+ *
+ * Exit 0 clean/warn · 1 fail · 2 usage.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -311,6 +329,15 @@ function _writeReport(byClass: Map<ArtifactClass, Artifact[]>, pairs: Pair[], di
 // --- changed mode ------------------------------------------------------------
 
 function _changed(files: string[]): { pairs: Pair[]; fails: number } {
+    // The boilerplate DF set is derived from the ESTABLISHED corpus only — the
+    // change set under review is excluded. Without this, a batch of ≥ _dfFloor
+    // near-identical re-skins submitted together would lift its OWN shared
+    // shingles over the floor, be reclassified as boilerplate, subtracted from
+    // every copy, and score 0 against each other — the gate blinds itself on
+    // exactly the attack it exists to catch. "What is scaffold" must be defined
+    // by the corpus as it stands, never by the diff proposing to change it.
+    const changedRel = new Set(files.map((f) => _rel(path.resolve(ROOT, f))));
+
     // Build the corpus in RAW (template-subtracted, pre-DF) form per class so we
     // can derive the same boilerplate set the candidate is filtered against.
     const byClass = new Map<ArtifactClass, Artifact[]>();
@@ -320,7 +347,8 @@ function _changed(files: string[]): { pairs: Pair[]; fails: number } {
         const tmpl = _templateShingles(spec);
         templateCache.set(spec.name, tmpl);
         const arts = spec.files().map((f) => _load(f, spec.name, tmpl));
-        const boiler = _boilerplateSet(arts);
+        // Established corpus = on-disk arts minus the change set.
+        const boiler = _boilerplateSet(arts.filter((a) => !changedRel.has(a.relpath)));
         for (const a of arts) _subtract(a, boiler);
         byClass.set(spec.name, arts);
         boilerByClass.set(spec.name, boiler);
