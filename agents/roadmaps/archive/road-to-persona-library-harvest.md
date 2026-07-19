@@ -48,8 +48,8 @@ default-off or advisory-first per house culture.
   (post-9.2.0, `package.json` 9.3.0). All Source-A file claims are against
   that commit.
 - Three analysis passes: (1) GitHub-API deep-dive (subagent), (2) full-clone
-  SHA-pinned source pass (parallel session, archived at
-  `agents/tmp/agency-agents.txt`, gitignored), (3) local verification of every
+  SHA-pinned source pass (parallel session, archived in a gitignored local
+  scratch file under `agents/tmp/`), (3) local verification of every
   load-bearing claim about THIS package (results inline below).
 
 ## § Council convergence (2026-07-19)
@@ -180,9 +180,13 @@ content linters, e.g. `lint_agent_skill_names.ts`):
   Source A's calibration: worst legitimate pair in low single digits. If ours
   lands above ~20 → investigate (likely template-strip gap in 1.2) before any
   flip.
-- [x] **Flip gate:** thresholds move to FAIL 40 / WARN 20 only after the audit
-  shows worst-legitimate-pair ≤ WARN/2. Record numbers in the report, not as a
-  README claim.
+- [-] **Flip gate — NOT satisfied as written; rule replaced (see 1.4).** The
+  gate said thresholds move to FAIL 40 / WARN 20 once worst-legitimate-pair
+  ≤ WARN/2 (= 10). Measured worst = **40**, so the precondition never held. It
+  was NOT met and then flipped anyway — instead the calibration (1.4) *replaced*
+  the rule with "block threshold above the measured floor" → FAIL 60 / WARN 40.
+  Struck (not checked) so a later reader does not mistake an unmet precondition
+  for a satisfied one. Numbers recorded in the report, not as a README claim.
 - [x] Wire into CI (lint taskfile target + the changed-files path the other
   content linters use). Blocking from this point on.
 
@@ -309,10 +313,14 @@ matters, without a new artifact class:
   id resolves to `src/agent-src/personas/<id>.md`, every skill slug to
   `src/skills/<slug>/SKILL.md`. Wire as advisory into the flow lint path.
 - [x] Annotate ONE existing flow (e.g. `delivery.yaml`) as the worked example.
-- [x] **Promotion criterion (recorded, not built):** ≥ 5 flows carrying
-  `team:` with repeated conditional shape, OR ≥ 2 external-user requests for
-  scenario-team selection → THEN design a roster schema as its own roadmap.
-  Until then, no schema, no linter class, no `/roster` commands.
+- [x] **Promotion criterion (recorded, not built) — self-measurement branch
+  removed.** Original "≥ 5 flows carrying `team:`" was self-satisfiable: there
+  are only ~6 flows total (one is the surface-map), so the maintainer could
+  clear it in one afternoon and the probe would report annotation mood, not
+  demand. Tightened to **≥ 2 external-user requests for scenario-team selection,
+  OR ≥ 5 flows carrying `team:` of which ≥ 2 were annotated by someone other
+  than the maintainer** → THEN design a roster schema as its own roadmap. Until
+  then, no schema, no linter class, no `/roster` commands.
 
 ---
 
