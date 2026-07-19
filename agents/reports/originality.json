@@ -1,7 +1,7 @@
 {
   "fail_threshold": 60,
   "warn_threshold": 40,
-  "artifacts_scanned": 495,
+  "artifacts_scanned": 496,
   "distribution": {
     "worst": 40,
     "p95": 0,
@@ -15,7 +15,8 @@
       "b": "override",
       "a_path": "src/domains/engineering-base/tests/command.md",
       "b_path": "src/domains/meta/override/command.md",
-      "overlap": 40
+      "overlap": 40,
+      "raw_overlap": 54.1
     }
   ]
 }

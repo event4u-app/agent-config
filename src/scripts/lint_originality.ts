@@ -40,13 +40,24 @@
  *      stands. The 40 % floor is a 2026-07-19 SNAPSHOT, not a fixed constant —
  *      it drifts as commands/skills are added or removed. Re-run the full audit
  *      after any large corpus change; do not treat 40 % as invariant.
- *   2. Adversarial batch masking. In `--changed` mode the boilerplate set is
- *      computed from the corpus MINUS the change set, so a batch of ≥ _dfFloor
- *      near-identical re-skins submitted together cannot classify its own shared
- *      shingles as boilerplate (see `_changed`). The full-audit sweep (no
- *      "changed" notion) does NOT have this guard — a batch of ≥ floor identical
- *      NEW files committed at once would mutually mask there; the `--changed` PR
- *      gate, not the sweep, is the adversarial defense.
+ *   2. Adversarial batch masking is guarded in BOTH modes. A batch of ≥ _dfFloor
+ *      near-identical files DF-masks itself (their shared shingles reach the
+ *      floor, get subtracted, score 0 on the DF signal). Two defenses close it:
+ *      `--changed` computes the boilerplate set from the corpus MINUS the change
+ *      set (the diff never defines what is scaffold; see `_changed`); and BOTH
+ *      modes carry a second RAW signal (`RAW_FAIL`) computed on the template-only
+ *      shingles with NO DF subtraction, so a batch that is ~100 % identical on
+ *      raw is flagged regardless of DF. The full-audit sweep — which has no
+ *      "changed" notion to exclude — relies on this raw signal for its batch
+ *      guard; it is the linter's own armed defense, not only the PR path.
+ *
+ * CONSOLIDATION: this gate SUPERSEDES the report-only `lint_originality_shingles`
+ * (entity-masked 8-word shingles, Jaccard, manual allowlist, never armed) — same
+ * anti-re-skin idea, upgraded to containment, class-scoped comparison, commands
+ * in the corpus, automatic DF boilerplate subtraction, a `--changed` batch guard,
+ * and armed thresholds. It keeps that gate's SUBAGENT coverage (do not drop it).
+ * `lint_skill_originality` (ADR-tracked Jaccard + pack-domain severity) is a
+ * different mechanism and stays.
  *
  * Exit 0 clean/warn · 1 fail · 2 usage.
  */
@@ -64,7 +75,7 @@ const OUT_MD = path.join(REPORT_DIR, 'originality.md');
 
 const K = 8;
 
-export type ArtifactClass = 'skill' | 'persona' | 'command';
+export type ArtifactClass = 'skill' | 'persona' | 'command' | 'subagent';
 
 interface ClassSpec {
     readonly name: ArtifactClass;
@@ -103,6 +114,7 @@ function _walkLeaf(dir: string, leaf: string, out: string[]): void {
 const SKILLS_DIR = path.join(ROOT, 'src', 'skills');
 const PERSONAS_DIR = path.join(ROOT, 'src', 'agent-src', 'personas');
 const DOMAINS_DIR = path.join(ROOT, 'src', 'domains');
+const SUBAGENTS_DIR = path.join(ROOT, 'src', 'subagents');
 
 const CLASSES: readonly ClassSpec[] = [
     {
@@ -145,6 +157,25 @@ const CLASSES: readonly ClassSpec[] = [
         },
         matches: (abs) => abs.startsWith(DOMAINS_DIR + path.sep) && path.basename(abs) === 'command.md',
     },
+    {
+        // Coverage parity with the retired lint_originality_shingles gate, which
+        // covered subagents; this gate must not regress that. No dedicated
+        // template (subagents have none) → template subtraction is a no-op.
+        name: 'subagent',
+        templatePath: path.join(ROOT, 'src', 'agent-src', 'templates', 'subagent.md'),
+        files() {
+            if (!_isDir(SUBAGENTS_DIR)) return [];
+            return fs.readdirSync(SUBAGENTS_DIR)
+                .filter((n) => n.endsWith('.md') && !n.startsWith('_'))
+                .map((n) => path.join(SUBAGENTS_DIR, n))
+                .filter(_isFile)
+                .sort();
+        },
+        matches: (abs) =>
+            path.dirname(abs) === SUBAGENTS_DIR &&
+            abs.endsWith('.md') &&
+            !path.basename(abs).startsWith('_'),
+    },
 ];
 
 interface Artifact {
@@ -152,8 +183,13 @@ interface Artifact {
     relpath: string;
     /** Human name — frontmatter name/id, else parent dir. */
     label: string;
-    /** Scaffold-stripped shingle set. */
+    /** Template-stripped shingles, then DF-boilerplate-subtracted (the calibrated
+     * signal — FAIL 60 / WARN 40). */
     shingles: Set<string>;
+    /** Template-stripped shingles WITHOUT DF subtraction. Powers the raw batch
+     * guard: a batch of ≥ _dfFloor near-identical files DF-masks each other, but
+     * remains ~100 % identical on the raw set (see RAW_FAIL). Frozen at load. */
+    rawShingles: Set<string>;
 }
 
 /** Cheap frontmatter name/id read for a readable label (no yaml dep needed). */
@@ -178,19 +214,37 @@ function _load(abs: string, cls: ArtifactClass, tmpl: Set<string>): Artifact {
     // is boilerplate, not authored content.
     const kept = new Set<string>();
     for (const s of raw) if (!tmpl.has(s)) kept.add(s);
-    return { cls, relpath: _rel(abs), label: _label(text, abs), shingles: kept };
+    // rawShingles is the template-stripped set frozen BEFORE DF subtraction.
+    return { cls, relpath: _rel(abs), label: _label(text, abs), shingles: kept, rawShingles: new Set(kept) };
 }
 
-export function overlap(a: Artifact, b: Artifact): number {
-    const min = Math.min(a.shingles.size, b.shingles.size);
+/** Containment over an arbitrary shingle field. */
+function _containment(a: Set<string>, b: Set<string>): number {
+    const min = Math.min(a.size, b.size);
     if (min === 0) return 0;
-    const [small, large] = a.shingles.size <= b.shingles.size ? [a.shingles, b.shingles] : [b.shingles, a.shingles];
+    const [small, large] = a.size <= b.size ? [a, b] : [b, a];
     let shared = 0;
     for (const s of small) if (large.has(s)) shared++;
     return (100 * shared) / min;
 }
 
-interface Pair { cls: ArtifactClass; a: string; b: string; a_path: string; b_path: string; overlap: number; }
+/** Calibrated signal — DF-boilerplate-subtracted overlap (FAIL 60 / WARN 40). */
+export function overlap(a: Artifact, b: Artifact): number {
+    return _containment(a.shingles, b.shingles);
+}
+
+/** Batch-guard signal — template-only overlap, no DF (RAW_FAIL). */
+export function rawOverlap(a: Artifact, b: Artifact): number {
+    return _containment(a.rawShingles, b.rawShingles);
+}
+
+interface Pair { cls: ArtifactClass; a: string; b: string; a_path: string; b_path: string; overlap: number; raw_overlap: number; }
+
+/** A pair fails the gate if the calibrated DF overlap crosses FAIL, OR the raw
+ * (batch-guard) overlap crosses RAW_FAIL. */
+function _isFail(dfOverlap: number, rawOverlap: number): boolean {
+    return dfOverlap >= FAIL || rawOverlap >= RAW_FAIL;
+}
 
 function _round1(x: number): number { return Math.round(x * 10) / 10; }
 
@@ -204,6 +258,14 @@ function _threshold(env: string, dflt: number): number {
 }
 export const FAIL = _threshold('ORIGINALITY_FAIL', 60);
 export const WARN = _threshold('ORIGINALITY_WARN', 40);
+// Raw batch-guard threshold — template-only overlap, NO DF subtraction. Arms
+// the full audit (which has no "changed set" to exclude) against the same
+// batch-masking the --changed path guards structurally: a batch of ≥ _dfFloor
+// near-identical files DF-masks itself to overlap 0, but is ~100 % identical on
+// the raw set. Calibrated 2026-07-19: the legit raw ceiling is 67.9 % (command
+// cluster-orchestrator scaffold), so RAW_FAIL 85 catches batches/re-skins
+// (~100 %) with a 17-point margin above the legit ceiling.
+export const RAW_FAIL = _threshold('ORIGINALITY_RAW_FAIL', 85);
 
 // --- corpus ------------------------------------------------------------------
 
@@ -265,13 +327,17 @@ function _fullPairs(byClass: Map<ArtifactClass, Artifact[]>): Pair[] {
                 const a = arts[i] as Artifact;
                 const b = arts[j] as Artifact;
                 const o = overlap(a, b);
-                if (o >= WARN) {
-                    pairs.push({ cls: a.cls, a: a.label, b: b.label, a_path: a.relpath, b_path: b.relpath, overlap: _round1(o) });
+                const r = rawOverlap(a, b);
+                // Surface a pair if the calibrated signal warns, or the raw
+                // batch guard fails (the latter catches DF-masked clusters whose
+                // DF overlap is 0).
+                if (o >= WARN || r >= RAW_FAIL) {
+                    pairs.push({ cls: a.cls, a: a.label, b: b.label, a_path: a.relpath, b_path: b.relpath, overlap: _round1(o), raw_overlap: _round1(r) });
                 }
             }
         }
     }
-    return pairs.sort((x, y) => y.overlap - x.overlap || (x.a_path < y.a_path ? -1 : 1));
+    return pairs.sort((x, y) => Math.max(y.overlap, y.raw_overlap) - Math.max(x.overlap, x.raw_overlap) || (x.a_path < y.a_path ? -1 : 1));
 }
 
 /** worst / p95 / median over EVERY pair (not just the >= WARN ones). */
@@ -302,25 +368,27 @@ function _writeReport(byClass: Map<ArtifactClass, Artifact[]>, pairs: Pair[], di
     };
     fs.writeFileSync(OUT_JSON, JSON.stringify(json, null, 2) + '\n', 'utf-8');
 
+    const fails = pairs.filter((p) => _isFail(p.overlap, p.raw_overlap)).length;
     const L: string[] = [
         '# Originality audit — entity-neutralized shingle overlap\n',
-        `> Anti-reskin gate over ${scanned} authored artifacts (skills · personas · commands), `,
-        `class-scoped, scaffold-subtracted, k=${K}. Thresholds: FAIL ${FAIL} / WARN ${WARN}. `,
-        'This report blocks NOTHING on its own — `lint_originality --changed` is the CI gate.\n',
+        `> Anti-reskin gate over ${scanned} authored artifacts (skills · personas · commands · subagents), `,
+        `class-scoped, scaffold-subtracted, k=${K}. Thresholds: FAIL ${FAIL} / WARN ${WARN} / RAW_FAIL ${RAW_FAIL}. `,
+        'The full audit is armed (FAIL + the raw batch guard); `--changed` adds the ' +
+            'corpus-excluded batch guard for the PR path.\n',
         `\n- Artifacts scanned: **${scanned}**`,
         `\n- Pairwise comparisons: **${dist.comparisons}**`,
-        `\n- Overlap distribution: worst **${dist.worst}%** · p95 **${dist.p95}%** · median **${dist.median}%**`,
-        `\n- Pairs ≥ WARN (${WARN}%): **${pairs.length}** (${pairs.filter((p) => p.overlap >= FAIL).length} ≥ FAIL)\n`,
-        '\n## Pairs at or above the warn threshold\n',
+        `\n- Overlap distribution (DF): worst **${dist.worst}%** · p95 **${dist.p95}%** · median **${dist.median}%**`,
+        `\n- Surfaced pairs: **${pairs.length}** (${fails} ≥ FAIL/RAW_FAIL)\n`,
+        '\n## Surfaced pairs (DF ≥ WARN, or raw ≥ RAW_FAIL)\n',
     ];
     if (pairs.length === 0) {
-        L.push('None — no same-class pair exceeds the warn threshold.\n');
+        L.push('None — no same-class pair crosses the warn or raw threshold.\n');
     } else {
-        L.push('| Class | A | B | overlap |');
-        L.push('|---|---|---|--:|');
+        L.push('| Class | A | B | overlap | raw |');
+        L.push('|---|---|---|--:|--:|');
         for (const p of pairs) {
-            const flag = p.overlap >= FAIL ? ' ❌' : '';
-            L.push(`| ${p.cls} | \`${p.a}\` | \`${p.b}\` | ${p.overlap}%${flag} |`);
+            const flag = _isFail(p.overlap, p.raw_overlap) ? ' ❌' : '';
+            L.push(`| ${p.cls} | \`${p.a}\` | \`${p.b}\` | ${p.overlap}%${flag} | ${p.raw_overlap}% |`);
         }
     }
     fs.writeFileSync(OUT_MD, L.join('\n') + '\n', 'utf-8');
@@ -373,10 +441,11 @@ function _changed(files: string[]): { pairs: Pair[]; fails: number } {
         const key = [a.relpath, b.relpath].sort().join(' ');
         if (seen.has(key)) return;
         const o = overlap(a, b);
-        if (o >= WARN) {
+        const r = rawOverlap(a, b);
+        if (o >= WARN || r >= RAW_FAIL) {
             seen.add(key);
             const [x, y] = a.relpath <= b.relpath ? [a, b] : [b, a];
-            pairs.push({ cls: a.cls, a: x.label, b: y.label, a_path: x.relpath, b_path: y.relpath, overlap: _round1(o) });
+            pairs.push({ cls: a.cls, a: x.label, b: y.label, a_path: x.relpath, b_path: y.relpath, overlap: _round1(o), raw_overlap: _round1(r) });
         }
     };
 
@@ -386,8 +455,8 @@ function _changed(files: string[]): { pairs: Pair[]; fails: number } {
         // vs the other changed files of the same class
         for (const other of changedArts) if (other.cls === cand.cls) record(cand, other);
     }
-    pairs.sort((x, y) => y.overlap - x.overlap || (x.a_path < y.a_path ? -1 : 1));
-    return { pairs, fails: pairs.filter((p) => p.overlap >= FAIL).length };
+    pairs.sort((x, y) => Math.max(y.overlap, y.raw_overlap) - Math.max(x.overlap, x.raw_overlap) || (x.a_path < y.a_path ? -1 : 1));
+    return { pairs, fails: pairs.filter((p) => _isFail(p.overlap, p.raw_overlap)).length };
 }
 
 // --- main --------------------------------------------------------------------
@@ -412,12 +481,12 @@ export function main(argv?: string[]): number {
         const { pairs, fails } = _changed(changedFiles);
         if (pairs.length > 0) {
             const stream = fails > 0 ? process.stderr : process.stdout;
-            stream.write(`lint_originality: ${pairs.length} overlap(s) ≥ WARN ${WARN}% (${fails} ≥ FAIL ${FAIL}%):\n`);
+            stream.write(`lint_originality: ${pairs.length} overlap(s) surfaced (${fails} ≥ FAIL ${FAIL}% / RAW_FAIL ${RAW_FAIL}%):\n`);
             for (const p of pairs) {
-                stream.write(`  [${p.cls}] ${p.a_path}  ~  ${p.b_path}  ${p.overlap}%${p.overlap >= FAIL ? '  ❌' : ''}\n`);
+                stream.write(`  [${p.cls}] ${p.a_path}  ~  ${p.b_path}  df ${p.overlap}% raw ${p.raw_overlap}%${_isFail(p.overlap, p.raw_overlap) ? '  ❌' : ''}\n`);
             }
         } else if (!quiet) {
-            process.stdout.write(`lint_originality: OK — ${changedFiles.length} changed file(s), no overlap ≥ WARN ${WARN}%.\n`);
+            process.stdout.write(`lint_originality: OK — ${changedFiles.length} changed file(s), no overlap ≥ WARN ${WARN}% / RAW_FAIL ${RAW_FAIL}%.\n`);
         }
         return fails > 0 ? 1 : 0;
     }
@@ -432,11 +501,11 @@ export function main(argv?: string[]): number {
     const dist = _distribution(byClass);
     const pairs = _fullPairs(byClass);
     _writeReport(byClass, pairs, dist);
-    const fails = pairs.filter((p) => p.overlap >= FAIL).length;
+    const fails = pairs.filter((p) => _isFail(p.overlap, p.raw_overlap)).length;
     if (!quiet) {
         process.stdout.write(
             `lint_originality: ${scanned} artifacts, worst ${dist.worst}% · p95 ${dist.p95}% · median ${dist.median}%; ` +
-                `${pairs.length} pair(s) ≥ WARN ${WARN}% (${fails} ≥ FAIL ${FAIL}%).\n`,
+                `${pairs.length} pair(s) surfaced (${fails} ≥ FAIL ${FAIL}% / RAW_FAIL ${RAW_FAIL}%).\n`,
         );
         process.stdout.write(`   JSON: ${_rel(OUT_JSON)}\n`);
         process.stdout.write(`   MD:   ${_rel(OUT_MD)}\n`);

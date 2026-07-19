@@ -115,7 +115,7 @@ delta, and promotes only once the invariant checker signs off on the merge.`;
 
     afterEach(() => { fs.rmSync(BATCH_DIR, { recursive: true, force: true }); });
 
-    it('flags a batch of 7 near-identical new commands (exit 1)', () => {
+    const seedBatch = (): string[] => {
         const rel: string[] = [];
         for (let i = 1; i <= 7; i++) {
             const dir = path.join(BATCH_DIR, `c${i}`);
@@ -123,6 +123,32 @@ delta, and promotes only once the invariant checker signs off on the merge.`;
             fs.writeFileSync(path.join(dir, 'command.md'), NOVEL, 'utf-8');
             rel.push(`src/domains/__origtest_batch/c${i}/command.md`);
         }
-        expect(main(['--changed', ...rel, '--quiet'])).toBe(1);
+        return rel;
+    };
+
+    it('--changed flags a batch of 7 near-identical new commands (exit 1)', () => {
+        expect(main(['--changed', ...seedBatch(), '--quiet'])).toBe(1);
+    });
+
+    it('the FULL AUDIT flags the same batch via the raw guard (exit 1)', () => {
+        // The full audit has no "changed set" to exclude, so DF would mask the
+        // batch. The RAW_FAIL signal (template-only, no DF) catches it — this is
+        // the guard that arms the CI path, which runs the full audit.
+        seedBatch();
+        expect(main(['--quiet'])).toBe(1);
+    });
+});
+
+describe('lint_originality — subagent coverage (parity with the retired shingles gate)', () => {
+    // Name must NOT start with '_' — the linter skips underscore-prefixed
+    // subagents by design (e.g. _prompt-defense.md), so a '_'-named fixture would
+    // never enter the corpus and the test would prove nothing.
+    const SUB = path.join(ROOT, 'src', 'subagents', 'origtest-subagent-dup.md');
+    afterEach(() => { fs.rmSync(SUB, { force: true }); });
+
+    it('a duplicate of an existing subagent is caught (subagents are in the corpus)', () => {
+        const original = fs.readFileSync(path.join(ROOT, 'src', 'subagents', 'production-validator.md'), 'utf-8');
+        fs.writeFileSync(SUB, original, 'utf-8');
+        expect(main(['--changed', 'src/subagents/origtest-subagent-dup.md', '--quiet'])).toBe(1);
     });
 });

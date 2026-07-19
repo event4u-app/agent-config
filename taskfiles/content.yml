@@ -331,7 +331,7 @@ tasks:
 
   lint-originality:
     silent: true
-    desc: "Anti-reskin gate — entity-neutralized shingle overlap over skills/personas/commands; blocks find-replace re-skins (FAIL 60, calibrated). Full audit writes agents/reports/originality.md; --changed <file...> for a PR-scoped check."
+    desc: "Anti-reskin gate — entity-neutralized shingle overlap over skills/personas/commands/subagents; blocks find-replace re-skins (FAIL 60 + RAW_FAIL 85 batch guard, calibrated). Supersedes the retired lint-originality-shingles. Full audit writes agents/reports/originality.md; --changed <file...> for a PR-scoped check."
     cmd: ./scripts-run src/scripts/lint_originality {{.QUIET_FLAG}}
 
   validate-flow-teams:
