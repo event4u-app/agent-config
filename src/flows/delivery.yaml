@@ -28,3 +28,12 @@ commands:              # seed from worksheet ·_flow:delivery_ tags
   - pr/create
   - fix/pr-comments
   - prepare-for-review
+team:                  # OPTIONAL demand-probe annotation (Phase 3) — no execution semantics
+  personas:
+    - production-validator
+    - qa
+    - senior-engineer
+  skills:
+    - verify-completion-evidence
+    - code-review
+    - requesting-code-review
