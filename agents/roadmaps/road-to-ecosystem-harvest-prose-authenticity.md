@@ -5,7 +5,7 @@ status: ready
 
 # Roadmap: Ecosystem-Harvest — Prose Authenticity
 
-**Trigger:** Ecosystem survey (see [`road-to-ecosystem-harvest-index`](road-to-ecosystem-harvest-index.md)).
+**Trigger:** Ecosystem survey (see [`road-to-ecosystem-harvest-index`](archive/road-to-ecosystem-harvest-index.md)).
 Source cited source-anonymously (**I** = a prose anti-slop humanizer skill);
 full provenance in the index § Provenance.
 
