@@ -6,7 +6,7 @@ status: ready
 # Roadmap: Ecosystem-Harvest — Review Mechanics
 
 **Trigger:** Ecosystem survey, second sweep of the source directory (see
-[`road-to-ecosystem-harvest-index`](../road-to-ecosystem-harvest-index.md)).
+[`road-to-ecosystem-harvest-index`](road-to-ecosystem-harvest-index.md)).
 Sources cited source-anonymously (**O** = a 3-persona PR-review skill, **P** = a
 mobile-app repo's change-review skill, **Q** = an RL-env repo's alignment-review
 skill, **G** = a security-firm repo, **Y** = a container-tooling repo); full
