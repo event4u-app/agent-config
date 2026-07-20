@@ -28,7 +28,7 @@ Do NOT use when:
   value — single file, one-liner fix
 * The user is still exploring — route to brainstorming / planning
   skills first
-* Budget is the constraint — each subagent call multiplies cost
+* Budget is the constraint — each subagent call multiplies cost; non-interactive bulk cohorts → batch/caching via the [`token-optimizer`](../token-optimizer/SKILL.md) index branch
 * The implementer and judge would be the same model on the same
   context — no added signal
 

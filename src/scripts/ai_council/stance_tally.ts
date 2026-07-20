@@ -59,6 +59,37 @@ export interface StanceTallyResult {
 const _STANCE_RE =
     /STANCE:\s*(.+?)\s*\|\s*CONFIDENCE:\s*(high|med(?:ium)?|low)\s*\|\s*DEALBREAKER:\s*(yes|no)/gi;
 
+
+/** Run the strict stance grammar; return the LAST match or null. */
+function _last_stance_match(text: string): RegExpExecArray | null {
+    _STANCE_RE.lastIndex = 0;
+    let last: RegExpExecArray | null = null;
+    let m: RegExpExecArray | null;
+    while ((m = _STANCE_RE.exec(text)) !== null) {
+        last = m;
+    }
+    return last;
+}
+
+/**
+ * Normalize the two cosmetic defect classes the lenient pass forgives, on
+ * lines that mention STANCE only: markdown emphasis characters and comma /
+ * semicolon field separators. Everything else is left byte-identical.
+ */
+export function _normalize_stance_cosmetics(text: string): string {
+    return text
+        .split('\n')
+        .map((line) => {
+            if (!/stance/i.test(line)) {
+                return line;
+            }
+            let out = line.replace(/[*_`]/g, '');
+            out = out.replace(/\s*[;,]\s*(?=(?:CONFIDENCE|DEALBREAKER)\b)/gi, ' | ');
+            return out;
+        })
+        .join('\n');
+}
+
 /**
  * Parse the member's stance line from their reply text. Returns the LAST stance
  * line if several appear (the final, most-authoritative one), or `null` when no
@@ -66,11 +97,17 @@ const _STANCE_RE =
  * infers a stance from the surrounding prose.
  */
 export function parse_stance_line(text: string): Omit<StanceLine, 'member'> | null {
-    _STANCE_RE.lastIndex = 0;
-    let last: RegExpExecArray | null = null;
-    let m: RegExpExecArray | null;
-    while ((m = _STANCE_RE.exec(text)) !== null) {
-        last = m;
+    let last = _last_stance_match(text);
+    if (last === null) {
+        // Lenient fallback (A3 repair-tightening): a stance whose only defect
+        // is cosmetic — markdown emphasis around the field names (`**STANCE:**`),
+        // or `,`/`;` used where the contract says `|` — is NOT "genuinely
+        // unparseable" and must not burn a repair call. Normalize those two
+        // defect classes on stance-bearing lines only, then re-run the SAME
+        // strict grammar. Anything the strict grammar still rejects (missing
+        // fields, invalid enum values, no STANCE line at all) stays a repair
+        // marker — leniency never invents a stance from prose.
+        last = _last_stance_match(_normalize_stance_cosmetics(text));
     }
     if (last === null) {
         return null;

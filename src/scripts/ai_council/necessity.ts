@@ -402,6 +402,17 @@ function _length_tier(text: string): LengthTier {
  * @param lens active lens; `debate` lens disables downgrade suggestions to
  *   keep dissent quality high.
  * @returns A {@link SizeFitVerdict}.
+ *
+ * SIZE DEFINITION (A3 precondition, verified 2026-07-20): "small" is measured
+ * in Unicode code points (`_pyLen`, Python-`len()` parity) against the
+ * character thresholds `_SHORT_PROMPT_MAX`/`_MEDIUM_PROMPT_MAX` (200/800) plus
+ * a complexity-trigger heuristic — NOT bytes and NOT tokens. A token-based
+ * classifier was considered and rejected: it would add a tokenizer dependency
+ * (or a paid pre-flight count_tokens call) on the sequential-dispatch path
+ * (orchestrator.ts § "Members are called sequentially"), where every
+ * per-member pre-flight adds wall-clock latency before the first real call.
+ * The chars/4 heuristic in `pricing.estimate_input_tokens` remains the shared
+ * token approximation where cost math needs one.
  */
 export function classify_size_fit(
     prompt: string,

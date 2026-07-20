@@ -437,6 +437,13 @@ export interface NecessityClassifierConfig {
 export interface ModelDowngradeConfig {
     readonly enabled: boolean;
     readonly auto_apply: boolean;
+    /**
+     * Per-run escape hatch (roadmap A3): member name → model id. A member
+     * listed here is pinned to that model for the run — the size classifier
+     * and the cache-coupling gate are both skipped for it. Set it in
+     * `.ai-council.yml` when a specific artefact needs a specific tier.
+     */
+    readonly model_tier_override: Readonly<Record<string, string>>;
 }
 
 /** Pre-flight cost-disclosure toggle (Phase 8). */
@@ -908,11 +915,27 @@ function _build_model_downgrade(d: Dict): ModelDowngradeConfig {
     if (!_isBool(enabled)) {
         throw new CouncilConfigError('`model_downgrade.enabled` must be a bool.');
     }
-    const auto_apply = _get(d, 'auto_apply', false);
+    // A3 (2026-07-20): auto_apply default flipped to TRUE — auto-downgrade is
+    // the default and `auto_apply: false` (or `enabled: false`) is the opt-out.
+    // The cache-coupling gate in council_cli._size_fit_gate keeps it honest.
+    const auto_apply = _get(d, 'auto_apply', true);
     if (!_isBool(auto_apply)) {
         throw new CouncilConfigError('`model_downgrade.auto_apply` must be a bool.');
     }
-    return { enabled: Boolean(enabled), auto_apply: Boolean(auto_apply) };
+    const override_raw = _get(d, 'model_tier_override', {});
+    if (!_isDict(override_raw)) {
+        throw new CouncilConfigError('`model_downgrade.model_tier_override` must be a mapping.');
+    }
+    const model_tier_override: Record<string, string> = {};
+    for (const [k, v] of Object.entries(override_raw as Dict)) {
+        if (!_isStr(v) || (v as string).length === 0) {
+            throw new CouncilConfigError(
+                `\`model_downgrade.model_tier_override.${k}\` must be a non-empty string model id.`,
+            );
+        }
+        model_tier_override[k] = v as string;
+    }
+    return { enabled: Boolean(enabled), auto_apply: Boolean(auto_apply), model_tier_override };
 }
 
 function _build_cost_disclosure(d: Dict, scope: string): CostDisclosureConfig {
@@ -1308,7 +1331,8 @@ function _build_lens_overrides(d: Dict): LensOverridesConfig {
                     `\`lenses.${lens_name}.model_downgrade.enabled\` must be a bool.`,
                 );
             }
-            const md_auto = _get(md_block, 'auto_apply', false);
+            // Lens overrides inherit the A3 auto-by-default posture.
+            const md_auto = _get(md_block, 'auto_apply', true);
             if (!_isBool(md_auto)) {
                 throw new CouncilConfigError(
                     `\`lenses.${lens_name}.model_downgrade.auto_apply\` must be a bool.`,
@@ -1317,6 +1341,7 @@ function _build_lens_overrides(d: Dict): LensOverridesConfig {
             md_overrides.set(lens_name, {
                 enabled: Boolean(md_enabled),
                 auto_apply: Boolean(md_auto),
+                model_tier_override: {},
             });
         }
         const cd_block = lens_cfg.cost_disclosure;

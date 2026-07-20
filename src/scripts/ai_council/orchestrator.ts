@@ -484,7 +484,10 @@ export function consult(
 
     const spent: Spent = { input: 0, output: 0, usd: 0.0 };
     let last_results: CouncilResponse[] = [];
-    let current_user_prompt = question.user_prompt;
+    // A3 read unlock: the stable prefix is ALWAYS the original user prompt;
+    // per-round critiques + the STANCE contract ride in a volatile suffix so
+    // cache-capable clients read the [system + artefact] prefix on round N+1.
+    let current_suffix = '';
 
     const stance_tally = opts.stance_tally ?? false;
     for (let round_idx = 0; round_idx < rounds; round_idx++) {
@@ -492,11 +495,11 @@ export function consult(
         // contract when the tally is enabled. Off (default) → the original
         // question object flows through untouched, byte-identical to today.
         const is_final = round_idx === rounds - 1;
-        const base_prompt = round_idx === 0 ? question.user_prompt : current_user_prompt;
-        const prompt_for_round =
+        const suffix_for_round =
             is_final && stance_tally
-                ? `${base_prompt}\n\n---\n\n${STANCE_LINE_CONTRACT}`
-                : base_prompt;
+                ? `${current_suffix}\n\n---\n\n${STANCE_LINE_CONTRACT}`
+                : current_suffix;
+        const prompt_for_round = `${question.user_prompt}${suffix_for_round}`;
         const round_question =
             round_idx === 0 && prompt_for_round === question.user_prompt
                 ? question
@@ -511,16 +514,15 @@ export function consult(
             project,
             original_ask,
             advisor_plans,
+            split: suffix_for_round
+                ? { stable: question.user_prompt, suffix: suffix_for_round }
+                : null,
         });
         if (on_round_complete !== null) {
             on_round_complete(round_idx, last_results);
         }
         if (round_idx + 1 < rounds) {
-            current_user_prompt = _augment_for_next_round(
-                question.user_prompt,
-                last_results,
-                round_idx + 2,
-            );
+            current_suffix = _critique_suffix(last_results, round_idx + 2);
         }
     }
 
@@ -579,6 +581,14 @@ interface RunRoundOptions {
     project: ProjectContext | null;
     original_ask: string;
     advisor_plans?: Map<string, AdvisorPlan> | null;
+    /**
+     * A3 cross-round read unlock: when set, members are called via
+     * `ask_split(system, stable, suffix)` so cache-capable clients keep the
+     * breakpoint on the byte-stable [system + artefact] prefix and the
+     * per-round critiques ride behind it. `question.user_prompt` stays the
+     * full concatenation (estimates + persistence unchanged).
+     */
+    split?: { stable: string; suffix: string } | null;
 }
 
 /** Run a single round; mutate `spent` with cumulative totals. */
@@ -626,11 +636,18 @@ function _run_round(
         if (!(_getattr(member, 'billable', true) as boolean)) {
             let response: CouncilResponse;
             try {
-                response = member.ask(
-                    _system_prompt_for_member(member),
-                    question.user_prompt,
-                    question.max_tokens,
-                );
+                response = opts.split
+                    ? member.ask_split(
+                          _system_prompt_for_member(member),
+                          opts.split.stable,
+                          opts.split.suffix,
+                          question.max_tokens,
+                      )
+                    : member.ask(
+                          _system_prompt_for_member(member),
+                          question.user_prompt,
+                          question.max_tokens,
+                      );
             } catch (exc) {
                 response = new CouncilResponse({
                     provider: member.name,
@@ -702,11 +719,18 @@ function _run_round(
         // ── actual call ──────────────────────────────────────────────
         let response: CouncilResponse;
         try {
-            response = member.ask(
-                _system_prompt_for_member(member),
-                question.user_prompt,
-                question.max_tokens,
-            );
+            response = opts.split
+                ? member.ask_split(
+                      _system_prompt_for_member(member),
+                      opts.split.stable,
+                      opts.split.suffix,
+                      question.max_tokens,
+                  )
+                : member.ask(
+                      _system_prompt_for_member(member),
+                      question.user_prompt,
+                      question.max_tokens,
+                  );
         } catch (exc) {
             response = new CouncilResponse({
                 provider: member.name,
@@ -797,6 +821,19 @@ function _augment_for_next_round(
     prior_responses: CouncilResponse[],
     next_round_number: number,
 ): string {
+    return `${original_prompt}${_critique_suffix(prior_responses, next_round_number)}`;
+}
+
+/**
+ * The volatile per-round block ONLY (A3 read unlock) — everything after the
+ * byte-stable original prompt. Empty string when no prior response survives.
+ * `_augment_for_next_round` = original + this; the rounds loop feeds this to
+ * `ask_split` so the cached [system + artefact] prefix stays byte-identical.
+ */
+function _critique_suffix(
+    prior_responses: CouncilResponse[],
+    next_round_number: number,
+): string {
     const blocks: string[] = [];
     let label_idx = 0;
     for (const r of prior_responses) {
@@ -808,11 +845,11 @@ function _augment_for_next_round(
         blocks.push(`### Reviewer ${label}\n\n${_pyStrip(r.text)}`);
     }
     if (blocks.length === 0) {
-        return original_prompt;
+        return '';
     }
     const prior_block = blocks.join('\n\n');
     return (
-        `${original_prompt}\n\n` +
+        `\n\n` +
         `---\n\n` +
         `## Prior round critiques (round ${next_round_number - 1})\n\n` +
         `You are now in round ${next_round_number}. Below are anonymised\n` +
@@ -911,6 +948,15 @@ function _augment_for_debate_round(
     // directive. Default `false` keeps the prompt byte-identical to today.
     anti_conformity = false,
 ): string {
+    return `${original_prompt}${_debate_suffix(prior_responses, next_round_number, anti_conformity)}`;
+}
+
+/** Debate twin of `_critique_suffix` — the volatile block only (A3). */
+function _debate_suffix(
+    prior_responses: CouncilResponse[],
+    next_round_number: number,
+    anti_conformity = false,
+): string {
     const blocks: string[] = [];
     let label_idx = 0;
     for (const r of prior_responses) {
@@ -922,12 +968,12 @@ function _augment_for_debate_round(
         blocks.push(`### Reviewer ${label}\n\n${_pyStrip(r.text)}`);
     }
     if (blocks.length === 0) {
-        return original_prompt;
+        return '';
     }
     const prior_block = blocks.join('\n\n');
     const anti_conformity_block = anti_conformity ? `${ANTI_CONFORMITY_DIRECTIVE}\n\n` : '';
     return (
-        `${original_prompt}\n\n` +
+        `\n\n` +
         `---\n\n` +
         `## Prior round positions (round ${next_round_number - 1})\n\n` +
         `You are now in round ${next_round_number} of a structured\n` +
@@ -1122,6 +1168,9 @@ export function run_debate(
 
     const spent: Spent = { input: 0, output: 0, usd: 0.0 };
     const all_rounds: CouncilResponse[][] = [];
+    // A3 read unlock (debate twin): stable prefix = the original prompt; the
+    // per-round positions block rides in a volatile suffix (see consult loop).
+    let current_suffix = '';
     let current_user_prompt = question.user_prompt;
 
     // Phase 3 restate: one pre-round-1 call per member. Runs BEFORE any debate
@@ -1167,6 +1216,9 @@ export function run_debate(
                 project,
                 original_ask,
                 advisor_plans,
+                split: current_suffix
+                    ? { stable: question.user_prompt, suffix: current_suffix }
+                    : null,
             });
         }
 
@@ -1195,12 +1247,12 @@ export function run_debate(
         // Prep the user-prompt for the next round so the cost estimate
         // below covers the augmented bytes.
         if (round_idx + 1 < max_rounds) {
-            current_user_prompt = _augment_for_debate_round(
-                question.user_prompt,
+            current_suffix = _debate_suffix(
                 results,
                 round_number + 1,
                 opts.debate_gates ?? false,
             );
+            current_user_prompt = `${question.user_prompt}${current_suffix}`;
             // Hard-cap + continue-prompt gating before kicking off N+1.
             let next_round_usd: number;
             if (table !== null) {

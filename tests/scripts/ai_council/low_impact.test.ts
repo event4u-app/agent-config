@@ -385,3 +385,47 @@ describe('low_impact — classify_impact_with_corpus_fuzzy', () => {
 
 // A no-op reference so `FastPathPlan` import is exercised by the type system.
 void FastPathPlan;
+
+describe('fast-path model downgrade (A3 — cheapest ladder rung, one-shot)', () => {
+    const RESOLVED = 'ANSWER: yes\nWHY: fine.';
+
+    const memWithLadder = (name: string): MemberConfig => ({
+        ...mem(name),
+        model: 'big-model',
+        model_ladder: ['small-model', 'mid-model', 'big-model'],
+    });
+
+    it('downgrades the client to the cheapest ladder rung when enabled', () => {
+        const plan = plan_fast_path({ anthropic: memWithLadder('anthropic') }, cfg(1));
+        const client = new Mock('anthropic', { model: 'big-model', text: RESOLVED });
+        resolve_low_impact('q?', plan, { anthropic: client }, null, CLOCK, { enabled: true });
+        expect(client.model).toBe('small-model');
+    });
+
+    it('model_tier_override pin wins over the ladder', () => {
+        const plan = plan_fast_path({ anthropic: memWithLadder('anthropic') }, cfg(1));
+        const client = new Mock('anthropic', { model: 'big-model', text: RESOLVED });
+        resolve_low_impact('q?', plan, { anthropic: client }, null, CLOCK, {
+            enabled: true,
+            model_tier_override: { anthropic: 'pinned-model' },
+        });
+        expect(client.model).toBe('pinned-model');
+    });
+
+    it('opt-out (enabled false / param absent) leaves the model untouched', () => {
+        const plan = plan_fast_path({ anthropic: memWithLadder('anthropic') }, cfg(1));
+        const a = new Mock('anthropic', { model: 'big-model', text: RESOLVED });
+        resolve_low_impact('q?', plan, { anthropic: a }, null, CLOCK, { enabled: false });
+        expect(a.model).toBe('big-model');
+        const b = new Mock('anthropic', { model: 'big-model', text: RESOLVED });
+        resolve_low_impact('q?', plan, { anthropic: b }, null, CLOCK);
+        expect(b.model).toBe('big-model');
+    });
+
+    it('empty ladder without a pin is a no-op even when enabled', () => {
+        const plan = plan_fast_path({ anthropic: mem('anthropic') }, cfg(1));
+        const client = new Mock('anthropic', { model: 'm', text: RESOLVED });
+        resolve_low_impact('q?', plan, { anthropic: client }, null, CLOCK, { enabled: true });
+        expect(client.model).toBe('m');
+    });
+});

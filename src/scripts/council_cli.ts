@@ -98,7 +98,9 @@ import {
 } from './ai_council/orchestrator.js';
 import {
     type PriceTable,
+    downgrade_coupling,
     estimate_cost,
+    estimate_input_tokens,
     load_prices,
     prices_file_for,
 } from './ai_council/pricing.js';
@@ -1605,7 +1607,8 @@ function _necessity_gate(opts: {
 function _resolve_model_downgrade(ai_cfg: Dict, lens: string): [boolean, boolean] {
     const md_block = (ai_cfg['model_downgrade'] as Dict) || {};
     let enabled = md_block['enabled'] === undefined ? true : Boolean(_pyBool(md_block['enabled']));
-    let auto_apply = md_block['auto_apply'] === undefined ? false : Boolean(_pyBool(md_block['auto_apply']));
+    // A3: auto-downgrade is the default; `auto_apply: false` is the opt-out.
+    let auto_apply = md_block['auto_apply'] === undefined ? true : Boolean(_pyBool(md_block['auto_apply']));
     const overrides = ((ai_cfg['lens_overrides'] as Dict) || {})['model_downgrade'] || {};
     const lens_override = _isDict(overrides) ? (overrides as Dict)[lens] : null;
     if (_isDict(lens_override)) {
@@ -1622,6 +1625,10 @@ function _size_fit_gate(opts: {
     members: ExternalAIClient[];
     ai_cfg: Dict;
     stdout?: ((s: string) => void) | null;
+    /** Planned rounds for the run; expected same-model cache reads = rounds − 1. */
+    rounds?: number;
+    /** Price table for the A1↔A3 cache-coupling gate; null → coupling skipped. */
+    price_table?: PriceTable | null;
 }): Array<[string, SizeFitVerdict, boolean]> {
     const out = opts.stdout ?? _stdout;
     const [enabled, auto_apply] = _resolve_model_downgrade(opts.ai_cfg, opts.lens);
@@ -1629,8 +1636,25 @@ function _size_fit_gate(opts: {
     if (!enabled) {
         return decisions;
     }
+    const md_block = (opts.ai_cfg['model_downgrade'] as Dict) || {};
+    const tier_override = (md_block['model_tier_override'] as Dict) || {};
+    const cache_enabled = opts.ai_cfg['prompt_cache'] !== false;
+    const expected_reads = Math.max(0, (opts.rounds ?? 1) - 1);
     const members_cfg = (opts.ai_cfg['members'] as Dict) || {};
     for (const member of opts.members) {
+        // Per-run escape hatch: a member pinned in model_tier_override gets
+        // exactly that model — classifier and coupling both skipped.
+        const pinned = tier_override[member.name];
+        if (typeof pinned === 'string' && pinned.length > 0) {
+            if (pinned !== member.model) {
+                out(
+                    `council:size-fit · ${member.name} · model_tier_override ` +
+                        `\`${member.model}\` → \`${pinned}\` (operator pin)\n`,
+                );
+                member.model = pinned;
+            }
+            continue;
+        }
         const member_cfg = (members_cfg[member.name] as Dict) || {};
         const ladder = (member_cfg['model_ladder'] as string[]) || [];
         if (ladder.length === 0) {
@@ -1639,6 +1663,35 @@ function _size_fit_gate(opts: {
         const verdict = classify_size_fit(opts.prompt, member.model, ladder, opts.lens);
         let applied = false;
         if (!verdict.fit && verdict.suggested_model) {
+            // A1↔A3 coupling: a downgraded member misses the model-scoped
+            // prompt cache — downgrade only when the model saving beats the
+            // forfeited cache reads. No price table → conservative skip is
+            // wrong for the cost goal, so coupling only gates when computable.
+            if (opts.price_table) {
+                const prefix_tokens = estimate_input_tokens(opts.prompt);
+                const coupling = downgrade_coupling(
+                    member.name,
+                    member.model,
+                    verdict.suggested_model,
+                    prefix_tokens,
+                    4096,
+                    {
+                        enabled: cache_enabled,
+                        cacheable_prefix_tokens: prefix_tokens,
+                        expected_reads,
+                    },
+                    opts.price_table,
+                );
+                if (!coupling.net_positive) {
+                    out(
+                        `council:size-fit · ${member.name} · downgrade skipped — ` +
+                            `lost cache savings $${coupling.lost_cache_savings_usd.toFixed(4)} ` +
+                            `≥ model savings $${coupling.downgrade_savings_usd.toFixed(4)}\n`,
+                    );
+                    decisions.push([member.name, verdict, false]);
+                    continue;
+                }
+            }
             if (auto_apply) {
                 out(
                     `council:size-fit · ${member.name} · auto-downgrade ` +
@@ -1845,6 +1898,8 @@ function cmd_run(
         lens: question.mode,
         members,
         ai_cfg,
+        rounds: _getattr(args, 'rounds', 1) as number,
+        price_table: table,
     });
     const project = detect_project_context(REPO_ROOT);
     const billable = members.filter((m) => _getattr(m, 'billable', true));

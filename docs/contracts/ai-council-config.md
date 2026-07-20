@@ -679,6 +679,31 @@ regression breaks `task consistency`, never the live council.
 `parse_corpus_strict` (Markdown). It runs **before** `task sync`
 rebuilds the lockfile, so it must read whatever the user just edited.
 
+## `model_downgrade` — auto-tiering + the A1↔A3 cache coupling
+
+Since the A3 slice of `road-to-api-cost-optimization` (2026-07-20):
+
+```yaml
+model_downgrade:
+  enabled: true        # default; false disables the size-fit gate entirely
+  auto_apply: true     # DEFAULT since A3 — auto-downgrade is opt-OUT
+  model_tier_override: # per-run escape hatch: member -> pinned model id
+    anthropic: claude-sonnet-4-5
+```
+
+- Small / low-complexity artefacts (per `necessity.classify_size_fit`,
+  character-based) auto-downgrade one ladder rung; the `debate` lens never
+  downgrades.
+- **Cache coupling:** a downgrade is applied only when the model saving beats
+  the forfeited model-scoped prompt-cache reads
+  (`pricing.downgrade_coupling`: `downgrade_savings > lost_cache_savings`,
+  expected reads = rounds − 1). One-shot paths (the low-impact fast-path)
+  have no reads to lose and downgrade to the CHEAPEST ladder rung outright.
+- `model_tier_override` pins a member to a model for the run — classifier and
+  coupling both skipped. Set it per artefact when a specific tier is needed.
+- Requires `model_ladder` on the member (smallest → largest, must include the
+  active `model`).
+
 ## `api_key_ref` forms
 
 Exactly two forms. Raw keys in the yml are a hard validation error.

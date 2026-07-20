@@ -134,3 +134,38 @@ describe('render_vote_tally', () => {
         expect(out).toContain('Cleared: Adopt');
     });
 });
+
+describe('parse_stance_line — lenient fallback (A3 repair-tightening)', () => {
+    it('forgives markdown emphasis around the stance line', () => {
+        const r = parse_stance_line('**STANCE: Adopt | CONFIDENCE: high | DEALBREAKER: no**');
+        expect(r).not.toBeNull();
+        expect(r?.label).toBe('adopt');
+        expect(r?.confidence).toBe('high');
+    });
+
+    it('forgives comma/semicolon field separators', () => {
+        const r = parse_stance_line('STANCE: Reject, CONFIDENCE: med; DEALBREAKER: yes');
+        expect(r).not.toBeNull();
+        expect(r?.label).toBe('reject');
+        expect(r?.dealbreaker).toBe(true);
+    });
+
+    it('still rejects genuinely unparseable stances (missing field)', () => {
+        expect(parse_stance_line('STANCE: Adopt | CONFIDENCE: high')).toBeNull();
+    });
+
+    it('still rejects invalid enum values', () => {
+        expect(
+            parse_stance_line('STANCE: Adopt | CONFIDENCE: absolutely | DEALBREAKER: no'),
+        ).toBeNull();
+    });
+
+    it('never invents a stance from prose without a STANCE line', () => {
+        expect(parse_stance_line('I strongly favor adopting option A.')).toBeNull();
+    });
+
+    it('leniency does not alter strict-parse results', () => {
+        const r = parse_stance_line('STANCE: Keep | CONFIDENCE: medium | DEALBREAKER: no');
+        expect(r?.confidence).toBe('med');
+    });
+});
