@@ -10,7 +10,7 @@ skills: [post-as]
 description: Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author.
 argument-hint: "[topic] [--tone] [--length] [--channel] [--audience]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "write as me, draft in my own voice, post as myself, draft from .agent-user.md"
   trigger_context: "user wants a copyable draft in their own captured voice from .agent-user.md; no third-party voice, no disclosure footer"
 workspaces:

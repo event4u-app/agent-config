@@ -10,7 +10,7 @@ skills: [ghostwriter]
 description: Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only.
 argument-hint: "[slug | index]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "show ghostwriter profile, inspect public-figure voice, view ghostwriter details, what does this profile contain"
   trigger_context: "user wants to inspect a single captured ghostwriter profile before writing with it or deciding to refresh / delete it"
 workspaces:

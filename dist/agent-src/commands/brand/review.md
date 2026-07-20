@@ -10,7 +10,7 @@ skills: [brand-audit]
 description: Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule.
 argument-hint: "<artifact-path | description>"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "audit our brand consistency, is this on-brand, check this UI/copy against the brand, brand review"
   trigger_context: "user has emitted UI/copy/assets and wants an on-brand consistency check against tokens + voice"
 workspaces:

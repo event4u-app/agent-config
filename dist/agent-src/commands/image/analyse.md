@@ -11,7 +11,7 @@ argument-hint: "<path-or-url> [character-id]"
 personas: [hollywood-director]
 skills: [image-analyser]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "analyse a character image, check character accuracy, does this render match the canon, find what drifted"
   trigger_context: "user supplies an image path/URL (and optionally a character id) and wants a detailed feature extraction or canon diff"
 workspaces:

@@ -10,7 +10,7 @@ description: Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, 
 argument-hint: "[path-to-AGENTS.md]"
 skills: [agents-md-thin-root, copilot-agents-optimization, copilot-config, agent-docs-writing]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "refactor AGENTS.md, shrink AGENTS.md, capability bullets, thin-root, optimize agent layer"
   trigger_context: "maintainer working on AGENTS.md (root or consumer template) or its tool stubs"
 workspaces:

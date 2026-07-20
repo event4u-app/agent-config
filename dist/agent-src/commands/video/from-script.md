@@ -11,7 +11,7 @@ argument-hint: "<path-to-script.md> [--mode preview|commit] [--max-spend-usd <us
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, pixar-storyteller, character-consistency, motion-choreographer]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "render a video from a script, full AI video pipeline, multi-scene generation"
   trigger_context: "user supplies a Markdown script with `## Scene N` headings and wants a final MP4"
 workspaces:

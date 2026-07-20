@@ -9,7 +9,7 @@ sub: add
 description: Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns)
 skills: [file-editor]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "remember this for later, add this to engineering memory, capture this learning"
   trigger_context: "post-incident or post-decision conversation"
 workspaces:

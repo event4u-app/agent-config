@@ -10,7 +10,7 @@ description: List existing knowledge ingests in `agents/memory/knowledge/` (tabl
 argument-hint: "[--format=table|json] [--pin <id-prefix>] [--unpin <id-prefix>]"
 skills: [file-editor]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "what knowledge has the agent ingested, list ingested folders, show knowledge memory, pin this ingest"
   trigger_context: "user wants to inspect or curate the local knowledge namespace"
 workspaces:

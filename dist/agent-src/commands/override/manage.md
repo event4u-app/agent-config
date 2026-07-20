@@ -9,7 +9,7 @@ sub: manage
 description: Reviews, updates, and refactors existing project-level overrides.
 skills: [override-management, agent-docs-writing]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "review my overrides, update the project overrides"
   trigger_context: "existing entries under agents/overrides/"
 workspaces:

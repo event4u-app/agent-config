@@ -9,7 +9,7 @@ sub: status
 skills: [worktree-lifecycle, git-workflow]
 description: List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "which worktrees are active, is this worktree merge-ready, worktree overview"
   trigger_context: "git worktree list shows more than the main working tree"
 workspaces:

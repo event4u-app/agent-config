@@ -10,7 +10,7 @@ description: Manage the agents/ directory — scaffold, folder-audit, fix. Singl
 argument-hint: "[--scaffold|--audit|--fix]"
 skills: [agents-audit, agent-docs-writing, override-management, module-management]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "scaffold agents folder, audit agents directory, fix agents docs, clean up overrides, prepare module agents"
   trigger_context: "user wants to inspect, scaffold, or curate the agents/ tree (NOT AGENTS.md — that's /agents)"
 workspaces:

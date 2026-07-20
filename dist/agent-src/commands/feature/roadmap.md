@@ -10,7 +10,7 @@ skills: [agent-docs-writing]
 description: Generate implementation roadmap(s) from a feature plan and link them
 argument-hint: "[feature-name]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "turn this feature into a roadmap, generate the implementation roadmap"
   trigger_context: "existing feature plan without linked roadmap"
 workspaces:

@@ -9,7 +9,7 @@ sub: fetch
 description: Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch/web-search to host.
 argument-hint: "<url | name> [--force-refresh]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "fetch public figure writing voice, capture LinkedIn / blog / Substack style, build ghostwriter profile from name, refresh stale profile"
   trigger_context: "user wants to capture a documented public figure's writing voice from a URL or by name into agents/reference/ghostwriter/<slug>.md"
 workspaces:

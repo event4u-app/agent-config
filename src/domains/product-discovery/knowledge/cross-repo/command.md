@@ -10,7 +10,7 @@ description: Targeted, read-only retrieval over opted-in linked-project siblings
 argument-hint: "<query> [--path-scope <glob>]"
 skills: [file-editor]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "what does the frontend expect, find the shared type in the other repo, check the sibling repo's API contract, /knowledge:cross-repo <query>"
   trigger_context: "user needs context that lives in an attached sibling repo without copying its files in"
 workspaces:

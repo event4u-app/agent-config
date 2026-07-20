@@ -10,7 +10,7 @@ description: Recommend skills for a role — ranked by four explained classes (m
 argument-hint: "[role]"
 skills: [file-editor]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "which skills should I use, recommend skills for my role, what fits this work, help me find a skill, /skills:discover sales"
   trigger_context: "user wants a short, explained skill shortlist instead of scanning the 220-skill catalog"
 workspaces:

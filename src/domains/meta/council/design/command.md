@@ -10,7 +10,7 @@ skills: [ai-council]
 description: Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment.
 argument-hint: "[path]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "council on this design, second opinion on the ADR, external review of architecture proposal"
   trigger_context: "user has a design doc / ADR / architecture proposal and wants an external review before commitment"
 workspaces:

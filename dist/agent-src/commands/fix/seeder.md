@@ -9,7 +9,7 @@ sub: seeder
 skills: [eloquent]
 description: Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "the seeder is broken, foreign key errors in seeders"
   trigger_context: "seeder error output or recent edits in database/seeders/"
 framework: laravel

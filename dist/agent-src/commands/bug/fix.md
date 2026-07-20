@@ -11,7 +11,7 @@ description: Plan and implement a bug fix — based on investigation, with quali
 argument-hint: "[bug-description]"
 council_depth: deep
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "fix this bug, patch the issue, resolve this error"
   trigger_context: "branch name matches fix/* or bug/*"
 framework: laravel

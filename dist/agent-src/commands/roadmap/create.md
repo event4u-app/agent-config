@@ -9,7 +9,7 @@ sub: create
 skills: [agent-docs-writing]
 description: Interactively create a new roadmap file in agents/roadmaps/
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "create a roadmap for X, plan this work as a roadmap"
   trigger_context: "multi-phase work without an existing agents/roadmaps/*.md"
 workspaces:

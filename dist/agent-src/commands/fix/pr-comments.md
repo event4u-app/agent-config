@@ -10,7 +10,7 @@ skills: [php-coder, quality-tools]
 description: Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
 argument-hint: "[pr-url]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "fix all PR review comments, resolve the review feedback"
   trigger_context: "open PR with unresolved comments (bot + human)"
 workspaces:

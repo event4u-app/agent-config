@@ -10,7 +10,7 @@ description: Render top prompts, launcher → completion rate per role, average 
 argument-hint: "[--window 24h|7d|30d] [--event <name>] [--role <slug>] [--format markdown|csv|json]"
 skills: [file-editor]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "show analytics, top prompts last 30 days, which role launched what, completion rate per role"
   trigger_context: "user wants a human-readable report from the local workspace event log"
 workspaces:

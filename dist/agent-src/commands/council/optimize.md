@@ -10,7 +10,7 @@ skills: [ai-council]
 description: Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice.
 argument-hint: "[target]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "council on this perf hot path, second opinion on this optimization, external review of /optimize output"
   trigger_context: "user has an optimization target (code path, query, profile result, /optimize-* output) and wants a ranked external opinion"
 workspaces:

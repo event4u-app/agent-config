@@ -9,7 +9,7 @@ sub: user
 skills: [agents]
 description: Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "show user persona, render .agent-user.md, print who the user is"
   trigger_context: "user wants to see what's currently in .agent-user.md without editing"
 workspaces:

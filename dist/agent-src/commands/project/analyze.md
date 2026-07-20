@@ -9,7 +9,7 @@ cluster: project
 skills: [project-analyzer]
 description: Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "analyze the project structure, do a full project audit"
   trigger_context: "new project or after a major refactor"
 workspaces:

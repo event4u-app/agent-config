@@ -11,7 +11,7 @@ description: Investigate a bug — auto-detect ticket from branch, gather Jira/S
 argument-hint: "[ticket-key | sentry-url | error-message | description]"
 council_depth: deep
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "why is this broken, investigate this error, trace the root cause"
   trigger_context: "Sentry URL, Jira bug ticket key, or stack trace pasted in the prompt"
 workspaces:

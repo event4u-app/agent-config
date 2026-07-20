@@ -9,7 +9,7 @@ sub: audit
 description: Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply.
 skills: [copilot-agents-optimization, agents-audit, agent-docs-writing, agents-md-thin-root, quality-tools]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "audit agent infrastructure, check rule triggers, verify AGENTS.md health, agent-layer health-check"
   trigger_context: "maintainer working on .augment/ files, AGENTS.md, or planning a refactor"
 workspaces:

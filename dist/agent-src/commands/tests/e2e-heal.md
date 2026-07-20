@@ -11,7 +11,7 @@ skills: [playwright-testing]
 description: Find, debug, and fix failing Playwright E2E tests
 argument-hint: "[test-file | ci-run-url]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "fix the failing E2E tests, playwright tests are red"
   trigger_context: "failing test output from tests/e2e/"
 workspaces:

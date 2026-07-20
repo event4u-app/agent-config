@@ -10,7 +10,7 @@ sub: in-chunks
 skills: [git-workflow]
 description: Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "commit everything autonomously, split and commit without confirmation"
   trigger_context: "autonomous mode active and uncommitted changes present"
 workspaces:

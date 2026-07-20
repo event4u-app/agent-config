@@ -10,7 +10,7 @@ skills: [test-driven-development]
 description: TDD green phase — write the minimum production code to make the failing test pass; no test edits
 argument-hint: "[failing test | context]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "make the failing test pass"
   trigger_context: "a failing test exists, ready to implement"
 workspaces:

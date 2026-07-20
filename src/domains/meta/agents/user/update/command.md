@@ -9,7 +9,7 @@ sub: user
 description: Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
 argument-hint: "[--validate]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "edit user persona, update .agent-user.md, change nickname, change language, refresh voice sample"
   trigger_context: "user wants to manually edit the persona file rather than answer interview questions"
 workspaces:

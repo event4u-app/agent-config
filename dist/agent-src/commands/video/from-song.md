@@ -11,7 +11,7 @@ argument-hint: "<images-dir> <song-file> [--mode preview|commit] [--brief <text>
 personas: [hollywood-director, ai-video-technical-director]
 skills: [song-to-script, scene-expander, video-director, character-consistency, motion-choreographer, prompt-validator]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "make a music video from a song, turn a track into a video, lip-sync clip from images and audio, AI music video"
   trigger_context: "user supplies an audio file plus reference images and wants a final MP4 cut to the song"
 workspaces:

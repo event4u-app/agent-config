@@ -9,7 +9,7 @@ sub: bootstrap
 description: One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit.
 skills: []
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "bootstrap the knowledge base, seed project knowledge, initialize agents/knowledge, onboard this project's knowledge layer"
   trigger_context: "a project has no agents/knowledge/ typed pages yet and the user wants a starting baseline"
 workspaces:

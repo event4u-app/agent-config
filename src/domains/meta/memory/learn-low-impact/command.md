@@ -10,7 +10,7 @@ skills: [ai-council, upstream-contribute]
 description: Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
 argument-hint: "[--preview|--apply]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "upstream low-impact decisions, share validated council questions, contribute the learning corpus"
   trigger_context: "user has accumulated validated entries in agents/decisions/low-impact-decisions.md and wants to share with the package"
 workspaces:

@@ -10,7 +10,7 @@ skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 argument-hint: "<repo-url | owner/repo | archive-url> [--focus=<area>] [--no-roadmap]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "look at how X does this, compare with that other repo, study this competitor's approach"
   trigger_context: "external repo URL or path mentioned in the prompt"
 workspaces:

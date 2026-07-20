@@ -10,7 +10,7 @@ skills: [worktree-lifecycle, git-workflow]
 description: Safe worktree removal gate — refuses while the branch holds commits on no other ref; never force-deletes
 argument-hint: "[worktree-path]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "clean up the worktrees, remove the finished worktree"
   trigger_context: "git worktree list shows worktrees whose branches are merged"
 workspaces:

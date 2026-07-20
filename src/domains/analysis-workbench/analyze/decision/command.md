@@ -10,7 +10,7 @@ skills: [decision-review]
 description: Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded).
 argument-hint: "[adr-id | path | decision-name]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "decision review, ADR review, did this hold up, rückblick Architektur, past decision"
   trigger_context: "user wants to audit a past architectural decision or ADR for continued validity"
 workspaces:

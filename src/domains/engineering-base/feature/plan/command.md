@@ -10,7 +10,7 @@ skills: [feature-planning]
 description: Interactively plan a feature — research, discuss, and create a structured feature document
 argument-hint: "[description]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "plan this feature, create a feature spec for X"
   trigger_context: "feature idea referenced and no plan doc exists"
 workspaces:

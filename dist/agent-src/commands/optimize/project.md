@@ -10,7 +10,7 @@ skills: [project-analyzer, decision-review, roadmap-writing]
 description: "Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'."
 argument-hint: "[--max-questions=N]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "optimize this project, optimize the project, what should we improve based on current state, challenge our old decisions, are our roadmaps and ADRs still right, optimiere das Projekt, hinterfrag unsere alten Entscheidungen"
   trigger_context: "user wants a project-wide review that questions existing state (roadmaps, ADRs, decisions, structures) and ends in new roadmap(s) — NOT a bug fix, NOT a single-decision audit (/analyze:decision), NOT agent-layer tooling (/optimize)"
 workspaces:

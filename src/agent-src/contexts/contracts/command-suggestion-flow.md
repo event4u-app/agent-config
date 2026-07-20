@@ -91,6 +91,19 @@ suggestion:
   cooldown: 30m            # longer than global default
 ```
 
+## Eligibility invariant — cluster sub-commands route via their head
+
+A `/cluster:sub` command (frontmatter `sub:` set) is **not** independently
+suggestion-eligible: `suggestion.eligible: false`. The cluster HEAD is the
+journey that self-suggests; the sub-command is reached by routing from the head
+(the `/fix:route` template) or by its explicit `/cluster:sub` name — which
+always works. This keeps the proactive surface to a few journeys, not one
+entry point per mode (9.4.0 review; `road-to-surface-consolidation`, council
+2026-07-20). Standalone commands (no `sub:`) and cluster heads may be eligible.
+Rationale: 160 eligible commands all competing to self-suggest IS the "190
+gleichwertig sichtbare Einstiegspunkte" the review flags; the sub-command flip
+collapses it without removing any command.
+
 ## Subordination — when to stay silent
 
 The rule lists four senior gates that outrank suggestion. The agent

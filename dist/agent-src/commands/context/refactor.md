@@ -9,7 +9,7 @@ sub: refactor
 skills: [agent-docs-writing]
 description: Analyze, update, and extend an existing context document
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "update the context doc, refresh this context document"
   trigger_context: "existing agents/settings/contexts/*.md referenced in the prompt"
 workspaces:

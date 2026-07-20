@@ -9,7 +9,7 @@ sub: ci
 skills: [github-ci, quality-tools]
 description: Fetch CI errors from GitHub Actions and fix them
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "CI is failing, fix the GitHub Actions errors, the pipeline is red"
   trigger_context: "open PR with failing checks"
 workspaces:

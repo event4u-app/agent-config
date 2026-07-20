@@ -9,7 +9,7 @@ sub: vision
 description: "Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff."
 argument-hint: "[--until=N] [--keep-going] [seed]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "challenge me on this plan, grill me, grill me on this, grill me on the vision, grill me on the idea, grill me until it's clear, grill me hard, frag mich durch, dreh mich durch die Mangel"
   trigger_context: "user has a fuzzy plan/idea/feature draft and wants it sharpened interactively rather than reconstructed in one shot"
 workspaces:

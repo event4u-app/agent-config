@@ -10,7 +10,7 @@ skills: [laravel]
 description: Create a new module from .module-template with interactive setup
 argument-hint: "[module-name]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "create a new module, scaffold a module for X"
   trigger_context: "prompt mentions a new domain area without an existing module"
 framework: laravel

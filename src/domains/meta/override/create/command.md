@@ -9,7 +9,7 @@ sub: create
 description: Creates a project-level override for a shared skill, rule, or command.
 skills: [override-management, agent-docs-writing]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "override this skill for the project, customize this rule locally"
   trigger_context: "prompt names a shared skill/rule needing project-specific behavior"
 workspaces:

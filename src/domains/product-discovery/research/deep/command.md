@@ -10,7 +10,7 @@ description: "Read `outline.yaml`, research each item in batches, write per-item
 argument-hint: "[--batch-confirm=each|once|auto]"
 skills: [deep-reading-analyst]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "deep research, populate the research scaffold, fill outline.yaml items"
   trigger_context: "user has run `/research <topic>` and now wants per-item depth"
 workspaces:

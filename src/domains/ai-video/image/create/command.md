@@ -11,7 +11,7 @@ argument-hint: "<character-id> <scene> [analyse-diff]"
 personas: [hollywood-director]
 skills: [image-creator, character-consistency]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "generate this character, render to spec, create the image, make every feature match the canon"
   trigger_context: "user supplies a character id (and a scene brief) and wants a maximally-accurate generation prompt or render"
 workspaces:

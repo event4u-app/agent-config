@@ -9,7 +9,7 @@ sub: list
 skills: [ghostwriter]
 description: List captured ghostwriter profiles under agents/reference/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only.
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "list ghostwriter profiles, show available public-figure voices, which ghostwriters do I have, ghostwriter inventory"
   trigger_context: "user wants to see which ghostwriter profiles exist locally and which are stale"
 workspaces:

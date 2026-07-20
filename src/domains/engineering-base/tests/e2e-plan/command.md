@@ -11,7 +11,7 @@ skills: [playwright-testing]
 description: Explore the application and create a structured E2E test plan in Markdown
 argument-hint: "[url | feature-area]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "plan E2E tests for this feature, what should we cover in playwright"
   trigger_context: "new feature or page added without tests/e2e/ coverage"
 workspaces:

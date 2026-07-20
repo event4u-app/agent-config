@@ -10,7 +10,7 @@ description: Non-destructive preview of a skill — its declared steps, executio
 argument-hint: "<skill-name> [--technical]"
 skills: [file-editor]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "what does this skill do, preview <skill> before running, what will it change, is it safe, /skill:preview competitive-positioning"
   trigger_context: "user wants to inspect a skill's declared intent before committing to run it"
 workspaces:

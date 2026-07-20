@@ -10,7 +10,7 @@ skills: [pest-testing, quality-tools]
 description: Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 argument-hint: "[file | filter] [--include-e2e] [--include-slow] [--php]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "run the tests, execute the test suite"
   trigger_context: "code changes pending verification"
 workspaces:

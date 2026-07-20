@@ -10,7 +10,7 @@ description: User-persona file (.agent-user.md) — interview, render, and maint
 argument-hint: "[init|show|review|accept|update] [args]"
 type: orchestrator
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "create user persona, render .agent-user.md, review observations, accept observations, edit user file"
   trigger_context: "user wants to bootstrap or maintain the .agent-user.md persona file (name, language, role, style, voice sample)"
 workspaces:

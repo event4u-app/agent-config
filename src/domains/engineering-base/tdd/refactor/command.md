@@ -10,7 +10,7 @@ skills: [test-driven-development]
 description: TDD refactor phase — clean up (rename, deduplicate) while keeping the test green
 argument-hint: "[target | context]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "refactor while the test stays green"
   trigger_context: "test is green, ready to clean up"
 workspaces:

@@ -9,7 +9,7 @@ sub: report
 description: "Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime."
 skills: [deep-reading-analyst]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "summarise research results, build research report, render outline.yaml results"
   trigger_context: "user has finished `/research:deep` and wants a single markdown summary"
 workspaces:

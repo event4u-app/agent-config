@@ -9,7 +9,7 @@ sub: create
 skills: [test-case-discovery, pest-testing, quality-tools]
 description: Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "write tests for these changes, add tests for this branch"
   trigger_context: "code changes on the branch without matching test changes"
 workspaces:

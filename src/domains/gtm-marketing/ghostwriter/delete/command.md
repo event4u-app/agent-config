@@ -10,7 +10,7 @@ skills: [ghostwriter]
 description: Hard-delete a ghostwriter profile at agents/reference/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance.
 argument-hint: "[slug]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "delete ghostwriter profile, remove public-figure voice, drop ghostwriter, retire captured profile"
   trigger_context: "user wants to permanently remove a captured ghostwriter profile from agents/reference/ghostwriter/"
 workspaces:

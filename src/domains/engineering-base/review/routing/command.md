@@ -10,7 +10,7 @@ skills: [review-routing, reviewer-awareness]
 description: Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
 argument-hint: "[base-ref head-ref]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "who should review this, suggest reviewers for this PR"
   trigger_context: "PR open without assigned reviewers"
 workspaces:

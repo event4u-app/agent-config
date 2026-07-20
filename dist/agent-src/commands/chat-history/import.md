@@ -8,7 +8,7 @@ cluster: chat-history
 sub: import
 description: Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "import a past session into the current chat, pull a prior session into context, pick a session to read"
   trigger_context: "user wants to selectively pull a prior session's context into the current one as a short summary"
 workspaces:

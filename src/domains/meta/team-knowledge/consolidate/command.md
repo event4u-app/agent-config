@@ -9,7 +9,7 @@ sub: consolidate
 description: Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval.
 skills: [file-editor]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "consolidate knowledge events, review pending observations, file captured knowledge, promote knowledge candidates"
   trigger_context: "pending events have accumulated in agents/knowledge/intake/ and are ready for review"
 workspaces:

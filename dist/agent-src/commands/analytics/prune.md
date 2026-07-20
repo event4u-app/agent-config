@@ -9,7 +9,7 @@ sub: prune
 description: Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent.
 skills: [file-editor]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "prune the analytics log, drop old events, clean up events.jsonl"
   trigger_context: "user wants to manually advance the rolling retention window"
 workspaces:

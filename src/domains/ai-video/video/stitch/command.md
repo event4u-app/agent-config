@@ -11,7 +11,7 @@ argument-hint: "<project-slug> [--skip-scene <id>] [--continue]"
 personas: [ai-video-technical-director]
 skills: []
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "re-stitch existing video clips, rebuild final MP4 after edits, ffmpeg concat existing scenes"
   trigger_context: "user has edited clips in `<project>/scenes/*/` and wants the final.mp4 rebuilt without paying for re-renders"
 workspaces:

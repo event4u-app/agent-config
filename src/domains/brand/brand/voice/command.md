@@ -10,7 +10,7 @@ skills: [voice-and-tone-design]
 description: Define the brand voice-and-tone profile — register, do/don't lexicon, and tone shifts by context — the profile the brand-consistency gate checks copy against.
 argument-hint: "<brand-ref | strategy-ref>"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "define our brand voice, voice and tone guide, how should our copy sound, tone of voice profile"
   trigger_context: "user wants a documented voice-and-tone profile for the brand to govern copy"
 workspaces:

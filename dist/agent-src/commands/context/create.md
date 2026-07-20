@@ -10,7 +10,7 @@ skills: [agent-docs-writing]
 description: Analyze a codebase area and create a structured context document
 argument-hint: "[topic]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "document this part of the codebase, create a context doc for X"
   trigger_context: "working in a module without an agents/settings/contexts/ doc"
 workspaces:

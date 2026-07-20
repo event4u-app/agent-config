@@ -10,7 +10,7 @@ description: Drop a knowledge ingest from `agents/memory/knowledge/` by id prefi
 argument-hint: "<ingest-id-prefix>"
 skills: [file-editor]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "forget this ingest, drop the acme knowledge, remove the customer folder from agent memory"
   trigger_context: "user wants to purge a specific knowledge ingest"
 workspaces:

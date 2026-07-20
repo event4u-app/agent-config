@@ -11,7 +11,7 @@ description: Challenge a roadmap with the AI council (deep tier) and refactor fr
 argument-hint: "[roadmap-name | path]"
 council_depth: deep
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "council on roadmap, challenge this roadmap, stress-test the plan, refactor roadmap from council findings"
   trigger_context: "existing agents/roadmaps/*.md the user wants reviewed before execution"
 workspaces:

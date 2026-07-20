@@ -10,7 +10,7 @@ description: Full 7-phase feature development workflow for complex features.
 argument-hint: "[description]"
 skills: [laravel, php-coder]
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "build this feature end-to-end, run the full feature workflow"
   trigger_context: "long-form feature description spanning multiple components"
 workspaces:

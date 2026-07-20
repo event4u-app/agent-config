@@ -9,7 +9,7 @@ sub: deactivate
 description: Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns
 argument-hint: "[names...]"
 suggestion:
-  eligible: true
+  eligible: false
   trigger_description: "deactivate the profile, clear my session profile, show everything again, reset the surface"
   trigger_context: "user wants the full command/skill surface back after a profile was active"
 workspaces:
