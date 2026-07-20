@@ -166,6 +166,29 @@ gated on the telemetry from 6.0.0-C. Deferred to 6.0.0-C: a
 `skills_discoverable` field, reactive just-in-time pack activation, and the
 per-pack budget lint.
 
+### Added — team mode: governed cross-model review (default-off, `road-to-team-mode`)
+
+A new default-off `/team` command family (`review`, `adversarial`, `delegate`,
+`status`) that governs the official `openai/codex-plugin-cc` as the Claude-Code
+transport — a second strong model reviewing the real working-tree diff (depth),
+the complement to the council's neutral-artefact breadth.
+
+- **Default-off + fail-closed.** With `ai_team.enabled: false` (default) no
+  command is suggested and invocation prints an enable pointer — byte-identical
+  to pre-roadmap behaviour. On Claude-Code hosts the wrappers are thin
+  delegations to `/codex:*`; absent the plugin they fail closed with the
+  `agent-config doctor --check team` remediation, never a silent no-op.
+- **Multi-host fallback (review lens only).** On non-Claude-Code hosts
+  `/team:review` sends a size-capped repo-diff bundle through the existing
+  subscription `OpenAICliClient`, with an honest capability-delta header.
+- **Governed, not rebuilt.** Nothing upstream-maintained is reimplemented; the
+  Review-Gate stays upstream's (we add an opt-in loop-bound + ledger line), and
+  `/team:delegate` (write access) sits behind a second opt-in
+  `ai_team.allow_delegate: false`. Config: `docs/contracts/ai-team-config.md`.
+- **No quality claim yet.** Cross-model defect-finding lift is unproven until
+  the Phase 5 benchmark runs (spend-gated); the docs describe workflow value
+  only, never a lift claim.
+
 ### Breaking — v4.0.0 unified setup (`road-to-unified-setup`)
 
 `v4.0.0` is a **hard-cut** release. The legacy Python installer at

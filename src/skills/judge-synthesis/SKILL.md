@@ -171,6 +171,9 @@ Required fields (ordered):
 - Dispatchers that feed this: [`/review-changes`](../../commands/review/changes.md)
   (5 code judges), [`subagent-orchestration`](../subagent-orchestration/SKILL.md)
   (parallel judge fan-out).
+- Cross-model review families (disambiguation): [`ai-council`](../ai-council/SKILL.md)
+  (independent breadth), [`/team`](../../commands/team.md) (collaborative repo-access
+  depth) — this skill consolidates in-session same-weights judges.
 - **LLM-as-a-Judge** — Zheng et al. (2023), [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685);
   this skill is the consolidation layer over the specialized-judge pattern, with
   consensus/conflict surfacing instead of a single aggregate score.

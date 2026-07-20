@@ -395,5 +395,6 @@ Skip emit when `subagents.enabled: false` or `spawn_count == 0` (in-session run)
 | Stepwise plan with judge gates       | Inline — see [`prompts/do-in-steps.md`](prompts/do-in-steps.md) |
 | Standalone judge on an existing diff | Inline — see judge prompt in [`prompts/do-and-judge.md`](prompts/do-and-judge.md) |
 | External / networked second opinion  | [`ai-council`](../ai-council/SKILL.md) |
+| Cross-model review WITH repo access   | [`/team`](../../domains/meta/team/command.md) (collaborative; subagents are in-session same-weights) |
 | Verifying completeness               | [`verify-before-complete`](../verify-before-complete/SKILL.md) |
 | What a subagent owns vs never owns   | [`subagent-boundary`](../../../docs/contracts/subagent-boundary.md) |
