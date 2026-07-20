@@ -23,7 +23,7 @@ the CI enforcement path (`originality-gate` + skill-lint jobs in
 failure from remote CI first.
 
 Requires only Node + installed `node_modules` (the `./scripts-run` shim invokes
-`tsx` directly — no task runner, no full `task ci` toolchain).
+`tsx` directly — no task runner, no full CI toolchain).
 
 ## Instructions
 
@@ -94,7 +94,7 @@ will match exactly in degraded mode — the PR gate diffs against the real base.
 
 ## Do NOT
 
-- Do NOT run `task ci` as a substitute — this command exists precisely so a
+- Do NOT run the full local CI pipeline as a substitute — this command exists precisely so a
   contributor without the full toolchain gets a verdict.
 - Do NOT skip step 1's empty-set report — "0 files checked" is INCONCLUSIVE,
   never a pass (same guard as CI).
