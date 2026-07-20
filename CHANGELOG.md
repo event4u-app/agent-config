@@ -1056,6 +1056,27 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 9.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.6.0](https://github.com/event4u-app/agent-config/compare/9.5.0...9.6.0) (2026-07-20)
+
+### Features
+
+* **commands:** collapse the proactive suggestion surface to cluster-head journeys ([09d9cb3](https://github.com/event4u-app/agent-config/commit/09d9cb3abd78c5181cacf114eb05eb6ed6b54bcd))
+
+### Bug Fixes
+
+* **hooks:** route consumer-runtime spawn sites through hardenedSpawnEnv ([835af7f](https://github.com/event4u-app/agent-config/commit/835af7fb09818a03fc8efa6058f5bf3a148519d0))
+* **ai-council:** scrub subprocess env to close spawn-inheritance RCE ([634486b](https://github.com/event4u-app/agent-config/commit/634486b6d72b739a9add0ef6555c66875d3d2f63))
+* **consolidation:** add rationale to de-eligibled subs; head absorbs the sub's intent ([bc2b479](https://github.com/event4u-app/agent-config/commit/bc2b4799c07c8e0c4bdd651dca3218aeac90e6a5))
+
+### Documentation
+
+* **roadmap:** archive completed runtime-security-hardening roadmap ([dae91c4](https://github.com/event4u-app/agent-config/commit/dae91c4d9faa8b12d38c1527b892069a735b5c85))
+* **security:** record runtime-security scope decision (ADR-123) ([efb2272](https://github.com/event4u-app/agent-config/commit/efb22723c2b42b390bad0eda0ace106c32d60b3b))
+* **roadmap:** road-to-surface-consolidation — Phase 1 done, Phase 2 folded ([c84e182](https://github.com/event4u-app/agent-config/commit/c84e18212658d038cfda0bfe50176bdc01bac6a4))
+* **consolidation:** fold the complexity-budget checklist + record restraint decisions ([6f864c9](https://github.com/event4u-app/agent-config/commit/6f864c9452d857f8f019bd27890214b6bff431a9))
+
+Tests: 7838 (+5 since 9.5.0)
+
 ## [9.5.0](https://github.com/event4u-app/agent-config/compare/9.4.0...9.5.0) (2026-07-20)
 
 ### Features
