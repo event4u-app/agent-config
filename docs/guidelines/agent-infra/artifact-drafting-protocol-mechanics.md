@@ -70,6 +70,32 @@ those artifacts:
 - Batch mode never skips the Research pass itself — it relocates and
   batches it. `artifact_protocol: skip` does not exist.
 
+## Complexity budget — the six questions before a new artefact
+
+Folded here from the 9.4.0 review (Prio 5), which named the failure mode:
+"das Paket kann fast jede Kritik mit einem weiteren Mechanismus beantworten"
+(Problem → Regel → Lint → Hook → Report → Roadmap → Claim → Test = governance
+inflation). This REPLACES the ad-hoc "should this exist" prose — it is a
+checklist, not a new gate/rule (adding a gate to enforce "add less" would be
+the very inflation it guards against). Before drafting any new skill / rule /
+command / hook / gate, answer all six; a "no" on **replaces** or **removable**
+is a strong signal to fold into an existing artefact instead:
+
+1. **Replaces?** — what existing mechanism does this retire or subsume? (If
+   nothing, justify why the surface must grow.)
+2. **Overlaps?** — does it duplicate a trigger / responsibility another
+   artefact already owns?
+3. **Discoverable?** — will a user actually find it, or does it just raise the
+   catalog count?
+4. **Measurable?** — is there a signal that would show it earning its place
+   (or a null that would retire it)?
+5. **Removable?** — can it be demoted / de-eligibled / deleted later without a
+   migration?
+6. **Who debugs it?** — is the maintenance owner real, given bus-factor?
+
+The load-bearing question the review elevates: not "how do we prevent this
+error in future?" but **"which existing mechanism gets removed or replaced?"**
+
 ## See also
 
 - `artifact-drafting-protocol` (rule) — Iron Law, triggers, golden rules.
