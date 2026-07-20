@@ -1056,6 +1056,20 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 9.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.5.0](https://github.com/event4u-app/agent-config/compare/9.4.0...9.5.0) (2026-07-20)
+
+### Features
+
+* **bench:** defect-finding runner + results (team-mode Phase 5 Steps 2-4) ([aca13fd](https://github.com/event4u-app/agent-config/commit/aca13fd0c212a1af31c0715bf56db1972d819d0b))
+* **bench:** pre-registered defect-finding corpus (team-mode Phase 5 Step 1) ([e7b5300](https://github.com/event4u-app/agent-config/commit/e7b5300d39fa6f2e9ac4fb0d42934cb08d8a9382))
+
+### Documentation
+
+* **roadmap:** close team-mode Phase 5 on the honest-null verdict ([2ff25dd](https://github.com/event4u-app/agent-config/commit/2ff25dd2837872f2ff36139839abc9211d7e7305))
+* **proof:** record the team-mode defect-finding honest null (Phase 5 Step 4-5) ([908284a](https://github.com/event4u-app/agent-config/commit/908284a9dc20d067aaaf1305b3c352f260c88e82))
+
+Tests: 7833 (+0 since 9.4.0)
+
 ## [9.4.0](https://github.com/event4u-app/agent-config/compare/9.3.0...9.4.0) (2026-07-20)
 
 ### Features
