@@ -27,6 +27,11 @@ Do NOT use when:
 - The user explicitly asked for a quick/rough draft.
 - You're exploring options, not committing to one yet.
 
+**Inbound delegation:** [`decision-record`](../decision-record/SKILL.md)
+§ Weighted-matrix mode delegates a scoped attack here after the weighted
+sums ("attack the winner, using the losing options' strongest criteria")
+— treat the matrix + sensitivity block as the artifact under review.
+
 ## Procedure: Adversarial review
 
 1. **Inspect the artifact** — Read the plan, diff, or draft you are about to critique; note its scope, assumptions, and the explicit asks before attacking.
