@@ -12,7 +12,7 @@ type: structural
 # ADR-123 — Runtime-security scope: harden subprocess spawn-env, keep behavioural enforcement out of scope
 
 - **Status:** Accepted (2026-07-20)
-- **Closes:** `agents/roadmaps/road-to-runtime-security-hardening.md`
+- **Closes:** `agents/roadmaps/archive/road-to-runtime-security-hardening.md`
 - **Related:** `docs/threat-model.md` row (d) (lethal-trifecta); `src/rules/tool-safety.md` (Least Agency); `src/rules/lethal-trifecta-guard.md`; `src/rules/untrusted-input-defense.md`.
 
 ## Context
