@@ -24,6 +24,11 @@ maintainer after a gap) ship a correct release without tribal knowledge.
 
 ## Context (measured, do not relitigate)
 
+> Contributor-side complement: the `/contribution-precheck` command
+> (`src/domains/meta/contribution-precheck/command.md`) gives external
+> contributors the local PR-gate subset — link, don't duplicate, when phase
+> items touch contributor process.
+
 - Bus-factor signals (fresh `main`): no `.github/CODEOWNERS`; 8.0.0 (PR #764)
   solo-merged, 1 participant, no external reviewers, 37 checks green. Community
   scaffolding present (issue templates, PR template) but no review requirement.
