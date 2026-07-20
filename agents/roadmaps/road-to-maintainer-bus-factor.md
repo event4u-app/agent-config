@@ -53,7 +53,7 @@ maintainer after a gap) ship a correct release without tribal knowledge.
 
 ## Phase 1 — Dogfood the review machinery as a pre-merge gate
 
-- [ ] Add a required PR workflow that runs `adversarial-review` +
+- [x] Add a required PR workflow that runs `adversarial-review` +
       `agent-security-review` (and, for large diffs, `ai-council` with the
       advisor personas) against the diff, posting findings as a review. This is
       the package reviewing itself with the exact machinery it sells.
@@ -63,10 +63,17 @@ maintainer after a gap) ship a correct release without tribal knowledge.
       that posts findings and skips as a logged no-op when ANTHROPIC_API_KEY is
       absent) driving `src/scripts/self_review_gate.ts` (loads the two review
       skill bodies as the system prompt, collects structured findings, posts a
-      PR review). STILL MAINTAINER: (a) the API secret + per-PR budget sign-off
-      to make it run LIVE (blocker `self-review-gate-cost`), (b) making it
-      REQUIRED = Phase 2 branch protection, (c) the large-diff `ai-council`
-      escalation. Built advisory, not blind. -->
+      PR review). -->
+      <!-- done 2026-07-20: part (c) large-diff ai-council escalation landed —
+      `escalationReasons(files, changedLines)` (pure, unit-tested) flags a large
+      diff (≥ 400 changed lines) OR a claim-affecting surface (CLAIMS/proof/
+      comparison/README); the dry-run plan prints it and the posted review
+      RECOMMENDS a maintainer `/council:pr` run. Detection is deterministic +
+      zero-spend; per blocker `self-review-gate-cost` the paid multi-model
+      council stays a run-time-authorized act, never a CI surprise-spend.
+      Documented in docs/self-review-gate.md § Escalation. Remaining
+      MAINTAINER-only: (a) the API secret + per-PR budget to run LIVE,
+      (b) making it REQUIRED = Phase 2 branch protection. -->
 - [x] Define the gate's teeth: security-sensitive or claim-affecting findings
       block merge; style findings advise. Wire the verdict through the existing
       `gateVerdict()` pattern so the outcome is recorded, not just printed.

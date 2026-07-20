@@ -37,6 +37,20 @@ no-op** (never a failing check) — exactly the `cross-model-canary.yml` pattern
   `enforce: false` (advisory always returns `0` and reports the would-block
   set).
 
+## Escalation on large / claim-affecting diffs
+
+The two in-session lenses are a floor. A **large** diff (≥ 400 changed lines
+across reviewable files) or one that touches a **claim-affecting surface**
+(`docs/CLAIMS.md`, `docs/proof.md`, `docs/comparison.yaml`, or `README.md`)
+warrants the full `ai-council` advisor panel — a spend-bearing multi-model run.
+
+Per blocker `self-review-gate-cost`, the paid council stays governed by the
+standing spend-authorization discipline **at run time**. So the gate does not
+fire council calls itself: `escalationReasons(files, changedLines)` (pure,
+unit-tested) DETECTS the condition, the dry-run plan prints it, and the posted
+review RECOMMENDS a maintainer `/council:pr` run. Detection is deterministic
+and zero-spend; the multi-model run is the maintainer's run-time act.
+
 ## Arming it (maintainer, one flip)
 
 1. Add the `ANTHROPIC_API_KEY` repo secret (per-PR budget sign-off) — turns
