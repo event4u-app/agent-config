@@ -29,6 +29,8 @@ Do NOT use when:
 * The user is still exploring — route to brainstorming / planning
   skills first
 * Budget is the constraint — each subagent call multiplies cost
+  (non-interactive bulk cohorts → batch/caching levers via
+  [`token-optimizer`](../token-optimizer/SKILL.md) index branch)
 * The implementer and judge would be the same model on the same
   context — no added signal
 
