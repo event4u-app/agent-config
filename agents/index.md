@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **673 artefacts** in this package.
+Maintainer-facing index of all **674 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (277)
+## Skills (278)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -148,6 +148,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`laravel-websocket`](../src/skills/laravel-websocket/SKILL.md) | official | Use when building Laravel real-time features — Broadcasting events, ShouldBroadcast, private/presence channels, Echo client. For non-Laravel WebSockets, use the stack-native skill. |
 | skill | [`launch-readiness`](../src/skills/launch-readiness/SKILL.md) | official | Use before merging a release-shaped PR — pre-merge checklist, rollout plan, rollback criteria, ops handoff. Triggers on 'ready to ship', 'launch checklist', 'rollout plan for X'. |
 | skill | [`learning-to-rule-or-skill`](../src/skills/learning-to-rule-or-skill/SKILL.md) | official | Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work. |
+| skill | [`learning-tutor`](../src/skills/learning-tutor/SKILL.md) | official | Use when the user wants to learn a topic or verify real understanding — rapid-competence session, error drills, learning sprint, gap probe, Feynman check. Triggers 'teach me X', 'quiz me'. |
 | skill | [`legal-intake-triage`](../src/skills/legal-intake-triage/SKILL.md) | official | Use when triaging the quick legal-question channel + intake; classifies and ROUTES, never reviews. Triggers on 'is this a legal problem', 'do we need a lawyer for this', 'quick legal question'. |
 | skill | [`legal-practice-profile`](../src/skills/legal-practice-profile/SKILL.md) | official | Use when setting up the legal pack — captures jurisdiction, role, escalation, and playbook into a plain-prose profile every legal skill reads. Triggers on \"set up legal\", \"legal profile\". |
 | skill | [`lint-skills`](../src/skills/lint-skills/SKILL.md) | official | Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata. |
@@ -446,7 +447,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`context`](../src/domains/meta/context/command.md) | cluster: context | Context orchestrator — routes to create, refactor |
 | command | [`context-create`](../src/domains/meta/context/create/command.md) | cluster: context | Analyze a codebase area and create a structured context document |
 | command | [`context-refactor`](../src/domains/meta/context/refactor/command.md) | cluster: context | Analyze, update, and extend an existing context document |
-| command | [`contribution-precheck`](../src/domains/meta/contribution-precheck/command.md) |  | Contributor self-service precheck — run the PR-relevant lint subset (skill linter, originality gate, frontmatter schema) on your changed files locally and get a verdict with fix hints, before opening… |
+| command | [`contribution-precheck`](../src/domains/meta/contribution-precheck/command.md) |  | Contributor self-service precheck: run the PR-relevant lint subset (skill linter, originality gate, frontmatter schema) on changed files locally — a verdict with fix hints before opening a PR. |
 | command | [`cost`](../src/domains/meta/cost/command.md) | cluster: cost | Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_loading_tier) |
 | command | [`cost-profile`](../src/domains/meta/cost/profile/command.md) | cluster: cost | Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`cost-report`](../src/domains/meta/cost/report/command.md) | cluster: cost | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
