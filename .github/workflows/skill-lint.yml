@@ -17,6 +17,7 @@ on:
       - "docs/guidelines/**"
       - "src/scripts/skill_linter.ts"
       - "src/scripts/lint_regression.ts"
+      - "src/scripts/lint_originality.ts"
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"
@@ -35,6 +36,7 @@ on:
       - "docs/guidelines/**"
       - "src/scripts/skill_linter.ts"
       - "src/scripts/lint_regression.ts"
+      - "src/scripts/lint_originality.ts"
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"
@@ -248,6 +250,63 @@ jobs:
         with:
           header: skill-lint-report
           path: /tmp/pr-comment.md
+
+  originality-gate:
+    # Anti-reskin PR gate — the adversarial enforcement path. Only the
+    # `--changed` mode carries the batch-masking guard: the DF-boilerplate set
+    # is computed from the corpus MINUS the change set, so a batch of
+    # near-identical re-skins submitted together cannot classify its own shared
+    # shingles as scaffold and mutually score 0 (src/scripts/lint_originality.ts
+    # § "adversarial batch masking"). The full-audit sweep in `task ci`
+    # structurally lacks that guard — this job, not the sweep, is the defense.
+    # Regression lock: tests/scripts/lint_originality.test.ts ("adversarial
+    # batch masking is closed" — 7 identical copies above the DF floor must
+    # exit 1) runs in tests.yml → Node Tests, so unwiring the guard in the
+    # script fails CI there before this job could silently go green.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          # Retry once — the per-pack matrix fans out ~14 concurrent npm ci
+          # calls; transient registry ECONNRESET would otherwise flake a job.
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Run originality gate on changed corpus files
+        run: |
+          # Corpus classes — must mirror CLASSES in src/scripts/lint_originality.ts:
+          #   skills    src/skills/*/SKILL.md
+          #   personas  src/agent-src/personas/*.md (top-level, non-underscore)
+          #   commands  src/domains/**/command.md
+          git fetch --no-tags origin "${{ github.base_ref }}"
+          CHANGED=$(git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}...HEAD" -- \
+            'src/skills/*/SKILL.md' \
+            'src/agent-src/personas/*.md' \
+            'src/domains/**/command.md' \
+            | grep -v '^src/agent-src/personas/_' || true)
+          if [ -z "$CHANGED" ]; then
+            # Same guard shape as the skill-lint PR summary: an empty changed
+            # set means the gate checked nothing — report it, never claim a pass.
+            echo "⚠️ INCONCLUSIVE — 0 changed corpus files (skills / personas / domain commands); the originality gate checked nothing. This is not a pass."
+            exit 0
+          fi
+          echo "Changed corpus files under review:"
+          echo "$CHANGED" | sed 's/^/  · /'
+          # shellcheck disable=SC2086
+          ./scripts-run src/scripts/lint_originality --changed $CHANGED
 
   skill-lint-strict:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

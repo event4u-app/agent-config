@@ -46,7 +46,10 @@
  *      shingles as boilerplate (see `_changed`). The full-audit sweep (no
  *      "changed" notion) does NOT have this guard — a batch of ≥ floor identical
  *      NEW files committed at once would mutually mask there; the `--changed` PR
- *      gate, not the sweep, is the adversarial defense.
+ *      gate, not the sweep, is the adversarial defense. That gate is wired as
+ *      the `originality-gate` job in `.github/workflows/skill-lint.yml`, which
+ *      computes the PR's changed corpus files and runs `--changed` on them
+ *      (empty changed set reports INCONCLUSIVE, never a pass).
  *
  * Exit 0 clean/warn · 1 fail · 2 usage.
  */
