@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: decision-record
-description: "Use when choosing between alternatives with trade-offs — X-or-Y decisions (pattern vs pattern, strategy vs strategy) — frames options · trade-offs · consequences; ADR draft via `adr-create`."
+description: "Use when choosing between alternatives with trade-offs — X-or-Y decisions or a weighted decision matrix / gewichtete Entscheidungsmatrix ('score my options'); ADR via `adr-create`."
 status: active
 tier: senior
 domain: process
@@ -126,6 +126,35 @@ If this decision overrides a prior ADR:
 Output the structured payload (below). The user — or
 `adr-create` — turns it into the file.
 
+## Weighted-matrix mode (quantitative)
+
+Optional numeric variant of step 3. **Gate — fire only when ALL hold:**
+≥ 3 options · no single dominant criterion · costly / hard-to-reverse ·
+commensurable criteria (no values conflict). 2-option or reversible choice →
+one-line redirect: just decide, or qualitative matrix above. Full procedure,
+anchors, worked example: [`references/weighted-matrix.md`](references/weighted-matrix.md).
+
+1. User states decision + options.
+2. **User lists criteria + weights (1-10) BEFORE any scoring** — AI may
+   append missed criteria afterward, each labeled `(AI-suggested)`. Never
+   propose criteria first (anchoring).
+3. Criteria hygiene: cap 4-8, merge near-synonyms (double-counting check).
+4. Score options 1-10 against **fixed anchors** (each criterion declares
+   what 1 and what 10 mean — never relative-to-best-in-set).
+5. Weighted sums, then **sensitivity block — the load-bearing gate**:
+   close-call margin (< 10 % = "no clear winner — decide on unquantified
+   factors"), smallest weight change that flips the winner, ±1-score flip
+   test. Fragile winner reported as fragile, never as "the rational choice".
+6. Delegate argue-against to
+   [`adversarial-review`](../adversarial-review/SKILL.md), scoped: "attack
+   the winner, using the losing options' strongest criteria" (`premortem`
+   delegation pattern — never reimplemented inline).
+
+Output appends matrix + sensitivity block + attack summary + intuition
+caveat (resistance to the result signals a wrong weight or unquantified
+information — surface it, don't ignore it). **The score is a structured
+argument, not a verdict.** Hand-off to `adr-create` unchanged.
+
 ## Related Skills
 
 **WHEN to use this**
@@ -147,6 +176,9 @@ Output the structured payload (below). The user — or
   payload, not the file.
 - The risk shape is the dominant question — route to
   [`risk-officer`](../risk-officer/SKILL.md) first, then return.
+- MANY items to rank on the fixed R×I×C/E formula (backlog, feature
+  list) — route to [`rice-prioritization`](../rice-prioritization/SKILL.md);
+  the weighted-matrix mode here is for ONE choice on custom criteria.
 - The decision is reversible and cheap — write a one-line note and
   move on; ADRs are for irreversible or expensive constraints.
 
@@ -157,6 +189,8 @@ Output the structured payload (below). The user — or
 - "Wir müssen ein ADR draus machen."
 - "Trade-off-Matrix für X vs Y."
 - "Diese Entscheidung überschreibt das alte ADR-NN."
+- "Weighted decision matrix für die Optionen" / "score my options
+  against my criteria" — fires the weighted-matrix mode (gate permitting).
 
 ## Output
 
