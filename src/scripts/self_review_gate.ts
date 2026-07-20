@@ -12,6 +12,14 @@
  *     advisory mode it NEVER blocks the merge (exit 0) — it records what WOULD
  *     block. If no key is available it is a logged no-op (exit 0), never a failure.
  *
+ * On a LARGE or CLAIM-AFFECTING diff the two in-session lenses are not enough —
+ * such a diff warrants the full `ai-council` advisor panel. That is a
+ * spend-bearing multi-model run, so per blocker `self-review-gate-cost` the gate
+ * DETECTS the escalation deterministically (`escalationReasons`) and RECOMMENDS
+ * a maintainer `/council:pr` run; it never fires paid council calls itself. The
+ * paid council stays governed by the standing spend-authorization discipline at
+ * run time.
+ *
  * Turning the gate REQUIRED (block-on-verdict) and wiring the API secret + the
  * per-PR budget are the maintainer's acts (blocker `self-review-gate-cost`); this
  * script exposes the `--enforce` path so that flip is a one-flag change, but the
@@ -100,6 +108,47 @@ function diffText(baseRef: string, files: string[]): string {
     return (r.stdout ?? '').toString();
 }
 
+/** Sum of added+deleted lines across `files` (binary files count 0). */
+function changedLineCount(baseRef: string, files: string[]): number {
+    if (files.length === 0) return 0;
+    const r = spawnSync('git', ['diff', '--numstat', `${baseRef}...HEAD`, '--', ...files], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        maxBuffer: 32 * 1024 * 1024,
+    });
+    let total = 0;
+    for (const line of (r.stdout ?? '').toString().split('\n')) {
+        const m = /^(\d+)\t(\d+)\t/.exec(line); // added \t deleted \t path ("-" for binary)
+        if (m) total += Number(m[1]) + Number(m[2]);
+    }
+    return total;
+}
+
+// ── Escalation classifier (large / claim-affecting → full ai-council) ──
+/**
+ * A large or claim-affecting diff warrants the FULL `ai-council` (advisor
+ * panel), not just the two in-session lenses — but that is a spend-bearing,
+ * multi-model run. Per blocker `self-review-gate-cost` the paid council stays
+ * governed by the standing spend-authorization discipline AT RUN TIME: the gate
+ * DETECTS the escalation deterministically here and RECOMMENDS a maintainer
+ * `/council:pr` run; it never fires paid council calls by surprise in CI.
+ */
+export const LARGE_DIFF_LINES = 400;
+/** The claim ledger + proof surfaces `check_claims` binds to. */
+const CLAIM_SURFACES = new Set(['docs/CLAIMS.md', 'docs/proof.md', 'docs/comparison.yaml']);
+
+export function escalationReasons(files: readonly string[], changedLines: number): string[] {
+    const reasons: string[] = [];
+    if (changedLines >= LARGE_DIFF_LINES) {
+        reasons.push(`large diff (${changedLines} changed lines ≥ ${LARGE_DIFF_LINES})`);
+    }
+    const claimHits = files.filter((f) => CLAIM_SURFACES.has(f) || f === 'README.md');
+    if (claimHits.length > 0) {
+        reasons.push(`claim-affecting surface touched (${claimHits.join(', ')})`);
+    }
+    return reasons;
+}
+
 // ── Review skill bodies (the system prompt) ───────────────────────────
 const REVIEW_SKILLS = ['adversarial-review', 'agent-security-review'] as const;
 
@@ -129,15 +178,18 @@ export interface ReviewPlan {
     files: string[];
     promptChars: number;
     note: string;
+    escalation: string[];
 }
 
 export function buildPlan(baseRef: string): ReviewPlan {
     const files = changedFiles(baseRef);
     const diff = diffText(baseRef, files);
+    const escalation = escalationReasons(files, changedLineCount(baseRef, files));
     return {
         skills: [...REVIEW_SKILLS],
         files,
         promptChars: buildSystemPrompt().length + diff.length,
+        escalation,
         note:
             files.length === 0
                 ? 'No reviewable (non-generated) files changed — the live review would no-op.'
@@ -174,13 +226,26 @@ function parseFindings(text: string): Finding[] {
         }));
 }
 
-export function renderReview(findings: Finding[], enforce: boolean): string {
+/** Advisory escalation banner, appended when a diff warrants full ai-council. */
+function escalationBlock(reasons: readonly string[]): string {
+    if (reasons.length === 0) return '';
+    return (
+        `\n\n🔺 **Escalation warranted** — ${reasons.join('; ')}. The two in-session ` +
+        'lenses above are a floor; a maintainer should run the full `ai-council` ' +
+        '(`/council:pr`) on this diff. That is a spend-bearing, run-time-authorized ' +
+        'act (blocker `self-review-gate-cost`) — this gate recommends it, never ' +
+        'fires paid council calls itself.'
+    );
+}
+
+export function renderReview(findings: Finding[], enforce: boolean, escalation: readonly string[] = []): string {
     const banner =
         '> HUMAN REVIEW REQUIRED — dogfooded AI adversarial-review + security gate. ' +
         'Findings are decision support, not a guarantee; detection is probabilistic. ' +
         'This is a floor, **not** independent human review.';
+    const esc = escalationBlock(escalation);
     if (findings.length === 0) {
-        return `${banner}\n\n✅ Self-review gate: no findings.`;
+        return `${banner}\n\n✅ Self-review gate: no findings.${esc}`;
     }
     const blocking = findings.filter(classifyBlocking);
     // Each row carries an explicit (Blocking)/(Advisory) marker so a
@@ -197,7 +262,7 @@ export function renderReview(findings: Finding[], enforce: boolean): string {
             ? `❌ ${blocking.length} merge-blocking finding(s) (security/claim × high+).`
             : `⚠️ ${blocking.length} finding(s) WOULD block merge under an enforced gate (advisory now).`
         : '✅ No merge-blocking findings (style/correctness advise only).';
-    return `${banner}\n\n${verdictLine}\n\n| severity | kind | file | finding |\n|---|---|---|---|\n${rows}`;
+    return `${banner}\n\n${verdictLine}\n\n| severity | kind | file | finding |\n|---|---|---|---|\n${rows}${esc}`;
 }
 
 function postReview(body: string): void {
@@ -238,7 +303,10 @@ export function main(argv: string[]): 0 | 2 {
             `self-review-gate (dry-run — no spend, advisory):\n` +
                 `  skills: ${plan.skills.join(', ')}\n` +
                 `  files:  ${plan.files.length}\n` +
-                `  ${plan.note}\n`,
+                `  ${plan.note}\n` +
+                (plan.escalation.length
+                    ? `  escalation: ${plan.escalation.join('; ')} → recommend /council:pr (run-time authorized)\n`
+                    : `  escalation: none (diff is small and not claim-affecting)\n`),
         );
         return 0;
     }
@@ -282,7 +350,7 @@ export function main(argv: string[]): 0 | 2 {
             return 0; // no credit / transport / API error → never blocks the merge
         }
         const findings = parseFindings(resp.text);
-        const body = renderReview(findings, enforce);
+        const body = renderReview(findings, enforce, plan.escalation);
         postReview(body);
 
         const code = gateVerdict(findings, { enforce });
