@@ -11,9 +11,8 @@ argument-hint: "<idea> [--mode preview|commit] [--image-provider <id>] [--video-
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, character-consistency, motion-choreographer]
 suggestion:
-  eligible: true
-  trigger_description: "render a single video scene, iterate on one shot, test a prompt without a full script"
-  trigger_context: "user supplies a one-line scene idea and wants a single clip, no multi-scene stitching"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

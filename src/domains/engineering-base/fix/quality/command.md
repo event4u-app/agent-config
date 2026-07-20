@@ -10,9 +10,8 @@ cluster: fix
 skills: [quality-tools]
 description: Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 suggestion:
-  eligible: true
-  trigger_description: "fix the quality errors — run the project's type-checker / linter / formatter and resolve every issue (PHPStan / tsc / mypy / golangci-lint / clippy / …)"
-  trigger_context: "type-checker / linter / formatter output in recent tool results (PHPStan, Rector, ECS, tsc, eslint, prettier, ruff, mypy, golangci-lint, clippy)"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

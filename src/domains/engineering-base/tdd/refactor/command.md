@@ -10,9 +10,8 @@ skills: [test-driven-development]
 description: TDD refactor phase — clean up (rename, deduplicate) while keeping the test green
 argument-hint: "[target | context]"
 suggestion:
-  eligible: true
-  trigger_description: "refactor while the test stays green"
-  trigger_context: "test is green, ready to clean up"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

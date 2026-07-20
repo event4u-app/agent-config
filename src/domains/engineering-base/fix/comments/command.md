@@ -9,9 +9,8 @@ sub: comments
 skills: [code-refactoring, quality-tools, git-workflow]
 description: Review the code comments touched by the current branch and simplify, shorten, or remove each one
 suggestion:
-  eligible: true
-  trigger_description: "simplify the comments in my branch, clean up code comments, remove redundant comments from my changes, trim comment noise"
-  trigger_context: "a feature branch with code changes pending review"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

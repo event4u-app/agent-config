@@ -10,9 +10,8 @@ skills: [laravel, php-coder]
 description: Refine and update an existing feature plan through interactive discussion
 argument-hint: "[feature-name]"
 suggestion:
-  eligible: true
-  trigger_description: "update the feature plan, refine the feature spec"
-  trigger_context: "existing agents/features/*.md referenced in the prompt"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

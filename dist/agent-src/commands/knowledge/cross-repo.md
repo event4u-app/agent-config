@@ -10,9 +10,8 @@ description: Targeted, read-only retrieval over opted-in linked-project siblings
 argument-hint: "<query> [--path-scope <glob>]"
 skills: [file-editor]
 suggestion:
-  eligible: true
-  trigger_description: "what does the frontend expect, find the shared type in the other repo, check the sibling repo's API contract, /knowledge:cross-repo <query>"
-  trigger_context: "user needs context that lives in an attached sibling repo without copying its files in"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

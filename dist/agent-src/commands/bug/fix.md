@@ -11,9 +11,8 @@ description: Plan and implement a bug fix — based on investigation, with quali
 argument-hint: "[bug-description]"
 council_depth: deep
 suggestion:
-  eligible: true
-  trigger_description: "fix this bug, patch the issue, resolve this error"
-  trigger_context: "branch name matches fix/* or bug/*"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 framework: laravel
 workspaces:
   - agent-config-maintainer

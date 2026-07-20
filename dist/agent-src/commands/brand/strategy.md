@@ -10,9 +10,8 @@ skills: [brand-strategy]
 description: Define brand positioning, archetype, voice, tone, and messaging over the brand-grounding corpus — the strategy that bounds identity and UI.
 argument-hint: "<brief>"
 suggestion:
-  eligible: true
-  trigger_description: "define our brand strategy, what's our brand archetype, positioning and messaging, brand voice direction"
-  trigger_context: "user wants brand positioning/archetype/voice/messaging before identity or UI work"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - small-business
 packs:

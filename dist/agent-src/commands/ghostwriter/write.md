@@ -9,9 +9,8 @@ sub: write
 description: Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.
 argument-hint: "[slug | --as=<slug>] [--tone] [--length] [--channel] [--audience]"
 suggestion:
-  eligible: true
-  trigger_description: "draft post in style of public figure, write in someone's voice, ghostwriter draft, LinkedIn post in style of X"
-  trigger_context: "user wants to generate a copyable draft in a previously captured public-figure voice with the mandatory disclosure footer"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

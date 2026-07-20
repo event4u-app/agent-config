@@ -9,9 +9,8 @@ sub: with-docs
 description: "Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch."
 argument-hint: "[--until=N] [--keep-going] [seed]"
 suggestion:
-  eligible: true
-  trigger_description: "challenge me against the docs, grill me with our context, grill me against the docs, grill me against CONTEXT.md, grill me with the project context, frag mich durch und prüf gegen CONTEXT.md, challenge plan with domain docs"
-  trigger_context: "user wants the seed challenged against existing project glossary, CONTEXT.md, or ADRs — not a greenfield interview"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

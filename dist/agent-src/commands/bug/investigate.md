@@ -11,9 +11,8 @@ description: Investigate a bug — auto-detect ticket from branch, gather Jira/S
 argument-hint: "[ticket-key | sentry-url | error-message | description]"
 council_depth: deep
 suggestion:
-  eligible: true
-  trigger_description: "why is this broken, investigate this error, trace the root cause"
-  trigger_context: "Sentry URL, Jira bug ticket key, or stack trace pasted in the prompt"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

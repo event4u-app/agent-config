@@ -9,9 +9,8 @@ cluster: project
 skills: [project-analyzer]
 description: Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 suggestion:
-  eligible: true
-  trigger_description: "analyze the project structure, do a full project audit"
-  trigger_context: "new project or after a major refactor"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

@@ -9,9 +9,8 @@ sub: ci
 skills: [github-ci, quality-tools]
 description: Fetch CI errors from GitHub Actions and fix them
 suggestion:
-  eligible: true
-  trigger_description: "CI is failing, fix the GitHub Actions errors, the pipeline is red"
-  trigger_context: "open PR with failing checks"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

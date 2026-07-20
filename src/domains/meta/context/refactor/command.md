@@ -9,9 +9,8 @@ sub: refactor
 skills: [agent-docs-writing]
 description: Analyze, update, and extend an existing context document
 suggestion:
-  eligible: true
-  trigger_description: "update the context doc, refresh this context document"
-  trigger_context: "existing agents/settings/contexts/*.md referenced in the prompt"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

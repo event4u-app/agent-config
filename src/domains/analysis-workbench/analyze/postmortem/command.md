@@ -10,9 +10,8 @@ skills: [blameless-post-mortem, root-cause-frameworks]
 description: Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate.
 argument-hint: "[incident-description]"
 suggestion:
-  eligible: true
-  trigger_description: "post-mortem, Nachbesprechung, incident review, was ist schiefgelaufen"
-  trigger_context: "incident or outage is resolved and a structured write-up is needed"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - engineering
 packs:

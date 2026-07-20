@@ -11,9 +11,8 @@ argument-hint: "<character-id> <scene> [analyse-diff]"
 personas: [hollywood-director]
 skills: [image-creator, character-consistency]
 suggestion:
-  eligible: true
-  trigger_description: "generate this character, render to spec, create the image, make every feature match the canon"
-  trigger_context: "user supplies a character id (and a scene brief) and wants a maximally-accurate generation prompt or render"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

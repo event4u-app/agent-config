@@ -10,9 +10,8 @@ skills: [premortem]
 description: Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails.
 argument-hint: "[plan-summary]"
 suggestion:
-  eligible: true
-  trigger_description: "premortem, what if this fails, imagine failure, stress-test this plan, what could go wrong"
-  trigger_context: "user wants to anticipate failure modes before committing to a plan"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - engineering
 packs:

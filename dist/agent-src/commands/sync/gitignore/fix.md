@@ -9,9 +9,8 @@ sub: gitignore
 skills: [sync-gitignore]
 description: Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
 suggestion:
-  eligible: true
-  trigger_description: "fix .gitignore garbage, clean up legacy agent-config entries, my .gitignore has stale agent entries, /sync-gitignore is not picking up the right paths"
-  trigger_context: "consumer project carries pre-/agents/ runtime patterns (.agent-chat-history, .agent-prices.md) at the root from an older install"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:
@@ -191,5 +190,5 @@ If the check fails, offer to re-sync the block with the current template:
   ignored-but-tracked detection (Phase 5.2)
 - [`scripts/check_gitignore_freshness.ts`](../../../../src/scripts/check_gitignore_freshness.ts) —
   manifest vs block coverage check (Phase 3.4)
-- [`docs/contracts/agents-layout.md`](../../../../docs/contracts/agents-layout.md) —
+- [`docs/contracts/agents-layout.md`](../../../../../../docs/contracts/agents-layout.md) —
   full classification contract for `agents/` entries

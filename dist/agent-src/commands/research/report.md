@@ -9,9 +9,8 @@ sub: report
 description: "Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime."
 skills: [deep-reading-analyst]
 suggestion:
-  eligible: true
-  trigger_description: "summarise research results, build research report, render outline.yaml results"
-  trigger_context: "user has finished `/research:deep` and wants a single markdown summary"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

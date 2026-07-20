@@ -9,9 +9,8 @@ cluster: project
 skills: [quality-tools]
 description: Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
 suggestion:
-  eligible: true
-  trigger_description: "check project health, what's the state of my docs and modules"
-  trigger_context: "routine health check, no destructive intent"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

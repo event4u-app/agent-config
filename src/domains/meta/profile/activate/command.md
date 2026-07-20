@@ -9,9 +9,8 @@ sub: activate
 description: Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence
 argument-hint: "<profile|pack> [names...]"
 suggestion:
-  eligible: true
-  trigger_description: "activate the laravel/po/finance profile for this session, switch my surface to X, only show me X commands"
-  trigger_context: "user wants the surfaced commands/skills narrowed to one audience for the current session"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

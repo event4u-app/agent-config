@@ -9,9 +9,8 @@ sub: add
 description: Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns)
 skills: [file-editor]
 suggestion:
-  eligible: true
-  trigger_description: "remember this for later, add this to engineering memory, capture this learning"
-  trigger_context: "post-incident or post-decision conversation"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

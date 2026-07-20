@@ -11,9 +11,8 @@ skills: [git-workflow]
 description: Generate a PR description as a copyable markdown block — used standalone or by create-pr
 argument-hint: "[pr-url | branch]"
 suggestion:
-  eligible: true
-  trigger_description: "write a PR description, draft the PR text"
-  trigger_context: "PR exists or branch ready for review without description"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:
