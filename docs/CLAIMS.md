@@ -162,7 +162,7 @@ visible, not hidden.
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 189 commands.
+- claim: 190 commands.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed

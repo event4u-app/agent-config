@@ -84,6 +84,23 @@ must clear before the code lands:
 Until all four gates are written and reviewed, consumer-side
 telemetry is **forbidden** even as a discussion item in roadmaps.
 
+## Extraction demand gate — lint_originality standalone probe
+
+Added 2026-07-20 (road-to-originality-gate-and-contributor-funnel Phase 3,
+council 2026-07-20: extraction is demand-gated; the floor IS the demand gate,
+applied post-probe). Uses **allowed public signals only** — inbound GitHub
+issues/PRs and their authors; no consumer telemetry, consistent with the Iron
+Law above.
+
+| Field | Value |
+|---|---|
+| **Probe surface** | [`docs/anti-reskin-gate.md`](../anti-reskin-gate.md) — run-from-clone recipe + signal instructions |
+| **Signal definition** | A distinct external (non-maintainer) GitHub account opening an issue titled `anti-reskin gate: standalone request`, or referencing `lint_originality` in an inbound issue/PR about their own catalog |
+| **Floor** | ≥ 3 distinct external signals |
+| **Window** | 90 days from the probe page landing on `main` |
+| **Floor met** | Extract `lint_originality` as a standalone zero-config npx package (`--changed` mode, no repo coupling, regression suite included); npm publish remains a maintainer decision (name, scope, moment) |
+| **Floor missed** | Extraction **cancelled** — recorded via decision-record; not relitigated without new evidence |
+
 ## Re-audit cadence
 
 Re-audit on each of:

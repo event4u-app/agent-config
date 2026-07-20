@@ -159,6 +159,7 @@ commands:
     - context
     - context/create
     - context/refactor
+    - contribution-precheck
     - cost
     - cost/report
     - knowledge

@@ -42,6 +42,7 @@
   "commands/context.md": "938b6d06b5d39f9536c42e78db4debb778a552fd310a5486851b96466d304dfd",
   "commands/context/create.md": "75bd85a184a228c2bd8223ffdcf1d7e894e425dae15f37eb24a40ea15eec504d",
   "commands/context/refactor.md": "8d5ef99fda19618992012b352ff73d1afb3509e99eb06cba615b1e84dd94f5f2",
+  "commands/contribution-precheck.md": "b51ef2f7dc10079c882b63c3bb6a172e6d5e4c808e2b99f812468b69c3de036f",
   "commands/cost.md": "2eca408bb3a7dfa0f21c9782b9486e5764853182cc8d953cc942511bd9f9de11",
   "commands/cost/profile.md": "b09c98cc20d9a2a047727196e81f1bd4afc88bc8db9a6af60d4b4c86d68daa52",
   "commands/cost/report.md": "2349c63f615a6ae5739859922142c0164093f01b13ce1695b398f5cd192a3413",
