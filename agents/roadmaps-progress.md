@@ -6,17 +6,17 @@
 
 ## Overall
 
-**91 / 159 steps done · 57%**
+**99 / 159 steps done · 62%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   57%
+█████████████████████████░░░░░░░░░░░░░░░   62%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 15 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 6% |
+| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 7 | 9 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 56% |
 | 2 | [road-to-api-cost-optimization.md](roadmaps/road-to-api-cost-optimization.md) | 4 | 14 | 4 | 9 | 1 | 0 | 0 | ███████░░░ 69% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
@@ -33,14 +33,14 @@
 
 ### [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md)
 
-**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 1 / 16 done (6%)
+**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 9 / 16 done (56%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Quick wins already verified missing (autonomous, hours not weeks) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
-| 1 | One 30-second wedge, not the whole platform | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Discoverability where the category is browsed | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Turn the proof surface into the differentiator narrative | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | One 30-second wedge, not the whole platform | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 2 | Discoverability where the category is browsed | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 3 | Turn the proof surface into the differentiator narrative | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | Convert the wedge to the platform (measured, not assumed) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-adoption-without-narrative-debt"></a>

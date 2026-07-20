@@ -91,16 +91,32 @@ value + install; no unbacked number introduced (`check-claims` green).
 
 ## Phase 1 — One 30-second wedge, not the whole platform
 
-- [ ] Ship ONE dead-simple entry that delivers a felt win in one command:
+- [x] Ship ONE dead-simple entry that delivers a felt win in one command:
       the production-validator single-install subagent (`@production-validator
       check this branch is actually done`) — no profile, no packs, no wizard.
       The 264-skill platform is the second date, not the first.
-- [ ] The wedge's README promise is a CLAIMS-backed sentence, not a feature
+      <!-- done 2026-07-20 (verified, largely pre-existing): curl one-liner in
+      README "Try it in 30 seconds" + docs/wedge/production-validator/
+      (README + pre-projected subagent file), byte-equality + wedge-only
+      invariants locked by tests/scripts/subagent_distribution.test.ts
+      (green this run). ADR-109 wedge-only distribution is the install path;
+      no CLI flag by design. -->
+- [x] The wedge's README promise is a CLAIMS-backed sentence, not a feature
       list: what it catches, on what host class, with the evidence pointer.
-- [ ] Instrument activation: does a fresh installer reach a successful first run?
+      <!-- done 2026-07-20: claim `wedge-hollow-detection` added to docs/CLAIMS.md
+      (evidence: internal/bench/orchestration/pv-a3-results.md, measured token
+      deltas, scoped to the two planted fixtures on a Claude Code host) and
+      markered into docs/wedge/production-validator/README.md; check_claims
+      green (4 markered claims bound). -->
+- [x] Instrument activation: does a fresh installer reach a successful first run?
       Wire the B9 install-friction instruments to a local, opt-in,
       default-off counter (no telemetry-by-default — that would violate the
       package's own posture).
+      <!-- done 2026-07-20: docs/wedge/production-validator/first-run-check.sh —
+      opt-in by construction (runs only when invoked), one aggregate local line
+      (date + outcome, no user/host/repo data), zero network; wedge README
+      documents it; outcome vocabulary (ready/not-ready/abandoned) matches the
+      B9 runbook. Exercised end-to-end in a scratch repo. -->
 - [ ] **Run B9 for real (HUMAN GATE — needs a real external person):** the
       install-friction study has instruments, protocol, and report template
       but ZERO completed sessions (`agents/recruit-sessions/` holds only
@@ -119,12 +135,23 @@ first-run success signal.
 - [ ] Submit to the third-party surfaces the competitors appear in
       (awesome-lists, plugin directories, marketplace catalogs) — the awesome
       draft from 8.0.0 is the seed. Each listing's claims match CLAIMS verbatim.
+      <!-- BLOCKED 2026-07-20: outward-facing submissions are a Hard-Floor
+      action (submit/post) — maintainer executes; listing texts can reuse the
+      launch-story canonical body + CLAIMS verbatim. -->
 - [ ] Publish ONE launch story built entirely on reproducible artifacts: the
       cost-factor sweep (11.7× → 1.71–3.3×, auto-off on null hosts) with the
       "verify it yourself on a fresh checkout" block. The hook is the honesty,
       including the published nulls — the anti-thread thread.
-- [ ] Cross-link the Starlight site's proof page as the primary CTA, not the
+      <!-- PARTIAL 2026-07-20: story drafted per the announcements convention
+      (docs/announcements/2026-07-honest-cost-sweep-launch.md — canonical body
+      + HN/Reddit/Dev.to variants + post-time checklist), every number
+      ledger-bound. Posting to external channels is the maintainer's Hard-Floor
+      call — same drafted-not-posted pattern as 2026-05-non-dev-launch.md. -->
+- [x] Cross-link the Starlight site's proof page as the primary CTA, not the
       feature catalog.
+      <!-- done 2026-07-20: README top teaser + "Prove it" now point at
+      /agent-config/proof/ as the primary entry; the new
+      docs/us-vs-the-category.md frames it. -->
 
 **Exit:** listed in ≥3 category directories; one launch story live with a
 reproducible-on-checkout claim table.
@@ -132,16 +159,25 @@ reproducible-on-checkout claim table.
 
 ## Phase 3 — Turn the proof surface into the differentiator narrative
 
-- [ ] Add a public, honest "us vs the category" page seeded from
+- [x] Add a public, honest "us vs the category" page seeded from
       `docs/proof.md` § 4, extended for the adoption context: every row is a
       claim WE can resolve on a fresh checkout; the category column is only what
       is publicly observable; never a named competitor, never a counter-number.
-- [ ] Make the demo GIF the hero: the trust surface running green, every
+      <!-- done 2026-07-20: docs/us-vs-the-category.md (frame + adopter reading)
+      + 2 new adoption-context rows in docs/comparison.yaml (wedge,
+      persona-null); table stays single-sourced on the proof page —
+      check-comparison: 6/6 rows checkable, build_proof regenerated. -->
+- [x] Make the demo GIF the hero: the trust surface running green, every
       "verify it yourself" command from a real run (already CI-re-executed).
-- [ ] One-line positioning, testable: "The only agent layer that publishes the
+      <!-- done 2026-07-20: docs/media/proof-demo.gif now sits directly under the
+      README top teaser (it previously had zero README presence). -->
+- [x] One-line positioning, testable: "The only agent layer that publishes the
       runs where it changed nothing." If a reader can falsify that (find a
       competitor publishing honest nulls), the line updates — that's the point.
-- [ ] Publish the persona placebo-benchmark verdict as an adoption asset:
+      <!-- done 2026-07-20: ledger claim `positioning-honest-nulls`
+      (kind: comparative, falsifiability clause in the claim text itself),
+      markered on docs/us-vs-the-category.md; check_claims green. -->
+- [x] Publish the persona placebo-benchmark verdict as an adoption asset:
       `later/road-to-opt-council-deliberation` Phase 4 runs a pre-registered
       3-arm benchmark (method-personas / famous-figure framing / bare
       multi-provider calls) whose outcome is publishable in BOTH
@@ -151,6 +187,12 @@ reproducible-on-checkout claim table.
       falsifiable verdicts — including the persona-theater question"):
       content from already-budgeted work, zero extra measurement spend.
       Gated on that benchmark's verdict existing; either outcome ships.
+      <!-- done 2026-07-20: gate met — the verdict EXISTS as a backed honest
+      null (claim `persona-identity-placebo-null`, archived
+      road-to-opt-council-deliberation Phase 4). Shipped as: a comparison-table
+      row, the us-vs-the-category story paragraph ("a council implementation
+      with falsifiable verdicts — including the persona-theater question") and
+      a launch-story section. Zero extra measurement spend. -->
 
 **Exit:** a differentiator page whose every claim is CI-drift-checked; the
 positioning line is itself falsifiable.
@@ -162,6 +204,9 @@ positioning line is itself falsifiable.
       profile/pack install (local opt-in counter, aggregate only). Do NOT assume
       the funnel — measure it; if the wedge does not convert, that is a finding,
       not a failure to paper over.
+      <!-- BLOCKED 2026-07-20: needs real wedge adopters over time; the opt-in
+      local instrument now exists (first-run-check.sh, Phase 1) but there are
+      zero external installs to measure yet. -->
 - [ ] If conversion is real: document the wedge→profile path in ONBOARDING.
       If not: keep the wedge as a standalone product and stop implying the
       platform is the destination.
@@ -180,6 +225,19 @@ recorded decision to keep the wedge standalone).
 - Any telemetry is opt-in, default-off, aggregate — adoption instrumentation
   does not contradict the no-runtime / privacy posture.
 - The positioning claims are themselves falsifiable, not superlatives.
+
+> **Status (2026-07-20).** Second autonomous slice landed: Phase 1 is done
+> except the B9 human session (wedge verified shipping + lock-test green;
+> CLAIMS-backed promise `wedge-hollow-detection`; opt-in local first-run
+> instrument). Phase 3 is fully done (us-vs-the-category page + 2 new
+> CI-checked comparison rows, GIF hero, falsifiable positioning claim
+> `positioning-honest-nulls`, persona-null story — its gate was met, the
+> verdict exists as a backed honest null). Phase 2: proof-page CTA done;
+> launch story DRAFTED (posting = maintainer Hard-Floor call); directory
+> submissions remain maintainer-executed. Still open and NOT autonomously
+> completable: Phase-0 maintainer positioning calls, B9
+> (`real-external-participant`), submissions/posting, Phase-4 conversion
+> measurement (needs real adopters).
 
 > **Status (2026-07-09).** Only the verified-missing Phase-0 discoverability
 > quick-win is landed autonomously: the deployed docs site is now linked from
