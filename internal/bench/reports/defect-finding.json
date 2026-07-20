@@ -1,0 +1,450 @@
+{
+  "preregistered": {
+    "roadmap": "road-to-team-mode Phase 5",
+    "authored": "2026-07-20",
+    "primary": [
+      "recall",
+      "false_positives",
+      "cost/time/calls"
+    ],
+    "secondary": "blind rubric judge — DEFERRED this pass (primary recall is deterministic)",
+    "hypotheses": {
+      "H1": "team>self on correctness, Δrecall>=+0.20",
+      "H2": "council≈team on design, within 0.10",
+      "H3": "FP<=1/arm on controls"
+    },
+    "codex_model": "gpt-5.5",
+    "models_cache_fetched": "2026-07-20T12:21Z"
+  },
+  "arms": {
+    "self-review": {
+      "recall_rate": 1,
+      "recall": 10,
+      "planted": 10,
+      "false_positives": 1,
+      "usd": 0.0438,
+      "ms": 70975,
+      "calls": 12,
+      "correctness_recall": 1,
+      "design_recall": 1
+    },
+    "team": {
+      "recall_rate": 1,
+      "recall": 10,
+      "planted": 10,
+      "false_positives": 0,
+      "usd": 0,
+      "ms": 165280,
+      "calls": 12,
+      "correctness_recall": 1,
+      "design_recall": 1
+    },
+    "council": {
+      "recall_rate": 1,
+      "recall": 10,
+      "planted": 10,
+      "false_positives": 0,
+      "usd": 0.0394,
+      "ms": 61256,
+      "calls": 24,
+      "correctness_recall": 1,
+      "design_recall": 1
+    }
+  },
+  "verdict": {
+    "H1_team_minus_self_correctness": 0,
+    "H1_met": false,
+    "H2_council_vs_team_design_absdelta": 0,
+    "H2_met": true,
+    "H3_fp_within_bound": true,
+    "honest_null": true,
+    "disposition": "HONEST NULL — arms indistinguishable within pre-registered thresholds; no lift claim binds."
+  },
+  "total_billable_usd": 0.0832,
+  "detail": [
+    {
+      "id": "df-logic-01",
+      "defect_class": "logic-bug",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0014,
+        "ms": 3188,
+        "error": null,
+        "review": "DEFECT: src/access/canView.ts:6 — Changed AND to OR allows viewing documents from any tenant if tenantId matches, bypassing ownership check\nVERDICT: 1"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0,
+        "ms": 12836,
+        "error": null,
+        "review": "DEFECT: src/access/canView.ts:5 — Replacing `&&` with `||` allows users to view any document in their tenant or any owned document across tenants, breaking owner-and-tenant authorization.\nVERDICT: 1"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0022,
+        "ms": 3342,
+        "error": null,
+        "review": "# reviewer A\nDEFECT: src/access/canView.ts:6 — Changed logical AND to OR, allowing access if either ownerId matches OR tenantId matches instead of requiring both conditions\nVERDICT: 1\n\n# reviewer B\nDEFECT: src/access/canView.ts:6 — Potential unauthorized access due to logical OR\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-logic-02",
+      "defect_class": "logic-bug",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0046,
+        "ms": 6730,
+        "error": null,
+        "review": "Looking at this diff, I need to analyze the logic change:\n\n**Before:** `if (order.status !== 'paid') return 0;`\n- This returns 0 for orders that are NOT paid\n- For paid orders, it calculates: `order.amountCents - order.feeCents`\n\n**After:** `if (order.status === 'paid') return 0;`\n- This returns 0 for orders that ARE paid\n- For non-paid orders, it calculates: `order.amountCents - order.feeCents`\n\nThe logic is now inverted. The function appears to calculate refund amounts. The original logic makes sense: only paid orders should be refunded (return the calculation), while unpaid orders get 0 refund. The new logic is backwards: it returns 0 for paid orders and calculates refunds for non-paid orders, which is illogical - you cannot refund something that wasn't paid.\n\nDEFECT: src/billing/refund.ts:8 — Logic inverted: now returns 0 for paid orders instead of unpaid orders, breaking refund calculation\nVERDICT: 1"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0,
+        "ms": 11196,
+        "error": null,
+        "review": "DEFECT: src/billing/refund.ts:5 — Inverts the paid-status guard, returning 0 for paid orders and refunding unpaid/non-paid orders.\nVERDICT: 1"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0022,
+        "ms": 4010,
+        "error": null,
+        "review": "# reviewer A\nDEFECT: src/billing/refund.ts:8 — Logic inverted: now returns 0 for paid orders instead of unpaid orders, preventing refunds for paid orders\n\nVERDICT: 1\n\n# reviewer B\nDEFECT: src/billing/refund.ts:6 — Logic is inverted: refunds should apply to paid orders, but currently return 0.\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-offbyone-01",
+      "defect_class": "off-by-one",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0066,
+        "ms": 7218,
+        "error": null,
+        "review": "Looking at this diff, I need to analyze the change to the `lastN` function.\n\n**Original behavior:**\n```typescript\nxs.slice(Math.max(0, xs.length - n));\n```\n- For an array of length 5, `lastN(xs, 3)` would do `xs.slice(2)`, returning the last 3 elements (indices 2, 3, 4).\n- For an array of length 5, `lastN(xs, 5)` would do `xs.slice(0)`, returning all 5 elements.\n\n**New behavior:**\n```typescript\nxs.slice(Math.max(0, xs.length - n - 1));\n```\n- For an array of length 5, `lastN(xs, 3)` would do `xs.slice(1)`, returning the last 4 elements (indices 1, 2, 3, 4).\n- For an array of length 5, `lastN(xs, 5)` would do `xs.slice(0)`, returning all 5 elements (still correct for this case).\n- For an array of length 5, `lastN(xs, 2)` would do `xs.slice(2)`, returning the last 3 elements instead of 2.\n\nThe change breaks the function's intended behavior. The function is supposed to return the last N elements, but with the `-1` added, it now returns N+1 elements (except in edge cases where `Math.max(0, ...)` caps it at 0).\n\nDEFECT: src/util/lastN.ts:5 — Off-by-one error: returns N+1 elements instead of N elements\n\nVERDICT: 1"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0,
+        "ms": 13836,
+        "error": null,
+        "review": "DEFECT: src/util/lastN.ts:3 — Off-by-one subtraction returns n+1 trailing elements instead of exactly n.\nVERDICT: 1"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0058,
+        "ms": 7614,
+        "error": null,
+        "review": "# reviewer A\nAnalyzing the diff:\n\nThe change modifies `lastN` function from:\n```typescript\nreturn xs.slice(Math.max(0, xs.length - n));\n```\nto:\n```typescript\nreturn xs.slice(Math.max(0, xs.length - n - 1));\n```\n\nThe function is intended to return the last N elements of an array.\n\nWith the original code:\n- For `lastN([1,2,3,4,5], 2)`: `slice(Math.max(0, 5-2))` = `slice(3)` = `[4,5]` ✓ (correct: last 2 elements)\n\nWith the modified code:\n- For `lastN([1,2,3,4,5], 2)`: `slice(Math.max(0, 5-2-1))` = `slice(2)` = `[3,4,5]` ✗ (wrong: returns 3 elements instead of 2)\n\nThe modified code returns `n+1` elements instead of `n` elements, which is a defect.\n\nDEFECT: src/util/lastN.ts:5 — Returns n+1 elements instead of n elements due to incorrect offset calculation\nVERDICT: 1\n\n# reviewer B\nDEFECT: src/util/lastN.ts:3 — Off-by-one error in slice calculation\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-offbyone-02",
+      "defect_class": "off-by-one",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0016,
+        "ms": 5496,
+        "error": null,
+        "review": "DEFECT: src/pager/pageRange.ts:7 — Changed Math.ceil to Math.floor incorrectly calculates page count (e.g., 10 items with size 3 needs 4 pages but returns 3)\nVERDICT: 1"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0,
+        "ms": 12259,
+        "error": null,
+        "review": "DEFECT: src/pager/pageRange.ts:5 — `Math.floor` undercounts pages when `total` is not evenly divisible by `size`.\nVERDICT: 1"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0024,
+        "ms": 4150,
+        "error": null,
+        "review": "# reviewer A\nDEFECT: src/pager/pageRange.ts:7 — Changed Math.ceil to Math.floor will incorrectly calculate page count when total is not evenly divisible by size (e.g., 11 items with size 10 should be 2 pages, not 1)\nVERDICT: 1\n\n# reviewer B\nDEFECT: src/pager/pageRange.ts:5 — Incorrect function; Math.floor changes intended behavior from ceiling to floor.\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-race-01",
+      "defect_class": "race",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 2,
+        "usd": 0.002,
+        "ms": 3610,
+        "error": null,
+        "review": "DEFECT: src/counter/increment.ts:9 — Race condition: non-atomic read-modify-write allows lost updates when concurrent increments occur\nDEFECT: src/counter/increment.ts:9 — Missing null check: row.n will throw if key doesn't exist in counters table\nVERDICT: 2"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0,
+        "ms": 14452,
+        "error": null,
+        "review": "DEFECT: src/counter/increment.ts:6 — Read-then-write increment is no longer atomic, so concurrent calls can lose updates\nVERDICT: 1"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 2,
+        "usd": 0.0029,
+        "ms": 5021,
+        "error": null,
+        "review": "# reviewer A\nDEFECT: src/counter/increment.ts:7 — Race condition: non-atomic read-modify-write allows lost updates under concurrent access\nDEFECT: src/counter/increment.ts:7 — No null check: row.n will throw if key doesn't exist (row is undefined/null)\nVERDICT: 2\n\n# reviewer B\nDEFECT: src/counter/increment.ts:7 — row.n may be undefined, leading to a potential NaN result when adding 1 if the key does not exist.\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-race-02",
+      "defect_class": "race",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 2,
+        "usd": 0.0083,
+        "ms": 12806,
+        "error": null,
+        "review": "I need to analyze this diff carefully to find real defects.\n\nThe original code:\n```typescript\nreturn this.inflight[key] ??= this.load(key);\n```\n\nThe new code:\n```typescript\nif (this.cache[key]) return this.cache[key];\nconst v = await this.load(key);\nthis.cache[key] = v;\nreturn v;\n```\n\nLet me identify the issues:\n\n1. **Race condition**: The original code used `this.inflight[key]` to track in-flight requests, preventing duplicate loads for the same key. The new code uses `this.cache[key]` but doesn't prevent multiple simultaneous calls to `this.load(key)` for the same key. If `getOrLoad(key)` is called twice before the first load completes, both will call `this.load(key)`.\n\n2. **Wrong cache check**: The condition `if (this.cache[key])` is falsy for valid cached values like `0`, `false`, `\"\"`, `null`. This will cause unnecessary reloads for falsy but valid values.\n\n3. **Missing await in original**: Looking at the original code more carefully - `this.inflight[key] ??= this.load(key)` assigns the Promise directly (no await), but the function signature is `Promise<Val>`. The new code adds `await`, which changes the behavior - it now waits for the load to complete before returning, wherea"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 2,
+        "usd": 0,
+        "ms": 13546,
+        "error": null,
+        "review": "DEFECT: src/cache/getOrLoad.ts:4 — Truthy cache check treats cached falsy values as misses, causing unnecessary reloads or changed behavior.\nDEFECT: src/cache/getOrLoad.ts:5 — Removed inflight promise reuse, so concurrent calls for the same key now trigger duplicate loads and possible races.\nVERDICT: 2"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0021,
+        "ms": 3434,
+        "error": null,
+        "review": "# reviewer A\nDEFECT: src/cache/getOrLoad.ts:6 — Multiple concurrent calls with same key will trigger multiple load() calls (removed inflight tracking)\nVERDICT: 1\n\n# reviewer B\nDEFECT: src/cache/getOrLoad.ts:3 — Awaiting the promise before assigning to cache causes concurrent load calls.\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-empty-01",
+      "defect_class": "missing-empty-state",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0013,
+        "ms": 1966,
+        "error": null,
+        "review": "DEFECT: src/ui/Avg.tsx:2 — Division by zero when scores array is empty (removed length check)\nVERDICT: 1"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0,
+        "ms": 12919,
+        "error": null,
+        "review": "DEFECT: src/ui/Avg.tsx:2 — Empty scores now calls reduce without an initial value, throwing instead of rendering the fallback.\nVERDICT: 1"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0021,
+        "ms": 4062,
+        "error": null,
+        "review": "# reviewer A\nDEFECT: src/ui/Avg.tsx:3 — Division by zero when scores array is empty (removed guard check)\nVERDICT: 1\n\n# reviewer B\nDEFECT: src/ui/Avg.tsx:3 — Potential division by zero when scores array is empty.\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-empty-02",
+      "defect_class": "missing-empty-state",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0016,
+        "ms": 5707,
+        "error": null,
+        "review": "DEFECT: src/report/summary.ts:6 — Accessing sorted[0] and sorted[sorted.length - 1] on empty array causes undefined behavior; removed empty check makes this unsafe\n\nVERDICT: 1"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0,
+        "ms": 13356,
+        "error": null,
+        "review": "DEFECT: src/report/summary.ts:6 — Empty input now returns `undefined` for `first`/`last` instead of the expected `null` values.\nVERDICT: 1"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0025,
+        "ms": 3741,
+        "error": null,
+        "review": "# reviewer A\nDEFECT: src/report/summary.ts:6 — Accessing sorted[0] and sorted[sorted.length - 1] will be undefined when rows is empty, causing runtime errors despite non-null assertions\nVERDICT: 1\n\n# reviewer B\nDEFECT: src/report/summary.ts:6 — Using non-null assertion operators can lead to runtime errors if \"rows\" is empty.\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-secsmell-01",
+      "defect_class": "security-smell",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0012,
+        "ms": 2256,
+        "error": null,
+        "review": "DEFECT: src/search/find.ts:6 — SQL injection vulnerability: user input concatenated directly into query without parameterization\nVERDICT: 1"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0,
+        "ms": 10710,
+        "error": null,
+        "review": "DEFECT: src/search/find.ts:4 — Interpolating `term` into SQL makes the query vulnerable to SQL injection.\nVERDICT: 1"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0019,
+        "ms": 3461,
+        "error": null,
+        "review": "# reviewer A\nDEFECT: src/search/find.ts:6 — SQL injection vulnerability: user input `term` is directly interpolated into query string without sanitization\n\nVERDICT: 1\n\n# reviewer B\nDEFECT: src/search/find.ts:4 — Potential SQL injection due to using string interpolation instead of a parameterized query.\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-secsmell-02",
+      "defect_class": "security-smell",
+      "control": false,
+      "self-review": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0012,
+        "ms": 2245,
+        "error": null,
+        "review": "DEFECT: src/auth/login.ts:8 — Logging plaintext password violates security best practices and exposes credentials\n\nVERDICT: 1"
+      },
+      "team": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0,
+        "ms": 23326,
+        "error": null,
+        "review": "DEFECT: src/auth/login.ts:10 — Logs the plaintext password, exposing credentials in application logs.\nVERDICT: 1"
+      },
+      "council": {
+        "recall_hit": true,
+        "false_positive": false,
+        "claimed": 1,
+        "usd": 0.0018,
+        "ms": 3785,
+        "error": null,
+        "review": "# reviewer A\nDEFECT: src/auth/login.ts:10 — Logging plaintext password exposes sensitive credential in logs\n\nVERDICT: 1\n\n# reviewer B\nDEFECT: src/auth/login.ts:8 — Logging sensitive information (password) may lead to security issues.\nVERDICT: 1"
+      }
+    },
+    {
+      "id": "df-ctl-01",
+      "defect_class": "control-clean-refactor",
+      "control": true,
+      "self-review": {
+        "recall_hit": false,
+        "false_positive": true,
+        "claimed": 1,
+        "usd": 0.0112,
+        "ms": 13875,
+        "error": null,
+        "review": "I need to analyze this diff carefully to find any real defects introduced by the change.\n\nThe original code:\n```typescript\nif (x < lo) return lo;\nif (x > hi) return hi;\nreturn x;\n```\n\nThe new code:\n```typescript\nreturn Math.min(hi, Math.max(lo, x));\n```\n\nLet me verify the logic is equivalent by testing different cases:\n\n1. When `x < lo`: \n   - Original: returns `lo`\n   - New: `Math.max(lo, x)` = `lo`, then `Math.min(hi, lo)` = `lo` (assuming `lo <= hi`)\n   - ✓ Equivalent\n\n2. When `x > hi`:\n   - Original: returns `hi`\n   - New: `Math.max(lo, x)` = `x`, then `Math.min(hi, x)` = `hi`\n   - ✓ Equivalent\n\n3. When `lo <= x <= hi`:\n   - Original: returns `x`\n   - New: `Math.max(lo, x)` = `x`, then `Math.min(hi, x)` = `x`\n   - ✓ Equivalent\n\n4. Edge case: What if `lo > hi` (invalid range)?\n   - Original: If `x < lo`, returns `lo`. If `x > hi`, returns `hi`. If `hi < x < lo`, returns `x`.\n   - New: `Math.max(lo, x)` takes the larger of `lo` and `x`, then `Math.min(hi, that)` could return `hi` even when `hi < lo`.\n   \n   Example: `clamp(5, 10, 2)` where `lo=10, hi=2, x=5`\n   - Original: `5 < 10` → returns `10`\n   - New: `Math.max(10, 5)` = `10`, then `Math.min(2, 10)` = `2`\n   - ✗ Different be"
+      },
+      "team": {
+        "recall_hit": false,
+        "false_positive": false,
+        "claimed": 0,
+        "usd": 0,
+        "ms": 15307,
+        "error": null,
+        "review": "VERDICT: 0"
+      },
+      "council": {
+        "recall_hit": false,
+        "false_positive": false,
+        "claimed": 0,
+        "usd": 0.011,
+        "ms": 13953,
+        "error": null,
+        "review": "# reviewer A\nI need to analyze this diff for the `clamp` function to check if the new implementation is equivalent to the old one.\n\n**Original implementation:**\n```typescript\nif (x < lo) return lo;\nif (x > hi) return hi;\nreturn x;\n```\n\n**New implementation:**\n```typescript\nreturn Math.min(hi, Math.max(lo, x));\n```\n\nLet me trace through the logic:\n\n**Original logic:**\n- If `x < lo`, return `lo`\n- Else if `x > hi`, return `hi`\n- Else return `x`\n\n**New logic:**\n- `Math.max(lo, x)` returns the larger of `lo` and `x`\n  - If `x < lo`, this returns `lo`\n  - If `x >= lo`, this returns `x`\n- `Math.min(hi, ...)` takes the result above and returns the smaller of `hi` and that result\n  - If the result from max is greater than `hi`, return `hi`\n  - Otherwise return the result from max\n\n**Test cases:**\n1. `x < lo`: `Math.max(lo, x)` = `lo`, then `Math.min(hi, lo)` = `lo` (assuming `lo <= hi`) ✓\n2. `lo <= x <= hi`: `Math.max(lo, x)` = `x`, then `Math.min(hi, x)` = `x` ✓\n3. `x > hi`: `Math.max(lo, x)` = `x`, then `Math.min(hi, x)` = `hi` ✓\n\n**Edge case to consider:**\nWhat if `lo > hi` (invalid range)?\n\nOriginal: If `x < lo` and `lo > hi`, returns `lo`. The second check `x > hi` might also be true,"
+      }
+    },
+    {
+      "id": "df-ctl-02",
+      "defect_class": "control-controversial-but-correct",
+      "control": true,
+      "self-review": {
+        "recall_hit": false,
+        "false_positive": false,
+        "claimed": 0,
+        "usd": 0.0027,
+        "ms": 5878,
+        "error": null,
+        "review": "This diff shows a bug fix rather than introducing a defect. The change adds an explicit radix parameter of 10 to `parseInt()`, which is actually a correction of a previous defect.\n\nThe original code `parseInt(s)` without a radix is problematic because:\n- Strings starting with \"0x\" would parse as hexadecimal\n- In older JavaScript environments, strings starting with \"0\" could parse as octal\n\nThe new code `parseInt(s, 10)` correctly enforces base-10 parsing, which aligns with the comment's intent.\n\nVERDICT: 0"
+      },
+      "team": {
+        "recall_hit": false,
+        "false_positive": false,
+        "claimed": 0,
+        "usd": 0,
+        "ms": 11537,
+        "error": null,
+        "review": "VERDICT: 0"
+      },
+      "council": {
+        "recall_hit": false,
+        "false_positive": false,
+        "claimed": 0,
+        "usd": 0.0024,
+        "ms": 4683,
+        "error": null,
+        "review": "# reviewer A\nThis diff shows a fix being applied, not a defect being introduced. The change adds an explicit radix parameter of 10 to `parseInt()`, which is actually a best practice that prevents the function from interpreting strings with leading zeros as octal numbers (a legacy JavaScript behavior).\n\nThe new code is an improvement over the old code. There are no defects in the supplied diff.\n\nVERDICT: 0\n\n# reviewer B\nVERDICT: 0"
+      }
+    }
+  ]
+}

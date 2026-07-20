@@ -48,9 +48,10 @@ evidence pointer, or `task check-claims` fails the build.
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `.github/workflows/publish-npm.yml#lint_agent_security` | ✅ |
 | 278 skills. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
+| On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**23 backed claim(s)** — all evidence pointers resolve in CI.
+**24 backed claim(s)** — all evidence pointers resolve in CI.
 
 Artefact counts in public prose (skills, commands, governed rules,
 guidelines, personas) are **generated from source and CI-drift-checked**:

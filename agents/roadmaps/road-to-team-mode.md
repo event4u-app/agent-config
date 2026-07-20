@@ -373,21 +373,39 @@ existing bench-rig discipline before any public copy exists.
       metrics, H1/H2/H3 + numeric thresholds, arms, and model pins BEFORE any
       spend (prereg discipline). Zero-spend authoring; Steps 2-5 (running the
       arms) stay gated on benchmark-spend-authorization. -->
-- [ ] **Step 2:** Three arms: (a) single-model adversarial self-review (host
+- [x] **Step 2:** Three arms: (a) single-model adversarial self-review (host
       model, existing skill), (b) cross-model team review (Phase 2/3 path),
       (c) `council:pr` at default depth. Record found/missed per defect class,
       wall time, call count per arm.
-- [ ] **Step 3:** Blind judging via the existing verification-judge pattern;
+      <!-- done 2026-07-20: src/scripts/bench_defect_finding.ts ran all three
+      arms over the 12 fixtures ($0.083 billable; arm b codex gpt-5.5 =
+      subscription). Report: internal/bench/reports/defect-finding.{json,md}. -->
+- [~] **Step 3:** Blind judging via the existing verification-judge pattern;
       judge never sees arm labels.
-- [ ] **Step 4:** Verdict in `docs/proof.md` + CLAIMS.md shape: per-arm
+      <!-- deferred 2026-07-20: the PRIMARY metric (defect recall) is scored
+      DETERMINISTICALLY against ground truth — no judge needed for the verdict.
+      A blind rubric (preference) judge is moot given the recall ceiling (all
+      arms 1.00); it re-opens with a judge-survivable-subtlety corpus that
+      breaks the ceiling. Secondary metric, no spend incurred. -->
+- [x] **Step 4:** Verdict in `docs/proof.md` + CLAIMS.md shape: per-arm
       detection rates; pre-registered hypothesis (b > a on correctness-class
       defects; c competitive on design-class); honest-null reporting if arms
       are indistinguishable.
-- [ ] **Step 5:** Disposition: on measured lift, bind the README/team-docs
+      <!-- done 2026-07-20: HONEST NULL — H1 not met (Δ=0, all arms recall 1.00),
+      H2 met, H3 met. docs/benchmark.md § Defect-finding (#honest-null-defect)
+      + CLAIMS `team-defect-finding-null` (backed); proof.md regenerated.
+      Ceiling-limited: the corpus is too obvious to discriminate on recall
+      (same corpus-validity bound as the adversarial-council section). -->
+- [x] **Step 5:** Disposition: on measured lift, bind the README/team-docs
       claim with a `<!-- claim:team-cross-model-lift -->` marker and re-open
       Phase 3 Step 4; on null, record evidence-closed with re-open conditions
       (new model generation) and keep the feature documented as *workflow*
       value only, never *quality* claims.
+      <!-- done 2026-07-20: NULL path taken — no lift claim bound; team mode
+      stays workflow-value-only (the CHANGELOG entry already says so). Recorded
+      evidence-closed (CLAIMS team-defect-finding-null). Re-open conditions:
+      judge-survivable-subtlety corpus OR new model generation. Phase 3 Step 4
+      stays deferred (re-opened only on lift, which did not occur). -->
 
 **Exit criteria:** benchmark artefacts for all arms exist; claims lint green;
 the disposition step executed either way.
@@ -436,9 +454,12 @@ the disposition step executed either way.
 - [ ] All new config keys live in `docs/contracts/ai-team-config.md` with
       schema validation rejecting unknown values; the shared quota bucket is
       documented.
-- [ ] No public claim about cross-model quality exists without the Phase 5
+- [x] No public claim about cross-model quality exists without the Phase 5
       verdict bound in CLAIMS.md — workflow-value prose allowed, lift claims
       not.
+      <!-- satisfied 2026-07-20: the Phase-5 verdict is a backed NULL
+      (CLAIMS team-defect-finding-null); no lift claim exists anywhere,
+      workflow-value prose only. -->
 - [ ] `/team:delegate` is unreachable until both `ai_team.enabled` and
       `ai_team.allow_delegate` are true.
 - [ ] All quality gates pass (delegated to remote CI per

@@ -582,3 +582,43 @@ controversial-but-correct control.
   judge-survivable-subtlety corpus with a published distribution, then (2) a
   maintainer-gated paid cross-vendor run. Honest-null on that run keeps the
   surface default-off permanently, like recursive-verification.
+
+
+## Defect-finding: team vs self-review vs council (2026-07-20) — HONEST NULL (ceiling-limited) {#honest-null-defect}
+
+Pre-registered 12-fixture corpus (`internal/bench/corpora/defect-finding.yaml`:
+10 seeded-defect diffs across logic / off-by-one / race / missing-empty-state /
+security-smell, + 2 controls), three arms, deterministic file-level recall
+against ground truth (blind rubric judge deferred — the primary metric is
+deterministic). Codex reviewer pinned `gpt-5.5`. Total billable $0.083 (arm b
+codex = ChatGPT subscription, $0).
+
+| arm | recall | correctness | design | false-positives |
+|---|--:|--:|--:|--:|
+| self-review (single model) | 1.00 | 1.00 | 1.00 | 1 |
+| team (cross-model, codex) | 1.00 | 1.00 | 1.00 | 0 |
+| council (neutral breadth)  | 1.00 | 1.00 | 1.00 | 0 |
+
+**Verdict: HONEST NULL.** H1 (cross-model team > single-model self-review on
+correctness recall, Δ ≥ +0.20) is **not met** — Δ = 0: all three arms recalled
+every planted defect. H2 (council ≈ team on design, within 0.10) is met (Δ = 0).
+H3 (≤ 1 false positive/arm) is met.
+
+**Corpus-validity caveat (the honest bound):** recall 1.00 across every arm is a
+**ceiling effect** — these seeded defects are catchable by any strong model, so
+the corpus cannot discriminate the arms on recall. This is the same limitation
+the adversarial-verification-council section names: a corpus of obvious,
+model-differentiating defects measures parity, not the judge-survivable
+subtleties where a cross-model lens might actually differ. The one non-null
+signal is precision, not recall: single-model self-review produced 1 false
+positive on the controversial-but-correct control (`df-ctl-01`, a
+behaviour-preserving `clamp` refactor) where team and council produced 0 — a
+hint of a multi-arm precision edge, within the pre-registered H3 bound, too
+small to claim.
+
+**Disposition (Phase 5 Step 5): evidence-closed as NULL.** No cross-model
+defect-finding *quality/lift* claim binds; team mode stays documented as
+**workflow value only**. Re-open conditions: (a) a curated
+judge-survivable-subtlety corpus that breaks the recall ceiling, or (b) a new
+model generation. The worker-via-bundle delegate (roadmap Phase 3 Step 4) stays
+deferred — it re-opened only on a measured review lift, which did not occur.
