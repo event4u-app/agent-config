@@ -598,6 +598,10 @@ export function resolve_low_impact(
     clients: ReadonlyMap<string, ExternalAIClient> | Record<string, ExternalAIClient>,
     price_table: unknown = null,
     now: (() => Date) | null = null,
+    model_downgrade: {
+        enabled: boolean;
+        model_tier_override?: Readonly<Record<string, string>>;
+    } | null = null,
 ): FastPathResolution {
     if (!plan.is_resolvable) {
         return new FastPathResolution({
@@ -618,6 +622,18 @@ export function resolve_low_impact(
 
     for (const member of plan.members) {
         const client = getClient(member.name);
+        // A3: the fast-path is one-shot (no same-model cache reads to lose),
+        // so a configured ladder downgrades to its CHEAPEST rung outright —
+        // low-impact questions are the definition of small/low-stakes. The
+        // per-run model_tier_override pin wins; enabled: false opts out.
+        if (client && model_downgrade?.enabled) {
+            const pinned = model_downgrade.model_tier_override?.[member.name];
+            const cheapest = member.model_ladder.length > 0 ? member.model_ladder[0] : null;
+            const target = pinned && pinned.length > 0 ? pinned : cheapest;
+            if (target && target !== client.model) {
+                client.model = target;
+            }
+        }
         if (client === undefined || client === null) {
             answers.push(
                 new MemberAnswer({

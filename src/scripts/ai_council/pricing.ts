@@ -119,6 +119,65 @@ export interface CacheTokenBreakdown {
     output_tokens: number;
 }
 
+/** A1↔A3 coupling verdict for a proposed model downgrade (Phase A3). */
+export interface DowngradeCoupling {
+    /** Full-rate cost delta per call: estimate(current) − estimate(suggested). */
+    downgrade_savings_usd: number;
+    /**
+     * Cache value forfeited by leaving the current model: the prompt cache is
+     * model-scoped, so a downgraded member re-pays the full input rate on the
+     * span that would have been read back at CACHE_READ_MULTIPLIER.
+     */
+    lost_cache_savings_usd: number;
+    /** True iff downgrade_savings_usd > lost_cache_savings_usd. */
+    net_positive: boolean;
+}
+
+/**
+ * Decide whether a suggested downgrade is net-positive AFTER accounting for
+ * the model-scoped prompt cache (roadmap A3 gate: downgrade only when
+ * `downgrade_savings > lost_cache_savings`).
+ *
+ * `cache.expected_reads` is the number of same-model cache reads the run
+ * would plausibly realize at the CURRENT model (rounds − 1 on multi-round
+ * runs, 0 on one-shot paths like the low-impact fast-path). With caching
+ * disabled the lost term is 0 and any cheaper model wins.
+ */
+export function downgrade_coupling(
+    provider: string,
+    current_model: string,
+    suggested_model: string,
+    input_tokens: number,
+    max_output_tokens: number,
+    cache: {
+        enabled: boolean;
+        cacheable_prefix_tokens: number;
+        expected_reads: number;
+    },
+    table: PriceTable,
+): DowngradeCoupling {
+    const cur = estimate_cost(provider, current_model, input_tokens, max_output_tokens, table);
+    const sug = estimate_cost(provider, suggested_model, input_tokens, max_output_tokens, table);
+    const downgrade_savings_usd =
+        cur.input_usd + cur.output_usd - (sug.input_usd + sug.output_usd);
+    let lost_cache_savings_usd = 0;
+    if (cache.enabled && cache.expected_reads > 0 && cache.cacheable_prefix_tokens > 0) {
+        const cur_rates = lookup(table, provider, current_model);
+        if (cur_rates !== null) {
+            lost_cache_savings_usd =
+                (cache.cacheable_prefix_tokens / 1_000_000) *
+                cur_rates.input_per_1m_usd *
+                (1 - CACHE_READ_MULTIPLIER) *
+                cache.expected_reads;
+        }
+    }
+    return {
+        downgrade_savings_usd,
+        lost_cache_savings_usd,
+        net_positive: downgrade_savings_usd > lost_cache_savings_usd,
+    };
+}
+
 /**
  * Realized cost of a call given OBSERVED cache-token counts (from
  * `CouncilResponse.usage`). Deliberately separate from `estimate_cost`, which
