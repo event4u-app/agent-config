@@ -35,12 +35,17 @@ vs. `council:pr`) whose verdict gates every public claim about the feature.
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, `src/skills/ai-council/SKILL.md`,
+- [x] Read `AGENTS.md`, `src/skills/ai-council/SKILL.md`,
       `docs/contracts/ai-council-config.md`
-- [ ] `codex` CLI installed + `codex login`-authed on the maintainer machine
+      <!-- done 2026-07-20: read during the close-out slice. -->
+- [x] `codex` CLI installed + `codex login`-authed on the maintainer machine
       (needed for Phase 2 smoke runs and Phase 5 benchmark arms)
-- [ ] Confirm the fake-client seam in `tests/scripts/ai_council/_harness.ts`
+      <!-- done 2026-07-12: verified live in blocker model-id-verification —
+      codex-cli 0.134.0, subscription-authed on the maintainer machine. -->
+- [x] Confirm the fake-client seam in `tests/scripts/ai_council/_harness.ts`
       is reusable for the Phase 3 fallback-path tests (no billable calls in CI)
+      <!-- done 2026-07-12: proven by Phase 3 shipping 29 fallback-path tests
+      against the fake client (zero billable calls) — the seam was reusable. -->
 
 ## Context — why team is not council
 
@@ -391,15 +396,24 @@ the disposition step executed either way.
       **Step 1:** Catalog + featured-commands entries for the `/team` family
       (visibility per the Phase 5 verdict); regenerate derived trees via
       `task sync` + `task generate-tools`.
-- [ ] **Step 2:** CHANGELOG entry; MIGRATION note: none needed (all
+- [x] **Step 2:** CHANGELOG entry; MIGRATION note: none needed (all
       default-off). `See also` cross-links between `ai-council`,
-      `subagent-orchestration`, the `judge-*` cluster, and the new `team` skill
-      so the router disambiguates council (independent) vs team (collaborative)
+      `subagent-orchestration`, the `judge-*` cluster, and the new `/team`
+      command family so the router disambiguates council (independent) vs team (collaborative)
       vs subagents (in-session same-weights).
-- [ ] **Step 3:** Re-verify upstream one final time; if the command surface
+      <!-- done 2026-07-20: CHANGELOG § "Added — team mode" (default-off,
+      no-lift-until-Phase-5); three-way disambiguation cross-links added to
+      ai-council + subagent-orchestration + judge-synthesis See-also blocks and
+      the /team command (there is no team SKILL — team is a command family, so
+      the links point at src/domains/meta/team/). src + dist twins, refs green. -->
+- [x] **Step 3:** Re-verify upstream one final time; if the command surface
       drifted since Phase 0, file the delta as a follow-up stub rather than
       silently absorbing it.
-- [ ] **Step 4:** No stale references (`task check-refs` clean).
+      <!-- done 2026-07-20: gh api openai/codex-plugin-cc — HEAD still
+      db52e28f4d9d (2026-07-08), same 8 commands as Phase 0. No drift, no
+      follow-up stub needed. -->
+- [x] **Step 4:** No stale references (`task check-refs` clean).
+      <!-- done 2026-07-20: check_references green on the close-out diff. -->
 
 ## Acceptance Criteria (anti-dump)
 
