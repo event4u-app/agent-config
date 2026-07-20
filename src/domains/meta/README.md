@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `9.3.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 280
+- **artefacts**: 281
 
-## Commands (146)
+## Commands (147)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -33,6 +33,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`context`** — Context orchestrator — routes to create, refactor
 - **`context-create`** — Analyze a codebase area and create a structured context document
 - **`context-refactor`** — Analyze, update, and extend an existing context document
+- **`contribution-precheck`** — Contributor self-service precheck — run the PR-relevant lint subset (skill linter, originality gate, frontmatter schema) on your changed files locally and get a verdict with fix hints, before opening a PR.
 - **`cost`** — Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_loading_tier)
 - **`cost-profile`** — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 - **`estimate-ticket`** — Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
