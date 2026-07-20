@@ -109,6 +109,7 @@ Pick one. Emit a build-buy-partner ADR via the `adr-create` skill, citing this s
 - Scenario shape comparison — route to [`scenario-modeling`](../scenario-modeling/SKILL.md) (O4); P1 consumes O4's `scenario-bundle.md`.
 - Org-shape changes (reorg, team-split) — route to [`org-design`](../org-design/SKILL.md) (Q1); P1 composes Q1 for the "build" option's team shape.
 - Decision-record authoring mechanics — route to [`adr-create`](../adr-create/SKILL.md); P1 emits an ADR via that skill.
+- A generic multi-option choice on custom user-weighted criteria (not build/buy/partner-shaped) — route to [`decision-record`](../decision-record/SKILL.md) § Weighted-matrix mode; this skill stays the domain-specific instance.
 
 ## When the agent should load this
 

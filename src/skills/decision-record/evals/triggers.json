@@ -1,17 +1,87 @@
 {
   "skill": "decision-record",
-  "last_eval": "2026-06-16",
-  "description": "5 should-trigger + 5 should-not-trigger. Seeded from the RDP `decision` discipline rows in tests/reasoning-layer-eval/trigger-fixtures.json (choice among alternatives with real tradeoffs -> decision ledger; escalate to ADR only when cross-task/structural). Should-not covers tasks with no alternatives to weigh (mechanical / single-path).",
+  "last_eval": "2026-07-20",
+  "description": "5 should-trigger + 5 should-not-trigger. Seeded from the RDP `decision` discipline rows in tests/reasoning-layer-eval/trigger-fixtures.json (choice among alternatives with real tradeoffs -> decision ledger; escalate to ADR only when cross-task/structural). Should-not covers tasks with no alternatives to weigh (mechanical / single-path). Extended 2026-07-20 with 5+5 weighted-matrix-mode cases: quantitative scoring asks trigger; RICE-shaped ranking, 2-option reversible, stakeholder-conflict, pure prioritization and explicit rice-prioritization asks do not.",
   "queries": [
-    { "q": "should we use the Action pattern or a Service class for this workflow?", "trigger": true },
-    { "q": "should we adopt Redis or Postgres for the rate-limiter store? weigh the tradeoffs", "trigger": true },
-    { "q": "pick a migration strategy for the column rename: expand-contract or big-bang", "trigger": true },
-    { "q": "do we put authorization in middleware or a policy layer here?", "trigger": true },
-    { "q": "choose between optimistic and pessimistic locking for the checkout flow", "trigger": true },
-    { "q": "use the existing UserRepository to load the user", "trigger": false },
-    { "q": "add a created_at timestamp column to the orders table", "trigger": false },
-    { "q": "rename the variable usr to user in this function", "trigger": false },
-    { "q": "import the logger and log the request id", "trigger": false },
-    { "q": "format this file with the project formatter", "trigger": false }
+    {
+      "q": "should we use the Action pattern or a Service class for this workflow?",
+      "trigger": true
+    },
+    {
+      "q": "should we adopt Redis or Postgres for the rate-limiter store? weigh the tradeoffs",
+      "trigger": true
+    },
+    {
+      "q": "pick a migration strategy for the column rename: expand-contract or big-bang",
+      "trigger": true
+    },
+    {
+      "q": "do we put authorization in middleware or a policy layer here?",
+      "trigger": true
+    },
+    {
+      "q": "choose between optimistic and pessimistic locking for the checkout flow",
+      "trigger": true
+    },
+    {
+      "q": "use the existing UserRepository to load the user",
+      "trigger": false
+    },
+    {
+      "q": "add a created_at timestamp column to the orders table",
+      "trigger": false
+    },
+    {
+      "q": "rename the variable usr to user in this function",
+      "trigger": false
+    },
+    {
+      "q": "import the logger and log the request id",
+      "trigger": false
+    },
+    {
+      "q": "format this file with the project formatter",
+      "trigger": false
+    },
+    {
+      "q": "build me a weighted decision matrix for our three hosting options",
+      "trigger": true
+    },
+    {
+      "q": "gewichtete Entscheidungsmatrix für die vier Anbieter, Kriterien gewichte ich selbst",
+      "trigger": true
+    },
+    {
+      "q": "help me decide between 4 job offers — I want to weight my criteria and score each",
+      "trigger": true
+    },
+    {
+      "q": "score my options against my criteria with weights and show which one wins",
+      "trigger": true
+    },
+    {
+      "q": "we have 3 vendor candidates; weigh cost, support and lock-in and compute a winner",
+      "trigger": true
+    },
+    {
+      "q": "rank our backlog of 40 feature ideas by reach, impact, confidence and effort",
+      "trigger": false
+    },
+    {
+      "q": "tabs or spaces for this repo? quick call, easily reversible",
+      "trigger": false
+    },
+    {
+      "q": "PO wants to ship, ops wants stability — who should win this conflict?",
+      "trigger": false
+    },
+    {
+      "q": "prioritize this quarter's initiatives for the roadmap",
+      "trigger": false
+    },
+    {
+      "q": "run rice-prioritization on these feature requests",
+      "trigger": false
+    }
   ]
 }
