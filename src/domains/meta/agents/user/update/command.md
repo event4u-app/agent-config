@@ -10,8 +10,7 @@ description: Open .agent-user.md in the user's IDE for manual edit; validates sc
 argument-hint: "[--validate]"
 suggestion:
   eligible: false
-  trigger_description: "edit user persona, update .agent-user.md, change nickname, change language, refresh voice sample"
-  trigger_context: "user wants to manually edit the persona file rather than answer interview questions"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

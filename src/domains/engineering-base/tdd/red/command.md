@@ -11,8 +11,7 @@ description: TDD red phase — enumerate cases, write ONE failing test, watch it
 argument-hint: "[behavior to test]"
 suggestion:
   eligible: false
-  trigger_description: "write the failing test first"
-  trigger_context: "starting a new behavior test-first"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

@@ -10,8 +10,7 @@ description: Drop events older than the 90-day retention window from the local a
 skills: [file-editor]
 suggestion:
   eligible: false
-  trigger_description: "prune the analytics log, drop old events, clean up events.jsonl"
-  trigger_context: "user wants to manually advance the rolling retention window"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

@@ -11,8 +11,7 @@ description: Run the project's test suite — stack-adaptive (pest / phpunit / v
 argument-hint: "[file | filter] [--include-e2e] [--include-slow] [--php]"
 suggestion:
   eligible: false
-  trigger_description: "run the tests, execute the test suite"
-  trigger_context: "code changes pending verification"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

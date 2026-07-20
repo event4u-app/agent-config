@@ -11,8 +11,7 @@ description: Blame-free near-miss analysis — same post-mortem flow as analyze:
 argument-hint: "[event-description]"
 suggestion:
   eligible: false
-  trigger_description: "near-miss, almost failed, beinahe-Vorfall, close call, we almost had an outage"
-  trigger_context: "user wants to analyse a close call or near-miss event that did not produce a full incident"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - engineering
 packs:

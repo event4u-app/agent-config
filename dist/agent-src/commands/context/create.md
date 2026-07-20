@@ -11,8 +11,7 @@ description: Analyze a codebase area and create a structured context document
 argument-hint: "[topic]"
 suggestion:
   eligible: false
-  trigger_description: "document this part of the codebase, create a context doc for X"
-  trigger_context: "working in a module without an agents/settings/contexts/ doc"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

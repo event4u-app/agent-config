@@ -10,8 +10,7 @@ description: Capture token cost from the active Claude Code session, append to t
 skills: [file-editor]
 suggestion:
   eligible: false
-  trigger_description: "check this session's token cost, see budget utilization, surface 50/75/90/100% alert ladder"
-  trigger_context: "user wants to know how expensive the active Claude Code session is or whether it crosses a budget threshold"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

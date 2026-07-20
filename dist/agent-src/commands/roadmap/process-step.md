@@ -11,8 +11,7 @@ description: Autonomously process the single next open step of a roadmap and sto
 argument-hint: "[roadmap]"
 suggestion:
   eligible: false
-  trigger_description: "process the next step, do the next roadmap step, einen schritt abarbeiten"
-  trigger_context: "existing agents/roadmaps/*.md and user wants exactly one step done autonomously"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

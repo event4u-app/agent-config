@@ -11,8 +11,7 @@ description: Multi-round council debate with progressive cost disclosure — eac
 argument-hint: "[topic | path] [--rounds N] [--auto-continue]"
 suggestion:
   eligible: false
-  trigger_description: "council debate on X, multi-round rebuttal, escalate council to debate mode, push the council to argue not synthesize"
-  trigger_context: "user wants real pushback — initial positions plus explicit rebuttals across rounds, with progressive cost confirmation between rounds"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

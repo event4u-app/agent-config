@@ -12,8 +12,7 @@ personas: [hollywood-director, ai-video-technical-director]
 skills: [song-to-script, scene-expander, video-director, character-consistency, motion-choreographer, prompt-validator]
 suggestion:
   eligible: false
-  trigger_description: "make a music video from a song, turn a track into a video, lip-sync clip from images and audio, AI music video"
-  trigger_context: "user supplies an audio file plus reference images and wants a final MP4 cut to the song"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

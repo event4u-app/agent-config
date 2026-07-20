@@ -11,8 +11,7 @@ description: Preview validated low-impact entries that would be upstreamed to th
 argument-hint: "[--preview|--apply]"
 suggestion:
   eligible: false
-  trigger_description: "upstream low-impact decisions, share validated council questions, contribute the learning corpus"
-  trigger_context: "user has accumulated validated entries in agents/decisions/low-impact-decisions.md and wants to share with the package"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

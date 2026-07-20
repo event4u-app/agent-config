@@ -12,8 +12,7 @@ description: Generate a PR description as a copyable markdown block — used sta
 argument-hint: "[pr-url | branch]"
 suggestion:
   eligible: false
-  trigger_description: "write a PR description, draft the PR text"
-  trigger_context: "PR exists or branch ready for review without description"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

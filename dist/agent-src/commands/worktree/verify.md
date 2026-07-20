@@ -11,8 +11,7 @@ description: Run the scoped verification for a worktree's declared change — na
 argument-hint: "[worktree-path | branch]"
 suggestion:
   eligible: false
-  trigger_description: "verify the worktree change, prove this worktree is ready"
-  trigger_context: "a governed worktree with committed changes but no verification evidence attached"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

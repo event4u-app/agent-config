@@ -10,8 +10,7 @@ skills: [agent-docs-writing]
 description: Interactively create a new roadmap file in agents/roadmaps/
 suggestion:
   eligible: false
-  trigger_description: "create a roadmap for X, plan this work as a roadmap"
-  trigger_context: "multi-phase work without an existing agents/roadmaps/*.md"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

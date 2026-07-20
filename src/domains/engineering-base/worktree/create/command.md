@@ -11,8 +11,7 @@ description: Create a governed worktree and write its scope-lock note — propos
 argument-hint: "[task] [branch-name]"
 suggestion:
   eligible: false
-  trigger_description: "do this in a worktree, isolate this task, spawn a worktree for X"
-  trigger_context: "parallel or exploratory work while the current branch is mid-work"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

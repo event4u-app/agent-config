@@ -11,8 +11,7 @@ description: Pull a GitHub PR via gh CLI and run the council on the diff with a 
 argument-hint: "[pr-number | url]"
 suggestion:
   eligible: false
-  trigger_description: "council on PR #N, external review of pull request, second opinion on a PR"
-  trigger_context: "user has a PR number / URL and wants an external review before approve/merge"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

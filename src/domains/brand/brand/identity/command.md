@@ -11,8 +11,7 @@ description: Define the brand identity — logo direction, colour story, type st
 argument-hint: "<strategy-ref | brief>"
 suggestion:
   eligible: false
-  trigger_description: "define our brand identity, logo and colour direction, type story, visual identity system"
-  trigger_context: "user has a brand strategy and wants the identity system (logo/colour/type/imagery)"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - small-business
 packs:

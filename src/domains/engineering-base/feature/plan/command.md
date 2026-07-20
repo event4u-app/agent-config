@@ -11,8 +11,7 @@ description: Interactively plan a feature — research, discuss, and create a st
 argument-hint: "[description]"
 suggestion:
   eligible: false
-  trigger_description: "plan this feature, create a feature spec for X"
-  trigger_context: "feature idea referenced and no plan doc exists"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

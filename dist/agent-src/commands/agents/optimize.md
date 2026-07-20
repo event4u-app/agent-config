@@ -11,8 +11,7 @@ argument-hint: "[path-to-AGENTS.md]"
 skills: [agents-md-thin-root, copilot-agents-optimization, copilot-config, agent-docs-writing]
 suggestion:
   eligible: false
-  trigger_description: "refactor AGENTS.md, shrink AGENTS.md, capability bullets, thin-root, optimize agent layer"
-  trigger_context: "maintainer working on AGENTS.md (root or consumer template) or its tool stubs"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

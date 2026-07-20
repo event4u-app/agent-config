@@ -11,8 +11,7 @@ description: "Project-wide optimization sweep — inventory roadmaps, ADRs, agen
 argument-hint: "[--max-questions=N]"
 suggestion:
   eligible: false
-  trigger_description: "optimize this project, optimize the project, what should we improve based on current state, challenge our old decisions, are our roadmaps and ADRs still right, optimiere das Projekt, hinterfrag unsere alten Entscheidungen"
-  trigger_context: "user wants a project-wide review that questions existing state (roadmaps, ADRs, decisions, structures) and ends in new roadmap(s) — NOT a bug fix, NOT a single-decision audit (/analyze:decision), NOT agent-layer tooling (/optimize)"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - engineering
   - agent-config-maintainer

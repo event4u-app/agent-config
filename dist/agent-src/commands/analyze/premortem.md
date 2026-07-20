@@ -11,8 +11,7 @@ description: Forward-looking imagined-failure analysis before committing to a he
 argument-hint: "[plan-summary]"
 suggestion:
   eligible: false
-  trigger_description: "premortem, what if this fails, imagine failure, stress-test this plan, what could go wrong"
-  trigger_context: "user wants to anticipate failure modes before committing to a plan"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - engineering
 packs:

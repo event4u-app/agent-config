@@ -12,8 +12,7 @@ cluster: team
 sub: adversarial
 suggestion:
   eligible: false
-  trigger_description: "adversarial cross-model review, attack this change with a second model, stress-test the diff with GPT, hostile review by another model"
-  trigger_context: "ai_team.enabled is true AND single-model self-review found nothing or the stakes are high — escalate the Attack-Defend-Revise frame to a second strong model"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

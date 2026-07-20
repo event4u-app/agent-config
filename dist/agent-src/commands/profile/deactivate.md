@@ -10,8 +10,7 @@ description: Deactivate the session profile — clear the overlay (or drop named
 argument-hint: "[names...]"
 suggestion:
   eligible: false
-  trigger_description: "deactivate the profile, clear my session profile, show everything again, reset the surface"
-  trigger_context: "user wants the full command/skill surface back after a profile was active"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

@@ -10,8 +10,7 @@ description: Audit agent infrastructure — token overhead, rule triggers, AGENT
 skills: [copilot-agents-optimization, agents-audit, agent-docs-writing, agents-md-thin-root, quality-tools]
 suggestion:
   eligible: false
-  trigger_description: "audit agent infrastructure, check rule triggers, verify AGENTS.md health, agent-layer health-check"
-  trigger_context: "maintainer working on .augment/ files, AGENTS.md, or planning a refactor"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

@@ -10,8 +10,7 @@ skills: [agents]
 description: List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
 suggestion:
   eligible: false
-  trigger_description: "review user observations, see what the agent learned about me, list buffered persona updates"
-  trigger_context: "user wants to see what the agent has buffered about their preferences before applying changes"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:
@@ -86,7 +85,7 @@ One question per turn. Wait for the user's number.
 ### 4. Privacy-floor verify
 
 Before printing any observation's `evidence` text, scan it for the
-[exclusions list](../../../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
+[exclusions list](../../../../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
 Match → replace the offending substring with `[redacted]` in the
 rendered output.
 
@@ -109,6 +108,6 @@ turn.
 
 ## See also
 
-- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
+- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user accept`](accept.md), [`/agents user update`](update.md).

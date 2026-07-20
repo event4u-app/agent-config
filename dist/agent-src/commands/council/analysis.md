@@ -11,8 +11,7 @@ description: Run the council on a local analysis output (project-analyze, audit 
 argument-hint: "[path] [question]"
 suggestion:
   eligible: false
-  trigger_description: "council on this analysis, critique the project-analyze output, second opinion on the audit findings, turn analysis into roadmap"
-  trigger_context: "user has a local analysis artefact (agents/evidence/analysis/*.md|json) and wants an external critique of the analysis quality + roadmap-ready follow-ups"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

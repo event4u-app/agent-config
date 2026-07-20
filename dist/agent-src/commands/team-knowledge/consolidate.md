@@ -10,8 +10,7 @@ description: Review pending typed knowledge-observation events and file them int
 skills: [file-editor]
 suggestion:
   eligible: false
-  trigger_description: "consolidate knowledge events, review pending observations, file captured knowledge, promote knowledge candidates"
-  trigger_context: "pending events have accumulated in agents/knowledge/intake/ and are ready for review"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

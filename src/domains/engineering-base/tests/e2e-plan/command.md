@@ -12,8 +12,7 @@ description: Explore the application and create a structured E2E test plan in Ma
 argument-hint: "[url | feature-area]"
 suggestion:
   eligible: false
-  trigger_description: "plan E2E tests for this feature, what should we cover in playwright"
-  trigger_context: "new feature or page added without tests/e2e/ coverage"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

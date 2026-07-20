@@ -11,8 +11,7 @@ argument-hint: "[init|show|review|accept|update] [args]"
 type: orchestrator
 suggestion:
   eligible: false
-  trigger_description: "create user persona, render .agent-user.md, review observations, accept observations, edit user file"
-  trigger_context: "user wants to bootstrap or maintain the .agent-user.md persona file (name, language, role, style, voice sample)"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

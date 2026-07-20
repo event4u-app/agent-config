@@ -11,8 +11,7 @@ description: Define the brand voice-and-tone profile — register, do/don't lexi
 argument-hint: "<brand-ref | strategy-ref>"
 suggestion:
   eligible: false
-  trigger_description: "define our brand voice, voice and tone guide, how should our copy sound, tone of voice profile"
-  trigger_context: "user wants a documented voice-and-tone profile for the brand to govern copy"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - small-business
 packs:

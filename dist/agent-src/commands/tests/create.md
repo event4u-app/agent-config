@@ -10,8 +10,7 @@ skills: [test-case-discovery, pest-testing, quality-tools]
 description: Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 suggestion:
   eligible: false
-  trigger_description: "write tests for these changes, add tests for this branch"
-  trigger_context: "code changes on the branch without matching test changes"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

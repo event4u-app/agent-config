@@ -11,8 +11,7 @@ argument-hint: "<ingest-id-prefix>"
 skills: [file-editor]
 suggestion:
   eligible: false
-  trigger_description: "forget this ingest, drop the acme knowledge, remove the customer folder from agent memory"
-  trigger_context: "user wants to purge a specific knowledge ingest"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

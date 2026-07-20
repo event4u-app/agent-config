@@ -11,8 +11,7 @@ description: Run the council on a design document, ADR, or architecture proposal
 argument-hint: "[path]"
 suggestion:
   eligible: false
-  trigger_description: "council on this design, second opinion on the ADR, external review of architecture proposal"
-  trigger_context: "user has a design doc / ADR / architecture proposal and wants an external review before commitment"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

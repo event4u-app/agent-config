@@ -10,8 +10,7 @@ description: Reviews, updates, and refactors existing project-level overrides.
 skills: [override-management, agent-docs-writing]
 suggestion:
   eligible: false
-  trigger_description: "review my overrides, update the project overrides"
-  trigger_context: "existing entries under agents/overrides/"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

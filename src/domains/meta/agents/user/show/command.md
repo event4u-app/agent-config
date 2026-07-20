@@ -10,8 +10,7 @@ skills: [agents]
 description: Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
 suggestion:
   eligible: false
-  trigger_description: "show user persona, render .agent-user.md, print who the user is"
-  trigger_context: "user wants to see what's currently in .agent-user.md without editing"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

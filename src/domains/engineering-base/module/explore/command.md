@@ -11,8 +11,7 @@ description: Explore a module — load its structure, docs, and context into the
 argument-hint: "[module-name]"
 suggestion:
   eligible: false
-  trigger_description: "show me the X module, load the module context"
-  trigger_context: "existing Modules/<Name>/ referenced in the prompt"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

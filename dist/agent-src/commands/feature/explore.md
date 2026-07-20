@@ -11,8 +11,7 @@ description: Brainstorm and explore a feature idea before committing to a full p
 argument-hint: "[idea]"
 suggestion:
   eligible: false
-  trigger_description: "brainstorm this idea, explore this feature concept"
-  trigger_context: "open-ended feature idea without acceptance criteria"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

@@ -13,8 +13,7 @@ skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-a
 description: Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
 suggestion:
   eligible: false
-  trigger_description: "self-review my changes, judge this diff before PR"
-  trigger_context: "uncommitted or staged changes pre-PR"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

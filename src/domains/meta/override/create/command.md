@@ -10,8 +10,7 @@ description: Creates a project-level override for a shared skill, rule, or comma
 skills: [override-management, agent-docs-writing]
 suggestion:
   eligible: false
-  trigger_description: "override this skill for the project, customize this rule locally"
-  trigger_context: "prompt names a shared skill/rule needing project-specific behavior"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

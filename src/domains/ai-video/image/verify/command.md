@@ -12,8 +12,7 @@ personas: [hollywood-director]
 skills: [image-analyser]
 suggestion:
   eligible: false
-  trigger_description: "verify this render, does the generated image pass the canon, re-check fidelity after regeneration, loop-verify"
-  trigger_context: "user has a generated candidate image + a character id and wants the canon-fidelity gate verdict"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

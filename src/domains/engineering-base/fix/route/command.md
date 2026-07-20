@@ -10,8 +10,7 @@ description: Classify a vaguely-described problem and dispatch to the right fix 
 argument-hint: "[free-text problem description]"
 suggestion:
   eligible: false
-  trigger_description: "something's broken but I'm not sure which fixer — throw me a problem and route it"
-  trigger_context: "user describes a problem without naming a specific fix sub-command"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

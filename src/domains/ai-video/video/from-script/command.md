@@ -12,8 +12,7 @@ personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, pixar-storyteller, character-consistency, motion-choreographer]
 suggestion:
   eligible: false
-  trigger_description: "render a video from a script, full AI video pipeline, multi-scene generation"
-  trigger_context: "user supplies a Markdown script with `## Scene N` headings and wants a final MP4"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

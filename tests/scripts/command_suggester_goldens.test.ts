@@ -59,7 +59,10 @@ describe('GT-CS goldens', () => {
         const { ranked, block } = suggest('commit my changes and write a PR description');
         const names = ranked.map((m) => m.command);
         expect(names).toContain('git-commit');
-        expect(names).toContain('git-pr-create-description-only');
+        // surface-consolidation: the `:description-only` sub-command is no longer
+        // independently suggestion-eligible; the pr:create HEAD absorbs the
+        // "write a PR description" intent and self-suggests (the /fix:route pattern).
+        expect(names).toContain('git-pr-create');
         expect(block).toContain(`> ${ranked.length + 1}. Just run the prompt as-is, no command`);
     });
 

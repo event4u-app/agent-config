@@ -10,8 +10,7 @@ description: Audits skills — measures baseline, finds duplicates/merge candida
 skills: [skill-reviewer]
 suggestion:
   eligible: false
-  trigger_description: "audit my skills, find duplicate skills"
-  trigger_context: "maintainer working on .augment/skills/ files"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

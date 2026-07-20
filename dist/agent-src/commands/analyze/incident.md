@@ -11,8 +11,7 @@ description: Full incident flow — incident-commander coordination, then RCA vi
 argument-hint: "[incident-description]"
 suggestion:
   eligible: false
-  trigger_description: "production is down, active incident, Vorfall, Prod ist down, full incident analysis"
-  trigger_context: "user is managing or reviewing a production incident end-to-end"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - engineering
 packs:

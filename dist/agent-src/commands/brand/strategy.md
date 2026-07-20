@@ -11,8 +11,7 @@ description: Define brand positioning, archetype, voice, tone, and messaging ove
 argument-hint: "<brief>"
 suggestion:
   eligible: false
-  trigger_description: "define our brand strategy, what's our brand archetype, positioning and messaging, brand voice direction"
-  trigger_context: "user wants brand positioning/archetype/voice/messaging before identity or UI work"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - small-business
 packs:

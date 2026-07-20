@@ -11,8 +11,7 @@ description: Audit a past architectural decision — restate what was chosen and
 argument-hint: "[adr-id | path | decision-name]"
 suggestion:
   eligible: false
-  trigger_description: "decision review, ADR review, did this hold up, rückblick Architektur, past decision"
-  trigger_context: "user wants to audit a past architectural decision or ADR for continued validity"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - engineering
 packs:

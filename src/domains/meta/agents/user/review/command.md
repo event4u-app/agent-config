@@ -10,8 +10,7 @@ skills: [agents]
 description: List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
 suggestion:
   eligible: false
-  trigger_description: "review user observations, see what the agent learned about me, list buffered persona updates"
-  trigger_context: "user wants to see what the agent has buffered about their preferences before applying changes"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

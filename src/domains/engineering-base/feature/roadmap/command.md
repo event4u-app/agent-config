@@ -11,8 +11,7 @@ description: Generate implementation roadmap(s) from a feature plan and link the
 argument-hint: "[feature-name]"
 suggestion:
   eligible: false
-  trigger_description: "turn this feature into a roadmap, generate the implementation roadmap"
-  trigger_context: "existing feature plan without linked roadmap"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

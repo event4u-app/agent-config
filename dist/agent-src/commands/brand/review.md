@@ -11,8 +11,7 @@ description: Audit emitted UI, copy, and assets against the active brand tokens 
 argument-hint: "<artifact-path | description>"
 suggestion:
   eligible: false
-  trigger_description: "audit our brand consistency, is this on-brand, check this UI/copy against the brand, brand review"
-  trigger_context: "user has emitted UI/copy/assets and wants an on-brand consistency check against tokens + voice"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - small-business
 packs:

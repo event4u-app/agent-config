@@ -11,8 +11,7 @@ description: Analyze an external reference repository (competitor, inspiration, 
 argument-hint: "<repo-url | owner/repo | archive-url> [--focus=<area>] [--no-roadmap]"
 suggestion:
   eligible: false
-  trigger_description: "look at how X does this, compare with that other repo, study this competitor's approach"
-  trigger_context: "external repo URL or path mentioned in the prompt"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

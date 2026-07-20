@@ -10,8 +10,7 @@ description: "Summarise per-item JSON results from `/research:deep` into `report
 skills: [deep-reading-analyst]
 suggestion:
   eligible: false
-  trigger_description: "summarise research results, build research report, render outline.yaml results"
-  trigger_context: "user has finished `/research:deep` and wants a single markdown summary"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

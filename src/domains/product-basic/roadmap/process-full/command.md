@@ -11,8 +11,7 @@ description: Autonomously process every open step across every phase of a roadma
 argument-hint: "[roadmap]"
 suggestion:
   eligible: false
-  trigger_description: "process the whole roadmap, finish the roadmap, komplette roadmap abarbeiten"
-  trigger_context: "existing agents/roadmaps/*.md and user wants the entire file done end-to-end"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

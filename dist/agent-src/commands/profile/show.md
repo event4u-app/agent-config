@@ -9,8 +9,7 @@ sub: show
 description: Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface)
 suggestion:
   eligible: false
-  trigger_description: "show my active profile, which packs are active, what's surfaced this session, profile status"
-  trigger_context: "user wants to see the current session-profile state and what it hides"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

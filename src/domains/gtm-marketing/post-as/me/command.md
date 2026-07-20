@@ -11,8 +11,7 @@ description: Draft a copyable markdown post in the maintainer's own voice (style
 argument-hint: "[topic] [--tone] [--length] [--channel] [--audience]"
 suggestion:
   eligible: false
-  trigger_description: "write as me, draft in my own voice, post as myself, draft from .agent-user.md"
-  trigger_context: "user wants a copyable draft in their own captured voice from .agent-user.md; no third-party voice, no disclosure footer"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

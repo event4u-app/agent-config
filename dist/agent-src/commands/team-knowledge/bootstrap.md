@@ -10,8 +10,7 @@ description: One-shot deterministic seed for a fresh project's knowledge layer â
 skills: []
 suggestion:
   eligible: false
-  trigger_description: "bootstrap the knowledge base, seed project knowledge, initialize agents/knowledge, onboard this project's knowledge layer"
-  trigger_context: "a project has no agents/knowledge/ typed pages yet and the user wants a starting baseline"
+  rationale: "Cluster sub-command â€” reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

@@ -11,8 +11,7 @@ description: Safe worktree removal gate — refuses while the branch holds commi
 argument-hint: "[worktree-path]"
 suggestion:
   eligible: false
-  trigger_description: "clean up the worktrees, remove the finished worktree"
-  trigger_context: "git worktree list shows worktrees whose branches are merged"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

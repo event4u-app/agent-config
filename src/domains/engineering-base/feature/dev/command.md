@@ -11,8 +11,7 @@ argument-hint: "[description]"
 skills: [laravel, php-coder]
 suggestion:
   eligible: false
-  trigger_description: "build this feature end-to-end, run the full feature workflow"
-  trigger_context: "long-form feature description spanning multiple components"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

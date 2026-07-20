@@ -11,8 +11,7 @@ description: Run the council on an optimization target — perf hot path, memory
 argument-hint: "[target]"
 suggestion:
   eligible: false
-  trigger_description: "council on this perf hot path, second opinion on this optimization, external review of /optimize output"
-  trigger_context: "user has an optimization target (code path, query, profile result, /optimize-* output) and wants a ranked external opinion"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

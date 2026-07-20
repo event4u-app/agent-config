@@ -11,8 +11,7 @@ description: Hard-delete a ghostwriter profile at agents/reference/ghostwriter/<
 argument-hint: "[slug]"
 suggestion:
   eligible: false
-  trigger_description: "delete ghostwriter profile, remove public-figure voice, drop ghostwriter, retire captured profile"
-  trigger_context: "user wants to permanently remove a captured ghostwriter profile from agents/reference/ghostwriter/"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

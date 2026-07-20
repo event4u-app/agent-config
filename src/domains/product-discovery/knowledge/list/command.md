@@ -11,8 +11,7 @@ argument-hint: "[--format=table|json] [--pin <id-prefix>] [--unpin <id-prefix>]"
 skills: [file-editor]
 suggestion:
   eligible: false
-  trigger_description: "what knowledge has the agent ingested, list ingested folders, show knowledge memory, pin this ingest"
-  trigger_context: "user wants to inspect or curate the local knowledge namespace"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

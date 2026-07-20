@@ -11,8 +11,7 @@ description: Blame-free post-mortem after a resolved incident — consume the in
 argument-hint: "[incident-description]"
 suggestion:
   eligible: false
-  trigger_description: "post-mortem, Nachbesprechung, incident review, was ist schiefgelaufen"
-  trigger_context: "incident or outage is resolved and a structured write-up is needed"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - engineering
 packs:

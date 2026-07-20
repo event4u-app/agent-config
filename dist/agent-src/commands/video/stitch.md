@@ -12,8 +12,7 @@ personas: [ai-video-technical-director]
 skills: []
 suggestion:
   eligible: false
-  trigger_description: "re-stitch existing video clips, rebuild final MP4 after edits, ffmpeg concat existing scenes"
-  trigger_context: "user has edited clips in `<project>/scenes/*/` and wants the final.mp4 rebuilt without paying for re-renders"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

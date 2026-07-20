@@ -11,8 +11,7 @@ description: Compute reviewer roles and matched historical bug patterns for the 
 argument-hint: "[base-ref head-ref]"
 suggestion:
   eligible: false
-  trigger_description: "who should review this, suggest reviewers for this PR"
-  trigger_context: "PR open without assigned reviewers"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

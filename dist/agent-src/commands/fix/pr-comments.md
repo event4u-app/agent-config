@@ -11,8 +11,7 @@ description: Fix, commit+push, reply to, then resolve all open review comments (
 argument-hint: "[pr-url]"
 suggestion:
   eligible: false
-  trigger_description: "fix all PR review comments, resolve the review feedback"
-  trigger_context: "open PR with unresolved comments (bot + human)"
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:
