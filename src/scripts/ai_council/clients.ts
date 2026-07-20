@@ -44,6 +44,7 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import { appendEvent } from './events_log.js';
 
@@ -1101,6 +1102,11 @@ export abstract class CliClient extends ExternalAIClient {
         const spawnOpts: Parameters<typeof spawnSync>[2] = {
             encoding: 'utf-8',
             timeout: Math.round(this.timeout_seconds * 1000),
+            // Least-Agency: scrub code-execution-injection env vectors
+            // (loader preload, git *_COMMAND, NODE_OPTIONS, …) so an
+            // attacker-influenced parent env cannot RCE via the spawned CLI
+            // or a `git` it invokes internally.
+            env: hardenedSpawnEnv(),
         };
         if (stdinPayload !== null) {
             spawnOpts.input = stdinPayload;
