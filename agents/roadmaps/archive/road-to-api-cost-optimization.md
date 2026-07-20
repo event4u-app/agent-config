@@ -222,11 +222,15 @@ over model memory).
 
 ## Phase A3 — (follow-up, sequenced AFTER A1 ships + is measured) cache-coupling-gated auto model-tiering
 
-- [ ] PRECONDITION: verify how `necessity.ts:334-526` defines "small" (byte vs
+- [x] PRECONDITION: verify how `necessity.ts:334-526` defines "small" (byte vs
       token vs heuristic); a token-based classifier adds a tokenizer dependency +
       a pre-flight call under the sequential-dispatch constraint
       (`orchestrator.ts:11`) — document it.
-- [ ] Wire the size classifier + `model_ladder` (`config.ts:374`) to
+      <!-- done 2026-07-20: chars (code points via _pyLen), thresholds 200/800 +
+      complexity-trigger heuristic, downgrade-only; token classifier rejected
+      (tokenizer dep / paid pre-flight on the sequential path) — documented in
+      necessity.ts § classify_size_fit JSDoc. -->
+- [x] Wire the size classifier + `model_ladder` (`config.ts:374`) to
       **auto-downgrade** (not just suggest) small / low-impact artefacts + the
       `low_impact.ts:635` fast-path to a cheaper tier, behind an opt-out flag,
       `debate` lens excluded — **gated on the A1↔A3 coupling:** downgrade only when
@@ -234,10 +238,26 @@ over model memory).
       model-scoped cache). Add a per-artefact `model_tier_override` escape hatch in
       `.ai-council.yml`. Verify: a small low-impact run downgrades only when
       net-positive; ledger shows the cheaper model + lower total.
-- [ ] Tighten the repair re-prompt (`orchestrator.ts:705`) to fire only on a
+      <!-- done 2026-07-20: auto_apply default flipped to TRUE (opt-out) in
+      config._build_model_downgrade + council_cli._resolve_model_downgrade;
+      A1↔A3 coupling via new pricing.downgrade_coupling (expected reads =
+      rounds − 1; skip when lost cache ≥ model saving, logged); fast-path
+      downgrades to ladder[0] outright (one-shot → nothing to lose);
+      model_tier_override (member → model pin, validated) skips classifier +
+      coupling. Contract documented in docs/contracts/ai-council-config.md.
+      Tests: pricing 23/23 (4 new coupling), low_impact 22/22 (4 new
+      fast-path), config/necessity/council_cli suites green (118 before new
+      additions). debate-lens exclusion pre-existing in classify_size_fit. -->
+- [x] Tighten the repair re-prompt (`orchestrator.ts:705`) to fire only on a
       genuinely unparseable STANCE. Verify: well-formed round → zero repair calls;
       injected malformed STANCE → ≥1 repair, ≤ `max_repair_attempts`.
-- [ ] **Cross-round read unlock (from the A1 verification finding).** Restructure
+      <!-- done 2026-07-20: leniency folded INTO parse_stance_line (strict grammar
+      first, then a cosmetic-normalization fallback: markdown emphasis + comma/
+      semicolon separators on stance-bearing lines only) so tally and repair see
+      the same truth; genuinely-unparseable (missing field, bad enum, no line)
+      still repairs. Tests: stance_tally 18/18 (6 new), orchestrator 33/33 incl.
+      zero-repair-on-cosmetic-defect; the ≤1-repair cap is structural. -->
+- [x] **Cross-round read unlock (from the A1 verification finding).** Restructure
       the round prompt so the cached span is a byte-stable `[base_system +
       artefact]` prefix and the per-round critiques ride in a **trailing** block
       after the breakpoint (per Anthropic's "freeze the system prefix" guidance).
@@ -247,6 +267,19 @@ over model memory).
       on a council output-quality spot-check. Verify: a multi-round single-member
       run shows `cache_read_input_tokens > 0` on round 2 and a lower realized cost
       than the pre-A1 baseline.
+      <!-- done 2026-07-20: base ExternalAIClient.ask_split (default concat —
+      every transport unchanged) + AnthropicClient._ask_impl override placing
+      the breakpoint on the STABLE user block only, suffix uncached; consult
+      AND debate loops now carry a volatile suffix (_critique_suffix /
+      _debate_suffix twins; question.user_prompt stays the full concat for
+      estimates/persistence). LIVE VERIFY (2-round debate on this roadmap as
+      artefact, $0.082): anthropic round 1 write=6953, round 2 READ=6953 with
+      only 1286 uncached input — the read unlock is real; round-2 output
+      quality spot-checked (coherent steel-man rebuttal engaging the artefact).
+      Tests: clients 64/64 (3 new ask_split), orchestrator 35/35 (2 new
+      stable-prefix + concat-parity), full ai_council sweep 471/471,
+      typecheck green. Small prompts (< min cacheable prefix ~1k tokens)
+      still never cache — expected, documented A1 behaviour. -->
 
 ## Phase A4 — DECISION (council-convergent): defer the Batch API
 
@@ -279,13 +312,19 @@ over model memory).
       decision → cite `api-cost-levers`" — and update the
       `token-optimizer-maintenance` rule catalog so the CI freshness gate covers
       the new row. Verify: `check_token_optimizer_freshness` + skill linter green.
-- [~] (deferred follow-up) Add targeted one-line pointers that reference the **token-optimizer index
+- [x] Add targeted one-line pointers that reference the **token-optimizer index
       branch** (NOT the guideline directly — single source of truth, per council)
       from `token-efficiency` rule (caching discipline), `subagent-orchestration`
       skill cost section (non-interactive bulk cohorts → batch), and
       `model-recommendations.md` / `model-recommendation` rule (cost-tier
       cross-link to `/cost:report`'s dominant-lever note). Verify: reference
       checker green; no Iron-Law / preservation regressions (`check_condensation`).
+      <!-- done 2026-07-20 (deferred item picked up in the A3 run — tiny,
+      fully specified, unblocks archival): three pointers land in
+      token-efficiency (§ API-dollar levers), subagent-orchestration (budget
+      bullet) and model-recommendations context (§ Cost cross-link), each
+      citing the token-optimizer index branch, never the guideline directly.
+      src + dist twins, condensation hashes clean. -->
 
 ## Acceptance criteria (this PR = A1+A2 + B1+B2; A3 is a measured follow-up, A4 decided)
 
