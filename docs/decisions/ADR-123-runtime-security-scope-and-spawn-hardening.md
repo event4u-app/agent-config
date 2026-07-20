@@ -109,3 +109,34 @@ are also rejected: per-file pragma containment (`security_lint.ts`) only.
   costs nothing to keep.
 - **Env allowlist instead of deny-by-family.** Rejected — would strip env the
   provider CLIs need and rot as new good vars appear.
+
+## Follow-up (2026-07-21) — `road-to-spawn-env-completion`
+
+The 9.6.0 external review reproduced a working exploit against the fix this ADR
+shipped: `GIT_CONFIG_COUNT` / `GIT_CONFIG_KEY_<n>` / `GIT_CONFIG_VALUE_<n>` (and
+`GIT_CONFIG_GLOBAL` / `_SYSTEM`) survived the deny-by-family scrub — the
+`GIT_*_COMMAND` family missed them (no `_COMMAND` suffix) — letting an attacker
+set arbitrary git config (`core.fsmonitor` runs shell on every `git status`,
+which the consumer-runtime hooks trigger). `GIT_ALTERNATE_OBJECT_DIRECTORIES`
+and `HOSTALIASES` also leaked. **Confirmed empirically (all 5) and closed:**
+`hardenedSpawnEnv` now denies the whole `GIT_CONFIG`/`GIT_CONFIG_*` family by
+prefix plus the two exact vars, with falsifiable test vectors (red without the
+fix, green with it).
+
+**`maintainer-ci-spawn-sweep` blocker — resolved by classification, not mass
+migration.** Rather than migrate ~15 low-risk maintainer/CI sites, all spawn
+sites are now classified in `docs/spawn-site-policy.md` (Consumer Runtime /
+Maintainer CLI / trusted CI / install-time). The consumer-runtime dispatcher
+(`hooks/dispatch_hook.ts`) — missed in PR #984 — now routes through
+`hardenedSpawnEnv`; the maintainer/CI/install sites are documented exempt with
+rationale (env is maintainer- or workflow-controlled, not attacker-influenced).
+
+**Secure-spawn lint — rejected (council 2026-07-21, claude-sonnet-4-5 +
+gpt-4o).** A CI lint forbidding raw spawn in runtime paths was proposed (P0 in
+the review) but rejected: it is net-new governance surface (a CI gate +
+allowlist + exemption-adjudication + false-positive triage), which the folded
+complexity-budget lock (PR #983) forbids — the lock text explicitly lists
+"linter". The "retires ad-hoc review" justification failed the retirement test
+(no such review gate exists to retire). `docs/spawn-site-policy.md` is the
+self-enforcing substitute: its completeness claim is checked by git-diff
+visibility at review time, not a build gate.

@@ -29,6 +29,15 @@ const INJECTION_VARS: Record<string, string> = {
     // family-matched (not in the exact set): a GIT_*_COMMAND variant + an LD_ one
     GIT_ALTERNATE_OBJECT_DIRECTORIES_COMMAND: 'evil',
     LD_AUDIT: '/tmp/evil-audit.so',
+    // git config-injection (the reproduced core.fsmonitor RCE): the GIT_CONFIG*
+    // family sets arbitrary git config; git runs core.fsmonitor as shell on
+    // every `git status`, which the consumer-runtime hooks trigger.
+    GIT_CONFIG_COUNT: '1',
+    GIT_CONFIG_KEY_0: 'core.fsmonitor',
+    GIT_CONFIG_VALUE_0: 'sh -c "touch /tmp/pwned"',
+    GIT_CONFIG_GLOBAL: '/tmp/evil.gitconfig',
+    GIT_ALTERNATE_OBJECT_DIRECTORIES: '/tmp/evil-objects',
+    HOSTALIASES: '/tmp/evil-hostaliases',
 };
 
 function withEnv<T>(vars: Record<string, string>, fn: () => T): T {
