@@ -210,6 +210,13 @@ visible, not hidden.
 - status: backed
 - last_verified: 2026-07-11
 
+### claim: positioning-honest-nulls
+- claim: The only agent layer that publishes the runs where it changed nothing. Deliberately falsifiable — if a reader finds a comparable agent layer publishing its own honest-null benchmark runs, this line updates; that is the point.
+- kind: comparative
+- evidence: docs/benchmark.md#honest
+- status: backed
+- last_verified: 2026-07-20
+
 ### claim: persona-identity-placebo-null
 - claim: On a 12-fixture option-decision corpus (3 arms × 2 providers, blind rubric judge claude-opus-4-8, pre-registered hypotheses), famous-figure identity framing added nothing beyond the underlying method text (method 5.04 vs figure 4.88, Δ=0.17, sign-test p=0.607), and provider diversity moved judged quality ~15× more than persona identity (provider Δ=2.58 vs identity Δ=0.17); the whole persona layer lifted only +0.08 over bare prompts. Honest null — persona panel-mode stays CUT, evidence-closed.
 - kind: quant
@@ -223,6 +230,13 @@ visible, not hidden.
 - evidence: internal/bench/reports/second-brain-retrieval.json#retrieval-on
 - status: backed
 - last_verified: 2026-07-12
+
+### claim: wedge-hollow-detection
+- claim: On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate.
+- kind: quant
+- evidence: internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured
+- status: backed
+- last_verified: 2026-07-20
 
 ### claim: cross-model-parity-count
 - claim: The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts via the council transport, $0.16) measured real per-host finding-count differences — claude-sonnet-4-5 surfaced ~2× the findings of gpt-4o on the multi-file analysis task (median 11 vs 5) while both vendors were identical on the planted hollow-implementation task (2 vs 2) and perfectly silent on the clean-code negative control (0 vs 0, no spurious findings). The per-task `finding_floor` values are calibrated from the cross-host lower envelope and the gate is armed.

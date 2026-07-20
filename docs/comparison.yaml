@@ -33,3 +33,13 @@ rows:
     our_evidence: "tests/scripts/witness/check_refs_relative_gap.test.ts"
     their_evidence: "Published known-limitation surfaces backed by reproducing tests are not a standard artifact in this category."
     checkable: true
+
+  - claim: "A 30-second single-file wedge exists — one read-only subagent, one command, verdict with file:line — and its promise is a scoped, published eval, not a feature list."
+    our_evidence: "internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured"
+    their_evidence: "Category entry points typically install the full platform (profiles, packs, runtime) before the first felt win; single-artifact entries with a published eval behind the promise are not a standard artifact."
+    checkable: true
+
+  - claim: "The persona-identity question was tested and published as an honest null (identity swap ~zero effect, provider choice ~15x larger) instead of being shipped as theater."
+    our_evidence: "internal/bench/reports/persona-placebo.json#honest-null"
+    their_evidence: "Named-persona prompts are shipped as a feature across the category without a published A/B separating identity from method."
+    checkable: true
