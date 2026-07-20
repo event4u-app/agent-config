@@ -1030,3 +1030,76 @@ describe('clients — CLI parse_output byte-parity with python3', () => {
         expect(tsParse(XAICliClient, stdout)).toEqual(pyParse('XAICliClient', stdout));
     });
 });
+
+describe('ask_split — A3 cross-round read unlock', () => {
+    it('caching on: breakpoint ONLY on the stable block; suffix rides uncached', () => {
+        let captured: Record<string, unknown> | null = null;
+        const mock = {
+            messages: {
+                create(kwargs: Record<string, unknown>) {
+                    captured = kwargs;
+                    return fakeAnthropicResponse('ok', 1, 2);
+                },
+            },
+        };
+        new AnthropicClient({ client: mock, enable_prompt_cache: true }).ask_split(
+            'SYS',
+            'STABLE-ARTEFACT',
+            '\n\n---\n\nROUND CRITIQUES',
+            99,
+        );
+        expect(captured).toEqual({
+            model: 'claude-sonnet-4-5',
+            max_tokens: 99,
+            system: [{ type: 'text', text: 'SYS', cache_control: { type: 'ephemeral' } }],
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'text',
+                            text: 'STABLE-ARTEFACT',
+                            cache_control: { type: 'ephemeral' },
+                        },
+                        { type: 'text', text: '\n\n---\n\nROUND CRITIQUES', cache_control: undefined },
+                    ].map((b) => (b.cache_control === undefined ? { type: b.type, text: b.text } : b)),
+                },
+            ],
+        });
+    });
+
+    it('caching on, empty suffix: byte-identical to ask()', () => {
+        const calls: Array<Record<string, unknown>> = [];
+        const mock = {
+            messages: {
+                create(kwargs: Record<string, unknown>) {
+                    calls.push(kwargs);
+                    return fakeAnthropicResponse('ok', 1, 2);
+                },
+            },
+        };
+        const c = new AnthropicClient({ client: mock, enable_prompt_cache: true });
+        c.ask('SYS', 'USER', 42);
+        c.ask_split('SYS', 'USER', '', 42);
+        expect(calls[1]).toEqual(calls[0]);
+    });
+
+    it('caching off: split concatenates into the plain string shape', () => {
+        let captured: Record<string, unknown> | null = null;
+        const mock = {
+            messages: {
+                create(kwargs: Record<string, unknown>) {
+                    captured = kwargs;
+                    return fakeAnthropicResponse('ok', 1, 2);
+                },
+            },
+        };
+        new AnthropicClient({ client: mock }).ask_split('SYS', 'A', 'B', 7);
+        expect(captured).toEqual({
+            model: 'claude-sonnet-4-5',
+            max_tokens: 7,
+            system: 'SYS',
+            messages: [{ role: 'user', content: 'AB' }],
+        });
+    });
+});
