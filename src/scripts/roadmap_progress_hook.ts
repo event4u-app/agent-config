@@ -38,6 +38,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { hardenedSpawnEnv } from "./_lib/spawn_env.js";
 import { log_dispatch_issue } from "./hooks/dispatch_issues.js";
 
 export const REPLAY_ENV_VAR = "AGENT_CONFIG_REPLAY";
@@ -414,6 +415,7 @@ export function run(
         cwd: root,
         stdio: ["ignore", "ignore", "ignore"],
         timeout: 30000,
+        env: hardenedSpawnEnv(),
       });
     } catch {
       // never propagate regenerator failures into the agent loop
