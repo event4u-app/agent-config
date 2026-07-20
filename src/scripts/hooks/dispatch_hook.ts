@@ -35,6 +35,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
 
+import { hardenedSpawnEnv } from "../_lib/spawn_env.js";
 import {
   atomic_write_json,
   feedback_dir,
@@ -500,7 +501,10 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
   // Pass the package root so concerns can locate package-shipped
   // distributed content (ADR-020 global-only consumers carry no
   // project-local copy). REPO_ROOT is the dispatcher's own resolved root.
-  const concern_env = { ...process.env, AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT };
+  // Consumer-runtime concern dispatch: scrub code-execution-injection env
+  // vectors (loader / git-config / NODE_OPTIONS / …) before spawning each
+  // concern, then set the package-root marker as an explicit override.
+  const concern_env = hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT });
 
   const started = performance.now();
   const { command, args: spawnArgs } = _resolve_tsx_invocation(script, cmd.slice(1));

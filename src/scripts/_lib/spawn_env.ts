@@ -14,6 +14,11 @@
  *   - git command-injection (CWE-88): GIT_EXTERNAL_DIFF, GIT_SSH,
  *     GIT_SSH_COMMAND, GIT_PROXY_COMMAND, any GIT_*_COMMAND, GIT_PAGER, PAGER —
  *     git runs these as shell commands (`core.pager` / external-diff RCE).
+ *   - git config-injection (CWE-88): the GIT_CONFIG* family (GIT_CONFIG,
+ *     GIT_CONFIG_GLOBAL/_SYSTEM, and inline GIT_CONFIG_COUNT / GIT_CONFIG_KEY_<n>
+ *     / GIT_CONFIG_VALUE_<n>) sets ANY git config — `core.fsmonitor` runs shell
+ *     on every `git status`; GIT_ALTERNATE_OBJECT_DIRECTORIES / HOSTALIASES
+ *     redirect object stores / hostname resolution.
  *   - runtime auto-exec hooks: NODE_OPTIONS (`--require attacker.js`),
  *     BASH_ENV / ENV (sourced by non-interactive shells), PYTHONPATH /
  *     PYTHONSTARTUP / PYTHONINSPECT, PERL5OPT / PERL5LIB, RUBYOPT.
@@ -45,6 +50,13 @@ const DENY_EXACT: ReadonlySet<string> = new Set([
     'GIT_PROXY_COMMAND',
     'GIT_PAGER',
     'PAGER',
+    // git config-injection: GIT_ALTERNATE_OBJECT_DIRECTORIES can point git at
+    // attacker-controlled object stores; the GIT_CONFIG* family is handled by
+    // prefix below (it is a general arbitrary-config-injection primitive).
+    'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+    // resolver hijack: HOSTALIASES remaps hostnames via an attacker file,
+    // redirecting any network fetch the child performs (CWE-427-adjacent).
+    'HOSTALIASES',
     // runtime auto-exec hooks
     'NODE_OPTIONS',
     'BASH_ENV',
@@ -61,14 +73,22 @@ const DENY_EXACT: ReadonlySet<string> = new Set([
 
 /**
  * Prefix families removed by pattern. `LD_` / `DYLD_` cover loader variants we
- * did not enumerate; `GIT_*_COMMAND` covers every git config-command hook
- * (e.g. GIT_ASKPASS is intentionally NOT here — it is a path, not a shell
- * command, and legitimate credential helpers need it; the *_COMMAND family is
- * the shell-executed one).
+ * did not enumerate; `GIT_*_COMMAND` covers every git config-command hook; the
+ * `GIT_CONFIG` family (GIT_CONFIG, GIT_CONFIG_GLOBAL, GIT_CONFIG_SYSTEM, and the
+ * inline GIT_CONFIG_COUNT / GIT_CONFIG_KEY_<n> / GIT_CONFIG_VALUE_<n> trio) is a
+ * general arbitrary-config-injection primitive — an attacker can set ANY git
+ * config key, e.g. `core.fsmonitor` / `core.pager` / `core.sshCommand` /
+ * `core.hooksPath` / `alias.*`, all of which git executes as shell on ordinary
+ * operations (`git status` alone runs `core.fsmonitor`). The plain `GIT_*_COMMAND`
+ * check missed it (no `_COMMAND` suffix), so it is denied by its own prefix.
+ * (GIT_ASKPASS is intentionally NOT denied — it is a path, not a shell command,
+ * and legitimate credential helpers need it; the *_COMMAND family is the
+ * shell-executed one.)
  */
 function isDeniedByFamily(name: string): boolean {
     if (name.startsWith('LD_') || name.startsWith('DYLD_')) return true;
     if (name.startsWith('GIT_') && name.endsWith('_COMMAND')) return true;
+    if (name === 'GIT_CONFIG' || name.startsWith('GIT_CONFIG_')) return true;
     return false;
 }
 
