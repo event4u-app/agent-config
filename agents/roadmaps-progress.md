@@ -6,10 +6,10 @@
 
 ## Overall
 
-**94 / 146 steps done · 64%**
+**95 / 146 steps done · 65%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+██████████████████████████░░░░░░░░░░░░░░   65%
 ```
 
 ## Open roadmaps
@@ -23,7 +23,7 @@
 | 5 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
 | 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 8 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 12 | 26 | 1 | 0 | [2](#blockers-road-to-team-mode) | ███████░░░ 68% |
+| 8 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 11 | 27 | 1 | 0 | [2](#blockers-road-to-team-mode) | ███████░░░ 71% |
 | 9 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
@@ -164,7 +164,7 @@ _1 blocker resolved._
 
 ### [road-to-team-mode.md](roadmaps/road-to-team-mode.md)
 
-**Road to team mode — govern the official cross-model pair, don't rebuild it** — 26 / 38 done (68%)
+**Road to team mode — govern the official cross-model pair, don't rebuild it** — 27 / 38 done (71%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -173,7 +173,7 @@ _1 blocker resolved._
 | 2 | `/team` command family (Claude-Code path) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | Multi-host fallback (the gap only we can fill) | ✅ done | 0 | 4 | 1 | 0 | 100% |
 | 4 | Review-Gate governance | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Defect-finding benchmark (measure the marketing) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | Defect-finding benchmark (measure the marketing) | 🟡 in progress | 4 | 1 | 0 | 0 | 20% |
 | 6 | Close-out | 🟡 in progress | 7 | 4 | 0 | 0 | 36% |
 
 <a id="blockers-road-to-team-mode"></a>

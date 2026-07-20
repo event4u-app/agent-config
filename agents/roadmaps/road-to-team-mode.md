@@ -363,9 +363,16 @@ existing bench-rig discipline before any public copy exists.
 > LOOP and the deferred worker-delegate share the same gate: both unlock
 > only on a positive review-lift verdict here.
 
-- [ ] **Step 1:** Fixture set: 10–15 seeded-defect diffs (logic bug, race,
+- [x] **Step 1:** Fixture set: 10–15 seeded-defect diffs (logic bug, race,
       missing empty-state, off-by-one, security smell) with pre-registered
       blind-judging rubrics, stored under the bench fixtures tree.
+      <!-- done 2026-07-20: internal/bench/corpora/defect-finding.yaml — 12
+      fixtures (5 classes × 2 + 2 controls: clean-refactor + controversial-but-
+      correct), each with a deterministic file:line GROUND TRUTH for recall and
+      a PRE-REGISTERED blind-judge rubric. Header fixes primary/secondary
+      metrics, H1/H2/H3 + numeric thresholds, arms, and model pins BEFORE any
+      spend (prereg discipline). Zero-spend authoring; Steps 2-5 (running the
+      arms) stay gated on benchmark-spend-authorization. -->
 - [ ] **Step 2:** Three arms: (a) single-model adversarial self-review (host
       model, existing skill), (b) cross-model team review (Phase 2/3 path),
       (c) `council:pr` at default depth. Record found/missed per defect class,
