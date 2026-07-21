@@ -498,6 +498,11 @@ tasks:
     desc: Block readable external inspiration/harvest source names from the tracked tree (source-confidentiality rule + 2026-06-13 sweep)
     cmd: ./scripts-run src/scripts/check_no_external_sources
 
+  check-source-pointer-freshness:
+    silent: true
+    desc: Fail when an authoring file names the retired .agent-src.uncondensed/ tree as source of truth (doc-follows-code — downstream-changes § Doc-Impact)
+    cmd: ./scripts-run src/scripts/check_source_pointer_freshness
+
   check-module-management-neutral:
     silent: true
     desc: Verify module-management SKILL stays framework-neutral (Phase C of road-to-configurable-modules)

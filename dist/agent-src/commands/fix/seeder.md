@@ -9,9 +9,8 @@ sub: seeder
 skills: [eloquent]
 description: Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
 suggestion:
-  eligible: true
-  trigger_description: "the seeder is broken, foreign key errors in seeders"
-  trigger_context: "seeder error output or recent edits in database/seeders/"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 framework: laravel
 workspaces:
   - agent-config-maintainer

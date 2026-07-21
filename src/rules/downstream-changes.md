@@ -45,7 +45,36 @@ After editing any file, search for **all** of these:
 | **Config / bindings** | Search service providers, config files | Update class references in DI bindings |
 | **API schemas / OpenAPI** | Check controller attributes | Update if response structure changed |
 | **Routes** | Search `routes/` for controller references | Update after controller rename/move |
-| **Documentation** | Search `agents/`, `docs/` for references | Update if behavior or API changed |
+| **Documentation** | Search `agents/`, `docs/`, `README`, examples for references | Update the doc that **describes** the changed surface — see Doc-Impact below |
+
+## Doc-Impact — docs follow code (same change)
+
+```
+A CHANGE TO A PUBLIC SURFACE IS INCOMPLETE UNTIL THE DOC THAT
+DESCRIBES IT IS UPDATED IN THE SAME CHANGE. A DOC MAKING A CLAIM
+THE CODE NOW CONTRADICTS IS A BROKEN CHANGE, NOT A STYLE NIT.
+```
+
+**Public surfaces** whose change triggers a doc update: HTTP route /
+endpoint · exported function / class signature · CLI command or flag ·
+config / settings key · env var · DB schema or migration · event
+payload. Update the doc that describes it — README, API / OpenAPI docs,
+AGENTS.md, code examples, CHANGELOG — in the same commit.
+
+**Drift = a falsifiable-claim contradiction**, not incompleteness. Fire
+when a reader following the doc would be misled: an endpoint that no
+longer exists, a wrong return type, a renamed key, a broken example. Do
+**not** fire on "the doc could be more detailed" — completeness is a
+quality nit, not drift.
+
+**Escape hatch** (no false-positive fatigue): refactor-only / no
+public-surface change → no doc obligation. If a surface changed but
+genuinely needs no doc edit, state the one-line reason instead of
+editing a doc to satisfy the rule.
+
+Detection + the framework-agnostic surface→doc map (Laravel / Symfony /
+Next.js / Python / Go) live in [`agent-docs-writing`](../skills/agent-docs-writing/SKILL.md)
+§ Doc-Impact — run it after every code change.
 
 ## Breaking changes
 
@@ -78,3 +107,4 @@ After completing all downstream changes:
 3. **No broken types / signatures** — project's type-checker (PHPStan / Psalm, TypeScript, mypy / pyright, `go vet`, `cargo check`).
 4. **No stale references** — grep for the old name / namespace / import path to confirm zero results.
 5. **No own-orphans** — the same sweep applied to the new diff: identifiers whose last reference disappeared in a file this diff touched are removed in the same diff (see [`minimal-safe-diff § Own-orphan cleanup`](minimal-safe-diff.md#own-orphan-cleanup)); pre-existing dead code stays.
+6. **No doc drift** — a public surface changed this diff has its describing doc updated (or the one-line no-doc-needed reason stated), per Doc-Impact above.

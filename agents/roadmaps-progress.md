@@ -2,32 +2,30 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 12 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers
+> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**91 / 175 steps done · 52%**
+**105 / 156 steps done · 67%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+███████████████████████████░░░░░░░░░░░░░   67%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 15 | 1 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | █░░░░░░░░░ 6% |
-| 2 | [road-to-api-cost-optimization.md](roadmaps/road-to-api-cost-optimization.md) | 4 | 14 | 4 | 9 | 1 | 0 | 0 | ███████░░░ 69% |
-| 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-ecosystem-harvest-domain-watch.md](roadmaps/road-to-ecosystem-harvest-domain-watch.md) | 3 | 8 | 6 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-ecosystem-harvest-index.md](roadmaps/road-to-ecosystem-harvest-index.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
-| 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 6 | 6 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | █████░░░░░ 50% |
-| 8 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 9 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 10 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 11 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 15 | 23 | 1 | 0 | [2](#blockers-road-to-team-mode) | ██████░░░░ 61% |
-| 12 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 7 | 9 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 56% |
+| 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
+| 4 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 5 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
+| 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 8 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 9 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 10 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -35,14 +33,14 @@
 
 ### [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md)
 
-**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 1 / 16 done (6%)
+**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 9 / 16 done (56%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Quick wins already verified missing (autonomous, hours not weeks) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
-| 1 | One 30-second wedge, not the whole platform | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Discoverability where the category is browsed | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Turn the proof surface into the differentiator narrative | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | One 30-second wedge, not the whole platform | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 2 | Discoverability where the category is browsed | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 3 | Turn the proof surface into the differentiator narrative | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | Convert the wedge to the platform (measured, not assumed) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-adoption-without-narrative-debt"></a>
@@ -58,17 +56,6 @@
 
 _2 blockers resolved._
 
-### [road-to-api-cost-optimization.md](roadmaps/road-to-api-cost-optimization.md)
-
-**Road to API-cost optimization — cut the dollar bill of paid LLM calls** — 9 / 13 done (69%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| A3 | (follow-up, sequenced AFTER A1 ships + is measured) cache-coupling-gated auto model-tiering | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| A4 | DECISION (council-convergent): defer the Batch API | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| B1 | One consolidated Claude-API cost-lever reference (guideline, not a skill) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| B2 | Wire the reference into the existing index + canon (extend, don't duplicate) | ✅ done | 0 | 7 | 1 | 0 | 100% |
-
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
 **Follow-up to CI-native release — first live run + drills** — 0 / 8 done (0%)
@@ -77,24 +64,6 @@ _2 blockers resolved._
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-
-### [road-to-ecosystem-harvest-domain-watch.md](roadmaps/road-to-ecosystem-harvest-domain-watch.md)
-
-**Ecosystem-Harvest — Domain Watch (gated verticals)** — 0 / 6 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | The one in-mission exception (adopt) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 2 | Gated verticals (do NOT open — watch-notes) | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
-| 3 | Watch-note authoring | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-
-### [road-to-ecosystem-harvest-index.md](roadmaps/road-to-ecosystem-harvest-index.md)
-
-**Ecosystem-Harvest Index** — 0 / 10 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Adoption sequencing (accept plates in priority order) | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
 
 ### [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md)
 
@@ -106,11 +75,11 @@ _2 blockers resolved._
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
-**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 6 / 12 done (50%)
+**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 12 done (58%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Dogfood the review machinery as a pre-merge gate | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
+| 1 | Dogfood the review machinery as a pre-merge gate | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 2 | CODEOWNERS + branch protection | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 3 | Make a release inheritable (the runbook) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 4 | Lower bus-factor toward >1 (opportunistic, honest) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
@@ -194,9 +163,31 @@ _1 blocker resolved._
     (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
   - **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines for the current month.
 
+### [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md)
+
+**Road to surface consolidation — collapse the proactive mental surface, remove don't add** — 6 / 11 done (55%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Collapse the proactive suggestion surface (the core) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Supporting net-reductions (remove / fold, never add) | 🟡 in progress | 5 | 3 | 2 | 0 | 38% |
+
+<a id="blockers-road-to-surface-consolidation"></a>
+**Blockers**
+
+- **launch-and-adoption** (owner: user) — blocks the product half of the review (post the drafted launch, distribute the wedge, run a first external session)
+  - **What to do:**
+  - **Resolved when:** the launch is posted and ≥1 external session is recorded.
+- **repo-admin-and-usage** (owner: maintainer) — blocks branch-protection apply; utilization-driven MERGE/DEMOTE/HIDE/REMOVE of artefacts (needs loaded-vs-fired usage over the window); auto-tiering monitoring
+  - **What to do:**
+  - **Resolved when:** branch protection is on and the utilization window has produced a data-backed removal list.
+- **benchmark-spend** (owner: user) — blocks lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
+  - **What to do:**
+  - **Resolved when:** the maintainer authorizes the specific run with an estimate.
+
 ### [road-to-team-mode.md](roadmaps/road-to-team-mode.md)
 
-**Road to team mode — govern the official cross-model pair, don't rebuild it** — 23 / 38 done (61%)
+**Road to team mode — govern the official cross-model pair, don't rebuild it** — 31 / 37 done (84%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -205,8 +196,8 @@ _1 blocker resolved._
 | 2 | `/team` command family (Claude-Code path) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | Multi-host fallback (the gap only we can fill) | ✅ done | 0 | 4 | 1 | 0 | 100% |
 | 4 | Review-Gate governance | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Defect-finding benchmark (measure the marketing) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | Close-out | 🟡 in progress | 10 | 1 | 0 | 0 | 9% |
+| 5 | Defect-finding benchmark (measure the marketing) | ✅ done | 0 | 4 | 1 | 0 | 100% |
+| 6 | Close-out | 🟡 in progress | 6 | 5 | 0 | 0 | 45% |
 
 <a id="blockers-road-to-team-mode"></a>
 **Blockers**

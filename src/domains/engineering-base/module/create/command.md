@@ -10,9 +10,8 @@ skills: [laravel]
 description: Create a new module from .module-template with interactive setup
 argument-hint: "[module-name]"
 suggestion:
-  eligible: true
-  trigger_description: "create a new module, scaffold a module for X"
-  trigger_context: "prompt mentions a new domain area without an existing module"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 framework: laravel
 workspaces:
   - agent-config-maintainer

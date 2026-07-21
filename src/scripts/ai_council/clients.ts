@@ -44,6 +44,7 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import { appendEvent } from './events_log.js';
 
@@ -281,6 +282,27 @@ export abstract class ExternalAIClient {
         user_prompt: string,
         max_tokens?: number,
     ): CouncilResponse;
+
+    /**
+     * Cache-aware variant (A3 cross-round read unlock): the caller splits the
+     * user prompt into a byte-stable prefix (system + artefact — identical
+     * across rounds) and a volatile suffix (per-round critiques, stance
+     * contract). Clients with native prompt-cache support override this and
+     * place the cache breakpoint on the stable block only, so round N+1 READS
+     * the prefix instead of re-writing it. Default: plain concatenation —
+     * byte-identical to `ask()` for every transport without cache support.
+     */
+    ask_split(
+        system_prompt: string,
+        stable_prompt: string,
+        volatile_suffix: string,
+        max_tokens?: number,
+    ): CouncilResponse {
+        const user_prompt = volatile_suffix
+            ? `${stable_prompt}${volatile_suffix}`
+            : stable_prompt;
+        return this.ask(system_prompt, user_prompt, max_tokens);
+    }
 }
 
 /** Shared ctor-options shape for the API clients. */
@@ -395,6 +417,27 @@ export class AnthropicClient extends ExternalAIClient {
         user_prompt: string,
         max_tokens: number = DEFAULT_MAX_TOKENS,
     ): CouncilResponse {
+        return this._ask_impl(system_prompt, user_prompt, '', max_tokens);
+    }
+
+    override ask_split(
+        system_prompt: string,
+        stable_prompt: string,
+        volatile_suffix: string,
+        max_tokens: number = DEFAULT_MAX_TOKENS,
+    ): CouncilResponse {
+        return this._ask_impl(system_prompt, stable_prompt, volatile_suffix, max_tokens);
+    }
+
+    private _ask_impl(
+        system_prompt: string,
+        stable_prompt: string,
+        volatile_suffix: string,
+        max_tokens: number,
+    ): CouncilResponse {
+        const user_prompt = volatile_suffix
+            ? `${stable_prompt}${volatile_suffix}`
+            : stable_prompt;
         const t0 = _nowMs();
         let response: unknown;
         try {
@@ -426,12 +469,19 @@ export class AnthropicClient extends ExternalAIClient {
                       messages: [
                           {
                               role: 'user',
+                              // Breakpoint on the STABLE block only — the
+                              // volatile suffix (round critiques) rides after
+                              // it, so round N+1 reads the cached prefix
+                              // instead of re-writing it (A3 read unlock).
                               content: [
                                   {
                                       type: 'text',
-                                      text: user_prompt,
+                                      text: stable_prompt,
                                       cache_control: { type: 'ephemeral' },
                                   },
+                                  ...(volatile_suffix
+                                      ? [{ type: 'text', text: volatile_suffix }]
+                                      : []),
                               ],
                           },
                       ],
@@ -1052,6 +1102,11 @@ export abstract class CliClient extends ExternalAIClient {
         const spawnOpts: Parameters<typeof spawnSync>[2] = {
             encoding: 'utf-8',
             timeout: Math.round(this.timeout_seconds * 1000),
+            // Least-Agency: scrub code-execution-injection env vectors
+            // (loader preload, git *_COMMAND, NODE_OPTIONS, …) so an
+            // attacker-influenced parent env cannot RCE via the spawned CLI
+            // or a `git` it invokes internally.
+            env: hardenedSpawnEnv(),
         };
         if (stdinPayload !== null) {
             spawnOpts.input = stdinPayload;

@@ -22,7 +22,7 @@ capability that sits inside the suite's mission.
 
 ## Phase 1 — The one in-mission exception (adopt)
 
-- [ ] **U1 — `evaluate-llm-feature` skill (black-box).** The real gap: a user building their product with the suite cannot get help evaluating the **LLM feature they ship**. Adopt a *black-box* evaluator — user describes the shipped LLM behavior; the skill runs adversarial probes (hallucination, prompt-injection, cost-runaway), checks against stated expectations, and reports findings. **Scope boundary:** evaluates the feature as a black box; it does **not** teach RAG architecture / chunk sizing / embedding models (that is *building* an LLM app, out of mission). *Source A (llm-evaluation), D (agent-evaluation).* Verify: "review my chatbot" fires the skill; it emits injection/hallucination/cost findings, not a RAG tutorial.
+- [x] **U1 — `evaluate-llm-feature` skill (black-box).** The real gap: a user building their product with the suite cannot get help evaluating the **LLM feature they ship**. Adopt a *black-box* evaluator — user describes the shipped LLM behavior; the skill runs adversarial probes (hallucination, prompt-injection, cost-runaway), checks against stated expectations, and reports findings. **Scope boundary:** evaluates the feature as a black box; it does **not** teach RAG architecture / chunk sizing / embedding models (that is *building* an LLM app, out of mission). *Source A (llm-evaluation), D (agent-evaluation).* Verify: "review my chatbot" fires the skill; it emits injection/hallucination/cost findings, not a RAG tutorial.
 
 ## Phase 2 — Gated verticals (do NOT open — watch-notes)
 
@@ -31,7 +31,7 @@ capability that sits inside the suite's mission.
 
 ## Phase 3 — Watch-note authoring
 
-- [ ] **U2 — Write the two watch-notes.** Create `agents/settings/contexts/domain-watch/{llm-app-engineering,cloud-native}.md`, each listing the missing gate evidence, so the next harvest re-evaluates without re-litigating. *Per `domain-adoption-policy` § "What to do when the gates fail".* Verify: both notes exist and name their gates.
+- [x] **U2 — Write the two watch-notes.** Create `agents/settings/contexts/domain-watch/{llm-app-engineering,cloud-native}.md`, each listing the missing gate evidence, so the next harvest re-evaluates without re-litigating. *Per `domain-adoption-policy` § "What to do when the gates fail".* Verify: both notes exist and name their gates.
 
 ## Council convergence (2026-07-11)
 
@@ -43,7 +43,7 @@ embedding / vector = out of mission.
 
 ## Acceptance criteria
 
-- [ ] `evaluate-llm-feature` ships as a black-box evaluator (no RAG-building content).
-- [ ] Two watch-notes exist under `agents/settings/contexts/domain-watch/` with gate requirements.
-- [ ] Neither vertical is opened; the reject/gate rationale is recorded so it is not relitigated.
-- [ ] Dashboard regenerated.
+- [x] `evaluate-llm-feature` ships as a black-box evaluator (no RAG-building content).
+- [x] Two watch-notes exist under `agents/settings/contexts/domain-watch/` with gate requirements.
+- [x] Neither vertical is opened; the reject/gate rationale is recorded so it is not relitigated.
+- [x] Dashboard regenerated.

@@ -1,0 +1,47 @@
+{
+  "skill": "contribution-precheck",
+  "last_eval": "2026-07-20",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers a contributor asking to pre-validate their changed skills/commands/personas locally before opening a PR against this package. Should-not-trigger covers near-miss neighbors: full CI runs (task ci), maintainer-side whole-catalog lint (/lint-skills --all), consumer-project quality tooling (quality-tools), reviewing someone else's PR, and generic git workflow questions.",
+  "queries": [
+    {
+      "q": "check my new skill before I open the PR",
+      "trigger": true
+    },
+    {
+      "q": "will my contribution pass the originality gate?",
+      "trigger": true
+    },
+    {
+      "q": "prüf meine geänderten Skills lokal bevor ich pushe",
+      "trigger": true
+    },
+    {
+      "q": "run the contribution precheck on my changed files",
+      "trigger": true
+    },
+    {
+      "q": "is my skill PR ready — frontmatter, lint, originality?",
+      "trigger": true
+    },
+    {
+      "q": "run the full CI pipeline locally",
+      "trigger": false
+    },
+    {
+      "q": "lint the whole skill catalog",
+      "trigger": false
+    },
+    {
+      "q": "run phpstan and rector on my Laravel project",
+      "trigger": false
+    },
+    {
+      "q": "review PR #969 for me",
+      "trigger": false
+    },
+    {
+      "q": "how do I squash my commits before pushing?",
+      "trigger": false
+    }
+  ]
+}

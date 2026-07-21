@@ -5,7 +5,7 @@ status: ready
 
 # Roadmap: Ecosystem-Harvest — Bug & Security Rigor
 
-**Trigger:** Ecosystem survey (see [`road-to-ecosystem-harvest-index`](../road-to-ecosystem-harvest-index.md)).
+**Trigger:** Ecosystem survey (see [`road-to-ecosystem-harvest-index`](road-to-ecosystem-harvest-index.md)).
 Sources cited source-anonymously (**G** = a security-firm skills repo, **A** = a
 multi-harness marketplace, **F** = a SaaS-pack marketplace); full provenance +
 `ENC1:` tokens in the index § Provenance.

@@ -232,7 +232,10 @@ export function _collect_skills(): Entry[] {
                 kind: 'skill',
                 name,
                 description: _truncate(fm['description'] ?? ''),
-                extra: '',
+                // Provenance: `official` unless the skill declares
+                // `provenance: community` (external contribution — credited in
+                // CREDITS.md; the catalog column makes the credit visible).
+                extra: fm['provenance'] ?? 'official',
                 path: _relativeToPosix(skillMd, ROOT),
             });
         }
@@ -372,7 +375,7 @@ export function _render_index(
         '',
         `## Skills (${skills.length})`,
         '',
-        _render_table(skills, ['kind', 'name', 'extra', 'description'], '../'),
+        _render_table(skills, ['kind', 'name', 'source', 'description'], '../'),
         '',
         `## Rules (${rules.length})`,
         '',
@@ -428,7 +431,7 @@ export function _render_catalog(
         '> (`./scripts-run src/scripts/domain_soundness_status`). A disclaimer',
         '> floor bounds liability, not correctness — see [the proof page](proof.md).',
         '',
-        _render_table(skills, ['kind', 'name', 'extra', 'description'], '../', _to_shipped_path),
+        _render_table(skills, ['kind', 'name', 'source', 'description'], '../', _to_shipped_path),
         '',
         `## Rules (${publicRules.length})`,
         '',

@@ -10,9 +10,8 @@ description: "Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI v
 argument-hint: "[DETAIL|BASIC] [using <ai>] [prompt]"
 skills: [prompt-optimizer]
 suggestion:
-  eligible: true
-  trigger_description: "optimize this prompt, make it better for ChatGPT, rewrite for Claude, sharpen this AI prompt"
-  trigger_context: "user pastes a rough prompt or names a target AI and asks for it to be improved"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

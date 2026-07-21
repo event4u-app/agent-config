@@ -14,7 +14,7 @@ skills: [git-workflow]
 description: Create a GitHub PR with structured description from Jira ticket and code changes
 suggestion:
   eligible: true
-  trigger_description: "open a PR, create a pull request, make a PR for this branch"
+  trigger_description: "open a PR, create a pull request, make a PR for this branch, write a PR description"
   trigger_context: "branch is ahead of base and not yet on a PR"
 workspaces:
   - agent-config-maintainer

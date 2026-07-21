@@ -134,3 +134,33 @@ Each settled decision this roadmap does NOT touch:
   ADR-120 (council chairman mode), ADR-109 (subagent-v1 contract).
 - `docs/CLAIMS.md#adversarial-council-finding-coverage` — the pre-registered claim.
 - `cross-vendor-parity` (backed) — the evidence the finding-coverage scope rests on.
+
+## Addendum (2026-07-21) — finding-coverage claim resolved HONEST-NULL
+
+The pre-registered `adversarial-council-finding-coverage` claim was executed and
+resolved **negative**. A curated judge-survivable corpus
+(`internal/bench/adversarial-council/`: 12 planted-defect fixtures across
+multi-file-interaction / logic-inversion / security-masked / complex-state + 3
+controversial-but-correct clean controls; subtlety distribution published;
+passed an independent validity audit after one fixture was repaired) was run
+cross-vendor (anthropic `claude-sonnet-4-5` + openai `gpt-4o`) under the
+maintainer spend authorization.
+
+**Result:** on the judge-passed residual, the 2-vendor skeptic panel matched the
+single skeptic exactly (residual recall 0.60 = 0.60, **zero lift** — the second
+vendor's catches were a strict subset of the first's), at a **100%** false-
+positive rate on the controversial-but-correct controls under the adversarial-
+skeptic posture. Both locked recall thresholds missed -> honest-null. **The
+Mode 9 `adversarial-verification-council` surface stays default-off permanently**
+(no settings change — it already ships off), recorded like recursive-verification
+(ADR-106). Detail + reproducible artifact:
+`docs/benchmark.md#adversarial-verification-council`,
+`internal/bench/adversarial-council/runs/`.
+
+**Transport lesson (durable):** `council_cli run`/`debate` is a *deliberation*
+transport — multi-round peer-review with cross-member visibility, prose output.
+It is the WRONG tool for an independent-skeptic, structured-output benchmark (it
+violated the independence requirement and defeated JSON scoring; the first run
+through it was rejected as an artifact). The valid measurement uses direct,
+independent per-vendor client calls with a strict-JSON contract and a
+deterministic, pre-validated scorer.

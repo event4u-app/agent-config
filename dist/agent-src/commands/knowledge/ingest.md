@@ -10,9 +10,8 @@ description: Walk a local path (folder, .zip, single file), redact PII + secrets
 argument-hint: "<path> [--no-redact] [--markitdown=<bin>]"
 skills: [file-editor]
 suggestion:
-  eligible: true
-  trigger_description: "ingest this folder, add these PDFs to the agent, point the agent at my customer files, /knowledge:ingest <path>"
-  trigger_context: "user wants the agent to know about a local folder or document without OAuth connectors"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

@@ -329,6 +329,16 @@ tasks:
     desc: "road-to-6.1.0 Step 8b (ADR-055) — validate src/flows/*.yaml against the flow schema + resolve every command/skill reference + closed-set/completeness"
     cmd: ./scripts-run src/scripts/lint_flows {{.QUIET_FLAG}}
 
+  lint-originality:
+    silent: true
+    desc: "Anti-reskin gate — entity-neutralized shingle overlap over skills/personas/commands; blocks find-replace re-skins (FAIL 60, calibrated). Full audit writes agents/reports/originality.md; --changed <file...> for a PR-scoped check."
+    cmd: ./scripts-run src/scripts/lint_originality {{.QUIET_FLAG}}
+
+  validate-flow-teams:
+    silent: true
+    desc: "Advisory — every flow `team:` annotation resolves to a real persona id and skill slug (demand-probe primitive; formalize a roster schema only on organic use)."
+    cmd: ./scripts-run src/scripts/validate_flow_teams {{.QUIET_FLAG}}
+
   lint-command-flow-coverage:
     silent: true
     desc: "road-to-6.1.0 Step 9 — every src/domains command is classified into exactly one flow/surface in src/flows/surface-map.yaml (the Flows primary view)"

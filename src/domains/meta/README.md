@@ -5,12 +5,12 @@
 Artefacts that maintain this package (agent-config itself).
 
 - **id**: `meta`
-- **version**: `9.3.0`
+- **version**: `9.6.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 280
+- **artefacts**: 281
 
-## Commands (146)
+## Commands (147)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -33,6 +33,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`context`** — Context orchestrator — routes to create, refactor
 - **`context-create`** — Analyze a codebase area and create a structured context document
 - **`context-refactor`** — Analyze, update, and extend an existing context document
+- **`contribution-precheck`** — Contributor self-service precheck: run the PR-relevant lint subset (skill linter, originality gate, frontmatter schema) on changed files locally — a verdict with fix hints before opening a PR.
 - **`cost`** — Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_loading_tier)
 - **`cost-profile`** — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 - **`estimate-ticket`** — Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
@@ -242,7 +243,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`context-document`** — Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation.
 - **`copilot-agents-optimization`** — Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
 - **`copilot-config`** — Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`).
-- **`decision-record`** — Use when choosing between alternatives with trade-offs — X-or-Y decisions (pattern vs pattern, strategy vs strategy) — frames options · trade-offs · consequences; ADR draft via `adr-create`.
+- **`decision-record`** — Use when choosing between alternatives with trade-offs — X-or-Y decisions or a weighted decision matrix / gewichtete Entscheidungsmatrix ('score my options'); ADR via `adr-create`.
 - **`description-assist`** — Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'.
 - **`doc-coauthoring`** — Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'.
 - **`docx-authoring`** — Use when generating or editing a Word .docx — create, fill a template, or edit body XML via a consumer library; round-trip validated. Triggers on 'generate a docx', 'fill this Word template'.

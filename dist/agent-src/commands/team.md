@@ -146,6 +146,10 @@ measured improvement.
 
 - `/council` — breadth under a neutrality contract; the complement, not the
   competitor.
+- `subagent-orchestration` skill — the in-session, same-weights variant (no
+  network, no spend); team is cross-model with repo access. The three-way
+  router split: council = independent breadth, team = collaborative depth,
+  subagents = in-session same-weights.
 - `adversarial-review` skill — the free single-model first rung below
   `/team adversarial`.
 - `docs/contracts/ai-team-config.md` — the `ai_team` settings block

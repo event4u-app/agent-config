@@ -559,7 +559,7 @@ replication on a per-token-billed key.
 - Runner: `src/scripts/bench_ab_v2_run.ts --host codex` (checkpoint-resumable).
 - Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 2.
 
-## adversarial-verification-council finding coverage — UNBACKED (pending corpus + run)
+## adversarial-verification-council finding coverage — HONEST NULL (resolved 2026-07-21)
 
 Pre-registered claim `adversarial-council-finding-coverage` (docs/CLAIMS.md,
 ADR-122): on the RESIDUAL defect pool — defects that survive a single strong
@@ -574,11 +574,75 @@ controversial-but-correct control.
   **AND** absolute >= +8 pp, **AND** panel FP not worse than baseline within
   noise — encoded + tested in
   [`src/scripts/_lib/adversarial_council_gate.ts`](../src/scripts/_lib/adversarial_council_gate.ts).
-- **Status: UNBACKED.** The corpus-validity gate BLOCKS the registered run: the
-  existing `internal/bench/orchestration/corpus/` was built for cross-vendor
-  *parity* (obvious, model-differentiating defects), not judge-survivable
-  residual subtleties, so a run on it would be a measurement artifact (the
-  council's Round-1 critique). Resolving the claim needs (1) a curated
-  judge-survivable-subtlety corpus with a published distribution, then (2) a
-  maintainer-gated paid cross-vendor run. Honest-null on that run keeps the
-  surface default-off permanently, like recursive-verification.
+- **Status: HONEST NULL (resolved 2026-07-21).** A curated judge-survivable
+  corpus was built (`internal/bench/adversarial-council/`: 12 planted-defect
+  fixtures across 4 subtlety classes + 3 controversial-but-correct clean
+  controls; subtlety distribution published; passed an independent validity
+  audit after one fixture was repaired). The registered cross-vendor run
+  (anthropic `claude-sonnet-4-5` + openai `gpt-4o`, spend-authorized) resolved
+  the claim NEGATIVE:
+
+  | quantity | value |
+  |---|--:|
+  | judge-passed residual pool | 5–7 defects (missed by both neutral passes) |
+  | single-skeptic residual recall | 0.60 |
+  | 2-vendor panel residual recall | 0.60 (**zero lift**) |
+  | single-skeptic FP on clean controls | 1.00 |
+  | panel FP on clean controls | 1.00 |
+
+  The second vendor's residual catches were a **strict subset** of the first's,
+  so the panel added no marginal coverage; both recall thresholds (+25% rel,
+  +8 pp abs) missed → **honest-null**. Under the adversarial-skeptic posture
+  both the single skeptic and the panel false-flagged **all three**
+  controversial-but-correct controls (100% FP) — the posture over-flags correct
+  code. Stable across two runs. Per the locked gate, the Mode 9 surface stays
+  **default-off permanently** (like recursive-verification). Reproducible
+  artifact: `internal/bench/adversarial-council/runs/`.
+- **Transport lesson.** The first run attempted via `council_cli run` was
+  REJECTED as a measurement artifact: that transport runs multi-round
+  peer-review with cross-member visibility and returns prose ("Round 2 …
+  Reviewer A"), which both violates the independent-skeptic requirement and
+  defeats JSON scoring. The valid run uses direct, independent per-vendor
+  client calls (`bench_adversarial_council.ts`) with a strict-JSON system
+  prompt and a deterministic, pre-validated scorer
+  (`adversarial_bench_score.ts` + its synthetic red/green test).
+
+
+## Defect-finding: team vs self-review vs council (2026-07-20) — HONEST NULL (ceiling-limited) {#honest-null-defect}
+
+Pre-registered 12-fixture corpus (`internal/bench/corpora/defect-finding.yaml`:
+10 seeded-defect diffs across logic / off-by-one / race / missing-empty-state /
+security-smell, + 2 controls), three arms, deterministic file-level recall
+against ground truth (blind rubric judge deferred — the primary metric is
+deterministic). Codex reviewer pinned `gpt-5.5`. Total billable $0.083 (arm b
+codex = ChatGPT subscription, $0).
+
+| arm | recall | correctness | design | false-positives |
+|---|--:|--:|--:|--:|
+| self-review (single model) | 1.00 | 1.00 | 1.00 | 1 |
+| team (cross-model, codex) | 1.00 | 1.00 | 1.00 | 0 |
+| council (neutral breadth)  | 1.00 | 1.00 | 1.00 | 0 |
+
+**Verdict: HONEST NULL.** H1 (cross-model team > single-model self-review on
+correctness recall, Δ ≥ +0.20) is **not met** — Δ = 0: all three arms recalled
+every planted defect. H2 (council ≈ team on design, within 0.10) is met (Δ = 0).
+H3 (≤ 1 false positive/arm) is met.
+
+**Corpus-validity caveat (the honest bound):** recall 1.00 across every arm is a
+**ceiling effect** — these seeded defects are catchable by any strong model, so
+the corpus cannot discriminate the arms on recall. This is the same limitation
+the adversarial-verification-council section names: a corpus of obvious,
+model-differentiating defects measures parity, not the judge-survivable
+subtleties where a cross-model lens might actually differ. The one non-null
+signal is precision, not recall: single-model self-review produced 1 false
+positive on the controversial-but-correct control (`df-ctl-01`, a
+behaviour-preserving `clamp` refactor) where team and council produced 0 — a
+hint of a multi-arm precision edge, within the pre-registered H3 bound, too
+small to claim.
+
+**Disposition (Phase 5 Step 5): evidence-closed as NULL.** No cross-model
+defect-finding *quality/lift* claim binds; team mode stays documented as
+**workflow value only**. Re-open conditions: (a) a curated
+judge-survivable-subtlety corpus that breaks the recall ceiling, or (b) a new
+model generation. The worker-via-bundle delegate (roadmap Phase 3 Step 4) stays
+deferred — it re-opened only on a measured review lift, which did not occur.

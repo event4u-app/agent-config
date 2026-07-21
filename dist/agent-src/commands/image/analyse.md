@@ -11,9 +11,8 @@ argument-hint: "<path-or-url> [character-id]"
 personas: [hollywood-director]
 skills: [image-analyser]
 suggestion:
-  eligible: true
-  trigger_description: "analyse a character image, check character accuracy, does this render match the canon, find what drifted"
-  trigger_context: "user supplies an image path/URL (and optionally a character id) and wants a detailed feature extraction or canon diff"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

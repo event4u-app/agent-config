@@ -28,7 +28,7 @@ Do NOT use when:
   value — single file, one-liner fix
 * The user is still exploring — route to brainstorming / planning
   skills first
-* Budget is the constraint — each subagent call multiplies cost
+* Budget is the constraint — each subagent call multiplies cost; non-interactive bulk cohorts → batch/caching via the [`token-optimizer`](../token-optimizer/SKILL.md) index branch
 * The implementer and judge would be the same model on the same
   context — no added signal
 
@@ -395,5 +395,6 @@ Skip emit when `subagents.enabled: false` or `spawn_count == 0` (in-session run)
 | Stepwise plan with judge gates       | Inline — see [`prompts/do-in-steps.md`](prompts/do-in-steps.md) |
 | Standalone judge on an existing diff | Inline — see judge prompt in [`prompts/do-and-judge.md`](prompts/do-and-judge.md) |
 | External / networked second opinion  | [`ai-council`](../ai-council/SKILL.md) |
+| Cross-model review WITH repo access   | [`/team`](../../commands/team.md) (collaborative; subagents are in-session same-weights) |
 | Verifying completeness               | [`verify-before-complete`](../verify-before-complete/SKILL.md) |
 | What a subagent owns vs never owns   | [`subagent-boundary`](../../../docs/contracts/subagent-boundary.md) |

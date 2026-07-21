@@ -11,9 +11,8 @@ skills: [playwright-testing]
 description: Find, debug, and fix failing Playwright E2E tests
 argument-hint: "[test-file | ci-run-url]"
 suggestion:
-  eligible: true
-  trigger_description: "fix the failing E2E tests, playwright tests are red"
-  trigger_context: "failing test output from tests/e2e/"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

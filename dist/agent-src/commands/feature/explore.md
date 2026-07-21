@@ -10,9 +10,8 @@ skills: [laravel]
 description: Brainstorm and explore a feature idea before committing to a full plan
 argument-hint: "[idea]"
 suggestion:
-  eligible: true
-  trigger_description: "brainstorm this idea, explore this feature concept"
-  trigger_context: "open-ended feature idea without acceptance criteria"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

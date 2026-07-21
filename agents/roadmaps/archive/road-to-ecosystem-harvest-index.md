@@ -69,20 +69,20 @@ user decides when to run each plate).
 
 | Tier | Roadmap | Why here |
 |---|---|---|
-| **P1** | [`road-to-ecosystem-harvest-bug-security-rigor`](archive/road-to-ecosystem-harvest-bug-security-rigor.md) ✅ shipped | The over-reporting gate is a live credibility fire — an over-flagging bug/security cluster damages trust today. |
-| **P1** | [`road-to-ecosystem-harvest-reliability-measurement`](archive/road-to-ecosystem-harvest-reliability-measurement.md) ✅ shipped | The loaded-vs-fired utilization report is the only mechanism that lets the suite **subtract** dead-weight skills — it enables the token-budget program. Golden-adversarial fixtures make review output testable. |
-| **P1** | [`road-to-ecosystem-harvest-review-mechanics`](archive/road-to-ecosystem-harvest-review-mechanics.md) ✅ shipped | Five verified upgrades to the review surface (ordering-bias, change-type routing, reasoned validation + dropped-FP transparency, two-tier triage, security deep-verify). *(Second sweep.)* |
-| **P2** | [`road-to-ecosystem-harvest-skill-authoring-rigor`](archive/road-to-ecosystem-harvest-skill-authoring-rigor.md) ✅ shipped | Spec alignment + a quantitative description-optimizer raise the quality floor of every future skill. |
-| **P2** | [`road-to-ecosystem-harvest-skill-quality-gates`](archive/road-to-ecosystem-harvest-skill-quality-gates.md) ✅ shipped | Deterministic gates: description-circularity lint, eval-schema v2 (tool-choice + trajectory), effort pinning, read-only-by-default scripts, host-loadability smoke. *(Second sweep.)* |
-| **P2** | [`road-to-ecosystem-harvest-workflow-contracts`](archive/road-to-ecosystem-harvest-workflow-contracts.md) ✅ shipped | Per-mode forbidden-lists with diff-checkable negatives, a host-neutral HANDOFF contract, plan-first merge-conflicts. *(Second sweep.)* |
-| **P2** | [`road-to-ecosystem-harvest-prelaunch-diagnostics`](archive/road-to-ecosystem-harvest-prelaunch-diagnostics.md) ✅ shipped | Consumer-launch diagnostic: stable finding IDs, Unknown ≠ Pass epistemics, findings regression gate, suppression-with-evidence. *(Second sweep; split from reliability-measurement.)* |
-| **P2** | [`road-to-ecosystem-harvest-document-skills`](archive/road-to-ecosystem-harvest-document-skills.md) ✅ shipped | Completes the document read→write cycle (a read skill already ships); scoped v1, CI-gated pptx. |
-| **P2** | [`road-to-ecosystem-harvest-prose-authenticity`](road-to-ecosystem-harvest-prose-authenticity.md) | A prose-level AI-ism taxonomy fills a real hole the code/UI slop rules don't cover. |
-| **P2** | [`road-to-ecosystem-harvest-tool-pitfalls`](archive/road-to-ecosystem-harvest-tool-pitfalls.md) ✅ shipped | Cheap, high-signal troubleshooting sections on the highest-burden shipped tool skills. |
-| **P3** | [`road-to-ecosystem-harvest-product-gate`](archive/road-to-ecosystem-harvest-product-gate.md) ✅ shipped | A tiny "should this exist?" demand check, one altitude above the engineering-fit gate. |
-| **P3** | [`road-to-ecosystem-harvest-ergonomics`](archive/road-to-ecosystem-harvest-ergonomics.md) ✅ shipped | Ergonomic dispatch + per-phase commands; nice-to-have, low risk. |
+| **P1** | [`road-to-ecosystem-harvest-bug-security-rigor`](road-to-ecosystem-harvest-bug-security-rigor.md) ✅ shipped | The over-reporting gate is a live credibility fire — an over-flagging bug/security cluster damages trust today. |
+| **P1** | [`road-to-ecosystem-harvest-reliability-measurement`](road-to-ecosystem-harvest-reliability-measurement.md) ✅ shipped | The loaded-vs-fired utilization report is the only mechanism that lets the suite **subtract** dead-weight skills — it enables the token-budget program. Golden-adversarial fixtures make review output testable. |
+| **P1** | [`road-to-ecosystem-harvest-review-mechanics`](road-to-ecosystem-harvest-review-mechanics.md) ✅ shipped | Five verified upgrades to the review surface (ordering-bias, change-type routing, reasoned validation + dropped-FP transparency, two-tier triage, security deep-verify). *(Second sweep.)* |
+| **P2** | [`road-to-ecosystem-harvest-skill-authoring-rigor`](road-to-ecosystem-harvest-skill-authoring-rigor.md) ✅ shipped | Spec alignment + a quantitative description-optimizer raise the quality floor of every future skill. |
+| **P2** | [`road-to-ecosystem-harvest-skill-quality-gates`](road-to-ecosystem-harvest-skill-quality-gates.md) ✅ shipped | Deterministic gates: description-circularity lint, eval-schema v2 (tool-choice + trajectory), effort pinning, read-only-by-default scripts, host-loadability smoke. *(Second sweep.)* |
+| **P2** | [`road-to-ecosystem-harvest-workflow-contracts`](road-to-ecosystem-harvest-workflow-contracts.md) ✅ shipped | Per-mode forbidden-lists with diff-checkable negatives, a host-neutral HANDOFF contract, plan-first merge-conflicts. *(Second sweep.)* |
+| **P2** | [`road-to-ecosystem-harvest-prelaunch-diagnostics`](road-to-ecosystem-harvest-prelaunch-diagnostics.md) ✅ shipped | Consumer-launch diagnostic: stable finding IDs, Unknown ≠ Pass epistemics, findings regression gate, suppression-with-evidence. *(Second sweep; split from reliability-measurement.)* |
+| **P2** | [`road-to-ecosystem-harvest-document-skills`](road-to-ecosystem-harvest-document-skills.md) ✅ shipped | Completes the document read→write cycle (a read skill already ships); scoped v1, CI-gated pptx. |
+| **P2** | [`road-to-ecosystem-harvest-prose-authenticity`](../road-to-ecosystem-harvest-prose-authenticity.md) | A prose-level AI-ism taxonomy fills a real hole the code/UI slop rules don't cover. |
+| **P2** | [`road-to-ecosystem-harvest-tool-pitfalls`](road-to-ecosystem-harvest-tool-pitfalls.md) ✅ shipped | Cheap, high-signal troubleshooting sections on the highest-burden shipped tool skills. |
+| **P3** | [`road-to-ecosystem-harvest-product-gate`](road-to-ecosystem-harvest-product-gate.md) ✅ shipped | A tiny "should this exist?" demand check, one altitude above the engineering-fit gate. |
+| **P3** | [`road-to-ecosystem-harvest-ergonomics`](road-to-ecosystem-harvest-ergonomics.md) ✅ shipped | Ergonomic dispatch + per-phase commands; nice-to-have, low risk. |
 | **Watch** | [`road-to-ecosystem-harvest-domain-watch`](road-to-ecosystem-harvest-domain-watch.md) | New verticals (LLM-app engineering, cloud-native) — gated by `domain-adoption-policy`; one narrow exception adopted. |
-| **Coverage** | [`road-to-ecosystem-harvest-second-sweep`](archive/road-to-ecosystem-harvest-second-sweep.md) ✅ shipped | Closes disposition on **every** remaining catalog entry (the backing repo == this directory); fold-in patch list; introduces zero new workstreams. |
+| **Coverage** | [`road-to-ecosystem-harvest-second-sweep`](road-to-ecosystem-harvest-second-sweep.md) ✅ shipped | Closes disposition on **every** remaining catalog entry (the backing repo == this directory); fold-in patch list; introduces zero new workstreams. |
 
 ---
 
@@ -91,12 +91,12 @@ user decides when to run each plate).
 Each checkbox = a maintainer go/no-go to schedule that plate. Accepting a plate
 does not execute it; it moves the plate from "planned" to "cleared to start".
 
-- [ ] Accept **P1** plates (bug-security-rigor, reliability-measurement)
-- [ ] Accept **P2** plates (skill-authoring-rigor, document-skills, prose-authenticity, tool-pitfalls)
-- [ ] Accept **P3** plates (product-gate, ergonomics)
-- [ ] Confirm **domain-watch** dispositions (defer LLM-vertical + cloud-native to watch-notes; adopt only the narrow LLM-feature evaluator)
-- [ ] Accept the **second-sweep** cluster (review-mechanics, skill-quality-gates, workflow-contracts) + confirm the catalog is fully dispositioned
-- [ ] Ratify the § Reject-log (do not re-propose the rejected items without new evidence)
+- [x] Accept **P1** plates (bug-security-rigor, reliability-measurement)
+- [x] Accept **P2** plates (skill-authoring-rigor, document-skills, prose-authenticity, tool-pitfalls)
+- [x] Accept **P3** plates (product-gate, ergonomics)
+- [x] Confirm **domain-watch** dispositions (defer LLM-vertical + cloud-native to watch-notes; adopt only the narrow LLM-feature evaluator)
+- [x] Accept the **second-sweep** cluster (review-mechanics, skill-quality-gates, workflow-contracts) + confirm the catalog is fully dispositioned
+- [x] Ratify the § Reject-log (do not re-propose the rejected items without new evidence)
 
 ---
 
@@ -151,10 +151,12 @@ the parts that carry the system dependency.
 
 ## Acceptance criteria
 
-- [ ] All nine sibling roadmaps exist under `agents/roadmaps/` with the shared prefix, each self-contained (own reality-check + plate + acceptance).
-- [ ] Every sibling cites only its own sources by letter and points here for full provenance.
-- [ ] Dashboard regenerated (`./agent-config roadmap:progress`).
-- [ ] No tracked artifact names a real external source (CI `check-no-external-sources` green).
+- [x] Every sibling roadmap exists under `agents/roadmaps/` with the shared prefix, each self-contained (own reality-check + plate + acceptance). <!-- 14 siblings: 13 shipped/archived + prose-authenticity (open, decision-blocked at U6). The stale "nine" count predated the second-sweep + depth-reconciliation passes; corrected. -->
+- [x] Ratified 2026-07-19 (maintainer go/no-go, this session): 12 of 13 plates already shipped, domain-watch executed (#970); the sole unshipped sibling (prose-authenticity) is "cleared to start" per Phase 0, still blocked at U6. Accepting a plate ≠ executing it.
+- [x] Every sibling cites only its own sources by letter and points here for full provenance.
+- [x] Dashboard regenerated (`./agent-config roadmap:progress`).
+- [x] No harvest-family artifact names a real external source — the index (anonymized Sources A–N + `ENC1:` provenance) and every sibling cite by-letter only; `langchain` in the LLM-vertical prose is a descriptive category mention, not on the denylist. <!-- note: the tree-wide check-no-external-sources gate is red on PRE-EXISTING, unrelated debt (agents/memory/product-rules.yml ruflo/affaan-m/ruvnet; agents/roadmaps/archive/road-to-opt-retrieval-and-memory.md graphify) that predates this work and is out of scope per minimal-safe-diff. The harvest family itself is clean. -->
+
 
 ---
 

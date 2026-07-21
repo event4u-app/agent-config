@@ -10,9 +10,8 @@ skills: [worktree-lifecycle, using-git-worktrees]
 description: Create a governed worktree and write its scope-lock note — propose-once branch naming, host-native primitive preferred
 argument-hint: "[task] [branch-name]"
 suggestion:
-  eligible: true
-  trigger_description: "do this in a worktree, isolate this task, spawn a worktree for X"
-  trigger_context: "parallel or exploratory work while the current branch is mid-work"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

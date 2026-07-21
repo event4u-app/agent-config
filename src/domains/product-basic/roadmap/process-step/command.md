@@ -10,9 +10,8 @@ skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
 argument-hint: "[roadmap]"
 suggestion:
-  eligible: true
-  trigger_description: "process the next step, do the next roadmap step, einen schritt abarbeiten"
-  trigger_context: "existing agents/roadmaps/*.md and user wants exactly one step done autonomously"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

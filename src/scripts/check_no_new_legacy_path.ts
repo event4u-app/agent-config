@@ -24,6 +24,7 @@
  *   - src/scripts/_lib/agent_src.py        (the LEGACY_SRC constant)
  *   - src/scripts/check_references.py       (forbidden-substring detector)
  *   - src/scripts/check_condensed_paths.py  (forbidden-substring detector)
+ *   - src/scripts/check_source_pointer_freshness.ts (forbidden-substring detector)
  *
  * Faithful-twin rule (Python→TypeScript migration): a `*.ts` file is also
  * exempt when a same-stem `*.py` sibling exists AND already contains the
@@ -50,6 +51,7 @@ const EXEMPT: ReadonlySet<string> = new Set([
     'src/scripts/check_references.py',
     'src/scripts/check_condensed_paths.py',
     'src/scripts/check_no_new_legacy_path.py', // this file documents the literal
+    'src/scripts/check_source_pointer_freshness.ts', // forbidden-substring detector for the legacy tree
 ]);
 
 type TwinCheck = (curFile: string) => boolean;

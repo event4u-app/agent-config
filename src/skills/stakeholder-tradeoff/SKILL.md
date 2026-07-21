@@ -147,7 +147,10 @@ column is missing.
   becomes input to this skill for escalation. Boundary prose lives
   in [`docs/guidelines/cross-role-handoff.md`](../../../docs/guidelines/cross-role-handoff.md).
 - The trade-off is purely technical (perf vs storage, sync vs async)
-  — route to [`decision-record`](../decision-record/SKILL.md).
+  — route to [`decision-record`](../decision-record/SKILL.md); if it is
+  one costly choice on ≥ 3 options with user-weighted criteria, its
+  § Weighted-matrix mode scores it (this skill answers WHO pays; that
+  mode answers WHICH option wins).
 - The dominant axis is risk, not stakeholder cost — route to
   [`risk-officer`](../risk-officer/SKILL.md).
 - The output is the locked decision artifact — hand off to

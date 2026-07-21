@@ -47,6 +47,23 @@
       "type": "array",
       "items": { "$ref": "#/definitions/commandRef" },
       "description": "Optional descriptive seed list lifted from the command-classification worksheet `·_flow:` tags. Annotation only — entry_points / default_path are the validated reference fields. Each entry, if present, must still resolve to a real command."
+    },
+    "team": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "OPTIONAL demand-probe annotation (road-to-persona-library-harvest.md Phase 3): the persona/skill team that this flow's work typically pulls in. Annotation ONLY — no execution semantics; subagent-orchestration remains the executor. Referential integrity (every persona id / skill slug resolves) is checked by scripts/validate_flow_teams.ts, not this schema. Exists so demand for scenario→team selection can reveal itself before a roster schema is designed.",
+      "properties": {
+        "personas": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "description": "Persona ids the flow typically pulls in. Each must resolve to a real src/agent-src/personas/<id>.md."
+        },
+        "skills": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "description": "Skill slugs the flow's team relies on. Each must resolve to a real skills/<slug>/SKILL.md."
+        }
+      }
     }
   },
   "definitions": {

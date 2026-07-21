@@ -16,7 +16,7 @@ promotion path from Tier-3 → Tier-2, and the non-implementation
 guarantee. Does **not** ship code: `agents/manifests/contrib/` is
 unmanifested until a user asks for an entry by name.
 
-Last refreshed: 2026-05-12.
+Last refreshed: 2026-07-16.
 
 ## Tier definitions
 
@@ -35,8 +35,16 @@ Tier-3 is the explicit overflow bucket.
 The following surfaces are Tier-3 candidates as of 2026-05-12. They
 were surfaced during the
 [`2026-05-12-installer-expansion`](../../agents/runtime/council/sessions/2026-05-12-installer-expansion/synthesis.md)
-council round and have **no entries** in `_VALID_TOOLS`,
-`USER_SCOPE_PATHS`, `SCOPE_SUPPORT`, or the bash `VALID_TOOLS` set.
+council round and had **no entries** in `_VALID_TOOLS`,
+`USER_SCOPE_PATHS`, `SCOPE_SUPPORT` or the bash `VALID_TOOLS` set at
+proposal time.
+
+**Status update (2026-07-16):** the candidates below have since been
+promoted to shipped hosts — each now has entries in `_VALID_TOOLS`,
+`USER_SCOPE_PATHS` and `SCOPE_SUPPORT`, deployed as the universal
+global skill bundle. The bullets are kept as the frozen proposal-time
+record; their rationales describe the pre-promotion state and no
+longer reflect current shipping status.
 
 - `qoder` — community fork, no public adoption signal
 - `trae` — ByteDance IDE, behind login wall
@@ -44,7 +52,7 @@ council round and have **no entries** in `_VALID_TOOLS`,
 - `codebuddy` — Tencent-internal, no public install path
 - `droid` — proposed CLI agent, alpha
 - `warp` — terminal-with-AI; integration shape unclear (PTY vs file marker)
-- `antigravity` — Google research project, no shipping surface
+- `antigravity` — Google's agentic IDE (public since 2026); shipped as a global bundle host (see status update above)
 
 Inclusion in this list is **not** a commitment to ship. Promotion
 requires a real user asking by name (issue, PR, council session, or

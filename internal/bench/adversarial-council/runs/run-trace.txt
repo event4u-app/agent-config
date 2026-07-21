@@ -1,0 +1,23 @@
+stage 1 (neutral, independent per vendor) over 12 defects…
+  neutral mfi-01: anthropic=1 openai=0
+  neutral mfi-02: anthropic=1 openai=0
+  neutral mfi-03: anthropic=1 openai=0
+  neutral inv-01: anthropic=1 openai=0
+  neutral inv-02: anthropic=1 openai=0
+  neutral inv-03: anthropic=1 openai=0
+  neutral sec-01: anthropic=1 openai=1
+  neutral sec-02: anthropic=1 openai=0
+  neutral sec-03: anthropic=1 openai=0
+  neutral state-01: anthropic=1 openai=0
+  neutral state-02: anthropic=0 openai=0
+  neutral state-03: anthropic=1 openai=1
+residual (missed by BOTH neutral passes): mfi-01, mfi-03, inv-01, inv-03, state-02
+stage 2 (adversarial skeptic, independent per vendor) over residual + controls…
+  skeptic mfi-01: anthropic=1 openai=1
+  skeptic mfi-03: anthropic=1 openai=1
+  skeptic inv-01: anthropic=1 openai=1
+  skeptic inv-03: anthropic=1 openai=0
+  skeptic state-02: anthropic=1 openai=1
+  skeptic clean-01: anthropic=1 openai=0
+  skeptic clean-02: anthropic=1 openai=0
+  skeptic clean-03: anthropic=1 openai=1

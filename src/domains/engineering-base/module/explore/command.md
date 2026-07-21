@@ -10,9 +10,8 @@ skills: [laravel, symfony-workflow, php-coder]
 description: Explore a module — load its structure, docs, and context into the current conversation
 argument-hint: "[module-name]"
 suggestion:
-  eligible: true
-  trigger_description: "show me the X module, load the module context"
-  trigger_context: "existing Modules/<Name>/ referenced in the prompt"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

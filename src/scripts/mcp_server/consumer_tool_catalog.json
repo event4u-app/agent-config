@@ -352,6 +352,52 @@
       }
     },
     {
+      "name": "catalog_search",
+      "description": "Search the package's own artifact catalog (skills, personas, commands) by free-text query and return ranked summaries — name, description, tags, score — WITHOUT loading any body. Use to discover which skill or persona fits a task when the full catalog is not in context. Read-only, deterministic (BM25 over an on-disk index). DISCOVERY STUB — the real handler ships behind a task-quality A/B before activation (see road-to-persona-library-harvest.md Phase 2); until then this returns the not_implemented envelope.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "Free-text search query."},
+          "class": {"type": "string", "enum": ["skill", "persona", "command"], "description": "Optional: restrict to one artifact class."},
+          "pack": {"type": "string", "description": "Optional: restrict to entries tagged with this pack/domain."},
+          "limit": {"type": "integer", "minimum": 1, "default": 8, "description": "Maximum results. Defaults to 8."}
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "catalog_inspect",
+      "description": "Return the metadata for one catalog entry by id (id, class, name, description, tags, path). Body is returned ONLY when include_body is true. Use after catalog_search to look at a candidate before loading it. Read-only. DISCOVERY STUB — real handler activation deferred (see catalog_search).",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string", "description": "Catalog id, e.g. `skill:api-design` or `persona:backend-architect`."},
+          "include_body": {"type": "boolean", "default": false, "description": "When true, include the full body. Defaults to false (metadata only)."}
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "catalog_load",
+      "description": "Load the full body of one catalog entry by id, wrapped in a neutral reference preamble that subordinates it to the user's request and system instructions. Use to bring a skill/persona/command body into context on demand. Read-only, path-confined to the package root. Never injects or acts — the host decides what to do with the body. DISCOVERY STUB — real handler activation deferred (see catalog_search).",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string", "description": "Catalog id to load the body for."}
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      }
+    },
+    {
       "name": "council_estimate",
       "description": "Estimate the token cost of an AI-council debate over a given input (roadmap, diff, prompt, or file set) without spending — no network call, no billing. Use before deciding whether to authorize a real council run. Read-only.",
       "side_effect": "ro",

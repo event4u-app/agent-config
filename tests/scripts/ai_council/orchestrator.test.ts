@@ -498,6 +498,20 @@ describe('stance repair call (Phase 1 wiring)', () => {
         expect(collected.length).toBe(1);
     });
 
+    it('a cosmetically-defect stance (markdown bold) burns ZERO repair calls (A3 tightening)', () => {
+        const bold = new CapturingMock('anthropic', 'm', [
+            'Reasoning.\n\n**STANCE: A | CONFIDENCE: high | DEALBREAKER: no**',
+        ]);
+        consult([bold], q, null, { stance_tally: true, on_stance_repair: () => true });
+        expect(bold.prompts.length).toBe(1); // lenient parse succeeded — no repair round
+
+        const commas = new CapturingMock('anthropic', 'm', [
+            'Reasoning.\n\nSTANCE: A, CONFIDENCE: med, DEALBREAKER: no',
+        ]);
+        consult([commas], q, null, { stance_tally: true, on_stance_repair: () => true });
+        expect(commas.prompts.length).toBe(1);
+    });
+
     it('no transport → detect-only; a parseable stance → no repair', () => {
         const noTransport = new CapturingMock('anthropic', 'm', ['I prefer A.']);
         consult([noTransport], q, null, { stance_tally: true });
@@ -535,5 +549,49 @@ describe('restate pass (Phase 3 wiring)', () => {
         run_debate([a], q, { max_rounds: 1 });
         expect(a.prompts.length).toBe(1);
         expect(a.prompts[0]).toBe(q.user_prompt);
+    });
+});
+
+describe('A3 cross-round read unlock — stable prefix + volatile suffix', () => {
+    class SplitCapture extends ExternalAIClient {
+        splits: Array<{ stable: string; suffix: string } | null> = [];
+        constructor() {
+            super();
+            this.name = 'anthropic';
+            this.model = 'm';
+            this.billable = false;
+            this.transport = 'manual';
+        }
+        override ask(_s: string, _u: string): CouncilResponse {
+            this.splits.push(null); // non-split path
+            return new CouncilResponse({ provider: this.name, model: this.model, text: 'pos', latency_ms: 1 });
+        }
+        override ask_split(_s: string, stable: string, suffix: string): CouncilResponse {
+            this.splits.push({ stable, suffix });
+            return new CouncilResponse({ provider: this.name, model: this.model, text: 'pos', latency_ms: 1 });
+        }
+    }
+
+    it('round 1 has no suffix; round 2+ keep the stable prefix byte-identical', () => {
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'ARTEFACT BODY' });
+        const m = new SplitCapture();
+        consult([m], q, null, { rounds: 3 });
+        expect(m.splits.length).toBe(3);
+        expect(m.splits[0]).toBeNull(); // round 1: plain ask, no volatile part
+        expect(m.splits[1]?.stable).toBe('ARTEFACT BODY');
+        expect(m.splits[2]?.stable).toBe('ARTEFACT BODY');
+        expect(m.splits[1]?.suffix).toContain('Prior round critiques');
+        expect(m.splits[2]?.suffix).toContain('Prior round critiques');
+    });
+
+    it('stable + suffix concatenation equals the legacy full prompt', () => {
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'ARTEFACT BODY' });
+        const legacy = new CapturingMock('anthropic', 'm', ['pos', 'pos']);
+        consult([legacy], q, null, { rounds: 2 });
+        const split = new SplitCapture();
+        consult([split], q, null, { rounds: 2 });
+        const s = split.splits[1];
+        expect(s).not.toBeNull();
+        expect(`${s!.stable}${s!.suffix}`).toBe(legacy.prompts[1]);
     });
 });

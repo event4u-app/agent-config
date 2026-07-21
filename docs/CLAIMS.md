@@ -155,14 +155,14 @@ claims below are `backed`. Remaining entries are listed so the debt is
 visible, not hidden.
 
 ### claim: skill-count
-- claim: 276 skills.
+- claim: 278 skills.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 189 commands.
+- claim: 190 commands.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
@@ -210,6 +210,13 @@ visible, not hidden.
 - status: backed
 - last_verified: 2026-07-11
 
+### claim: positioning-honest-nulls
+- claim: The only agent layer that publishes the runs where it changed nothing. Deliberately falsifiable — if a reader finds a comparable agent layer publishing its own honest-null benchmark runs, this line updates; that is the point.
+- kind: comparative
+- evidence: docs/benchmark.md#honest
+- status: backed
+- last_verified: 2026-07-20
+
 ### claim: persona-identity-placebo-null
 - claim: On a 12-fixture option-decision corpus (3 arms × 2 providers, blind rubric judge claude-opus-4-8, pre-registered hypotheses), famous-figure identity framing added nothing beyond the underlying method text (method 5.04 vs figure 4.88, Δ=0.17, sign-test p=0.607), and provider diversity moved judged quality ~15× more than persona identity (provider Δ=2.58 vs identity Δ=0.17); the whole persona layer lifted only +0.08 over bare prompts. Honest null — persona panel-mode stays CUT, evidence-closed.
 - kind: quant
@@ -224,6 +231,13 @@ visible, not hidden.
 - status: backed
 - last_verified: 2026-07-12
 
+### claim: wedge-hollow-detection
+- claim: On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate.
+- kind: quant
+- evidence: internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured
+- status: backed
+- last_verified: 2026-07-20
+
 ### claim: cross-model-parity-count
 - claim: The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts via the council transport, $0.16) measured real per-host finding-count differences — claude-sonnet-4-5 surfaced ~2× the findings of gpt-4o on the multi-file analysis task (median 11 vs 5) while both vendors were identical on the planted hollow-implementation task (2 vs 2) and perfectly silent on the clean-code negative control (0 vs 0, no spurious findings). The per-task `finding_floor` values are calibrated from the cross-host lower envelope and the gate is armed.
 - kind: quant
@@ -231,9 +245,17 @@ visible, not hidden.
 - status: backed
 - last_verified: 2026-07-12
 
+### claim: team-defect-finding-null
+- claim: On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation.
+- kind: quant
+- evidence: internal/bench/reports/defect-finding.json#honest_null
+- status: backed
+- last_verified: 2026-07-20
+
 ### claim: adversarial-council-finding-coverage
 - claim: On the residual defect pool (planted defects that survive a single strong cross-model judge), an adversarial panel of >=2 distinct-vendor skeptics finds materially more residual defects than that single judge — relative residual-recall lift >= +25% AND absolute >= +8 percentage points — at a false-positive rate on a controversial-but-correct control no worse than the single-judge baseline (within noise). Scope: finding coverage, NOT decision quality (the separate, unbacked council-vs-solo-baseline question). Pre-registered; honest-null (either threshold missed or FP worse) keeps the surface off by default permanently.
 - kind: quant
 - evidence: docs/benchmark.md#adversarial-verification-council
 - status: unbacked
-- last_verified:
+- last_verified: 2026-07-21
+- resolution: HONEST-NULL (resolved, not pending). Registered cross-vendor run 2026-07-21 on the curated judge-survivable corpus (internal/bench/adversarial-council/): on the judge-passed residual, the 2-vendor skeptic panel (anthropic+openai) matched the single skeptic exactly (residual recall 0.6 = 0.6, zero lift — the second vendor's residual catches were a strict subset of the first), at a 100% false-positive rate on the controversial-but-correct controls under the adversarial-skeptic posture. Both recall thresholds missed → honest-null → Mode 9 surface stays default-off permanently (like recursive-verification). Reproducible artifact: internal/bench/adversarial-council/runs/. Note: an initial run via `council_cli run` was REJECTED as a measurement artifact (that transport imposes multi-round peer-review + prose output, defeating the independent-skeptic + JSON-scoring protocol) — the valid run uses direct independent per-vendor client calls.

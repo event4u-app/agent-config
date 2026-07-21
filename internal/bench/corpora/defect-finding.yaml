@@ -1,0 +1,240 @@
+# Defect-finding benchmark fixtures (road-to-team-mode Phase 5, Step 1).
+#
+# 12 fixtures: 10 seeded-defect diffs across the five pre-registered defect
+# classes (logic bug, race, missing empty-state, off-by-one, security smell —
+# 2 each) plus 2 controls (one clean refactor, one controversial-but-correct
+# diff) that MUST NOT produce a finding. Every fixture carries a deterministic
+# GROUND TRUTH (the planted defect's file:line, for recall) and a PRE-REGISTERED
+# blind-judging rubric (the judge scores an arm's review 1-10 against the rubric
+# without ever seeing which arm produced it).
+#
+# PRE-REGISTERED before any billable call (prereg discipline — thresholds fixed
+# at authoring time, 2026-07-20):
+#   Primary metrics (per arm, per defect class):
+#     - recall  = planted defects whose file:line the arm's review cites / total planted
+#     - false_positives = findings on control fixtures (df-ctl-*) or on unplanted lines
+#     - cost / wall_time / call_count
+#     - fix_success = does the arm's proposed fix remove the defect without regressing
+#   Secondary: judge preference (blind rubric score 1-10).
+#   Hypotheses:
+#     H1: arm (b) cross-model team review > arm (a) single-model self-review on
+#         CORRECTNESS-class defects (logic, off-by-one, race) — recall delta >= +0.20.
+#     H2: arm (c) council:pr competitive with (b) on DESIGN-class defects
+#         (missing-empty-state, security-smell) — within 0.10 recall.
+#     H3: false-positive rate on the two controls is <= 1 finding per arm.
+#   Honest-null: if arm recall deltas are within +/-0.10 across classes, report
+#   indistinguishable — no lift claim binds (Phase 5 Step 5 disposition).
+#
+# Arms (code-defined, run in a real operator-gated session — the harness cannot
+# spawn headless multi-agent calls, README under internal/bench/orchestration):
+#   (a) single-model adversarial self-review  — host model, adversarial-review skill
+#   (b) cross-model team review               — /team:review (Phase 2/3), reviewer pinned gpt-5.5
+#                                               (consider codex-auto-review for the review arm)
+#   (c) council:pr at default depth           — the neutral-artefact breadth arm
+# Model pins (blocker model-id-verification, re-read ~/.codex/models_cache.json at
+# run time — lists rotate): reviewer gpt-5.5 (codex CLI default), gpt-5.6-sol is
+# NOT available.
+#
+# EXECUTION IS SPEND-GATED (blocker benchmark-spend-authorization, owner: user):
+# authoring these fixtures is unblocked; running the three arms is not. An
+# estimate is rendered before the first call.
+
+version: 1
+corpus_id: defect-finding
+fixtures:
+  # ── logic bug (correctness class) ──────────────────────────────────
+  - id: df-logic-01
+    defect_class: logic-bug
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/access/canView.ts
+      +++ b/src/access/canView.ts
+      @@ -3,6 +3,6 @@ export function canView(user: User, doc: Doc): boolean {
+      -  if (user.isAdmin) return true;
+      -  return doc.ownerId === user.id && doc.tenantId === user.tenantId;
+      +  if (user.isAdmin) return true;
+      +  return doc.ownerId === user.id || doc.tenantId === user.tenantId;
+      ```
+    ground_truth: "canView.ts:6 — `&&` changed to `||`: any user in the same tenant can view any doc (cross-owner leak within a tenant)."
+    rubric: "Full marks (9-10) only if the review flags the && -> || change on the return line as an authorization-widening logic bug that lets a non-owner in the same tenant read the doc. Partial (5-6) if it flags the line as suspicious without naming the access-widening consequence. 1-2 if missed."
+    expected: "correctness-class → H1 predicts (b) recall > (a)."
+  - id: df-logic-02
+    defect_class: logic-bug
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/billing/refund.ts
+      +++ b/src/billing/refund.ts
+      @@ -5,7 +5,7 @@ export function refundCents(order: Order): number {
+      -  if (order.status !== 'paid') return 0;
+      +  if (order.status === 'paid') return 0;
+         return order.amountCents - order.feeCents;
+      ```
+    ground_truth: "refund.ts:8 — inverted guard: `!== 'paid'` became `=== 'paid'`, so only unpaid orders refund and paid orders always refund 0."
+    rubric: "Full marks (9-10) if the review names the inverted status guard and its effect (paid orders refund 0 / unpaid orders refund a nonzero amount). Partial (5-6) if it flags the condition without the behavioural inversion. 1-2 if missed."
+    expected: "correctness-class → H1 predicts (b) recall > (a)."
+
+  # ── off-by-one (correctness class) ─────────────────────────────────
+  - id: df-offbyone-01
+    defect_class: off-by-one
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/util/lastN.ts
+      +++ b/src/util/lastN.ts
+      @@ -2,4 +2,4 @@ export function lastN<T>(xs: T[], n: number): T[] {
+      -  return xs.slice(Math.max(0, xs.length - n));
+      +  return xs.slice(Math.max(0, xs.length - n - 1));
+      ```
+    ground_truth: "lastN.ts:4 — off-by-one: `- n - 1` returns n+1 items (or the whole array when n = length-1)."
+    rubric: "Full marks (9-10) if the review identifies the slice returns one element too many (off-by-one on the start index). Partial (5-6) if it flags the slice math as wrong without stating the count. 1-2 if missed."
+    expected: "correctness-class → H1 predicts (b) recall > (a)."
+  - id: df-offbyone-02
+    defect_class: off-by-one
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/pager/pageRange.ts
+      +++ b/src/pager/pageRange.ts
+      @@ -4,5 +4,5 @@ export function pageRange(total: number, size: number): number {
+      -  return Math.ceil(total / size);
+      +  return Math.floor(total / size);
+      ```
+    ground_truth: "pageRange.ts:6 — `ceil` -> `floor` drops the final partial page (e.g. 21 items / 10 = 2 pages, losing item 21)."
+    rubric: "Full marks (9-10) if the review flags floor-vs-ceil and names the lost trailing partial page. Partial (5-6) if it flags the arithmetic without the dropped-page consequence. 1-2 if missed."
+    expected: "correctness-class → H1 predicts (b) recall > (a)."
+
+  # ── race (correctness class) ───────────────────────────────────────
+  - id: df-race-01
+    defect_class: race
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/counter/increment.ts
+      +++ b/src/counter/increment.ts
+      @@ -6,4 +6,5 @@ export async function increment(key: string): Promise<number> {
+      -  return db.transaction((tx) => tx.raw('UPDATE counters SET n = n + 1 WHERE key = ? RETURNING n', [key]));
+      +  const row = await db.query('SELECT n FROM counters WHERE key = ?', [key]);
+      +  await db.query('UPDATE counters SET n = ? WHERE key = ?', [row.n + 1, key]);
+      +  return row.n + 1;
+      ```
+    ground_truth: "increment.ts:9-10 — check-then-act race: the atomic UPDATE ... n+1 was replaced by a non-atomic read then write; concurrent callers lose increments."
+    rubric: "Full marks (9-10) if the review names the read-then-write as a lost-update race and notes the atomic single-statement form was removed. Partial (5-6) if it flags concurrency risk without naming the lost-update / atomicity loss. 1-2 if missed."
+    expected: "correctness-class → H1 predicts (b) recall > (a)."
+  - id: df-race-02
+    defect_class: race
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/cache/getOrLoad.ts
+      +++ b/src/cache/getOrLoad.ts
+      @@ -3,7 +3,9 @@ export async function getOrLoad(key: string): Promise<Val> {
+      -  return this.inflight[key] ??= this.load(key);
+      +  if (this.cache[key]) return this.cache[key];
+      +  const v = await this.load(key);
+      +  this.cache[key] = v;
+      +  return v;
+      ```
+    ground_truth: "getOrLoad.ts:5-8 — the inflight-dedupe promise was dropped; concurrent misses each call load() (thundering herd / duplicate side effects)."
+    rubric: "Full marks (9-10) if the review flags the loss of in-flight de-duplication and the resulting duplicate concurrent load() calls. Partial (5-6) if it mentions caching correctness without the concurrent-duplicate-load point. 1-2 if missed."
+    expected: "correctness-class → H1 predicts (b) recall > (a)."
+
+  # ── missing empty-state (design class) ─────────────────────────────
+  - id: df-empty-01
+    defect_class: missing-empty-state
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/ui/Avg.tsx
+      +++ b/src/ui/Avg.tsx
+      @@ -2,4 +2,4 @@ export function Avg({ scores }: { scores: number[] }) {
+      -  if (scores.length === 0) return <span>—</span>;
+      -  return <span>{scores.reduce((a, b) => a + b, 0) / scores.length}</span>;
+      +  return <span>{scores.reduce((a, b) => a + b, 0) / scores.length}</span>;
+      ```
+    ground_truth: "Avg.tsx:4 — the empty-array guard was removed: an empty scores array now renders NaN (0/0)."
+    rubric: "Full marks (9-10) if the review flags the removed empty guard and names the NaN-on-empty consequence. Partial (5-6) if it flags a possible divide-by-zero without the empty-state framing. 1-2 if missed."
+    expected: "design-class → H2 predicts (c) competitive with (b)."
+  - id: df-empty-02
+    defect_class: missing-empty-state
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/report/summary.ts
+      +++ b/src/report/summary.ts
+      @@ -4,6 +4,5 @@ export function summarize(rows: Row[]): Summary {
+      -  if (!rows.length) return { first: null, last: null, count: 0 };
+         const sorted = [...rows].sort((a, b) => a.ts - b.ts);
+      -  return { first: sorted[0], last: sorted[sorted.length - 1], count: rows.length };
+      +  return { first: sorted[0]!, last: sorted[sorted.length - 1]!, count: rows.length };
+      ```
+    ground_truth: "summary.ts:5,7 — empty-rows early return removed and the results forced non-null with `!`; an empty input now returns `{ first: undefined, last: undefined }` masquerading as present."
+    rubric: "Full marks (9-10) if the review flags the removed empty-rows guard AND the misleading non-null assertions on sorted[0]/sorted[len-1]. Partial (5-6) if it catches only one of the two. 1-2 if missed."
+    expected: "design-class → H2 predicts (c) competitive with (b)."
+
+  # ── security smell (design class) ──────────────────────────────────
+  - id: df-secsmell-01
+    defect_class: security-smell
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/search/find.ts
+      +++ b/src/search/find.ts
+      @@ -3,4 +3,4 @@ export async function find(term: string) {
+      -  return db.query('SELECT * FROM items WHERE name = ?', [term]);
+      +  return db.query(`SELECT * FROM items WHERE name = '${term}'`);
+      ```
+    ground_truth: "find.ts:5 — parameterized query replaced by string interpolation: SQL injection on `term`."
+    rubric: "Full marks (9-10) if the review names SQL injection via the interpolated `term` and that the parameterized form was removed. Partial (5-6) if it flags 'unsafe query' without naming injection. 1-2 if missed."
+    expected: "design/security-class → H2 predicts (c) competitive with (b)."
+  - id: df-secsmell-02
+    defect_class: security-smell
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/auth/login.ts
+      +++ b/src/auth/login.ts
+      @@ -7,3 +7,4 @@ export async function login(email: string, pw: string) {
+         const user = await users.byEmail(email);
+      +  logger.info('login attempt', { email, pw });
+         return verify(user, pw);
+      ```
+    ground_truth: "login.ts:9 — the raw password is written to the log stream (credential in logs)."
+    rubric: "Full marks (9-10) if the review flags the plaintext password reaching the log and names it a secret/credential-in-logs leak. Partial (5-6) if it flags 'logging sensitive data' without naming the password specifically. 1-2 if missed."
+    expected: "design/security-class → H2 predicts (c) competitive with (b)."
+
+  # ── controls (MUST NOT produce a finding) ──────────────────────────
+  - id: df-ctl-01
+    defect_class: control-clean-refactor
+    negative_control: true
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/util/clamp.ts
+      +++ b/src/util/clamp.ts
+      @@ -1,3 +1,3 @@ export function clamp(x: number, lo: number, hi: number): number {
+      -  if (x < lo) return lo;
+      -  if (x > hi) return hi;
+      -  return x;
+      +  return Math.min(hi, Math.max(lo, x));
+      ```
+    ground_truth: "NONE — behaviour-preserving refactor (identical clamp semantics for lo <= hi). Any finding here is a false positive."
+    rubric: "Full marks (9-10) if the review reports NO defect (correctly recognizes the refactor preserves clamp semantics). Deduct heavily (1-3) for any invented defect. A note that the two forms differ only when lo > hi (a pre-existing, unchanged contract) is acceptable and not a false positive."
+    expected: "control → H3: <= 1 false-positive finding per arm across both controls."
+  - id: df-ctl-02
+    defect_class: control-controversial-but-correct
+    negative_control: true
+    prompt: |
+      Review this diff for defects. Report each with file:line.
+      ```diff
+      --- a/src/parse/toInt.ts
+      +++ b/src/parse/toInt.ts
+      @@ -1,4 +1,5 @@ export function toInt(s: string): number {
+      +  // radix pinned to 10 on purpose — leading-zero inputs must not parse as octal
+      -  return parseInt(s);
+      +  return parseInt(s, 10);
+      ```
+    ground_truth: "NONE — adding the explicit radix 10 is a correct hardening (avoids implementation-defined/octal parsing). Any 'defect' finding here is a false positive."
+    rubric: "Full marks (9-10) if the review reports NO defect and, ideally, recognizes the explicit radix as a correct improvement. Deduct heavily (1-3) for flagging the radix change as a defect or regression."
+    expected: "control → H3: <= 1 false-positive finding per arm across both controls."

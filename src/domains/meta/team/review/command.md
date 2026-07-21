@@ -10,9 +10,8 @@ description: Thin wrapper — cross-model review of the current diff via the off
 cluster: team
 sub: review
 suggestion:
-  eligible: true
-  trigger_description: "team review, second model review, cross-model review of my changes, GPT drüberschauen lassen, review the diff with another strong model"
-  trigger_context: "ai_team.enabled is true AND there is an uncommitted / staged diff the user wants a second strong model to review with repo access"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

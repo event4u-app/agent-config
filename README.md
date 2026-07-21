@@ -4,11 +4,13 @@
 
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config)
 
-[![Skills](https://img.shields.io/badge/Skills-276-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-105-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-184-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-101-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+[![Skills](https://img.shields.io/badge/Skills-278-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-105-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-190-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-101-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
 
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
-**Try it in 30 seconds** — drop one read-only subagent into any repo and watch it gate "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Full docs: **[event4u-app.github.io/agent-config](https://event4u-app.github.io/agent-config)**.
+**Try it in 30 seconds** — drop one read-only subagent into any repo and watch it gate "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Start at the proof, not the catalog: **[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/)**.
+
+![The trust surface running green — every "verify it yourself" command from a real, CI-re-executed run](docs/media/proof-demo.gif)
 
 **Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
@@ -120,8 +122,14 @@ is generated from source: a claim→evidence table (every public claim binds to 
 resolvable pointer or CI fails), honest-null benchmarks *including the runs where
 the package changed nothing* and a "verify it yourself" block you run on a fresh
 checkout. The proof page fails CI if it drifts from its sources — reproducibility
-is the proof. Browse it on the deployed docs site:
-[event4u-app.github.io/agent-config](https://event4u-app.github.io/agent-config).
+is the proof. Browse it on the deployed docs site — the proof page is the primary entry:
+[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/).
+The honest comparison frame lives at
+[`docs/us-vs-the-category.md`](docs/us-vs-the-category.md).
+
+Maintaining a skills catalog yourself? The **anti-reskin gate** that blocks
+find-replace re-skin PRs here runs on your catalog too —
+[`docs/anti-reskin-gate.md`](docs/anti-reskin-gate.md).
 
 Audit-disciplined by construction — every memory consult, decision
 key and hook concern lands in `agents/runtime/state/` so you can replay it.

@@ -17,6 +17,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { DEFAULT_PRICES } from '../../../src/scripts/ai_council/_default_prices.js';
 import {
     bootstrap_from_defaults,
+    downgrade_coupling,
     estimate_cost,
     estimate_input_tokens,
     is_stale,
@@ -285,5 +286,58 @@ describe('is_stale', () => {
         );
         const table = load_prices(p);
         expect(is_stale(table)).toBe(true);
+    });
+});
+
+describe('downgrade_coupling — A1↔A3 cache-coupling gate', () => {
+    const table = (() => {
+        const p = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'prices-')), '.agent-prices.md');
+        bootstrap_from_defaults(p);
+        return load_prices(p);
+    })();
+
+    it('no cache expected (one-shot) → any cheaper model is net-positive', () => {
+        const c = downgrade_coupling(
+            'anthropic', 'claude-sonnet-4-5', 'claude-haiku-4-5-20251001',
+            10_000, 4096,
+            { enabled: true, cacheable_prefix_tokens: 10_000, expected_reads: 0 },
+            table,
+        );
+        expect(c.lost_cache_savings_usd).toBe(0);
+        expect(c.downgrade_savings_usd).toBeGreaterThan(0);
+        expect(c.net_positive).toBe(true);
+    });
+
+    it('cache disabled → lost term is 0 regardless of reads', () => {
+        const c = downgrade_coupling(
+            'anthropic', 'claude-sonnet-4-5', 'claude-haiku-4-5-20251001',
+            10_000, 4096,
+            { enabled: false, cacheable_prefix_tokens: 10_000, expected_reads: 3 },
+            table,
+        );
+        expect(c.lost_cache_savings_usd).toBe(0);
+        expect(c.net_positive).toBe(true);
+    });
+
+    it('massive cached prefix with many reads can outweigh a small model saving', () => {
+        const c = downgrade_coupling(
+            'anthropic', 'claude-sonnet-4-5', 'claude-haiku-4-5-20251001',
+            1_000, 64, // tiny call: little to save by downgrading
+            { enabled: true, cacheable_prefix_tokens: 5_000_000, expected_reads: 4 },
+            table,
+        );
+        expect(c.lost_cache_savings_usd).toBeGreaterThan(c.downgrade_savings_usd);
+        expect(c.net_positive).toBe(false);
+    });
+
+    it('same model both sides → zero savings, never net-positive', () => {
+        const c = downgrade_coupling(
+            'anthropic', 'claude-sonnet-4-5', 'claude-sonnet-4-5',
+            10_000, 4096,
+            { enabled: true, cacheable_prefix_tokens: 0, expected_reads: 0 },
+            table,
+        );
+        expect(c.downgrade_savings_usd).toBe(0);
+        expect(c.net_positive).toBe(false);
     });
 });

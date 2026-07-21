@@ -12,9 +12,8 @@ cluster: review
 skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-synthesis, git-workflow]
 description: Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
 suggestion:
-  eligible: true
-  trigger_description: "self-review my changes, judge this diff before PR"
-  trigger_context: "uncommitted or staged changes pre-PR"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

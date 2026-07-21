@@ -102,6 +102,7 @@ tasks:
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-no-external-sources
+      - task: check-source-pointer-freshness
       - task: check-module-management-neutral
       - task: check-release-trunk-sync
       - task: check-release-published
@@ -210,6 +211,8 @@ tasks:
       - task: validate-pack-yaml
       - task: lint-pack-dependencies
       - task: lint-flows
+      - task: lint-originality
+      - task: validate-flow-teams
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check
@@ -285,6 +288,7 @@ tasks:
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-no-external-sources
+      - task: check-source-pointer-freshness
       - task: check-module-management-neutral
       - task: check-release-trunk-sync
       - task: check-release-published
@@ -393,6 +397,8 @@ tasks:
       - task: validate-pack-yaml
       - task: lint-pack-dependencies
       - task: lint-flows
+      - task: lint-originality
+      - task: validate-flow-teams
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check

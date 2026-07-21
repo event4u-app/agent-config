@@ -1,0 +1,21 @@
+{
+  "fail_threshold": 60,
+  "warn_threshold": 40,
+  "artifacts_scanned": 498,
+  "distribution": {
+    "worst": 40,
+    "p95": 0,
+    "median": 0,
+    "comparisons": 56893
+  },
+  "pairs": [
+    {
+      "cls": "command",
+      "a": "tests",
+      "b": "override",
+      "a_path": "src/domains/engineering-base/tests/command.md",
+      "b_path": "src/domains/meta/override/command.md",
+      "overlap": 40
+    }
+  ]
+}

@@ -10,9 +10,8 @@ description: "Read `outline.yaml`, research each item in batches, write per-item
 argument-hint: "[--batch-confirm=each|once|auto]"
 skills: [deep-reading-analyst]
 suggestion:
-  eligible: true
-  trigger_description: "deep research, populate the research scaffold, fill outline.yaml items"
-  trigger_context: "user has run `/research <topic>` and now wants per-item depth"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

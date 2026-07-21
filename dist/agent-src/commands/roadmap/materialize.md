@@ -10,9 +10,8 @@ skills: [emit-tickets]
 description: Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/
 argument-hint: "[roadmap-path]"
 suggestion:
-  eligible: true
-  trigger_description: "turn this roadmap into tickets, materialise the roadmap, mach Tickets aus der Roadmap"
-  trigger_context: "an existing agents/roadmaps/*.md the user wants decomposed into build-ready tickets"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

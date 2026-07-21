@@ -7,6 +7,14 @@ system — not just green tests over hollow code.
 
 One file. No install of anything else. No runtime, no daemon, no account.
 
+<!-- claim:wedge-hollow-detection -->On its published eval it returned the
+correct verdict on both fixtures — `NOT READY` with the exact `file:line` on a
+planted hollow implementation, `READY` with zero spurious findings on the clean
+control — at ~45k fewer tokens per task than the same check run inline
+([evidence](../../../internal/bench/orchestration/pv-a3-results.md)). Two
+planted fixtures on a Claude Code host — a scoped, reproducible promise, not a
+hit-rate.<!-- /claim -->
+
 ## What it does
 
 Before you call a feature done, `@production-validator` greps the shipped path
@@ -45,6 +53,22 @@ production-validator
            exercises the real API.
   Final gate: NOT READY — refund() is a stub; validate against the real provider.
 ```
+
+## Optional: record your first run (local-only, opt-in)
+
+Nothing is measured unless you run it. After your first verdict, you can keep a
+private local record — one aggregate line, written into YOUR repo, no network:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/event4u-app/agent-config/main/docs/wedge/production-validator/first-run-check.sh) ready
+```
+
+Outcomes: `ready` · `not-ready` · `abandoned`. The log
+(`.claude/wedge-first-run.local.log`) never leaves your machine — the package
+runs zero telemetry by default
+([contract](../../contracts/adoption-signal-floor.md)). The same outcome
+vocabulary feeds the proctored install-friction study
+(`agents/recruit-sessions/_install-friction-runbook.md`).
 
 ## Why this one
 

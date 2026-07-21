@@ -958,6 +958,9 @@ fast-path entries (clean session is not an error).
 - `/council` command — the user-facing entry point.
 - `subagent-orchestration` skill — internal multi-agent variant (no
   network, no spend, but no diversity of weights either).
+- `/team` command — collaborative cross-model review WITH repo access
+  (depth); council is breadth on an artefact, team is one strong model in
+  the repo. Different mechanism, not a competitor.
 - `scripts/ai_council/prompts.ts` — neutrality preamble + per-mode
   system prompts.
 - `scripts/ai_council/advisors.ts` — replace-mode planning + persona

@@ -10,9 +10,8 @@ skills: [test-driven-development]
 description: TDD green phase — write the minimum production code to make the failing test pass; no test edits
 argument-hint: "[failing test | context]"
 suggestion:
-  eligible: true
-  trigger_description: "make the failing test pass"
-  trigger_context: "a failing test exists, ready to implement"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

@@ -35,6 +35,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { hardenedSpawnEnv } from './_lib/spawn_env.js';
 import { redact_low_impact_entry } from './ai_council/redact_low_impact_entry.js';
 
 export const HOT_CONTEXT_REL = path.join('agents', 'runtime', 'state', 'hot-context.md');
@@ -85,6 +86,7 @@ export function _current_branch(root: string): string {
             cwd: root,
             encoding: 'utf-8',
             timeout: 5000,
+            env: hardenedSpawnEnv(),
         });
         if (proc.status === 0) {
             return (proc.stdout || '').trim() || 'unknown';

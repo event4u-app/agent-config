@@ -10,9 +10,8 @@ skills: [test-driven-development]
 description: TDD red phase — enumerate cases, write ONE failing test, watch it fail at an assertion (not an import error)
 argument-hint: "[behavior to test]"
 suggestion:
-  eligible: true
-  trigger_description: "write the failing test first"
-  trigger_context: "starting a new behavior test-first"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

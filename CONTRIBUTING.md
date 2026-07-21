@@ -127,6 +127,20 @@ the review floor, not around it.
   specific consumer project, domain, or stack. The
   [`augment-portability`](dist/agent-src/rules/augment-portability.md) rule and
   `scripts/check_portability.py` enforce this in CI.
+- **External contributions get credited.** A merged community skill carries
+  `provenance: community` in its frontmatter — the public catalog
+  ([`docs/catalog.md`](docs/catalog.md)) renders it as `community` in the
+  `source` column — and gets a row in [`CREDITS.md`](CREDITS.md)
+  (§ Community contributions). Maintainers add both on merge; if you were
+  missed, open an issue — attribution gaps are treated as bugs.
+- **Originality is CI-gated.** Every PR touching skills, personas, or domain
+  commands runs `lint_originality --changed` (the anti-reskin gate, see the
+  `originality-gate` job in `.github/workflows/skill-lint.yml`). Run it
+  locally before pushing:
+  `./scripts-run src/scripts/lint_originality --changed <changed files>` —
+  or run the whole contributor precheck in one pass via the
+  [`/contribution-precheck`](src/domains/meta/contribution-precheck/command.md)
+  command (frontmatter schema + skill lint + originality, Node-only).
 
 ## Agent-assisted contribution workflow
 

@@ -58,6 +58,12 @@ ABOVE the implementer tier (ladder in
 [`subagent-configuration`](subagent-configuration.md)). Downshifting an
 implementer never downshifts its judge.
 
+## Cost cross-link
+
+Tier choice is also a **billing lever** — for the dollar side (caching, batch,
+model tiering, effort right-sizing) route via `token-optimizer` skill's index
+branch (`api-cost-levers` row); `/cost:report` names the dominant lever.
+
 ## Detection Heuristics
 
 | Signal | Task Type | Tier |

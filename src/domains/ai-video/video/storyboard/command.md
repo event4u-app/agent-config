@@ -11,9 +11,8 @@ argument-hint: "<path-to-script.md> [--image-provider <id>]"
 personas: [hollywood-director]
 skills: [scene-expander, video-director, character-consistency]
 suggestion:
-  eligible: true
-  trigger_description: "build a storyboard, contact sheet of scenes, image-only preview, validate a script visually before video render"
-  trigger_context: "user wants to see all scenes as stills before committing to motion calls"
+  eligible: false
+  rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
 packs:

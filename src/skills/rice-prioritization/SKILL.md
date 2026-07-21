@@ -89,6 +89,7 @@ Do NOT use for valuation, OKR decomposition, or funnel-stage diagnosis (see Rela
 
 **WHEN NOT to use this**
 
+- ONE choice between alternatives on custom criteria (not many items on the fixed R×I×C/E formula) — route to [`decision-record`](../decision-record/SKILL.md) § Weighted-matrix mode.
 - Decomposing an objective into KRs — route to [`okr-tree-modeling`](../okr-tree-modeling/SKILL.md).
 - Diagnosing why a funnel stage drops — route to [`funnel-analysis`](../funnel-analysis/SKILL.md).
 - Modelling whether an investment is worth its capital cost — route to [`dcf-modeling`](../dcf-modeling/SKILL.md).
