@@ -49,7 +49,6 @@ import {
     type Finding,
     type GroundTruth,
 } from './_lib/adversarial_bench_score.js';
-import { hardenedSpawnEnv } from './_lib/spawn_env.js';
 
 const REPO_ROOT = process.cwd();
 const CORPUS_PATH = path.join(REPO_ROOT, 'internal/bench/adversarial-council/corpus.json');
@@ -182,15 +181,15 @@ async function realPasses(items: CorpusItem[]): Promise<Passes> {
     process.stderr.write('stage 1 (neutral, independent per vendor) over 12 defects…\n');
     for (const d of defects) {
         neutral[d.id] = await directReview(d, neutralPrompt(d));
-        process.stderr.write(`  neutral ${d.id}: ${Object.entries(neutral[d.id]).map(([m, f]) => `${m}=${f.length}`).join(' ')}\n`);
+        process.stderr.write(`  neutral ${d.id}: ${Object.entries(neutral[d.id] ?? {}).map(([m, f]) => `${m}=${f.length}`).join(' ')}\n`);
     }
-    const residual = defects.filter((d) => !Object.values(neutral[d.id]).flat().some((f) => caughtDefect(groundTruth(d), [f])));
+    const residual = defects.filter((d) => !Object.values(neutral[d.id] ?? {}).flat().some((f) => caughtDefect(groundTruth(d), [f])));
     process.stderr.write(`residual (missed by BOTH neutral passes): ${residual.map((r) => r.id).join(', ') || '(none)'}\n`);
     const skeptic: Reviews = {};
     process.stderr.write('stage 2 (adversarial skeptic, independent per vendor) over residual + controls…\n');
     for (const item of [...residual, ...controls]) {
         skeptic[item.id] = await directReview(item, skepticPrompt(item));
-        process.stderr.write(`  skeptic ${item.id}: ${Object.entries(skeptic[item.id]).map(([m, f]) => `${m}=${f.length}`).join(' ')}\n`);
+        process.stderr.write(`  skeptic ${item.id}: ${Object.entries(skeptic[item.id] ?? {}).map(([m, f]) => `${m}=${f.length}`).join(' ')}\n`);
     }
     return { neutral, skeptic, residualIds: residual.map((r) => r.id) };
 }
@@ -205,20 +204,21 @@ function mockPasses(items: CorpusItem[]): Passes {
     // residual = the other 6: sec-03, inv-03, state-01, state-02, mfi-02, mfi-03
     const anthropicSkepticCatch = new Set(['sec-03', 'state-01']); // single skeptic recovers 2/6
     const openaiSkepticExtra = new Set(['inv-03', 'mfi-02', 'mfi-03']); // openai adds 3 more → panel 5/6
-    const hit = (i: CorpusItem, m: string): Finding[] => [
-        { file: i.ground_truth.defect_files[0] ?? i.files[0].path, category: i.defect_category, confidence: 'high' as const },
-    ].filter(() => true).map((f) => ({ ...f, _m: m })).map(({ _m, ...f }) => f);
+    const hit = (i: CorpusItem): Finding[] => [
+        { file: i.ground_truth.defect_files[0] ?? i.files[0]?.path ?? '', category: i.defect_category, confidence: 'high' as const },
+    ];
     const neutral: Reviews = {};
-    for (const d of defects) neutral[d.id] = { anthropic: neutralCatch.has(d.id) ? hit(d, 'a') : [], openai: [] };
+    for (const d of defects) neutral[d.id] = { anthropic: neutralCatch.has(d.id) ? hit(d) : [], openai: [] };
     const skeptic: Reviews = {};
     const residual = defects.filter((d) => !neutralCatch.has(d.id));
     for (const d of residual) {
         skeptic[d.id] = {
-            anthropic: anthropicSkepticCatch.has(d.id) ? hit(d, 'a') : [],
-            openai: openaiSkepticExtra.has(d.id) ? hit(d, 'o') : [],
+            anthropic: anthropicSkepticCatch.has(d.id) ? hit(d) : [],
+            openai: openaiSkepticExtra.has(d.id) ? hit(d) : [],
         };
     }
-    for (const c of controls) skeptic[c.id] = { anthropic: [], openai: c.id === 'clean-02' ? [{ file: c.files[0].path, category: 'correctness', confidence: 'high' }] : [] };
+    for (const c of controls)
+        skeptic[c.id] = { anthropic: [], openai: c.id === 'clean-02' ? [{ file: c.files[0]?.path ?? '', category: 'correctness', confidence: 'high' }] : [] };
     return { neutral, skeptic, residualIds: residual.map((r) => r.id) };
 }
 
