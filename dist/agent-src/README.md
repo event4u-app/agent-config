@@ -1,8 +1,8 @@
 # Agent Infrastructure
 
 > **⚠️ DO NOT edit files in `dist/agent-src/` or `.augment/` directly.**
-> The source of truth is `.agent-src.uncondensed/`. Edit there, then run `task sync`.
-> See `.agent-src.uncondensed/commands/condense.md` for the full workflow.
+> The source of truth is `src/` (`src/skills/`, `src/rules/`, `src/agent-src/`). Edit there, then run `task sync`.
+> See the `source-of-truth` rule and the `/condense` command for the full workflow.
 
 This directory contains the shared agent infrastructure: skills, commands, rules, guidelines,
 templates, and contexts that power the AI coding assistant across all projects.
