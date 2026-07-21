@@ -102,6 +102,7 @@ tasks:
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-no-external-sources
+      - task: check-source-pointer-freshness
       - task: check-module-management-neutral
       - task: check-release-trunk-sync
       - task: check-release-published
@@ -286,6 +287,7 @@ tasks:
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-no-external-sources
+      - task: check-source-pointer-freshness
       - task: check-module-management-neutral
       - task: check-release-trunk-sync
       - task: check-release-published
