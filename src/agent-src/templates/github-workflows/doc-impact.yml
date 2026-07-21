@@ -1,0 +1,101 @@
+# Doc-Impact Check — template shipped by agent-config
+#
+# Copy this file to `.github/workflows/doc-impact.yml` in the consumer
+# project. It is the OPTIONAL CI backstop for the doc-follows-code
+# discipline that already ships to you via projection:
+#
+#   - rule  `downstream-changes` § Doc-Impact  — the same-change obligation
+#   - skill `agent-docs-writing`  § Doc-Impact  — the surface→doc procedure
+#
+# Those two are framework-agnostic and behavioral; they need no CI. This
+# workflow adds a deterministic reminder: when a PR changes a PUBLIC
+# SURFACE but touches no documentation, it flags the likely doc drift.
+#
+# Design (per the 2026-07-21 council): WARN-first, opt-in, with an
+# explicit escape hatch — a gate that hard-fails on every surface change
+# gets routinely overridden, which is worse than none. Flip STRICT=true
+# below only once your team wants the hard gate.
+#
+# Framework-agnostic: it globs the changed-file paths, so it works for
+# Laravel / Symfony / Next.js / Python / Go / … without per-stack tuning.
+# Tune the PUBLIC_SURFACE / DOC globs to your repo layout.
+#
+# Escape hatch: put `[docs:not-needed]` in the PR title/body, or use a
+# `refactor:`-prefixed PR title, when a surface changed but genuinely
+# needs no doc edit. State the reason — do not edit a doc just to pass.
+
+name: Doc-Impact Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  doc-impact:
+    name: Public surface changed without a doc update?
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect surface-vs-doc drift
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          # Flip to "true" to make the drift a hard CI failure.
+          STRICT: "false"
+        run: |
+          set -euo pipefail
+
+          # Escape hatch — skip entirely on an explicit opt-out.
+          case "${PR_TITLE}${PR_BODY}" in
+            *"[docs:not-needed]"*|refactor:*|"refactor("*)
+              echo "Doc-Impact: escape hatch present — skipping." ; exit 0 ;;
+          esac
+
+          changed="$(git diff --name-only "${BASE_SHA}" "${HEAD_SHA}")"
+          echo "Changed files:"; echo "${changed}" | sed 's/^/  /'
+
+          # PUBLIC-SURFACE globs (extend for your stack).
+          surface="$(printf '%s\n' "${changed}" | grep -E \
+            -e '(^|/)routes/' \
+            -e '(^|/)(migrations|schema)/' \
+            -e 'openapi.*\.(ya?ml|json)$' \
+            -e '(^|/)(cli|commands|console)/' \
+            -e '(^|/)\.env\.example$' \
+            -e '(^|/)(config)/' \
+            || true)"
+
+          # DOC globs — a change to any of these satisfies the obligation.
+          docs="$(printf '%s\n' "${changed}" | grep -E \
+            -e '\.md$' \
+            -e '(^|/)docs/' \
+            -e '(^|/)AGENTS\.md$' \
+            -e 'openapi.*\.(ya?ml|json)$' \
+            -e '(^|/)CHANGELOG' \
+            || true)"
+
+          if [ -n "${surface}" ] && [ -z "${docs}" ]; then
+            echo "Public surface(s) changed with NO accompanying doc update:"
+            echo "${surface}" | sed 's/^/  /'
+            echo ""
+            echo "Update the doc that DESCRIBES the changed surface (README /"
+            echo "API reference / AGENTS.md / examples / CHANGELOG), per the"
+            echo "downstream-changes § Doc-Impact obligation. If no doc is"
+            echo "needed, add [docs:not-needed] to the PR with a one-line reason."
+            if [ "${STRICT}" = "true" ]; then
+              echo "::error::Doc-Impact drift (STRICT mode)."
+              exit 1
+            fi
+            echo "::warning::Public surface changed without a doc update — review Doc-Impact."
+            exit 0
+          fi
+
+          echo "Doc-Impact: OK — no undocumented public-surface change."

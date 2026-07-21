@@ -189,28 +189,46 @@ After making changes, check if docs need updating:
 - **Structural changes** → update affected docs in `./agents/`
 - **New patterns** → update or create guideline docs
 
-## Doc sync check (after code changes)
+## Doc-Impact — the mandatory check after every code change
 
-After completing a significant code change, run this mental checklist:
+This is the detection procedure the [`downstream-changes`](../../rules/downstream-changes.md)
+§ Doc-Impact obligation points at. **Run it after every code change** — the
+*detection* is non-optional; the human still confirms the actual edit.
 
-| What changed | Doc to check |
+**Step 1 — did a public surface change?** Framework-agnostic surface list:
+
+| Public surface changed | Doc that describes it — update in the same change |
 |---|---|
-| Database schema (migration) | `agents/reference/docs/database-setup.md` |
-| New API endpoint | OpenAPI annotations, `AGENTS.md` API section |
-| New module created | Create `{module_root}/{Module}/{agent_folder}/` (resolve via `modules.root_paths` + `modules.agent_folder`) |
-| Service/repository signature changed | Check if referenced in `agents/reference/docs/services-and-repos.md` |
-| New environment variable | `.env.example`, `AGENTS.md` environment section |
-| Docker/compose change | `agents/reference/docs/docker.md`, `Makefile` documentation |
-| New Artisan command | `AGENTS.md` commands section |
-| New pattern/convention introduced | Relevant guideline in `.augment/guidelines/` |
+| HTTP route / endpoint (Laravel `routes/`, Next.js `app/api`, FastAPI/Express handlers, Go mux) | OpenAPI / API reference, `README` usage, `AGENTS.md` API section |
+| Exported function / class / method signature | The doc/example that calls it; `agents/reference/docs/services-and-repos.md` if referenced |
+| CLI command or flag | `README` usage, `AGENTS.md` commands section, `--help` text |
+| Config / settings key | Settings doc, `README` config section, schema/example file |
+| Environment variable | `.env.example`, `AGENTS.md` environment section |
+| DB schema / migration | `agents/reference/docs/database-setup.md` |
+| Event payload / job constructor | The listener/consumer doc that documents the contract |
+| New module | `{module_root}/{Module}/{agent_folder}/` (resolve via `modules.root_paths` + `modules.agent_folder`) |
+| New pattern / convention | Relevant guideline in `.augment/guidelines/` |
+| Architectural decision | [`adr-create`](../adr-create/SKILL.md) — numbered ADR + index regen |
 
-**When unsure** — ask with numbered options:
+**Step 2 — apply the fire/no-fire test.** Drift is a **falsifiable-claim
+contradiction**, not incompleteness:
+
+- **FIRE** (doc is now wrong — a reader would be misled): endpoint no longer
+  exists, wrong return type, renamed key, removed flag, broken code example.
+- **DO NOT FIRE** (completeness / quality only): the doc is high-level and
+  omits a new internal detail it never claimed to list; "could be clearer".
+
+**Step 3 — escape hatch.** Refactor-only / no public-surface change → no doc
+obligation. Surface changed but genuinely needs no doc edit → state the
+one-line reason; never edit a doc just to satisfy the rule (false-positive
+fatigue is worse than a missed nit).
+
+**When a doc edit IS needed but you are unsure of the wording** — flag it with
+numbered options; do NOT auto-rewrite prose without the user's knowledge:
 ```
 > 1. Yes — update the docs
-> 2. No — leave as-is
+> 2. No — leave as-is (reason: …)
 ```
-
-Do NOT auto-update docs without the user's knowledge. Flag what needs updating and let the user decide.
 
 ## Rules
 
