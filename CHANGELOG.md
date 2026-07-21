@@ -139,6 +139,44 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.7.0](https://github.com/event4u-app/agent-config/compare/9.6.0...9.7.0) (2026-07-21)
+
+### Features
+
+* **templates:** opt-in consumer doc-impact CI workflow ([c02c878](https://github.com/event4u-app/agent-config/commit/c02c87810d0ee60f8544f17c9d7cefdafc59c826))
+* **scripts:** add check_source_pointer_freshness CI gate + test ([f5895f7](https://github.com/event4u-app/agent-config/commit/f5895f784da4cc4c0d5b93fd55629589ec2f56c4))
+* **rules,skills:** docs-follow-code — Doc-Impact discipline + fix source-of-truth pointer drift ([9f8f666](https://github.com/event4u-app/agent-config/commit/9f8f6665d9ea3b1baa48a3aa2b30a516b9878912))
+* **bench:** adversarial-council residual-detection corpus + harness ([784202e](https://github.com/event4u-app/agent-config/commit/784202e5a33d94c0fe507cfb526e9dd2487dc89a))
+
+### Bug Fixes
+
+* **ci:** exempt check_source_pointer_freshness from the legacy-path guard ([5254683](https://github.com/event4u-app/agent-config/commit/5254683f492bb52e8fe3262f08b91a240867e3be))
+* **bench:** typecheck + lint the adversarial-council runner ([14e81cd](https://github.com/event4u-app/agent-config/commit/14e81cd9f2034a66b448b70440f77916ed054d5d))
+* **security:** close GIT_CONFIG_* config-injection RCE residual in hardenedSpawnEnv ([48941a6](https://github.com/event4u-app/agent-config/commit/48941a6d3be2bd125758f7899690e5bf36bb2843))
+
+### Documentation
+
+* **roadmap:** archive completed road-to-doc-follows-code ([2695aad](https://github.com/event4u-app/agent-config/commit/2695aade3be5e4a87acd19af8032c655e3bd10fe))
+* **changelog:** record the docs-follow-code discipline under [Unreleased] ([54703a5](https://github.com/event4u-app/agent-config/commit/54703a5e930e01a2a124e22ded5ef5fc3aadfbd8))
+* **roadmap:** archive completed adversarial-council-benchmark roadmap ([ae30ddb](https://github.com/event4u-app/agent-config/commit/ae30ddb4156365d17ac97c8ff1af7c5902c76337))
+* **bench:** resolve adversarial-council-finding-coverage — HONEST NULL ([9bd5fe4](https://github.com/event4u-app/agent-config/commit/9bd5fe489fb9a324da9a096fc4170e820d7b2888))
+* **roadmap:** archive completed changelog-unreleased-drain roadmap ([361f72f](https://github.com/event4u-app/agent-config/commit/361f72fe681e04b0ab717314c2fdb24e13939048))
+* **changelog:** drain the stale 6.0.0 fossil out of [Unreleased] ([ca99ced](https://github.com/event4u-app/agent-config/commit/ca99ced83eee2b23ea18b33f9852cfe718ebbb2f))
+* **roadmap:** archive completed spawn-env-completion roadmap ([c4fd083](https://github.com/event4u-app/agent-config/commit/c4fd0839c83f2c580bb08ce2581bcceb8d62d095))
+* **security:** spawn-site policy inventory + ADR-123 follow-up (lint rejected) ([bec13d1](https://github.com/event4u-app/agent-config/commit/bec13d1c7acb0a17e2d8a561ca279a6cebb97446))
+* drop serial comma in README + package.json prose ([dec73af](https://github.com/event4u-app/agent-config/commit/dec73affaca0a000c5fab656017be15c67e0f884))
+
+### Tests
+
+* **changelog:** guard [Unreleased] against at-a-glance fossil reopening ([75993e4](https://github.com/event4u-app/agent-config/commit/75993e4426bb2b103ae89706d59a70195513d624))
+
+### Chores
+
+* **condense:** re-mark 19 commands after dependency-hash cascade ([07ddac7](https://github.com/event4u-app/agent-config/commit/07ddac7a80661693852ae68ce31d530020d95305))
+* **ci:** guard README against serial-comma drift ([a7caa83](https://github.com/event4u-app/agent-config/commit/a7caa83e0771244e16845505028f812f59d26624))
+
+Tests: 7854 (+16 since 9.6.0)
+
 ## [9.6.0](https://github.com/event4u-app/agent-config/compare/9.5.0...9.6.0) (2026-07-20)
 
 ### Features
