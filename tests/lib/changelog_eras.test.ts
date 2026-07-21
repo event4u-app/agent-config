@@ -110,6 +110,26 @@ describe('changelog era drift gate (live CHANGELOG.md)', () => {
         }
     });
 
+    it('test_unreleased_carries_no_at_a_glance_fossil', () => {
+        // Guard the [Unreleased] drain (road-to-changelog-unreleased-drain):
+        // the region between `## [Unreleased]` and the first `# Era:` header
+        // must not reopen with a `### N.Y.Z at a glance` release-overview block
+        // — that content belongs in a dated release section or docs/archive/,
+        // never staged under [Unreleased] where it fossilises.
+        const lines = eras.read_changelog_lines();
+        const uidx = lines.findIndex((l) => /^## \[Unreleased\]/.test(l));
+        expect(uidx, 'CHANGELOG.md must have an `## [Unreleased]` section.').toBeGreaterThanOrEqual(0);
+        const firstEra = lines.findIndex((l) => /^# Era:/.test(l));
+        const end = firstEra > uidx ? firstEra : lines.length;
+        const region = lines.slice(uidx + 1, end).join('\n');
+        expect(
+            /^### \d+\.\d+\.\d+ at a glance/m.test(region),
+            'The [Unreleased] section carries a `### N.Y.Z at a glance` overview ' +
+                'block — drain it to docs/archive/ (see ' +
+                'docs/archive/CHANGELOG-6.0.0-overview.md) so [Unreleased] starts clean.',
+        ).toBe(false);
+    });
+
     it('test_conventions_doc_linked_from_changelog', () => {
         const lines = eras.read_changelog_lines();
         const header = lines.slice(0, 30).join('\n');
