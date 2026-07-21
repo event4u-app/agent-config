@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 ---
 
 # Road to resolving the adversarial-council finding-coverage claim (benchmark arm)
@@ -65,18 +65,18 @@ refined *before* the registered run; the pass/fail numbers may not move after it
 
 ## Phase 1 — Curate a judge-survivable residual-defect corpus
 
-- [ ] Build a corpus of planted defects designed to **survive a single strong
+- [x] Build a corpus of planted defects designed to **survive a single strong
       cross-model judge** (residual-defect subtlety), per the bar in
       `docs/design/adversarial-council-eval.md`. Each item: a real, non-obvious
       defect (subtle broken edge case / missing control / plausible-but-wrong
       logic), not a deliberately hollow impl.
-- [ ] Include a **controversial-but-correct clean control** carrying real
+- [x] Include a **controversial-but-correct clean control** carrying real
       perf/security tradeoffs + uncommon-but-correct patterns, so panel
       false-positive rate is measured against single-judge FP on the same control.
-- [ ] **Publish the subtlety distribution** (how many items at each subtlety
+- [x] **Publish the subtlety distribution** (how many items at each subtlety
       tier, defect classes covered) alongside the corpus, so the corpus is
       auditable and the residual claim is falsifiable.
-- [ ] Corpus-validity gate passes: an independent read confirms the corpus meets
+- [x] Corpus-validity gate passes: an independent read confirms the corpus meets
       the judge-survivable bar and is not the parity corpus in disguise.
 
 ## Phase 2 — Registered run + claim resolution (maintainer spend-gated)
@@ -86,15 +86,15 @@ refined *before* the registered run; the pass/fail numbers may not move after it
 > this-turn maintainer spend approval, and only after Phase 1's corpus-validity
 > gate passes.
 
-- [ ] Run Stage 1: a strong single cross-model judge over the corpus; record the
+- [x] Run Stage 1: a strong single cross-model judge over the corpus; record the
       residual subset (defects that survive it).
-- [ ] Run Stage 2: the cross-vendor adversarial panel (>=2 distinct providers via
+- [x] Run Stage 2: the cross-vendor adversarial panel (>=2 distinct providers via
       `council_cli.ts`) over the judge-passed residual subset; measure residual
       recall + false-positive rate on the controversial-clean control.
-- [ ] Evaluate against the locked dual threshold via `evaluateCouncilBench`;
+- [x] Evaluate against the locked dual threshold via `evaluateCouncilBench`;
       record the reproducible verdict (inputs, seeds, provider set, per-stage
       counts).
-- [ ] Resolve the `adversarial-council-finding-coverage` claim: `backed` with the
+- [x] Resolve the `adversarial-council-finding-coverage` claim: `backed` with the
       recorded evidence, **or** a documented honest-null. On honest-null, confirm
       the Mode 9 surface stays default-off permanently (no settings change needed —
       it already ships off).

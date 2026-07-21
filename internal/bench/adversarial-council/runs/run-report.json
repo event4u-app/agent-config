@@ -1,0 +1,56 @@
+{
+  "mode": "run",
+  "corpus": "internal/bench/adversarial-council/corpus.json",
+  "protocol": "stage1 2-vendor neutral → residual (missed by both); stage2 single skeptic (anthropic) vs cross-vendor panel union on residual; FP on clean controls",
+  "inputs": {
+    "single_judge_residual_recall": 0.6,
+    "panel_residual_recall": 0.6,
+    "single_judge_fp_rate": 1,
+    "panel_fp_rate": 1,
+    "fp_noise_margin": 0.3333333333333333
+  },
+  "detail": {
+    "total_defects": 12,
+    "residual_ids": [
+      "mfi-01",
+      "mfi-03",
+      "inv-01",
+      "inv-03",
+      "state-02"
+    ],
+    "residual_size": 5,
+    "single_skeptic": "anthropic",
+    "single_residual_caught": [
+      "mfi-03",
+      "inv-01",
+      "state-02"
+    ],
+    "panel_residual_caught": [
+      "mfi-03",
+      "inv-01",
+      "state-02"
+    ],
+    "single_fp": [
+      "clean-01",
+      "clean-02",
+      "clean-03"
+    ],
+    "panel_fp": [
+      "clean-01",
+      "clean-02",
+      "clean-03"
+    ]
+  },
+  "verdict": {
+    "relative_lift": 0,
+    "absolute_lift_pp": 0,
+    "relative_pass": false,
+    "absolute_pass": false,
+    "fp_pass": true,
+    "verdict": "honest-null",
+    "reasons": [
+      "relative lift 0.0% < 25%",
+      "absolute lift 0.0pp < 8pp"
+    ]
+  }
+}
