@@ -16,7 +16,28 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
-_Nothing yet — changes land here between releases._
+### Added
+
+- **Doc-follows-code discipline** — deterministic, framework-agnostic mechanism
+  so documentation is updated when code changes.
+  - `downstream-changes` rule gains a first-class **Doc-Impact** obligation:
+    a change to a public surface (route, exported signature, CLI flag, config/
+    settings key, env var, DB schema, event payload) is incomplete until the
+    doc that describes it is updated in the same change; escape hatch for
+    refactor-only / no-surface changes.
+  - `agent-docs-writing` skill: the advisory doc-sync table becomes an
+    actionable, cross-stack Doc-Impact procedure with a falsifiable-claim
+    fire/no-fire test.
+  - `check_source_pointer_freshness` CI gate — fails when an authoring file
+    names the retired `.agent-src.uncondensed/` tree as source of truth.
+  - Opt-in consumer CI template `github-workflows/doc-impact.yml` (warn-first,
+    `[docs:not-needed]` / `refactor:` escape hatch, `STRICT` toggle).
+
+### Fixed
+
+- Source-of-truth pointer drift: `src/agent-src/README.md` and the
+  `agents-md-thin-root` skill named the retired `.agent-src.uncondensed/`
+  tree; corrected to `src/`.
 
 > The former "6.0.0 at a glance" overview was drained on 2026-07-21 to
 > [`docs/archive/CHANGELOG-6.0.0-overview.md`](docs/archive/CHANGELOG-6.0.0-overview.md).
