@@ -3,17 +3,53 @@ title: agent-config
 description: A governed skill/rule/command suite for AI coding tools — every claim machine-checked, including zero runtime.
 template: splash
 hero:
-  tagline: A governed skill/rule/command suite for AI coding tools. Every public claim is machine-checked against the code — including "zero runtime daemon".
+  tagline: A governed skill/rule/command suite for AI coding tools. Bring your own AI provider — get a deep library of skills, commands and governed rules, compiled into 7+ host agents with zero runtime daemon.
   actions:
+    - text: Get Started
+      link: /agent-config/getting-started/introduction/
+      icon: right-arrow
+      variant: primary
     - text: Verify it yourself
       link: /agent-config/proof/
-      icon: right-arrow
-    - text: The benchmark (both hosts)
-      link: /agent-config/benchmark/
+      variant: minimal
+    - text: View on GitHub
+      link: https://github.com/event4u-app/agent-config
+      icon: external
       variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<div align="center">
+  <a href="https://event4u.app">
+    <img alt="agent-config" src="/agent-config/banner.png" style="max-width: 100%; height: auto; border-radius: 8px;" />
+  </a>
+</div>
+
+## Explore the docs
+
+<CardGrid>
+  <Card title="Getting Started" icon="rocket">
+    [Install](/agent-config/getting-started/installation/), meet the
+    [requirements](/agent-config/getting-started/requirements/), and run the
+    [30-second wedge](/agent-config/getting-started/quick-start/).
+  </Card>
+  <Card title="Configuration" icon="setting">
+    The [`.agent-settings.yml`](/agent-config/configuration/overview/) surface —
+    [settings reference](/agent-config/configuration/settings-reference/),
+    [profiles](/agent-config/configuration/profiles/), and
+    [packs](/agent-config/configuration/packs/).
+  </Card>
+  <Card title="CLI & Agent Commands" icon="seti:powershell">
+    The terminal [`agent-config` / `task` CLI](/agent-config/cli/overview/) and
+    the in-agent [`/slash` commands](/agent-config/agent-commands/overview/).
+  </Card>
+  <Card title="Architecture" icon="puzzle">
+    The [content + governance layer](/agent-config/architecture/overview/) —
+    [kernel & router](/agent-config/architecture/kernel-and-router/),
+    [source of truth](/agent-config/architecture/source-of-truth/).
+  </Card>
+</CardGrid>
 
 ## Why this is different
 
