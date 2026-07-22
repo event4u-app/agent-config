@@ -112,9 +112,17 @@ maintainer approves the run once per release.
   on deploys, a single human checkpoint before a release's own CI even
   runs is arguably a feature, not friction.
 - `RELEASE_PR_TOKEN` (a fine-grained PAT or GitHub App installation
-  token with `contents: write` + `pull-requests: write` on this repo)
-  removes the approval requirement entirely — documented as the
-  zero-friction upgrade path in `release.yml`'s header comment. Adding
+  token with `contents: write` + `pull-requests: write` + `actions: write`
+  on this repo) removes the approval requirement entirely — documented as
+  the zero-friction upgrade path in `release.yml`'s header comment. The
+  `actions: write` scope ("Actions: read and write" on a fine-grained PAT,
+  or the classic `workflow` scope) is required by release.ts step 9's
+  explicit `gh workflow run` dispatch of the tag-triggered workflows
+  (release-guard / publish-npm / cloud-release); without it that dispatch
+  returns HTTP 403. As of 2026-07-21 that dispatch is **non-fatal** — the
+  release is already complete when it runs, and a PAT-pushed tag fires
+  those workflows on the push regardless — so a missing scope degrades to
+  a logged warning, never a failed-but-shipped release. Adding
   it is a maintainer action, not part of this ADR.
 
 ## Verified facts (not assumed)
