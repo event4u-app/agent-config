@@ -1451,9 +1451,30 @@ function execute(
         // publish that already happened.
         if (ci) {
             _step(9, total, 'Dispatch release-guard.yml + publish-npm.yml + cloud-release.yml for the tag');
-            run(['gh', 'workflow', 'run', 'release-guard.yml', '--ref', MAIN_BRANCH, '-f', `tag=${plan.target}`]);
-            run(['gh', 'workflow', 'run', 'publish-npm.yml', '--ref', MAIN_BRANCH, '-f', `tag=${plan.target}`]);
-            run(['gh', 'workflow', 'run', 'cloud-release.yml', '--ref', MAIN_BRANCH, '-f', `tag=${plan.target}`]);
+            // NON-FATAL by design. By this point the release is already complete
+            // — the tag is pushed and the GitHub Release is created above, and
+            // npm publish runs asynchronously. These explicit dispatches are a
+            // FALLBACK for a tag pushed with the default GITHUB_TOKEN, which does
+            // NOT fire tag-triggered workflows (GitHub's recursion guard). When
+            // the tag was pushed with a PAT (RELEASE_PR_TOKEN), those three
+            // workflows already fired on the push and this dispatch is redundant.
+            // Dispatching via the API additionally needs the token's
+            // `actions:write` scope; a 403 here (scope missing) must NOT mark an
+            // already-shipped release as failed — warn and continue.
+            for (const wf of ['release-guard.yml', 'publish-npm.yml', 'cloud-release.yml']) {
+                const r = run(['gh', 'workflow', 'run', wf, '--ref', MAIN_BRANCH, '-f', `tag=${plan.target}`], {
+                    check: false,
+                });
+                if (r.returncode !== 0) {
+                    process.stderr.write(
+                        `⚠️  Could not dispatch ${wf} (exit ${r.returncode}) — the release ${plan.target} is ` +
+                            `already complete (tag + GitHub Release created; npm publishes async). If the tag was ` +
+                            `pushed with a PAT, ${wf} already fired on the tag push. If you rely on the explicit ` +
+                            `dispatch, grant RELEASE_PR_TOKEN the "Actions: read and write" scope (fine-grained PAT) ` +
+                            `or the "workflow" scope (classic PAT).\n`,
+                    );
+                }
+            }
         }
     }
 

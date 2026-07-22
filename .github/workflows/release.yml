@@ -12,9 +12,17 @@ name: Release
 #
 # Token: uses secrets.RELEASE_PR_TOKEN when configured (a fine-grained PAT
 # or GitHub App installation token with contents:write + pull-requests:write
-# on this repo), falling back to the default GITHUB_TOKEN.
+# + actions:write on this repo), falling back to the default GITHUB_TOKEN.
+# actions:write ("Actions: read and write" on a fine-grained PAT, or the
+# "workflow" scope on a classic PAT) is required for step 9's explicit
+# dispatch of the tag-triggered workflows (release-guard / publish-npm /
+# cloud-release); WITHOUT it that dispatch returns HTTP 403. It is non-fatal
+# (the release is already complete by then, and a PAT-pushed tag fires those
+# workflows on the push anyway — see release.ts step 9), but the run's log
+# will carry a warning until the scope is granted.
 #
-#   - With RELEASE_PR_TOKEN: fully unattended end-to-end.
+#   - With RELEASE_PR_TOKEN (contents + pull-requests + actions): fully
+#     unattended end-to-end.
 #   - Without it (default): GitHub's bot-created-PR safeguard (introduced
 #     2026-06-11) queues the release PR's checks — including the required
 #     "Sync + Generate Tools Consistency" check — in an approval-required
