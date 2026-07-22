@@ -65,3 +65,4 @@ If a skill needs a tool that is not in the registry:
 - [`lethal-trifecta-guard`](lethal-trifecta-guard.md) — an over-broad tool grant is the standing egress leg of the lethal trifecta (OWASP ASI). Least Agency here breaks that leg by construction.
 - [`supply-chain-intake`](../skills/supply-chain-intake/SKILL.md) — the MCP-server intake gate applies this rule's Least-Agency tool-grant review before a new server is connected.
 - [`untrusted-input-defense`](untrusted-input-defense.md) — the least-agency + human-approval controls (OWASP LLM06 / ASI excessive-agency) that bound an untrusted-content path.
+- [`secret-vcs-guard`](secret-vcs-guard.md) — a raw credential in a shipped file is the "no hidden credentials" violation this rule names; that rule blocks it at write/commit time.
