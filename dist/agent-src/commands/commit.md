@@ -79,6 +79,23 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   - Are purely stylistic/formatting changes (separate from logic changes)
   - Are unrelated to the main change (e.g. config fix, unrelated typo)
 
+### 3b. Secret-leak pre-flight
+
+Before planning any commit, scan the changed set for credentials:
+
+```
+./scripts-run src/scripts/check_secret_leak
+```
+
+If it exits non-zero (a high-confidence secret in the diff or an untracked file),
+**STOP** — do not stage or commit. Hand control to the
+`.augment/rules/secret-vcs-guard.md` rule: show the match, ask via numbered
+options, and offer the tiered alternative (see
+`.augment/skills/secrets-management/SKILL.md`). Only proceed
+once the user resolves it (move to a store, or add an audited
+`# secret-allow` / `.secret-allow` entry for a confirmed false positive). Never
+silently commit a secret; never silently strip one.
+
 ### 4. Plan the commits
 
 For each logical group, determine the commit message following the commit conventions rule

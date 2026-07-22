@@ -8,13 +8,13 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **version**: `9.7.0`
 - **owner**: engineering
 - **requires**: —
-- **artefacts**: 109
+- **artefacts**: 110
 
 ## Commands (1)
 
 - **`mission-upgrade`** — Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs.
 
-## Rules (25)
+## Rules (26)
 
 - **`active-remediation`** — Spotted an issue while working (security gap, missing test, bad code, duplication, stale idiom) — never ignore; fix small+aligned inline, ask on bigger, propose a follow-up PR for many
 - **`broken-access-control`** — Endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant/role check + the three negative tests (401/non-owner/cross-tenant)
@@ -35,6 +35,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`output-discipline`** — No placeholder prose in generated code/UI — no truncation shorthands; on budget overflow emit a clean PAUSED breakpoint
 - **`prefer-enums-over-literals`** — Modeling a field/property with multiple non-boolean states — prefer an enum over bare string/numeric literals; found old-style literals where an enum fits → note, finish the task, ask after
 - **`scope-control`** — Scope control — no unsolicited architectural changes, refactors, or library replacements
+- **`secret-vcs-guard`** — About to write a credential into a tracked file or stage/commit one in any VCS (git/svn/hg) — STOP, show the match, ask, offer alternatives; never silently commit, never silently strip
 - **`security-sensitive-stop`** — Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing
 - **`senior-engineering-discipline`** — Writing/generating code — generalize (no overfit or tautological tests), supply the invisible cross-cutting controls the prompt didn't name, never invent an API/field/package
 - **`source-discovery-gate`** — Before coding/DB/API/vendor work — prove structural facts against a real source (file:line, SDL, probe)

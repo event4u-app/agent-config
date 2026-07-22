@@ -53,6 +53,10 @@ Uses `/create-pr:description-only` to generate the PR content, then creates the 
 - Verify the current branch is NOT the default branch (`main` / `master`).
 - Run `git status` — warn if there are uncommitted changes.
 - Run `git log origin/{default}..HEAD --oneline` to verify there are commits to push.
+- **Secret-leak pre-flight (MANDATORY before push):** run
+  `./scripts-run src/scripts/check_secret_leak`. On a high-confidence hit, STOP —
+  do not push; hand to `.augment/rules/secret-vcs-guard.md` (show, ask, offer the
+  alternative, rotate-first if already in history). Pushing publishes the secret.
 - If the branch has not been pushed yet, ask the user (in their language) whether to push.
 
 ### 1b. Freshness gate — MANDATORY before opening any PR
