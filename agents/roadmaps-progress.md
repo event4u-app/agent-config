@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 11 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**135 / 187 steps done · 72%**
+**105 / 156 steps done · 67%**
 
 ```text
-█████████████████████████████░░░░░░░░░░░   72%
+███████████████████████████░░░░░░░░░░░░░   67%
 ```
 
 ## Open roadmaps
@@ -22,11 +22,10 @@
 | 4 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 5 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 7 | [road-to-starlight-project-docs.md](roadmaps/road-to-starlight-project-docs.md) | 9 | 31 | 1 | 30 | 0 | 0 | 0 | ██████████ 97% |
-| 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 9 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 10 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 11 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 8 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 9 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 10 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -139,22 +138,6 @@ _1 blocker resolved._
   - **What to do:**
     labelled golden set; the live 3-host canary tick stays as the second half.
   - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0. - **Evidence update 2026-07-11 (real run landed — gate is RED, not just pending):** the consumer golden set is complete (PR #885) and a full sonnet n=90 `check_quality_regression --as-flip-gate` ran (PR #887). It **FAILS** (thin win-rate 36.2% < 48% floor; length-confound 60%, judge inconsistency 31%). CAVEAT: that run measured the **thin** projection (kernel bodies + non-kernel pointers), NOT this roadmap's **workspace-scoping** reduction — a milder, different cut with **no dedicated arm** in `bench_quality_run` yet. So the held-quality arm is **not** directly resolved, but the strongest same-class reduction failed the gate decisively → treat context-reduction-for-tokens as **quality-risky by prior** on this eval. **Disposition (maintainer, 2026-07-11): do NOT spend another ~$33 on a workspace-scoped arm** that shares the same verbosity confound and would most likely reconfirm the negative; the Phase-1 DEFAULT flip stays **evidence-blocked**. The opt-in build path is unaffected (per Blocks above). Revisit only with a length-normalised arm that kills the confound.
-
-### [road-to-starlight-project-docs.md](roadmaps/road-to-starlight-project-docs.md)
-
-**Starlight project documentation** — 30 / 31 done (97%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Theme & chrome (data-helpers look) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Landing page | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 3 | Getting Started section | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 4 | Configuration section | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | CLI Commands section | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 6 | Agent Commands section | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 7 | Architecture / Concepts section | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 8 | Wire-up, README/banner, verify | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 9 | PR | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 

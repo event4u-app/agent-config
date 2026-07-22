@@ -349,8 +349,8 @@ anchors survive (verified by the link check).
 
 ## Phase 9 — PR
 
-- [ ] Open the PR for the Starlight documentation work (via `/create-pr`),
-      targeting `main`.
+- [x] Open the PR for the Starlight documentation work, targeting `main`
+      (PR #995).
 
 ## Out of scope
 
