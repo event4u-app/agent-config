@@ -25,8 +25,9 @@
  * .env.example, lockfiles, *.min.*.
  *
  * Usage:
- *   ./scripts-run src/scripts/check_secret_leak [paths...] [--json]
- *   (no paths → scans `git ls-files`)
+ *   ./scripts-run src/scripts/check_secret_leak [paths...] [--all] [--base <ref>] [--json]
+ *   default → files changed vs origin/main + untracked (shift-left); --all →
+ *   whole tracked tree; paths → exactly those (excludes skipped).
  *
  * Exit codes: 0 clean · 1 high-confidence leak found · 2 usage/env error.
  */
@@ -131,7 +132,7 @@ export type Mode = 'diff' | 'all' | 'explicit';
 export function resolveFiles(
     root: string,
     mode: Mode,
-    opts: { explicit?: readonly string[]; base?: string } = {},
+    opts: { explicit?: readonly string[] | undefined; base?: string | undefined } = {},
 ): string[] {
     if (mode === 'explicit') {
         return (opts.explicit ?? []).map((p) =>
@@ -150,7 +151,7 @@ export function resolveFiles(
 export function scanRepo(
     root: string,
     mode: Mode = 'diff',
-    opts: { explicit?: readonly string[]; base?: string } = {},
+    opts: { explicit?: readonly string[] | undefined; base?: string | undefined } = {},
 ): LeakHit[] {
     const allow = readAllowFile(root);
     // Explicit paths express intent — the fixture/test/example excludes (which
