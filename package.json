@@ -71,7 +71,8 @@
         "test:ts": "vitest run",
         "prepack": "npm run build && npm run build:discovery && npm run build:mcp-manifest && node src/scripts/prepack-check.mjs",
         "prepublishOnly": "./scripts-run src/scripts/check_release_includes_discovery",
-        "prepare": "[ -d .git ] && bash src/scripts/install-hooks.sh || true"
+        "prepare": "[ -d .git ] && bash src/scripts/install-hooks.sh || true",
+        "postinstall": "node dist/scripts/postinstall_gui.js 2>/dev/null || true"
     },
     "publishConfig": {
         "access": "public",
