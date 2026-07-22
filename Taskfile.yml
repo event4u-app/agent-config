@@ -82,6 +82,7 @@ tasks:
       - task: check-template-pin-drift
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: check-secret-leak
       - task: check-claims
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale
@@ -268,6 +269,7 @@ tasks:
       - task: check-template-pin-drift
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: check-secret-leak
       - task: check-claims
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale
