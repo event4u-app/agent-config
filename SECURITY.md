@@ -78,3 +78,8 @@ Key controls shipped with the package:
   (`bypassPermissions`, wildcard `allowed_tools`, unsafe automated execution).
 - `lint_agent_security.py` — umbrella runner aggregating the four linters above,
   with SARIF 2.1.0 output for CI integration.
+- `check_secret_leak.ts` + `_lib/secret_detector.ts` — secret-in-VCS gate
+  (CWE-798): a regex + entropy + keyword detector run at agent write/commit time
+  by the `secret-vcs-guard` rule and, non-bypassably, in CI (`task ci`). A
+  `secret-scan.yml` (gitleaks) consumer template ships for the developer-side net.
+  See `skill:secrets-management` for stores, rotation, and remediation ordering.

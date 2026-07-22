@@ -99,6 +99,49 @@ Error responses     → never echo the secret back, even on failure.
 Telemetry / APM     → strip from request/response captures; allowlist headers.
 ```
 
+### Step 6 — Runtime guard: block before the secret lands
+
+The scanning gates (Step 4) are the CI/pre-commit nets. The **earliest** gate is
+the agent itself: before it writes a credential into a tracked file or stages a
+commit, the [`secret-vcs-guard`](../../rules/secret-vcs-guard.md) rule runs the
+`secret_detector` library (`src/scripts/_lib/secret_detector.ts`) and, on a hit,
+STOPS → shows the match (`file:line` · kind · masked · why) → asks via numbered
+options → offers the tiered alternative below. It never silently commits and
+never silently strips. VCS-agnostic: the same detector runs against the diff for
+git, SVN, and Mercurial (SVN/hg native hooks are server-side, a stronger but
+later net). The deterministic CI backstop is `check_secret_leak`
+(`src/scripts/check_secret_leak.ts`) — the agent gate is one layer, not the whole
+defense.
+
+**False positives — audited allowlist, never a global mute.** Suppress a
+confirmed non-secret with an inline `# secret-allow` marker on the line, or a
+narrow entry (`path` or `path:line`) in a repo-root `.secret-allow` file. Each
+`.secret-allow` entry SHOULD carry a one-line justification comment (`#  …`) so it
+is reviewable in the diff; the entry is line-scoped, so it cannot mute a *new*
+secret elsewhere in the same file.
+
+**Tiered alternative to suggest when a secret is caught** (refines Step 1 for the
+in-the-moment fix; cite OWASP Secrets Management Cheat Sheet + CWE-798 + 12-factor):
+
+```
+Solo / local, dev-only        → gitignored .env + committed .env.example (keys, no values).
+Team / production app         → cloud secret manager (AWS/GCP/Azure) or Vault / Doppler.
+Kubernetes / GitOps           → SOPS (encrypt values in the committed file) or Sealed Secrets.
+CI / deploy                   → OIDC federation to the cloud — no long-lived stored credential.
+```
+
+## Remediation — a secret already reached VCS
+
+Order matters; a history rewrite does **not** un-leak an already-pushed secret:
+
+1. **Rotate / revoke the credential now.** Immediate, and the only step that
+   actually stops the damage — assume it is compromised the moment it was pushed.
+2. **`git rm` / a deletion commit is insufficient** — the secret stays in history
+   (`git log`, blame, prior commits, clones, forks, CI logs).
+3. **Purge history** with `git filter-repo` (preferred) or BFG Repo-Cleaner.
+4. **Force-push + coordinate** re-clones; forks and existing clones still hold the
+   old objects — which is why step 1 is the real fix.
+
 ## Procedure: Apply to a new secret
 
 1. **Inspect** the existing secret inventory and IaC for store conventions; run Step 1 and lock the store decision in code/IaC.

@@ -1,0 +1,11 @@
+# secret-detector positive fixtures — every value below is FAKE, do not use.
+# Line format: <kind-label>|<fake-secret>
+aws|AKIA1234567890ABCDEF
+github|ghp_0123456789abcdefghijklmnopqrstuvwxyz
+stripe|sk_live_0123456789abcdefABCDEF
+google|AIza0123456789abcdefghijklmnopqrstuvwxy
+slack|xoxb-0123456789-abcdefABCDEF
+pem|-----BEGIN RSA PRIVATE KEY-----
+jwt|eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+dburl|postgres://dbuser:s3cr3tpass@db.internal:5432/app
+assignment|api_key = "s3cr3tV4lu3Abc123"

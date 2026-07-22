@@ -1,0 +1,10 @@
+# secret-detector negative fixtures — all benign, must not flag high/medium.
+api_key = "changeme"
+api_key = "xxxxxxxxxxxxxxxx"
+password = "your-password-here"
+build commit d41d8cd98f00b204e9800998ecf8427e5f1a2b3c
+request id 550e8400-e29b-41d4-a716-446655440000
+bundle integrity 3a7bd3e2360a3d29eea436fcfb7e44c735d117c42d1c1835420b6b9942dd4f1b
+data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAElFTkSuQmCC
+API_KEY=your-key-here
+aws_key = "AKIAZ4Q7WXYT2H9RVBKL"  # secret-allow
