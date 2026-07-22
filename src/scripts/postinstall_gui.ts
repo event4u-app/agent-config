@@ -21,12 +21,45 @@
  */
 
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
-import { isHeadless } from '../cli/commands/uiServe.js';
-import { readServerInfo, clearServerInfo } from '../server/serverInfo.js';
+// NB: this file ships as SOURCE under `src/scripts/` (package.json `files`), so
+// it must import ONLY node builtins — a cross-dir import into src/cli or
+// src/server (not in the `files` whitelist) would fail the prepack-check and
+// crash a source run with ERR_MODULE_NOT_FOUND. The two helpers below are
+// therefore inlined from their canonical homes (kept trivially in sync):
+//   isHeadless()  — mirror of src/cli/commands/uiServe.ts
+//   serverInfo    — mirror of src/server/serverInfo.ts (path + pid read + clear)
+
+/** Mirror of `src/cli/commands/uiServe.ts` isHeadless(). */
+function isHeadless(): boolean {
+    if (process.env['SSH_CONNECTION']) return true;
+    if (process.platform === 'linux' && !process.env['DISPLAY']) return true;
+    return false;
+}
+
+/** Mirror of `src/server/serverInfo.ts` — the on-disk running-server record. */
+function serverInfoPath(): string {
+    return resolve(homedir(), '.event4u', 'agent-config', 'local-server.json');
+}
+function readServerPid(): number | null {
+    try {
+        const parsed = JSON.parse(readFileSync(serverInfoPath(), 'utf8')) as { pid?: unknown };
+        return typeof parsed.pid === 'number' ? parsed.pid : null;
+    } catch {
+        return null;
+    }
+}
+function clearServerInfo(): void {
+    try {
+        rmSync(serverInfoPath(), { force: true });
+    } catch {
+        /* best-effort */
+    }
+}
 
 export interface LaunchEnv {
     npm_config_global?: string | undefined;
@@ -50,16 +83,16 @@ export function shouldPostinstallLaunchGui(env: LaunchEnv, headless: boolean): b
 
 /** Terminate a previously-recorded live server instance, if any. Best-effort. */
 function terminatePreviousInstance(): void {
-    const info = readServerInfo();
-    if (!info) return;
+    const pid = readServerPid();
+    if (pid === null) return;
     try {
-        process.kill(info.pid, 0); // liveness probe — throws if the process is gone
+        process.kill(pid, 0); // liveness probe — throws if the process is gone
     } catch {
         clearServerInfo(); // stale record — nothing to kill
         return;
     }
     try {
-        process.kill(info.pid, 'SIGTERM');
+        process.kill(pid, 'SIGTERM');
     } catch {
         // already exiting / not ours — leave the record for the new instance to overwrite
         return;
