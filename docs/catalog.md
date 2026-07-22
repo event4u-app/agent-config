@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **673 public artefacts** shipped by
+Consumer-facing catalog of all **674 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -415,7 +415,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (190)
+## Commands (191)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -485,6 +485,7 @@ are excluded.
 | command | [`fix-ci`](../dist/agent-src/commands/fix/ci.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix-comments`](../dist/agent-src/commands/fix/comments.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
 | command | [`fix-portability`](../dist/agent-src/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
+| command | [`fix-pr-comments-loop`](../dist/agent-src/commands/fix/pr-comments-loop.md) | cluster: fix | Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments |
 | command | [`fix-pr-comments`](../dist/agent-src/commands/fix/pr-comments.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR |
 | command | [`fix-quality`](../dist/agent-src/commands/fix/quality.md) | cluster: fix | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`fix-refs`](../dist/agent-src/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
