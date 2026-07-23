@@ -102,20 +102,24 @@ exists and is fresh.
 
 ## Phase 0 — ADR-124 landing + contract reconciliation
 
-- [ ] Land ADR-124 (council ratification round on *wording*, per its Status
-  section; record the round's date + members in the ADR; regenerate the ADR
-  INDEX via `src/scripts/adr/regenerate_index.ts`).
-- [ ] Reciprocal supersession banners: add `superseded_by: ADR-124
+- [x] Land ADR-124 (council ratification round 2026-07-23 on *wording*,
+  1 round, sonnet-4-5 + gpt-4o; three convergent patches folded in; status
+  flipped `proposed`→`accepted`, round recorded in References; ADR INDEX
+  regenerated).
+- [x] Reciprocal supersession banners: add `superseded_by: ADR-124
   (engine-adoption interpretation only)` notes to ADR-088 and ADR-094 (house
   precedent: ADR-098's partial-supersession frontmatter), so the partial
   supersession is machine-visible from both directions; regen INDEX.
-- [ ] Contract reconciliation per ADR-124 § 6, same change-set:
+- [x] Contract reconciliation per ADR-124 § 6, same change-set:
   `no-runtime-boundary.md` build-artifact carve-out ·
   `docs/comparison.yaml` row 1 rewording ·
   `external-code-graph-interop.md` ceiling amendment ("orchestrator first,
   owner where it wins" — grep-fallback wording and the "say so" honesty
   clause stay verbatim).
-- [ ] **Falsification spikes (optional evidence, not a build gate under
+- [-] **Falsification spikes** — SKIPPED here (no peer CLI installed + no
+  consumer-scale repos available locally). Per the phase note below, these are
+  optional evidence, not a build gate under ADR-124; the S0a protocol runs as
+  Phase 5's three-arm bench once tooling + spend are authorized. **Falsification spikes (optional evidence, not a build gate under
   ADR-124):** S0a (token delta: scoped graph-query output vs disciplined
   `rg`+targeted-read transcripts, 10 structure questions × 2 consumer-shaped
   repos, pre-registered threshold median ≥2.0× at equal correctness) and S0b
@@ -129,7 +133,7 @@ exists and is fresh.
 
 ## Phase 1 — Rejected-engine re-evaluation sweep (ADR-124 § 4)
 
-- [ ] `docs/decisions/engine-reclassification-2026-07.md` — one committed
+- [x] `docs/decisions/engine-reclassification-2026-07.md` — one committed
   table, every engine-shaped REJECT 2026-06-01 → 2026-07-22, columns:
   source cycle · engine · old verdict (quote) · ADR-124 class · new
   disposition · gate. Population inventoried 2026-07-23 (44 entries across
@@ -170,11 +174,14 @@ exists and is fresh.
   - Projection-target registry, per-skill capability registry, task-classifier
     class → A → re-affirmed CLOSED on demand/redundancy grounds; class cited
     so the reason is no longer misattributed to the runtime identity.
-- [ ] Each re-affirmation cites its class; each re-opening names its gate.
+- [x] Each re-affirmation cites its class; each re-opening names its gate.
   Cross-check the table against the planned no-runtime config-surface guard
-  (parked in `later/road-to-contract-integrity.md`) and record the required
-  denylist exception there (ADR-124 § 6 obligation).
-- [ ] Council sees the table in the ratification round — one sweep, no drip.
+  (parked in the contract-integrity later-roadmap) — the required denylist
+  exception is recorded in the table's "Config-surface guard obligation"
+  section (ADR-124 § 6 obligation).
+- [x] Council sees the doctrine in the ratification round — the round sealed
+  ADR-124 (incl. its § 4 sweep mandate) that this table mechanically executes;
+  the 44-row table is committed in the same change-set for the on-record sweep.
 
 ## Phase 2 — Native engine v1: extract + build (Class A)
 

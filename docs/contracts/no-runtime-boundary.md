@@ -37,7 +37,7 @@ and violating the no-runtime principle).
 | Category | Why |
 |---|---|
 | **Background processes / daemons** | No spawned subprocesses that outlive the current agent turn |
-| **Cross-session persistent state stores** | No SQLite, pgvector, MCP memory servers, Redis, or any store that persists beyond the git working tree — agent-memory layer sunset applies here |
+| **Cross-session persistent state stores** | No SQLite, pgvector, MCP memory servers, Redis, or any store that persists beyond the git working tree — agent-memory layer sunset applies here. **Carve-out (ADR-124 § 6): a gitignored, deterministic, rebuildable build/index artifact under `agents/runtime/state/` is a build output, not a state store** — it carries no authority, is reproducible from the working tree, and is never auto-written memory. State-store test: if deleting the artifact changes *what* the tool can answer rather than only *how fast* it answers, it is a state store and prohibited (a code-graph cache passes — deletion only slows recompute; a vector/embedding index fails — it enables query semantics absent from source, and stays Class C). |
 | **Event loops / polling** | No `while true; do …; done`, no `inotifywait`, no cron-inside-mission |
 | **Auto-PR / auto-push** | Hard-Floor (`non-destructive-by-default`): missions never push to remote or open PRs autonomously; those gates require explicit user confirmation every turn |
 | **Network egress from mission scripts** | Mission scripts may not initiate outbound HTTP calls; skills that need network access declare `allowed_tools` explicitly and go through the normal lethal-trifecta gate |

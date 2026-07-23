@@ -14,9 +14,9 @@
 # no named source leaks in.
 
 rows:
-  - claim: "No runtime — no background daemon, no state database, no auto-write memory."
+  - claim: "No resident runtime — no background daemon, no state database or service, no auto-write memory; deterministic, rebuildable file indexes only."
     our_evidence: "docs/contracts/no-runtime-boundary.md#file-first"
-    their_evidence: "Swarm-runtime tools in this category ship a background process and/or a state store by design; that is an architectural fact of the runtime approach, not a defect."
+    their_evidence: "Swarm-runtime tools in this category ship a background process and/or a resident state store by design; that is an architectural fact of the runtime approach, not a defect."
     checkable: true
 
   - claim: "Capability/benchmark results are published — including the runs where the package changed nothing."

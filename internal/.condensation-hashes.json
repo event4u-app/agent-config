@@ -314,7 +314,7 @@
   "rules/domain-safety-retention.md": "34a44ce3bf9a36c10cde37a7f3a8e74eba4aa7dd53d21e3279f5684130e96de5",
   "rules/downstream-changes.md": "f555c361194196e8e0a050f6029af7ba7328ab04d259816d2e907dbd86ac706d",
   "rules/engineering-safety-floor.md": "f784cc0f7608a5618cacc2f6e165cd4081862cfbef83f87d1aac5a9c11d2192a",
-  "rules/external-code-graph-interop.md": "50d23e0484a200c7a8adb423ae3df6826628db8a04f1a4034007b0ca96d684b0",
+  "rules/external-code-graph-interop.md": "7a77720b168c595246b092e501a33a8e909cdc8d0510d6566c2afdc3ecc3f417",
   "rules/external-reference-deep-dive.md": "88ff54b58eef67dbf220aeddc0d438e0d9f51298422e9fed462eca762497ae4f",
   "rules/fast-path-marker-visibility.md": "f0f9592325542cbb002b0a0d2ef1bfe783e1beb61255b2ede8923ff2cc269d68",
   "rules/finance-safety-floor.md": "3ef88893bce0e20e2ca1d03fc9fd995394dd8b8e2de5bc02e76ec65a10aae673",
