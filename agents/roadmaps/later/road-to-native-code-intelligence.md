@@ -1,9 +1,25 @@
 ---
-status: ready
+status: later
 complexity: heavy
 ---
 
 # Road to native code intelligence — own the engine, sweep the rejected inventory, keep the gates
+
+> **Parked in `later/` 2026-07-23 (72% — Phases 0–4 landed).** The doctrine
+> (ADR-124), the reclassification sweep, and the native engine
+> (extract/build/query/detect/affected/update + the code-intelligence skill +
+> the PreToolUse nudge) are all merged and working. What remains is **not
+> autonomously workable now**:
+>
+> **Resume when** `benchmark-spend-authorization` is granted AND a
+> consumer-scale test corpus is available (the peer CLI + a Laravel ~50–150k
+> LOC + a TS ~30–100k LOC repo) — that unblocks **Phase 5** (the judged
+> three-arm benchmark → default-on decision) and, in turn, the bench-linked
+> **Phase 6** close-out (archive at the landing SHA; the CAPABILITIES regen and
+> the comparison verdict are already done). The one deferred wiring item
+> (`[~]` dedicated session-start freshness hook + installer post-commit git
+> hook) rides the same resume. Per the Later-disposition Iron Law this roadmap
+> is parked, not left active, until that trigger fires.
 
 > **Supersedes** `skipped/road-to-code-graph-orchestration.md` (2026-07-23,
 > same-day draft) after the maintainer's directive: the "orchestrator only"
