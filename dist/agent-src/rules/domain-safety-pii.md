@@ -164,3 +164,4 @@ PreToolUse hook — see `agents/settings/contexts/legal-privilege-probe.md`.
 - `skill:logging-monitoring`, `skill:secrets-management` — technical surfaces.
 - `domain-safety-disclaimer` — companion advisory rule.
 - `domain-safety-retention` — companion retention rule.
+- `doc-screenshot-hygiene` — the visual sibling: PII inside a **screenshot** shipped into docs (this rule covers text drafts / logs / exports, not images).

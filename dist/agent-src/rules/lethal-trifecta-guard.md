@@ -84,3 +84,4 @@ backstop.
 - [`non-destructive-by-default`](non-destructive-by-default.md) — the human-in-the-loop egress floor.
 - [`threat-modeling`](../skills/threat-modeling/SKILL.md) — abuse-case enumeration.
 - [`domain-safety-pii`](domain-safety-pii.md) § Surface 4 — legal privilege markers extend this egress gate (legal pack); a privileged document on an outbound path is blocked pending explicit confirmation.
+- [`doc-screenshot-hygiene`](doc-screenshot-hygiene.md) — a screenshot embedded into shipped docs is private-data + egress on one path; the human gate on a data-bearing embed is the egress control.

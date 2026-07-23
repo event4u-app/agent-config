@@ -98,3 +98,4 @@ with governance applied before delivery. All adapters are scaffold-tier (dry-run
 - [`image-provider-routing`](../image-provider-routing/SKILL.md) — select the right provider before writing the prompt.
 - [`prompt-engineering-image`](../prompt-engineering-image/SKILL.md) — translate the edit brief into provider-specific prompt grammar.
 - [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md) — rights check before editing real-person likenesses or brand marks.
+- [`screenshot-hygiene`](../screenshot-hygiene/SKILL.md) — for redacting a documentation screenshot, use a deterministic opaque box/blur (never the lossy inpaint here).

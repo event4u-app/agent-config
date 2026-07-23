@@ -21,16 +21,17 @@ install:
 
 > Read a character image, extract **every** feature (face marks, per-location
 > tattoos incl. lettered text, exact hair split, per-eye colour, jewelry,
-> asymmetry), diff against the character's canon so drift is caught **before** it
-> ships. Output feeds [`image-creator`](../image-creator/SKILL.md) + the fidelity
-> loop. Schema + rubric + loop: [`canon-spec.md`](canon-spec.md).
+> asymmetry), and diff it against the character's canon so drift is caught
+> **before** it ships. Output feeds [`image-creator`](../image-creator/SKILL.md)
+> and the fidelity loop. Schema + rubric + loop: [`canon-spec.md`](canon-spec.md).
 
 ## When to use
 
 - "Analyse this image / character", "does this match the canon", "check
   character accuracy", "find what's wrong with this render".
-- Verify step of the fidelity loop (after `image-creator` generates).
-- Bootstrap a Canon Spec from an authoritative portrait (*image wins over text*).
+- As the verify step of the fidelity loop (after `image-creator` generates).
+- To bootstrap a Canon Spec from an authoritative portrait (the *image wins
+  over the text*).
 
 NOT for: scene/motion review (→ `video-director`), non-character art
 (→ `canvas-design`), cross-scene token locking (→ `character-consistency`,
@@ -39,7 +40,7 @@ which consumes this skill's output).
 ## Input
 
 - Image **path or public URL** (per the `vision-analyze` shape).
-- Optional: reference Canon Spec / character id (e.g.
+- Optional: a reference Canon Spec / character id (e.g.
   `agents/reference/ai-video/<project>/characters/<id>.json`) to diff against.
 - **Input gate** (per the `image-ocr` contract): refuse blurry / sub-resolution
   / unreadable inputs with a clear reason rather than guessing.
@@ -64,16 +65,16 @@ which consumes this skill's output).
    lives here, **never** written back onto the canon (Layer 1).
 6. **If a reference is given — diff + score** per the rubric: per-feature
    `match|partial|miss`, the **canon-breaking hard gate**, per-section scores,
-   advisory roll-up, `low`-confidence misses flagged `needs-better-image`
+   advisory roll-up, and `low`-confidence misses flagged `needs-better-image`
    (not a hard fail). Emit concrete correction directives per miss.
 
 ## The one rule that overrides everything
 
-**The image wins over the text.** Extracting from an authoritative portrait and
-the canon text disagrees → record what is *visible*. Verifying a candidate
-against the canon → the canon's `identity` is the truth. Never invent a feature
-the image does not show (per `direct-answers` — no invented facts); mark it
-`unverifiable` instead.
+**The image wins over the text.** When extracting from an authoritative portrait
+and the canon text disagrees, record what is *visible*. When verifying a
+candidate against the canon, the canon's `identity` is the truth. Never invent a
+feature the image does not show (per `direct-answers` — no invented facts); mark
+it `unverifiable` instead.
 
 ## Output format
 
@@ -119,3 +120,4 @@ agent's, in-session.
 - [`image-creator`](../image-creator/SKILL.md) — consumes the diff; the loop partner.
 - [`character-consistency`](../character-consistency/SKILL.md) — consumes the load-bearing token subset of the `identity` layer.
 - [`canon-spec.md`](canon-spec.md) — schema, rubric, fidelity loop.
+- [`screenshot-hygiene`](../screenshot-hygiene/SKILL.md) — reuses this skill's OCR text-read to detect sensitive data in a documentation screenshot before it ships.

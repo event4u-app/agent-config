@@ -226,7 +226,12 @@ to every README you author.
 1. Does the opening paragraph carry marketing adjectives ("modern",
    "comprehensive", "powerful")?
 2. Are setup steps narrated instead of bulleted commands?
-3. Are screenshots / GIFs present without explicit user request?
+3. Are screenshots / GIFs present without explicit user request? A
+   **data-bearing** screenshot (dashboard, admin panel, form/list with real
+   content) without an explicit request is a stronger flag — route it through
+   [`screenshot-hygiene`](../screenshot-hygiene/SKILL.md): anonymize sensitive
+   data and human-gate the embed before it ships. Illustrative / no-data visuals
+   (diagrams, placeholder-only UI) are the reconciled exception.
 4. Is content duplicated from `AGENTS.md` rather than linked?
 
 ## Do NOT
