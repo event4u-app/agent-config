@@ -12,9 +12,14 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import * as os from 'node:os';
+
 import { buildGraph, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
+import { pickSource, type SourceVerdict } from '../../src/scripts/code_graph/detect.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import { loadLanguage } from '../../src/scripts/code_graph/loader.js';
+import { affected, loadGraph, path as graphPath, query, resolveSeeds } from '../../src/scripts/code_graph/query.js';
+import { sanitizeLabel } from '../../src/scripts/code_graph/sanitize.js';
 import { EXPECTED_GRAMMAR_ABI, type Lang } from '../../src/scripts/code_graph/types.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
@@ -165,6 +170,82 @@ describe('install-bundle guard', () => {
         const installPath = path.resolve(HERE, '..', '..', 'src', 'scripts', 'install.ts');
         const body = fs.readFileSync(installPath, 'utf-8');
         expect(/code_graph/.test(body), 'install.ts must not reference code_graph/').toBe(false);
+    });
+});
+
+describe('query tier (Phase 3)', () => {
+    async function loadedFixture() {
+        const { graph } = await buildFixture();
+        const tmp = path.join(os.tmpdir(), `cg-fixture-${process.pid}-${graph.edges.length}.json`);
+        fs.writeFileSync(tmp, serializeGraph(graph));
+        return loadGraph(tmp, 'native:fixture');
+    }
+
+    it('query returns a seed’s direct relations with source attribution', async () => {
+        const g = await loadedFixture();
+        const r = query(g, 'app/Foo.php#Foo::handle', 2000);
+        expect(r.source).toBe('native:fixture');
+        expect(r.lines.some((l) => l.includes('--calls-->'))).toBe(true);
+        expect(r.lines.some((l) => l.includes('INFERRED') && l.includes('Base::shared'))).toBe(true);
+    });
+
+    it('affected does reverse BFS (who references the target)', async () => {
+        const g = await loadedFixture();
+        const r = affected(g, 'app/Base.php#Base::shared', 2, 2000);
+        // Foo::handle calls Base::shared (INFERRED) → must appear as a caller
+        expect(r.lines.some((l) => l.includes('Foo::handle') && l.includes('Base::shared'))).toBe(true);
+    });
+
+    it('path finds a route between two connected nodes', async () => {
+        const g = await loadedFixture();
+        const r = graphPath(g, 'app/Foo.php#Foo', 'app/Foo.php#Foo::handle', 2000);
+        expect(r.lines.length).toBeGreaterThan(0);
+        expect(r.lines.join(' ')).not.toContain('no path found');
+    });
+
+    it('resolveSeeds falls back to BM25 on a partial label', async () => {
+        const g = await loadedFixture();
+        const ids = resolveSeeds(g, 'handle');
+        expect(ids.some((id) => id.endsWith('Foo::handle'))).toBe(true);
+    });
+
+    it('respects the token budget (truncates)', async () => {
+        const g = await loadedFixture();
+        const tiny = query(g, 'app/Foo.php#Foo', 1); // 1 token → ~4 chars → truncates
+        expect(tiny.truncated).toBe(true);
+    });
+});
+
+describe('detect — source precedence (ADR-124 §2)', () => {
+    const V = (kind: SourceVerdict['kind'], stale?: boolean): SourceVerdict => ({
+        kind,
+        path: `/${kind}.json`,
+        present: true,
+        ...(stale === undefined ? {} : { stale }),
+    });
+    it('fresh consumer index wins over native', () => {
+        expect(pickSource([V('native'), V('consumer', false)])?.kind).toBe('consumer');
+    });
+    it('native covers a stale consumer index', () => {
+        expect(pickSource([V('consumer', true), V('native')])?.kind).toBe('native');
+    });
+    it('falls back to a stale consumer when nothing else exists', () => {
+        expect(pickSource([V('consumer', true)])?.kind).toBe('consumer');
+    });
+});
+
+describe('sanitizer', () => {
+    it('strips control, zero-width, and bidi-override chars', () => {
+        const tab = String.fromCharCode(0x09);
+        const zwsp = String.fromCharCode(0x200b);
+        const rlo = String.fromCharCode(0x202e);
+        const cleaned = sanitizeLabel(`a${tab}b${zwsp}c${rlo}d`);
+        expect(cleaned).toBe('a b c d');
+        expect(cleaned).not.toContain(zwsp);
+        expect(cleaned).not.toContain(rlo);
+    });
+    it('caps overly long labels', () => {
+        expect(sanitizeLabel('x'.repeat(500)).length).toBeLessThanOrEqual(160);
     });
 });
 

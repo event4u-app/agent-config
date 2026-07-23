@@ -213,3 +213,7 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
 * [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 cap.
 * [`no-runtime-boundary`](../../../docs/contracts/no-runtime-boundary.md) — the
   runtime-free constraint this loop honors.
+* Optional impact pre-step (when a code-graph is present, ADR-124): run
+  `code_graph affected --since <ref>` to scope which symbols a change touches
+  before choosing verdict sources — cited, not duplicated; the loop itself is
+  unchanged when no graph exists.

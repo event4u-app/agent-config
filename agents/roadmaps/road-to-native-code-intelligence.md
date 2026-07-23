@@ -283,7 +283,14 @@ Phase 5, which requires those repos + spend authorization anyway.
 
 ## Phase 3 — Query tier: one engine, two sources
 
-- [ ] `query.ts` — `query|path|explain|affected` over the `graph.json` shape,
+- [x] `query.ts` — `query|path|explain|affected` shipped (BFS/DFS, `--budget`
+  token cap, hybrid seed-matching: exact id → exact label → BM25 via
+  `_lib/lexical_index.ts`). Source-agnostic (native cache or `--graph <path>`);
+  every answer prints a `source:` attribution line. Verified live on the
+  repo's own graph: `query LexicalIndex` → members; `affected sanitizeLabel`
+  → correct reverse-BFS callers.
+  <!-- original -->
+  `query.ts` — `query|path|explain|affected` over the `graph.json` shape,
   BFS/DFS, `--budget` token cap, hybrid seed-matching (exact/label → BM25
   fallback via `_lib/lexical_index.ts`). **Source-agnostic:** runs identically
   over (a) the native cache and (b) a consumer-shipped `graph.json` — the
@@ -292,20 +299,28 @@ Phase 5, which requires those repos + spend authorization anyway.
   - Precedence when both exist: consumer-shipped index wins if fresh (interop
     courtesy, ADR-124 § 2); native engine covers stale-or-absent — and every
     answer names which source answered.
-- [ ] `detect.ts` — consumer-index detection (`graph.json` shape validation;
+- [x] `detect.ts` — shipped: consumer `graph.json` shape-validation (native +
+  foreign shape), `*.scip` presence-only ("peer tooling required", no owned
+  reader), native cache; freshness via embedded `head_at_build` SHA
+  (`commits_behind`) else mtime-vs-`git log -1 %ct`; `pickSource` precedence
+  (fresh consumer > native > stale consumer) unit-tested. git calls route
+  through `hardenedSpawnEnv()` (ADR-123).
+  <!-- original -->
+  `detect.ts` — consumer-index detection (`graph.json` shape validation;
   `*.scip` presence-only: "SCIP detected — peer tooling required", exit 1 —
   an owned SCIP reader stays YAGNI-gated on the first consumer report) +
   freshness verdict (`head_at_build` when the artifact carries it, else
   artifact mtime vs `git log -1 --format=%ct`; `commits_behind` only when a
   SHA is embedded — no guessing), extended with the native cache as a third
   source.
-- [ ] `affected --since <ref>` — git-diff-seeded impact BFS, wired as an
-  optional pre-step citation in the `verify-repair-loop` skill (cited, not
+- [x] `affected --since <ref>` — git-diff-seeded impact BFS shipped (diff
+  `ref..HEAD` → changed files → their nodes → reverse-BFS); cited as an
+  optional pre-step in the `verify-repair-loop` skill's See-also (cited, not
   duplicated).
-- [ ] All retrieved **string fields** — node labels, file paths,
-  docblock-derived strings, relation values — pass the retrieved-content
-  sanitizer before context re-entry; label caps + control-char stripping in
-  the reader (hostile-repo injection; independently reimplemented).
+- [x] All retrieved **string fields** — node labels, targets, candidates —
+  pass `sanitize.ts` before context re-entry: codepoint-level stripping of
+  C0/C1 controls, zero-width, bidi-override/isolate, BOM (hidden-instruction
+  vectors) + length cap; independently reimplemented; unit-tested.
 
 **Acceptance:** the 10-question structure set answered from the native graph
 with correct scoped output; source-attribution line present in every answer;
