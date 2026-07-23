@@ -106,6 +106,31 @@ describe('regenerate_index — pure helpers', () => {
         expect(errs).toEqual([]);
     });
 
+    it('scan resolves comma-separated annotated supersedes refs (partial supersession)', () => {
+        const d = mkTmp();
+        writeAdr(d, 'ADR-001-base.md', { adr: '1', decision: 'base' });
+        writeAdr(d, 'ADR-002-other.md', { adr: '2', decision: 'other' });
+        writeAdr(d, 'ADR-003-partial.md', {
+            adr: '3',
+            decision: 'partial',
+            supersedes: 'ADR-001 (interpretation only), ADR-002 (interpretation only)',
+        });
+        const [, , errs] = rgi.scan(d);
+        expect(errs).toEqual([]);
+    });
+
+    it('scan still flags a dangling ref inside an annotated multi-ref list', () => {
+        const d = mkTmp();
+        writeAdr(d, 'ADR-001-base.md', { adr: '1', decision: 'base' });
+        writeAdr(d, 'ADR-003-partial.md', {
+            adr: '3',
+            decision: 'partial',
+            supersedes: 'ADR-001 (interpretation only), ADR-042 (interpretation only)',
+        });
+        const [, , errs] = rgi.scan(d);
+        expect(errs).toContain('ADR-003-partial.md: supersedes ADR-042 not found');
+    });
+
     it('row title-cases the decision and emits the ADR-NNN label', () => {
         const out = rgi.row({ num: '001', slug: 'foo-bar', path: 'ADR-001-foo-bar.md', decision: 'python-to-ts-migration', status: 'accepted', date: '2026-01-01' });
         expect(out).toBe('| [ADR-001](ADR-001-foo-bar.md) | Python To Ts Migration | accepted | 2026-01-01 | — |');
