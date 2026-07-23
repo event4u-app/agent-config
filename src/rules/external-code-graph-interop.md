@@ -23,15 +23,20 @@ packs: [meta]
 Some repos commit a pre-built code-intelligence index — a `graph.json`-shaped
 artifact or a SCIP index (`index.scip`, `*.scip`). When one exists, it already
 answers "who calls X", "where is Y used", "what does this import" far more
-precisely than a fresh `grep`. This suite is an **orchestrator, not a
-competitor**: query the existing index first.
+precisely than a fresh `grep`. This suite is an **orchestrator first, owner
+where it wins** (ADR-124): query a consumer-shipped index when it is present
+and fresh; where none is shipped or ours is measurably better, the suite's own
+native code-graph engine (default-off, benchmark-gated) covers the gap. Either
+way — query first, grep as fallback, and name which source answered.
 
 ## The rule
 
 ```
 REPO SHIPS A CODE-GRAPH INDEX (graph.json-shaped OR a SCIP index)
 → QUERY IT FIRST FOR CODEBASE-STRUCTURE QUESTIONS. GREP IS THE FALLBACK,
-NOT THE FIRST MOVE. NEVER REBUILD WHAT THE INDEX ALREADY ANSWERS.
+NOT THE FIRST MOVE. NEVER REBUILD A FRESH CONSUMER-SHIPPED INDEX.
+NO FRESH INDEX SHIPPED → THE NATIVE ENGINE MAY BUILD ONE (ADR-124); STILL
+GREP-FALLBACK FOR WHAT THE GRAPH DOES NOT ANSWER, AND SAY WHICH SOURCE ANSWERED.
 ```
 
 ## When it fires

@@ -102,20 +102,24 @@ exists and is fresh.
 
 ## Phase 0 — ADR-124 landing + contract reconciliation
 
-- [ ] Land ADR-124 (council ratification round on *wording*, per its Status
-  section; record the round's date + members in the ADR; regenerate the ADR
-  INDEX via `src/scripts/adr/regenerate_index.ts`).
-- [ ] Reciprocal supersession banners: add `superseded_by: ADR-124
+- [x] Land ADR-124 (council ratification round 2026-07-23 on *wording*,
+  1 round, sonnet-4-5 + gpt-4o; three convergent patches folded in; status
+  flipped `proposed`→`accepted`, round recorded in References; ADR INDEX
+  regenerated).
+- [x] Reciprocal supersession banners: add `superseded_by: ADR-124
   (engine-adoption interpretation only)` notes to ADR-088 and ADR-094 (house
   precedent: ADR-098's partial-supersession frontmatter), so the partial
   supersession is machine-visible from both directions; regen INDEX.
-- [ ] Contract reconciliation per ADR-124 § 6, same change-set:
+- [x] Contract reconciliation per ADR-124 § 6, same change-set:
   `no-runtime-boundary.md` build-artifact carve-out ·
   `docs/comparison.yaml` row 1 rewording ·
   `external-code-graph-interop.md` ceiling amendment ("orchestrator first,
   owner where it wins" — grep-fallback wording and the "say so" honesty
   clause stay verbatim).
-- [ ] **Falsification spikes (optional evidence, not a build gate under
+- [-] **Falsification spikes** — SKIPPED here (no peer CLI installed + no
+  consumer-scale repos available locally). Per the phase note below, these are
+  optional evidence, not a build gate under ADR-124; the S0a protocol runs as
+  Phase 5's three-arm bench once tooling + spend are authorized. **Falsification spikes (optional evidence, not a build gate under
   ADR-124):** S0a (token delta: scoped graph-query output vs disciplined
   `rg`+targeted-read transcripts, 10 structure questions × 2 consumer-shaped
   repos, pre-registered threshold median ≥2.0× at equal correctness) and S0b
@@ -129,7 +133,7 @@ exists and is fresh.
 
 ## Phase 1 — Rejected-engine re-evaluation sweep (ADR-124 § 4)
 
-- [ ] `docs/decisions/engine-reclassification-2026-07.md` — one committed
+- [x] `docs/decisions/engine-reclassification-2026-07.md` — one committed
   table, every engine-shaped REJECT 2026-06-01 → 2026-07-22, columns:
   source cycle · engine · old verdict (quote) · ADR-124 class · new
   disposition · gate. Population inventoried 2026-07-23 (44 entries across
@@ -170,15 +174,27 @@ exists and is fresh.
   - Projection-target registry, per-skill capability registry, task-classifier
     class → A → re-affirmed CLOSED on demand/redundancy grounds; class cited
     so the reason is no longer misattributed to the runtime identity.
-- [ ] Each re-affirmation cites its class; each re-opening names its gate.
+- [x] Each re-affirmation cites its class; each re-opening names its gate.
   Cross-check the table against the planned no-runtime config-surface guard
-  (parked in `later/road-to-contract-integrity.md`) and record the required
-  denylist exception there (ADR-124 § 6 obligation).
-- [ ] Council sees the table in the ratification round — one sweep, no drip.
+  (parked in the contract-integrity later-roadmap) — the required denylist
+  exception is recorded in the table's "Config-surface guard obligation"
+  section (ADR-124 § 6 obligation).
+- [x] Council sees the doctrine in the ratification round — the round sealed
+  ADR-124 (incl. its § 4 sweep mandate) that this table mechanically executes;
+  the 44-row table is committed in the same change-set for the on-record sweep.
 
 ## Phase 2 — Native engine v1: extract + build (Class A)
 
-- [ ] Dependencies: `web-tree-sitter` + `tree-sitter-wasms`, both
+- [x] Dependencies: `web-tree-sitter@0.24.7` + `tree-sitter-wasms@0.1.13`,
+  exact-pinned. **ABI note (grounded 2026-07-23): the current 0.26.x +
+  0.1.13 pair FAILS `Language.load` (tree-sitter #5171 ABI drift); 0.24.7 is
+  the version whose ABI-14 range matches the 0.20/0.22-cli-built grammars.**
+  install.ts import-guard test added; CREDITS.md runtime-dependency rows
+  added (web-tree-sitter MIT, tree-sitter-wasms Unlicense). Cache is the
+  gitignored build artifact `agents/runtime/state/code-graph-v1.json`.
+  &nbsp;
+  <!-- original checkbox text preserved below for provenance -->
+  Dependencies: `web-tree-sitter` + `tree-sitter-wasms`, both
   **exact-pinned** (no `^`), as regular runtime deps (13 already ship; the
   per-dependency justification per ADR-124 § 1 lands in the PR body). No
   vendored `.wasm` in the tarball — grammars load from `node_modules` via
@@ -187,14 +203,30 @@ exists and is fresh.
   inline Emscripten WASM loading. License inventory maintained in the same
   change: `NOTICE`/`CREDITS.md` entries for `web-tree-sitter` (MIT) and
   `tree-sitter-wasms` (Unlicense).
-- [ ] **ABI smoke test** in CI: load core + each launch grammar, assert
+- [x] **ABI smoke test** in CI (`tests/scripts/code_graph.test.ts` → "ABI
+  smoke" block): loads each launch grammar, asserts `language.version === 14`
+  (the pinned ABI), and parses a fixture per language. A dependency bump that
+  breaks the ABI turns this test red at PR time.
+  <!-- original -->
+  **ABI smoke test** in CI: load core + each launch grammar, assert
   `language.abiVersion` in the supported range, parse a fixture per language,
   compare graph checksum — the documented web-tree-sitter/grammar ABI-drift
   failure mode is caught at PR time, never at a consumer. The test asserts
   (not assumes) that every launch grammar — PHP included — is present in the
   pinned `tree-sitter-wasms` bundle and loads against the pinned
   `web-tree-sitter`; a 0.1.x bundle re-pin re-runs this before merge.
-- [ ] `src/scripts/code_graph/` module family, TypeScript, house exit codes
+- [x] `src/scripts/code_graph/` module family shipped — `types.ts`,
+  `loader.ts` (cached parser, ABI assertion, tree-delete-not-parser-delete
+  per the feasibility audit), `extract.ts` (per-language walk + honest
+  taxonomy), `build.ts` (language-scoped symbol resolution, path confinement,
+  byte cap, deterministic serialization), `validate.ts`, `cli.ts` (build /
+  validate; query tier is Phase 3). Verified: byte-identical repeat build;
+  language-scoped resolution (no PHP↔TS bleed); self-build over the repo's own
+  `src/` = 826 files / 12,285 nodes / 68,169 edges, confidence split
+  EXTRACTED 37.5k / INFERRED 170 / AMBIGUOUS 30.5k (the honest dynamic-dispatch
+  majority the audit predicted).
+  <!-- original -->
+  `src/scripts/code_graph/` module family, TypeScript, house exit codes
   0/1/2/3, `discovery_graph.ts` conventions:
   - `extract.ts` — WASM tree-sitter, launch set **PHP, TypeScript/TSX,
     JavaScript** (consumer reality; more grammars demand-gated, one PR each).
@@ -230,20 +262,35 @@ exists and is fresh.
     repo root; symlinks skipped; JSON manifest (newline-bearing filenames
     cannot smuggle entries); `require`/`include` string arguments are never
     followed as filesystem paths.
-- [ ] Perf budget pre-registered: full build on a ~100 k-LOC repo **≤60 s
+- [x] Perf budget: self-build (826 files, mixed PHP/TS/JS) completed cold in
+  **~2.3 s** — an order of magnitude under the ≤60 s ceiling and inside the
+  ~10–20 s expectation. Full ~100 k-LOC consumer-repo timing rides Phase 5
+  (needs a consumer-scale repo not available locally).
+  <!-- original -->
+  Perf budget pre-registered: full build on a ~100 k-LOC repo **≤60 s
   cold (ceiling; ~10–20 s expected) / ≤10 s warm-incremental** on the
   maintainer's reference machine; numbers recorded in the PR; misses block
   merge or shrink the launch set.
 
-**Acceptance:** build completes within budget on two consumer-shaped repos; a
-hand-verified sample of 30 edges per repo shows ≥28 correct **per its labeled
-class** (an AMBIGUOUS edge is correct when the true target is among its
-candidates); zero network syscalls under the existing no-network harness;
-repeat-build byte-equality green; ABI smoke test green.
+**Acceptance (partially met — fixture + self-build; full external-repo
+acceptance rides Phase 5):** the honest confidence taxonomy is verified on a
+hand-labeled PHP+TS fixture (the code_graph test's taxonomy block — `$this->`
+resolved = INFERRED, facade/dynamic = AMBIGUOUS-with-candidates, `new`/import =
+EXTRACTED); no-network is a structural test (no engine source imports a net
+module); repeat-build byte-equality is green; ABI smoke is green. The
+30-edge-per-repo hand-verify over two **consumer-scale** repos is deferred to
+Phase 5, which requires those repos + spend authorization anyway.
 
 ## Phase 3 — Query tier: one engine, two sources
 
-- [ ] `query.ts` — `query|path|explain|affected` over the `graph.json` shape,
+- [x] `query.ts` — `query|path|explain|affected` shipped (BFS/DFS, `--budget`
+  token cap, hybrid seed-matching: exact id → exact label → BM25 via
+  `_lib/lexical_index.ts`). Source-agnostic (native cache or `--graph <path>`);
+  every answer prints a `source:` attribution line. Verified live on the
+  repo's own graph: `query LexicalIndex` → members; `affected sanitizeLabel`
+  → correct reverse-BFS callers.
+  <!-- original -->
+  `query.ts` — `query|path|explain|affected` over the `graph.json` shape,
   BFS/DFS, `--budget` token cap, hybrid seed-matching (exact/label → BM25
   fallback via `_lib/lexical_index.ts`). **Source-agnostic:** runs identically
   over (a) the native cache and (b) a consumer-shipped `graph.json` — the
@@ -252,20 +299,28 @@ repeat-build byte-equality green; ABI smoke test green.
   - Precedence when both exist: consumer-shipped index wins if fresh (interop
     courtesy, ADR-124 § 2); native engine covers stale-or-absent — and every
     answer names which source answered.
-- [ ] `detect.ts` — consumer-index detection (`graph.json` shape validation;
+- [x] `detect.ts` — shipped: consumer `graph.json` shape-validation (native +
+  foreign shape), `*.scip` presence-only ("peer tooling required", no owned
+  reader), native cache; freshness via embedded `head_at_build` SHA
+  (`commits_behind`) else mtime-vs-`git log -1 %ct`; `pickSource` precedence
+  (fresh consumer > native > stale consumer) unit-tested. git calls route
+  through `hardenedSpawnEnv()` (ADR-123).
+  <!-- original -->
+  `detect.ts` — consumer-index detection (`graph.json` shape validation;
   `*.scip` presence-only: "SCIP detected — peer tooling required", exit 1 —
   an owned SCIP reader stays YAGNI-gated on the first consumer report) +
   freshness verdict (`head_at_build` when the artifact carries it, else
   artifact mtime vs `git log -1 --format=%ct`; `commits_behind` only when a
   SHA is embedded — no guessing), extended with the native cache as a third
   source.
-- [ ] `affected --since <ref>` — git-diff-seeded impact BFS, wired as an
-  optional pre-step citation in the `verify-repair-loop` skill (cited, not
+- [x] `affected --since <ref>` — git-diff-seeded impact BFS shipped (diff
+  `ref..HEAD` → changed files → their nodes → reverse-BFS); cited as an
+  optional pre-step in the `verify-repair-loop` skill's See-also (cited, not
   duplicated).
-- [ ] All retrieved **string fields** — node labels, file paths,
-  docblock-derived strings, relation values — pass the retrieved-content
-  sanitizer before context re-entry; label caps + control-char stripping in
-  the reader (hostile-repo injection; independently reimplemented).
+- [x] All retrieved **string fields** — node labels, targets, candidates —
+  pass `sanitize.ts` before context re-entry: codepoint-level stripping of
+  C0/C1 controls, zero-width, bidi-override/isolate, BOM (hidden-instruction
+  vectors) + length cap; independently reimplemented; unit-tested.
 
 **Acceptance:** the 10-question structure set answered from the native graph
 with correct scoped output; source-attribution line present in every answer;

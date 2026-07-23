@@ -17,6 +17,19 @@ Per [ADR-061](docs/decisions/ADR-061-corpus-grounding-layer.md), vendored
 material keeps its upstream notice inside the skill directory; this table is
 the aggregate pointer, never a replacement for the per-skill notice.
 
+### Runtime dependencies — code-graph engine (ADR-124)
+
+The native code-graph engine (`src/scripts/code_graph/`, Class-A per
+[ADR-124](docs/decisions/ADR-124-embedded-engine-doctrine.md)) adds two
+exact-pinned runtime dependencies. They are ordinary npm dependencies (each
+ships its own license in `node_modules`); listed here for the honest
+dependency record the ADR-124 § 1 per-dependency justification requires:
+
+| Dependency | Version | License | Role |
+|---|---|---|---|
+| `web-tree-sitter` | 0.24.7 (exact) | MIT | WASM tree-sitter runtime — parses PHP/TS/JS with no native toolchain |
+| `tree-sitter-wasms` | 0.1.13 (exact) | Unlicense | prebuilt grammar `.wasm` (ABI 14; the pair is ABI-locked by the smoke test) |
+
 ## Community contributions
 
 External contributions merged into the catalog are credited here and carry
