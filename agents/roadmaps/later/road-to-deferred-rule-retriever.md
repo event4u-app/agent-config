@@ -17,8 +17,9 @@ complexity: medium
 ## What this is — and what it is not
 
 The 2026-07-07 council REJECT killed an **MCP deferred-rule retrieval
-server** — correctly, and ADR-124 re-affirms that verdict at Class C (network
-transport + tool runtime in core). What the ADR-124 reclassification sweep
+server** — correctly, and ADR-124 re-affirms that verdict at Class B (a
+resident server; residency is the defining trait — an MCP server can run
+stdio without any network). What the ADR-124 reclassification sweep
 re-opened is the **Class-A slice**: a *command-invoked* retriever — one-shot
 CLI over the already-shipped BM25/trigram core (`_lib/lexical_index.ts`),
 corpus = the suite's own deferred/tier-2 rule bodies instead of
@@ -40,5 +41,5 @@ corpus = the suite's own deferred/tier-2 rule bodies instead of
 
 - Archived flow-learnings cycle: REJECT of the *server* shape with three
   re-open conditions (quoted in the blocked-until header).
-- ADR-124 § 4 sweep (2026-07-23): server re-affirmed C; command-invoked
-  variant classed A and queued here.
+- ADR-124 § 4 sweep (2026-07-23): server re-affirmed B (resident);
+  command-invoked variant classed A and queued here.

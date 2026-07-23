@@ -3,7 +3,7 @@ adr: 124
 status: proposed
 date: 2026-07-23
 decision: embedded-engine-doctrine
-supersedes: —
+supersedes: ADR-088 (engine-adoption interpretation only), ADR-094 (engine-adoption interpretation only)
 superseded_by: —
 phase: road-to-native-code-intelligence
 type: structural
@@ -103,7 +103,7 @@ whatever index a consumer happens to ship.
 | Class | Definition | Verdict |
 |---|---|---|
 | **A — Embedded engine** | Deterministic, in-process, invoked-per-command, no resident process, no listening socket, no network in the build path; state only as gitignored, rebuildable build/index artifacts under the suite's own runtime dirs (`agents/runtime/state/`). **Termination clause (council patch, 2026-07-23): a Class-A engine terminates after command completion; in-memory state never spans CLI invocations** — a memory-only long-lived process that "never touches disk" is Class B regardless of its storage story (the sole exception is an explicitly user-invoked `--watch`-style mode with user-visible process lifetime, which is a Class-B escalation under § 5, not Class A). Implementation preference in order: Node built-ins / stdlib → exact-pinned pure-npm or WASM dependencies (admissible with a per-dependency justification in the adopting artifact) → native-compiled (node-gyp) deps only via an explicit per-dependency exception. Every subprocess it spawns routes through `hardenedSpawnEnv()` per ADR-123 and `docs/spawn-site-policy.md`. | **ADOPTABLE.** This suite may build, fork, or vendor Class-A engines natively. |
-| **B — Resident service / daemon** | Anything with a lifecycle beyond one command: DB servers, MCP *servers* run as memory/retrieval backends, watchers, browser daemons, background workers, web consoles, in-process actor runtimes/swarms. | **PROHIBITED in core**, unchanged. Route to `agent-ide-plugin` or a sibling package where genuinely needed. ADR-088/094 remain authoritative here. |
+| **B — Resident service / daemon** | Anything with a lifecycle beyond one command: DB servers, MCP *servers* run as memory/retrieval backends, watchers, browser daemons, background workers, web consoles. (In-process actor runtimes/swarms are equally out of scope, but by the ADR-109 identity floor preserved in § 3 — not by this lifecycle definition; they can terminate within one command and are still excluded.) | **PROHIBITED in core**, unchanged. Route to `agent-ide-plugin` or a sibling package where genuinely needed. ADR-088/094 remain authoritative here. |
 | **C — Network/LLM-dependent build path** | Any index/graph/corpus *build* step that requires network or model calls (embedding pipelines included — ADR-061's "embeddings only on measured recall failure" remains the sole doorway). | **PROHIBITED by default**, unchanged. Query-time LLM use follows existing council/budget governance. |
 
 ### 2. What is explicitly superseded

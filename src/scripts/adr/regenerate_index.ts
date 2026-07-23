@@ -159,9 +159,15 @@ export function scan(d: string): [Row[], Row[], string[]] {
     for (const r of num) {
         const s = r.supersedes ?? '—';
         if (s && s !== '—') {
-            const t = _zfill3(_lstripZeros(s.replaceAll('ADR-', '')));
-            if (!nums.has(t)) {
-                errs.push(`${r.path}: supersedes ADR-${t} not found`);
+            // Comma-separated refs; a parenthesized annotation per ref marks
+            // partial supersession (house precedent: ADR-098's superseded_by).
+            for (const ref of s.split(',')) {
+                const bare = ref.replace(/\(.*?\)/g, '').trim();
+                if (!bare) continue;
+                const t = _zfill3(_lstripZeros(bare.replaceAll('ADR-', '')));
+                if (!nums.has(t)) {
+                    errs.push(`${r.path}: supersedes ADR-${t} not found`);
+                }
             }
         }
     }

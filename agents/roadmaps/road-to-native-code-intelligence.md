@@ -104,7 +104,11 @@ exists and is fresh.
 
 - [ ] Land ADR-124 (council ratification round on *wording*, per its Status
   section; record the round's date + members in the ADR; regenerate the ADR
-  INDEX via `scripts/adr/regenerate_index.ts`).
+  INDEX via `src/scripts/adr/regenerate_index.ts`).
+- [ ] Reciprocal supersession banners: add `superseded_by: ADR-124
+  (engine-adoption interpretation only)` notes to ADR-088 and ADR-094 (house
+  precedent: ADR-098's partial-supersession frontmatter), so the partial
+  supersession is machine-visible from both directions; regen INDEX.
 - [ ] Contract reconciliation per ADR-124 § 6, same change-set:
   `no-runtime-boundary.md` build-artifact carve-out ·
   `docs/comparison.yaml` row 1 rewording ·
@@ -136,11 +140,14 @@ exists and is fresh.
     (`_lib/lexical_index.ts`); no action. Embedded FTS5 (`node:sqlite`) → A →
     stays pre-decided behind its ADR-116 tripwire; note honestly that the
     ADR-116 engine was never built and the amendment re-resolved it.
-  - MCP deferred-rule retrieval **server** → C (network transport) →
-    re-affirmed REJECT in core; a *command-invoked* deferred-rule retriever
-    (no server) is Class A → queued (`later/road-to-deferred-rule-retriever`),
-    unblock = flow-learnings' three re-open conditions converting to a demand
-    signal + the Phase-5 verdict.
+  - MCP deferred-rule retrieval **server** → B (resident server — the
+    defining trait is residency, per ADR-124 § 1's own enumeration "MCP
+    *servers* run as … backends"; Class C is about network/LLM in the *build
+    path*, and an MCP server can run stdio without any network) → re-affirmed
+    REJECT in core; a *command-invoked* deferred-rule retriever (no server)
+    is Class A → queued (`later/road-to-deferred-rule-retriever`), unblock =
+    flow-learnings' three re-open conditions converting to a demand signal +
+    the Phase-5 verdict.
   - SQLite memory **service** / vector clocks / distributed memory → B →
     re-affirmed (the Class-A slice is already covered).
   - Browser daemon + compiled runtime (operator harvest) → B → re-affirmed,
@@ -177,11 +184,16 @@ exists and is fresh.
   vendored `.wasm` in the tarball — grammars load from `node_modules` via
   `locateFile` at runtime. **CI guard:** `src/scripts/install.ts` must never
   import `code_graph/` (grep check) — the esbuild install bundle cannot
-  inline Emscripten WASM loading.
+  inline Emscripten WASM loading. License inventory maintained in the same
+  change: `NOTICE`/`CREDITS.md` entries for `web-tree-sitter` (MIT) and
+  `tree-sitter-wasms` (Unlicense).
 - [ ] **ABI smoke test** in CI: load core + each launch grammar, assert
   `language.abiVersion` in the supported range, parse a fixture per language,
   compare graph checksum — the documented web-tree-sitter/grammar ABI-drift
-  failure mode is caught at PR time, never at a consumer.
+  failure mode is caught at PR time, never at a consumer. The test asserts
+  (not assumes) that every launch grammar — PHP included — is present in the
+  pinned `tree-sitter-wasms` bundle and loads against the pinned
+  `web-tree-sitter`; a 0.1.x bundle re-pin re-runs this before merge.
 - [ ] `src/scripts/code_graph/` module family, TypeScript, house exit codes
   0/1/2/3, `discovery_graph.ts` conventions:
   - `extract.ts` — WASM tree-sitter, launch set **PHP, TypeScript/TSX,
@@ -207,8 +219,10 @@ exists and is fresh.
     start there), content-addressed to a file-manifest checksum, atomic
     versioned cache `agents/runtime/state/code-graph-v1.json` (gitignored,
     rebuildable — a build artifact per ADR-124 § 6, not a state store).
-  - **Determinism contract** in the module header: identical tree → identical
-    graph bytes. Canonical sort, stable key order, POSIX-relative paths, no
+  - **Determinism contract** in the module header: identical *source* →
+    identical graph bytes (the tree is an intermediate; the golden-checksum
+    test measures source-to-bytes). Canonical sort, stable key order,
+    POSIX-relative paths, no
     timestamps; a repeat-build byte-equality (golden-checksum) test enforces
     it.
   - `validate.ts` — schema gate before build consumes extraction output.

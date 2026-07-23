@@ -6,10 +6,10 @@
 
 ## Overall
 
-**105 / 182 steps done · 58%**
+**105 / 183 steps done · 57%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+███████████████████████░░░░░░░░░░░░░░░░░   57%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
 | 4 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 5 | [road-to-native-code-intelligence.md](roadmaps/road-to-native-code-intelligence.md) | 7 | 26 | 26 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-native-code-intelligence.md](roadmaps/road-to-native-code-intelligence.md) | 7 | 27 | 27 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 7 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
 | 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -99,11 +99,11 @@ _1 blocker resolved._
 
 ### [road-to-native-code-intelligence.md](roadmaps/road-to-native-code-intelligence.md)
 
-**Road to native code intelligence — own the engine, sweep the rejected inventory, keep the gates** — 0 / 26 done (0%)
+**Road to native code intelligence — own the engine, sweep the rejected inventory, keep the gates** — 0 / 27 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | ADR-124 landing + contract reconciliation | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 0 | ADR-124 landing + contract reconciliation | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 1 | Rejected-engine re-evaluation sweep (ADR-124 § 4) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Native engine v1: extract + build (Class A) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Query tier: one engine, two sources | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
