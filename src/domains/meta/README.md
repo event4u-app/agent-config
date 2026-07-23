@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `9.7.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 283
+- **artefacts**: 284
 
 ## Commands (147)
 
@@ -227,7 +227,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Questions, options, progress summaries — numbered-options Iron Law, single-recommendation rule
 - **`user-interrupt-priority`** — New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming
 
-## Skills (71)
+## Skills (72)
 
 - **`adr-create`** — Use when capturing an architectural decision — file naming, next ADR number, Status / Context / Decision / Consequences, index regen; fires even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -236,6 +236,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`analysis-autonomous-mode`** — ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work.
 - **`analysis-skill-router`** — Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'.
 - **`check-refs`** — Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
+- **`code-intelligence`** — Route codebase-structure questions (who calls X, where used, what imports, change-impact) to a code-graph first, grep fallback. Triggers 'who calls', 'where is this used', 'call graph'.
 - **`command-routing`** — Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
 - **`command-writing`** — Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
 - **`complexity-first-planning`** — Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first.
