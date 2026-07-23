@@ -546,6 +546,39 @@ consistency:
   #        reading of whichever source it happened to read).
   cross_source: "on"
 
+# --- Documentation screenshots ---
+#
+# When the agent creates screenshots for documentation (e.g. generating a docs
+# site) and embeds them, sensitive data visible on the screenshot MUST be
+# anonymized / pixelated before it ships. Consumed by the `doc-screenshot-hygiene`
+# rule and the `screenshot-hygiene` skill. Automated detection is a helper that
+# flags + pre-redacts — never a clearance; the gate for a data-bearing screenshot
+# is human confirmation (routing into `non-destructive-by-default`, since a
+# shipped screenshot is an irreversible published egress).
+screenshots:
+  # Public identity tokens that are SAFE to show unredacted — the maintainer's
+  # OWN public handles (e.g. a username shown in an admin panel) plus well-known
+  # fake-data tokens. This is NOT a general fake-data dictionary and NOT
+  # identity-resolution: everything not on this list is treated as sensitive by
+  # default. A public handle co-located with a real name does NOT whitelist the
+  # real name. Default: [] (nothing auto-allowed; every identity is human-decided).
+  identity_allowlist: []
+
+  # true | false  (default: true)
+  # true  = terminal / CLI / IDE screenshots are FORBIDDEN (highest leak vector:
+  #         absolute local paths, env tokens). Use text code blocks with text
+  #         redaction instead.
+  # false = allowed, but still subject to the data-bearing human gate.
+  forbid_terminal_capture: true
+
+  # on | off  (default: on)
+  # on  = a data-bearing screenshot embed is gated behind this-turn human
+  #       confirmation; uncertain/unresolved regions → redact-or-refuse, never
+  #       ship-and-hope. Illustrative / no-data screenshots (diagrams, logos,
+  #       placeholder-only UI) may embed with a stated justification.
+  # off = no data-bearing gate (legacy; the anonymization taxonomy still applies).
+  data_bearing_gate: "on"
+
 code_style:
   # minimal | full  (default: minimal)
   #

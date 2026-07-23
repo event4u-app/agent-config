@@ -155,7 +155,7 @@ claims below are `backed`. Remaining entries are listed so the debt is
 visible, not hidden.
 
 ### claim: skill-count
-- claim: 278 skills.
+- claim: 279 skills.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
@@ -169,7 +169,7 @@ visible, not hidden.
 - last_verified: 2026-07-08
 
 ### claim: rule-count
-- claim: 106 governed rules.
+- claim: 107 governed rules.
 - kind: quant
 - evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
 - status: backed
