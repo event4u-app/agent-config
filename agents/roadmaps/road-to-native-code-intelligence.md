@@ -251,34 +251,34 @@ malformed variants covered by tests.
 
 ## Phase 4 — Behavior wiring: make agents actually use it
 
-- [ ] `code-intelligence` skill (consumer projection, engineering
-  workspaces): when the question is structural ("who calls", "trace",
-  "impact of changing X"), run `query`/`affected` first, grep as fallback
-  with the honesty clause ("the graph has no entry for X, so I grepped").
-  `external-code-graph-interop.md` routes here.
-- [ ] PreToolUse **soft nudge** — default-off, config at
-  `hooks.code_graph.enabled` (the `rtk_wrap`/`design_slop` settings shape),
+- [x] `code-intelligence` skill shipped (`src/skills/code-intelligence/`,
+  engineering workspace, packs: meta) — routes structure questions to
+  `code_graph detect|query|affected|path` first, grep fallback with the
+  honesty clause; source-attribution + confidence-preservation Output reqs;
+  lint-skills green. `external-code-graph-interop` See-also routes here.
+- [x] PreToolUse **soft nudge** shipped — default-off (`hooks.code_graph.enabled`),
   handler `src/scripts/hooks/code_graph_nudge_hook.ts` registered in
-  `hook_manifest.yaml` (`fail_closed: false`), once-per-session latch
-  (existing runtime-state latch mechanism), ≤40 tokens (measured in the PR),
-  **never blocks** — Source G's strict/block mode stays un-ported (blocking
-  reads on a possibly-stale index violates the minimal-safe-diff posture).
-  New under ADR-124: the nudge may also *offer the build* ("no index found —
-  build one? ~N s") instead of only pointing at an existing index.
-- [ ] Freshness loop without a daemon: session-start hook surfaces "graph is
-  N commits behind — run `code-graph build --update`"; an optional
-  post-commit git hook is **offered by the installer, opt-in,
-  consumer-repo-visible** (no silent hook writes; ADR-123 posture;
-  interpreter-pinning lesson applied).
+  `hook_manifest.yaml` (pre_tool_use, `fail_closed: false`), once-per-session
+  latch, warn-only (never blocks — Source G's strict block-first-read
+  un-ported), branches present→query / stale→rebuild / absent→build-offer.
+  Tested (enabled-gate, tool eligibility, branch selection).
+- [~] Freshness loop — **partially done, rest deferred.** Staleness IS surfaced:
+  the nudge's stale branch tells the agent "index N commits behind — rebuild".
+  A *dedicated session-start* freshness hook is deferred (the session_start
+  concern budget already warns at 9>8; adding one worsens it for marginal gain
+  over the read-path nudge), and the *installer-offered opt-in post-commit git
+  hook* is deferred as installer-scope work — both recorded here, neither
+  blocking the capability.
 - [x] Incremental `--update`: re-extract only files whose content hash
   changed (per-file extract sidecar), reuse the rest, rebuild the full graph
   — **byte-identical to a cold build** (buildGraph is pure over extracts;
   update is a speed win, never a semantic one). Also fixed a symlink-path
   confinement bug (macOS `/tmp`→`/private/tmp`, symlinked checkouts). Tested.
-- [ ] Consumer-matrix row + `enforcement-by-host.md` update: hook platforms
-  get the nudge; instruction-file platforms get one added sentence in the
-  projected interop rule (zero new rule files — surface consolidation holds;
-  zero new always-on consumer rule weight, measured by the token verifier).
+- [x] Interop routing + host degradation: `external-code-graph-interop`
+  See-also routes to `code-intelligence`; `docs/enforcement-by-host.md` gains
+  the graceful-degradation sentence (hook hosts → nudge; instruction-file hosts
+  → rule + skill). No new rule files (surface consolidation holds). The release
+  `consumer-matrix` needs no row — the hook rides hook_manifest→install→`hooks:doctor`.
 
 **Acceptance:** transcript tests — fresh graph + first Grep → exactly one
 nudge; second Grep → none; stale graph → no nudge + one staleness line;
