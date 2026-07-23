@@ -44,9 +44,9 @@ exists and is fresh.
 ## Sequencing plan (the queue — order is binding)
 
 1. **This roadmap, Phase 0** — ADR-124 ratification + contract reconciliation.
-2. **This roadmap, Phase 1** — the reclassification table lands
-   (`docs/decisions/engine-reclassification-2026-07.md`); it is the single
-   intake path for every further engine.
+2. **This roadmap, Phase 1** — the reclassification table lands (the
+   engine-reclassification-2026-07 decision doc, first Phase-1 checkbox
+   below); it is the single intake path for every further engine.
 3. **This roadmap, Phases 2–4** — native engine v1 (extract/build/query/wire).
 4. **This roadmap, Phase 5** — benchmark verdict published. **Hard gate:**
    nothing below starts before this verdict exists (ADR-124 sequencing rule).
