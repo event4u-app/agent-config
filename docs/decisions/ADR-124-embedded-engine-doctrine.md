@@ -1,6 +1,6 @@
 ---
 adr: 124
-status: proposed
+status: accepted
 date: 2026-07-23
 decision: embedded-engine-doctrine
 supersedes: ADR-088 (engine-adoption interpretation only), ADR-094 (engine-adoption interpretation only)
@@ -13,14 +13,18 @@ type: structural
 
 ## Status
 
-**Proposed** · 2026-07-23. **Maintainer-directed reversal** of the
+**Accepted** · 2026-07-23. **Maintainer-directed reversal** of the
 engine-rejection *interpretation* accumulated across ADR-088, ADR-094 and the
-archived harvest-cycle REJECT records of 2026-06/07. A council ratification
-round is scheduled as *review of the boundary wording*, not as a veto on the
-direction — the direction is a maintainer product decision: the prior councils
-optimized for scope discipline and, in doing so, systematically excluded a
-capability class (deterministic code/corpus intelligence) that competing
-suites ship as their headline feature.
+archived harvest-cycle REJECT records of 2026-06/07. The council ratification
+round reviewed the *boundary wording*, not the direction — the direction is a
+maintainer product decision: the prior councils optimized for scope discipline
+and, in doing so, systematically excluded a capability class (deterministic
+code/corpus intelligence) that competing suites ship as their headline
+feature. The ratification round ran 2026-07-23 (see References); its three
+convergent wording patches — the tightened `--watch` termination clause, the
+maintainer-approves-per-dep ladder note, and the "changes *what* the tool can
+answer, not just *how fast*" state-store test in § 6 — are folded in, and the
+ADR is accepted on that sealed wording.
 
 ## Context
 
@@ -102,7 +106,7 @@ whatever index a consumer happens to ship.
 
 | Class | Definition | Verdict |
 |---|---|---|
-| **A — Embedded engine** | Deterministic, in-process, invoked-per-command, no resident process, no listening socket, no network in the build path; state only as gitignored, rebuildable build/index artifacts under the suite's own runtime dirs (`agents/runtime/state/`). **Termination clause (council patch, 2026-07-23): a Class-A engine terminates after command completion; in-memory state never spans CLI invocations** — a memory-only long-lived process that "never touches disk" is Class B regardless of its storage story (the sole exception is an explicitly user-invoked `--watch`-style mode with user-visible process lifetime, which is a Class-B escalation under § 5, not Class A). Implementation preference in order: Node built-ins / stdlib → exact-pinned pure-npm or WASM dependencies (admissible with a per-dependency justification in the adopting artifact) → native-compiled (node-gyp) deps only via an explicit per-dependency exception. Every subprocess it spawns routes through `hardenedSpawnEnv()` per ADR-123 and `docs/spawn-site-policy.md`. | **ADOPTABLE.** This suite may build, fork, or vendor Class-A engines natively. |
+| **A — Embedded engine** | Deterministic, in-process, invoked-per-command, no resident process, no listening socket, no network in the build path; state only as gitignored, rebuildable build/index artifacts under the suite's own runtime dirs (`agents/runtime/state/`). **Termination clause (council patch, 2026-07-23): a Class-A engine terminates after command completion; in-memory state never spans CLI invocations** — a memory-only long-lived process that "never touches disk" is Class B regardless of its storage story. The sole exception is an explicit `--watch` flag on a stateless file-regeneration command where (a) the process lifecycle is bounded to file-system event observation, (b) **each regeneration cycle is a fresh Class-A invocation with no shared in-memory state between cycles**, and (c) the flag emits a first-launch notice that a long-running process started; any other persistent process (REPL, server, daemon, background worker) is Class B regardless of flag naming, and the `--watch` mode itself is a Class-B escalation under § 5. Implementation preference in order: Node built-ins / stdlib → exact-pinned pure-npm or WASM dependencies (admissible with a per-dependency justification in the adopting ADR — the justification states why a lighter dependency does not suffice, and the maintainer approves it in that ADR, not in a downstream feature PR) → native-compiled (node-gyp) deps only via an explicit per-dependency exception on the same terms. Every subprocess it spawns routes through `hardenedSpawnEnv()` per ADR-123 and `docs/spawn-site-policy.md`. | **ADOPTABLE.** This suite may build, fork, or vendor Class-A engines natively. |
 | **B — Resident service / daemon** | Anything with a lifecycle beyond one command: DB servers, MCP *servers* run as memory/retrieval backends, watchers, browser daemons, background workers, web consoles. (In-process actor runtimes/swarms are equally out of scope, but by the ADR-109 identity floor preserved in § 3 — not by this lifecycle definition; they can terminate within one command and are still excluded.) | **PROHIBITED in core**, unchanged. Route to `agent-ide-plugin` or a sibling package where genuinely needed. ADR-088/094 remain authoritative here. |
 | **C — Network/LLM-dependent build path** | Any index/graph/corpus *build* step that requires network or model calls (embedding pipelines included — ADR-061's "embeddings only on measured recall failure" remains the sole doorway). | **PROHIBITED by default**, unchanged. Query-time LLM use follows existing council/budget governance. |
 
@@ -162,7 +166,14 @@ implementing roadmap carries, in the same change-set as the first engine:
   `agents/runtime/state/` are build outputs, not state stores* (they carry no
   authority, are reproducible from the working tree, and are never
   auto-written memory). One-shot subprocess spawning is already sanctioned by
-  the contract's Allowed table; daemons remain prohibited.
+  the contract's Allowed table; daemons remain prohibited. **State-store test
+  (council ratification patch): if deleting the artifact changes *what* the
+  tool can answer rather than only *how fast* it answers, it is a state store,
+  not a build artifact — even if deterministically rebuildable.** A code-graph
+  cache passes the test (deleting it only slows the next query; the answer is
+  identical, recomputed from source); a learned index that enables query
+  semantics absent from the source tree (vector/embedding search) fails it and
+  stays Class C.
 - **`docs/comparison.yaml` row 1** — "no state database" is reworded to "no
   resident database or service; deterministic, rebuildable file indexes only",
   so the machine-checked claim stays true rather than quietly weakening.
@@ -230,5 +241,15 @@ implementing roadmap carries, in the same change-set as the first engine:
   both members in round 2 (capability-before-adoption causality; the engine is
   the differentiation the launch story needs) — the adopted middle path is the
   bench-as-launch-story inversion plus the existing default-off gates.
-- Council ratification round on wording: scheduled with this ADR's landing PR;
-  final convergence to be recorded here on acceptance.
+- Council ratification round on wording: 2026-07-23, debate mode, 1 round,
+  members claude-sonnet-4-5 (Anthropic, verdict FLAG-with-patches) + gpt-4o
+  (OpenAI, verdict RATIFY-with-patches). Both converged on three wording
+  patches, all folded in on acceptance: (1) the `--watch` termination clause
+  now requires each regeneration cycle to be a fresh Class-A invocation with
+  no shared in-memory state (§ 1); (2) the dependency ladder names the
+  maintainer as the per-dep approver in the adopting ADR, not a downstream PR
+  (§ 1); (3) the state-store test — "changes *what* the tool can answer, not
+  just *how fast*" — is added to the § 6 no-runtime-boundary carve-out, which
+  explicitly keeps vector/embedding indexes on the Class-C side. No member
+  flagged the direction; the round sealed the wording and the ADR is accepted
+  on it.
