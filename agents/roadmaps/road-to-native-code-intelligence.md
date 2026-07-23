@@ -193,28 +193,10 @@ exists and is fresh.
   added (web-tree-sitter MIT, tree-sitter-wasms Unlicense). Cache is the
   gitignored build artifact `agents/runtime/state/code-graph-v1.json`.
   &nbsp;
-  <!-- original checkbox text preserved below for provenance -->
-  Dependencies: `web-tree-sitter` + `tree-sitter-wasms`, both
-  **exact-pinned** (no `^`), as regular runtime deps (13 already ship; the
-  per-dependency justification per ADR-124 § 1 lands in the PR body). No
-  vendored `.wasm` in the tarball — grammars load from `node_modules` via
-  `locateFile` at runtime. **CI guard:** `src/scripts/install.ts` must never
-  import `code_graph/` (grep check) — the esbuild install bundle cannot
-  inline Emscripten WASM loading. License inventory maintained in the same
-  change: `NOTICE`/`CREDITS.md` entries for `web-tree-sitter` (MIT) and
-  `tree-sitter-wasms` (Unlicense).
 - [x] **ABI smoke test** in CI (`tests/scripts/code_graph.test.ts` → "ABI
   smoke" block): loads each launch grammar, asserts `language.version === 14`
   (the pinned ABI), and parses a fixture per language. A dependency bump that
   breaks the ABI turns this test red at PR time.
-  <!-- original -->
-  **ABI smoke test** in CI: load core + each launch grammar, assert
-  `language.abiVersion` in the supported range, parse a fixture per language,
-  compare graph checksum — the documented web-tree-sitter/grammar ABI-drift
-  failure mode is caught at PR time, never at a consumer. The test asserts
-  (not assumes) that every launch grammar — PHP included — is present in the
-  pinned `tree-sitter-wasms` bundle and loads against the pinned
-  `web-tree-sitter`; a 0.1.x bundle re-pin re-runs this before merge.
 - [x] `src/scripts/code_graph/` module family shipped — `types.ts`,
   `loader.ts` (cached parser, ABI assertion, tree-delete-not-parser-delete
   per the feasibility audit), `extract.ts` (per-language walk + honest
@@ -225,52 +207,10 @@ exists and is fresh.
   `src/` = 826 files / 12,285 nodes / 68,169 edges, confidence split
   EXTRACTED 37.5k / INFERRED 170 / AMBIGUOUS 30.5k (the honest dynamic-dispatch
   majority the audit predicted).
-  <!-- original -->
-  `src/scripts/code_graph/` module family, TypeScript, house exit codes
-  0/1/2/3, `discovery_graph.ts` conventions:
-  - `extract.ts` — WASM tree-sitter, launch set **PHP, TypeScript/TSX,
-    JavaScript** (consumer reality; more grammars demand-gated, one PR each).
-    Single `Parser` instance, `tree.delete()` per file (Emscripten heap does
-    not shrink). Deterministic per-file **byte cap** (skip >1 MB with a
-    `SKIPPED` node) — never parse timeouts (time-dependent partial trees are
-    the one real nondeterminism trap). Emits the frozen extraction shape:
-    `nodes[] {id, label, source_file, source_location}`, `edges[]
-    {source, target, relation, confidence}` with
-    `calls|imports|uses|inherits|member` relations.
-  - **Honest confidence taxonomy** (feasibility-corrected): `EXTRACTED` =
-    definitions, `use`/`import`, `extends`/`implements`, trait `use`,
-    `new ClassName()`, direct free-function calls. `INFERRED` =
-    hierarchy-resolved `$this->`/`self::`/`static::`/`parent::` receivers
-    (second-pass over parsed ancestors) and TS annotated receivers.
-    `AMBIGUOUS` (multi-candidate, never dropped) = the **expected default**
-    for dynamic method calls, facades, container lookups, magic
-    `__call`/`__get`, string callables. Per-class edge counts are reported in
-    build output so the honesty split is visible.
-  - `build.ts` — dedupe, symbol resolution, **path-qualified node IDs from
-    day one** (Source G retrofitted these after same-name collisions — we
-    start there), content-addressed to a file-manifest checksum, atomic
-    versioned cache `agents/runtime/state/code-graph-v1.json` (gitignored,
-    rebuildable — a build artifact per ADR-124 § 6, not a state store).
-  - **Determinism contract** in the module header: identical *source* →
-    identical graph bytes (the tree is an intermediate; the golden-checksum
-    test measures source-to-bytes). Canonical sort, stable key order,
-    POSIX-relative paths, no
-    timestamps; a repeat-build byte-equality (golden-checksum) test enforces
-    it.
-  - `validate.ts` — schema gate before build consumes extraction output.
-  - **Path confinement:** every manifest path resolved and asserted under the
-    repo root; symlinks skipped; JSON manifest (newline-bearing filenames
-    cannot smuggle entries); `require`/`include` string arguments are never
-    followed as filesystem paths.
 - [x] Perf budget: self-build (826 files, mixed PHP/TS/JS) completed cold in
   **~2.3 s** — an order of magnitude under the ≤60 s ceiling and inside the
   ~10–20 s expectation. Full ~100 k-LOC consumer-repo timing rides Phase 5
   (needs a consumer-scale repo not available locally).
-  <!-- original -->
-  Perf budget pre-registered: full build on a ~100 k-LOC repo **≤60 s
-  cold (ceiling; ~10–20 s expected) / ≤10 s warm-incremental** on the
-  maintainer's reference machine; numbers recorded in the PR; misses block
-  merge or shrink the launch set.
 
 **Acceptance (partially met — fixture + self-build; full external-repo
 acceptance rides Phase 5):** the honest confidence taxonomy is verified on a
@@ -289,30 +229,12 @@ Phase 5, which requires those repos + spend authorization anyway.
   every answer prints a `source:` attribution line. Verified live on the
   repo's own graph: `query LexicalIndex` → members; `affected sanitizeLabel`
   → correct reverse-BFS callers.
-  <!-- original -->
-  `query.ts` — `query|path|explain|affected` over the `graph.json` shape,
-  BFS/DFS, `--budget` token cap, hybrid seed-matching (exact/label → BM25
-  fallback via `_lib/lexical_index.ts`). **Source-agnostic:** runs identically
-  over (a) the native cache and (b) a consumer-shipped `graph.json` — the
-  interop tier from the superseded draft collapses into a `--graph <path>`
-  flag plus the detector.
-  - Precedence when both exist: consumer-shipped index wins if fresh (interop
-    courtesy, ADR-124 § 2); native engine covers stale-or-absent — and every
-    answer names which source answered.
 - [x] `detect.ts` — shipped: consumer `graph.json` shape-validation (native +
   foreign shape), `*.scip` presence-only ("peer tooling required", no owned
   reader), native cache; freshness via embedded `head_at_build` SHA
   (`commits_behind`) else mtime-vs-`git log -1 %ct`; `pickSource` precedence
   (fresh consumer > native > stale consumer) unit-tested. git calls route
   through `hardenedSpawnEnv()` (ADR-123).
-  <!-- original -->
-  `detect.ts` — consumer-index detection (`graph.json` shape validation;
-  `*.scip` presence-only: "SCIP detected — peer tooling required", exit 1 —
-  an owned SCIP reader stays YAGNI-gated on the first consumer report) +
-  freshness verdict (`head_at_build` when the artifact carries it, else
-  artifact mtime vs `git log -1 --format=%ct`; `commits_behind` only when a
-  SHA is embedded — no guessing), extended with the native cache as a third
-  source.
 - [x] `affected --since <ref>` — git-diff-seeded impact BFS shipped (diff
   `ref..HEAD` → changed files → their nodes → reverse-BFS); cited as an
   optional pre-step in the `verify-repair-loop` skill's See-also (cited, not
@@ -348,8 +270,11 @@ malformed variants covered by tests.
   post-commit git hook is **offered by the installer, opt-in,
   consumer-repo-visible** (no silent hook writes; ADR-123 posture;
   interpreter-pinning lesson applied).
-- [ ] Incremental `--update`: re-extract changed files only (manifest
-  checksum diff), rebuild the affected subgraph.
+- [x] Incremental `--update`: re-extract only files whose content hash
+  changed (per-file extract sidecar), reuse the rest, rebuild the full graph
+  — **byte-identical to a cold build** (buildGraph is pure over extracts;
+  update is a speed win, never a semantic one). Also fixed a symlink-path
+  confinement bug (macOS `/tmp`→`/private/tmp`, symlinked checkouts). Tested.
 - [ ] Consumer-matrix row + `enforcement-by-host.md` update: hook platforms
   get the nudge; instruction-file platforms get one added sentence in the
   projected interop rule (zero new rule files — surface consolidation holds;

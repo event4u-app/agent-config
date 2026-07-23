@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as os from 'node:os';
 
-import { buildGraph, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
+import { buildFromRepo, buildGraph, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
 import { pickSource, type SourceVerdict } from '../../src/scripts/code_graph/detect.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import { loadLanguage } from '../../src/scripts/code_graph/loader.js';
@@ -246,6 +246,30 @@ describe('sanitizer', () => {
     });
     it('caps overly long labels', () => {
         expect(sanitizeLabel('x'.repeat(500)).length).toBeLessThanOrEqual(160);
+    });
+});
+
+describe('incremental --update (Phase 4)', () => {
+    it('produces a byte-identical graph to a cold build and re-extracts only changed files', async () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-upd-'));
+        fs.mkdirSync(path.join(dir, 'app'));
+        fs.writeFileSync(path.join(dir, 'app', 'A.php'), '<?php\nnamespace X;\nclass A { function m(){ $this->m(); } }\n');
+        fs.writeFileSync(path.join(dir, 'app', 'w.ts'), 'export class W { a(){ this.a(); } }\n');
+        const cache = path.join(dir, 'g.json');
+
+        const cold = await buildFromRepo(dir, cache, {});
+        const upd = await buildFromRepo(dir, cache, { update: true });
+        expect(serializeGraph(upd.graph)).toBe(serializeGraph(cold.graph)); // byte-identical
+        expect(upd.reExtracted).toBe(0);
+        expect(upd.reused).toBe(2);
+
+        // change one file → exactly one re-extract, result equals a fresh cold build
+        fs.writeFileSync(path.join(dir, 'app', 'A.php'), '<?php\nnamespace X;\nclass A { function m(){ $this->n(); } function n(){} }\n');
+        const upd2 = await buildFromRepo(dir, cache, { update: true });
+        expect(upd2.reExtracted).toBe(1);
+        expect(upd2.reused).toBe(1);
+        const cold2 = await buildFromRepo(dir, path.join(dir, 'g2.json'), {});
+        expect(serializeGraph(upd2.graph)).toBe(serializeGraph(cold2.graph)); // update === cold
     });
 });
 
