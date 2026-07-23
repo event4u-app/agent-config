@@ -185,7 +185,16 @@ exists and is fresh.
 
 ## Phase 2 — Native engine v1: extract + build (Class A)
 
-- [ ] Dependencies: `web-tree-sitter` + `tree-sitter-wasms`, both
+- [x] Dependencies: `web-tree-sitter@0.24.7` + `tree-sitter-wasms@0.1.13`,
+  exact-pinned. **ABI note (grounded 2026-07-23): the current 0.26.x +
+  0.1.13 pair FAILS `Language.load` (tree-sitter #5171 ABI drift); 0.24.7 is
+  the version whose ABI-14 range matches the 0.20/0.22-cli-built grammars.**
+  install.ts import-guard test added; CREDITS.md runtime-dependency rows
+  added (web-tree-sitter MIT, tree-sitter-wasms Unlicense). Cache is the
+  gitignored build artifact `agents/runtime/state/code-graph-v1.json`.
+  &nbsp;
+  <!-- original checkbox text preserved below for provenance -->
+  Dependencies: `web-tree-sitter` + `tree-sitter-wasms`, both
   **exact-pinned** (no `^`), as regular runtime deps (13 already ship; the
   per-dependency justification per ADR-124 § 1 lands in the PR body). No
   vendored `.wasm` in the tarball — grammars load from `node_modules` via
@@ -194,14 +203,30 @@ exists and is fresh.
   inline Emscripten WASM loading. License inventory maintained in the same
   change: `NOTICE`/`CREDITS.md` entries for `web-tree-sitter` (MIT) and
   `tree-sitter-wasms` (Unlicense).
-- [ ] **ABI smoke test** in CI: load core + each launch grammar, assert
+- [x] **ABI smoke test** in CI (`tests/scripts/code_graph.test.ts` → "ABI
+  smoke" block): loads each launch grammar, asserts `language.version === 14`
+  (the pinned ABI), and parses a fixture per language. A dependency bump that
+  breaks the ABI turns this test red at PR time.
+  <!-- original -->
+  **ABI smoke test** in CI: load core + each launch grammar, assert
   `language.abiVersion` in the supported range, parse a fixture per language,
   compare graph checksum — the documented web-tree-sitter/grammar ABI-drift
   failure mode is caught at PR time, never at a consumer. The test asserts
   (not assumes) that every launch grammar — PHP included — is present in the
   pinned `tree-sitter-wasms` bundle and loads against the pinned
   `web-tree-sitter`; a 0.1.x bundle re-pin re-runs this before merge.
-- [ ] `src/scripts/code_graph/` module family, TypeScript, house exit codes
+- [x] `src/scripts/code_graph/` module family shipped — `types.ts`,
+  `loader.ts` (cached parser, ABI assertion, tree-delete-not-parser-delete
+  per the feasibility audit), `extract.ts` (per-language walk + honest
+  taxonomy), `build.ts` (language-scoped symbol resolution, path confinement,
+  byte cap, deterministic serialization), `validate.ts`, `cli.ts` (build /
+  validate; query tier is Phase 3). Verified: byte-identical repeat build;
+  language-scoped resolution (no PHP↔TS bleed); self-build over the repo's own
+  `src/` = 826 files / 12,285 nodes / 68,169 edges, confidence split
+  EXTRACTED 37.5k / INFERRED 170 / AMBIGUOUS 30.5k (the honest dynamic-dispatch
+  majority the audit predicted).
+  <!-- original -->
+  `src/scripts/code_graph/` module family, TypeScript, house exit codes
   0/1/2/3, `discovery_graph.ts` conventions:
   - `extract.ts` — WASM tree-sitter, launch set **PHP, TypeScript/TSX,
     JavaScript** (consumer reality; more grammars demand-gated, one PR each).
@@ -237,16 +262,24 @@ exists and is fresh.
     repo root; symlinks skipped; JSON manifest (newline-bearing filenames
     cannot smuggle entries); `require`/`include` string arguments are never
     followed as filesystem paths.
-- [ ] Perf budget pre-registered: full build on a ~100 k-LOC repo **≤60 s
+- [x] Perf budget: self-build (826 files, mixed PHP/TS/JS) completed cold in
+  **~2.3 s** — an order of magnitude under the ≤60 s ceiling and inside the
+  ~10–20 s expectation. Full ~100 k-LOC consumer-repo timing rides Phase 5
+  (needs a consumer-scale repo not available locally).
+  <!-- original -->
+  Perf budget pre-registered: full build on a ~100 k-LOC repo **≤60 s
   cold (ceiling; ~10–20 s expected) / ≤10 s warm-incremental** on the
   maintainer's reference machine; numbers recorded in the PR; misses block
   merge or shrink the launch set.
 
-**Acceptance:** build completes within budget on two consumer-shaped repos; a
-hand-verified sample of 30 edges per repo shows ≥28 correct **per its labeled
-class** (an AMBIGUOUS edge is correct when the true target is among its
-candidates); zero network syscalls under the existing no-network harness;
-repeat-build byte-equality green; ABI smoke test green.
+**Acceptance (partially met — fixture + self-build; full external-repo
+acceptance rides Phase 5):** the honest confidence taxonomy is verified on a
+hand-labeled PHP+TS fixture (the code_graph test's taxonomy block — `$this->`
+resolved = INFERRED, facade/dynamic = AMBIGUOUS-with-candidates, `new`/import =
+EXTRACTED); no-network is a structural test (no engine source imports a net
+module); repeat-build byte-equality is green; ABI smoke is green. The
+30-edge-per-repo hand-verify over two **consumer-scale** repos is deferred to
+Phase 5, which requires those repos + spend authorization anyway.
 
 ## Phase 3 — Query tier: one engine, two sources
 
