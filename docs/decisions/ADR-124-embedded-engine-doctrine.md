@@ -1,0 +1,234 @@
+---
+adr: 124
+status: proposed
+date: 2026-07-23
+decision: embedded-engine-doctrine
+supersedes: —
+superseded_by: —
+phase: road-to-native-code-intelligence
+type: structural
+---
+
+# ADR-124 — Embedded-engine doctrine: this suite may own deterministic in-process engines; the service/daemon prohibition stands
+
+## Status
+
+**Proposed** · 2026-07-23. **Maintainer-directed reversal** of the
+engine-rejection *interpretation* accumulated across ADR-088, ADR-094 and the
+archived harvest-cycle REJECT records of 2026-06/07. A council ratification
+round is scheduled as *review of the boundary wording*, not as a veto on the
+direction — the direction is a maintainer product decision: the prior councils
+optimized for scope discipline and, in doing so, systematically excluded a
+capability class (deterministic code/corpus intelligence) that competing
+suites ship as their headline feature.
+
+## Context
+
+### What the record actually prohibits (verified 2026-07-23)
+
+The "no runtime" identity rests on instruments whose literal scope is narrower
+than the posture they produced:
+
+1. **ADR-088** prohibits **cross-vendor runtime federation**: "agent-config
+   does not bridge to, or drive, external tool runtimes. It is a content suite
+   (skills, rules, commands) for AI coding tools — not a runtime coordinator."
+   It says nothing about whether this suite may run an in-process algorithm of
+   its own. The frequently-cited gloss "no runtime orchestration (work
+   stealing, load balancing)" is a harvest-cycle REJECT line (council,
+   2026-07-07) that *cites* ADR-088 — it is not ADR-088's text.
+2. **ADR-094** removed one specific companion package (Layer 2:
+   PostgreSQL + pgvector + MCP memory server + decay engine) because "its
+   PostgreSQL + MCP runtime contradicted the suite's 'no app runtime'
+   positioning." It is a removal record, not a forward-looking ban list.
+3. **Archived REJECT records** (council convergences, 2026-06 → 2026-07,
+   quoted inline per the transient-reference rule): the MCP deferred-rule
+   retrieval **server** ("council REJECT, 2026-07-07", three re-open
+   conditions); "SQLite memory *service*, vector clocks, distributed memory —
+   the second-brain verdict and Layer-2 sunset stand"; a web console ("no
+   runtime to monitor"); a browser daemon + compiled runtime ("compiled
+   runtime betrays no-runtime identity" — routed to `agent-ide-plugin`); an
+   in-process swarm/topology engine ("an in-process actor runtime is
+   identity-rejected").
+4. **`src/rules/external-code-graph-interop.md`** codified the resulting
+   ceiling: "This suite is an **orchestrator, not a competitor**: query the
+   existing index first … NEVER REBUILD WHAT THE INDEX ALREADY ANSWERS." This
+   is the single most on-point prior commitment against a native code-graph
+   engine — an active tier-2a rule, and it is amended by this ADR (§ 2).
+
+In practice these instruments were *interpreted* wider than written: a
+2026-07-23 inventory sweep across all roadmap dispositions (active, archive,
+later, skipped, stubs) found **44 engine-shaped rejects across ~30 cycles** —
+harvests of at least six external references (a code-graph suite, an
+orchestration runtime, a control-plane/enforcement suite, and three memory
+systems) adopted **protocol discipline only** and reflexively rejected every
+**engine**, including engines that are neither services nor daemons.
+
+### The precedent — read honestly
+
+**ADR-116** pre-decided SQLite FTS5 via `node:sqlite` — a persisted,
+incrementally-updated engine, in-process — as compatible with the Layer-2
+sunset: "no service, no always-on worker, zero npm dependency." Two facts keep
+this precedent honest rather than convenient:
+
+- **That engine was never built.** The activation path was re-resolved to a
+  hand-rolled stdlib BM25 + trigram prefilter (`_lib/lexical_index.ts`); only
+  the engine choice moved, per the ADR-116 amendment banner.
+- **Its compatibility argument rested on being a zero-npm-dep Node built-in.**
+  ADR-116 explicitly rejected `better-sqlite3` and a minisearch dependency
+  *for being npm deps*. It is therefore precedent for "embedded engine ≠
+  runtime" **in principle**, and **counter-precedent on the dependency axis**.
+  This ADR does its own work on that axis (§ 1, Class A) instead of borrowing
+  authority ADR-116 does not carry.
+
+### Dependency reality
+
+The package ships **13 runtime npm dependencies** today (fastify, commander,
+execa, tsx, zod, js-yaml, the MCP SDK, …). No package-wide "zero
+dependencies" commitment exists — the closest claim was a README bullet
+deliberately dropped before 2.2.0. The zero-dep virtue in ADR-061/ADR-116 is a
+*feature-level* stdlib preference, not a distribution-level promise. An engine
+dependency is therefore a **cost to justify per adoption**, not a broken vow.
+
+### The product goal has changed
+
+The maintainer directs: the suite should be able to natively own capability
+classes (deterministic code intelligence first) when owning them makes the
+package better, closes gaps and improves agent behavior — not merely defer to
+whatever index a consumer happens to ship.
+
+## Decision
+
+### 1. Three engine classes; the boundary moves, it does not vanish
+
+| Class | Definition | Verdict |
+|---|---|---|
+| **A — Embedded engine** | Deterministic, in-process, invoked-per-command, no resident process, no listening socket, no network in the build path; state only as gitignored, rebuildable build/index artifacts under the suite's own runtime dirs (`agents/runtime/state/`). **Termination clause (council patch, 2026-07-23): a Class-A engine terminates after command completion; in-memory state never spans CLI invocations** — a memory-only long-lived process that "never touches disk" is Class B regardless of its storage story (the sole exception is an explicitly user-invoked `--watch`-style mode with user-visible process lifetime, which is a Class-B escalation under § 5, not Class A). Implementation preference in order: Node built-ins / stdlib → exact-pinned pure-npm or WASM dependencies (admissible with a per-dependency justification in the adopting artifact) → native-compiled (node-gyp) deps only via an explicit per-dependency exception. Every subprocess it spawns routes through `hardenedSpawnEnv()` per ADR-123 and `docs/spawn-site-policy.md`. | **ADOPTABLE.** This suite may build, fork, or vendor Class-A engines natively. |
+| **B — Resident service / daemon** | Anything with a lifecycle beyond one command: DB servers, MCP *servers* run as memory/retrieval backends, watchers, browser daemons, background workers, web consoles, in-process actor runtimes/swarms. | **PROHIBITED in core**, unchanged. Route to `agent-ide-plugin` or a sibling package where genuinely needed. ADR-088/094 remain authoritative here. |
+| **C — Network/LLM-dependent build path** | Any index/graph/corpus *build* step that requires network or model calls (embedding pipelines included — ADR-061's "embeddings only on measured recall failure" remains the sole doorway). | **PROHIBITED by default**, unchanged. Query-time LLM use follows existing council/budget governance. |
+
+### 2. What is explicitly superseded
+
+- The **blanket engine-rejection interpretation** of ADR-088 and ADR-094.
+  Their literal text (no cross-vendor federation; Layer-2 removal) stands; any
+  archived REJECT that cites them against a Class-A engine is void and must be
+  re-evaluated (§ 4).
+- The **"orchestrator, not a competitor" ceiling** in
+  `external-code-graph-interop.md`. New wording: "orchestrator *first* —
+  query a consumer-shipped index when present and fresh; owner *where it
+  wins* — the suite's native engines cover the gap when none is shipped or
+  ours is measurably better." Interop behavior toward existing indexes is
+  unchanged.
+
+### 3. What is explicitly NOT superseded
+
+- **Falsifiability-first.** Every native engine ships **default-off**,
+  activates via tripwire or explicit setting, and earns default-on only
+  through a pre-registered benchmark with an honest-null publication path.
+  The evidence gates now govern *defaults*, no longer *existence*.
+- Claims Ledger, budget/spend gates, minimal-safe-diff, source
+  confidentiality, and the security posture (ADR-123 spawn hardening applies
+  to every engine subprocess; the no-network floor applies to every build
+  path).
+- The `agent-ide-plugin` routing for genuinely runtime-shaped capability.
+- ADR-109's no-runtime identity floor for subagent artifacts (no daemon, no
+  auto-write, no in-process swarm, no dispatch we enforce) — a command-invoked,
+  non-dispatching engine does not touch it.
+
+### 4. Mandatory re-evaluation sweep
+
+Every engine-shaped REJECT recorded 2026-06-01 → 2026-07-22 is re-classified
+A/B/C. Class-A rejects are re-opened as candidates (adoption still demand- and
+benchmark-gated); Class-B/C rejects are re-affirmed with the class cited. The
+population was inventoried on 2026-07-23 (44 entries); the classification
+table is committed as `docs/decisions/engine-reclassification-2026-07.md` by
+the implementing roadmap — no silent re-openings, no silent re-affirmations.
+
+### 5. Extension clause
+
+Opening Class B (e.g., a resident index server for very large fleets) requires
+its own ADR with: a named consumer demand signal, a measured Class-A failure
+(the embedded engine demonstrably cannot serve the need), and a security
+review under ADR-123. This clause exists so the next escalation is a decision,
+not a drift.
+
+### 6. Contract reconciliation — obligations this ADR creates
+
+The doctrine is not landed until the published claims agree with it. The
+implementing roadmap carries, in the same change-set as the first engine:
+
+- **`docs/contracts/no-runtime-boundary.md`** — the "Cross-session persistent
+  state stores" prohibition row gains an explicit carve-out: *gitignored,
+  deterministic, rebuildable build/index artifacts under
+  `agents/runtime/state/` are build outputs, not state stores* (they carry no
+  authority, are reproducible from the working tree, and are never
+  auto-written memory). One-shot subprocess spawning is already sanctioned by
+  the contract's Allowed table; daemons remain prohibited.
+- **`docs/comparison.yaml` row 1** — "no state database" is reworded to "no
+  resident database or service; deterministic, rebuildable file indexes only",
+  so the machine-checked claim stays true rather than quietly weakening.
+- **`src/rules/external-code-graph-interop.md`** — ceiling sentence amended
+  per § 2.
+- **Config-surface guard alignment** — a planned no-runtime config-surface
+  guard (parked in a later-disposition roadmap) denylists `vector`/`daemon`/
+  `decay`/`pgvector` keys and `setInterval`/`setTimeout` outside dev tooling.
+  Its denylist must except Class-A engine surfaces when it lands, or Class-A
+  engines will fail CI after this doctrine flips; this ADR is the anchor that
+  guard must cite.
+
+## Consequences
+
+- The suite may natively own: code-graph extraction/query (first instance —
+  WASM tree-sitter, Class A), lexical/FTS index engines (in-principle
+  precedent: ADR-116, with the honest reading above), deterministic
+  clustering/analysis over its own graph outputs, and comparable future
+  engines — each behind the § 3 gates.
+- **Sequencing rule:** no second native engine starts before the first has a
+  published benchmark verdict. The § 4 table is the queue, not a starting gun.
+- Positioning language changes from "no engines, governance only" to "no
+  *resident runtime*; deterministic embedded intelligence is in scope."
+  README/docs claims still bind to bench rows via the Claims Ledger.
+- **Named cost:** the first engine introduces parser-class runtime
+  dependencies (exact-pinned WASM). That breaks the feature-level stdlib
+  pattern ADR-061/116 prize — accepted deliberately, justified per dependency
+  in the adopting artifact, never silently.
+- **Named risk:** scope-dilution pressure on a single-maintainer package with
+  a live adoption gap. Mitigation is structural, not aspirational — the § 3
+  gates, the sequencing rule, and the § 4 table as the only intake path for
+  further engines.
+
+## Alternatives considered
+
+- **Keep the orchestrator-only posture** — rejected by maintainer directive:
+  it structurally cedes the headline capability class to peer suites and makes
+  the interop rule a promise with no machine behind it when consumers ship no
+  index (the common case).
+- **Repeal ADR-088/094 outright** — rejected: their literal scope
+  (cross-vendor federation; resident memory runtime) is correct and keeps the
+  differentiation that a reversal must not destroy.
+- **Class-A via native node-gyp bindings** — rejected: perpetual
+  consumer-install failure tax on a solo-maintainer package; WASM carries the
+  same fidelity without the toolchain.
+
+## References
+
+- ADR-061 (engine-fork ban; embeddings doorway) · ADR-088 (no external-runtime
+  federation) · ADR-094 (Layer-2 removal) · ADR-109 (subagent contract,
+  no-runtime identity floor) · ADR-116 (FTS5 pre-decision + amendment) ·
+  ADR-123 (spawn hardening).
+- `docs/contracts/no-runtime-boundary.md` · `docs/comparison.yaml` ·
+  `docs/spawn-site-policy.md` · `src/rules/external-code-graph-interop.md`.
+- Pre-landing adversarial council review: 2026-07-23, debate mode, 2 rounds,
+  members claude-sonnet-4-5 (Anthropic) + gpt-4o (OpenAI). Convergence:
+  A/B/C taxonomy well-drawn; the rebuildable-build-artifact carve-out judged
+  honest (deterministic from source, no runtime decisions recorded, byte-stable
+  rebuild) and categorically distinct from a state store; code-graph confirmed
+  as the correct first engine (retriever too incremental, policy evaluator
+  needs its predicate language designed first); benchmark thresholds sound.
+  Adopted patches: the Class-A termination clause (§ 1) and the benchmark
+  confound controls (implementing roadmap, Phase 5). A round-1 proposal to
+  block engine *construction* on an external adoption signal was rebutted by
+  both members in round 2 (capability-before-adoption causality; the engine is
+  the differentiation the launch story needs) — the adopted middle path is the
+  bench-as-launch-story inversion plus the existing default-off gates.
+- Council ratification round on wording: scheduled with this ADR's landing PR;
+  final convergence to be recorded here on acceptance.
