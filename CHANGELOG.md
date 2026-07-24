@@ -18,6 +18,42 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Added
 
+- **Internet-reach operator tooling** — upstream-tool health and install-pinning
+  discipline for the tools a reach recipe needs. The router skill this was
+  scoped around was **cancelled pre-authoring by its own benchmark gate**: the
+  pre-registered run returned 0/12 outright wins against the host's native web
+  tools (`band: stop`), so no skill, no triggers, no capability-area claim. The
+  null is published in [`docs/benchmark.md`](docs/benchmark.md) § internet-reach;
+  the decision is [ADR-126](docs/decisions/ADR-126-internet-reach-operator-tooling.md).
+  - `reach:doctor` — new read-only command: per-channel probe status,
+    `active_backend`, tier, lifecycle, and the exact **pinned** fix command for
+    the current platform when a backend is missing or broken. No writes, no
+    installs, no network (`--deep` is the explicit opt-in that makes one real
+    request per backend and still writes nothing).
+  - `src/config/reach-channels.yml` + `reach-channels.schema.json` — ordered
+    backend candidates per channel (swapping a backend is a config reorder, not
+    a code edit), the four-value lifecycle vocabulary reused from
+    `provider-lifecycle`, `last_verified` staleness metadata, and an install
+    pattern that **rejects** unpinned versions, `latest`/`main`/`HEAD` refs and
+    archive-URL install sources.
+  - `tool_probe` — five-state probe taxonomy (`ok`/`missing`/`broken`/`timeout`/
+    `error`) with stale-shim detection (resolvable shim, dead interpreter),
+    exit-126/127 mapping, timeout-only single retry, and per-channel error
+    isolation. Every spawn routes through `hardenedSpawnEnv()`.
+  - `check-reach-channels` + `check-reach-prescriptions` CI gates — pinning and
+    intake-record discipline is machine-checked, not an honour system; a
+    prescription that cannot be pinned does not ship.
+  - `check-reach-staleness` CI gate — offline: a channel unverified for >90 days,
+    a `deprecated` channel with no `replacement`, or a channel past its
+    `removal_after` date and still present fails the build.
+  - Registry trust is enforced at runtime, not just in CI: `reach:doctor` (incl.
+    `--registry <path>`) validates the registry against its schema and refuses to
+    probe on any violation (exit 2). `probe_args` is a flag-shaped **allowlist**
+    and `probe_cmd` must equal its backend `id`, so a registry entry can neither
+    smuggle a shell payload nor label a row with a binary other than the one that
+    ran — both closed by an adversarial pre-merge review, with permanent
+    regression fixtures.
+
 - **Doc-follows-code discipline** — deterministic, framework-agnostic mechanism
   so documentation is updated when code changes.
   - `downstream-changes` rule gains a first-class **Doc-Impact** obligation:

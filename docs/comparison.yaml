@@ -43,3 +43,8 @@ rows:
     our_evidence: "internal/bench/reports/persona-placebo.json#honest-null"
     their_evidence: "Named-persona prompts are shipped as a feature across the category without a published A/B separating identity from method."
     checkable: true
+
+  - claim: "Every upstream-tool install prescription the package ships is version-pinned, intake-recorded, and enforced offline in CI — an unpinned version, a branch/archive install source, or a pipe-remote-to-shell instruction fails the build."
+    our_evidence: "src/scripts/validate_reach_prescriptions.ts"
+    their_evidence: "Capability layers in this category commonly install themselves and their upstream dependencies from a moving target (a branch archive or an unpinned package) via a piped remote installer; whether any given one pins is observable per repo, but a CI gate that fails the build on an unpinned prescription is not a standard artifact."
+    checkable: true

@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **674 artefacts** in this package.
+Maintainer-facing index of all **677 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (278)
+## Skills (279)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -240,6 +240,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`runway-cognition`](../src/skills/runway-cognition/SKILL.md) | official | Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'. |
 | skill | [`scenario-modeling`](../src/skills/scenario-modeling/SKILL.md) | official | Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'. |
 | skill | [`scene-expander`](../src/skills/scene-expander/SKILL.md) | official | Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. |
+| skill | [`screenshot-hygiene`](../src/skills/screenshot-hygiene/SKILL.md) | official | Use when creating and embedding a documentation screenshot — detect and redact sensitive data, human-gate data-bearing shots before ship. Triggers 'screenshot for docs', 'screenshot admin panel'. |
 | skill | [`script-writing`](../src/skills/script-writing/SKILL.md) | official | Use when adding or editing any script under `scripts/` — `--quiet`, `_lib/script_output`, silent Taskfile wiring, Iron-Law carve-outs; fires on 'add a check script for X'. |
 | skill | [`secrets-management`](../src/skills/secrets-management/SKILL.md) | official | Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized. |
 | skill | [`security`](../src/skills/security/SKILL.md) | official | Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic. |
@@ -290,7 +291,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (105)
+## Rules (107)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -321,6 +322,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`design-fidelity`](../src/rules/design-fidelity.md) | auto | A provided prototype/mockup/design system is the spec — build 1:1; never swap fonts, controls, or layout unconfirmed |
 | rule | [`devcontainer-routing`](../src/rules/devcontainer-routing.md) | auto | Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill |
 | rule | [`direct-answers`](../src/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |
+| rule | [`doc-screenshot-hygiene`](../src/rules/doc-screenshot-hygiene.md) | auto | Screenshots for docs — anonymize sensitive data before shipping; data-bearing shots are human-gated (published egress); terminal/CLI/IDE screenshots forbidden |
 | rule | [`docker-commands`](../src/rules/docker-commands.md) | auto | Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool |
 | rule | [`domain-adoption-policy`](../src/rules/domain-adoption-policy.md) | auto | Adopting a new domain track (mobile, ML, IoT…) — demand/owner/CI gates BEFORE harvest |
 | rule | [`domain-safety-disclaimer`](../src/rules/domain-safety-disclaimer.md) | auto | Advisory content (legal, medical, financial, consulting) — matching 'not X advice' disclaimer; refuse diagnosis/dosage |
@@ -375,6 +377,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`rule-type-governance`](../src/rules/rule-type-governance.md) | auto | Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto |
 | rule | [`runtime-safety`](../src/rules/runtime-safety.md) | auto | Skill declares execution metadata — enforce safety constraints for assisted/automated execution types |
 | rule | [`scope-control`](../src/rules/scope-control.md) | always | Scope control — no unsolicited architectural changes, refactors, or library replacements |
+| rule | [`secret-vcs-guard`](../src/rules/secret-vcs-guard.md) | auto | About to write a credential into a tracked file or stage/commit one in any VCS (git/svn/hg) — STOP, show the match, ask, offer alternatives; never silently commit, never silently strip |
 | rule | [`security-sensitive-stop`](../src/rules/security-sensitive-stop.md) | auto | Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing |
 | rule | [`senior-engineering-discipline`](../src/rules/senior-engineering-discipline.md) | auto | Writing/generating code — generalize (no overfit or tautological tests), supply the invisible cross-cutting controls the prompt didn't name, never invent an API/field/package |
 | rule | [`size-enforcement`](../src/rules/size-enforcement.md) | manual | Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits |
