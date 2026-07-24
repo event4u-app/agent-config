@@ -1,0 +1,35 @@
+# RUN-META run_id=run-2026-07-24 utc_date=2026-07-24 arms_order=per-task-native-then-reach
+# RUN-META host_platform=darwin-24.6.0 host_agent=claude-code node=v25.9.0 gh=2.96.0 curl=8.7.1 jq=1.7.1
+# RUN-META native_tools=host web-search + web-fetch; provider undisclosed; result cap undisclosed; rate limit undisclosed (one 429 observed on news.ycombinator.com item page)
+# RUN-META reach_tools=agents/runtime/tmp/reach-proto/{web-read,web-search,github,rss,hackernews}.sh (gitignored prototypes, Phase 0a)
+# RUN-META endpoints_native=example.com; raw.githubusercontent.com; nodejs.org; github.com/{yt-dlp,simonw}; api.github.com; news.ycombinator.com/rss; releases.atom; hn.algolia.com (HTML shell + JSON API); news.ycombinator.com/item (429)
+# RUN-META endpoints_reach=example.com; raw.githubusercontent.com; api.github.com via gh; news.ycombinator.com/rss; releases.atom; hn.algolia.com JSON API
+# RUN-META rate_limits=1 (native, news.ycombinator.com/item -> 429, handled: skip, evidence already held)
+# RUN-META untested_channels=youtube (yt-dlp absent; see roadmap blocker yt-dlp-not-installed)
+# RUN-META executed_by=4 parallel subagents, 3 tasks x 2 arms each, arms judged independently on evidence only
+task_id,arm,outcome,tokens,notes,run_id
+T01,native,pass,500,title Example Domain plus 187 chars / 29 words,run-2026-07-24
+T01,reach,pass,400,TITLE Example Domain and CHARS 142 from web-read.sh,run-2026-07-24
+T02,native,pass,350,first heading INSTALLATION plus pip install -U --pre yt-dlp[default],run-2026-07-24
+T02,reach,fail,800,recipe caps excerpt at 400 chars of badge markup so no heading or install line surfaced,run-2026-07-24
+T03,native,pass,900,429 Too Many Requests with MDN and RFC 6585 sources,run-2026-07-24
+T03,reach,no-backend,300,web-search.sh declares host-native only by design,run-2026-07-24
+T04,native,pass,1200,Node 26 Current and v24.18.0 Active LTS from nodejs.org previous-releases,run-2026-07-24
+T04,reach,no-backend,250,recipe declares host-native only and prints no search result,run-2026-07-24
+T05,native,pass,520,tag 2026.07.04 from releases page; ISO timestamp needed a second fetch of releases.atom,run-2026-07-24
+T05,reach,pass,110,gh api returned TAG and PUBLISHED in one call,run-2026-07-24
+T06,native,pass,450,five open issues with numbers from the rendered issues page,run-2026-07-24
+T06,reach,pass,140,gh api returned five ISSUE #num open title lines,run-2026-07-24
+T07,native,pass,320,tag 0.31.1 plus verbatim body quoted - no breaking change stated,run-2026-07-24
+T07,reach,fail,330,recipe emits TAG/PUBLISHED/BODY_CHARS only - body text never returned so no grounded yes/no,run-2026-07-24
+T08,native,pass,300,3 titles plus 3 exact pubDates from the XML feed,run-2026-07-24
+T08,reach,pass,280,3 titles plus 3 pubDates - HTML entity left unescaped in title 3,run-2026-07-24
+T09,native,pass,260,2 entry titles plus 2 ISO updated timestamps,run-2026-07-24
+T09,reach,pass,240,2 entry titles plus 2 ISO updated timestamps,run-2026-07-24
+T10,native,pass,2600,WebSearch missed HN entirely and Algolia HTML shell was empty; JSON API returned 5 scored titles; one 429 on item page,run-2026-07-24
+T10,reach,pass,600,hackernews.sh returned 5 scored titles in one call,run-2026-07-24
+T11,native,pass,900,WebFetch Algolia JSON API gave title plus resolvable URL,run-2026-07-24
+T11,reach,pass,500,hackernews.sh returned title and URL directly,run-2026-07-24
+T12,native,pass,1200,api.github.com gave tag; Algolia JSON gave scored yt-dlp stories,run-2026-07-24
+T12,reach,pass,800,github.sh gave tag; hackernews.sh gave 1244pts top story,run-2026-07-24
+YT01,reach,untested,0,youtube channel not prototypable - yt-dlp absent - cannot contribute to tally,run-2026-07-24

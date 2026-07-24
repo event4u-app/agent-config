@@ -646,3 +646,51 @@ defect-finding *quality/lift* claim binds; team mode stays documented as
 judge-survivable-subtlety corpus that breaks the recall ceiling, or (b) a new
 model generation. The worker-via-bundle delegate (roadmap Phase 3 Step 4) stays
 deferred — it re-opened only on a measured review lift, which did not occur.
+
+## Internet-reach prescriptions vs host-native web tools (2026-07-24) — HONEST NULL (capability), cost signal unregistered {#honest-null-reach}
+
+**Question (pre-registered before the run):** does a reach-prescription layer —
+`gh api` for repository metadata, a local feed parser, a keyless discussion-search
+API, `curl` + local HTML→text — beat the host's own web-search / web-fetch tools
+on credential-free dev-research tasks, and at what token cost? The layer was
+prototyped in gitignored scratch first, so both arms were real at scoring time.
+
+**Design.** 12 tasks × 2 arms (`native` = host web tools only; `reach` = the
+prototype prescriptions), 4 parallel subagents, arms judged independently on
+pre-declared acceptance evidence — no arm-vs-arm comparison at scoring time.
+Thresholds, verdict bands and the run protocol were committed **before** the run
+(`internal/bench/reach-vs-native/README.md`); the report is
+`internal/bench/reach-vs-native/VERDICT.md`, raw rows in `results.csv`.
+
+**Result — capability: NULL.** The native arm passed **12/12**. Under the
+pre-registered rule (reach wins only where native fails; **ties are native
+wins**) the reach arm scored **0 outright wins of 12** → band **`stop`**. Two
+reach failures were prescription defects (a 400-char excerpt cap; a `jq`
+projection dropping the release body), and repairing them **cannot** move the
+band: the native arm passed those tasks too, so a repaired reach arm scores a
+tie. Zero native failures ⇒ zero possible reach wins.
+
+**Consequence: no router skill shipped.** The `internet-reach` router was
+cancelled pre-authoring by its own Phase-0 gate. What did ship is the
+verdict-independent operator tooling — a schema-validated channel registry, a
+five-state probe engine with stale-shim detection, a read-only `reach:doctor`,
+and a CI gate that fails on any unpinned install prescription.
+
+**Honest bound.** The credential-free constraint (needed for reproducibility)
+structurally excluded the two cases where a reach advantage was hypothesized:
+video subtitles (backend absent → `untested`) and authenticated / rate-limited
+platform access (impossible in a keyless set). The null therefore reads narrowly:
+*on public, credential-free dev-research tasks, a reach prescription layer buys
+no capability the host does not already have.* It says nothing about gated-platform
+access. Testing that needs a credentialed task set with its own pre-registration.
+
+**Unregistered observation — cost, not capability.** On all 8 tasks both arms
+solved, the reach arm was cheaper: **3,070 vs 6,730 tokens (0.46×)**, largest
+gaps on repository metadata (0.26×) and discussion search (0.31×). The native
+arm's overhead was *discovery*: it repeatedly had to find the machine-readable
+endpoint the prescription already knows. This is recorded **outside** the
+decision — S0b was authored as a ≤1.5× guardrail, never a win condition, and
+promoting it to one after seeing the data would be the post-hoc rigging the bands
+exist to prevent. Acting on it requires a separate, cost-primary pre-registration
+(equal-evidence tasks, token cost as the primary metric, a stated minimum saving
+worth the maintenance burden).
