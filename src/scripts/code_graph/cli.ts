@@ -37,12 +37,14 @@ async function cmdBuild(argv: string[]): Promise<number> {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
         return 1;
     }
-    const { graph, fileCount } = await buildFromRepo(root, out);
+    const update = argv.includes('--update');
+    const { graph, fileCount, reExtracted, reused } = await buildFromRepo(root, out, { update });
     const c = graph.edge_confidence_counts;
     process.stdout.write(
-        `✅  code-graph built — ${fileCount} files · ${graph.nodes.length} nodes · ${graph.edges.length} edges\n` +
+        `✅  code-graph ${update ? 'updated' : 'built'} — ${fileCount} files · ${graph.nodes.length} nodes · ${graph.edges.length} edges\n` +
             `    languages: ${graph.languages.join(', ') || '(none)'} · grammar ABI ${graph.grammar_abi}\n` +
             `    edges: EXTRACTED ${c.EXTRACTED} · INFERRED ${c.INFERRED} · AMBIGUOUS ${c.AMBIGUOUS}\n` +
+            (update ? `    incremental: ${reExtracted} re-extracted · ${reused} reused\n` : '') +
             (out ? `    cache: ${path.relative(REPO_ROOT, out)}\n` : ''),
     );
     return 0;

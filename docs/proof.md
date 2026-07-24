@@ -46,7 +46,7 @@ evidence pointer, or `task check-claims` fails the build.
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
 | Removing the perfect-retrieval assumption, the substrate's REAL keyword retrieval recalls the needed decision into the top-5 under keyword-overlapping confusers (precision@5 9/9) and the model disambiguates it from the co-injected confusers — retrieval-on 27/27 vs no-memory 5/27 and vs equal-count placebo 5/27 (claude-haiku-4-5, 9 tasks x 3 seeds, sign test p=0.008 both). Named limit: retrieval RECALLS but does not RANK (mean tie-set 3.3, ties broken by store order, not relevance) — the discrimination gap that motivates the SQLite-FTS5 activation path (ADR-116) at larger scale. | quant | `internal/bench/reports/second-brain-retrieval.json` | ✅ |
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `.github/workflows/publish-npm.yml#lint_agent_security` | ✅ |
-| 279 skills. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
+| 280 skills. | quant | `src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
@@ -80,11 +80,11 @@ shipping theater; the full per-cell data is committed at
 `internal/bench/reports/persona-placebo.json`.
 
 **Behavioural-eval coverage — the honest baseline.** Skill *quality* is only
-as good as its measurement. Today **42 of 279** skills carry a behavioural
+as good as its measurement. Today **42 of 280** skills carry a behavioural
 `evals.json`; the highest-traffic / highest-cost tiers (default-surface +
 `rich` + routers) are **fully covered (35 of 35)**, the long tail
-(7 of 244) is not. We publish that gap rather than imply
-"279 evaluated skills": coverage is measured per tier
+(7 of 245) is not. We publish that gap rather than imply
+"280 evaluated skills": coverage is measured per tier
 (`./scripts-run src/scripts/skill_eval_coverage`), **CI-ratcheted so it can
 only rise**, and the priority tiers carry a hard **tier floor**: every
 rich / default-surface / router skill MUST have a behavioural eval or an

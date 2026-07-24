@@ -99,6 +99,16 @@ concerns:
     script: src/scripts/hooks/design_slop_hook.ts
     args: []
     fail_closed: false
+  # ADR-124 Phase 4 — OPTIONAL PreToolUse code-graph nudge. When a code-graph
+  # source is present and the agent is about to search/read source, WARNS
+  # (exit 2) once per session to query the graph first (or rebuild if stale,
+  # or build if absent). Never blocks — Source G's strict block-first-read
+  # mode is deliberately un-ported. Default-OFF (hooks.code_graph.enabled).
+  # fail_closed: false.
+  code-graph-nudge:
+    script: src/scripts/hooks/code_graph_nudge_hook.ts
+    args: []
+    fail_closed: false
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
   # gate that surfaces the marketplace-install-but-unscaffolded shape.
   # Writes .augment/.first-run-action-needed.md + one stderr line so
@@ -162,7 +172,7 @@ platforms:
     session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:      [chat-history]
     stop:             [chat-history, hot-context, verify-before-complete]
-    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
+    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   claude:
@@ -170,7 +180,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
+    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
@@ -192,7 +202,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
+    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
