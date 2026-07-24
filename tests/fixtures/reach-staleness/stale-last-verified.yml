@@ -1,0 +1,23 @@
+# Negative fixture — rule (a): `last_verified` older than 90 days.
+#
+# REFERENCE DATE: --today 2026-07-24. `2026-01-05` is 200 days before it, well
+# past the 90-day floor, and stays past it for every later date too — so this
+# fixture is red under a pinned reference date AND under the real clock.
+#
+# Everything else is deliberately clean: `stable` lifecycle, no deprecation
+# fields, a pinned install. The only reason this file can go red is staleness.
+schema_version: reach-channels-v1
+
+channels:
+  - id: github
+    description: Repository, issue, release and workflow metadata from the GitHub API.
+    tier: free-key
+    lifecycle: stable
+    override_key: reach.channels.github.backend
+    last_verified: "2026-01-05"
+    backends:
+      - id: gh
+        probe_cmd: gh
+        probe_args: ["--version"]
+        install:
+          default: asdf plugin add github-cli && asdf install github-cli 2.96.0

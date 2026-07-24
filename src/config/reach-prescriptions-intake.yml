@@ -1,0 +1,200 @@
+# Reach prescription intake record — committed supply-chain evidence
+# (road-to-internet-reach Phase 3, Step 2).
+#
+# WHAT THIS FILE IS. The offline substitute for a network lookup at lint time.
+# `src/scripts/validate_reach_prescriptions.ts` (gate:
+# `task check-reach-prescriptions`) reads THIS file to answer "does the package
+# this prescription names exist, is its pin the one we checked, and was it
+# CVE-reviewed" — it never fetches a registry. That is a hard architectural
+# constraint, not a convenience: the Class A boundary
+# (docs/contracts/no-runtime-boundary.md, ADR-124) forbids network access in the
+# build path, and a lint that phones a third party is a flaky lint.
+#
+# CONSEQUENCE. Every claim below is a HUMAN-RUN check frozen at `checked_on`.
+# Freshness is a maintenance duty, not a guarantee this file can make about
+# itself: re-run the recorded commands, update `pinned_version` +
+# `verified_on`, and change the registry pin in the same commit.
+#
+# WHAT AN ENTRY IS FOR. `tools:` carries exactly one entry per EXTERNALLY
+# INSTALLED third-party tool named by an install prescription in
+# src/config/reach-channels.yml. A prescription whose backend has no entry
+# here cannot ship — the validator fails closed on it.
+#
+# WHY `os_baseline:` IS A SEPARATE CLASS, NOT A THIN `tools:` ENTRY. `curl`,
+# `node` and `jq` are not package installs this project prescribes: they ship
+# with the OS or the developer's base image. Writing a fake intake entry for
+# them — "existence verified: it is curl" — would launder an assumption into
+# evidence and put a registry/CVE claim on this project's ledger that nobody
+# actually checked per platform. They are declared as baselines instead, with
+# the reason, and the validator exempts them from the `tools:` requirement
+# while still enforcing the pinning rules on any string they do carry.
+#
+# EXECUTION HONESTY. `asdf` and `pipx` are ABSENT on the authoring machine
+# (`which asdf` / `which pipx` → not found), so no install command below was
+# ever executed here. That is the design: prescription-first, human-performed,
+# no auto-install (roadmap `## Non-goals`). Existence was verified against the
+# registries' own metadata APIs, which is what the pin depends on.
+#
+# ISO DATES MUST STAY QUOTED — unquoted, YAML parses them as timestamps and
+# the validator's string check fails loudly.
+schema_version: reach-prescriptions-intake-v1
+
+# The date every `verification.command` below was last executed by a human.
+checked_on: "2026-07-24"
+
+tools:
+  # ── gh ────────────────────────────────────────────────────────────────────
+  # Backend of the `github` channel. Two package identities because no
+  # single registry offers an exactly-pinnable `gh` on every platform:
+  # Homebrew ships only an unversioned `gh` formula (a pin there would be a
+  # lie), so macOS/Linux go through asdf, and Windows through winget.
+  - backend: gh
+    tool: gh
+    pinned_version: "2.96.0"
+    packages:
+      - registry: asdf
+        package: github-cli
+      - registry: winget
+        package: GitHub.cli
+    intake:
+      existence_verified: >-
+        Three independent confirmations at the pin. (1) The binary itself
+        reports 2.96.0 on the authoring machine. (2) The asdf plugin index
+        contains plugins/github-cli (blob sha
+        b8ab100243bc01e361a61c50d11d4ab66b790c92). (3) The winget-pkgs manifest
+        tree lists exactly 2.96.0 under manifests/g/GitHub/cli. Not a
+        model-produced name: every identifier came out of a registry response.
+      pinned: >-
+        Exact, both platforms — `asdf install github-cli 2.96.0` and
+        `winget install --id GitHub.cli --version 2.96.0`. No range, no
+        `latest`, no branch, no archive URL. Homebrew was rejected as the
+        macOS/Linux path precisely because its unversioned `gh` formula admits
+        no exact pin at all — a pinned-looking Homebrew line would be fiction.
+      lockfile_note: >-
+        No project lockfile applies — gh is an external CLI a human installs,
+        never a dependency of this package (absent from package.json, and this
+        repo ships no .tool-versions). The lock equivalent is the exact pin in
+        this record plus asdf's own .tool-versions in the operator's
+        environment, if they use one. Nothing in this repo can pin it for them.
+      cve_note: >-
+        GitHub Advisory Database, ecosystem `go`, package
+        github.com/cli/cli/v2: 6 advisories, newest first_patched_version
+        2.93.0 (GHSA-8xvp-7hj6-mcj9, TUF-mirror auth header). 2.93.0 <= 2.96.0,
+        so no listed advisory affects the pin. Reviewed by advisory listing, not
+        by a scanner — osv-scanner and pip-audit are not installed here, and
+        neither covers a system CLI install anyway.
+    verified_on: "2026-07-24"
+    verification:
+      - command: gh --version
+        source: local PATH on the authoring machine
+        observed: "gh version 2.96.0 (2026-07-02)"
+      - command: gh api repos/asdf-vm/asdf-plugins/contents/plugins/github-cli --jq '.sha + " " + .path'
+        source: https://api.github.com/repos/asdf-vm/asdf-plugins
+        observed: "b8ab100243bc01e361a61c50d11d4ab66b790c92 plugins/github-cli"
+      - command: gh api repos/microsoft/winget-pkgs/contents/manifests/g/GitHub/cli --jq '[.[].name] | map(select(startswith("2.96")))'
+        source: https://api.github.com/repos/microsoft/winget-pkgs
+        observed: '["2.96.0"]'
+      - command: gh api "/advisories?ecosystem=go&affects=github.com%2Fcli%2Fcli%2Fv2&per_page=100" --jq '[.[].vulnerabilities[] | select(.package.name=="github.com/cli/cli/v2") | .first_patched_version] | unique | sort'
+        source: https://api.github.com/advisories
+        observed: '["2.62.0","2.63.0","2.63.1","2.67.0","2.92.0","2.93.0"]'
+
+  # ── yt-dlp ────────────────────────────────────────────────────────────────
+  # Backend of the `youtube` channel, and NOT installed here — the roadmap
+  # blocker `yt-dlp-not-installed` is open by design. An intake record is
+  # about whether the prescription is safe to hand a human, which is a
+  # different question from whether the tool is present locally; the probe
+  # layer owns the second one.
+  - backend: yt-dlp
+    tool: yt-dlp
+    pinned_version: "2026.7.4"
+    packages:
+      - registry: PyPI
+        package: yt-dlp
+    intake:
+      existence_verified: >-
+        PyPI JSON API reports .info.version 2026.7.4 for the project, and the
+        per-release endpoint /pypi/yt-dlp/2026.7.4/json resolves with 2 upload
+        files — so the exact pinned release exists, not merely the project name.
+        Typo-adjacency checked deliberately: `yt-dlp` is the hyphenated form,
+        the shape most prone to hallucinated variants (`ytdlp`, `yt_dlp`,
+        `youtube-dl`); the identifier used here is the one PyPI returned.
+      pinned: >-
+        Exact PyPI equality pin — `pipx install yt-dlp==2026.7.4` (Windows:
+        `py -m pipx install yt-dlp==2026.7.4`). yt-dlp publishes date-shaped
+        versions, so a `latest`-style install would silently roll forward
+        every few days; the schema rejects that form outright.
+      lockfile_note: >-
+        No project lockfile applies — an isolated pipx application, not a
+        dependency of this package. pipx records the exact spec in its own
+        venv metadata; the pin above is the only lock this repo controls.
+      cve_note: >-
+        GitHub Advisory Database, ecosystem `pip`, package yt-dlp: 11
+        advisories, newest first_patched_version 2026.6.9 (GHSA-69qj-pvh9-c5wg
+        `--exec` command injection, plus three siblings patched in the same
+        release). 2026.6.9 < 2026.7.4, so no listed advisory affects the pin.
+        Worth carrying forward: the tool's own history is dominated by
+        argument-injection and filename-sanitization classes, which is one more
+        reason its output is untrusted content, never instructions
+        (src/rules/untrusted-input-defense.md).
+    verified_on: "2026-07-24"
+    verification:
+      - command: curl -fsSL https://pypi.org/pypi/yt-dlp/json | jq -r '.info.version'
+        source: https://pypi.org/pypi/yt-dlp/json
+        observed: "2026.7.4"
+      - command: curl -fsSL https://pypi.org/pypi/yt-dlp/2026.7.4/json | jq -r '.info.version + " files=" + (.urls|length|tostring)'
+        source: https://pypi.org/pypi/yt-dlp/2026.7.4/json
+        observed: "2026.7.4 files=2"
+      - command: gh api "/advisories?ecosystem=pip&affects=yt-dlp&per_page=100" --jq '[.[].vulnerabilities[] | select(.package.name=="yt-dlp") | .first_patched_version] | unique | sort'
+        source: https://api.github.com/advisories
+        observed: '["2023.09.24","2023.11.14","2023.7.06","2024.04.09","2024.07.01","2024.07.07","2026.02.21","2026.6.9"]'
+
+# ── OS baselines — declared non-installs ──────────────────────────────────
+# Present because the registry names them as backends, NOT because this
+# project prescribes installing them. Each entry states why a pin is not
+# meaningful; the validator exempts these from the `tools:` requirement and
+# still enforces "pinned or explicit os-baseline sentinel" on every string
+# they carry.
+os_baseline:
+  - tool: curl
+    os_baseline: true
+    rationale: >-
+      Ships with macOS (/usr/bin/curl) and Windows 10+ (System32\curl.exe),
+      and is a distro package on Linux whose version tracks the distro. There
+      is no cross-platform version this project could pin without prescribing
+      a source it does not control — so the registry carries `os-baseline:`
+      sentinels and no version, deliberately.
+    verification:
+      - command: curl --version | head -1
+        source: local PATH on the authoring machine
+        observed: "curl 8.7.1 (x86_64-apple-darwin24.0) libcurl/8.7.1"
+
+  - tool: node
+    os_baseline: true
+    rationale: >-
+      A Node runtime is this package's own execution baseline
+      (package.json engines >=20.11.0), so any environment that can run the
+      validator already has it. The one platform where a pin IS meaningful —
+      Homebrew's versioned major-line formula — carries a real pin
+      (`brew install node@22`), verified below; the remaining platforms track
+      their own LTS channel and stay unpinned behind an explicit sentinel.
+    verification:
+      - command: curl -fsSL https://formulae.brew.sh/api/formula/node@22.json | jq -r '.versions.stable'
+        source: https://formulae.brew.sh/api/formula/node@22.json
+        observed: "22.23.1 (versioned formula node@22 exists)"
+      - command: node --version
+        source: local PATH on the authoring machine
+        observed: "v25.9.0"
+
+  - tool: jq
+    os_baseline: true
+    rationale: >-
+      Named nowhere in the registry as a backend on purpose — JSON shaping
+      happens inside the operator's own recipe, downstream of retrieval, so jq
+      never satisfies a channel. Recorded here so its absence from `tools:` is
+      a documented decision rather than an omission: if jq ever becomes a
+      backend it inherits curl's `os-baseline:` treatment, not a fabricated
+      pin.
+    verification:
+      - command: jq --version
+        source: local PATH on the authoring machine
+        observed: "jq-1.7.1-apple"

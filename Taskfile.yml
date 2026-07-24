@@ -80,6 +80,9 @@ tasks:
       - task: check-condensed-paths
       - task: check-overlay-cascade-subdirs
       - task: check-template-pin-drift
+      - task: check-reach-channels
+      - task: check-reach-prescriptions
+      - task: check-reach-staleness
       - task: check-refs
       - task: check-no-conflict-markers
       - task: check-secret-leak
@@ -267,6 +270,9 @@ tasks:
       - task: check-condensed-paths
       - task: check-overlay-cascade-subdirs
       - task: check-template-pin-drift
+      - task: check-reach-channels
+      - task: check-reach-prescriptions
+      - task: check-reach-staleness
       - task: check-refs
       - task: check-no-conflict-markers
       - task: check-secret-leak
