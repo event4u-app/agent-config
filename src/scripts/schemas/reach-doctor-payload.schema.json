@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/reach-doctor-payload.schema.json",
+  "x-schemaVersion": "1.0.0",
+  "title": "reach:doctor --format json payload",
+  "$comment": "road-to-internet-reach Phase 2 step 5 — the falsifier for 'the JSON is clean'. Emitted by src/scripts/reach_doctor.ts; real output is validated against this file by tests/scripts/reach_doctor.test.ts (Ajv, the same validator tests/scripts/evals_schema.test.ts uses — full Draft-07, so nullable unions are expressed honestly here rather than being weakened for the frontmatter validator's Draft-07 subset). SCOPE: a health report over operator-chosen backends. It is NOT a routing table and carries no field that ranks, recommends, or routes a channel to an agent — the Phase 0 benchmark returned band: stop. Any future field implying agent-facing preference is a scope violation, not a feature.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "platform",
+    "registry",
+    "deep",
+    "channels",
+    "last_verified_suggestions"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [1],
+      "description": "Payload format version, mirroring the hooks:doctor convention. Bumped only on a breaking payload shape change."
+    },
+    "platform": {
+      "type": "string",
+      "minLength": 1,
+      "description": "process.platform of the reporting machine — the key by which each install prescription was selected (with `default` as the fallback)."
+    },
+    "registry": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Registry file actually read, repo-relative when it lives inside the repo. Present so a report is never ambiguous about its own input."
+    },
+    "deep": {
+      "type": "boolean",
+      "description": "True only when --deep ran, i.e. when real network requests were made. False means the run touched no network at all."
+    },
+    "channels": {
+      "type": "array",
+      "description": "One row per admitted channel, in registry order. A malformed channel appears as its own `error` row rather than removing the report — per-channel isolation is part of the contract.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "active_backend",
+          "tier",
+          "lifecycle",
+          "last_verified",
+          "fix",
+          "warnings",
+          "credential",
+          "backends"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Channel id from the registry, or `(channel #N)` when the entry was too malformed to carry one."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ok", "missing", "broken", "timeout", "error", "removed"],
+            "description": "The five probe states plus `removed`. `ok` = some backend probes ok; otherwise the FIRST candidate's verdict (the one whose fix the operator runs); `removed` = past removal_after, never probed."
+          },
+          "active_backend": {
+            "type": ["string", "null"],
+            "description": "First backend in the ordered candidate list that probes ok; null when none does. Candidate order is the switch — this field reports it, it does not choose."
+          },
+          "tier": {
+            "type": "string",
+            "description": "Access cost to the operator (zero-config | free-key | login), echoed from the registry. Documents setup effort only."
+          },
+          "lifecycle": {
+            "type": "string",
+            "description": "Registry lifecycle value, reused verbatim from docs/contracts/provider-lifecycle.md."
+          },
+          "last_verified": {
+            "type": "string",
+            "description": "ISO date a human last checked this channel, echoed from the registry."
+          },
+          "fix": {
+            "type": ["string", "null"],
+            "description": "The exact PINNED install command for this platform, echoed verbatim from the registry, and only when the first candidate is missing or broken. Never composed, never invented, never executed by the package — a human reads and runs it."
+          },
+          "warnings": {
+            "type": "array",
+            "description": "Operator-facing warnings: deprecation, removal, credential permissions. Never carries a credential's contents or any fingerprint of it.",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "credential": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["path", "present", "mode", "group_or_world_readable", "checked"],
+            "description": "Permission metadata for a declared credential file, or null when the channel declares none (the shipped registry declares none — see reach_doctor.ts § inspectCredential). Path + mode ONLY: contents and secret fingerprints are deliberately absent, because a fingerprint is a confirmation oracle rather than a redaction.",
+            "properties": {
+              "path": { "type": "string", "minLength": 1, "description": "Resolved credential path (~ expanded) — the path a chmod would target." },
+              "present": { "type": "boolean", "description": "Whether the declared file exists." },
+              "mode": {
+                "type": ["string", "null"],
+                "pattern": "^0[0-7]{3}$",
+                "description": "Octal permission bits, e.g. `0600`. Null when absent or unchecked."
+              },
+              "group_or_world_readable": {
+                "type": "boolean",
+                "description": "True when the mode grants group- or other-read (0o044) — the silent exposure this check exists to surface."
+              },
+              "checked": {
+                "type": "boolean",
+                "description": "False on win32, where POSIX mode bits are not meaningful; the check is skipped rather than asserted with a different meaning."
+              }
+            }
+          },
+          "backends": {
+            "type": "array",
+            "description": "Per-candidate probe results in registry order. Empty for a `removed` channel (not probed) and for an `error` row (not readable).",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "probe_cmd", "status", "path", "exit_code", "diagnostic", "fix", "deep"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1, "description": "Backend slug within its channel." },
+                "probe_cmd": { "type": "string", "minLength": 1, "description": "Executable probed on PATH." },
+                "status": {
+                  "type": "string",
+                  "enum": ["ok", "missing", "broken", "timeout", "error"],
+                  "description": "tool_probe's five-state taxonomy, unchanged."
+                },
+                "path": { "type": ["string", "null"], "description": "Resolved binary path, or null when resolution failed." },
+                "exit_code": { "type": ["integer", "null"], "description": "Probe exit code, or null when the child never reported one." },
+                "diagnostic": { "type": "string", "minLength": 1, "description": "Short, OUTPUT-FREE explanation. Probe stdio is ignored, so fetched content and credentials can never reach a report." },
+                "fix": { "type": ["string", "null"], "description": "Platform-selected pinned prescription for this backend; populated for missing/broken only." },
+                "deep": {
+                  "type": ["object", "null"],
+                  "additionalProperties": false,
+                  "required": ["status", "endpoint", "exit_code", "detail"],
+                  "description": "Result of the one real read-only request made under --deep; null in the default shallow mode (no network).",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": ["ok", "failed", "skipped", "not-declared"],
+                      "description": "`not-declared` = no deep endpoint is declared for this backend, and none is invented for it."
+                    },
+                    "endpoint": { "type": ["string", "null"], "description": "The endpoint actually contacted; null when no deep probe is declared." },
+                    "exit_code": { "type": ["integer", "null"], "description": "Exit code of the deep request." },
+                    "detail": { "type": "string", "minLength": 1, "description": "One-line explanation of the deep verdict." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "last_verified_suggestions": {
+      "type": "array",
+      "description": "--deep only (empty otherwise): the `last_verified` lines an operator MAY choose to commit. The command prints them and writes nothing — staleness stays a human-attested field, not a machine-refreshed one.",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

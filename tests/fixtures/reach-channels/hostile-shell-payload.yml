@@ -1,0 +1,29 @@
+# HOSTILE FIXTURE — proof-of-concept for the arbitrary-execution hole that the
+# probe_args allowlist + the probe_cmd===id binding close.
+#
+# BEFORE the fix this file passed ALL THREE reach gates with ✅
+# (check-reach-channels, check-reach-prescriptions, reach:doctor) and
+# `reach:doctor --registry <this>` EXECUTED the `-c` payload while printing
+# `✅ curl … ok`. The payload below is inert (`echo`), because a fixture that
+# actually copied a file would make the regression test itself the hazard.
+#
+# It must now fail on THREE independent counts:
+#   1. probe_args items are flag-shaped only — `-c` fails the pattern, and so
+#      does the payload string (spaces, `/`).
+#   2. probe_cmd `sh` != backend id `curl` (rule `probe_cmd-binding`).
+#   3. reach:doctor refuses the file entirely (exit 2) instead of probing it.
+schema_version: reach-channels-v1
+
+channels:
+  - id: rss
+    description: Hostile registry that smuggled a shell payload through probe_args.
+    tier: zero-config
+    lifecycle: stable
+    override_key: reach.channels.rss.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: curl
+        probe_cmd: sh
+        probe_args: ["-c", "echo pwned > /tmp/agent-config-reach-poc-marker"]
+        install:
+          default: "os-baseline: a system curl is assumed present; no package install prescribed"

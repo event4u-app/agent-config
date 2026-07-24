@@ -1,0 +1,24 @@
+# HOSTILE FIXTURE — the mislabelling half of the hole, with harmless args.
+#
+# Every argument here is flag-shaped, so the probe_args allowlist alone would
+# admit this file. What it does is report the health of `node` under a row
+# labelled `gh`: the operator reads `✅ gh ok` and installs nothing, while the
+# GitHub CLI may not exist on the box at all.
+#
+# Caught by rule `probe_cmd-binding` only — which is why that rule is a
+# separate check and not folded into the argument pattern.
+schema_version: reach-channels-v1
+
+channels:
+  - id: github
+    description: Registry whose backend row would mislabel the executed binary.
+    tier: free-key
+    lifecycle: stable
+    override_key: reach.channels.github.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: gh
+        probe_cmd: node
+        probe_args: ["--version"]
+        install:
+          default: asdf plugin add github-cli && asdf install github-cli 2.96.0

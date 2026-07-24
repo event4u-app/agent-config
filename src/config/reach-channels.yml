@@ -1,0 +1,177 @@
+# Reach channel registry — standalone operator tooling
+# (road-to-internet-reach Phase 1).
+#
+# WHAT THIS FILE IS. A machine-checked answer to three operator questions:
+# which external backend does a reach recipe need, is that backend healthy,
+# and is its install command pinned. Schema:
+# src/scripts/schemas/reach-channels.schema.json; gate:
+# `task check-reach-channels`.
+#
+# WHAT THIS FILE IS NOT. Not a routing table, not a recommendation, not an
+# agent-facing surface. The Phase 0 pre-registered benchmark returned
+# `band: stop` (native arm 12/12, reach arm 0 outright wins), so no router
+# skill ships and NO channel below is routed, preferred, or suggested to an
+# agent. Reading a channel here as "the agent should use this" is a
+# misreading of the verdict.
+#
+# BACKEND ORDER IS THE SWITCH. `backends:` is an ordered candidate list —
+# each entry satisfies the channel on its own (an alternative, never a
+# pipeline stage). Changing the preferred candidate is reordering this list,
+# never editing code. Channel order carries no meaning.
+#
+# LIFECYCLE VOCABULARY IS BORROWED, NOT FORKED. `lifecycle:` uses the four
+# values from docs/contracts/provider-lifecycle.md (`experimental | stable |
+# deprecated | community`). `stable` here means the same thing it means
+# there: a maintainer exercised it against a real run at least once.
+#
+# PINNING IS LOAD-BEARING. Every `install:` string is either an explicitly
+# version-pinned command or an `os-baseline:` sentinel (see below). Moving
+# targets — `latest`, `main`, `master`, `HEAD`, archive/tarball URLs — are
+# rejected by the schema pattern, not by good intentions. The package never
+# executes these strings: a human reads and runs them.
+#
+# OS BASELINES ARE NOT PACKAGE INSTALLS. `curl` and `node` are assumed
+# present: they ship with the OS or the developer's base image. Their
+# prescriptions therefore name the platform's own package manager and stay
+# unpinned wherever a version pin is not meaningful, marked with the
+# explicit `os-baseline:` sentinel so the absence of a pin is a declared
+# decision rather than an oversight. Where a pin IS meaningful — Node's
+# major line — a real versioned formula is used.
+#
+# `jq` IS DELIBERATELY NOT A BACKEND. JSON shaping happens inside the
+# operator's own recipe, downstream of retrieval; it is not a candidate
+# that satisfies a channel. If it ever becomes one, it inherits the same
+# `os-baseline:` convention as curl.
+#
+# PIN PROVENANCE (looked up 2026-07-24, never invented):
+#   gh 2.96.0      — `gh --version` on the authoring machine, corroborated by
+#                    https://api.github.com/repos/cli/cli/releases/latest
+#                    (tag_name v2.96.0) and
+#                    https://formulae.brew.sh/api/formula/gh.json (stable 2.96.0).
+#   yt-dlp 2026.7.4 — https://pypi.org/pypi/yt-dlp/json (.info.version).
+#   node@22        — https://formulae.brew.sh/api/formula/node@22.json
+#                    (versioned formula exists; stable 22.23.1 at lookup time).
+#   asdf plugin `github-cli` — exists in the asdf plugin index
+#                    (raw.githubusercontent.com/asdf-vm/asdf-plugins → plugins/github-cli).
+#                    Homebrew has no versioned `gh` formula, so an exactly
+#                    pinned macOS/Linux prescription goes through asdf.
+#   winget id `GitHub.cli` version 2.96.0 — present in the winget-pkgs manifest
+#                    tree (api.github.com/repos/microsoft/winget-pkgs/contents/
+#                    manifests/g/GitHub/cli lists 2.96.0).
+#
+# `last_verified:` MUST stay quoted — an unquoted ISO date parses as a
+# timestamp, not a string, and fails the schema type check.
+schema_version: reach-channels-v1
+
+channels:
+  # Repository metadata: issues, PRs, releases, workflow runs, raw file reads.
+  # `free-key`: unauthenticated GitHub API access is rate-limited hard enough
+  # that a token is the practical floor. The token is operator-provisioned;
+  # nothing here reads, stores, or forwards it.
+  - id: github
+    description: Repository, issue, release and workflow metadata from the GitHub API.
+    tier: free-key
+    lifecycle: stable
+    override_key: reach.channels.github.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: gh
+        probe_cmd: gh
+        probe_args: ["--version"]
+        install:
+          darwin: asdf plugin add github-cli && asdf install github-cli 2.96.0
+          linux: asdf plugin add github-cli && asdf install github-cli 2.96.0
+          win32: winget install --id GitHub.cli --version 2.96.0
+          default: asdf plugin add github-cli && asdf install github-cli 2.96.0
+
+  # Video metadata and subtitle tracks. `yt-dlp` is NOT installed on the
+  # authoring machine, and that is expected: this file is validated offline
+  # against the schema only, so an absent backend cannot fail the gate. Its
+  # health is the probe layer's question, never the registry's.
+  # `experimental` for exactly that reason — the shape is right, no
+  # maintainer has exercised this backend against a real run.
+  - id: youtube
+    description: Video metadata and subtitle tracks for a public video URL.
+    tier: zero-config
+    lifecycle: experimental
+    override_key: reach.channels.youtube.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: yt-dlp
+        probe_cmd: yt-dlp
+        probe_args: ["--version"]
+        install:
+          darwin: pipx install yt-dlp==2026.7.4
+          linux: pipx install yt-dlp==2026.7.4
+          win32: py -m pipx install yt-dlp==2026.7.4
+          default: pipx install yt-dlp==2026.7.4
+
+  # Feed retrieval. Two independent candidates: fetch the feed with curl, or
+  # fetch-and-parse it in a Node one-liner. Either satisfies the channel.
+  - id: rss
+    description: Atom and RSS feed retrieval for a known feed URL.
+    tier: zero-config
+    lifecycle: stable
+    override_key: reach.channels.rss.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--version"]
+        install:
+          darwin: "os-baseline: macOS ships curl (8.7.1 observed 2026-07-24) at /usr/bin/curl — no package install prescribed"
+          linux: "os-baseline: distro-provided curl package (apt / dnf / apk) — version tracks the distro, no pin meaningful"
+          win32: "os-baseline: Windows 10+ ships curl.exe in System32 — no package install prescribed"
+          default: "os-baseline: a system curl is assumed present; if absent, install it from the platform package manager — never a piped remote installer"
+      - id: node
+        probe_cmd: node
+        probe_args: ["--version"]
+        install:
+          darwin: brew install node@22
+          linux: "os-baseline: distro or NodeSource nodejs package — version tracks the chosen channel, no pin meaningful here"
+          win32: "os-baseline: winget package OpenJS.NodeJS.LTS — version tracks the LTS line, no pin meaningful here"
+          default: "os-baseline: any Node runtime at or above this package's engines floor (>=20.11.0) already on PATH"
+
+  # Single-page read. Same two candidates as `rss`: curl fetches the bytes;
+  # Node covers the case where the extraction step runs in-process.
+  - id: web-read
+    description: Single public web page fetch for a URL the operator already has.
+    tier: zero-config
+    lifecycle: stable
+    override_key: reach.channels.web-read.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--version"]
+        install:
+          darwin: "os-baseline: macOS ships curl (8.7.1 observed 2026-07-24) at /usr/bin/curl — no package install prescribed"
+          linux: "os-baseline: distro-provided curl package (apt / dnf / apk) — version tracks the distro, no pin meaningful"
+          win32: "os-baseline: Windows 10+ ships curl.exe in System32 — no package install prescribed"
+          default: "os-baseline: a system curl is assumed present; if absent, install it from the platform package manager — never a piped remote installer"
+      - id: node
+        probe_cmd: node
+        probe_args: ["--version"]
+        install:
+          darwin: brew install node@22
+          linux: "os-baseline: distro or NodeSource nodejs package — version tracks the chosen channel, no pin meaningful here"
+          win32: "os-baseline: winget package OpenJS.NodeJS.LTS — version tracks the LTS line, no pin meaningful here"
+          default: "os-baseline: any Node runtime at or above this package's engines floor (>=20.11.0) already on PATH"
+
+  # Discussion search over the public Hacker News search API. Keyless, and
+  # the endpoint returns JSON directly — one candidate is enough.
+  - id: hackernews
+    description: Discussion and comment search over the public Hacker News search API.
+    tier: zero-config
+    lifecycle: stable
+    override_key: reach.channels.hackernews.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--version"]
+        install:
+          darwin: "os-baseline: macOS ships curl (8.7.1 observed 2026-07-24) at /usr/bin/curl — no package install prescribed"
+          linux: "os-baseline: distro-provided curl package (apt / dnf / apk) — version tracks the distro, no pin meaningful"
+          win32: "os-baseline: Windows 10+ ships curl.exe in System32 — no package install prescribed"
+          default: "os-baseline: a system curl is assumed present; if absent, install it from the platform package manager — never a piped remote installer"
