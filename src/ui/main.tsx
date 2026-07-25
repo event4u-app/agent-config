@@ -14,6 +14,7 @@ import { App } from './App.js';
 import { setAuthToken } from './api.js';
 import { startServerLifecycle } from './serverLifecycle.js';
 import { watchSystemTheme } from './theme.js';
+import { stripTokenFromUrl } from './urlToken.js';
 import './tokens.css';
 import './app.css';
 
@@ -31,6 +32,10 @@ function bootstrap(): void {
         return;
     }
     setAuthToken(token);
+    // Token-strip hardening (embed contract Phase 2): the token is now on
+    // the API client, so drop it from the URL before anything else can read
+    // or copy the address bar.
+    stripTokenFromUrl();
     // Keep the server alive while open; ask it to exit when the window closes.
     startServerLifecycle(token);
     // Follow OS light/dark changes while no explicit override is stored.

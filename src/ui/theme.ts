@@ -31,6 +31,32 @@ function storedOverride(): Theme | null {
     }
 }
 
+/**
+ * Host-supplied `?theme=light|dark` boot override (reciprocal-ecosystem
+ * embed contract, Phase 2). When a host opens the page with `?theme=`, the
+ * host owns the theme — the same query the pre-paint stamp in `index.html`
+ * reads at boot.
+ */
+function urlThemeOverride(): Theme | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        const q = new URLSearchParams(window.location.search).get('theme');
+        return q === 'light' || q === 'dark' ? q : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * OS light/dark changes are followed only when the user has NOT pinned an
+ * explicit theme — either a persisted standalone override or a host-supplied
+ * `?theme=` boot query. An explicit theme (stored or host-owned) wins over
+ * the OS preference. Exported for direct unit coverage.
+ */
+export function shouldFollowSystemTheme(): boolean {
+    return storedOverride() === null && urlThemeOverride() === null;
+}
+
 function apply(next: Theme): void {
     theme.value = next;
     document.documentElement.setAttribute('data-theme', next);
@@ -51,7 +77,7 @@ export function watchSystemTheme(): void {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = (): void => {
-        if (storedOverride() !== null) return;
+        if (!shouldFollowSystemTheme()) return;
         apply(mq.matches ? 'dark' : 'light');
     };
     if (typeof mq.addEventListener === 'function') mq.addEventListener('change', onChange);

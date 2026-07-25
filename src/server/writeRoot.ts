@@ -26,6 +26,7 @@
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { event4u_root, EVENT4U_HOME_ENV } from '../scripts/_lib/user_global_paths.js';
 
 export type WriteRootMode = 'package-sandbox' | 'global';
 
@@ -72,8 +73,21 @@ export function isInsidePackage(cwd: string): boolean {
     }
 }
 
-/** Absolute path to the user-scope global config directory. */
+/**
+ * Absolute path to the user-scope global config directory.
+ *
+ * Honours a host-supplied config root (`EVENT4U_CONFIG_HOME`, set by the
+ * `--config-root` flag) first, so the GUI wizard writes profile-scoped
+ * settings under the same override as the scripts family — routed through
+ * the single source of truth `event4u_root()`. With no override, falls
+ * back to `<home>/.event4u/agent-config` (byte-identical to before; the
+ * `home` param is still honoured for tests and callers that pass it).
+ */
 export function globalWriteRoot(home: string = homedir()): string {
+    const override = process.env[EVENT4U_HOME_ENV];
+    if (override !== undefined && override.length > 0) {
+        return event4u_root();
+    }
     return join(home, GLOBAL_REL);
 }
 

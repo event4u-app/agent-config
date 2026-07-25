@@ -11,8 +11,8 @@
  */
 
 import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { resolve } from 'node:path';
+import { event4u_root } from '../scripts/_lib/user_global_paths.js';
 
 export interface ServerInfo {
     pid: number;
@@ -22,7 +22,11 @@ export interface ServerInfo {
 }
 
 function infoDir(): string {
-    return resolve(homedir(), '.event4u', 'agent-config');
+    // Follows a host-supplied config root (EVENT4U_CONFIG_HOME / --config-root)
+    // so a profile-scoped server records its liveness under its own root
+    // instead of clobbering the shared default. Byte-identical to
+    // `~/.event4u/agent-config` when no override is set.
+    return event4u_root();
 }
 
 export function serverInfoPath(): string {

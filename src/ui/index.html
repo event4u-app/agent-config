@@ -8,13 +8,22 @@
         <script>
             // Theme boot — set data-theme BEFORE first paint so there is no
             // flash of the wrong theme (road-to-setup-experience § Phase 4.2).
-            // Persisted override in localStorage wins; otherwise follow the OS.
+            // Precedence: a host-supplied `?theme=light|dark` boot query wins
+            // (reciprocal-ecosystem embed contract — the host owns the theme),
+            // then a persisted localStorage override, then the OS preference.
             (function () {
+                var query = null;
+                try {
+                    var q = new URLSearchParams(window.location.search).get('theme');
+                    if (q === 'light' || q === 'dark') query = q;
+                } catch (e) { /* older engine */ }
                 var stored = null;
                 try { stored = localStorage.getItem('agent-config-theme'); } catch (e) { /* private mode */ }
-                var theme = stored === 'light' || stored === 'dark'
-                    ? stored
-                    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                var theme = query
+                    ? query
+                    : stored === 'light' || stored === 'dark'
+                        ? stored
+                        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                 document.documentElement.setAttribute('data-theme', theme);
             })();
         </script>

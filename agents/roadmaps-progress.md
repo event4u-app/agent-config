@@ -2,34 +2,57 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 12 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
 
 ## Overall
 
-**105 / 156 steps done · 67%**
+**107 / 204 steps done · 52%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   67%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 7 | 9 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 56% |
-| 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
-| 4 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 5 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 8 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 9 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 10 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 1 | [road-to-ac-embeddable-gui.md](roadmaps/road-to-ac-embeddable-gui.md) | 4 | 30 | 28 | 2 | 0 | 0 | [2](#blockers-road-to-ac-embeddable-gui) | █░░░░░░░░░ 7% |
+| 2 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 7 | 9 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 56% |
+| 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
+| 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 7 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
+| 8 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
+| 9 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 10 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 11 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 12 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-ac-embeddable-gui.md](roadmaps/road-to-ac-embeddable-gui.md)
+
+**Road to an embeddable AC GUI — host-ready without weakening a single security invariant** — 2 / 30 done (7%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spike | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 1 | Embed mode (`?embed=1`) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Framing stance + theme contract | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 3 | Capability discovery + host lifecycle | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-ac-embeddable-gui"></a>
+**Blockers**
+
+- **framing-security-verdict** (owner: maintainer (security role)) — blocks — (was: the framing half of Phase 2) - **Decision:** **no iframe framing — ship an explicit `frame-ancestors 'none'`.** Council convergence: framing is an engineering-economics question, not a security one (any same-user local process is already inside the trust boundary); the real cost is the three-webview CSP compatibility matrix, and the deterministic stance is the smallest surface. Hosts load the UI **top-level** (a host-managed child webview or separate window pointed at the same URL — `frame-ancestors` does not gate top-level loads), which keeps the embed-mode/theme/capability contract fully useful. Token transport: keep the existing `?token=` bootstrap, hardened by the SPA stripping the token from the URL after boot; the session-cookie endpoint was rejected as the costlier surface (CSRF assessed a non-issue for a loopback-only server, but the new endpoint + second credential type is avoidable entirely). Divergence recorded: one member preferred header-silence as "smallest surface" — rejected because this roadmap's acceptance criteria rule out silence; both members pick DENY when an explicit stance is required.
+  - **What to do:**
+  - **Resolved when:** ~~a decision record exists~~ — this entry is the record; council transcript: agent-switch worktree `agents/runtime/council/responses/omni-route-framing.json` (local-only).
+- **cross-platform-webview-verification** (owner: maintainer) — blocks — (was: scoping the top-level-load guidance per platform) - **Decision:** hosts use the stable separate `WebviewWindow` transport on all platforms (unstable child-webview API rejected — open upstream bugs on every engine); top-level plain-HTTP loopback is a secure context per spec and Tauri's own dev-flow precedent. The thin residual (live per-platform QA) lives in S0.1 as an ordinary verification item, not a blocker. Council transcript: agent-switch worktree `agents/runtime/council/responses/omni-route-spikes.json` (local-only).
+  - **What to do:**
+  - **Resolved when:** ~~per-OS top-level-load behaviour is recorded~~ — decided; S0.1 records the QA pass.
 
 ### [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md)
 
@@ -116,6 +139,27 @@ _1 blocker resolved._
     the post-ADR-117 default (`subagents.auto: on`), then check
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
+
+### [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md)
+
+**Road to a reciprocal ecosystem — AC recommends AS the way AS already recommends AC** — 0 / 18 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spike | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 1 | Detection + the single card | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Behave correctly under AS (the part that is not promotion) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Symmetry in the docs | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-reciprocal-ecosystem"></a>
+**Blockers**
+
+- **restraint-review** (owner: maintainer) — blocks — (was: Phase 1 shipping at all) - **Decision:** affirmed — the distribution value outweighs the surface cost. Phase 1 ships, under the unchanged hard bound: **one card, one surface, self-retiring, permanently dismissible, no second placement ever.**
+  - **What to do:**
+  - **Resolved when:** ~~the decision is recorded either way~~ — recorded here.
+- **adoption-measurement** (owner: user) — blocks knowing whether reciprocal promotion moves anything
+  - **What to do:**
+  - **Resolved when:** ≥1 external user reports (issue/discussion/direct message) arriving at either package through the other.
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 

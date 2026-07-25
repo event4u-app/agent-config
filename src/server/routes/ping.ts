@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { readFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
 import { PACKAGE_JSON } from '../../cli/paths.js';
+import { CAPABILITIES } from '../../shared/capabilities.js';
 
 function systemUserName(): string {
     try {
@@ -60,6 +61,22 @@ export const PingResponseSchema = z.object({
      * `#/workspace` deep link keeps working regardless).
      */
     devSurfaces: z.boolean(),
+    /**
+     * Host-facing capability advertisement (reciprocal-ecosystem Phase 2)
+     * — a spawner reads `capabilities.configRoot` to detect support for a
+     * host-supplied config root, and `capabilities.embed` to detect the
+     * `?embed=1` embed contract, before relying on either. An older server
+     * omits this block, so a newer host degrades to "not supported". The
+     * shape mirrors `Capabilities` in `src/shared/capabilities.ts`.
+     */
+    capabilities: z.object({
+        configRoot: z.boolean(),
+        embed: z.object({
+            supported: z.boolean(),
+            version: z.number(),
+            features: z.array(z.enum(['theme', 'deepLink'])),
+        }),
+    }),
 });
 
 export type PingResponse = z.infer<typeof PingResponseSchema>;
@@ -101,6 +118,7 @@ export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
                 systemUser: systemUserName(),
                 projectSurface: opts.projectSurface === true,
                 devSurfaces: (process.env['AGENT_CONFIG_DEV_MODE'] ?? '') === '1',
+                capabilities: { ...CAPABILITIES },
             };
             return response;
         });
