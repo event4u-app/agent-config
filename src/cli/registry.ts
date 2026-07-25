@@ -69,6 +69,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'hooks:status', disposition: 'delegate', synopsis: 'Print the runtime hook matrix (per-platform install + bindings).' },
     { name: 'hooks:doctor', disposition: 'delegate', synopsis: 'Diagnose hook health: concerns, posture, missing trampolines (read-only).' },
     { name: 'hooks:replay', disposition: 'delegate', synopsis: 'Replay a fixture through the universal hook dispatcher (no state writes).' },
+    { name: 'reach:doctor', disposition: 'delegate', synopsis: 'Reach-channel health report: active backend + pinned fix per channel (read-only; --deep opts into network).' },
     { name: 'keys:install-anthropic', disposition: 'delegate', synopsis: 'Install the Anthropic API key for the AI Council (interactive).' },
     { name: 'keys:install-openai', disposition: 'delegate', synopsis: 'Install the OpenAI API key for the AI Council (interactive).' },
     { name: 'first-run', disposition: 'delegate', synopsis: 'Guided first-run setup — cost profile, settings, tooling.' },

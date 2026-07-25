@@ -1,0 +1,42 @@
+# Passing control for check_reach_staleness (road-to-internet-reach P7.3).
+#
+# REFERENCE DATE: --today 2026-07-24. Every date below is pinned relative to
+# that value, so this fixture's verdict never depends on the wall clock.
+#
+# Without a green control, the red fixtures next to it prove only that the lint
+# can say "no". This one exercises all three rules in their PASSING shape:
+#   - `stable` channel verified 23 days ago  → inside the 90-day floor.
+#   - `deprecated` channel WITH a replacement → deprecation is not itself a
+#     violation; a deprecation with no successor is.
+#   - `removal_after` still in the future     → an announced removal date that
+#     has not arrived yet is fine.
+schema_version: reach-channels-v1
+
+channels:
+  - id: github
+    description: Repository, issue, release and workflow metadata from the GitHub API.
+    tier: free-key
+    lifecycle: stable
+    override_key: reach.channels.github.backend
+    last_verified: "2026-07-01"
+    backends:
+      - id: gh
+        probe_cmd: gh
+        probe_args: ["--version"]
+        install:
+          default: asdf plugin add github-cli && asdf install github-cli 2.96.0
+
+  - id: legacy-feed
+    description: Superseded feed retrieval kept for one migration window.
+    tier: zero-config
+    lifecycle: deprecated
+    override_key: reach.channels.legacy-feed.backend
+    last_verified: "2026-07-10"
+    removal_after: "2026-12-31"
+    replacement: rss
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--version"]
+        install:
+          default: "os-baseline: a system curl is assumed present"

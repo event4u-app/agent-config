@@ -57,7 +57,9 @@
     "\\bskillui\\b",
     "\\bgraphify\\b",
     "graphify-labs",
-    "penpax"
+    "penpax",
+    "\\bagent-reach\\b",
+    "panniantong"
   ],
   "skip_paths": [
     "src/scripts/check_no_external_sources.py",

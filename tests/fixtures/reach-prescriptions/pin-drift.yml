@@ -1,0 +1,26 @@
+# NEGATIVE fixture — traceability: the registry pin is not the verified pin.
+#
+# Exactly pinned, and the backend IS in the intake record — but at a version
+# nobody checked. This is the realistic drift: someone bumps (or reverts) the
+# registry and forgets the record, so the CVE note on file now describes a
+# different release than the one a human would install. Pinning to a version
+# that predates the recorded advisory sweep is how a patched CVE gets
+# reintroduced.
+#
+# Expected finding: kind `pin-drift` at
+# channels[youtube].backends[yt-dlp].install.default.
+schema_version: reach-channels-v1
+
+channels:
+  - id: youtube
+    description: Video metadata and subtitle tracks (negative fixture).
+    tier: zero-config
+    lifecycle: experimental
+    override_key: reach.channels.youtube.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: yt-dlp
+        probe_cmd: yt-dlp
+        probe_args: ["--version"]
+        install:
+          default: pipx install yt-dlp==2024.03.10

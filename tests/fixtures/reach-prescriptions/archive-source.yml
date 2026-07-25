@@ -1,0 +1,26 @@
+# NEGATIVE fixture — rule (b): an archive / branch install source.
+#
+# Two shapes in one file, because they fail for the same reason but look
+# different to an author:
+#   - `.tar.gz` under an `archive/` path: version-shaped in the URL, yet the
+#     bytes behind a GitHub archive tarball are regenerated and unpinnable.
+#   - a `@main` git reference: a pin that moves on every upstream push.
+#
+# Expected findings: kind `moving-target-source` at
+# channels[github].backends[gh].install.darwin AND at ….install.default.
+schema_version: reach-channels-v1
+
+channels:
+  - id: github
+    description: Repository metadata from the GitHub API (negative fixture).
+    tier: free-key
+    lifecycle: stable
+    override_key: reach.channels.github.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: gh
+        probe_cmd: gh
+        probe_args: ["--version"]
+        install:
+          darwin: curl -fsSLO https://example.test/cli/archive/refs/tags/v2.96.0.tar.gz && tar xzf v2.96.0.tar.gz
+          default: asdf plugin add github-cli && asdf install github-cli@main

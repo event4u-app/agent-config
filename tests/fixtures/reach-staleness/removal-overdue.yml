@@ -1,0 +1,23 @@
+# Negative fixture — rule (c): past `removal_after`, still present in the registry.
+#
+# REFERENCE DATE: --today 2026-07-24. `removal_after: 2026-06-01` is 53 days
+# before it (and stays in the past for every later date), while `last_verified`
+# is 14 days before it and a `replacement:` IS declared — so rules (a) and (b)
+# are both satisfied and the only finding is the overdue removal.
+schema_version: reach-channels-v1
+
+channels:
+  - id: legacy-feed
+    description: Superseded feed retrieval that outlived its own removal date.
+    tier: zero-config
+    lifecycle: deprecated
+    override_key: reach.channels.legacy-feed.backend
+    last_verified: "2026-07-10"
+    removal_after: "2026-06-01"
+    replacement: rss
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--version"]
+        install:
+          default: "os-baseline: a system curl is assumed present"

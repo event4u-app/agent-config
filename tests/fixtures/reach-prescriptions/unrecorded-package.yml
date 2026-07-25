@@ -1,0 +1,27 @@
+# NEGATIVE fixture — rule (c): a package absent from the intake record.
+#
+# The install is exactly pinned and looks impeccable; what is missing is the
+# evidence that anyone checked the package exists, is not typo-adjacent to a
+# more popular crate, and carries no open advisory. That is the whole point of
+# the gate: a pin is not an intake check.
+#
+# Expected finding: kind `unrecorded-package` at
+# channels[grep-search].backends[rg].install.default — and ONLY that one. The
+# backend id is `rg`, not `ripgrep`, because `probe_cmd` must equal its own id
+# (rule `probe_cmd-binding`); a fixture red for two reasons could keep passing
+# after the reason it was written for was fixed.
+schema_version: reach-channels-v1
+
+channels:
+  - id: grep-search
+    description: Local repository text search over a checked-out tree (negative fixture).
+    tier: zero-config
+    lifecycle: experimental
+    override_key: reach.channels.grep-search.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: rg
+        probe_cmd: rg
+        probe_args: ["--version"]
+        install:
+          default: cargo install ripgrep --version 14.1.1

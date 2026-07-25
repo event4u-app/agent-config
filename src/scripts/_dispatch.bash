@@ -205,6 +205,15 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              Usage: hooks:replay --platform <name> --event <event>
                                     --payload <path|event-name> [--native-event <native>]
                                     [--manifest <path>] [--json] [--dry-run]
+  reach:doctor               Health report over the reach channel registry: per channel
+                             the active backend, lifecycle, and the pinned install command
+                             for this platform when a backend is missing/broken.
+                             Read-only — no writes, no installs; NOT a router and NOT an
+                             agent-facing recommendation.
+                             Flags: --format json|table, --strict (CI), --channel <id>,
+                             --registry <path>, --deep (⚠️  opt-in NETWORK: one real
+                             read-only request per declared backend; never runs in CI,
+                             writes nothing)
   memory:lookup              Retrieve memory entries (text or JSON envelope)
   linked-projects:list       List opted-in IDE-attached sibling repos (path · detected_via · large)
                              Flags: --all (show undecided too), --format json
@@ -634,6 +643,11 @@ cmd_hooks_doctor() {
 
 cmd_hooks_replay() {
   exec_hook "src/scripts/hooks/replay_hook" "$@"
+}
+
+# Read-only reach-channel health report. Never installs, never writes.
+cmd_reach_doctor() {
+  exec_hook "src/scripts/reach_doctor" "$@"
 }
 
 cmd_chat_history_checkpoint() {
@@ -1085,6 +1099,7 @@ main() {
     hooks:status)            cmd_hooks_status "$@" ;;
     hooks:doctor)            cmd_hooks_doctor "$@" ;;
     hooks:replay)            cmd_hooks_replay "$@" ;;
+    reach:doctor)            cmd_reach_doctor "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
     telemetry:status)        cmd_telemetry_status "$@" ;;
     telemetry:report)        cmd_telemetry_report "$@" ;;

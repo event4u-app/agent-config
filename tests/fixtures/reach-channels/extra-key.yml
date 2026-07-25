@@ -1,0 +1,25 @@
+# NEGATIVE FIXTURE — must FAIL `check_reach_channels`.
+# Defect: an undeclared channel-level key (`probe_timeout_ms`) is added
+# without extending the schema — the case `additionalProperties: false`
+# exists to make loud instead of silently ignored. Expected finding:
+# additionalProperties at $.channels[0].probe_timeout_ms.
+# Everything else is deliberately valid so exactly one rule fires.
+schema_version: reach-channels-v1
+
+channels:
+  - id: github
+    description: Repository metadata from the GitHub API (fixture channel).
+    tier: free-key
+    lifecycle: stable
+    override_key: reach.channels.github.backend
+    last_verified: "2026-07-24"
+    probe_timeout_ms: 5000
+    backends:
+      - id: gh
+        probe_cmd: gh
+        probe_args: ["--version"]
+        install:
+          darwin: asdf plugin add github-cli && asdf install github-cli 2.96.0
+          linux: asdf plugin add github-cli && asdf install github-cli 2.96.0
+          win32: winget install --id GitHub.cli --version 2.96.0
+          default: asdf plugin add github-cli && asdf install github-cli 2.96.0
