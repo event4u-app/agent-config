@@ -1,11 +1,11 @@
 {
   "_doc": "Feasibility measurement for an `exec:` evidence form in the claims ledger (road-to-enforcement-proof Phase 5). The question this answers is NOT 'would exec: be nice' but 'would it cover enough of the ledger to earn its maintenance surface'. The threshold was pre-registered in the roadmap BEFORE this was measured: >= 10 percentage points of the backed ledger, or it gets parked with the number published. Measured 2026-07-25 against docs/CLAIMS.md.",
-  "measured_at": "2026-07-25 (re-counted; the first publication said 25 backed / 10 feasible and was measured mid-PR, so it was stale within a day of shipping — the drift class this very report describes)",
+  "measured_at": "2026-07-25 (third count; the first said 25 and the second 26, each stale within a day — the denominator is now DERIVED and gate-checked rather than retyped)",
   "pre_registered_threshold_pp": 10,
-  "backed_claims": 26,
+  "backed_claims": 27,
   "machine_re_verifiable_today": 0,
   "exec_feasible": 11,
-  "delta_pp": 42.3,
+  "delta_pp": 40.7,
   "decision": "JUSTIFIED — 40 pp clears the pre-registered 10 pp bar by a wide margin. `exec:` becomes its own PR; it is deliberately NOT built here, because the point of measuring first was to avoid shipping a schema change, a validator, and a renderer on an assumption.",
   "method": "Each backed entry was classified by whether a deterministic command could re-derive the claim with its exit code carrying the verdict. Pointing at a producer is not sufficient — a bench report whose regeneration needs paid model calls is not re-runnable in CI, and was counted NO. Two borderline cases were checked rather than assumed: measure_lexical_ranking.ts has zero model/API/fetch references (deterministic, model-free re-ranking), and token-baseline figures are re-derived by check_token_regression.ts via js-tiktoken. Both counted YES.",
   "feasible": [
@@ -87,5 +87,5 @@
   },
   "honest_caveat": "`exec_feasible` counts claims for which a re-running command PLAUSIBLY carries the verdict. It is not a promise that all ten pass on first wiring, and a claim whose command exits 0 for a reason unrelated to the claim would be a false green — argument hardening and a narrow prefix allowlist are what keep that from becoming the new hole.",
   "ledger_hygiene_note": "Found while counting: 10 entries filed under `## Unbacked inventory (documented debt)` carry `status: backed`. The checker keys on the status field, not the heading, so nothing is mis-gated — but the section headings no longer describe their contents and a reader would be misled. Filed for a follow-up pass, not silently fixed here.",
-  "_snapshot_note": "backed_claims is a dated snapshot of the ledger, not a live read. It drifted once already. Re-count with: ./scripts-run src/scripts/check_claims (reports the live backed total) and re-classify feasibility by hand — the classification is a judgment, only the denominator is mechanical."
+  "_snapshot_note": "backed_claims is checked against the live ledger by check_claims — a divergence FAILS. It drifted twice while hand-written (25 when the ledger held 26, 26 when it held 27) and CI stayed green both times because the evidence pointer resolved. The feasibility CLASSIFICATION stays a human judgment; only the denominator is mechanical."
 }

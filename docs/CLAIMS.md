@@ -134,32 +134,18 @@
 - last_verified: 2026-07-12
 
 ### claim: ledger-exec-verifiability
-- claim: 0 of 26 backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured 11 of 26 (42.3 pp) COULD carry a re-executing `exec:` form, which is why that form is scheduled rather than assumed: the threshold (>= 10 pp) was pre-registered before the count was taken. The other 15 cannot — paid or stochastic benchmark runs no CI job can re-derive, and prose contracts. This entry demonstrated its own thesis: it first published "0 of 25", a denominator already stale on the day it shipped, and two backed claims over one artefact were found disagreeing while both resolved. Corrected 2026-07-25.
+- claim: NONE of the backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured minority COULD carry a re-executing `exec:` form, clearing the >= 10 pp threshold that was pre-registered before the count was taken, which is why that form is scheduled rather than assumed. The rest cannot: paid or stochastic benchmark runs no CI job can re-derive, and prose contracts. Exact counts live in the evidence file and are NOT restated here on purpose — this entry hard-coded its denominator twice and drifted within a day both times (25 when the ledger held 26, then 26 when it held 27) while CI stayed green, because the pointer resolved. `check_claims` now compares the stored denominator against the live ledger and fails on divergence. A number a human retypes on every ledger edit will drift; the fix was to stop retyping it.
 - kind: quant
 - evidence: internal/reports/exec-evidence-feasibility.json#"exec_feasible"
 - status: backed
 - last_verified: 2026-07-25
 
 ### claim: enforcement-coverage-resolved
-- claim: 14 of 107 governed rules (13.1%) carry a backstop that can actually fail a build. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND is reachable from a taskfile, workflow, or the hook manifest (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`, because it instruments and cannot block. 21 rules declare `enforced_by`; 6 resolve to observer, 0 to unwired, 86 are undeclared and counted as uncovered. The first run found `lint_output_slop.ts` shipped and wired nowhere while the `output-discipline` rule asserted CI enforcement in shipped prose; the gate's first fix was to wire it, which is the 14th. This is a floor, not a boast — the undeclared 86 count against the number, not out of it.
+- claim: 14 of 107 governed rules (13.1%) carry a backstop that fails a CI build. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly — 37 findings, baselined in `rule-backstop-debt.json` and ratcheted against growth. 86 rules declare nothing and count as uncovered, not excluded.
 - kind: quant
-- evidence: internal/reports/enforcement-coverage.json#"blocking"
+- evidence: internal/reports/enforcement-coverage.json#"local_only"
 - status: backed
 - last_verified: 2026-07-25
-
----
-
-## Unbacked inventory (documented debt — not yet markered in prose)
-
-These are real README claims that need a durable binding before they may carry a
-`<!-- claim: -->` marker. Counts are drift-prone: binding them requires a
-count-source mechanism (a generated number the prose must match). That
-mechanism now exists (road-to-truth-and-reference-hygiene Phase 1):
-`update_counts.ts` generates every prose count from source, and
-`check_artefact_count_messaging.ts` fails CI on any count-shaped prose
-mention that drifts or is internally inconsistent — so the three count
-claims below are `backed`. Remaining entries are listed so the debt is
-visible, not hidden.
 
 ### claim: skill-count
 - claim: 281 skills.

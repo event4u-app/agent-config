@@ -4,6 +4,7 @@
     "total": 107,
     "declared": 21,
     "blocking": 14,
+    "local_only": 0,
     "observer": 6,
     "unwired": 0,
     "missing": 0,

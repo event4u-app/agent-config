@@ -96,7 +96,7 @@ class ExitCode extends Error {
     }
 }
 
-interface LedgerEntry {
+export interface LedgerEntry {
     id: string;
     claim: string;
     kind: string;
@@ -318,6 +318,42 @@ function main(argv: string[] = process.argv.slice(2)): number {
         }
     }
 
+    // A published denominator must match the live ledger.
+    //
+    // `exec-evidence-feasibility.json` records how many backed claims the
+    // feasibility measurement was taken over. That number was hand-written and
+    // drifted twice inside two days — 25 when the ledger held 26, then 26 when it
+    // held 27 — and CI stayed green both times, because the claim's evidence
+    // pointer resolved. Pointer-resolution is not truth: that is the very thing
+    // `ledger-exec-verifiability` says about the ledger, demonstrated by its own
+    // entry. The classification in that file is a human judgment and stays one;
+    // the denominator is mechanical, so it gets checked.
+    {
+        const rel = 'internal/reports/exec-evidence-feasibility.json';
+        const abs = path.join(REPO, rel);
+        if (fs.existsSync(abs)) {
+            try {
+                const stored = JSON.parse(fs.readFileSync(abs, 'utf8')) as { backed_claims?: number };
+                const live = [...ledger.values()].filter((e) => e.status === 'backed').length;
+                if (typeof stored.backed_claims === 'number' && stored.backed_claims !== live) {
+                    findings.push({
+                        id: '(derived-count)',
+                        file: rel,
+                        reason:
+                            `backed_claims is ${stored.backed_claims} but the ledger holds ${live} — ` +
+                            `a published denominator drifted from its source. Re-measure and update the report.`,
+                    });
+                }
+            } catch {
+                findings.push({
+                    id: '(derived-count)',
+                    file: rel,
+                    reason: 'unparseable JSON — the derived-count check cannot verify the published denominator',
+                });
+            }
+        }
+    }
+
     if (findings.length > 0) {
         process.stderr.write(`❌  check_claims: ${findings.length} unbacked/dangling claim(s):\n`);
         for (const f of findings) {
@@ -362,3 +398,24 @@ if (_isCliEntry()) {
 }
 
 export { REPO, LEDGER_REL, main, parse_args, load_ledger, scan_markers, pointer_unresolved, ExitCode };
+
+/**
+ * Live count of `status: backed` ledger entries.
+ *
+ * Exists so a published denominator can be DERIVED instead of typed. The
+ * `ledger-exec-verifiability` entry hard-coded this number twice and drifted
+ * within a day both times — first 25 when the ledger held 26, then 26 when it
+ * held 27 — while `check_claims` stayed green because its evidence pointer
+ * resolved. A number a human retypes on every ledger edit will drift; the only
+ * fix is to stop retyping it.
+ *
+ * Note this is not the same as `grep -c '^- status: backed'`, which also counts
+ * the entry-schema template in the document header.
+ */
+export function count_backed(): number {
+    let n = 0;
+    for (const e of load_ledger().values()) {
+        if (e.status === 'backed') n += 1;
+    }
+    return n;
+}
