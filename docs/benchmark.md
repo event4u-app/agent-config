@@ -694,3 +694,92 @@ promoting it to one after seeing the data would be the post-hoc rigging the band
 exist to prevent. Acting on it requires a separate, cost-primary pre-registration
 (equal-evidence tasks, token cost as the primary metric, a stated minimum saving
 worth the maintenance burden).
+
+## Gated-platform reads (2026-07-25) — SHIP (3 channels), with a narrowed gap on one {#ship-gated-reach}
+
+**Question (pre-registered before the run):** on platforms the host's own web tools
+cannot reach at all, are credential-free prescriptions **reliable** enough to justify
+their maintenance weight — measured **per channel**, never aggregated?
+
+This is deliberately not the question the parent bench asked. The
+[internet-reach null](#honest-null-reach) measured whether a prescription layer beats
+native tools on credential-free dev research, answered **no** (0/12, band `stop`), and
+named its own bound: *"It says nothing about gated-platform access. Testing that needs
+a credentialed task set with its own pre-registration."* This run is that test —
+except it turned out **no credentials are needed**, which is itself the finding that
+made it worth running.
+
+**The capability gap is established, not assumed.** Measured the same session, first
+hand: `reddit.com` is refused at the domain level by the host's own tool (a
+client-side refusal, not a 403 from Reddit); `x.com/<user>/status/<id>` answers **HTTP
+402**; a YouTube watch page answers 200 with metadata and no transcript.
+
+**Design.** 6 tasks per channel with pre-declared acceptance evidence, each with a
+**native-arm control**, thresholds frozen before the run (≥5/6 ship · 3–4/6 park ·
+≤2/6 drop), one documented repair per task allowed, verdicts never aggregated.
+Pre-registration: `internal/bench/gated-reach/README.md`; rows and evidence:
+`internal/bench/gated-reach/results.md`.
+
+| Channel | reach | native | Verdict |
+|---|---|---|---|
+| `reddit` tier 1 — Atom text | **6/6** | 0/6 | **ship** |
+| `reddit` tier 2 — ranking + thread structure | **6/6** | 0/6 | **ship** — time-bounded |
+| `twitter-oembed` — single tweet | **6/6** | 2/6 | **ship** — narrowed gap, below |
+| `youtube-transcripts` | not run | — | **park** — unexercised (backend absent by design) |
+
+**Reddit is a real, unambiguous capability.** Post text, comment text with authors
+(147 feed entries on the test thread, 135 author-bearing), and — via server-rendered
+HTML — **comment scores and reply nesting** (134 comments across 7 depth levels,
+scores cross-checked against the rendered page). Native scores 0/6 by construction:
+there is no native path to a domain the host refuses. The rate limiting that makes
+this fragile is solved with **no new code** — `curl --retry 8 --retry-max-time 110`
+measured 5/5 against 2/6 without it, because curl treats 429 as retryable and backs
+off exponentially when `--retry-delay` is omitted.
+
+**Tier 2 ships with an expiry, not a promise.** Reddit announced a login requirement
+for the server-rendered interface on 2026-06-30 and withdrew its earlier commitment to
+keep it available. Logged-out access still worked on 2026-07-25. It therefore ships
+with a kill-switch keyed on an **observed** login wall — never on the announcement —
+and with tier 1 as the permanent fallback. Degradation is a documented output
+(`login_wall: true`, "ranking unavailable"), because presenting unranked text as
+ranked is the one failure mode here that produces wrong conclusions rather than a
+missing answer.
+
+**The control rule fired, and the Twitter story is narrower than its 6/6.** The first
+task set used the most-quoted tweets in existence; native scored **5/6** on them — not
+by reading `x.com`, but because a canonical tweet's text is reproduced everywhere.
+Those five tasks were **removed and replaced** per the pre-registered control rule.
+On five genuinely obscure tweets native dropped to **2/6**, and one of its two
+"passes" came from the author's Threads and Mastodon cross-posts rather than Twitter.
+Where it failed it failed usefully badly: on one tweet it produced a paraphrase and a
+**confidently wrong month**, and it cannot distinguish a deleted tweet from a live one
+(both answer 402). So the honest reading of Twitter's 6/6 is: *the channel is reliable,
+and the gap it closes is narrow* — for any tweet discussed anywhere, native search
+already recovers the content; the channel earns its place on the case where a specific
+URL is in hand and nothing mirrors it.
+
+**A bench limitation, published rather than engineered away.** The control rule says a
+native pass means the task was mis-scoped, so the two native-passed Twitter tasks
+should have been replaced again. They were not, and the reason is structural: every
+tweet-sourcing channel available to a host that cannot read Twitter — HN links, Reddit
+links, search — selects for tweets that *were* discussed publicly, which is exactly the
+population native search recovers. Sourcing an undiscussed tweet requires the access
+this bench exists because we lack. The 6/6 stands on the frozen threshold; the caveat
+is recorded here so nobody later reads it as "six things only this channel can do".
+
+**YouTube is parked, not scored.** `yt-dlp` is absent and the package never
+auto-installs. Per the pre-registered unexercised rule, a channel that cannot be
+exercised cannot reach ship and is not counted as a drop — an uninstalled tool is a
+fact about this machine, not about the channel. What did ship for it is the readiness
+check that closes the blind spot the parent bench left open: a passing `yt-dlp
+--version` does **not** imply extraction works, because full YouTube support needs an
+external JS runtime, so the doctor inspects the yt-dlp config semantically and reports
+a distinct `not-ready` state with an idempotent fix command.
+
+**Three prescription defects were found by executing the prescriptions verbatim** —
+none would have been caught by review: a single HTML-entity decode pass leaves
+`&mdash;` in tweet text; a missing `-f` makes a deleted tweet answer **exit 0 with
+3,663 bytes of error HTML** that a caller reads as success; and a dropped `-L` makes
+the oEmbed endpoint answer 301 with an empty body, which looks like a dead service.
+All three are fixed and documented as load-bearing in
+[`docs/guides/gated-platform-reads.md`](guides/gated-platform-reads.md).
