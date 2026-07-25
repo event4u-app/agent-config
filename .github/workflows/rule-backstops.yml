@@ -1,0 +1,124 @@
+name: Rule Backstops
+
+# The gates a rule's `enforced_by:` points at, actually running in CI.
+#
+# Why this workflow exists: `check_enforcement_coverage` counted "named in a
+# taskfile" as "can fail a build", and NO workflow invokes `task ci`,
+# `ci-strict`, or `ci-fast` — only the narrow `ci-cloud-bundle` and
+# `ci-linear-digest`. So nine validators a rule declared as its backstop ran
+# only when a human typed the command, while the published number said
+# otherwise. That is the exact defect the coverage gate was built to catch,
+# committed by the coverage gate itself.
+#
+# Two things had to change together: the resolver now distinguishes `validator`
+# (a workflow runs it) from `validator-local` (only a taskfile does), and this
+# workflow moves the ones that belong in CI across the line. Fixing only the
+# resolver would have been honest and left the gates unrun; fixing only the
+# wiring would have left the number unable to tell the difference next time.
+#
+# `tests/scripts/rule_backstops_ci_wired.test.ts` fails if a rule declares a
+# `validator:` this workflow does not run — so a backstop cannot quietly fall
+# back out of CI.
+
+on:
+  pull_request:
+    paths:
+      - "src/rules/**"
+      - "src/scripts/**"
+      - "src/skills/**"
+      - "src/agent-src/**"
+      - "docs/**"
+      - "agents/**"
+      - "tests/**"
+      - ".github/workflows/rule-backstops.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/rules/**"
+      - "src/scripts/**"
+      - "src/skills/**"
+      - "src/agent-src/**"
+      - "docs/**"
+      - "agents/**"
+      - "tests/**"
+      - ".github/workflows/rule-backstops.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  rule-backstops:
+    name: Rule backstops
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      # --- validators a rule names as its enforced_by backstop, clean today ---
+      # Each line below is the reason some rule's `enforced_by:` is not a claim
+      # about a command nobody runs.
+
+      - name: media-governance-routing (policy linkage)
+        run: ./scripts-run src/scripts/lint_media_policy_linkage
+
+      - name: output-discipline (placeholder prose)
+        run: ./scripts-run src/scripts/lint_output_slop
+
+      - name: persona-governance
+        run: ./scripts-run src/scripts/lint_persona_governance
+
+      - name: secret-vcs-guard
+        run: ./scripts-run src/scripts/check_secret_leak
+
+      - name: language-and-tone (.md English)
+        # Argument shape mirrors the taskfile entry — the two catalog files are
+        # generated and excluded there for the same reason.
+        run: ./scripts-run src/scripts/check_md_language $(find docs -name '*.md' ! -name 'catalog.md' ! -name 'skills-catalog.md' | sort)
+
+      # --- validators that were ALREADY RED when first wired ------------------
+      # Five gates a rule names as its backstop were failing, and had been,
+      # invisibly — nothing ran them. That is pre-existing debt, not a regression
+      # from wiring them, and cleaning 37 findings is a different piece of work
+      # with a different reviewer. Baseline the legacy, enforce the boundary: the
+      # counts may fall freely, a rise fails. Deliberately NOT continue-on-error,
+      # which is a WARN wearing a gate's clothes.
+
+      - name: Rule-backstop debt ratchet (5 gates red on arrival)
+        run: ./scripts-run src/scripts/check_backstop_debt
+
+      # --- gates added by the enforcement-proof and number-truth work --------
+      # Shipped with a taskfile entry and nothing else; the coverage number they
+      # produced counted them as blocking.
+
+      - name: Enforcement-coverage ratchet
+        run: ./scripts-run src/scripts/check_enforcement_coverage --check
+
+      - name: Kernel-override audit
+        run: ./scripts-run src/scripts/lint_override_kernel_guard --strict
+
+      - name: ADR frontmatter + review_trigger
+        run: ./scripts-run src/scripts/check_adr_frontmatter
+
+      - name: Subagent safety-floor freshness
+        run: ./scripts-run src/scripts/generate_subagent_floor --check
+
+      # --- the sharpest instance of the class -------------------------------
+      # A linter guarding the four safety-floor rules against modification,
+      # reachable from no taskfile, no workflow, and no hook manifest — only its
+      # own test. The thing standing watch over the floor was itself unwatched.
+
+      - name: Safety-floor rules untouched
+        run: ./scripts-run src/scripts/check_safety_floor_untouched
