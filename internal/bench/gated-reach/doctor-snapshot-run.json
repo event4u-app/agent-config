@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "platform": "darwin",
+  "registry": "src/config/reach-channels.yml",
+  "deep": false,
+  "channels": [
+    {
+      "id": "github",
+      "status": "ok",
+      "active_backend": "gh",
+      "tier": "free-key",
+      "lifecycle": "stable",
+      "last_verified": "2026-07-24",
+      "fix": null,
+      "warnings": [],
+      "credential": null,
+      "backends": [
+        {
+          "id": "gh",
+          "probe_cmd": "gh",
+          "status": "ok",
+          "path": "/opt/homebrew/bin/gh",
+          "exit_code": 0,
+          "diagnostic": "probe exited 0 (/opt/homebrew/bin/gh)",
+          "fix": null,
+          "deep": null
+        }
+      ]
+    },
+    {
+      "id": "youtube",
+      "status": "missing",
+      "active_backend": null,
+      "tier": "zero-config",
+      "lifecycle": "experimental",
+      "last_verified": "2026-07-24",
+      "fix": "pipx install yt-dlp==2026.7.4",
+      "warnings": [],
+      "credential": null,
+      "backends": [
+        {
+          "id": "yt-dlp",
+          "probe_cmd": "yt-dlp",
+          "status": "missing",
+          "path": null,
+          "exit_code": null,
+          "diagnostic": "'yt-dlp' does not resolve on PATH",
+          "fix": "pipx install yt-dlp==2026.7.4",
+          "deep": null,
+          "readiness": {
+            "kind": "js-runtime",
+            "config_path": "/Users/mathiasberg/.config/yt-dlp/config",
+            "config_present": true,
+            "config_flag": true,
+            "runtimes": [
+              "node"
+            ],
+            "version": null,
+            "status": "unknown",
+            "fix": null,
+            "detail": "the backend itself is missing, so extraction readiness is not evaluated yet — install it first (the channel's pinned prescription above), then re-run; the runtime and config facts below were still observed and will still apply"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rss",
+      "status": "ok",
+      "active_backend": "curl",
+      "tier": "zero-config",
+      "lifecycle": "stable",
+      "last_verified": "2026-07-24",
+      "fix": null,
+      "warnings": [],
+      "credential": null,
+      "backends": [
+        {
+          "id": "curl",
+          "probe_cmd": "curl",
+          "status": "ok",
+          "path": "/usr/bin/curl",
+          "exit_code": 0,
+          "diagnostic": "probe exited 0 (/usr/bin/curl)",
+          "fix": null,
+          "deep": null
+        },
+        {
+          "id": "node",
+          "probe_cmd": "node",
+          "status": "ok",
+          "path": "/opt/homebrew/bin/node",
+          "exit_code": 0,
+          "diagnostic": "probe exited 0 (/opt/homebrew/bin/node)",
+          "fix": null,
+          "deep": null
+        }
+      ]
+    },
+    {
+      "id": "web-read",
+      "status": "ok",
+      "active_backend": "curl",
+      "tier": "zero-config",
+      "lifecycle": "stable",
+      "last_verified": "2026-07-24",
+      "fix": null,
+      "warnings": [],
+      "credential": null,
+      "backends": [
+        {
+          "id": "curl",
+          "probe_cmd": "curl",
+          "status": "ok",
+          "path": "/usr/bin/curl",
+          "exit_code": 0,
+          "diagnostic": "probe exited 0 (/usr/bin/curl)",
+          "fix": null,
+          "deep": null
+        },
+        {
+          "id": "node",
+          "probe_cmd": "node",
+          "status": "ok",
+          "path": "/opt/homebrew/bin/node",
+          "exit_code": 0,
+          "diagnostic": "probe exited 0 (/opt/homebrew/bin/node)",
+          "fix": null,
+          "deep": null
+        }
+      ]
+    },
+    {
+      "id": "hackernews",
+      "status": "ok",
+      "active_backend": "curl",
+      "tier": "zero-config",
+      "lifecycle": "stable",
+      "last_verified": "2026-07-24",
+      "fix": null,
+      "warnings": [],
+      "credential": null,
+      "backends": [
+        {
+          "id": "curl",
+          "probe_cmd": "curl",
+          "status": "ok",
+          "path": "/usr/bin/curl",
+          "exit_code": 0,
+          "diagnostic": "probe exited 0 (/usr/bin/curl)",
+          "fix": null,
+          "deep": null
+        }
+      ]
+    },
+    {
+      "id": "reddit",
+      "status": "ok",
+      "active_backend": "curl",
+      "tier": "zero-config",
+      "lifecycle": "experimental",
+      "last_verified": "2026-07-25",
+      "fix": null,
+      "warnings": [],
+      "credential": null,
+      "backends": [
+        {
+          "id": "curl",
+          "probe_cmd": "curl",
+          "status": "ok",
+          "path": "/usr/bin/curl",
+          "exit_code": 0,
+          "diagnostic": "probe exited 0 (/usr/bin/curl)",
+          "fix": null,
+          "deep": null
+        },
+        {
+          "id": "node",
+          "probe_cmd": "node",
+          "status": "ok",
+          "path": "/opt/homebrew/bin/node",
+          "exit_code": 0,
+          "diagnostic": "probe exited 0 (/opt/homebrew/bin/node)",
+          "fix": null,
+          "deep": null
+        }
+      ]
+    },
+    {
+      "id": "twitter-oembed",
+      "status": "ok",
+      "active_backend": "curl",
+      "tier": "zero-config",
+      "lifecycle": "experimental",
+      "last_verified": "2026-07-25",
+      "fix": null,
+      "warnings": [],
+      "credential": null,
+      "backends": [
+        {
+          "id": "curl",
+          "probe_cmd": "curl",
+          "status": "ok",
+          "path": "/usr/bin/curl",
+          "exit_code": 0,
+          "diagnostic": "probe exited 0 (/usr/bin/curl)",
+          "fix": null,
+          "deep": null
+        }
+      ]
+    }
+  ],
+  "last_verified_suggestions": []
+}
