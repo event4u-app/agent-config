@@ -275,7 +275,7 @@ const WRITE_FLAG_RE = /[wa+]/;
  *                                     index (statically knowable, so honoured)
  *
  * A computed callee (`fs[verb](…)`) yields `undefined` — see the header for why
- * that is left to the sandboxed-run instruments.
+ * that is left to the run-window instruments (1–2).
  */
 function calleeName(expression: ts.Expression): string | undefined {
     if (ts.isIdentifier(expression)) return expression.text;
