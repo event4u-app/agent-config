@@ -46,8 +46,47 @@ const URL_DATED = /^https?:\/\/\S+\(\d{4}-\d{2}-\d{2}\)\s*$/;
  *  not appear as a capability claim. docs/proof.md and docs/comparison.yaml
  *  are structurally witnessed (pointer columns + their own linters). */
 const WITNESS_SURFACES = ['README.md', 'CAPABILITIES.yaml'];
-/** A percentage or multiplier reading as a measured capability figure. */
-const QUANTIFIED_CLAIM = /\b\d+(?:\.\d+)?\s*(?:%|[x×](?![A-Za-z0-9]))/;
+
+/**
+ * Shapes that read as a measured capability figure.
+ *
+ * The ratio pattern was written against the "84.8%-style headline" anti-lesson
+ * and catches exactly that. It missed the shape that actually bit us: the README
+ * shipped "compiled into 7+ host agents" while the real, test-pinned number was
+ * 23 detected / 20 emitted — understating coverage by 3x, for months, on the one
+ * surface this sweep already watched. A bare integer carries no `%` and no `x`,
+ * so no ratio pattern could see it and no unit allowlist would either.
+ *
+ * Three narrow classes:
+ *   - RATIO      — percentages and multipliers (the original).
+ *   - MAGNITUDE  — a number carrying a measurement unit. Unit-gated, not
+ *                  digit-gated: a thousands-separator heuristic would catch
+ *                  `22,077` and also every year and large ordinal.
+ *   - SELF_COUNT — a count-shaped assertion about the package's own reach.
+ *                  This is the class that shipped wrong.
+ *
+ * Excluded from MAGNITUDE in v1: time units. "wait 30 seconds" is an
+ * instruction, not a claim, and a gate that false-positives is a gate that gets
+ * bypassed (`narrow > recall`, as with the credential floor).
+ *
+ * Deliberately NOT widened to more surfaces, and this was measured rather than
+ * assumed: `docs/benchmark.md` alone matches the ratio pattern on 54 lines — it
+ * is a methodology document whose job is to be full of statistics, and sweeping
+ * it would produce exactly the flood that teaches a maintainer to bypass the
+ * gate. `docs/proof.md` and `docs/comparison.yaml` are pointer-enforced by their
+ * own linters, so an unmarkered figure cannot originate there. The gap was never
+ * the surface list; it was the pattern.
+ */
+const RATIO = /\b\d+(?:\.\d+)?\s*(?:%|[x×](?![A-Za-z0-9]))/;
+// The optional `<word>-` allows a qualified unit: `13,881 GPT-tokens` is the
+// same claim shape as `13,881 tokens` and was missed without it.
+const MAGNITUDE = /\b\d[\d,._]*\s*(?:[A-Za-z]+-)?(?:tokens?|ms|USD|KB|MB|GB|chars?)\b/i;
+const SELF_COUNT = /\b\d+\+?\s+(?:host agents?|hosts|supported (?:agents?|hosts))\b/i;
+
+/** True when a line carries any figure shape that must bind to a claim. */
+export function is_quantified_claim(line: string): boolean {
+    return RATIO.test(line) || MAGNITUDE.test(line) || SELF_COUNT.test(line);
+}
 
 class ExitCode extends Error {
     code: number;
@@ -254,12 +293,27 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 continue;
             }
             if (inFence) continue;
-            if (!QUANTIFIED_CLAIM.test(line)) continue;
-            if (/<!--\s*claim:/.test(line) || /unverified/i.test(line)) continue;
+            if (!is_quantified_claim(line)) continue;
+            if (/unverified/i.test(line)) continue;
+
+            // A marker on the line is not enough — it must be a marker that can
+            // LICENSE A NUMBER. This is how "7+ host agents" survived: the line
+            // already carried `claim:no-runtime-daemon`, a `kind: qual` claim
+            // about having no daemon, and any-marker-exempts-the-line let the
+            // unrelated figure ride along on it. A qualitative claim says nothing
+            // about a quantity, so only a `kind: quant` entry clears a figure.
+            const markers = [...line.matchAll(/<!--\s*claim:([A-Za-z0-9._-]+)\s*-->/g)].map((m) => m[1] as string);
+            const licensed = markers.some((id) => ledger.get(id)?.kind === 'quant');
+            if (licensed) continue;
+
+            const why =
+                markers.length > 0
+                    ? `figure carried only by non-quantitative claim marker(s) [${markers.join(', ')}] — a \`kind: qual\` claim cannot license a number`
+                    : 'quantified claim without a claim marker or \'unverified\' annotation';
             findings.push({
                 id: '(unmarkered)',
                 file: `${rel}:${i + 1}`,
-                reason: `quantified claim without a claim marker or 'unverified' annotation — ${line.trim().slice(0, 70)}`,
+                reason: `${why} — ${line.trim().slice(0, 70)}`,
             });
         }
     }

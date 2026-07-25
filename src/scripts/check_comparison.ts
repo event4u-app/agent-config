@@ -29,6 +29,18 @@ export interface Row {
     our_evidence: string;
     their_evidence: string;
     checkable: boolean;
+    /**
+     * Optional — the failure mode this row's claim prevents, in adopter-facing
+     * voice. Populated rows additionally render as a second, non-comparative
+     * view; an empty field is the honest signal that a row is comparative only.
+     *
+     * The field exists so that "which rows appear where" is a **data property**
+     * rather than a curatorial decision. Hand-picking rows for a second surface
+     * would be manual curation with weaker enforcement than the projection this
+     * repo already runs — and either way the row's `our_evidence` pointer keeps
+     * being resolved, so no cell escapes the gate by appearing in the new view.
+     */
+    failure_mode?: string;
 }
 
 export function loadRows(repo: string = REPO): Row[] {

@@ -1,0 +1,91 @@
+{
+  "_doc": "Feasibility measurement for an `exec:` evidence form in the claims ledger (road-to-enforcement-proof Phase 5). The question this answers is NOT 'would exec: be nice' but 'would it cover enough of the ledger to earn its maintenance surface'. The threshold was pre-registered in the roadmap BEFORE this was measured: >= 10 percentage points of the backed ledger, or it gets parked with the number published. Measured 2026-07-25 against docs/CLAIMS.md.",
+  "measured_at": "2026-07-25 (re-counted; the first publication said 25 backed / 10 feasible and was measured mid-PR, so it was stale within a day of shipping — the drift class this very report describes)",
+  "pre_registered_threshold_pp": 10,
+  "backed_claims": 26,
+  "machine_re_verifiable_today": 0,
+  "exec_feasible": 11,
+  "delta_pp": 42.3,
+  "decision": "JUSTIFIED — 40 pp clears the pre-registered 10 pp bar by a wide margin. `exec:` becomes its own PR; it is deliberately NOT built here, because the point of measuring first was to avoid shipping a schema change, a validator, and a renderer on an assumption.",
+  "method": "Each backed entry was classified by whether a deterministic command could re-derive the claim with its exit code carrying the verdict. Pointing at a producer is not sufficient — a bench report whose regeneration needs paid model calls is not re-runnable in CI, and was counted NO. Two borderline cases were checked rather than assumed: measure_lexical_ranking.ts has zero model/API/fetch references (deterministic, model-free re-ranking), and token-baseline figures are re-derived by check_token_regression.ts via js-tiktoken. Both counted YES.",
+  "feasible": [
+    {
+      "claim": "eval-coverage-ratcheted",
+      "command": "skill_eval_coverage --check",
+      "why": "ratchet script; exit code IS the verdict"
+    },
+    {
+      "claim": "domain-soundness-scoped",
+      "command": "domain_soundness_status --check",
+      "why": "ratchet script"
+    },
+    {
+      "claim": "domain-soundness-validated-count",
+      "command": "domain_soundness_status",
+      "why": "the same script re-derives the count the JSON snapshots"
+    },
+    {
+      "claim": "skill-count",
+      "command": "check_artefact_count_messaging",
+      "why": "gate compares prose counts against source counts"
+    },
+    {
+      "claim": "command-count",
+      "command": "check_artefact_count_messaging",
+      "why": "same gate"
+    },
+    {
+      "claim": "rule-count",
+      "command": "check_artefact_count_messaging",
+      "why": "same gate"
+    },
+    {
+      "claim": "enforcement-coverage-resolved",
+      "command": "check_enforcement_coverage --check",
+      "why": "ratchet built in Phase 1 of this roadmap"
+    },
+    {
+      "claim": "shipped-artifacts-hidden-instruction-scanned",
+      "command": "lint_agent_security",
+      "why": "deterministic scan over the shipped tree"
+    },
+    {
+      "claim": "lexical-ranking-lift",
+      "command": "measure_lexical_ranking",
+      "why": "verified model-free — deterministic re-ranking of a fixed retrieved set"
+    },
+    {
+      "claim": "context-token-reduction",
+      "command": "check_token_regression",
+      "why": "exact tokenizer over static surfaces; the headline token figures are re-derivable (the paired quality gate half is not, and is not claimed)"
+    },
+    {
+      "claim": "host-agent-count",
+      "command": "vitest run tests/install/toolDetection.test.ts",
+      "why": "the pointer is a test assertion whose literal IS the count; running it re-derives the claim, and lint_surface_matrix independently holds the matrix in set-equality with the installer path map"
+    }
+  ],
+  "not_feasible_and_why": {
+    "paid_or_stochastic_bench": [
+      "discipline-lift-weak-host",
+      "essential-tier-cost-factor",
+      "downshift-cost-reduction",
+      "second-brain-recall-lift",
+      "retrieval-substrate-live-pass",
+      "persona-identity-placebo-null",
+      "cross-model-parity-count",
+      "team-defect-finding-null",
+      "humanizer-tell-reduction",
+      "wedge-hollow-detection"
+    ],
+    "prose_contract_or_policy": [
+      "no-runtime-daemon",
+      "surgical-uninstall",
+      "bus-factor-tracked",
+      "positioning-honest-nulls"
+    ]
+  },
+  "honest_caveat": "`exec_feasible` counts claims for which a re-running command PLAUSIBLY carries the verdict. It is not a promise that all ten pass on first wiring, and a claim whose command exits 0 for a reason unrelated to the claim would be a false green — argument hardening and a narrow prefix allowlist are what keep that from becoming the new hole.",
+  "ledger_hygiene_note": "Found while counting: 10 entries filed under `## Unbacked inventory (documented debt)` carry `status: backed`. The checker keys on the status field, not the heading, so nothing is mis-gated — but the section headings no longer describe their contents and a reader would be misled. Filed for a follow-up pass, not silently fixed here.",
+  "_snapshot_note": "backed_claims is a dated snapshot of the ledger, not a live read. It drifted once already. Re-count with: ./scripts-run src/scripts/check_claims (reports the live backed total) and re-classify feasibility by hand — the classification is a judgment, only the denominator is mechanical."
+}

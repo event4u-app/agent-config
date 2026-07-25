@@ -35,20 +35,24 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { KERNEL_RULE_FILENAMES } from './_lib/kernel_rules.js';
 
-const KERNEL_RULES: ReadonlySet<string> = new Set([
-    'agent-authority.md',
-    'ask-when-uncertain.md',
-    'commit-policy.md',
-    'direct-answers.md',
-    'language-and-tone.md',
-    'no-cheap-questions.md',
-    'non-destructive-by-default.md',
-    'scope-control.md',
-    'verify-before-complete.md',
-]);
+const KERNEL_RULES: ReadonlySet<string> = KERNEL_RULE_FILENAMES;
 
-const KERNEL_DIR = '.agent-src.uncondensed/rules';
+/**
+ * Kernel-rule source directory.
+ *
+ * This gate was watching a retired tree — the pre-ADR-051 source root — and a
+ * directory that no longer exists can never match a changed path. So the
+ * one-kernel-rule-per-PR slow-rollout guarantee reported "no kernel rule
+ * touched" for every kernel-rule edit, silently and indefinitely. Found by
+ * editing a kernel rule and noticing the gate stayed green.
+ *
+ * The first fix kept the old path as a fallback; CI's ADR-051 guard rejected
+ * that, correctly. Retaining a dead path is the bug, not the safety net — a
+ * second root that cannot exist is exactly what made this gate inert.
+ */
+const KERNEL_DIR = 'src/rules';
 const DEFAULT_LABEL = 'bundled-always-rules-acknowledged';
 
 function _git_changed_files(base_ref: string): string[] {

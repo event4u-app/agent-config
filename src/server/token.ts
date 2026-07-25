@@ -8,8 +8,9 @@
  * token is fresh per process, written to
  * `~/.event4u/agent-config/local-server.token` with mode 0600, and
  * the UI bundle reads it via a `?token=…` query param on the initial
- * page load (handed back as a cookie by the server's static-file
- * handler — see `src/server/app.ts`).
+ * page load. There is no cookie mechanism: the SPA strips the token
+ * from the URL after boot (see `src/ui/urlToken.ts`) and sends it as
+ * an `Authorization: Bearer <token>` header on every API request.
  *
  * The file is replaced (not appended) on every process boot. A stale
  * token from a previous process is invalid.
@@ -17,8 +18,8 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
-import { homedir } from 'node:os';
 import { dirname, resolve } from 'node:path';
+import { event4u_root } from '../scripts/_lib/user_global_paths.js';
 
 export interface TokenFile {
     /** Token bytes, hex-encoded (64 chars / 32 bytes of entropy). */
@@ -44,7 +45,13 @@ export interface MintTokenOptions {
 }
 
 function tokenDir(): string {
-    return resolve(homedir(), '.event4u', 'agent-config');
+    // Follows a host-supplied config root (EVENT4U_CONFIG_HOME / --config-root)
+    // so a profile-scoped server mints its bearer token under its own root.
+    // The token's security properties (fresh per process, mode 0600,
+    // 127.0.0.1-only) are unchanged — only the parent directory follows the
+    // operator-chosen root. Byte-identical to `~/.event4u/agent-config` with
+    // no override.
+    return event4u_root();
 }
 
 function tokenPath(): string {

@@ -19,11 +19,57 @@ When an agent loads any skill, rule, command, guideline, or template:
 ```
 1. Load original from .augment/{type}/{name}
 2. Check agents/overrides/{type}/{name} exists?
-   ├── YES → Read Mode header
-   │   ├── extend  → Apply original FIRST, then layer override on top
-   │   └── replace → Skip original entirely, use override only
+   ├── YES → Is the target a KERNEL or safety-floor rule?
+   │   ├── YES → replace → REFUSE. Report it. Keep the original.
+   │   │         extend  → allowed ONLY with a registered exception (below)
+   │   └── NO  → Read Mode header
+   │             ├── extend  → Apply original FIRST, then layer override on top
+   │             └── replace → Skip original entirely, use override only
    └── NO  → Use original unchanged
 ```
+
+## The non-overridable class
+
+```
+A KERNEL OR SAFETY-FLOOR RULE MAY BE TIGHTENED, NEVER REPLACED OR RELAXED.
+A `replace`-MODE OVERRIDE ON ONE IS REFUSED AND REPORTED — NEVER SILENTLY APPLIED.
+AN `extend` ON ONE REQUIRES A REGISTERED, JUSTIFIED EXCEPTION.
+```
+
+The nine kernel rules — `agent-authority`, `ask-when-uncertain`, `commit-policy`,
+`direct-answers`, `language-and-tone`, `no-cheap-questions`,
+`non-destructive-by-default`, `scope-control`, `verify-before-complete` — plus
+anything carrying `tier: safety-floor`, are not replaceable. Dropping an empty
+file at `agents/overrides/rules/non-destructive-by-default.md` must not remove
+the Hard Floor.
+
+**Why not a blanket ban.** Legitimate tightening exists, and this package does
+it: its own `verify-before-complete` override adds a mandatory-Playwright clause
+for UI changes. Banning the name would forbid a change that makes the floor
+*stronger*. So direction matters, not identity — and since no linter can prove
+"relaxes" versus "legitimately narrows" from prose, `extend` is the machine-
+checkable proxy for tightening and the registry carries the human judgement.
+
+**The exception registry.** An `extend` override on a kernel or safety-floor rule
+requires an entry in `agents/overrides/kernel-exceptions.yml`:
+
+```yaml
+exceptions:
+  - rule: verify-before-complete
+    mode: extend
+    justification: "Ships a browser UI; code-only tests cannot prove what renders."
+    approved_by: maintainer
+```
+
+**Honest limit — read this before trusting the class.** This is a norm with a
+partial gate, and saying so is the point. The override layer is resolved by the
+*agent reading these instructions*, not by a loader, so an `extend` block that
+says "ignore everything above" is not mechanically detectable — and nothing here
+stops a consumer relaxing a rule through another channel (a persona file,
+host-level config, a direct instruction). What the gate does cover is this
+package's own authoring surface: a `replace`-mode kernel override, or an
+unregistered kernel exception, fails deterministically. Everything else is
+reported, not claimed as enforced.
 
 ## Directory Mapping
 
@@ -93,13 +139,33 @@ The original is loaded first. The override adds, modifies, or removes specific p
 
 ## Mode: replace
 
-The original is completely ignored. The override is the sole source of truth.
+The original is completely ignored. The override is the sole source of truth —
+**except for kernel and safety-floor rules, where `replace` is refused outright**
+(see "The non-overridable class" above).
 
 **Use when:**
 - The shared skill/rule fundamentally doesn't fit the project
 - The project needs a completely different workflow for a command
 
 **Best practice:** Must be self-contained and complete. No references to the original.
+
+**Note the update cost.** A whole-file replacement freezes that file at the
+version you forked it from: later fixes to the original — including security
+fixes — stop reaching you, silently, because your copy wins on name match
+forever. Prefer `extend`, which keeps the rest of the original in the update
+flow. This is the same silent-drift failure the deploy-tiering discussion names.
+
+## Citation obligation
+
+Every override carries, directly under its Mode header, one line naming what it
+overrides and why:
+
+```markdown
+> Overrides: verify-before-complete §Turn-completion — ships a browser UI; code-only tests cannot prove what renders.
+```
+
+Without it the layer is usable but not auditable: a reviewer six months later
+cannot tell an intentional narrowing from an accident. No reason, no override.
 
 ## Agent Behavior
 
@@ -110,6 +176,10 @@ Agents **must** check for overrides before applying any shared resource:
 3. Before running a command → check `agents/overrides/commands/{name}.md`
 4. Before reading a guideline → check `agents/overrides/guidelines/{lang}-{name}.md`
 5. Before using a template → check `agents/overrides/templates/{name}.md`
+
+**Before honouring an override on a rule, check the non-overridable class
+first.** A `replace` on a kernel or safety-floor rule is refused and reported to
+the user — it is never silently dropped and never silently applied.
 
 ## When to Create vs. When to Fix
 

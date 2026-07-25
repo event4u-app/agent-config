@@ -87,6 +87,11 @@ tasks:
       - task: check-no-conflict-markers
       - task: check-secret-leak
       - task: check-claims
+      - task: check-adr-frontmatter
+      - task: check-subagent-floor
+      - task: lint-override-kernel-guard
+      - task: lint-output-slop
+      - task: check-enforcement-coverage
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay
@@ -277,6 +282,11 @@ tasks:
       - task: check-no-conflict-markers
       - task: check-secret-leak
       - task: check-claims
+      - task: check-adr-frontmatter
+      - task: check-subagent-floor
+      - task: lint-override-kernel-guard
+      - task: lint-output-slop
+      - task: check-enforcement-coverage
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay

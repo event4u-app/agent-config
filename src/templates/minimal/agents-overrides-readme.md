@@ -29,6 +29,26 @@ Drop a file under `agents/overrides/rules/foo.md` to override the global
 copy. The bridge anchor at `agents/.event4u-bridge.yml` tells the loader which
 `~/.event4u/agent-config/` install to pair with.
 
+## What you cannot override
+
+The nine kernel rules — `agent-authority`, `ask-when-uncertain`, `commit-policy`,
+`direct-answers`, `language-and-tone`, `no-cheap-questions`,
+`non-destructive-by-default`, `scope-control`, `verify-before-complete` — and
+anything marked `tier: safety-floor` are **not replaceable**. You may *tighten*
+one with a `Mode: extend` override plus an entry in
+`agents/overrides/kernel-exceptions.yml` recording why. A `Mode: replace` on one
+is refused and reported.
+
+Two consequences that are easy to miss:
+
+- **"Wins on name match" is not unconditional.** An empty file at
+  `agents/overrides/rules/non-destructive-by-default.md` does not switch off the
+  Hard Floor — it is refused.
+- **Whole-file replacement freezes that file.** Later fixes to the original,
+  including security fixes, stop reaching you for as long as your copy exists,
+  and nothing announces it. Prefer `extend`, which keeps the rest of the rule in
+  the update flow.
+
 ## Adding your first override
 
 ```bash

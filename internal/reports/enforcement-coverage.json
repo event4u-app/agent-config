@@ -1,0 +1,13 @@
+{
+  "_doc": "Enforcement-coverage baseline. `blocking` counts rules whose strongest enforced_by resolves to something that can fail a build. Coverage is a ratchet: --check fails when blocking falls or unwired rises. Regenerate intentionally with --write-baseline when the change is the point.",
+  "summary": {
+    "total": 107,
+    "declared": 21,
+    "blocking": 14,
+    "observer": 6,
+    "unwired": 0,
+    "missing": 0,
+    "undeclared": 86,
+    "blocking_pct": 13.1
+  }
+}

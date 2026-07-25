@@ -7,6 +7,8 @@ supersedes: —
 superseded_by: —
 phase: v2.x · monorepo-phase-3-typescript-installer
 type: prospective
+review_trigger: >-
+  When a consumer reports losing a local edit to a framework-authoritative file on update, OR when any framework file legitimately needs to move between the force-update and scaffold classes — the conflict-resolution half (skip | overwrite | merge) is the part under review, not the TypeScript choice
 ---
 
 # ADR-016 — TypeScript Installer Architecture

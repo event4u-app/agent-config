@@ -32,6 +32,8 @@ routes_to:
   - "guideline:agent-infra/framework-neutrality-patterns"
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/lint_framework_leakage.ts"
 ---
 
 # framework-neutrality-in-generic-skills

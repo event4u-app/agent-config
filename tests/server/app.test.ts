@@ -54,6 +54,16 @@ describe('createApp', () => {
         expect(body).toMatchObject({ ok: true, projectRoot: '/tmp/fake-project' });
     });
 
+    it('advertises the configRoot capability in the ping readout', async () => {
+        const res = await app.inject({
+            method: 'GET',
+            url: '/api/v1/ping',
+            headers: { host: HOST, authorization: `Bearer ${TOKEN}` },
+        });
+        expect(res.statusCode).toBe(200);
+        expect(res.json()).toMatchObject({ capabilities: { configRoot: true } });
+    });
+
     it('accepts the token via ?token= query param', async () => {
         const res = await app.inject({
             method: 'GET',

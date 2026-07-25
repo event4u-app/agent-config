@@ -30,6 +30,7 @@ import { ProjectSettingsPage } from './pages/ProjectSettingsPage.js';
 import { WorkspacePage } from './pages/WorkspacePage.js';
 import { serverStatus, fetchServerStatus } from './serverStatus.js';
 import { theme, toggleTheme } from './theme.js';
+import { embed } from './embed.js';
 
 interface Surface {
     readonly id: 'setup' | 'settings' | 'project' | 'workspace';
@@ -156,10 +157,17 @@ export function App(): preact.JSX.Element {
         if (route.value === '/') navigate('/setup');
         void fetchServerStatus();
     }, []);
+    // Embed mode (reciprocal-ecosystem embed contract, Phase 1) is a chrome
+    // switch, not a second UI: under `?embed=1` the host owns navigation and
+    // theme, so the standalone chrome (TopNav — brand, surface tabs, theme
+    // toggle) is hidden. One more render condition alongside the existing
+    // per-surface visibility gating — every settings surface, form, and save
+    // path (dispatch) is byte-identical, so `#/settings` / `#/settings/<x>`
+    // deep links keep working.
     return (
         <>
             <DryRunBanner />
-            <TopNav />
+            {embed ? null : <TopNav />}
             {dispatch(route.value)}
         </>
     );

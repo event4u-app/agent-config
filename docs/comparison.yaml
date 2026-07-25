@@ -12,44 +12,76 @@
 # check_claims pointer resolver); every `checkable: true` row's `our_evidence`
 # resolves. build_proof renders these rows. check_no_external_sources guarantees
 # no named source leaks in.
+#
+# `failure_mode` (optional) — what this row's claim prevents, in adopter-facing
+# voice. A populated row ALSO renders in the "What each one prevents" view on the
+# proof page; an empty field is the honest signal that the row is comparative
+# only. Membership in that view is therefore a data property, never a curated
+# short-list that can drift from this table.
+#
+# THE PIN SHAPE IS REFUSED HERE, DELIBERATELY. A number in these rows is bound by
+# a resolving pointer — never by a test asserting that a literal string appears in
+# a doc. A comparable suite pinned a marketing figure with an
+# `assertIn("<number> tokens", …)` test; its own published formula yields a value
+# ~4x larger, and the pin turned the wrong number into a protected invariant that
+# CI actively defended. A pointer can go stale and be re-derived; a pin makes
+# staleness the passing condition.
 
 rows:
   - claim: "No resident runtime — no background daemon, no state database or service, no auto-write memory; deterministic, rebuildable file indexes only."
     our_evidence: "docs/contracts/no-runtime-boundary.md#file-first"
     their_evidence: "Swarm-runtime tools in this category ship a background process and/or a resident state store by design; that is an architectural fact of the runtime approach, not a defect."
     checkable: true
+    failure_mode: >-
+      A background process keeps running after you stop using it, holds state you did not write, and has to be kept alive and upgraded.
 
   - claim: "Capability/benchmark results are published — including the runs where the package changed nothing."
     our_evidence: "docs/benchmark.md"
     their_evidence: "A category headline figure (e.g. an '84.8%' score) appears across marketing surfaces with no reproducible methodology published — so it cannot be verified either way."
     checkable: true
+    failure_mode: >-
+      You adopt on a headline number nobody can re-run, and never learn which of its measurements changed nothing.
 
   - claim: "Every public claim binds to machine-checked evidence."
     our_evidence: "docs/CLAIMS.md"
     their_evidence: "Marketing claims in this category are not bound to a machine-checked ledger a reader can reproduce."
     checkable: true
+    failure_mode: >-
+      A shipped number drifts from the artefact it came from and stays published, because nothing re-checks the claim against its source.
 
   - claim: "Skills publish their own known limits, each with a witness test."
     our_evidence: "tests/scripts/witness/check_refs_relative_gap.test.ts"
     their_evidence: "Published known-limitation surfaces backed by reproducing tests are not a standard artifact in this category."
     checkable: true
+    failure_mode: >-
+      A limitation is discovered by you, in your repo, at the moment it costs you something — instead of being stated up front and held by a test.
 
   - claim: "A 30-second single-file wedge exists — one read-only subagent, one command, verdict with file:line — and its promise is a scoped, published eval, not a feature list."
     our_evidence: "internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured"
     their_evidence: "Category entry points typically install the full platform (profiles, packs, runtime) before the first felt win; single-artifact entries with a published eval behind the promise are not a standard artifact."
     checkable: true
+    failure_mode: >-
+      Evaluating the tool means installing the whole platform first, so the first thing you learn is the setup cost rather than whether it works.
 
   - claim: "The persona-identity question was tested and published as an honest null (identity swap ~zero effect, provider choice ~15x larger) instead of being shipped as theater."
     our_evidence: "internal/bench/reports/persona-placebo.json#honest-null"
     their_evidence: "Named-persona prompts are shipped as a feature across the category without a published A/B separating identity from method."
     checkable: true
+    failure_mode: >-
+      You pay tokens for prompt theater that was never measured against the method text it wraps.
 
   - claim: "Every upstream-tool install prescription the package ships is version-pinned, intake-recorded, and enforced offline in CI — an unpinned version, a branch/archive install source, or a pipe-remote-to-shell instruction fails the build."
     our_evidence: "src/scripts/validate_reach_prescriptions.ts"
     their_evidence: "Capability layers in this category commonly install themselves and their upstream dependencies from a moving target (a branch archive or an unpinned package) via a piped remote installer; whether any given one pins is observable per repo, but a CI gate that fails the build on an unpinned prescription is not a standard artifact."
     checkable: true
+    failure_mode: >-
+      An install instruction silently follows a moving target — an unpinned package or a piped remote script — so what lands in your repo is whatever the source held that day.
 
   - claim: "Platform reads that the host's own web tools cannot perform at all (a refused domain, an HTTP 402) are shipped as credential-free prescriptions whose reliability was measured per channel against a native control, with the thresholds frozen before the run and the narrowing caveat published alongside the pass."
     our_evidence: "docs/benchmark.md#ship-gated-reach"
     their_evidence: "Reaching gated platforms is commonly solved in this category by asking for an API key or a session cookie, and the capability is asserted from a feature list rather than a per-channel reliability measurement with a native-arm control; publishing the case where the native tools already suffice, next to the pass, is not a standard artifact."
     checkable: true
+    failure_mode: >-
+      You hand over a credential — or your account — for a read the tools could
+      already do, and you cannot tell which channels actually work because the
+      capability was claimed rather than measured.

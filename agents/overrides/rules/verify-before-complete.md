@@ -7,6 +7,8 @@
 **Original:** `.augment/rules/verify-before-complete.md`
 ---
 
+> Overrides: verify-before-complete §The Gate — this package ships a browser UI; unit and CLI e2e tests cannot prove what the browser renders, so UI-affecting changes additionally require Playwright evidence. Tightens the rule; registered in `agents/overrides/kernel-exceptions.yml`.
+
 ## Project-specific addition — Playwright is mandatory for UI changes
 
 This package ships a browser UI (the wizard / settings panels served by
