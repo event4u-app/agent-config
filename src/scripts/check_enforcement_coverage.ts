@@ -43,21 +43,33 @@ const RULES_DIR = path.join(REPO_ROOT, 'src', 'rules');
 const HOOK_MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
 const BASELINE = path.join(REPO_ROOT, 'internal', 'reports', 'enforcement-coverage.json');
 
-/** Trees scanned to decide whether a validator script is actually reachable. */
-const WIRING_DIRS = [
-    path.join(REPO_ROOT, 'taskfiles'),
-    path.join(REPO_ROOT, '.github', 'workflows'),
-];
-const WIRING_FILES = [path.join(REPO_ROOT, 'Taskfile.yml'), HOOK_MANIFEST];
+/**
+ * Two wiring corpora, deliberately separate.
+ *
+ * The first version treated `taskfiles/` and `.github/workflows/` as one bag, so
+ * "named in a taskfile" resolved to `validator` and counted under a headline that
+ * read "can actually fail a build". Which build? **No workflow invokes `task ci`,
+ * `ci-strict`, or `ci-fast`** — only the narrow `ci-cloud-bundle` and
+ * `ci-linear-digest`. So for a taskfile-only validator the honest answer was
+ * "a local run someone starts by hand", and the number said otherwise.
+ *
+ * That is the same defect the coverage gate was built to catch — a check whose
+ * wiring is weaker than the claim about it — committed by the gate itself. Hence
+ * the split: `validator` means CI runs it, `validator-local` means a human does.
+ */
+const WORKFLOW_DIRS = [path.join(REPO_ROOT, '.github', 'workflows')];
+const TASK_DIRS = [path.join(REPO_ROOT, 'taskfiles')];
+const TASK_FILES = [path.join(REPO_ROOT, 'Taskfile.yml'), HOOK_MANIFEST];
 
 export type Resolution =
-    | 'validator'   // script exists AND is wired into a taskfile/workflow/manifest
-    | 'test'        // test file exists; the suite runs it
-    | 'hook'        // registered in the hook manifest with fail_closed: true
-    | 'observer'    // instruments only — never blocks
-    | 'unwired'     // declared script exists but nothing runs it  ← the D1 class
-    | 'missing'     // declared target does not exist at all
-    | 'none';       // honest, recorded gap
+    | 'validator'       // reachable from a WORKFLOW — CI fails without a human
+    | 'validator-local' // reachable only from a taskfile — fails a run someone starts
+    | 'test'            // test file exists; the suite runs it
+    | 'hook'            // registered in the hook manifest with fail_closed: true
+    | 'observer'        // instruments only — never blocks
+    | 'unwired'         // declared script exists but nothing runs it  ← the D1 class
+    | 'missing'         // declared target does not exist at all
+    | 'none';           // honest, recorded gap
 
 export interface RuleCoverage {
     id: string;
@@ -71,9 +83,25 @@ export interface RuleCoverage {
 }
 
 /** Strength order — a rule is credited with its strongest resolving backstop. */
-const RANK: Resolution[] = ['validator', 'test', 'hook', 'observer', 'unwired', 'missing', 'none'];
+const RANK: Resolution[] = [
+    'validator',
+    'test',
+    'hook',
+    'validator-local',
+    'observer',
+    'unwired',
+    'missing',
+    'none',
+];
 
-/** A resolution that can actually fail a build. */
+/**
+ * A resolution that fails a CI build — the headline number.
+ *
+ * `validator-local` is NOT here, and that is the whole correction. It ranks above
+ * `observer` (it does block *something*) and below `hook` (which fires in the
+ * agent runtime without anyone asking), but a gate only a human can start is not
+ * what "can fail a build" means to a reader.
+ */
 const BLOCKING: ReadonlySet<Resolution> = new Set<Resolution>(['validator', 'test', 'hook']);
 
 // ---------------------------------------------------------------- frontmatter
@@ -155,12 +183,12 @@ function unquote(s: string): string {
  * Read once and concatenated: the question is only ever "does this path appear
  * anywhere that runs things", so a single haystack is both correct and cheap.
  */
-function load_wiring_corpus(): string {
+function load_corpus(dirs: readonly string[], files: readonly string[] = []): string {
     const parts: string[] = [];
-    for (const f of WIRING_FILES) {
+    for (const f of files) {
         if (fs.existsSync(f)) parts.push(fs.readFileSync(f, 'utf-8'));
     }
-    for (const dir of WIRING_DIRS) {
+    for (const dir of dirs) {
         if (!fs.existsSync(dir)) continue;
         for (const entry of walk(dir)) {
             if (/\.(ya?ml)$/.test(entry)) parts.push(fs.readFileSync(entry, 'utf-8'));
@@ -295,10 +323,12 @@ export function parse_hook_manifest(text: string): Map<string, boolean> {
 export function resolve_one(
     decl: string,
     ctx: {
-        wiring: string;
+        /** Scripts reachable from a GitHub workflow (transitively). */
+        reachable_ci: Set<string>;
+        /** Scripts reachable from a taskfile or the hook manifest (transitively). */
+        reachable_local: Set<string>;
         hooks: Map<string, boolean>;
         exists: (rel: string) => boolean;
-        reachable: Set<string>;
     },
 ): { resolution: Resolution; note?: string } {
     if (decl === 'none') return { resolution: 'none' };
@@ -333,16 +363,18 @@ export function resolve_one(
         if (!ctx.exists(target)) {
             return { resolution: 'missing', note: `validator script does not exist: ${target}` };
         }
-        // Resolution, not declaration: existing is not running.
-        const stem = path.basename(target).replace(/\.[tj]s$/, '');
-        const reachable =
-            ctx.reachable.has(target) || ctx.wiring.includes(target) || ctx.wiring.includes(stem);
-        return reachable
-            ? { resolution: 'validator' }
-            : {
-                  resolution: 'unwired',
-                  note: `validator '${target}' exists but is referenced by no taskfile, workflow, or hook manifest — it runs nowhere`,
-              };
+        // Resolution, not declaration — and now: reachable from WHAT.
+        if (ctx.reachable_ci.has(target)) return { resolution: 'validator' };
+        if (ctx.reachable_local.has(target)) {
+            return {
+                resolution: 'validator-local',
+                note: `validator '${target}' is reachable only from a taskfile — no workflow runs it, so it fails a local run someone starts, not a CI build`,
+            };
+        }
+        return {
+            resolution: 'unwired',
+            note: `validator '${target}' exists but is referenced by no taskfile, workflow, or hook manifest — it runs nowhere`,
+        };
     }
 
     return { resolution: 'missing', note: `unrecognised enforced_by form: ${decl}` };
@@ -365,12 +397,17 @@ export function strongest(resolutions: Resolution[]): Resolution {
 // -------------------------------------------------------------------- report
 
 export function collect(): RuleCoverage[] {
-    const wiring = load_wiring_corpus();
+    const ci_corpus = load_corpus(WORKFLOW_DIRS);
+    const local_corpus = load_corpus(TASK_DIRS, TASK_FILES);
     const hooks = fs.existsSync(HOOK_MANIFEST)
         ? parse_hook_manifest(fs.readFileSync(HOOK_MANIFEST, 'utf-8'))
         : new Map<string, boolean>();
     const exists = (rel: string): boolean => fs.existsSync(path.join(REPO_ROOT, rel));
-    const reachable = reachable_scripts(wiring);
+    // Seeded separately so the umbrella expansion answers "reachable from CI"
+    // rather than "reachable from anything". The expansion itself was correct;
+    // it was the seed that conflated the two.
+    const reachable_ci = reachable_scripts(ci_corpus);
+    const reachable_local = reachable_scripts(`${ci_corpus}\n${local_corpus}`);
 
     const out: RuleCoverage[] = [];
     for (const name of fs.readdirSync(RULES_DIR).sort()) {
@@ -382,7 +419,7 @@ export function collect(): RuleCoverage[] {
         const resolutions: Resolution[] = [];
         const notes: string[] = [];
         for (const d of declared) {
-            const { resolution, note } = resolve_one(d, { wiring, hooks, exists, reachable });
+            const { resolution, note } = resolve_one(d, { reachable_ci, reachable_local, hooks, exists });
             resolutions.push(resolution);
             if (note) notes.push(note);
         }
@@ -402,7 +439,10 @@ export function collect(): RuleCoverage[] {
 export interface Summary {
     total: number;
     declared: number;
+    /** Fails a CI build without a human starting anything. The headline. */
     blocking: number;
+    /** Reachable only from a taskfile — reported beside the headline, never folded in. */
+    local_only: number;
     observer: number;
     unwired: number;
     missing: number;
@@ -418,6 +458,7 @@ export function summarise(rows: RuleCoverage[]): Summary {
         total: rows.length,
         declared: declared.length,
         blocking,
+        local_only: count((r) => r.effective === 'validator-local'),
         observer: count((r) => r.effective === 'observer'),
         unwired: count((r) => r.effective === 'unwired'),
         missing: count((r) => r.effective === 'missing'),
@@ -469,12 +510,18 @@ function main(argv: string[]): number {
     const lines: string[] = [];
     lines.push(
         `enforcement coverage · ${summary.blocking}/${summary.total} rules (${summary.blocking_pct}%) ` +
-            `have a backstop that can fail a build`,
+            `have a backstop that fails a CI build`,
     );
     lines.push(
-        `  declared ${summary.declared} · observer ${summary.observer} · ` +
+        `  declared ${summary.declared} · local-only ${summary.local_only} · observer ${summary.observer} · ` +
             `unwired ${summary.unwired} · missing ${summary.missing} · undeclared ${summary.undeclared}`,
     );
+    if (summary.local_only > 0) {
+        lines.push(
+            `  local-only = a validator no workflow runs. It fails \`task ci\` if someone types it; ` +
+                `it does not fail the build. Counted separately, never in the headline.`,
+        );
+    }
 
     const problems = rows.filter((r) => r.notes.length > 0);
     if (problems.length > 0) {
@@ -501,6 +548,16 @@ function main(argv: string[]): number {
         }
         if (summary.unwired > base.unwired) {
             regressions.push(`unwired declarations rose: ${base.unwired} → ${summary.unwired}`);
+        }
+        // A validator dropping out of a workflow back into taskfile-only is the
+        // exact regression this split was built to name. Without this line the
+        // headline would fall and only the `blocking` check would notice, which
+        // reports the symptom rather than the cause.
+        if (summary.local_only > (base.local_only ?? 0)) {
+            regressions.push(
+                `validators fell back to taskfile-only: ${base.local_only ?? 0} → ${summary.local_only} ` +
+                    `(a gate left .github/workflows/ — add it back to rule-backstops.yml)`,
+            );
         }
         if (summary.missing > base.missing) {
             regressions.push(`missing targets rose: ${base.missing} → ${summary.missing}`);
