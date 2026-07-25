@@ -57,7 +57,33 @@ export const AREAS: Record<string, AreaMeta> = {
         contract: 'smoke-contracts.md',
         scope: 'Per-tier smoke contracts, baseline locks, regression gates.',
     },
+    memory: {
+        contract: 'memory-visibility-v1.md',
+        scope: 'Memory / knowledge surfaces. RETIRED area — its single ADR is superseded by the agent-memory-layer removal; listed so the directory is audited rather than invisible.',
+    },
 };
+
+/**
+ * Area directories present on disk but absent from `AREAS`.
+ *
+ * `docs/adrs/memory/` sat on disk unlisted, and therefore unaudited, for an
+ * unknown period: the audit iterates a hardcoded inventory and had no way to
+ * notice a directory nobody told it about. Adding `memory` fixes the instance —
+ * this fixes the class. A coverage audit blind to a whole area is the same defect
+ * shape as a gate watching a path that no longer exists.
+ */
+export function unlistedAreaDirs(adrsRoot: string): string[] {
+    try {
+        return fs
+            .readdirSync(adrsRoot, { withFileTypes: true })
+            .filter((e) => e.isDirectory())
+            .map((e) => e.name)
+            .filter((n) => !(n in AREAS))
+            .sort();
+    } catch {
+        return [];
+    }
+}
 
 // ^(\d{4})-([a-z0-9-]+)\.md$
 const NAMED = /^(\d{4})-([a-z0-9-]+)\.md$/;
@@ -252,6 +278,13 @@ export function cmd_report(): number {
 export function cmd_check(): number {
     let hard = 0;
     let warn = 0;
+    for (const dir of unlistedAreaDirs(ADR_ROOT)) {
+        process.stderr.write(
+            `❌ ${dir}/: area directory exists on disk but is absent from AREAS — it is not audited at all. ` +
+                `Add it to the inventory (or delete the directory).\n`,
+        );
+        hard += 1;
+    }
     for (const [area, meta] of Object.entries(AREAS)) {
         const [adrs, errs] = scan_area(area);
         for (const e of errs) {
