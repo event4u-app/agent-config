@@ -31,7 +31,7 @@ differentiator.
    auto-flip held at a documented honest-null). Evidence:
    [`benchmark.md`](benchmark.md).
 4. **No-runtime, host-agnostic governance.** Rules compile into each tool's
-   native format at projection time; the same governance rides on 7+ hosts with
+   native format at projection time; the same governance rides on 20 hosts with
    no daemon. Surgical uninstall (JSON-pointer + SHA-256, never a neighbour
    tool's keys). Evidence:
    [`contracts/no-runtime-boundary.md`](contracts/no-runtime-boundary.md),

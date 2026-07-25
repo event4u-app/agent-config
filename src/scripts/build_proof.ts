@@ -224,6 +224,35 @@ function render(): string {
             L.push(`| ${claim} | ${ours} | ${theirs} | ${r.checkable ? '✅' : '—'} |`);
         }
     }
+
+    // Second lens on the SAME rows: what each one prevents, for a reader who has
+    // not asked "compared to what". Membership is a data property — a row appears
+    // here iff it carries a `failure_mode` — so nobody curates a short-list that
+    // then drifts from the table above. The pointer is the same pointer, resolved
+    // by the same gate, so no cell reaches this view unbound.
+    const fmRows = cmpRows.filter((r) => (r.failure_mode ?? '').trim() !== '');
+    if (fmRows.length > 0) {
+        L.push('');
+        L.push('### What each one prevents');
+        L.push('');
+        L.push('The same rows, read as failure modes rather than as comparisons. Each names');
+        L.push('something that goes wrong without the control and carries the identical');
+        L.push('resolvable pointer — a projection of the table above, not a second list to');
+        L.push('keep in sync.');
+        L.push('');
+        L.push('| Without it | The control | Evidence |');
+        L.push('|---|---|---|');
+        for (const r of fmRows) {
+            const fm = (r.failure_mode ?? '').replace(/\|/g, '\\|').trim();
+            const claim = r.claim.replace(/\|/g, '\\|');
+            const filePart = (r.our_evidence.split('#')[0] ?? r.our_evidence).split(':')[0] ?? r.our_evidence;
+            const ours = pointer_unresolved(r.our_evidence) === null
+                ? `[\`${r.our_evidence}\`](../${filePart})`
+                : `\`${r.our_evidence}\``;
+            L.push(`| ${fm} | ${claim} | ${ours} |`);
+        }
+    }
+
     L.push('');
     L.push('## 5. Verify it yourself');
     L.push('');

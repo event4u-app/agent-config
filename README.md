@@ -14,7 +14,7 @@
 
 **Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
-**A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
+**A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into **20 host agents** — of 23 detected, 3 being export-only<!-- claim:host-agent-count --> (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini CLI, Codex, Continue, Zed, JetBrains, Aider and more) — with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
 ### What's different
 

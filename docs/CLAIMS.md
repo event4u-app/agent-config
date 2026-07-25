@@ -119,15 +119,8 @@
 - status: backed
 - last_verified: 2026-07-09
 
-### claim: second-brain-retrieval-precision
-- claim: Removing the perfect-retrieval assumption, the substrate's REAL keyword retrieval recalls the needed decision into the top-5 under keyword-overlapping confusers (precision@5 9/9) and the model disambiguates it from the co-injected confusers — retrieval-on 27/27 vs no-memory 5/27 and vs equal-count placebo 5/27 (claude-haiku-4-5, 9 tasks x 3 seeds, sign test p=0.008 both). Named limit: retrieval RECALLS but does not RANK (mean tie-set 3.3, ties broken by store order, not relevance) — the discrimination gap that motivates the SQLite-FTS5 activation path (ADR-116) at larger scale.
-- kind: quant
-- evidence: internal/bench/reports/second-brain-retrieval.json
-- status: backed
-- last_verified: 2026-07-09
-
 ### claim: lexical-ranking-lift
-- claim: A hand-rolled, dependency-free BM25 + trigram lexical index resolves the "recalls but does not rank" gap: on the retrieval-precision corpus (9 keyword-overlapping-confuser tasks) it drives the mean top tie-set from 3.333 (the `_score` bucket scorer) to 1.0 — every needed decision uniquely top-ranked — with precision@1 and precision@5 unchanged at 1.0. Method: deterministic, model-free re-ranking of the SAME retrieved entry set; both scorers measured over the identical store via `measure_lexical_ranking.ts`.
+- claim: A hand-rolled, dependency-free BM25 + trigram lexical index resolves the "recalls but does not rank" gap: on the retrieval-precision corpus (9 keyword-overlapping-confuser tasks) it drives the mean top tie-set from 3.333 (the `_score` bucket scorer) to 1.0 — every needed decision uniquely top-ranked — with precision@1 and precision@5 unchanged at 1.0. Method: deterministic, model-free re-ranking of the SAME retrieved entry set; both scorers measured over the identical store via `measure_lexical_ranking.ts`. Cross-artefact note (2026-07-25): this baseline (3.333) is the value in THIS claim's own artefact and is cited correctly, but the retrieval-precision artefact records 4.111 for the same scorer on the same corpus — two bench scripts disagree. The lift direction (ties collapse to 1.0) holds under either baseline; the discrepancy itself is unresolved and recorded rather than smoothed.
 - kind: quant
 - evidence: internal/bench/reports/lexical-ranking.json
 - status: backed
@@ -141,7 +134,7 @@
 - last_verified: 2026-07-12
 
 ### claim: ledger-exec-verifiability
-- claim: 0 of 25 backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured 10 of 25 (40 pp) COULD carry a re-executing `exec:` form, which is why that form is now scheduled rather than assumed: the threshold (≥ 10 pp) was pre-registered before the count was taken. The other 15 cannot — 11 rest on paid or stochastic benchmark runs that no CI job can re-derive, and 4 are prose contracts. Method and the per-claim classification, including two borderline cases verified rather than assumed, are in the evidence file.
+- claim: 0 of 26 backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured 11 of 26 (42.3 pp) COULD carry a re-executing `exec:` form, which is why that form is scheduled rather than assumed: the threshold (>= 10 pp) was pre-registered before the count was taken. The other 15 cannot — paid or stochastic benchmark runs no CI job can re-derive, and prose contracts. This entry demonstrated its own thesis: it first published "0 of 25", a denominator already stale on the day it shipped, and two backed claims over one artefact were found disagreeing while both resolved. Corrected 2026-07-25.
 - kind: quant
 - evidence: internal/reports/exec-evidence-feasibility.json#"exec_feasible"
 - status: backed
@@ -190,11 +183,11 @@ visible, not hidden.
 - last_verified: 2026-07-08
 
 ### claim: host-agent-count
-- claim: Compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini).
+- claim: 23 host agents are detected and inventoried; 20 receive a written config surface (18 projection + 1 plugin + 1 bundle target) and 3 are export-only (aider, zed, jetbrains). The count is enforced, not asserted — `knownToolIds()` is pinned at 23 by a test whose assertion literal IS the number, and `src/config/surface-matrix.yml` is held in set-equality with the installer's own user-scope path map by `lint_surface_matrix`, so a host added to one and not the other fails the build. This entry stood `unbacked` while naming its own unblocking condition ("once `surface-matrix.yml` exists, bind the count to that file and flip"); the condition was met and nothing fired, so the shipped figure stayed "7+" — understating real coverage by 3x.
 - kind: quant
-- evidence: stays unbacked pending a machine-readable projection-targets list — the concrete binding artifact is `src/config/surface-matrix.yml` (authored by road-to-install-path-convergence Phase 2, per the 2026-07-07 install-path council); once it exists, bind the count to that file and flip. Triaged 2026-07-08 (truth-and-reference-hygiene P3): do NOT bind to prose host tables (`docs/enforcement-by-host.md`) — a substring pointer cannot verify a count.
-- status: unbacked
-- last_verified:
+- evidence: tests/install/toolDetection.test.ts#toHaveLength(23)
+- status: backed
+- last_verified: 2026-07-25
 
 ### claim: orchestration-dispatch-net-win
 - claim: On the ordered-refactor + competitive-impl families (`orch-02`, `orch-03`), contract-governed subagent dispatch nets ≥15% token-or-wall reduction at non-regressed quality vs single-agent execution.
@@ -239,11 +232,11 @@ visible, not hidden.
 - last_verified: 2026-07-12
 
 ### claim: retrieval-substrate-live-pass
-- claim: On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with keyword-overlapping confusers), the memory retrieval substrate scored precision@5 = 100% (9/9) with 100% poisoned-entry rejection, and the retrieval-on arm passed 27/27 model-scored tasks vs 2/27 with retrieval off and 4/27 with a placebo injection. Known limit stays published: mean tie-set 4.1 means top-k ties break by store order, not relevance (the ADR-116/FTS5 signal).
+- claim: On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with keyword-overlapping confusers), the memory retrieval substrate scored precision@5 = 100% (9/9) with 100% poisoned-entry rejection, and the retrieval-on arm passed 27/27 model-scored tasks vs 2/27 with retrieval off and 4/27 with a placebo injection. Known limit stays published: mean tie-set 4.111 means top-k ties break by store order, not relevance (the ADR-116/FTS5 signal). SOLE RECORD for this artefact as of 2026-07-25: a second entry (`second-brain-retrieval-precision`) described the same measurement from the precision angle and had drifted to 5/27, 5/27 and tie-set 3.3 — figures absent from the shared artefact. Two entries over one artefact is what allowed them to disagree while both resolved, so the pair was folded into this one.
 - kind: quant
 - evidence: internal/bench/reports/second-brain-retrieval.json#retrieval-on
 - status: backed
-- last_verified: 2026-07-12
+- last_verified: 2026-07-25
 
 ### claim: wedge-hollow-detection
 - claim: On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate.
