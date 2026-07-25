@@ -33,5 +33,24 @@ describe('check_kernel_rule_bundle — _kernel_changes', () => {
     it('the kernel set has exactly 9 rules', () => {
         expect(KERNEL_RULES.size).toBe(9);
     });
+
+    // Regression: the gate watched only `.agent-src.uncondensed/rules`, a tree
+    // retired in the ADR-051 move to `src/`. A path that no longer exists can
+    // never match, so every kernel-rule edit reported "no kernel rule touched"
+    // and the slow-rollout guarantee was inert. Both roots are pinned here so it
+    // cannot go quiet again.
+    it('sees a kernel-rule edit under the LIVE source root (src/rules)', () => {
+        expect(_kernel_changes(['src/rules/non-destructive-by-default.md'])).toEqual([
+            'src/rules/non-destructive-by-default.md',
+        ]);
+    });
+
+    it('still sees a kernel-rule edit under the legacy root', () => {
+        expect(_kernel_changes([`${R}/commit-policy.md`])).toEqual([`${R}/commit-policy.md`]);
+    });
+
+    it('does not fire on a non-kernel rule under the live root', () => {
+        expect(_kernel_changes(['src/rules/output-discipline.md'])).toEqual([]);
+    });
 });
 

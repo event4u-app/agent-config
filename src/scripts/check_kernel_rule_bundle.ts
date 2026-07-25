@@ -35,20 +35,25 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { KERNEL_RULE_FILENAMES } from './_lib/kernel_rules.js';
 
-const KERNEL_RULES: ReadonlySet<string> = new Set([
-    'agent-authority.md',
-    'ask-when-uncertain.md',
-    'commit-policy.md',
-    'direct-answers.md',
-    'language-and-tone.md',
-    'no-cheap-questions.md',
-    'non-destructive-by-default.md',
-    'scope-control.md',
-    'verify-before-complete.md',
-]);
+const KERNEL_RULES: ReadonlySet<string> = KERNEL_RULE_FILENAMES;
 
-const KERNEL_DIR = '.agent-src.uncondensed/rules';
+/**
+ * Kernel-rule source directories.
+ *
+ * This gate was watching only `.agent-src.uncondensed/rules` — a tree retired in
+ * the ADR-051 move to `src/` as the single source of truth. A directory that no
+ * longer exists can never match a changed path, so the one-kernel-rule-per-PR
+ * slow-rollout guarantee reported "no kernel rule touched" for every kernel-rule
+ * edit, silently and indefinitely. Found by editing a kernel rule and noticing
+ * the gate stayed green.
+ *
+ * The legacy path is retained so the gate still fires in a tree that predates
+ * the move; `src/rules` is the live one.
+ */
+const KERNEL_DIRS: readonly string[] = ['src/rules', '.agent-src.uncondensed/rules'];
+const KERNEL_DIR = KERNEL_DIRS[0];
 const DEFAULT_LABEL = 'bundled-always-rules-acknowledged';
 
 function _git_changed_files(base_ref: string): string[] {
@@ -120,7 +125,7 @@ function _exists(p: string): boolean {
 function _kernel_changes(files: readonly string[]): string[] {
     const hits: string[] = [];
     for (const p of files) {
-        if (!p.startsWith(`${KERNEL_DIR}/`)) {
+        if (!KERNEL_DIRS.some((d) => p.startsWith(`${d}/`))) {
             continue;
         }
         const name = _basename(p);
