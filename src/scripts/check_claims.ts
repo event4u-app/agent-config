@@ -15,10 +15,17 @@
  * Ledger entries with `status: unbacked` are inventory (documented debt) and do
  * NOT fail the build — but marking such an entry's claim in prose does.
  *
- * Evidence-pointer grammar (v1):
+ * Evidence-pointer grammar (v2):
  *   <repo-path>[:line]        → the repo file exists (line advisory).
  *   <repo-path>#<substring>   → the file exists AND contains <substring>.
  *   https://… (YYYY-MM-DD)    → external cite with a dated stamp (not fetched).
+ *   exec:<command> -> <code>  → the command RE-RUNS and its exit code matches.
+ *
+ * The first three are existence checks and cannot tell a live claim from a
+ * stale one: a pointer at a report nobody regenerated resolves forever. The
+ * fourth re-derives the claim. It runs in CI only — locally it reports
+ * UNVERIFIED rather than executing anything, because a consumer's checkout has
+ * no business re-running this package's evidence commands.
  *
  * Exit codes: 0 = clean · 2 = unbacked/dangling/missing-entry finding OR usage
  * error. Success prints to stdout; findings print to stderr.
@@ -26,10 +33,17 @@
  * Usage:
  *     ./scripts-run src/scripts/check_claims
  *     ./scripts-run src/scripts/check_claims --quiet
+ *     CI=true ./scripts-run src/scripts/check_claims     # re-runs exec: claims
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import {
+    exec_allowed_here,
+    exec_static_error,
+    parse_exec_pointer,
+    run_exec_evidence,
+} from './_lib/exec_evidence.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const _HERE = path.dirname(_FILE);
@@ -209,10 +223,24 @@ function scan_markers(): { id: string; file: string }[] {
     return found;
 }
 
-/** Does an evidence pointer resolve? Returns null on success, else a reason. */
+/**
+ * Does an evidence pointer resolve? Returns null on success, else a reason.
+ *
+ * For `exec:` this is the STATIC half only — is the pointer well-formed and is
+ * the command allowlisted. A malformed or non-allowlisted command fails
+ * everywhere, including locally, because that is a defect in the ledger rather
+ * than a property of the environment. Re-execution is the separate CI-gated
+ * pass in `main`, so a laptop never runs an evidence command.
+ */
 function pointer_unresolved(evidence: string): string | null {
     const ev = evidence.trim();
     if (!ev) return 'empty evidence pointer';
+
+    const exec = parse_exec_pointer(ev);
+    if (exec !== null) {
+        return 'error' in exec ? exec.error : exec_static_error(exec);
+    }
+
     if (/^https?:\/\//.test(ev)) {
         return URL_DATED.test(ev) ? null : 'external URL missing a (YYYY-MM-DD) stamp';
     }
@@ -318,6 +346,39 @@ function main(argv: string[] = process.argv.slice(2)): number {
         }
     }
 
+    // 4. Re-execution pass (`exec:` evidence). CI only — locally every exec
+    //    claim reports UNVERIFIED and nothing runs. A mismatch is a finding: the
+    //    command ran and disagreed with the claim. A skip is NOT a finding —
+    //    collapsing "could not run" into "failed" is how a verifier degrades
+    //    into a rubber stamp in the other direction.
+    const execEntries = [...ledger.values()]
+        .filter((e) => e.status === 'backed')
+        .map((e) => ({ entry: e, ptr: parse_exec_pointer(e.evidence) }))
+        .filter((x): x is { entry: LedgerEntry; ptr: { command: string; expected: number } } =>
+            x.ptr !== null && !('error' in x.ptr),
+        );
+
+    const execSkipped: string[] = [];
+    const execVerified: string[] = [];
+
+    if (execEntries.length > 0) {
+        const allowed = exec_allowed_here();
+        for (const { entry, ptr } of execEntries) {
+            if (!allowed) {
+                execSkipped.push(entry.id);
+                continue;
+            }
+            const outcome = run_exec_evidence(ptr, REPO);
+            if (outcome.mismatch) {
+                findings.push({ id: entry.id, file: LEDGER_REL, reason: outcome.reason });
+            } else if (outcome.verified) {
+                execVerified.push(entry.id);
+            } else {
+                execSkipped.push(entry.id);
+            }
+        }
+    }
+
     if (findings.length > 0) {
         process.stderr.write(`❌  check_claims: ${findings.length} unbacked/dangling claim(s):\n`);
         for (const f of findings) {
@@ -333,6 +394,14 @@ function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             `✅  check_claims: ${markers.length} markered claim(s) bound · ledger ${ledger.size} entries (${backed} backed, ${unbacked} unbacked inventory)\n`,
         );
+        if (execEntries.length > 0) {
+            const detail = execVerified.length > 0 ? ` (${execVerified.length} re-verified)` : '';
+            process.stdout.write(
+                execSkipped.length === execEntries.length
+                    ? `    exec: ${execEntries.length} claim(s) UNVERIFIED — re-execution is CI-only, skipped locally\n`
+                    : `    exec: ${execEntries.length} claim(s)${detail}, ${execSkipped.length} skipped\n`,
+            );
+        }
     }
     return 0;
 }

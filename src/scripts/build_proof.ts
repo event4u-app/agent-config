@@ -41,6 +41,105 @@ class ExitCode extends Error {
     }
 }
 
+/**
+ * The prevented-failure table.
+ *
+ * Every row names a **failure mode that is prevented**, never a feature. That
+ * constraint is the whole discipline: "cross-platform" is a feature and says
+ * nothing; "the same rules do not silently differ between the agent you run
+ * today and the one you switch to" names what goes wrong without it.
+ *
+ * Every row cites a ledger claim, and `backs` is not decoration — a cited id
+ * that is missing or not `backed` throws, so the table cannot outlive its
+ * evidence. This is the guard against the failure it was modelled on: the
+ * reference ships an equivalent table whose headline efficiency figure appears
+ * only there, an order of magnitude below the cheapest scenario in its own
+ * generated benchmark. A number with nowhere to resolve is exactly what this
+ * ledger exists to catch, so the table is held to the ledger's own bar.
+ *
+ * A row with no resolving claim ships WITHOUT a number rather than with an
+ * approximate one.
+ */
+export const PREVENTED_FAILURES: { failure: string; mechanism: string; backs: string }[] = [
+    {
+        failure: 'A rule says MUST, and nothing anywhere enforces it — so the rule reads as a guarantee while being honour-system.',
+        mechanism:
+            'Each rule declares `enforced_by:`, and the check **resolves** it: a validator reachable from no taskfile, workflow, or hook manifest counts as unwired, not as covered. Undeclared counts as uncovered.',
+        backs: 'enforcement-coverage-resolved',
+    },
+    {
+        failure:
+            'A shipped artefact carries a hidden-Unicode or instruction-smuggling payload, and reaches consumers because only the source tree was scanned.',
+        mechanism:
+            'Source **and** the condensed projection are scanned in CI; a finding blocks the release before publish, not merely the merge.',
+        backs: 'shipped-artifacts-hidden-instruction-scanned',
+    },
+    {
+        failure:
+            'A count in public prose drifts from the source, and the marketing number quietly stops being true.',
+        mechanism:
+            'Counts are generated from source and drift-checked; the build fails on a count-shaped prose mention that disagrees, or on two different numbers for the same artefact kind.',
+        backs: 'skill-count',
+    },
+    {
+        failure:
+            'A host-coverage claim understates or overstates what actually works — for months, on the one surface everybody reads.',
+        mechanism: 'The number is pinned by a test over real detection, and the test is re-run as the claim evidence.',
+        backs: 'host-agent-count',
+    },
+    {
+        failure:
+            'A non-coding domain skill implies proven correctness it never had, because it was forged on a different domain and never checked against one.',
+        mechanism:
+            'Domain skills are labelled unvalidated until they pass a sourced domain-truth fixture, and the validated count is ratcheted so it cannot quietly fall.',
+        backs: 'domain-soundness-scoped',
+    },
+    {
+        failure:
+            'Behavioural-eval coverage regresses as skills are added, and the suite looks healthy because only the absolute number is reported.',
+        mechanism: 'Coverage is measured per tier and ratcheted in CI, so it can only rise; the gap is published rather than implied away.',
+        backs: 'eval-coverage-ratcheted',
+    },
+];
+
+export function renderPreventedFailures(ledger: ReturnType<typeof load_ledger>): string {
+    const L: string[] = [];
+    L.push('## What this prevents');
+    L.push('');
+    L.push('Each row is a failure mode, not a feature — and each cites the ledger');
+    L.push('claim that backs it. A row whose claim stopped resolving would fail this');
+    L.push('page\'s own generator, so the table cannot outlive its evidence.');
+    L.push('');
+    L.push('| Failure this prevents | How | Backed by |');
+    L.push('|---|---|---|');
+    for (const row of PREVENTED_FAILURES) {
+        const entry = ledger.get(row.backs);
+        if (!entry) {
+            throw new Error(
+                `build_proof: prevented-failure row cites claim '${row.backs}', which has no ledger entry. ` +
+                    'Bind it in docs/CLAIMS.md or drop the row — the table may not carry an unbacked cell.',
+            );
+        }
+        if (entry.status !== 'backed') {
+            throw new Error(
+                `build_proof: prevented-failure row cites claim '${row.backs}', whose ledger status is ` +
+                    `'${entry.status}', not 'backed'. The table may not carry an unbacked cell.`,
+            );
+        }
+        const reverifies = entry.evidence.trim().startsWith('exec:') ? ' ⟳' : '';
+        L.push(
+            `| ${row.failure.replace(/\|/g, '\\|')} | ${row.mechanism.replace(/\|/g, '\\|')} | ` +
+                `[\`${row.backs}\`](CLAIMS.md)${reverifies} |`,
+        );
+    }
+    L.push('');
+    L.push('⟳ — the claim carries `exec:` evidence: CI re-runs the command and');
+    L.push('compares its exit code, so a stale row turns the build red rather than');
+    L.push('ageing quietly into marketing.');
+    L.push('');
+    return L.join('\n');
+}
+
 function render(): string {
     const ledger = load_ledger();
     const entries = [...ledger.values()].sort((a, b) => a.id.localeCompare(b.id));
@@ -59,6 +158,7 @@ function render(): string {
     L.push('every check below on a fresh checkout. This page is itself generated');
     L.push('from those sources and fails CI if it drifts.');
     L.push('');
+    L.push(renderPreventedFailures(ledger));
     L.push('## See it run (< 60s, real output)');
     L.push('');
     L.push('![The trust surface running green — every "verify it yourself" command below, recorded from a real run](media/proof-demo.gif)');
@@ -85,6 +185,39 @@ function render(): string {
     }
     L.push('');
     L.push(`**${backed.length} backed claim(s)** — all evidence pointers resolve in CI.`);
+    L.push('');
+
+    // Re-verifiable vs. merely-resolving. The distinction is the point: a
+    // pointer proves an artefact exists, not that the claim is still true. Any
+    // page that reported only the backed total would hide exactly the gap this
+    // ledger was built to expose.
+    const execBacked = backed.filter((e) => e.evidence.trim().startsWith('exec:'));
+    const pointerOnly = backed.filter((e) => !e.evidence.trim().startsWith('exec:'));
+    L.push('### How many of those re-derive themselves');
+    L.push('');
+    L.push(`**${execBacked.length} of ${backed.length}** backed claims carry \`exec:\` evidence —`);
+    L.push('CI re-runs the command and compares its exit code to the claim, so a');
+    L.push('stale one turns the build red. The other');
+    L.push(`**${pointerOnly.length}** rest on a pointer: CI checks that the artefact`);
+    L.push('exists and contains what it should, which cannot distinguish a live');
+    L.push('claim from one whose producer nobody has run in months.');
+    L.push('');
+    L.push('That residue is not an oversight, and it is listed rather than rounded');
+    L.push('away. A claim can only re-derive itself when a deterministic command');
+    L.push("carries the verdict in its exit code. These cannot, for the reasons");
+    L.push('given:');
+    L.push('');
+    L.push('| Claim | Why it cannot re-execute |');
+    L.push('|---|---|');
+    for (const e of pointerOnly) {
+        const ev = e.evidence.trim();
+        const why = /^https?:\/\//.test(ev)
+            ? 'external cite — CI does not fetch the network'
+            : /benchmark|bench\/|results-/.test(ev)
+              ? 'benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive'
+              : 'prose or contract artefact — no exit code carries the verdict';
+        L.push(`| ${e.claim.replace(/\|/g, '\\|').slice(0, 110)} | ${why} |`);
+    }
     L.push('');
     L.push('Artefact counts in public prose (skills, commands, governed rules,');
     L.push('guidelines, personas) are **generated from source and CI-drift-checked**:');

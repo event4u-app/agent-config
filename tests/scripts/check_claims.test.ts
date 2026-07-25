@@ -18,6 +18,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
 const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
 const SCRIPT_SRC = path.join(REPO_ROOT, 'src', 'scripts', 'check_claims.ts');
+// check_claims imports the exec: evidence lib, so the throwaway tree needs it
+// too. exec_evidence itself imports only node builtins, so the chain ends here.
+const LIB_SRC = path.join(REPO_ROOT, 'src', 'scripts', '_lib', 'exec_evidence.ts');
 
 let work: string;
 
@@ -39,6 +42,8 @@ beforeEach(() => {
     work = fs.mkdtempSync(path.join(os.tmpdir(), 'claims-test-'));
     fs.mkdirSync(path.join(work, 'src', 'scripts'), { recursive: true });
     fs.copyFileSync(SCRIPT_SRC, path.join(work, 'src', 'scripts', 'check_claims.ts'));
+    fs.mkdirSync(path.join(work, 'src', 'scripts', '_lib'), { recursive: true });
+    fs.copyFileSync(LIB_SRC, path.join(work, 'src', 'scripts', '_lib', 'exec_evidence.ts'));
     write('docs/evidence.md', 'This file contains the ANCHOR string.\n');
 });
 
