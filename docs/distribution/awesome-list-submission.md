@@ -29,7 +29,7 @@ other install, no runtime.
 
 **event4u/agent-config** — a governed, no-runtime configuration layer for AI
 coding agents: audited skills, review personas, rules, and commands projected
-into 7+ hosts (Claude Code, Cursor, Windsurf, Copilot, …). Its distinguishing
+into 20 hosts (Claude Code, Cursor, Windsurf, Copilot, Codex, Continue, …). Its distinguishing
 discipline: **every public claim is machine-checked** — the README binds each
 claim to resolvable evidence in a Claims-Ledger, and a generated proof page lets
 anyone reproduce the checks (`docs/proof.md`). Bring your own model.
