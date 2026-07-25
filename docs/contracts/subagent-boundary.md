@@ -43,6 +43,21 @@ the whole of its authority.
 - **Verify, never adopt blind** — a subagent return is evidence, not truth; the orchestrator verifies per [`delegation-policy`](../../src/rules/delegation-policy.md)'s Iron Law before adopting it.
 - **Tier-size the slice, not the agent** — dispatch at the slice's complexity, not the session's.
 - **Own the safety decision** — a Hard-Floor or egress action surfaced by a subagent is decided by the orchestrator + human, never executed by the subagent.
+- **Re-confirm; the subagent's confirmation does not count** — a destructive or irreversible mutation *proposed by a subagent* is subject to the same Hard Floor as one the orchestrator proposed, and the subagent's own "I checked, it's fine" does not satisfy the gate. Without this clause, delegation is a detour around it: ask a subagent, receive a blessing, act.
+- **Deliver the floor, do not assume it** — the floor reaches a worker because [`generate_subagent_floor.ts`](../../src/scripts/generate_subagent_floor.ts) writes it into every dispatch prompt and CI fails on drift.
+
+### Honest scope of the floor guarantee
+
+The invariant above — *a subagent cannot do what its parent may not* — is now
+**delivered** for subagents dispatched through this package's prompt templates:
+the floor is generated from the kernel rules and drift-gated. It was previously
+asserted here and carried by nothing; the brief schema, the spawn composer, and
+all eight prompt templates contained no floor text at all.
+
+What stays unproven, and is therefore not claimed: whether a subagent spawned by
+a host primitive outside these templates inherits any of it. That is a host
+property this package does not control and does not test. A contract that
+quietly covered it would repeat the exact defect this section exists to close.
 
 ## Failure modes
 
