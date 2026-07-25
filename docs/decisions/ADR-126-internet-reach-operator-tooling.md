@@ -160,13 +160,14 @@ the file-type check turns the directory case red.
   rigging the bands exist to prevent. Acting on it requires a separate,
   cost-primary pre-registration.
 - **Both accepted costs now have a named re-entry point,** so neither stays a
-  footnote: `agents/roadmaps/later/road-to-reach-gated-platforms.md` (the
-  credential-gated case the keyless task set could not ask) and
-  `agents/roadmaps/later/road-to-reach-cost-primary-bench.md` (the cost thesis,
-  with a pre-registration whose primary metric is token cost and whose ledger
-  includes the maintenance cost of the thing winning). Both are parked in
-  `later/` with explicit resume triggers — a named demand signal, a measured
-  host-capability regression, or a maintainer decision. Neither may reuse this
+  footnote: the credential-gated case the keyless task set could not ask, and the
+  cost thesis (whose pre-registration must make token cost the primary metric and
+  must price the maintenance cost of the thing winning). Both are parked as
+  named plans in the roadmap layer with explicit resume triggers — a named demand
+  signal, a measured host-capability regression, or a maintainer decision. Paths
+  are deliberately not cited here: the roadmap layer is transient and a stable
+  artefact must not link into it (`no-roadmap-references`). The gated-platform one
+  has since fired and been executed — see § Amendment 2026-07-25. Neither may reuse this
   roadmap's task set or thresholds: a capability-shaped corpus must not be
   allowed to decide a cost question, and vice versa.
 - The registry carries maintenance weight (upstream tools break at platform
@@ -197,6 +198,50 @@ the file-type check turns the directory case red.
   and the reference's identifying tokens were added to the CI denylist so a
   future accidental attribution fails the build.
 
+## Amendment 2026-07-25 — the gated-platform gap, measured and partly closed
+
+This ADR's null was scoped explicitly: *"It says nothing about gated-platform
+access. Testing that needs a credentialed task set with its own
+pre-registration."* That test has now run, and the first thing it found is that
+the sentence's premise was wrong — **no credentials were needed**.
+
+**Closed for three channels, credential-free.** Reddit thread text (Atom feeds),
+Reddit comment **ranking and reply nesting** (server-rendered HTML), and a single
+named tweet (the platform's own oEmbed endpoint) all reached 6/6 against a
+pre-registered task set with a native control and thresholds frozen before the
+run. The native arm scored 0/6 on both Reddit tiers, because the host's own tool
+refuses the `reddit.com` domain outright. Evidence: `docs/benchmark.md`
+§ gated-reach; `internal/bench/gated-reach/{README,results,VERDICT}.md`.
+
+**Still open, each with its re-entry trigger.**
+
+| Surface | State | Re-entry trigger |
+|---|---|---|
+| YouTube transcripts | **parked, unexercised** | the backend is installed by a human and one real extraction is run |
+| Reddit logged-in HTML (session cookie) | parked | an observed login wall on `old.reddit` **and** the maintainer choosing that successor |
+| Reddit approved Data API | parked | the maintainer choosing the durable path — approval-only, weeks of latency, so it starts before it is needed or not at all |
+| Twitter timelines / search | parked | a task that genuinely needs them; no credential-free path exists |
+| Headless browser | parked | a measured need on a fourth platform |
+| Audio transcription fallback | parked | a video task failing specifically because no caption track exists |
+
+**The credential-free scope was a deliberate cut, not an oversight.** Adding a
+credential to any of these channels would put a secret on the same autonomous
+path as untrusted third-party content (Reddit comment bodies, tweet HTML) and an
+outbound fetch — all three legs of the lethal trifecta at once, which
+`lethal-trifecta-guard` exists to prevent. Keeping every prescription
+credential-free keeps that leg broken **by construction** rather than by
+discipline. It also removed the whole consent-gate / credential-file /
+account-ban surface that the design council named as the sharpest risk in this
+area. The cut cost real capability (no timelines, no search, no metrics) and
+that cost is recorded rather than hidden.
+
+**One bound this amendment does not soften.** Reddit tier 2 is on an announced
+closing path (login requirement announced 2026-06-30, still not enforced on the
+bench machine on 2026-07-25). It ships with a kill-switch keyed on an
+**observed** login wall — never on the announcement — plus a reverse trigger that
+keeps the tier alive while logged-out access still works. A press release is not
+an outage.
+
 ## References
 
 - `internal/bench/reach-vs-native/README.md` — pre-registered tasks, thresholds, bands, run protocol.
@@ -204,3 +249,6 @@ the file-type check turns the directory case red.
 - `docs/benchmark.md` § internet-reach — the published null.
 - `internal/upstream-changes.md` — maintenance log for channel breakage.
 - Council: anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-07-24, 3 rounds — converged on the five structural defects of the first draft (impossible sequencing, rigged threshold, post-facto verdict, unfalsifiable acceptance criteria, unmechanized discipline claims); all five fixed before execution.
+- `internal/bench/gated-reach/VERDICT.md` — per-channel verdicts + kill-switch criteria (Amendment 2026-07-25).
+- `docs/guides/gated-platform-reads.md` — the shipped operator prescriptions.
+- `src/skills/gated-reach/SKILL.md` — the ship-tier skill, triggers proven both directions.

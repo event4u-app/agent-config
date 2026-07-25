@@ -60,8 +60,8 @@
           },
           "status": {
             "type": "string",
-            "enum": ["ok", "missing", "broken", "timeout", "error", "removed"],
-            "description": "The five probe states plus `removed`. `ok` = some backend probes ok; otherwise the FIRST candidate's verdict (the one whose fix the operator runs); `removed` = past removal_after, never probed."
+            "enum": ["ok", "missing", "broken", "timeout", "error", "removed", "not-ready"],
+            "description": "The five probe states plus `removed` and `not-ready`. `ok` = some backend is USABLE (probes ok AND, if it declares a readiness requirement, that requirement is confirmed satisfied); `not-ready` = a candidate is installed and answering its probe while its readiness requirement is unsatisfied or unconfirmed — the 'installed, unverified' ceiling, deliberately NOT reported as ok because that was the false green the readiness layer exists to close; otherwise the FIRST candidate's probe verdict (the one whose install fix the operator runs); `removed` = past removal_after, never probed. Which of unsatisfied-vs-unconfirmed applies is carried precisely by backends[].readiness.status."
           },
           "active_backend": {
             "type": ["string", "null"],
@@ -130,6 +130,65 @@
                 "exit_code": { "type": ["integer", "null"], "description": "Probe exit code, or null when the child never reported one." },
                 "diagnostic": { "type": "string", "minLength": 1, "description": "Short, OUTPUT-FREE explanation. Probe stdio is ignored, so fetched content and credentials can never reach a report." },
                 "fix": { "type": ["string", "null"], "description": "Platform-selected pinned prescription for this backend; populated for missing/broken only." },
+                "readiness": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "status",
+                    "config_path",
+                    "config_present",
+                    "config_flag",
+                    "runtimes",
+                    "version",
+                    "fix",
+                    "detail"
+                  ],
+                  "description": "Config-semantic readiness verdict — the answer to 'installed, or actually able to retrieve?'. PRESENT ONLY for a backend that declares a readiness requirement (declared doctor-side in reach_doctor.ts § READINESS_REQUIREMENTS, not in the registry — see the $comment of reach-channels.schema.json for why). Its ABSENCE, rather than a null value, is how a backend with no such requirement is expressed: the other channels' backend rows gain no field at all. Read-only and local: a config file is read bounded and symlink-refusing, PATH is consulted, and no network request is made in either mode.",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": ["js-runtime"],
+                      "description": "Which readiness requirement this row settles. One kind today: an external JavaScript runtime the extractor must be configured to use."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["ready", "not-ready", "unknown"],
+                      "description": "`ready` = confirmed usable; `not-ready` = confirmed unusable as configured; `unknown` = deliberately not settled (the backend is not installed, or its version could not be parsed so flag support cannot be confirmed). `unknown` never reads as ok — an 'installed, unverified' ceiling is preferred to a false green."
+                    },
+                    "config_path": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "The config file path resolved THE WAY THE UPSTREAM TOOL RESOLVES IT ($XDG_CONFIG_HOME/yt-dlp/config, else ~/.config/yt-dlp/config). Reported so the doctor and the operator can never be reading different files — the specific confusion this layer exists to prevent. The emitted fix targets this same path."
+                    },
+                    "config_present": {
+                      "type": "boolean",
+                      "description": "True only when that path is a real, readable regular file. False also covers a REFUSED read (a symlink, a directory) — the reason is named in `detail`, so a refusal is never silent."
+                    },
+                    "config_flag": {
+                      "type": "boolean",
+                      "description": "True when the literal flag was found in the config (any runtime value — presence of the flag is the signal). The file's contents never appear anywhere in this payload; only this boolean is extracted."
+                    },
+                    "runtimes": {
+                      "type": "array",
+                      "description": "External JavaScript runtimes found on PATH, in the order checked (deno first — the extractor enables it by default, so finding it settles the question with no config).",
+                      "items": { "type": "string", "minLength": 1 }
+                    },
+                    "version": {
+                      "type": ["string", "null"],
+                      "description": "The backend version PARSED to a YYYY.M.D release, or null when it could not be parsed (which is reported as `unknown`, never as new-enough). Raw `--version` output never reaches this payload — only this re-rendered numeric form, so child output cannot travel into a report."
+                    },
+                    "fix": {
+                      "type": ["string", "null"],
+                      "description": "An IDEMPOTENT, OS-specific remedy for the operator to run: create the config dir if needed and append the flag only when it is not already present. Printed, never executed. Null when there is nothing to fix, when the remedy is an upgrade rather than a config edit (a build predating the flag would reject it), or when readiness could not be settled."
+                    },
+                    "detail": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "One-line explanation of the verdict, including any refusal reason. Carries no config contents and no raw child output."
+                    }
+                  }
+                },
                 "deep": {
                   "type": ["object", "null"],
                   "additionalProperties": false,

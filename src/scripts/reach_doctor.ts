@@ -3,12 +3,23 @@
  * reach:doctor — read-only health report over the reach channel registry
  * (road-to-internet-reach Phase 2, steps 4-7; `--deep` from Phase 7 step 4).
  *
- * WHAT THIS ANSWERS. One operator question, nothing more: *is the upstream
+ * WHAT THIS ANSWERS. Two operator questions, nothing more: *is the upstream
  * tool I already chose to install healthy, and is its install command
- * pinned?* Per channel it reports the health of the ordered backend
- * candidates, which one is currently active, and — when the first candidate
- * is `missing` or `broken` — the exact pinned command **a human** runs for
- * the current platform, echoed verbatim from `src/config/reach-channels.yml`.
+ * pinned?* — and, for a backend that declares one, *is it actually able to do
+ * the retrieval, or merely installed?* Per channel it reports the health of the
+ * ordered backend candidates, which one is currently active, and — when the
+ * first candidate is `missing` or `broken` — the exact pinned command **a
+ * human** runs for the current platform, echoed verbatim from
+ * `src/config/reach-channels.yml`.
+ *
+ * THE SECOND QUESTION EXISTS BECAUSE A PASSING PROBE CAN LIE. `yt-dlp
+ * --version` exits 0 as soon as the binary is on PATH, while YouTube extraction
+ * additionally needs an external JavaScript runtime that the tool must be
+ * configured to use. A channel reported `ok` on that evidence alone is a false
+ * green. The readiness layer (§ READINESS LAYER) closes it locally and
+ * read-only, and its verdict is surfaced as the distinct `not-ready` channel
+ * status so `missing` (nothing installed) can never be confused with
+ * `not-ready` (installed, cannot retrieve).
  *
  * WHAT THIS IS NOT. Not a router, not a recommendation, not an agent-facing
  * surface. The Phase 0 pre-registered benchmark returned `band: stop` (native
@@ -88,8 +99,15 @@ const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 /** Payload format version. Bumped only on a breaking payload shape change. */
 export const SCHEMA_VERSION = 1;
 
-/** `removed` extends the probe taxonomy: past `removal_after`, never probed. */
-export type ChannelStatus = ToolProbeStatus | 'removed';
+/**
+ * `removed` extends the probe taxonomy: past `removal_after`, never probed.
+ * `not-ready` extends it the other way: a candidate IS installed and answering
+ * its probe, but a declared readiness requirement is not confirmed satisfied —
+ * the "installed, unverified" ceiling (see § READINESS LAYER). It exists so an
+ * operator can tell `missing` (nothing to run) from `not-ready` (the binary
+ * runs, the retrieval still will not work).
+ */
+export type ChannelStatus = ToolProbeStatus | 'removed' | 'not-ready';
 
 /** Thrown for the exit-2 class: bad flags, unknown channel, `--deep` in CI. */
 export class ReachDoctorUsageError extends Error {}
@@ -157,6 +175,14 @@ export interface BackendRow {
     /** Pinned prescription for the CURRENT platform; `missing`/`broken` only. */
     fix: string | null;
     deep: DeepRow | null;
+    /**
+     * Config-semantic readiness verdict, present ONLY for a backend that
+     * declares a readiness requirement (see `READINESS_REQUIREMENTS`). ABSENT —
+     * not `null` — for every other backend, so "this backend has no such
+     * requirement" is expressed by the field not existing rather than by a
+     * value a reader has to interpret.
+     */
+    readiness?: ReadinessRow;
 }
 
 /**
@@ -210,6 +236,11 @@ export interface CollectOptions {
     deep?: boolean;
     /** Injectable clock for the `removal_after` comparison. */
     now?: Date;
+    /**
+     * Injectable readiness observer (defaults to the live one). TEST-FACING,
+     * exactly like `now`: no CLI flag reaches it.
+     */
+    readiness?: ReadinessProbeFn;
 }
 
 function toRecord(value: unknown): Record<string, unknown> | null {
@@ -450,6 +481,527 @@ export function runDeepProbe(probeCmd: string, localStatus: ToolProbeStatus): De
     };
 }
 
+/* ====================================================================== *
+ * READINESS LAYER — a passing `--version` is not a working backend
+ * (road-to-gated-reach Phase 2, steps 2/3/6)
+ * ====================================================================== */
+
+/**
+ * THE INVARIANT THIS WHOLE LAYER DEPENDS ON (Phase 2 step 6 — recorded here
+ * because this is the file that would break it).
+ *
+ *   1. **Probes stay `--version`-only.** Every argument list this script hands
+ *      to a child process is either the registry's schema-constrained,
+ *      flag-shaped `probe_args`, or a literal `['--version']` written here. No
+ *      registry value ever selects a *subcommand*.
+ *   2. **The doctor NEVER runs an upstream tool's own status subcommand when
+ *      that subcommand has side effects.** `gh auth status` refreshes and can
+ *      rewrite the stored credential; `yt-dlp -U` / `--update-to` replaces the
+ *      binary; a `login`/`doctor`/`serve` subcommand can start a daemon or
+ *      mint a token. Any of those would make this *diagnostic* mutating — and
+ *      the read-only claim is asserted mechanically by
+ *      `tests/scripts/witness/reach_doctor_readonly.test.ts`, which fails on the
+ *      mere presence of a filesystem write primitive in this file.
+ *   3. **Therefore an "installed, unverified" ceiling is preferred to a false
+ *      green.** Where readiness cannot be settled without a side-effectful call
+ *      or a network round-trip, the honest answer is `unknown` plus the
+ *      `not-ready` channel status — never `ok`. The one exception is `--deep`,
+ *      which is opt-in, CI-refusing, and limited to the endpoints declared in
+ *      `DEEP_PROBES`.
+ *
+ * The readiness check below stays inside that invariant by construction: it
+ * reads a LOCAL config file and consults PATH. It contacts no network, and the
+ * only new child process it introduces is one more `--version`.
+ */
+
+/**
+ * DECISION (Phase 2 step 3): readiness requirements live HERE, in doctor-side
+ * logic keyed on the backend id — NOT as an optional per-backend field in
+ * `reach-channels.schema.json`.
+ *
+ * Why this shape:
+ *
+ *   - **It keeps the schema honest for the backends that have no such
+ *     requirement.** With a schema field, the four other channels' backends
+ *     would each have to *declare an absence* (omit an optional key that a
+ *     reader must then interpret); with a code table they declare nothing at
+ *     all, and the payload simply carries no `readiness` object for them.
+ *   - **The requirement is a property of the upstream tool, not of the
+ *     operator's registry entry.** "yt-dlp needs an external JS runtime" is a
+ *     fact about yt-dlp; a registry that could omit it would hand the operator
+ *     back the exact false green this layer exists to close.
+ *   - **The registry is untrusted input** (see `collect()`), and a schema field
+ *     of kind "check this config file" would widen that input's influence into
+ *     *which local path the doctor reads*. Keyed here, the resolved path
+ *     depends only on the operator's own environment.
+ *   - **Precedent in this same file:** `DEEP_PROBES` is declared code-side for
+ *     the same reason — the registry's schema describes install pinning and
+ *     local probes, and neither a network endpoint nor a config-semantic rule
+ *     is derivable from it. A backend absent from the table gets `undefined`,
+ *     never an invented requirement.
+ *
+ * The rejected trade-off, stated: a schema field would make the requirement
+ * visible in the registry an operator reads, and would let a *new* backend with
+ * the same need be added by editing config instead of code. That is a real
+ * cost, and it is paid here — adding a second js-runtime-needing backend means
+ * a code edit plus a test, not a YAML line. It was judged the cheaper cost,
+ * because the alternative's failure mode (a registry silently declaring no
+ * requirement, or declaring one for a backend where it is meaningless) is a
+ * wrong *health verdict*, while this one is only extra work for a maintainer.
+ * A short form of this reasoning also lives in the `$comment` of
+ * `src/scripts/schemas/reach-channels.schema.json`, where a reader looking for
+ * the absent field will actually be standing.
+ */
+export type ReadinessKind = 'js-runtime';
+
+const READINESS_REQUIREMENTS: Readonly<Record<string, ReadinessKind>> = {
+    // `yt-dlp --version` exits 0 as soon as the binary exists, but YouTube
+    // extraction additionally needs an external JavaScript runtime. Only Deno
+    // is enabled by default; with Node the user config must opt in.
+    'yt-dlp': 'js-runtime',
+};
+
+/** The literal flag whose PRESENCE is the signal — any runtime value counts. */
+export const JS_RUNTIME_FLAG = '--js-runtimes';
+
+/** Runtime the flag names when the doctor prescribes it. */
+const JS_RUNTIME_PRESCRIBED = 'node';
+
+/**
+ * External JavaScript runtimes, in the order checked. `deno` first because
+ * yt-dlp enables it with no config at all, so finding it settles the question.
+ */
+const JS_RUNTIME_CANDIDATES: readonly string[] = ['deno', 'node'];
+
+/**
+ * VERSION GATE — `2025.11.12`, the yt-dlp release that introduced
+ * `--js-runtimes`. Older builds reject the option outright, so prescribing it
+ * there would tell an operator to write a config the tool then errors on: a
+ * fix command that breaks a working install is worse than no fix command.
+ * Below the gate the remedy is therefore "upgrade first", never the flag.
+ *
+ * Provenance: taken from the roadmap step that specified this gate, NOT
+ * re-derived here — this command reaches no network and must not pretend to
+ * have checked a release feed. An unparseable version is treated as
+ * *unconfirmed* rather than assumed new enough (see `assessJsRuntimeReadiness`),
+ * so a wrong gate value can only make the doctor more conservative.
+ */
+const JS_RUNTIME_MIN_VERSION: readonly [number, number, number] = [2025, 11, 12];
+
+/** Bounded read: a user config is a handful of lines; 64 KiB is already absurd. */
+export const READINESS_CONFIG_MAX_BYTES = 64 * 1024;
+
+/** Deadline for the extra `--version` capture — same order as a probe. */
+const VERSION_TIMEOUT_MS = 5_000;
+
+/** `ready` = confirmed usable · `not-ready` = confirmed unusable · `unknown` = not settled. */
+export type ReadinessStatus = 'ready' | 'not-ready' | 'unknown';
+
+export interface ReadinessRow {
+    kind: ReadinessKind;
+    status: ReadinessStatus;
+    /** Config path resolved the way the upstream tool itself resolves it. */
+    config_path: string;
+    /** True only when that path is a real, readable regular file. */
+    config_present: boolean;
+    /** True when the literal flag was found in it (any runtime value). */
+    config_flag: boolean;
+    /** Runtimes found on PATH, in `JS_RUNTIME_CANDIDATES` order. */
+    runtimes: string[];
+    /** Parsed backend version (`YYYY.M.D`), or null when it could not be parsed. */
+    version: string | null;
+    /** Idempotent, OS-specific remedy the OPERATOR runs. Never executed here. */
+    fix: string | null;
+    detail: string;
+}
+
+/**
+ * The three facts about the live machine that a fixture cannot supply. Split
+ * out so the whole verdict — path resolution, the bounded config read, the
+ * version gate — is exercisable against real files with only these injected.
+ */
+export interface JsRuntimeObservation {
+    /** The backend binary's own probe verdict; readiness is decidable only at `ok`. */
+    backend_status: ToolProbeStatus;
+    /**
+     * First line of the backend's `--version` output, or null when none was
+     * read. NEVER reaches the payload: it is parsed against a strict numeric
+     * shape and only the parsed form is reported, so raw child output cannot
+     * travel into a report (the same discipline `probeTool` keeps by ignoring
+     * stdio entirely).
+     */
+    version_raw: string | null;
+    /** JS runtimes found on PATH. */
+    runtimes: readonly string[];
+}
+
+/**
+ * Resolve the yt-dlp USER config path the way yt-dlp itself resolves it:
+ * `$XDG_CONFIG_HOME/yt-dlp/config` when `XDG_CONFIG_HOME` is set and non-empty,
+ * otherwise `~/.config/yt-dlp/config`.
+ *
+ * THIS IS THE FAILURE WORTH PREVENTING. If the doctor read `~/.config/...`
+ * while the tool read `$XDG_CONFIG_HOME/...`, the doctor and the operator would
+ * agree with each other — "the flag is not there", "I added it, still broken" —
+ * while the real tool was reading a different file the whole time. A diagnostic
+ * that resolves a path differently from the tool it diagnoses is worse than no
+ * diagnostic, because it is confidently wrong.
+ *
+ * KNOWN GAP, not silently absorbed: on Windows yt-dlp ALSO honours
+ * `%APPDATA%\yt-dlp\config`. This resolver implements the XDG pair only, so on
+ * a win32 host with no `XDG_CONFIG_HOME` it inspects `~/.config/yt-dlp/config`
+ * — a location yt-dlp does read, but not the only one. The emitted fix targets
+ * the same path this check read, so the two never disagree with each other;
+ * they can, on win32, both be looking somewhere the operator's real config is
+ * not. Stated rather than papered over.
+ */
+export function resolveYtDlpConfigPath(env: NodeJS.ProcessEnv = process.env): string {
+    const xdg = env['XDG_CONFIG_HOME'];
+    const base =
+        typeof xdg === 'string' && xdg.trim() !== ''
+            ? expandHome(xdg)
+            : path.join(os.homedir(), '.config');
+    return path.join(base, 'yt-dlp', 'config');
+}
+
+export interface ConfigFlagRead {
+    present: boolean;
+    flag: boolean;
+    /** Non-null when the path exists but was deliberately NOT read. */
+    refused: string | null;
+}
+
+/**
+ * Bounded, symlink-refusing read for the literal flag.
+ *
+ * - `lstatSync`, never `statSync`: a symlink is REFUSED rather than followed.
+ *   The doctor is asked to inspect a config file, and following a link would
+ *   let something other than that file answer for it (the same reasoning as
+ *   `confineCredentialPath` above, applied to a read instead of a stat).
+ *   Non-regular files (directory, fifo, socket, device) are refused for the
+ *   same reason — reading one can block forever.
+ * - The read is CAPPED at `READINESS_CONFIG_MAX_BYTES` via
+ *   `openSync(path, 'r')` + `readSync`, not `readFileSync`: a config path that
+ *   is really a 5 GB file must not become an OOM in a health report.
+ * - Only the flag's PRESENCE is extracted. The file's contents never reach the
+ *   payload, so an operator's config (which can legitimately carry cookies
+ *   paths, proxies, credentials) cannot leak through a diagnostic.
+ */
+export function readConfigFlag(
+    configPath: string,
+    maxBytes: number = READINESS_CONFIG_MAX_BYTES,
+): ConfigFlagRead {
+    let stat: fs.Stats;
+    try {
+        stat = fs.lstatSync(configPath);
+    } catch {
+        return { present: false, flag: false, refused: null };
+    }
+    if (stat.isSymbolicLink()) {
+        return {
+            present: false,
+            flag: false,
+            refused: `${configPath} is a symlink — refused rather than followed, so nothing but that file itself can answer for it`,
+        };
+    }
+    if (!stat.isFile()) {
+        return {
+            present: false,
+            flag: false,
+            refused: `${configPath} is not a regular file — not read`,
+        };
+    }
+    let descriptor: number | null = null;
+    try {
+        descriptor = fs.openSync(configPath, 'r');
+        const buffer = Buffer.alloc(Math.min(maxBytes, Math.max(stat.size, 1)));
+        const read = fs.readSync(descriptor, buffer, 0, buffer.length, 0);
+        const text = buffer.subarray(0, read).toString('utf-8');
+        return { present: true, flag: text.includes(JS_RUNTIME_FLAG), refused: null };
+    } catch {
+        return {
+            present: true,
+            flag: false,
+            refused: `${configPath} exists but could not be read`,
+        };
+    } finally {
+        if (descriptor !== null) {
+            try {
+                fs.closeSync(descriptor);
+            } catch {
+                // A descriptor that cannot be closed changes no verdict.
+            }
+        }
+    }
+}
+
+/**
+ * Parse the `YYYY.M.D` release shape yt-dlp reports, tolerating the nightly
+ * fourth component (`2025.11.12.232946`). ANYTHING else returns null, which the
+ * caller reads as "cannot confirm" — never as "new enough". The nightly suffix
+ * is dropped from the reported version on purpose: the gate compares releases.
+ */
+const YT_DLP_VERSION_RE = /^(\d{4})\.(\d{1,2})\.(\d{1,2})(?:\.\d+)?$/;
+
+export function parseYtDlpVersion(raw: string | null): readonly [number, number, number] | null {
+    if (raw === null) return null;
+    const match = YT_DLP_VERSION_RE.exec(raw.trim());
+    if (match === null) return null;
+    const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+        return null;
+    }
+    return [year, month, day];
+}
+
+function compareVersions(
+    left: readonly [number, number, number],
+    right: readonly [number, number, number],
+): number {
+    for (let index = 0; index < 3; index += 1) {
+        const delta = (left[index] as number) - (right[index] as number);
+        if (delta !== 0) return delta;
+    }
+    return 0;
+}
+
+function shellQuote(value: string): string {
+    return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
+function powershellQuote(value: string): string {
+    return `'${value.replace(/'/g, "''")}'`;
+}
+
+/**
+ * The IDEMPOTENT, OS-specific remedy. The doctor prints it; it never runs it
+ * (no install, no write — `non-destructive-by-default` plus the read-only
+ * witness).
+ *
+ * Idempotence is the whole design constraint: an operator may paste this twice,
+ * or into a provisioning script that runs on every boot, so it must create the
+ * directory if needed and append the flag ONLY when the line is not already
+ * there. On POSIX the `grep … || printf …` pair is wrapped in `{ …; }` because
+ * `A && B || C` would run C when A fails — the grouping is what keeps a failed
+ * `mkdir` from silently becoming an append attempt. The appended text is
+ * byte-identical to what `grep -qxF` matches, so the second run is a no-op.
+ *
+ * The path is the SAME one `readConfigFlag` inspected, so the check and the
+ * remedy can never point at different files.
+ */
+export function jsRuntimeFixCommand(
+    configPath: string,
+    platform: string = process.platform,
+): string {
+    const line = `${JS_RUNTIME_FLAG} ${JS_RUNTIME_PRESCRIBED}`;
+    const directory = path.dirname(configPath);
+    if (platform === 'win32') {
+        return (
+            `New-Item -ItemType Directory -Force -Path ${powershellQuote(directory)} | Out-Null; ` +
+            `if (-not (Test-Path -LiteralPath ${powershellQuote(configPath)}) -or ` +
+            `-not (Select-String -LiteralPath ${powershellQuote(configPath)} -SimpleMatch ` +
+            `-Pattern ${powershellQuote(JS_RUNTIME_FLAG)} -Quiet)) ` +
+            `{ Add-Content -LiteralPath ${powershellQuote(configPath)} -Value ${powershellQuote(line)} }`
+        );
+    }
+    return (
+        `mkdir -p ${shellQuote(directory)} && ` +
+        `{ grep -qxF -- ${shellQuote(line)} ${shellQuote(configPath)} 2>/dev/null || ` +
+        `printf '%s\\n' ${shellQuote(line)} >> ${shellQuote(configPath)}; }`
+    );
+}
+
+/**
+ * Settle the js-runtime readiness question from one observation plus the real,
+ * locally-resolved config file. Pure with respect to the network; the only I/O
+ * is the bounded config read.
+ *
+ * Order of the branches is the contract:
+ *
+ *   1. backend not `ok` → `unknown`. Nothing about a runtime can make an
+ *      uninstalled extractor work, so no readiness verdict is claimed; the
+ *      channel's own `missing` / `broken` status and its pinned install
+ *      prescription are the actionable output. The runtime and config
+ *      observations are still reported — they were really made, and they tell
+ *      the operator what will ALSO be needed after the install.
+ *   2. Deno on PATH → `ready`. yt-dlp enables Deno by default, so no config
+ *      flag is required and the version gate is irrelevant.
+ *   3. No JS runtime at all → `not-ready`. No config edit fixes that, so no fix
+ *      command is emitted for it — installing a runtime is the operator's
+ *      decision and is not a prescription this registry pins.
+ *   4. Node-only: the version gate runs BEFORE the flag is considered, so a
+ *      build that cannot support the flag is never told to add it, and an
+ *      unparseable version can never read as `ready`.
+ */
+export function assessJsRuntimeReadiness(
+    observation: JsRuntimeObservation,
+    env: NodeJS.ProcessEnv = process.env,
+): ReadinessRow {
+    const configPath = resolveYtDlpConfigPath(env);
+    const read = readConfigFlag(configPath);
+    const runtimes = [...observation.runtimes];
+    const parsed = parseYtDlpVersion(observation.version_raw);
+    const version = parsed === null ? null : parsed.join('.');
+    const suffix = read.refused === null ? '' : ` (${read.refused})`;
+
+    const base = {
+        kind: 'js-runtime' as const,
+        config_path: configPath,
+        config_present: read.present,
+        config_flag: read.flag,
+        runtimes,
+        version,
+    };
+
+    if (observation.backend_status !== 'ok') {
+        return {
+            ...base,
+            status: 'unknown',
+            version: null,
+            fix: null,
+            detail:
+                `the backend itself is ${observation.backend_status}, so extraction readiness is not evaluated yet — ` +
+                `install it first (the channel's pinned prescription above), then re-run; ` +
+                `the runtime and config facts below were still observed and will still apply${suffix}`,
+        };
+    }
+
+    if (runtimes.includes('deno')) {
+        return {
+            ...base,
+            status: 'ready',
+            fix: null,
+            detail: `deno is on PATH and yt-dlp enables it by default — no ${JS_RUNTIME_FLAG} entry is required${suffix}`,
+        };
+    }
+
+    if (runtimes.length === 0) {
+        return {
+            ...base,
+            status: 'not-ready',
+            fix: null,
+            detail:
+                `no external JavaScript runtime is on PATH (checked: ${JS_RUNTIME_CANDIDATES.join(', ')}) — ` +
+                `YouTube extraction needs one; installing Deno needs no yt-dlp config change${suffix}`,
+        };
+    }
+
+    if (parsed === null) {
+        return {
+            ...base,
+            status: 'unknown',
+            fix: null,
+            detail:
+                `cannot confirm this yt-dlp version supports ${JS_RUNTIME_FLAG}: --version reported no ` +
+                `YYYY.M.D release, so the ${JS_RUNTIME_MIN_VERSION.join('.')} gate cannot be applied — ` +
+                `upgrade first (the channel's pinned prescription above), then re-run${suffix}`,
+        };
+    }
+
+    if (compareVersions(parsed, JS_RUNTIME_MIN_VERSION) < 0) {
+        return {
+            ...base,
+            status: 'not-ready',
+            fix: null,
+            detail:
+                `yt-dlp ${version} is older than ${JS_RUNTIME_MIN_VERSION.join('.')}, the release that added ` +
+                `${JS_RUNTIME_FLAG} — this build would reject the flag, so upgrade first ` +
+                `(the channel's pinned prescription above) rather than editing the config${suffix}`,
+        };
+    }
+
+    if (read.flag) {
+        return {
+            ...base,
+            status: 'ready',
+            fix: null,
+            detail: `node is on PATH and ${configPath} carries ${JS_RUNTIME_FLAG}${suffix}`,
+        };
+    }
+
+    return {
+        ...base,
+        status: 'not-ready',
+        fix: jsRuntimeFixCommand(configPath),
+        detail:
+            `node is the only JavaScript runtime on PATH and ${configPath} ` +
+            `${read.present ? `does not carry ${JS_RUNTIME_FLAG}` : `does not exist, so nothing carries ${JS_RUNTIME_FLAG}`} — ` +
+            `yt-dlp will not use node until it does${suffix}`,
+    };
+}
+
+/**
+ * Probe the JS runtimes through the EXISTING probe machinery rather than a new
+ * spawn path: `probeTool` already hardens the child env, bounds the deadline,
+ * ignores stdio and never throws, so presence-on-PATH needs no second
+ * implementation.
+ */
+export function probeJsRuntimes(): string[] {
+    return JS_RUNTIME_CANDIDATES.filter(
+        (bin) =>
+            probeTool({ name: `js-runtime/${bin}`, bin, probe_args: ['--version'] }).status ===
+            'ok',
+    );
+}
+
+/**
+ * Capture a backend's `--version` line.
+ *
+ * This is the ONE place readiness cannot reuse `probeTool`: that function
+ * deliberately ignores child stdio (its verdict is the exit status), and the
+ * version gate needs the string. So it is a separate `spawnSync` — routed
+ * through `hardenedSpawnEnv()` like every other spawn in this file (ADR-123),
+ * with the same bounded deadline, `stdio` piped for stdout ONLY, and a capped
+ * buffer. The argument list is the literal `['--version']` written here, never a
+ * registry value, so this cannot become a channel for a chosen subcommand.
+ */
+export function probeBackendVersion(probeCmd: string): string | null {
+    const result = spawnSync(probeCmd, ['--version'], {
+        env: hardenedSpawnEnv(),
+        timeout: VERSION_TIMEOUT_MS,
+        stdio: ['ignore', 'pipe', 'ignore'],
+        encoding: 'utf-8',
+        maxBuffer: 64 * 1024,
+        windowsHide: true,
+    });
+    if (result.error !== undefined || result.status !== 0) return null;
+    const first = (result.stdout ?? '').split('\n')[0]?.trim() ?? '';
+    return first === '' ? null : first;
+}
+
+/**
+ * Readiness verdict for one backend, or `null` when that backend declares no
+ * requirement. `Object.hasOwn`, never a bare index — same prototype-chain
+ * reasoning as `runDeepProbe`: `backendId: 'constructor'` must take the
+ * no-requirement path rather than resolving to an inherited value.
+ */
+export function liveReadinessRow(
+    backendId: string,
+    probedStatus: ToolProbeStatus,
+): ReadinessRow | null {
+    const kind = Object.hasOwn(READINESS_REQUIREMENTS, backendId)
+        ? READINESS_REQUIREMENTS[backendId]
+        : undefined;
+    if (kind === undefined) return null;
+    return assessJsRuntimeReadiness({
+        backend_status: probedStatus,
+        // Only worth a spawn when the binary answered its own probe.
+        version_raw: probedStatus === 'ok' ? probeBackendVersion(backendId) : null,
+        runtimes: probeJsRuntimes(),
+    });
+}
+
+/**
+ * Injectable readiness observer. The default is `liveReadinessRow`; the option
+ * exists for the same reason `now` does — a fixture cannot install yt-dlp, and
+ * a machine without it could otherwise only ever exercise the `unknown` branch.
+ * TEST-FACING: nothing on the CLI surface can set it.
+ */
+export type ReadinessProbeFn = (
+    backendId: string,
+    probedStatus: ToolProbeStatus,
+) => ReadinessRow | null;
+
 /**
  * Build one channel row. Throws on a malformed channel — the caller turns
  * that into this channel's `error` row so the rest of the report survives.
@@ -465,8 +1017,9 @@ export function runDeepProbe(probeCmd: string, localStatus: ToolProbeStatus): De
  */
 export function buildChannelRow(
     raw: unknown,
-    options: { deep: boolean; now: Date },
+    options: { deep: boolean; now: Date; readiness?: ReadinessProbeFn },
 ): ChannelRow {
+    const readinessProbe = options.readiness ?? liveReadinessRow;
     // Entry gate — defense in depth behind `collect()`'s schema validation. Each
     // shape a validated registry cannot produce is refused with a named reason
     // rather than read speculatively: a row built from an entry whose `id` or
@@ -601,6 +1154,8 @@ export function buildChannelRow(
             ...(fixPrescription === undefined ? {} : { fix: fixPrescription }),
         });
 
+        const readiness = readinessProbe(backendId, probed.status);
+
         backends.push({
             id: backendId,
             probe_cmd: probeCmd,
@@ -610,15 +1165,43 @@ export function buildChannelRow(
             diagnostic: probed.diagnostic,
             fix: probed.fix,
             deep: options.deep ? runDeepProbe(probeCmd, probed.status) : null,
+            // Omitted entirely (not null) when the backend declares no
+            // requirement — the four other channels gain no field at all.
+            ...(readiness === null ? {} : { readiness }),
         });
     }
 
-    // Backend order is the switch: the first candidate that probes ok wins.
-    const active = backends.find((backend) => backend.status === 'ok') ?? null;
+    // Backend order is the switch: the first USABLE candidate wins. A backend
+    // whose probe is `ok` but whose declared readiness requirement is not
+    // confirmed satisfied is NOT usable — that is the whole point of the
+    // readiness layer, and treating it as active would reintroduce the false
+    // green (`yt-dlp --version` exits 0, the transcript pull still fails).
+    const usable = (backend: BackendRow): boolean =>
+        backend.status === 'ok' &&
+        (backend.readiness === undefined || backend.readiness.status === 'ready');
+    const active = backends.find(usable) ?? null;
     // With no healthy candidate the channel takes the FIRST candidate's
     // verdict — that is the one whose fix the operator is expected to run.
     const first = backends[0] as BackendRow;
-    const status: ChannelStatus = active !== null ? 'ok' : first.status;
+    // `not-ready` = "installed and answering, but not confirmed able to satisfy
+    // this channel". It covers BOTH readiness verdicts that are not `ready`:
+    // `not-ready` (confirmed unusable) and `unknown` (not settled). One enum
+    // value, because the distinction between them is already carried precisely
+    // by `backends[].readiness.status` — and because reporting `ok` for an
+    // unsettled readiness is exactly the false green this layer closes (see the
+    // invariant block: an "installed, unverified" ceiling over a false green).
+    const unready = backends.some(
+        (backend) =>
+            backend.status === 'ok' &&
+            backend.readiness !== undefined &&
+            backend.readiness.status !== 'ready',
+    );
+    const status: ChannelStatus =
+        active !== null ? 'ok' : unready ? 'not-ready' : first.status;
+    // Unchanged meaning: `fix` is the pinned INSTALL prescription. A readiness
+    // remedy is a different kind of instruction (it edits an operator's config
+    // rather than installing a pin) and lives in `backends[].readiness.fix`, so
+    // one field never carries two meanings.
     const fix =
         active === null && (first.status === 'missing' || first.status === 'broken')
             ? first.fix
@@ -744,7 +1327,13 @@ export function collect(options: CollectOptions = {}): ReachDoctorPayload {
             ? declaredId
             : `(channel #${index})`;
         try {
-            channels.push(buildChannelRow(raw, { deep, now }));
+            channels.push(
+                buildChannelRow(raw, {
+                    deep,
+                    now,
+                    ...(options.readiness === undefined ? {} : { readiness: options.readiness }),
+                }),
+            );
         } catch (err) {
             channels.push(errorRow(label, err));
         }
@@ -782,6 +1371,9 @@ const STATUS_MARKER: Readonly<Record<ChannelStatus, string>> = {
     timeout: '⚠️  ',
     error: '⚠️  ',
     removed: '·  ',
+    // Distinct from `missing`'s ❌ on purpose: the binary IS installed, so the
+    // operator's next action is a config/upgrade step, not an install.
+    'not-ready': '⚠️  ',
 };
 
 export function renderTable(payload: ReachDoctorPayload): string {
@@ -809,6 +1401,28 @@ export function renderTable(payload: ReachDoctorPayload): string {
             lines.push(`    ${mark} ${backend.id.padEnd(10)} ${backend.diagnostic}`);
             if (backend.deep !== null) {
                 lines.push(`       deep: ${backend.deep.status} — ${backend.deep.detail}`);
+            }
+            // Rendered for BOTH the ready and the not-ready case: an operator
+            // reading "installed" needs to see that the second question was
+            // asked at all, otherwise a silent pass is indistinguishable from
+            // a check that never ran.
+            if (backend.readiness !== undefined) {
+                const readiness = backend.readiness;
+                lines.push(
+                    `       readiness (${readiness.kind}): ${readiness.status} — ${readiness.detail}`,
+                );
+                lines.push(
+                    `       readiness config: ${readiness.config_path} ` +
+                        `(${readiness.config_present ? 'present' : 'not a readable file'}, ` +
+                        `${JS_RUNTIME_FLAG}: ${readiness.config_flag ? 'yes' : 'no'}) · ` +
+                        `runtimes on PATH: ${readiness.runtimes.length === 0 ? 'none' : readiness.runtimes.join(', ')} · ` +
+                        // `null` covers both "never probed" and "unparseable",
+                        // so the label claims neither — `detail` says which.
+                        `version: ${readiness.version ?? 'not confirmed'}`,
+                );
+                if (readiness.fix !== null) {
+                    lines.push(`       readiness fix (${payload.platform}): ${readiness.fix}`);
+                }
             }
         }
         if (channel.fix !== null) {
@@ -858,10 +1472,14 @@ export function finalExitCode(payload: ReachDoctorPayload, strict: boolean): num
 
 const USAGE = `reach:doctor — read-only health report over the reach channel registry
 
-Answers one operator question per channel: is the upstream backend I already
-chose to install healthy, and is its install command pinned? It is NOT a
-router and NOT an agent-facing recommendation — no channel it prints is
-routed, preferred, or suggested to an agent.
+Answers two operator questions per channel: is the upstream backend I already
+chose to install healthy and pinned — and, where the backend declares a
+readiness requirement, is it actually able to retrieve, or merely installed?
+A channel reported not-ready is installed and answering its probe while a
+config-semantic requirement is unsatisfied or unconfirmed; the remedy is
+printed, never run. It is NOT a router and NOT an agent-facing
+recommendation — no channel it prints is routed, preferred, or suggested to
+an agent.
 
 Usage:
   agent-config reach:doctor [options]
