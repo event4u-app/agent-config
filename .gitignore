@@ -130,6 +130,7 @@ __pycache__/
 # triggers.json is tracked, last-run.json is per-run output)
 .agent-src.uncondensed/skills/*/evals/last-run.json
 dist/agent-src/skills/*/evals/last-run.json
+src/skills/*/evals/last-run.json
 # Live trigger-eval outputs — timestamped JSON per run, not committed.
 internal/evals/results/
 
