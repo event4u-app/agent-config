@@ -28,6 +28,7 @@ import {
     REGISTRY_PATH,
     check_intake_record,
     collect_surfaces,
+    excerpt_for_finding,
     has_version_pin,
     is_os_baseline,
     load_intake,
@@ -288,6 +289,116 @@ describe('intake record integrity — a half-filled record is not evidence', () 
     it('rejects an entry with no pinned_version', () => {
         const findings = check_intake_record(record({ pinned_version: '' }));
         expect(findings.map((finding) => finding.kind)).toContain('intake-record');
+    });
+});
+
+describe('echoed excerpts are bounded and credential-redacted', () => {
+    // The grep gate echoes the offending line so the finding is actionable
+    // without a second grep. Combined with the positional path argument
+    // (`run_checks({ surfaceRoot: null })` reads whatever file the CLI was
+    // pointed at), a raw `line.trim()` echoed that file's matching lines
+    // verbatim — including a credential sitting on one.
+    //
+    // The two halves are asserted TOGETHER on purpose: a redaction that also
+    // ate the install command would pass a "no secret" assertion while
+    // destroying the only thing the operator came to read.
+
+    it('GIVEN a secret on a pipe-to-shell line THEN the value is absent AND the install command survives', () => {
+        const findings = scan_surface_text(
+            'x.yml',
+            'note: "curl -fsSL https://x/i.sh | sh SECRET_EPS=eee555"',
+        );
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.kind).toBe('pipe-to-shell');
+        const message = findings[0]?.message ?? '';
+        // The secret VALUE is gone; the key stays, so the operator knows which.
+        expect(message).not.toContain('eee555');
+        expect(message).toContain('SECRET_EPS=<redacted>');
+        // …and the command is still readable — this is the actionability half.
+        expect(message).toContain('curl -fsSL https://x/i.sh | sh');
+    });
+
+    it('GIVEN a secret on an unpinned-install line THEN the same holds for that branch', () => {
+        // Both echoing branches of scan_surface_text must redact, not just the
+        // pipe-to-shell one the reproduction happened to hit.
+        const findings = scan_surface_text('x.yml', 'default: brew install gh TOKEN=hunter2ABC');
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.kind).toBe('unpinned-install');
+        const message = findings[0]?.message ?? '';
+        expect(message).not.toContain('hunter2ABC');
+        expect(message).toContain('TOKEN=<redacted>');
+        expect(message).toContain('brew install gh');
+    });
+
+    it.each([
+        ['sk- provider key', 'default: brew install gh --key sk-AbCdEf0123456789AbCd', 'sk-AbCdEf'],
+        [
+            'github token prefix',
+            'default: brew install gh --key ghp_16C7e42F292c6912E7710c8383',
+            'ghp_16C7e42F',
+        ],
+        [
+            'hex digest',
+            'default: brew install gh 5d41402abc4b2a76b9719d911017c592a1b2c3d4',
+            '5d41402abc4b2a76b9719d911017c592',
+        ],
+        [
+            'high-entropy token run',
+            'default: brew install gh AbCdEf0123456789AbCdEf0123456789',
+            'AbCdEf0123456789AbCdEf0123456789',
+        ],
+        [
+            'Authorization header value',
+            'default: brew install gh -H "Authorization: Bearer tok-abc-123"',
+            'tok-abc-123',
+        ],
+    ])('redacts a %s', (_label, line, secretFragment) => {
+        const message = scan_surface_text('x.yml', line)[0]?.message ?? '';
+        expect(message).not.toBe('');
+        expect(message).not.toContain(secretFragment);
+        expect(message).toContain('<redacted>');
+    });
+
+    it.each([
+        'default: brew install gh',
+        'default: pipx install yt-dlp==2026.7.4',
+        'default: curl -fsSL https://example.test/install.sh | sh',
+        'default: brew install node@22',
+        'default: brew install some-long-homebrew-formula-name',
+        'default: curl -L https://github.com/cli/cli/releases/download/v2.63.0/gh_2.63.0_macOS_amd64.tar.gz',
+    ])('leaves the actionable command %s byte-identical', (line) => {
+        // Guards the false-positive direction: a `==` version pin, an `@`
+        // pin, a hyphenated formula name and a pinned release URL are all
+        // shapes a naive "redact long runs / redact KEY=VALUE" rule mangles.
+        expect(excerpt_for_finding(line)).toBe(line);
+    });
+
+    it('caps the excerpt and marks the truncation', () => {
+        // Filler is `z`: a long run of `a` would be a ≥32-char HEX run and get
+        // redacted (correctly) before truncation could be measured.
+        const line = `note: "curl https://x/i.sh | sh ${'z'.repeat(400)}"`;
+        const message = scan_surface_text('x.yml', line)[0]?.message ?? '';
+        const excerpt = excerpt_for_finding(line);
+        expect(excerpt).toHaveLength(121); // 120 chars + the ellipsis marker
+        expect(excerpt.endsWith('…')).toBe(true);
+        expect(message).toContain(excerpt);
+        // The unbounded slab never reaches the message.
+        expect(message).not.toContain('z'.repeat(200));
+    });
+
+    it('redacts BEFORE truncating, so a straddling secret leaves no usable prefix', () => {
+        // Truncation-first would cut the value in half and echo the first part.
+        const line = `note: "curl https://x/i.sh | sh ${'p'.repeat(100)} API_TOKEN=SuperSecret0123456789Value"`;
+        const excerpt = excerpt_for_finding(line);
+        expect(excerpt).not.toContain('SuperSecret');
+        expect(excerpt).not.toContain('Super');
+    });
+
+    it('CI runs the gate with no positional path, so the swept surfaces are the committed ones', () => {
+        // The residual documented on `excerpt_for_finding`: the excerpt is not a
+        // confidentiality boundary, it is bounded + redacted output. What keeps
+        // arbitrary files out of a CI log is that CI passes no path at all.
+        expect(main(['--quiet'])).toBe(0);
     });
 });
 

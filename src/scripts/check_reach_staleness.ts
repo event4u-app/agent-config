@@ -193,6 +193,21 @@ export function check_channels(registry: unknown, todayStamp: number): Staleness
         }
 
         // (c) a channel that outlived its own removal date.
+        //
+        // NOT A LEXICOGRAPHIC DATE COMPARISON — flagged as one by review, so the
+        // two facts that refute it are recorded here rather than re-derived:
+        //   1. Both operands are NUMBERS. `parse_iso_date` (line 92 of this
+        //      file) returns a UTC-midnight epoch stamp or `null`, and `null`
+        //      takes the `unparseable-date` branch below instead of any
+        //      comparison; `todayStamp` comes from the same function. The `>`
+        //      below is therefore numeric — as is the `age` test in (a) above,
+        //      which goes through `days_between`.
+        //   2. The input shape is pinned upstream regardless:
+        //      `src/scripts/schemas/reach-channels.schema.json` constrains
+        //      `last_verified` (line 52) and `removal_after` (line 57) to
+        //      `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`, and `ISO_DATE_RE` (line 65) is
+        //      re-checked here, so an unpadded or non-ISO date cannot reach the
+        //      parse at all.
         if (channel.removal_after !== undefined && channel.removal_after !== null) {
             const removal = parse_iso_date(channel.removal_after);
             if (removal === null) {

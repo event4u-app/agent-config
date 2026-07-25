@@ -458,6 +458,84 @@ export function reach_scope_lines(relPath: string, text: string): Set<number> {
     return inScope;
 }
 
+// --- echoed excerpts -------------------------------------------------------
+// The grep gate's whole value is that a finding names the offending TEXT, not
+// just a line number — an operator fixing their own registry needs to read the
+// command back. That echo is also the one place this script copies bytes out of
+// a file it was pointed at, so the excerpt is bounded and credential-redacted
+// before it reaches stdout.
+
+/**
+ * Cap on the echoed excerpt. Long enough for a real prescription
+ * (`pipx install yt-dlp==2026.7.4`, a pinned release URL), short enough that a
+ * single finding can never dump a paragraph of the scanned file.
+ */
+const EXCERPT_MAX_CHARS = 120;
+
+const REDACTED = '<redacted>';
+
+/**
+ * Credential-shaped substrings replaced before a line is echoed. Every pattern
+ * keeps the part that makes the finding actionable — the variable name, the
+ * header name, the key prefix — and drops only the value.
+ *
+ * Each one is deliberately narrower than its obvious form, because a
+ * false-positive redaction is not free: it destroys the command the operator
+ * came here to read. The version-pin cases that MUST survive are
+ * `brew install gh`, `pipx install yt-dlp==2026.7.4`, `node@22`,
+ * `--version 2.96.0`, and a pinned release URL.
+ */
+const REDACTIONS: readonly (readonly [RegExp, string])[] = [
+    // `Authorization: Bearer …` — the header name stays, the value does not.
+    // Runs to end of line: everything after the colon is the credential.
+    [/(\bauthorization\s*:\s*)(\S.*)$/gi, `$1${REDACTED}`],
+    // `KEY=VALUE`. Two narrowings carry their weight. The lookbehind requires
+    // the key to START a token — so `yt-dlp==2026.7.4` is never chopped at its
+    // `dlp=` tail and `--target=/opt` is left alone — while still admitting a
+    // quote or paren before it, because `sh -c "SECRET=…"` is how a credential
+    // actually appears in a command. `(?!=)` excludes the `==` pin operator.
+    [/(?<![A-Za-z0-9_./-])([A-Za-z_][A-Za-z0-9_]{2,})=(?!=)\S+/g, `$1=${REDACTED}`],
+    // Provider key prefixes — the shapes that are a secret by construction.
+    [/\b(sk|pk|rk)-[A-Za-z0-9_-]{8,}/gi, `$1-${REDACTED}`],
+    [/\b(gh[pousr]|github_pat|xox[baprs])[-_][A-Za-z0-9_-]{8,}/gi, `$1_${REDACTED}`],
+    // A hex digest ≥ 32: an API key or a signature, never part of an install verb.
+    [/(?<![0-9a-fA-F])[0-9a-fA-F]{32,}(?![0-9a-fA-F])/g, REDACTED],
+    // A ≥ 24-char run carrying lower + upper + digit — the entropy shape of an
+    // opaque token. Narrower than "any 24-char base64/hex run" ON PURPOSE: that
+    // form also eats `some-long-homebrew-formula-name` and the path segment of
+    // a pinned release URL, both of which the operator needs to read. Requiring
+    // mixed case AND a digit keeps hyphenated names and lowercase paths intact.
+    [
+        /(?<![A-Za-z0-9+_-])(?=[A-Za-z0-9+_-]{24,})(?=[A-Za-z0-9+_-]*[a-z])(?=[A-Za-z0-9+_-]*[A-Z])(?=[A-Za-z0-9+_-]*\d)[A-Za-z0-9+_-]{24,}(?![A-Za-z0-9+_-])/g,
+        REDACTED,
+    ],
+];
+
+/**
+ * Bounded, credential-redacted excerpt of one scanned line.
+ *
+ * Redaction runs BEFORE truncation on purpose: truncating first would let a
+ * secret that straddles the 120-char boundary leave a usable prefix behind.
+ *
+ * RESIDUAL, STATED PLAINLY — this is NOT a confidentiality boundary and cannot
+ * be made into one. A bounded excerpt still reveals some content of a file the
+ * caller named, and the positional path argument only ever reads what the
+ * invoking shell could already `cat`; whoever runs this CLI has that shell. Two
+ * things are nonetheless bought here, and they are the real ones: the
+ * credential-shaped classes above never land in stdout or a CI log, and no
+ * single finding can emit an unbounded slab of the target file. CI never passes
+ * a caller-supplied path — `task check-reach-prescriptions` runs with no
+ * positional argument, so the surfaces swept there are the committed reach
+ * config and docs, whose contents are public in the repo anyway.
+ */
+export function excerpt_for_finding(line: string): string {
+    let text = line.trim();
+    for (const [pattern, replacement] of REDACTIONS) {
+        text = text.replace(pattern, replacement);
+    }
+    return text.length > EXCERPT_MAX_CHARS ? `${text.slice(0, EXCERPT_MAX_CHARS)}…` : text;
+}
+
 /**
  * Scan one surface's text. `scopeLines` restricts the sweep (docs sections);
  * omit it to scan every line (config files, fixtures).
@@ -466,6 +544,10 @@ export function reach_scope_lines(relPath: string, text: string): Set<number> {
  * human to run `brew install <tool>` hands over the same unpinned artefact the
  * command would, so exempting prose would leave the hazard reachable through
  * the one channel this package actually ships — text a person reads.
+ *
+ * Every branch that echoes a line goes through `excerpt_for_finding` — a raw
+ * `line.trim()` here is what turned the positional path argument into a
+ * verbatim-content echo (`… | sh SECRET_EPS=…` printed the value).
  */
 export function scan_surface_text(
     relPath: string,
@@ -482,7 +564,7 @@ export function scan_surface_text(
             findings.push({
                 locator: `${relPath}:${lineNo}`,
                 kind: 'pipe-to-shell',
-                message: `pipes a remote fetch straight into an interpreter: ${line.trim()} — download, inspect, then run a pinned artefact (supply-chain-intake § no pipe-to-shell)`,
+                message: `pipes a remote fetch straight into an interpreter: ${excerpt_for_finding(line)} — download, inspect, then run a pinned artefact (supply-chain-intake § no pipe-to-shell)`,
             });
             return;
         }
@@ -490,7 +572,7 @@ export function scan_surface_text(
             findings.push({
                 locator: `${relPath}:${lineNo}`,
                 kind: 'unpinned-install',
-                message: `unpinned install command in a shipped reach surface: ${line.trim()} — pin the version`,
+                message: `unpinned install command in a shipped reach surface: ${excerpt_for_finding(line)} — pin the version`,
             });
         }
     });

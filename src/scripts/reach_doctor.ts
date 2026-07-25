@@ -75,6 +75,7 @@ import {
     REGISTRY_PATH,
     RegistryLoadError,
     load_registry,
+    sanitizeParseError,
     validate_file,
 } from './check_reach_channels.js';
 
@@ -248,6 +249,18 @@ function expandHome(target: string): string {
  */
 function inspectCredential(declared: string): CredentialRow {
     const resolved = expandHome(declared);
+    // WIN32: NO ALTERNATIVE CONTROL, AND THE GAP IS REPORTED RATHER THAN HIDDEN.
+    // Windows does not express file access as a `stat.mode` bitmask at all — it
+    // uses ACLs, so there is no POSIX permission triple here to read and no
+    // narrower check available. Reading the real ACL would need either a native
+    // binding or spawning `icacls`, and this doctor refuses to add a child
+    // process for a diagnostic (its read-only contract is asserted by the
+    // witness test). So the honest answer is `checked: false`: `present` is
+    // still reported, `mode` is `null`, and `group_or_world_readable` is `false`
+    // as "not determined" — never as "determined safe". `checked` is a REQUIRED
+    // field of the payload schema and both output formats surface it (the table
+    // prints "not checked on this platform"), so an operator sees an unevaluated
+    // check instead of a passing one.
     if (process.platform === 'win32') {
         return {
             path: resolved,
@@ -282,11 +295,25 @@ function inspectCredential(declared: string): CredentialRow {
     };
 }
 
+/**
+ * Run the declared deep probe for one backend.
+ *
+ * Reached from `buildChannelRow`, so the same boundary note applies: the schema
+ * gate is `collect()`, which validates the registry before `--deep` can turn any
+ * `probe_cmd` into a child process. This export is TEST-FACING; a direct caller
+ * is responsible for validating its input first.
+ */
 export function runDeepProbe(probeCmd: string, localStatus: ToolProbeStatus): DeepRow {
-    // `Object.hasOwn`, never a bare index: `DEEP_PROBES[probeCmd]` walks the
-    // prototype chain, so `probe_cmd: constructor` resolved to `Object`,
-    // skipped the `not-declared` branch, and emitted a `deep` block with
-    // `endpoint: undefined` — a payload that fails its own schema.
+    // `Object.hasOwn`, never a bare index. THE GUARD IS WHAT MAKES A
+    // PROTOTYPE-CHAIN KEY IMPOSSIBLE HERE — reviewers have flagged this area
+    // twice, so the mechanism is recorded rather than left to be re-derived:
+    // `DEEP_PROBES[probeCmd]` walks the prototype chain, so `probe_cmd:
+    // constructor` resolved to `Object` and `probe_cmd: __proto__` to
+    // `Object.prototype`. Either one skipped the `not-declared` branch and
+    // emitted a `deep` block with `endpoint: undefined` — a payload that fails
+    // its own schema. `Object.hasOwn` consults only own properties, so every
+    // inherited key now takes the `not-declared` path by construction, and no
+    // endpoint is ever invented for a backend that declared none.
     const spec = Object.hasOwn(DEEP_PROBES, probeCmd) ? DEEP_PROBES[probeCmd] : undefined;
     if (spec === undefined) {
         return {
@@ -338,22 +365,39 @@ export function runDeepProbe(probeCmd: string, localStatus: ToolProbeStatus): De
 /**
  * Build one channel row. Throws on a malformed channel — the caller turns
  * that into this channel's `error` row so the rest of the report survives.
+ *
+ * THE SCHEMA GATE IS `collect()`, NOT THIS FUNCTION. `collect()` runs
+ * `validate_file` (schema + the cross-field `probe_cmd === id` rule) and refuses
+ * the whole run before `load_registry`, this function, or any probe is reached.
+ * This export exists for the tests that exercise the per-channel isolation layer
+ * directly — no registry can get past that gate to reach it otherwise — so it is
+ * TEST-FACING, not a public API. A direct caller is responsible for validating
+ * its own input first; the entry gate and the `probe_cmd` check below are
+ * defense in depth for exactly that case, not a substitute for the schema.
  */
 export function buildChannelRow(
     raw: unknown,
     options: { deep: boolean; now: Date },
 ): ChannelRow {
+    // Entry gate — defense in depth behind `collect()`'s schema validation. Each
+    // shape a validated registry cannot produce is refused with a named reason
+    // rather than read speculatively: a row built from an entry whose `id` or
+    // `backends` had to be guessed would attribute probe results to a channel
+    // nobody declared, which is worse than no row at all.
     const record = toRecord(raw);
     if (record === null) {
         throw new Error('channel entry is not a mapping');
     }
     const id = readString(record, 'id');
     if (id === null) {
-        throw new Error('channel entry carries no id');
+        throw new Error('channel entry carries no id — a row can only be attributed by id');
     }
     const backendsRaw = record['backends'];
-    if (!Array.isArray(backendsRaw) || backendsRaw.length === 0) {
-        throw new Error(`channel '${id}': backends must be a non-empty list`);
+    if (!Array.isArray(backendsRaw)) {
+        throw new Error(`channel '${id}': backends must be a non-empty list, got a non-list`);
+    }
+    if (backendsRaw.length === 0) {
+        throw new Error(`channel '${id}': backends must be a non-empty list, got an empty one`);
     }
 
     const tier = readString(record, 'tier') ?? '(unset)';
@@ -374,6 +418,15 @@ export function buildChannelRow(
 
     // Past `removal_after` the channel is not probed at all: the migration
     // window closed, so its backends' health is no longer a question.
+    //
+    // This comparison IS string-wise, and that is sound rather than a shortcut:
+    // `reach-channels.schema.json` pins `removal_after` (line 57) to
+    // `^[0-9]{4}-[0-9]{2}-[0-9]{2}$` and `collect()` refuses the registry before
+    // this line on any schema error, so both operands are fixed-width
+    // zero-padded ISO dates — a form whose lexicographic order IS its
+    // chronological order. `isoDate()` emits the same shape. (The staleness lint
+    // takes the other route for the same field, parsing to epoch numbers; see
+    // the note at `check_reach_staleness.ts` § (c).)
     const today = isoDate(options.now);
     const removed = removalAfter !== null && today > removalAfter;
     if (removed) {
@@ -483,7 +536,11 @@ export function buildChannelRow(
 }
 
 export function errorRow(id: string, err: unknown): ChannelRow {
-    const message = err instanceof Error ? err.message : String(err);
+    // `sanitizeParseError`, not `String(err)`: this was the one error→output path
+    // in the reach scripts that did not go through it, and a YAMLParseError
+    // stringifies with the offending source line plus a caret — no error message
+    // reaching this payload may carry a line of the registry it came from.
+    const message = sanitizeParseError(err);
     return {
         id,
         status: 'error',
