@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `9.7.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 284
+- **artefacts**: 285
 
 ## Commands (147)
 
@@ -227,7 +227,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Questions, options, progress summaries — numbered-options Iron Law, single-recommendation rule
 - **`user-interrupt-priority`** — New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming
 
-## Skills (72)
+## Skills (73)
 
 - **`adr-create`** — Use when capturing an architectural decision — file naming, next ADR number, Status / Context / Decision / Consequences, index regen; fires even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -251,6 +251,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`docx-authoring`** — Use when generating or editing a Word .docx — create, fill a template, or edit body XML via a consumer library; round-trip validated. Triggers on 'generate a docx', 'fill this Word template'.
 - **`emit-tickets`** — Use when materialising a roadmap into a ticket bundle — 'turn this roadmap into tickets', 'materialise tickets', 'mach Tickets aus der Roadmap', 'emit tickets for this plan'.
 - **`file-editor`** — Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled.
+- **`gated-reach`** — Read a Reddit thread or single tweet the host cannot fetch — 'what does this Reddit thread say', 'top comment on this post', 'what does this tweet say' — when reddit.com is refused or x.com 402s.
 - **`guideline-writing`** — Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'.
 - **`jira-integration`** — Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking.
 - **`judge-artifact-completeness`** — Use when scoring a roadmap, PR review, ADR, or ticket for completeness — risk, tests, migration, maintainability. Dispatched by /refine-ticket, /adr-create, /review-changes; never auto-gates.

@@ -1,0 +1,72 @@
+{
+    "skill": "gated-reach",
+    "last_eval": "2026-07-25",
+    "description": "6 should-trigger + 8 should-not-trigger queries. Should-trigger covers DE + EN phrasings for the two ship-tier intents only: reading a Reddit thread (text, and ranking/structure) and reading a single named tweet. Should-not-trigger is deliberately larger than the positive set: the parent bench found the native web tools already win on ordinary research, so this skill's main failure mode is over-triggering. Negatives cover general research, plain web pages, the parked YouTube channel, unsupported Twitter surfaces (timelines/search), and an unsupported platform — a trigger that fires only to decline is worse than no trigger.",
+    "queries": [
+        {
+            "q": "what does this reddit thread say? https://www.reddit.com/r/rust/comments/abc123/",
+            "trigger": true
+        },
+        {
+            "q": "which comment did people actually upvote in this reddit discussion?",
+            "trigger": true,
+            "note": "ranking intent — tier 2, the credential-free capability this roadmap shipped"
+        },
+        {
+            "q": "reddit.com wird von deinem web-tool abgelehnt — lies mir den Thread trotzdem vor",
+            "trigger": true
+        },
+        {
+            "q": "summarise the top comments and their scores on this r/programming post",
+            "trigger": true
+        },
+        {
+            "q": "what does this tweet say? https://x.com/somesmallaccount/status/1964428927159382261",
+            "trigger": true
+        },
+        {
+            "q": "x.com gibt 402 zurück — was steht in diesem Tweet?",
+            "trigger": true
+        },
+        {
+            "q": "research the current best practice for database connection pooling",
+            "trigger": false,
+            "note": "ordinary dev research — native web tools win 12/12 (parent bench null)"
+        },
+        {
+            "q": "fetch this blog post and summarise it",
+            "trigger": false,
+            "note": "plain web page — the host's own fetch handles it"
+        },
+        {
+            "q": "get me the transcript of this YouTube video",
+            "trigger": false,
+            "note": "youtube-transcripts is PARKED — backend absent by design; reach:doctor states it"
+        },
+        {
+            "q": "pull this user's recent twitter timeline",
+            "trigger": false,
+            "note": "no credential-free path to timelines — not a shipped intent"
+        },
+        {
+            "q": "search twitter for mentions of our product",
+            "trigger": false,
+            "note": "no credential-free path to search — not a shipped intent"
+        },
+        {
+            "q": "read this Weibo thread for me",
+            "trigger": false,
+            "note": "no prescription exists for CN platforms — declining is not a trigger"
+        },
+        {
+            "q": "what are the open issues on this GitHub repo?",
+            "trigger": false,
+            "note": "the github channel is a separate, already-working surface"
+        },
+        {
+            "q": "install yt-dlp for me so the youtube channel works",
+            "trigger": false,
+            "note": "the package never auto-installs — missing-tool-handling, not this skill"
+        }
+    ]
+}

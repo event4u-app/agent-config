@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **677 artefacts** in this package.
+Maintainer-facing index of all **679 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (279)
+## Skills (281)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -45,6 +45,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`character-consistency`](../src/skills/character-consistency/SKILL.md) | official | Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'. |
 | skill | [`check-refs`](../src/skills/check-refs/SKILL.md) | official | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | skill | [`churn-prevention`](../src/skills/churn-prevention/SKILL.md) | official | Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'. |
+| skill | [`code-intelligence`](../src/skills/code-intelligence/SKILL.md) | official | Route codebase-structure questions (who calls X, where used, what imports, change-impact) to a code-graph first, grep fallback. Triggers 'who calls', 'where is this used', 'call graph'. |
 | skill | [`code-refactoring`](../src/skills/code-refactoring/SKILL.md) | official | Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools. |
 | skill | [`code-review`](../src/skills/code-review/SKILL.md) | official | Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards. |
 | skill | [`command-routing`](../src/skills/command-routing/SKILL.md) | official | Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns. |
@@ -108,6 +109,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`frontend-render-security`](../src/skills/frontend-render-security/SKILL.md) | official | Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage |
 | skill | [`fundraising-narrative`](../src/skills/fundraising-narrative/SKILL.md) | official | Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'. |
 | skill | [`funnel-analysis`](../src/skills/funnel-analysis/SKILL.md) | official | Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven. |
+| skill | [`gated-reach`](../src/skills/gated-reach/SKILL.md) | official | Read a Reddit thread or single tweet the host cannot fetch — 'what does this Reddit thread say', 'top comment on this post', 'what does this tweet say' — when reddit.com is refused or x.com 402s. |
 | skill | [`git-workflow`](../src/skills/git-workflow/SKILL.md) | official | Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git. |
 | skill | [`github-ci`](../src/skills/github-ci/SKILL.md) | official | Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'. |
 | skill | [`grafana`](../src/skills/grafana/SKILL.md) | official | Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana. |

@@ -1,0 +1,129 @@
+{
+  "skill": "gated-reach",
+  "model": "claude-sonnet-4-5",
+  "timestamp": "2026-07-25T09:10:23+00:00",
+  "router": "mock",
+  "queries": [
+    {
+      "q": "what does this reddit thread say? https://www.reddit.com/r/rust/comments/abc123/",
+      "expected": true,
+      "observed": true,
+      "loaded_skills": [
+        "gated-reach"
+      ],
+      "passed": true
+    },
+    {
+      "q": "which comment did people actually upvote in this reddit discussion?",
+      "expected": true,
+      "observed": true,
+      "loaded_skills": [
+        "gated-reach"
+      ],
+      "passed": true
+    },
+    {
+      "q": "reddit.com wird von deinem web-tool abgelehnt \u2014 lies mir den Thread trotzdem vor",
+      "expected": true,
+      "observed": true,
+      "loaded_skills": [
+        "gated-reach"
+      ],
+      "passed": true
+    },
+    {
+      "q": "summarise the top comments and their scores on this r/programming post",
+      "expected": true,
+      "observed": true,
+      "loaded_skills": [
+        "gated-reach"
+      ],
+      "passed": true
+    },
+    {
+      "q": "what does this tweet say? https://x.com/somesmallaccount/status/1964428927159382261",
+      "expected": true,
+      "observed": true,
+      "loaded_skills": [
+        "gated-reach"
+      ],
+      "passed": true
+    },
+    {
+      "q": "x.com gibt 402 zur\u00fcck \u2014 was steht in diesem Tweet?",
+      "expected": true,
+      "observed": true,
+      "loaded_skills": [
+        "gated-reach"
+      ],
+      "passed": true
+    },
+    {
+      "q": "research the current best practice for database connection pooling",
+      "expected": false,
+      "observed": false,
+      "loaded_skills": [],
+      "passed": true
+    },
+    {
+      "q": "fetch this blog post and summarise it",
+      "expected": false,
+      "observed": false,
+      "loaded_skills": [],
+      "passed": true
+    },
+    {
+      "q": "get me the transcript of this YouTube video",
+      "expected": false,
+      "observed": false,
+      "loaded_skills": [],
+      "passed": true
+    },
+    {
+      "q": "pull this user's recent twitter timeline",
+      "expected": false,
+      "observed": false,
+      "loaded_skills": [],
+      "passed": true
+    },
+    {
+      "q": "search twitter for mentions of our product",
+      "expected": false,
+      "observed": false,
+      "loaded_skills": [],
+      "passed": true
+    },
+    {
+      "q": "read this Weibo thread for me",
+      "expected": false,
+      "observed": false,
+      "loaded_skills": [],
+      "passed": true
+    },
+    {
+      "q": "what are the open issues on this GitHub repo?",
+      "expected": false,
+      "observed": false,
+      "loaded_skills": [],
+      "passed": true
+    },
+    {
+      "q": "install yt-dlp for me so the youtube channel works",
+      "expected": false,
+      "observed": false,
+      "loaded_skills": [],
+      "passed": true
+    }
+  ],
+  "metrics": {
+    "true_positive": 6,
+    "false_positive": 0,
+    "true_negative": 8,
+    "false_negative": 0,
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "input_tokens": 78870,
+  "output_tokens": 224,
+  "cost_usd_estimate": 0.23997
+}
