@@ -56,6 +56,16 @@ const backedLedger = [
     '- status: backed',
     '- last_verified: 2026-07-04',
     '',
+    // A quantitative entry. The witness sweep requires `kind: quant` to clear a
+    // FIGURE: a qualitative claim says nothing about a quantity, so `good` above
+    // deliberately cannot license "saves 65% of tokens".
+    '### claim: good-quant',
+    '- claim: A bound quantitative claim.',
+    '- kind: quant',
+    '- evidence: docs/evidence.md#ANCHOR',
+    '- status: backed',
+    '- last_verified: 2026-07-04',
+    '',
 ].join('\n');
 
 describe('check_claims — mechanism', () => {
@@ -115,7 +125,7 @@ describe('check_claims — mechanism', () => {
         write(
             'README.md',
             [
-                'This layer saves 65% of tokens. <!-- claim:good -->',
+                'This layer saves 65% of tokens. <!-- claim:good-quant -->',
                 'Rough guess: maybe 3x faster (unverified, not measured).',
                 '```',
                 'benchmark output: 99% — fenced, never scanned',
@@ -125,6 +135,22 @@ describe('check_claims — mechanism', () => {
         );
         const good = run();
         expect(good.code).toBe(0);
+    });
+
+    it('witness sweep: a qualitative marker cannot license a figure on its line', () => {
+        // The regression that shipped. README carried "compiled into 7+ host
+        // agents" on a line already markered `claim:no-runtime-daemon` — a
+        // `kind: qual` claim about having no daemon. Any-marker-exempts-the-line
+        // let the figure ride along on it for months.
+        write('docs/CLAIMS.md', backedLedger);
+        write('README.md', 'Compiled into 7+ host agents.<!-- claim:good -->\n');
+        const bad = run();
+        expect(bad.code).toBe(2);
+        expect(bad.stderr).toContain('cannot license a number');
+
+        // The same line clears once a quantitative entry backs it.
+        write('README.md', 'Compiled into 20 host agents.<!-- claim:good-quant -->\n');
+        expect(run().code).toBe(0);
     });
 
 });
