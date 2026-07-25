@@ -175,3 +175,43 @@ channels:
           linux: "os-baseline: distro-provided curl package (apt / dnf / apk) — version tracks the distro, no pin meaningful"
           win32: "os-baseline: Windows 10+ ships curl.exe in System32 — no package install prescribed"
           default: "os-baseline: a system curl is assumed present; if absent, install it from the platform package manager — never a piped remote installer"
+
+  - id: reddit
+    description: Reddit discussion reading in two tiers — durable Atom text, and time-bounded ranked HTML.
+    tier: zero-config
+    lifecycle: experimental
+    override_key: reach.channels.reddit.backend
+    last_verified: "2026-07-25"
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--version"]
+        install:
+          darwin: "os-baseline: macOS ships curl (8.7.1 observed 2026-07-25) at /usr/bin/curl — no package install prescribed"
+          linux: "os-baseline: distro-provided curl package (apt / dnf / apk) — version tracks the distro, no pin meaningful"
+          win32: "os-baseline: Windows 10+ ships curl.exe in System32 — no package install prescribed"
+          default: "os-baseline: a system curl is assumed present; if absent, install it from the platform package manager — never a piped remote installer"
+      - id: node
+        probe_cmd: node
+        probe_args: ["--version"]
+        install:
+          darwin: brew install node@22
+          linux: "os-baseline: distro or NodeSource nodejs package — version tracks the chosen channel, no pin meaningful here"
+          win32: "os-baseline: winget package OpenJS.NodeJS.LTS — version tracks the LTS line, no pin meaningful here"
+          default: "os-baseline: any Node runtime at or above this package's engines floor (>=20.11.0) already on PATH"
+
+  - id: twitter-oembed
+    description: Single public tweet read through the platform's own oEmbed endpoint, credential-free.
+    tier: zero-config
+    lifecycle: experimental
+    override_key: reach.channels.twitter-oembed.backend
+    last_verified: "2026-07-25"
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--version"]
+        install:
+          darwin: "os-baseline: macOS ships curl (8.7.1 observed 2026-07-25) at /usr/bin/curl — no package install prescribed"
+          linux: "os-baseline: distro-provided curl package (apt / dnf / apk) — version tracks the distro, no pin meaningful"
+          win32: "os-baseline: Windows 10+ ships curl.exe in System32 — no package install prescribed"
+          default: "os-baseline: a system curl is assumed present; if absent, install it from the platform package manager — never a piped remote installer"
