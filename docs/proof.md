@@ -130,6 +130,59 @@ decision into the top-5 (9/9) and the model disambiguates it — retrieval-on
 honest limit: the keyword scorer recalls but does not rank (mean tie-set
 3.3), which is the SQLite-FTS5 activation signal (ADR-116) at scale.
 
+## 2b. How much of our own governance actually bites
+
+A rule that depends on the agent noticing it is an honor system. We had no
+instrument for that until now, so here is the number, resolved rather than
+declared:
+
+**14 of 107 rules (13.1%) have a backstop that can fail a build.**
+<!-- claim:enforcement-coverage-resolved -->
+
+The method matters more than the figure. A rule may declare
+`enforced_by: validator:src/scripts/lint_x.ts`, but the gate credits it only
+when that script both exists **and** is reachable from a taskfile, a workflow,
+or the hook manifest — following umbrella indirection, so a sub-check that runs
+inside an aggregate linter still counts. A hook registered `fail_closed: false`
+resolves to `observer`, never `validator`: it writes evidence, it cannot stop a
+merge, and treating that as enforcement is how a package ends up believing its
+own marketing. Of 18 registered hooks, exactly one can block.
+
+The remaining 86 rules declare nothing yet and are counted as **uncovered**, not
+excluded. That is deliberate: a coverage number computed over only the rules
+that opted in would be flattering and useless.
+
+The first run of this gate found `lint_output_slop.ts` shipped and wired into
+nothing, while the `output-discipline` rule asserted in shipped prose that
+"violations cause a CI exit-code-2". No existing gate could see it, because every
+existing gate checks that a *pointer resolves*, not that a *claim is true*. It
+was closed by wiring the linter rather than by softening the rule — the claim was
+worth keeping, it just was not true yet. That fix is the 14th covered rule.
+
+Regenerate: `./scripts-run src/scripts/check_enforcement_coverage` · ratchet:
+`--check` (blocking coverage may not fall; unwired declarations may not rise).
+
+### And how much of the ledger above verifies its own truth
+
+The same question, turned on this page. Every evidence pointer in the ledger is
+checked for **existence** — the file is present, the substring is present, the URL
+carries a date — and never for **truth**. A claim reading "the suite is green"
+that points at a report nobody regenerated stays `backed` forever.
+
+**0 of 25 backed claims are machine-re-verifiable today. A measured 10 of 25
+(40 pp) could be.**
+<!-- claim:ledger-exec-verifiability -->
+
+That is why a re-executing `exec:` evidence form is now scheduled rather than
+assumed: the ≥ 10 pp bar was written down before the count was taken, so the
+decision was made by the number, not by how appealing the feature sounded. The
+remaining 15 cannot carry it and this is stated rather than glossed — 11 rest on
+paid or stochastic benchmark runs that no CI job can re-derive, and 4 are prose
+contracts.
+
+This is the sharpest limit on this page: the ledger currently proves that a claim
+has a citation, not that the citation is still true.
+
 ## 3. Known limits (published, witness-tested)
 
 Each limitation below is stated by the skill itself and carries a witness
