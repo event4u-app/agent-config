@@ -74,6 +74,8 @@ import type { FixPrescription, ToolProbeStatus } from './_lib/tool_probe.js';
 import {
     REGISTRY_PATH,
     RegistryLoadError,
+    SCHEMA_MESSAGE_MAX_CHARS,
+    excerpt_for_finding,
     load_registry,
     sanitizeParseError,
     validate_file,
@@ -237,6 +239,66 @@ function expandHome(target: string): string {
 }
 
 /**
+ * Roots a declared `credential_path` may point into: the operator's home (where
+ * `~/.config`, `~/.netrc` and token files live), this repo, and the system temp
+ * dir (the fixture case — a temp path reveals nothing its author does not already
+ * control).
+ */
+function credentialRoots(): string[] {
+    const roots = [os.homedir(), ROOT, os.tmpdir()];
+    // BOTH the symlinked and the resolved form of every root, because macOS hands
+    // out `/var/folders/…` from `os.tmpdir()` while its realpath is
+    // `/private/var/folders/…`. Comparing only one form refused the legitimate
+    // fixture case — caught by running the check, not by reading it.
+    for (const root of [...roots]) {
+        try {
+            roots.push(fs.realpathSync(root));
+        } catch {
+            // A root that cannot be resolved simply contributes its literal form.
+        }
+    }
+    return [...new Set(roots.map((root) => path.resolve(root)))];
+}
+
+/**
+ * PATH CONFINEMENT — the registry is untrusted input, so `credential_path` is an
+ * arbitrary-path primitive until it is bounded.
+ *
+ * Found by an adversarial council pass on this file, and reproduced before being
+ * believed: a `--registry` file declaring
+ * `credential_path: ../../../../../../../etc/passwd` made the doctor `stat` that
+ * path and report, at exit 0 inside a normal-looking health row,
+ * `{"path":"/etc/passwd","present":true,"mode":"0644","group_or_world_readable":true,"checked":true}`.
+ * That is an existence-and-permission oracle over the whole filesystem wearing the
+ * costume of a credential warning. The schema cannot express the bound (it only
+ * pins the value to a single line), so the bound lives here.
+ *
+ * Honest severity: whoever runs this CLI already has a shell and could `stat` the
+ * file themselves, so locally it buys an attacker nothing. It matters because this
+ * is a *diagnostic others may invoke* — a CI job, an agent surface with a path
+ * parameter — and a tool whose whole contract is "read-only and boring" should not
+ * ship a primitive that reports arbitrary path metadata.
+ *
+ * Refusal is reported, never silent: `checked: false` plus a warning naming it, so
+ * an operator with a legitimately unusual credential location sees why nothing was
+ * checked rather than seeing a pass.
+ */
+export function confineCredentialPath(resolved: string): boolean {
+    const roots = credentialRoots();
+    const candidates = [path.resolve(resolved)];
+    try {
+        // Realpath the target too, so a symlink cannot point out of the roots and
+        // so the macOS `/var` → `/private/var` case matches from either side.
+        candidates.push(fs.realpathSync(candidates[0] as string));
+    } catch {
+        // Not resolvable (usually: does not exist) — the literal form decides.
+    }
+    return candidates.every((candidate) =>
+        roots.some((root) => candidate === root || candidate.startsWith(`${root}${path.sep}`)),
+    );
+}
+
+/**
  * Group- or world-readability check on a declared credential file.
  *
  * No channel in the shipped registry declares `credential_path` — the
@@ -249,6 +311,18 @@ function expandHome(target: string): string {
  */
 function inspectCredential(declared: string): CredentialRow {
     const resolved = expandHome(declared);
+
+    // Confinement runs BEFORE any syscall, so an out-of-bounds path is never
+    // stat'ed and not even its existence leaks.
+    if (!confineCredentialPath(resolved)) {
+        return {
+            path: resolved,
+            present: false,
+            mode: null,
+            group_or_world_readable: false,
+            checked: false,
+        };
+    }
     // WIN32: NO ALTERNATIVE CONTROL, AND THE GAP IS REPORTED RATHER THAN HIDDEN.
     // Windows does not express file access as a `stat.mode` bitmask at all — it
     // uses ACLs, so there is no POSIX permission triple here to read and no
@@ -280,6 +354,20 @@ function inspectCredential(declared: string): CredentialRow {
             mode: null,
             group_or_world_readable: false,
             checked: true,
+        };
+    }
+    // A directory is not a credential file, and its 0755 is normal rather than a
+    // finding — reporting one as group-readable would manufacture a warning an
+    // operator cannot act on (council finding: the mode was read without checking
+    // the file type). Same for a socket / device / fifo: `checked: false` says the
+    // question was not answered, which is the truth.
+    if (!stat.isFile()) {
+        return {
+            path: resolved,
+            present: true,
+            mode: null,
+            group_or_world_readable: false,
+            checked: false,
         };
     }
     const bits = stat.mode & 0o777;
@@ -413,6 +501,21 @@ export function buildChannelRow(
         warnings.push(
             `credential file ${credential.path} is mode ${credential.mode ?? '?'} ` +
                 `(group- or world-readable) — run: chmod 600 ${credential.path}`,
+        );
+    }
+    // A refusal is louder than a silent skip: an operator whose credential really
+    // does live outside the permitted roots must see WHY nothing was checked,
+    // instead of reading an unevaluated check as a passing one.
+    if (
+        credential !== null &&
+        !credential.checked &&
+        process.platform !== 'win32' &&
+        !confineCredentialPath(credential.path)
+    ) {
+        warnings.push(
+            `credential_path ${credential.path} is outside the permitted roots ` +
+                `(your home directory, this repo, or the system temp dir) — not inspected. ` +
+                `Move the credential, or drop the field.`,
         );
     }
 
@@ -585,9 +688,20 @@ export function collect(options: CollectOptions = {}): ReachDoctorPayload {
         (finding) => finding.severity === 'error',
     );
     if (findings.length > 0) {
+        // Redacted like every other echo of registry content. This was the FOURTH
+        // site of the same class and the last one found: the schema validator
+        // quotes the offending value in its message, so composing this refusal
+        // detail raw meant `--registry <any file>` printed that file's matching
+        // values straight back — the exact oracle the other three sites had
+        // already closed. Found by re-running the leak probe against EVERY entry
+        // point rather than assuming that fixing three had fixed the class.
         const detail = findings
             .slice(0, 10)
-            .map((finding) => `${finding.path}: ${finding.rule}: ${finding.message}`)
+            .map(
+                (finding) =>
+                    `${finding.path}: ${finding.rule}: ` +
+                    `${excerpt_for_finding(finding.message, SCHEMA_MESSAGE_MAX_CHARS)}`,
+            )
             .join('; ');
         const more = findings.length > 10 ? ` (+${findings.length - 10} more)` : '';
         throw new RegistryLoadError(
@@ -767,6 +881,13 @@ Options:
                         the backend really reaches its endpoint. Refuses to
                         run in CI. Writes NOTHING: it prints the
                         last_verified lines you may choose to commit.
+                        WHAT YOU ARE CONSENTING TO: a backend's own rate-limit
+                        read authenticates with whatever credential that tool
+                        already holds, so running --deep presents your existing
+                        token to that third party and appears in their logs.
+                        Nothing new is stored and no credential is read by this
+                        command — but the request is made on your behalf, which
+                        is why it is opt-in and never automatic.
   --help                Show this help.
 
 Without --deep the command touches no network at all: the only child

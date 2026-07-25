@@ -31,6 +31,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
     buildChannelRow,
     collect,
+    confineCredentialPath,
     errorRow,
     finalExitCode,
     main,
@@ -683,6 +684,228 @@ channels:
     });
 });
 
+/**
+ * The registry is UNTRUSTED input, so `credential_path` was an arbitrary-path
+ * primitive until it was bounded. Reproduced before it was believed: a
+ * `--registry` file declaring `credential_path: ../../../../../../../etc/passwd`
+ * made the doctor `stat` that path and report, inside a normal-looking health row
+ * at exit 0,
+ * `{"path":"/etc/passwd","present":true,"mode":"0644","group_or_world_readable":true,"checked":true}`
+ * — an existence-and-permission oracle over the whole filesystem wearing the
+ * costume of a credential warning.
+ *
+ * These cases drive the REAL CLI (`--registry <fixture> --format json`), because
+ * the bytes an operator — or a CI job, or an agent surface with a path parameter —
+ * actually receives are what has to be free of it. The refusal is asserted as a
+ * SHAPE (`checked: false` plus a named warning), never as silence: an operator
+ * whose credential really does live outside the roots must be able to tell an
+ * unevaluated check from a passing one.
+ *
+ * POSIX-gated for the same reason the permission block above is: the mode bits the
+ * legitimate cases assert do not exist on win32, and `buildChannelRow` withholds
+ * the refusal warning there because the whole check is already reported as skipped.
+ */
+describe.skipIf(!POSIX)('reach:doctor — credential_path confinement (the arbitrary-path oracle is refused)', () => {
+    /** Substring of the refusal warning — the operator-facing half of the fix. */
+    const REFUSED = 'outside the permitted roots';
+    /** The exact string from the reported exploit, kept verbatim as the repro. */
+    const TRAVERSAL = '../../../../../../../etc/passwd';
+
+    function confinementRegistry(name: string, declared: string): string {
+        return registry(
+            name,
+            `schema_version: reach-channels-v1
+channels:
+  - id: credentialed
+    description: A channel that declares a credential file path.
+    tier: login
+    lifecycle: stable
+    override_key: reach.channels.credentialed.backend
+    last_verified: "2026-07-24"
+    credential_path: ${declared}
+    backends:
+      - id: ${PRESENT_CMD}
+        probe_cmd: ${PRESENT_CMD}
+        probe_args: ["--version"]
+        install:
+          default: brew install node@22
+`,
+        );
+    }
+
+    /**
+     * Real CLI, real registry file, real stdout bytes. `cwd` is the repo, so a
+     * relative `credential_path` resolves exactly as it did in the report.
+     */
+    function runCliJson(
+        name: string,
+        declared: string,
+    ): { status: number | null; payload: ReachDoctorPayload } {
+        const file = confinementRegistry(name, declared);
+        const run = spawnSync(
+            process.execPath,
+            [TSX_CLI, DOCTOR, '--registry', file, '--format', 'json'],
+            { cwd: REPO, encoding: 'utf-8' },
+        );
+        expect(run.error).toBeUndefined();
+        return { status: run.status, payload: JSON.parse(run.stdout) as ReachDoctorPayload };
+    }
+
+    it('GIVEN a ../.. traversal to /etc/passwd THEN nothing is stat`ed — present/mode/checked all report the refusal, a warning names it, and the payload still validates', () => {
+        // Premise of the repro, asserted rather than assumed: from this checkout the
+        // fixture really does land outside the permitted roots.
+        const escaped = path.resolve(REPO, TRAVERSAL);
+        expect(confineCredentialPath(escaped)).toBe(false);
+
+        const { status, payload } = runCliJson('confine-traversal', TRAVERSAL);
+        // A credential finding never changes the exit code — the oracle hid at 0.
+        expect(status).toBe(0);
+        const channel = payload.channels[0];
+        const cred = channel?.credential;
+
+        expect(cred?.path).toBe(escaped);
+        // `present: false` for a file that DOES exist: existence never leaked.
+        expect(cred?.present).toBe(false);
+        expect(cred?.mode).toBeNull();
+        expect(cred?.group_or_world_readable).toBe(false);
+        expect(cred?.checked).toBe(false);
+        expect(channel?.warnings.join(' ')).toContain(REFUSED);
+
+        // The refusal shape is not a schema escape hatch either.
+        expect(makeValidator()(payload)).toBe(true);
+    });
+
+    it('GIVEN an absolute out-of-bounds path (/etc/passwd, no traversal needed) THEN the same refusal shape and warning', () => {
+        const { status, payload } = runCliJson('confine-absolute', '/etc/passwd');
+        expect(status).toBe(0);
+        const channel = payload.channels[0];
+        const cred = channel?.credential;
+
+        expect(cred?.path).toBe(path.resolve(path.sep, 'etc', 'passwd'));
+        expect(cred?.present).toBe(false);
+        expect(cred?.mode).toBeNull();
+        expect(cred?.group_or_world_readable).toBe(false);
+        expect(cred?.checked).toBe(false);
+        expect(channel?.warnings.join(' ')).toContain(REFUSED);
+    });
+
+    it('GIVEN a symlink INSIDE the temp root pointing at /etc/passwd THEN it is refused — the realpath check, which a prefix test alone would miss', () => {
+        const link = path.join(TMP, 'confine-symlink-token');
+        fs.symlinkSync(path.resolve(path.sep, 'etc', 'passwd'), link);
+        // What makes this case load-bearing: the DECLARED path is genuinely inside a
+        // permitted root, so only resolving the target can catch the escape.
+        expect(link.startsWith(`${path.resolve(TMP)}${path.sep}`)).toBe(true);
+
+        const { status, payload } = runCliJson('confine-symlink', link);
+        expect(status).toBe(0);
+        const channel = payload.channels[0];
+        const cred = channel?.credential;
+
+        expect(cred?.path).toBe(link);
+        expect(cred?.present).toBe(false);
+        expect(cred?.mode).toBeNull();
+        expect(cred?.group_or_world_readable).toBe(false);
+        expect(cred?.checked).toBe(false);
+        expect(channel?.warnings.join(' ')).toContain(REFUSED);
+    });
+
+    it('GIVEN a legitimate 0644 file inside the temp root THEN the check RUNS and the original chmod-600 finding still fires (the bound did not silence it)', () => {
+        const credential = path.join(TMP, 'confine-inbounds-0644-token');
+        fs.writeFileSync(credential, 'not-a-real-secret\n', 'utf-8');
+        fs.chmodSync(credential, 0o644);
+
+        const { status, payload } = runCliJson('confine-inbounds-0644', credential);
+        expect(status).toBe(0);
+        const channel = payload.channels[0];
+        const cred = channel?.credential;
+
+        expect(cred?.checked).toBe(true);
+        expect(cred?.present).toBe(true);
+        expect(cred?.mode).toBe('0644');
+        expect(cred?.group_or_world_readable).toBe(true);
+        const warning = channel?.warnings.join(' ') ?? '';
+        expect(warning).toContain('group- or world-readable');
+        expect(warning).toContain(`chmod 600 ${credential}`);
+        // An in-bounds path is never reported as refused.
+        expect(warning).not.toContain(REFUSED);
+        // And the contents still never travel.
+        expect(JSON.stringify(payload)).not.toContain('not-a-real-secret');
+    });
+
+    it('GIVEN a legitimate 0600 file inside the temp root THEN the check RUNS and reports it unexposed, with no warning at all', () => {
+        const credential = path.join(TMP, 'confine-inbounds-0600-token');
+        fs.writeFileSync(credential, 'not-a-real-secret\n', 'utf-8');
+        fs.chmodSync(credential, 0o600);
+
+        const { status, payload } = runCliJson('confine-inbounds-0600', credential);
+        expect(status).toBe(0);
+        const channel = payload.channels[0];
+        const cred = channel?.credential;
+
+        expect(cred?.checked).toBe(true);
+        expect(cred?.present).toBe(true);
+        expect(cred?.mode).toBe('0600');
+        expect(cred?.group_or_world_readable).toBe(false);
+        expect(channel?.warnings).toEqual([]);
+    });
+
+    it('GIVEN a DIRECTORY as credential_path THEN present:true with mode null / checked false, and NO group-readable warning (its 0755 is normal, not a finding)', () => {
+        const directory = path.join(TMP, 'confine-a-directory');
+        fs.mkdirSync(directory, { recursive: true });
+        // The mode a naive read would have reported as an exposure.
+        expect((fs.statSync(directory).mode & 0o044) !== 0).toBe(true);
+
+        const { status, payload } = runCliJson('confine-directory', directory);
+        expect(status).toBe(0);
+        const channel = payload.channels[0];
+        const cred = channel?.credential;
+
+        expect(cred?.present).toBe(true);
+        expect(cred?.mode).toBeNull();
+        expect(cred?.group_or_world_readable).toBe(false);
+        expect(cred?.checked).toBe(false);
+        // In bounds, so not a refusal either — no warning an operator cannot act on.
+        expect(channel?.warnings).toEqual([]);
+    });
+});
+
+describe('reach_doctor — confineCredentialPath bounds (unit)', () => {
+    /**
+     * `..` kept LITERAL in the string handed to the helper: this is what separates
+     * resolve-then-compare from a naive `startsWith(root)`, which would accept it —
+     * the string does begin with the temp root.
+     */
+    const ESCAPING_VIA_DOTDOT = [
+        path.resolve(os.tmpdir()),
+        '..',
+        '..',
+        '..',
+        'etc',
+        'passwd',
+    ].join(path.sep);
+
+    const CASES: ReadonlyArray<readonly [string, string, boolean]> = [
+        ['a token under the operator home', path.join(os.homedir(), '.reach-fixture-token'), true],
+        ['a file under this repo root', path.join(REPO, 'agents', 'reach-fixture-token'), true],
+        ['a file under the system temp dir', path.join(os.tmpdir(), 'reach-fixture-token'), true],
+        ['/etc/passwd — the reported exploit target', path.resolve(path.sep, 'etc', 'passwd'), false],
+        ['the filesystem root itself', path.resolve(path.sep), false],
+        ['a path that escapes the temp root via ..', ESCAPING_VIA_DOTDOT, false],
+    ];
+
+    it.each(CASES)('GIVEN %s THEN confineCredentialPath returns %s', (_label, target, allowed) => {
+        expect(confineCredentialPath(target)).toBe(allowed);
+    });
+
+    it('accepts a path under BOTH root forms — macOS hands out /var/folders/… from os.tmpdir() while its realpath is /private/var/folders/…, and comparing only one form refused the legitimate fixture case', () => {
+        const literal = path.resolve(os.tmpdir());
+        const real = path.resolve(fs.realpathSync(literal));
+
+        expect(confineCredentialPath(path.join(literal, 'reach-fixture-token'))).toBe(true);
+        expect(confineCredentialPath(path.join(real, 'reach-fixture-token'))).toBe(true);
+    });
+});
+
 describe('reach:doctor — errorRow sanitizes the message it puts in the payload', () => {
     // Every other error→output path in the reach scripts goes through
     // `sanitizeParseError`; this one used a raw `err.message`. A YAMLParseError
@@ -922,6 +1145,49 @@ describe('reach:doctor — the registry is validated before anything is spawned'
         expect(runMain(['--registry', hostile, '--format', 'json'])).toBe(2);
         // The whole point: no child process ran, so no side effect landed.
         expect(fs.existsSync(marker)).toBe(false);
+    });
+
+    it('GIVEN a schema-invalid registry whose offending VALUE carries a secret THEN the refusal message redacts it', () => {
+        // The schema validator quotes the offending value in its message, and
+        // `collect()` composes that message into the refusal it throws. That was
+        // the FOURTH echo site of the content-leak class and the last one found:
+        // three others were already redacted while this one still printed a
+        // caller-supplied file's values back through `--registry`.
+        const file = registry(
+            'secret-in-unpinned-install',
+            `schema_version: reach-channels-v1
+
+channels:
+  - id: rss
+    description: A fixture whose unpinned install string carries a secret value.
+    tier: zero-config
+    lifecycle: stable
+    override_key: reach.channels.rss.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: ${PRESENT_CMD}
+        probe_cmd: ${PRESENT_CMD}
+        probe_args: ["--version"]
+        install:
+          default: brew install curl AWS_SECRET_ACCESS_KEY=zzz999topsecret
+`,
+        );
+
+        let message = '';
+        try {
+            collect({ registryPath: file });
+        } catch (err) {
+            message = err instanceof Error ? err.message : String(err);
+        }
+
+        expect(message).toMatch(/refusing to probe it/);
+        // The secret is gone; the key, the rule and the JSON path survive, so the
+        // finding stays actionable.
+        expect(message).not.toContain('zzz999topsecret');
+        expect(message).toContain('<redacted>');
+        expect(message).toContain('AWS_SECRET_ACCESS_KEY');
+        expect(message).toMatch(/pattern/);
+        expect(message).toMatch(/\$\.channels\[0\]\.backends\[0\]\.install\.default/);
     });
 
     it('GIVEN a URL-bearing probe argument THEN collect refuses — a shallow run promises zero network', () => {
