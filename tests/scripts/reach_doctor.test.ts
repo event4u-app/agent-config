@@ -34,6 +34,7 @@ import {
     errorRow,
     finalExitCode,
     main,
+    renderTable,
     runDeepProbe,
     type ReachDoctorPayload,
 } from '../../src/scripts/reach_doctor.js';
@@ -679,6 +680,138 @@ channels:
     it('GIVEN the shipped registry THEN no channel declares a credential path (the check is inert there, by design)', () => {
         const payload = collect();
         expect(payload.channels.every((channel) => channel.credential === null)).toBe(true);
+    });
+});
+
+describe('reach:doctor — errorRow sanitizes the message it puts in the payload', () => {
+    // Every other error→output path in the reach scripts goes through
+    // `sanitizeParseError`; this one used a raw `err.message`. A YAMLParseError
+    // stringifies with the offending SOURCE LINE and a caret, so an unsanitized
+    // message could carry a line of the registry into the payload warning.
+    it('GIVEN a parse-error-shaped multi-line message THEN only the first line reaches the warning', () => {
+        const err = new Error(
+            'Nested mappings are not allowed at line 3\n\n' +
+                'SECRET_LINE=abc123\n' +
+                '^^^^^^^^^^^^^^^^^^',
+        );
+        err.name = 'YAMLParseError';
+        const row = errorRow('github', err);
+
+        const warning = row.warnings.join(' ');
+        expect(warning).not.toContain('SECRET_LINE');
+        expect(warning).not.toContain('abc123');
+        expect(warning).not.toContain('^^^');
+        // The actionable first line, and the error class, both survive.
+        expect(warning).toContain('Nested mappings are not allowed at line 3');
+        expect(warning).toContain('YAMLParseError');
+        expect(row.warnings).toHaveLength(1);
+        expect(row.warnings[0]?.includes('\n')).toBe(false);
+    });
+
+    it('GIVEN a non-Error throw THEN it is still stringified into exactly one line', () => {
+        const row = errorRow('github', { toString: () => 'weird\nmultiline' });
+        expect(row.status).toBe('error');
+        expect(row.warnings).toHaveLength(1);
+        expect(row.warnings[0]?.includes('\n')).toBe(false);
+    });
+});
+
+describe('reach:doctor — buildChannelRow entry gate (defense in depth behind collect())', () => {
+    // `collect()` is the schema gate; these exports are test-facing. The gate
+    // below is what keeps a DIRECT caller from getting a row whose id or
+    // backends had to be guessed.
+    it.each([
+        ['a non-mapping entry', 'scalar', /not a mapping/],
+        ['an entry with no id', { backends: [{ id: 'node', probe_cmd: 'node' }] }, /carries no id/],
+        ['an entry whose backends is not a list', { id: 'x', backends: 'nope' }, /non-empty list/],
+        ['an entry whose backends list is EMPTY', { id: 'x', backends: [] }, /non-empty list/],
+        ['an entry with no backends key at all', { id: 'x' }, /non-empty list/],
+    ])('refuses %s with a named reason rather than reading it speculatively', (_label, raw, re) => {
+        expect(() => buildChannelRow(raw, { deep: false, now: new Date() })).toThrow(re);
+    });
+});
+
+describe('reach:doctor — the win32 credential gap is surfaced, not reported as a pass', () => {
+    // FIX 5's claim under test: POSIX mode bits do not exist on Windows (ACLs
+    // do), reading them would need a native call or an `icacls` spawn this
+    // read-only doctor refuses, so the check reports `checked: false`. That
+    // value must actually REACH the payload — a skipped check silently
+    // rendered as a clean one is the failure mode.
+    const originalPlatform = process.platform;
+
+    function withPlatform<T>(value: string, fn: () => T): T {
+        Object.defineProperty(process, 'platform', { value, configurable: true });
+        try {
+            return fn();
+        } finally {
+            Object.defineProperty(process, 'platform', {
+                value: originalPlatform,
+                configurable: true,
+            });
+        }
+    }
+
+    function credentialRegistry(name: string): string {
+        const credential = path.join(TMP, `${name}-token`);
+        fs.writeFileSync(credential, 'not-a-real-secret\n', 'utf-8');
+        if (POSIX) fs.chmodSync(credential, 0o644); // world-readable ON PURPOSE
+        return registry(
+            name,
+            `schema_version: reach-channels-v1
+channels:
+  - id: credentialed
+    description: A channel that declares a credential file path.
+    tier: login
+    lifecycle: stable
+    override_key: reach.channels.credentialed.backend
+    last_verified: "2026-07-24"
+    credential_path: ${credential}
+    backends:
+      - id: ${PRESENT_CMD}
+        probe_cmd: ${PRESENT_CMD}
+        probe_args: ["--version"]
+        install:
+          default: brew install node@22
+`,
+        );
+    }
+
+    it('GIVEN win32 THEN checked:false reaches the payload AND the row still validates against the schema', () => {
+        const file = credentialRegistry('win32-cred');
+        const payload = withPlatform('win32', () => collect({ registryPath: file }));
+
+        const cred = payload.channels[0]?.credential;
+        expect(cred).not.toBeNull();
+        expect(cred?.checked).toBe(false);
+        expect(cred?.mode).toBeNull();
+        // A 0644 file: `false` here means "not determined", never "determined
+        // safe" — and because the check did not run, no warning is invented.
+        expect(cred?.group_or_world_readable).toBe(false);
+        expect(payload.channels[0]?.warnings).toEqual([]);
+        // The file is still reported as present — that part needs no mode bits.
+        expect(cred?.present).toBe(true);
+
+        // `checked` is a required field of the payload schema; the whole payload
+        // must remain valid with the skipped-check shape in it.
+        expect(makeValidator()(payload)).toBe(true);
+    });
+
+    it('GIVEN win32 THEN the table names the gap in words the operator can read', () => {
+        const file = credentialRegistry('win32-cred-table');
+        const table = withPlatform('win32', () =>
+            renderTable(collect({ registryPath: file })),
+        );
+        expect(table).toContain('not checked on this platform');
+    });
+
+    it.skipIf(!POSIX)('GIVEN this POSIX host THEN the same registry IS checked (the gap is win32-only)', () => {
+        // Control: without it, `checked: false` above could be the normal
+        // outcome everywhere rather than a platform-specific gap.
+        const file = credentialRegistry('posix-cred-control');
+        const cred = collect({ registryPath: file }).channels[0]?.credential;
+        expect(cred?.checked).toBe(true);
+        expect(cred?.mode).toBe('0644');
+        expect(cred?.group_or_world_readable).toBe(true);
     });
 });
 
