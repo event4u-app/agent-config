@@ -8,11 +8,13 @@ parent_roadmap: road-to-internet-reach
 
 # Roadmap: Road to gated reach — read the resources the host cannot fetch
 
-> Ship credential-free read access to Reddit (posts **and** comments),
-> Twitter/X single tweets, and YouTube transcripts — the three resource classes
-> the host's own web tools demonstrably cannot retrieve — as registry entries
-> plus operator prescriptions, with the auto-triggering skill gated behind a
-> pre-registered reliability bench.
+> Ship credential-free read access to Reddit — posts, comments, **and comment
+> ranking plus thread structure** — Twitter/X single tweets, and YouTube
+> transcripts: the three resource classes the host's own web tools demonstrably
+> cannot retrieve. Registry entries plus operator prescriptions, with the
+> auto-triggering skill gated behind a pre-registered reliability bench, and the
+> structured Reddit path shipped with a kill-switch because its access surface is
+> announced-closing.
 
 ## Context
 
@@ -54,6 +56,9 @@ and the remedy are both already demonstrated.
 | `publish.twitter.com/oembed?url=…` | 200 · tweet text + author + date · **no credentials** |
 | `cdn.syndication.twimg.com/tweet-result` | 200 but body `{}` — **dead**, including for a known-public tweet |
 | YouTube caption-track URL scraped from the watch page | 200 but **0 bytes** — the extractor's challenge solving is genuinely required |
+| `old.reddit.com/<thread permalink>` (logged out) | 200 · **135 comment nodes, 133 parsed scores**, `child` nesting markup — ranking AND thread order, credential-free |
+| `old.reddit.com` `?sort=top` / `?sort=confidence` / `?limit=200` | 200, accepted; same set on this thread |
+| Reddit `.json` (www + old), 3 user-agent variants | **403** every time — identical 189,908-byte block page, so it is not user-agent driven |
 
 **Reliability, measured — this is the load-bearing engineering fact:**
 
@@ -86,6 +91,16 @@ absent** — installs stay human-performed by contract.
   support; only one runtime is enabled by default and using another needs an
   explicit config flag. **A passing `--version` probe does not imply this
   readiness** — the exact blind spot Phase 2 closes.
+- **The credential-free structured path is a closing window, and this roadmap says
+  so up front.** On 2026-06-30 Reddit announced that `old.reddit.com` will
+  **require login**, rolling out "over the next month", naming logged-out access
+  to that interface as a significant source of scraping. Reddit also walked back
+  its earlier commitment to keeping old Reddit alive, now saying it "can't
+  promise" it will remain. Measured reality on 2026-07-25: logged-out access
+  **still worked** from this machine — the rollout had not reached it. So the
+  structured capability below is real today and explicitly time-bounded, which is
+  why it ships with a kill-switch and a named successor rather than as a durable
+  promise.
 
 ### Council convergence
 
@@ -132,14 +147,16 @@ Recorded so they are not silently re-proposed:
 
 | # | Candidate | Verdict | Reason |
 |---|---|---|---|
-| 1 | Reddit posts + comments, credential-free via `.rss` | **KEEP** | Measured working; the reference project does **not** have this path (its own module docstring says no credential-free path exists). Rides the shipped `rss` channel. |
+| 1 | Reddit posts + comments (text), credential-free via `.rss` | **KEEP** | Measured working; the reference project does **not** have this path (its own module docstring says no credential-free path exists). Rides the shipped `rss` channel. This is the **durable** tier. |
+| 1b | Reddit comment **ranking + thread structure**, credential-free via `old.reddit.com` server-rendered HTML | **KEEP (time-bounded)** | Measured: 135 comment nodes, 133 scores, nesting markup, logged out. Announced-closing (login requirement rolling out) → ships with a kill-switch and a named successor, never as a durable claim. |
+| 1c | Deterministic HTML→structured-comments parser | **KEEP (the only new code)** | Nesting cannot be reconstructed honestly with a regex. stdin→stdout, offline, no network, sanitize floor on every emitted field. |
 | 2 | Twitter single tweet, credential-free via oEmbed | **KEEP** | Measured working, unthrottled at practical cadence. Absent from the reference entirely (its removed credential-free path was a hosted reader; the syndication endpoint appears nowhere in its tree or history). |
 | 3 | YouTube transcripts via `yt-dlp` | **KEEP** | Native arm gives metadata only; direct caption fetch is dead. Requires a human install. |
 | 4 | JS-runtime readiness check (config-semantic, version-gated) | **KEEP** | The reference's best engineering: resolve the extractor's real config path, grep the literal flag, gate the remedy on the installed version, render an idempotent OS-specific fix. Adopted as a mechanism shape. |
 | 5 | "Refuse side-effectful status probes" discipline | **FOLD** | Our probes are already `--version`-only; this becomes a documented invariant, not new code. |
 | 6 | Two-phase backend election (all findings, then first `ok`, else first `warn`) | **FOLD** | The shipped doctor picks the first healthy backend; with credential-free channels there is no installed-but-unauthenticated state to mask. Folded into the Phase 2 verification step, implemented only if a real case appears. |
 | 7 | Credential staleness TTL on credential files | **CUT — not applicable** | No credentialed channel ships here. Moves to the structured-Reddit stub, where it would have its first consumer. |
-| 8 | Reddit session-cookie path (full read: scores, thread structure) | **CUT — parked** | Buys ranking + structure, costs a consent gate, ban risk, a credential file and a credentials-with-untrusted-content flow. Stub with a named trigger. |
+| 8 | Reddit session-cookie path (logged-in `old.reddit` HTML) | **DEFERRED — the named successor, decision pre-staged** | No longer needed to *reach* ranking/structure (row 1b does that credential-free). It becomes relevant only when the login rollout closes row 1b. Phase 0 Step 2 records the maintainer's decision **before** that happens, so the capability does not die in an outage-shaped surprise; the cost stays what it always was (consent gate, ban risk, credentials beside untrusted content). |
 | 9 | Twitter login-state path (env-var cookies, timelines, search) | **CUT — parked** | oEmbed covers "read this tweet". Timelines/search cost the same surface as #8 plus documented account-flag risk. |
 | 10 | Headless / JS-rendered page fetch | **CUT — parked** | Maintainer named three platforms. The zero-config option discloses every URL to a third party; the local option is a browser stack. Stub. |
 | 11 | Whisper audio transcription for videos without captions | **CUT — parked** | Needs API keys + spend + media egress. Stub with a precise trigger. |
@@ -149,19 +166,31 @@ Recorded so they are not silently re-proposed:
 
 ## Goal
 
-Make Reddit threads, single tweets and YouTube transcripts readable from this
-package **without any credential**, by adding three registry entries and their
-operator prescriptions, closing the extractor's readiness blind spot, and
-shipping an auto-triggering skill only for the channels a pre-registered
+Make Reddit threads — **including which comments the community actually
+endorsed and how the replies nest** — single tweets, and YouTube transcripts
+readable from this package **without any credential**, by adding the registry
+entries and operator prescriptions, closing the extractor's readiness blind spot,
+and shipping an auto-triggering skill only for the channels a pre-registered
 reliability bench earns.
+
+Ranking and structure are an explicit goal, not a follow-up: the maintainer asked
+for them, and they turned out to be reachable credential-free. The honest caveat
+travels with the goal — the surface that provides them is announced-closing, so
+the roadmap ships it with a kill-switch and a pre-decided successor rather than as
+a durable promise.
 
 ## Non-goals
 
 - **NO credentials anywhere in this roadmap.** No cookie export, no session file,
   no env-var token, no `credential_path` consumer. This is the single cut that
   removes the consent gate, the ban risk, and the trust-boundary contamination
-  the council named as the sharpest risk. Everything credentialed is parked with
-  a trigger.
+  the council named as the sharpest risk.
+  The maintainer's ranking/structure goal does **not** require breaking this cut —
+  that discovery is what reshaped this roadmap: `old.reddit` server-rendered HTML
+  carries scores and reply nesting **logged out**. What stays parked as
+  credentialed stubs with concrete triggers: the Reddit *session* successor (only
+  once a login wall is actually observed), Twitter timelines and search, headless
+  fetch, and Whisper transcription.
 - NO general web-research router — the parent null stands. The skill triggers
   only on earned gated intents and opens by deferring to host-native tools by
   name.
@@ -209,19 +238,25 @@ in this phase.
   Any fact that has died removes its channel from the candidate table **now**,
   not mid-bench.
   <!-- verify: grep -qE "re-verified: 2026-" internal/bench/gated-reach/README.md -->
-- [ ] **Step 2:** Record the **Reddit depth scope line** — the one genuine
-  open question, surfaced by the council. `.rss` delivers comment *text* but no
-  score and no thread structure (verified: entry tags carry neither). Write which
-  of the two the maintainer needs:
-  - **text-only** ("read what people said", summarise a discussion) → `.rss` is
-    sufficient, this roadmap is complete as scoped;
-  - **ranking / structure** ("what does the community actually endorse") →
-    `.rss` is insufficient for that class, and
-    `later/road-to-reach-reddit-structured.md` is the follow-up, not an
-    in-scope addition.
-  Either answer ships the same Phase 1; the answer only decides whether a stub
-  becomes an active roadmap afterwards. Record it as a committed line, with the
-  limitation quoted verbatim into the prescription in Phase 3 regardless.
+- [ ] **Step 2:** Record the **Reddit depth decision — already answered by the
+  maintainer: ranking and structure are the goal.** `.rss` carries comment text
+  but no score and no parent-child order (verified from the entry tag set), so the
+  goal is served by the `old.reddit` HTML tier (row 1b), which measured 133 scores
+  and nesting markup logged out. Two things must be written down here because the
+  surface is announced-closing:
+  - **the two-tier contract**: `.rss` is the durable text tier and stays the
+    fallback; `old.reddit` HTML is the ranking/structure tier and is explicitly
+    time-bounded. A degradation from tier 2 to tier 1 is a documented outcome, not
+    a bug;
+  - **the successor decision, made now rather than under pressure**: when the
+    login rollout reaches this machine, does the maintainer (i) accept
+    text-only `.rss` and lose ranking, (ii) authorize a **human-exported session
+    cookie** for logged-in `old.reddit` HTML — accepting the consent gate, the
+    `chmod 600` credential file, the ban risk and the credentials-beside-untrusted-content
+    flow the council named as the sharpest risk, or (iii) apply for approved API
+    access as the durable path (approval-only since Nov 2025, weeks of latency,
+    high rejection rate for individuals)? Record the answer verbatim; it decides
+    which stub in Phase 5 Step 4 becomes an active roadmap.
 - [ ] **Step 3:** Record the **latency scope line**: the measured Reddit
   worst case is ~65 s wall-clock for one feed fetch under rate limiting. Confirm
   that a read taking up to ~65 s (rather than failing) is the preferred
@@ -242,31 +277,62 @@ in this phase.
   platforms discriminate on this), and the doctor-snapshot procedure. CI is
   explicitly not a bench environment.
 
-## Phase 1 — Ship the two credential-free channels (capability first)
+## Phase 1 — Ship the credential-free channels, both Reddit tiers (capability first)
 
 The council's converged sequencing: the capability lands here, in prescriptions
 an operator can use immediately. Nothing in this phase claims anything publicly —
 claims wait for Phase 3's verdict.
 
+Reddit ships as **two tiers on one channel**, because the maintainer's goal
+(ranking + structure) sits on the surface that is announced-closing while the text
+surface is durable:
+
+| Tier | Surface | Gives | Durability |
+|---|---|---|---|
+| 1 (durable) | `reddit.com/…/.rss` | post + comment **text**, author, timestamp | stable, no announced change |
+| 2 (goal, time-bounded) | `old.reddit.com/<permalink>` HTML | **scores + reply nesting** + full comment set | login requirement rolling out — kill-switch in Phase 3 Step 4 |
+
 Exit criteria: both channels validate against the schema, all three reach gates
-green, and a real fetch of a Reddit thread and a tweet succeeds from a clean
-shell using only the committed prescription text. Rollback: remove the two
-registry entries; nothing else is touched.
+green, and from a clean shell using only the committed prescription text a Reddit
+thread yields **its top-voted comment and the reply nesting**, plus a tweet's text.
+Rollback: remove the registry entries and the parser; nothing else is touched.
 
 - [ ] **Step 1:** Add `reddit` to `src/config/reach-channels.yml` — `tier:
   zero-config`, `lifecycle: experimental`, reusing the **existing** curl + node
-  backends verbatim (no new install, so no new intake record). The entry
-  documents the three URL shapes (subreddit listing, sort variants, thread
-  comments) and carries the measured retry flags as the prescribed invocation.
+  backends verbatim (no new install, so no new intake record). The entry documents
+  both tiers: the `.rss` URL shapes (subreddit listing, sort variants, thread
+  comments) and the `old.reddit` permalink shape with its `?sort=top` /
+  `?sort=confidence` / `?limit=` parameters (all measured accepted), and carries
+  the measured retry flags as the prescribed invocation for both.
   <!-- verify: task check-reach-channels -->
+- [ ] **Step 1b:** Write `src/scripts/_lib/reddit_thread_parse.ts` — the one piece
+  of new code this roadmap needs. Reads `old.reddit` thread HTML on **stdin**,
+  emits JSON on stdout: per comment `{id, author, score, depth, parent_id, body}`.
+  Constraints: deterministic, **no network**, no filesystem write, no state; every
+  emitted string passes the `retrieval_sanitize` floor **because this parses
+  hostile third-party HTML by definition**; unparseable score or author is `null`
+  rather than a guess. Depth comes from the enclosing `child` container nesting, not
+  from a flat regex — reply order is the point of tier 2, so approximating it would
+  defeat the goal.
+  <!-- verify: task test-ts -- --run tests/scripts/reddit_thread_parse.test.ts -->
+- [ ] **Step 1c:** Test the parser against a **committed HTML fixture** (a real
+  thread capture, license-safe excerpt) asserting: comment count, that the
+  highest-scored comment is identified, that at least one nested reply resolves to
+  its parent, that a score-less node yields `null` not `0`, and that an injected
+  `<script>` / instruction-shaped payload in a comment body is neutralised by the
+  sanitize floor. Fixture-driven so it cannot silently depend on live Reddit.
 - [ ] **Step 2:** Add `twitter-oembed` — `tier: zero-config`, `lifecycle:
   experimental`, curl backend, documenting the oEmbed URL form and the 404
   behaviour for non-existent tweet IDs.
   <!-- verify: task check-reach-prescriptions -->
-- [ ] **Step 3:** Write the two prescriptions with the **exact measured
-  commands**, not idealised ones — including `--retry 8 --retry-max-time 110`
-  for Reddit with its ~65 s worst case stated, and the double-unescaping step the
-  Atom `<content>` needs (measured: `&#32;` survives one unescape pass).
+- [ ] **Step 3:** Write the prescriptions with the **exact measured commands**,
+  not idealised ones — `--retry 8 --retry-max-time 110` with its ~65 s worst case
+  stated, the double-unescaping step the Atom `<content>` needs (measured: `&#32;`
+  survives one unescape pass), the `-L` redirect follow that `old.reddit` thread
+  URLs require (measured 301), and the tier-2 → tier-1 degradation instruction
+  written as a first-class path rather than a footnote: **if the HTML fetch returns
+  a login wall, say so and fall back to `.rss` text, explicitly telling the reader
+  that ranking is unavailable** — never silently present unranked text as ranked.
 - [ ] **Step 4:** Prove the prescriptions work as written: run each from a clean
   shell, capture the output, and record it in the bench scratch. A prescription
   that only works with undocumented extra flags is not shipped.
@@ -327,10 +393,17 @@ the deliverable.
   its registry entry only if it carries a `removal_after` date (the shipped
   deprecation path).
 - [ ] **Step 4:** Write the **kill-switch criteria** (council item 5): per
-  channel, the observable event that retires it — the access path returning a
-  hard error class for N consecutive doctor runs, or a platform terms change —
-  and the fact that retirement is a registry edit plus an
-  `internal/upstream-changes.md` entry, never a silent degradation.
+  channel, the observable event that retires it, and the fact that retirement is a
+  registry edit plus an `internal/upstream-changes.md` entry, never a silent
+  degradation. The Reddit tier-2 criterion is already known and must be written
+  concretely rather than generically: **a login wall or redirect-to-login on the
+  `old.reddit` permalink fetch** retires tier 2, the channel degrades to tier-1
+  text, the prescription's ranking claim is struck in the same commit, and the
+  successor decision recorded in Phase 0 Step 2 fires. Include the reverse
+  trigger too: if logged-out access is still working at the next staleness check,
+  `last_verified` moves and tier 2 stays — an announced closure is not the same as
+  an observed one, and this roadmap should not retire a working capability on a
+  press release.
 - [ ] **Step 5:** If zero channels reach ship-tier, cancel Phase 4, publish the
   nulls, and archive. The prescriptions from Phase 1 keep standalone operator
   value regardless — that is the whole point of shipping them first.
@@ -377,9 +450,15 @@ cut capability has a stub with a trigger. Rollback: revert the docs commit.
   channels and explicitly still open for dropped ones, each with its re-entry
   trigger. Record that the credential-free scope was a deliberate cut, not an
   oversight, and why (it removes the trust-boundary contamination risk).
-- [ ] **Step 4:** Materialise the stubs, each with one concrete trigger line:
-  `later/road-to-reach-reddit-structured.md` (trigger: a task needs comment
-  ranking or thread structure, per the Phase 0 Step 2 answer),
+- [ ] **Step 4:** Materialise the stubs, each with one concrete trigger line.
+  Note that `reddit-structured` is **not** among them — ranking and structure
+  shipped in this roadmap, credential-free. What remains parked:
+  `later/road-to-reach-reddit-session.md` (the successor from Phase 0 Step 2 —
+  trigger: an observed login wall on `old.reddit`, plus the maintainer having
+  chosen option (ii) there),
+  `later/road-to-reach-reddit-approved-api.md` (trigger: option (iii) chosen — the
+  durable path, approval-only and weeks of latency, so it is started before it is
+  needed or not at all),
   `later/road-to-reach-twitter-login.md` (trigger: a task needs timelines or
   search), `later/road-to-reach-headless.md` (trigger: a measured need on a
   fourth platform), `later/road-to-reach-transcribe.md` (trigger: a video task
@@ -393,7 +472,9 @@ cut capability has a stub with a trigger. Rollback: revert the docs commit.
 
 | Risk | Exposure | Containment |
 |---|---|---|
-| Reddit tightens or removes the `.rss` surface | The main capability disappears | Phase 0 re-verification before freeze; kill-switch criteria in Phase 3 Step 4; `removal_after` deprecation path; the channel is one registry entry, so retirement is a config edit |
+| Reddit tightens or removes the `.rss` surface | The durable text tier disappears | Phase 0 re-verification before freeze; kill-switch criteria in Phase 3 Step 4; `removal_after` deprecation path; the channel is one registry entry, so retirement is a config edit |
+| **`old.reddit` logged-out access closes during or after this roadmap** — announced 2026-06-30, rollout in progress | The ranking/structure goal is lost | Named, not hoped away: two-tier design with tier-1 fallback shipped from day one; kill-switch criterion is the observed login wall, not the announcement; the successor decision is pre-recorded in Phase 0 Step 2 so the response is a decision already made, not an improvisation; the parser keeps its value because logged-in HTML is the same markup |
+| The parser becomes a maintenance surface as Reddit's markup drifts | Silent wrong output (mis-attributed scores, flattened nesting) | Fixture-driven tests that fail on markup change rather than degrade; `null` over guessed values; the parser is ~one file with no network and no state, so replacing it is cheap |
 | Rate limiting makes reads feel broken | User surprise | Measured retry flags shipped **in** the prescription; the ~65 s worst case is stated, not hidden; the latency-vs-failure trade-off is an explicit Phase 0 scope line |
 | Reddit selftext / tweet HTML carries injected instructions | Untrusted-content ingestion (trifecta leg 2) | Skill mandates DATA framing + the `retrieval_sanitize` floor; no credential and no autonomous egress in the same flow — the credential-free scope removes the third leg by construction |
 | `.rss` text-only data is mistaken for ranked consensus | Wrong research conclusions | The measured limitation (no score, no thread structure) is quoted verbatim in the prescription; the structured path is a named stub, not an implied future |
@@ -407,6 +488,12 @@ cut capability has a stub with a trigger. Rollback: revert the docs commit.
 - [ ] A Reddit thread — post **and** comments — is readable from a clean shell
   using only the committed prescription, and a single tweet's text and author
   likewise, with no credential anywhere.
+- [ ] For that same thread, **the top-voted comment is identifiable and at least
+  one nested reply resolves to its parent** — the maintainer's ranking/structure
+  goal, demonstrated rather than asserted.
+- [ ] The tier-2 → tier-1 degradation path is exercised at least once (simulated
+  login wall against the fixture) and proven to say ranking is unavailable rather
+  than presenting unranked text as ranked.
 - [ ] A YouTube transcript is extracted after a human install, and the doctor
   distinguishes "installed" from "ready to extract".
 - [ ] Per-channel verdicts published for every outcome class, with no aggregate
