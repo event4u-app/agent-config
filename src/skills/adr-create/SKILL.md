@@ -104,6 +104,21 @@ Use the surface-specific template. All sections are required; "—"
 is acceptable for genuinely empty Alternatives or References blocks
 but never for Status, Context, Decision, or Consequences.
 
+**`review_trigger` is required and it names a CONDITION, not a date.** A
+decision is a call made under conditions that held at the time; the trigger
+records which change would make it worth re-deciding. "Review annually" is
+ignored by everyone and rots into ceremony —
+`check_adr_frontmatter.ts` rejects bare cadences for exactly that reason. Write
+the event: *"when a second consumer reports the same preservation surprise"*,
+*"when a host ships a native primitive for this"*, *"if the measured lift drops
+below the pre-registered threshold"*. Enforced from 2026-07-25 forward; earlier
+ADRs are grandfathered by date.
+
+When you later reopen one, say which **premise moved** and what evidences the
+move — not "we were wrong". If the original was right under its own conditions,
+record that too. A premise that turns out false while the decision stays correct
+gets a logged correction block, never a silent edit.
+
 **Flat-surface template** (`docs/decisions/ADR-NNN-<slug>.md`):
 
 ```markdown
@@ -115,6 +130,7 @@ decision: <slug>
 supersedes: — | ADR-MMM
 superseded_by: — | ADR-MMM
 phase: <roadmap> · <phase-id>
+review_trigger: <the CONDITION that would reopen this decision>
 ---
 
 # ADR-NNN — <Decision Title>
