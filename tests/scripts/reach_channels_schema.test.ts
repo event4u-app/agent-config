@@ -24,12 +24,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     REGISTRY_PATH,
     RegistryLoadError,
+    SCHEMA_MESSAGE_MAX_CHARS,
+    SCHEMA_PATH,
     check_probe_cmd_binding,
+    excerpt_for_finding,
+    format_finding,
     load_registry,
     main,
     sanitizeParseError,
     validate_file,
 } from '../../src/scripts/check_reach_channels.js';
+import { SchemaError } from '../../src/scripts/validate_frontmatter.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const FIXTURE_DIR = path.join(REPO_ROOT, 'tests', 'fixtures', 'reach-channels');
@@ -231,6 +236,134 @@ describe('install pinning pattern — the supply-chain floor', () => {
             ).toBeDefined();
         });
     }
+});
+
+describe('printed schema findings are credential-redacted', () => {
+    // `main()` writes every violation straight to stdout via `format_finding`,
+    // and the Draft-07 `pattern` / `enum` rules quote the OFFENDING VALUE. With
+    // the optional path argument (`check_reach_channels <path>`) that made the
+    // printer echo a caller-supplied file's bytes verbatim into stdout and into
+    // any CI log capturing it — the same class already closed on the grep gate's
+    // line echoes, still open here.
+    //
+    // Both halves are asserted TOGETHER: a redaction that also ate the rule
+    // name, the JSON path or the regex would pass a "no secret" assertion while
+    // destroying everything the operator came to read.
+    const SECRET = 'zzz999topsecret';
+    let tmp: string;
+    let written: string[];
+
+    beforeEach(() => {
+        tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'reach-chan-echo-')));
+        written = [];
+        vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+            written.push(String(chunk));
+            return true;
+        });
+        vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+        vi.restoreAllMocks();
+    });
+
+    function runOn(installString: string): { code: number; out: string } {
+        const target = path.join(tmp, 'reach-channels.yml');
+        fs.writeFileSync(target, registryWithInstall(installString), 'utf-8');
+        const code = main([target]);
+        return { code, out: written.join('') };
+    }
+
+    it('GIVEN a secret in an install command THEN stdout carries <redacted>, never the value', () => {
+        const { code, out } = runOn(`brew install curl AWS_SECRET_ACCESS_KEY=${SECRET}`);
+        expect(code).toBe(1);
+        expect(out).not.toContain(SECRET);
+        expect(out).toContain('<redacted>');
+        // …and the finding is still navigable: the schema rule and the JSON path.
+        expect(out).toContain('pattern:');
+        expect(out).toContain('$.channels[0].backends[0].install.default');
+        // The key survives, so the operator knows WHICH value to fix.
+        expect(out).toContain('AWS_SECRET_ACCESS_KEY=<redacted>');
+    });
+
+    it('GIVEN no secret THEN the command and the whole schema regex print intact', () => {
+        const { code, out } = runOn('brew install gh');
+        expect(code).toBe(1);
+        // The actionable command, byte-identical.
+        expect(out).toContain("Value 'brew install gh' does not match");
+        // The regex the operator has to satisfy, head AND tail — the tail proves
+        // `SCHEMA_MESSAGE_MAX_CHARS` did not truncate the rule away.
+        expect(out).toContain('\\blatest\\b');
+        expect(out).toContain('--version[ =]v?[0-9]+');
+        expect(out).toContain('os-baseline: ');
+        expect(out).toContain('[^\\n]+)$/');
+    });
+
+    it('leaves the real schema pattern byte-identical through the redactor', () => {
+        // Read from the schema itself so this cannot drift when the pattern is
+        // edited. The regex body contains `--version[ =]v?[0-9]+` and
+        // `(?:==|@|=)v?` — exactly the shapes a naive KEY=VALUE or long-run
+        // redaction mangles.
+        const schema = JSON.parse(fs.readFileSync(SCHEMA_PATH, 'utf-8')) as Record<string, unknown>;
+        const walk = (node: unknown): string | null => {
+            if (node === null || typeof node !== 'object') {
+                return null;
+            }
+            const record = node as Record<string, unknown>;
+            if (typeof record['pattern'] === 'string' && record['pattern'].length > 100) {
+                return record['pattern'];
+            }
+            for (const value of Object.values(record)) {
+                const hit = walk(value);
+                if (hit !== null) {
+                    return hit;
+                }
+            }
+            return null;
+        };
+        const pattern = walk(schema);
+        expect(pattern, 'the install pinning pattern must be findable in the schema').toBeTruthy();
+
+        for (const command of [
+            'brew install gh',
+            'pipx install yt-dlp==2026.7.4',
+            'curl -fsSL https://example.test/install.sh | sh',
+            'brew install node@22',
+            'winget install --id GitHub.cli --version 2.96.0',
+        ]) {
+            const message = `Value '${command}' does not match /${pattern ?? ''}/`;
+            expect(
+                excerpt_for_finding(message, SCHEMA_MESSAGE_MAX_CHARS),
+                `mangled for ${command}`,
+            ).toBe(message);
+        }
+    });
+
+    it('redacts the probe_cmd-binding message, which quotes two registry fields', () => {
+        // The cross-field rule this module owns builds its own message from
+        // `probe_cmd` and `id` — file-derived text on the same printer.
+        const raw = format_finding(
+            new SchemaError(
+                '$.channels[0].backends[0].probe_cmd',
+                'probe_cmd-binding',
+                `probe_cmd 'gh' must equal the backend id 'gh' TOKEN=${SECRET}`,
+            ),
+        );
+        expect(raw).not.toContain(SECRET);
+        expect(raw).toContain('TOKEN=<redacted>');
+        expect(raw).toContain('probe_cmd-binding');
+        expect(raw).toContain('$.channels[0].backends[0].probe_cmd');
+    });
+
+    it('still bounds the message — a pathological value cannot dump a paragraph', () => {
+        // Filler is `z`: a long run of `a` would be a ≥32-char HEX run and get
+        // redacted (correctly) before truncation could be measured.
+        const message = `Value '${'z'.repeat(1000)}' does not match /x/`;
+        const excerpt = excerpt_for_finding(message, SCHEMA_MESSAGE_MAX_CHARS);
+        expect(excerpt).toHaveLength(SCHEMA_MESSAGE_MAX_CHARS + 1); // + the ellipsis marker
+        expect(excerpt.endsWith('…')).toBe(true);
+        expect(excerpt).not.toContain('z'.repeat(500));
+    });
 });
 
 describe('probe_args allowlist — the execution surface', () => {

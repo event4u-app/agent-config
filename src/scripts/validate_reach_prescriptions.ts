@@ -73,10 +73,18 @@ import { parse as parseYaml } from 'yaml';
 
 import {
     RegistryLoadError,
+    SCHEMA_MESSAGE_MAX_CHARS,
+    excerpt_for_finding,
     load_registry,
     sanitizeParseError,
     validate_file,
 } from './check_reach_channels.js';
+
+// The redaction helper moved one layer down into `check_reach_channels.ts`
+// (both gates echo file-derived text, and the import already ran in this
+// direction — the reverse would be a cycle). Re-exported unchanged so this
+// module stays the surface its callers and tests already address.
+export { EXCERPT_MAX_CHARS, REDACTIONS, excerpt_for_finding } from './check_reach_channels.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 /** Repo root — two dirs up from src/scripts. */
@@ -357,7 +365,7 @@ export function check_prescriptions(registry: unknown, intake: IntakeRecord): Fi
             findings.push({
                 locator,
                 kind: 'moving-target-source',
-                message: `install source is a moving target (${moving.join(', ')}): ${JSON.stringify(command)} — pin an immutable release instead`,
+                message: `install source is a moving target (${moving.join(', ')}): ${JSON.stringify(excerpt_for_finding(command))} — pin an immutable release instead`,
             });
             continue;
         }
@@ -379,7 +387,7 @@ export function check_prescriptions(registry: unknown, intake: IntakeRecord): Fi
             findings.push({
                 locator,
                 kind: 'unpinned-install',
-                message: `install command carries no version specifier: ${JSON.stringify(command)} — pin it exactly, or declare an \`os-baseline:\` exemption with the reason`,
+                message: `install command carries no version specifier: ${JSON.stringify(excerpt_for_finding(command))} — pin it exactly, or declare an \`os-baseline:\` exemption with the reason`,
             });
             continue;
         }
@@ -404,7 +412,7 @@ export function check_prescriptions(registry: unknown, intake: IntakeRecord): Fi
             findings.push({
                 locator,
                 kind: 'pin-drift',
-                message: `install pins a version the intake record did not verify (record: ${recorded.pinned_version}): ${JSON.stringify(command)}`,
+                message: `install pins a version the intake record did not verify (record: ${recorded.pinned_version}): ${JSON.stringify(excerpt_for_finding(command))}`,
             });
             continue;
         }
@@ -414,7 +422,7 @@ export function check_prescriptions(registry: unknown, intake: IntakeRecord): Fi
             findings.push({
                 locator,
                 kind: 'package-name-mismatch',
-                message: `install names no package the intake record verified (recorded: ${names.join(', ')}): ${JSON.stringify(command)}`,
+                message: `install names no package the intake record verified (recorded: ${names.join(', ')}): ${JSON.stringify(excerpt_for_finding(command))}`,
             });
         }
     }
@@ -456,84 +464,6 @@ export function reach_scope_lines(relPath: string, text: string): Set<number> {
         }
     });
     return inScope;
-}
-
-// --- echoed excerpts -------------------------------------------------------
-// The grep gate's whole value is that a finding names the offending TEXT, not
-// just a line number — an operator fixing their own registry needs to read the
-// command back. That echo is also the one place this script copies bytes out of
-// a file it was pointed at, so the excerpt is bounded and credential-redacted
-// before it reaches stdout.
-
-/**
- * Cap on the echoed excerpt. Long enough for a real prescription
- * (`pipx install yt-dlp==2026.7.4`, a pinned release URL), short enough that a
- * single finding can never dump a paragraph of the scanned file.
- */
-const EXCERPT_MAX_CHARS = 120;
-
-const REDACTED = '<redacted>';
-
-/**
- * Credential-shaped substrings replaced before a line is echoed. Every pattern
- * keeps the part that makes the finding actionable — the variable name, the
- * header name, the key prefix — and drops only the value.
- *
- * Each one is deliberately narrower than its obvious form, because a
- * false-positive redaction is not free: it destroys the command the operator
- * came here to read. The version-pin cases that MUST survive are
- * `brew install gh`, `pipx install yt-dlp==2026.7.4`, `node@22`,
- * `--version 2.96.0`, and a pinned release URL.
- */
-const REDACTIONS: readonly (readonly [RegExp, string])[] = [
-    // `Authorization: Bearer …` — the header name stays, the value does not.
-    // Runs to end of line: everything after the colon is the credential.
-    [/(\bauthorization\s*:\s*)(\S.*)$/gi, `$1${REDACTED}`],
-    // `KEY=VALUE`. Two narrowings carry their weight. The lookbehind requires
-    // the key to START a token — so `yt-dlp==2026.7.4` is never chopped at its
-    // `dlp=` tail and `--target=/opt` is left alone — while still admitting a
-    // quote or paren before it, because `sh -c "SECRET=…"` is how a credential
-    // actually appears in a command. `(?!=)` excludes the `==` pin operator.
-    [/(?<![A-Za-z0-9_./-])([A-Za-z_][A-Za-z0-9_]{2,})=(?!=)\S+/g, `$1=${REDACTED}`],
-    // Provider key prefixes — the shapes that are a secret by construction.
-    [/\b(sk|pk|rk)-[A-Za-z0-9_-]{8,}/gi, `$1-${REDACTED}`],
-    [/\b(gh[pousr]|github_pat|xox[baprs])[-_][A-Za-z0-9_-]{8,}/gi, `$1_${REDACTED}`],
-    // A hex digest ≥ 32: an API key or a signature, never part of an install verb.
-    [/(?<![0-9a-fA-F])[0-9a-fA-F]{32,}(?![0-9a-fA-F])/g, REDACTED],
-    // A ≥ 24-char run carrying lower + upper + digit — the entropy shape of an
-    // opaque token. Narrower than "any 24-char base64/hex run" ON PURPOSE: that
-    // form also eats `some-long-homebrew-formula-name` and the path segment of
-    // a pinned release URL, both of which the operator needs to read. Requiring
-    // mixed case AND a digit keeps hyphenated names and lowercase paths intact.
-    [
-        /(?<![A-Za-z0-9+_-])(?=[A-Za-z0-9+_-]{24,})(?=[A-Za-z0-9+_-]*[a-z])(?=[A-Za-z0-9+_-]*[A-Z])(?=[A-Za-z0-9+_-]*\d)[A-Za-z0-9+_-]{24,}(?![A-Za-z0-9+_-])/g,
-        REDACTED,
-    ],
-];
-
-/**
- * Bounded, credential-redacted excerpt of one scanned line.
- *
- * Redaction runs BEFORE truncation on purpose: truncating first would let a
- * secret that straddles the 120-char boundary leave a usable prefix behind.
- *
- * RESIDUAL, STATED PLAINLY — this is NOT a confidentiality boundary and cannot
- * be made into one. A bounded excerpt still reveals some content of a file the
- * caller named, and the positional path argument only ever reads what the
- * invoking shell could already `cat`; whoever runs this CLI has that shell. Two
- * things are nonetheless bought here, and they are the real ones: the
- * credential-shaped classes above never land in stdout or a CI log, and no
- * single finding can emit an unbounded slab of the target file. CI never passes
- * a caller-supplied path — `task check-reach-prescriptions` runs with no
- * positional argument, so the surfaces swept there are the committed reach
- * config and docs, whose contents are public in the repo anyway.
- */
-export function excerpt_for_finding(line: string): string {
-    let text = line.trim();
-    for (const [pattern, replacement] of REDACTIONS) {
-        text = text.replace(pattern, replacement);
-    }
-    return text.length > EXCERPT_MAX_CHARS ? `${text.slice(0, EXCERPT_MAX_CHARS)}…` : text;
 }
 
 /**
@@ -660,13 +590,19 @@ export function run_checks(options: RunOptions = {}): Finding[] {
     // Pre-flight: the schema gate owns shape validation (reuse, not a second
     // implementation). Shape errors are surfaced, then the prescription checks
     // run anyway on whatever is well-formed enough to read.
+    //
+    // `error.message` is file-derived — the Draft-07 `pattern` / `enum` rules
+    // quote the offending VALUE — so it goes through `excerpt_for_finding` like
+    // every other echo site. This was the last raw one: the two install-command
+    // paths above were already redacted while this message still printed
+    // `Value 'brew install curl SECRET=…' does not match /…/` verbatim.
     for (const error of validate_file(registryPath).filter(
         (finding) => finding.severity === 'error',
     )) {
         findings.push({
             locator: error.path,
             kind: 'schema',
-            message: `${error.rule}: ${error.message} (fix via \`task check-reach-channels\`)`,
+            message: `${error.rule}: ${excerpt_for_finding(error.message, SCHEMA_MESSAGE_MAX_CHARS)} (fix via \`task check-reach-channels\`)`,
         });
     }
 

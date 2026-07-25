@@ -402,6 +402,104 @@ describe('echoed excerpts are bounded and credential-redacted', () => {
     });
 });
 
+describe('the [schema] finding is redacted too — the last raw echo site', () => {
+    // `run_checks` runs the schema gate as a pre-flight and re-emits each
+    // error-severity finding as a `[schema]` finding. The Draft-07 `pattern`
+    // rule quotes the OFFENDING VALUE, so this one message echoed a
+    // caller-supplied registry's bytes verbatim — while the two
+    // install-command messages beside it in the very same report were already
+    // redacted. The reproduction below is the exact one that surfaced it.
+    const SECRET = 'zzz999topsecret';
+    let tmp: string;
+
+    beforeEach(() => {
+        tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'reach-schema-echo-')));
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+        vi.restoreAllMocks();
+    });
+
+    /** A minimal registry whose single install string is the variable. */
+    function registryWithInstall(installString: string): string {
+        return [
+            'schema_version: reach-channels-v1',
+            '',
+            'channels:',
+            '  - id: rss',
+            '    description: temp registry whose install string is the variable under test.',
+            '    tier: zero-config',
+            '    lifecycle: stable',
+            '    override_key: reach.channels.rss.backend',
+            '    last_verified: "2026-07-24"',
+            '    backends:',
+            '      - id: curl',
+            '        probe_cmd: curl',
+            '        probe_args: ["--version"]',
+            '        install:',
+            `          default: ${JSON.stringify(installString)}`,
+            '',
+        ].join('\n');
+    }
+
+    function schemaFinding(installString: string): Finding | undefined {
+        const target = path.join(tmp, 'reach-channels.yml');
+        fs.writeFileSync(target, registryWithInstall(installString), 'utf-8');
+        return run_checks({
+            registryPath: target,
+            intakePath: INTAKE_PATH,
+            surfaceRoot: null,
+        }).find((finding) => finding.kind === 'schema');
+    }
+
+    it('GIVEN a secret in an install command THEN the value is absent AND the finding stays navigable', () => {
+        const finding = schemaFinding(`brew install curl AWS_SECRET_ACCESS_KEY=${SECRET}`);
+        expect(finding, 'expected a [schema] finding').toBeDefined();
+        const message = finding?.message ?? '';
+        expect(message).not.toContain(SECRET);
+        expect(message).toContain('<redacted>');
+        // The rule name, so the operator knows WHICH schema constraint failed…
+        expect(message).toContain('pattern:');
+        // …the JSON path, so they know where…
+        expect(finding?.locator).toBe('$.channels[0].backends[0].install.default');
+        // …the key, so they know which value…
+        expect(message).toContain('AWS_SECRET_ACCESS_KEY=<redacted>');
+        // …and the hand-off to the gate that owns shape validation.
+        expect(message).toContain('fix via `task check-reach-channels`');
+    });
+
+    it('GIVEN no secret THEN the command and the whole schema regex survive', () => {
+        const message = schemaFinding('brew install gh')?.message ?? '';
+        expect(message).toContain("Value 'brew install gh' does not match");
+        // Head and tail of the regex: the tail is what proves the message cap
+        // did not truncate the rule the operator has to satisfy.
+        expect(message).toContain('\\blatest\\b');
+        expect(message).toContain('--version[ =]v?[0-9]+');
+        expect(message).toContain('[^\\n]+)$/');
+    });
+
+    it('does not swallow the sibling install-command findings on the same report', () => {
+        // Regression guard for the move itself: the two paths that were ALREADY
+        // redacted must still fire, and still redact, now that the helper lives
+        // one layer down and is imported back.
+        const target = path.join(tmp, 'reach-channels.yml');
+        fs.writeFileSync(
+            target,
+            registryWithInstall(`brew install curl AWS_SECRET_ACCESS_KEY=${SECRET}`),
+            'utf-8',
+        );
+        const findings = run_checks({
+            registryPath: target,
+            intakePath: INTAKE_PATH,
+            surfaceRoot: null,
+        });
+        expect(findings.map((finding) => finding.kind)).toContain('unpinned-install');
+        for (const finding of findings) {
+            expect(finding.message, describeFindings(findings)).not.toContain(SECRET);
+        }
+    });
+});
+
 describe('grep gate — scope selection and the two rejected classes', () => {
     let tmp: string;
 
