@@ -29,15 +29,26 @@ import Ajv from 'ajv';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
+    JS_RUNTIME_FLAG,
+    READINESS_CONFIG_MAX_BYTES,
+    assessJsRuntimeReadiness,
     buildChannelRow,
     collect,
     confineCredentialPath,
     errorRow,
     finalExitCode,
+    jsRuntimeFixCommand,
+    liveReadinessRow,
     main,
+    parseYtDlpVersion,
+    probeJsRuntimes,
+    readConfigFlag,
     renderTable,
+    resolveYtDlpConfigPath,
     runDeepProbe,
+    type BackendRow,
     type ReachDoctorPayload,
+    type ReadinessRow,
 } from '../../src/scripts/reach_doctor.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -1210,5 +1221,627 @@ channels:
                 expect(backend.probe_cmd, `${channel.id}/${backend.id}`).toBe(backend.id);
             }
         }
+    });
+});
+
+/**
+ * READINESS — "installed" is not "able to retrieve"
+ * (road-to-gated-reach Phase 2, steps 2/3/6).
+ *
+ * The blind spot under test: `yt-dlp --version` exits 0 as soon as the binary
+ * exists, while YouTube extraction additionally needs an external JavaScript
+ * runtime. Only Deno is enabled by default; with Node the user config must
+ * carry `--js-runtimes`. So the doctor could report a healthy `youtube` channel
+ * while a transcript pull failed — a false green.
+ *
+ * NOTHING HERE NEEDS yt-dlp INSTALLED, and that is deliberate: installs are
+ * human-performed by contract, so this suite drives the real resolution, the
+ * real bounded config read and the real verdict against REAL files in a temp
+ * XDG root, injecting only the three facts a fixture cannot supply (whether the
+ * backend answered, what version it printed, which runtimes are on PATH). The
+ * one thing that IS exercised live is `probeJsRuntimes()`, which really walks
+ * PATH through the shared probe machinery.
+ *
+ * `assessJsRuntimeReadiness` takes its env explicitly, so the XDG cases assert
+ * the resolved path directly instead of mutating the process — and one case
+ * still goes through the `process.env` default, because that is the path the
+ * CLI actually takes.
+ */
+describe('reach:doctor — YouTube readiness is config-semantic, local, and read-only', () => {
+    /** A release comfortably newer than the `--js-runtimes` gate (2025.11.12). */
+    const NEW_ENOUGH = '2026.7.4';
+    /** One day older than the gate — the flag would be rejected by this build. */
+    const TOO_OLD = '2025.11.11';
+
+    /**
+     * A temp XDG root, optionally containing a real `yt-dlp/config`.
+     * `body === null` leaves the directory absent too, which is the ordinary
+     * "operator never wrote a config" case.
+     */
+    function xdgRoot(name: string, body: string | null): string {
+        const root = path.join(TMP, `xdg-${name}`);
+        fs.mkdirSync(root, { recursive: true });
+        if (body !== null) {
+            fs.mkdirSync(path.join(root, 'yt-dlp'), { recursive: true });
+            fs.writeFileSync(path.join(root, 'yt-dlp', 'config'), body, 'utf-8');
+        }
+        return root;
+    }
+
+    function assess(
+        root: string,
+        overrides: {
+            backend_status?: BackendRow['status'];
+            version_raw?: string | null;
+            runtimes?: string[];
+        } = {},
+    ): ReadinessRow {
+        return assessJsRuntimeReadiness(
+            {
+                backend_status: overrides.backend_status ?? 'ok',
+                version_raw:
+                    overrides.version_raw === undefined ? NEW_ENOUGH : overrides.version_raw,
+                runtimes: overrides.runtimes ?? ['node'],
+            },
+            { XDG_CONFIG_HOME: root },
+        );
+    }
+
+    // ── 1 ─────────────────────────────────────────────────────────────────
+    it('GIVEN a config carrying --js-runtimes node on a Node-only host THEN readiness is ready and no fix is prescribed', () => {
+        const row = assess(xdgRoot('flag-present', '--js-runtimes node\n'));
+
+        expect(row.kind).toBe('js-runtime');
+        expect(row.status).toBe('ready');
+        expect(row.config_present).toBe(true);
+        expect(row.config_flag).toBe(true);
+        expect(row.version).toBe(NEW_ENOUGH);
+        expect(row.fix).toBeNull();
+        expect(row.detail).toContain(JS_RUNTIME_FLAG);
+    });
+
+    it('GIVEN the flag with ANY runtime value (a list, an = form, extra options) THEN presence alone is the signal', () => {
+        for (const body of [
+            '--js-runtimes deno,node\n',
+            '--js-runtimes=node\n',
+            '# a comment\n--no-check-certificates\n--js-runtimes node\n',
+        ]) {
+            expect(assess(xdgRoot(`flag-shape-${body.length}`, body)).status, body).toBe('ready');
+        }
+    });
+
+    // ── 2 ─────────────────────────────────────────────────────────────────
+    it('GIVEN a config present WITHOUT the flag on a Node-only host THEN readiness is not-ready AND an idempotent fix command is prescribed', () => {
+        const root = xdgRoot('flag-absent', '--no-check-certificates\n');
+        const row = assess(root);
+        const configPath = path.join(root, 'yt-dlp', 'config');
+
+        expect(row.status).toBe('not-ready');
+        expect(row.config_present).toBe(true);
+        expect(row.config_flag).toBe(false);
+        expect(row.fix).not.toBeNull();
+
+        const fix = row.fix ?? '';
+        // The remedy targets the SAME path the check read — a fix pointing at a
+        // different file than the check inspected is the failure mode this
+        // whole layer exists to prevent.
+        expect(fix).toContain(configPath);
+        // Idempotent SHAPE: create the dir, then append only when the exact
+        // line is absent. The grouping matters — `A && B || C` would append
+        // after a failed mkdir.
+        expect(fix).toContain('mkdir -p');
+        expect(fix).toContain('grep -qxF');
+        expect(fix).toContain('|| printf');
+        expect(fix).toContain('>>');
+        expect(fix).toMatch(/&& \{ .* \|\| .*; \}/);
+        // The text it greps for is byte-identical to the text it appends, which
+        // is what makes the second run a no-op.
+        expect(fix).toContain(`'${JS_RUNTIME_FLAG} node'`);
+    });
+
+    it.skipIf(!POSIX)('GIVEN the emitted POSIX fix WHEN it is really run TWICE THEN the flag lands exactly once and the verdict flips to ready', () => {
+        // Idempotence measured, not asserted: the command is executed for real
+        // in a temp XDG root, twice, and the resulting file is counted.
+        const root = xdgRoot('fix-executed', null);
+        const configPath = path.join(root, 'yt-dlp', 'config');
+        const before = assess(root);
+        expect(before.status).toBe('not-ready');
+        expect(before.config_present).toBe(false);
+        const fix = before.fix ?? '';
+
+        for (const pass of [1, 2]) {
+            const run = spawnSync('/bin/sh', ['-c', fix], { encoding: 'utf-8' });
+            expect(run.status, `pass ${pass}: ${run.stderr}`).toBe(0);
+        }
+
+        const lines = fs
+            .readFileSync(configPath, 'utf-8')
+            .split('\n')
+            .filter((line) => line.trim() !== '');
+        expect(lines).toEqual([`${JS_RUNTIME_FLAG} node`]);
+        // And the doctor now agrees the channel can extract.
+        expect(assess(root).status).toBe('ready');
+    });
+
+    it('GIVEN win32 THEN the fix is the PowerShell equivalent, guarded by Select-String -Quiet', () => {
+        const configPath = path.join('C:\\Users\\op\\.config', 'yt-dlp', 'config');
+        const fix = jsRuntimeFixCommand(configPath, 'win32');
+
+        expect(fix).toContain('New-Item -ItemType Directory -Force');
+        expect(fix).toContain('Select-String');
+        expect(fix).toContain('-Quiet');
+        expect(fix).toContain('Add-Content');
+        expect(fix).toContain(configPath);
+        // No POSIX shell fragment leaks into the Windows form.
+        expect(fix).not.toContain('mkdir -p');
+        expect(fix).not.toContain('grep');
+    });
+
+    // ── 3 ─────────────────────────────────────────────────────────────────
+    it('GIVEN no config file at all on a Node-only host THEN readiness is not-ready AND the fix creates it', () => {
+        const root = xdgRoot('no-config', null);
+        const row = assess(root);
+
+        expect(row.status).toBe('not-ready');
+        expect(row.config_present).toBe(false);
+        expect(row.config_flag).toBe(false);
+        expect(row.detail).toContain('does not exist');
+        expect(row.fix ?? '').toContain(path.join(root, 'yt-dlp', 'config'));
+    });
+
+    // ── 4 ─────────────────────────────────────────────────────────────────
+    it('GIVEN deno on PATH THEN readiness is ready even with NO config — yt-dlp enables Deno by default', () => {
+        const row = assess(xdgRoot('deno-no-config', null), { runtimes: ['deno'] });
+
+        expect(row.status).toBe('ready');
+        expect(row.config_present).toBe(false);
+        expect(row.config_flag).toBe(false);
+        expect(row.fix).toBeNull();
+        expect(row.detail).toContain('deno');
+    });
+
+    it('GIVEN deno present but a version far too old THEN it is STILL ready — the gate only governs the Node flag', () => {
+        const row = assess(xdgRoot('deno-old', null), {
+            runtimes: ['deno', 'node'],
+            version_raw: '2019.1.1',
+        });
+        expect(row.status).toBe('ready');
+    });
+
+    it('GIVEN NO JavaScript runtime at all THEN readiness is not-ready and NO config fix is invented — a config edit cannot conjure a runtime', () => {
+        const row = assess(xdgRoot('no-runtime', '--js-runtimes node\n'), { runtimes: [] });
+
+        expect(row.status).toBe('not-ready');
+        expect(row.fix).toBeNull();
+        expect(row.detail).toContain('no external JavaScript runtime');
+    });
+
+    // ── 5 ─────────────────────────────────────────────────────────────────
+    it('GIVEN a yt-dlp older than the flag gate THEN the remedy is "upgrade first", never the flag', () => {
+        const row = assess(xdgRoot('too-old', null), { version_raw: TOO_OLD });
+
+        expect(row.status).toBe('not-ready');
+        expect(row.version).toBe(TOO_OLD);
+        expect(row.fix).toBeNull();
+        expect(row.detail).toContain('2025.11.12');
+        expect(row.detail).toContain('upgrade first');
+        // The build would REJECT the flag, so it must not be prescribed at all.
+        expect(row.detail).not.toContain('mkdir -p');
+    });
+
+    it('GIVEN an old yt-dlp whose config ALREADY carries the flag THEN it is still not-ready — the flag does not exist in that build', () => {
+        const row = assess(xdgRoot('too-old-with-flag', '--js-runtimes node\n'), {
+            version_raw: TOO_OLD,
+        });
+        expect(row.status).toBe('not-ready');
+        expect(row.config_flag).toBe(true);
+        expect(row.detail).toContain('upgrade first');
+    });
+
+    it('GIVEN the exact gate release THEN the flag path is allowed (the boundary is inclusive)', () => {
+        expect(assess(xdgRoot('at-gate', '--js-runtimes node\n'), { version_raw: '2025.11.12' }).status).toBe(
+            'ready',
+        );
+        expect(assess(xdgRoot('at-gate-noflag', null), { version_raw: '2025.11.12' }).fix).not.toBeNull();
+    });
+
+    // ── 6 ─────────────────────────────────────────────────────────────────
+    it('GIVEN a version that cannot be parsed THEN readiness is unknown with a cannot-confirm message — NEVER a false ready', () => {
+        for (const raw of ['nightly', 'v24.3.0', '', 'yt-dlp 2026.7.4', '2026.7', 'unknown']) {
+            const row = assess(xdgRoot(`unparsed-${raw.length}-${raw.slice(0, 3)}`, null), {
+                version_raw: raw,
+            });
+            expect(row.status, raw).toBe('unknown');
+            expect(row.version, raw).toBeNull();
+            expect(row.detail, raw).toContain('cannot confirm');
+            expect(row.detail, raw).toContain('upgrade first');
+            expect(row.fix, raw).toBeNull();
+        }
+    });
+
+    it('GIVEN an unparseable version WHOSE config already carries the flag THEN it is STILL unknown, not ready', () => {
+        const row = assess(xdgRoot('unparsed-with-flag', '--js-runtimes node\n'), {
+            version_raw: 'nightly-2026',
+        });
+        expect(row.status).toBe('unknown');
+        expect(row.config_flag).toBe(true);
+    });
+
+    it('parseYtDlpVersion accepts the release shape (including the nightly 4th component) and nothing else', () => {
+        expect(parseYtDlpVersion('2026.7.4')).toEqual([2026, 7, 4]);
+        expect(parseYtDlpVersion('  2025.11.12  ')).toEqual([2025, 11, 12]);
+        // A nightly build: the release triple decides, the suffix is dropped.
+        expect(parseYtDlpVersion('2025.11.12.232946')).toEqual([2025, 11, 12]);
+        for (const bad of [null, '', 'nightly', 'v2026.7.4', '2026.7', '26.7.4', '2026-07-04']) {
+            expect(parseYtDlpVersion(bad), String(bad)).toBeNull();
+        }
+    });
+
+    // ── 7 ─────────────────────────────────────────────────────────────────
+    it('GIVEN XDG_CONFIG_HOME set THEN the config is looked for THERE, exactly as yt-dlp resolves it — not under ~/.config', () => {
+        // THE failure worth preventing: if the doctor read ~/.config while the
+        // tool read $XDG_CONFIG_HOME, doctor and operator would agree with each
+        // other while yt-dlp read a third file. So the resolved path is asserted
+        // literally, in both directions.
+        const root = xdgRoot('xdg-explicit', '--js-runtimes node\n');
+        const expected = path.join(root, 'yt-dlp', 'config');
+
+        expect(resolveYtDlpConfigPath({ XDG_CONFIG_HOME: root })).toBe(expected);
+        expect(resolveYtDlpConfigPath({ XDG_CONFIG_HOME: root })).not.toBe(
+            path.join(os.homedir(), '.config', 'yt-dlp', 'config'),
+        );
+        // And the verdict really came from that file: the flag is only there.
+        const row = assess(root);
+        expect(row.config_path).toBe(expected);
+        expect(row.config_flag).toBe(true);
+    });
+
+    it('GIVEN XDG_CONFIG_HOME unset or empty THEN it falls back to ~/.config/yt-dlp/config', () => {
+        const fallback = path.join(os.homedir(), '.config', 'yt-dlp', 'config');
+        expect(resolveYtDlpConfigPath({})).toBe(fallback);
+        expect(resolveYtDlpConfigPath({ XDG_CONFIG_HOME: '' })).toBe(fallback);
+        expect(resolveYtDlpConfigPath({ XDG_CONFIG_HOME: '   ' })).toBe(fallback);
+    });
+
+    it('GIVEN a ~-prefixed XDG_CONFIG_HOME THEN it is expanded rather than taken literally', () => {
+        expect(resolveYtDlpConfigPath({ XDG_CONFIG_HOME: '~/xdg-home' })).toBe(
+            path.join(os.homedir(), 'xdg-home', 'yt-dlp', 'config'),
+        );
+    });
+
+    it('GIVEN the process env itself carries XDG_CONFIG_HOME THEN the DEFAULT (no-argument) resolution honours it — the path the CLI actually takes', () => {
+        const root = xdgRoot('xdg-live', '--js-runtimes node\n');
+        vi.stubEnv('XDG_CONFIG_HOME', root);
+        try {
+            expect(resolveYtDlpConfigPath()).toBe(path.join(root, 'yt-dlp', 'config'));
+            const row = assessJsRuntimeReadiness({
+                backend_status: 'ok',
+                version_raw: NEW_ENOUGH,
+                runtimes: ['node'],
+            });
+            expect(row.config_path).toBe(path.join(root, 'yt-dlp', 'config'));
+            expect(row.status).toBe('ready');
+        } finally {
+            vi.unstubAllEnvs();
+        }
+    });
+
+    // ── 8 ─────────────────────────────────────────────────────────────────
+    it.skipIf(!POSIX)('GIVEN a SYMLINKED config path THEN it is refused rather than followed — the link target never answers for the file', () => {
+        const target = path.join(TMP, 'symlink-target-config');
+        fs.writeFileSync(target, `${JS_RUNTIME_FLAG} node\n`, 'utf-8');
+        const root = xdgRoot('symlink', null);
+        fs.mkdirSync(path.join(root, 'yt-dlp'), { recursive: true });
+        fs.symlinkSync(target, path.join(root, 'yt-dlp', 'config'));
+
+        const row = assess(root);
+
+        // The load-bearing assertion: the TARGET carries the flag, so a followed
+        // link would have reported `ready`. Refusing means not-ready.
+        expect(row.config_flag).toBe(false);
+        expect(row.config_present).toBe(false);
+        expect(row.status).toBe('not-ready');
+        expect(row.detail).toContain('symlink');
+        expect(row.detail).toContain('refused');
+    });
+
+    it.skipIf(!POSIX)('readConfigFlag refuses a symlink and a directory, and names why in both cases', () => {
+        const file = path.join(TMP, 'rcf-real-config');
+        fs.writeFileSync(file, `${JS_RUNTIME_FLAG} node\n`, 'utf-8');
+        const link = path.join(TMP, 'rcf-link-config');
+        fs.symlinkSync(file, link);
+        const directory = path.join(TMP, 'rcf-directory-config');
+        fs.mkdirSync(directory, { recursive: true });
+
+        const viaLink = readConfigFlag(link);
+        expect(viaLink).toMatchObject({ present: false, flag: false });
+        expect(viaLink.refused).toContain('symlink');
+
+        const viaDirectory = readConfigFlag(directory);
+        expect(viaDirectory).toMatchObject({ present: false, flag: false });
+        expect(viaDirectory.refused).toContain('not a regular file');
+
+        // The control: the real file IS read, so the refusals above are about
+        // the path shape and not about the reader being broken.
+        expect(readConfigFlag(file)).toEqual({ present: true, flag: true, refused: null });
+        // An absent path is simply absent — not a refusal.
+        expect(readConfigFlag(path.join(TMP, 'rcf-nope'))).toEqual({
+            present: false,
+            flag: false,
+            refused: null,
+        });
+    });
+
+    it('readConfigFlag is BOUNDED — a flag beyond the byte cap is not seen, so a huge file cannot be slurped', () => {
+        const file = path.join(TMP, 'rcf-bounded-config');
+        const padding = `# ${'x'.repeat(200)}\n`;
+        fs.writeFileSync(file, `${padding}${JS_RUNTIME_FLAG} node\n`, 'utf-8');
+
+        // Read capped below the flag's offset: not found.
+        expect(readConfigFlag(file, 32)).toMatchObject({ present: true, flag: false });
+        // Read with the real cap: found. Same file, so the cap is what differed.
+        expect(readConfigFlag(file, READINESS_CONFIG_MAX_BYTES)).toMatchObject({
+            present: true,
+            flag: true,
+        });
+        expect(READINESS_CONFIG_MAX_BYTES).toBeGreaterThan(1024);
+    });
+
+    // ── the not-evaluated combination, which must not contradict itself ────
+    it('GIVEN the backend itself is missing THEN readiness is unknown and says so — never not-ready, never ready', () => {
+        for (const status of ['missing', 'broken', 'timeout', 'error'] as const) {
+            const row = assess(xdgRoot(`backend-${status}`, `${JS_RUNTIME_FLAG} node\n`), {
+                backend_status: status,
+                version_raw: null,
+            });
+            expect(row.status, status).toBe('unknown');
+            expect(row.version, status).toBeNull();
+            expect(row.fix, status).toBeNull();
+            expect(row.detail, status).toContain(status);
+            expect(row.detail, status).toContain('not evaluated');
+            // The config observation is still reported truthfully — the flag IS
+            // there — and the detail explains why that does not settle anything.
+            expect(row.config_flag, status).toBe(true);
+        }
+    });
+
+    // ── the live runtime detection ─────────────────────────────────────────
+    it('probeJsRuntimes uses the shared probe machinery and finds the runtime this suite is running under', () => {
+        const runtimes = probeJsRuntimes();
+        // `node` is guaranteed: vitest is executing inside it.
+        expect(runtimes).toContain('node');
+        // Nothing outside the declared candidate set can appear.
+        for (const runtime of runtimes) expect(['deno', 'node']).toContain(runtime);
+    });
+
+    it('liveReadinessRow returns null for every backend that declares no requirement — including prototype-chain names', () => {
+        for (const backendId of [
+            'curl',
+            'node',
+            'gh',
+            'constructor',
+            'toString',
+            'hasOwnProperty',
+            '__proto__',
+        ]) {
+            expect(liveReadinessRow(backendId, 'ok'), backendId).toBeNull();
+        }
+    });
+
+    it('liveReadinessRow DOES fire for yt-dlp on this machine, and reports the not-evaluated ceiling rather than a green', () => {
+        // yt-dlp is not installed here (installs are human-performed), so this
+        // is the honest live shape: a real probe verdict plus a readiness row
+        // that refuses to guess.
+        const row = liveReadinessRow('yt-dlp', 'missing');
+        expect(row).not.toBeNull();
+        expect(row?.kind).toBe('js-runtime');
+        expect(row?.status).toBe('unknown');
+        expect(row?.config_path).toBe(resolveYtDlpConfigPath());
+    });
+});
+
+describe('reach:doctor — the readiness verdict reaches the channel status, both output formats, and the schema', () => {
+    /**
+     * The seam: `collect({ readiness })` swaps the live observer, exactly as
+     * `now` swaps the clock. It is the only way to exercise an INSTALLED
+     * backend's readiness on a machine where the backend is not installed —
+     * and the rows fed through it are REAL rows from
+     * `assessJsRuntimeReadiness` over real temp config files, not hand-written
+     * literals.
+     */
+    function rowFor(name: string, body: string | null, runtimes: string[]): ReadinessRow {
+        const root = path.join(TMP, `seam-${name}`);
+        fs.mkdirSync(root, { recursive: true });
+        if (body !== null) {
+            fs.mkdirSync(path.join(root, 'yt-dlp'), { recursive: true });
+            fs.writeFileSync(path.join(root, 'yt-dlp', 'config'), body, 'utf-8');
+        }
+        return assessJsRuntimeReadiness(
+            { backend_status: 'ok', version_raw: '2026.7.4', runtimes },
+            { XDG_CONFIG_HOME: root },
+        );
+    }
+
+    function collectWith(row: ReadinessRow | null): ReachDoctorPayload {
+        const file = registry(
+            `readiness-${row?.status ?? 'none'}`,
+            `schema_version: reach-channels-v1
+channels:
+${OK_CHANNEL}`,
+        );
+        return collect({
+            registryPath: file,
+            readiness: (backendId) => (backendId === PRESENT_CMD ? row : null),
+        });
+    }
+
+    it('GIVEN an installed backend whose readiness is NOT satisfied THEN the channel is not-ready (not ok, not missing) and --strict fails', () => {
+        const row = rowFor('not-ready', null, ['node']);
+        expect(row.status).toBe('not-ready');
+
+        const payload = collectWith(row);
+        const channel = payload.channels[0];
+
+        // The distinction an operator needs: the binary is fine…
+        expect(channel?.backends[0]?.status).toBe('ok');
+        // …and the channel still cannot retrieve.
+        expect(channel?.status).toBe('not-ready');
+        expect(channel?.active_backend).toBeNull();
+        expect(channel?.backends[0]?.readiness?.status).toBe('not-ready');
+        expect(finalExitCode(payload, true)).toBe(1);
+        expect(finalExitCode(payload, false)).toBe(0);
+    });
+
+    it('GIVEN readiness UNKNOWN on an installed backend THEN the channel is still not-ready — an "installed, unverified" ceiling, never a green', () => {
+        const unknown = assessJsRuntimeReadiness(
+            { backend_status: 'ok', version_raw: 'nightly', runtimes: ['node'] },
+            { XDG_CONFIG_HOME: path.join(TMP, 'seam-unknown-root') },
+        );
+        expect(unknown.status).toBe('unknown');
+
+        const payload = collectWith(unknown);
+        expect(payload.channels[0]?.status).toBe('not-ready');
+        expect(payload.channels[0]?.active_backend).toBeNull();
+        expect(finalExitCode(payload, true)).toBe(1);
+    });
+
+    it('GIVEN readiness satisfied THEN the channel is ok and the backend is active again', () => {
+        const row = rowFor('ready', `${JS_RUNTIME_FLAG} node\n`, ['node']);
+        expect(row.status).toBe('ready');
+
+        const payload = collectWith(row);
+        expect(payload.channels[0]?.status).toBe('ok');
+        expect(payload.channels[0]?.active_backend).toBe(PRESENT_CMD);
+        expect(finalExitCode(payload, true)).toBe(0);
+    });
+
+    it('GIVEN a not-ready backend THEN the TABLE names the state, the resolved config path, and the fix command', () => {
+        const row = rowFor('table', null, ['node']);
+        const table = renderTable(collectWith(row));
+
+        expect(table).toContain('readiness (js-runtime): not-ready');
+        expect(table).toContain(row.config_path);
+        expect(table).toContain('readiness fix');
+        expect(table).toContain('mkdir -p');
+        expect(table).toContain('runtimes on PATH: node');
+        expect(table).toContain(`${JS_RUNTIME_FLAG}: no`);
+    });
+
+    it('GIVEN a ready backend THEN the table STILL shows the readiness line — a silent pass would be indistinguishable from a check that never ran', () => {
+        const table = renderTable(collectWith(rowFor('table-ready', `${JS_RUNTIME_FLAG} node\n`, ['node'])));
+        expect(table).toContain('readiness (js-runtime): ready');
+        expect(table).toContain(`${JS_RUNTIME_FLAG}: yes`);
+        expect(table).not.toContain('readiness fix');
+    });
+
+    it('GIVEN every readiness state THEN the serialised JSON payload still validates against reach-doctor-payload.schema.json', () => {
+        const validate = makeValidator();
+        const rows: ReadinessRow[] = [
+            rowFor('schema-ready', `${JS_RUNTIME_FLAG} node\n`, ['node']),
+            rowFor('schema-not-ready', null, ['node']),
+            rowFor('schema-no-runtime', null, []),
+            rowFor('schema-deno', null, ['deno']),
+            assessJsRuntimeReadiness(
+                { backend_status: 'ok', version_raw: '2025.11.11', runtimes: ['node'] },
+                { XDG_CONFIG_HOME: path.join(TMP, 'schema-too-old') },
+            ),
+            assessJsRuntimeReadiness(
+                { backend_status: 'ok', version_raw: 'nightly', runtimes: ['node'] },
+                { XDG_CONFIG_HOME: path.join(TMP, 'schema-unparsed') },
+            ),
+            assessJsRuntimeReadiness(
+                { backend_status: 'missing', version_raw: null, runtimes: ['node'] },
+                { XDG_CONFIG_HOME: path.join(TMP, 'schema-missing-backend') },
+            ),
+        ];
+        expect(new Set(rows.map((row) => row.status))).toEqual(
+            new Set(['ready', 'not-ready', 'unknown']),
+        );
+
+        for (const row of rows) {
+            const payload = collectWith(row);
+            // Round-trip through JSON: the schema describes the serialised bytes.
+            const serialised: unknown = JSON.parse(JSON.stringify(payload));
+            expect(validate(serialised), row.status).toBe(true);
+            // The `not-ready` channel status is in the enum too.
+            expect(
+                (serialised as ReachDoctorPayload).channels[0]?.backends[0]?.readiness?.status,
+                row.status,
+            ).toBe(row.status);
+        }
+    });
+
+    it('GIVEN a not-ready readiness row THEN nothing in the payload carries the config file contents', () => {
+        const root = path.join(TMP, 'seam-secretive');
+        fs.mkdirSync(path.join(root, 'yt-dlp'), { recursive: true });
+        fs.writeFileSync(
+            path.join(root, 'yt-dlp', 'config'),
+            '--cookies /home/op/cookies.txt\n--proxy http://user:not-a-real-secret@127.0.0.1:8080\n',
+            'utf-8',
+        );
+        const row = assessJsRuntimeReadiness(
+            { backend_status: 'ok', version_raw: '2026.7.4', runtimes: ['node'] },
+            { XDG_CONFIG_HOME: root },
+        );
+
+        expect(row.status).toBe('not-ready');
+        const serialised = JSON.stringify(collectWith(row));
+        expect(serialised).not.toContain('not-a-real-secret');
+        expect(serialised).not.toContain('cookies.txt');
+        expect(serialised).not.toContain('--proxy');
+    });
+
+    // ── 10 · regression guard for the channels with no such requirement ────
+    it('GIVEN a backend that declares NO readiness requirement THEN no field and no warning appear — the other channels are untouched', () => {
+        const payload = collectWith(null);
+        const channel = payload.channels[0];
+
+        expect(channel?.status).toBe('ok');
+        expect(channel?.active_backend).toBe(PRESENT_CMD);
+        expect(channel?.warnings).toEqual([]);
+        expect(channel?.backends[0]?.readiness).toBeUndefined();
+        // Absence, not a null: the key must not exist in the serialised channel
+        // rows. (Scoped to `channels` on purpose — the payload's `registry`
+        // field carries the fixture's own filename.)
+        expect(JSON.stringify(payload.channels)).not.toContain('readiness');
+        expect(makeValidator()(JSON.parse(JSON.stringify(payload)))).toBe(true);
+        expect(renderTable(payload)).not.toContain('readiness (');
+    });
+
+    it('GIVEN the SHIPPED registry THEN only the youtube channel carries a readiness row, and every other channel is byte-for-byte unaffected', () => {
+        const payload = collect();
+        const withReadiness = payload.channels.filter((channel) =>
+            channel.backends.some((backend) => backend.readiness !== undefined),
+        );
+
+        expect(withReadiness.map((channel) => channel.id)).toEqual(['youtube']);
+        for (const channel of payload.channels) {
+            if (channel.id === 'youtube') continue;
+            expect(JSON.stringify(channel), channel.id).not.toContain('readiness');
+            expect(channel.status, channel.id).not.toBe('not-ready');
+        }
+        expect(makeValidator()(JSON.parse(JSON.stringify(payload)))).toBe(true);
+    });
+
+    it('GIVEN the shipped youtube channel on THIS machine (yt-dlp absent) THEN missing + readiness-unknown read as one coherent report, not a contradiction', () => {
+        const payload = collect({ channel: 'youtube' });
+        const channel = payload.channels[0];
+        const readiness = channel?.backends[0]?.readiness;
+
+        // `missing` is the channel verdict (there is a binary to install) …
+        expect(channel?.status).toBe('missing');
+        expect(channel?.fix).toContain('pipx install yt-dlp==');
+        // … and readiness explicitly declines to judge, naming the reason.
+        expect(readiness?.status).toBe('unknown');
+        expect(readiness?.detail).toContain('missing');
+        expect(readiness?.detail).toContain('install it first');
+        expect(readiness?.fix).toBeNull();
+
+        // The table says both things in words, in that order.
+        const table = renderTable(payload);
+        expect(table).toContain('readiness (js-runtime): unknown');
+        expect(table).toContain('pipx install yt-dlp==');
+        // No flag remedy is offered for a tool that is not installed.
+        expect(table).not.toContain('readiness fix');
     });
 });
