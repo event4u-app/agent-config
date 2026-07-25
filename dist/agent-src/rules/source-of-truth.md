@@ -11,6 +11,8 @@ triggers:
   - path_prefix: ".cursor/"
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/check_condensation.ts"
 ---
 
 # Source of Truth

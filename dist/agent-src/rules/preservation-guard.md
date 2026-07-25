@@ -14,6 +14,9 @@ validator_ignore:
     reason: "Rule references the authoring tree as the operand of condensation/preservation."
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/check_condensation.ts"
+  - "validator:src/scripts/skill_linter.ts"
 ---
 
 # Preservation Guard

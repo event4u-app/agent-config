@@ -9,6 +9,8 @@ validator_ignore:
     reason: "Rule scopes the .md-English mandate to the authoring tree."
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/check_md_language.ts"
 ---
 
 # Language and Tone

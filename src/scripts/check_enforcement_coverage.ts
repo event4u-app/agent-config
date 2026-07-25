@@ -1,0 +1,525 @@
+#!/usr/bin/env tsx
+/**
+ * Enforcement-coverage gate — how many rules have a backstop that actually runs.
+ *
+ * This package's positioning is falsifiability, and its own doctrine says a MUST
+ * that depends on agent self-report is honor-system theatre. That doctrine had
+ * no instrument: 107 rules carry `type / tier / description / …` and not one
+ * field said what enforces them. This script is that instrument.
+ *
+ * The load-bearing design choice is **resolution over declaration**. A rule that
+ * declares `validator:src/scripts/lint_x.ts` is NOT counted as enforced merely
+ * because the file exists — the script must also be *reachable*: referenced from
+ * a taskfile, a GitHub workflow, or the hook manifest. A linter that ships and
+ * runs nowhere is exactly the defect this gate exists to surface, and a
+ * declaration-only checker would rate it green. (Found on the first run:
+ * `lint_output_slop.ts` is wired nowhere while `output-discipline` asserts in
+ * shipped prose that violations cause a CI exit-code-2.)
+ *
+ * Second choice: **blocking and instrumenting are different tiers.** A hook
+ * registered `fail_closed: false` cannot fail a build; it writes evidence. It
+ * resolves to `observer`, never `validator`, and declaring it as one is reported
+ * as a misdeclaration rather than silently accepted.
+ *
+ * `none` is a legal, counted value. An honest recorded gap is worth more than a
+ * false claim of coverage — that is the whole point of the exercise.
+ *
+ * Usage:
+ *   ./scripts-run src/scripts/check_enforcement_coverage            # report
+ *   ./scripts-run src/scripts/check_enforcement_coverage --json     # machine
+ *   ./scripts-run src/scripts/check_enforcement_coverage --check    # ratchet
+ *   ./scripts-run src/scripts/check_enforcement_coverage --write-baseline
+ *
+ * Exit codes: 0 ok · 1 ratchet regression (--check) · 2 usage/env error.
+ */
+
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const _HERE = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(_HERE, '..', '..');
+const RULES_DIR = path.join(REPO_ROOT, 'src', 'rules');
+const HOOK_MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
+const BASELINE = path.join(REPO_ROOT, 'internal', 'reports', 'enforcement-coverage.json');
+
+/** Trees scanned to decide whether a validator script is actually reachable. */
+const WIRING_DIRS = [
+    path.join(REPO_ROOT, 'taskfiles'),
+    path.join(REPO_ROOT, '.github', 'workflows'),
+];
+const WIRING_FILES = [path.join(REPO_ROOT, 'Taskfile.yml'), HOOK_MANIFEST];
+
+export type Resolution =
+    | 'validator'   // script exists AND is wired into a taskfile/workflow/manifest
+    | 'test'        // test file exists; the suite runs it
+    | 'hook'        // registered in the hook manifest with fail_closed: true
+    | 'observer'    // instruments only — never blocks
+    | 'unwired'     // declared script exists but nothing runs it  ← the D1 class
+    | 'missing'     // declared target does not exist at all
+    | 'none';       // honest, recorded gap
+
+export interface RuleCoverage {
+    id: string;
+    tier: string;
+    type: string;
+    declared: string[];
+    resolutions: Resolution[];
+    /** Strongest resolution, by the ordering in `RANK`. */
+    effective: Resolution;
+    notes: string[];
+}
+
+/** Strength order — a rule is credited with its strongest resolving backstop. */
+const RANK: Resolution[] = ['validator', 'test', 'hook', 'observer', 'unwired', 'missing', 'none'];
+
+/** A resolution that can actually fail a build. */
+const BLOCKING: ReadonlySet<Resolution> = new Set<Resolution>(['validator', 'test', 'hook']);
+
+// ---------------------------------------------------------------- frontmatter
+
+/**
+ * Read frontmatter, keeping list values as arrays.
+ *
+ * `measure_rule_budget.strip_frontmatter` is scalar-only by design; `enforced_by`
+ * is a list, so this reader handles both `key: [a, b]` and block `- item` form.
+ * Deliberately not a general YAML parser: the accepted shape is exactly what the
+ * rule schema permits, and anything else is left for the schema validator to
+ * reject rather than silently coerced here.
+ */
+export function read_frontmatter(text: string): Record<string, string | string[]> {
+    if (!text.startsWith('---\n')) return {};
+    const end = text.indexOf('\n---\n', 4);
+    if (end === -1) return {};
+    const out: Record<string, string | string[]> = {};
+    const lines = text.slice(4, end).split('\n');
+
+    let pending_key: string | null = null;
+    let pending_list: string[] = [];
+
+    const flush = (): void => {
+        if (pending_key !== null) {
+            out[pending_key] = pending_list;
+            pending_key = null;
+            pending_list = [];
+        }
+    };
+
+    for (const raw of lines) {
+        const line = raw.replace(/\s+$/, '');
+        if (!line || line.trimStart().startsWith('#')) continue;
+
+        const block_item = /^\s+-\s+(.*)$/.exec(line);
+        if (block_item && pending_key !== null) {
+            pending_list.push(unquote(block_item[1].trim()));
+            continue;
+        }
+        flush();
+
+        const idx = line.indexOf(':');
+        if (idx === -1) continue;
+        const key = line.slice(0, idx).trim();
+        const val = line.slice(idx + 1).trim();
+
+        if (val === '') {
+            // Either a block list follows, or an empty scalar. Assume list; if no
+            // item follows, flush() records an empty array, which reads as absent.
+            pending_key = key;
+            pending_list = [];
+            continue;
+        }
+        if (val.startsWith('[') && val.endsWith(']')) {
+            const inner = val.slice(1, -1).trim();
+            out[key] = inner === '' ? [] : inner.split(',').map((s) => unquote(s.trim()));
+            continue;
+        }
+        out[key] = unquote(val);
+    }
+    flush();
+    return out;
+}
+
+function unquote(s: string): string {
+    if (s.length >= 2 && ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'")))) {
+        return s.slice(1, -1);
+    }
+    return s;
+}
+
+// ------------------------------------------------------------------- wiring
+
+/**
+ * Every file whose text decides whether a script is reachable.
+ *
+ * Read once and concatenated: the question is only ever "does this path appear
+ * anywhere that runs things", so a single haystack is both correct and cheap.
+ */
+function load_wiring_corpus(): string {
+    const parts: string[] = [];
+    for (const f of WIRING_FILES) {
+        if (fs.existsSync(f)) parts.push(fs.readFileSync(f, 'utf-8'));
+    }
+    for (const dir of WIRING_DIRS) {
+        if (!fs.existsSync(dir)) continue;
+        for (const entry of walk(dir)) {
+            if (/\.(ya?ml)$/.test(entry)) parts.push(fs.readFileSync(entry, 'utf-8'));
+        }
+    }
+    return parts.join('\n');
+}
+
+/**
+ * Scripts reachable from a CI entry point, following umbrella indirection.
+ *
+ * A direct-mention test is not sufficient and the miss is not hypothetical:
+ * `lint_skill_frontmatter_safety.ts` is never named in a taskfile, yet it runs on
+ * every CI pass as a sub-check of the `lint_agent_security` umbrella, which is.
+ * Reporting it unwired would be a false alarm — the same defect class, pointed
+ * the other way. So reachability is transitive: seed with the scripts CI names
+ * directly, then expand through the scripts those name, to a fixed point.
+ *
+ * Deliberately NOT part of the seed: `_dispatch.bash`. A CLI subcommand is
+ * something a human or agent may invoke; enforcement is something that runs
+ * whether or not anyone chooses to. Conflating the two is how a package ends up
+ * believing an on-demand tool is a gate.
+ */
+function reachable_scripts(wiring: string): Set<string> {
+    const scripts_dir = path.join(REPO_ROOT, 'src', 'scripts');
+    const all: string[] = fs.existsSync(scripts_dir)
+        ? walk(scripts_dir).filter((p) => p.endsWith('.ts'))
+        : [];
+
+    const rel = (abs: string): string => path.relative(REPO_ROOT, abs);
+    const stem = (abs: string): string => path.basename(abs).replace(/\.ts$/, '');
+
+    const reached = new Set<string>();
+    for (const abs of all) {
+        if (wiring.includes(rel(abs)) || wiring.includes(stem(abs))) reached.add(rel(abs));
+    }
+
+    let grew = true;
+    while (grew) {
+        grew = false;
+        const frontier = [...reached];
+        const bodies = frontier
+            .map((r) => {
+                const abs = path.join(REPO_ROOT, r);
+                return fs.existsSync(abs) ? strip_comments(fs.readFileSync(abs, 'utf-8')) : '';
+            })
+            .join('\n');
+        for (const abs of all) {
+            const r = rel(abs);
+            if (reached.has(r)) continue;
+            if (mentions_as_code(bodies, path.basename(abs), stem(abs))) {
+                reached.add(r);
+                grew = true;
+            }
+        }
+    }
+    return reached;
+}
+
+/**
+ * Drop comments before deciding whether one script invokes another.
+ *
+ * This function exists because its absence produced a live false negative. The
+ * first version matched any textual occurrence, so the moment THIS file's own
+ * docstring named `lint_output_slop.ts` as an example of an unwired linter, the
+ * closure "reached" it and the gate reported the very defect it was built to
+ * catch as fixed. A prose mention is not a call.
+ *
+ * That is the general class: a check that matches on substring presence rather
+ * than on the resolved structure is fail-open by construction. Stripping
+ * comments and requiring a quoted specifier is the narrow structural test —
+ * invocation always goes through a path string or an import specifier.
+ */
+export function strip_comments(src: string): string {
+    return src
+        .replace(/\/\*[\s\S]*?\*\//g, ' ')
+        .split('\n')
+        .map((l) => l.replace(/(^|[^:])\/\/.*$/, '$1'))
+        .join('\n');
+}
+
+/** True when `base`/`stem` appears inside a quoted specifier — an invocation shape. */
+export function mentions_as_code(haystack: string, base: string, stem: string): boolean {
+    for (const needle of [base, stem]) {
+        const q = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (new RegExp(`['"\`][^'"\`]*${q}[^'"\`]*['"\`]`).test(haystack)) return true;
+    }
+    return false;
+}
+
+function walk(dir: string): string[] {
+    const out: string[] = [];
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) out.push(...walk(p));
+        else out.push(p);
+    }
+    return out;
+}
+
+/**
+ * Hook name → whether it can fail a build.
+ *
+ * Parsed with a narrow reader rather than a YAML dependency: the manifest's
+ * `concerns:` block is a fixed two-level shape, and the only fact needed is the
+ * `fail_closed` flag per concern.
+ */
+export function parse_hook_manifest(text: string): Map<string, boolean> {
+    const out = new Map<string, boolean>();
+    let in_concerns = false;
+    let current: string | null = null;
+    for (const raw of text.split('\n')) {
+        const line = raw.replace(/\s+$/, '');
+        if (/^concerns:\s*$/.test(line)) { in_concerns = true; continue; }
+        if (!in_concerns) continue;
+        if (/^\S/.test(line)) break; // left the concerns block
+
+        const concern = /^ {2}([a-z0-9_-]+):\s*$/.exec(line);
+        if (concern) { current = concern[1]; out.set(current, false); continue; }
+        const fc = /^\s+fail_closed:\s*(true|false)\s*$/.exec(line);
+        if (fc && current) out.set(current, fc[1] === 'true');
+    }
+    return out;
+}
+
+// ---------------------------------------------------------------- resolution
+
+export function resolve_one(
+    decl: string,
+    ctx: {
+        wiring: string;
+        hooks: Map<string, boolean>;
+        exists: (rel: string) => boolean;
+        reachable: Set<string>;
+    },
+): { resolution: Resolution; note?: string } {
+    if (decl === 'none') return { resolution: 'none' };
+
+    const idx = decl.indexOf(':');
+    const kind = decl.slice(0, idx);
+    const target = decl.slice(idx + 1);
+
+    if (kind === 'observer') return { resolution: 'observer' };
+
+    if (kind === 'hook') {
+        if (!ctx.hooks.has(target)) {
+            return { resolution: 'missing', note: `hook '${target}' is not registered in hook_manifest.yaml` };
+        }
+        if (!ctx.hooks.get(target)) {
+            // Registered but non-blocking. It instruments; it does not enforce.
+            return {
+                resolution: 'observer',
+                note: `hook '${target}' is fail_closed: false — it instruments, it cannot block; counted as observer`,
+            };
+        }
+        return { resolution: 'hook' };
+    }
+
+    if (kind === 'test') {
+        return ctx.exists(target)
+            ? { resolution: 'test' }
+            : { resolution: 'missing', note: `test path does not exist: ${target}` };
+    }
+
+    if (kind === 'validator') {
+        if (!ctx.exists(target)) {
+            return { resolution: 'missing', note: `validator script does not exist: ${target}` };
+        }
+        // Resolution, not declaration: existing is not running.
+        const stem = path.basename(target).replace(/\.[tj]s$/, '');
+        const reachable =
+            ctx.reachable.has(target) || ctx.wiring.includes(target) || ctx.wiring.includes(stem);
+        return reachable
+            ? { resolution: 'validator' }
+            : {
+                  resolution: 'unwired',
+                  note: `validator '${target}' exists but is referenced by no taskfile, workflow, or hook manifest — it runs nowhere`,
+              };
+    }
+
+    return { resolution: 'missing', note: `unrecognised enforced_by form: ${decl}` };
+}
+
+export function strongest(resolutions: Resolution[]): Resolution {
+    if (resolutions.length === 0) return 'none';
+    let best = resolutions[0];
+    for (const r of resolutions) {
+        if (RANK.indexOf(r) < RANK.indexOf(best)) best = r;
+    }
+    return best;
+}
+
+// -------------------------------------------------------------------- report
+
+export function collect(): RuleCoverage[] {
+    const wiring = load_wiring_corpus();
+    const hooks = fs.existsSync(HOOK_MANIFEST)
+        ? parse_hook_manifest(fs.readFileSync(HOOK_MANIFEST, 'utf-8'))
+        : new Map<string, boolean>();
+    const exists = (rel: string): boolean => fs.existsSync(path.join(REPO_ROOT, rel));
+    const reachable = reachable_scripts(wiring);
+
+    const out: RuleCoverage[] = [];
+    for (const name of fs.readdirSync(RULES_DIR).sort()) {
+        if (!name.endsWith('.md')) continue;
+        const fm = read_frontmatter(fs.readFileSync(path.join(RULES_DIR, name), 'utf-8'));
+        const raw = fm['enforced_by'];
+        const declared = Array.isArray(raw) ? raw : typeof raw === 'string' && raw ? [raw] : [];
+
+        const resolutions: Resolution[] = [];
+        const notes: string[] = [];
+        for (const d of declared) {
+            const { resolution, note } = resolve_one(d, { wiring, hooks, exists, reachable });
+            resolutions.push(resolution);
+            if (note) notes.push(note);
+        }
+        out.push({
+            id: name.replace(/\.md$/, ''),
+            tier: String(fm['tier'] ?? '—'),
+            type: String(fm['type'] ?? '—'),
+            declared,
+            resolutions,
+            effective: strongest(resolutions),
+            notes,
+        });
+    }
+    return out;
+}
+
+export interface Summary {
+    total: number;
+    declared: number;
+    blocking: number;
+    observer: number;
+    unwired: number;
+    missing: number;
+    undeclared: number;
+    blocking_pct: number;
+}
+
+export function summarise(rows: RuleCoverage[]): Summary {
+    const declared = rows.filter((r) => r.declared.length > 0);
+    const count = (p: (r: RuleCoverage) => boolean): number => rows.filter(p).length;
+    const blocking = count((r) => BLOCKING.has(r.effective));
+    return {
+        total: rows.length,
+        declared: declared.length,
+        blocking,
+        observer: count((r) => r.effective === 'observer'),
+        unwired: count((r) => r.effective === 'unwired'),
+        missing: count((r) => r.effective === 'missing'),
+        undeclared: rows.length - declared.length,
+        blocking_pct: rows.length === 0 ? 0 : Math.round((blocking / rows.length) * 1000) / 10,
+    };
+}
+
+function main(argv: string[]): number {
+    const as_json = argv.includes('--json');
+    const check = argv.includes('--check');
+    const write = argv.includes('--write-baseline');
+
+    if (!fs.existsSync(RULES_DIR)) {
+        process.stderr.write(`❌  check_enforcement_coverage: no rules dir at ${RULES_DIR}\n`);
+        return 2;
+    }
+
+    const rows = collect();
+    const summary = summarise(rows);
+
+    if (as_json) {
+        process.stdout.write(JSON.stringify({ summary, rules: rows }, null, 2) + '\n');
+        return 0;
+    }
+
+    if (write) {
+        fs.mkdirSync(path.dirname(BASELINE), { recursive: true });
+        fs.writeFileSync(
+            BASELINE,
+            JSON.stringify(
+                {
+                    _doc:
+                        'Enforcement-coverage baseline. `blocking` counts rules whose strongest ' +
+                        'enforced_by resolves to something that can fail a build. Coverage is a ' +
+                        'ratchet: --check fails when blocking falls or unwired rises. Regenerate ' +
+                        'intentionally with --write-baseline when the change is the point.',
+                    summary,
+                },
+                null,
+                2,
+            ) + '\n',
+        );
+        process.stdout.write(`✅  wrote baseline → ${path.relative(REPO_ROOT, BASELINE)}\n`);
+        return 0;
+    }
+
+    // Human report.
+    const lines: string[] = [];
+    lines.push(
+        `enforcement coverage · ${summary.blocking}/${summary.total} rules (${summary.blocking_pct}%) ` +
+            `have a backstop that can fail a build`,
+    );
+    lines.push(
+        `  declared ${summary.declared} · observer ${summary.observer} · ` +
+            `unwired ${summary.unwired} · missing ${summary.missing} · undeclared ${summary.undeclared}`,
+    );
+
+    const problems = rows.filter((r) => r.notes.length > 0);
+    if (problems.length > 0) {
+        lines.push('');
+        lines.push('  resolution findings:');
+        for (const r of problems) {
+            for (const n of r.notes) lines.push(`    · ${r.id}: ${n}`);
+        }
+    }
+    process.stdout.write(lines.join('\n') + '\n');
+
+    if (check) {
+        if (!fs.existsSync(BASELINE)) {
+            process.stderr.write(
+                `❌  check_enforcement_coverage --check: no baseline at ${path.relative(REPO_ROOT, BASELINE)}; ` +
+                    `run --write-baseline first\n`,
+            );
+            return 2;
+        }
+        const base = JSON.parse(fs.readFileSync(BASELINE, 'utf-8')).summary as Summary;
+        const regressions: string[] = [];
+        if (summary.blocking < base.blocking) {
+            regressions.push(`blocking coverage fell: ${base.blocking} → ${summary.blocking}`);
+        }
+        if (summary.unwired > base.unwired) {
+            regressions.push(`unwired declarations rose: ${base.unwired} → ${summary.unwired}`);
+        }
+        if (summary.missing > base.missing) {
+            regressions.push(`missing targets rose: ${base.missing} → ${summary.missing}`);
+        }
+        if (regressions.length > 0) {
+            process.stderr.write('❌  enforcement-coverage ratchet:\n');
+            for (const r of regressions) process.stderr.write(`    · ${r}\n`);
+            process.stderr.write(
+                '    Raise coverage, or regenerate the baseline with --write-baseline if the drop is the point.\n',
+            );
+            return 1;
+        }
+        process.stdout.write('✅  enforcement-coverage ratchet holds\n');
+    }
+    return 0;
+}
+
+// Main-guard (realpath-compared, mirrors the repo convention).
+if (process.argv[1] !== undefined) {
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv1 = fs.realpathSync(path.resolve(process.argv[1]));
+        if (here === argv1) {
+            process.exit(main(process.argv.slice(2)));
+        }
+    } catch {
+        const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+        if (import.meta.url === argvUrl) {
+            process.exit(main(process.argv.slice(2)));
+        }
+    }
+}

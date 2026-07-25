@@ -121,6 +121,16 @@
       "default": "active",
       "description": "ADR-013 lifecycle state."
     },
+    "enforced_by": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^(hook:[a-z0-9_-]+|validator:[A-Za-z0-9_./-]+|test:[A-Za-z0-9_./-]+|observer:[a-z0-9 _-]+|none)$"
+      },
+      "description": "What mechanically enforces this rule. `validator:<script>` and `test:<path>` must resolve on disk AND be wired into a taskfile, workflow, or the hook manifest — a script that exists but runs nowhere resolves to unwired, not covered. `hook:<name>` must be registered in hook_manifest.yaml with fail_closed: true; a hook that never blocks is `observer:`, not `validator:`. `none` is legal and counted — an honest gap beats a false claim. Resolved, not trusted, by check_enforcement_coverage.ts."
+    },
     "trust": {
       "type": "object",
       "additionalProperties": false,

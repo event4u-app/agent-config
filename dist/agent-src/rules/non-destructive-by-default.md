@@ -7,6 +7,8 @@ load_context:
   - ../contexts/authority/destructive-mechanics.md
 workspaces: [engineering]
 packs: [engineering-base]
+enforced_by:
+  - "none"
 ---
 
 # Non-Destructive by Default
@@ -53,6 +55,24 @@ Catalog (autonomy-as-cover, roadmap-as-authorization, refusing-named-deletions, 
 ## Cloud Behavior
 
 Applies on every surface — web, Skills API, any cloud agent. No "cloud override".
+
+## See also
+
+[`autonomous-execution`](autonomous-execution.md) · [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) · [`user-interaction`](user-interaction.md).
+
+## Enforcement — stated honestly (`enforced_by: none`)
+
+This floor has **no mechanical backstop**, and pretending otherwise would be the
+failure it exists to prevent. No script can enforce "ask before you deploy" — the
+obligation is to pause and surface, and the only thing that observes it is the
+human in the loop. Adjacent hooks (`block-no-verify`) guard hook-bypass, not
+destructive intent; claiming them here would inflate coverage, so they are not
+claimed.
+
+So this rule is load-bearing **and** unenforced. It is carried by the model
+honouring it — which is why it is a kernel rule, why it is short, and why it is
+counted as uncovered in the enforcement-coverage report rather than excluded
+from it.
 
 ## See also
 

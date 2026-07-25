@@ -28,6 +28,8 @@ validator_ignore:
     reason: "Rule contrasts project-local placement with the .agent-src.uncondensed/rules/ alternative — mentioning the path is the argument."
 workspaces: [agent-config-maintainer, engineering, gtm]
 packs: [ai-image, ai-video]
+enforced_by:
+  - "validator:src/scripts/lint_media_policy_linkage.ts"
 ---
 
 # Media Governance Routing

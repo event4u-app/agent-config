@@ -6,6 +6,8 @@ triggers:
   - intent: "any reply"
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "observer:maintainer review — the rule ships its CI lock as explicitly optional"
 ---
 
 # Telegraph Speak

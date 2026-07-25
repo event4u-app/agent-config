@@ -11,6 +11,8 @@ routes_to:
   - "guideline:agent-infra/roadmap-progress-mechanics"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+enforced_by:
+  - "hook:roadmap-progress"
 ---
 
 # Roadmap Progress Sync

@@ -25,6 +25,8 @@ validator_ignore:
     reason: "Rule documents the persona authoring tree (.agent-src.uncondensed/personas/) as the deprecation-path operand."
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/lint_persona_governance.ts"
 ---
 
 # Persona Governance

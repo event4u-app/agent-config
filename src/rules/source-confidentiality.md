@@ -19,6 +19,8 @@ validator_ignore:
     reason: "Rule names the linter/denylist asset that necessarily holds the tokens."
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/check_no_external_sources.ts"
 ---
 
 # Source Confidentiality
