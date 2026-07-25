@@ -1040,6 +1040,16 @@ hooks:
   design_slop:
     enabled: false
 
+  # PreToolUse code-graph nudge (ADR-124 Phase 4). Default-OFF. When enabled
+  # AND a native code-graph engine has built a cache (or the repo ships a
+  # graph.json / SCIP index), WARNS once per session (exit 2, never blocks) as
+  # the agent is about to Grep/Glob or Read a source file: query the graph
+  # first for "who calls / where used / impact" questions (or rebuild if the
+  # index is stale, or build one if absent). Source G's strict block-first-read
+  # mode is deliberately un-ported. Build the cache with `code_graph build`.
+  code_graph:
+    enabled: false
+
 # --- Decision engine ---
 #
 # Controllable gates layered over the observability surface. Absent

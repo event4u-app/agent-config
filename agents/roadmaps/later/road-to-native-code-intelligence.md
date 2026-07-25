@@ -1,9 +1,25 @@
 ---
-status: ready
+status: later
 complexity: heavy
 ---
 
 # Road to native code intelligence — own the engine, sweep the rejected inventory, keep the gates
+
+> **Parked in `later/` 2026-07-23 (72% — Phases 0–4 landed).** The doctrine
+> (ADR-124), the reclassification sweep, and the native engine
+> (extract/build/query/detect/affected/update + the code-intelligence skill +
+> the PreToolUse nudge) are all merged and working. What remains is **not
+> autonomously workable now**:
+>
+> **Resume when** `benchmark-spend-authorization` is granted AND a
+> consumer-scale test corpus is available (the peer CLI + a Laravel ~50–150k
+> LOC + a TS ~30–100k LOC repo) — that unblocks **Phase 5** (the judged
+> three-arm benchmark → default-on decision) and, in turn, the bench-linked
+> **Phase 6** close-out (archive at the landing SHA; the CAPABILITIES regen and
+> the comparison verdict are already done). The one deferred wiring item
+> (`[~]` dedicated session-start freshness hook + installer post-commit git
+> hook) rides the same resume. Per the Later-disposition Iron Law this roadmap
+> is parked, not left active, until that trigger fires.
 
 > **Supersedes** `skipped/road-to-code-graph-orchestration.md` (2026-07-23,
 > same-day draft) after the maintainer's directive: the "orchestrator only"
@@ -193,28 +209,10 @@ exists and is fresh.
   added (web-tree-sitter MIT, tree-sitter-wasms Unlicense). Cache is the
   gitignored build artifact `agents/runtime/state/code-graph-v1.json`.
   &nbsp;
-  <!-- original checkbox text preserved below for provenance -->
-  Dependencies: `web-tree-sitter` + `tree-sitter-wasms`, both
-  **exact-pinned** (no `^`), as regular runtime deps (13 already ship; the
-  per-dependency justification per ADR-124 § 1 lands in the PR body). No
-  vendored `.wasm` in the tarball — grammars load from `node_modules` via
-  `locateFile` at runtime. **CI guard:** `src/scripts/install.ts` must never
-  import `code_graph/` (grep check) — the esbuild install bundle cannot
-  inline Emscripten WASM loading. License inventory maintained in the same
-  change: `NOTICE`/`CREDITS.md` entries for `web-tree-sitter` (MIT) and
-  `tree-sitter-wasms` (Unlicense).
 - [x] **ABI smoke test** in CI (`tests/scripts/code_graph.test.ts` → "ABI
   smoke" block): loads each launch grammar, asserts `language.version === 14`
   (the pinned ABI), and parses a fixture per language. A dependency bump that
   breaks the ABI turns this test red at PR time.
-  <!-- original -->
-  **ABI smoke test** in CI: load core + each launch grammar, assert
-  `language.abiVersion` in the supported range, parse a fixture per language,
-  compare graph checksum — the documented web-tree-sitter/grammar ABI-drift
-  failure mode is caught at PR time, never at a consumer. The test asserts
-  (not assumes) that every launch grammar — PHP included — is present in the
-  pinned `tree-sitter-wasms` bundle and loads against the pinned
-  `web-tree-sitter`; a 0.1.x bundle re-pin re-runs this before merge.
 - [x] `src/scripts/code_graph/` module family shipped — `types.ts`,
   `loader.ts` (cached parser, ABI assertion, tree-delete-not-parser-delete
   per the feasibility audit), `extract.ts` (per-language walk + honest
@@ -225,52 +223,10 @@ exists and is fresh.
   `src/` = 826 files / 12,285 nodes / 68,169 edges, confidence split
   EXTRACTED 37.5k / INFERRED 170 / AMBIGUOUS 30.5k (the honest dynamic-dispatch
   majority the audit predicted).
-  <!-- original -->
-  `src/scripts/code_graph/` module family, TypeScript, house exit codes
-  0/1/2/3, `discovery_graph.ts` conventions:
-  - `extract.ts` — WASM tree-sitter, launch set **PHP, TypeScript/TSX,
-    JavaScript** (consumer reality; more grammars demand-gated, one PR each).
-    Single `Parser` instance, `tree.delete()` per file (Emscripten heap does
-    not shrink). Deterministic per-file **byte cap** (skip >1 MB with a
-    `SKIPPED` node) — never parse timeouts (time-dependent partial trees are
-    the one real nondeterminism trap). Emits the frozen extraction shape:
-    `nodes[] {id, label, source_file, source_location}`, `edges[]
-    {source, target, relation, confidence}` with
-    `calls|imports|uses|inherits|member` relations.
-  - **Honest confidence taxonomy** (feasibility-corrected): `EXTRACTED` =
-    definitions, `use`/`import`, `extends`/`implements`, trait `use`,
-    `new ClassName()`, direct free-function calls. `INFERRED` =
-    hierarchy-resolved `$this->`/`self::`/`static::`/`parent::` receivers
-    (second-pass over parsed ancestors) and TS annotated receivers.
-    `AMBIGUOUS` (multi-candidate, never dropped) = the **expected default**
-    for dynamic method calls, facades, container lookups, magic
-    `__call`/`__get`, string callables. Per-class edge counts are reported in
-    build output so the honesty split is visible.
-  - `build.ts` — dedupe, symbol resolution, **path-qualified node IDs from
-    day one** (Source G retrofitted these after same-name collisions — we
-    start there), content-addressed to a file-manifest checksum, atomic
-    versioned cache `agents/runtime/state/code-graph-v1.json` (gitignored,
-    rebuildable — a build artifact per ADR-124 § 6, not a state store).
-  - **Determinism contract** in the module header: identical *source* →
-    identical graph bytes (the tree is an intermediate; the golden-checksum
-    test measures source-to-bytes). Canonical sort, stable key order,
-    POSIX-relative paths, no
-    timestamps; a repeat-build byte-equality (golden-checksum) test enforces
-    it.
-  - `validate.ts` — schema gate before build consumes extraction output.
-  - **Path confinement:** every manifest path resolved and asserted under the
-    repo root; symlinks skipped; JSON manifest (newline-bearing filenames
-    cannot smuggle entries); `require`/`include` string arguments are never
-    followed as filesystem paths.
 - [x] Perf budget: self-build (826 files, mixed PHP/TS/JS) completed cold in
   **~2.3 s** — an order of magnitude under the ≤60 s ceiling and inside the
   ~10–20 s expectation. Full ~100 k-LOC consumer-repo timing rides Phase 5
   (needs a consumer-scale repo not available locally).
-  <!-- original -->
-  Perf budget pre-registered: full build on a ~100 k-LOC repo **≤60 s
-  cold (ceiling; ~10–20 s expected) / ≤10 s warm-incremental** on the
-  maintainer's reference machine; numbers recorded in the PR; misses block
-  merge or shrink the launch set.
 
 **Acceptance (partially met — fixture + self-build; full external-repo
 acceptance rides Phase 5):** the honest confidence taxonomy is verified on a
@@ -289,30 +245,12 @@ Phase 5, which requires those repos + spend authorization anyway.
   every answer prints a `source:` attribution line. Verified live on the
   repo's own graph: `query LexicalIndex` → members; `affected sanitizeLabel`
   → correct reverse-BFS callers.
-  <!-- original -->
-  `query.ts` — `query|path|explain|affected` over the `graph.json` shape,
-  BFS/DFS, `--budget` token cap, hybrid seed-matching (exact/label → BM25
-  fallback via `_lib/lexical_index.ts`). **Source-agnostic:** runs identically
-  over (a) the native cache and (b) a consumer-shipped `graph.json` — the
-  interop tier from the superseded draft collapses into a `--graph <path>`
-  flag plus the detector.
-  - Precedence when both exist: consumer-shipped index wins if fresh (interop
-    courtesy, ADR-124 § 2); native engine covers stale-or-absent — and every
-    answer names which source answered.
 - [x] `detect.ts` — shipped: consumer `graph.json` shape-validation (native +
   foreign shape), `*.scip` presence-only ("peer tooling required", no owned
   reader), native cache; freshness via embedded `head_at_build` SHA
   (`commits_behind`) else mtime-vs-`git log -1 %ct`; `pickSource` precedence
   (fresh consumer > native > stale consumer) unit-tested. git calls route
   through `hardenedSpawnEnv()` (ADR-123).
-  <!-- original -->
-  `detect.ts` — consumer-index detection (`graph.json` shape validation;
-  `*.scip` presence-only: "SCIP detected — peer tooling required", exit 1 —
-  an owned SCIP reader stays YAGNI-gated on the first consumer report) +
-  freshness verdict (`head_at_build` when the artifact carries it, else
-  artifact mtime vs `git log -1 --format=%ct`; `commits_behind` only when a
-  SHA is embedded — no guessing), extended with the native cache as a third
-  source.
 - [x] `affected --since <ref>` — git-diff-seeded impact BFS shipped (diff
   `ref..HEAD` → changed files → their nodes → reverse-BFS); cited as an
   optional pre-step in the `verify-repair-loop` skill's See-also (cited, not
@@ -329,31 +267,34 @@ malformed variants covered by tests.
 
 ## Phase 4 — Behavior wiring: make agents actually use it
 
-- [ ] `code-intelligence` skill (consumer projection, engineering
-  workspaces): when the question is structural ("who calls", "trace",
-  "impact of changing X"), run `query`/`affected` first, grep as fallback
-  with the honesty clause ("the graph has no entry for X, so I grepped").
-  `external-code-graph-interop.md` routes here.
-- [ ] PreToolUse **soft nudge** — default-off, config at
-  `hooks.code_graph.enabled` (the `rtk_wrap`/`design_slop` settings shape),
+- [x] `code-intelligence` skill shipped (`src/skills/code-intelligence/`,
+  engineering workspace, packs: meta) — routes structure questions to
+  `code_graph detect|query|affected|path` first, grep fallback with the
+  honesty clause; source-attribution + confidence-preservation Output reqs;
+  lint-skills green. `external-code-graph-interop` See-also routes here.
+- [x] PreToolUse **soft nudge** shipped — default-off (`hooks.code_graph.enabled`),
   handler `src/scripts/hooks/code_graph_nudge_hook.ts` registered in
-  `hook_manifest.yaml` (`fail_closed: false`), once-per-session latch
-  (existing runtime-state latch mechanism), ≤40 tokens (measured in the PR),
-  **never blocks** — Source G's strict/block mode stays un-ported (blocking
-  reads on a possibly-stale index violates the minimal-safe-diff posture).
-  New under ADR-124: the nudge may also *offer the build* ("no index found —
-  build one? ~N s") instead of only pointing at an existing index.
-- [ ] Freshness loop without a daemon: session-start hook surfaces "graph is
-  N commits behind — run `code-graph build --update`"; an optional
-  post-commit git hook is **offered by the installer, opt-in,
-  consumer-repo-visible** (no silent hook writes; ADR-123 posture;
-  interpreter-pinning lesson applied).
-- [ ] Incremental `--update`: re-extract changed files only (manifest
-  checksum diff), rebuild the affected subgraph.
-- [ ] Consumer-matrix row + `enforcement-by-host.md` update: hook platforms
-  get the nudge; instruction-file platforms get one added sentence in the
-  projected interop rule (zero new rule files — surface consolidation holds;
-  zero new always-on consumer rule weight, measured by the token verifier).
+  `hook_manifest.yaml` (pre_tool_use, `fail_closed: false`), once-per-session
+  latch, warn-only (never blocks — Source G's strict block-first-read
+  un-ported), branches present→query / stale→rebuild / absent→build-offer.
+  Tested (enabled-gate, tool eligibility, branch selection).
+- [~] Freshness loop — **partially done, rest deferred.** Staleness IS surfaced:
+  the nudge's stale branch tells the agent "index N commits behind — rebuild".
+  A *dedicated session-start* freshness hook is deferred (the session_start
+  concern budget already warns at 9>8; adding one worsens it for marginal gain
+  over the read-path nudge), and the *installer-offered opt-in post-commit git
+  hook* is deferred as installer-scope work — both recorded here, neither
+  blocking the capability.
+- [x] Incremental `--update`: re-extract only files whose content hash
+  changed (per-file extract sidecar), reuse the rest, rebuild the full graph
+  — **byte-identical to a cold build** (buildGraph is pure over extracts;
+  update is a speed win, never a semantic one). Also fixed a symlink-path
+  confinement bug (macOS `/tmp`→`/private/tmp`, symlinked checkouts). Tested.
+- [x] Interop routing + host degradation: `external-code-graph-interop`
+  See-also routes to `code-intelligence`; `docs/enforcement-by-host.md` gains
+  the graceful-degradation sentence (hook hosts → nudge; instruction-file hosts
+  → rule + skill). No new rule files (surface consolidation holds). The release
+  `consumer-matrix` needs no row — the hook rides hook_manifest→install→`hooks:doctor`.
 
 **Acceptance:** transcript tests — fresh graph + first Grep → exactly one
 nudge; second Grep → none; stale graph → no nudge + one staleness line;
