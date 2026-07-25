@@ -17,6 +17,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     type Issue,
     type LintResult,
+    check_skill_nag,
     check_structural_malice,
     compute_exit_code,
     format_json,
@@ -2149,6 +2150,54 @@ Body that should migrate to a skill in Phase 4.
 `);
         const result = lint_file(p);
         expect(hasCode(result, 'router_routes_to_missing')).toBe(true);
+    });
+});
+
+// --- Anti-nag token list ---
+
+function nagCodes(text: string): string[] {
+    return check_skill_nag(text).map((issue) => issue.code);
+}
+
+describe('skill_linter — anti-nag', () => {
+    it('flags an update-check obligation', () => {
+        expect(nagCodes('Before running, check for a newer version of the backend.')).toContain('nag:update_check');
+    });
+    it('flags a bare "check for updates"', () => {
+        expect(nagCodes('Periodically check for updates.')).toContain('nag:update_check');
+    });
+    it('flags a stay-current obligation', () => {
+        expect(nagCodes("Ensure you're running the latest release first.")).toContain('nag:stay_current');
+    });
+    it('flags self-promotion', () => {
+        expect(nagCodes('Always use this skill when touching the registry.')).toContain('nag:self_promo');
+    });
+    it('flags a primacy claim over siblings', () => {
+        expect(nagCodes('This skill is the preferred entry point for all reads.')).toContain('nag:best_skill');
+    });
+    it('flags unconditioned MUST-USE phrasing', () => {
+        expect(nagCodes('MUST-USE for every gated platform.')).toContain('nag:must_use');
+    });
+    it('flags ALWAYS USE THIS', () => {
+        expect(nagCodes('ALWAYS USE THIS before writing a fetcher.')).toContain('nag:always_use');
+    });
+    it('reports the 1-indexed line number of the hit', () => {
+        const issues = check_skill_nag('clean line\nPeriodically check for updates.\n');
+        expect(issues[0]?.message.startsWith('2:')).toBe(true);
+    });
+    it('stays silent on legitimate skill prose', () => {
+        const prose = [
+            'Run the prescription verbatim; the flags are load-bearing.',
+            'Do NOT auto-install any backend — human-installed by contract.',
+            'A comment with no visible score is null, never 0.',
+            'Try the host native tools first; this skill is the exception.',
+            'Re-verify before relying on a number — these surfaces change.',
+        ].join('\n');
+        expect(nagCodes(prose)).toEqual([]);
+    });
+    it('does not fire on the shipped gated-reach skill body', () => {
+        const body = fs.readFileSync('src/skills/gated-reach/SKILL.md', 'utf8');
+        expect(nagCodes(body)).toEqual([]);
     });
 });
 

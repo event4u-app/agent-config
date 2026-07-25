@@ -3327,6 +3327,50 @@ export function check_structural_malice(text: string): Issue[] {
     return issues;
 }
 
+// --- Anti-nag check ---
+//
+// A skill may describe a capability; it may not nag the agent into re-invoking
+// it, obligate an update check the package cannot honour offline, or claim
+// unconditional primacy over sibling skills. The token list below IS the
+// contract — greppable on purpose, so an author can see exactly what is refused
+// without reading the linter.
+//
+// Measured before wiring: 0 hits across all 281 shipped skills. This is a
+// regression guard, not a cleanup task — so any hit is a new violation and
+// `error` is the honest severity. A skill that must quote one of these phrases
+// as a negative example belongs in prose docs, not in a SKILL.md body.
+
+const _NAG_UPDATE_CHECK = /(?:check\s+(?:for\s+)?(?:updates?|(?:a\s+)?(?:newer|later|latest)\s+version))/i;
+const _NAG_STAY_CURRENT = /(?:(?:ensure|make sure)\s+(?:you(?:\s+are|\s*'re)?\s+)?(?:on|running|using)\s+the\s+latest)/i;
+const _NAG_SELF_PROMO = /(?:(?:always|you\s+must)\s+use\s+this\s+skill)/i;
+const _NAG_BEST_SKILL = /(?:this\s+skill\s+is\s+the\s+(?:best|only|preferred))/i;
+const _NAG_MUST_USE = /\bMUST[- ]USE\b/;
+const _NAG_ALWAYS_USE = /\bALWAYS\s+USE\s+THIS\b/i;
+
+const _NAG_PATTERNS: Array<[string, RegExp]> = [
+    ['update_check', _NAG_UPDATE_CHECK],
+    ['stay_current', _NAG_STAY_CURRENT],
+    ['self_promo', _NAG_SELF_PROMO],
+    ['best_skill', _NAG_BEST_SKILL],
+    ['must_use', _NAG_MUST_USE],
+    ['always_use', _NAG_ALWAYS_USE],
+];
+
+export function check_skill_nag(text: string): Issue[] {
+    const issues: Issue[] = [];
+    const lines = splitlines(text);
+    lines.forEach((raw, idx) => {
+        const lineno = idx + 1;
+        for (const [name, pattern] of _NAG_PATTERNS) {
+            const match = pattern.exec(raw);
+            if (match) {
+                issues.push(new Issue('error', `nag:${name}`, `${lineno}:${match[0].trim()}`));
+            }
+        }
+    });
+    return issues;
+}
+
 // --- Output-schema check ---
 
 const _OUTPUT_SCHEMA_KEY_PATTERN = /^(\w+):\s*(.*?)\s*$/;
@@ -3525,6 +3569,17 @@ export function lint_file(p: string, repoRoot: string | null = null): LintResult
         const maliceIssues = check_structural_malice(text);
         if (maliceIssues.length > 0) {
             result.issues.push(...maliceIssues);
+            result.status = classify_status(result.issues);
+        }
+    }
+
+    // Skills only: rules legitimately carry unconditional MUST language (that is
+    // what an Iron Law is), so applying the nag list to rules would fight the
+    // rule layer's own register.
+    if (artifactType === 'skill') {
+        const nagIssues = check_skill_nag(text);
+        if (nagIssues.length > 0) {
+            result.issues.push(...nagIssues);
             result.status = classify_status(result.issues);
         }
     }
