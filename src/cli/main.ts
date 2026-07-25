@@ -29,13 +29,21 @@ import { runPacksLs } from './commands/packs.js';
 import { runCommandsLs, runCommandsExplain, looksLikeCommandTarget } from './commands/commands.js';
 import { logger } from './log/logger.js';
 import { buildHelp } from './help.js';
+import { applyConfigRootFromArgv } from './configRoot.js';
+import { buildVersionReadout } from '../shared/capabilities.js';
 
 function readVersion(): string {
     const pkg = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as { version?: unknown };
     return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
 }
 
-async function main(argv: readonly string[]): Promise<number> {
+async function main(rawArgv: readonly string[]): Promise<number> {
+    // Accept a host-supplied config root (`--config-root <path>`) before
+    // anything resolves the config home. Applied by exporting into
+    // `EVENT4U_CONFIG_HOME`, so the scripts family, the server family, and
+    // every Bash-delegated subprocess (inherits `process.env`) observe the
+    // override. Absent flag → pure passthrough, byte-identical behaviour.
+    const { argv } = applyConfigRootFromArgv(rawArgv);
     const program = new Command();
     program
         .name('agent-config')
@@ -334,7 +342,15 @@ async function main(argv: readonly string[]): Promise<number> {
         return 0;
     }
     if (head === '--version' || head === '-V') {
-        process.stdout.write(`${readVersion()}\n`);
+        // `--version --json` is the host-facing capability readout: emits
+        // `{ version, capabilities: { configRoot: true } }` so a spawner
+        // can detect support before relying on `--config-root`. Plain
+        // `--version` keeps printing just the version string.
+        if (argv.includes('--json')) {
+            process.stdout.write(`${JSON.stringify(buildVersionReadout(readVersion()))}\n`);
+        } else {
+            process.stdout.write(`${readVersion()}\n`);
+        }
         return 0;
     }
 

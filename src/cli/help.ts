@@ -18,7 +18,10 @@ export function buildHelp(): string {
         'Usage:',
         '  agent-config <command> [options]',
         '  agent-config --help',
-        '  agent-config --version',
+        '  agent-config --version [--json]',
+        '',
+        'Global options:',
+        '  --config-root <path>       Config/settings/state home (else $EVENT4U_CONFIG_HOME, else ~/.event4u/agent-config)',
         '',
         'Native commands (TS shell):',
     ];
