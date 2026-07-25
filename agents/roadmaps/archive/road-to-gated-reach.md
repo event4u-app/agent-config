@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 parent_roadmap: road-to-internet-reach
@@ -25,7 +25,7 @@ pre-registration, exactly as that ADR requires. It does **not** renegotiate the
 parent band: `band: stop` for the general web-research router stands
 (`internal/bench/reach-vs-native/VERDICT.md`).
 
-Supersedes the `later/` stub `road-to-reach-gated-platforms.md`, whose resume
+Supersedes the now-`skipped/` stub `road-to-reach-gated-platforms.md`, whose resume
 trigger — *"a named demand signal: a user asks for reach on a credential-gated
 platform"* — fired: the maintainer named Reddit, YouTube and Twitter as resources
 they cannot currently open.
@@ -220,7 +220,7 @@ a durable promise.
   before the run, prototypes in gitignored scratch, arms judged independently on
   pre-declared evidence.
 
-- [ ] **Step 0:** Re-verify the prerequisite surfaces resolve on the current
+- [x] **Step 0:** Re-verify the prerequisite surfaces resolve on the current
   `main` before Phase 0 starts.
   <!-- verify: node -e "['src/config/reach-channels.yml','src/scripts/schemas/reach-channels.schema.json','src/scripts/reach_doctor.ts','src/scripts/_lib/tool_probe.ts','src/scripts/validate_reach_prescriptions.ts','src/scripts/check_reach_staleness.ts','internal/bench/reach-vs-native/VERDICT.md'].forEach(p=>{if(!require('fs').existsSync(p))throw new Error('missing '+p)});console.log('ok')" -->
 
@@ -230,7 +230,7 @@ Exit criteria: the two platform-volatile facts are re-verified with date and
 method; both scope lines are answered in-file. Rollback: none — nothing is built
 in this phase.
 
-- [ ] **Step 1:** Re-verify and record (date + exact command) in
+- [x] **Step 1:** Re-verify and record (date + exact command) in
   `internal/bench/gated-reach/README.md`: (a) Reddit self-service OAuth still
   approval-only; (b) `reddit.com/r/<sub>/.rss` and
   `reddit.com/r/<sub>/comments/<id>/.rss` still return Atom with entries;
@@ -238,7 +238,7 @@ in this phase.
   Any fact that has died removes its channel from the candidate table **now**,
   not mid-bench.
   <!-- verify: grep -qE "re-verified: 2026-" internal/bench/gated-reach/README.md -->
-- [ ] **Step 2:** Record the **Reddit depth decision — already answered by the
+- [x] **Step 2:** Record the **Reddit depth decision — already answered by the
   maintainer: ranking and structure are the goal.** `.rss` carries comment text
   but no score and no parent-child order (verified from the entry tag set), so the
   goal is served by the `old.reddit` HTML tier (row 1b), which measured 133 scores
@@ -257,12 +257,12 @@ in this phase.
     access as the durable path (approval-only since Nov 2025, weeks of latency,
     high rejection rate for individuals)? Record the answer verbatim; it decides
     which stub in Phase 5 Step 4 becomes an active roadmap.
-- [ ] **Step 3:** Record the **latency scope line**: the measured Reddit
+- [x] **Step 3:** Record the **latency scope line**: the measured Reddit
   worst case is ~65 s wall-clock for one feed fetch under rate limiting. Confirm
   that a read taking up to ~65 s (rather than failing) is the preferred
   trade-off, and record the alternative that was rejected (fail fast at ~8 s with
   a measured ~2/6 success rate).
-- [ ] **Step 4:** Commit the pre-registration, before any prescription is
+- [x] **Step 4:** Commit the pre-registration, before any prescription is
   written: per channel **6 tasks** with pre-declared acceptance evidence and a
   **native-arm control** per task. Control rule: any task the native arm passes
   is removed and replaced — it was mis-scoped into a gated set — with the
@@ -272,7 +272,7 @@ in this phase.
   prescriptions. One documented repair per task is allowed with both runs
   recorded (a reliability rule admits no ties, so the parent's no-repair rule
   does not transfer; unlimited repair would be threshold shopping).
-- [ ] **Step 5:** Declare the environment: bench host, network class
+- [x] **Step 5:** Declare the environment: bench host, network class
   (residential vs datacenter — the measurements above are residential and
   platforms discriminate on this), and the doctor-snapshot procedure. CI is
   explicitly not a bench environment.
@@ -297,7 +297,7 @@ green, and from a clean shell using only the committed prescription text a Reddi
 thread yields **its top-voted comment and the reply nesting**, plus a tweet's text.
 Rollback: remove the registry entries and the parser; nothing else is touched.
 
-- [ ] **Step 1:** Add `reddit` to `src/config/reach-channels.yml` — `tier:
+- [x] **Step 1:** Add `reddit` to `src/config/reach-channels.yml` — `tier:
   zero-config`, `lifecycle: experimental`, reusing the **existing** curl + node
   backends verbatim (no new install, so no new intake record). The entry documents
   both tiers: the `.rss` URL shapes (subreddit listing, sort variants, thread
@@ -305,7 +305,7 @@ Rollback: remove the registry entries and the parser; nothing else is touched.
   `?sort=confidence` / `?limit=` parameters (all measured accepted), and carries
   the measured retry flags as the prescribed invocation for both.
   <!-- verify: task check-reach-channels -->
-- [ ] **Step 1b:** Write `src/scripts/_lib/reddit_thread_parse.ts` — the one piece
+- [x] **Step 1b:** Write `src/scripts/_lib/reddit_thread_parse.ts` — the one piece
   of new code this roadmap needs. Reads `old.reddit` thread HTML on **stdin**,
   emits JSON on stdout: per comment `{id, author, score, depth, parent_id, body}`.
   Constraints: deterministic, **no network**, no filesystem write, no state; every
@@ -315,17 +315,17 @@ Rollback: remove the registry entries and the parser; nothing else is touched.
   from a flat regex — reply order is the point of tier 2, so approximating it would
   defeat the goal.
   <!-- verify: task test-ts -- --run tests/scripts/reddit_thread_parse.test.ts -->
-- [ ] **Step 1c:** Test the parser against a **committed HTML fixture** (a real
+- [x] **Step 1c:** Test the parser against a **committed HTML fixture** (a real
   thread capture, license-safe excerpt) asserting: comment count, that the
   highest-scored comment is identified, that at least one nested reply resolves to
   its parent, that a score-less node yields `null` not `0`, and that an injected
   `<script>` / instruction-shaped payload in a comment body is neutralised by the
   sanitize floor. Fixture-driven so it cannot silently depend on live Reddit.
-- [ ] **Step 2:** Add `twitter-oembed` — `tier: zero-config`, `lifecycle:
+- [x] **Step 2:** Add `twitter-oembed` — `tier: zero-config`, `lifecycle:
   experimental`, curl backend, documenting the oEmbed URL form and the 404
   behaviour for non-existent tweet IDs.
   <!-- verify: task check-reach-prescriptions -->
-- [ ] **Step 3:** Write the prescriptions with the **exact measured commands**,
+- [x] **Step 3:** Write the prescriptions with the **exact measured commands**,
   not idealised ones — `--retry 8 --retry-max-time 110` with its ~65 s worst case
   stated, the double-unescaping step the Atom `<content>` needs (measured: `&#32;`
   survives one unescape pass), the `-L` redirect follow that `old.reddit` thread
@@ -333,11 +333,11 @@ Rollback: remove the registry entries and the parser; nothing else is touched.
   written as a first-class path rather than a footnote: **if the HTML fetch returns
   a login wall, say so and fall back to `.rss` text, explicitly telling the reader
   that ranking is unavailable** — never silently present unranked text as ranked.
-- [ ] **Step 4:** Prove the prescriptions work as written: run each from a clean
+- [x] **Step 4:** Prove the prescriptions work as written: run each from a clean
   shell, capture the output, and record it in the bench scratch. A prescription
   that only works with undocumented extra flags is not shipped.
   <!-- verify: task check-reach-staleness -->
-- [ ] **Step 5:** Set `last_verified` on both entries from the actual exercise
+- [x] **Step 5:** Set `last_verified` on both entries from the actual exercise
   date, and add a `min_version` note where a tool version is load-bearing
   (council item 6 — prescriptions are a versioned surface).
 
@@ -349,10 +349,10 @@ Exit criteria: the doctor distinguishes "installed" from "ready to extract", and
 one real transcript pull succeeds. Rollback: revert the schema field and the
 doctor rendering; the channel returns to `experimental` unexercised.
 
-- [ ] **Step 1:** Operator installs the pinned backend (`pipx install
+- [~] **Step 1:** *(deferred — needs a human install; the package never auto-installs, per `missing-tool-handling`)* Operator installs the pinned backend (`pipx install
   yt-dlp==<pin>` — pin re-looked-up against the real registry first and bumped in
   registry + intake in the same commit if it moved) plus a JavaScript runtime.
-- [ ] **Step 2:** Implement the readiness check as a **config-semantic** probe,
+- [x] **Step 2:** Implement the readiness check as a **config-semantic** probe,
   adopting the reference's mechanism shape: resolve the extractor's real config
   path the way the tool itself resolves it (XDG first, documented per OS), read
   it bounded and symlink-refusing, check for the literal runtime flag, and gate
@@ -360,16 +360,16 @@ doctor rendering; the channel returns to `experimental` unexercised.
   Emit an **idempotent** OS-specific fix command. Read-only and local — no
   network readiness probe (that stays `--deep`'s declared-endpoint territory).
   <!-- verify: task test-ts -- --run tests/scripts/reach_doctor.test.ts -->
-- [ ] **Step 3:** Decide and record whether this lands as an optional per-backend
+- [x] **Step 3:** Decide and record whether this lands as an optional per-backend
   schema field or as doctor-side logic; whichever is chosen, the reason goes in
   the schema comment. Prefer the shape that keeps the schema honest for backends
   that have no such requirement.
-- [ ] **Step 4:** Exercise the channel for real: one subtitle pull, one metadata
+- [~] **Step 4:** *(deferred — blocked on Step 1)* Exercise the channel for real: one subtitle pull, one metadata
   dump, one search. Document the auto-caption line-duplication and the dedup step
   (the reference names this problem and never implements it).
-- [ ] **Step 5:** Flip `lifecycle: experimental → stable` only after a real run,
+- [~] **Step 5:** *(deferred — blocked on Step 4; `experimental` correctly retained)* Flip `lifecycle: experimental → stable` only after a real run,
   per the registry's own vocabulary.
-- [ ] **Step 6:** Record the invariant the whole layer now depends on: probes are
+- [x] **Step 6:** Record the invariant the whole layer now depends on: probes are
   `--version`-only and the doctor never runs an upstream tool's own status
   subcommand when that subcommand has side effects — an "installed, unverified"
   ceiling is preferred to a false green (council item 3; the reference learned
@@ -381,18 +381,18 @@ Exit criteria: a per-channel verdict table exists with no aggregate band
 anywhere, and every outcome class is published. Rollback: none — publication is
 the deliverable.
 
-- [ ] **Step 1:** Run `internal/bench/gated-reach/` per the Phase 0
+- [x] **Step 1:** Run `internal/bench/gated-reach/` per the Phase 0
   registration: both arms per task, arms judged independently on evidence only,
   every result row carrying the doctor snapshot, the network class, and both runs
   for any repaired task.
-- [ ] **Step 2:** Write the per-channel VERDICT (ship / park / drop) against the
+- [x] **Step 2:** Write the per-channel VERDICT (ship / park / drop) against the
   pre-registered thresholds.
   <!-- verify: grep -qE "^band: (per-channel)" internal/bench/gated-reach/VERDICT.md -->
-- [ ] **Step 3:** Publish every outcome in `docs/benchmark.md` § gated-reach —
+- [x] **Step 3:** Publish every outcome in `docs/benchmark.md` § gated-reach —
   ships, parks and drops alike, with pinned report paths. A dropped channel keeps
   its registry entry only if it carries a `removal_after` date (the shipped
   deprecation path).
-- [ ] **Step 4:** Write the **kill-switch criteria** (council item 5): per
+- [x] **Step 4:** Write the **kill-switch criteria** (council item 5): per
   channel, the observable event that retires it, and the fact that retirement is a
   registry edit plus an `internal/upstream-changes.md` entry, never a silent
   degradation. The Reddit tier-2 criterion is already known and must be written
@@ -404,7 +404,7 @@ the deliverable.
   `last_verified` moves and tier 2 stays — an announced closure is not the same as
   an observed one, and this roadmap should not retire a working capability on a
   press release.
-- [ ] **Step 5:** If zero channels reach ship-tier, cancel Phase 4, publish the
+- [-] **Step 5:** *(not applicable — 3 channels reached ship-tier, so no cancellation; nulls/parks published regardless)* If zero channels reach ship-tier, cancel Phase 4, publish the
   nulls, and archive. The prescriptions from Phase 1 keep standalone operator
   value regardless — that is the whole point of shipping them first.
 
@@ -414,7 +414,7 @@ Exit criteria: triggers match the verdict table exactly and the trigger eval
 proves both directions. Rollback: delete the skill directory and its projection,
 re-run `consistency-fix` and the index generators.
 
-- [ ] **Step 1:** `src/skills/gated-reach/SKILL.md` — triggers naming ONLY
+- [x] **Step 1:** `src/skills/gated-reach/SKILL.md` — triggers naming ONLY
   ship-tier intents; body opens with the native-first deferral clause and one
   sentence citing the parent null; injection-hygiene section mandatory (fetched
   content is DATA, `retrieval_sanitize` floor, `lethal-trifecta-guard`
@@ -422,17 +422,23 @@ re-run `consistency-fix` and the index generators.
   `doctor-before-multi-backend-channels` standing rule; per-channel graceful
   degradation, where an honest "this platform is currently unreadable" beats a
   hallucinated summary.
-- [ ] **Step 2:** Anti-nag lint over the skill body — no update-check
+- [x] **Step 2:** Anti-nag lint over the skill body — no update-check
   obligation, no self-promotion, no unconditioned MUST-USE phrasing (a greppable
   token list committed with the check).
   <!-- verify: task lint-skills -->
-- [ ] **Step 3:** `evals/triggers.json` — positive cases per shipped intent;
+- [x] **Step 3:** `evals/triggers.json` — positive cases per shipped intent;
   negative cases for general research, plain web pages, and CN platforms, which
   must **not** trigger (a trigger that fires only to decline is worse than none).
   <!-- verify: task test-triggers -->
-- [ ] **Step 4:** Condense, project to all hosts, regenerate `CAPABILITIES.yaml`
+- [x] **Step 4:** Condense, project to all hosts, regenerate `CAPABILITIES.yaml`
   (the internet-reach area gains its first skill, banded honestly), run
   `task consistency-fix`, targeted linters green.
+  <!-- DEVIATION: there is no `internet-reach` discovery pack — this roadmap assumed
+       one. The parent shipped its reach tooling under `meta`, and minting a new pack
+       id needs an ADR-013 amendment plus vocabulary/size-class lint updates in the
+       same PR: scope expansion for a single skill. The skill therefore ships under
+       `packs: [meta]` and CAPABILITIES.yaml lists it there (281 skills, drift-check
+       green). Revisit only if a second gated-reach skill lands. -->
   <!-- verify: task check-index && task counts-check -->
 
 ## Phase 5 — Decision record and the parked set
@@ -440,17 +446,17 @@ re-run `consistency-fix` and the index generators.
 Exit criteria: ADR amended, claims registered only for ship-tier channels, every
 cut capability has a stub with a trigger. Rollback: revert the docs commit.
 
-- [ ] **Step 1:** `docs/CLAIMS.md` — ship-tier claims only, each with a
+- [x] **Step 1:** `docs/CLAIMS.md` — ship-tier claims only, each with a
   resolvable pointer. Parked and dropped channels get no claim.
   <!-- verify: ./scripts-run src/scripts/check_claims -->
-- [ ] **Step 2:** Comparison-row candidate (category-level, unnamed): only if the
+- [x] **Step 2:** Comparison-row candidate (category-level, unnamed): only if the
   pointer resolver passes.
   <!-- verify: ./scripts-run src/scripts/check_comparison -->
-- [ ] **Step 3:** Amend ADR-126: the gated-platform gap is closed for shipped
+- [x] **Step 3:** Amend ADR-126: the gated-platform gap is closed for shipped
   channels and explicitly still open for dropped ones, each with its re-entry
   trigger. Record that the credential-free scope was a deliberate cut, not an
   oversight, and why (it removes the trust-boundary contamination risk).
-- [ ] **Step 4:** Materialise the stubs, each with one concrete trigger line.
+- [x] **Step 4:** Materialise the stubs, each with one concrete trigger line.
   Note that `reddit-structured` is **not** among them — ranking and structure
   shipped in this roadmap, credential-free. What remains parked:
   `later/road-to-reach-reddit-session.md` (the successor from Phase 0 Step 2 —
@@ -463,8 +469,8 @@ cut capability has a stub with a trigger. Rollback: revert the docs commit.
   search), `later/road-to-reach-headless.md` (trigger: a measured need on a
   fourth platform), `later/road-to-reach-transcribe.md` (trigger: a video task
   fails specifically because no caption track exists).
-- [ ] **Step 5:** Retire the superseded stub
-  `later/road-to-reach-gated-platforms.md` — its trigger fired and this roadmap
+- [x] **Step 5:** Retire the superseded stub
+  `road-to-reach-gated-platforms.md` (now in `skipped/`) — its trigger fired and this roadmap
   is its execution; record the supersession rather than deleting silently.
   <!-- verify: ./scripts-run src/scripts/check_references -->
 
@@ -485,25 +491,25 @@ cut capability has a stub with a trigger. Rollback: revert the docs commit.
 
 ## Acceptance criteria
 
-- [ ] A Reddit thread — post **and** comments — is readable from a clean shell
+- [x] A Reddit thread — post **and** comments — is readable from a clean shell
   using only the committed prescription, and a single tweet's text and author
   likewise, with no credential anywhere.
-- [ ] For that same thread, **the top-voted comment is identifiable and at least
+- [x] For that same thread, **the top-voted comment is identifiable and at least
   one nested reply resolves to its parent** — the maintainer's ranking/structure
   goal, demonstrated rather than asserted.
-- [ ] The tier-2 → tier-1 degradation path is exercised at least once (simulated
+- [x] The tier-2 → tier-1 degradation path is exercised at least once (simulated
   login wall against the fixture) and proven to say ranking is unavailable rather
   than presenting unranked text as ranked.
-- [ ] A YouTube transcript is extracted after a human install, and the doctor
+- [~] *(deferred — `yt-dlp` absent; human install by contract. The doctor half IS done: it distinguishes `missing` / `not-ready` / `ok` with 93 tests. The extraction half needs the install.)* A YouTube transcript is extracted after a human install, and the doctor
   distinguishes "installed" from "ready to extract".
-- [ ] Per-channel verdicts published for every outcome class, with no aggregate
+- [x] Per-channel verdicts published for every outcome class, with no aggregate
   band in the verdict file.
-- [ ] The skill, if any ships, triggers exactly the earned intents and provably
+- [x] The skill, if any ships, triggers exactly the earned intents and provably
   does not trigger on general research or CN platforms.
-- [ ] Zero credential paths, zero unpinned install strings, zero new resident
+- [x] Zero credential paths, zero unpinned install strings, zero new resident
   state; all three reach gates plus `task test-ts`, skill lint, `check_claims`
   and `check_comparison` green.
-- [ ] Every cut capability has a stub with one concrete resume trigger.
+- [x] Every cut capability has a stub with one concrete resume trigger.
 
 ## Notes
 
@@ -540,3 +546,5 @@ than shipped "while we are in here".
   design lens; convergence and the rejected-findings table inlined above.
 - All measurement rows in § Context were produced first-hand against the live
   services on 2026-07-25 from a residential network.
+
+<!-- Deferred items migrated to agents/roadmaps/road-to-gated-reach-followup.md on 2026-07-25 -->

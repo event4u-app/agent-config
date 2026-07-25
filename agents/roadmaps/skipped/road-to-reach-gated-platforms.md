@@ -6,6 +6,18 @@ parent_roadmap: road-to-internet-reach
 
 # Roadmap: Reach — measure the gated-platform case (the half the first null could not test)
 
+> **Superseded (2026-07-25):** its resume trigger fired and it was executed by
+> `road-to-gated-reach`, which measured the gated-platform case with its own
+> pre-registration. The headline finding inverts this file's premise: the case did
+> **not** need credentials. Reddit thread text, Reddit comment ranking + reply
+> nesting, and single-tweet reads all shipped credential-free (6/6 per channel
+> against a native control); `youtube-transcripts` stayed parked because its
+> backend is human-installed and was never exercised. The remaining gaps were
+> re-cut into five narrower parked files — `road-to-reach-reddit-session`,
+> `road-to-reach-reddit-approved-api`, `road-to-reach-twitter-login`,
+> `road-to-reach-headless`, `road-to-reach-transcribe` — each with one concrete
+> trigger. Kept for historical reference; do NOT resume this file.
+
 > Decide, with its OWN pre-registration, whether prescription-based access to
 > credential-gated platforms beats host-native tools — the question
 > `road-to-internet-reach`'s benchmark structurally could not ask.
