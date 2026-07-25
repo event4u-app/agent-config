@@ -55,6 +55,17 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          # Full history: two of these gates diff against `origin/main`.
+          # `check_safety_floor_untouched` exits 3 without it, and
+          # `check_secret_leak` defaults to the changed-set — on a shallow
+          # checkout it would find no base and scan nothing, passing green while
+          # examining zero files. It offers a `--skip-if-no-baseline` flag; using
+          # that here would be the fail-open this workflow exists to remove.
+          fetch-depth: 0
+
+      - name: Fetch the baseline branch
+        run: git fetch --no-tags origin main:refs/remotes/origin/main || git fetch --no-tags origin main
 
       - name: Set up Node
         uses: actions/setup-node@v4

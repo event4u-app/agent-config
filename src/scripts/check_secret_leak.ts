@@ -143,6 +143,24 @@ export function resolveFiles(
         return gitLines(root, ['ls-files']);
     }
     const base = opts.base ?? 'origin/main';
+    // An unresolvable base is a scan of NOTHING, not a clean scan.
+    //
+    // `git diff <missing-ref>` yields no lines, so the changed-set silently
+    // became empty and the gate reported "no high-confidence secret found in the
+    // tracked tree" while examining zero files. That is the shape a shallow CI
+    // checkout produces by default — verified: with an unresolvable base this
+    // function returned 0 paths. A secret gate that passes green on an empty
+    // scan is worse than no gate, because it is believed.
+    const probe = spawnSync('git', ['-C', root, 'rev-parse', '--verify', '--quiet', `${base}^{commit}`], {
+        encoding: 'utf-8',
+    });
+    if ((probe.status ?? 1) !== 0) {
+        throw new Error(
+            `check_secret_leak: baseline ref '${base}' does not resolve, so the changed-set would be empty ` +
+                `and the scan would examine no files. Fetch the branch (CI: actions/checkout with fetch-depth: 0), ` +
+                `pass --base <ref>, or use --all to scan the whole tracked tree.`,
+        );
+    }
     const changed = gitLines(root, ['diff', '--name-only', '--diff-filter=ACMR', base]);
     const untracked = gitLines(root, ['ls-files', '--others', '--exclude-standard']);
     return Array.from(new Set([...changed, ...untracked]));
