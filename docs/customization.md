@@ -473,6 +473,14 @@ defaults"* above). The cascade is **per-file** by basename — the
 deepest existing `agents/<kind>/<name>.md` wins; the rest are silently
 shadowed.
 
+**One exception, and it is not silent.** Kernel and `tier: safety-floor`
+rules sit outside the cascade: a `Mode: replace` override on one is
+refused and reported, and a `Mode: extend` (a tightening) needs a
+registered entry in `agents/overrides/kernel-exceptions.yml`. See
+[`override-system`](../src/agent-src/contexts/override-system.md)
+§ *The non-overridable class* — including its stated limit, since the
+class is a norm with a partial gate, not a proof.
+
 | Subdir | Cascade? | User-global allowed? | Why |
 |---|---|---|---|
 | `agents/overrides/` | ✅ Yes — deepest wins by basename. | ✅ Yes — weakest layer. | Personal developer overrides. |
@@ -489,10 +497,13 @@ fallback). Files under `~/.event4u/agent-config/agents/settings/contexts/` or
 project-shaped and must not leak across projects.
 
 The resolver lives at
-[`scripts/_lib/agents_overlay.py`](../src/scripts/_lib/agents_overlay.py)
-and is enforced by `scripts/check_overlay_cascade_subdirs.py` — drift
-between the code constants (`CASCADE_ELIGIBLE_KINDS`,
+[`scripts/_lib/agents_overlay.ts`](../src/scripts/_lib/agents_overlay.ts)
+and is enforced by
+[`scripts/check_overlay_cascade_subdirs.ts`](../src/scripts/check_overlay_cascade_subdirs.ts)
+— drift between the code constants (`CASCADE_ELIGIBLE_KINDS`,
 `USER_GLOBAL_OVERLAY_KINDS`) and the table above breaks the build.
+(Both were `.py` before the ADR-200 TypeScript port; the old paths were
+cited here long after they were deleted.)
 
 ---
 

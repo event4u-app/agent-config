@@ -12,6 +12,8 @@ routes_to:
   - "guideline:agent-infra/context-hygiene-mechanics"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+enforced_by:
+  - "hook:context-hygiene"
 ---
 
 # Context Hygiene

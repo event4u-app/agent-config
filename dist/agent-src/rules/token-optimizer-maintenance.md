@@ -17,6 +17,8 @@ validator_ignore:
     reason: "Rule lists the authoring-tree paths that must stay in sync with the catalog."
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/check_token_optimizer_freshness.ts"
 ---
 
 # Token Optimizer Maintenance

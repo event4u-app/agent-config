@@ -25,6 +25,8 @@ validator_ignore:
     reason: "See-also routes to docs/threat-model.md — the canonical attack-surface doc lives there by design."
 workspaces: [engineering]
 packs: [engineering-base]
+enforced_by:
+  - "validator:src/scripts/check_secret_leak.ts"
 ---
 
 # Secret-in-VCS Guard

@@ -8,6 +8,8 @@ routes_to:
   - "guideline:agent-infra/skill-quality-checklist"
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/skill_linter.ts"
 ---
 
 # Skill Quality

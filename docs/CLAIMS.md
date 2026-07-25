@@ -140,6 +140,20 @@
 - status: backed
 - last_verified: 2026-07-12
 
+### claim: ledger-exec-verifiability
+- claim: 0 of 25 backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured 10 of 25 (40 pp) COULD carry a re-executing `exec:` form, which is why that form is now scheduled rather than assumed: the threshold (≥ 10 pp) was pre-registered before the count was taken. The other 15 cannot — 11 rest on paid or stochastic benchmark runs that no CI job can re-derive, and 4 are prose contracts. Method and the per-claim classification, including two borderline cases verified rather than assumed, are in the evidence file.
+- kind: quant
+- evidence: internal/reports/exec-evidence-feasibility.json#"exec_feasible"
+- status: backed
+- last_verified: 2026-07-25
+
+### claim: enforcement-coverage-resolved
+- claim: 14 of 107 governed rules (13.1%) carry a backstop that can actually fail a build. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND is reachable from a taskfile, workflow, or the hook manifest (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`, because it instruments and cannot block. 21 rules declare `enforced_by`; 6 resolve to observer, 0 to unwired, 86 are undeclared and counted as uncovered. The first run found `lint_output_slop.ts` shipped and wired nowhere while the `output-discipline` rule asserted CI enforcement in shipped prose; the gate's first fix was to wire it, which is the 14th. This is a floor, not a boast — the undeclared 86 count against the number, not out of it.
+- kind: quant
+- evidence: internal/reports/enforcement-coverage.json#"blocking"
+- status: backed
+- last_verified: 2026-07-25
+
 ---
 
 ## Unbacked inventory (documented debt — not yet markered in prose)

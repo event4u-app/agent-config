@@ -14,6 +14,8 @@ triggers:
   - phrase: "read the file and post"
 workspaces: [engineering]
 packs: [engineering-base]
+enforced_by:
+  - "validator:src/scripts/lint_skill_frontmatter_safety.ts"
 ---
 
 # Lethal-Trifecta Guard

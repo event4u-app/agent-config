@@ -19,6 +19,9 @@ validator_ignore:
     reason: "Rule contrasts the authoring tree with transient layers."
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/check_no_roadmap_refs.ts"
+  - "validator:src/scripts/check_council_references.ts"
 ---
 
 # No Transient References from Stable Artifacts

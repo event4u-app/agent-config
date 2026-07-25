@@ -7,6 +7,8 @@ supersedes: —
 superseded_by: —
 phase: road-to-discipline-profile-tiering
 type: standing
+review_trigger: >-
+  When a diff in a downstream-trust-boundary path (installer, provenance, kernel rules, spawn path) is found to have run under minimum discipline because the HOST was weak — host capability is only one axis, and diff risk is the missing one
 ---
 
 # ADR-110 — `discipline_profile` resolves at runtime (agent-in-the-loop); projection stays configuration-independent

@@ -408,6 +408,31 @@ tasks:
     desc: "Claims-Ledger gate — every <!-- claim:ID --> marker in README/docs binds to a backed, resolvable entry in docs/CLAIMS.md (road-to-final-state-and-market-readiness B1)"
     cmd: ./scripts-run src/scripts/check_claims {{.QUIET_FLAG}}
 
+  check-adr-frontmatter:
+    silent: true
+    desc: "ADR frontmatter gate — required fields, valid status, and a named `review_trigger` CONDITION (not a cadence) on every ADR dated 2026-07-25 or later. Earlier ADRs warn; grandfathering is by date, not an allowlist (road-to-enforcement-proof P4.1-P4.4)"
+    cmd: ./scripts-run src/scripts/check_adr_frontmatter
+
+  check-subagent-floor:
+    silent: true
+    desc: "Subagent safety-floor freshness — every dispatch prompt carries the generated floor derived from the kernel rules; drift FAILS (not WARN, unlike the reference implementation we took the idea from) (road-to-enforcement-proof P3.3)"
+    cmd: ./scripts-run src/scripts/generate_subagent_floor --check
+
+  lint-override-kernel-guard:
+    silent: true
+    desc: "Kernel-override audit — a `replace` on a kernel/safety-floor rule is refused, an `extend` on one needs a registered exception. Reports what exists; hard-fails only on this repo's own authoring surface, because the override layer is model-resolved and other relax routes are not visible to a linter (road-to-enforcement-proof P2.6)"
+    cmd: ./scripts-run src/scripts/lint_override_kernel_guard --strict
+
+  lint-output-slop:
+    silent: true
+    desc: "Fail on placeholder prose in the package's own authored artefacts (Lorem ipsum, `// rest of component`, `for brevity`, TODO-implement stubs) — the CI net the output-discipline rule has always claimed and, until now, did not have"
+    cmd: ./scripts-run src/scripts/lint_output_slop
+
+  check-enforcement-coverage:
+    silent: true
+    desc: "Enforcement-coverage ratchet — each rule's enforced_by is RESOLVED, not trusted: the script must exist AND be reachable from a taskfile/workflow/hook manifest, and a fail_closed:false hook counts as observer, never validator. Blocking coverage may not fall; unwired declarations may not rise (road-to-enforcement-proof P1.4)"
+    cmd: ./scripts-run src/scripts/check_enforcement_coverage --check
+
   check-artefact-counts:
     silent: true
     desc: "Artefact-count messaging gate — every count-shaped prose mention of skills/commands/governed rules/guidelines/personas on a flagship surface matches the source count; internal inconsistency (two different numbers for one kind) fails (road-to-truth-and-reference-hygiene Phase 1)"

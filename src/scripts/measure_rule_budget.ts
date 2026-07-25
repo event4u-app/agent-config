@@ -29,6 +29,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots } from './_lib/agent_src.js';
 import * as token_count from './_lib/token_count.js';
+import { KERNEL_RULE_ID_SET } from './_lib/kernel_rules.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/measure_rule_budget.ts → parents[2] is the repo root (mirrors
@@ -47,18 +48,8 @@ const PER_RULE_HARD = 2_500;
 const PER_RULE_TARGET = 2_000;
 const PER_RULE_OVERRIDE_CEILING = 4_000; // Iron-Law-override ADR ceiling.
 
-// Locked kernel set — docs/contracts/kernel-membership.md § 4.
-const KERNEL_RULES: ReadonlySet<string> = new Set([
-    'agent-authority',
-    'ask-when-uncertain',
-    'commit-policy',
-    'direct-answers',
-    'language-and-tone',
-    'no-cheap-questions',
-    'non-destructive-by-default',
-    'scope-control',
-    'verify-before-complete',
-]);
+// Locked kernel set — single-sourced in _lib/kernel_rules.ts (contract: docs/contracts/kernel-membership.md § 4).
+const KERNEL_RULES: ReadonlySet<string> = KERNEL_RULE_ID_SET;
 
 export interface RuleMeasure {
     id: string;
