@@ -135,6 +135,16 @@ adding a backend.
   promoting it to one after seeing the data would be precisely the post-hoc
   rigging the bands exist to prevent. Acting on it requires a separate,
   cost-primary pre-registration.
+- **Both accepted costs now have a named re-entry point,** so neither stays a
+  footnote: `agents/roadmaps/later/road-to-reach-gated-platforms.md` (the
+  credential-gated case the keyless task set could not ask) and
+  `agents/roadmaps/later/road-to-reach-cost-primary-bench.md` (the cost thesis,
+  with a pre-registration whose primary metric is token cost and whose ledger
+  includes the maintenance cost of the thing winning). Both are parked in
+  `later/` with explicit resume triggers — a named demand signal, a measured
+  host-capability regression, or a maintainer decision. Neither may reuse this
+  roadmap's task set or thresholds: a capability-shaped corpus must not be
+  allowed to decide a cost question, and vice versa.
 - The registry carries maintenance weight (upstream tools break at platform
   cadence). Contained by `last_verified` + an offline staleness lint + an
   append-only upstream-change log — not by a scheduled network job, which would

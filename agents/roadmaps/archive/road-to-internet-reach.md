@@ -39,10 +39,14 @@ searching itself is **the agent calling upstream tools directly**. The
 package ships selection, health, prescriptions and hygiene — never a
 wrapper, never a proxy, never a daemon.
 
-**Council convergence.** Council (anthropic/claude-sonnet-4-5 +
+**Council — convergence AND divergence.** Council (anthropic/claude-sonnet-4-5 +
 openai/gpt-4o, 2026-07-24, 3 rounds, roadmap lens) reviewed the draft
-capability-absorption plan and converged on five structural defects,
-all of which are fixed in the phase order below:
+capability-absorption plan. It converged on five structural defects (below),
+and it split on four further points — both halves are recorded, because a
+section titled "convergence" that buries the disagreements is the same
+selective reporting this roadmap's own thresholds exist to prevent.
+
+Converged, all fixed in the phase order below:
 
 1. **Sequencing was impossible** — the draft's scope-deciding benchmark
    compared "reach prescriptions" that did not exist yet. Fixed: Phase 0
@@ -66,13 +70,29 @@ all of which are fixed in the phase order below:
    Phase 3 ships `validate_reach_prescriptions.ts` wired into `task ci`,
    with negative fixtures proving it fails closed.
 
-Divergence worth recording: the members split on effort estimation
-(one produced a multi-month serial estimate, the other a parallelized
-weeks estimate). **Host verdict: rejected, both.** This package's
-roadmaps carry no duration or headcount estimates (`templates/roadmaps.md`
-rule 13 + `direct-answers` Iron Law 2 — no duration estimates); the
-useful residue is the *parallelism map*, which is recorded per phase as
-"Parallel-safe with:" so an autonomous multi-subagent run can exploit it.
+Diverged — all four, with how each was resolved:
+
+1. **Effort.** One member produced a multi-month serial estimate, the other a
+   parallelized weeks estimate. **Host verdict: rejected, both.** This package's
+   roadmaps carry no duration or headcount estimates (`templates/roadmaps.md`
+   rule 13 + `direct-answers` Iron Law 2); the useful residue is the
+   *parallelism map*, recorded per phase as "Parallel-safe with:" so an
+   autonomous multi-subagent run can exploit it.
+2. **OS detection.** One member wanted a dedicated OS-detection module (because
+   the external reference has one); the other argued that complexity exists
+   there only because that project auto-installs. **Host verdict: the minimal
+   reading wins** — `process.platform` plus static per-platform strings from the
+   registry (Phase 2 Step 2). No detection module.
+3. **Whether the injection-hygiene claims were measurable at all.** One member
+   called them unmeasurable; the other showed they are measurable but
+   unspecified. **Host verdict: the second is right** — which is why the payload
+   JSON schema and the pre-registered case matrix exist, and why the
+   *behavioural* compliance claim was deferred rather than asserted.
+4. **Who was responsible for step granularity.** A procedural disagreement about
+   which reviewer had already solved it. **Host verdict: no action** — the
+   granularity fix was adopted regardless of attribution.
+
+None of the four changed the plan's shape; recording them is the point.
 
 ## Gap table — audited before drafting (rule 19a)
 
