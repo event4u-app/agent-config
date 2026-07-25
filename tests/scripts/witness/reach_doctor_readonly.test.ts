@@ -8,23 +8,20 @@
  * snapshotted before and after REAL runs of the command, and any mutation
  * fails the test.
  *
- * Four independent instruments, because each has a blind spot the others
+ * Three independent instruments, because each has a blind spot the others
  * cover:
  *
  *   1. `git status --porcelain --ignored` — catches content changes to tracked
  *      files and the creation of any untracked file, INCLUDING a gitignored
- *      one. `--ignored` is load-bearing: without it, a write into any
- *      gitignored path (a stray log, a cache dir, `.agent-settings.yml`) was
- *      invisible to this instrument, and instrument 3 only covers
- *      `agents/runtime/`.
+ *      one, as long as its parent directory is not itself wholly ignored.
+ *      `--ignored` is load-bearing: without it, a write into any gitignored
+ *      path (a stray log, a cache dir, `.agent-settings.yml`) would be
+ *      invisible to this instrument.
  *   2. `git ls-files` + per-file (size, mtime, mode) — catches an in-place
  *      rewrite that restores identical bytes (invisible to instrument 1, since
  *      git compares content) and any chmod.
- *   3. A recursive (path, size, mtime) walk of `agents/runtime/` — the
- *      gitignored state tree, kept as its own instrument because it also
- *      detects same-byte rewrites there, which instrument 1 cannot.
- *   4. A STRUCTURAL scan of the reach scripts' TypeScript ASTs (instruments
- *      1–3 observe one machine on one day; this one observes the program). It
+ *   3. A STRUCTURAL scan of the reach scripts' TypeScript ASTs (instruments
+ *      1–2 observe one machine on one day; this one observes the program). It
  *      parses each source with the TypeScript compiler API and reports a write
  *      primitive only when the name appears in CALLEE position of a real call
  *      expression — `fs.writeFileSync(…)`, `writeFileSync(…)`,
@@ -40,30 +37,69 @@
  *      `eval`, a function received as a parameter), a write performed by a
  *      spawned child process or a `require`d/imported third-party module, and a
  *      write through a non-`fs` API (a native addon, an `fd` handed out
- *      elsewhere). None of that is in its reach — the sandboxed-run instruments
- *      (1–3) are what cover it, by watching the filesystem itself while the
+ *      elsewhere). None of that is in its reach — the run-window instruments
+ *      (1–2) are what cover it, by watching the filesystem itself while the
  *      real command executes. The two halves are complementary on purpose:
  *      the parse generalises beyond this machine, the snapshots see through
  *      indirection.
  *
+ * WHAT WAS REMOVED, AND WHY — this witness used to carry a fourth instrument: a
+ * recursive (path, size, mtime, mode) walk of `agents/runtime/`, diffed around
+ * the real runs. It is gone, deliberately. `agents/runtime/` is SHARED MUTABLE
+ * STATE: under `task test-ts` several hundred test files execute in parallel in
+ * this same worktree and write into that tree while this test is measuring. The
+ * instrument therefore failed reproducibly on files this command cannot reach —
+ * first `runtime: mutated: council/events.log` (the council event log, written by
+ * `tests/scripts/council_cli.test.ts`), and then, once that path had been scoped
+ * out with a regex, `runtime: mutated: mcp-telemetry/calls.jsonl` (written by an
+ * MCP test). The second failure is the verdict on the first fix: each scope-out
+ * is one more allowlist entry, which this repo's own `autonomous-execution` rule
+ * names as an antipattern — when the list has to grow, the tool shape is wrong,
+ * not the list. Watching shared mutable state from a witness measures the SUITE,
+ * not the command under test.
+ *
+ * THE COST, not hidden: removing it NARROWS what this witness measures. Writes
+ * under `agents/runtime/` — including same-byte rewrites and bare mtime touches,
+ * which no other instrument here can see inside a wholly ignored directory — are
+ * no longer observed at all. Nothing replaces that coverage one-for-one. What
+ * carries the load instead:
+ *
+ *   - instrument 3, the AST scan — the command contains no filesystem write
+ *     primitive at all, so it cannot write to a path this test no longer
+ *     watches; a future edit that adds one breaks that assertion loudly;
+ *   - the runs' working directory — every invocation below runs with `cwd` set
+ *     to the repo root and never chdirs, so a relative-path write lands inside
+ *     the watched worktree and instruments 1–2 catch it;
+ *   - the reach surface's own files are TRACKED — `src/config/reach-channels.yml`
+ *     and every script in `REACH_SOURCES` appear in `git ls-files`, so the most
+ *     plausible real regression, writing `last_verified` back into its own
+ *     registry, is still compared by instrument 1 (content) AND instrument 2
+ *     (size, mtime, mode), the latter even for a byte-identical rewrite.
+ *
  * EXACT SCOPE OF THE CLAIM — deliberately stated, because an assertion that
  * over-reaches is worse than a narrow one. What is measured:
  *
- *   - every tracked path (content, size, mtime, mode);
+ *   - every tracked path (content, size, mtime, mode), including same-byte
+ *     rewrites;
  *   - every untracked path, gitignored or not, whose PARENT directory is not
- *     itself wholly ignored;
- *   - every path under `agents/runtime/`, including same-byte rewrites.
+ *     itself wholly ignored.
  *
- * What is NOT measured, and therefore not claimed: a write inside a wholly
- * ignored directory other than `agents/runtime/` (git collapses such a
- * directory to a single `!!` entry and reports nothing about its contents — no
- * `--ignored` mode changes that), any write OUTSIDE the worktree (`$HOME`,
- * `/tmp`, `/usr/local`), and vitest's own transient
- * `vitest.config.ts.timestamp-*.mjs` at the repo root (see `HARNESS_NOISE_RE`,
- * whose narrowness is itself asserted below). Those rest on different evidence: the command opens no
- * file for writing at all, install prescriptions are echoed strings that are
- * never executed, and the schema gate keeps `probe_args` flag-shaped so a probe
- * cannot be handed an output path — see `tests/scripts/reach_doctor.test.ts`.
+ * What is NOT measured, and therefore not claimed:
+ *
+ *   - `agents/runtime/` is NO LONGER WATCHED. This is a deliberate narrowing of
+ *     the claim, not an oversight: the tree is shared mutable state and a
+ *     witness cannot attribute a change there to the command (see above).
+ *   - a write inside any other wholly ignored directory (git collapses such a
+ *     directory to a single `!!` entry and reports nothing about its contents —
+ *     no `--ignored` mode changes that);
+ *   - any write OUTSIDE the worktree (`$HOME`, `/tmp`, `/usr/local`);
+ *   - vitest's own transient `vitest.config.ts.timestamp-*.mjs` at the repo root
+ *     (see `HARNESS_NOISE_RE`, whose narrowness is itself asserted below).
+ *
+ * Those rest on different evidence: the command opens no file for writing at all,
+ * install prescriptions are echoed strings that are never executed, and the
+ * schema gate keeps `probe_args` flag-shaped so a probe cannot be handed an
+ * output path — see `tests/scripts/reach_doctor.test.ts`.
  *
  * Nothing here is mocked: the command runs as a child process through the same
  * `tsx` the dispatcher uses, against the shipped registry, in the repo root.
@@ -86,7 +122,6 @@ import { describe, expect, it } from 'vitest';
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const DOCTOR = path.join(REPO, 'src', 'scripts', 'reach_doctor.ts');
 const TSX_CLI = path.join(REPO, 'node_modules', 'tsx', 'dist', 'cli.mjs');
-const RUNTIME_DIR = path.join(REPO, 'agents', 'runtime');
 
 function git(args: string[]): string {
     const run = spawnSync('git', args, { cwd: REPO, encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 });
@@ -116,33 +151,6 @@ function trackedStats(): Map<string, string> {
         } catch {
             // A tracked-but-absent path is itself a stable fact; record it as
             // such so its (re)appearance would show up as a difference.
-            stats.set(rel, 'absent');
-        }
-    }
-    return stats;
-}
-
-/** Instrument 3 — (path, size, mtime) over the gitignored runtime state tree. */
-function runtimeStats(dir: string = RUNTIME_DIR, prefix = ''): Map<string, string> {
-    const stats = new Map<string, string>();
-    let entries: fs.Dirent[];
-    try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-        return stats;
-    }
-    for (const entry of entries) {
-        const rel = prefix === '' ? entry.name : `${prefix}/${entry.name}`;
-        const abs = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-            stats.set(`${rel}/`, 'dir');
-            for (const [key, value] of runtimeStats(abs, rel)) stats.set(key, value);
-            continue;
-        }
-        try {
-            const stat = fs.statSync(abs);
-            stats.set(rel, `${stat.size}:${stat.mtimeMs}:${stat.mode}`);
-        } catch {
             stats.set(rel, 'absent');
         }
     }
@@ -184,34 +192,15 @@ function diffMaps(before: Map<string, string>, after: Map<string, string>): stri
  * for a doctor-caused path to be subtracted, the ambient window would have to
  * produce that very same path independently.
  */
-type Snapshot = { porcelain: string; tracked: Map<string, string>; runtime: Map<string, string> };
+type Snapshot = { porcelain: string; tracked: Map<string, string> };
 
 function snapshot(): Snapshot {
-    return { porcelain: porcelain(), tracked: trackedStats(), runtime: runtimeStats() };
+    return { porcelain: porcelain(), tracked: trackedStats() };
 }
 
 /**
- * Paths under `agents/runtime/` that OTHER test files legitimately write while
- * this one measures — so a diff there says nothing about `reach:doctor`.
- *
- * This is not a convenience escape; it is a measured fact. Under the full suite
- * this witness failed **reproducibly** (2/2 runs) on exactly one entry:
- *
- *   runtime: mutated: council/events.log (7921:… → 9270:…)
- *
- * `agents/runtime/council/events.log` is the council layer's append-only event
- * log, written by `tests/scripts/council_cli.test.ts` running in parallel in this
- * same worktree. The doctor cannot reach it: it holds no write primitive at all
- * (asserted separately below), so any change there is by construction someone
- * else's. Watching a shared mutable state tree from a witness test is the defect —
- * scoping it out is the fix, and the structural assertion is what keeps the claim
- * honest without it.
- */
-const FOREIGN_RUNTIME_RE = /^council\//;
-
-/**
  * Reach scripts — scanned for write primitives, which is the load-bearing
- * evidence once the shared-state instrument is scoped down.
+ * evidence now that the shared-state instrument is removed (see header).
  */
 const REACH_SOURCES = [
     'src/scripts/reach_doctor.ts',
@@ -369,12 +358,6 @@ function changesBetween(before: Snapshot, after: Snapshot): Set<string> {
         }
     }
     for (const change of diffMaps(before.tracked, after.tracked)) out.add(`tracked: ${change}`);
-    for (const change of diffMaps(before.runtime, after.runtime)) {
-        // `change` reads `mutated: <rel> (…)` / `created: <rel>` / `disappeared: <rel>`.
-        const rel = change.replace(/^[a-z]+: /, '').replace(/ \(.*$/, '');
-        if (FOREIGN_RUNTIME_RE.test(rel)) continue;
-        out.add(`runtime: ${change}`);
-    }
     return out;
 }
 
@@ -429,18 +412,6 @@ describe('witness — the instruments themselves', () => {
             '?? tools/vitest.config.ts.timestamp.mjs',
         ]) {
             expect(isHarnessNoise(line), line).toBe(false);
-        }
-    });
-
-    it('the foreign-runtime exception matches ONLY the council event tree, not reach state', () => {
-        expect(FOREIGN_RUNTIME_RE.test('council/events.log')).toBe(true);
-        for (const rel of [
-            'state/reach.json',
-            'state/context-hygiene.json',
-            'tmp/reach-proto/NOTES.md',
-            'reach-council/events.log',
-        ]) {
-            expect(FOREIGN_RUNTIME_RE.test(rel), rel).toBe(false);
         }
     });
 
@@ -619,7 +590,7 @@ describe('witness — reach:doctor is read-only', () => {
                 expect(fs.existsSync(marker)).toBe(false);
             });
 
-            // `attributableChanges` already covers all three instruments.
+            // `attributableChanges` already covers both snapshot instruments.
             expect(changes).toEqual([]);
         } finally {
             fs.rmSync(tmp, { recursive: true, force: true });

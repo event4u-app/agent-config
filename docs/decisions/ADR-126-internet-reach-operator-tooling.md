@@ -103,6 +103,30 @@ now states a bounded claim and explicitly declines to promise that every upstrea
 binary is side-effect-free under every flag — that judgement stays with the human
 adding a backend.
 
+**A second review round — an external bot gate plus a paid multi-model council —
+found one more real primitive, and two of its HIGHs did not reproduce.** Recorded
+because a review trail that only lists confirmed hits teaches the wrong lesson
+about review. The bot gate's two HIGH findings were probed before being believed
+and **neither reproduced as worded**: the deep-probe table was already
+`Object.hasOwn`-guarded behind a `collect()` gate that validates before any load
+or spawn, and a nine-way probe matrix over every entry point showed the parse
+paths leaked nothing. Its `removal_after`-compared-lexicographically finding was a
+false positive twice over (the code parses to epoch numbers, and the schema pins
+both date fields to a fixed-width ISO pattern). Each is now documented at the site
+so it cannot be re-raised without reading the refutation. What the round DID find:
+(a) the grep gate echoed matched file lines verbatim, so `--registry <any file>`
+printed that file's content back — closed at all **four** echo sites, the fourth
+found only by re-running the probe against every entry point instead of assuming
+three fixes had closed the class; and (b) via the council, `credential_path` was
+an arbitrary-path oracle — a registry declaring
+`credential_path: ../../../../etc/passwd` made the doctor report that path's
+existence and permissions at exit 0 inside a normal-looking health row. Now
+confined to the operator's home, this repo, or the temp dir, checked against both
+the literal and realpath'd form of each (so a symlink cannot escape), refused
+before any syscall, and reported as a refusal rather than a silent skip. Both fixes
+are mutation-tested: forcing the confinement open turns six tests red, and deleting
+the file-type check turns the directory case red.
+
 ## Consequences
 
 **Good.**
