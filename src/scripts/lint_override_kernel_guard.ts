@@ -95,8 +95,8 @@ export function registered_rules(text: string): Set<string> {
         if (/^exceptions:\s*$/.test(line)) { in_exceptions = true; continue; }
         if (!in_exceptions) continue;
         if (/^\S/.test(line)) break;
-        const m = /^\s*-?\s*rule:\s*"?([a-z0-9-]+)"?\s*$/i.exec(line);
-        if (m) out.add(m[1]);
+        const rule_name = /^\s*-?\s*rule:\s*"?([a-z0-9-]+)"?\s*$/i.exec(line)?.[1];
+        if (rule_name !== undefined) out.add(rule_name);
     }
     return out;
 }

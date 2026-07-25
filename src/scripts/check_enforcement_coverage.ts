@@ -110,8 +110,9 @@ export function read_frontmatter(text: string): Record<string, string | string[]
         if (!line || line.trimStart().startsWith('#')) continue;
 
         const block_item = /^\s+-\s+(.*)$/.exec(line);
-        if (block_item && pending_key !== null) {
-            pending_list.push(unquote(block_item[1].trim()));
+        const item_value = block_item?.[1];
+        if (item_value !== undefined && pending_key !== null) {
+            pending_list.push(unquote(item_value.trim()));
             continue;
         }
         flush();
@@ -277,10 +278,14 @@ export function parse_hook_manifest(text: string): Map<string, boolean> {
         if (!in_concerns) continue;
         if (/^\S/.test(line)) break; // left the concerns block
 
-        const concern = /^ {2}([a-z0-9_-]+):\s*$/.exec(line);
-        if (concern) { current = concern[1]; out.set(current, false); continue; }
-        const fc = /^\s+fail_closed:\s*(true|false)\s*$/.exec(line);
-        if (fc && current) out.set(current, fc[1] === 'true');
+        const concern_name = /^ {2}([a-z0-9_-]+):\s*$/.exec(line)?.[1];
+        if (concern_name !== undefined) {
+            current = concern_name;
+            out.set(current, false);
+            continue;
+        }
+        const fc = /^\s+fail_closed:\s*(true|false)\s*$/.exec(line)?.[1];
+        if (fc !== undefined && current !== null) out.set(current, fc === 'true');
     }
     return out;
 }
@@ -345,9 +350,14 @@ export function resolve_one(
 
 export function strongest(resolutions: Resolution[]): Resolution {
     if (resolutions.length === 0) return 'none';
-    let best = resolutions[0];
+    let best: Resolution = 'none';
+    let best_rank = Number.POSITIVE_INFINITY;
     for (const r of resolutions) {
-        if (RANK.indexOf(r) < RANK.indexOf(best)) best = r;
+        const rank = RANK.indexOf(r);
+        if (rank < best_rank) {
+            best = r;
+            best_rank = rank;
+        }
     }
     return best;
 }
