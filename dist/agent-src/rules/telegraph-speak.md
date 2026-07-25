@@ -7,7 +7,7 @@ triggers:
 workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
-  - "observer:maintainer review — the rule ships its CI lock as explicitly optional"
+  - "observer:maintainer-review"
 ---
 
 # Telegraph Speak

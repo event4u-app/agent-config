@@ -40,20 +40,19 @@ import { KERNEL_RULE_FILENAMES } from './_lib/kernel_rules.js';
 const KERNEL_RULES: ReadonlySet<string> = KERNEL_RULE_FILENAMES;
 
 /**
- * Kernel-rule source directories.
+ * Kernel-rule source directory.
  *
- * This gate was watching only `.agent-src.uncondensed/rules` — a tree retired in
- * the ADR-051 move to `src/` as the single source of truth. A directory that no
- * longer exists can never match a changed path, so the one-kernel-rule-per-PR
- * slow-rollout guarantee reported "no kernel rule touched" for every kernel-rule
- * edit, silently and indefinitely. Found by editing a kernel rule and noticing
- * the gate stayed green.
+ * This gate was watching a retired tree — the pre-ADR-051 source root — and a
+ * directory that no longer exists can never match a changed path. So the
+ * one-kernel-rule-per-PR slow-rollout guarantee reported "no kernel rule
+ * touched" for every kernel-rule edit, silently and indefinitely. Found by
+ * editing a kernel rule and noticing the gate stayed green.
  *
- * The legacy path is retained so the gate still fires in a tree that predates
- * the move; `src/rules` is the live one.
+ * The first fix kept the old path as a fallback; CI's ADR-051 guard rejected
+ * that, correctly. Retaining a dead path is the bug, not the safety net — a
+ * second root that cannot exist is exactly what made this gate inert.
  */
-const KERNEL_DIRS: readonly string[] = ['src/rules', '.agent-src.uncondensed/rules'];
-const KERNEL_DIR = KERNEL_DIRS[0];
+const KERNEL_DIR = 'src/rules';
 const DEFAULT_LABEL = 'bundled-always-rules-acknowledged';
 
 function _git_changed_files(base_ref: string): string[] {
@@ -125,7 +124,7 @@ function _exists(p: string): boolean {
 function _kernel_changes(files: readonly string[]): string[] {
     const hits: string[] = [];
     for (const p of files) {
-        if (!KERNEL_DIRS.some((d) => p.startsWith(`${d}/`))) {
+        if (!p.startsWith(`${KERNEL_DIR}/`)) {
             continue;
         }
         const name = _basename(p);

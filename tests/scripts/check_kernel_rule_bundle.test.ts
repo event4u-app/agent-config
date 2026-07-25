@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { KERNEL_RULES, _kernel_changes } from '../../src/scripts/check_kernel_rule_bundle.js';
 
 
-const R = '.agent-src.uncondensed/rules';
+const R = 'src/rules';
 
 describe('check_kernel_rule_bundle — _kernel_changes', () => {
     it('counts kernel rules under the kernel dir only', () => {
@@ -34,19 +34,14 @@ describe('check_kernel_rule_bundle — _kernel_changes', () => {
         expect(KERNEL_RULES.size).toBe(9);
     });
 
-    // Regression: the gate watched only `.agent-src.uncondensed/rules`, a tree
-    // retired in the ADR-051 move to `src/`. A path that no longer exists can
-    // never match, so every kernel-rule edit reported "no kernel rule touched"
-    // and the slow-rollout guarantee was inert. Both roots are pinned here so it
-    // cannot go quiet again.
+    // Regression: the gate watched a retired source root (pre-ADR-051). A path
+    // that no longer exists can never match, so every kernel-rule edit reported
+    // "no kernel rule touched" and the slow-rollout guarantee was inert. Pinned
+    // here so it cannot go quiet again.
     it('sees a kernel-rule edit under the LIVE source root (src/rules)', () => {
         expect(_kernel_changes(['src/rules/non-destructive-by-default.md'])).toEqual([
             'src/rules/non-destructive-by-default.md',
         ]);
-    });
-
-    it('still sees a kernel-rule edit under the legacy root', () => {
-        expect(_kernel_changes([`${R}/commit-policy.md`])).toEqual([`${R}/commit-policy.md`]);
     });
 
     it('does not fire on a non-kernel rule under the live root', () => {
