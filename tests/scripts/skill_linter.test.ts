@@ -4,11 +4,9 @@
 // `beforeEach` and removed in `afterEach`; `monkeypatch` of the role-contract
 // cache → the exported `_resetRoleContractCacheForTest` seam.
 //
-// Plus golden-parity tests: run the Python original and the TS twin on the
-// REAL repo with `--all`, `--pairs --duplicates`, and a single-file invocation,
-// asserting byte-identical stdout + stderr + exit code (skipped when python3 is
-// absent).
-import { spawnSync } from 'node:child_process';
+// The golden-parity tests against the Python original were removed with the
+// depythonization; their `spawnSync` + `TSX_BIN` helpers were left behind as
+// orphans and are removed here.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -2281,15 +2279,5 @@ describe('skill_linter — structural malice', () => {
         expect(codes(snippet).some((c) => c === `malice:${name}`)).toBe(true);
     });
 });
-
-// --- Golden parity on the REAL repo (strongest fixture) ---
-
-
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
 
