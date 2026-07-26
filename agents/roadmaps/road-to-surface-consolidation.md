@@ -166,7 +166,7 @@ locked-decision notes recorded. Rollback: each is an isolated reversible edit.
 
 ## Provenance
 
-Source: the user-authored 9.4.0 review (`agents/tmp/feedback-9.4.0-1.txt`,
+Source: the user-authored 9.4.0 review (`agents/tmp.old/feedback-9.4.0-1.txt`,
 local, gitignored). One external competitor is named in the review's comparison
 table (referred to only as **Source A** here per `source-confidentiality`); this
 roadmap does not depend on that comparison. Council convergence recorded inline

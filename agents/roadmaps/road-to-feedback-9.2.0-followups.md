@@ -6,7 +6,7 @@ status: draft
 # Roadmap: Feedback 9.2.0 Follow-ups
 
 > **Source:** external review passes of Release 9.2.0 / `main` @ 9.2.0
-> (`agents/tmp/feedback-9.2.0-1.txt`, multiple independent reviewers, verdicts
+> (`agents/tmp.old/feedback-9.2.0-1.txt`, multiple independent reviewers, verdicts
 > 9.4–9.6/10 and 119/120). The reviews are overwhelmingly positive; this roadmap
 > captures **only the concrete, code-shaped, net-new defects and gaps** they
 > surfaced — not the field/measurement-gated items (those are routed in
