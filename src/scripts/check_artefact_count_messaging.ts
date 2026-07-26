@@ -53,6 +53,10 @@ export const SURFACES: readonly string[] = [
     'docs/featured-skills.md',
     'docs/featured-commands.md',
     'docs/proof.md',
+    // Public submission text: the block here described version 3.2.0 with a
+    // "4929 tests" figure while the package reached 9.7.0, because nothing
+    // watched this file. Added 2026-07-25 so a hand-typed count here fails CI.
+    'docs/distribution/registries.md',
     'site/src/content/docs/index.mdx',
     'site/src/content/docs/claims.md',
 ];
