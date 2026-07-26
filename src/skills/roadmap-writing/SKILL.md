@@ -307,6 +307,11 @@ to every roadmap you author.
    link, inlined council convergence, and an anti-dump acceptance
    criterion? (Internally-originated roadmap → these must be **absent**,
    not empty.)
+8. *Inbox-sourced only:* if the roadmap consumed an `agents/tmp/` file as
+   its input, is that file moved to `agents/tmp.old/<name>` in the SAME
+   reply, with the Source line pointing at the `tmp.old/` path? (Per
+   `agents-layout § User Inbox Workflow`. Move only the explicitly named
+   input file(s); never sweep the rest of the inbox.)
 
 ## Do NOT
 

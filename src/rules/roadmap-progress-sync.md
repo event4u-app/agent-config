@@ -75,6 +75,12 @@ Before sending any reply that landed roadmap work:
 
 1. Did this reply land a step (code/doc saved + verification passed)?
 2. Is its checkbox flipped to `[x]` / `[~]` / `[-]` in `agents/roadmaps/<file>.md`? If no → flip, then continue.
+2b. Was a roadmap created or updated from an `agents/tmp/` inbox file this
+   reply? If yes → `mv` that file to `agents/tmp.old/` NOW, same reply (per
+   `agents-layout § User Inbox Workflow`), and point the roadmap's Source
+   line at `agents/tmp.old/<name>`. A consumed inbox file left in
+   `agents/tmp/` is a rule violation, not tidiness. Move ONLY the file(s)
+   explicitly named as input — never sweep the rest of the inbox.
 3. Is regen due now per `roadmap.dashboard_regen_cadence`?
    - `per_step` → yes, always.
    - `every_5_steps` → yes when this is the 5th, 10th, … closed step in the run, or the last step of the reply.

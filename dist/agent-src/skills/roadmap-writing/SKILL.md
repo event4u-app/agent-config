@@ -301,6 +301,10 @@ to every roadmap you author.
    behind the scope? `## Provenance` block with `ENC1:` link? inlined
    council convergence? anti-dump acceptance criterion? (Internally
    originated → these must be **absent**, not empty.)
+8. *Inbox-sourced only:* roadmap consumed an `agents/tmp/` file as input →
+   file moved to `agents/tmp.old/<name>` in the SAME reply, Source line
+   pointing at the `tmp.old/` path? (Per `agents-layout § User Inbox
+   Workflow`. Move only the named input file(s); never sweep the inbox.)
 
 ## Do NOT
 
