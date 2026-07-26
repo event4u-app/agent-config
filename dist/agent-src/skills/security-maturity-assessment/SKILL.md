@@ -55,7 +55,7 @@ Do NOT use when:
 
 1. **Scope** — name the module/paths under assessment; list entry points (routes, jobs, commands, webhooks). Scorecard without stated scope is not reproducible.
 2. **Assess each category** — inspect the code the category names. Every rating cites evidence:
-   - Positive evidence: `file:line` of the control (`app/Http/Requests/…:12`).
+   - Positive evidence: `file:line` of the control (`app/Http/Requests/…:12`, `src/guards/auth.guard.ts:12`).
    - Absence evidence: the searches run that came back empty (name the grep patterns) — "not found" beats "probably missing".
    - Multi-tenant N/A: single-tenant systems rate category 8 `N/A`; drops out of the roll-up.
 3. **Roll up deterministically** — overall rating is computed, not vibed:
