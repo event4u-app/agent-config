@@ -7,17 +7,26 @@
  * and had been, invisibly, because no workflow ran them. A rule declared a
  * backstop; the backstop existed; the backstop was red; nothing said so.
  *
- * Those failures are pre-existing debt, not regressions from the wiring change,
- * and fixing eleven framework-leakage spots plus eighteen source-confidentiality
- * hits is a different piece of work with a different reviewer. Folding them in
- * would make one PR unreviewable and would mix "make the gate run" with "clean up
- * what the gate found".
- *
  * So the established pattern applies — the one the decision-homing work already
  * uses and the council endorsed: **baseline the legacy, enforce the boundary.**
  * Each gate's current finding count is committed. The count may fall freely; it
  * may not rise. New violations fail, existing debt is visible and counted, and
  * nothing is silently tolerated.
+ *
+ * **The baseline is now 0 across all five gates.** The 37 findings were cleared
+ * in a follow-up pass, so this file no longer records debt — it holds the line at
+ * zero. Keeping the ratchet after the cleanup is the point: it is what stops the
+ * counts creeping back, and the mechanism is identical whether the baseline is 37
+ * or 0.
+ *
+ * Worth recording, because it changes how the next such number should be read:
+ * roughly two thirds of the 37 were never violations. `CREDITS.md` was flagged
+ * for the license-required attribution that `source-confidentiality` explicitly
+ * exempts. A checklist row naming five ecosystems on ONE line read as
+ * PHP-specific because only the PHP family carried a plain-language window hint.
+ * An archived acceptance criterion was flagged for the source names it quotes in
+ * order to assert their absence. Wiring a gate proves that it runs; it does not
+ * prove its findings are real. That takes reading them one at a time.
  *
  * What this deliberately is NOT: a `continue-on-error` step. That is a WARN
  * wearing a gate's clothes, and removing exactly that confusion is why this
@@ -112,12 +121,12 @@ function main(argv: string[]): number {
             JSON.stringify(
                 {
                     _doc:
-                        'Pre-existing findings in rule backstops that were red when they were first ' +
-                        'wired into CI — they had been failing invisibly because no workflow ran them. ' +
-                        'Counts may FALL freely; a rise fails the build. This is debt made visible, ' +
-                        'not debt tolerated: every number here is a rule whose declared backstop is ' +
-                        'currently not clean. Regenerate with --write-baseline only when the change ' +
-                        'is deliberate.',
+                        'Per-gate finding counts for the rule backstops wired into CI by ' +
+                        'rule-backstops.yml. Counts may FALL freely; a rise fails the build. These ' +
+                        'gates were red on arrival (37 findings) because no workflow had ever run ' +
+                        'them; that debt is now cleared and the baseline holds the line at 0. A ' +
+                        'non-zero number here is a rule whose declared backstop is not currently ' +
+                        'clean. Regenerate with --write-baseline only when the change is deliberate.',
                     gates: Object.fromEntries(measured.map((m) => [m.script, { rule: m.rule, findings: m.findings }])),
                     total: measured.reduce((a, m) => a + m.findings, 0),
                 },
@@ -172,7 +181,8 @@ function main(argv: string[]): number {
         process.stderr.write('❌  rule-backstop debt ratchet:\n');
         for (const r of regressions) process.stderr.write(`    · ${r}\n`);
         process.stderr.write(
-            '    These gates are already failing on pre-existing debt; the ratchet only forbids ADDING to it.\n',
+            '    The baseline is 0 — these gates are clean, so a rise is a NEW violation, not inherited debt.\n' +
+                '    Fix the finding, or re-baseline with --write-baseline if the change is deliberate.\n',
         );
         return 1;
     }

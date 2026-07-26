@@ -101,13 +101,17 @@ jobs:
 
       # --- validators that were ALREADY RED when first wired ------------------
       # Five gates a rule names as its backstop were failing, and had been,
-      # invisibly — nothing ran them. That is pre-existing debt, not a regression
-      # from wiring them, and cleaning 37 findings is a different piece of work
-      # with a different reviewer. Baseline the legacy, enforce the boundary: the
-      # counts may fall freely, a rise fails. Deliberately NOT continue-on-error,
-      # which is a WARN wearing a gate's clothes.
+      # invisibly — nothing ran them. Baselined at 37 findings, then cleared in a
+      # follow-up pass; the baseline now stands at 0 and the ratchet holds that
+      # line. Counts may fall freely, a rise fails. Deliberately NOT
+      # continue-on-error, which is a WARN wearing a gate's clothes.
+      #
+      # Two thirds of the 37 were never violations: the gates were flagging
+      # allowances their own rules already grant (license-required attribution,
+      # multi-stack peer examples). Running a gate proves it runs — not that what
+      # it reports is real.
 
-      - name: Rule-backstop debt ratchet (5 gates red on arrival)
+      - name: Rule-backstop debt ratchet (baseline 0, was 37)
         run: ./scripts-run src/scripts/check_backstop_debt
 
       # --- gates added by the enforcement-proof and number-truth work --------

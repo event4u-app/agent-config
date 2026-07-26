@@ -21,7 +21,7 @@
  * - Vendored Apache/MIT code keeps its license-required attribution.
  * - Recommendation/registry docs may name registries (Smithery/Glama).
  * - A retained source link must be stored encrypted via
- *   src/scripts/_lib/link_crypto.py, never in plaintext.
+ *   src/scripts/_lib/link_crypto.ts, never in plaintext.
  *
  * Exit codes: 0 = clean, 1 = at least one denied token in a non-skipped tracked
  * file, 2 = usage / config error.
@@ -318,7 +318,7 @@ function main(argv: readonly string[]): number {
             process.stdout.write(
                 '\nThese name an external inspiration/harvest source. Remove the name,\n' +
                     'or — if a real source link must be retained — encrypt it via\n' +
-                    'src/scripts/_lib/link_crypto.py. Legitimate carve-outs (vendored code,\n' +
+                    'src/scripts/_lib/link_crypto.ts. Legitimate carve-outs (vendored code,\n' +
                     'registry recommendations) belong in external_sources_denylist.json\n' +
                     'skip_paths. See rule: source-confidentiality.\n',
             );

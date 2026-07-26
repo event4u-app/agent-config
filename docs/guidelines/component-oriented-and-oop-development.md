@@ -171,8 +171,10 @@ standard's stated purpose (OOP *is* a deliberate high priority for the operator)
 Divergence held: the frontend section stays (an intentional FE / backend
 entry-point + carve-out index, per the operator's explicit "split by FE /
 backend" ask) — against the anthropic "delete as redundant"; it is a cohesive
-index of the existing FE surfaces, not a claim of novel guidance. Trace:
-`agents/runtime/council/responses/component-oop-standard.json/` (gitignored, local-only).
+index of the existing FE surfaces, not a claim of novel guidance. The trace is
+the 2026-07-15 session above, not a path: council output is gitignored and
+auto-pruned, and this guideline is a stable artifact that must not carry a link
+which rots (`no-roadmap-references`).
 
 ## See also
 

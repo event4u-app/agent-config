@@ -116,6 +116,16 @@
         185
       ],
       "reason": "Multi-ecosystem capture-tools line and skip-marker grep spanning pytest/PHPUnit/JS in one pattern — documentation across stacks."
+    },
+    {
+      "file": "src/skills/test-driven-development/SKILL.md",
+      "lines": [
+        228,
+        231,
+        239,
+        243
+      ],
+      "reason": "Example A of a deliberate A/B pair: '### Example A — PHP / Pest' (L228) sits opposite '### Example B — TypeScript / Vitest' (L259). That is framework-neutrality's textbook 'multi-stack peers' shape, but the two headings are 31 lines apart and the cross-stack window is +/-10, so the heuristic cannot see the sibling. Allowlisted rather than widening the window for a single document — if a second per-stack A/B skill appears, build the section-aware window instead of adding a second entry here."
     }
   ]
 }

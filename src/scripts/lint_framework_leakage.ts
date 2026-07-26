@@ -148,19 +148,19 @@ const CROSS_STACK_HINTS: Record<string, string[]> = {
     ruby: ['\\bRails\\b', '\\bbin/rails\\b', '\\bGemfile\\b', '\\bbundle exec\\b'],
     python: ['\\bDjango\\b', '\\bFastAPI\\b', '\\bFlask\\b', '\\bpoetry\\b',
         '\\buv (add|sync|run|pip)\\b', '\\bvenv\\b', '\\bPydantic\\b', '\\bJinja\\b',
-        'docs\\.python\\.org'],
+        'docs\\.python\\.org', '\\bPython\\b'],
     node: ['\\bExpress\\b', '\\bNext\\.?js\\b', '\\bNode\\.?js\\b', '\\bnpx\\b',
         '\\bvitest\\b', '\\bjest\\b', '\\beslint\\b', '\\bprettier\\b',
         '\\bReact\\b', '\\bVue\\b', '\\bNestJS\\b', '\\bTypeScript\\b',
         '\\btsc\\b', '\\bzod\\b', '\\bPrisma\\b', '\\bTailwind\\b',
         '\\bTurborepo\\b', '\\bclass-validator\\b', '\\bInertia\\b',
         '\\bJSX\\b', '\\bNx\\b',
-        '\\.tsx?\\b', 'typescriptlang\\.org'],
+        '\\.tsx?\\b', 'typescriptlang\\.org', '\\bTS\\b', '\\bJS\\b'],
     go: ['\\bgo (test|build|run|mod)\\b', '\\bgolangci-lint\\b', '\\bGoLand\\b',
         '\\bGolang\\b', '\\bgo\\.dev\\b'],
     rust: ['\\bcargo (test|build|run|check|fmt|clippy|add|update)\\b',
         '\\bClippy\\b', '\\brustfmt\\b', '\\bCargo\\.toml\\b',
-        'rust-lang\\.org'],
+        'rust-lang\\.org', '\\bRust\\b'],
     dotnet: ['\\bdotnet (test|build|run|add|restore)\\b', '\\b\\.NET\\b'],
     java: ['\\bSpring\\b', '\\bmvn (test|clean|install|package)\\b',
         '\\bgradle\\b', '\\bMaven\\b'],
@@ -168,6 +168,20 @@ const CROSS_STACK_HINTS: Record<string, string[]> = {
     // are hit patterns; these are window-only hints so a JS/Python hit next
     // to plain-language PHP mentions self-suppresses as cross-stack docs.
     php: ['\\bvendor/', '\\bPHP\\b'],
+    // Bare LANGUAGE names (Python / Rust / TS / JS above) are the same class of
+    // window-only hint the `php` family already had, and their absence was an
+    // asymmetry, not a policy: a checklist row naming "PHP typed properties +
+    // declare(strict_types=1), TS strict, Python type hints, Go / Rust" — five
+    // ecosystems on ONE line, the rule's textbook "multi-stack peers" case —
+    // matched the PHP hit pattern and found no cross-stack hint, because only
+    // PHP had a plain-language entry. So the linter flagged the exact shape
+    // framework-neutrality documents as allowed.
+    //
+    // `\bGo\b` is deliberately NOT added. These hints SUPPRESS, so an
+    // over-broad one hides real leakage — and "go to" / "go ahead" would fire
+    // constantly in prose. Golang / `go test|build|run|mod` / go.dev stay the
+    // Go signals; a Go-only line with none of those is not self-evidently
+    // cross-stack anyway.
     // Polyglot-runner pseudo-family: a Taskfile/Makefile mention marks the
     // window as multi-stack tooling documentation (runner files are
     // ecosystem-neutral by definition).

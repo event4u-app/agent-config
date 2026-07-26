@@ -531,7 +531,7 @@ content).
 
 ## Do NOT
 
-* Write documentation-style, pointer-only, or too-broad skills ("Laravel skill")
+* Write documentation-style, pointer-only, or too-broad skills ("Laravel skill", "Django skill")
 * Skip Procedure or use vague validation
 * Exceed size limits (see `docs/guidelines/agent-infra/size-and-scope.md`)
 * Duplicate rules

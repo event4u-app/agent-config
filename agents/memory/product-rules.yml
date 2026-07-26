@@ -304,8 +304,7 @@ entries:
       is positioning not capability; universal enforcement lever is compile-time
       frontmatter, runtime hooks Tier-2 MCP-only; do-not-cross list. 2026-06-25
       council (claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.14) on how AC should
-      respond to an external operator-runtime reference suite ("Suite R" = ECC,
-      affaan-m/ECC). Verified counts: AC 258 skills / 93 rules / 162 commands /
+      respond to an external operator-runtime reference suite ("Suite R"). Verified counts: AC 258 skills / 93 rules / 162 commands /
       26 personas; Suite R 271 skills / 114 rules / 92 commands / 67 subagents /
       47 hook scripts. External GPT review undersold AC (read "162" command
       count as the '
@@ -408,15 +407,15 @@ entries:
     last_validated: 2026-07-09
     review_after_days: 365
     key: council final state market readiness
-    body: "2026-06-30 council synthesized the 6 ruflo-analysis drafts into one
+    body: "2026-06-30 council synthesized the 6 Source-A analysis drafts into one
       master roadmap — parallel Track A (capability, gated) + Track B (adoption,
       wedge-first); don't relitigate. 2026-06-30 council (claude-sonnet-4-5 +
       gpt-4o, 2-round debate, $0.26) on synthesizing the 6 roadmap drafts in
-      `agents/tmp/up-to-ruf.txt` (ruflo/claude-flow in-code analysis:
-      ruflo-borrowings, closing-the-learning-loop, execution-subagents,
+      `agents/tmp/up-to-ruf.txt` (Source A in-code analysis:
+      source-a-borrowings, closing-the-learning-loop, execution-subagents,
       subagent-seed-catalog, subagent-evals, adoption-readiness) toward the
       maintainer's 2 goals: (A) best daily-driver dev tool, (B) market readiness
-      (adoption ≈0, 7 stars vs ruflo 62k). **"
+      (adoption ≈0, 7 stars vs Source A 62k). **"
   - id: council-flow-learnings
     status: active
     confidence: high
@@ -1143,7 +1142,7 @@ entries:
       The user said "kläre das im ai council" and then, when I surfaced a
       council split for them to break, "triff diese und andere entscheidungen im
       ai council" (2026-06-03). They treat the council as t
-  - id: ruflo-deep-dive-subagent-reframe
+  - id: source-a-deep-dive-subagent-reframe
     status: active
     confidence: high
     source:
@@ -1151,10 +1150,10 @@ entries:
     owner: maintainer
     last_validated: 2026-07-09
     review_after_days: 365
-    key: ruflo deep dive subagent reframe
-    body: 2026-06-29 ruflo/claude-flow deep-dive — its "swarm" is weaker than ours;
+    key: source a deep dive subagent reframe
+    body: 2026-06-29 Source A deep-dive — its "swarm" is weaker than ours;
       parity = downgrade; real lever = wire our inert design + capture
-      telemetry. 2026-06-29 deep-dive of `ruvnet/ruflo` (mandatory
+      telemetry. 2026-06-29 deep-dive of Source A (mandatory
       source-of-truth inspection, not README). **It is a repackaging of
       `claude-flow` v3.15.0** (TS monorepo; Rust workspace is admitted
       scorecard-cosmetics). Its "swarm" is an **in-process `Map<string,Agent>`

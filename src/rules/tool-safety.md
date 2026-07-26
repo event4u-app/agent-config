@@ -30,7 +30,7 @@ Tools are permissions, not abilities. Every tool access must be declared and rev
 ## Scoped grants + deny-list (U3, ecosystem harvest 2026-07-13)
 
 - **Prefer scoped-grant syntax over bare tool names** where the host supports
-  it: `Bash(npm test:*)` grants one command family; a bare `Bash` grants a
+  it: `Bash(npm test:*)` / `Bash(pytest:*)` grants one command family; a bare `Bash` grants a
   shell. The narrowest grant that satisfies the task is the Least-Agency
   default.
 - **Optional `disallowed_tools` deny-list** (execution block, schema-backed):
