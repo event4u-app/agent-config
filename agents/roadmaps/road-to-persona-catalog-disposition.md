@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 ---
 
 # Road to persona-catalog disposition — four mechanisms audited, one insight kept, no fourth ontology
@@ -18,7 +18,7 @@ status: draft
 > minors old and its Phase 1 shipped in the meantime.
 > **Council:** AI council debate 2026-07-27 (anthropic/claude-sonnet-4-5 +
 > openai/gpt-4o, 2 rounds; round 2 converged both soft spots to
-> rejection). **Draft — pending maintainer OK before execution.**
+> rejection). **Activated 2026-07-27 by maintainer decision.**
 
 ## Provenance
 

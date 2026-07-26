@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 ---
 
 # Road to enforcement-peer disposition — wire the fail-open gates, record what 9.8.0 already answered
@@ -15,8 +15,7 @@ status: draft
 > already shipped the majority of the analysis's top recommendations.
 > **Council:** AI council debate 2026-07-27 (anthropic/claude-sonnet-4-5 +
 > openai/gpt-4o, 2 rounds; round 2 settled the chain/witness dispute:
-> wire the gate, park the cryptographic mechanism). **Draft — pending
-> maintainer OK before execution.**
+> wire the gate, park the cryptographic mechanism). **Activated 2026-07-27 by maintainer decision.**
 
 ## Provenance
 

@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 ---
 
 # Road to self-critical — structural review honesty instead of rule #108
@@ -22,8 +22,7 @@ status: draft
 > **Council:** AI council debate 2026-07-26 (anthropic/claude-sonnet-4-5 +
 > openai/gpt-4o, 2 rounds). Notable: round 2 caught one member's own
 > "88% weak-host usage" figure as unsupported — the absence of usage data
-> disarms BOTH extremes and is itself recorded below. **Draft — pending
-> maintainer OK before execution.**
+> disarms BOTH extremes and is itself recorded below. **Activated 2026-07-27 by maintainer decision.**
 
 ## Goal
 

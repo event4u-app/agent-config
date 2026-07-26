@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 ---
 
 # Roadmap: Feedback 9.8.0 Follow-ups — stabilize, prove, dispose, decide
@@ -9,8 +9,7 @@ status: draft
 > (`agents/tmp.old/feedback-9.8.0-1.txt`, verdicts 9.5–9.8/10 and 2× 119/120).
 > **Council:** AI council debate 2026-07-26 (anthropic/claude-sonnet-4-5 +
 > openai/gpt-4o, 2 rounds) converged on the cut below — Q1–Q7 verdicts are
-> inlined in § Council convergence. **Draft — pending maintainer OK before
-> execution.**
+> inlined in § Council convergence. **Activated 2026-07-27 by maintainer decision.**
 
 ## Goal
 

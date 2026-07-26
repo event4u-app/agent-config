@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 ---
 
 # Road to reachable code memory — wire the orphaned engine, accumulate locally, decide the substrate honestly
@@ -25,7 +25,7 @@ status: draft
 > operational necessity for unreachable code" — the spikes arbitrate);
 > the one contested default ships OFF; this council round itself
 > constitutes the procedural review of the ADR-116 reopening.
-> **Draft — pending maintainer OK before execution.**
+> **Activated 2026-07-27 by maintainer decision.**
 
 ## Goal
 
