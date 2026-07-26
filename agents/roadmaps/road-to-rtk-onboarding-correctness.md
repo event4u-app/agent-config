@@ -236,5 +236,11 @@ touch these sites. Windows/install-path facts researched 2026-07-23 with
 citations (upstream README/INSTALL.md/install.sh/Releases API,
 formulae.brew.sh, microsoft/winget-pkgs manifests, crates.io); win32
 two-tier decision + output-signature probe refinement by AI council
-(claude-sonnet-4-5 + gpt-4o), transcript local-only in the agent-switch
-worktree (`agents/runtime/council/responses/omni-route-spikes.json`).
+(2026-07-23, claude-sonnet-4-5 + gpt-4o, converged): on win32 offer two
+tiers — `winget install rtk-ai.rtk` as "Recommended (automated)" plus the
+ripgrep dependency note, and the README msvc-zip path as "Manual (all
+Windows versions)" for winget-less images; and probe detection off the
+output signature, not the exit code. Both decisions are recorded in full
+in Phase 1 and in the `windows-install-path` blocker entry. The
+transcript is local-only in the agent-switch worktree and is deliberately
+not linked — a council-response path is unresolvable to any other reader.
