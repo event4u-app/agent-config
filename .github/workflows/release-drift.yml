@@ -11,9 +11,19 @@ name: Release Drift Check
 # `.github/workflows/release.yml` (its --ci path is equally resume-safe).
 #
 # NOTE: deliberately no path-filtered `push:` trigger (avoids the
-# phantom 0-job "failure" runs that path-filtered pushes create). The
-# `task ci` gate already enforces the tag invariant on every main build;
-# this workflow adds the network (npm) invariant on a cadence.
+# phantom 0-job "failure" runs that path-filtered pushes create).
+#
+# CORRECTED 2026-07-25 — this note previously read "The `task ci` gate already
+# enforces the tag invariant on every main build", and used that as the reason
+# the missing trigger was safe. **No workflow invokes `task ci`, `ci-strict`, or
+# `ci-fast`** (only the narrow `ci-cloud-bundle` and `ci-linear-digest`) —
+# `skill-lint.yml` states this correctly twice in its own comments, so two
+# workflow files contradicted each other and one of them justified a design
+# decision with the wrong half.
+#
+# What actually holds the tag invariant today: this workflow's daily schedule
+# plus manual dispatch. That is a 24h detection window, not a merge-time gate.
+# Stated plainly rather than implied away by citing a gate that does not run.
 
 on:
   schedule:

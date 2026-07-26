@@ -1,0 +1,323 @@
+{
+  "_doc": "Shadow report for trust-boundary risk escalation. NOTHING IS GATED BY THIS FILE. It answers one question: over recent history, how often did a merge land in a class the reference would have escalated? The threshold below was pre-registered in the roadmap before this was first read.",
+  "measured_at_sha": "54ec73fc6",
+  "merges_examined": 99,
+  "pre_registered_teeth_threshold": 5,
+  "counts": {
+    "none": 66,
+    "governance": 21,
+    "auth": 1,
+    "trust-boundary": 11
+  },
+  "trust_boundary_merges": 11,
+  "decision": "JUSTIFIED — 11 of 99 first-parent merges touched a trust-boundary path, at or above the pre-registered threshold of 5. A non-declinable escalation for that class gets its own ADR and its own PR; it is deliberately NOT enabled by this report.",
+  "note": "Classification is path-based and reproducible from the diff alone — no model judgement. Docs-only changes are exempt by extension, except on kernel-rule paths, where a markdown file IS the governed surface.",
+  "escalating_merges": [
+    {
+      "sha": "54ec73fc6",
+      "subject": "Merge pull request #1002 from event4u-app/feat/gated-reach",
+      "files": 48,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "e2fd5c153",
+      "subject": "Merge pull request #1003 from event4u-app/feat/reciprocal-ecosystem",
+      "files": 28,
+      "risk": "auth",
+      "reasons": [
+        "authentication, session, token, or secret handling"
+      ]
+    },
+    {
+      "sha": "5e68955c7",
+      "subject": "Merge pull request #1001 from event4u-app/feat/enforcement-proof",
+      "files": 92,
+      "risk": "trust-boundary",
+      "reasons": [
+        "rule, settings, or schema surface",
+        "kernel rule or Iron-Law integrity surface",
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary"
+      ]
+    },
+    {
+      "sha": "bf27883cc",
+      "subject": "Merge pull request #1000 from event4u-app/feat/internet-reach",
+      "files": 52,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "eb81d5253",
+      "subject": "Merge pull request #999 from event4u-app/worktree-nci-phase4",
+      "files": 27,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary",
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "b4ac186fa",
+      "subject": "Merge pull request #998 from event4u-app/feat/doc-screenshot-anonymization",
+      "files": 34,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary",
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "9b43447a1",
+      "subject": "Merge pull request #997 from event4u-app/worktree-native-code-intelligence",
+      "files": 28,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "2e966b14c",
+      "subject": "Merge pull request #992 from event4u-app/feat/secret-hygiene-guardrail",
+      "files": 38,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "f6b887639",
+      "subject": "Merge pull request #991 from event4u-app/fix/release-guard-dispatch-nonfatal",
+      "files": 3,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary"
+      ]
+    },
+    {
+      "sha": "6cd1246d8",
+      "subject": "Merge pull request #989 from event4u-app/feat/doc-follows-code",
+      "files": 18,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "efdadca73",
+      "subject": "Merge pull request #976 from event4u-app/feat/api-cost-a3",
+      "files": 23,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "96bb015a7",
+      "subject": "Merge pull request #973 from event4u-app/feat/originality-gate-contributor-funnel",
+      "files": 30,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "a1e8c650c",
+      "subject": "Merge pull request #968 from event4u-app/feat/persona-library-harvest",
+      "files": 21,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "763b795b9",
+      "subject": "Merge pull request #962 from event4u-app/fix/pre-push-consistency-gate",
+      "files": 3,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary"
+      ]
+    },
+    {
+      "sha": "bc93d2ccd",
+      "subject": "Merge pull request #961 from event4u-app/feat/component-oop-dev-standards",
+      "files": 15,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "7c522c5c6",
+      "subject": "Merge pull request #956 from event4u-app/feat/discrepancy-detection-gate",
+      "files": 34,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary",
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "51a673975",
+      "subject": "Merge pull request #955 from event4u-app/feat/adversarial-verification-council",
+      "files": 36,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary",
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "c32af12ad",
+      "subject": "Merge pull request #953 from event4u-app/feat/pr-description-tiers",
+      "files": 13,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary",
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "1d291c47a",
+      "subject": "Merge pull request #948 from event4u-app/fix/bridge-marker-global-not-project",
+      "files": 24,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary"
+      ]
+    },
+    {
+      "sha": "1ea713422",
+      "subject": "Merge pull request #945 from event4u-app/feat/harvest-product-gate",
+      "files": 7,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "76f2d6f34",
+      "subject": "Merge pull request #944 from event4u-app/feat/eco-tool-pitfalls",
+      "files": 15,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "77de4b71c",
+      "subject": "Merge pull request #942 from event4u-app/fix/ai-council-global-only-docs",
+      "files": 6,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "cd96aa3b4",
+      "subject": "Merge pull request #939 from event4u-app/feat/eco-prelaunch-diagnostics",
+      "files": 11,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "3d2eb8ff1",
+      "subject": "Merge pull request #937 from event4u-app/feat/eco-skill-quality-gates-phase4",
+      "files": 302,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "907682251",
+      "subject": "Merge pull request #936 from event4u-app/feat/harvest-skill-authoring-rigor",
+      "files": 15,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "ca6dd2f8e",
+      "subject": "Merge pull request #934 from event4u-app/feat/ecosystem-skill-quality-gates",
+      "files": 24,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "02846b2c4",
+      "subject": "Merge pull request #935 from event4u-app/feat/harvest-reliability-measurement",
+      "files": 25,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "e76913a71",
+      "subject": "Merge pull request #933 from event4u-app/feat/consumer-scoped-default-flip",
+      "files": 7,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "289cba462",
+      "subject": "Merge pull request #932 from event4u-app/fix/p4-batch-b-stub-consistency",
+      "files": 19,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "3b21570cf",
+      "subject": "Merge pull request #930 from event4u-app/feat/p4-batch-b-migrations",
+      "files": 29,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "94cff584f",
+      "subject": "Merge pull request #927 from event4u-app/worktree-feedback-8-11-5",
+      "files": 41,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary",
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "7c8c71e40",
+      "subject": "Merge pull request #924 from event4u-app/worktree-feedback-8-11-4",
+      "files": 47,
+      "risk": "trust-boundary",
+      "reasons": [
+        "installer, provenance, publish, or subagent-spawn path — crosses a downstream trust boundary",
+        "rule, settings, or schema surface"
+      ]
+    },
+    {
+      "sha": "3ea026356",
+      "subject": "Merge pull request #921 from event4u-app/worktree-feedback-8-11-2",
+      "files": 57,
+      "risk": "governance",
+      "reasons": [
+        "rule, settings, or schema surface"
+      ]
+    }
+  ]
+}

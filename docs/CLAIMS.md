@@ -32,11 +32,36 @@
 - last_verified: <YYYY-MM-DD>
 ```
 
-**Evidence-pointer grammar (v1):**
+**Evidence-pointer grammar (v2):**
 
 - `path/to/file.md` or `path/to/file.md:42` — the repo file exists (line advisory).
 - `path/to/file.md#substring` — the file exists AND contains `substring`.
 - `https://… (YYYY-MM-DD)` — external cite carrying a dated stamp (not fetched in CI).
+- `exec:<command> -> <exit-code>` — the command **re-runs** and its exit code
+  must match. The only form that can tell a live claim from a stale one.
+
+**Why the fourth form exists.** The first three are existence checks. A claim
+reading "the suite is green" whose pointer resolves to a report nobody
+regenerated stays `backed` indefinitely — the pointer resolves, the claim is
+false. `exec:` re-derives the claim and lets the exit code carry the verdict.
+
+**Where `exec:` runs, and where it does not.** Re-execution happens in CI only.
+Locally the gate is read-only and reports `UNVERIFIED — re-execution is CI-only,
+skipped locally`; it never runs a command in a consumer's checkout. The static
+half — is the pointer well-formed, is the command allowlisted — is checked
+everywhere, because a bad pointer is a defect in the ledger rather than a
+property of the machine.
+
+**What `exec:` cannot cover.** Only claims whose exit code *is* the verdict. A
+figure resting on a paid model run, a stochastic benchmark, or a prose contract
+cannot use this form; those stay on a pointer and are listed as
+unfalsifiable-by-machine in [`proof.md`](proof.md) rather than quietly omitted.
+
+The allowlist is a set of argv prefix tuples in
+[`src/scripts/_lib/exec_evidence.ts`](../src/scripts/_lib/exec_evidence.ts) —
+never a regex over a command string, because a regex over shell text is the
+classic bypass. Every argument after the matched prefix is re-checked for shell
+metacharacters and repo escape, including the right-hand side of `--flag=value`.
 
 ---
 
@@ -52,7 +77,7 @@
 ### claim: shipped-artifacts-hidden-instruction-scanned
 - claim: Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge.
 - kind: qual
-- evidence: .github/workflows/publish-npm.yml#lint_agent_security
+- evidence: exec:lint_agent_security -> 0
 - status: backed
 - last_verified: 2026-07-09
 
@@ -87,21 +112,21 @@
 ### claim: eval-coverage-ratcheted
 - claim: Behavioural-eval coverage is measured per tier and CI-ratcheted so it can only rise; the current coverage and its gap are published, never implied as "264 evaluated skills".
 - kind: qual
-- evidence: src/scripts/skill_eval_coverage.ts#checkRatchet
+- evidence: exec:skill_eval_coverage --check -> 0
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: domain-soundness-scoped
 - claim: The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted.
 - kind: qual
-- evidence: src/scripts/domain_soundness_status.ts#checkRatchet
+- evidence: exec:domain_soundness_status --check -> 0
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: domain-soundness-validated-count
 - claim: The validated non-coding domain-skill count is pinned and CI-ratcheted at a maintainer-set floor (9 of 20 default-surface skills carry a sourced `evals/domain-truth.json` fixture at pin time, 2026-07-11 — 5 deterministic, keys from cited formulas; 4 rubric, criteria matching a named external practice); the floor only rises via a maintainer `--write-floor` after a new sourced fixture lands.
 - kind: quant
-- evidence: internal/evals/domain-soundness-floor.json#validated
+- evidence: exec:domain_soundness_status -> 0
 - status: backed
 - last_verified: 2026-07-11
 
@@ -122,7 +147,7 @@
 ### claim: lexical-ranking-lift
 - claim: A hand-rolled, dependency-free BM25 + trigram lexical index resolves the "recalls but does not rank" gap: on the retrieval-precision corpus (9 keyword-overlapping-confuser tasks) it drives the mean top tie-set from 3.333 (the `_score` bucket scorer) to 1.0 — every needed decision uniquely top-ranked — with precision@1 and precision@5 unchanged at 1.0. Method: deterministic, model-free re-ranking of the SAME retrieved entry set; both scorers measured over the identical store via `measure_lexical_ranking.ts`. Cross-artefact note (2026-07-25): this baseline (3.333) is the value in THIS claim's own artefact and is cited correctly, but the retrieval-precision artefact records 4.111 for the same scorer on the same corpus — two bench scripts disagree. The lift direction (ties collapse to 1.0) holds under either baseline; the discrepancy itself is unresolved and recorded rather than smoothed.
 - kind: quant
-- evidence: internal/bench/reports/lexical-ranking.json
+- evidence: exec:measure_lexical_ranking -> 0
 - status: backed
 - last_verified: 2026-07-09
 
@@ -134,58 +159,44 @@
 - last_verified: 2026-07-12
 
 ### claim: ledger-exec-verifiability
-- claim: 0 of 26 backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured 11 of 26 (42.3 pp) COULD carry a re-executing `exec:` form, which is why that form is scheduled rather than assumed: the threshold (>= 10 pp) was pre-registered before the count was taken. The other 15 cannot — paid or stochastic benchmark runs no CI job can re-derive, and prose contracts. This entry demonstrated its own thesis: it first published "0 of 25", a denominator already stale on the day it shipped, and two backed claims over one artefact were found disagreeing while both resolved. Corrected 2026-07-25.
+- claim: NONE of the backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured minority COULD carry a re-executing `exec:` form, clearing the >= 10 pp threshold that was pre-registered before the count was taken, which is why that form is scheduled rather than assumed. The rest cannot: paid or stochastic benchmark runs no CI job can re-derive, and prose contracts. Exact counts live in the evidence file and are NOT restated here on purpose — this entry hard-coded its denominator twice and drifted within a day both times (25 when the ledger held 26, then 26 when it held 27) while CI stayed green, because the pointer resolved. `check_claims` now compares the stored denominator against the live ledger and fails on divergence. A number a human retypes on every ledger edit will drift; the fix was to stop retyping it.
 - kind: quant
 - evidence: internal/reports/exec-evidence-feasibility.json#"exec_feasible"
 - status: backed
 - last_verified: 2026-07-25
 
 ### claim: enforcement-coverage-resolved
-- claim: 14 of 107 governed rules (13.1%) carry a backstop that can actually fail a build. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND is reachable from a taskfile, workflow, or the hook manifest (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`, because it instruments and cannot block. 21 rules declare `enforced_by`; 6 resolve to observer, 0 to unwired, 86 are undeclared and counted as uncovered. The first run found `lint_output_slop.ts` shipped and wired nowhere while the `output-discipline` rule asserted CI enforcement in shipped prose; the gate's first fix was to wire it, which is the 14th. This is a floor, not a boast — the undeclared 86 count against the number, not out of it.
+- claim: 14 of 107 governed rules (13.1%) carry a backstop that fails a CI build. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly — 37 findings, baselined in `rule-backstop-debt.json` and ratcheted against growth. 86 rules declare nothing and count as uncovered, not excluded.
 - kind: quant
-- evidence: internal/reports/enforcement-coverage.json#"blocking"
+- evidence: exec:check_enforcement_coverage --check -> 0
 - status: backed
 - last_verified: 2026-07-25
-
----
-
-## Unbacked inventory (documented debt — not yet markered in prose)
-
-These are real README claims that need a durable binding before they may carry a
-`<!-- claim: -->` marker. Counts are drift-prone: binding them requires a
-count-source mechanism (a generated number the prose must match). That
-mechanism now exists (road-to-truth-and-reference-hygiene Phase 1):
-`update_counts.ts` generates every prose count from source, and
-`check_artefact_count_messaging.ts` fails CI on any count-shaped prose
-mention that drifts or is internally inconsistent — so the three count
-claims below are `backed`. Remaining entries are listed so the debt is
-visible, not hidden.
 
 ### claim: skill-count
 - claim: 281 skills.
 - kind: quant
-- evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
+- evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: command-count
 - claim: 190 commands.
 - kind: quant
-- evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
+- evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: rule-count
 - claim: 107 governed rules.
 - kind: quant
-- evidence: src/scripts/check_artefact_count_messaging.ts#Artefact-count messaging gate
+- evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: host-agent-count
 - claim: 23 host agents are detected and inventoried; 20 receive a written config surface (18 projection + 1 plugin + 1 bundle target) and 3 are export-only (aider, zed, jetbrains). The count is enforced, not asserted — `knownToolIds()` is pinned at 23 by a test whose assertion literal IS the number, and `src/config/surface-matrix.yml` is held in set-equality with the installer's own user-scope path map by `lint_surface_matrix`, so a host added to one and not the other fails the build. This entry stood `unbacked` while naming its own unblocking condition ("once `surface-matrix.yml` exists, bind the count to that file and flip"); the condition was met and nothing fired, so the shipped figure stayed "7+" — understating real coverage by 3x.
 - kind: quant
-- evidence: tests/install/toolDetection.test.ts#toHaveLength(23)
+- evidence: exec:vitest run tests/install/toolDetection.test.ts -> 0
 - status: backed
 - last_verified: 2026-07-25
 
