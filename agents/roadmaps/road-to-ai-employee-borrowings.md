@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 ---
 
 # Road to AI-employee borrowings — measure first, harden the kernel, gate the builds
@@ -18,7 +18,7 @@ status: draft
 > **Council:** AI council debate 2026-07-27 (anthropic/claude-sonnet-4-5 +
 > openai/gpt-4o, 2 rounds); the round-2 correction (the 60-seconds BUILD is
 > not freeze-exempt; only its measurement phases are) is folded in.
-> **Draft — pending maintainer OK before execution.**
+> **Activated 2026-07-27 by maintainer decision.**
 
 ## Provenance
 

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers
+> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers
 
 ## Overall
 
-**109 / 255 steps done · 43%**
+**109 / 372 steps done · 29%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
 ```
 
 ## Open roadmaps
@@ -18,19 +18,27 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ac-embeddable-gui.md](roadmaps/road-to-ac-embeddable-gui.md) | 4 | 30 | 28 | 2 | 0 | 0 | [2](#blockers-road-to-ac-embeddable-gui) | █░░░░░░░░░ 7% |
 | 2 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 6 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 62% |
-| 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
-| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 8 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 10 | [road-to-rtk-onboarding-correctness.md](roadmaps/road-to-rtk-onboarding-correctness.md) | 4 | 21 | 20 | 1 | 0 | 0 | [2](#blockers-road-to-rtk-onboarding-correctness) | ░░░░░░░░░░ 5% |
-| 11 | [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md) | 4 | 18 | 18 | 0 | 0 | 0 | [1](#blockers-road-to-shared-design-tokens) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 14 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 3 | [road-to-ai-employee-borrowings.md](roadmaps/road-to-ai-employee-borrowings.md) | 4 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 30 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
+| 7 | [road-to-enforcement-peer-disposition.md](roadmaps/road-to-enforcement-peer-disposition.md) | 3 | 7 | 7 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md) | 5 | 22 | 22 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-honesty-bench.md](roadmaps/road-to-honesty-bench.md) | 2 | 7 | 7 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 12 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 13 | [road-to-persona-catalog-disposition.md](roadmaps/road-to-persona-catalog-disposition.md) | 2 | 2 | 2 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 14 | [road-to-reachable-code-memory.md](roadmaps/road-to-reachable-code-memory.md) | 10 | 27 | 27 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 15 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
+| 16 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
+| 17 | [road-to-rtk-onboarding-correctness.md](roadmaps/road-to-rtk-onboarding-correctness.md) | 4 | 21 | 20 | 1 | 0 | 0 | [2](#blockers-road-to-rtk-onboarding-correctness) | ░░░░░░░░░░ 5% |
+| 18 | [road-to-self-critical.md](roadmaps/road-to-self-critical.md) | 3 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 19 | [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md) | 4 | 18 | 18 | 0 | 0 | 0 | [1](#blockers-road-to-shared-design-tokens) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 21 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 22 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 23 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -82,6 +90,17 @@
 
 _2 blockers resolved._
 
+### [road-to-ai-employee-borrowings.md](roadmaps/road-to-ai-employee-borrowings.md)
+
+**Road to AI-employee borrowings — measure first, harden the kernel, gate the builds** — 0 / 12 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Decision-bearing measurements (cheap, all pre-registered) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Kernel immutability: complete the three layers (safety, ships regardless) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Cheap unconditional records | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | First-run finding ("60 seconds"), BUILD — freeze-gated | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
 **Follow-up to CI-native release — first live run + drills** — 0 / 8 done (0%)
@@ -91,6 +110,20 @@ _2 blockers resolved._
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
+### [road-to-credible-install.md](roadmaps/road-to-credible-install.md)
+
+**Road to credible install — survive the first five minutes of an external evaluation** — 0 / 30 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Supply-chain and metadata hotfix (ships as a security patch) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Hook latency: make enforcement real or switch it off | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Default projection: ship the engineering surface | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | MCP hygiene: generated truth, honest stubs, registry paperwork | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 4 | Published verification surface (the trust fix) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Release cadence policy (types, not versions) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | Outside-in umbrella gate (added 2026-07-26 per the self-critical council cut) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
 ### [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md)
 
 **Ecosystem-Harvest — Prose Authenticity** — 9 / 10 done (90%)
@@ -98,6 +131,28 @@ _2 blockers resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Adopt-now plate (≤ 3 units) | 🟡 in progress | 1 | 9 | 0 | 0 | 90% |
+
+### [road-to-enforcement-peer-disposition.md](roadmaps/road-to-enforcement-peer-disposition.md)
+
+**Road to enforcement-peer disposition — wire the fail-open gates, record what 9.8.0 already answered** — 0 / 7 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Wire the fail-open, extend the shipped lints | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Cheap one-time measurements | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Intake honesty records | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+### [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md)
+
+**Feedback 9.8.0 Follow-ups — stabilize, prove, dispose, decide** — 0 / 22 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Stabilization floor: installable, honest, convention-clean | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Decisions made falsifiable: positioning, freeze, launch | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Code-graph proof: 2-arm, pre-registered, physical null-consequence | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Enforcement truth: debt down, existing axes surfaced, meters hardened | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 4 | Disposition and physical surface (window-gated) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
@@ -114,6 +169,15 @@ _2 blockers resolved._
   - **What to do:**
     `yt-dlp` and a JavaScript runtime are installed **by a human** on
   - **Resolved when:** condition described above clears
+
+### [road-to-honesty-bench.md](roadmaps/road-to-honesty-bench.md)
+
+**Road to honesty bench — measure the shipped honesty kernel, park the rest** — 0 / 7 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Build the honesty bench (eval-infrastructure extension) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 2 | Records | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
@@ -158,6 +222,32 @@ _1 blocker resolved._
     the post-ADR-117 default (`subagents.auto: on`), then check
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
+
+### [road-to-persona-catalog-disposition.md](roadmaps/road-to-persona-catalog-disposition.md)
+
+**Road to persona-catalog disposition — four mechanisms audited, one insight kept, no fourth ontology** — 0 / 2 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Capture the one novel insight (guidance, not object) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | Intake honesty records | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
+### [road-to-reachable-code-memory.md](roadmaps/road-to-reachable-code-memory.md)
+
+**Road to reachable code memory — wire the orphaned engine, accumulate locally, decide the substrate honestly** — 0 / 27 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spikes (pre-registered, cheap) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Reachability (ungated defect fix) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Freshness without a daemon (gated on S0b) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3 | Cut the noise (gated on S0c) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 4 | Memory that accumulates (local, human-promoted) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | Shared project context (defect tier, before the substrate) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 6 | The substrate (maintainer-decided; recorded honestly) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 7 | Zero-touch upgrades | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 8 | Storage boundary: the `subject` axis (security tier) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 9 | Engine deltas (small, each self-gated) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md)
 
@@ -222,6 +312,16 @@ _1 blocker resolved._
 - **windows-install-path** (owner: maintainer) — blocks — (was: the `win32` branch of the install-command map) - **Decision:** Windows has clean paths — two-tier UI: `winget install rtk-ai.rtk` as "Recommended (automated)" (manifests 0.36.0→0.43.0 in microsoft/winget-pkgs, tracking stable) + ripgrep dependency note; README's msvc-zip as "Manual (all Windows versions)" for winget-less images. Residual: one live `winget install` run on a real Windows box before the command ships (Phase 1 test item).
   - **What to do:**
   - **Resolved when:** ~~a verified Windows path exists~~ — it does; the live-run test is ordinary Phase 1 verification, not a blocker.
+
+### [road-to-self-critical.md](roadmaps/road-to-self-critical.md)
+
+**Road to self-critical — structural review honesty instead of rule #108** — 0 / 10 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | The adversarial review protocol (contract doc + template) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Canary calibration (review the reviewer) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Record the architecture disposition (close the umbrella honestly) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md)
 

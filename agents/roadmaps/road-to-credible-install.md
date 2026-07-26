@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 ---
 
 # Road to credible install — survive the first five minutes of an external evaluation
@@ -13,8 +13,7 @@ status: draft
 > verified-baseline table below is OUR measurement, not the reviewer's.
 > **Council:** AI council debate 2026-07-26 (anthropic/claude-sonnet-4-5 +
 > openai/gpt-4o, 2 rounds) converged on ONE tightly-scoped roadmap; verdicts
-> inlined in § Council convergence. **Draft — pending maintainer OK before
-> execution.**
+> inlined in § Council convergence. **Activated 2026-07-27 by maintainer decision.**
 
 ## Goal
 

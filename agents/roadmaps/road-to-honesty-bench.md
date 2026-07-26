@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 ---
 
 # Road to honesty bench — measure the shipped honesty kernel, park the rest
@@ -19,7 +19,7 @@ status: draft
 > **Council:** AI council debate 2026-07-27 (anthropic/claude-sonnet-4-5 +
 > openai/gpt-4o, 2 rounds; round 2 resolved reject-vs-refine into
 > "record the convergence, build the measurement, park the unproven").
-> **Draft — pending maintainer OK before execution.**
+> **Activated 2026-07-27 by maintainer decision.**
 
 ## Goal
 
