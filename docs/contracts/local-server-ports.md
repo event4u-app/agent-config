@@ -49,5 +49,8 @@
 - Port range: ADR-012. Enforcement: `src/server/port.ts`.
 - Token transport: `src/server/token.ts`.
 - Capabilities source: `src/shared/capabilities.ts`.
-- Host-side plans: `agents/roadmaps/road-to-ac-embeddable-gui.md`,
-  `agents/roadmaps/road-to-reciprocal-ecosystem.md`.
+- Host-side consumers: the embeddable-GUI and reciprocal-ecosystem tracks drive
+  this contract. They are named rather than linked — a roadmap is archived or
+  deleted as its work completes, so a contract citing the file rots the day the
+  plan lands (`no-roadmap-references`). The durable anchors are the ADR and the
+  source paths above.

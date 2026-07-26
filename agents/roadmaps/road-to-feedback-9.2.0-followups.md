@@ -217,8 +217,9 @@ restores the single-file skill unchanged.
 ## Council review (2026-07-14)
 
 Deep debate, 3 rounds, cross-vendor (`anthropic/claude-sonnet-4-5` +
-`openai/gpt-4o`), roadmap input-mode, actual **$0.15**
-(`agents/runtime/council/responses/road-to-feedback-9.2.0-followups-roadmap.json/`).
+`openai/gpt-4o`), roadmap input-mode, actual **$0.15**. The transcript is gitignored and
+auto-pruned, so it is not cited by path — the date, composition and cost above
+are the durable trace.
 
 **Convergence — one load-bearing finding (both members).** The roadmap
 **over-builds and is internally inconsistent with its own evidence discipline**:
@@ -268,5 +269,6 @@ and repo before acceptance.
 
 ### Predecessor council trace
 
-`agents/runtime/council/responses/road-to-feedback-9.2.0-followups-roadmap.json/`
-(this run — gitignored, local-only).
+Same run as the 2026-07-14 session above (`anthropic/claude-sonnet-4-5` +
+`openai/gpt-4o`, 3 rounds). Not cited by path — council output is gitignored
+and auto-pruned after the retention window.
