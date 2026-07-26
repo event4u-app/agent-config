@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 13 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **15** open blockers
+> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers
 
 ## Overall
 
-**107 / 216 steps done · 50%**
+**109 / 255 steps done · 43%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ac-embeddable-gui.md](roadmaps/road-to-ac-embeddable-gui.md) | 4 | 30 | 28 | 2 | 0 | 0 | [2](#blockers-road-to-ac-embeddable-gui) | █░░░░░░░░░ 7% |
-| 2 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 7 | 9 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 56% |
+| 2 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 6 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 62% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
@@ -25,10 +25,12 @@
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 8 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 10 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 11 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 12 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 13 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 10 | [road-to-rtk-onboarding-correctness.md](roadmaps/road-to-rtk-onboarding-correctness.md) | 4 | 21 | 20 | 1 | 0 | 0 | [2](#blockers-road-to-rtk-onboarding-correctness) | ░░░░░░░░░░ 5% |
+| 11 | [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md) | 4 | 18 | 18 | 0 | 0 | 0 | [1](#blockers-road-to-shared-design-tokens) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 14 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -57,11 +59,11 @@
 
 ### [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md)
 
-**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 9 / 16 done (56%)
+**Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers** — 10 / 16 done (62%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Quick wins already verified missing (autonomous, hours not weeks) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 0 | Quick wins already verified missing (autonomous, hours not weeks) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 1 | One 30-second wedge, not the whole platform | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 2 | Discoverability where the category is browsed | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 3 | Turn the proof surface into the differentiator narrative | ✅ done | 0 | 4 | 0 | 0 | 100% |
@@ -199,6 +201,45 @@ _1 blocker resolved._
   - **What to do:**
     labelled golden set; the live 3-host canary tick stays as the second half.
   - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0. - **Evidence update 2026-07-11 (real run landed — gate is RED, not just pending):** the consumer golden set is complete (PR #885) and a full sonnet n=90 `check_quality_regression --as-flip-gate` ran (PR #887). It **FAILS** (thin win-rate 36.2% < 48% floor; length-confound 60%, judge inconsistency 31%). CAVEAT: that run measured the **thin** projection (kernel bodies + non-kernel pointers), NOT this roadmap's **workspace-scoping** reduction — a milder, different cut with **no dedicated arm** in `bench_quality_run` yet. So the held-quality arm is **not** directly resolved, but the strongest same-class reduction failed the gate decisively → treat context-reduction-for-tokens as **quality-risky by prior** on this eval. **Disposition (maintainer, 2026-07-11): do NOT spend another ~$33 on a workspace-scoped arm** that shares the same verbosity confound and would most likely reconfirm the negative; the Phase-1 DEFAULT flip stays **evidence-blocked**. The opt-in build path is unaffected (per Blocks above). Revisit only with a length-normalised arm that kills the confound.
+
+### [road-to-rtk-onboarding-correctness.md](roadmaps/road-to-rtk-onboarding-correctness.md)
+
+**Road to rtk onboarding correctness — the install path we ship is currently broken** — 1 / 21 done (5%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spike | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 1 | Fix the two bugs (small diff, high value) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 2 | Make the recommendation earn its place | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Expose detection as a contract AS can consume | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-rtk-onboarding-correctness"></a>
+**Blockers**
+
+- **rtk-benchmark-spend** (owner: user) — blocks Phase 2's optional own-measurement of the savings claim
+  - **What to do:**
+  - **Resolved when:** the maintainer authorizes the run with an estimate, or accepts attribution-only permanently.
+- **windows-install-path** (owner: maintainer) — blocks — (was: the `win32` branch of the install-command map) - **Decision:** Windows has clean paths — two-tier UI: `winget install rtk-ai.rtk` as "Recommended (automated)" (manifests 0.36.0→0.43.0 in microsoft/winget-pkgs, tracking stable) + ripgrep dependency note; README's msvc-zip as "Manual (all Windows versions)" for winget-less images. Residual: one live `winget install` run on a real Windows box before the command ships (Phase 1 test item).
+  - **What to do:**
+  - **Resolved when:** ~~a verified Windows path exists~~ — it does; the live-run test is ordinary Phase 1 verification, not a blocker.
+
+### [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md)
+
+**Road to shared design tokens — one visual identity across two independent GUIs** — 0 / 18 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spike | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 1 | Canonical token source (this repo) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Two generators, no runtime dependency | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | The embed theme contract | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-shared-design-tokens"></a>
+**Blockers**
+
+- **brand-decision** (owner: user) — blocks — (was: Phase 1, which palette wins) - **Decision:** **Orange wins — brand takes precedence.** AC's accent becomes event4u orange `#d15c38`. Deviations are permitted **where they make sense**: surface-adjusted derived values when S0.1's contrast checks demand it, and other colours for semantic roles (success/warning/danger stay functional, not brand). The blue `#5b8cff` retires as the accent.
+  - **What to do:**
+  - **Resolved when:** ~~the maintainer confirms the direction~~ — confirmed: orange-wins with pragmatic exceptions.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
