@@ -3,24 +3,24 @@
   "gates": {
     "lint_framework_leakage": {
       "rule": "framework-neutrality-in-generic-skills",
-      "findings": 11
+      "findings": 0
     },
     "check_no_roadmap_refs": {
       "rule": "no-roadmap-references",
-      "findings": 2
+      "findings": 0
     },
     "check_council_references": {
       "rule": "no-roadmap-references",
-      "findings": 5
+      "findings": 0
     },
     "check_no_external_sources": {
       "rule": "source-confidentiality",
-      "findings": 18
+      "findings": 0
     },
     "check_token_optimizer_freshness": {
       "rule": "token-optimizer-maintenance",
-      "findings": 1
+      "findings": 0
     }
   },
-  "total": 37
+  "total": 0
 }
