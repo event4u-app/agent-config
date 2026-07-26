@@ -19,13 +19,20 @@ import {
 } from '../../src/scripts/check_enforcement_coverage.js';
 
 const ctx = (over: Partial<Parameters<typeof resolve_one>[1]> = {}) => ({
-    wiring: 'cmd: ./scripts-run src/scripts/check_wired.ts\n',
     hooks: new Map([
         ['blocking-hook', true],
         ['instrumenting-hook', false],
     ]),
     exists: (rel: string) => rel !== 'src/scripts/gone.ts' && rel !== 'tests/gone.test.ts',
-    reachable: new Set<string>(['src/scripts/check_wired.ts', 'src/scripts/sub_check.ts']),
+    // Reachable from a WORKFLOW — the headline class.
+    reachable_ci: new Set<string>(['src/scripts/check_wired.ts', 'src/scripts/sub_check.ts']),
+    // Reachable from a taskfile too (a superset of CI by construction), plus one
+    // script only a taskfile names.
+    reachable_local: new Set<string>([
+        'src/scripts/check_wired.ts',
+        'src/scripts/sub_check.ts',
+        'src/scripts/task_only.ts',
+    ]),
     ...over,
 });
 
@@ -47,6 +54,31 @@ describe('resolve_one — resolution beats declaration', () => {
 
     it('reports a declared validator whose file is gone', () => {
         expect(resolve_one('validator:src/scripts/gone.ts', ctx()).resolution).toBe('missing');
+    });
+});
+
+describe('resolve_one — which build fails', () => {
+    // The correction this split exists for. The first version treated `taskfiles/`
+    // and `.github/workflows/` as one corpus, so "named in a taskfile" resolved to
+    // `validator` under a headline reading "can actually fail a build" — while NO
+    // workflow invokes `task ci`. The gate committed the defect it was built to catch.
+    it('credits a validator a workflow actually reaches', () => {
+        expect(resolve_one('validator:src/scripts/check_wired.ts', ctx()).resolution).toBe('validator');
+    });
+
+    it('demotes a taskfile-only validator and says which build it fails', () => {
+        const r = resolve_one('validator:src/scripts/task_only.ts', ctx());
+        expect(r.resolution).toBe('validator-local');
+        expect(r.note).toMatch(/no workflow runs it/);
+    });
+
+    it('still reports a validator nothing reaches as unwired', () => {
+        expect(resolve_one('validator:src/scripts/orphan.ts', ctx()).resolution).toBe('unwired');
+    });
+
+    it('ranks local-only below a real backstop but above observer', () => {
+        expect(strongest(['validator-local', 'validator'] as Resolution[])).toBe('validator');
+        expect(strongest(['observer', 'validator-local'] as Resolution[])).toBe('validator-local');
     });
 });
 
