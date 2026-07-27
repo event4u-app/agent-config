@@ -1,6 +1,10 @@
 /*
  * Design tokens for the settings GUI + setup wizard — v2, dark-first.
  *
+ * GENERATED FILE — do not hand-edit. Source of truth:
+ * tokens/event4u-agent-tokens.json. To change a value, edit the JSON and
+ * run `node tokens/build-ac.mjs`. CI drift check: `node tokens/build-ac.mjs --check`.
+ *
  * Hand-written, no Tailwind, no CSS-in-JS (deliberate — dependency weight
  * matters more than authoring speed for a maintainer-of-one localhost GUI;
  * road-to-setup-experience § Phase 4 council decision). The whole UI
@@ -23,6 +27,7 @@
     --color-surface:      #121316;
     --color-surface-alt:  #1a1c20;
     --color-surface-hover:#1f2126;
+    --color-sidebar:      #232427; /* chrome step — consumed by agent-switch, unused by AC chrome today */
     --color-border:       rgba(255, 255, 255, 0.09);
     --color-border-strong:rgba(255, 255, 255, 0.22);
 
@@ -33,10 +38,10 @@
     --color-text-inverse: #101114;
 
     /* Colour — accent (single accent, not per-button) */
-    --color-accent:       #5b8cff;
-    --color-accent-hover: #79a1ff;
-    --color-accent-fg:    #0a1020;
-    --color-accent-soft:  rgba(91, 140, 255, 0.14);
+    --color-accent:       #d66d4d;
+    --color-accent-hover: #db7e61;
+    --color-accent-fg:    #101114;
+    --color-accent-soft:  rgba(209, 92, 56, 0.14);
 
     /* Colour — semantic (reserved for meaning, never chrome) */
     --color-success:      #4ade80;
@@ -49,7 +54,7 @@
     --color-info-soft:    rgba(56, 189, 248, 0.13);
 
     /* Focus ring — always 2px, never removed */
-    --color-focus-ring:   #79a1ff;
+    --color-focus-ring:   #db7e61;
 
     /* Shadows — dark theme leans on the surface ladder, shadows stay subtle */
     --shadow-sm:  0 1px 2px 0 rgba(0, 0, 0, 0.5);
@@ -65,6 +70,7 @@
     --color-surface:      #ffffff;
     --color-surface-alt:  #f1f2f4;
     --color-surface-hover:#e9eaee;
+    --color-sidebar:      #f1f2f4;
     --color-border:       rgba(17, 18, 24, 0.10);
     --color-border-strong:rgba(17, 18, 24, 0.28);
 
@@ -73,10 +79,10 @@
     --color-text-subtle:  #7d808c;
     --color-text-inverse: #f7f7f8;
 
-    --color-accent:       #2563eb;
-    --color-accent-hover: #1d4ed8;
+    --color-accent:       #b24929;
+    --color-accent-hover: #9d4024;
     --color-accent-fg:    #ffffff;
-    --color-accent-soft:  rgba(37, 99, 235, 0.10);
+    --color-accent-soft:  rgba(209, 92, 56, 0.10);
 
     --color-success:      #16a34a;
     --color-success-soft: rgba(22, 163, 74, 0.12);
@@ -87,7 +93,7 @@
     --color-info:         #0284c7;
     --color-info-soft:    rgba(2, 132, 199, 0.11);
 
-    --color-focus-ring:   #3b82f6;
+    --color-focus-ring:   #be4e2c;
 
     --shadow-sm:  0 1px 2px 0 rgba(16, 17, 20, 0.05);
     --shadow-md:  0 4px 10px -2px rgba(16, 17, 20, 0.08);
