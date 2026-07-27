@@ -1,0 +1,39 @@
+{
+  "_comment": "Pre-registered 30-query labelled set for road-to-reachable-code-memory Phase 9 D3 (intent-conditioned verb selection). Written and frozen BEFORE src/scripts/code_graph/intent.ts existed — see the D3 evidence note in agents/evidence/reports/. Each `verb` is the human-judged CORRECT code_graph subcommand for the natural-language `question`, independent of any keyword the router might later use. Labels are NOT tuned to any regex — they reflect genuine intent: `query` = direct (1-hop) relations of a seed, `affected` = reverse lookup (who calls/uses/would break), `path` = connectivity/reachability between two seeds, `explain` = a broader neighbourhood/overview around a seed.",
+  "always_query_baseline": {
+    "description": "The pre-D3 default verb every ambiguous natural-language ask maps to today.",
+    "correct_verb_rate": "count(verb == 'query') / 30"
+  },
+  "queries": [
+    { "id": 1, "question": "What does UserService depend on?", "verb": "query" },
+    { "id": 2, "question": "Who calls the deleteAccount method?", "verb": "affected" },
+    { "id": 3, "question": "Show me everything that references PaymentGateway", "verb": "affected" },
+    { "id": 4, "question": "What would break if I change the User model?", "verb": "affected" },
+    { "id": 5, "question": "How does the checkout flow reach the payment API?", "verb": "path" },
+    { "id": 6, "question": "Is there a connection between AuthController and TokenService?", "verb": "path" },
+    { "id": 7, "question": "Give me an overview of the OrderProcessor class", "verb": "explain" },
+    { "id": 8, "question": "Explain what's going on around the CartManager", "verb": "explain" },
+    { "id": 9, "question": "What functions does formatCurrency call?", "verb": "query" },
+    { "id": 10, "question": "List the direct relations of the Logger class", "verb": "query" },
+    { "id": 11, "question": "Who uses the deprecated LegacyHelper?", "verb": "affected" },
+    { "id": 12, "question": "What's the blast radius of touching the Invoice class?", "verb": "affected" },
+    { "id": 13, "question": "How is the Router connected to the Middleware pipeline?", "verb": "path" },
+    { "id": 14, "question": "Trace the path from LoginForm to SessionStore", "verb": "path" },
+    { "id": 15, "question": "Walk me through the neighbourhood of the ReportBuilder", "verb": "explain" },
+    { "id": 16, "question": "Give me the big picture around NotificationService", "verb": "explain" },
+    { "id": 17, "question": "What does the handle() method call directly?", "verb": "query" },
+    { "id": 18, "question": "Show the outgoing edges of PaymentProcessor", "verb": "query" },
+    { "id": 19, "question": "Which callers would be impacted by renaming save()?", "verb": "affected" },
+    { "id": 20, "question": "What references the Config::get helper?", "verb": "affected" },
+    { "id": 21, "question": "Is Foo::bar reachable from Baz::qux?", "verb": "path" },
+    { "id": 22, "question": "How does the frontend connect to the backend API layer?", "verb": "path" },
+    { "id": 23, "question": "Summarize the surrounding context of the AuthMiddleware", "verb": "explain" },
+    { "id": 24, "question": "Explain the two-hop neighbourhood of Cache", "verb": "explain" },
+    { "id": 25, "question": "What does the constructor of Repository call?", "verb": "query" },
+    { "id": 26, "question": "Who else touches the shared $config array?", "verb": "affected" },
+    { "id": 27, "question": "What's the shortest route between ModuleA and ModuleC?", "verb": "path" },
+    { "id": 28, "question": "Give a quick explain of what surrounds the EventBus", "verb": "explain" },
+    { "id": 29, "question": "List what UserController directly uses", "verb": "query" },
+    { "id": 30, "question": "If I break this method's signature, what else breaks?", "verb": "affected" }
+  ]
+}

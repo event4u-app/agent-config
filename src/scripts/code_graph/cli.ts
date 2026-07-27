@@ -4,26 +4,73 @@
  *
  *   build    [--root P] [--out P] [--force]   (re)build the deterministic graph
  *   validate [--graph P]                       schema-gate a graph.json
+ *   detect   [--root P] [--format json]        three-state freshness verdict
+ *   refresh  [--root P] [--out P] [--budget-seconds N]
+ *                                               build --update (STALE) / no-op
+ *                                               (FRESH) / full build (ABSENT)
  *
- * Query subcommands (query/path/explain/affected/detect) are added by the
- * Phase-3 query tier. Deterministic, LLM-free, no network. Exit codes:
- * 0 ok · 1 not-found / validation-failed · 2 usage · 3 internal.
+ * `detect --format json` (Phase 2, road-to-reachable-code-memory) emits a
+ * single-line, stable-key-order JSON verdict on stdout — no timestamps, safe
+ * to diff or pipe to `jq`:
+ *
+ *   { "verdict": "ABSENT" | "STALE" | "FRESH",
+ *     "behind_commits": <n> | null,
+ *     "source": { "kind": "consumer" | "scip" | "native", "path": "…" } | null,
+ *     "sources": [ { "kind": …, "path": "…", "present": true, … }, … ] }
+ *
+ * `refresh` never blocks on a hung build: it spawns the actual `build` in a
+ * CHILD process against a temp `--out` path, under a hard wall-clock
+ * `--budget-seconds` (default 60, via SIGKILL). The real cache at `--out` is
+ * only ever touched by a same-directory atomic rename of that child's
+ * completed temp output — on budget-exceeded, build failure, or the child
+ * never producing output, the rename never happens and the OLD cache is left
+ * byte-for-byte untouched. The cache itself (default
+ * `agents/runtime/state/code-graph-v1.json`) is local-only and disposable —
+ * gitignored, rebuildable from source at any time; never a source of truth.
+ *
+ * Query subcommands (query/path/explain/affected) are added by the Phase-3
+ * query tier. Deterministic, LLM-free, no network. Exit codes:
+ * 0 ok · 1 not-found / validation-failed / refresh-budget-exceeded ·
+ * 2 usage · 3 internal.
+ *
+ *   suggest-verb "<question>"                  (Phase 9 D3) print the verb
+ *                                               (query/affected/path/explain)
+ *                                               a regex table thinks best
+ *                                               answers a free-text structure
+ *                                               question — a standalone hint,
+ *                                               never auto-run against a
+ *                                               graph.
  */
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { buildFromRepo } from './build.js';
-import { detectSources, pickSource } from './detect.js';
-import { affected, explain, loadGraph, type LoadedGraph, path as graphPath, query, type QueryResult } from './query.js';
+import { buildFromRepo, sidecarPath } from './build.js';
+import { computeVerdict, detectSources, pickSource } from './detect.js';
+import { suggestVerb } from './intent.js';
+import {
+    affected,
+    explain,
+    loadGraph,
+    type LoadedGraph,
+    mergeRecommendedReads,
+    path as graphPath,
+    query,
+    type QueryResult,
+} from './query.js';
 import { validateGraph } from './validate.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
 export const DEFAULT_CACHE = path.join(REPO_ROOT, 'agents', 'runtime', 'state', 'code-graph-v1.json');
+/** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file
+ * through it, so a budget-exceeded kill only ever terminates the child. */
+const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
+const DEFAULT_BUDGET_SECONDS = 60;
 
 function flag(argv: string[], name: string): string | null {
     const i = argv.indexOf(name);
@@ -93,6 +140,10 @@ function render(r: QueryResult, staleNote: string): number {
     for (const l of r.lines) process.stdout.write(`  ${l}\n`);
     if (r.truncated) process.stdout.write('  … (budget reached — narrow the seed or raise --budget)\n');
     if (!r.lines.length) process.stdout.write('  (no matching relations)\n');
+    if (r.recommended_reads.length) {
+        process.stdout.write('recommended reads (dropped by the budget, or a low-confidence seed match):\n');
+        for (const rr of r.recommended_reads) process.stdout.write(`  ${rr.path}${rr.lines ? `:${rr.lines[0]}-${rr.lines[1]}` : ''}\n`);
+    }
     return 0;
 }
 
@@ -130,12 +181,16 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
     if (kind === 'affected' && flag(argv, '--since')) {
         const root = flag(argv, '--root') ?? REPO_ROOT;
         const seeds = changedNodeSeeds(r.g, root, flag(argv, '--since') as string);
-        const merged: QueryResult = { source: r.g.source, seeds: [], lines: [], truncated: false };
+        const merged: QueryResult = { source: r.g.source, seeds: [], lines: [], truncated: false, recommended_reads: [] };
+        const perSeed: QueryResult[] = [];
         for (const s of seeds) {
             const one = affected(r.g, s, 2, budget);
             merged.seeds.push(...one.seeds);
             merged.lines.push(...one.lines);
+            merged.truncated = merged.truncated || one.truncated;
+            perSeed.push(one);
         }
+        merged.recommended_reads = mergeRecommendedReads(perSeed);
         return render(merged, r.note);
     }
     const a = positional[0];
@@ -162,6 +217,12 @@ function isFlagValue(argv: string[], token: string): boolean {
 
 function cmdDetect(argv: string[]): number {
     const root = flag(argv, '--root') ?? REPO_ROOT;
+    if (flag(argv, '--format') === 'json') {
+        // Machine-readable three-state verdict (Phase 2). Existing human-text
+        // output below is unchanged for existing consumers.
+        process.stdout.write(`${JSON.stringify(computeVerdict(root, DEFAULT_CACHE))}\n`);
+        return 0;
+    }
     const verdicts = detectSources(root, DEFAULT_CACHE);
     if (!verdicts.length) {
         process.stdout.write('no code-graph source detected\n');
@@ -176,16 +237,127 @@ function cmdDetect(argv: string[]): number {
     return 0;
 }
 
+function budgetSecondsOf(argv: string[]): number {
+    const raw = flag(argv, '--budget-seconds');
+    if (raw === null) return DEFAULT_BUDGET_SECONDS;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : DEFAULT_BUDGET_SECONDS;
+}
+
+/** Best-effort removal of a temp build output + its sidecar. Never throws —
+ * cleanup failure must not mask the real result (budget-exceeded / error). */
+function cleanupTemp(tmpOut: string): void {
+    for (const p of [tmpOut, sidecarPath(tmpOut)]) {
+        try {
+            fs.unlinkSync(p);
+        } catch {
+            /* already absent, or never materialised — fine */
+        }
+    }
+}
+
+/**
+ * Run `build` (optionally `--update`) as a CHILD process against a temp
+ * `--out` path, under a hard wall-clock budget. Only on a clean, in-budget
+ * exit does the temp output get promoted into `out` — via a same-directory
+ * `renameSync`, atomic at the OS level, exactly the technique `write_atomic`
+ * itself uses. Any other outcome (timeout, non-zero exit, missing output)
+ * cleans up the temp files and leaves `out` untouched.
+ */
+function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeconds: number): number {
+    if (!(budgetSeconds > 0)) {
+        // Node's own `timeout` option treats 0 as "no limit" — a genuinely
+        // zero-or-negative budget is an immediate, deterministic abort
+        // instead of silently becoming unlimited.
+        process.stderr.write(`code-graph: refresh budget exceeded (${budgetSeconds}s) — old cache kept\n`);
+        return 1;
+    }
+    const dir = path.dirname(out);
+    const tmpOut = path.join(dir, `.${path.basename(out)}.refresh-tmp-${process.pid}-${randomBytes(4).toString('hex')}.json`);
+    if (update) {
+        const realSidecar = sidecarPath(out);
+        if (fs.existsSync(realSidecar)) {
+            try {
+                fs.copyFileSync(realSidecar, sidecarPath(tmpOut));
+            } catch {
+                /* fall back to a full re-extraction inside the child */
+            }
+        }
+    }
+    const args = ['build', '--root', root, '--out', tmpOut, ...(update ? ['--update'] : [])];
+    const res = spawnSync(TSX_BIN, [_HERE, ...args], {
+        env: hardenedSpawnEnv(),
+        stdio: 'ignore',
+        timeout: Math.round(budgetSeconds * 1000),
+        killSignal: 'SIGKILL',
+    });
+    const timedOut = res.signal !== null || (res.error !== undefined && (res.error as NodeJS.ErrnoException).code === 'ETIMEDOUT');
+    if (timedOut) {
+        cleanupTemp(tmpOut);
+        process.stderr.write(`code-graph: refresh budget exceeded (${budgetSeconds}s) — old cache kept\n`);
+        return 1;
+    }
+    if (res.status !== 0) {
+        cleanupTemp(tmpOut);
+        const detail = res.error ? `: ${res.error.message}` : res.status !== null ? ` (exit ${res.status})` : '';
+        process.stderr.write(`code-graph: refresh build failed${detail} — old cache kept\n`);
+        return 1;
+    }
+    if (!fs.existsSync(tmpOut)) {
+        cleanupTemp(tmpOut);
+        process.stderr.write('code-graph: refresh produced no output — old cache kept\n');
+        return 3;
+    }
+    fs.renameSync(tmpOut, out); // same-dir → atomic; real cache only ever changes here
+    const tmpSidecar = sidecarPath(tmpOut);
+    if (fs.existsSync(tmpSidecar)) fs.renameSync(tmpSidecar, sidecarPath(out));
+    process.stdout.write(`✅  code-graph refreshed — cache: ${path.relative(REPO_ROOT, out)}\n`);
+    return 0;
+}
+
+function cmdRefresh(argv: string[]): number {
+    const root = flag(argv, '--root') ?? REPO_ROOT;
+    const out = flag(argv, '--out') ?? DEFAULT_CACHE;
+    const budgetSeconds = budgetSecondsOf(argv);
+    if (!fs.existsSync(root)) {
+        process.stderr.write(`code-graph: root not found: ${root}\n`);
+        return 1;
+    }
+    const v = computeVerdict(root, out);
+    if (v.verdict === 'FRESH') {
+        process.stdout.write('fresh — nothing to do\n');
+        return 0;
+    }
+    return runBudgetedBuild(root, out, v.verdict === 'STALE', budgetSeconds);
+}
+
+/**
+ * `suggest-verb "<question>"` (Phase 9 D3) — print the `code_graph` verb a
+ * pure regex table thinks best answers a free-text structure question. A
+ * standalone hint only: never resolves a graph, never runs a query itself.
+ */
+function cmdSuggestVerb(argv: string[]): number {
+    const question = argv.filter((a) => !a.startsWith('--')).join(' ').trim();
+    if (!question) {
+        process.stderr.write('usage: code_graph/cli.ts suggest-verb "<question>"\n');
+        return 2;
+    }
+    process.stdout.write(`${suggestVerb(question)}\n`);
+    return 0;
+}
+
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
     const sub = argv[0];
     try {
         if (sub === 'build') return await cmdBuild(argv.slice(1));
         if (sub === 'validate') return cmdValidate(argv.slice(1));
         if (sub === 'detect') return cmdDetect(argv.slice(1));
+        if (sub === 'refresh') return cmdRefresh(argv.slice(1));
         if (sub === 'query' || sub === 'explain' || sub === 'affected' || sub === 'path')
             return cmdQuery(sub, argv.slice(1));
+        if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
         process.stderr.write(
-            'usage: code_graph/cli.ts <build|validate|detect|query|explain|affected|path> [options]\n',
+            'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|suggest-verb> [options]\n',
         );
         return 2;
     } catch (e) {

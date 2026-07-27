@@ -131,12 +131,12 @@ export function nudgeReason(root: string): string {
     const verdicts = detectSources(root, path.join(root, NATIVE_CACHE));
     const picked = pickSource(verdicts);
     if (!picked) {
-        return 'No code-graph found. For "who calls / where used / impact" run `code_graph build` once, then `code_graph query <symbol>` instead of grepping blind.';
+        return 'No code-graph found. For "who calls / where used / impact" run `agent-config code-graph refresh` once, then `agent-config code-graph query <symbol>` instead of grepping blind.';
     }
     if (picked.stale) {
-        return `code-graph is ${picked.commits_behind ?? 'N'} commit(s) behind — rebuild with \`code_graph build --update\` before trusting relationship answers.`;
+        return `code-graph is ${picked.commits_behind ?? 'N'} commit(s) behind — rebuild with \`agent-config code-graph refresh\` before trusting relationship answers.`;
     }
-    return 'A fresh code-graph is present — for structure questions run `code_graph query|affected <symbol>` first; grep is the fallback (say which answered).';
+    return 'A fresh code-graph is present — for structure questions run `agent-config code-graph query|affected <symbol>` first; grep is the fallback (say which answered).';
 }
 
 export function main(): number {
