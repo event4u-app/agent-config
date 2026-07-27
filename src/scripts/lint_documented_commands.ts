@@ -23,8 +23,8 @@
  * flags, exit codes (0 clean, 1 violations, 2 usage error, 3 internal error),
  * stdout-only output, self-documenting allowlist, fenced-code-aware scan.
  *
- * Contract: .agent-src.uncondensed/rules/token-optimizer-maintenance.md (n/a),
- * road-to-reachable-code-memory Phase 1.
+ * Contract: road-to-reachable-code-memory Phase 1 (the load-bearing
+ * lint_documented_commands item).
  */
 
 import * as fs from 'node:fs';
