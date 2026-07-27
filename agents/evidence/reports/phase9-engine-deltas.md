@@ -1,7 +1,7 @@
 # Phase 9 results — road-to-reachable-code-memory (three self-gated engine deltas)
 
 > Each delta's acceptance threshold was fixed in
-> `agents/roadmaps/road-to-reachable-code-memory.md` Phase 9 BEFORE
+> `agents/roadmaps/archive/road-to-reachable-code-memory.md` Phase 9 BEFORE
 > implementation; results below apply the threshold in writing. Run date:
 > 2026-07-27, branch `feat/road-to-reachable-code-memory`, working tree state
 > after Phases 0–8.

@@ -1,7 +1,7 @@
 # Spike results — road-to-reachable-code-memory Phase 0
 
 > Pre-registered falsification spikes (S0a–S0d) from
-> `agents/roadmaps/road-to-reachable-code-memory.md`. Each spike's threshold
+> `agents/roadmaps/archive/road-to-reachable-code-memory.md`. Each spike's threshold
 > was fixed in the roadmap BEFORE execution; results below apply the
 > threshold in writing. Run date: 2026-07-27, HEAD = 9.8.0 lineage,
 > branch `feat/road-to-reachable-code-memory`.
