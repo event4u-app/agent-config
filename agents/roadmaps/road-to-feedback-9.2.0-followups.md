@@ -53,6 +53,15 @@ over-firing (ask-inflation) failure mode it exposes — is Phase 1.
 
 ## Phase 1 — A behavioral eval for `cross-source-consistency` (minimal-first)
 
+> **Unification note (2026-07-27, road-to-honesty-bench):** the
+> execute-or-park question is resolved in favor of EXECUTE. The fixture
+> corpus for step 1.2 now EXISTS, built once for two owners:
+> `internal/bench/corpora/honesty-false-premise.yaml` (30 fixtures in this
+> phase's 1.1 shape — `sources:` + `expected: action ask|proceed|warn` +
+> `question_contains` / `forbidden_assumptions`, incl. the 10 negative
+> controls). Steps 1.1 (runner) and 1.3–1.5 remain THIS roadmap's work;
+> step 1.2's authoring should extend the shared corpus, never fork it.
+
 The reviewers' most-repeated P0. The existing harnesses do not fit: trigger-evals
 are skill-scoped (rules are unsupported), and golden-outcome baselines fit only
 sharp Iron-Law rules — a situation-dependent rule has no home. **Council correction
