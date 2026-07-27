@@ -740,9 +740,12 @@ ai_team:
 
   # Per-day cap on team calls. Team calls count into the EXISTING
   # cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json,
-  # daily UTC reset) — one subscription, one counter, never a parallel
-  # count. This key is the team-side ceiling read against that shared
-  # bucket. 0 = block all team calls; raise if you review heavily.
+  # daily UTC reset) — the counter tracks MACHINE-WIDE spend across ALL
+  # subscriptions/profiles on this machine (an `agent-switch` profile
+  # switch does NOT get its own counter; the bucket is deliberately one
+  # per machine, never parallel counts). This key is the team-side
+  # ceiling read against that shared bucket. 0 = block all team calls;
+  # raise if you review heavily.
   max_calls_per_day: 50
 
   # Suppress the one-line wizard/init recommendation to set up the codex
@@ -915,6 +918,17 @@ memory:
   #   on  = inject the compact index (spotlighted as DATA).
   session_index: "off"
 
+  # session_end learning-sidecar aggregation (road-to-reachable-code-memory
+  # Phase 4). When true, the session_end hook aggregates
+  # agents/memory/intake/*.jsonl through the learning sidecar (30-day decay,
+  # ≥2-origin corroboration) into the gitignored .agent-learning.json +
+  # LESSONS.md and emits the one-line memory-visibility marker. Local-only,
+  # budget-capped (2 s), fail-open; promotion into curated memory stays
+  # human via /memory:propose. SHIPS OFF (council 2026-07-27): the default
+  # flip is proposed only after the 30-day dogfood shows non-trivial signal
+  # AND session-end p95 < 2 s.
+  learn_on_session_end: false
+
 # --- Knowledge cards: global cross-project sharing (ADR-100) ---
 #
 # Structure-grounding v2. Promote *expensive* (remote) knowledge cards from
@@ -1046,7 +1060,8 @@ hooks:
   # the agent is about to Grep/Glob or Read a source file: query the graph
   # first for "who calls / where used / impact" questions (or rebuild if the
   # index is stale, or build one if absent). Source G's strict block-first-read
-  # mode is deliberately un-ported. Build the cache with `code_graph build`.
+  # mode is deliberately un-ported. Build the cache with
+  # `agent-config code-graph build`.
   code_graph:
     enabled: false
 
