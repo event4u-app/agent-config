@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers
+> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **19** open blockers
 
 ## Overall
 
-**109 / 348 steps done · 31%**
+**109 / 350 steps done · 31%**
 
 ```text
 ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   31%
@@ -31,11 +31,12 @@
 | 13 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
 | 14 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
 | 15 | [road-to-rtk-onboarding-correctness.md](roadmaps/road-to-rtk-onboarding-correctness.md) | 4 | 21 | 20 | 1 | 0 | 0 | [2](#blockers-road-to-rtk-onboarding-correctness) | ░░░░░░░░░░ 5% |
-| 16 | [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md) | 4 | 18 | 18 | 0 | 0 | 0 | [1](#blockers-road-to-shared-design-tokens) | ░░░░░░░░░░ 0% |
-| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 19 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 20 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 16 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 17 | [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md) | 4 | 18 | 18 | 0 | 0 | 0 | [1](#blockers-road-to-shared-design-tokens) | ░░░░░░░░░░ 0% |
+| 18 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 19 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 20 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 21 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -290,6 +291,25 @@ _1 blocker resolved._
 - **windows-install-path** (owner: maintainer) — blocks — (was: the `win32` branch of the install-command map) - **Decision:** Windows has clean paths — two-tier UI: `winget install rtk-ai.rtk` as "Recommended (automated)" (manifests 0.36.0→0.43.0 in microsoft/winget-pkgs, tracking stable) + ripgrep dependency note; README's msvc-zip as "Manual (all Windows versions)" for winget-less images. Residual: one live `winget install` run on a real Windows box before the command ships (Phase 1 test item).
   - **What to do:**
   - **Resolved when:** ~~a verified Windows path exists~~ — it does; the live-run test is ordinary Phase 1 verification, not a blocker.
+
+### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
+
+**Road to the scale-history bench run — fire the pre-registered Phase-4 bench** — 0 / 2 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Run and publish | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-scale-history-bench-run"></a>
+**Blockers**
+
+- **benchmark-spend-authorization** (owner: user) — blocks Phase 1 (both steps) — everything author-able is already committed and dry-verified in PR #1016.
+  - **What to do:**
+    1. Approve the run budget in-session (estimate rendered before the
+    first call: 3 arms × 16 runs × ≥2 families on the agentic build
+    task; same standing authorization the team-mode Phase-5 bench
+    waits on).
+  - **Resolved when:** the user confirms the run budget in-session.
 
 ### [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md)
 

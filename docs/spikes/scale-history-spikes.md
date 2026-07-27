@@ -31,7 +31,7 @@
 | R-A8 thin-request-path (F9) | S0.5 PASS | **gate** |
 | R-A9 event-decoupling (F10) | not spiked — heuristic by design | **advice** (promotion requires a falsifiable detection proposal) |
 | R-A10 durable-async (F11) | S0.5 PASS | **gate** |
-| R-A11 commit-ordering | not spiked in Phase 0 | **advice** until a detection spike exists (afterCommit/outbox presence is stack-specific; no certainty claim without one) |
+| R-A11 commit-ordering | not spiked in Phase 0 — DELIBERATE, not an omission: the rule ships normatively in the pack rule; no detector exists yet, so no lint claims it | **advice** until the registered S0.6 spike passes. **S0.6 candidate mechanism (registered 2026-07-27, PR #1016 review):** `dispatch()` / `::dispatch()` of a job class that neither implements `ShouldDispatchAfterCommit` nor chains `->afterCommit()`, occurring inside a `DB::transaction(...)` closure span — statically detectable with the same brace-span machinery as S0.5. Same thresholds as the other spikes (≥9/10 TP, ≤1/10 FP); FAIL keeps R-A11 advice permanently |
 | R-B1 audit-coverage (F8) | S0.4 PASS | **gate** (against a DECLARED audit scope only — no scope file, no findings) |
 
 ## Honesty notes
@@ -39,7 +39,10 @@
 - "Deterministic" everywhere means deterministic **pattern detection with an
   auditable waiver process** (council round 2) — instance-level correctness
   stays contextual and waiver-mediated.
-- S0.2's 80.8% is a NARROW pass over the fixture corpus; the Phase 2
+- S0.2's 80.8% is a NARROW pass over the fixture corpus — and a
+  DETERMINISTIC one: S0.2 runs only on the committed fixture set (the
+  real-world harvest belongs to S0.3 and only counts parser crashes), so
+  the value is order/seed-independent and reproducible byte-for-byte; the Phase 2
   false-positive verification pass against a real-world codebase is the
   second, independent check before the gate tier is trusted.
 - The S0.3 harvest corpus is not committed (third-party code); the spike is
