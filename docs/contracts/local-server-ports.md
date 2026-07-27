@@ -37,6 +37,31 @@
   — a host renders AC's URL in a **separate top-level window**, not a frame.
 - `?theme=light|dark` feeds the pre-paint `data-theme` stamp (no flash).
 
+### Theme contract (shared-design-tokens track)
+
+- **Precedence at boot:** `?theme=` query > persisted user override
+  (`localStorage`) > OS preference — implemented by the pre-paint stamp in
+  `src/ui/index.html` and mirrored at runtime by `src/ui/theme.ts`. While a
+  host supplies `?theme=`, the host **owns** the theme: AC suppresses its own
+  OS-preference following (`shouldFollowSystemTheme()`), so the embedded view
+  never drifts from the host.
+- **Live OS-theme changes are host-owned.** A host that follows the OS theme
+  (agent-switch resolves `system` via a `matchMedia` listener) must
+  **re-drive the embedded view by reloading it with the new `?theme=` query**
+  when the OS preference flips. There is no postMessage/live-retheme channel
+  in v1 — reload-with-new-query is the contract.
+- **Accent override: none in v1 — by design.** Both GUIs consume one accent
+  family from the canonical token source (`tokens/event4u-agent-tokens.json`,
+  see `tokens/README-as-wiring.md`), so a host-supplied accent parameter is
+  unnecessary; the shared identity makes the seam invisible without it. If a
+  future host ever needs one, it must be a **named-value allow-list** — an
+  arbitrary hex from a host page is a contrast-failure vector and an
+  unbounded support surface, and stays rejected.
+- **Token versioning:** the canonical token file carries `_version` (bumped on
+  any value change — a token change is a visual breaking change for the
+  embedded view). A host pinning visual parity can compare its vendored token
+  version against AC's; the embed provenance strip may surface a mismatch.
+
 ## Capability discovery
 
 - `GET /api/v1/ping` and `agent-config --version --json` carry a `capabilities`
