@@ -91,6 +91,7 @@ tasks:
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop
+      - task: lint-governed-writes
       - task: check-enforcement-coverage
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale
@@ -286,6 +287,7 @@ tasks:
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop
+      - task: lint-governed-writes
       - task: check-enforcement-coverage
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale

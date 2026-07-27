@@ -26,6 +26,14 @@
  * everything above" passes this check. No linter reads intent. The registry
  * entry is where a human records it, and the report is what makes it reviewable.
  *
+ * The citation obligation (override-system.md § Citation obligation) binds
+ * every override file, not only kernel/safety-floor ones — until now that was
+ * doc-contract-only for ordinary overrides. This guard now also scans ordinary
+ * (non-kernel, non-safety-floor) override files and raises a `missing-citation`
+ * finding when the `> Overrides: <rule> §<section> — <reason>` line is absent.
+ * The non-overridable-class checks (replace-on-kernel, unregistered-extend)
+ * still apply only to kernel/safety-floor files, unchanged.
+ *
  * Usage:
  *   ./scripts-run src/scripts/lint_override_kernel_guard            # report
  *   ./scripts-run src/scripts/lint_override_kernel_guard --json
@@ -101,27 +109,30 @@ export function registered_rules(text: string): Set<string> {
     return out;
 }
 
-export function audit(): OverrideRow[] {
-    if (!fs.existsSync(OVERRIDES_RULES)) return [];
-    const floor = safety_floor_ids(RULES_DIR);
-    const registered = fs.existsSync(REGISTRY)
-        ? registered_rules(fs.readFileSync(REGISTRY, 'utf-8'))
-        : new Set<string>();
+/**
+ * Violations for one override file.
+ *
+ * Kernel / safety-floor files get the full non-overridable-class check
+ * (unchanged from before this file gained an ordinary-override path): a
+ * `replace` is refused, an undeclared mode is refused, and an unregistered
+ * `extend` is refused — each in addition to the citation check every override
+ * carries.
+ *
+ * An ordinary override gets only the citation check — the non-overridable
+ * class does not apply to it — surfaced as the `missing-citation` finding
+ * class per override-system.md § Citation obligation.
+ */
+export function classify_violations(input: {
+    kernel: boolean;
+    is_floor: boolean;
+    mode: 'extend' | 'replace' | 'unknown';
+    cited: boolean;
+    is_registered: boolean;
+}): string[] {
+    const { kernel, is_floor, mode, cited, is_registered } = input;
+    const violations: string[] = [];
 
-    const rows: OverrideRow[] = [];
-    for (const name of fs.readdirSync(OVERRIDES_RULES).sort()) {
-        if (!name.endsWith('.md')) continue;
-        const rule = name.replace(/\.md$/, '');
-        const kernel = is_kernel_rule(rule);
-        const is_floor = floor.has(rule);
-        if (!kernel && !is_floor) continue; // ordinary override — not this gate's business
-
-        const text = fs.readFileSync(path.join(OVERRIDES_RULES, name), 'utf-8');
-        const mode = parse_mode(text);
-        const cited = has_citation(text);
-        const is_registered = registered.has(rule);
-
-        const violations: string[] = [];
+    if (kernel || is_floor) {
         if (mode === 'replace') {
             violations.push(
                 `\`replace\` on a ${kernel ? 'kernel' : 'safety-floor'} rule — this class may be tightened, never replaced`,
@@ -140,6 +151,39 @@ export function audit(): OverrideRow[] {
         if (!cited) {
             violations.push('missing `> Overrides: <rule> §<section> — <reason>` citation');
         }
+        return violations;
+    }
+
+    // Ordinary override — not the non-overridable class, but the citation
+    // obligation binds it too (override-system.md § Citation obligation).
+    if (!cited) {
+        violations.push(
+            'missing-citation: no `> Overrides: <rule> §<section> — <reason>` line ' +
+                '(override-system.md § Citation obligation)',
+        );
+    }
+    return violations;
+}
+
+export function audit(): OverrideRow[] {
+    if (!fs.existsSync(OVERRIDES_RULES)) return [];
+    const floor = safety_floor_ids(RULES_DIR);
+    const registered = fs.existsSync(REGISTRY)
+        ? registered_rules(fs.readFileSync(REGISTRY, 'utf-8'))
+        : new Set<string>();
+
+    const rows: OverrideRow[] = [];
+    for (const name of fs.readdirSync(OVERRIDES_RULES).sort()) {
+        if (!name.endsWith('.md')) continue;
+        const rule = name.replace(/\.md$/, '');
+        const kernel = is_kernel_rule(rule);
+        const is_floor = floor.has(rule);
+
+        const text = fs.readFileSync(path.join(OVERRIDES_RULES, name), 'utf-8');
+        const mode = parse_mode(text);
+        const cited = has_citation(text);
+        const is_registered = registered.has(rule);
+        const violations = classify_violations({ kernel, is_floor, mode, cited, is_registered });
 
         rows.push({
             rule,
@@ -161,7 +205,7 @@ function main(argv: string[]): number {
     const rows = audit();
 
     if (as_json) {
-        process.stdout.write(JSON.stringify({ kernel_overrides: rows }, null, 2) + '\n');
+        process.stdout.write(JSON.stringify({ overrides: rows }, null, 2) + '\n');
         return 0;
     }
 
@@ -169,19 +213,23 @@ function main(argv: string[]): number {
 
     if (rows.length === 0) {
         process.stdout.write(
-            `✅  override audit: 0 kernel / safety-floor overrides present ` +
+            `✅  override audit: 0 overrides present ` +
                 `(${KERNEL_RULE_IDS.length} kernel rules, none overridden)\n`,
         );
         return 0;
     }
 
+    const kernel_floor_rows = rows.filter((r) => r.kernel || r.safety_floor);
+    const ordinary_rows = rows.filter((r) => !r.kernel && !r.safety_floor);
+
     const lines: string[] = [];
     lines.push(
-        `override audit: ${rows.length} kernel / safety-floor override(s) · ` +
-            `${rows.filter((r) => r.registered).length} registered · ${bad.length} with findings`,
+        `override audit: ${rows.length} override(s) — ${kernel_floor_rows.length} kernel/safety-floor ` +
+            `(${rows.filter((r) => r.registered).length} registered), ${ordinary_rows.length} ordinary · ` +
+            `${bad.length} with findings`,
     );
     for (const r of rows) {
-        const tag = r.kernel ? 'kernel' : 'safety-floor';
+        const tag = r.kernel ? 'kernel' : r.safety_floor ? 'safety-floor' : 'ordinary';
         lines.push(`  · ${r.rule} [${tag}] mode=${r.mode} registered=${r.registered ? 'yes' : 'NO'}`);
         for (const v of r.violations) lines.push(`      ❌ ${v}`);
     }
@@ -195,7 +243,7 @@ function main(argv: string[]): number {
 
     if (strict && bad.length > 0) {
         process.stderr.write(
-            `❌  lint_override_kernel_guard: ${bad.length} override(s) violate the non-overridable class\n`,
+            `❌  lint_override_kernel_guard: ${bad.length} override(s) violate the override contract\n`,
         );
         return 1;
     }

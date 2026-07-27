@@ -305,6 +305,9 @@ tasks:
       else
         echo "  ℹ️  no agents/memory/*.yml files — skipping"
       fi
+      # Append-only guard over agents/memory/intake/*.jsonl — CI twin lives in
+      # .github/workflows/rule-backstops.yml (was fail-open: nothing invoked the flag).
+      ./scripts-run src/scripts/check_memory --append-only
 
   memory:shadow-report:
     silent: true

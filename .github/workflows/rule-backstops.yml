@@ -137,3 +137,20 @@ jobs:
 
       - name: Safety-floor rules untouched
         run: ./scripts-run src/scripts/check_safety_floor_untouched
+
+      # --- fail-open closed by road-to-enforcement-peer-disposition ----------
+      # The append-only guard over agents/memory/intake/*.jsonl existed in
+      # code and NOTHING invoked it with the flag — the check was fail-open
+      # since it shipped. On pull_request GITHUB_BASE_REF supplies the base;
+      # on push it falls back to origin/main (fetched above).
+
+      - name: Memory intake append-only (was fail-open)
+        run: ./scripts-run src/scripts/check_memory --append-only
+
+      # Governed-writes lint — direct fs writes to protected ledger/governance
+      # surfaces (claims ledger, append-only intake/audit jsonl) bypassing the
+      # atomic-write layer. Allowlist-free; zero findings was the
+      # pre-registered null when wired.
+
+      - name: Governed writes (protected surfaces)
+        run: ./scripts-run src/scripts/lint_governed_writes

@@ -88,20 +88,20 @@ trigger. A maintenance-hardening pass, not a feature sprint.
 
 ## Phase 1 — Wire the fail-open, extend the shipped lints
 
-- [ ] **Wire `check_memory --append-only`** into the workflow/taskfile
+- [x] **Wire `check_memory --append-only`** into the workflow/taskfile
   chain that guards `agents/memory/intake/*.jsonl` — the check exists in
   code and NOTHING invokes it with the flag (confirmed fail-open;
   bug-fix tier).
   *Verify:* seeded non-append edit fails the gate (red/green); the
   invoking workflow/task is named.
-- [ ] **Governed-writes lint:** static scan flagging direct write patterns
+- [x] **Governed-writes lint:** static scan flagging direct write patterns
   to protected ledger/governance surfaces (claims ledger, bench index,
   chained/append-only files) that bypass the atomic-write/hook layer;
   extends the existing lint family, allowlist-free start.
   *Verify:* seeded direct-write fixture flagged; **pre-registered null:**
   zero findings across the codebase = SUCCESS (validates existing
   hygiene), recorded as such — not wasted work.
-- [ ] **Ordinary-override citation lint:** extend the shipped
+- [x] **Ordinary-override citation lint:** extend the shipped
   kernel-override guard so the citation obligation the override contract
   already imposes on ALL overrides is linted on ordinary overrides too
   (today: doc-contract only).
@@ -110,14 +110,14 @@ trigger. A maintenance-hardening pass, not a feature sprint.
 
 ## Phase 2 — Cheap one-time measurements
 
-- [ ] **Installer drift report (measurement, not tiering):** on
+- [x] **Installer drift report (measurement, not tiering):** on
   install/update, report which framework-authoritative files were locally
   modified — non-blocking telemetry folded into the release-install E2E
   work (`road-to-credible-install.md` Phase 0 owns that harness). This
   MEASURES the deploy-tiering premise instead of building on it.
   *Verify:* seeded local modification appears in the report on a test
   install.
-- [ ] **Impossible-cycles one-time audit:** sweep for gates that require a
+- [x] **Impossible-cycles one-time audit:** sweep for gates that require a
   state another rule forbids reaching (the analysis's deadlock class);
   document findings; NOT a recurring lint (governance-on-governance)
   unless a cycle is actually found.
@@ -126,13 +126,13 @@ trigger. A maintenance-hardening pass, not a feature sprint.
 
 ## Phase 3 — Intake honesty records
 
-- [ ] **This disposition is the record** — the shipped table above +
+- [x] **This disposition is the record** — the shipped table above +
   rejected/deferred triggers make the intake auditable; add one line to
   the enforcement/claims docs where the analysis's two honest caveats
   live on: the `exec:` workflow path-filter and the host-native-spawn
   floor gap are ACCEPTED, documented limitations, not silent ones.
   *Verify:* both caveats stated on the relevant doc surfaces.
-- [ ] **"What you get" table format as adoption input:** every row names a
+- [x] **"What you get" table format as adoption input:** every row names a
   PREVENTED FAILURE MODE (not a feature), every cell backed by a
   resolving ledger entry — filed as input to the adoption roadmap's
   exhibit set (`road-to-adoption-without-narrative-debt.md`), where the

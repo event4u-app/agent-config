@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    classify_violations,
     has_citation,
     parse_mode,
     registered_rules,
@@ -92,5 +93,180 @@ describe('is_kernel_rule — the class boundary', () => {
 
     it('holds the set at exactly 9', () => {
         expect(KERNEL_RULE_IDS.length).toBe(9);
+    });
+});
+
+describe('classify_violations — kernel / safety-floor path (unchanged behavior)', () => {
+    it('refuses `replace` on a kernel rule', () => {
+        const v = classify_violations({
+            kernel: true,
+            is_floor: false,
+            mode: 'replace',
+            cited: true,
+            is_registered: false,
+        });
+        expect(v).toEqual(['`replace` on a kernel rule — this class may be tightened, never replaced']);
+    });
+
+    it('refuses `replace` on a safety-floor rule (distinct wording)', () => {
+        const v = classify_violations({
+            kernel: false,
+            is_floor: true,
+            mode: 'replace',
+            cited: true,
+            is_registered: false,
+        });
+        expect(v).toEqual([
+            '`replace` on a safety-floor rule — this class may be tightened, never replaced',
+        ]);
+    });
+
+    it('refuses an undeclared mode', () => {
+        const v = classify_violations({
+            kernel: true,
+            is_floor: false,
+            mode: 'unknown',
+            cited: true,
+            is_registered: false,
+        });
+        expect(v).toEqual([
+            'no readable `**Mode:**` header — an override on this class must declare its mode',
+        ]);
+    });
+
+    it('refuses an unregistered `extend`', () => {
+        const v = classify_violations({
+            kernel: true,
+            is_floor: false,
+            mode: 'extend',
+            cited: true,
+            is_registered: false,
+        });
+        expect(v).toEqual([
+            '`extend` on a kernel rule with no entry in agents/overrides/kernel-exceptions.yml',
+        ]);
+    });
+
+    it('accepts a registered `extend` with a citation — clean', () => {
+        const v = classify_violations({
+            kernel: true,
+            is_floor: false,
+            mode: 'extend',
+            cited: true,
+            is_registered: true,
+        });
+        expect(v).toEqual([]);
+    });
+
+    it('still flags a missing citation on a kernel rule (existing class, unchanged wording)', () => {
+        const v = classify_violations({
+            kernel: true,
+            is_floor: false,
+            mode: 'extend',
+            cited: false,
+            is_registered: true,
+        });
+        expect(v).toEqual(['missing `> Overrides: <rule> §<section> — <reason>` citation']);
+    });
+});
+
+describe('classify_violations — ordinary override (new: citation obligation now linted)', () => {
+    it('flags an ordinary override missing the citation line', () => {
+        const v = classify_violations({
+            kernel: false,
+            is_floor: false,
+            mode: 'extend',
+            cited: false,
+            is_registered: false,
+        });
+        expect(v).toHaveLength(1);
+        expect(v[0]).toContain('missing-citation');
+    });
+
+    it('does not apply the non-overridable-class checks to an ordinary `replace`', () => {
+        // Replace is legitimate for an ordinary override — only kernel /
+        // safety-floor files are non-replaceable.
+        const v = classify_violations({
+            kernel: false,
+            is_floor: false,
+            mode: 'replace',
+            cited: true,
+            is_registered: false,
+        });
+        expect(v).toEqual([]);
+    });
+
+    it('accepts an ordinary override with the citation line — clean', () => {
+        const v = classify_violations({
+            kernel: false,
+            is_floor: false,
+            mode: 'extend',
+            cited: true,
+            is_registered: false,
+        });
+        expect(v).toEqual([]);
+    });
+});
+
+describe('has_citation — ordinary-override fixture text (red/green)', () => {
+    it('red: an ordinary override file with no `> Overrides: …` line', () => {
+        const text = [
+            '# Override: Rule — some-ordinary-rule',
+            '',
+            '> Override for `.augment/rules/some-ordinary-rule.md`',
+            '',
+            '---',
+            '**Mode:** `extend`',
+            '**Original:** `.augment/rules/some-ordinary-rule.md`',
+            '---',
+            '',
+            '## Project-specific addition',
+            '',
+            'Some prose with no citation line at all.',
+            '',
+        ].join('\n');
+        expect(has_citation(text)).toBe(false);
+        expect(
+            classify_violations({
+                kernel: false,
+                is_floor: false,
+                mode: parse_mode(text),
+                cited: has_citation(text),
+                is_registered: false,
+            }),
+        ).toEqual([
+            'missing-citation: no `> Overrides: <rule> §<section> — <reason>` line ' +
+                '(override-system.md § Citation obligation)',
+        ]);
+    });
+
+    it('green: the same fixture with the citation line added', () => {
+        const text = [
+            '# Override: Rule — some-ordinary-rule',
+            '',
+            '> Override for `.augment/rules/some-ordinary-rule.md`',
+            '',
+            '---',
+            '**Mode:** `extend`',
+            '**Original:** `.augment/rules/some-ordinary-rule.md`',
+            '---',
+            '',
+            '> Overrides: some-ordinary-rule §Some Section — project needs a stricter check here.',
+            '',
+            '## Project-specific addition',
+            '',
+            'Some prose.',
+            '',
+        ].join('\n');
+        expect(has_citation(text)).toBe(true);
+        expect(
+            classify_violations({
+                kernel: false,
+                is_floor: false,
+                mode: parse_mode(text),
+                cited: has_citation(text),
+                is_registered: false,
+            }),
+        ).toEqual([]);
     });
 });
