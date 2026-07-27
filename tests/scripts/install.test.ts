@@ -28,9 +28,14 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as inst from '../../src/scripts/install.js';
+
+// Real repo root — used to exercise the scoped-projection helpers against
+// the real `src/config/discovery/packs.yml` and `agent-settings.template.yml`.
+const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 // Resolve TSX_BIN to an ABSOLUTE path: golden-parity runs spawn with cwd set
 // to a temp dir, and a relative binary path would resolve against that cwd
@@ -298,6 +303,325 @@ describe('install — team-mode setup hint', () => {
                 'ai_team:\n  suppress_setup_hint: false\n',
             );
             expect(inst._team_setup_hint_line(root)).not.toBeNull();
+        });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Scoped-projection prune (road-to-credible-install Phase 2 default flip) —
+// active-pack-set computation, prune predicate, mode resolution, fail-safe.
+// ---------------------------------------------------------------------------
+
+describe('install — scoped-projection prune (road-to-credible-install Phase 2)', () => {
+    describe('_compute_active_pack_ids', () => {
+        it('selects packs whose workspaces intersect engineering + agent-config-maintainer', () => {
+            const packs: inst.PackRecord[] = [
+                { id: 'engineering-base', workspaces: ['engineering'], requires: [] },
+                { id: 'meta', workspaces: ['agent-config-maintainer'], requires: [] },
+                { id: 'ai-video', workspaces: ['small-business'], requires: [] },
+            ];
+            const active = inst._compute_active_pack_ids(packs, []);
+            expect(active.has('engineering-base')).toBe(true);
+            expect(active.has('meta')).toBe(true);
+            expect(active.has('ai-video')).toBe(false);
+        });
+
+        it('expands the requires graph transitively over active packs only', () => {
+            const packs: inst.PackRecord[] = [
+                { id: 'engineering-base', workspaces: ['engineering'], requires: [] },
+                { id: 'php', workspaces: ['engineering'], requires: ['engineering-base'] },
+                { id: 'laravel', workspaces: ['engineering'], requires: ['php', 'engineering-base'] },
+                // Required transitively by an engineering pack, so it must
+                // activate even though `founder` alone would not qualify it.
+                { id: 'frontend-design', workspaces: ['engineering'], requires: ['engineering-base'] },
+                // Reachable from NOTHING active — must stay excluded.
+                { id: 'brand', workspaces: ['founder'], requires: ['frontend-design'] },
+            ];
+            const active = inst._compute_active_pack_ids(packs, []);
+            expect(active.has('laravel')).toBe(true);
+            expect(active.has('php')).toBe(true);
+            expect(active.has('engineering-base')).toBe(true);
+            expect(active.has('frontend-design')).toBe(true);
+            expect(active.has('brand')).toBe(false);
+        });
+
+        it('honors the runtime.active_packs overlay and its own requires closure', () => {
+            const packs: inst.PackRecord[] = [
+                { id: 'finance-basic', workspaces: ['finance', 'founder'], requires: [] },
+                { id: 'finance-advanced', workspaces: ['finance'], requires: ['finance-basic'] },
+            ];
+            const active = inst._compute_active_pack_ids(packs, ['finance-advanced']);
+            expect(active.has('finance-advanced')).toBe(true);
+            expect(active.has('finance-basic')).toBe(true);
+        });
+    });
+
+    describe('_load_packs_registry', () => {
+        it('parses the real packs.yml, resolving requires + the requires_hint fallback', () => {
+            const packs = inst._load_packs_registry(REPO_ROOT);
+            const byId = new Map(packs.map((p) => [p.id, p]));
+            expect(byId.get('engineering-base')?.workspaces).toContain('engineering');
+            expect(byId.get('laravel')?.requires).toEqual(expect.arrayContaining(['php', 'engineering-base']));
+            expect(byId.get('meta')?.workspaces).toContain('agent-config-maintainer');
+        });
+
+        function mkPackageRoot(): string {
+            return fs.mkdtempSync(path.join(os.tmpdir(), 'packs-registry-'));
+        }
+        function writePacksYaml(root: string, body: string): void {
+            const dir = path.join(root, 'src', 'config', 'discovery');
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, 'packs.yml'), body, 'utf-8');
+        }
+
+        it('falls back to requires_hint when requires is absent', () => {
+            const root = mkPackageRoot();
+            try {
+                writePacksYaml(
+                    root,
+                    '- id: a\n  workspaces: [engineering]\n' +
+                        '- id: b\n  workspaces: [engineering]\n  requires_hint: [a]\n',
+                );
+                const packs = inst._load_packs_registry(root);
+                expect(packs.find((p) => p.id === 'b')?.requires).toEqual(['a']);
+            } finally {
+                fs.rmSync(root, { recursive: true, force: true });
+            }
+        });
+
+        it('throws when packs.yml is missing (upstream catch restores the full tree)', () => {
+            const root = mkPackageRoot();
+            try {
+                expect(() => inst._load_packs_registry(root)).toThrow();
+            } finally {
+                fs.rmSync(root, { recursive: true, force: true });
+            }
+        });
+
+        it('throws when packs.yml does not parse to a list', () => {
+            const root = mkPackageRoot();
+            try {
+                writePacksYaml(root, 'not_a_list: true\n');
+                expect(() => inst._load_packs_registry(root)).toThrow();
+            } finally {
+                fs.rmSync(root, { recursive: true, force: true });
+            }
+        });
+
+        it('throws on unparseable YAML', () => {
+            const root = mkPackageRoot();
+            try {
+                writePacksYaml(root, 'foo: [1, 2\n');
+                expect(() => inst._load_packs_registry(root)).toThrow();
+            } finally {
+                fs.rmSync(root, { recursive: true, force: true });
+            }
+        });
+    });
+
+    describe('_prune_scoped_modules — prune predicate', () => {
+        function mkDeployTree(): { root: string; paths: string[] } {
+            const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scoped-prune-'));
+            const write = (rel: string, content: string): void => {
+                const full = path.join(root, rel);
+                fs.mkdirSync(path.dirname(full), { recursive: true });
+                fs.writeFileSync(full, content, 'utf-8');
+            };
+            write(
+                path.join('skills', 'git-workflow', 'SKILL.md'),
+                '---\nname: git-workflow\npacks:\n  - engineering-base\n---\n# git-workflow\n',
+            );
+            write(
+                path.join('skills', 'video-director', 'SKILL.md'),
+                '---\nname: video-director\npacks:\n  - ai-video\n---\n# video-director\n',
+            );
+            write(
+                path.join('skills', 'generic-helper', 'SKILL.md'),
+                '---\nname: generic-helper\n---\n# generic-helper (untagged — core/shared)\n',
+            );
+            write(path.join('commands', 'feature.md'), '---\npack: engineering-base\n---\n# /feature\n');
+            write(path.join('commands', 'video-scene.md'), '---\npack: ai-video\n---\n# /video:scene\n');
+            write(path.join('commands', 'help.md'), '---\nname: help\n---\n# /help (untagged)\n');
+            const paths = [
+                path.join(root, 'skills', 'git-workflow', 'SKILL.md'),
+                path.join(root, 'skills', 'video-director', 'SKILL.md'),
+                path.join(root, 'skills', 'generic-helper', 'SKILL.md'),
+                path.join(root, 'commands', 'feature.md'),
+                path.join(root, 'commands', 'video-scene.md'),
+                path.join(root, 'commands', 'help.md'),
+            ];
+            return { root, paths };
+        }
+
+        it('prunes tagged-non-active artefacts, keeps tagged-active + untagged', () => {
+            const { root, paths } = mkDeployTree();
+            try {
+                const deploy_results: Record<string, inst.DeployResult> = {
+                    toolA: [paths.length, 0, 'deployed', paths],
+                };
+                const active = new Set(['engineering-base']);
+                const [pruned, adjusted] = inst._prune_scoped_modules(deploy_results, active);
+
+                expect(pruned).toBe(2); // video-director/SKILL.md + video-scene.md
+
+                expect(fs.existsSync(path.join(root, 'skills', 'video-director'))).toBe(false);
+                expect(fs.existsSync(path.join(root, 'commands', 'video-scene.md'))).toBe(false);
+
+                expect(fs.existsSync(path.join(root, 'skills', 'git-workflow', 'SKILL.md'))).toBe(true);
+                expect(fs.existsSync(path.join(root, 'skills', 'generic-helper', 'SKILL.md'))).toBe(true);
+                expect(fs.existsSync(path.join(root, 'commands', 'feature.md'))).toBe(true);
+                expect(fs.existsSync(path.join(root, 'commands', 'help.md'))).toBe(true);
+
+                const kept = adjusted['toolA']?.[3] ?? [];
+                expect(kept).not.toContain(path.join(root, 'skills', 'video-director', 'SKILL.md'));
+                expect(kept).not.toContain(path.join(root, 'commands', 'video-scene.md'));
+                expect(kept).toContain(path.join(root, 'skills', 'git-workflow', 'SKILL.md'));
+                expect(kept).toContain(path.join(root, 'skills', 'generic-helper', 'SKILL.md'));
+                expect(kept).toContain(path.join(root, 'commands', 'help.md'));
+                expect(adjusted['toolA']?.[0]).toBe(paths.length - 2);
+            } finally {
+                fs.rmSync(root, { recursive: true, force: true });
+            }
+        });
+    });
+
+    describe('_resolve_scoped_projection — mode resolution', () => {
+        function withHome(fn: (home: string) => void): void {
+            const base = fs.mkdtempSync(path.join(os.tmpdir(), 'scoped-mode-'));
+            const home = path.join(base, 'e4u-home');
+            const prev = process.env['EVENT4U_CONFIG_HOME'];
+            process.env['EVENT4U_CONFIG_HOME'] = home;
+            try {
+                fn(home);
+            } finally {
+                if (prev === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+                else process.env['EVENT4U_CONFIG_HOME'] = prev;
+                fs.rmSync(base, { recursive: true, force: true });
+            }
+        }
+
+        it('no global settings file yet → falls back to the packaged template default (scoped)', () => {
+            withHome(() => {
+                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
+                expect(mode).toBe('scoped');
+            });
+        });
+
+        it('existing settings file missing projection.mode → legacy-all (upgrade-compat)', () => {
+            withHome((home) => {
+                fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
+                fs.writeFileSync(path.join(home, 'settings', '.agent-settings.yml'), 'rule_loading_tier: minimal\n');
+                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
+                expect(mode).toBe('legacy-all');
+            });
+        });
+
+        it('existing settings file with projection.mode: legacy-all → legacy-all', () => {
+            withHome((home) => {
+                fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
+                fs.writeFileSync(
+                    path.join(home, 'settings', '.agent-settings.yml'),
+                    'projection:\n  mode: legacy-all\n',
+                );
+                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
+                expect(mode).toBe('legacy-all');
+            });
+        });
+
+        it('existing settings file with projection.mode: scoped → scoped, honors runtime.active_packs', () => {
+            withHome((home) => {
+                fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
+                fs.writeFileSync(
+                    path.join(home, 'settings', '.agent-settings.yml'),
+                    'projection:\n  mode: scoped\nruntime:\n  active_packs:\n    - ai-video\n',
+                );
+                const { mode, active_packs } = inst._resolve_scoped_projection(REPO_ROOT);
+                expect(mode).toBe('scoped');
+                expect(active_packs).toEqual(['ai-video']);
+            });
+        });
+
+        it('legacy flat global settings file (no settings/ subdir) is honored as a fallback', () => {
+            withHome((home) => {
+                fs.mkdirSync(home, { recursive: true });
+                fs.writeFileSync(path.join(home, '.agent-settings.yml'), 'projection:\n  mode: legacy-all\n');
+                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
+                expect(mode).toBe('legacy-all');
+            });
+        });
+
+        it('unreadable/corrupt settings YAML → legacy-all (fail-safe, never crash)', () => {
+            withHome((home) => {
+                fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
+                fs.writeFileSync(path.join(home, 'settings', '.agent-settings.yml'), 'foo: [1, 2\n');
+                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
+                expect(mode).toBe('legacy-all');
+            });
+        });
+    });
+
+    describe('end-to-end sanity — fabricated deploy tree over _prune_modules_by', () => {
+        // Full `install_global()` sandboxing (a real deploy + lockfile write +
+        // per-tool anchors) is out of scope for a unit test — see
+        // tests/fixtures/installer-e2e/ for the real container e2e. This
+        // covers the SAME assertion the roadmap's Step D asks for
+        // (a fresh scoped install ships an engineering skill + an untagged
+        // core skill, and drops an ai-video/fun-only skill) at the
+        // `_prune_modules_by`/`_prune_scoped_modules` level against a
+        // fabricated deploy_results over a temp tree, using the REAL active-
+        // pack-set computation (`_load_packs_registry` + `_compute_active_pack_ids`
+        // against the actual packs.yml).
+        it('a fresh scoped install keeps engineering + untagged skills, drops ai-video/fun-only ones', () => {
+            const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scoped-e2e-'));
+            try {
+                const write = (rel: string, content: string): void => {
+                    const full = path.join(root, rel);
+                    fs.mkdirSync(path.dirname(full), { recursive: true });
+                    fs.writeFileSync(full, content, 'utf-8');
+                };
+                write(
+                    path.join('skills', 'systematic-debugging', 'SKILL.md'),
+                    '---\nname: systematic-debugging\npacks:\n  - engineering-base\n---\n# systematic-debugging\n',
+                );
+                write(
+                    path.join('skills', 'a-generic-core-skill', 'SKILL.md'),
+                    '---\nname: a-generic-core-skill\n---\n# a-generic-core-skill (untagged — core)\n',
+                );
+                write(
+                    path.join('skills', 'video-director', 'SKILL.md'),
+                    '---\nname: video-director\npacks:\n  - ai-video\n---\n# video-director\n',
+                );
+                write(
+                    path.join('skills', 'prediction-pool-optimizer', 'SKILL.md'),
+                    '---\nname: prediction-pool-optimizer\npacks:\n  - fun\n---\n# prediction-pool-optimizer\n',
+                );
+                const paths = [
+                    path.join(root, 'skills', 'systematic-debugging', 'SKILL.md'),
+                    path.join(root, 'skills', 'a-generic-core-skill', 'SKILL.md'),
+                    path.join(root, 'skills', 'video-director', 'SKILL.md'),
+                    path.join(root, 'skills', 'prediction-pool-optimizer', 'SKILL.md'),
+                ];
+                const deploy_results: Record<string, inst.DeployResult> = {
+                    'claude-code': [paths.length, 0, 'deployed', paths],
+                };
+
+                const registry = inst._load_packs_registry(REPO_ROOT);
+                const active_ids = inst._compute_active_pack_ids(registry, []);
+                const [, adjusted] = inst._prune_scoped_modules(deploy_results, active_ids);
+
+                expect(fs.existsSync(path.join(root, 'skills', 'systematic-debugging', 'SKILL.md'))).toBe(true);
+                expect(fs.existsSync(path.join(root, 'skills', 'a-generic-core-skill', 'SKILL.md'))).toBe(true);
+                expect(fs.existsSync(path.join(root, 'skills', 'video-director'))).toBe(false);
+                expect(fs.existsSync(path.join(root, 'skills', 'prediction-pool-optimizer'))).toBe(false);
+
+                const kept = adjusted['claude-code']?.[3] ?? [];
+                expect(kept).toContain(path.join(root, 'skills', 'systematic-debugging', 'SKILL.md'));
+                expect(kept).toContain(path.join(root, 'skills', 'a-generic-core-skill', 'SKILL.md'));
+                expect(kept).not.toContain(path.join(root, 'skills', 'video-director', 'SKILL.md'));
+                expect(kept).not.toContain(path.join(root, 'skills', 'prediction-pool-optimizer', 'SKILL.md'));
+            } finally {
+                fs.rmSync(root, { recursive: true, force: true });
+            }
         });
     });
 });

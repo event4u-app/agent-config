@@ -1,3 +1,23 @@
+# Migrating past 9.8 — scoped projection is the default for NEW installs
+
+`projection.mode` in the settings template flipped from `legacy-all` to
+`scoped` (road-to-credible-install Phase 2). What this means:
+
+- **Fresh installs** project only the engineering surface: the active
+  profile's packs (default `developer` → `engineering-base` + always-on
+  `meta`), expanded over the `requires` graph. Creative/media/fun packs are
+  opt-in.
+- **Existing installs are untouched.** Your `.agent-settings.yml` is never
+  rewritten on update, and a *missing* `projection.mode` key still means
+  `legacy-all` — upgrades preserve your prior mode.
+- **Full catalog back in one step:** set `projection.mode: legacy-all` in
+  `.agent-settings.yml` (or pick a broader profile / add packs via
+  `agent-config use --profile=<id>` and the `runtime.active_packs` overlay).
+
+Escalation rule (pre-registered): if this flip breaks a documented consumer
+contract or CI gate, the flip stops and goes back to a council round
+(potential lock-revisit) instead of being forced.
+
 # Migrating off the Claude Code marketplace plugin (single-surface model)
 
 The marketplace plugin for Claude Code is deprecated. The npx/npm global
