@@ -14,10 +14,15 @@ import { fileURLToPath } from 'node:url';
 import { main } from './server.js';
 
 // Mirror `if __name__ == "__main__"`: run only when invoked directly,
-// not when imported. Compare the resolved module path to argv[1].
+// not when imported. Compare the resolved module path to argv[1]. Under
+// the esbuild bundle (dist/mcp/server.mjs) the build banner detects the
+// direct invocation before any module code runs, sets the global marker,
+// and rewrites argv[1] to a sentinel (so inlined modules' CLI-entry
+// guards cannot false-fire) — the marker is the bundle's signal here.
 const _selfPath = fileURLToPath(import.meta.url);
 const _invokedDirectly =
-    process.argv[1] !== undefined && path.resolve(process.argv[1]) === path.resolve(_selfPath);
+    (globalThis as { __AC_MCP_BUNDLE_DIRECT?: boolean }).__AC_MCP_BUNDLE_DIRECT === true ||
+    (process.argv[1] !== undefined && path.resolve(process.argv[1]) === path.resolve(_selfPath));
 
 if (_invokedDirectly) {
     main();

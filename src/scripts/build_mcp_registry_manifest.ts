@@ -45,6 +45,7 @@ interface PathConfig {
     OUT_MANIFEST: string;
     OUT_ROW_MD: string;
     OUT_CF_JSON: string;
+    OUT_SERVER_JSON: string;
 }
 
 function _deriveConfig(root: string): PathConfig {
@@ -58,6 +59,7 @@ function _deriveConfig(root: string): PathConfig {
         OUT_MANIFEST: path.join(outDir, 'registry-manifest.json'),
         OUT_ROW_MD: path.join(outDir, 'awesome-mcp-servers.row.md'),
         OUT_CF_JSON: path.join(outDir, 'mcp-cloudflare-catalogue.json'),
+        OUT_SERVER_JSON: path.join(outDir, 'server.json'),
     };
 }
 
@@ -85,6 +87,17 @@ const REGISTRIES_SEED: ReadonlyArray<JsonObject> = [
         listing_format: 'json-entry',
         submission_url: 'https://github.com/cloudflare/mcp-server-cloudflare',
         rendered_payload: 'dist/mcp/mcp-cloudflare-catalogue.json',
+    },
+    // Official MCP Registry (schema-bump #3 per docs/distribution/
+    // mcp-submission-checklist.md § Submitting to a new registry;
+    // road-to-credible-install Phase 3). Payload is the registry's
+    // server.json; submission itself runs via `mcp-publisher` (human-gated).
+    {
+        id: 'mcp-official-registry',
+        label: 'Official MCP Registry (registry.modelcontextprotocol.io)',
+        listing_format: 'server-json',
+        submission_url: 'https://registry.modelcontextprotocol.io',
+        rendered_payload: 'dist/mcp/server.json',
     },
 ];
 
@@ -195,6 +208,37 @@ function _render_cf_json(m: JsonObject): string {
     return pyJsonDumps(payload, { indent: 2, sortKeys: true }) + '\n';
 }
 
+/**
+ * Official MCP Registry server.json (registry.modelcontextprotocol.io).
+ * Minimal valid shape per the registry's server.schema.json: reverse-DNS
+ * name (matches package.json `mcpName` + the README `mcp-name:` marker),
+ * the npm package pointer, and the stdio transport. The version is asserted
+ * equal to package.json.version by lint_mcp_registry_manifest (CI).
+ */
+function _render_server_json(m: JsonObject): string {
+    const pkg = m['package'] as JsonObject;
+    const version = pkg['version'] as string;
+    const payload: JsonObject = {
+        $schema: 'https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json',
+        name: 'io.github.event4u-app/agent-config',
+        description: pkg['description'],
+        repository: {
+            url: pkg['repository'],
+            source: 'github',
+        },
+        version,
+        packages: [
+            {
+                registryType: 'npm',
+                identifier: '@event4u/agent-config',
+                version,
+                transport: { type: 'stdio' },
+            },
+        ],
+    };
+    return pyJsonDumps(payload, { indent: 2, sortKeys: true }) + '\n';
+}
+
 interface ParsedArgs {
     write: boolean;
     strict: boolean;
@@ -236,11 +280,13 @@ export function main(argv: readonly string[]): number {
     const manifest_text = pyJsonDumps(manifest, { indent: 2, sortKeys: true }) + '\n';
     const row_md = _render_row_md(manifest);
     const cf_json = _render_cf_json(manifest);
+    const server_json = _render_server_json(manifest);
 
     const outputs: Array<[string, string]> = [
         [_config.OUT_MANIFEST, manifest_text],
         [_config.OUT_ROW_MD, row_md],
         [_config.OUT_CF_JSON, cf_json],
+        [_config.OUT_SERVER_JSON, server_json],
     ];
     const changed = outputs.filter(
         ([p, t]) => !_isFile(p) || fs.readFileSync(p, 'utf-8') !== t,

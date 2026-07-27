@@ -35,8 +35,9 @@ the submission shape evolves; this file accumulates history.
 | # | Registry | Submission shape | Status | PR / form URL | Date | Maintainer notes |
 |---|---|---|---|---|---|---|
 | 1 | `punkpeye/awesome-mcp-servers` | One-line entry under agent-tooling section; PR via `scripts/mcp_registry_submit.sh` | `submitted` | <https://github.com/punkpeye/awesome-mcp-servers/pull/9607> | 2026-07-07 | PR opened via the submit script (two script bugs fixed on the way: idempotent upstream remote, `--head OWNER:branch` format). Awaiting upstream review. |
-| 2 | `mcp.so` | Directory form submission (web form, no programmatic API) | `pending` | — | — | Form URL: <https://mcp.so/>. Submission shape: same one-line entry, paste into the form's `description` field. |
-| 3 | `mcpservers.org` | Directory form submission (web form, verify URL at submission time) | `pending` | — | — | Form URL: <https://mcpservers.org/>. Submission shape: one-line entry; check the site is live before posting. |
+| 2 | `mcp.so` | Directory form submission (web form, no programmatic API) | `pending` | — | — | Form URL: <https://mcp.so/>. Submission shape: same one-line entry, paste into the form's `description` field. **Concrete blocker (recorded 2026-07-27):** web-form submission is an outward-facing human action (Hard Floor) — everything stageable is staged; the maintainer submits the form. |
+| 3 | `mcpservers.org` | Directory form submission (web form, verify URL at submission time) | `pending` | — | — | Form URL: <https://mcpservers.org/>. Submission shape: one-line entry; check the site is live before posting. **Concrete blocker (recorded 2026-07-27):** same human form-submission gate as row 2. |
+| 4 | Official MCP Registry (`registry.modelcontextprotocol.io`) | `server.json` publish via `mcp-publisher` CLI (GitHub-auth'd) | `pending` | — | — | Paperwork complete 2026-07-27 (road-to-credible-install Phase 3): `mcpName` in package.json, `mcp-name:` README marker, `dist/mcp/server.json` emitted by `build:mcp-manifest` (schema bumped to 3 registries per `mcp-submission-checklist.md`), version-equality + name-equality gated in `lint_mcp_registry_manifest`. **Concrete blocker:** `mcp-publisher login github && mcp-publisher publish` needs the maintainer's interactive GitHub auth (human-gated). |
 
 ## How to update a row
 

@@ -126,13 +126,25 @@ describe('tools — allowlist + registry', () => {
         expect(line).toContain('lint_skills');
     });
 
-    it('every catalog stub is marked as a stub', () => {
-        const cache = new ToolCache();
+    it('every catalog stub is marked as a stub (explicit stub registry)', () => {
+        // ADR-132: the DEFAULT registry no longer carries stubs; the
+        // envelope machinery stays testable via an explicit registry
+        // (the cloud packer still consumes CATALOG_STUBS).
+        const cache = new ToolCache({ ...ALLOWLIST, ...CATALOG_STUBS });
         for (const name of STUB_NAMES) {
             expect(cache.is_stub(name)).toBe(true);
         }
         expect(cache.is_stub('lint_skills')).toBe(false);
         expect(cache.is_stub('nope')).toBe(false);
+    });
+
+    it('ADR-132: the default registry carries NO stubs on the wire', () => {
+        const cache = new ToolCache();
+        expect(new Set(cache.names())).toEqual(new Set(Object.keys(ALLOWLIST)));
+        for (const name of STUB_NAMES) {
+            expect(cache.is_stub(name)).toBe(false);
+            expect(cache.get(name)).toBeNull();
+        }
     });
 });
 
@@ -146,10 +158,17 @@ describe('tools — dispatch', () => {
         await expect(cache.dispatch('nope', {})).rejects.toThrow(/Unknown tool/);
     });
 
-    it('stub dispatch returns the not_implemented envelope', async () => {
+    it('a stub name is an unknown tool on the default wire (ADR-132)', async () => {
+        const cache = new ToolCache();
+        await expect(cache.dispatch('run_quality_checks', { tool: 'x' })).rejects.toThrow(
+            /Unknown tool/,
+        );
+    });
+
+    it('stub dispatch returns the not_implemented envelope (explicit stub registry)', async () => {
         // `run_quality_checks` is still a catalog stub after the Phase 5
         // pilot cut (shell-exec tier — not in the 2026-07-07 council cut).
-        const cache = new ToolCache();
+        const cache = new ToolCache({ ...ALLOWLIST, ...CATALOG_STUBS });
         const result = await cache.dispatch('run_quality_checks', {
             tool: 'x',
         });
@@ -327,9 +346,9 @@ describe('tools — dispatch telemetry', () => {
         expect(records[0]!.transport).toBe('stdio');
     });
 
-    it('logs stub for a catalog entry', async () => {
+    it('logs stub for a catalog entry (explicit stub registry)', async () => {
         const root = tmp();
-        const cache = new ToolCache();
+        const cache = new ToolCache({ ...ALLOWLIST, ...CATALOG_STUBS });
         await cache.dispatch(
             'skill_trigger_eval',
             { message: 'hello' },
@@ -353,7 +372,7 @@ describe('tools — dispatch telemetry', () => {
 
     it('records carry the five-field envelope, no payload body', async () => {
         const root = tmp();
-        const cache = new ToolCache();
+        const cache = new ToolCache({ ...ALLOWLIST, ...CATALOG_STUBS });
         await cache.dispatch(
             'skill_trigger_eval',
             { message: 'secret', context: 'secret' },
@@ -818,27 +837,42 @@ describe('tools — council_estimate', () => {
 // ----------------------------------------------------------------------
 
 describe('golden structure — registry + envelopes', () => {
-    it('REGISTRY is the disjoint union of ALLOWLIST and CATALOG_STUBS', () => {
+    it('REGISTRY carries the implemented tools only; stubs stay catalog-side (ADR-132)', () => {
         const allow = Object.keys(ALLOWLIST).sort();
         const stubs = [...STUB_NAMES].sort();
         expect(allow.filter((n) => stubs.includes(n))).toEqual([]);
-        expect(Object.keys(REGISTRY).sort()).toEqual([...allow, ...stubs].sort());
+        expect(Object.keys(REGISTRY).sort()).toEqual(allow);
+        expect(stubs.length).toBeGreaterThan(0); // catalog documentation surface intact
     });
 
     it('to_mcp_tool_meta emits exactly the wire envelope for every allowlist tool', () => {
         for (const [name, tool] of Object.entries(ALLOWLIST)) {
             const meta = to_mcp_tool_meta(tool);
-            expect(Object.keys(meta).sort()).toEqual(['description', 'inputSchema', 'name']);
+            // Phase 3 of road-to-credible-install: every implemented tool
+            // carries an honest `annotations.readOnlyHint` derived from its
+            // own `side_effect` — never a hand-authored duplicate.
+            expect(Object.keys(meta).sort()).toEqual(['annotations', 'description', 'inputSchema', 'name']);
             expect(meta.name).toBe(name);
             expect((meta.description as string).trim()).toBeTruthy();
             expect(meta.inputSchema).toEqual(tool.input_schema);
+            const annotations = meta.annotations as Record<string, unknown>;
+            expect(typeof annotations.readOnlyHint).toBe('boolean');
+            expect(annotations.readOnlyHint).toBe(tool.side_effect === 'ro');
             // Canonical JSON round-trip is lossless (wire-safe values only).
             expect(canonical(meta)).toEqual(JSON.parse(JSON.stringify(meta)));
         }
     });
 
+    it('to_mcp_tool_meta never annotates a stub tool (0% of stubs carry annotations)', () => {
+        for (const name of STUB_NAMES) {
+            const tool = CATALOG_STUBS[name]!;
+            const meta = to_mcp_tool_meta(tool);
+            expect(meta).not.toHaveProperty('annotations');
+        }
+    });
+
     it('stub dispatch envelope is deterministic across roots', async () => {
-        const cache = new ToolCache();
+        const cache = new ToolCache({ ...ALLOWLIST, ...CATALOG_STUBS });
         const first = await cache.dispatch('compile_router', {}, tmp());
         const second = await cache.dispatch('compile_router', {}, tmp());
         expect(canonical(first)).toEqual(canonical(second));

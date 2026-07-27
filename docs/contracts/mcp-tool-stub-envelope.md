@@ -33,12 +33,26 @@ per-tool `implemented_on` metadata.
   "description": "<≤500 chars; agent-facing>",
   "side_effect": "ro | fs-write | shell",
   "implemented_on": ["stdio"],
-  "input_schema": { "type": "object", "...": "JSON Schema draft-7" }
+  "input_schema": { "type": "object", "...": "JSON Schema draft-7" },
+  "annotations": { "readOnlyHint": true }
 }
 ```
 
 `implemented_on` lists transports where a real handler is wired;
-missing transports return the envelope.
+missing transports return the envelope. `annotations` is optional and
+present only on implemented entries (Phase 3 of
+road-to-credible-install) — honest MCP tool-behavior hints derived
+from `side_effect`, surfaced on `tools/list` (`readOnlyHint: true` for
+`ro`, `false` for `fs-write` / `shell`). A stub entry's `description`
+always starts with the literal marker `[stub — implemented on
+demand] ` so a client can tell a discovery placeholder from a real
+tool without cross-checking `implemented_on`.
+
+**Generated, never hand-edited.** `consumer_tool_catalog.json` is
+produced by `src/scripts/build_mcp_catalog.ts --write` from the tool
+registry (`ALLOWLIST` in `scripts/mcp_server/tools.ts` for implemented
+tools; `STUB_TOOLS` in `scripts/mcp_server/tool_catalog_source.ts` for
+discovery-only stubs) — `--strict` fails CI on any drift.
 
 ## Envelope wire shape
 
