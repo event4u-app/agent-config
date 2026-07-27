@@ -50,7 +50,10 @@ Locally the gate is read-only and reports `UNVERIFIED — re-execution is CI-onl
 skipped locally`; it never runs a command in a consumer's checkout. The static
 half — is the pointer well-formed, is the command allowlisted — is checked
 everywhere, because a bad pointer is a defect in the ledger rather than a
-property of the machine.
+property of the machine. **Accepted limitation (documented, not silent):** the
+re-executing workflow is path-filtered to claims-adjacent files, so a change
+elsewhere in the tree does not re-trigger re-execution — an `exec:`-backed
+claim is re-derived when the claims surface moves, not on every commit.
 
 **What `exec:` cannot cover.** Only claims whose exit code *is* the verdict. A
 figure resting on a paid model run, a stochastic benchmark, or a prose contract
