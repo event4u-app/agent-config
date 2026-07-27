@@ -146,3 +146,11 @@ jobs:
 
       - name: Memory intake append-only (was fail-open)
         run: ./scripts-run src/scripts/check_memory --append-only
+
+      # Governed-writes lint — direct fs writes to protected ledger/governance
+      # surfaces (claims ledger, append-only intake/audit jsonl) bypassing the
+      # atomic-write layer. Allowlist-free; zero findings was the
+      # pre-registered null when wired.
+
+      - name: Governed writes (protected surfaces)
+        run: ./scripts-run src/scripts/lint_governed_writes

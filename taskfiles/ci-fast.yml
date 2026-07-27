@@ -428,6 +428,11 @@ tasks:
     desc: "Fail on placeholder prose in the package's own authored artefacts (Lorem ipsum, `// rest of component`, `for brevity`, TODO-implement stubs) — the CI net the output-discipline rule has always claimed and, until now, did not have"
     cmd: ./scripts-run src/scripts/lint_output_slop
 
+  lint-governed-writes:
+    silent: true
+    desc: "Static scan for direct fs writes to protected ledger/governance surfaces (claims ledger, append-only intake/audit jsonl) that bypass the atomic-write layer — allowlist-free; zero findings is the pre-registered null (road-to-enforcement-peer-disposition P1)"
+    cmd: ./scripts-run src/scripts/lint_governed_writes
+
   check-enforcement-coverage:
     silent: true
     desc: "Enforcement-coverage ratchet — each rule's enforced_by is RESOLVED, not trusted: the script must exist AND be reachable from a taskfile/workflow/hook manifest, and a fail_closed:false hook counts as observer, never validator. Blocking coverage may not fall; unwired declarations may not rise (road-to-enforcement-proof P1.4)"
