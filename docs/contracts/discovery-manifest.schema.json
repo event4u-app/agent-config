@@ -84,7 +84,8 @@
         "finance-basic", "finance-advanced",
         "gtm-sales", "gtm-marketing",
         "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "ai-image", "fun", "meta", "git", "frontend-design", "brand",
-        "memory", "analytics", "product-reasoning", "analysis-workbench", "legal-review-prep"
+        "memory", "analytics", "product-reasoning", "analysis-workbench", "legal-review-prep",
+        "scale-discipline", "history-discipline"
       ]
     },
     "lifecycle": {

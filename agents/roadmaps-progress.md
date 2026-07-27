@@ -279,6 +279,25 @@ _1 blocker resolved._
   - **What to do:**
   - **Resolved when:** ~~a verified Windows path exists~~ — it does; the live-run test is ordinary Phase 1 verification, not a blocker.
 
+### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
+
+**Road to the scale-history bench run — fire the pre-registered Phase-4 bench** — 0 / 2 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Run and publish | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-scale-history-bench-run"></a>
+**Blockers**
+
+- **benchmark-spend-authorization** (owner: user) — blocks Phase 1 (both steps) — everything author-able is already committed and dry-verified in PR #1016.
+  - **What to do:**
+    1. Approve the run budget in-session (estimate rendered before the
+    first call: 3 arms × 16 runs × ≥2 families on the agentic build
+    task; same standing authorization the team-mode Phase-5 bench
+    waits on).
+  - **Resolved when:** the user confirms the run budget in-session.
+
 ### [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md)
 
 **Road to shared design tokens — one visual identity across two independent GUIs** — 0 / 18 done (0%)

@@ -133,6 +133,28 @@
   domain: engineering
   size_class: medium
 
+- id: scale-discipline
+  label: Scale Discipline
+  description: Scale-safe persistence — index parity, bounded reads, migration safety, growth budgets, thin request path, durable async; deterministic pattern lints gate, heuristics advise.
+  workspaces: [engineering]
+  requires: [engineering-base]
+  trust_level_default: experimental
+  surface_tier: lab
+  domain: engineering
+  size_class: small
+  default_install: false
+
+- id: history-discipline
+  label: History Discipline
+  description: Audit/change history done right — audit coverage on declared scopes, cheapest-sufficient tier selection (default row-level audit log; event sourcing only by waiver), audit-table hygiene, privacy + reliability interlocks.
+  workspaces: [engineering]
+  requires: [scale-discipline]
+  trust_level_default: experimental
+  surface_tier: lab
+  domain: engineering
+  size_class: small
+  default_install: false
+
 - id: python
   label: Python
   description: Python-language patterns.

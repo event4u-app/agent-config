@@ -46,6 +46,8 @@ const ADR_PACKS: ReadonlySet<string> = new Set<string>([
     'ai-image', 'analysis-workbench',
     // road-to-legal-pack Phase 0 + road-to-legal-review-prep Phase 0 rename (ADR-013 amendments).
     'legal-review-prep',
+    // road-to-scale-and-history-discipline Phase 1/3 (ADR-013 amendment, same PR).
+    'scale-discipline', 'history-discipline',
 ]);
 
 // ADR-010 non-overlap reservations.

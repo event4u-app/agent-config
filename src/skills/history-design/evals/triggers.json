@@ -1,0 +1,17 @@
+{
+    "skill": "history-design",
+    "last_eval": "2026-07-27",
+    "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for choosing an audit/history mechanism (tier matrix). Should-not-trigger covers near-miss neighbours: migration review (schema-review), privacy/DSR policy (privacy-review), retention floors (domain-safety-retention), git history.",
+    "queries": [
+        { "q": "we need to track who changed what and when on tenant data", "trigger": true },
+        { "q": "wir brauchen eine Änderungshistorie — wer hat was wann geändert?", "trigger": true },
+        { "q": "should we use event sourcing for the orders domain?", "trigger": true },
+        { "q": "add an audit trail to the admin panel models", "trigger": true },
+        { "q": "which activity log package fits our Laravel app?", "trigger": true },
+        { "q": "review this migration for missing indexes", "trigger": false },
+        { "q": "how long may we keep support tickets under GDPR?", "trigger": false },
+        { "q": "squash my last three git commits into one", "trigger": false },
+        { "q": "anonymize user data on account deletion", "trigger": false },
+        { "q": "profile the slow audit report query in production", "trigger": false }
+    ]
+}
