@@ -31,7 +31,14 @@ const pkg: PackageJson = JSON.parse(
 );
 const runtimeDeps = new Set(Object.keys(pkg.dependencies ?? {}));
 
-const BUILTINS = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`)]);
+// Prefix-only builtins (node:test, node:sqlite, …) are absent from
+// `builtinModules` by Node's own contract — list the ones this repo uses.
+const PREFIX_ONLY_BUILTINS = ['node:sqlite', 'node:test'];
+const BUILTINS = new Set([
+    ...builtinModules,
+    ...builtinModules.map((m) => `node:${m}`),
+    ...PREFIX_ONLY_BUILTINS,
+]);
 
 /** Bare-specifier → npm package name (`@scope/pkg/sub` → `@scope/pkg`). */
 function packageName(specifier: string): string {

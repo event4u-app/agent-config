@@ -165,6 +165,8 @@ tasks:
       - task: lint-load-context
       - task: check-context-paths
       - task: check-no-roadmap-refs
+      - task: lint-documented-commands
+      - task: lint-store-boundary
       - task: check-knowledge-cards
       - task: check-knowledge-pages
       - task: lint-knowledge-scale
@@ -361,6 +363,8 @@ tasks:
       - task: lint-load-context
       - task: check-context-paths
       - task: check-no-roadmap-refs
+      - task: lint-documented-commands
+      - task: lint-store-boundary
       - task: check-knowledge-cards
       - task: check-knowledge-pages
       - task: lint-knowledge-scale

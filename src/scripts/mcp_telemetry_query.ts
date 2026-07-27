@@ -18,9 +18,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { DatabaseSync } from 'node:sqlite';
-import type * as NodeSqlite from 'node:sqlite';
 
 import { resolve_db } from './mcp_telemetry_store.js';
+import { loadSqlite } from './_lib/sqlite_guard.js';
 
 export interface ToolRow {
     tool_name: string;
@@ -48,43 +48,12 @@ function toolRowAsDict(t: ToolRow): Record<string, unknown> {
 /** Python error subclass marker so main() can mirror the FileNotFoundError branch. */
 class FileNotFoundLikeError extends Error {}
 
-// Python's stdlib sqlite3 emits nothing on stderr; node:sqlite is flagged
-// experimental on node 22 and prints an `ExperimentalWarning: SQLite …` line
-// to stderr on first import (stable / silent on node >= 23). Drop only that
-// specific warning so stderr stays byte-stable across node versions (tests
-// pin the exact bytes). Installed once, narrowly matched.
-let _sqliteWarningSilenced = false;
-function _silenceSqliteExperimentalWarning(): void {
-    if (_sqliteWarningSilenced) return;
-    _sqliteWarningSilenced = true;
-    const orig = process.emitWarning.bind(process);
-    process.emitWarning = ((warning: string | Error, ...rest: unknown[]): void => {
-        const text = typeof warning === 'string' ? warning : (warning?.message ?? '');
-        if (/SQLite is an experimental/i.test(text)) return;
-        (orig as (w: string | Error, ...a: unknown[]) => void)(warning, ...rest);
-    }) as typeof process.emitWarning;
-}
-
-/** Lazy `node:sqlite` import — keeps the module loadable on a runtime without it. */
-async function _loadSqlite(): Promise<typeof NodeSqlite> {
-    _silenceSqliteExperimentalWarning();
-    try {
-        return await import('node:sqlite');
-    } catch (exc) {
-        const message = exc instanceof Error ? exc.message : String(exc);
-        throw new Error(
-            `node:sqlite is unavailable in this runtime (${message}). ` +
-                'mcp_telemetry_query requires Node with the built-in SQLite module.',
-        );
-    }
-}
-
 /** Open read-only. Mirrors `_connect_ro`; raises FileNotFound-like on absence. */
 async function _connect_ro(db_path: string): Promise<DatabaseSync> {
     if (!fs.existsSync(db_path)) {
         throw new FileNotFoundLikeError(`telemetry db not found: ${db_path}`);
     }
-    const { DatabaseSync } = await _loadSqlite();
+    const { DatabaseSync } = await loadSqlite('mcp_telemetry_query');
     // `file:<posix>?mode=ro` — Python opens via the same URI form.
     const uri = `file:${_asPosix(db_path)}?mode=ro`;
     return new DatabaseSync(uri, { readOnly: true });

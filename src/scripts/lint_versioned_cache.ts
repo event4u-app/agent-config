@@ -17,6 +17,12 @@
  * the derived caches later phases create (B2 index, B3 learning sidecar, B5a
  * stat-index), not on directories or ordinary data files.
  *
+ * road-to-reachable-code-memory Phase 6: also covers `.sqlite3` / `.db` path
+ * literals — every derived SQLite store this suite writes (telemetry, the
+ * memory FTS index, the graph store) is exactly the "invalidate me on a
+ * format change" cache this lint exists to catch, and none of them carry a
+ * `-index`/`-cache` infix the original `.json`-only pattern required.
+ *
  * Usage: lint_versioned_cache.ts [--dir <root>] [--format text|json] [--quiet]
  * Exit codes: 0 = clean, 1 = usage error, 2 = violations found, 3 = internal.
  */
@@ -36,7 +42,7 @@ export const JUSTIFY_WINDOW = 6;
  * ordinary data/config JSON does not match.
  */
 export const CACHE_SUFFIX_RE =
-    /(?:^|[\/'"`\-.])(?:[a-z0-9_\-.]*)(?:-index|\.index|-cache|\.cache|\.stat-index|-stat-index|\.agent-learning)\.json(?:['"`]|$)/i;
+    /(?:^|[\/'"`\-.])(?:[a-z0-9_\-.]*)(?:(?:-index|\.index|-cache|\.cache|\.stat-index|-stat-index|\.agent-learning)\.json|\.sqlite3|\.db)(?:['"`]|$)/i;
 
 /** A version namespace present in the path literal itself. */
 const VERSION_IN_PATH_RE = /(?:[\/_\-.]v\d+|\$\{[^}]*[Vv]ersion[^}]*\}|\$\{[^}]*VERSION[^}]*\})/;

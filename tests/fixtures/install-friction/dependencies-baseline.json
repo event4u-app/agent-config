@@ -1,0 +1,23 @@
+{
+    "_comment": "Committed baseline for tests/scripts/install_friction_guard.test.ts (road-to-reachable-code-memory Phase 6). node:sqlite ships with Node itself — ADR-129's zero-new-dependencies promise means this snapshot must stay byte-identical for the SQLite substrate work; a real new runtime dependency requires updating this file deliberately, not as a side effect.",
+    "dependencies": {
+        "@fastify/static": "^9.1.0",
+        "@modelcontextprotocol/sdk": "^1.29.0",
+        "@preact/signals": "^2.9.0",
+        "commander": "^12.1.0",
+        "execa": "^9.5.0",
+        "fastify": "^5.8.0",
+        "js-yaml": "^4.1.0",
+        "open": "^10.2.0",
+        "preact": "^10.29.0",
+        "tree-sitter-wasms": "0.1.13",
+        "tsx": "^4.22.3",
+        "web-tree-sitter": "0.24.7",
+        "yaml": "^2.9.0",
+        "zod": "^3.25.0",
+        "zod-to-json-schema": "^3.25.0"
+    },
+    "lifecycle_scripts": {
+        "postinstall": "node dist/scripts/postinstall_gui.js 2>/dev/null || true"
+    }
+}

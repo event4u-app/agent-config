@@ -14470,6 +14470,9 @@ var settingsSchema = external_exports.object({
     ),
     session_index: external_exports.enum(["on", "off"]).default("off").describe(
       "Opt-in compact memory index at session start (road-to-memory-retrieval-economy P5). on = inject a compact id + title + ~tokens index of curated entries (hard cap 30 rows, bodies never included) through the hot-context hook; the agent fetches full entries via memory_get on demand. off (default) = no injection \u2014 the ship-criterion (measured hit-rate gain) is unproven, so off unless proven."
+    ),
+    learn_on_session_end: external_exports.boolean().default(false).describe(
+      "session_end learning-sidecar aggregation (road-to-reachable-code-memory P4). true = the session_end hook aggregates agents/memory/intake/*.jsonl through the learning sidecar into the gitignored .agent-learning.json + LESSONS.md (local-only, 2 s budget, fail-open; promotion stays human via /memory:propose). false (default, council 2026-07-27) = no-op; the flip is proposed only after the 30-day dogfood shows non-trivial signal AND session-end p95 < 2 s."
     )
   }),
   knowledge: external_exports.object({

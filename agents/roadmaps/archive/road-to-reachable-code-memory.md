@@ -95,51 +95,63 @@ strictly zero-delta.
 
 ## Phase 0 — Falsification spikes (pre-registered, cheap)
 
-- [ ] **S0a reachability-zero:** from a clean `npm pack` tarball in a
+- [x] **S0a reachability-zero:** from a clean `npm pack` tarball in a
   scratch project, attempt all six documented invocations. Threshold:
   0/6 resolve (≥1 resolves → the diagnosis is wrong; rewrite before code).
-- [ ] **S0b consumer-scale build cost:** two external repos (PHP ≥50k,
+  <!-- done 2026-07-27: 0/6 resolved — CONFIRMED; evidence in agents/evidence/reports/spike-reachable-code-memory-s0.md -->
+
+- [x] **S0b consumer-scale build cost:** two external repos (PHP ≥50k,
   TS ≥30k LOC): cold build ≤60 s AND cache ≤80 MB on both (the embedded-
   engine doctrine ceiling). Miss → Phase 2 downgrades to
   explicit-invocation-only. Blocked by the corpus blocker; record
   candidates in `docs/wedge/code-graph-corpus/CORPUS.md` (repo, SHA,
   license, LOC, floor-clearance) — honest-null: no arm clears the floor →
   say so, leave the parked benchmark parked.
-- [ ] **S0c denylist losslessness:** 20 real structure questions
+  <!-- done 2026-07-27: corpus blocker CLEARED (two maintainer-local repos clear the floors, recorded in CORPUS.md); PHP arm 3.7s/36.1MB, TS arm 1.7s/3.2MB — PASS, Phase 2 un-downgraded -->
+
+- [x] **S0c denylist losslessness:** 20 real structure questions
   re-answered against a builtin-denylisted graph: 20/20 unchanged AND
   ≥35% edge reduction. Any regression → Phase 3 abandoned (the noise is
   load-bearing; record it).
-- [ ] **S0d sidecar verdict replay:** ≥30 synthetic intake signals across
+  <!-- done 2026-07-27: losslessness 20/20 PASS, reduction MISS (34.8% mixed / 7.9% PHP < 35%) → Phase 3 abandoned per pre-registration; council 2026-07-27 (claude-sonnet-4-5 + gpt-4o) converged strict-miss; honest null in agents/evidence/reports/spike-reachable-code-memory-s0.md -->
+
+- [x] **S0d sidecar verdict replay:** ≥30 synthetic intake signals across
   ≥3 origins: ≥1 PROMOTED, ≥1 correctly withheld single-origin,
   byte-stable output for fixed `--now`. Miss → Phase 4 ships entry points
   but not surfacing.
+  <!-- done 2026-07-27: 30 signals / 5 origins — PROMOTED ✓, single-origin withheld ✓, byte-stable ✓, dead-end ledger ✓; Phase 4 ships entry points AND surfacing -->
+
   *Verify (all):* spike results committed with their thresholds applied
   in writing.
 
 ## Phase 1 — Reachability (ungated defect fix)
 
-- [ ] Register the engine as ONE CLI command `code-graph` with its six
+- [x] Register the engine as ONE CLI command `code-graph` with its six
   existing verbs (delegate to the engine CLI); add `memory:get` (CLI twin
   of the existing MCP tool — closes a drift the code comments already
   assume) and `memory:learn` (sidecar entry; read-only by default,
   `--write` to emit).
   *Verify:* all resolve from a fresh consumer install (S0a re-run green).
-- [ ] Rewrite `src/skills/code-intelligence/SKILL.md` + its dist twin to
+  <!-- done 2026-07-27: registry + _dispatch.bash + cmd_memory_get.ts; S0a re-run 11/11 resolve from fresh tarball install (incl. refresh, analytics, knowledge); registry parity test green -->
+- [x] Rewrite `src/skills/code-intelligence/SKILL.md` + its dist twin to
   use only registered forms, plus the one-line fallback: "if this command
   is not available, grep and say so".
   *Verify:* zero non-resolving commands in the shipped skill.
-- [ ] **`lint_documented_commands` (the load-bearing item):** every
+  <!-- done 2026-07-27: skill + settings-template comment + rule sweep to `agent-config code-graph <verb>`; dist twin via sync before commit; lint green -->
+- [x] **`lint_documented_commands` (the load-bearing item):** every
   backtick-quoted command in ANY shipped skill/rule/command doc must
   resolve to a registry entry, MCP tool, npm script or task target —
   the bug CLASS becomes impossible, not just this instance.
   *Verify:* lint wired into CI; seeded non-resolving command fails
   red/green; current tree green.
-- [ ] Explicitly NOT here: MCP graph tools (N0 gate; see Non-goals) and
+  <!-- done 2026-07-27: src/scripts/lint_documented_commands.ts (agent-config + curated bare-token namespaces; npm-run/task checks deliberately excluded — consumer-project guidance produced 12/19 systematic FPs, rationale in header); 8/8 red/green vitest incl. current-tree gate; task target in both ci chains; found + fixed 5 REAL rot instances (analytics/knowledge verbs unregistered — now registered); knowledge-ingest doc describes an unbuilt module — noted, out of scope -->
+- [x] Explicitly NOT here: MCP graph tools (N0 gate; see Non-goals) and
   any `build`-as-side-effect — builds are never model-triggered.
+  <!-- done 2026-07-27: honored — zero MCP tools added, no build side-effects; refresh/build only via explicit CLI invocation -->
 
 ## Phase 2 — Freshness without a daemon (gated on S0b)
 
-- [ ] `code-graph detect` emits a machine-readable three-state verdict
+- [x] `code-graph detect` emits a machine-readable three-state verdict
   ABSENT / STALE(n commits behind) / FRESH; add `code-graph refresh`
   (= `build --update` when STALE, no-op when FRESH, full build when
   ABSENT) with a hard wall-clock budget (default 60 s) that aborts
@@ -147,42 +159,50 @@ strictly zero-delta.
   never blocking) names the real command on ABSENT; cache documented as
   local-only and disposable.
   *Verify:* verdict JSON stable; budget abort tested; nudge text honest.
+  <!-- done 2026-07-27: detect --format json (deterministic, byte-stable across runs); refresh via child-process build to temp+rename (budget abort keeps old cache byte-identical, no temp leftovers); nudge names `agent-config code-graph refresh/query`; 7/7 refresh tests + 4/4 nudge tests green -->
 
 ## Phase 3 — Cut the noise (gated on S0c)
 
-- [ ] Per-language builtin/stdlib denylist in the extractor (unresolved
+- [-] Per-language builtin/stdlib denylist in the extractor (unresolved
   calls to known builtins/test-matchers dropped, not emitted AMBIGUOUS;
   repo-local symbols sharing a builtin name still resolve); golden-
   checksum determinism re-run; before/after recorded as a dated evidence
   note (measured note, not marketing).
   *Verify:* AMBIGUOUS share ≤15%; 20/20 answers unchanged; determinism
   green.
+  <!-- cancelled 2026-07-27: S0c gate MISSED (reduction 34.8%/7.9% < 35% pre-registered; losslessness held) — Phase 3 abandoned per its own spike gate; honest null + retained prototype in agents/evidence/reports/spike-reachable-code-memory-s0.md -->
+
 
 ## Phase 4 — Memory that accumulates (local, human-promoted)
 
-- [ ] Create `agents/memory/intake/` (+ .gitkeep + 2-line README) so the
+- [x] Create `agents/memory/intake/` (+ .gitkeep + 2-line README) so the
   write path exists on a fresh clone; wire `memory:learn` into the
   EXISTING `session_end` hook event (joins the existing concern set — NO
   new hook file); local-only, budget-capped, fail-open.
-- [ ] **`memory.learn_on_session_end` ships `off`** (council decision).
+  <!-- done 2026-07-27: intake/ + README tracked; memory-learn concern joined session_end on all 6 platforms in hook_manifest.yaml (no new platform wiring); src/scripts/memory_learn_hook.ts budget-capped 2s, fail-open; manifest lint + hook parity tests green -->
+- [x] **`memory.learn_on_session_end` ships `off`** (council decision).
   The default-flip is proposed as its own follow-up ONLY after the
   dogfood item below shows non-trivial signal AND session-end p95 < 2 s —
   the source file's demotion trigger becomes our promotion gate.
-- [ ] Promotion stays human: a PROMOTED sidecar lesson (≥2 origins,
+  <!-- done 2026-07-27: default false in template + zod schema (promotion gate quoted in both); install bundle rebuilt; hook no-ops with the setting off (tested) -->
+- [x] Promotion stays human: a PROMOTED sidecar lesson (≥2 origins,
   uncontested) renders as a reviewable proposal through the existing
   memory-proposal flow; nothing auto-writes into curated
   `agents/memory/*.yml`. One-line session-end visibility marker via the
   existing memory-visibility contract.
-- [ ] **Dogfood:** replay this repo's own last 30 days through the write
+  <!-- done 2026-07-27: hook renders LESSONS.md + emits the 🧠 one-liner pointing at /memory:propose; test asserts zero curated-YAML writes; S0d proved PROMOTED/withheld/dead-end verdicts -->
+- [x] **Dogfood:** replay this repo's own last 30 days through the write
   path; ~0 signals is a FINDING for the evidence note, not something to
   paper over.
+  <!-- done 2026-07-27: 0 signals / 0 lessons — the write path was absent all 30 days (the roadmap's own core finding); recorded in agents/evidence/reports/spike-reachable-code-memory-s0.md § Phase 4 dogfood -->
+
   *Verify:* fresh-clone write path exists; hook fires with the setting
   on; zero writes with it off; proposal flow renders a candidate;
   dogfood note committed.
 
 ## Phase 5 — Shared project context (defect tier, before the substrate)
 
-- [ ] Apply the shipped-but-never-applied `merge=union` .gitattributes
+- [x] Apply the shipped-but-never-applied `merge=union` .gitattributes
   fragment: in THIS repo (dogfood — it currently has none), via an
   idempotent installer append for consumers (skip if present; never touch
   unrelated lines; report in the install summary), fragment updated to
@@ -193,10 +213,12 @@ strictly zero-delta.
   tracked).
   *Verify:* two-writer append merge test passes; doctor + CI assertions
   red/green.
+  <!-- done 2026-07-27: fragment covers both curated layouts + intake JSONL (per-LINE union caveat + no-id-dedup honesty documented in the block); applied to this repo's .gitattributes; sync_gitattributes.ts (idempotent, --check) wired into cmd_refresh advisory path; doctor memory-merge-union green; tier-split + two-writer union tests 12/12 green -->
+
 
 ## Phase 6 — The substrate (maintainer-decided; recorded honestly)
 
-- [ ] **Write the superseding ADR**: engine confirmed (`node:sqlite`
+- [x] **Write the superseding ADR**: engine confirmed (`node:sqlite`
   FTS5 verified available, unflagged, on the current Node), the prior
   ADR's scale-only activation condition retired and its ship-gate clause
   overridden BY MAINTAINER DIRECTION with the recorded three-point
@@ -206,30 +228,36 @@ strictly zero-delta.
   Layer-2 sunset (no service, no vector, no daemon) explicitly untouched;
   thresholds below stated as ROLLBACK triggers, never undisclosed ship
   gates.
-- [ ] Extract a shared `sqlite_guard` (lazy import, FTS5 probe, narrow
+  <!-- done 2026-07-27: docs/decisions/ADR-129-sqlite-substrate-maintainer-override.md (FTS5 re-verified live on v25.9.0; INDEX.md regenerated) -->
+
+- [x] Extract a shared `sqlite_guard` (lazy import, FTS5 probe, narrow
   warning silencer) and migrate BOTH telemetry twins onto it (net-zero
   surface, proven by existing tests first).
-- [ ] **Graph store:** build additionally emits a derived
+  <!-- done 2026-07-27: src/scripts/_lib/sqlite_guard.ts (async+sync variants, FTS5 probe, user_version helpers); both telemetry twins migrated, 24/24 twin tests green before+after -->
+- [x] **Graph store:** build additionally emits a derived
   `code-graph-v1.sqlite3`; the query path prefers it, falls back to JSON
   when absent or on old Node. JSON stays canonical and byte-deterministic
   (golden checksum untouched). Rollback triggers: query p95 ≤ 50 ms,
   heap ≤ 10 MB — a miss reverts THAT store to fallback + incident note.
-- [ ] **Memory store:** FTS5 index over both curated layouts + intake,
+  <!-- done 2026-07-27: sqlite_store.ts (stat+checksum-verified twin, byte-identical answers test, corrupt/stale/version-mismatch → JSON fallback + zero-touch re-emit); rollback triggers measured on the 89.5k-edge consumer graph: query p95 5.66ms ≤ 50ms, heap-delta 6.7MB ≤ 10MB — both clear; 7/7 twin tests + 35/35 engine tests green -->
+- [x] **Memory store:** FTS5 index over both curated layouts + intake,
   rebuilt batch/lazy (post-session or first lookup, never inline
   per-write); the substring scorer becomes the documented fallback.
   Rollback trigger: the 24-query replay reports recall AND
   tie-distribution against the recorded `mean_tie_set_size: 4.11`
   baseline.
-- [ ] Extend the versioned-cache lint to cover `.sqlite3`/`.db`; **CI
+  <!-- done 2026-07-27: _lib/memory_fts_index.ts (lazy/stale-rebuild, corruption-tolerant); wired as recall-gap closer (fires when _score recalls zero — the separator defect ADR-129 names; making FTS primary would break the pinned _score bucket tests, deviation recorded); memory_replay_24.ts: recall@5 baseline=0 → fts=1.0 over 24 hyphenated ids, comparator caveat vs 4.11/3.333 stated in agents/evidence/reports/memory-fts-replay.md; 263/263 memory-suite tests green -->
+- [x] Extend the versioned-cache lint to cover `.sqlite3`/`.db`; **CI
   install-friction guard:** the diff adds zero `dependencies`, no
   node-gyp/postinstall/prebuild; scratch old-Node install passes smoke on
   the fallback path.
   *Verify (all):* identical graph answers on both stores; zero new deps
   CI-asserted; rollback = delete the derived files.
+  <!-- done 2026-07-27: lint_versioned_cache covers .sqlite3/.db (11+1 tests); install_friction_guard.test.ts pins the dependencies baseline + forbids new lifecycle scripts + asserts no tracked *.sqlite3; graceful-degradation test covers the no-node:sqlite path; identical-answers test in code_graph_sqlite_store.test.ts -->
 
 ## Phase 7 — Zero-touch upgrades
 
-- [ ] `PRAGMA user_version` stamps ALL derived sqlite stores (telemetry —
+- [x] `PRAGMA user_version` stamps ALL derived sqlite stores (telemetry —
   fixing its recorded never-read SCHEMA_VERSION bug — graph, memory);
   rebuild-on-drift silently on first lookup (version mismatch / absent /
   corrupt → rebuild from committed truth; corruption is a non-event,
@@ -237,17 +265,20 @@ strictly zero-delta.
   CI upgrade test** (install, seed, upgrade, first lookup succeeds, no
   user action in the transcript).
   *Verify:* upgrade test green; truncated-file test green.
+  <!-- done 2026-07-27: user_version stamped on telemetry (SCHEMA_VERSION bug fixed), memory index, graph twin (GRAPH_STORE_VERSION); rebuild-on-drift tested for all three (zero_touch_upgrade.test.ts 5/5 incl. truncated-file + N→N+1; graph twin version-mismatch → silent re-emit test) -->
 
 ## Phase 8 — Storage boundary: the `subject` axis (security tier)
 
-- [ ] **Partition rule recorded as a successor note to the knowledge-store
+- [x] **Partition rule recorded as a successor note to the knowledge-store
   ADRs:** project-local holds everything derived FROM the repo;
   user-global holds everything ABOUT repos; `subject: user` records live
   global-only and may NEVER be written into a project artifact;
   `subject: project` (default) promotable via the existing gate.
   Read-open / write-closed asymmetry; arbitration test: "appropriate for
   a colleague who checks out the repo?".
-- [ ] **Three invariants:** (1) store-boundary lint — no homedir/global-
+  <!-- done 2026-07-27: docs/decisions/ADR-130-storage-subject-axis.md (successor note to ADR-119/121; INDEX regenerated) -->
+
+- [x] **Three invariants:** (1) store-boundary lint — no homedir/global-
   root literals in index code outside the path module; (2) provenance
   gate at the WRITE edge — a record whose origin resolves to the global
   store is refused entry into tracked project artifacts (reachability
@@ -256,27 +287,34 @@ strictly zero-delta.
   that HALTS, never rewrites — with its own honest-null rule: zero fires
   across the full history → drop invariant 3 as unfounded, keep 1–2
   (structural).
-- [ ] Resolve the recorded `cli_call_budget` wording contradiction (move
+  <!-- done 2026-07-27: (1) lint_store_boundary.ts — sanctioned modules = _lib/user_global_paths.ts + _lib/knowledge_global.ts, real tree clean, red/green tested; (2) provenance gate in memory_signal.emit (_assert_project_writable: global-origin + subject:user refused, subject:project additive default), 13/13 + 17/17 signal tests green; (3) tripwire built, full-history scan 0 fires → HONEST NULL applied: NOT CI-wired, retained as evidence (spike report § Phase 8 invariant 3) -->
+
+- [x] Resolve the recorded `cli_call_budget` wording contradiction (move
   under the profile, or correct the schema wording to machine-wide
   spend).
+  <!-- done 2026-07-27: wording corrected to machine-wide-across-subscriptions (matches the implementation; no new per-profile counter machinery) in agent-settings.template.yml § ai_team.max_calls_per_day + docs/contracts/ai-team-config.md § Quota -->
+
   *Verify:* lints red/green; ADR note merged; no `subject: user` record
   reaches a tracked artifact (CI-enforced).
 
 ## Phase 9 — Engine deltas (small, each self-gated)
 
-- [ ] **D2 stat-before-read + git fast-path** (the extractor sidecar
+- [x] **D2 stat-before-read + git fast-path** (the extractor sidecar
   already caches by content hash; the delta is skipping the read):
   acceptance ≥70% wall-time reduction on a single-file-edit rebuild AND
   unchanged golden checksum; below 70% → the cost was extraction not IO —
   record and close without merging.
-- [ ] **D4 `recommended_reads`:** every edge dropped by the output budget
+  <!-- done 2026-07-27: MISS — CLI-level wall-time reduction ≈2.2% (median) / ≈3.0% (mean) over 10 trials each, baseline vs D2, on a synthetic 500-file fixture (real `code_graph build --update` child-process invocations, not in-process timing) — far below the 70% gate. Root cause empirically NOT "extraction not IO" as pre-registered but process-startup overhead (tsx transpile + Node boot + WASM grammar init, ≈0.6s/invocation) dominating over the read/hash savings, which a supplementary in-process measurement showed ARE real in isolation (≈69.6% reduction in the read/hash/extract loop alone). Reverted per protocol — build.ts restored to its pre-D2 state; honest null + full method in agents/evidence/reports/phase9-engine-deltas.md -->
+- [x] **D4 `recommended_reads`:** every edge dropped by the output budget
   + every under-threshold result names {path, line range} — a read plan
   instead of silent truncation. Cheap; token-economy fit.
-- [ ] **D3 intent-conditioned verb selection** (regex table only, no
+  <!-- done 2026-07-27: shipped — QueryResult.recommended_reads populated from budget-dropped edges' focus node + weak (BM25-fallback) seed matches, deduped, printed by cli.ts render() and merged across --since's per-seed affected calls; 3 new tests in tests/scripts/code_graph.test.ts; detail in agents/evidence/reports/phase9-engine-deltas.md -->
+- [x] **D3 intent-conditioned verb selection** (regex table only, no
   model call): PRE-REGISTER a 30-query labelled set BEFORE implementing;
   ship only if intent selection beats always-`query` on correct-verb
   rate; null → publish, leave the nudge generic.
   *Verify:* each delta's threshold applied in writing.
+  <!-- done 2026-07-27: BEATS BASELINE — suggestVerb scores 30/30 = 100.0% correct-verb rate on the pre-registered tests/fixtures/code-graph-intent/queries.json (written + frozen before intent.ts existed) vs the 23.3% (7/30) always-query baseline. Shipped as a standalone `code_graph suggest-verb "<question>"` subcommand (print-only hint, never touches the nudge hook, which is owned elsewhere); regression-locked by tests/scripts/code_graph_intent.test.ts; detail in agents/evidence/reports/phase9-engine-deltas.md -->
 
 ## Acceptance criteria (roadmap-level)
 

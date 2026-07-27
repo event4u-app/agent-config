@@ -877,6 +877,16 @@ tasks:
     desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
     cmd: ./scripts-run src/scripts/check_no_roadmap_refs
 
+  lint-documented-commands:
+    silent: true
+    desc: Every documented package command in shipped skill/rule/command docs resolves (reachability bug class; road-to-reachable-code-memory Phase 1)
+    cmd: ./scripts-run src/scripts/lint_documented_commands
+
+  lint-store-boundary:
+    silent: true
+    desc: No global-root literal in memory/knowledge index code outside the sanctioned path modules (ADR-130 invariant 1)
+    cmd: ./scripts-run src/scripts/lint_store_boundary
+
   check-knowledge-cards:
     silent: true
     desc: "Knowledge-card pointer-CI — size ≤ 150, mandatory authoritative pointer, trust tagging, multi-evidence consistency (evidence-first structure discovery / ADR-097)"

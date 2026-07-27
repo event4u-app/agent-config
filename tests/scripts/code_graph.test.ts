@@ -214,6 +214,44 @@ describe('query tier (Phase 3)', () => {
         const tiny = query(g, 'app/Foo.php#Foo', 1); // 1 token → ~4 chars → truncates
         expect(tiny.truncated).toBe(true);
     });
+
+    describe('D4 recommended_reads (Phase 9)', () => {
+        it('names the dropped edges’ target files instead of silently truncating', async () => {
+            const g = await loadedFixture();
+            const tiny = query(g, 'app/Foo.php#Foo', 1); // 1 token → ~4 chars → every edge drops
+            expect(tiny.truncated).toBe(true);
+            expect(tiny.recommended_reads.length).toBeGreaterThan(0);
+            // Foo inherits Base (app/Base.php) and declares handle() (app/Foo.php) —
+            // both dropped edges' real targets must be named; the unresolved
+            // `symbol:LoggerTrait` target has no node and is correctly excluded.
+            expect(tiny.recommended_reads.some((r) => r.path === 'app/Base.php')).toBe(true);
+            expect(tiny.recommended_reads.some((r) => r.path === 'app/Foo.php')).toBe(true);
+            for (const r of tiny.recommended_reads) {
+                if (r.lines) {
+                    expect(r.lines[0]).toBeGreaterThan(0);
+                    expect(r.lines[1]).toBeGreaterThanOrEqual(r.lines[0]);
+                }
+            }
+        });
+
+        it('a non-truncated query with an exact seed match carries no recommended_reads', async () => {
+            const g = await loadedFixture();
+            const r = query(g, 'app/Foo.php#Foo::handle', 2000); // exact id match, ample budget
+            expect(r.truncated).toBe(false);
+            expect(r.recommended_reads).toEqual([]);
+        });
+
+        it('flags a weak (BM25-fallback, non-exact) seed match even without truncation', async () => {
+            const g = await loadedFixture();
+            // "handle method" matches neither a node id nor a whole node label —
+            // resolution falls through to the BM25 tier, which the D4 read-plan
+            // treats as under-threshold and worth flagging on its own.
+            const r = query(g, 'handle method', 2000);
+            expect(r.truncated).toBe(false);
+            expect(r.seeds.length).toBeGreaterThan(0);
+            expect(r.recommended_reads.some((rr) => rr.path === 'app/Foo.php')).toBe(true);
+        });
+    });
 });
 
 describe('detect — source precedence (ADR-124 §2)', () => {

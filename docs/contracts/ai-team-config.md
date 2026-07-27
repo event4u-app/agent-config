@@ -103,12 +103,19 @@ library, reusing `subagent-orchestration`'s implementer/judge frame and
 its `subagent-status.json` envelope. **No `team_mode`/role frontmatter key
 is added to skill/command/rule schemas.**
 
-## Quota — one subscription, one counter
+## Quota — one machine, one counter
 
 ```
 TEAM CALLS COUNT INTO THE EXISTING cli_call_budget OPENAI BUCKET.
-ONE SUBSCRIPTION, ONE COUNTER. NEVER A PARALLEL COUNTER.
+ONE MACHINE-WIDE COUNTER ACROSS ALL SUBSCRIPTIONS/PROFILES.
+NEVER A PARALLEL COUNTER.
 ```
+
+The counter is deliberately **machine-wide spend across subscriptions**:
+two `agent-switch` profiles on two accounts share the one
+`cli-calls.json` bucket. That is the recorded semantics (2026-07-27,
+resolving the wording/implementation contradiction the consumer-index
+intake flagged) — the counter does NOT move under the profile.
 
 The daily CLI-call counter is already **generic per-provider** — no
 team-specific counting system exists or may be built:

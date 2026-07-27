@@ -36,24 +36,27 @@ code-graph and no appetite to build one — plain `grep`/read is right there.
 
 ## Procedure
 
-1. **Detect the source.** `code_graph detect` — is a fresh consumer `graph.json`
-   or native cache present? (A consumer-shipped fresh index wins; the native
-   engine covers stale-or-absent — ADR-124 § 2.)
+1. **Detect the source.** `agent-config code-graph detect` — is a fresh consumer
+   `graph.json` or native cache present? (A consumer-shipped fresh index wins;
+   the native engine covers stale-or-absent — ADR-124 § 2.)
 2. **Build if absent and worthwhile.** No graph + a repo in the launch set
-   (PHP / TS / JS)? `code_graph build` (deterministic, LLM-free, ~seconds).
-   Skip for a one-off question in an unsupported stack — grep instead.
+   (PHP / TS / JS)? `agent-config code-graph build` (deterministic, LLM-free,
+   ~seconds). Skip for a one-off question in an unsupported stack — grep
+   instead.
 3. **Query.** Pick the verb:
-   - `code_graph query <symbol>` — direct relations of a symbol.
-   - `code_graph affected <symbol>` — reverse: who calls / references it (the
-     "impact of changing X" question). `--since <ref>` seeds from a git diff.
-   - `code_graph path <a> <b>` — how two symbols connect.
-   - `code_graph explain <symbol>` — 2-hop neighbourhood.
+   - `agent-config code-graph query <symbol>` — direct relations of a symbol.
+   - `agent-config code-graph affected <symbol>` — reverse: who calls /
+     references it (the "impact of changing X" question). `--since <ref>`
+     seeds from a git diff.
+   - `agent-config code-graph path <a> <b>` — how two symbols connect.
+   - `agent-config code-graph explain <symbol>` — 2-hop neighbourhood.
    Pass `--budget <tokens>` to cap output.
 4. **Read the confidence.** `EXTRACTED` = syntactic fact; `INFERRED` =
    hierarchy-resolved; `AMBIGUOUS` = dynamic dispatch / facade, carries
    candidates — treat its target as *one of* the candidates, never as certain.
 5. **Fall back honestly.** If the graph has no entry for the symbol, grep — and
-   say so: *"the graph has no entry for X, so I grepped."*
+   say so: *"the graph has no entry for X, so I grepped."* If this command is
+   not available, grep and say so.
 
 ## Output
 
@@ -68,8 +71,8 @@ Every answer built with this skill MUST:
 ## Gotcha
 
 - **A stale graph lies confidently.** If `detect` reports the index is N commits
-  behind, rebuild (`code_graph build --update`) before trusting relationship
-  answers, or say the answer is from a stale index.
+  behind, rebuild (`agent-config code-graph build --update`) before trusting
+  relationship answers, or say the answer is from a stale index.
 - **Dynamic dispatch is honestly ambiguous.** On a Laravel/JS codebase most
   method-call edges are `AMBIGUOUS` (facades, injected services, `$obj->m()`).
   That is the engine being honest, not broken — do not "resolve" them yourself

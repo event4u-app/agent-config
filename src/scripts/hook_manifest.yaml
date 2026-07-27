@@ -124,6 +124,19 @@ concerns:
     script: src/scripts/hooks/code_graph_nudge_hook.ts
     args: []
     fail_closed: false
+  # road-to-reachable-code-memory Phase 4 — session_end learning-sidecar
+  # aggregation. Joins the EXISTING session_end concern set (no new platform
+  # wiring). Aggregates agents/memory/intake/*.jsonl through the learning
+  # sidecar into the gitignored .agent-learning.json + LESSONS.md; emits the
+  # one-line memory-visibility marker when lessons exist. Default-OFF
+  # (memory.learn_on_session_end — council 2026-07-27: ships off; flip is
+  # proposed only after the 30-day dogfood shows non-trivial signal AND
+  # session-end p95 < 2 s). Budget-capped (2 s), fail-open. Promotion stays
+  # human via /memory:propose. fail_closed: false.
+  memory-learn:
+    script: src/scripts/memory_learn_hook.ts
+    args: []
+    fail_closed: false
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
   # gate that surfaces the marketplace-install-but-unscaffolded shape.
   # Writes .augment/.first-run-action-needed.md + one stderr line so
@@ -196,14 +209,14 @@ concerns:
 platforms:
   augment:
     session_start:    [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:      [chat-history]
+    session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete]
     pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   claude:
     session_start:    [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:      [chat-history]
+    session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
@@ -225,7 +238,7 @@ platforms:
   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
     session_start:    [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:      [chat-history]
+    session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
@@ -240,7 +253,7 @@ platforms:
   # agents/settings/contexts/chat-history-platform-hooks.md.
   cursor:
     session_start:      [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:        [chat-history]
+    session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
@@ -255,7 +268,7 @@ platforms:
   # session is interrupted with partial state (mirrors Augment Stop).
   cline:
     session_start:      [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:        [chat-history]
+    session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
@@ -289,7 +302,7 @@ platforms:
   # — this is our `stop` slot.
   gemini:
     session_start:      [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:        [chat-history]
+    session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]

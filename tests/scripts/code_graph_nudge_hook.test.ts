@@ -56,16 +56,16 @@ describe('classifyTool — eligibility', () => {
 });
 
 describe('nudgeReason — source-state branches', () => {
-    it('present (fresh, non-git tmp) → query-first line', () => {
+    it('present (fresh, non-git tmp) → query-first line naming the registered form', () => {
         const root = tmpRoot(null);
         writeNativeCache(root);
         const r = nudgeReason(root);
-        expect(r).toMatch(/code_graph query/);
-        expect(r.length).toBeLessThan(220); // ≤~40 tokens
+        expect(r).toMatch(/agent-config code-graph query/);
+        expect(r.length).toBeLessThan(240); // ≤~40 tokens
     });
-    it('absent → build-offer line', () => {
+    it('absent → refresh-offer line naming the registered form', () => {
         const r = nudgeReason(tmpRoot(null));
         expect(r).toMatch(/No code-graph found/);
-        expect(r).toMatch(/code_graph build/);
+        expect(r).toMatch(/agent-config code-graph refresh/);
     });
 });

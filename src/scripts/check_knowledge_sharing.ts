@@ -66,8 +66,19 @@ export function checkSharing(staged: StagedFile[], readContent: (path: string) =
     const blocked: string[] = [];
     const warnings: string[] = [];
 
+    // The intake DIRECTORY SKELETON is tracked so the write path exists on a
+    // fresh clone (road-to-reachable-code-memory Phase 4); only the signal
+    // CONTENT (JSONL etc.) is local scratch that must never be committed.
+    const INTAKE_SKELETON = new Set([
+        'agents/memory/intake/.gitkeep',
+        'agents/memory/intake/README.md',
+        'agents/knowledge/intake/.gitkeep',
+        'agents/knowledge/intake/README.md',
+    ]);
     const intakeFiles = staged.filter(
-        (f) => f.path.startsWith('agents/memory/intake/') || f.path.startsWith('agents/knowledge/intake/'),
+        (f) =>
+            (f.path.startsWith('agents/memory/intake/') || f.path.startsWith('agents/knowledge/intake/')) &&
+            !INTAKE_SKELETON.has(f.path),
     );
     for (const f of intakeFiles) {
         blocked.push(`${f.path}: gitignored intake staged — intake is local scratch, never committed`);

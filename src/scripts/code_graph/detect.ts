@@ -132,3 +132,55 @@ export function pickSource(verdicts: SourceVerdict[]): SourceVerdict | null {
     if (native) return native;
     return verdicts.find((v) => v.kind === 'consumer') ?? null;
 }
+
+/** A single detected source, JSON-shaped (only defined fields are emitted —
+ * key order fixed by construction so `JSON.stringify` output is stable). */
+export interface DetectedSourceJSON {
+    kind: SourceKind;
+    path: string;
+    present: boolean;
+    stale?: boolean;
+    commits_behind?: number;
+    note?: string;
+}
+
+/** The `code-graph detect --format json` verdict shape (Phase 2). Deterministic:
+ * fixed key order, no timestamps, paths relative to `root`. */
+export interface VerdictJSON {
+    verdict: 'ABSENT' | 'STALE' | 'FRESH';
+    /** commits behind, when known from the picked source; else null. */
+    behind_commits: number | null;
+    /** the source `refresh`/queries would use, or null when ABSENT. */
+    source: { kind: SourceKind; path: string } | null;
+    /** every detected source (for diagnostics), not just the picked one. */
+    sources: DetectedSourceJSON[];
+}
+
+/**
+ * Three-state freshness verdict for `root`, reusing `detectSources` +
+ * `pickSource` (no duplicated precedence logic). ABSENT = no usable source
+ * (a bare `scip` presence or nothing at all); STALE = the picked source is
+ * stale; FRESH = picked source is fresh, or freshness is unknown (mirrors the
+ * nudge hook's `picked.stale ? STALE : FRESH` reading — unknown is not
+ * treated as stale).
+ */
+export function computeVerdict(root: string, nativeCache: string): VerdictJSON {
+    const abs = path.resolve(root);
+    const verdicts = detectSources(root, nativeCache);
+    const picked = pickSource(verdicts);
+    const rel = (p: string): string => path.relative(abs, p).split(path.sep).join('/');
+    const verdict: VerdictJSON['verdict'] = picked === null ? 'ABSENT' : picked.stale ? 'STALE' : 'FRESH';
+    const sources: DetectedSourceJSON[] = verdicts.map((v) => {
+        const s: DetectedSourceJSON = { kind: v.kind, path: rel(v.path), present: v.present };
+        if (v.stale !== undefined) s.stale = v.stale;
+        if (v.commits_behind !== undefined) s.commits_behind = v.commits_behind;
+        if (v.note !== undefined) s.note = v.note;
+        return s;
+    });
+    return {
+        verdict,
+        behind_commits: picked?.commits_behind ?? null,
+        source: picked ? { kind: picked.kind, path: rel(picked.path) } : null,
+        sources,
+    };
+}
