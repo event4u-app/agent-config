@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **679 artefacts** in this package.
+Maintainer-facing index of all **684 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (281)
+## Skills (283)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -116,6 +116,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`gtm-launch`](../src/skills/gtm-launch/SKILL.md) | official | Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'. |
 | skill | [`guideline-writing`](../src/skills/guideline-writing/SKILL.md) | official | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
 | skill | [`hiring-loop-design`](../src/skills/hiring-loop-design/SKILL.md) | official | Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'. |
+| skill | [`history-design`](../src/skills/history-design/SKILL.md) | official | Use when choosing HOW to record change history / audit trails — walks the tier matrix (columns → audit log → temporal → event sourcing). Triggers on 'wer hat was wann', 'audit log'. |
 | skill | [`html-deck`](../src/skills/html-deck/SKILL.md) | official | Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests. |
 | skill | [`humanizer`](../src/skills/humanizer/SKILL.md) | official | Use when removing AI-writing tells from deliverable prose — posts, articles, drafts. Triggers on 'make this sound less like AI', 'humanize this draft', 'this reads like ChatGPT wrote it'. |
 | skill | [`iconography`](../src/skills/iconography/SKILL.md) | official | Resolve an icon request to a concrete Iconify name and emit the embedding for the project's stack. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler. |
@@ -242,6 +243,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`runway-cognition`](../src/skills/runway-cognition/SKILL.md) | official | Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'. |
 | skill | [`scenario-modeling`](../src/skills/scenario-modeling/SKILL.md) | official | Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'. |
 | skill | [`scene-expander`](../src/skills/scene-expander/SKILL.md) | official | Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. |
+| skill | [`schema-review`](../src/skills/schema-review/SKILL.md) | official | Use when reviewing a migration diff or schema change for scale hazards — indexes, unsafe migrations, unbounded growth, N+1. Triggers on 'review this migration', 'will this scale'. |
 | skill | [`screenshot-hygiene`](../src/skills/screenshot-hygiene/SKILL.md) | official | Use when creating and embedding a documentation screenshot — detect and redact sensitive data, human-gate data-bearing shots before ship. Triggers 'screenshot for docs', 'screenshot admin panel'. |
 | skill | [`script-writing`](../src/skills/script-writing/SKILL.md) | official | Use when adding or editing any script under `scripts/` — `--quiet`, `_lib/script_output`, silent Taskfile wiring, Iron-Law carve-outs; fires on 'add a check script for X'. |
 | skill | [`secrets-management`](../src/skills/secrets-management/SKILL.md) | official | Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized. |
@@ -293,7 +295,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (107)
+## Rules (110)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -339,6 +341,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`framework-neutrality-in-generic-skills`](../src/rules/framework-neutrality-in-generic-skills.md) | auto | Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead |
 | rule | [`git-history-discipline`](../src/rules/git-history-discipline.md) | auto | Git history — no unasked rebase/squash/amend; never drop foreign commits; pushed rewrite → re-push same turn |
 | rule | [`guidelines`](../src/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
+| rule | [`history-discipline`](../src/rules/history-discipline.md) | auto | Change history done right — audit coverage, cheapest-sufficient tier (default: row-level audit log; event sourcing only by waiver), audit hygiene + privacy interlocks. |
 | rule | [`icon-consistency`](../src/rules/icon-consistency.md) | auto | One icon system per project unless the brand says otherwise — flag mixed icon sets (default-Lucide anti-pattern) |
 | rule | [`image-likeness-and-rights`](../src/rules/image-likeness-and-rights.md) | auto | AI image rights gate — real-person likeness, trademarked marks, named artists' styles need explicit rights/consent |
 | rule | [`improve-before-implement`](../src/rules/improve-before-implement.md) | auto | Before features or architectural changes — validate against existing code, challenge weak requirements |
@@ -378,10 +381,12 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`role-mode-adherence`](../src/rules/role-mode-adherence.md) | auto | When roles.active_role is set — closing outputs must match mode contract and emit structured mode marker |
 | rule | [`rule-type-governance`](../src/rules/rule-type-governance.md) | auto | Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto |
 | rule | [`runtime-safety`](../src/rules/runtime-safety.md) | auto | Skill declares execution metadata — enforce safety constraints for assisted/automated execution types |
+| rule | [`scale-discipline`](../src/rules/scale-discipline.md) | auto | Scale-safe persistence — indexes with the queries, bounded reads, safe migrations, growth budgets, thin request path, durable async. Pattern lints gate; heuristics advise. |
 | rule | [`scope-control`](../src/rules/scope-control.md) | always | Scope control — no unsolicited architectural changes, refactors, or library replacements |
 | rule | [`secret-vcs-guard`](../src/rules/secret-vcs-guard.md) | auto | About to write a credential into a tracked file or stage/commit one in any VCS (git/svn/hg) — STOP, show the match, ask, offer alternatives; never silently commit, never silently strip |
 | rule | [`security-sensitive-stop`](../src/rules/security-sensitive-stop.md) | auto | Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing |
 | rule | [`senior-engineering-discipline`](../src/rules/senior-engineering-discipline.md) | auto | Writing/generating code — generalize (no overfit or tautological tests), supply the invisible cross-cutting controls the prompt didn't name, never invent an API/field/package |
+| rule | [`session-canary`](../src/rules/session-canary.md) | auto | personal.canary_name is set — open every new task by addressing the user by name (liveness canary) and keep the reply-close markers (ONE end-summary, PR URL as literal last line) alive |
 | rule | [`size-enforcement`](../src/rules/size-enforcement.md) | manual | Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits |
 | rule | [`skill-improvement-trigger`](../src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../src/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |

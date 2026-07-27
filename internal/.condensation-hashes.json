@@ -367,6 +367,7 @@
   "rules/secret-vcs-guard.md": "1b7ca2d1ab287fabceafbb15f2ea71bb87231af55ff01e463a097eb53e8e2b8f",
   "rules/security-sensitive-stop.md": "e7ac80a77910318cd071f3669b68c5449947196f3d575c8b2b08c04164f1c4db",
   "rules/senior-engineering-discipline.md": "dc33b3bb31603bdb2987f52490500af48ba9363fd1210850d125f1d53ff5abf1",
+  "rules/session-canary.md": "c4385427192c74df43807c11c8f3b00ba2278e24834867ab85a104f9eb48469b",
   "rules/size-enforcement.md": "4788a99ed97747a1a20f27fea3096188e7abdc663d063ebbdae2159069c43973",
   "rules/skill-improvement-trigger.md": "6020600f2f13a4501d28112b825aa51bf0285530a15532160e6663bea19acba5",
   "rules/skill-quality.md": "89c62cd288cf553d70c5ee8f7caf6d67f08f95196415681cef0d7e2ab852a620",
