@@ -163,6 +163,15 @@ jobs:
           gh pr diff "${{ github.event.pull_request.number }}" \
             | ./scripts-run src/scripts/check_no_new_legacy_path --stdin
 
+      - name: Design-token drift — generated CSS matches the canonical source
+        # road-to-shared-design-tokens Phase 2: src/ui/tokens.css and the
+        # emitted agent-switch block are generator outputs of
+        # tokens/event4u-agent-tokens.json — hand-edits must fail here.
+        run: |
+          node tokens/build-ac.mjs --check
+          node tokens/build-as.mjs --check
+          node tokens/check-contrast.mjs
+
       - name: Check package portability
         run: ./scripts-run src/scripts/check_portability
 

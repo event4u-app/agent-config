@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 18 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **19** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers
 
 ## Overall
 
-**138 / 309 steps done · 45%**
+**138 / 291 steps done · 47%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
 ```
 
 ## Open roadmaps
@@ -29,11 +29,10 @@
 | 11 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
 | 12 | [road-to-rtk-onboarding-correctness.md](roadmaps/road-to-rtk-onboarding-correctness.md) | 4 | 21 | 20 | 1 | 0 | 0 | [2](#blockers-road-to-rtk-onboarding-correctness) | ░░░░░░░░░░ 5% |
 | 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 14 | [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md) | 4 | 18 | 18 | 0 | 0 | 0 | [1](#blockers-road-to-shared-design-tokens) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 16 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 17 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 16 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 17 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -270,24 +269,6 @@ _1 blocker resolved._
     task; same standing authorization the team-mode Phase-5 bench
     waits on).
   - **Resolved when:** the user confirms the run budget in-session.
-
-### [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md)
-
-**Road to shared design tokens — one visual identity across two independent GUIs** — 0 / 18 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsification spike | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 1 | Canonical token source (this repo) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Two generators, no runtime dependency | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | The embed theme contract | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-shared-design-tokens"></a>
-**Blockers**
-
-- **brand-decision** (owner: user) — blocks — (was: Phase 1, which palette wins) - **Decision:** **Orange wins — brand takes precedence.** AC's accent becomes event4u orange `#d15c38`. Deviations are permitted **where they make sense**: surface-adjusted derived values when S0.1's contrast checks demand it, and other colours for semantic roles (success/warning/danger stay functional, not brand). The blue `#5b8cff` retires as the accent.
-  - **What to do:**
-  - **Resolved when:** ~~the maintainer confirms the direction~~ — confirmed: orange-wins with pragmatic exceptions.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 

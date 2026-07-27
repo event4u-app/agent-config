@@ -1,0 +1,96 @@
+{
+  "_version": 1,
+  "$description": "Canonical design tokens for the event4u agent tooling — ONE source consumed by two independent GUIs via build-time generators: agent-config's Preact settings GUI (build-ac.mjs → src/ui/tokens.css, hex CSS vars, W3C draft names) and agent-switch's React/Tailwind/shadcn GUI (build-as.mjs → shadcn :root block, HSL channels). Homed in agent-config: it owns the W3C-draft naming and the more complete surface ladder; a third repo was rejected for a two-consumer problem (roadmap decision). W3C Design Tokens draft shape, canonical values in hex/rgba. `_version` is bumped on ANY value change — a token change is a visual breaking change for the embedded view; the embed provenance strip may surface a host/AC token-version mismatch. Accent family: event4u orange (brand #d15c38, hue 14 / sat 62) with per-theme surface-adjusted lightness so every text role clears WCAG AA on every surface step — measured derivation in tokens/s0.1-contrast-verdict.md. Council convergence 2026-07-27 (claude-sonnet-4-5 + gpt-4o, 2 rounds): one shared warning (AC amber), one shared ladder (AC near-black + sidebar step), light sidebar reuses an existing step instead of inventing a fifth value.",
+  "brand": {
+    "orange": {
+      "$type": "color",
+      "$value": "#d15c38",
+      "$description": "The literal event4u brand orange. Reference/identity value — GUIs render the per-theme derived accents below; soft tints keep this literal RGB."
+    }
+  },
+  "color": {
+    "dark": {
+      "bg": { "$type": "color", "$value": "#0b0c0e" },
+      "surface": { "$type": "color", "$value": "#121316" },
+      "surface-alt": { "$type": "color", "$value": "#1a1c20" },
+      "surface-hover": { "$type": "color", "$value": "#1f2126" },
+      "sidebar": {
+        "$type": "color",
+        "$value": "#232427",
+        "$description": "Sidebar chrome step above surface-hover — added for agent-switch's setup-hub redesign; unused by agent-config's own chrome today."
+      },
+      "border": { "$type": "color", "$value": "rgba(255, 255, 255, 0.09)" },
+      "border-strong": { "$type": "color", "$value": "rgba(255, 255, 255, 0.22)" },
+      "text": { "$type": "color", "$value": "#ededef" },
+      "text-muted": { "$type": "color", "$value": "#a2a5ad" },
+      "text-subtle": { "$type": "color", "$value": "#6f7280" },
+      "text-inverse": { "$type": "color", "$value": "#101114" },
+      "accent": {
+        "$type": "color",
+        "$value": "#d66d4d",
+        "$description": "Brand orange +5 L — AA (>= 4.5) as text on all FIVE dark surface steps incl. sidebar #232427 (worst 4.55); the literal #d15c38 fails on surface-alt/surface-hover, and +4 L still fails on sidebar."
+      },
+      "accent-hover": { "$type": "color", "$value": "#db7e61", "$description": "Brand +10 L." },
+      "accent-fg": { "$type": "color", "$value": "#101114", "$description": "Text on accent fills — 5.38:1 on accent, 6.45:1 on accent-hover." },
+      "accent-soft": {
+        "$type": "color",
+        "$value": "rgba(209, 92, 56, 0.14)",
+        "$description": "Brand-literal tint. Constraint: accent-colored text on a soft chip only on bg/surface — the compound blend on elevated surfaces drops below AA (s0.1-contrast-verdict.md)."
+      },
+      "focus-ring": { "$type": "color", "$value": "#db7e61", "$description": "= accent-hover (existing dark pattern); >= 3:1 vs every adjacent surface." },
+      "success": { "$type": "color", "$value": "#4ade80" },
+      "success-soft": { "$type": "color", "$value": "rgba(74, 222, 128, 0.13)" },
+      "warning": { "$type": "color", "$value": "#fbbf24" },
+      "warning-soft": { "$type": "color", "$value": "rgba(251, 191, 36, 0.13)" },
+      "danger": { "$type": "color", "$value": "#f87171" },
+      "danger-soft": { "$type": "color", "$value": "rgba(248, 113, 113, 0.12)" },
+      "info": { "$type": "color", "$value": "#38bdf8" },
+      "info-soft": { "$type": "color", "$value": "rgba(56, 189, 248, 0.13)" }
+    },
+    "light": {
+      "bg": { "$type": "color", "$value": "#f7f7f8" },
+      "surface": { "$type": "color", "$value": "#ffffff" },
+      "surface-alt": { "$type": "color", "$value": "#f1f2f4" },
+      "surface-hover": { "$type": "color", "$value": "#e9eaee" },
+      "sidebar": {
+        "$type": "color",
+        "$value": "#f1f2f4",
+        "$description": "Reuses surface-alt (resting chrome surface) — council: reuse an existing step, do not invent a fifth light value."
+      },
+      "border": { "$type": "color", "$value": "rgba(17, 18, 24, 0.10)" },
+      "border-strong": { "$type": "color", "$value": "rgba(17, 18, 24, 0.28)" },
+      "text": { "$type": "color", "$value": "#16171b" },
+      "text-muted": { "$type": "color", "$value": "#565963" },
+      "text-subtle": { "$type": "color", "$value": "#7d808c" },
+      "text-inverse": { "$type": "color", "$value": "#f7f7f8" },
+      "accent": {
+        "$type": "color",
+        "$value": "#b24929",
+        "$description": "Brand orange -9 L — AA (>= 4.5) as text on all four light surface steps; the literal fails on every light surface (3.54-3.96)."
+      },
+      "accent-hover": { "$type": "color", "$value": "#9d4024", "$description": "Brand -13 L." },
+      "accent-fg": { "$type": "color", "$value": "#ffffff", "$description": "White on darkened orange — 5.42:1 on accent, 6.58:1 on accent-hover." },
+      "accent-soft": {
+        "$type": "color",
+        "$value": "rgba(209, 92, 56, 0.10)",
+        "$description": "Brand-literal tint. Same elevated-surface constraint as dark."
+      },
+      "focus-ring": { "$type": "color", "$value": "#be4e2c", "$description": "Brand -6 L; >= 3:1 vs every adjacent light surface." },
+      "success": { "$type": "color", "$value": "#16a34a" },
+      "success-soft": { "$type": "color", "$value": "rgba(22, 163, 74, 0.12)" },
+      "warning": { "$type": "color", "$value": "#d97706" },
+      "warning-soft": { "$type": "color", "$value": "rgba(217, 119, 6, 0.12)" },
+      "danger": { "$type": "color", "$value": "#dc2626" },
+      "danger-soft": { "$type": "color", "$value": "rgba(220, 38, 38, 0.10)" },
+      "info": { "$type": "color", "$value": "#0284c7" },
+      "info-soft": { "$type": "color", "$value": "rgba(2, 132, 199, 0.11)" }
+    }
+  },
+  "radius": {
+    "sm": { "$type": "dimension", "$value": "0.25rem" },
+    "md": { "$type": "dimension", "$value": "0.5rem" },
+    "lg": { "$type": "dimension", "$value": "0.625rem" },
+    "xl": { "$type": "dimension", "$value": "0.75rem" },
+    "full": { "$type": "dimension", "$value": "9999px" }
+  }
+}
