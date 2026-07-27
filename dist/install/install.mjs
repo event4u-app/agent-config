@@ -14177,6 +14177,9 @@ var settingsSchema = external_exports.object({
     minimal_output: external_exports.boolean().default(true).describe(
       "Prefer short bullets and tables (true, default) vs verbose prose with rationale (false). Affects every chat reply; flip to false during debugging when you want the agent to think out loud."
     ),
+    canary_name: external_exports.string().default("").describe(
+      'Session canary \u2014 the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = off. See rules/session-canary.md.'
+    ),
     play_by_play: external_exports.boolean().default(false).describe(
       `Narrate intermediate findings between tool calls ("Found it.", "Let me check Y."). Off by default \u2014 most users find it noisy. Turn on when you want to follow the agent's reasoning step by step.`
     ),
