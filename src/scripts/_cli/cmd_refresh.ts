@@ -68,6 +68,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as cli_wrapper from '../_lib/cli_wrapper.js';
 import * as sync_gitignore from '../sync_gitignore.js';
+import * as sync_gitattributes from '../sync_gitattributes.js';
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
@@ -306,6 +307,12 @@ function _refresh_project(project_root: string, out: OutSink, err: OutSink): num
     if (rc !== 0) {
         return rc;
     }
+
+    // Memory merge-safety attributes (road-to-reachable-code-memory Phase 5):
+    // advisory, same shape as the gitignore sync above — never fails the
+    // refresh on its own.
+    _sync_gitattributes(project_root, out, err);
+
     _print(out, '✅  refresh --project complete.');
     return 0;
 }
@@ -325,6 +332,28 @@ function _sync_gitignore(project_root: string, out: OutSink, err: OutSink): numb
         _print(err, `⚠️  refresh --project: gitignore sync returned ${rc}`);
     } else {
         _print(out, '✅  .gitignore agents/ block synced.');
+    }
+    return 0;
+}
+
+/**
+ * Sync the memory-merge-safety block into the consumer's `.gitattributes`.
+ * Advisory only (mirrors `_sync_gitignore`'s failure shape) — a missing
+ * template or a write failure is reported but never fails the refresh.
+ */
+function _sync_gitattributes(project_root: string, out: OutSink, err: OutSink): number {
+    let mod: typeof sync_gitattributes;
+    try {
+        mod = sync_gitattributes;
+    } catch (exc) {
+        _print(err, `⚠️  refresh --project: gitattributes sync unavailable (${osErrorStr(exc)})`);
+        return 0;
+    }
+    const rc = mod.main(['--path', path.join(project_root, '.gitattributes')]);
+    if (rc !== 0 && rc !== null && rc !== undefined) {
+        _print(err, `⚠️  refresh --project: gitattributes sync returned ${rc}`);
+    } else {
+        _print(out, '✅  .gitattributes memory merge-safety block synced.');
     }
     return 0;
 }
@@ -460,6 +489,7 @@ export {
     _is_source_repo,
     _refresh_project,
     _sync_gitignore,
+    _sync_gitattributes,
     _remove_legacy_consumer_bridge_marker,
     ArgparseExit,
 };

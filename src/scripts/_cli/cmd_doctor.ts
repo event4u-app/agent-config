@@ -30,7 +30,8 @@
  * lockfile-freshness · bridge-drift · mcp-mode · mcp-beta-readiness ·
  * offline-readiness · python-runtime · humanizer-runtime · tier-usage-readiness ·
  * council-cli · team ·
- * unsupported-combos · wizard-state.
+ * unsupported-combos · wizard-state · settings-review-pending ·
+ * memory-merge-union.
  * Each emits a structured `{id, status, message, remedy}` record with
  * `status` ∈ `ok` / `warn` / `fail` / `skipped` (rendered
  * `✅` / `⚠️` / `❌` / `⏭️`). `--check <id>` runs a single check.
@@ -88,6 +89,7 @@ import * as installed_lock from '../_lib/installed_lock.js';
 import * as installed_tools from '../_lib/installed_tools.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import * as global_deploy_inventory from '../_lib/global_deploy_inventory.js';
+import * as sync_gitattributes from '../sync_gitattributes.js';
 import {
     PROJECT_ROOT_ENV,
     ROOT_OVERRIDE_ENV,
@@ -759,6 +761,7 @@ const CHECK_IDS = [
     'unsupported-combos',
     'wizard-state',
     'settings-review-pending',
+    'memory-merge-union',
 ] as const;
 
 /** Checks that need only the project root and run regardless of a lockfile. */
@@ -782,6 +785,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'team',
     'wizard-state',
     'settings-review-pending',
+    'memory-merge-union',
 ]);
 
 /** Checks that genuinely cannot run without the project manifest. */
@@ -2557,6 +2561,61 @@ function _check_settings_review_pending(): Dict {
     };
 }
 
+/**
+ * `memory-merge-union` — read-only warn check (road-to-reachable-code-memory
+ * Phase 5). The `merge=union` .gitattributes block lets two branches each
+ * appending a NEW memory entry (intake JSONL, or the flat curated
+ * `agents/memory/<type>.yml` files) merge cleanly instead of conflicting.
+ * Without it, ordinary parallel memory writes on separate branches produce a
+ * merge conflict the human has to resolve by hand. Never fails the run —
+ * this is advisory, same posture as `offline-readiness`.
+ */
+function _check_memory_merge_union(project_root: string): Dict {
+    const remedy =
+        'run: npx tsx src/scripts/sync_gitattributes.ts (or `agent-config refresh --project`)';
+    const target = path.join(project_root, sync_gitattributes.DEFAULT_GITATTRIBUTES);
+    if (!pathExists(target)) {
+        return {
+            id: 'memory-merge-union',
+            status: 'warn',
+            message:
+                'no .gitattributes at project root — memory merge-safety attributes not applied',
+            remedy,
+        };
+    }
+    let text: string;
+    try {
+        text = readText(target);
+    } catch (exc) {
+        return {
+            id: 'memory-merge-union',
+            status: 'warn',
+            message: `unreadable .gitattributes at ${target}: ${osErrorStr(exc)}`,
+            remedy,
+        };
+    }
+    const has_block = text.includes(sync_gitattributes.SECTION_HEADER);
+    const has_intake_union = /agents\/memory\/intake\/\*\.jsonl\s+merge=union/.test(text);
+    if (has_block && has_intake_union) {
+        return {
+            id: 'memory-merge-union',
+            status: 'ok',
+            message:
+                '.gitattributes carries the memory merge-safety block (intake JSONL union-merge present)',
+            remedy: '',
+        };
+    }
+    return {
+        id: 'memory-merge-union',
+        status: 'warn',
+        message: has_block
+            ? '.gitattributes has the managed block but is missing the intake merge=union line'
+            : '.gitattributes is missing the memory merge-safety block — parallel-branch ' +
+              'memory writes can conflict instead of merging',
+        remedy,
+    };
+}
+
 interface JsonDecodeError {
     msg: string;
     lineno: number;
@@ -2691,6 +2750,7 @@ function _run_checks(
         'unsupported-combos': () => _check_unsupported_combos(manifest),
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
+        'memory-merge-union': () => _check_memory_merge_union(project_root),
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
@@ -2765,6 +2825,7 @@ function _run_checks_no_manifest(
         'unsupported-combos': () => _skipped_manifest_check('unsupported-combos'),
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
+        'memory-merge-union': () => _check_memory_merge_union(project_root),
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
