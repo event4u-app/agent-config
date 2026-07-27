@@ -76,6 +76,21 @@ concerns:
     script: src/scripts/hooks/block_no_verify.ts
     args: []
     fail_closed: true
+  # road-to-ai-employee-borrowings Phase 1 — kernel immutability Layer 1.
+  # PreToolUse guard: DENIES Write/Edit/NotebookEdit (and cross-platform
+  # equivalents) whose target path is a kernel rule file — the source tree
+  # (src/rules/<kernel>.md) or any projection (dist/agent-src/rules/,
+  # .claude/**/rules/, .augment/rules/, …). ADR-127 permits more than one
+  # blocking hook; this is the second (after block-no-verify). fail_closed:
+  # a parse/detection failure never crashes into a false block — the
+  # guarantee applies to a DETECTED kernel-rule write, which this hook
+  # always catches deterministically (no I/O beyond stdin). No
+  # agent-accessible override — the only legitimate bypass is the
+  # human-owned exception registry named in the deny message.
+  block-kernel-rule-writes:
+    script: src/scripts/hooks/block_kernel_rule_writes.ts
+    args: []
+    fail_closed: true
   # token-saving Phase 3 — PreToolUse RTK-wrap nudge. DETERMINISTIC: keys off a
   # live `which rtk` probe (not the self-reported flag). When rtk is installed
   # and the agent is about to run a single verbose CLI command that is NOT
@@ -172,7 +187,7 @@ platforms:
     session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:      [chat-history]
     stop:             [chat-history, hot-context, verify-before-complete]
-    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop, code-graph-nudge]
+    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   claude:
@@ -180,7 +195,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop, code-graph-nudge]
+    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
@@ -202,7 +217,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop, code-graph-nudge]
+    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
