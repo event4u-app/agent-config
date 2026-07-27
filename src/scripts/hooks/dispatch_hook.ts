@@ -42,6 +42,11 @@ import {
   is_replay_mode,
 } from "./state_io.js";
 import { log_dispatch_issue, fix_hint } from "./dispatch_issues.js";
+import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
+import {
+  setHookStdinOverride,
+  clearHookStdinOverride,
+} from "./hook_stdin.js";
 
 // Free-form JSON values flow through every helper here; a documented
 // alias keeps the surface honest without `any` (ADR-200 § strict TS).
@@ -55,11 +60,14 @@ export type JsonValue =
 export type JsonObject = { [key: string]: JsonValue };
 
 // src/scripts/hooks/dispatch_hook.ts → parents[3] is the repo root.
+// Bundled (dist/hooks/dispatch.js) the module sits two levels below the repo
+// root; under tsx (src/scripts/hooks/) it sits three. The `__AGENT_CONFIG_BUNDLE__`
+// sentinel (esbuild --define) picks the right depth (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+const _IN_BUNDLE = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
+  ...(_IN_BUNDLE ? ["..", ".."] : ["..", "..", ".."]),
 );
 const MANIFEST_PATH = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml");
 
@@ -471,7 +479,115 @@ function _resolve_tsx_invocation(
  * through `tsx` (resolved from the package's `node_modules/.bin`, falling
  * back to `npx tsx`), mirroring how `run.ts` runs its `.ts` twins.
  */
+/**
+ * Single-process dispatch (road-to-credible-install Phase 1): run a concern
+ * IN-PROCESS via the static registry instead of re-spawning a per-concern
+ * interpreter. Mirrors the child-process contract exactly — stdin via the
+ * hook_stdin override, argv swap, cwd = workspace, hardened env, captured
+ * stdout/stderr, crash → rc 3 (the caller applies the fail-open /
+ * fail-closed reduction unchanged).
+ *
+ * Escape hatch: AGENT_CONFIG_HOOKS_ISOLATED=1 forces the historical
+ * spawn-per-concern path (also used by the bench harness for A/B numbers).
+ *
+ * Known trade-off vs the spawn path: the 30 s kill-timeout cannot preempt
+ * in-process synchronous code. Concerns are repo-owned, budget-capped and
+ * fail-open; the latency budget gate (hook-latency-budget.json) is the
+ * standing regression net.
+ */
+function _run_concern_inproc(
+  main_fn: ConcernMain,
+  concern: ConcernDef,
+  envelope: JsonObject,
+): RunResult {
+  const scriptAbs = path.join(REPO_ROOT, String(concern["script"]));
+  const argsList = Array.isArray(concern["args"])
+    ? concern["args"].map((a) => String(a))
+    : [];
+  argsList.push("--platform", String(envelope["platform"] || "generic"));
+  const workspace = String(envelope["workspace_root"] || process.cwd());
+
+  let out = "";
+  let err = "";
+  type WriteFn = typeof process.stdout.write;
+  const makeCapture =
+    (sink: (s: string) => void): WriteFn =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((chunk: any, enc?: any, cb?: any): boolean => {
+      sink(typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf-8"));
+      const callback = typeof enc === "function" ? enc : cb;
+      if (typeof callback === "function") callback();
+      return true;
+    }) as WriteFn;
+
+  const prevStdoutWrite = process.stdout.write;
+  const prevStderrWrite = process.stderr.write;
+  const prevArgv = process.argv;
+  const prevCwd = process.cwd();
+  const prevEnv = { ...process.env };
+
+  const started = performance.now();
+  let rc = 0;
+  setHookStdinOverride(_compactJsonDumps(envelope));
+  process.stdout.write = makeCapture((s) => {
+    out += s;
+  });
+  process.stderr.write = makeCapture((s) => {
+    err += s;
+  });
+  try {
+    process.argv = [prevArgv[0] as string, scriptAbs, ...argsList];
+    // Same env-hardening the spawn path applied — concerns may spawn their
+    // own children (dashboard regen, git), which inherit process.env.
+    const hardened = hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT });
+    for (const k of Object.keys(process.env)) {
+      if (!(k in hardened)) delete process.env[k];
+    }
+    Object.assign(process.env, hardened);
+    if (workspace !== prevCwd && _isDir(workspace)) {
+      process.chdir(workspace);
+    }
+    const result = main_fn(argsList);
+    rc = typeof result === "number" ? result : 0;
+  } catch (exc) {
+    rc = 3;
+    const msg = exc instanceof Error ? (exc.stack ?? exc.message) : String(exc);
+    err += `${String(concern["name"])}: ${msg}\n`;
+    log_dispatch_issue(
+      workspace,
+      String(concern["name"] || "unknown"),
+      "execution_failed",
+      `in-process concern crashed: ${exc instanceof Error ? exc.message : String(exc)}`,
+      fix_hint(),
+    );
+  } finally {
+    process.stdout.write = prevStdoutWrite;
+    process.stderr.write = prevStderrWrite;
+    process.argv = prevArgv;
+    for (const k of Object.keys(process.env)) {
+      if (!(k in prevEnv)) delete process.env[k];
+    }
+    Object.assign(process.env, prevEnv);
+    try {
+      if (process.cwd() !== prevCwd) process.chdir(prevCwd);
+    } catch {
+      /* original cwd vanished — keep going, fail-open */
+    }
+    clearHookStdinOverride();
+  }
+  const elapsed = Math.floor(performance.now() - started);
+  return { rc, stderr: err, stdout: out, duration_ms: elapsed };
+}
+
 function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
+  // In-process fast path — the default whenever the concern is in the
+  // static registry (all manifest concerns; parity is CI-enforced).
+  if (process.env["AGENT_CONFIG_HOOKS_ISOLATED"] !== "1") {
+    const inproc = CONCERN_REGISTRY[String(concern["script"])];
+    if (inproc !== undefined) {
+      return _run_concern_inproc(inproc, concern, envelope);
+    }
+  }
   const script = path.join(REPO_ROOT, String(concern["script"]));
   const argsList = Array.isArray(concern["args"])
     ? concern["args"].map((a) => String(a))
@@ -651,6 +767,57 @@ function _write_feedback(
   } catch (exc) {
     const msg = exc instanceof Error ? exc.message : String(exc);
     process.stderr.write(`dispatch_hook: summary write failed: ${msg}\n`);
+  }
+}
+
+/**
+ * Checkable-rule trip counting (road-to-credible-install Phase 6, scoped P3
+ * cut): every concern that returns BLOCK (1) or WARN (2) — a violation the
+ * gate actually caught — increments a per-concern counter in
+ * `agents/runtime/state/rule-trips.json`. Extends the existing dispatcher
+ * feedback machinery only; the evaluator/umbrella surfaces read this file.
+ *
+ * PII-exclusion-by-construction: the schema carries ONLY concern ids,
+ * integer counters, and ISO dates — no field capable of holding free-form
+ * content, prompt text, or file bodies. Never widen it.
+ *
+ * Fail-open (a broken counter must never affect dispatch), skipped in
+ * replay mode like the feedback dir.
+ */
+function _record_rule_trips(envelope: JsonObject, entries: FeedbackEntry[]): void {
+  if (is_replay_mode()) return;
+  const tripped = entries.filter(
+    (e) => e["exit_code"] === EXIT_BLOCK || e["exit_code"] === EXIT_WARN,
+  );
+  if (tripped.length === 0) return;
+  try {
+    const workspace = String(envelope["workspace_root"] || process.cwd());
+    const state_dir = path.join(workspace, "agents", "runtime", "state");
+    const target = path.join(state_dir, "rule-trips.json");
+    fs.mkdirSync(state_dir, { recursive: true });
+    let doc: JsonObject = { schema_version: 1, concerns: {} };
+    try {
+      const parsed = JSON.parse(fs.readFileSync(target, "utf-8")) as JsonObject;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) doc = parsed;
+    } catch {
+      /* absent or corrupt → fresh counter file */
+    }
+    const concerns = (doc["concerns"] ?? {}) as Record<string, JsonObject>;
+    const today = _now_iso().slice(0, 10);
+    for (const e of tripped) {
+      const name = String(e["concern"]);
+      const prev = (concerns[name] ?? { block: 0, warn: 0 }) as JsonObject;
+      concerns[name] = {
+        block: (Number(prev["block"]) || 0) + (e["exit_code"] === EXIT_BLOCK ? 1 : 0),
+        warn: (Number(prev["warn"]) || 0) + (e["exit_code"] === EXIT_WARN ? 1 : 0),
+        last_trip: today,
+      };
+    }
+    doc["schema_version"] = 1;
+    doc["concerns"] = concerns;
+    atomic_write_json(target, doc);
+  } catch {
+    /* fail-open — counters are observability, never dispatch-critical */
   }
 }
 
@@ -850,6 +1017,7 @@ export function main(argv?: string[]): number {
   }
   const final_rc = _reduce(rcs);
   _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at);
+  _record_rule_trips(envelope, feedback_entries);
   if (context_blocks.length > 0 && final_rc === EXIT_ALLOW) {
     process.stdout.write(context_blocks.join("\n\n") + "\n");
   }
@@ -877,7 +1045,12 @@ function _readStdin(): string {
   }
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (declare at top of file).
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }

@@ -36,6 +36,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // `agents/runtime/state/.dispatcher.lock` discipline (hook-architecture-v1.md
 // § Concurrency, Phase 7.4).
 import { atomic_write_json } from "./hooks/state_io.js";
+import { readHookStdin } from "./hooks/hook_stdin.js";
 
 export const SETTINGS_FILE = ".agent-settings.yml";
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
@@ -201,11 +202,7 @@ function parse_args(argv: string[]): ParsedArgs {
 }
 
 function _readStdin(): void {
-  try {
-    fs.readFileSync(0, "utf-8");
-  } catch {
-    /* ignore */
-  }
+  readHookStdin();
 }
 
 export function main(argv?: string[]): number {
@@ -216,7 +213,13 @@ export function main(argv?: string[]): number {
   return run({ consumer_root: process.cwd(), verbose: args.verbose });
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }

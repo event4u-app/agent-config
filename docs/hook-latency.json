@@ -1,0 +1,52 @@
+{
+    "_comment": "Recorded hook-dispatch latency (bench_hook_latency --update). Method pinned in src/scripts/bench_hook_latency.ts; budgets in src/config/hook-latency-budget.json. Re-run from a fresh clone to reproduce.",
+    "recorded_at": "2026-07-27T18:42:54.627Z",
+    "node": "v25.9.0",
+    "platform": "darwin-arm64",
+    "hardware_note": "see hook-latency-budget.json hardware_reference — CI numbers are the gated ones",
+    "runs_per_event": 50,
+    "results": [
+        {
+            "event": "pre_tool_use",
+            "runs": 50,
+            "p50_ms": 69,
+            "p95_ms": 73,
+            "max_ms": 75
+        },
+        {
+            "event": "post_tool_use",
+            "runs": 50,
+            "p50_ms": 70,
+            "p95_ms": 72,
+            "max_ms": 78
+        },
+        {
+            "event": "user_prompt_submit",
+            "runs": 50,
+            "p50_ms": 71,
+            "p95_ms": 78,
+            "max_ms": 79
+        },
+        {
+            "event": "stop",
+            "runs": 50,
+            "p50_ms": 80,
+            "p95_ms": 83,
+            "max_ms": 83
+        },
+        {
+            "event": "session_start",
+            "runs": 50,
+            "p50_ms": 70,
+            "p95_ms": 73,
+            "max_ms": 75
+        },
+        {
+            "event": "session_end",
+            "runs": 50,
+            "p50_ms": 70,
+            "p95_ms": 79,
+            "max_ms": 80
+        }
+    ]
+}

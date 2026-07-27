@@ -40,6 +40,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { hardenedSpawnEnv } from "./_lib/spawn_env.js";
 import { log_dispatch_issue } from "./hooks/dispatch_issues.js";
+import { readHookStdin } from "./hooks/hook_stdin.js";
 
 export const REPLAY_ENV_VAR = "AGENT_CONFIG_REPLAY";
 
@@ -458,11 +459,7 @@ function parse_args(argv: string[]): ParsedArgs {
 }
 
 function _readStdin(): string {
-  try {
-    return fs.readFileSync(0, "utf-8");
-  } catch {
-    return "";
-  }
+  return readHookStdin();
 }
 
 export function main(argv?: string[]): number {
@@ -471,7 +468,13 @@ export function main(argv?: string[]): number {
   return run(_readStdin(), { consumer_root: root, verbose: args.verbose });
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }
