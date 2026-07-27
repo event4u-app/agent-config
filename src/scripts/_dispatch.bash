@@ -76,6 +76,7 @@ TS-shell native (run via the installed `agent-config` binary):
   commands [ls|explain]      List/explain the command surface from the discovery manifest
   mcp-server                 Turnkey read-only stdio MCP server (no repo clone; ADR-085)
   doctor-shell               Probe the TS-shell environment
+  rtk:detect                 rtk (Rust Token Killer) presence + identity readout (--json)
   eval:record                Record a live trigger-eval result into a corpus manifest
 EOF
 

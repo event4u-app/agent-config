@@ -21,6 +21,7 @@ import { delegateToBash } from './bash/runBash.js';
 import { runVersions } from './commands/versions.js';
 import { runRecordTriggerEval } from './commands/recordTriggerEval.js';
 import { runDoctorShell } from './commands/doctorShell.js';
+import { runRtkDetect } from './commands/rtkDetect.js';
 import { runUiServe } from './commands/uiServe.js';
 import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation } from './initRouting.js';
 import { runSettings } from './commands/settings.js';
@@ -71,6 +72,15 @@ async function main(rawArgv: readonly string[]): Promise<number> {
         .description('Probe the TS-shell environment')
         .action(() => {
             const code = runDoctorShell();
+            process.exit(code);
+        });
+
+    program
+        .command('rtk:detect')
+        .description('Detect rtk (Rust Token Killer) — two-stage presence + identity probe (docs/contracts/rtk-detection.md)')
+        .option('--json', 'Emit the machine-readable contract shape')
+        .action((opts: { json?: boolean }) => {
+            const code = runRtkDetect(opts);
             process.exit(code);
         });
 
@@ -374,7 +384,7 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'mcp-server', 'ui:serve', 'settings', 'config', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
+    const native = ['versions', 'doctor-shell', 'rtk:detect', 'mcp-server', 'ui:serve', 'settings', 'config', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         // Actions that don't hard-exit signal failure via process.exitCode.

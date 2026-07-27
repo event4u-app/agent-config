@@ -40,6 +40,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'converge', disposition: 'delegate', synopsis: 'Consented cleanup of duplicate install surfaces (surface-matrix driven).' },
     { name: 'conformance', disposition: 'delegate', synopsis: 'Consumer conformance contract: doctor --ci + installed-and-firing checks.' },
     { name: 'doctor-shell', disposition: 'native', synopsis: 'Native TS-shell environment probe.' },
+    { name: 'rtk:detect', disposition: 'native', synopsis: 'rtk (Rust Token Killer) presence + identity readout — contract: docs/contracts/rtk-detection.md.' },
     { name: 'ui:serve', disposition: 'native', synopsis: 'Start the local UI server.' },
     { name: 'config', disposition: 'native', synopsis: 'Open the configuration GUI (global by default; --project for the project surface).' },
     { name: 'settings', disposition: 'native', synopsis: 'Open the local Settings GUI (alias of config).' },
