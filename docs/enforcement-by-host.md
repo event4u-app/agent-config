@@ -47,5 +47,30 @@ authoritatively, per artifact type, in
 dispatcher, drift-checked in CI) — we do not restate per-host surface facts here,
 to avoid drift between two hand-maintained tables.
 
+## Vocabulary — the enforcement ladder (glossary, not a migration)
+
+An external "enforcement-first" architecture proposal (reviewed by AI
+council 2026-07-26, road-to-self-critical; **not adopted** — disposition in
+`agents/settings/contexts/enforcement-first-disposition.md`) contributed a
+useful *vocabulary* for talking about how strongly a rule can be held. It
+is recorded here as a glossary alongside the resolver taxonomy this repo
+already measures with (`enforced_by:` → `validator` / `validator-local` /
+`observer` / `none`, per
+[ADR-127](decisions/ADR-127-enforcement-claims-must-resolve.md)). No
+migration toward it is scheduled.
+
+| Ladder level | Meaning | Nearest resolver tier today |
+|---|---|---|
+| L1 `impossible` | The violating action cannot be expressed (capability removed, API absent) | — (no per-rule tier; this is tool-grant design, see `tool-safety`) |
+| L2 `blocked` | A deterministic gate rejects the action at call time | `validator` (CI-reachable), or a `fail_closed: true` hook |
+| L3 `verified` | The action runs; a check detects the violation after the fact and fails a build | `validator` / `validator-local` |
+| L4 `just-in-time` | The constraint is injected into context at the moment of relevance, not always-loaded | *no equivalent today* — the one genuinely new level; worth a future look (hook-capable hosts only) |
+| L5 `prose` | The constraint is instructed, model-cooperatively | `observer` / `none` (honest prose, per the compile-time-first stance above) |
+
+The ladder is descriptive vocabulary. The measured stance stands: lead
+with compile-time prose everywhere, bind deterministic checks where a host
+supports them, and never delete the prose from static-host projections —
+that is where the measured discipline lift lives.
+
 See also the artifact-projection view: [`capability-matrix.md`](capability-matrix.md)
 (its `hooks` row already shows hooks are native to the Claude plugin only).
