@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: rtk-output-filtering
-description: "Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns."
+description: "Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer, third-party Apache-2.0; upstream reports 60-90% token savings). Covers installation, configuration, and usage patterns."
 domain: process
 execution:
   type: assisted
@@ -23,9 +23,17 @@ packs:
 
 ## What
 
-High-performance CLI proxy that reduces LLM token consumption by 60-90%
-on common dev commands through intelligent output filtering (whitespace, boilerplate,
+High-performance CLI proxy that reduces LLM token consumption on common dev
+commands through intelligent output filtering (whitespace, boilerplate,
 comments, duplicate log messages). Single Rust binary, <10ms startup overhead.
+**Third-party Apache-2.0 tool** (rtk-ai upstream, not an event4u project).
+
+**Savings, honestly stated:** upstream reports 60-90% (their estimate —
+"actual savings vary"). agent-config's own scoped spot-measurement
+(2026-07-28, one repo, one macOS machine, 8-command corpus) landed at
+**33% overall, 0-57% per command** — verbose commands (`git status`,
+`git log`, `ls -la`) save ~55%, already-compact output (`--oneline`,
+`--stat`) passes through at ~0%. See `internal/bench/rtk-savings/RESULTS.md`.
 
 **Docs:** https://www.mintlify.com/rtk-ai/rtk
 **Repo:** https://github.com/rtk-ai/rtk
@@ -34,9 +42,9 @@ comments, duplicate log messages). Single Rust binary, <10ms startup overhead.
 
 Wrap any CLI command with `rtk`:
 ```bash
-rtk git status        # 80-92% savings
-rtk git log           # compact log output
-rtk cargo test        # 90% savings — only failures shown
+rtk git status        # verbose status → compact (measured ~55% here)
+rtk git log           # compact log output (measured ~55% here)
+rtk cargo test        # upstream: only failures shown
 rtk npm test          # same for JS/TS
 rtk docker compose ps # compact container status
 ```
@@ -70,12 +78,23 @@ outside onboarding, follow the Installation section below and set
 
 ## Installation (on-demand)
 
-Invoked by `/onboard` when rtk is not on `PATH`, or on explicit user
-request. Never fire unsolicited.
+Invoked when rtk is not on `PATH` and the user explicitly asks to install
+it. Never fire unsolicited.
 
-1. Ask which installer to use (macOS → Homebrew; otherwise Cargo).
-2. Run the installer. On success:
-   1. `rtk --version` to verify.
+1. Offer the verified per-OS install path (same map as
+   `src/install/rtkDetection.ts` / `docs/contracts/rtk-detection.md`):
+   - macOS → `brew install rtk` (official homebrew-core formula)
+   - Linux → `curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/master/install.sh | sh`
+     (installs to `~/.local/bin`)
+   - Windows → `winget install rtk-ai.rtk` (plus the documented ripgrep
+     dependency: `winget install BurntSushi.ripgrep.MSVC`); winget-less
+     images use the upstream `rtk-x86_64-pc-windows-msvc.zip` release.
+   **NEVER `cargo install rtk`** — the bare crates.io `rtk` crate is the
+   unrelated Rust Type Kit, not Rust Token Killer.
+2. Run the installer only on explicit confirmation. On success:
+   1. `rtk gain` to verify IDENTITY (the savings dashboard prints "RTK
+      Token Savings" only on Rust Token Killer — `rtk --version` cannot
+      distinguish the two same-name tools).
    2. `rtk init --global` to enable auto-rewrite hooks.
    3. Apply **Post-Install Setup** below (telemetry, tee, audit logging).
    4. Generate project-local filters (see Post-Install Setup).

@@ -50,7 +50,7 @@ INTENT
 │     → cite [cli-output-handling](../../rules/cli-output-handling.md)
 │       (Iron Law: redirect / tail / grep / wrap)
 │     → cite [rtk-output-filtering](../rtk-output-filtering/SKILL.md)
-│       (rtk wrapper, 60-90% savings on tests/linters/git)
+│       (rtk wrapper — upstream reports 60-90% on tests/linters/git)
 │
 ├── Large document or paste (PDF, DOCX, HTML, transcript)
 │     → cite markitdown (upstream: https://github.com/microsoft/markitdown)
