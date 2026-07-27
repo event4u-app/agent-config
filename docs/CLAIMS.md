@@ -176,7 +176,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-25
 
 ### claim: skill-count
-- claim: 281 skills.
+- claim: 283 skills.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
@@ -190,7 +190,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: rule-count
-- claim: 107 governed rules.
+- claim: 109 governed rules.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
