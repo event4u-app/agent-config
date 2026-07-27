@@ -10,7 +10,9 @@ name: glama MCP smoke
 # openai/gpt-4o, converged):
 #   - path-filtered to the MCP-build surface + weekly cron on main (bitrot)
 #   - NON-BLOCKING / informational: the failure domain includes third-party
-#     registries (Docker Hub, nodesource, astral.sh, PyPI) we do not control.
+#     registries (Docker Hub, npm) we do not control. (nodesource dropped
+#     2026-07-28: its setup script 403'd with a swallowed error — node now
+#     comes from the official node:24 image via a multi-stage copy.)
 #     Do NOT add this check to the required-checks set in
 #     docs/contracts/branch-protection-policy.md. Failures stay visible (red)
 #     so the forcing function works: a glama sync failure audits ignored runs.
