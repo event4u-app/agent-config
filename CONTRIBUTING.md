@@ -235,13 +235,12 @@ The setting flip is the easy part. Before enabling it, confirm:
 ## Installer and Python tooling
 
 - Primary installer entry point: `scripts/install` (bash orchestrator).
-  It chains `scripts/install.sh` (payload sync) and `scripts/install.py`
-  (bridge files). `bin/install.php` and `scripts/postinstall.sh` are
-  thin wrappers that route through the orchestrator.
+  It chains `scripts/install.sh` (payload sync) and `scripts/install.ts`
+  (bridge files; run via the bundled `dist/install/install.mjs`).
 - Each stage stays independently callable (`bash scripts/install.sh`,
-  `python3 scripts/install.py`) and has its own CLI.
-- Python scripts must work on Python 3.10+ with only the standard library.
-  No third-party runtime dependencies.
+  `npx tsx scripts/install.ts`) and has its own CLI.
+- The retired Python installer is gone (ADR-200); no Python runtime is
+  required anywhere on the install path.
 - Add integration tests to `tests/test_install.sh` (payload sync) or
   `tests/test_install_orchestrator.sh` (orchestrator + wrappers), and
   Python unit tests under `tests/`.
@@ -314,6 +313,11 @@ which never reach a consumer.
 > recovery — live in [`docs/release-runbook.md`](docs/release-runbook.md), with
 > the secret/operator-gated dependencies in [`docs/succession.md`](docs/succession.md).
 > The summary below is orientation; the runbook is the source of truth.
+>
+> **Cadence contract:** release *types* (security patch anytime · minors
+> batched ~weekly · breaking rare + migration note) and the `latest`/`next`
+> dist-tag split are pinned in [`docs/releases.md`](docs/releases.md); the
+> publish workflow routes by version shape.
 
 Releases are driven by a single command that owns the entire pipeline from
 version bump to npm publish:
@@ -431,7 +435,9 @@ Tooling:
   `npm prepack` so every published tarball carries the manifest.
 - `task lint-mcp-registry-manifest` — schema + payload-shape gate.
 - `task lint-positioning` — asserts the README H1 anchor
-  (*"Universal AI Agent OS"*) appears in `package.json.description`
+  (the text after the em-dash in the README H1, currently *"every
+  claim machine-checked, including \"zero runtime daemon\""*) appears
+  in `package.json.description`
   and `.github/about.yml`, and that every topic in
   `.github/topics.yml` is discoverable in the README body (literal
   or via the optional `equivalents:` map).

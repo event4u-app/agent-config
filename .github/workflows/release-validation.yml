@@ -187,3 +187,20 @@ jobs:
           # fresh `init` bootstraps onto a stale pin. release.ts set_template_pin
           # keeps it in lockstep; this gate is the backstop on the release PR.
           ./scripts-run src/scripts/check_template_pin_drift
+
+  audit-gate:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
+    name: npm audit (runtime deps, high+)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Standing audit gate (road-to-credible-install Phase 0): same floor
+      # status as ci-green on every release PR. Lockfile-driven — no npm ci
+      # needed; dev-only advisories do not block the release line.
+      - name: npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev --audit-level=high

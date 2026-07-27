@@ -13,7 +13,11 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
 var __commonJS = (cb, mod) => function __require2() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  try {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  } catch (e) {
+    throw mod = 0, e;
+  }
 };
 var __export = (target, all) => {
   for (var name in all)
@@ -16925,6 +16929,20 @@ function jsonDumpsCompact(value) {
   }
   return _jsonStrNoAscii(String(value));
 }
+function yamlSafeLoad(text) {
+  let YAML2;
+  try {
+    YAML2 = require_dist();
+  } catch {
+    return null;
+  }
+  try {
+    const data = YAML2.parse(text, { version: "1.1" });
+    return data;
+  } catch {
+    return void 0;
+  }
+}
 var DEFAULT_PROFILE = "balanced";
 var SUPPORTED_PROFILES = ["minimal", "balanced", "full"];
 var RULE_LOADING_TIER_PLACEHOLDER = "__RULE_LOADING_TIER__";
@@ -18279,6 +18297,30 @@ function _enforce_not_source_repo(scope, project_root) {
     `Refusing to install agent-config into its own source checkout (detected: ${signature}). The source repo is global-only \u2014 a project-scope install would recreate the .augment/ .claude/ .cursor/ projection trees in the repo (double token cost). Run \`task sync\` to regenerate them from .agent-src.uncondensed/ instead, or set AGENT_CONFIG_ALLOW_SELF_INSTALL=1 to force.`
   );
 }
+function _load_yaml_doc(p) {
+  if (!pathExists(p) || !isFile(p)) return {};
+  let text;
+  try {
+    text = readText(p);
+  } catch {
+    return {};
+  }
+  const data = yamlSafeLoad(text);
+  return _isPlainObject2(data) ? data : {};
+}
+function _load_default_settings(package_root) {
+  const template_source = path12.join(package_root, "src", "config", "agent-settings.template.yml");
+  if (!pathExists(template_source)) return {};
+  let text;
+  try {
+    text = readText(template_source);
+  } catch {
+    return {};
+  }
+  const rendered = text.split(RULE_LOADING_TIER_PLACEHOLDER).join(DEFAULT_PROFILE).split(USER_TYPE_PLACEHOLDER).join("");
+  const data = yamlSafeLoad(rendered);
+  return _isPlainObject2(data) ? data : {};
+}
 function _resolve_scope(opts, detected, detect_reason, custom_path) {
   if (opts.scope === "project") return "project";
   if (opts.scope === "global") return "global";
@@ -19050,22 +19092,22 @@ function _verify_deploy_targets(anchor, plan) {
   }
   return missing;
 }
-function _prune_lab_modules(deploy_results, lab_ids) {
+function _prune_modules_by(deploy_results, is_pruned) {
   let pruned = 0;
   const adjusted = {};
   for (const tool_id of Object.keys(deploy_results)) {
     const [written, skipped, status, paths] = deploy_results[tool_id];
-    const lab_skill_dirs = /* @__PURE__ */ new Set();
+    const pruned_skill_dirs = /* @__PURE__ */ new Set();
     for (const p of paths) {
       const parts = p.split(path12.sep);
       if (parts.includes("skills")) {
         const i = parts.indexOf("skills");
         if (i + 1 < parts.length) {
           const skill_root = parts.slice(0, i + 2).join(path12.sep);
-          if (!lab_skill_dirs.has(skill_root)) {
+          if (!pruned_skill_dirs.has(skill_root)) {
             const skillmd = path12.join(skill_root, "SKILL.md");
-            if (pathExists(skillmd) && is_lab_artefact(skillmd, lab_ids)) {
-              lab_skill_dirs.add(skill_root);
+            if (pathExists(skillmd) && is_pruned(skillmd)) {
+              pruned_skill_dirs.add(skill_root);
             }
           }
         }
@@ -19075,18 +19117,18 @@ function _prune_lab_modules(deploy_results, lab_ids) {
     const delete_files = [];
     for (const p of paths) {
       const parts = p.split(path12.sep);
-      let is_lab = false;
+      let is_target = false;
       if (parts.includes("skills")) {
         const i = parts.indexOf("skills");
-        if (i + 1 < parts.length && lab_skill_dirs.has(parts.slice(0, i + 2).join(path12.sep))) {
-          is_lab = true;
+        if (i + 1 < parts.length && pruned_skill_dirs.has(parts.slice(0, i + 2).join(path12.sep))) {
+          is_target = true;
         }
-      } else if (parts.includes("commands") && path12.extname(p) === ".md" && is_lab_artefact(p, lab_ids)) {
-        is_lab = true;
+      } else if (parts.includes("commands") && path12.extname(p) === ".md" && is_pruned(p)) {
+        is_target = true;
       }
-      (is_lab ? delete_files : keep).push(p);
+      (is_target ? delete_files : keep).push(p);
     }
-    for (const d of lab_skill_dirs) {
+    for (const d of pruned_skill_dirs) {
       fs14.rmSync(d, { recursive: true, force: true });
     }
     for (const p of delete_files) {
@@ -19101,6 +19143,85 @@ function _prune_lab_modules(deploy_results, lab_ids) {
     adjusted[tool_id] = [Math.max(0, written - delete_files.length), skipped, status, keep];
   }
   return [pruned, adjusted];
+}
+function _prune_lab_modules(deploy_results, lab_ids) {
+  return _prune_modules_by(deploy_results, (p) => is_lab_artefact(p, lab_ids));
+}
+var SCOPED_ACTIVE_WORKSPACES = /* @__PURE__ */ new Set(["engineering", "agent-config-maintainer"]);
+function _load_packs_registry(package_root) {
+  const vocab_path = path12.join(package_root, "src", "config", "discovery", "packs.yml");
+  const data = yamlSafeLoad(readText(vocab_path));
+  if (!Array.isArray(data)) {
+    throw new Error(`packs.yml did not parse to a list: ${vocab_path}`);
+  }
+  const out = [];
+  for (const entry of data) {
+    if (!_isPlainObject2(entry)) continue;
+    const id = entry["id"];
+    if (typeof id !== "string" || id === "") continue;
+    const workspaces_raw = entry["workspaces"];
+    const workspaces = Array.isArray(workspaces_raw) ? workspaces_raw.filter((w) => typeof w === "string") : [];
+    const requires_raw = entry["requires"] ?? entry["requires_hint"];
+    const requires = Array.isArray(requires_raw) ? requires_raw.filter((r) => typeof r === "string") : [];
+    out.push({ id, workspaces, requires });
+  }
+  return out;
+}
+function _compute_active_pack_ids(packs, runtime_active_packs) {
+  const by_id = /* @__PURE__ */ new Map();
+  for (const p of packs) by_id.set(p.id, p);
+  const active = /* @__PURE__ */ new Set();
+  for (const p of packs) {
+    if (p.workspaces.some((w) => SCOPED_ACTIVE_WORKSPACES.has(w))) {
+      active.add(p.id);
+    }
+  }
+  for (const id of runtime_active_packs) {
+    active.add(id);
+  }
+  let frontier = [...active];
+  while (frontier.length > 0) {
+    const next = [];
+    for (const id of frontier) {
+      const rec = by_id.get(id);
+      if (rec === void 0) continue;
+      for (const dep of rec.requires) {
+        if (!active.has(dep)) {
+          active.add(dep);
+          next.push(dep);
+        }
+      }
+    }
+    frontier = next;
+  }
+  return active;
+}
+function _resolve_global_settings_doc() {
+  const root = event4u_root();
+  const canonical = path12.join(root, "settings", SETTINGS_FILE);
+  if (pathExists(canonical)) return _load_yaml_doc(canonical);
+  const legacy = path12.join(root, SETTINGS_FILE);
+  if (pathExists(legacy)) return _load_yaml_doc(legacy);
+  return null;
+}
+function _resolve_scoped_projection(package_root) {
+  const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
+  const projection = _isPlainObject2(doc["projection"]) ? doc["projection"] : {};
+  const mode = projection["mode"] === "scoped" ? "scoped" : "legacy-all";
+  const runtime = _isPlainObject2(doc["runtime"]) ? doc["runtime"] : {};
+  const active_packs_raw = runtime["active_packs"];
+  const active_packs = Array.isArray(active_packs_raw) ? active_packs_raw.filter((v) => typeof v === "string") : [];
+  return { mode, active_packs };
+}
+function _prune_scoped_modules(deploy_results, active_ids) {
+  return _prune_modules_by(deploy_results, (p) => {
+    const packs = frontmatter_packs(p);
+    if (packs.size === 0) return false;
+    for (const id of packs) {
+      if (active_ids.has(id)) return false;
+    }
+    return true;
+  });
 }
 function install_global(tools, force, project_root = null, core_only = false) {
   const migrated = migrate_legacy_namespace();
@@ -19175,6 +19296,24 @@ function install_global(tools, force, project_root = null, core_only = false) {
       info(
         `\u{1F9F9} Core-only install: pruned ${pruned} lab-tier artefact(s) (packs: ${[...lab_ids].sort().join(", ")}).`
       );
+    }
+  }
+  try {
+    const { mode, active_packs } = _resolve_scoped_projection(package_root);
+    if (mode === "scoped") {
+      const packs_registry = _load_packs_registry(package_root);
+      const active_ids = _compute_active_pack_ids(packs_registry, active_packs);
+      let scoped_pruned;
+      [scoped_pruned, deploy_results] = _prune_scoped_modules(deploy_results, active_ids);
+      if (!state.QUIET) {
+        info(
+          `\u{1F9F9} Scoped install: pruned ${scoped_pruned} non-active-pack artefact(s) (active packs: ${[...active_ids].sort().join(", ") || "(none)"}). Set projection.mode: legacy-all in .agent-settings.yml to restore the full surface.`
+        );
+      }
+    }
+  } catch (e) {
+    if (!state.QUIET) {
+      warn(`Scoped-projection prune failed \u2014 restoring full tree (${String(e)}).`);
     }
   }
   const failed_tools = new Set(
@@ -20421,6 +20560,7 @@ export {
   _apply_payload_preview,
   _bridge_marker,
   _canonical_settings_target,
+  _compute_active_pack_ids,
   _current_settings_surface,
   _detect_legacy_for_migration,
   _dry_run_summary,
@@ -20430,14 +20570,20 @@ export {
   _inject_packs,
   _is_agent_config_source_repo,
   _is_tool_enabled,
+  _load_packs_registry,
   _merge_tools_aliases,
   _parse_legacy_settings,
   _parse_profile_ini,
   _parse_tools,
+  _prune_lab_modules,
+  _prune_modules_by,
+  _prune_scoped_modules,
   _render_template,
   _replace_template_value,
   _replace_template_value_raw,
+  _resolve_global_settings_doc,
   _resolve_scope,
+  _resolve_scoped_projection,
   _resolve_settings_read,
   _team_setup_hint_line,
   _tools_was_all,

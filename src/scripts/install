@@ -3,7 +3,7 @@
 #
 # Orchestrates the two stages:
 #   1. scripts/install.sh  — payload sync (copy rules, symlink skills/commands)
-#   2. scripts/install.py  — bridge files (.agent-settings, VSCode/Augment JSONs)
+#   2. scripts/install.ts  — bridge files (.agent-settings, VSCode/Augment JSONs)
 #
 # This is the only installer a consumer needs to invoke. The underlying
 # scripts remain callable directly for advanced use; see their --help.
@@ -35,7 +35,7 @@
 #   --verbose         Detailed payload sync output
 #   --quiet           Suppress non-error output
 #   --skip-sync       Skip payload sync (install.sh)
-#   --skip-bridges    Skip bridge files (install.py)
+#   --skip-bridges    Skip bridge files (install.ts)
 #   --global          Install to user-scope paths (~/.claude/, ~/.cursor/, …)
 #                     instead of project-locally. Implies --skip-sync (the
 #                     payload sync stage is project-only). See ADR-007.
@@ -100,7 +100,7 @@ FLEET_CONFIG=""
 USER_TYPE=""
 NO_UI=false
 
-# Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
+# Single source of truth for valid tool IDs (also referenced by install.sh / install.ts).
 VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro all"
 
 show_help() {
@@ -214,9 +214,9 @@ fi
 # (and its --scope project / --scope=project / SCOPE shorthand) is the
 # maintainer-only escape hatch behind AGENT_CONFIG_DEV_MODE=1. Without
 # the env flag we refuse here so the bash orchestrator fails fast with
-# a directive error pointing at the maintainer doc — install.py's
+# a directive error pointing at the maintainer doc — install.ts's
 # Python-side _enforce_consumer_global_only still backstops the same
-# check for direct python3 scripts/install.py invocations.
+# check for legacy direct python3 installer invocations (retired install.py).
 if [[ "${SCOPE:-}" == "project" && "${AGENT_CONFIG_DEV_MODE:-}" != "1" ]]; then
     err "--scope=project is reserved for maintainers (ADR-020 — consumer installs are global-only). Set AGENT_CONFIG_DEV_MODE=1 to opt in. See docs/maintainers/dev-mode.md."
     exit 1
@@ -296,7 +296,7 @@ prompt_tools() {
 # When an interactive global install will hand off to the browser wizard,
 # the wizard is the single tool-selection surface — skip the terminal
 # picker so it does not pre-empt (and, via TOOLS_EXPLICIT, suppress) the
-# GUI. Mirrors install.py::_wizard_should_launch (the --no-ui flag is
+# GUI. Mirrors install.ts wizard_should_launch (the --no-ui flag is
 # handled here too — it suppresses both the wizard and the picker).
 # Headless paths (no TTY / CI / AGENT_CONFIG_NO_UI) still get the picker.
 wizard_will_handle_tools=false

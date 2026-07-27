@@ -261,8 +261,10 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         // here on the static UI responses. Additive hardening only: the
         // three onRequest security hooks above (Host / Origin / Bearer) are
         // unchanged, and no `/api/*` route is affected.
-        setHeaders: (res): void => {
-            res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+        // @fastify/static v10 passes the FastifyReply (not the raw Node
+        // response) to setHeaders — use reply.header().
+        setHeaders: (reply): void => {
+            reply.header('Content-Security-Policy', "frame-ancestors 'none'");
         },
     });
 
