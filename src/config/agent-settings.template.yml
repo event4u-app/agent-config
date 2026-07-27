@@ -214,6 +214,14 @@ personal:
   # false = silently investigate, only report the conclusion
   play_by_play: false
 
+  # Session canary — the name the agent addresses you with at the start of
+  # every new task (e.g. "Alex"). Like a canary in a coal mine: when the
+  # greeting silently disappears, the context window is degrading and it is
+  # time for a fresh conversation. Also keeps the reply-close markers alive
+  # (ONE end-summary; PR URL as the literal last line).
+  # Empty = feature off. See rules/session-canary.md.
+  canary_name: ""
+
   # Prefix PR comment replies with a bot icon 🤖 (true, false)
   # Personal preference — each developer decides for themselves.
   pr_comment_bot_icon: false
