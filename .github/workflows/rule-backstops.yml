@@ -88,6 +88,15 @@ jobs:
       - name: output-discipline (placeholder prose)
         run: ./scripts-run src/scripts/lint_output_slop
 
+      - name: pre-migration references (retired Python install hints)
+        run: ./scripts-run src/scripts/lint_pre_migration_refs
+
+      - name: consumer-internal references (maintainer-only paths/tasks in shipped skills)
+        run: ./scripts-run src/scripts/lint_consumer_internal_refs
+
+      - name: budget ownership (owner + review date on every gate budget)
+        run: ./scripts-run src/scripts/lint_budget_ownership
+
       - name: persona-governance
         run: ./scripts-run src/scripts/lint_persona_governance
 

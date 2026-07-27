@@ -30,6 +30,9 @@
 // TS port of the retired Python tools.py (ADR-200). Preserves the full public surface:
 //   STDIO_TRANSPORT, BuiltinTool, ToolHandler, ALLOWLIST, to_mcp_tool_meta,
 //   CATALOG_STUBS, STUB_NAMES, REGISTRY, ToolCache, boot_log_line.
+// TS-only addition (Phase 3 of road-to-credible-install): `ToolSideEffect` +
+// `BuiltinTool.side_effect` — the generated-catalog source of truth for a
+// tool's side-effect classification and `readOnlyHint` annotation.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -78,6 +81,16 @@ export type ToolHandler = (
 ) => Promise<Record<string, unknown>>;
 
 /**
+ * Side-effect classification surfaced in `consumer_tool_catalog.json` and
+ * (for implemented tools) as the `readOnlyHint` MCP annotation. `ro` never
+ * writes or spawns; `fs-write` edits the filesystem; `shell` spawns a
+ * subprocess. Single source of truth for a tool's own classification — the
+ * catalog generator (`build_mcp_catalog.ts`) reads it directly off
+ * `ALLOWLIST` rather than a hand-maintained shadow list.
+ */
+export type ToolSideEffect = 'ro' | 'fs-write' | 'shell';
+
+/**
  * Static registration record for an allowlisted MCP tool.
  *
  * `input_schema` is a JSON-Schema object the SDK validates against on
@@ -85,12 +98,15 @@ export type ToolHandler = (
  * validated arguments + the resolved `consumer_root` path.
  *
  * Mirrors the Python frozen dataclass `BuiltinTool` (field order
- * preserved).
+ * preserved). `side_effect` is a TS-only addition (Phase 3 of
+ * road-to-credible-install) — the Python original predates the generated
+ * catalog and had no analogous field.
  */
 export interface BuiltinTool {
     readonly name: string;
     readonly description: string;
     readonly input_schema: Record<string, unknown>;
+    readonly side_effect: ToolSideEffect;
     readonly handler: ToolHandler;
 }
 
@@ -1197,6 +1213,7 @@ async function _readResourceBodyHandler(
 export const ALLOWLIST: Record<string, BuiltinTool> = {
     lint_skills: {
         name: 'lint_skills',
+        side_effect: 'ro',
         description:
             'Lint skill, rule, command, guideline, and persona markdown ' +
             'files for frontmatter and structural errors. Use before ' +
@@ -1225,6 +1242,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     chat_history_append: {
         name: 'chat_history_append',
+        side_effect: 'fs-write',
         description:
             "Append one structured entry to the consumer project's " +
             'chat-history log (a JSONL file). Use to record a decision, ' +
@@ -1286,6 +1304,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     chat_history_read: {
         name: 'chat_history_read',
+        side_effect: 'ro',
         description:
             "Read recent entries back from the consumer project's " +
             'chat-history JSONL ' +
@@ -1362,6 +1381,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     memory_lookup: {
         name: 'memory_lookup',
+        side_effect: 'ro',
         description:
             'Retrieve engineering-memory entries for one or more memory ' +
             'types, optionally narrowed to specific anchor paths. Use ' +
@@ -1429,6 +1449,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     memory_get: {
         name: 'memory_get',
+        side_effect: 'ro',
         description:
             'Batch-fetch FULL memory entries by id — the second half of ' +
             'the index-first retrieval workflow. Call memory_lookup with ' +
@@ -1453,6 +1474,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     memory_status: {
         name: 'memory_status',
+        side_effect: 'ro',
         description:
             'Report the memory backend status. Memory is entirely ' +
             'file-backed (`agents/memory/`); there is no external backend. ' +
@@ -1467,6 +1489,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     list_skills: {
         name: 'list_skills',
+        side_effect: 'ro',
         description:
             'Enumerate every skill the server currently exposes as a ' +
             'prompt, each with its name, description, and source. Use to ' +
@@ -1482,6 +1505,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     list_commands: {
         name: 'list_commands',
+        side_effect: 'ro',
         description:
             'Enumerate every slash command the server currently exposes ' +
             'as a prompt, each with its name and description. Use to ' +
@@ -1497,6 +1521,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     list_rules: {
         name: 'list_rules',
+        side_effect: 'ro',
         description:
             'Enumerate every behavioral rule the server exposes as a ' +
             'resource, each with its URI, name, and description. Use to ' +
@@ -1513,6 +1538,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     read_resource_body: {
         name: 'read_resource_body',
+        side_effect: 'ro',
         description:
             'Fetch the rendered body of a single resource URI (rule, ' +
             'guideline, or context document) in one call, without the ' +
@@ -1538,6 +1564,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     memory_signal: {
         name: 'memory_signal',
+        side_effect: 'fs-write',
         description:
             'Record an engineering-memory signal — a short, anchored ' +
             'observation such as a recurring bug pattern or an ownership ' +
@@ -1572,6 +1599,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     roadmap_progress: {
         name: 'roadmap_progress',
+        side_effect: 'fs-write',
         description:
             'Regenerate `agents/roadmaps-progress.md` from the current ' +
             'checkbox state of every active roadmap. Use after landing ' +
@@ -1595,6 +1623,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     roadmap_archive: {
         name: 'roadmap_archive',
+        side_effect: 'fs-write',
         description:
             'Archive every roadmap that has reached `count_open == 0` and ' +
             'was touched on the current branch — `git mv` to ' +
@@ -1611,6 +1640,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     capabilities_index: {
         name: 'capabilities_index',
+        side_effect: 'fs-write',
         description:
             "Regenerate `CAPABILITIES.yaml`, the package's coverage index " +
             'of skills, rules, commands, and guidelines. Use after adding ' +
@@ -1634,6 +1664,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     doctor_report: {
         name: 'doctor_report',
+        side_effect: 'ro',
         description:
             'Run the consumer-project doctor diagnostic and return a ' +
             'structured health report (install drift, hook wiring, ' +
@@ -1648,6 +1679,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     conformance_check: {
         name: 'conformance_check',
+        side_effect: 'ro',
         description:
             'Run the consumer conformance contract (`doctor --ci` plus ' +
             'installed-and-firing checks) and return pass/fail per check. ' +
@@ -1662,6 +1694,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     telemetry_report: {
         name: 'telemetry_report',
+        side_effect: 'ro',
         description:
             'Return the artefact-engagement telemetry report — essential ' +
             '/ useful / retirement-candidate skills and rules ranked by ' +
@@ -1684,6 +1717,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     council_estimate: {
         name: 'council_estimate',
+        side_effect: 'ro',
         description:
             'Estimate the token cost of an AI-council debate over a given ' +
             'input (roadmap, diff, prompt, or file set) without spending ' +
@@ -1713,6 +1747,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     },
     run_tests: {
         name: 'run_tests',
+        side_effect: 'shell',
         description:
             "Run the consumer project's vitest test suite under a " +
             'compiled safety envelope: fixed argv (no shell ' +
@@ -1744,11 +1779,18 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
 
 /** Render a `BuiltinTool` as kwargs for `mcp.types.Tool`. */
 export function to_mcp_tool_meta(tool: BuiltinTool): Record<string, unknown> {
-    return {
+    const meta: Record<string, unknown> = {
         name: tool.name,
         description: tool.description,
         inputSchema: tool.input_schema,
     };
+    // Annotations are honest MCP tool-behavior hints (Phase 3 of
+    // road-to-credible-install): only the implemented set carries them — a
+    // stub never actually runs, so there is nothing true to annotate.
+    if (tool.name in ALLOWLIST) {
+        meta['annotations'] = { readOnlyHint: tool.side_effect === 'ro' };
+    }
+    return meta;
 }
 
 // ---------------------------------------------------------------------
@@ -1790,6 +1832,7 @@ function _buildCatalogRegistry(): [Record<string, BuiltinTool>, ReadonlySet<stri
             name: entry.name,
             description: entry.description,
             input_schema: entry.input_schema,
+            side_effect: entry.side_effect as ToolSideEffect,
             handler: _makeStubHandler(entry, installHintValue),
         };
         stubNames.add(entry.name);
@@ -1801,9 +1844,17 @@ const _catalogBuild = _buildCatalogRegistry();
 export const CATALOG_STUBS: Record<string, BuiltinTool> = _catalogBuild[0];
 export const STUB_NAMES: ReadonlySet<string> = _catalogBuild[1];
 
-// Full wire-surface registry — implemented + stubs. `tools/list` reads
-// from this; `tools/call` dispatches against it.
-export const REGISTRY: Record<string, BuiltinTool> = { ...ALLOWLIST, ...CATALOG_STUBS };
+// Wire-surface registry — IMPLEMENTED TOOLS ONLY (ADR-132, council revisit
+// 2026-07-27 after the evaluator scoring-model claim was verified: the
+// 40%-minimum term makes phantom stub tools the structural worst-scored
+// entries, and an unlisted tool is uncallable in compliant MCP clients
+// anyway — so a stub on `tools/list` is pure cost). The 12 stub entries
+// remain in the GENERATED catalog as the documented implemented-on-demand
+// backlog (marked "[stub — implemented on demand]"); they are no longer
+// registered as callable tools on the stdio transport. `CATALOG_STUBS` /
+// `STUB_NAMES` stay exported for the catalog surface, the cloud packer,
+// and the parity tests.
+export const REGISTRY: Record<string, BuiltinTool> = { ...ALLOWLIST };
 
 /**
  * Registry view backing the MCP `tools/*` handlers.

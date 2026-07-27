@@ -15,7 +15,7 @@
 #  (a) stages a tarball from `npm pack` or operator-supplied .tgz
 #  (b) verifies sha256sum against a separate-channel manifest +
 #      operator GPG key
-#  (c) invokes `scripts/install.py --offline --package-dir=<staging>`
+#  (c) invokes `scripts/install.ts --offline --package-dir=<staging>`
 #  (d) writes additive lockfile fields under schema_version: 1
 #      (installation_mode, package_checksum, signature_verified)
 #
@@ -24,7 +24,7 @@
 #   1   — argument error
 #   2   — checksum mismatch
 #   3   — GPG verification failed
-#   4   — install.py invocation failed
+#   4   — install.ts invocation failed
 #   5   — required dependency missing
 
 set -euo pipefail
@@ -53,7 +53,7 @@ Optional:
                     (default: $(mktemp -d)).
   --package-version Override the semver written to installed.lock
                     (default: parse package.json after extraction).
-  --dry-run         Verify everything but skip install.py invocation.
+  --dry-run         Verify everything but skip install.ts invocation.
 
 Exit codes: 0 ok · 1 args · 2 checksum · 3 gpg · 4 install · 5 dep
 USAGE

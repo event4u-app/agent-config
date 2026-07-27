@@ -91,7 +91,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'roadmap-progress:hook', disposition: 'delegate', synopsis: 'PostToolUse hook entry point — regenerates the roadmap dashboard.' },
     { name: 'onboarding-gate:hook', disposition: 'delegate', synopsis: 'Hook entry point — writes the onboarding-gate state file.' },
     { name: 'context-hygiene:hook', disposition: 'delegate', synopsis: 'PostToolUse hook entry point — maintains context-hygiene state.' },
-    { name: 'dispatch:hook', disposition: 'delegate', synopsis: 'Universal hook dispatcher (runs the resolved concern chain).' },
+    { name: 'dispatch:hook', disposition: 'native', synopsis: 'Universal hook dispatcher (runs the resolved concern chain in-process via dist/hooks/dispatch.js).' },
     { name: 'telemetry:record', disposition: 'delegate', synopsis: 'Append one artefact-engagement event (default-off).' },
     { name: 'telemetry:status', disposition: 'delegate', synopsis: 'Print artefact-engagement telemetry status (read-only).' },
     { name: 'telemetry:report', disposition: 'delegate', synopsis: 'Aggregate the engagement log into a quartile report.' },

@@ -25,6 +25,7 @@
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
+import { readHookStdin } from './hook_stdin.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -338,14 +339,7 @@ function _usageError(arg: string): string {
 
 function _readStdin(): string {
     // Mirror `sys.stdin.read() if not sys.stdin.isatty() else ""`.
-    try {
-        if (process.stdin.isTTY) {
-            return '';
-        }
-        return fs.readFileSync(0, 'utf-8');
-    } catch {
-        return '';
-    }
+    return readHookStdin();
 }
 
 export function main(argv?: string[]): number {
@@ -390,7 +384,13 @@ export function main(argv?: string[]): number {
     return 0; // EXIT_ALLOW
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }
@@ -412,7 +412,7 @@ function _isCliEntry(): boolean {
     }
 }
 
-if (_isCliEntry() || process.argv[1] === _HERE) {
+if (_isCliEntry() || (typeof __AGENT_CONFIG_BUNDLE__ === 'undefined' && process.argv[1] === _HERE)) {
     process.exitCode = main();
 }
 

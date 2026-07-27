@@ -287,3 +287,24 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/benchmark.md#ship-gated-reach
 - status: backed
 - last_verified: 2026-07-25
+
+### claim: install-audit-clean
+- claim: A fresh registry install of this package carries zero high/critical npm-audit findings on the runtime dependency tree (0 vulnerabilities total at last verification), gated on every PR and every release PR.
+- kind: quant
+- evidence: .github/workflows/release-validation.yml#npm audit --omit=dev --audit-level=high
+- status: backed
+- last_verified: 2026-07-27
+
+### claim: hook-dispatch-latency
+- claim: Hook dispatch runs as one precompiled node process with all concerns in-process — measured p50 76–103 ms / p95 81–103 ms per event across GitHub-hosted CI runners (shared-runner wall-clock varies ±23% run-to-run; a darwin dev machine measures ~70-90 ms) against the pre-registered budget (pre_tool_use p95 <= 150 ms, any event <= 250 ms), down from ~1.6 s p50 on the retired CLI-to-bash-to-tsx per-concern-respawn chain; the bench harness and its regression gate run in CI.
+- kind: quant
+- evidence: docs/hook-latency.json#pre_tool_use
+- status: backed
+- last_verified: 2026-07-27
+
+### claim: default-install-context-cost
+- claim: The scoped-projection default for new installs ships 212 of 283 skills (untagged core plus engineering/maintainer packs), an approximately 26% reduction of the skill-catalog surface (about 577k to about 428k approximated tokens), with the counting method pinned in the benchmark doc.
+- kind: quant
+- evidence: docs/benchmark.md#Default-install context cost
+- status: backed
+- last_verified: 2026-07-27

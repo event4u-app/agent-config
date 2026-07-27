@@ -30,6 +30,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { readHookStdin } from "./hooks/hook_stdin.js";
+
 const SETTINGS_FILE = ".agent-settings.yml";
 const EXIT_ALLOW = 0;
 const EXIT_WARN = 2;
@@ -274,10 +276,16 @@ function _pyTruthy(v: JsonValue | undefined): boolean {
 }
 
 function _readStdin(): string {
-  return fs.readFileSync(0, "utf-8");
+  return readHookStdin();
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }

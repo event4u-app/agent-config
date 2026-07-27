@@ -63,7 +63,7 @@ export const USER_SCOPE_PATHS: Readonly<Record<string, string>> = {
 
 /**
  * Universal Anthropic-shaped skill bundle deployed to markdown-skills
- * tools. Mirrors `_CLAUDE_SKILL_BUNDLE` in `scripts/install.py`.
+ * tools. Mirrors `_CLAUDE_SKILL_BUNDLE` in the retired Python installer (ADR-200).
  */
 const CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
     ['dist/agent-src/rules',    'rules'],

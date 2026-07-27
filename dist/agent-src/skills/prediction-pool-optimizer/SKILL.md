@@ -145,9 +145,9 @@ Don't hand-pick a scoreline. Run the executed grid optimiser — builds the full
 Poisson score grid, returns the EV-max tip under the step-1 point tiers:
 
 ```bash
-./scripts-run src/scripts/prediction-pool/score_ev --lh <home-xg> --la <away-xg> \
+npx tsx node_modules/@event4u/agent-config/src/scripts/prediction-pool/score_ev.ts --lh <home-xg> --la <away-xg> \
     --tendency <t> --diff <d> --exact <e>          # one match
-./scripts-run src/scripts/prediction-pool/score_ev matches.json \
+npx tsx node_modules/@event4u/agent-config/src/scripts/prediction-pool/score_ev.ts matches.json \
     --tendency <t> --diff <d> --exact <e>          # batch, prints a ranked table
 ```
 
@@ -176,7 +176,7 @@ of the field)**; pure EV-max converges with the crowd, can't open a gap.
 Measure it with the executed field simulator, not a "rough Kelly" hand-wave:
 
 ```bash
-./scripts-run src/scripts/prediction-pool/pool_winsim pool.json --runs 4000 --max-flips 4
+npx tsx node_modules/@event4u/agent-config/src/scripts/prediction-pool/pool_winsim.ts pool.json --runs 4000 --max-flips 4
 ```
 
 Models the field as softmax-EV tippers, reports `P(win)` for EV-max-everywhere,
@@ -204,7 +204,7 @@ question type — full taxonomy + per-type method in
   winner") aggregated per step 2, **or** the executed Poisson simulator:
 
   ```bash
-  ./scripts-run src/scripts/prediction-pool/poisson_sim <teams-xg.json> --runs 20000
+  npx tsx node_modules/@event4u/agent-config/src/scripts/prediction-pool/poisson_sim.ts <teams-xg.json> --runs 20000
   ```
 
   It plays the bracket from per-team expected goals and prints empirical
@@ -306,9 +306,9 @@ gate — the skill never enters or submits anything.
   question taxonomy with a per-type method.
 - [`reference/ev-fixtures.md`](reference/ev-fixtures.md) — known-good
   rules+odds → EV examples.
-- [`scripts/prediction-pool/score_ev.ts`](../../../../scripts/prediction-pool/score_ev.ts) —
+- `node_modules/@event4u/agent-config/src/scripts/prediction-pool/score_ev.ts` —
   executed exact-score EV optimiser (step 4a; λ + rule → EV-max scoreline).
-- [`scripts/prediction-pool/pool_winsim.ts`](../../../../scripts/prediction-pool/pool_winsim.ts) —
+- `node_modules/@event4u/agent-config/src/scripts/prediction-pool/pool_winsim.ts` —
   executed field model + P(finish 1st) simulator and flip-finder (step 4b).
-- [`scripts/prediction-pool/poisson_sim.ts`](../../../../scripts/prediction-pool/poisson_sim.ts) —
+- `node_modules/@event4u/agent-config/src/scripts/prediction-pool/poisson_sim.ts` —
   the executed tournament simulator (step 5).

@@ -40,6 +40,7 @@ import * as path from 'node:path';
 
 import { is_kernel_rule } from '../_lib/kernel_rules.js';
 import { EDIT_TOOLS } from '../minimal_safe_diff_hook.js';
+import { readHookStdin } from './hook_stdin.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -145,14 +146,7 @@ function _asObject(v: JsonValue | undefined): JsonObject | null {
 }
 
 function _readStdin(): string {
-    try {
-        if (process.stdin.isTTY) {
-            return '';
-        }
-        return fs.readFileSync(0, 'utf-8');
-    } catch {
-        return '';
-    }
+    return readHookStdin();
 }
 
 export function main(): number {
@@ -185,7 +179,13 @@ export function main(): number {
     return 0; // EXIT_ALLOW
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }
@@ -207,6 +207,6 @@ function _isCliEntry(): boolean {
     }
 }
 
-if (_isCliEntry() || process.argv[1] === _HERE) {
+if (_isCliEntry() || (typeof __AGENT_CONFIG_BUNDLE__ === 'undefined' && process.argv[1] === _HERE)) {
     process.exitCode = main();
 }

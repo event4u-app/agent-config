@@ -78,8 +78,8 @@ function _checkInstallerRuns(tmpdir: string): [number, string | null] {
     ];
     // ADR-020: --project is reserved for maintainers; CI is a maintainer context.
     const env = { ...process.env, AGENT_CONFIG_DEV_MODE: '1' };
-    // Run the installer's `.ts` twin via the repo-local tsx binary (was
-    // `python3 install.py`; the retired Python implementation is deleted).
+    // Run the installer's `.ts` twin via the repo-local tsx binary (the
+    // retired Python implementation is deleted, ADR-200).
     const result = spawnSync(TSX_BIN, cmd, {
         encoding: 'utf-8',
         timeout: 60000,

@@ -170,7 +170,7 @@ full suite:
 
 ```bash
 # 1. Install — on a terminal with a display, the browser wizard launches
-#    automatically; the same install.py runs the real install behind it.
+#    automatically; the same TypeScript installer runs the real install behind it.
 npx -y @event4u/agent-config init
 
 # 2. Pick your profile + tools in the wizard, click Finish.
@@ -180,7 +180,7 @@ npx -y @event4u/agent-config init
 /work "your first real task"
 ```
 
-**Headless / CI:** `init` skips the GUI automatically when `CI` is set, stdout is not a TTY, `--no-ui` is passed, **or** an explicit `--tools=` selection is given — it then runs the non-interactive installer directly. Pass flags (`--profile=developer --tools=claude-code,cursor`); add `--dry-run` to preview writes. The GUI and the CLI share one installer (`scripts/install.py`), so both produce identical results. Reference: [`docs/wizard.md`](docs/wizard.md).
+**Headless / CI:** `init` skips the GUI automatically when `CI` is set, stdout is not a TTY, `--no-ui` is passed, **or** an explicit `--tools=` selection is given — it then runs the non-interactive installer directly. Pass flags (`--profile=developer --tools=claude-code,cursor`); add `--dry-run` to preview writes. The GUI and the CLI share one installer (`scripts/install.ts`), so both produce identical results. Reference: [`docs/wizard.md`](docs/wizard.md).
 
 **Pick specific AIs:** `--tools=claude-code,cursor,augment,windsurf,cline,gemini-cli,copilot,roocode,aider,codex,claude-desktop,continue` (any subset). Visual picker: add `--gui` (loopback-bound, CSRF-gated; contract [`gui-wizard`](docs/contracts/gui-wizard.md)).
 
@@ -568,10 +568,27 @@ task dev:setup        # boot the onboarding wizard against the working tree
 
 ## Requirements
 
-- **Node ≥ 18** — `npx @event4u/agent-config init` is the canonical install path.
-- **Python 3.10+** — bridge stage only; missing → installer skips bridges.
-- **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks; native PowerShell / cmd unsupported. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
+- **Node ≥ 20.11** — `npx @event4u/agent-config init` is the canonical install path. No Python anywhere on the install path (the Python installer retired with the TypeScript migration).
+- **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
+
+### Windows
+
+Native PowerShell / cmd is **not supported for the file install** — use WSL2
+for the full installed tree. The supported native-Windows surface is the
+**MCP stdio server**: point any MCP client at
+
+```bash
+npx -y @event4u/agent-config mcp-server
+```
+
+and the governance content (prompts, resources, tools) is available without
+the file install. Porting the bash dispatcher to native Windows is
+**demand-gated**: a named Windows adopter who cannot use WSL2 or the MCP
+path reopens it (see `agents/roadmaps/` — road-to-credible-install Phase 3).
 
 ## License
 
 [MIT](LICENSE).
+
+<!-- Official MCP Registry package validation marker -->
+mcp-name: io.github.event4u-app/agent-config

@@ -229,6 +229,30 @@ strong = ceiling null · GPT weak = failed replication (confounded surface).
 
 - Report: `internal/bench/reports/ab-v2/2026-07-07T10-33-53Z-ab-v2-paired.json`.
 
+## Default-install context cost — scoped projection flip (road-to-credible-install Phase 2)
+
+**Measured 2026-07-27** on the shipped skill projection (`dist/agent-src/skills/*/SKILL.md`).
+
+The settings-template default flipped `projection.mode: legacy-all` → `scoped`
+for NEW installs (existing installs keep their recorded mode; missing key
+still means legacy-all). Scoped keeps every untagged core skill plus every
+pack whose `workspaces` intersects {engineering, agent-config-maintainer}
+(requires-closure applied), matching the default `developer` profile.
+
+| Surface | legacy-all (before) | scoped (after) | Δ |
+|---|--:|--:|--:|
+| Skills projected | 283 | 212 | −71 (−25%) |
+| Skill-surface size (chars) | 2,309,968 | 1,710,353 | −599,615 |
+| Skill-surface size (≈ GPT tokens, chars/4) | ≈ 577k | ≈ 428k | **−26%** |
+
+**Counting method (pinned):** sum of `SKILL.md` byte lengths under
+`dist/agent-src/skills/`, partitioned by the same predicate the installer's
+scoped prune applies (untagged → keep; tagged → keep iff `packs:` frontmatter
+intersects the active set from `src/config/discovery/packs.yml` workspaces
+{engineering, agent-config-maintainer} + requires closure). Token estimate is
+chars/4 — an approximation, honest-labeled as such; skills load on-demand per
+trigger, so this is the *catalog* surface, not an always-loaded cost.
+
 ## Two-host matrix (flow-learnings Phase 3, `claude-haiku-4-5`) — Gate verdict: **HONEST-NULL**
 
 First live run of the `bench_matrix` two-host composite (`internal/bench/matrix.yaml`):

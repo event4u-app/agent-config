@@ -3137,34 +3137,36 @@ function _verify_deploy_targets(anchor: string, plan: ReadonlyArray<readonly [st
 }
 
 /**
- * Remove lab-tier skills/commands from a completed deploy (core-only).
+ * Remove skills/commands matching `is_pruned` from a completed deploy.
  *
- * road-to-install-contract-stability Phase 2 Step 2. Skills are pruned by
- * whole directory (tier decided by the skill's `SKILL.md` frontmatter);
- * commands by file (own frontmatter). Rules / personas / contexts / templates
- * are core/shared and left intact. Returns `[pruned_count, adjusted_results]`
- * with the lab paths removed from each tool's `written_paths` so the manifest
- * never records them.
+ * road-to-install-contract-stability Phase 2 Step 2 (generalized in
+ * road-to-credible-install Phase 2 to back both the core-only lab prune and
+ * the scoped-projection pack prune off the same mechanics). Skills are
+ * pruned by whole directory (tier decided by the skill's `SKILL.md`
+ * frontmatter); commands by file (own frontmatter). Rules / personas /
+ * contexts / templates are core/shared and left intact. Returns
+ * `[pruned_count, adjusted_results]` with the pruned paths removed from each
+ * tool's `written_paths` so the manifest never records them.
  */
-function _prune_lab_modules(
+function _prune_modules_by(
     deploy_results: Record<string, DeployResult>,
-    lab_ids: Set<string>,
+    is_pruned: (md_path: string) => boolean,
 ): [number, Record<string, DeployResult>] {
     let pruned = 0;
     const adjusted: Record<string, DeployResult> = {};
     for (const tool_id of Object.keys(deploy_results)) {
         const [written, skipped, status, paths] = deploy_results[tool_id] as DeployResult;
-        const lab_skill_dirs = new Set<string>();
+        const pruned_skill_dirs = new Set<string>();
         for (const p of paths) {
             const parts = p.split(path.sep);
             if (parts.includes('skills')) {
                 const i = parts.indexOf('skills');
                 if (i + 1 < parts.length) {
                     const skill_root = parts.slice(0, i + 2).join(path.sep);
-                    if (!lab_skill_dirs.has(skill_root)) {
+                    if (!pruned_skill_dirs.has(skill_root)) {
                         const skillmd = path.join(skill_root, 'SKILL.md');
-                        if (pathExists(skillmd) && surface_tiers.is_lab_artefact(skillmd, lab_ids)) {
-                            lab_skill_dirs.add(skill_root);
+                        if (pathExists(skillmd) && is_pruned(skillmd)) {
+                            pruned_skill_dirs.add(skill_root);
                         }
                     }
                 }
@@ -3174,22 +3176,22 @@ function _prune_lab_modules(
         const delete_files: string[] = [];
         for (const p of paths) {
             const parts = p.split(path.sep);
-            let is_lab = false;
+            let is_target = false;
             if (parts.includes('skills')) {
                 const i = parts.indexOf('skills');
-                if (i + 1 < parts.length && lab_skill_dirs.has(parts.slice(0, i + 2).join(path.sep))) {
-                    is_lab = true;
+                if (i + 1 < parts.length && pruned_skill_dirs.has(parts.slice(0, i + 2).join(path.sep))) {
+                    is_target = true;
                 }
             } else if (
                 parts.includes('commands') &&
                 path.extname(p) === '.md' &&
-                surface_tiers.is_lab_artefact(p, lab_ids)
+                is_pruned(p)
             ) {
-                is_lab = true;
+                is_target = true;
             }
-            (is_lab ? delete_files : keep).push(p);
+            (is_target ? delete_files : keep).push(p);
         }
-        for (const d of lab_skill_dirs) {
+        for (const d of pruned_skill_dirs) {
             fs.rmSync(d, { recursive: true, force: true });
         }
         for (const p of delete_files) {
@@ -3205,6 +3207,175 @@ function _prune_lab_modules(
         adjusted[tool_id] = [Math.max(0, written - delete_files.length), skipped, status, keep];
     }
     return [pruned, adjusted];
+}
+
+/**
+ * Remove lab-tier skills/commands from a completed deploy (core-only).
+ *
+ * road-to-install-contract-stability Phase 2 Step 2. Thin wrapper over
+ * `_prune_modules_by` — see that function for the mechanics.
+ */
+function _prune_lab_modules(
+    deploy_results: Record<string, DeployResult>,
+    lab_ids: Set<string>,
+): [number, Record<string, DeployResult>] {
+    return _prune_modules_by(deploy_results, (p) => surface_tiers.is_lab_artefact(p, lab_ids));
+}
+
+// --- Scoped-projection prune (road-to-credible-install Phase 2) ----------
+//
+// `projection.mode: scoped` narrows a GLOBAL deploy to the active profile's
+// packs (workspaces `engineering` + `agent-config-maintainer` by default,
+// unioned with a `runtime.active_packs` overlay, expanded over the packs.yml
+// `requires` graph). Mirrors the core-only lab prune above — same
+// `_prune_modules_by` mechanics, a different predicate.
+
+/** `workspaces` values whose packs are ALWAYS active under `scoped` mode. */
+const SCOPED_ACTIVE_WORKSPACES: ReadonlySet<string> = new Set(['engineering', 'agent-config-maintainer']);
+
+interface PackRecord {
+    id: string;
+    workspaces: string[];
+    requires: string[];
+}
+
+/**
+ * Parse `src/config/discovery/packs.yml` into `{id, workspaces, requires}`
+ * records. `requires` falls back to the legacy `requires_hint` field name
+ * when `requires` is absent.
+ *
+ * Deliberately THROWS on a missing file or a parse result that is not a
+ * list — an empty active-pack set would be the LEAST safe fallback here
+ * (it would prune every tagged artefact, the opposite of the fail-safe
+ * contract). The caller wraps this in a try/catch that restores the full
+ * tree on any error instead.
+ */
+function _load_packs_registry(package_root: string): PackRecord[] {
+    const vocab_path = path.join(package_root, 'src', 'config', 'discovery', 'packs.yml');
+    const data = yamlSafeLoad(readText(vocab_path));
+    if (!Array.isArray(data)) {
+        throw new Error(`packs.yml did not parse to a list: ${vocab_path}`);
+    }
+    const out: PackRecord[] = [];
+    for (const entry of data) {
+        if (!_isPlainObject(entry)) continue;
+        const id = entry['id'];
+        if (typeof id !== 'string' || id === '') continue;
+        const workspaces_raw = entry['workspaces'];
+        const workspaces = Array.isArray(workspaces_raw)
+            ? workspaces_raw.filter((w): w is string => typeof w === 'string')
+            : [];
+        const requires_raw = entry['requires'] ?? entry['requires_hint'];
+        const requires = Array.isArray(requires_raw)
+            ? requires_raw.filter((r): r is string => typeof r === 'string')
+            : [];
+        out.push({ id, workspaces, requires });
+    }
+    return out;
+}
+
+/**
+ * Active pack id set for `scoped` mode: every pack whose `workspaces`
+ * intersects `SCOPED_ACTIVE_WORKSPACES`, unioned with `runtime_active_packs`,
+ * expanded over the `requires` graph (transitive closure).
+ */
+function _compute_active_pack_ids(
+    packs: readonly PackRecord[],
+    runtime_active_packs: readonly string[],
+): Set<string> {
+    const by_id = new Map<string, PackRecord>();
+    for (const p of packs) by_id.set(p.id, p);
+
+    const active = new Set<string>();
+    for (const p of packs) {
+        if (p.workspaces.some((w) => SCOPED_ACTIVE_WORKSPACES.has(w))) {
+            active.add(p.id);
+        }
+    }
+    for (const id of runtime_active_packs) {
+        active.add(id);
+    }
+
+    let frontier = [...active];
+    while (frontier.length > 0) {
+        const next: string[] = [];
+        for (const id of frontier) {
+            const rec = by_id.get(id);
+            if (rec === undefined) continue;
+            for (const dep of rec.requires) {
+                if (!active.has(dep)) {
+                    active.add(dep);
+                    next.push(dep);
+                }
+            }
+        }
+        frontier = next;
+    }
+    return active;
+}
+
+/**
+ * Read the GLOBAL settings document that governs a global deploy, if one
+ * already exists on disk — the wizard's canonical typed-subdir location
+ * (`<event4u_root>/settings/.agent-settings.yml`, matching
+ * `src/server/routes/settings.ts`'s `SETTINGS_RELATIVE`) first, the legacy
+ * flat root (`<event4u_root>/.agent-settings.yml`) second. Returns `null`
+ * when neither exists — a genuinely fresh machine with no prior settings
+ * artefact of any kind.
+ */
+function _resolve_global_settings_doc(): Record<string, unknown> | null {
+    const root = user_global_paths.event4u_root();
+    const canonical = path.join(root, 'settings', SETTINGS_FILE);
+    if (pathExists(canonical)) return _load_yaml_doc(canonical);
+    const legacy = path.join(root, SETTINGS_FILE);
+    if (pathExists(legacy)) return _load_yaml_doc(legacy);
+    return null;
+}
+
+/**
+ * Resolve the effective `projection.mode` + `runtime.active_packs` overlay
+ * for THIS global install.
+ *
+ * An EXISTING global settings file (any prior install, wizard-written or
+ * hand-edited) is authoritative: a missing `projection.mode` key, an
+ * unreadable file, or an explicit non-`scoped` value ALL resolve to
+ * `legacy-all` — the upgrade-compat contract (an install that never opted in
+ * stays unscoped). Only when NO global settings file exists yet — before the
+ * wizard's `/api/v1/wizard/finish` route has ever written one on this
+ * machine — does resolution fall through to the packaged template's own
+ * default, the value a fresh install is about to receive.
+ */
+function _resolve_scoped_projection(
+    package_root: string,
+): { mode: 'scoped' | 'legacy-all'; active_packs: string[] } {
+    const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
+    const projection = _isPlainObject(doc['projection']) ? (doc['projection'] as Record<string, unknown>) : {};
+    const mode: 'scoped' | 'legacy-all' = projection['mode'] === 'scoped' ? 'scoped' : 'legacy-all';
+    const runtime = _isPlainObject(doc['runtime']) ? (doc['runtime'] as Record<string, unknown>) : {};
+    const active_packs_raw = runtime['active_packs'];
+    const active_packs = Array.isArray(active_packs_raw)
+        ? active_packs_raw.filter((v): v is string => typeof v === 'string')
+        : [];
+    return { mode, active_packs };
+}
+
+/**
+ * Prune every skill/command artefact whose `packs:` frontmatter is
+ * non-empty AND has no intersection with `active_ids`. Untagged artefacts
+ * (empty `packs:` frontmatter) are core/shared and always kept.
+ */
+function _prune_scoped_modules(
+    deploy_results: Record<string, DeployResult>,
+    active_ids: ReadonlySet<string>,
+): [number, Record<string, DeployResult>] {
+    return _prune_modules_by(deploy_results, (p) => {
+        const packs = surface_tiers.frontmatter_packs(p);
+        if (packs.size === 0) return false;
+        for (const id of packs) {
+            if (active_ids.has(id)) return false;
+        }
+        return true;
+    });
 }
 
 function install_global(
@@ -3322,6 +3493,35 @@ function install_global(
                 `🧹 Core-only install: pruned ${pruned} lab-tier artefact(s) ` +
                     `(packs: ${[...lab_ids].sort().join(', ')}).`,
             );
+        }
+    }
+
+    // Scoped-projection prune (road-to-credible-install Phase 2 default
+    // flip): when the GLOBAL settings governing this install resolve to
+    // `projection.mode: scoped` (fresh installs; an EXISTING install without
+    // the key, or with any other value, stays untouched — see
+    // `_resolve_scoped_projection`), drop every skill/command artefact whose
+    // `packs:` frontmatter carries no intersection with the active pack set.
+    // A failed resolution (corrupt packs.yml, any thrown error) is caught
+    // here and restores the full tree — never a partial or crashed prune.
+    try {
+        const { mode, active_packs } = _resolve_scoped_projection(package_root);
+        if (mode === 'scoped') {
+            const packs_registry = _load_packs_registry(package_root);
+            const active_ids = _compute_active_pack_ids(packs_registry, active_packs);
+            let scoped_pruned: number;
+            [scoped_pruned, deploy_results] = _prune_scoped_modules(deploy_results, active_ids);
+            if (!state.QUIET) {
+                info(
+                    `🧹 Scoped install: pruned ${scoped_pruned} non-active-pack artefact(s) ` +
+                        `(active packs: ${[...active_ids].sort().join(', ') || '(none)'}). ` +
+                        'Set projection.mode: legacy-all in .agent-settings.yml to restore the full surface.',
+                );
+            }
+        }
+    } catch (e) {
+        if (!state.QUIET) {
+            warn(`Scoped-projection prune failed — restoring full tree (${String(e)}).`);
         }
     }
 
@@ -4816,5 +5016,14 @@ export {
     ensure_cline_bridge,
     ensure_windsurf_bridge,
     ensure_gemini_bridge,
+    // road-to-credible-install Phase 2: exported for the scoped-projection
+    // prune unit tests.
+    _prune_modules_by,
+    _prune_lab_modules,
+    _prune_scoped_modules,
+    _load_packs_registry,
+    _compute_active_pack_ids,
+    _resolve_global_settings_doc,
+    _resolve_scoped_projection,
 };
-export type { Options };
+export type { Options, PackRecord, DeployResult };

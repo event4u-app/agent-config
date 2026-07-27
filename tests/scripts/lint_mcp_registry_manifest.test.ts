@@ -58,6 +58,17 @@ function validManifest(): Record<string, unknown> {
                 last_verified: null,
                 rendered_payload: 'dist/mcp/mcp-cloudflare-catalogue.json',
             },
+            {
+                id: 'mcp-official-registry',
+                label: 'Official MCP Registry',
+                listing_format: 'server-json',
+                submission_url: 'https://registry.modelcontextprotocol.io',
+                status: 'pending',
+                submitted_at: null,
+                pr_url: null,
+                last_verified: null,
+                rendered_payload: 'dist/mcp/server.json',
+            },
         ],
     };
 }

@@ -57,6 +57,6 @@ equivalents:
   claude-code: ["Claude Code"]
   ai-video: ["AI video", "Cinematic AI video"]
   agent-governance: ["governance rules", "audit-disciplined"]
-  ai-agent: ["AI agent", "AI Agent"]
+  ai-agent: ["AI agent", "AI Agent", "host agent"]
   prompt-engineering: ["prompt engineering", "prompt-engineering-patterns", "optimize-prompt", "refine-prompt"]
   typescript: ["TypeScript"]

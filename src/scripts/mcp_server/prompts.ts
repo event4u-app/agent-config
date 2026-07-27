@@ -72,10 +72,16 @@ export interface SkillPrompt {
 }
 
 /** Walk up from this file to the repo root (parent of `scripts/`). */
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 export function _project_root(): string {
     // Python: Path(__file__).resolve().parent.parent.parent.parent
     //   __file__ = src/scripts/mcp_server/prompts.py
     //   → .../src/scripts/mcp_server → src/scripts → src → repo root.
+    // Bundled (dist/mcp/server.mjs) the module sits two levels below the
+    // package root — the esbuild --define sentinel picks the right depth.
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+    }
     return path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 }
 

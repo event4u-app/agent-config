@@ -1,13 +1,13 @@
 {
   "_doc": "Feasibility measurement for an `exec:` evidence form in the claims ledger (road-to-enforcement-proof Phase 5). The question this answers is NOT 'would exec: be nice' but 'would it cover enough of the ledger to earn its maintenance surface'. The threshold was pre-registered in the roadmap BEFORE this was measured: >= 10 percentage points of the backed ledger, or it gets parked with the number published. Measured 2026-07-25 against docs/CLAIMS.md.",
-  "measured_at": "2026-07-25 (re-counted three times. The first publication said 25 backed / 10 feasible and was measured mid-PR. The 11-feasible figure was then corrected DOWN to 10 when the form was actually built: context-token-reduction was counted feasible because check_token_regression re-derives token figures via js-tiktoken, but the script reads internal/bench/reports/projection-cost.json, which is gitignored as a per-run artifact \u2014 so the command is not self-sufficient in a fresh checkout and exits 1. Found by the exec: gate on its first CI run, which is the gate doing its job. The backed_claims DENOMINATOR drifted separately and is now derived and gate-checked rather than retyped.",
+  "measured_at": "2026-07-25 (re-counted three times. The first publication said 25 backed / 10 feasible and was measured mid-PR. The 11-feasible figure was then corrected DOWN to 10 when the form was actually built: context-token-reduction was counted feasible because check_token_regression re-derives token figures via js-tiktoken, but the script reads internal/bench/reports/projection-cost.json, which is gitignored as a per-run artifact — so the command is not self-sufficient in a fresh checkout and exits 1. Found by the exec: gate on its first CI run, which is the gate doing its job. The backed_claims DENOMINATOR drifted separately and is now derived and gate-checked rather than retyped. Re-derived 2026-07-27: +3 backed entries from road-to-credible-install (install-audit-clean exec-backed, hook-dispatch-latency, default-install-context-cost).",
   "pre_registered_threshold_pp": 10,
-  "backed_claims": 27,
+  "backed_claims": 30,
   "machine_re_verifiable_today": 0,
   "exec_feasible": 10,
   "delta_pp": 38.5,
-  "decision": "JUSTIFIED \u2014 38.5 pp clears the pre-registered 10 pp bar by a wide margin. `exec:` becomes its own PR; it is deliberately NOT built here, because the point of measuring first was to avoid shipping a schema change, a validator, and a renderer on an assumption.",
-  "method": "Each backed entry was classified by whether a deterministic command could re-derive the claim with its exit code carrying the verdict. Pointing at a producer is not sufficient \u2014 a bench report whose regeneration needs paid model calls is not re-runnable in CI, and was counted NO. Two borderline cases were checked rather than assumed: measure_lexical_ranking.ts has zero model/API/fetch references (deterministic, model-free re-ranking), and token-baseline figures are re-derived by check_token_regression.ts via js-tiktoken. Both counted YES.",
+  "decision": "JUSTIFIED — 38.5 pp clears the pre-registered 10 pp bar by a wide margin. `exec:` becomes its own PR; it is deliberately NOT built here, because the point of measuring first was to avoid shipping a schema change, a validator, and a renderer on an assumption.",
+  "method": "Each backed entry was classified by whether a deterministic command could re-derive the claim with its exit code carrying the verdict. Pointing at a producer is not sufficient — a bench report whose regeneration needs paid model calls is not re-runnable in CI, and was counted NO. Two borderline cases were checked rather than assumed: measure_lexical_ranking.ts has zero model/API/fetch references (deterministic, model-free re-ranking), and token-baseline figures are re-derived by check_token_regression.ts via js-tiktoken. Both counted YES.",
   "feasible": [
     {
       "claim": "eval-coverage-ratcheted",
@@ -52,7 +52,7 @@
     {
       "claim": "lexical-ranking-lift",
       "command": "measure_lexical_ranking",
-      "why": "verified model-free \u2014 deterministic re-ranking of a fixed retrieved set"
+      "why": "verified model-free — deterministic re-ranking of a fixed retrieved set"
     },
     {
       "claim": "context-token-reduction",
@@ -85,20 +85,20 @@
       "positioning-honest-nulls"
     ]
   },
-  "honest_caveat": "`exec_feasible` counts claims for which a re-running command PLAUSIBLY carries the verdict. It is not a promise that all ten pass on first wiring, and a claim whose command exits 0 for a reason unrelated to the claim would be a false green \u2014 argument hardening and a narrow prefix allowlist are what keep that from becoming the new hole.",
-  "ledger_hygiene_note": "Found while counting: 10 entries filed under `## Unbacked inventory (documented debt)` carry `status: backed`. The checker keys on the status field, not the heading, so nothing is mis-gated \u2014 but the section headings no longer describe their contents and a reader would be misled. Filed for a follow-up pass, not silently fixed here.",
+  "honest_caveat": "`exec_feasible` counts claims for which a re-running command PLAUSIBLY carries the verdict. It is not a promise that all ten pass on first wiring, and a claim whose command exits 0 for a reason unrelated to the claim would be a false green — argument hardening and a narrow prefix allowlist are what keep that from becoming the new hole.",
+  "ledger_hygiene_note": "Found while counting: 10 entries filed under `## Unbacked inventory (documented debt)` carry `status: backed`. The checker keys on the status field, not the heading, so nothing is mis-gated — but the section headings no longer describe their contents and a reader would be misled. Filed for a follow-up pass, not silently fixed here.",
   "_snapshot_note": "backed_claims is checked against the live ledger by check_claims — a divergence FAILS. It drifted twice while hand-written (25 when the ledger held 26, 26 when it held 27) and CI stayed green both times because the evidence pointer resolved. The feasibility CLASSIFICATION stays a human judgment; only the denominator is mechanical.",
   "built": {
     "shipped": "2026-07-25",
     "converted": 10,
     "machine_re_verifiable_now": 10,
-    "note": "The pre-registered threshold was >= 10 pp. Measured 38.5 pp after correction, so the decision to build stands on the corrected number too \u2014 the over-count did not change the verdict, only the size of the margin."
+    "note": "The pre-registered threshold was >= 10 pp. Measured 38.5 pp after correction, so the decision to build stands on the corrected number too — the over-count did not change the verdict, only the size of the margin."
   },
   "over_counted": [
     {
       "claim": "context-token-reduction",
       "counted": "YES (feasible)",
-      "actual": "NO \u2014 check_token_regression requires internal/bench/reports/projection-cost.json, which is gitignored and produced by `task audit-tokens`; a command with an uncommitted precondition cannot carry exec: standalone.",
+      "actual": "NO — check_token_regression requires internal/bench/reports/projection-cost.json, which is gitignored and produced by `task audit-tokens`; a command with an uncommitted precondition cannot carry exec: standalone.",
       "disposition": "reverted to its pointer form; listed as unfalsifiable-by-machine"
     }
   ]

@@ -28,6 +28,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { is_replay_mode } from './hooks/state_io.js';
+import { readHookStdin } from './hooks/hook_stdin.js';
 
 const CHECK_WINDOW_MS = 24 * 60 * 60 * 1000;
 const STATE_REL = ['agents', 'runtime', 'state', 'surface-probe.json'] as const;
@@ -50,13 +51,7 @@ function _package_root(): string {
 }
 
 function _readStdinIfNotTty(): void {
-    try {
-        if (!process.stdin.isTTY) {
-            fs.readFileSync(0, 'utf-8');
-        }
-    } catch {
-        /* ignore */
-    }
+    readHookStdin();
 }
 
 function _exists(p: string): boolean {
@@ -209,7 +204,13 @@ export function main(argv?: string[], opts: ProbeOptions = {}): number {
     }
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }

@@ -33,16 +33,10 @@ import {
 } from './ai_team/review_gate.js';
 import { AI_TEAM_DEFAULTS, load_ai_team_config, type AiTeamConfig } from './ai_team/config.js';
 import { unwrap } from './hooks/envelope.js';
+import { readHookStdin } from './hooks/hook_stdin.js';
 
 function _read_stdin(): string {
-    try {
-        if (process.stdin.isTTY) {
-            return '';
-        }
-        return fs.readFileSync(0, 'utf-8');
-    } catch {
-        return '';
-    }
+    return readHookStdin();
 }
 
 export function main(): number {
@@ -93,7 +87,13 @@ export function main(): number {
     return 0;
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }

@@ -333,7 +333,7 @@ structured review phases, add an explicit **Anti-Slop Check** section:
 1. **Run the deterministic detector first** — it catches the pattern-detectable
    tells so you don't eyeball or re-derive them:
    ```
-   npx tsx src/scripts/lint_design_slop.ts --dir <consumer-ui-path> --json
+   npx tsx node_modules/@event4u/agent-config/src/scripts/lint_design_slop.ts --dir <consumer-ui-path> --json
    ```
    Each finding carries `rule` (e.g. `slop-v1-side-stripe`), `catalogId`
    (`V1`), `severity` (`P0`–`P3`), `file:line`, and a `message`. **Cite these
@@ -354,11 +354,10 @@ structured review phases, add an explicit **Anti-Slop Check** section:
 
 For the **objective quality floors** (WCAG contrast, font-size, line-length,
 reduced-motion, heading hierarchy, focus indicator), do NOT eyeball them —
-cite [`lint_design_quality`](../../../src/scripts/lint_design_quality.ts)
-output for the consumer project (Q1–Q6 in the catalog). The review owns the
-*subjective* anti-slop judgment (Visual / Typography / Color / Layout taste);
-the linter owns the *objective* floors; `accessibility-auditor` owns the WCAG
-*audit method*. Cite, don't re-derive.
+run the `accessibility-auditor` checklist (Q1–Q6 in the catalog) and cite its
+verdict. The review owns the *subjective* anti-slop judgment (Visual /
+Typography / Color / Layout taste); `accessibility-auditor` owns the
+*objective* floors and the WCAG *audit method*. Cite, don't re-derive.
 
 ## Do NOT
 

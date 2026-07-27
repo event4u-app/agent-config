@@ -504,6 +504,13 @@ cmd_mcp_setup() {
 # package (PACKAGE_ROOT/src/scripts/mcp_server/) as a TypeScript module run
 # via tsx — no Python venv / SDK install any more (the runtime is Node/tsx).
 cmd_mcp_run() {
+  # Precompiled bundle first (road-to-credible-install Phase 1 tsx sweep):
+  # one node start, no tsx in the runtime tree. tsx path is the dev-tree
+  # fallback only.
+  local server_bundle="$PACKAGE_ROOT/dist/mcp/server.mjs"
+  if [[ -f "$server_bundle" ]]; then
+    exec node "$server_bundle" "$@"
+  fi
   local server_main="$PACKAGE_ROOT/src/scripts/mcp_server/__main__.ts"
   if [[ ! -f "$server_main" ]]; then
     echo "❌  agent-config: MCP server module not found at $server_main" >&2
@@ -691,6 +698,13 @@ cmd_context_hygiene_hook() {
 }
 
 cmd_dispatch_hook() {
+  # Hook hot path (road-to-credible-install Phase 1): prefer the precompiled
+  # single-process bundle — one node start, concerns in-process, no tsx.
+  # Fallback to the tsx path only on a stale dev tree without dist/.
+  local bundle="$PACKAGE_ROOT/dist/hooks/dispatch.js"
+  if [[ -f "$bundle" ]]; then
+    exec node "$bundle" "$@"
+  fi
   exec_hook "src/scripts/hooks/dispatch_hook" "$@"
 }
 

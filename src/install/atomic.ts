@@ -2,7 +2,7 @@
  * Atomic file writer — Phase A4 primitive.
  *
  * 1:1 port of the `tempfile.mkstemp` + `os.replace` pattern used across
- * `scripts/install.py` (see `_write_consumer_bridge_marker` ~line 3036).
+ * the retired Python installer's `_write_consumer_bridge_marker` (ADR-200).
  *
  * Contract:
  *   1. Open a sibling `.tmp.<rand>` file in the destination directory

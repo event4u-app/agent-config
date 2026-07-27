@@ -12,9 +12,11 @@
  * Phase 5 will reverse the delegation direction.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { Command } from 'commander';
-import { PACKAGE_JSON } from './paths.js';
+import { PACKAGE_JSON, PACKAGE_ROOT } from './paths.js';
 import { delegateToBash } from './bash/runBash.js';
 import { runVersions } from './commands/versions.js';
 import { runRecordTriggerEval } from './commands/recordTriggerEval.js';
@@ -337,6 +339,23 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     }
 
     const head = argv[0];
+
+    // Hook hot path (road-to-credible-install Phase 1): dispatch:hook runs
+    // IN THIS PROCESS via the precompiled dist/hooks bundle — no bash
+    // delegation, no tsx, no per-concern re-spawn. Placed before every
+    // other route so a hook event pays nothing but the bundle import.
+    // Fallback: bundle missing (stale dev tree) → historical bash path.
+    if (head === 'dispatch:hook') {
+        const bundle = resolve(PACKAGE_ROOT, 'dist', 'hooks', 'dispatch.js');
+        if (existsSync(bundle)) {
+            const mod = (await import(pathToFileURL(bundle).href)) as {
+                main: (argv?: string[]) => number;
+            };
+            return mod.main(argv.slice(1));
+        }
+        return delegateToBash({ args: argv });
+    }
+
     if (head === '--help' || head === '-h') {
         process.stdout.write(`${buildHelp()}\n`);
         return 0;

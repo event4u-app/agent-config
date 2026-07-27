@@ -38,6 +38,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { readHookStdin } from "./hooks/hook_stdin.js";
+
 const PLUGIN_ID = "agent-config@event4u-agent-config";
 const ACTION_NEEDED_FILE = ".augment/.first-run-action-needed.md";
 
@@ -222,11 +224,7 @@ export function parse_args(argv: string[]): ParsedArgs {
 }
 
 function _readStdin(): void {
-  try {
-    fs.readFileSync(0, "utf-8");
-  } catch {
-    /* ignore */
-  }
+  readHookStdin();
 }
 
 export function main(argv?: string[]): number {
@@ -238,7 +236,13 @@ export function main(argv?: string[]): number {
   return run(consumer_root);
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }

@@ -94,4 +94,4 @@ Every answer built with this skill MUST:
 - [`source-discovery`](../source-discovery/SKILL.md) — evidence-before-structure
   discipline; the graph is one evidence source, still confirmed against the real
   code when load-bearing.
-- `src/scripts/code_graph/` — the engine (build / query / detect / affected).
+- `agent-config code-graph` — the CLI surface over the engine (build / query / detect / affected).

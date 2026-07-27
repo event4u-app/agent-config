@@ -6,10 +6,10 @@
 
 ## Overall
 
-**109 / 309 steps done · 35%**
+**138 / 309 steps done · 45%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-ac-embeddable-gui.md](roadmaps/road-to-ac-embeddable-gui.md) | 4 | 30 | 28 | 2 | 0 | 0 | [2](#blockers-road-to-ac-embeddable-gui) | █░░░░░░░░░ 7% |
 | 2 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 6 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 62% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 30 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 1 | 29 | 0 | 0 | 0 | ██████████ 97% |
 | 5 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
 | 6 | [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md) | 5 | 22 | 22 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
@@ -96,17 +96,17 @@ _2 blockers resolved._
 
 ### [road-to-credible-install.md](roadmaps/road-to-credible-install.md)
 
-**Road to credible install — survive the first five minutes of an external evaluation** — 0 / 30 done (0%)
+**Road to credible install — survive the first five minutes of an external evaluation** — 29 / 30 done (97%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Supply-chain and metadata hotfix (ships as a security patch) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 1 | Hook latency: make enforcement real or switch it off | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Default projection: ship the engineering surface | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | MCP hygiene: generated truth, honest stubs, registry paperwork | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | Published verification surface (the trust fix) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Release cadence policy (types, not versions) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | Outside-in umbrella gate (added 2026-07-26 per the self-critical council cut) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 0 | Supply-chain and metadata hotfix (ships as a security patch) | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 1 | Hook latency: make enforcement real or switch it off | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Default projection: ship the engineering surface | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | MCP hygiene: generated truth, honest stubs, registry paperwork | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 4 | Published verification surface (the trust fix) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 5 | Release cadence policy (types, not versions) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 6 | Outside-in umbrella gate (added 2026-07-26 per the self-critical council cut) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md)
 

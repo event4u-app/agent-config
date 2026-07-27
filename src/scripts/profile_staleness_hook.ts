@@ -36,6 +36,7 @@ import {
   LOCAL_PROJECT_FILE,
   LOCAL_PROJECT_SUBDIR,
 } from "./_lib/agent_settings.js";
+import { readHookStdin } from "./hooks/hook_stdin.js";
 
 // --- inlined session_profiles.stale_notice slice (unported dep) ----------
 
@@ -118,13 +119,7 @@ function _project_root(): string {
 }
 
 function _readStdinIfNotTty(): void {
-  try {
-    if (!process.stdin.isTTY) {
-      fs.readFileSync(0, "utf-8");
-    }
-  } catch {
-    /* ignore */
-  }
+  readHookStdin();
 }
 
 function _parseRoot(argv: string[]): string | null {
@@ -161,7 +156,13 @@ export function main(argv?: string[]): number {
   return 0;
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }

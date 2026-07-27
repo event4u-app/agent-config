@@ -39,7 +39,7 @@ install:
    surface that references the changed tables:
 
    ```bash
-   ./scripts-run src/scripts/lint_persistence -- --dir <path> [--stack eloquent|prisma|raw-sql] --format json
+   npx tsx node_modules/@event4u/agent-config/src/scripts/lint_persistence.ts -- --dir <path> [--stack eloquent|prisma|raw-sql] --format json
    ```
 
    The linter emits `gate` findings (pattern-detected: F1 N+1, F2

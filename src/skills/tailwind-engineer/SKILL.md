@@ -134,9 +134,8 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
   [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
   (C1 gradients, T7 fonts, L1/L2 layout, V1 side-stripe). Pull the catalog
   for the full list; the objective subset (contrast, font-size floor,
-  reduced-motion) is CI-enforced by
-  [`lint_design_quality`](../../../src/scripts/lint_design_quality.ts) for
-  consumer projects.
+  reduced-motion) is validated via `accessibility-auditor`'s checklist —
+  cite its verdict rather than eyeballing.
 - **Anti-AI-slop: gradients.** Unless audit-pinned or brief-explicit,
   avoid the default purple-to-blue / cyan-to-pink gradients on white —
   they read as auto-generated (catalog C1/C2). Reach for a single accent

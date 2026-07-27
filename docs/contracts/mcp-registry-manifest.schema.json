@@ -74,8 +74,8 @@
         },
         "registries": {
             "type": "array",
-            "minItems": 2,
-            "maxItems": 2,
+            "minItems": 3,
+            "maxItems": 3,
             "items": { "$ref": "#/$defs/registry" }
         }
     },
@@ -96,11 +96,11 @@
             ],
             "properties": {
                 "id": {
-                    "enum": ["awesome-mcp-servers", "mcp-cloudflare-catalogue"],
+                    "enum": ["awesome-mcp-servers", "mcp-cloudflare-catalogue", "mcp-official-registry"],
                     "description": "Closed vocabulary. Adding a third registry requires a schema-version bump."
                 },
                 "label": { "type": "string", "minLength": 1 },
-                "listing_format": { "enum": ["markdown-row", "json-entry"] },
+                "listing_format": { "enum": ["markdown-row", "json-entry", "server-json"] },
                 "submission_url": { "type": "string", "format": "uri" },
                 "status": {
                     "enum": ["pending", "listed", "rejected", "unlisted"],

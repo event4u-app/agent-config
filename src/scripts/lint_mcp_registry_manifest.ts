@@ -33,6 +33,8 @@ const SCHEMA = path.join(ROOT, 'docs', 'contracts', 'mcp-registry-manifest.schem
 const MANIFEST = path.join(ROOT, 'dist', 'mcp', 'registry-manifest.json');
 const ROW_MD = path.join(ROOT, 'dist', 'mcp', 'awesome-mcp-servers.row.md');
 const CF_JSON = path.join(ROOT, 'dist', 'mcp', 'mcp-cloudflare-catalogue.json');
+const SERVER_JSON = path.join(ROOT, 'dist', 'mcp', 'server.json');
+const PKG_FILE = path.join(ROOT, 'package.json');
 
 function _relToRoot(p: string): string {
     return path.relative(ROOT, p);
@@ -293,7 +295,7 @@ function main(argv: readonly string[]): number {
         throw e;
     }
 
-    for (const p of [SCHEMA, MANIFEST, ROW_MD, CF_JSON]) {
+    for (const p of [SCHEMA, MANIFEST, ROW_MD, CF_JSON, SERVER_JSON]) {
         if (!fs.existsSync(p)) {
             return _fail(`missing: ${_relToRoot(p)}`);
         }
@@ -322,6 +324,29 @@ function main(argv: readonly string[]): number {
         JSON.parse(fs.readFileSync(CF_JSON, 'utf-8'));
     } catch (e) {
         return _fail(`mcp-cloudflare-catalogue.json: ${(e as Error).message}`);
+    }
+
+    // Official-registry payload (road-to-credible-install Phase 3): valid
+    // JSON, reverse-DNS name matching package.json `mcpName`, and version
+    // equal to package.json.version (the CI version-equality gate).
+    let server_payload: JsonObject;
+    try {
+        server_payload = JSON.parse(fs.readFileSync(SERVER_JSON, 'utf-8')) as JsonObject;
+    } catch (e) {
+        return _fail(`server.json: ${(e as Error).message}`);
+    }
+    const pkg_for_gate = JSON.parse(fs.readFileSync(PKG_FILE, 'utf-8')) as JsonObject;
+    if (server_payload['version'] !== pkg_for_gate['version']) {
+        return _fail(
+            `server.json version (${String(server_payload['version'])}) != package.json version ` +
+                `(${String(pkg_for_gate['version'])}) — re-run build:mcp-manifest`,
+        );
+    }
+    if (server_payload['name'] !== pkg_for_gate['mcpName']) {
+        return _fail(
+            `server.json name (${String(server_payload['name'])}) != package.json mcpName ` +
+                `(${String(pkg_for_gate['mcpName'])})`,
+        );
     }
 
     if (!args.quiet) {

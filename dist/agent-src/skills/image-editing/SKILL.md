@@ -45,7 +45,7 @@ with governance applied before delivery. All adapters are scaffold-tier (dry-run
    write the edit prompt in the target provider's grammar. For inpaint, describe what
    fills the masked region. For variation, carry the original seed/ref-image path forward.
 5. **Invoke the adapter (dry-run today)** — run
-   `src/scripts/ai-image/adapters/<provider>.sh` with the assembled params including
+   `node_modules/@event4u/agent-config/src/scripts/ai-image/adapters/<provider>.sh` with the assembled params including
    the source image path and, for inpaint, the mask path. Validate the returned
    artifact path or dry-run confirmation. All adapters are `experimental`
    (scaffold-tier); no live editing occurs until a maintainer promotes the adapter

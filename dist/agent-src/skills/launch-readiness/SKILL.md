@@ -89,7 +89,7 @@ report per [`docs/contracts/prelaunch-diagnostics.md`](../../../docs/contracts/p
 - **Questions section** — list the questions that would change the
   diagnosis; the next run converts them into evidence or findings.
 - Validate + verdict via
-  `./scripts-run src/scripts/prelaunch_diagnostics validate <report.json>`;
+  `npx tsx node_modules/@event4u/agent-config/src/scripts/prelaunch_diagnostics.ts validate <report.json>`;
   regression-gate against the committed baseline via
   `… diff <baseline> <current> --ci` (contract § 4–6).
 

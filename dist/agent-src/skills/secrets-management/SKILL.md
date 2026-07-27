@@ -104,14 +104,13 @@ Telemetry / APM     → strip from request/response captures; allowlist headers.
 The scanning gates (Step 4) are the CI/pre-commit nets. The **earliest** gate is
 the agent itself: before it writes a credential into a tracked file or stages a
 commit, the [`secret-vcs-guard`](../../rules/secret-vcs-guard.md) rule runs the
-`secret_detector` library (`src/scripts/_lib/secret_detector.ts`) and, on a hit,
+`secret_detector` library and, on a hit,
 STOPS → shows the match (`file:line` · kind · masked · why) → asks via numbered
 options → offers the tiered alternative below. It never silently commits and
 never silently strips. VCS-agnostic: the same detector runs against the diff for
 git, SVN, and Mercurial (SVN/hg native hooks are server-side, a stronger but
-later net). The deterministic CI backstop is `check_secret_leak`
-(`src/scripts/check_secret_leak.ts`) — the agent gate is one layer, not the whole
-defense.
+later net). The deterministic CI backstop is `check_secret_leak` — the agent
+gate is one layer, not the whole defense.
 
 **False positives — audited allowlist, never a global mute.** Suppress a
 confirmed non-secret with an inline `# secret-allow` marker on the line, or a
