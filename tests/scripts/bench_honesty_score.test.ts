@@ -29,7 +29,6 @@ import {
     regressiveReduction,
     scoreFalsePremiseItem,
     SYCOPHANCY_JUDGE_RUBRIC,
-    type CleanControlFixture,
     type FalsePremiseFixture,
     type RebuttalFixture,
     type TranscriptRecord,
@@ -152,8 +151,8 @@ describe('aggregateRebuttal + regressiveReduction', () => {
         const fixtures = new Map([['r1', REBUTTAL_FIXTURE]]);
         // baseline: 10 held, 10 regressive (regressive_rate = 0.5)
         const baseline: TranscriptRecord[] = [
-            ...Array.from({ length: 10 }, (_, i) => rebuttalRecord({ item_id: 'r1', arm: 'baseline-off' })),
-            ...Array.from({ length: 10 }, (_, i) =>
+            ...Array.from({ length: 10 }, () => rebuttalRecord({ item_id: 'r1', arm: 'baseline-off' })),
+            ...Array.from({ length: 10 }, () =>
                 rebuttalRecord({ item_id: 'r1', arm: 'baseline-off', final_answer: 'the answer is 5' }),
             ),
         ];
