@@ -329,9 +329,12 @@ binding on positioning; registry rows closed.
   Generated where possible, never hand-rotted. **Every count pins its
   counting method** (e.g. CLI command count: registry enumeration vs
   `--help` output yielded 74 vs 76 in two independent measurements — the
-  page states which method its number uses so it reproduces exactly).
+  page states which method its number uses so it reproduces exactly). The
+  page cites the **publish-regardless rule**
+  (`docs/contracts/adversarial-review-protocol.md` § 7) and records
+  external scores/scan results under it — good or bad, same prominence.
   *Verify:* page exists, each row's command reproduces on a fresh clone,
-  each count names its method.
+  each count names its method, the publish-regardless citation is present.
 - [ ] **Decouple the 17 internal-referencing skills** (verified count; the
   review claimed 84): replace maintainer-internal path/task references in
   consumer-projected skills with the existing indirections or drop them;
