@@ -26,7 +26,7 @@ packs:
 High-performance CLI proxy that reduces LLM token consumption on common dev
 commands through intelligent output filtering (whitespace, boilerplate,
 comments, duplicate log messages). Single Rust binary, <10ms startup overhead.
-**Third-party Apache-2.0 tool** (rtk-ai upstream, not an event4u project).
+**Third-party Apache-2.0 tool** (rtk-ai upstream — an external project, not part of this package).
 
 **Savings, honestly stated:** upstream reports 60-90% (their estimate —
 "actual savings vary"). agent-config's own scoped spot-measurement
