@@ -417,6 +417,16 @@ asserts agreement with the README. **Never edit Topics, description,
 or homepage in the GitHub UI** — those edits are overwritten on the
 next sync.
 
+Changing the manifests in a PR is allowed and expected: the
+`check-visibility-drift` workflow recognizes a PR whose net diff
+touches `topics.yml` / `about.yml` as an **intentional pending
+change** and reports the remote diff in advisory mode instead of
+failing. Strict failure is reserved for the weekly sweep, manual
+dispatch, and tooling-only PRs — there, observed drift means someone
+edited the GitHub UI directly. After the PR merges, a maintainer
+applies the pending change once via `sync-visibility.yml`
+(`workflow_dispatch`, `dry_run=false`).
+
 Sources of truth:
 
 - [`.github/topics.yml`](.github/topics.yml) — the topic list +
