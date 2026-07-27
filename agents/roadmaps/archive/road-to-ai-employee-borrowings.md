@@ -118,7 +118,7 @@ gates can fire without re-derivation.
 
 ## Phase 0 — Decision-bearing measurements (cheap, all pre-registered)
 
-- [ ] **Spike A — baseline correction-repeat rate (CRR).** Over a
+- [x] **Spike A — baseline correction-repeat rate (CRR).** Over a
   hand-labelled set of ≥30 existing session transcripts: how often does an
   operator correction semantically repeat one already issued in an earlier
   session? Pre-registered decision rule: **CRR < 0.15 → the self-evolution
@@ -128,7 +128,7 @@ gates can fire without re-derivation.
   CRR metric itself is unmeasurable; that finding parks the category too.)
   *Verify:* labelled set + measurement committed; decision rule applied in
   writing.
-- [ ] **Spike B — outcome-signal availability.** Across the Phase-0 fixture
+- [x] **Spike B — outcome-signal availability.** Across the Phase-0 fixture
   repos (below): what fraction emit machine-readable tier-1/tier-2 outcome
   signals (CI red/green, revert-of-agent-commit, PR merged without change
   request) without new credentials? Pre-registered: **<50% tier-1
@@ -136,7 +136,7 @@ gates can fire without re-derivation.
   populate). Record the signal-trust tier table (tier-4 = model
   self-assessment = excluded) in the eval/telemetry docs regardless.
   *Verify:* availability numbers committed; tier table recorded.
-- [ ] **Spike C — rules-in-the-wild coverage baseline.** Assemble a frozen
+- [x] **Spike C — rules-in-the-wild coverage baseline.** Assemble a frozen
   fixture set of ≥20 real, unaffiliated repositories (PHP/Laravel,
   TypeScript, mixed). Run the EXISTING deterministic verifiers/rule packs
   (no new rules, no LLM) and measure: on what fraction do they produce ≥1
@@ -154,14 +154,14 @@ gates can fire without re-derivation.
 > failure modes beat one. No new subsystem — hardening of an existing
 > surface.
 
-- [ ] **Layer 1 — tool-call-time deny** on writes/edits to kernel rule
+- [x] **Layer 1 — tool-call-time deny** on writes/edits to kernel rule
   paths (hook), implemented on the precompiled hook path (sequence with
   `road-to-credible-install` Phase 1 so the hook layer is touched once);
   red/green test proves the deny fires.
-- [ ] **Layer 2 — projected immutability statement**: the projected rule
+- [x] **Layer 2 — projected immutability statement**: the projected rule
   set states explicitly that kernel rules are immutable and must never be
   proposed for edit (tighten-only, per the existing override hardening).
-- [ ] **Layer 3 — post-write SHA comparison**: already exists
+- [x] **Layer 3 — post-write SHA comparison**: already exists
   (condensation hashes / kernel bundle check) — document it as Layer 3 of
   the now-complete stack, plus the honest **residual-risk statement**: a
   technically valid change inside a writable surface is not caught by any
@@ -172,7 +172,7 @@ gates can fire without re-derivation.
 
 ## Phase 2 — Cheap unconditional records
 
-- [ ] **Prior-negative-results note on the ai-council contract surface:**
+- [x] **Prior-negative-results note on the ai-council contract surface:**
   an unaffiliated project DELETED its 6-judge LLM content review as "cost
   without signal" — record the finding, the distinction (config-delta
   judging ≠ artifact judging under a neutrality contract with
@@ -180,7 +180,7 @@ gates can fire without re-derivation.
   council design. External falsification pressure gets answered in
   writing, not left for readers to notice.
   *Verify:* note merged on a stable (non-roadmap) surface.
-- [ ] **Capability audit as a publishable artifact:** the external
+- [x] **Capability audit as a publishable artifact:** the external
   8-capability coworker rubric self-assessed honestly — six N/A/No rows
   (cross-functional reach, cross-system action, sandboxed compute,
   proactive operation…), two Strong rows (identity/permissions/audit;
@@ -188,7 +188,7 @@ gates can fire without re-derivation.
   its publication into the adoption roadmap's exhibit set.
   *Verify:* table exists with the N/A rows intact; adoption roadmap
   references it.
-- [ ] **Category-absence finding recorded as launch-ADR input:** the
+- [x] **Category-absence finding recorded as launch-ADR input:** the
   AI-employee category maps list ~12 software-engineering agents and zero
   governance layers — our category does not exist on that map. One
   paragraph, filed with the positioning inputs.
@@ -203,20 +203,30 @@ gates can fire without re-derivation.
 > unblock list clears OR the launch ADR explicitly pulls it as the launch
 > artifact. Thresholds are FIXED NOW (pre-registration precedes data):
 
-- [ ] Coverage ≥60% of the Spike-C fixture set within the cap; **first-
+- [x] Coverage ≥60% of the Spike-C fixture set within the cap; **first-
   finding false-positive rate ≤5%** (precision over coverage — if forced
   to trade, lower coverage); p90 ≤60s / p99 ≤90s cold; **zero mutation**
   (a single fixture where the first run modifies a tracked file fails the
   phase outright); partial-output affordance on timeout; locked reason-code
   taxonomy; idempotent (marker + run ledger).
-- [ ] Honest-null consequence: thresholds missed → do NOT ship; publish
+- [x] Honest-null consequence: thresholds missed → do NOT ship; publish
   the coverage/precision numbers as the H2 product finding.
-- [ ] Standing precondition: any mechanism borrowed from Source P is
+- [x] Standing precondition: any mechanism borrowed from Source P is
   implemented only after reading its source ([DOC-ONLY] → VERIFIED-SRC).
   *Verify:* gate condition documented; thresholds committed before any
   build data; ship/no-ship decision recorded against them.
 
 ## Parked — preserved designs with named un-park conditions
+
+> **Condition status (recorded at execution, 2026-07-27):** governed
+> evolution — Spike A banked CRR 0.167 ≥ 0.15 with κ=1.0 (condition 2 of
+> 3 MET; freeze + detector-reuse still open; the thin 0.017 margin and
+> the repeats-already-covered caveat are recorded in the verdict file).
+> `feedback_signals` — Spike B measured 90% tier-1 availability
+> (condition MET); the build still waits on the standing freeze per this
+> roadmap's Goal ("gate every BUILD … behind … the standing freeze") and
+> lands only as a telemetry extension, never a new primitive. Neither
+> park is silently lifted by these numbers.
 
 - **Governed evolution loop** (agent rewrites maintainer-side rules under
   deterministic bounds). Un-parks only when ALL: freeze unblock list
