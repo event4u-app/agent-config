@@ -134,7 +134,7 @@ everything — exhortation does not generalize, structure does.
 
 > Cheap, fully maintainer-controlled, removes R3–R5 by construction.
 
-- [ ] **Write `docs/contracts/adversarial-review-protocol.md`**: clean-room
+- [x] **Write `docs/contracts/adversarial-review-protocol.md`**: clean-room
   session (no repo rules, prior reviews, scores or roadmaps in context);
   consumer seat first (registry install in an empty project BEFORE the
   checkout is opened); verbatim rejection mandate ("find the fastest
@@ -148,19 +148,19 @@ everything — exhortation does not generalize, structure does.
   chat reviews (the fix is fully maintainer-controlled — the old prompt
   must not survive alongside the new one); the findings-ledger format is
   defined.
-- [ ] **Retire the /120 format**: the protocol states that numeric
+- [x] **Retire the /120 format**: the protocol states that numeric
   self/solicited scores are no longer requested and are ignored on
   arrival; severity-tagged findings replace their function. Existing
   historical scores stay as history — nothing is rewritten.
   *Verify:* protocol says so explicitly; the next solicited review uses
   the template.
-- [ ] **Publish-regardless rule** recorded in the same contract: every
+- [x] **Publish-regardless rule** recorded in the same contract: every
   external score/scan result (registry scores, scanners, dogfood deltas)
   is published with the same prominence regardless of outcome — burying a
   bad one rebuilds the false-confidence machine.
   *Verify:* rule present; evaluator page (credible-install Phase 4) cites
   it.
-- [ ] **Findings→work routing**: each S0/S1 finding from a protocol review
+- [x] **Findings→work routing**: each S0/S1 finding from a protocol review
   gets a disposition (fix now / roadmap item / rejected with reason) —
   reusing the normal roadmap flow, no new machinery.
   *Verify:* routing section in the contract; first run produces
@@ -171,7 +171,7 @@ everything — exhortation does not generalize, structure does.
 > The only way to know the watchdog still bites. Package-side mechanism
 > only (the consumer-facing skill is deferred with the E-pack).
 
-- [ ] **Canary procedure in the protocol doc**: biannual, one planted
+- [x] **Canary procedure in the protocol doc**: biannual, one planted
   defect from a rotating class (vulnerable dep pin, dead script target,
   oversized artifact, stale reference, slow path) on a SHORT-LIVED branch;
   sealed planting record stored outside the review session's reach; the
@@ -179,12 +179,12 @@ everything — exhortation does not generalize, structure does.
   ship.
   *Verify:* procedure documented incl. the never-ships safety rule and
   class rotation (no reuse).
-- [ ] **Consequence rule**: review misses its canary → the review process
+- [x] **Consequence rule**: review misses its canary → the review process
   (not the reviewer) failed; a root-cause entry + protocol fix before the
   next cycle. Escape hatch: ≥3 genuine high-severity non-canary findings
   excuse the miss.
   *Verify:* rule in the contract.
-- [ ] **First calibration cycle executed**: one canary planted, one
+- [x] **First calibration cycle executed**: one canary planted, one
   protocol review run against it, catch/miss + RCA recorded. This is the
   roadmap's proof-of-life; without one completed cycle the protocol is
   prose.
@@ -193,20 +193,20 @@ everything — exhortation does not generalize, structure does.
 
 ## Phase 3 — Record the architecture disposition (close the umbrella honestly)
 
-- [ ] **Glossary entry, not an ADR-direction**: the enforcement ladder
+- [x] **Glossary entry, not an ADR-direction**: the enforcement ladder
   (impossible / blocked / verified / just-in-time / prose) is recorded as
   vocabulary alongside the existing enforcement-coverage taxonomy
   (validator / validator-local / observer / none), noting L4 (just-in-time
   injection) as the one genuinely new level worth a future look.
   *Verify:* glossary text merged into the enforcement-coverage contract
   docs; no migration scheduled.
-- [ ] **Rejection record with revisit conditions**: the promotion-law /
+- [x] **Rejection record with revisit conditions**: the promotion-law /
   kernel-target / hooks-first re-platforming rejection and its two named
   revisit conditions (hook budget met + usage-distribution evidence) are
   recorded where future sessions will find them (decision record; memory
   entry).
   *Verify:* record exists and names both conditions.
-- [ ] **E-vertical deferral note** incl. E3's pre-registered re-test
+- [x] **E-vertical deferral note** incl. E3's pre-registered re-test
   design sketch (clean-context + consumer-seat + measurement mandate as
   the changed structural variables vs the 9.5.0 Team-Mode Δ=0) so the
   re-test can be picked up post-freeze without re-deriving it.
