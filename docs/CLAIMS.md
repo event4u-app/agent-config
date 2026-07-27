@@ -296,7 +296,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-27
 
 ### claim: hook-dispatch-latency
-- claim: Hook dispatch runs as one precompiled node process with all concerns in-process — measured p50 67–80 ms / p95 69–83 ms per event against the pre-registered budget (pre_tool_use p95 <= 150 ms, any event <= 250 ms), down from ~1.6 s p50 on the retired CLI-to-bash-to-tsx per-concern-respawn chain; the bench harness and its regression gate run in CI.
+- claim: Hook dispatch runs as one precompiled node process with all concerns in-process — measured p50 76–83 ms / p95 81–89 ms per event on the gating CI runner (GitHub-hosted ubuntu-latest; a darwin dev machine measures ~10 ms faster) against the pre-registered budget (pre_tool_use p95 <= 150 ms, any event <= 250 ms), down from ~1.6 s p50 on the retired CLI-to-bash-to-tsx per-concern-respawn chain; the bench harness and its regression gate run in CI.
 - kind: quant
 - evidence: docs/hook-latency.json#pre_tool_use
 - status: backed

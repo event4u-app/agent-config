@@ -1,52 +1,52 @@
 {
-    "_comment": "Recorded hook-dispatch latency (bench_hook_latency --update). Method pinned in src/scripts/bench_hook_latency.ts; budgets in src/config/hook-latency-budget.json. Re-run from a fresh clone to reproduce.",
-    "recorded_at": "2026-07-27T18:42:54.627Z",
-    "node": "v25.9.0",
-    "platform": "darwin-arm64",
+    "_comment": "Recorded hook-dispatch latency baseline. Method pinned in src/scripts/bench_hook_latency.ts; budgets in src/config/hook-latency-budget.json. The baseline MUST come from the environment the gate runs in (GitHub-hosted ubuntu-latest) — a locally recorded darwin baseline made the 20% regression window measure the environment offset instead of real regressions. These values are the bench step's own output from CI run 30303438406/30303438480 (2026-07-27); refresh from a CI run's printed table, or via --update ONLY on a comparable linux runner.",
+    "recorded_at": "2026-07-27T20:39:52Z",
+    "node": "v20 (GitHub-hosted ubuntu-latest)",
+    "platform": "linux-x64 (GitHub Actions, tests.yml Static Checks)",
     "hardware_note": "see hook-latency-budget.json hardware_reference — CI numbers are the gated ones",
     "runs_per_event": 50,
     "results": [
         {
             "event": "pre_tool_use",
             "runs": 50,
-            "p50_ms": 69,
-            "p95_ms": 73,
-            "max_ms": 75
+            "p50_ms": 77,
+            "p95_ms": 81,
+            "max_ms": 87
         },
         {
             "event": "post_tool_use",
             "runs": 50,
-            "p50_ms": 70,
-            "p95_ms": 72,
-            "max_ms": 78
+            "p50_ms": 80,
+            "p95_ms": 85,
+            "max_ms": 87
         },
         {
             "event": "user_prompt_submit",
             "runs": 50,
-            "p50_ms": 71,
-            "p95_ms": 78,
-            "max_ms": 79
+            "p50_ms": 76,
+            "p95_ms": 81,
+            "max_ms": 83
         },
         {
             "event": "stop",
             "runs": 50,
-            "p50_ms": 80,
+            "p50_ms": 78,
             "p95_ms": 83,
-            "max_ms": 83
+            "max_ms": 84
         },
         {
             "event": "session_start",
             "runs": 50,
-            "p50_ms": 70,
-            "p95_ms": 73,
-            "max_ms": 75
+            "p50_ms": 83,
+            "p95_ms": 89,
+            "max_ms": 91
         },
         {
             "event": "session_end",
             "runs": 50,
-            "p50_ms": 70,
-            "p95_ms": 79,
-            "max_ms": 80
+            "p50_ms": 77,
+            "p95_ms": 82,
+            "max_ms": 88
         }
     ]
 }

@@ -20,7 +20,7 @@
  *     specific-file-citation case for stable artifacts.)
  *
  * What DOES leak: a literal Taskfile verb invocation (`task ci`, `task
- * sync`, …), the retired `.agent-src.uncondensed/` source tree, maintainer-
+ * sync`, …), the retired uncondensed legacy source tree (pre-ADR-051), maintainer-
  * only docs (`docs/maintainers/`), a bare `src/scripts/<tool>.ts` reference
  * with no `node_modules/@event4u/agent-config/` prefix (broken once the
  * skill is installed — the relative distance from the installed file to
@@ -101,7 +101,7 @@ const PATTERNS: readonly PatternDef[] = [
     },
     {
         re: /\.agent-src\.uncondensed\//,
-        label: 'reference to the retired `.agent-src.uncondensed/` source tree',
+        label: 'reference to the retired uncondensed legacy source tree (pre-ADR-051)',
     },
     {
         re: /docs\/maintainers\//,
