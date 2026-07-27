@@ -275,6 +275,17 @@ recorded decision to keep the wedge standalone).
 > `agents/evidence/reports/what-you-get-adoption-input.md`
 > (prevented-failure-mode rows, every cell ledger-backed).
 
+> **Funnel-lesson input (2026-07-27, from
+> `archive/road-to-persona-catalog-disposition.md`).** The persona-catalog intake's
+> top non-technical lesson: a contribution funnel (issue-form intake →
+> originality gate → external-PR stream) drove Source R's external
+> contribution volume (headline figure unverified — directional, not
+> evidence). The GATE half is already shipped here (`lint_originality.ts` +
+> committed `agents/reports/originality.*`); the FUNNEL half — a contributor
+> intake path that routes submissions through that gate — is adoption work
+> and is owned by this roadmap: a candidate Phase-2/Phase-4 lever once
+> external interest materializes. No new mechanism before then.
+
 > **Status (2026-07-20).** Second autonomous slice landed: Phase 1 is done
 > except the B9 human session (wedge verified shipping + lock-test green;
 > CLAIMS-backed promise `wedge-hollow-detection`; opt-in local first-run

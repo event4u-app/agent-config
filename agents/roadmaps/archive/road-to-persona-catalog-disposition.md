@@ -67,7 +67,7 @@ For whoever picks up the stubs under the mcp-full-power N0 unlock:
 
 ## Phase 1 — Capture the one novel insight (guidance, not object)
 
-- [ ] **Severity-conditioned team composition as orchestration guidance:**
+- [x] **Severity-conditioned team composition as orchestration guidance:**
   add a short conditions-pattern section to the existing
   subagent-orchestration surface (skill guidance / flow entry — extend,
   don't create): incident-style severity tiers map to team composition and
@@ -79,7 +79,7 @@ For whoever picks up the stubs under the mcp-full-power N0 unlock:
 
 ## Phase 2 — Intake honesty records
 
-- [ ] **This disposition table is the record** — shipped / routed /
+- [x] **This disposition table is the record** — shipped / routed /
   rejected / dormant, each with its trigger; the funnel routing note is
   filed with the adoption roadmap's inputs.
   *Verify:* adoption roadmap references the funnel lesson; no rejected
