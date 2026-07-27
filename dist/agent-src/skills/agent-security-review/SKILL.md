@@ -46,7 +46,7 @@ check trigger — `pull_request_target` on fork PRs is attacker-influenced —,
 the agent's prompt). Static pass first:
 
 ```bash
-./scripts-run src/scripts/security_audit_config --root <repo> --json
+npx tsx node_modules/@event4u/agent-config/src/scripts/security_audit_config.ts --root <repo> --json
 ```
 
 ### 2. Red team (attacker lens)

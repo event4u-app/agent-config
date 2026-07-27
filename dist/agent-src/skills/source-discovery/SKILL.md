@@ -38,9 +38,9 @@ discover the real source  →  Evidence Report (Verified / Assumed / Gaps)  → 
 Scaffold the report cheaply so it never gets skipped:
 
 ```bash
-./scripts-run src/scripts/evidence_report git-state            # fail-fast: abort if a rebase/merge/cherry-pick is in progress
-./scripts-run src/scripts/evidence_report init --task "<task>" # writes the gitignored session report
-./scripts-run src/scripts/evidence_report add --bucket verified --claim "users.email is unique" --source "db/schema/users.sql:23"
+npx tsx node_modules/@event4u/agent-config/src/scripts/evidence_report.ts git-state            # fail-fast: abort if a rebase/merge/cherry-pick is in progress
+npx tsx node_modules/@event4u/agent-config/src/scripts/evidence_report.ts init --task "<task>" # writes the gitignored session report
+npx tsx node_modules/@event4u/agent-config/src/scripts/evidence_report.ts add --bucket verified --claim "users.email is unique" --source "db/schema/users.sql:23"
 ```
 
 **Provenance on every item** (`observed_at` / `source` / `version`). Within a
@@ -175,10 +175,10 @@ the per-session Evidence Report above. Append to the knowledge intake —
 never write a tracked page mid-task:
 
 ```bash
-./scripts-run src/scripts/emit_knowledge_event --type api_shape_learned \
+npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts --type api_shape_learned \
     --endpoint "<path>" --method "<verb>" --request-schema '<json>' --response-schema '<json>'
 
-./scripts-run src/scripts/emit_knowledge_event --type convention_detected \
+npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts --type convention_detected \
     --pattern "<pattern>" --evidence "file:line" --sample-size <N> --scope project
 ```
 

@@ -70,7 +70,8 @@ has distinct prompt grammar — this skill applies the right structure per adapt
 3. **Apply provider grammar** from the section above for the target model.
 4. **Tune for the job shape** — text-literal first for Ideogram; noun-phrase first for Flux;
    minimal + `style:` param for Recraft; natural language for Gemini/GPT.
-5. **Inspect the adapter header** — open `src/scripts/ai-image/adapters/<provider>.sh`
+5. **Inspect the adapter header** — open
+   `node_modules/@event4u/agent-config/src/scripts/ai-image/adapters/<provider>.sh`
    and confirm the param enums (aspect/style/model) the prompt relies on still match.
 6. **Emit the prompt** in the Output format below.
 
@@ -111,5 +112,5 @@ descriptors will be ignored and the vector output will be wrong.
 
 - [`image-provider-routing`](../image-provider-routing/SKILL.md) — select the provider before writing the prompt.
 - [`provider-lifecycle-discipline`](../../rules/provider-lifecycle-discipline.md) — lifecycle tier gates live runs.
-- `src/scripts/ai-image/adapters/` — adapter header comments for param enums.
+- `node_modules/@event4u/agent-config/src/scripts/ai-image/adapters/` — adapter header comments for param enums.
 - [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md) — rights check before generating real-person likenesses or brand marks.

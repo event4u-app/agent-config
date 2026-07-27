@@ -182,9 +182,9 @@ naming (e.g. `feat/` vs `fix/` vs `refactor/` prefix), and
 risks instead of inventing terms.
 
 The match lists and `require_count` thresholds are owned by
-`detection-map.yml` — edit the map, not this skill. Tests:
-[`tests/scripts/refine_ticket_detect.test.ts`](../../../tests/scripts/refine_ticket_detect.test.ts)
-(DE + EN fixtures, repo-aware + graceful-degrade coverage).
+`detection-map.yml` — edit the map, not this skill (DE + EN fixtures,
+repo-aware + graceful-degrade coverage are regression-locked in this
+package's own test suite).
 
 ### 3. Orchestrate
 

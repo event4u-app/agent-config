@@ -275,7 +275,7 @@ knowledge intake — never rewrite the page mid-task (see
 [`knowledge-pages`](../../templates/contexts/knowledge-pages.md)):
 
 ```bash
-./scripts-run src/scripts/emit_knowledge_event \
+npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts \
     --type mistake_made \
     --error-category "<one or two words>" \
     --context-source "<agents/knowledge/... path, or 'null' if no page was followed>" \
@@ -292,7 +292,7 @@ right now (observed ≠ documented, not a one-off) → hybrid immediate-fix
 case instead — surface the correction, ask before continuing (see
 [`knowledge-pages`](../../templates/contexts/knowledge-pages.md) §
 Contested entries). Approved → isolated fix commit. Declined →
-`./scripts-run src/scripts/append_contested` on that page, then still
+`npx tsx node_modules/@event4u/agent-config/src/scripts/append_contested.ts` on that page, then still
 emit the `context_stale` event above for the consolidation pass.
 
 ## Gotchas

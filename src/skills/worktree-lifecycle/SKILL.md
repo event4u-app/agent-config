@@ -103,11 +103,10 @@ A worktree is **merge-ready** only when ALL hold:
 
 Removal is gated by the deterministic helper (edge-case-tested: detached
 HEAD, branch without remote, tag-only reachability, deleted remote
-branch, untracked files, paths with spaces —
-`tests/scripts/worktree_cleanup_check.test.ts`):
+branch, untracked files, paths with spaces):
 
 ```bash
-./scripts-run src/scripts/worktree_cleanup_check check <worktree-path>
+npx tsx node_modules/@event4u/agent-config/src/scripts/worktree_cleanup_check.ts check <worktree-path>
 ```
 
 Exit `0` → removal allowed; exit `1` → refuse, gates in order:

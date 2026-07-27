@@ -91,6 +91,9 @@ tasks:
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop
+      - task: lint-pre-migration-refs
+      - task: lint-consumer-internal-refs
+      - task: lint-budget-ownership
       - task: lint-governed-writes
       - task: check-enforcement-coverage
       - task: check-artefact-counts
@@ -289,6 +292,9 @@ tasks:
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop
+      - task: lint-pre-migration-refs
+      - task: lint-consumer-internal-refs
+      - task: lint-budget-ownership
       - task: lint-governed-writes
       - task: check-enforcement-coverage
       - task: check-artefact-counts

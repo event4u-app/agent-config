@@ -428,6 +428,25 @@ tasks:
     desc: "Fail on placeholder prose in the package's own authored artefacts (Lorem ipsum, `// rest of component`, `for brevity`, TODO-implement stubs) — the CI net the output-discipline rule has always claimed and, until now, did not have"
     cmd: ./scripts-run src/scripts/lint_output_slop
 
+  lint-pre-migration-refs:
+    silent: true
+    desc: "Fail on pre-migration install hints (pip install agent-config, python install.py, retired Python MCP entry) in shipped files — the doc-rot net from road-to-credible-install Phase 0 (ADR-200 retired the Python installer)"
+    cmd: ./scripts-run src/scripts/lint_pre_migration_refs
+
+  lint-consumer-internal-refs:
+    silent: true
+    desc: "Fail on maintainer-internal path/task references (Taskfile verbs, .agent-src.uncondensed/, src/scripts/ without the node_modules prefix, this package's own tests/scripts/, the ./scripts-run dispatcher) in consumer-projected skills — the doc-rot net from road-to-credible-install Phase 4 step 2 (review claimed 84/281, verified 17)"
+    cmd: ./scripts-run src/scripts/lint_consumer_internal_refs
+
+  lint-budget-ownership:
+    silent: true
+    desc: "Every gate-budget config under src/config/*budget*.json carries an owner + review date — anti-ossification lint (road-to-credible-install Phase 6.2); overdue review warns, missing date fails"
+    cmd: ./scripts-run src/scripts/lint_budget_ownership
+
+  evaluator-umbrella:
+    desc: "The external evaluator's first five minutes as ONE suite over the PACKED artifact — audit, publint, headless tarball install, staleness lints, hook bench, cold-start/size/surface budgets, npx smoke (road-to-credible-install Phase 6.1; CI: evaluator-umbrella.yml on release PRs + nightly)"
+    cmd: bash src/scripts/evaluator_umbrella.sh
+
   lint-governed-writes:
     silent: true
     desc: "Static scan for direct fs writes to protected ledger/governance surfaces (claims ledger, append-only intake/audit jsonl) that bypass the atomic-write layer — allowlist-free; zero findings is the pre-registered null (road-to-enforcement-peer-disposition P1)"
