@@ -300,3 +300,6 @@ internal/bench/corpora/*.local.yaml
 /agents/memory/.agent-learning.json
 /agents/memory/LESSONS.md
 /fleet.yaml
+
+# scale-history bench artifacts are LLM-generated untrusted output — never committed (PR #1016 review)
+/internal/bench/scale-history/artifacts/

@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `9.8.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 285
+- **artefacts**: 286
 
 ## Commands (147)
 
@@ -160,7 +160,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 - **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
-## Rules (64)
+## Rules (65)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -212,6 +212,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`role-mode-adherence`** — When roles.active_role is set — closing outputs must match mode contract and emit structured mode marker
 - **`rule-type-governance`** — Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto
 - **`runtime-safety`** — Skill declares execution metadata — enforce safety constraints for assisted/automated execution types
+- **`session-canary`** — personal.canary_name is set — open every new task by addressing the user by name (liveness canary) and keep the reply-close markers (ONE end-summary, PR URL as literal last line) alive
 - **`size-enforcement`** — Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits
 - **`skill-improvement-trigger`** — After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled
 - **`skill-quality`** — Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained

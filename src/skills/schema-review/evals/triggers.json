@@ -1,0 +1,17 @@
+{
+    "skill": "schema-review",
+    "last_eval": "2026-07-27",
+    "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for reviewing a migration/schema diff for scale hazards. Should-not-trigger covers near-miss neighbours: authoring a migration (laravel-migration), live-traffic performance (performance-analysis), audit-tier selection (history-design), generic code review.",
+    "queries": [
+        { "q": "review this migration for missing indexes before I merge", "trigger": true },
+        { "q": "will this schema change scale to 100k rows?", "trigger": true },
+        { "q": "prüfe meine Migration auf Skalierungsprobleme", "trigger": true },
+        { "q": "check the new schema.prisma diff for unsafe changes", "trigger": true },
+        { "q": "does this ALTER TABLE need CONCURRENTLY and a default?", "trigger": true },
+        { "q": "create a migration that adds a status column to orders", "trigger": false },
+        { "q": "the dashboard endpoint is slow in production, profile it", "trigger": false },
+        { "q": "which audit log mechanism should we use for tenants?", "trigger": false },
+        { "q": "review my pull request for code quality", "trigger": false },
+        { "q": "wie lege ich einen Index in MySQL an?", "trigger": false }
+    ]
+}
