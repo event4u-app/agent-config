@@ -30,7 +30,8 @@ import { composeUserIdentity } from '../../shared/userMd/utils.js';
 import { mergeIntoTemplate, parseYaml, replaceScalar } from '../io/yamlIO.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
-import { detectInstalledTools, isBinaryOnPath, knownToolIds } from '../../install/toolDetection.js';
+import { detectInstalledTools, knownToolIds } from '../../install/toolDetection.js';
+import { detectRtk, rtkInstallCommands, RTK_UPSTREAM_REPO } from '../../install/rtkDetection.js';
 import { readSelectedTools, readSelectedPacks, writeSelectedTools } from '../../install/selectedTools.js';
 
 export interface WizardRouteOptions {
@@ -702,33 +703,33 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             };
         });
 
-        // road-to-wizard-ux-improvements § Phase 7 — rtk presence on the
-        // Editor-and-tooling step. Detection is the ONLY source of truth (the
-        // value is never loaded from `.agent-settings.yml`). When rtk is
-        // missing, return the suggested per-OS install command + repo so the
-        // UI can offer a copy-and-run button (we surface the command rather
-        // than shelling out an unverified package install — non-destructive
-        // by default). Read-only; extended-mode only.
-        app.get('/api/v1/wizard/detect-rtk', async (_request, reply) => {
-            if (!extended) {
-                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
-                return reply;
-            }
-            const installed = isBinaryOnPath('rtk');
-            // Per-OS install hint (maintainer-tunable). `cargo install --git`
-            // is the portable fallback for the Rust tool when no packaged
-            // formula is known.
-            const repo = 'https://github.com/event4u-app/rtk';
-            const installCommandByOs: Record<string, string> = {
-                darwin: 'brew install rtk',
-                linux: `cargo install --git ${repo}`,
-                win32: `cargo install --git ${repo}`,
-            };
+        // road-to-rtk-onboarding-correctness — rtk presence + identity on the
+        // identity step. Detection is the ONLY source of truth (the value is
+        // never loaded from `.agent-settings.yml`), and it is a two-stage
+        // probe: PATH presence AND an `rtk gain` output-signature identity
+        // check — the binary name collides with the unrelated Rust Type Kit,
+        // so presence alone is not an answer. When rtk is missing, return the
+        // per-OS install command from verified upstream paths so the UI can
+        // offer a copy-and-run button (we surface the command rather than
+        // shelling out an unverified package install — non-destructive by
+        // default). Read-only; available in BOTH wizard modes (council
+        // 2026-07-28: the recommendation is dead weight when only extended
+        // runs ever see it).
+        app.get('/api/v1/wizard/detect-rtk', async () => {
+            const detection = detectRtk();
+            // Legacy `installed` field: true ONLY for a verified Rust Token
+            // Killer — a colliding binary is never reported as installed.
+            const installed = detection.present && detection.identity === 'token-killer';
+            const commands = rtkInstallCommands(process.platform);
             return {
                 installed,
+                present: detection.present,
+                identity: detection.identity ?? null,
+                version: detection.version ?? null,
                 platform: process.platform,
-                repo,
-                installCommand: installed ? null : (installCommandByOs[process.platform] ?? `cargo install --git ${repo}`),
+                repo: RTK_UPSTREAM_REPO,
+                installCommand: detection.present ? null : commands.recommended,
+                installCommands: detection.present ? null : commands,
             };
         });
 

@@ -97,7 +97,7 @@ export const settingsSchema = z.object({
             'After the agent edits a file, run `<ide> <path>` to surface it in your editor immediately. Off by default to avoid window-stealing during long agent runs.',
         ),
         rtk_installed: z.boolean().default(false).describe(
-            'Does this machine have rtk (Rust Token Killer, https://github.com/event4u-app/rtk) on PATH? When true the agent wraps verbose CLI output (git, tests, linters, docker, npm, composer) with rtk for ~60-90% token savings. Leave false if rtk is missing — the agent falls back to tail / grep.',
+            'Does this machine have rtk (Rust Token Killer, a third-party Apache-2.0 tool: https://github.com/rtk-ai/rtk) on PATH — verified as the real Token Killer, not the unrelated Rust Type Kit that shares the binary name? When true the agent wraps verbose CLI output (git, tests, linters, docker, npm, composer) with rtk (upstream reports 60-90% token savings — their estimate). Leave false if rtk is missing — the agent falls back to tail / grep. The wizard overwrites this from a live two-stage probe (PATH presence + `rtk gain` identity check).',
         ),
         minimal_output: z.boolean().default(true).describe(
             'Prefer short bullets and tables (true, default) vs verbose prose with rationale (false). Affects every chat reply; flip to false during debugging when you want the agent to think out loud.',
@@ -448,7 +448,7 @@ export const settingsSchema = z.object({
         }).default({}),
         rtk_wrap: z.object({
             enabled: z.boolean().default(false).describe(
-                'PreToolUse RTK-wrap nudge (token-saving Phase 3). Default off. When on AND rtk is on PATH (a live probe — not a self-reported flag), warns (never blocks) "re-run wrapped with rtk" before a single verbose CLI command (git/npm/cargo/docker/…) for 60–90% token saving. Skips completeness-critical / piped / compound commands and git diff. No-op when rtk is absent.',
+                'PreToolUse RTK-wrap nudge (token-saving Phase 3). Default off. When on AND the binary on PATH is verified as Rust Token Killer (a live two-stage identity probe — not a self-reported flag, and never a colliding same-name binary), warns (never blocks) "re-run wrapped with rtk" before a single verbose CLI command (git/npm/cargo/docker/…) — upstream reports 60–90% output-token savings (their estimate). Skips completeness-critical / piped / compound commands and git diff. No-op when rtk is absent, unverified, or a different tool.',
             ),
         }).default({}),
         design_slop: z.object({

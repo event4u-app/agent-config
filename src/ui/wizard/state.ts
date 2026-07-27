@@ -298,15 +298,29 @@ export const toolsDetectionLoading = signal(false);
 export const toolPresence = signal<Record<string, boolean>>({});
 
 /**
- * rtk (Rust Token Killer) presence on the Editor-and-tooling step
- * (road-to-wizard-ux-improvements § Phase 7). Always detected at runtime via
- * `GET /api/v1/wizard/detect-rtk` — never read from settings. `null` = not yet
- * probed. When missing, `rtkInstallCommand` carries the per-OS install hint.
+ * rtk (Rust Token Killer — a third-party Apache-2.0 tool) presence + identity
+ * on the identity step (road-to-rtk-onboarding-correctness). Always detected
+ * at runtime via `GET /api/v1/wizard/detect-rtk` — never read from settings.
+ * `rtkInstalled === null` = not yet probed. Identity is the two-stage probe's
+ * verdict: the binary name collides with the unrelated Rust Type Kit, so a
+ * bare presence check cannot answer "is rtk installed".
  */
+export type RtkIdentityState = 'token-killer' | 'unknown-rtk' | 'unverified';
+export interface RtkInstallCommandTiers {
+    recommended: string;
+    recommendedLabel?: string;
+    manual?: string;
+    manualLabel?: string;
+    note?: string;
+}
 export const rtkDetectionLoaded = signal(false);
 export const rtkInstalled = signal<boolean | null>(null);
+export const rtkPresent = signal<boolean | null>(null);
+export const rtkIdentity = signal<RtkIdentityState | null>(null);
+export const rtkVersion = signal<string | null>(null);
 export const rtkInstallCommand = signal<string | null>(null);
-export const rtkRepo = signal<string>('https://github.com/event4u-app/rtk');
+export const rtkInstallTiers = signal<RtkInstallCommandTiers | null>(null);
+export const rtkRepo = signal<string>('https://github.com/rtk-ai/rtk');
 
 /**
  * AI Council step (road-to-wizard-ux-improvements § Phase 8). The

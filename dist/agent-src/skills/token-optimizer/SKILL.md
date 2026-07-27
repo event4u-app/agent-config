@@ -50,7 +50,7 @@ INTENT
 │     → cite [cli-output-handling](../../rules/cli-output-handling.md)
 │       (Iron Law: redirect / tail / grep / wrap)
 │     → cite [rtk-output-filtering](../rtk-output-filtering/SKILL.md)
-│       (rtk wrapper, 60-90% savings on tests/linters/git)
+│       (rtk wrapper — upstream reports 60-90% on tests/linters/git)
 │
 ├── Large document or paste (PDF, DOCX, HTML, transcript)
 │     → cite markitdown (upstream: https://github.com/microsoft/markitdown)
@@ -85,7 +85,7 @@ INTENT
 | `agent-handoff` | `src/domains/meta/agent-handoff/command.md` | `handoff`, `fresh`, `chat`, `context` | Context envelope for fresh-chat continuation |
 | `direct-answers` | `.agent-src.uncondensed/rules/direct-answers.md` | `brevity`, `flattery`, `severity`, `tiered` | Iron-Law brevity floor (kernel) |
 | `markitdown` | upstream: github.com/microsoft/markitdown | `PDF`, `DOCX`, `HTML`, `convert` | Document → markdown converter (authoritative-link only) |
-| `/cost:report` | TBD — an internal roadmap (local-only) | `cost`, `model spend`, `budget` | Per-session cost telemetry (planned) |
+| `/cost:report` | TBD — an internal roadmap (local-only) § P1.2` | `cost`, `model spend`, `budget` | Per-session cost telemetry (planned) |
 | `api-cost-levers` | `docs/guidelines/agent-infra/api-cost-levers.md` | `cache`, `caching`, `batch`, `tiering`, `effort` | Anthropic billing levers: prompt caching, Batch API, model tiering, effort/output right-sizing |
 
 ## Output format

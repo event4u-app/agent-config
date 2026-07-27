@@ -289,7 +289,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`review-routing`** — Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML.
 - **`roadmap-management`** — Use when the user says "create roadmap", "show roadmap", or "execute roadmap". Creates, reads, and manages roadmap files with phase tracking.
 - **`roadmap-writing`** — Use when authoring or rewriting a roadmap in agents/roadmaps/ — phases, goal, acceptance criteria, council notes; fires even on 'write a plan for X' / 'draft a roadmap'.
-- **`rtk-output-filtering`** — Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
+- **`rtk-output-filtering`** — Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer, third-party Apache-2.0; upstream reports 60-90% token savings). Covers installation, configuration, and usage patterns.
 - **`rule-refactor`** — Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule.
 - **`rule-writing`** — Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
 - **`screenshot-hygiene`** — Use when creating and embedding a documentation screenshot — detect and redact sensitive data, human-gate data-bearing shots before ship. Triggers 'screenshot for docs', 'screenshot admin panel'.
