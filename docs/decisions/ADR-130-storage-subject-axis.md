@@ -7,6 +7,14 @@ supersedes: —
 superseded_by: —
 phase: road-to-reachable-code-memory · Phase 8
 type: structural
+review_trigger: >-
+  The tripwire honest-null is contradicted — a first-person/personal-context
+  record is actually found in a tracked memory artifact (run
+  `lint_memory_tripwire --history` on suspicion) — because invariant 3 was
+  dropped on the zero-fires evidence and a single real fire re-founds it.
+  Also reopen when a team/multi-user storage model lands: the single-user
+  premise behind "one user-global store" stops holding and the subject axis
+  needs a per-principal cut.
 ---
 
 # ADR-130 — The `subject` axis: user-global vs project-local storage partition

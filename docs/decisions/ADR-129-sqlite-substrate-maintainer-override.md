@@ -6,6 +6,14 @@ decision: sqlite-substrate-maintainer-override
 supersedes: 116
 superseded_by: —
 phase: road-to-reachable-code-memory · Phase 6
+review_trigger: >-
+  A rollback trigger fires and sticks — the graph twin reverted to the JSON
+  fallback (query p95 > 50 ms or heap > 10 MB) or the 24-query replay reports
+  a recall regression against its named comparator — because then the
+  substrate is costing instead of paying and the lift-gate question this ADR
+  waived becomes live again. Also reopen if `node:sqlite` is removed or
+  breaking-changed upstream, or if a real dependency has to be added to keep
+  it working (the zero-new-deps premise is load-bearing).
 ---
 
 # ADR-129 — `node:sqlite` substrate lands by maintainer direction; ADR-116's ship-gate clause overridden, thresholds become rollback triggers
