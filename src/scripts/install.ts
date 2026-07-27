@@ -77,6 +77,7 @@ import * as installed_lock from './_lib/installed_lock.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
 import * as installed_tools from './_lib/installed_tools.js';
+import { collect_drift, format_drift_report } from './_lib/install_drift.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
@@ -3281,6 +3282,27 @@ function install_global(
         info(`Lockfile written: ${written}`);
         info(`  schema_version=1, agent_config_version=${installed_version}`);
         info(`  tools=${merged_tools.join(',')}`);
+    }
+
+    // Installer drift report (measurement only, never a gate — see
+    // `_lib/install_drift.ts`). Printed here because this is the only
+    // moment the information is actionable: right before the redeploy below
+    // overwrites whatever the consumer may have locally edited since the
+    // last install. Same project-scoping the manifest update further below
+    // uses (skipped inside the agent-config source repo itself, where the
+    // manifest would be untracked noise).
+    if (
+        project_root !== null &&
+        pathExists(_resolve_settings_read(project_root)) &&
+        !isDir(path.join(project_root, '.agent-src.uncondensed'))
+    ) {
+        const drift = collect_drift(project_root);
+        if (!state.QUIET) {
+            process.stdout.write('\n');
+            for (const line of format_drift_report(drift).replace(/\n$/, '').split('\n')) {
+                info(line);
+            }
+        }
     }
 
     const package_root = _resolve_package_root_for_global();
