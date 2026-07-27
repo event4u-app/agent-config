@@ -76,14 +76,14 @@ The decision artifact MUST contain:
 
 ## Gotcha
 
-- Laravel Tier-1 reference: **spatie/laravel-activitylog** is the default
-  pick (source-level comparison 2026-07-27: first-class age-based retention
-  command `activitylog:clean` maps directly onto the R-A7 growth budget;
-  JSON diff columns match R-B3 hygiene; morphs-indexed subject/causer).
-  **owen-it/laravel-auditing** is the documented alternative when forensic
-  depth is required (ip/url/user-agent/tags fields; per-model
-  record-count pruning instead of age-based) — re-verify both against the
-  project's Laravel version at decision time.
+- Tier-1 reference per stack — Laravel: **spatie/laravel-activitylog**
+  (source-level comparison 2026-07-27: age-based `activitylog:clean`
+  retention command maps directly onto the R-A7 growth budget; JSON diff
+  columns match R-B3 hygiene) with **owen-it/laravel-auditing** as the
+  forensic alternative (ip/url/user-agent/tags; count-based pruning);
+  TS/Node: the thin custom audit-table pattern, no dependency. Re-verify
+  the package pick against the project's framework version at decision
+  time.
 - Tier 2 (temporal tables) depends on the database: MariaDB/SQL Server
   have system-versioned tables, vanilla MySQL and SQLite do not, and
   Postgres needs an extension or trigger pattern — verify the actual
