@@ -111,6 +111,26 @@ Rules:
   or `none`) so the gate's value is measurable inside the ADR-117
   prove-or-drop window.
 
+## Severity-conditioned team composition — conditions pattern
+
+Guidance, not a new object class (persona-catalog disposition; AI council
+2026-07-27, claude-sonnet-4-5 + gpt-4o: capture as guidance on this
+existing surface — no roster schema, no linter, no fourth scoping
+ontology). Incident-style severity tiers refine composition and
+activation **within** the form the static gate already picked — severity
+never overrides the form gate, the Iron Law, or any safety floor.
+
+| Severity | Composition + activation | Existing mode(s) |
+|---|---|---|
+| Critical — prod impact, security, data integrity | Full parallel team; debate-grade review on the aggregate | `do-in-parallel` + `judge-with-debate` (Mode 9 where opted in) |
+| High — contested spec, cross-layer risk | Implementer + two sequential judges | `do-and-judge-two-stage` |
+| Medium — routine multi-step | Implementer + judge between steps | `do-in-steps` / `do-and-judge` |
+| Low — small, reversible | Solo with async review | in-session (`none`); optional single async judge |
+
+At equal severity the cheapest-mode preference (§ 3. Pick the mode)
+still applies; escalate one tier only on a named risk signal, never on
+vibes.
+
 ## The nine modes
 
 Each mode has a decision row: when to use, when not, and the expected
