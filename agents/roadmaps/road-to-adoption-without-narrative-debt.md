@@ -267,6 +267,14 @@ recorded decision to keep the wedge standalone).
   does not contradict the no-runtime / privacy posture.
 - The positioning claims are themselves falsifiable, not superlatives.
 
+> **Exhibit inputs (2026-07-27, from sibling roadmaps).** Two filed
+> adoption exhibits await Phase-2/launch use:
+> `agents/evidence/reports/coworker-capability-audit.md` (honest
+> eight-capability table on an external category rubric — six N/A/No
+> rows, two Strong; the concession IS the positioning artifact) and
+> `agents/evidence/reports/what-you-get-adoption-input.md`
+> (prevented-failure-mode rows, every cell ledger-backed).
+
 > **Status (2026-07-20).** Second autonomous slice landed: Phase 1 is done
 > except the B9 human session (wedge verified shipping + lock-test green;
 > CLAIMS-backed promise `wedge-hollow-detection`; opt-in local first-run
