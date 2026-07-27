@@ -28,7 +28,7 @@
  * skipped rather than guessed, biasing toward precision.
  */
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, lstatSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type { Finding } from './types.ts';
 
@@ -75,10 +75,11 @@ function list_php_files(dir: string): string[] {
             const full = join(d, entry);
             let st;
             try {
-                st = statSync(full); // broken symlinks must not crash the walk
+                st = lstatSync(full); // never follow symlinks; broken links must not crash
             } catch {
                 continue;
             }
+            if (st.isSymbolicLink()) continue;
             if (st.isDirectory()) {
                 if (entry === 'vendor' || entry === 'node_modules' || entry.startsWith('.')) continue;
                 walk(full);

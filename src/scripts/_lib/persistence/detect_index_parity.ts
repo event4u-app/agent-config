@@ -21,7 +21,7 @@
  * All functions are pure; the only I/O is the directory walk in `analyze`.
  */
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, lstatSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { type Finding, parse_waiver, is_ignored_dir } from './types';
 
@@ -518,10 +518,14 @@ function walk(dir: string): string[] {
         const p = join(dir, entry);
         let st;
         try {
-            st = statSync(p); // broken symlinks (public/storage) must not crash the walk
+            // lstat: never FOLLOW symlinks — a hostile tree could link outside
+            // the scanned root (council PR-review finding); broken links must
+            // not crash the walk either.
+            st = lstatSync(p);
         } catch {
             continue;
         }
+        if (st.isSymbolicLink()) continue;
         if (st.isDirectory()) {
             if (!is_ignored_dir(entry)) out.push(...walk(p));
         } else out.push(p);

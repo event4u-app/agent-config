@@ -25,7 +25,7 @@
  * should filter on `!finding.waived`.
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, lstatSync } from 'node:fs';
 import { join } from 'node:path';
 import {
     type Finding,
@@ -429,10 +429,11 @@ export function collect_sql_files(dir: string): string[] {
             const p = join(d, e);
             let st;
             try {
-                st = statSync(p);
+                st = lstatSync(p); // never follow symlinks (council PR-review finding)
             } catch {
                 continue;
             }
+            if (st.isSymbolicLink()) continue;
             if (st.isDirectory()) walk(p);
             else if (e.toLowerCase().endsWith('.sql')) out.push(p);
         }

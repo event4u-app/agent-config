@@ -43,7 +43,7 @@ A HEURISTIC FINDING IS ADVICE, NEVER A CI FAILURE.
 EVERY WAIVER CARRIES A NON-EMPTY REASON.
 ```
 
-## Rule surface (enforced by `lint_persistence`, gate tier per spike verdicts)
+## Rule surface (tier per the spike-verdict record: `lint_persistence` gates where a spike PASSED; unspiked rules — R-A4, R-A9, R-A11 — are advice/normative only)
 
 - **R-A1 query-shape** — no query calls inside iteration over query
   results; batch/eager-load instead (F1).

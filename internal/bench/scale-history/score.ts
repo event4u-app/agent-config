@@ -51,15 +51,24 @@ interface Finding {
 
 /** Refuse any artifact path that escapes the bench directory. */
 function confine_artifact(raw: string): string | null {
+    const given = path.resolve(raw);
     let resolved: string;
     try {
-        resolved = fs.realpathSync(path.resolve(raw));
+        resolved = fs.realpathSync(given);
     } catch {
         return null;
     }
     const root = fs.realpathSync(HERE) + path.sep;
     if (!(resolved + path.sep).startsWith(root)) return null;
-    if (!fs.statSync(resolved).isDirectory()) return null;
+    // Refuse a symlinked artifact root outright (council PR review): the
+    // caller must hand the REAL directory, so the path we spawn on is the
+    // path we checked — no check-to-use swap via a re-pointed link.
+    try {
+        if (fs.lstatSync(given).isSymbolicLink()) return null;
+        if (!fs.lstatSync(resolved).isDirectory()) return null;
+    } catch {
+        return null;
+    }
     return resolved;
 }
 
