@@ -511,6 +511,30 @@ decision_resolution:
       confidence_threshold: 0.6
 ```
 
+### Prior negative result in the wild — and what would falsify OUR design
+
+An unaffiliated agent project publicly DELETED its 6-judge LLM content
+review, recording it as "cost without signal" (2026-07, external
+AI-employee analysis intake; source anonymized per source-confidentiality).
+External falsification pressure gets answered in writing, not left for
+readers to notice:
+
+- **The distinction.** That panel judged ARTIFACT CONTENT with free-form
+  LLM opinions — N models reading the same text and emitting takes. This
+  package's council judges CONFIG DELTAS and DECISIONS under a neutrality
+  contract: pre-registered thresholds fixed before data, honest-null
+  consequences that bind, stance tallies over free prose, necessity
+  classifier gating whether a debate runs at all, and cost disclosure per
+  call. Same word ("judges"), different mechanism class.
+- **What would falsify OUR design** (recorded criterion): a measured run
+  showing council-consulted decisions do not differ in outcome quality
+  from solo-model decisions at matched cost — i.e. our own
+  `council-vs-solo-baseline` claim failing its threshold on a
+  pre-registered re-run — or the necessity classifier's "unnecessary"
+  verdicts exceeding its budget while verdict quality stays flat. If that
+  evidence lands, the honest disposition is the external project's:
+  delete the cost, publish the null, keep the deterministic gates.
+
 ### Low-impact council opt-in
 
 The default route for `low_impact` is `agent` — the host resolves locally
