@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 19 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers
+> 18 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers
 
 ## Overall
 
-**109 / 336 steps done · 32%**
+**109 / 309 steps done · 35%**
 
 ```text
-█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
 ```
 
 ## Open roadmaps
@@ -26,15 +26,14 @@
 | 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 10 | [road-to-persona-catalog-disposition.md](roadmaps/road-to-persona-catalog-disposition.md) | 2 | 2 | 2 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 11 | [road-to-reachable-code-memory.md](roadmaps/road-to-reachable-code-memory.md) | 10 | 27 | 27 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 12 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 14 | [road-to-rtk-onboarding-correctness.md](roadmaps/road-to-rtk-onboarding-correctness.md) | 4 | 21 | 20 | 1 | 0 | 0 | [2](#blockers-road-to-rtk-onboarding-correctness) | ░░░░░░░░░░ 5% |
-| 15 | [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md) | 4 | 18 | 18 | 0 | 0 | 0 | [1](#blockers-road-to-shared-design-tokens) | ░░░░░░░░░░ 0% |
-| 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 18 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 11 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
+| 13 | [road-to-rtk-onboarding-correctness.md](roadmaps/road-to-rtk-onboarding-correctness.md) | 4 | 21 | 20 | 1 | 0 | 0 | [2](#blockers-road-to-rtk-onboarding-correctness) | ░░░░░░░░░░ 5% |
+| 14 | [road-to-shared-design-tokens.md](roadmaps/road-to-shared-design-tokens.md) | 4 | 18 | 18 | 0 | 0 | 0 | [1](#blockers-road-to-shared-design-tokens) | ░░░░░░░░░░ 0% |
+| 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 16 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 17 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -197,23 +196,6 @@ _1 blocker resolved._
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Capture the one novel insight (guidance, not object) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | Intake honesty records | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-
-### [road-to-reachable-code-memory.md](roadmaps/road-to-reachable-code-memory.md)
-
-**Road to reachable code memory — wire the orphaned engine, accumulate locally, decide the substrate honestly** — 0 / 27 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsification spikes (pre-registered, cheap) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Reachability (ungated defect fix) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Freshness without a daemon (gated on S0b) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 3 | Cut the noise (gated on S0c) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 4 | Memory that accumulates (local, human-promoted) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | Shared project context (defect tier, before the substrate) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 6 | The substrate (maintainer-decided; recorded honestly) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 7 | Zero-touch upgrades | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 8 | Storage boundary: the `subject` axis (security tier) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 9 | Engine deltas (small, each self-gated) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md)
 
