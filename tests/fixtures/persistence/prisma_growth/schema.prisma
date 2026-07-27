@@ -1,0 +1,39 @@
+// FIXTURE: prisma growth-budget (R-A7) — 2 violations, 2 pass, 1 waived.
+
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+/// retention: pruned after 180 days by the nightly retention job
+model RequestLog {
+  id        Int      @id @default(autoincrement())
+  path      String
+  createdAt DateTime @default(now())
+
+  @@map("request_logs")
+}
+
+/// no-retention: legal hold — records kept indefinitely per compliance ruling 2026-04
+model LegalHoldEvent {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  @@map("legal_hold_events")
+}
+
+model UserSession {
+  id        String   @id
+  userId    Int
+  expiresAt DateTime
+
+  @@map("sessions")
+}

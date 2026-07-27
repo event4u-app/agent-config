@@ -1,0 +1,46 @@
+// Fixture for spike S0.2 (index parity) — road-to-scale-and-history-discipline.
+// Schema expectations:
+//   User:  indexed = id (@id), email (@unique)         plain = name, createdAt
+//   Post:  indexed = id, authorId (@@index), status (@@index)
+//          plain   = title, viewCount, createdAt
+//   Order: indexed = id, reference (@unique)           plain = channel, total, placedAt
+// Prisma note: relation scalar FKs (authorId) are NOT auto-indexed on
+// PostgreSQL — only @id / @unique / @@index / @@unique count as indexed.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  posts     Post[]
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  authorId  Int
+  status    String
+  title     String
+  viewCount Int      @default(0)
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+
+  @@index([authorId])
+  @@index([status])
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  reference String   @unique
+  channel   String
+  total     Decimal
+  placedAt  DateTime @default(now())
+}

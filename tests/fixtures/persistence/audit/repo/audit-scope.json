@@ -1,0 +1,11 @@
+{
+    "audit_scoped_models": [
+        "Invoice",
+        "Tenant",
+        "Project",
+        "Payment",
+        "Contract",
+        "Order",
+        "Subscription"
+    ]
+}

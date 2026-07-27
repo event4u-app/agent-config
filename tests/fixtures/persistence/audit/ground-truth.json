@@ -1,0 +1,117 @@
+[
+    {
+        "file": "app/Http/Controllers/InvoiceController.php",
+        "line_approx": 12,
+        "covered": true
+    },
+    {
+        "file": "app/Http/Controllers/InvoiceController.php",
+        "line_approx": 18,
+        "covered": true
+    },
+    {
+        "file": "app/Http/Controllers/InvoiceController.php",
+        "line_approx": 24,
+        "covered": true
+    },
+    {
+        "file": "app/Http/Controllers/PaymentController.php",
+        "line_approx": 12,
+        "covered": false
+    },
+    {
+        "file": "app/Http/Controllers/PaymentController.php",
+        "line_approx": 20,
+        "covered": false
+    },
+    {
+        "file": "app/Http/Controllers/PaymentController.php",
+        "line_approx": 26,
+        "covered": false
+    },
+    {
+        "file": "app/Http/Controllers/ProjectController.php",
+        "line_approx": 12,
+        "covered": false
+    },
+    {
+        "file": "app/Http/Controllers/ProjectController.php",
+        "line_approx": 18,
+        "covered": false
+    },
+    {
+        "file": "app/Http/Controllers/ProjectController.php",
+        "line_approx": 24,
+        "covered": false
+    },
+    {
+        "file": "app/Http/Controllers/SubscriptionController.php",
+        "line_approx": 12,
+        "covered": true
+    },
+    {
+        "file": "app/Http/Controllers/TenantController.php",
+        "line_approx": 12,
+        "covered": true
+    },
+    {
+        "file": "app/Http/Controllers/TenantController.php",
+        "line_approx": 19,
+        "covered": true
+    },
+    {
+        "file": "app/Http/Controllers/TenantController.php",
+        "line_approx": 25,
+        "covered": true
+    },
+    {
+        "file": "app/Services/BillingService.php",
+        "line_approx": 14,
+        "covered": true
+    },
+    {
+        "file": "app/Services/ContractService.php",
+        "line_approx": 11,
+        "covered": true
+    },
+    {
+        "file": "app/Services/ContractService.php",
+        "line_approx": 16,
+        "covered": true
+    },
+    {
+        "file": "app/Services/InvoiceService.php",
+        "line_approx": 13,
+        "covered": false
+    },
+    {
+        "file": "app/Services/OrderService.php",
+        "line_approx": 12,
+        "covered": true
+    },
+    {
+        "file": "app/Services/OrderService.php",
+        "line_approx": 19,
+        "covered": false
+    },
+    {
+        "file": "app/Services/PaymentService.php",
+        "line_approx": 12,
+        "covered": false
+    },
+    {
+        "file": "app/Services/ProjectService.php",
+        "line_approx": 13,
+        "covered": true
+    },
+    {
+        "file": "app/Services/ProjectService.php",
+        "line_approx": 20,
+        "covered": false
+    },
+    {
+        "file": "app/Services/ReportService.php",
+        "line_approx": 13,
+        "covered": false
+    }
+]
