@@ -1,0 +1,20 @@
+{
+    "_comment": "Pre-registered hook-latency budget (road-to-credible-install Phase 1). Committed BEFORE the first optimization landed, per the roadmap's pre-registration discipline: the numbers below are the acceptance bar the precompile + single-process work is measured against, not a post-hoc fit. Consumed by the bench harness (scripts/bench_hook_latency) and its CI gate. Every budget carries an owner and a review date per the Phase-6 budget-ownership lint.",
+    "schema_version": 1,
+    "registered_at": "2026-07-27",
+    "owner": "maintainer",
+    "review_by": "2027-07-27",
+    "hardware_reference": {
+        "ci": "GitHub-hosted ubuntu-latest runner (the numbers the gate enforces)",
+        "floor": "1 vCPU reference container (documented ceiling, not CI-enforced)"
+    },
+    "budgets_ms": {
+        "pre_tool_use": { "p95_ci": 150, "p95_1vcpu": 400 },
+        "any_hook_event": { "p95_ci": 250 }
+    },
+    "regression_gate": {
+        "max_regression_pct": 20,
+        "_comment": "A PR that worsens a recorded p95 by more than this fails the bench gate even while still under the absolute budget."
+    },
+    "honest_null_consequence": "If the budget is missed after precompile + single-process + lazy I/O, hooks ship default-off with an explicit opt-in flag and the measured numbers published under a 'known cost' heading. A resident-dispatcher daemon is NOT improvised as a rescue (council 2026-07-26)."
+}
