@@ -1,0 +1,86 @@
+/* GENERATED FILE — do not hand-edit.
+ * Generated from event4u-agent-tokens.json (_version 1) by
+ * tokens/build-as.mjs in agent-config.
+ *
+ * Paste this content over the two `:root` blocks in agent-switch's
+ * gui/src/index.css — see tokens/README-as-wiring.md for the full wiring
+ * contract. Never hand-edit gui/src/index.css's `:root` blocks directly;
+ * regenerate here instead. */
+
+:root {
+  --radius: 0.5rem;
+
+  --background: 220 12% 4.9%; /* bg #0b0c0e */
+  --foreground: 240 5.9% 93.3%; /* text #ededef */
+
+  --card: 225 10% 7.8%; /* surface #121316 */
+  --card-foreground: 240 5.9% 93.3%; /* text #ededef */
+
+  --popover: 225 10% 7.8%; /* surface #121316 */
+  --popover-foreground: 240 5.9% 93.3%; /* text #ededef */
+
+  --primary: 14 62.6% 57.1%; /* accent #d66d4d */
+  --primary-foreground: 225 11.1% 7.1%; /* accent-fg #101114 */
+
+  --secondary: 222.9 10.1% 13.5%; /* surface-hover #1f2126 */
+  --secondary-foreground: 240 5.9% 93.3%; /* text #ededef */
+
+  --muted: 220 10.3% 11.4%; /* surface-alt #1a1c20 */
+  --muted-foreground: 223.6 6.3% 65.7%; /* text-muted #a2a5ad */
+
+  --accent: 222.9 10.1% 13.5%; /* surface-hover #1f2126 */
+  --accent-foreground: 240 5.9% 93.3%; /* text #ededef */
+
+  --destructive: 0 90.6% 70.8%; /* danger #f87171 */
+  --destructive-foreground: 225 11.1% 7.1%; /* text-inverse #101114 */
+
+  --success: 141.9 69.2% 58%; /* success #4ade80 */
+
+  --warning: 43.3 96.4% 56.3%; /* warning #fbbf24 */
+
+  --sidebar: 225 5.4% 14.5%; /* sidebar #232427 */
+
+  --border: 225 4.9% 16.1%; /* border over surface #27282b */
+  --input: 220 2.1% 28%; /* border-strong over surface #464749 */
+  --ring: 14.3 62.9% 62%; /* focus-ring #db7e61 */
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --background: 240 6.7% 97.1%; /* bg #f7f7f8 */
+  --foreground: 228 10.2% 9.6%; /* text #16171b */
+
+  --card: 0 0% 100%; /* surface #ffffff */
+  --card-foreground: 228 10.2% 9.6%; /* text #16171b */
+
+  --popover: 0 0% 100%; /* surface #ffffff */
+  --popover-foreground: 228 10.2% 9.6%; /* text #16171b */
+
+  --primary: 14 62.6% 42.9%; /* accent #b24929 */
+  --primary-foreground: 0 0% 100%; /* accent-fg #ffffff */
+
+  --secondary: 228 12.8% 92.4%; /* surface-hover #e9eaee */
+  --secondary-foreground: 228 10.2% 9.6%; /* text #16171b */
+
+  --muted: 220 12% 95.1%; /* surface-alt #f1f2f4 */
+  --muted-foreground: 226.2 7% 36.3%; /* text-muted #565963 */
+
+  --accent: 228 12.8% 92.4%; /* surface-hover #e9eaee */
+  --accent-foreground: 228 10.2% 9.6%; /* text #16171b */
+
+  --destructive: 0 72.2% 50.6%; /* danger #dc2626 */
+  --destructive-foreground: 0 0% 100%; /* accent-fg #ffffff */
+
+  --success: 142.1 76.2% 36.3%; /* success #16a34a */
+
+  --warning: 32.1 94.6% 43.7%; /* warning #d97706 */
+
+  --sidebar: 220 12% 95.1%; /* sidebar #f1f2f4 */
+
+  --border: 240 2.1% 90.8%; /* border over surface #e7e7e8 */
+  --input: 210 1.5% 74.1%; /* border-strong over surface #bcbdbe */
+  --ring: 14 62.4% 45.9%; /* focus-ring #be4e2c */
+
+  color-scheme: light;
+}
