@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
 import { PACKAGE_JSON } from '../../cli/paths.js';
 import { CAPABILITIES } from '../../shared/capabilities.js';
+import { detectAgentSwitchProfile } from '../../install/agentSwitchProfile.js';
 
 function systemUserName(): string {
     try {
@@ -77,6 +78,18 @@ export const PingResponseSchema = z.object({
             features: z.array(z.enum(['theme', 'deepLink'])),
         }),
     }),
+    /**
+     * Whether this server process is currently running under an
+     * agent-switch (AS) profile (`road-to-reciprocal-ecosystem.md`
+     * Phase 2), and which one. Lets the GUI say which profile is
+     * active so a user who switches profiles and sees different
+     * settings does not mistake profile-scoping for lost config.
+     */
+    agentSwitchProfile: z.object({
+        active: z.boolean(),
+        provider: z.string().nullable(),
+        profile: z.string().nullable(),
+    }),
 });
 
 export type PingResponse = z.infer<typeof PingResponseSchema>;
@@ -119,6 +132,7 @@ export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
                 projectSurface: opts.projectSurface === true,
                 devSurfaces: (process.env['AGENT_CONFIG_DEV_MODE'] ?? '') === '1',
                 capabilities: { ...CAPABILITIES },
+                agentSwitchProfile: detectAgentSwitchProfile(),
             };
             return response;
         });
