@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **16** open blockers
+> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
 
 ## Overall
 
-**168 / 281 steps done · 60%**
+**168 / 263 steps done · 64%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   60%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
@@ -26,13 +26,12 @@
 | 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 11 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 16 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 17 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 11 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
+| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 15 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -197,27 +196,6 @@ _1 blocker resolved._
     the post-ADR-117 default (`subagents.auto: on`), then check
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
-
-### [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md)
-
-**Road to a reciprocal ecosystem — AC recommends AS the way AS already recommends AC** — 0 / 18 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsification spike | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 1 | Detection + the single card | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Behave correctly under AS (the part that is not promotion) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Symmetry in the docs | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-reciprocal-ecosystem"></a>
-**Blockers**
-
-- **restraint-review** (owner: maintainer) — blocks — (was: Phase 1 shipping at all) - **Decision:** affirmed — the distribution value outweighs the surface cost. Phase 1 ships, under the unchanged hard bound: **one card, one surface, self-retiring, permanently dismissible, no second placement ever.**
-  - **What to do:**
-  - **Resolved when:** ~~the decision is recorded either way~~ — recorded here.
-- **adoption-measurement** (owner: user) — blocks knowing whether reciprocal promotion moves anything
-  - **What to do:**
-  - **Resolved when:** ≥1 external user reports (issue/discussion/direct message) arriving at either package through the other.
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
