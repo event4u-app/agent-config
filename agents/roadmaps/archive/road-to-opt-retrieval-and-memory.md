@@ -14,8 +14,9 @@ complexity: lightweight
 > criteria.
 
 > Part of the `road-to-opt-*` cluster (2026-07-11 sweep). Two source pools:
-> (a) the residual items from the maintainer's borrow catalogue in
-> `agents/tmp/graphify.txt`, and (b) protocol-level mechanisms from five
+> (a) the residual items from the maintainer's borrow catalogue (a local,
+> gitignored inbox file, since moved to `agents/tmp.old/`), and (b)
+> protocol-level mechanisms from five
 > external memory/knowledge references whose ENGINES were all re-confirmed
 > as rejected (vectors/services/vault — the Layer-2 sunset holds) but whose
 > write/recall discipline is genuinely sharper than ours.
@@ -156,7 +157,7 @@ hook; no new storage layer, no new service.
 
 ## Phase 4 — close out the source file
 
-- [x] Move `agents/tmp/graphify.txt` → `agents/tmp.old/` in the main
+- [x] Move the borrow-catalogue inbox file `agents/tmp/` → `agents/tmp.old/` in the main
       checkout (local, gitignored on both sides) — the catalogue is fully
       dispositioned: B3/B4/B6/B8 + B1/B2 shipped previously (substrate
       hardening + discovery graph), the residuals and the anti-lesson by
