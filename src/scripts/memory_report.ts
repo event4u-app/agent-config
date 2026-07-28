@@ -189,10 +189,17 @@ function _pyYamlDatetimeStr(raw: string): string {
 
 // --- curated/intake iteration -----------------------------------------------
 
-type CuratedTuple = [string, string, Record<string, unknown>];
+export type CuratedTuple = [string, string, Record<string, unknown>];
 
-/** Yield [file, type, entry] across both curated layouts. */
-function _iter_curated_entries(): CuratedTuple[] {
+/**
+ * Yield [file, type, entry] across both curated layouts.
+ *
+ * Exported for reuse by `_lib/memory_fts_index.ts` (road-to-reachable-code-memory
+ * Phase 6) — the FTS index builder repoints `MEMORY_ROOT` via `_setMemoryRoot`
+ * before calling this, then restores it, so it never needs a second copy of
+ * the curated-layout scan.
+ */
+export function _iter_curated_entries(): CuratedTuple[] {
     const out: CuratedTuple[] = [];
     for (const mtype of CURATED_TYPES) {
         const single = path.join(MEMORY_ROOT, `${mtype}.yml`);
@@ -838,7 +845,13 @@ export function main(): number {
     return 0;
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }

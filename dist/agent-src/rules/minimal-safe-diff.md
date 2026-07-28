@@ -13,6 +13,8 @@ routes_to:
   - "guideline:agent-infra/minimal-safe-diff-mechanics"
 workspaces: [engineering]
 packs: [engineering-base]
+enforced_by:
+  - "hook:minimal-safe-diff"
 ---
 
 # Minimal Safe Diff

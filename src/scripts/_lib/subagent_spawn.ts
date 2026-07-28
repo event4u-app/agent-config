@@ -11,6 +11,8 @@
  * into a subagent — keep the private-data leg narrow.
  */
 
+import * as crypto from 'node:crypto';
+
 export type RoleMode = 'developer' | 'reviewer' | 'tester' | 'po' | 'incident' | 'planner';
 
 const ROLE_MODES: ReadonlySet<string> = new Set<RoleMode>([
@@ -37,6 +39,12 @@ export interface SpawnSelection {
     personas?: string[];
     /** Knowledge slice REFERENCES (ids / paths) — never inline bodies. */
     knowledge_refs?: string[];
+    /**
+     * Hard per-worker token stop-loss (L0b), resolved from the worker's tier
+     * via `worker_budget.budgetForTier`. Null/absent = orchestrator did not
+     * set one (legacy dispatch).
+     */
+    max_tokens_per_worker?: number | null;
 }
 
 export interface SpawnBrief {
@@ -45,6 +53,8 @@ export interface SpawnBrief {
     profile: string | null;
     personas: string[];
     knowledge_refs: string[];
+    /** Per-worker token stop-loss; null = unset (legacy dispatch). */
+    max_tokens_per_worker: number | null;
     warnings: string[];
 }
 
@@ -86,12 +96,55 @@ export function composeSpawnBrief(sel: SpawnSelection): SpawnBrief {
         knowledge_refs = knowledge_refs.slice(0, MAX_KNOWLEDGE_REFS);
     }
 
+    let max_tokens_per_worker: number | null = null;
+    if (sel.max_tokens_per_worker != null) {
+        if (Number.isInteger(sel.max_tokens_per_worker) && sel.max_tokens_per_worker > 0) {
+            max_tokens_per_worker = sel.max_tokens_per_worker;
+        } else {
+            warnings.push(`invalid max_tokens_per_worker '${sel.max_tokens_per_worker}' dropped (positive integer required)`);
+        }
+    }
+
     return {
         task: sel.task,
         role_mode,
         profile: sel.profile ?? null,
         personas,
         knowledge_refs,
+        max_tokens_per_worker,
         warnings,
     };
+}
+
+// ── Prefix-stable payload serialization (road-to-lean-agent-init Phase 4) ──
+
+/**
+ * Serialize a brief into the spawn payload with DETERMINISTIC ordering:
+ * static prefix first (role contract, profile, personas, budget — stable
+ * across dispatches of the same configuration), variable task part last.
+ * No timestamps, no random IDs — the prefix is byte-identical for identical
+ * configurations, which is what provider prompt-caching keys on. The
+ * `cache_hit` audit field records whether the provider actually reused it;
+ * measurement only — no savings claim without provider-response evidence.
+ */
+export function serializeSpawnPayload(brief: SpawnBrief): string {
+    const staticPrefix = JSON.stringify({
+        role_mode: brief.role_mode,
+        profile: brief.profile,
+        personas: brief.personas,
+        max_tokens_per_worker: brief.max_tokens_per_worker,
+    });
+    const variableTail = JSON.stringify({
+        task: brief.task,
+        knowledge_refs: brief.knowledge_refs,
+    });
+    return `${staticPrefix}\n${variableTail}`;
+}
+
+/**
+ * Hex digest of a serialized payload — the `payload_hash` audit field
+ * (never content; 16 hex chars satisfy the audit schema's 8–64 window).
+ */
+export function spawnPayloadHash(payload: string): string {
+    return crypto.createHash('sha256').update(payload, 'utf8').digest('hex').slice(0, 16);
 }

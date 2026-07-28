@@ -21,6 +21,7 @@ import * as path from 'node:path';
 import { record_event } from './telemetry/boundary.js';
 import {
     ALLOWED_OUTCOMES,
+    type CrossSourceEntry,
     EngagementEvent,
     EngagementSchemaError,
     now_utc_iso,
@@ -58,6 +59,30 @@ function _reprStr(s: string): string {
     return `'${s}'`;
 }
 
+/** Turn `["d1:text-image:ask", ...]` into cross_source entries. Unknown
+ *  `type` values are left to schema validation (consistent with how
+ *  `_parse_kv_list` leaves unknown artefact kinds to the schema); only
+ *  the CLI-only `id:type:ask|warn` shape is checked here. */
+function _parse_cross_source_list(values: string[]): CrossSourceEntry[] {
+    const out: CrossSourceEntry[] = [];
+    for (const raw of values) {
+        const parts = raw.split(':');
+        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
+            throw new SystemExitError(
+                `❌  --cross-source must be 'id:type:ask|warn', got ${_reprStr(raw)}`,
+            );
+        }
+        const [id, type, verdict] = parts as [string, string, string];
+        if (verdict !== 'ask' && verdict !== 'warn') {
+            throw new SystemExitError(
+                `❌  --cross-source verdict must be 'ask' or 'warn', got ${_reprStr(verdict)}`,
+            );
+        }
+        out.push({ id, type, asked: verdict === 'ask' });
+    }
+    return out;
+}
+
 interface RecordArgs {
     task_id: string;
     boundary: string;
@@ -65,6 +90,7 @@ interface RecordArgs {
     applied: string[] | null;
     loaded: string[] | null;
     outcome: string[] | null;
+    cross_source: string[] | null;
     ts: string;
     payload_file: string | null;
     stdin: boolean;
@@ -81,6 +107,9 @@ function _build_event_from_args(args: RecordArgs): EngagementEvent {
         applied: _parse_kv_list(args.applied ?? []),
         loaded: args.loaded && args.loaded.length > 0 ? _parse_kv_list(args.loaded) : null,
         outcomes: args.outcome && args.outcome.length > 0 ? [...args.outcome] : null,
+        cross_source: args.cross_source && args.cross_source.length > 0
+            ? _parse_cross_source_list(args.cross_source)
+            : null,
     });
 }
 
@@ -106,6 +135,7 @@ function _build_event_from_payload(raw: string): EngagementEvent {
         loaded: d['loaded'] === undefined || d['loaded'] === null ? null : _orEmpty(d['loaded']),
         outcomes: (d['outcomes'] as string[] | null | undefined) ?? null,
         tokens_estimate: (d['tokens_estimate'] as Record<string, number> | null | undefined) ?? null,
+        cross_source: (d['cross_source'] as CrossSourceEntry[] | null | undefined) ?? null,
     });
 }
 
@@ -126,6 +156,7 @@ function _parseArgs(argv: string[]): RecordArgs {
         applied: null,
         loaded: null,
         outcome: null,
+        cross_source: null,
         ts: '',
         payload_file: null,
         stdin: false,
@@ -170,7 +201,8 @@ function _parseArgs(argv: string[]): RecordArgs {
                 );
             }
             (a.outcome ??= []).push(v);
-        } else if (tok === '--ts') a.ts = next();
+        } else if (tok === '--cross-source') (a.cross_source ??= []).push(next());
+        else if (tok === '--ts') a.ts = next();
         else if (tok === '--payload-file') a.payload_file = next();
         else if (tok === '--stdin') a.stdin = true;
         else if (tok === '--settings') a.settings = next();

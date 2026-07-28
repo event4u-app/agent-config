@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **675 artefacts** in this package.
+Maintainer-facing index of all **684 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (278)
+## Skills (283)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -45,6 +45,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`character-consistency`](../src/skills/character-consistency/SKILL.md) | official | Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'. |
 | skill | [`check-refs`](../src/skills/check-refs/SKILL.md) | official | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | skill | [`churn-prevention`](../src/skills/churn-prevention/SKILL.md) | official | Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'. |
+| skill | [`code-intelligence`](../src/skills/code-intelligence/SKILL.md) | official | Route codebase-structure questions (who calls X, where used, what imports, change-impact) to a code-graph first, grep fallback. Triggers 'who calls', 'where is this used', 'call graph'. |
 | skill | [`code-refactoring`](../src/skills/code-refactoring/SKILL.md) | official | Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools. |
 | skill | [`code-review`](../src/skills/code-review/SKILL.md) | official | Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards. |
 | skill | [`command-routing`](../src/skills/command-routing/SKILL.md) | official | Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns. |
@@ -108,12 +109,14 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`frontend-render-security`](../src/skills/frontend-render-security/SKILL.md) | official | Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage |
 | skill | [`fundraising-narrative`](../src/skills/fundraising-narrative/SKILL.md) | official | Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'. |
 | skill | [`funnel-analysis`](../src/skills/funnel-analysis/SKILL.md) | official | Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven. |
+| skill | [`gated-reach`](../src/skills/gated-reach/SKILL.md) | official | Read a Reddit thread or single tweet the host cannot fetch — 'what does this Reddit thread say', 'top comment on this post', 'what does this tweet say' — when reddit.com is refused or x.com 402s. |
 | skill | [`git-workflow`](../src/skills/git-workflow/SKILL.md) | official | Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git. |
 | skill | [`github-ci`](../src/skills/github-ci/SKILL.md) | official | Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'. |
 | skill | [`grafana`](../src/skills/grafana/SKILL.md) | official | Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana. |
 | skill | [`gtm-launch`](../src/skills/gtm-launch/SKILL.md) | official | Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'. |
 | skill | [`guideline-writing`](../src/skills/guideline-writing/SKILL.md) | official | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
 | skill | [`hiring-loop-design`](../src/skills/hiring-loop-design/SKILL.md) | official | Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'. |
+| skill | [`history-design`](../src/skills/history-design/SKILL.md) | official | Use when choosing HOW to record change history / audit trails — walks the tier matrix (columns → audit log → temporal → event sourcing). Triggers on 'wer hat was wann', 'audit log'. |
 | skill | [`html-deck`](../src/skills/html-deck/SKILL.md) | official | Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests. |
 | skill | [`humanizer`](../src/skills/humanizer/SKILL.md) | official | Use when removing AI-writing tells from deliverable prose — posts, articles, drafts. Triggers on 'make this sound less like AI', 'humanize this draft', 'this reads like ChatGPT wrote it'. |
 | skill | [`iconography`](../src/skills/iconography/SKILL.md) | official | Resolve an icon request to a concrete Iconify name and emit the embedding for the project's stack. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler. |
@@ -240,6 +243,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`runway-cognition`](../src/skills/runway-cognition/SKILL.md) | official | Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'. |
 | skill | [`scenario-modeling`](../src/skills/scenario-modeling/SKILL.md) | official | Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'. |
 | skill | [`scene-expander`](../src/skills/scene-expander/SKILL.md) | official | Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. |
+| skill | [`schema-review`](../src/skills/schema-review/SKILL.md) | official | Use when reviewing a migration diff or schema change for scale hazards — indexes, unsafe migrations, unbounded growth, N+1. Triggers on 'review this migration', 'will this scale'. |
+| skill | [`screenshot-hygiene`](../src/skills/screenshot-hygiene/SKILL.md) | official | Use when creating and embedding a documentation screenshot — detect and redact sensitive data, human-gate data-bearing shots before ship. Triggers 'screenshot for docs', 'screenshot admin panel'. |
 | skill | [`script-writing`](../src/skills/script-writing/SKILL.md) | official | Use when adding or editing any script under `scripts/` — `--quiet`, `_lib/script_output`, silent Taskfile wiring, Iron-Law carve-outs; fires on 'add a check script for X'. |
 | skill | [`secrets-management`](../src/skills/secrets-management/SKILL.md) | official | Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized. |
 | skill | [`security`](../src/skills/security/SKILL.md) | official | Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic. |
@@ -290,7 +295,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (105)
+## Rules (110)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -321,6 +326,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`design-fidelity`](../src/rules/design-fidelity.md) | auto | A provided prototype/mockup/design system is the spec — build 1:1; never swap fonts, controls, or layout unconfirmed |
 | rule | [`devcontainer-routing`](../src/rules/devcontainer-routing.md) | auto | Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill |
 | rule | [`direct-answers`](../src/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |
+| rule | [`doc-screenshot-hygiene`](../src/rules/doc-screenshot-hygiene.md) | auto | Screenshots for docs — anonymize sensitive data before shipping; data-bearing shots are human-gated (published egress); terminal/CLI/IDE screenshots forbidden |
 | rule | [`docker-commands`](../src/rules/docker-commands.md) | auto | Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool |
 | rule | [`domain-adoption-policy`](../src/rules/domain-adoption-policy.md) | auto | Adopting a new domain track (mobile, ML, IoT…) — demand/owner/CI gates BEFORE harvest |
 | rule | [`domain-safety-disclaimer`](../src/rules/domain-safety-disclaimer.md) | auto | Advisory content (legal, medical, financial, consulting) — matching 'not X advice' disclaimer; refuse diagnosis/dosage |
@@ -335,6 +341,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`framework-neutrality-in-generic-skills`](../src/rules/framework-neutrality-in-generic-skills.md) | auto | Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead |
 | rule | [`git-history-discipline`](../src/rules/git-history-discipline.md) | auto | Git history — no unasked rebase/squash/amend; never drop foreign commits; pushed rewrite → re-push same turn |
 | rule | [`guidelines`](../src/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
+| rule | [`history-discipline`](../src/rules/history-discipline.md) | auto | Change history done right — audit coverage, cheapest-sufficient tier (default: row-level audit log; event sourcing only by waiver), audit hygiene + privacy interlocks. |
 | rule | [`icon-consistency`](../src/rules/icon-consistency.md) | auto | One icon system per project unless the brand says otherwise — flag mixed icon sets (default-Lucide anti-pattern) |
 | rule | [`image-likeness-and-rights`](../src/rules/image-likeness-and-rights.md) | auto | AI image rights gate — real-person likeness, trademarked marks, named artists' styles need explicit rights/consent |
 | rule | [`improve-before-implement`](../src/rules/improve-before-implement.md) | auto | Before features or architectural changes — validate against existing code, challenge weak requirements |
@@ -374,9 +381,12 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`role-mode-adherence`](../src/rules/role-mode-adherence.md) | auto | When roles.active_role is set — closing outputs must match mode contract and emit structured mode marker |
 | rule | [`rule-type-governance`](../src/rules/rule-type-governance.md) | auto | Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto |
 | rule | [`runtime-safety`](../src/rules/runtime-safety.md) | auto | Skill declares execution metadata — enforce safety constraints for assisted/automated execution types |
+| rule | [`scale-discipline`](../src/rules/scale-discipline.md) | auto | Scale-safe persistence — indexes with the queries, bounded reads, safe migrations, growth budgets, thin request path, durable async. Pattern lints gate; heuristics advise. |
 | rule | [`scope-control`](../src/rules/scope-control.md) | always | Scope control — no unsolicited architectural changes, refactors, or library replacements |
+| rule | [`secret-vcs-guard`](../src/rules/secret-vcs-guard.md) | auto | About to write a credential into a tracked file or stage/commit one in any VCS (git/svn/hg) — STOP, show the match, ask, offer alternatives; never silently commit, never silently strip |
 | rule | [`security-sensitive-stop`](../src/rules/security-sensitive-stop.md) | auto | Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing |
 | rule | [`senior-engineering-discipline`](../src/rules/senior-engineering-discipline.md) | auto | Writing/generating code — generalize (no overfit or tautological tests), supply the invisible cross-cutting controls the prompt didn't name, never invent an API/field/package |
+| rule | [`session-canary`](../src/rules/session-canary.md) | auto | personal.canary_name is set — open every new task by addressing the user by name (liveness canary) and keep the reply-close markers (ONE end-summary, PR URL as literal last line) alive |
 | rule | [`size-enforcement`](../src/rules/size-enforcement.md) | manual | Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits |
 | rule | [`skill-improvement-trigger`](../src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../src/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |
@@ -400,7 +410,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (191)
+## Commands (190)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -470,7 +480,6 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`fix-ci`](../src/domains/engineering-base/fix/ci/command.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix-comments`](../src/domains/engineering-base/fix/comments/command.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
 | command | [`fix-portability`](../src/domains/engineering-base/fix/portability/command.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
-| command | [`fix-pr-comments-loop`](../src/domains/engineering-base/fix/pr-comments-loop/command.md) | cluster: fix | Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments |
 | command | [`fix-pr-comments`](../src/domains/engineering-base/fix/pr-comments/command.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR |
 | command | [`fix-quality`](../src/domains/engineering-base/fix/quality/command.md) | cluster: fix | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`fix-refs`](../src/domains/engineering-base/fix/refs/command.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |

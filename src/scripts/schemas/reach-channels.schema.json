@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/reach-channels.schema.json",
+  "x-schemaVersion": "1.0.0",
+  "title": "Reach channel registry (src/config/reach-channels.yml)",
+  "$comment": "road-to-internet-reach Phase 1. Validated by src/scripts/check_reach_channels.ts (task check-reach-channels). SCOPE: standalone operator tooling — the registry answers 'which external backend does a reach recipe need, is it healthy, is its install command pinned'. The Phase 0 benchmark returned band: stop, so no channel here is routed, recommended, or agent-facing; nothing in this schema may be read as a routing table. Lifecycle vocabulary is REUSED from docs/contracts/provider-lifecycle.md — never fork a second enum. NO $ref / patternProperties / if-then anywhere: the validator is the Draft-07 subset exported by src/scripts/validate_frontmatter.ts (type, required, properties, additionalProperties:false, items, minItems, pattern, minLength, enum), so the install-string schema is inlined per platform key on purpose. DELIBERATELY ABSENT — a per-backend readiness field (road-to-gated-reach Phase 2 step 3): a backend can pass its `--version` probe and still be unable to retrieve (`yt-dlp` needs an external JavaScript runtime it must be configured to use), and that config-semantic check is implemented DOCTOR-SIDE, keyed on the backend id, in src/scripts/reach_doctor.ts § READINESS_REQUIREMENTS. Rationale: (1) it keeps this schema honest for the backends that have no such requirement — they declare nothing, instead of each omitting an optional key a reader must interpret as an absence; (2) the requirement is a property of the upstream tool, not of an operator's registry entry, so a registry that could omit it would hand back the very false green the check closes; (3) this file is UNTRUSTED input at runtime (reach_doctor.collect() validates it before spawning anything), and a field of the form 'check this config file' would widen that input's influence into which local path the doctor reads; (4) same precedent as the doctor's DEEP_PROBES table, which is code-side for the same reason. The rejected trade-off, stated: a field here would be visible to an operator reading the registry and would let a future backend with the same need be added in YAML rather than in code — that cost is accepted, because its failure mode is only extra maintainer work, whereas the alternative's failure mode is a wrong health verdict.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "channels"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["reach-channels-v1"],
+      "description": "Registry format version. Bumped only on a breaking shape change."
+    },
+    "channels": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Channel list. A channel is a retrieval need (repository metadata, a feed, a page read); its `backends` are the ORDERED candidate tools that can satisfy it — first healthy candidate wins, so switching a backend is reordering this list, never editing code. Order carries meaning; channel order does not.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description", "tier", "lifecycle", "override_key", "last_verified", "backends"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Channel slug — unique within the registry, lowercase."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "description": "What the channel retrieves, in operator terms. Never a recommendation to use it."
+          },
+          "tier": {
+            "type": "string",
+            "enum": ["zero-config", "free-key", "login"],
+            "description": "Access cost to the operator: `zero-config` = no credential; `free-key` = a free token/API key the operator provisions; `login` = an authenticated account session. Documents setup effort only — it does not authorize credential harvesting of any kind."
+          },
+          "lifecycle": {
+            "type": "string",
+            "enum": ["experimental", "stable", "deprecated", "community"],
+            "description": "Reused verbatim from docs/contracts/provider-lifecycle.md § tiers. `experimental` = shape is right, no maintainer-verified real run; `stable` = maintainer-verified against a real run at least once; `deprecated` = successor declared, kept for one migration window (see removal_after / replacement); `community` = externally contributed, best-effort."
+          },
+          "override_key": {
+            "type": "string",
+            "pattern": "^reach\\.channels\\.[a-z0-9-]+\\.backend$",
+            "description": "Settings key by which an operator pins one backend for this channel, bypassing candidate order."
+          },
+          "last_verified": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "ISO date the channel's backends and pins were last checked by a human. MUST be quoted in YAML — an unquoted date parses as a timestamp, not a string, and fails this type check loudly. Replaces a scheduled network CI job: staleness is checked offline against this field."
+          },
+          "removal_after": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "Deprecation path, optional. Only meaningful with lifecycle `deprecated`: until this date the channel still probes with a warning; past it the doctor reports the channel as removed and the staleness lint flags its continued presence in this file."
+          },
+          "replacement": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Deprecation path, optional. Channel id that supersedes this one."
+          },
+          "credential_path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^\\n]+$",
+            "description": "Optional path to the credential file this channel's backend reads (`~` is expanded). The doctor ONLY stats it, to warn when it is group- or world-readable — it never opens it, never hashes it, and never reports its contents. Declared here because reach_doctor.ts enforces this schema at runtime and additionalProperties is false, so a field the code supports must be declared or no registry could use it. No shipped channel declares one."
+          },
+          "backends": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Ordered candidate tools. Each is an alternative that satisfies the channel on its own — not a pipeline stage.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "probe_cmd", "probe_args", "install"],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_.-]*$",
+                  "description": "Backend slug — unique within its channel."
+                },
+                "probe_cmd": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_.-]*$",
+                  "description": "Bare executable name resolved on PATH. No path separators, no shell — the probe layer spawns it directly through hardenedSpawnEnv(). MUST equal this backend's `id`: a backend probes its own binary and nothing else, so a report row labelled `gh` can never be the health of `/bin/sh`. The equality is a cross-field rule this Draft-07 subset cannot express, so it is asserted by check_probe_cmd_binding() in src/scripts/check_reach_channels.ts and reported as rule `probe_cmd-binding`."
+                },
+                "probe_args": {
+                  "type": "array",
+                  "minItems": 1,
+                  "description": "Side-effect-free probe arguments only — a version / help / status query. The item pattern is an ALLOWLIST, not a denylist: an argument must be flag-shaped (`--version`, `-V`, `version`, `rate_limit`) and nothing else. A denylist was tried first and leaked — it admitted `cp`, `cat`, `-c`, `--data-binary` and every URL, so `probe_cmd: sh` + `probe_args: [\"-c\", \"<payload>\"]` passed the gate. What is actually true after the allowlist plus the probe_cmd===id binding plus runtime enforcement of this schema in reach_doctor.collect(): no path, no URL, no shell metacharacter, and no `-c`-style inline payload can reach the spawned child, and the child is the backend's own binary. This bounds the argument shape; it is not a proof that every upstream binary is side-effect-free under every flag — that judgement stays with the human who adds the backend.",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^-{0,2}[A-Za-z][A-Za-z0-9._-]*$"
+                  }
+                },
+                "install": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["default"],
+                  "description": "Human-performed install prescription per platform, selected by process.platform with `default` as the fallback. The package NEVER runs these: prescription-first, no auto-install, no piped remote installer. Platform keys are optional; `default` is not.",
+                  "properties": {
+                    "darwin": {
+                      "type": "string",
+                      "pattern": "^(?!.*(?:\\blatest\\b|\\bmain\\b|\\bmaster\\b|\\bHEAD\\b|archive/|\\.zip|\\.tgz|\\.tar\\.gz|\\.tar\\.xz))(?:os-baseline: [^\\n]{10,}|(?=.*(?:(?:==|@|=)v?[0-9]+(?:\\.[0-9]+)*|--version[ =]v?[0-9]+(?:\\.[0-9]+)*|\\sv?[0-9]+\\.[0-9]+\\.[0-9]+))[^\\n]+)$",
+                      "description": "See `default` for the pinning contract."
+                    },
+                    "linux": {
+                      "type": "string",
+                      "pattern": "^(?!.*(?:\\blatest\\b|\\bmain\\b|\\bmaster\\b|\\bHEAD\\b|archive/|\\.zip|\\.tgz|\\.tar\\.gz|\\.tar\\.xz))(?:os-baseline: [^\\n]{10,}|(?=.*(?:(?:==|@|=)v?[0-9]+(?:\\.[0-9]+)*|--version[ =]v?[0-9]+(?:\\.[0-9]+)*|\\sv?[0-9]+\\.[0-9]+\\.[0-9]+))[^\\n]+)$",
+                      "description": "See `default` for the pinning contract."
+                    },
+                    "win32": {
+                      "type": "string",
+                      "pattern": "^(?!.*(?:\\blatest\\b|\\bmain\\b|\\bmaster\\b|\\bHEAD\\b|archive/|\\.zip|\\.tgz|\\.tar\\.gz|\\.tar\\.xz))(?:os-baseline: [^\\n]{10,}|(?=.*(?:(?:==|@|=)v?[0-9]+(?:\\.[0-9]+)*|--version[ =]v?[0-9]+(?:\\.[0-9]+)*|\\sv?[0-9]+\\.[0-9]+\\.[0-9]+))[^\\n]+)$",
+                      "description": "See `default` for the pinning contract."
+                    },
+                    "default": {
+                      "type": "string",
+                      "pattern": "^(?!.*(?:\\blatest\\b|\\bmain\\b|\\bmaster\\b|\\bHEAD\\b|archive/|\\.zip|\\.tgz|\\.tar\\.gz|\\.tar\\.xz))(?:os-baseline: [^\\n]{10,}|(?=.*(?:(?:==|@|=)v?[0-9]+(?:\\.[0-9]+)*|--version[ =]v?[0-9]+(?:\\.[0-9]+)*|\\sv?[0-9]+\\.[0-9]+\\.[0-9]+))[^\\n]+)$",
+                      "description": "PINNING CONTRACT — an install prescription is EITHER (a) a command carrying an explicit version specifier (`name==1.2.3`, `name@22`, `--version 2.96.0`, or a whitespace-separated exact `1.2.3` triple), OR (b) an `os-baseline: <explanation>` sentinel for a tool the platform ships and no package install is prescribed for. Everything else FAILS: an unpinned command, and any moving-target source — `latest`, `main`, `master`, `HEAD`, `archive/…`, `.zip`, `.tgz`, `.tar.gz`, `.tar.xz`. This mechanizes the supply-chain intake floor (verify, pin, lock, never pipe a remote script to a shell) instead of asserting it."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

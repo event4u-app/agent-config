@@ -229,6 +229,30 @@ strong = ceiling null · GPT weak = failed replication (confounded surface).
 
 - Report: `internal/bench/reports/ab-v2/2026-07-07T10-33-53Z-ab-v2-paired.json`.
 
+## Default-install context cost — scoped projection flip (road-to-credible-install Phase 2)
+
+**Measured 2026-07-27** on the shipped skill projection (`dist/agent-src/skills/*/SKILL.md`).
+
+The settings-template default flipped `projection.mode: legacy-all` → `scoped`
+for NEW installs (existing installs keep their recorded mode; missing key
+still means legacy-all). Scoped keeps every untagged core skill plus every
+pack whose `workspaces` intersects {engineering, agent-config-maintainer}
+(requires-closure applied), matching the default `developer` profile.
+
+| Surface | legacy-all (before) | scoped (after) | Δ |
+|---|--:|--:|--:|
+| Skills projected | 286 | 215 | −71 (−25%) |
+| Skill-surface size (chars) | 2,309,968 | 1,710,353 | −599,615 |
+| Skill-surface size (≈ GPT tokens, chars/4) | ≈ 577k | ≈ 428k | **−26%** |
+
+**Counting method (pinned):** sum of `SKILL.md` byte lengths under
+`dist/agent-src/skills/`, partitioned by the same predicate the installer's
+scoped prune applies (untagged → keep; tagged → keep iff `packs:` frontmatter
+intersects the active set from `src/config/discovery/packs.yml` workspaces
+{engineering, agent-config-maintainer} + requires closure). Token estimate is
+chars/4 — an approximation, honest-labeled as such; skills load on-demand per
+trigger, so this is the *catalog* surface, not an always-loaded cost.
+
 ## Two-host matrix (flow-learnings Phase 3, `claude-haiku-4-5`) — Gate verdict: **HONEST-NULL**
 
 First live run of the `bench_matrix` two-host composite (`internal/bench/matrix.yaml`):
@@ -646,3 +670,140 @@ defect-finding *quality/lift* claim binds; team mode stays documented as
 judge-survivable-subtlety corpus that breaks the recall ceiling, or (b) a new
 model generation. The worker-via-bundle delegate (roadmap Phase 3 Step 4) stays
 deferred — it re-opened only on a measured review lift, which did not occur.
+
+## Internet-reach prescriptions vs host-native web tools (2026-07-24) — HONEST NULL (capability), cost signal unregistered {#honest-null-reach}
+
+**Question (pre-registered before the run):** does a reach-prescription layer —
+`gh api` for repository metadata, a local feed parser, a keyless discussion-search
+API, `curl` + local HTML→text — beat the host's own web-search / web-fetch tools
+on credential-free dev-research tasks, and at what token cost? The layer was
+prototyped in gitignored scratch first, so both arms were real at scoring time.
+
+**Design.** 12 tasks × 2 arms (`native` = host web tools only; `reach` = the
+prototype prescriptions), 4 parallel subagents, arms judged independently on
+pre-declared acceptance evidence — no arm-vs-arm comparison at scoring time.
+Thresholds, verdict bands and the run protocol were committed **before** the run
+(`internal/bench/reach-vs-native/README.md`); the report is
+`internal/bench/reach-vs-native/VERDICT.md`, raw rows in `results.csv`.
+
+**Result — capability: NULL.** The native arm passed **12/12**. Under the
+pre-registered rule (reach wins only where native fails; **ties are native
+wins**) the reach arm scored **0 outright wins of 12** → band **`stop`**. Two
+reach failures were prescription defects (a 400-char excerpt cap; a `jq`
+projection dropping the release body), and repairing them **cannot** move the
+band: the native arm passed those tasks too, so a repaired reach arm scores a
+tie. Zero native failures ⇒ zero possible reach wins.
+
+**Consequence: no router skill shipped.** The `internet-reach` router was
+cancelled pre-authoring by its own Phase-0 gate. What did ship is the
+verdict-independent operator tooling — a schema-validated channel registry, a
+five-state probe engine with stale-shim detection, a read-only `reach:doctor`,
+and a CI gate that fails on any unpinned install prescription.
+
+**Honest bound.** The credential-free constraint (needed for reproducibility)
+structurally excluded the two cases where a reach advantage was hypothesized:
+video subtitles (backend absent → `untested`) and authenticated / rate-limited
+platform access (impossible in a keyless set). The null therefore reads narrowly:
+*on public, credential-free dev-research tasks, a reach prescription layer buys
+no capability the host does not already have.* It says nothing about gated-platform
+access. Testing that needs a credentialed task set with its own pre-registration.
+
+**Unregistered observation — cost, not capability.** On all 8 tasks both arms
+solved, the reach arm was cheaper: **3,070 vs 6,730 tokens (0.46×)**, largest
+gaps on repository metadata (0.26×) and discussion search (0.31×). The native
+arm's overhead was *discovery*: it repeatedly had to find the machine-readable
+endpoint the prescription already knows. This is recorded **outside** the
+decision — S0b was authored as a ≤1.5× guardrail, never a win condition, and
+promoting it to one after seeing the data would be the post-hoc rigging the bands
+exist to prevent. Acting on it requires a separate, cost-primary pre-registration
+(equal-evidence tasks, token cost as the primary metric, a stated minimum saving
+worth the maintenance burden).
+
+## Gated-platform reads (2026-07-25) — SHIP (3 channels), with a narrowed gap on one {#ship-gated-reach}
+
+**Question (pre-registered before the run):** on platforms the host's own web tools
+cannot reach at all, are credential-free prescriptions **reliable** enough to justify
+their maintenance weight — measured **per channel**, never aggregated?
+
+This is deliberately not the question the parent bench asked. The
+[internet-reach null](#honest-null-reach) measured whether a prescription layer beats
+native tools on credential-free dev research, answered **no** (0/12, band `stop`), and
+named its own bound: *"It says nothing about gated-platform access. Testing that needs
+a credentialed task set with its own pre-registration."* This run is that test —
+except it turned out **no credentials are needed**, which is itself the finding that
+made it worth running.
+
+**The capability gap is established, not assumed.** Measured the same session, first
+hand: `reddit.com` is refused at the domain level by the host's own tool (a
+client-side refusal, not a 403 from Reddit); `x.com/<user>/status/<id>` answers **HTTP
+402**; a YouTube watch page answers 200 with metadata and no transcript.
+
+**Design.** 6 tasks per channel with pre-declared acceptance evidence, each with a
+**native-arm control**, thresholds frozen before the run (≥5/6 ship · 3–4/6 park ·
+≤2/6 drop), one documented repair per task allowed, verdicts never aggregated.
+Pre-registration: `internal/bench/gated-reach/README.md`; rows and evidence:
+`internal/bench/gated-reach/results.md`.
+
+| Channel | reach | native | Verdict |
+|---|---|---|---|
+| `reddit` tier 1 — Atom text | **6/6** | 0/6 | **ship** |
+| `reddit` tier 2 — ranking + thread structure | **6/6** | 0/6 | **ship** — time-bounded |
+| `twitter-oembed` — single tweet | **6/6** | 2/6 | **ship** — narrowed gap, below |
+| `youtube-transcripts` | not run | — | **park** — unexercised (backend absent by design) |
+
+**Reddit is a real, unambiguous capability.** Post text, comment text with authors
+(147 feed entries on the test thread, 135 author-bearing), and — via server-rendered
+HTML — **comment scores and reply nesting** (134 comments across 7 depth levels,
+scores cross-checked against the rendered page). Native scores 0/6 by construction:
+there is no native path to a domain the host refuses. The rate limiting that makes
+this fragile is solved with **no new code** — `curl --retry 8 --retry-max-time 110`
+measured 5/5 against 2/6 without it, because curl treats 429 as retryable and backs
+off exponentially when `--retry-delay` is omitted.
+
+**Tier 2 ships with an expiry, not a promise.** Reddit announced a login requirement
+for the server-rendered interface on 2026-06-30 and withdrew its earlier commitment to
+keep it available. Logged-out access still worked on 2026-07-25. It therefore ships
+with a kill-switch keyed on an **observed** login wall — never on the announcement —
+and with tier 1 as the permanent fallback. Degradation is a documented output
+(`login_wall: true`, "ranking unavailable"), because presenting unranked text as
+ranked is the one failure mode here that produces wrong conclusions rather than a
+missing answer.
+
+**The control rule fired, and the Twitter story is narrower than its 6/6.** The first
+task set used the most-quoted tweets in existence; native scored **5/6** on them — not
+by reading `x.com`, but because a canonical tweet's text is reproduced everywhere.
+Those five tasks were **removed and replaced** per the pre-registered control rule.
+On five genuinely obscure tweets native dropped to **2/6**, and one of its two
+"passes" came from the author's Threads and Mastodon cross-posts rather than Twitter.
+Where it failed it failed usefully badly: on one tweet it produced a paraphrase and a
+**confidently wrong month**, and it cannot distinguish a deleted tweet from a live one
+(both answer 402). So the honest reading of Twitter's 6/6 is: *the channel is reliable,
+and the gap it closes is narrow* — for any tweet discussed anywhere, native search
+already recovers the content; the channel earns its place on the case where a specific
+URL is in hand and nothing mirrors it.
+
+**A bench limitation, published rather than engineered away.** The control rule says a
+native pass means the task was mis-scoped, so the two native-passed Twitter tasks
+should have been replaced again. They were not, and the reason is structural: every
+tweet-sourcing channel available to a host that cannot read Twitter — HN links, Reddit
+links, search — selects for tweets that *were* discussed publicly, which is exactly the
+population native search recovers. Sourcing an undiscussed tweet requires the access
+this bench exists because we lack. The 6/6 stands on the frozen threshold; the caveat
+is recorded here so nobody later reads it as "six things only this channel can do".
+
+**YouTube is parked, not scored.** `yt-dlp` is absent and the package never
+auto-installs. Per the pre-registered unexercised rule, a channel that cannot be
+exercised cannot reach ship and is not counted as a drop — an uninstalled tool is a
+fact about this machine, not about the channel. What did ship for it is the readiness
+check that closes the blind spot the parent bench left open: a passing `yt-dlp
+--version` does **not** imply extraction works, because full YouTube support needs an
+external JS runtime, so the doctor inspects the yt-dlp config semantically and reports
+a distinct `not-ready` state with an idempotent fix command.
+
+**Three prescription defects were found by executing the prescriptions verbatim** —
+none would have been caught by review: a single HTML-entity decode pass leaves
+`&mdash;` in tweet text; a missing `-f` makes a deleted tweet answer **exit 0 with
+3,663 bytes of error HTML** that a caller reads as success; and a dropped `-L` makes
+the oEmbed endpoint answer 301 with an empty body, which looks like a dead service.
+All three are fixed and documented as load-bearing in
+[`docs/guides/gated-platform-reads.md`](guides/gated-platform-reads.md).

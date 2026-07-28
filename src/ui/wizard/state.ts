@@ -298,15 +298,46 @@ export const toolsDetectionLoading = signal(false);
 export const toolPresence = signal<Record<string, boolean>>({});
 
 /**
- * rtk (Rust Token Killer) presence on the Editor-and-tooling step
- * (road-to-wizard-ux-improvements § Phase 7). Always detected at runtime via
- * `GET /api/v1/wizard/detect-rtk` — never read from settings. `null` = not yet
- * probed. When missing, `rtkInstallCommand` carries the per-OS install hint.
+ * rtk (Rust Token Killer — a third-party Apache-2.0 tool) presence + identity
+ * on the identity step (road-to-rtk-onboarding-correctness). Always detected
+ * at runtime via `GET /api/v1/wizard/detect-rtk` — never read from settings.
+ * `rtkInstalled === null` = not yet probed. Identity is the two-stage probe's
+ * verdict: the binary name collides with the unrelated Rust Type Kit, so a
+ * bare presence check cannot answer "is rtk installed".
  */
+export type RtkIdentityState = 'token-killer' | 'unknown-rtk' | 'unverified';
+export interface RtkInstallCommandTiers {
+    recommended: string;
+    recommendedLabel?: string;
+    manual?: string;
+    manualLabel?: string;
+    note?: string;
+}
 export const rtkDetectionLoaded = signal(false);
 export const rtkInstalled = signal<boolean | null>(null);
+export const rtkPresent = signal<boolean | null>(null);
+export const rtkIdentity = signal<RtkIdentityState | null>(null);
+export const rtkVersion = signal<string | null>(null);
 export const rtkInstallCommand = signal<string | null>(null);
-export const rtkRepo = signal<string>('https://github.com/event4u-app/rtk');
+export const rtkInstallTiers = signal<RtkInstallCommandTiers | null>(null);
+export const rtkRepo = signal<string>('https://github.com/rtk-ai/rtk');
+
+/**
+ * agent-switch presence on the identity step (road-to-reciprocal-ecosystem
+ * § Phase 1 — S0.1 honest-null council verdict, 2026-07-28: PASSIVE ROW
+ * ONLY). Always detected at runtime via
+ * `GET /api/v1/wizard/detect-agent-switch` — never read from settings, and
+ * unlike rtk there is no identity-collision concern, so a single boolean
+ * `asInstalled` is enough. `asDismissed` is permanent once the user closes
+ * the row (`POST /api/v1/wizard/dismiss-recommendation`) — never reset by
+ * a fresh detection load.
+ */
+export const asDetectionLoaded = signal(false);
+export const asInstalled = signal<boolean | null>(null);
+export const asVersion = signal<string | null>(null);
+export const asInstallCommand = signal<string | null>(null);
+export const asRepo = signal<string>('event4u-app/agent-switch');
+export const asDismissed = signal(false);
 
 /**
  * AI Council step (road-to-wizard-ux-improvements § Phase 8). The

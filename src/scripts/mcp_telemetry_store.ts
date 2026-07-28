@@ -22,10 +22,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { DatabaseSync } from 'node:sqlite';
-import type * as NodeSqlite from 'node:sqlite';
 
 import { TELEMETRY_FILENAME, TELEMETRY_REL_DIR } from './mcp_server/telemetry.js';
+import { loadSqlite, readUserVersion, stampUserVersion } from './_lib/sqlite_guard.js';
 
+// cache-invalidation: the path carries no version segment (existing CLI
+// intent tests pin this exact string in stdout); invalidation instead runs
+// through `PRAGMA user_version = SCHEMA_VERSION`, stamped on every connect
+// by `_connect()` below (road-to-reachable-code-memory Phase 7).
 export const DEFAULT_DB_REL = 'agents/runtime/mcp-telemetry/calls.sqlite3';
 export const SCHEMA_VERSION = 1;
 
@@ -173,42 +177,18 @@ export function resolve_db(consumer_root?: string | null): string {
     return path.join(root, DEFAULT_DB_REL);
 }
 
-// Python's stdlib sqlite3 emits nothing on stderr; node:sqlite is flagged
-// experimental on node 22 and prints an `ExperimentalWarning: SQLite …` line
-// to stderr on first import (stable / silent on node >= 23). Drop only that
-// specific warning so stderr stays byte-stable across node versions (tests
-// pin the exact bytes). Installed once, narrowly matched.
-let _sqliteWarningSilenced = false;
-function _silenceSqliteExperimentalWarning(): void {
-    if (_sqliteWarningSilenced) return;
-    _sqliteWarningSilenced = true;
-    const orig = process.emitWarning.bind(process);
-    process.emitWarning = ((warning: string | Error, ...rest: unknown[]): void => {
-        const text = typeof warning === 'string' ? warning : (warning?.message ?? '');
-        if (/SQLite is an experimental/i.test(text)) return;
-        (orig as (w: string | Error, ...a: unknown[]) => void)(warning, ...rest);
-    }) as typeof process.emitWarning;
-}
-
-/** Lazy `node:sqlite` import — keeps the module loadable on a runtime without it. */
-async function _loadSqlite(): Promise<typeof NodeSqlite> {
-    _silenceSqliteExperimentalWarning();
-    try {
-        return await import('node:sqlite');
-    } catch (exc) {
-        const message = exc instanceof Error ? exc.message : String(exc);
-        throw new Error(
-            `node:sqlite is unavailable in this runtime (${message}). ` +
-                'mcp_telemetry_store requires Node with the built-in SQLite module.',
-        );
+/** Remove a possibly-corrupt DB file + its WAL/SHM sidecars, best-effort. */
+function _discardDb(db_path: string): void {
+    for (const p of [db_path, `${db_path}-wal`, `${db_path}-shm`]) {
+        try {
+            fs.rmSync(p, { force: true });
+        } catch {
+            /* best-effort */
+        }
     }
 }
 
-/** Open + schema-init the DB. Mirrors the Python `_connect` helper. */
-async function _connect(db_path: string): Promise<DatabaseSync> {
-    fs.mkdirSync(path.dirname(db_path), { recursive: true });
-    const { DatabaseSync } = await _loadSqlite();
-    const conn = new DatabaseSync(db_path);
+function _createSchema(conn: DatabaseSync): void {
     conn.exec('PRAGMA journal_mode=WAL');
     conn.exec(
         `
@@ -226,6 +206,56 @@ async function _connect(db_path: string): Promise<DatabaseSync> {
     conn.exec('CREATE INDEX IF NOT EXISTS idx_calls_tool ON calls(tool_name)');
     conn.exec('CREATE INDEX IF NOT EXISTS idx_calls_ts ON calls(ts)');
     conn.exec('CREATE INDEX IF NOT EXISTS idx_calls_outcome ON calls(outcome)');
+}
+
+/**
+ * Open + schema-init the DB. Mirrors the Python `_connect` helper.
+ *
+ * road-to-reachable-code-memory Phase 7 — fixes the previously never-read
+ * `SCHEMA_VERSION` constant: `PRAGMA user_version` is stamped on create AND
+ * checked on open.
+ *
+ * - Absent file, or `user_version == 0` (a pre-Phase-7 DB written before this
+ *   fix existed — same table shape, just never versioned): create/open
+ *   normally, then stamp the current version. This is the "legacy-path
+ *   sweep on first run".
+ * - `user_version` present but NOT `SCHEMA_VERSION`: a real future schema
+ *   change landed. The DB is a derived, idempotently-rebuildable view of the
+ *   JSONL sink (source of truth) — silently discard it and rebuild fresh
+ *   rather than attempt an in-place migration for a schema this code
+ *   doesn't know.
+ * - File exists but fails to even OPEN (truncated / corrupt): same
+ *   discard-and-rebuild path. Corruption is a non-event, not an error the
+ *   caller has to handle.
+ */
+async function _connect(db_path: string): Promise<DatabaseSync> {
+    fs.mkdirSync(path.dirname(db_path), { recursive: true });
+    const { DatabaseSync } = await loadSqlite('mcp_telemetry_store');
+
+    if (fs.existsSync(db_path)) {
+        let probe: DatabaseSync | null = null;
+        let drift = false;
+        try {
+            probe = new DatabaseSync(db_path);
+            const existing = readUserVersion(probe);
+            drift = existing !== 0 && existing !== SCHEMA_VERSION;
+        } catch {
+            drift = true; // corrupt / unreadable → rebuild
+        } finally {
+            try {
+                probe?.close();
+            } catch {
+                /* best-effort */
+            }
+        }
+        if (drift) {
+            _discardDb(db_path);
+        }
+    }
+
+    const conn = new DatabaseSync(db_path);
+    _createSchema(conn);
+    stampUserVersion(conn, SCHEMA_VERSION);
     return conn;
 }
 

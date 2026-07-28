@@ -17,8 +17,21 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Bundled (dist/mcp/server.mjs) this module's dir is dist/mcp/, but the
+// catalog ships as source under src/scripts/mcp_server/ — the esbuild
+// --define sentinel picks the shipped location.
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 const _CATALOG_FILE = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
+    typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__
+        ? path.resolve(
+              path.dirname(fileURLToPath(import.meta.url)),
+              '..',
+              '..',
+              'src',
+              'scripts',
+              'mcp_server',
+          )
+        : path.dirname(fileURLToPath(import.meta.url)),
     'consumer_tool_catalog.json',
 );
 
@@ -44,6 +57,12 @@ export interface CatalogEntry {
     readonly side_effect: string;
     readonly implemented_on: readonly string[];
     readonly input_schema: Record<string, unknown>;
+    /**
+     * Honest MCP tool-behavior hints (Phase 3 of road-to-credible-install),
+     * e.g. `{ readOnlyHint: true }`. Present only for implemented tools —
+     * optional so the field stays backward-compatible with schema_version 1.
+     */
+    readonly annotations?: Record<string, unknown>;
 }
 
 /** Refuse to boot on a malformed catalog. Boot-time errors only. */
@@ -112,6 +131,9 @@ export function load_catalog(targetPath?: string): CatalogEntry[] {
             (v) => v as string,
         ),
         input_schema: t.input_schema as Record<string, unknown>,
+        ...(t.annotations !== undefined && t.annotations !== null
+            ? { annotations: t.annotations as Record<string, unknown> }
+            : {}),
     }));
 }
 

@@ -10,6 +10,8 @@ triggers:
   - phrase: "similar pattern"
 workspaces: [engineering]
 packs: [engineering-base]
+enforced_by:
+  - "validator:src/scripts/lint_output_slop.ts"
 ---
 
 # Output Discipline

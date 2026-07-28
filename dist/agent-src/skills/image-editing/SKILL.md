@@ -45,7 +45,7 @@ with governance applied before delivery. All adapters are scaffold-tier (dry-run
    write the edit prompt in the target provider's grammar. For inpaint, describe what
    fills the masked region. For variation, carry the original seed/ref-image path forward.
 5. **Invoke the adapter (dry-run today)** — run
-   `src/scripts/ai-image/adapters/<provider>.sh` with the assembled params including
+   `node_modules/@event4u/agent-config/src/scripts/ai-image/adapters/<provider>.sh` with the assembled params including
    the source image path and, for inpaint, the mask path. Validate the returned
    artifact path or dry-run confirmation. All adapters are `experimental`
    (scaffold-tier); no live editing occurs until a maintainer promotes the adapter
@@ -98,3 +98,4 @@ with governance applied before delivery. All adapters are scaffold-tier (dry-run
 - [`image-provider-routing`](../image-provider-routing/SKILL.md) — select the right provider before writing the prompt.
 - [`prompt-engineering-image`](../prompt-engineering-image/SKILL.md) — translate the edit brief into provider-specific prompt grammar.
 - [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md) — rights check before editing real-person likenesses or brand marks.
+- [`screenshot-hygiene`](../screenshot-hygiene/SKILL.md) — for redacting a documentation screenshot, use a deterministic opaque box/blur (never the lossy inpaint here).

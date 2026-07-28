@@ -31,7 +31,7 @@ import {
 } from '../../src/scripts/mcp_server/prompts.js';
 import { load_all_resources } from '../../src/scripts/mcp_server/resources.js';
 import { MIME_MARKDOWN } from '../../src/scripts/mcp_server/resources.js';
-import { ToolCache } from '../../src/scripts/mcp_server/tools.js';
+import { ALLOWLIST, CATALOG_STUBS, ToolCache } from '../../src/scripts/mcp_server/tools.js';
 
 const tmpDirs: string[] = [];
 afterEach(() => {
@@ -215,9 +215,16 @@ describe('server — tools', () => {
         expect(names).toContain('memory_lookup');
     });
 
-    it('call_tool on a stub returns the envelope as a successful result (J2)', async () => {
-        const root = tmp();
+    it('call_tool on a stub name fails as unknown tool on the wire (ADR-132)', async () => {
         const server = build_server([], { tools: new ToolCache() });
+        const handler = server.request_handlers['tools/call'];
+        expect(handler).toBeDefined();
+        await expect(handler!('compile_router', { dry_run: true })).rejects.toThrow(/Unknown tool/);
+    });
+
+    it('call_tool on a stub returns the envelope with an explicit stub registry (J2, worker parity)', async () => {
+        const root = tmp();
+        const server = build_server([], { tools: new ToolCache({ ...ALLOWLIST, ...CATALOG_STUBS }) });
         const handler = server.request_handlers['tools/call'];
         expect(handler).toBeDefined();
         const prev = process.cwd();

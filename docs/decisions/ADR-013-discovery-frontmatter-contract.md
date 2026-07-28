@@ -129,6 +129,8 @@ Amendments to the workspace list require an ADR-013 amendment.
 | `frontend-design` | Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge. `requires: engineering-base`; `suggests: react, nextjs`. Added 2026-06-07 (ADR-061). |
 | `analysis-workbench` | RCA, post-mortem, premortem, decision-review as an integrated learning loop. `requires: engineering-base`; opt-in under the `engineering` workspace. Added 2026-06-15 (ADR-096). |
 | `brand` | Brand as a first-class UX layer — archetype/voice/identity grounding corpus, brand→token derivation, and consistency governance that constrains UI. `requires: frontend-design`; `suggests: ai-image`; opt-in under the `engineering` workspace. Added 2026-06-16 (road-to-image-brand-typography Phase B). |
+| `scale-discipline` | Scale-safe persistence — index parity, bounded reads, migration safety, growth budgets, thin request path, durable async; deterministic pattern lints (`lint_persistence`) gate, heuristics advise. `requires: engineering-base`; `experimental`/lab, `default_install: false` until benched. Added 2026-07-27 (road-to-scale-and-history-discipline Phase 1). |
+| `history-discipline` | Audit/change history done right — audit coverage on declared scopes, cheapest-sufficient tier matrix (default: row-level audit log; event sourcing only by waiver), audit-table hygiene, privacy + reliability interlocks. `requires: scale-discipline`; `experimental`/lab, `default_install: false` until benched. Added 2026-07-27 (road-to-scale-and-history-discipline Phase 3). |
 
 Amendments to the pack list require an ADR-013 amendment and the
 matching `src/config/discovery/packs.yml` row in the same PR.

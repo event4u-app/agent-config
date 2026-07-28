@@ -1,6 +1,6 @@
 # Architecture
 
-> **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
+> **agent-config is a governance layer with optional, individually opt-in embedded engines ([ADR-124](decisions/ADR-124-embedded-engine-doctrine.md)) — it ships a deterministic orchestration contract / state machine for host agents, never a resident process.** Engines (code intelligence, gated reach, setup GUI, bench lab) are per-command, terminate on completion, and are never default-on without measured lift.
 
 ## System overview
 
@@ -146,9 +146,9 @@ note, package-internal path-swap, description budget, and the
 
 | Layer | Count | Purpose |
 |---|---|---|
-| **Skills** | 278 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
-| **Rules** | 105 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
-| **Commands** | 191 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
+| **Skills** | 286 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
+| **Rules** | 111 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+| **Commands** | 190 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
 | **Guidelines** | 101 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |

@@ -7,6 +7,8 @@ load_context:
   - ../contexts/execution/verification-mechanics.md
 workspaces: [engineering]
 packs: [engineering-base]
+enforced_by:
+  - "hook:verify-before-complete"
 ---
 
 # Verify Before Completion

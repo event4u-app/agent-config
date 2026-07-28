@@ -4,7 +4,7 @@ status: accepted
 date: 2026-06-14
 decision: agent-memory-layer-removal
 supersedes: —
-superseded_by: —
+superseded_by: ADR-124 (engine-adoption interpretation only)
 phase: memory-layer-cleanup
 type: structural
 ---

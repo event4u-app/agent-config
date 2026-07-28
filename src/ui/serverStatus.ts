@@ -32,6 +32,12 @@ export interface ServerStatus {
     projectSurface: boolean;
     /** Dev-mode surfaces (Workspace tab) — AGENT_CONFIG_DEV_MODE=1 only. */
     devSurfaces: boolean;
+    /**
+     * Active agent-switch (AS) profile, if any (road-to-reciprocal-
+     * ecosystem Phase 2). Optional — an older server bundle omits the
+     * field, and the Settings hub banner simply stays hidden.
+     */
+    agentSwitchProfile?: { active: boolean; provider: string | null; profile: string | null };
 }
 
 export const serverStatus = signal<ServerStatus | null>(null);

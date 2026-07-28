@@ -10,6 +10,7 @@ routes_to:
   - "guideline:php/php-coding-patterns"
 workspaces: [engineering]
 packs: [php]
+roles: [developer, reviewer]
 trust:
   level: professional
 install:

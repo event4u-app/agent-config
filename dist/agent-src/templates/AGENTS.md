@@ -19,7 +19,7 @@
 ## Pointers
 
 - **Filling out this AGENTS.md** — section templates, capability bullets, multi-agent entry flow, monorepo per-package layout: [`.augment/contexts/contracts/consumer-agents-md-guide.md`](.augment/contexts/contracts/consumer-agents-md-guide.md).
-- **Behavior rules (always active)** — Iron Laws and routed rules that fire automatically while you work in this project: [`.augment/rules/`](.augment/rules/).
+- **Behavior rules (always active)** — [`.augment/rules/`](.augment/rules/). Kernel rules are **immutable** — never propose an edit; tighten-only via the override registry.
 - **Skills (on-demand expertise)** — domain skills surfaced by description; invoked when their trigger fires: [`.augment/skills/`](.augment/skills/).
 - **Commands (workflows)** — slash-commands the agent runs end-to-end (`/work`, `/implement-ticket`, `/commit`, `/create-pr`, …): [`.augment/commands/`](.augment/commands/).
 - **Project-specific docs** — your own architecture notes, roadmaps, sessions, contexts: [`agents/`](agents/).

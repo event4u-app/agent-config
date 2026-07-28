@@ -1,0 +1,46 @@
+{
+    "_comment": "Outside-in evaluator budgets (road-to-credible-install Phase 6). VALUES ARE FROZEN FROM MEASURED ACCEPTANCE NUMBERS of Phases 0-3 (2026-07-27, packed tarball @ 9.8.0 tree, --omit=dev consumer install), never invented. The umbrella harness (src/scripts/evaluator_umbrella.sh) measures the packed artifact and check_evaluator_budgets.ts enforces: absolute budget AND >regression_pct growth vs last_measured fails even under budget. Owner + review date are lint-enforced (lint_budget_ownership). Timing metrics carry a per-entry regression_pct override (200) — wall-clock noise would flap a 10% creep rule; their absolute max is the binding gate. Sizes/counts keep the tight 10% creep.",
+    "schema_version": 1,
+    "owner": "maintainer",
+    "review_by": "2027-07-27",
+    "regression_pct": 10,
+    "budgets": {
+        "unpacked_size_mb": {
+            "max": 28,
+            "last_measured": 26.05,
+            "method": "npm pack --json → dist.unpackedSize / 1e6 — includes the Phase-1 precompiled bundles (dist/hooks/dispatch.js + dist/mcp/server.mjs, ~2.1 MB) that bought the 23x hook-latency win and the tsx removal"
+        },
+        "node_modules_mb": {
+            "max": 140,
+            "last_measured": 127,
+            "method": "du -sm node_modules after `npm install --omit=dev <tarball>` in a clean project"
+        },
+        "runtime_dep_count": {
+            "max": 200,
+            "last_measured": 187,
+            "method": "package-lock.json packages count (minus root) of the clean --omit=dev install"
+        },
+        "cli_version_cold_ms": {
+            "max": 1500,
+            "last_measured": 370,
+            "method": "wall-clock of the FIRST `agent-config --version` after install (cold fs cache run counts)",
+            "regression_pct": 200
+        },
+        "mcp_boot_to_initialize_ms": {
+            "max": 2000,
+            "last_measured": 264,
+            "method": "initialize request piped to `node dist/mcp/server.mjs`, wall-clock to response",
+            "regression_pct": 200
+        },
+        "cli_help_command_count": {
+            "max": 79,
+            "last_measured": 79,
+            "method": "registry enumeration — count of `{ name: '...', disposition` entries in src/cli/registry.ts (NOT --help prose parsing; methods historically disagreed 74 vs 76 vs 79)"
+        },
+        "mcp_public_tool_count": {
+            "max": 19,
+            "last_measured": 19,
+            "method": "tools/list length on the stdio server (post-ADR-132: implemented tools only)"
+        }
+    }
+}

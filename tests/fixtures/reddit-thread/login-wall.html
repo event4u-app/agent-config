@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head>
+<title>reddit.com: log in</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head><body class="loggedout">
+<!-- SYNTHETIC FIXTURE for src/scripts/_lib/reddit_thread_parse.ts.
+     A login interstitial served in place of a thread: no div.thing
+     [data-type="comment"] anywhere, plus a password form. The parser must set
+     login_wall: true and emit comments: [] rather than inventing nodes. -->
+<div id="header"><a href="/login">log in</a><a href="/register">sign up</a></div>
+<div class="content" role="main">
+  <div class="login-form-side">
+    <h1>You must log in to continue</h1>
+    <form id="login_login-main" method="post" action="https://old.reddit.com/post/login" class="login-form">
+      <input type="text" name="user" placeholder="username" />
+      <input type="password" name="passwd" placeholder="password" />
+      <button type="submit" class="btn">log in</button>
+    </form>
+  </div>
+</div>
+</body></html>

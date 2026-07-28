@@ -205,6 +205,3 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
   architecture, qualification rubric, fork resolutions.
 - [`docs/contracts/skill-bundled-assets.md`](../../../docs/contracts/skill-bundled-assets.md)
   — how bundled `scripts/` + `data/` reach consumer runtime.
-- Tests: `tests/scripts/skills_corpus_grounding_ground.test.ts`,
-  `tests/scripts/skills_corpus_grounding_bm25_search.test.ts`,
-  `tests/scripts/skills_corpus_grounding_schema_validator.test.ts`.

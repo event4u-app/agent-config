@@ -1,0 +1,46 @@
+name: Evaluator Umbrella
+
+# The external evaluator's "first five minutes" as ONE containerized suite
+# over the PACKED artifact (road-to-credible-install Phase 6): audit gate,
+# tarball integrity + publint, headless install from the tarball, staleness
+# lints, hook-latency bench, cold-start / size / surface budgets
+# (src/config/evaluator-budgets.json — owner-dated, lint-enforced), npx
+# smoke. Runs on release PRs and nightly — never against the checkout's
+# working tree.
+
+on:
+  pull_request:
+    branches: [main, master]
+    # Release PRs (head `release/X.Y.Z`) are the primary gate surface; the
+    # inline `if` below filters, matching release-validation.yml's pattern.
+  schedule:
+    # Nightly, 03:17 UTC — off-peak, deliberately not on the hour.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  umbrella:
+    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    name: Packed-artifact evaluation (clean container)
+    runs-on: ubuntu-latest
+    container:
+      # Clean Node container — the point is the PACKED artifact evaluated
+      # outside the checkout's toolchain assumptions.
+      image: node:20-bullseye
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (build toolchain for npm pack's prepack chain)
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Run the evaluator umbrella
+        run: bash src/scripts/evaluator_umbrella.sh

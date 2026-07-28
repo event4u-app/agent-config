@@ -118,6 +118,21 @@ tasks:
       task test-install-local
     cmd: bash tests/test_one_liner_entrypoints.sh
 
+  release-install-e2e:
+    silent: true
+    desc: |
+      Release gate, runnable locally before cutting a release: packs the
+      current checkout into a tarball (or uses RELEASE_TARBALL), installs
+      it into an isolated global npm prefix, upgrades from a 9.7.0
+      baseline (fetched once, or BASELINE_TARBALL), exercises the
+      code-graph WASM load on a fixture repo, boots the GUI server
+      headless and pings it, runs reach:doctor, smokes the repo-side
+      secret gate, then uninstalls cleanly. Needs network (npm install -g
+      resolves real dependencies) — expect several minutes. Usage:
+      task release-install-e2e
+      RELEASE_TARBALL=/path/to/agent-config.tgz task release-install-e2e
+    cmd: bash tests/test_release_install_e2e.sh
+
   test-triggers:
     silent: true
     desc: "Run trigger eval for one skill (MockRouter, no API call). Usage: task test-triggers -- eloquent"
@@ -305,6 +320,9 @@ tasks:
       else
         echo "  ℹ️  no agents/memory/*.yml files — skipping"
       fi
+      # Append-only guard over agents/memory/intake/*.jsonl — CI twin lives in
+      # .github/workflows/rule-backstops.yml (was fail-open: nothing invoked the flag).
+      ./scripts-run src/scripts/check_memory --append-only
 
   memory:shadow-report:
     silent: true

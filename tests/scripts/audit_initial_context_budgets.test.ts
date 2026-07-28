@@ -12,8 +12,9 @@ describe("audit_initial_context — evaluate_budgets", () => {
       "rules.gpt": 74_456,
       "skill_catalog.gpt": 10_999,
       "command_catalog.gpt": 5_005,
-      // post-run_tests-exec-pilot surface (cap re-anchored to 4,250)
-      "mcp_schemas.gpt": 3_694,
+      // post road-to-credible-install Phase 3 (stub-honesty marker + readOnlyHint
+      // annotations) surface (cap re-anchored to 5,570)
+      "mcp_schemas.gpt": 4_839,
     };
     expect(evaluate_budgets(checks, BUDGETS)).toEqual([]);
   });
@@ -36,7 +37,7 @@ describe("audit_initial_context — evaluate_budgets", () => {
 
   it("reports every breached surface", () => {
     const breaches = evaluate_budgets(
-      { "skill_catalog.gpt": 13_000, "command_catalog.gpt": 6_000, "mcp_schemas.gpt": 4_300 },
+      { "skill_catalog.gpt": 13_000, "command_catalog.gpt": 6_000, "mcp_schemas.gpt": 5_571 },
       BUDGETS,
     );
     expect(breaches).toHaveLength(3);

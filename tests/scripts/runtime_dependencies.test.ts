@@ -3,14 +3,18 @@
 // The global install (`npm install -g @event4u/agent-config`) only ships
 // `dependencies` — devDependencies never reach a consumer machine. Every
 // script the bash dispatcher (`src/scripts/_dispatch.bash`) executes at
-// runtime therefore may only import packages listed under `dependencies`,
-// and the `tsx` runner itself must be a runtime dependency: when it is
-// missing, `require_tsx` falls back to `npx tsx` in the CONSUMER project's
-// cwd, where the consumer's npm config and devEngines/engines constraints
-// apply — a consumer pinning e.g. `node <24` then hard-fails every hook and
-// TS command with EBADDEVENGINES. That regression (8.1.0) silently broke
-// hooks and `roadmap:progress` in consumer projects; this test locks the
-// contract so it cannot come back.
+// runtime therefore may only import packages listed under `dependencies`.
+//
+// CONTRACT FLIP (road-to-credible-install Phase 1, 2026-07-27): `tsx` is
+// now a devDependency — the consumer runtime tree ships NO tsx. This is
+// safe because the surfaces the 8.1.0 EBADDEVENGINES regression actually
+// broke (hooks — every PreToolUse/PostToolUse dispatch — and the
+// roadmap-progress hook) are structurally tsx-free: they run the
+// precompiled node bundles (dist/hooks/dispatch.js, dist/mcp/server.mjs),
+// which this test asserts the dispatcher prefers. Remaining delegate `.ts`
+// commands fall back to `npx tsx` (require_tsx last resort) — a documented
+// one-time-fetch cost, no longer on any hook hot path. Reintroducing tsx
+// into `dependencies` OR dropping the bundle preference both fail here.
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -31,7 +35,14 @@ const pkg: PackageJson = JSON.parse(
 );
 const runtimeDeps = new Set(Object.keys(pkg.dependencies ?? {}));
 
-const BUILTINS = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`)]);
+// Prefix-only builtins (node:test, node:sqlite, …) are absent from
+// `builtinModules` by Node's own contract — list the ones this repo uses.
+const PREFIX_ONLY_BUILTINS = ['node:sqlite', 'node:test'];
+const BUILTINS = new Set([
+    ...builtinModules,
+    ...builtinModules.map((m) => `node:${m}`),
+    ...PREFIX_ONLY_BUILTINS,
+]);
 
 /** Bare-specifier → npm package name (`@scope/pkg/sub` → `@scope/pkg`). */
 function packageName(specifier: string): string {
@@ -108,9 +119,19 @@ function collectBareImports(roots: string[]): Map<string, string[]> {
 }
 
 describe('runtime dependencies — consumer dispatcher surface', () => {
-    it('tsx is a runtime dependency (never devDependencies-only)', () => {
-        expect(runtimeDeps.has('tsx')).toBe(true);
-        expect(Object.keys(pkg.devDependencies ?? {})).not.toContain('tsx');
+    it('tsx is NOT a runtime dependency (consumer tree ships no tsx)', () => {
+        expect(runtimeDeps.has('tsx')).toBe(false);
+        // The maintainer tree keeps tsx for the dev/tsx fallback paths.
+        expect(Object.keys(pkg.devDependencies ?? {})).toContain('tsx');
+    });
+
+    it('the hook + mcp hot paths prefer the precompiled node bundles', () => {
+        const dispatch = fs.readFileSync(DISPATCH, 'utf-8');
+        // cmd_dispatch_hook execs dist/hooks/dispatch.js when present — the
+        // structural guarantee that hooks never need tsx in a consumer.
+        expect(dispatch).toContain('dist/hooks/dispatch.js');
+        // cmd_mcp_run prefers the bundled server.
+        expect(dispatch).toContain('dist/mcp/server.mjs');
     });
 
     it('every dispatcher-referenced script resolves and imports only runtime deps', () => {

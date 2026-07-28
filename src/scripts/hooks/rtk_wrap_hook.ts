@@ -4,10 +4,13 @@
  * (token-saving Phase 3).
  *
  * Converts RTK from advisory to DETERMINISTIC: instead of trusting a
- * self-reported flag, this hook keys off a live `which rtk` probe. When rtk is
- * actually installed AND the agent is about to run a single verbose CLI command
- * that is NOT completeness-critical, it surfaces (warn) "re-run wrapped with
- * rtk" so the 60–90% output-token saving is captured. It NEVER blocks (the v1
+ * self-reported flag, this hook keys off a live probe — PATH presence PLUS an
+ * `rtk gain` identity check (the binary name collides with the unrelated Rust
+ * Type Kit; see src/install/rtkDetection.ts). When a VERIFIED Rust Token
+ * Killer is installed AND the agent is about to run a single verbose CLI
+ * command that is NOT completeness-critical, it surfaces (warn) "re-run
+ * wrapped with rtk" so the upstream-reported 60–90% output-token saving is
+ * captured. It NEVER blocks (the v1
  * dispatcher contract is allow/block/warn — there is no transparent
  * `updatedInput` rewrite — and, like `injection_scan_hook`, warn preserves
  * agency). It NEVER fires when rtk is absent (silent plain-command fallback,
@@ -35,6 +38,8 @@ import {
   _split_subcommands,
   _is_env_assignment,
 } from "./block_no_verify.js";
+import { readHookStdin } from "./hook_stdin.js";
+import { detectRtkCached } from "../../install/rtkDetection.js";
 
 const SETTINGS_FILE = ".agent-settings.yml";
 const EXIT_ALLOW = 0;
@@ -171,12 +176,7 @@ export function classify(command: string): Eligibility {
 }
 
 function _readStdin(): string {
-  try {
-    if (process.stdin.isTTY) return "";
-    return fs.readFileSync(0, "utf-8");
-  } catch {
-    return "";
-  }
+  return readHookStdin();
 }
 
 function _jsonReason(reason: string): string {
@@ -203,8 +203,16 @@ export function main(): number {
         : ".";
   if (!_enabled(root)) return EXIT_ALLOW;
 
-  // Deterministic gate: the live probe, NOT a self-reported flag.
+  // Deterministic gate: the live probe, NOT a self-reported flag — and an
+  // IDENTITY probe, not bare presence: the `rtk` binary name collides with
+  // the unrelated Rust Type Kit, and nudging the agent to wrap commands with
+  // the wrong tool would be a second wrong answer. Only a verified Rust
+  // Token Killer activates the nudge; `unverified` (broken/slow probe) does
+  // NOT — fail closed for behavior, fail open for the command itself.
+  // Identity is cached user-globally keyed on the binary's path+mtime+size,
+  // so the `rtk gain` probe runs once per installed binary, not per command.
   if (!rtk_available()) return EXIT_ALLOW;
+  if (detectRtkCached().identity !== "token-killer") return EXIT_ALLOW;
 
   const command = _extract_command(envelope);
   if (!command) return EXIT_ALLOW;
@@ -213,14 +221,20 @@ export function main(): number {
   if (!verdict.eligible) return EXIT_ALLOW;
 
   const reason =
-    `rtk is installed and wraps verbose CLI output (60–90% fewer output tokens). ` +
+    `rtk is installed and wraps verbose CLI output (upstream reports 60–90% fewer output tokens). ` +
     `Re-run wrapped: \`rtk ${command.trim()}\`. ` +
     `(Skip for completeness-critical output like \`git diff\`.)`;
   process.stdout.write(`${_jsonReason(reason)}\n`);
   return EXIT_WARN;
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }

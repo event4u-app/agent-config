@@ -1,0 +1,52 @@
+{
+    "skill": "license-compliance-borrow-check",
+    "last_eval": "2026-07-28",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers pasting a source URL/repo to check its license before borrowing, and asking whether a specific borrow is allowed. Should-not-trigger covers near-miss neighbours (regenerating notices, running a broad similarity scan, generic new-dependency intake, plain code review) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "I want to adapt this retry-loop from https://github.com/example/repo — is its license compatible with ours?",
+            "trigger": true
+        },
+        {
+            "q": "this Stack Overflow answer has the algorithm I need, check if I can use it before I write the code",
+            "trigger": true
+        },
+        {
+            "q": "can I borrow this LRU cache implementation, it's under GPL-3.0?",
+            "trigger": true
+        },
+        {
+            "q": "draft a ledger entry for the debounce helper I ported from another repo",
+            "trigger": true
+        },
+        {
+            "q": "what license does this vendored snippet carry and does it clear our policy?",
+            "trigger": true
+        },
+        {
+            "q": "regenerate the third-party notices file, the ledger just changed",
+            "trigger": false,
+            "note": "notices regeneration → license-compliance-credits"
+        },
+        {
+            "q": "run a similarity scan across the whole diff to check for copied code",
+            "trigger": false,
+            "note": "broad corpus scan, no single named source → license-compliance-audit"
+        },
+        {
+            "q": "add lodash to package.json and install it",
+            "trigger": false,
+            "note": "new dependency intake, not a code borrow → supply-chain-intake"
+        },
+        {
+            "q": "review this diff for correctness and style issues",
+            "trigger": false,
+            "note": "generic code review, no borrow involved"
+        },
+        {
+            "q": "what CVEs affect the version of this package we're pinned to?",
+            "trigger": false,
+            "note": "dependency vulnerability scanning, not licensing a borrow"
+        }
+    ]
+}

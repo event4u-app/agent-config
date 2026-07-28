@@ -26,6 +26,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots } from './_lib/agent_src.js';
+import { KERNEL_RULE_IDS } from './_lib/kernel_rules.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -60,18 +61,8 @@ function _isFile(p: string): boolean {
     }
 }
 
-// Locked kernel set — kept in sync with measure_rule_budget.KERNEL_RULES.
-const KERNEL_RULES: readonly string[] = [
-    'agent-authority',
-    'ask-when-uncertain',
-    'commit-policy',
-    'direct-answers',
-    'language-and-tone',
-    'no-cheap-questions',
-    'non-destructive-by-default',
-    'scope-control',
-    'verify-before-complete',
-];
+// Locked kernel set — single-sourced in _lib/kernel_rules.ts.
+const KERNEL_RULES: readonly string[] = KERNEL_RULE_IDS;
 
 // Python: re.compile(r"```(?:[^\n]*\n)([\s\S]*?)```")
 const _FENCE_RE = /```(?:[^\n]*\n)([\s\S]*?)```/g;

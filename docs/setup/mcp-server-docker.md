@@ -1,8 +1,9 @@
 # MCP server — Docker (stdio bundle)
 
 Phase-6 F3 ships `internal/docker/mcp-server/Dockerfile`: a stdio-only image of
-the agent-config MCP server, pinned to the same `mcp` + `PyYAML`
-versions the test suite runs against. No HTTP / SSE transport — that
+the agent-config MCP server — the compiled CLI's native `mcp-server` command
+(TypeScript runtime; the Python image retired with ADR-200), running on the
+same dependency lockfile the test suite runs against. No HTTP / SSE transport — that
 lives in [`road-to-mcp-distribution.md`](../../agents/roadmaps/road-to-mcp-distribution.md)
 under its own A0 amendment.
 

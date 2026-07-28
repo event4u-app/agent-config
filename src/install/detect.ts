@@ -26,7 +26,7 @@ import type { InstallTarget } from './types.js';
 /**
  * Settings-file name used as the strongest project-scope signal.
  *
- * Matches `SETTINGS_FILE` in `scripts/install.py`. Presence in `cwd`
+ * Matches `SETTINGS_FILE` in the retired Python installer (ADR-200). Presence in `cwd`
  * short-circuits scope detection to `'project'` without consulting
  * the manifest / AI-tool lists.
  */

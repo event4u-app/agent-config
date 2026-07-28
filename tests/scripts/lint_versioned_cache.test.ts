@@ -45,6 +45,32 @@ describe('scanFile — cache-file path literals', () => {
         expect(a).toHaveLength(1);
         expect(b).toHaveLength(1);
     });
+
+    // road-to-reachable-code-memory Phase 6: .sqlite3 / .db coverage.
+    it('flags an unversioned .sqlite3 path with no justification', () => {
+        const src = `export const DB = 'agents/runtime/mcp-telemetry/calls.sqlite3';\n`;
+        const v = scanFile('x.ts', src);
+        expect(v).toHaveLength(1);
+        expect(v[0]?.literal).toContain('calls.sqlite3');
+    });
+
+    it('passes a .sqlite3 path with a v<N> namespace', () => {
+        const src = `export const IDX = 'agents/runtime/state/memory-index-v1.sqlite3';\n`;
+        expect(scanFile('x.ts', src)).toHaveLength(0);
+    });
+
+    it('passes an unversioned .db with an inline invalidation comment', () => {
+        const src =
+            `// cache-invalidation: PRAGMA user_version stamped on every connect\n` +
+            `export const DB = 'agents/runtime/state/graph.db';\n`;
+        expect(scanFile('x.ts', src)).toHaveLength(0);
+    });
+
+    it('ignores an ordinary non-cache .json path even when a sibling line has .db noise', () => {
+        // The .sqlite3/.db branch must not accidentally widen the .json branch.
+        const src = `const P = 'package.json';\nconst NOTE = 'see docs/foo.db.md for background';\n`;
+        expect(scanFile('x.ts', src)).toHaveLength(0);
+    });
 });
 
 describe('runChecks — directory walk', () => {

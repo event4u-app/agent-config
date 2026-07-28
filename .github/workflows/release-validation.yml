@@ -13,6 +13,16 @@ name: Release Validation
 #   3. version-consistency — package.json / marketplace.json / every
 #                            packages/*/pack.yaml agree on the version
 #
+# Four jobs total — the fourth closes the 9.8.0 skip-class (a release
+# shipped without src/install/ across two minors; caught only after
+# publish because nothing between merge and tag installed the actual
+# packed tarball as a consumer):
+#   4. release-install-e2e — packs the tarball, installs it into an
+#                            isolated global npm prefix, upgrades from a
+#                            cached 9.7.0 baseline, boots the GUI server
+#                            headless, exercises code-graph (WASM load),
+#                            reach:doctor, and the repo-side secret gate.
+#
 # Trigger:
 #   * `pull_request` against main, head matching `release/*`. push: main
 #     and tag triggers are owned by release-guard.yml — this workflow is
@@ -120,7 +130,17 @@ jobs:
             console.error(`::error::CHANGELOG section for ${version} is empty.`);
             process.exit(1);
           }
-          console.log(`CHANGELOG section for ${version} has ${body.trim().split("\n").length} line(s) of body.`);
+          // Tests-footer convention (every release since 9.1.0): the section
+          // must end with `Tests: N (+M since X.Y.Z)`. release.ts renders it
+          // but degrades SILENTLY to null on collection failure — 9.8.0
+          // shipped without the line. This check makes the absence red at
+          // release-PR time instead of remembered.
+          if (!/^Tests: \d+/m.test(body)) {
+            console.error(`::error::CHANGELOG section for ${version} is missing the \`Tests: N (+M since PREV)\` footer line.`);
+            console.error("release.ts renders it via _render_test_trend_line; a missing line means vitest collection failed during `task release` — fix the collection, do not hand-wave the footer.");
+            process.exit(1);
+          }
+          console.log(`CHANGELOG section for ${version} has ${body.trim().split("\n").length} line(s) of body incl. Tests footer.`);
           ' "$version"
 
   version-consistency:
@@ -187,3 +207,70 @@ jobs:
           # fresh `init` bootstraps onto a stale pin. release.ts set_template_pin
           # keeps it in lockstep; this gate is the backstop on the release PR.
           ./scripts-run src/scripts/check_template_pin_drift
+
+  audit-gate:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
+    name: npm audit (runtime deps, high+)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Standing audit gate (road-to-credible-install Phase 0): same floor
+      # status as ci-green on every release PR. Lockfile-driven — no npm ci
+      # needed; dev-only advisories do not block the release line.
+      - name: npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
+
+  release-install-e2e:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
+    name: Release install E2E (pack → install → upgrade → boot)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # 9.7.0 is a fixed historical baseline for the upgrade leg — cached
+      # so the registry is hit once, not once per workflow run. A cache
+      # miss re-fetches; a fetch failure here is a SETUP failure (network
+      # / registry), never a release-quality signal.
+      - name: Cache 9.7.0 baseline tarball
+        id: baseline-cache
+        uses: actions/cache@v4
+        with:
+          path: baseline-9.7.0.tgz
+          key: npm-baseline-9.7.0
+
+      - name: Fetch 9.7.0 baseline tarball (cache miss)
+        if: steps.baseline-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/baseline-pack
+          if ! npm pack '@event4u/agent-config@9.7.0' --pack-destination /tmp/baseline-pack; then
+            echo "::error::baseline fetch failed (setup phase, not validation) — could not pack @event4u/agent-config@9.7.0 from the registry."
+            exit 1
+          fi
+          tarballs=(/tmp/baseline-pack/*.tgz)
+          if [ ! -f "${tarballs[0]:-}" ] || [ "${#tarballs[@]}" -ne 1 ]; then
+            echo "::error::baseline fetch produced ${#tarballs[@]} tarball(s) in /tmp/baseline-pack, expected exactly 1."
+            exit 1
+          fi
+          mv "${tarballs[0]}" baseline-9.7.0.tgz
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Run release install E2E gate
+        env:
+          BASELINE_TARBALL: ${{ github.workspace }}/baseline-9.7.0.tgz
+        run: bash tests/test_release_install_e2e.sh

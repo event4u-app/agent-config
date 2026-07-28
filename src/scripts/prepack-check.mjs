@@ -159,6 +159,23 @@ process.stderr.write(
     `prepack-check: import-completeness OK (${scanRoots.length} shipped src tree(s) scanned)\n`,
 );
 
+// ---------------------------------------------------------------------------
+// Lifecycle-target guard (gate 3): every consumer-side lifecycle script
+// (preinstall/install/postinstall/prepare) must reference only targets that
+// exist and ship. Structural fix for the 9.8.0 dead-postinstall class.
+// ---------------------------------------------------------------------------
+import { existsSync } from 'node:fs';
+import { checkLifecycleTargets } from './prepack_lifecycle_check.mjs';
+
+const lifecycleErrors = checkLifecycleTargets(pkg, (p) => existsSync(resolve(p)));
+if (lifecycleErrors.length > 0) {
+    for (const e of lifecycleErrors) {
+        process.stderr.write(`prepack-check: ${e}\n`);
+    }
+    die(`${lifecycleErrors.length} lifecycle script target(s) missing or unshipped.`);
+}
+process.stderr.write('prepack-check: lifecycle script targets OK\n');
+
 // Optional: invoked with --verbose dumps the size for tarball-budget bookkeeping.
 if (argv.includes('--verbose')) {
     process.stderr.write(`prepack-check: size=${st.size} bytes\n`);

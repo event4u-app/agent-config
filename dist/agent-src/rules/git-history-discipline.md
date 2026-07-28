@@ -28,6 +28,8 @@ routes_to:
   - "skill:git-workflow"
 workspaces: [engineering]
 packs: [engineering-base]
+enforced_by:
+  - "hook:block-no-verify"
 ---
 
 # Git History Discipline

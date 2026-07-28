@@ -67,6 +67,7 @@ import {
 } from './prompts.js';
 import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
 import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
+import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block } from './blind_review.js';
 
 // ── Python-format / stdlib parity helpers ────────────────────────────────
 //
@@ -428,6 +429,20 @@ export interface ConsultOptions {
     on_stance_repair?: ((member: string) => boolean) | null;
     /** Receives each stance-repair response so the caller can account its cost. */
     on_stance_repair_result?: ((r: CouncilResponse) => void) | null;
+    /**
+     * Ü2 (road-to-council-blind-review Phase 1): per-member system-prompt
+     * suffix appended AFTER the base/advisor system prompt — e.g. a stance
+     * framing sentence from `blind_review.assign_stances`. This module stays
+     * stance-agnostic on purpose: the caller supplies plain text keyed by
+     * member name. Default `null` → byte-identical to today.
+     */
+    member_prompt_suffix?: Map<string, string> | null;
+    /**
+     * Ü2 outsider-seat ablation: member names in this set get `project: null`
+     * in their system-prompt build (question + artefact only, no project
+     * context). Default `null` → byte-identical to today.
+     */
+    no_project_context_members?: ReadonlySet<string> | null;
 }
 
 /**
@@ -514,6 +529,8 @@ export function consult(
             project,
             original_ask,
             advisor_plans,
+            member_prompt_suffix: opts.member_prompt_suffix ?? null,
+            no_project_context_members: opts.no_project_context_members ?? null,
             split: suffix_for_round
                 ? { stable: question.user_prompt, suffix: suffix_for_round }
                 : null,
@@ -589,6 +606,10 @@ interface RunRoundOptions {
      * full concatenation (estimates + persistence unchanged).
      */
     split?: { stable: string; suffix: string } | null;
+    /** Ü2 — see `ConsultOptions.member_prompt_suffix`. */
+    member_prompt_suffix?: Map<string, string> | null;
+    /** Ü2 — see `ConsultOptions.no_project_context_members`. */
+    no_project_context_members?: ReadonlySet<string> | null;
 }
 
 /** Run a single round; mutate `spent` with cumulative totals. */
@@ -604,6 +625,8 @@ function _run_round(
     const project = opts.project;
     const original_ask = opts.original_ask;
     const plans = opts.advisor_plans ?? new Map<string, AdvisorPlan>();
+    const member_prompt_suffix = opts.member_prompt_suffix ?? null;
+    const no_project_context_members = opts.no_project_context_members ?? null;
     const base_system_prompt = system_prompt_for(question.mode, {
         project,
         original_ask,
@@ -611,10 +634,22 @@ function _run_round(
 
     const _system_prompt_for_member = (m: ExternalAIClient): string => {
         const plan = plans.get(m.name);
+        // Ü2 outsider-seat ablation: this member's system prompt is built
+        // WITHOUT project context (question + artefact only). Everyone else
+        // is unaffected — `use_project === project` short-circuits back to
+        // the precomputed `base_system_prompt` when no set is provided.
+        const use_project = no_project_context_members?.has(m.name) ? null : project;
+        let base: string;
         if (plan === undefined) {
-            return base_system_prompt;
+            base =
+                use_project === project
+                    ? base_system_prompt
+                    : system_prompt_for(question.mode, { project: use_project, original_ask });
+        } else {
+            base = advisor_system_prompt(plan.persona_text, { project: use_project, original_ask });
         }
-        return advisor_system_prompt(plan.persona_text, { project, original_ask });
+        const suffix = member_prompt_suffix?.get(m.name);
+        return suffix ? `${base}\n\n${suffix}` : base;
     };
 
     const results: CouncilResponse[] = [];
@@ -1716,6 +1751,21 @@ export interface RenderOptions {
      * slot, prefixed by the visible annotation. Absent/null → byte-identical.
      */
     chairman?: { member: string | null; annotation: string; text: string | null } | null;
+    /**
+     * Ü3 (road-to-council-blind-review Phase 1): when true, the synthesis
+     * template gains the two mandatory chairman fields (Collective blind
+     * spot / One-line verdict). Default `false` → byte-identical.
+     */
+    chairman_fields?: boolean;
+    /**
+     * Ü1 host-path blind render (road-to-council-blind-review Phase 1): when
+     * set, response blocks are headed by their blind label (`## Response A`)
+     * instead of `## <provider> · <model>`, and a de-anonymization map is
+     * appended AFTER the synthesis slot. Only meaningful when no member
+     * chairman ran — the member-chairman path embeds its own de-anon block
+     * directly in `chairman.text`. Default `null` → byte-identical.
+     */
+    blind?: { label_to_source: ReadonlyMap<string, string> } | null;
 }
 
 /**
@@ -1744,6 +1794,15 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
     const consensus = opts.consensus ?? null;
     const peer_review = opts.peer_review ?? null;
     const explain_confidence = opts.explain_confidence ?? null;
+    // Ü1 host-path blind render: reverse the persisted `label -> provider:model`
+    // map so each response block can look up its own blind label by source.
+    const blind = opts.blind ?? null;
+    const source_to_label =
+        blind !== null
+            ? new Map<string, string>(
+                  Array.from(blind.label_to_source.entries()).map(([label, source]) => [source, label]),
+              )
+            : null;
 
     const blocks: string[] = [];
     const explain =
@@ -1759,7 +1818,8 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
         blocks.push(_render_consensus(consensus.bucket, explain));
     }
     for (const r of responses) {
-        const header = `## ${r.provider} · ${r.model}`;
+        const blind_label = source_to_label?.get(`${r.provider}:${r.model}`) ?? null;
+        const header = blind_label !== null ? `## ${blind_label}` : `## ${r.provider} · ${r.model}`;
         if (r.error) {
             blocks.push(`${header}\n\n*ERROR:* \`${r.error}\``);
             continue;
@@ -1781,6 +1841,11 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
     if (peer_review !== null && peer_review.responses.length > 0) {
         const addendum = peer_review_synthesis_addendum();
         template = template ? `${template}\n${addendum}` : _pyLStrip(addendum);
+    }
+    if (opts.chairman_fields === true) {
+        // Ü3: two mandatory trailing sections, composed after any peer-review
+        // addendum so both extensions stack predictably.
+        template = template ? `${template}\n\n${CHAIRMAN_FIELDS_ADDENDUM}` : CHAIRMAN_FIELDS_ADDENDUM;
     }
     let body: string;
     if (template) {
@@ -1808,6 +1873,11 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
         blocks.push(render_vote_tally(tally));
     }
     blocks.push(`## Convergence / Divergence\n\n${body}`);
+    if (blind !== null) {
+        // Ü1: de-anonymization AFTER the synthesis slot — blind is only at
+        // decision time, never the archive.
+        blocks.push(render_deanonymization_block('### De-anonymization map', blind.label_to_source));
+    }
     return blocks.join('\n\n---\n\n');
 }
 

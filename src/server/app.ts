@@ -254,6 +254,18 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         root: opts.uiDistDir,
         prefix: '/',
         decorateReply: false,
+        // Framing stance (reciprocal-ecosystem embed contract, Phase 2):
+        // AC refuses to be iframed — a host renders the UI top-level in its
+        // own window (`?embed=1`), never inside an iframe. `frame-ancestors`
+        // is a header-only directive (ignored in a <meta> CSP), so it ships
+        // here on the static UI responses. Additive hardening only: the
+        // three onRequest security hooks above (Host / Origin / Bearer) are
+        // unchanged, and no `/api/*` route is affected.
+        // @fastify/static v10 passes the FastifyReply (not the raw Node
+        // response) to setHeaders — use reply.header().
+        setHeaders: (reply): void => {
+            reply.header('Content-Security-Policy', "frame-ancestors 'none'");
+        },
     });
 
     const packageRoot = opts.packageRoot ?? PACKAGE_ROOT;

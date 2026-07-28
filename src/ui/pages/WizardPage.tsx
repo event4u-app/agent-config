@@ -34,6 +34,12 @@ import { BackupScreen } from '../wizard/BackupScreen.js';
 import { FinishChecklist } from '../wizard/FinishChecklist.js';
 import {
     activeTotalSteps,
+    asDetectionLoaded,
+    asDismissed,
+    asInstallCommand,
+    asInstalled,
+    asRepo,
+    asVersion,
     banner,
     clampStep,
     continueAcknowledged,
@@ -61,9 +67,13 @@ import {
     reviewChanges,
     rolesTouched,
     rtkDetectionLoaded,
+    rtkIdentity,
     rtkInstallCommand,
+    rtkInstallTiers,
     rtkInstalled,
+    rtkPresent,
     rtkRepo,
+    rtkVersion,
     packsTouched,
     packRemovalsConfirmed,
     saving,
@@ -286,6 +296,7 @@ async function loadAll(): Promise<void> {
         }
         if (resumed.id === 'identity') {
             void loadRtkDetectionOnce();
+            void loadAgentSwitchDetectionOnce();
         }
         if (resumed.kind === 'review') {
             void refreshDiff();
@@ -499,15 +510,27 @@ async function loadToolDetectionOnce(): Promise<void> {
 
 interface DetectRtkResponse {
     installed?: boolean;
+    present?: boolean;
+    identity?: 'token-killer' | 'unknown-rtk' | 'unverified' | null;
+    version?: string | null;
     installCommand?: string | null;
+    installCommands?: {
+        recommended: string;
+        recommendedLabel?: string;
+        manual?: string;
+        manualLabel?: string;
+        note?: string;
+    } | null;
     repo?: string;
 }
 
 /**
- * Detect rtk presence once per session (road-to-wizard-ux-improvements § Phase
- * 7). Detection is the only source of truth — the result is written into
- * `personal.rtk_installed` so the saved setting always matches reality, never
- * a stale manual toggle. When missing, capture the per-OS install command.
+ * Detect rtk presence + identity once per session
+ * (road-to-rtk-onboarding-correctness). Detection is the only source of
+ * truth — the result is written into `personal.rtk_installed` so the saved
+ * setting always matches reality, never a stale manual toggle. `installed`
+ * is true ONLY for a verified Rust Token Killer (never a colliding binary).
+ * When missing, capture the per-OS install command tiers.
  */
 async function loadRtkDetectionOnce(): Promise<void> {
     if (rtkDetectionLoaded.value) return;
@@ -516,7 +539,11 @@ async function loadRtkDetectionOnce(): Promise<void> {
         const res = await apiFetch<DetectRtkResponse>('/api/v1/wizard/detect-rtk');
         const installed = res.installed === true;
         rtkInstalled.value = installed;
+        rtkPresent.value = res.present === true;
+        rtkIdentity.value = res.identity ?? null;
+        rtkVersion.value = res.version ?? null;
         rtkInstallCommand.value = res.installCommand ?? null;
+        rtkInstallTiers.value = res.installCommands ?? null;
         if (typeof res.repo === 'string') rtkRepo.value = res.repo;
         // Detection wins over whatever was loaded: overwrite the setting via
         // a proper nested update (a flat `'personal.rtk_installed'` key would
@@ -524,11 +551,42 @@ async function loadRtkDetectionOnce(): Promise<void> {
         const personal = (values.value.personal ?? {}) as Record<string, JsonValue>;
         values.value = { ...values.value, personal: { ...personal, rtk_installed: installed } };
     } catch {
-        // Extended-mode 404 / failure → leave rtkInstalled null (widget shows
-        // an "unknown" state and does not touch the setting).
+        // Detection failure → leave rtkInstalled null (widget shows an
+        // "unknown" state and does not touch the setting).
     }
 }
 
+interface DetectAgentSwitchResponse {
+    installed?: boolean;
+    version?: string | null;
+    installCommand?: string | null;
+    repo?: string;
+    dismissed?: boolean;
+}
+
+/**
+ * Detect agent-switch presence once per session
+ * (road-to-reciprocal-ecosystem § Phase 1 — S0.1 honest-null council
+ * verdict, 2026-07-28: a PASSIVE ROW, never persisted into settings — this
+ * is a recommendation, not a configuration toggle). `asDismissed` mirrors
+ * the server's permanent-dismissal record so a previously closed row stays
+ * closed after a page reload within the same session.
+ */
+async function loadAgentSwitchDetectionOnce(): Promise<void> {
+    if (asDetectionLoaded.value) return;
+    asDetectionLoaded.value = true;
+    try {
+        const res = await apiFetch<DetectAgentSwitchResponse>('/api/v1/wizard/detect-agent-switch');
+        asInstalled.value = res.installed === true;
+        asVersion.value = res.version ?? null;
+        asInstallCommand.value = res.installCommand ?? null;
+        if (typeof res.repo === 'string') asRepo.value = res.repo;
+        asDismissed.value = res.dismissed === true;
+    } catch {
+        // Detection failure → leave asInstalled null (row stays hidden until
+        // a later successful load).
+    }
+}
 
 async function persistStep(nextIndex: number, partial: Record<string, JsonValue>): Promise<void> {
     try {
@@ -605,6 +663,7 @@ async function goTo(nextIndex: number): Promise<void> {
     }
     if (next.id === 'identity') {
         void loadRtkDetectionOnce();
+        void loadAgentSwitchDetectionOnce();
     }
     if (next.kind === 'review') {
         void refreshDiff();
@@ -1307,37 +1366,155 @@ function PacksStepBody(): preact.JSX.Element {
 }
 
 /**
- * rtk presence row on the Editor-and-tooling step (Phase 7). Detection-driven,
- * read-only — when missing, surfaces the per-OS install command + repo link.
+ * rtk presence + identity row on the identity step
+ * (road-to-rtk-onboarding-correctness). Detection-driven, read-only. Four
+ * states: absent (install command tiers), verified Token Killer, a colliding
+ * same-name binary (Rust Type Kit), and present-but-unverified. rtk is a
+ * third-party Apache-2.0 tool; the savings figure is upstream's own estimate.
  */
 function RtkRow(): preact.JSX.Element {
     const installed = rtkInstalled.value;
-    const cmd = rtkInstallCommand.value;
+    const present = rtkPresent.value;
+    const identity = rtkIdentity.value;
+    const version = rtkVersion.value;
+    const tiers = rtkInstallTiers.value;
+    const badge = installed === null
+        ? <span class="ac-badge ac-badge--missing">detecting…</span>
+        : installed
+            ? <span class="ac-badge ac-badge--installed">installed{version !== null ? ` (v${version})` : ''}</span>
+            : present === true
+                ? <span class="ac-badge ac-badge--missing">{identity === 'unknown-rtk' ? 'different tool' : 'unverified'}</span>
+                : <span class="ac-badge ac-badge--missing">not installed</span>;
     return (
         <div class="ac-rtk-row">
             <div class="ac-rtk-row__head">
-                <span class="ac-rtk-row__label">rtk <small>(Rust Token Killer)</small></span>
-                {installed === null
-                    ? <span class="ac-badge ac-badge--missing">detecting…</span>
-                    : installed
-                        ? <span class="ac-badge ac-badge--installed">installed</span>
-                        : <span class="ac-badge ac-badge--missing">not installed</span>}
+                <span class="ac-rtk-row__label">rtk <small>(Rust Token Killer — third-party, Apache-2.0)</small></span>
+                {badge}
             </div>
-            {installed === false
+            {present === true && identity === 'unknown-rtk'
                 ? (
                     <div class="ac-rtk-row__install">
                         <p class="ac-field__description">
-                            rtk wraps verbose CLI output for ~60–90% token
-                            savings. Install it, then re-open the wizard to
-                            pick up detection:
+                            A binary named <code>rtk</code> is on PATH, but it is not
+                            Rust Token Killer — two unrelated projects share the name
+                            (the other is Rust Type Kit). The token-saving integration
+                            stays off. See the upstream name-collision guidance:
                         </p>
-                        {cmd !== null ? <code class="ac-rtk-row__cmd">{cmd}</code> : null}
+                        <a class="ac-button" href={`${rtkRepo.value}/blob/master/INSTALL.md`} target="_blank" rel="noreferrer noopener">
+                            Open rtk install guide
+                        </a>
+                    </div>
+                )
+                : null}
+            {present === true && identity === 'unverified'
+                ? (
+                    <p class="ac-field__description">
+                        rtk found but the identity check failed — verify manually
+                        with <code>rtk gain</code> (Rust Token Killer renders a token-savings
+                        dashboard; the colliding Rust Type Kit does not).
+                    </p>
+                )
+                : null}
+            {present === false
+                ? (
+                    <div class="ac-rtk-row__install">
+                        <p class="ac-field__description">
+                            rtk wraps verbose CLI output — upstream reports 60–90%
+                            token savings (their estimate). Install it, then re-open
+                            the wizard to pick up detection:
+                        </p>
+                        {tiers !== null
+                            ? (
+                                <>
+                                    {tiers.recommendedLabel !== undefined
+                                        ? <p class="ac-field__description">{tiers.recommendedLabel}:</p>
+                                        : null}
+                                    <code class="ac-rtk-row__cmd">{tiers.recommended}</code>
+                                    {tiers.manual !== undefined
+                                        ? (
+                                            <>
+                                                <p class="ac-field__description">{tiers.manualLabel ?? 'Manual'}:</p>
+                                                <code class="ac-rtk-row__cmd">{tiers.manual}</code>
+                                            </>
+                                        )
+                                        : null}
+                                    {tiers.note !== undefined
+                                        ? <p class="ac-field__description">{tiers.note}</p>
+                                        : null}
+                                </>
+                            )
+                            : rtkInstallCommand.value !== null
+                                ? <code class="ac-rtk-row__cmd">{rtkInstallCommand.value}</code>
+                                : null}
                         <a class="ac-button" href={rtkRepo.value} target="_blank" rel="noreferrer noopener">
                             Open rtk repo
                         </a>
                     </div>
                 )
                 : null}
+        </div>
+    );
+}
+
+/**
+ * Permanently dismiss the agent-switch recommendation
+ * (road-to-reciprocal-ecosystem § Phase 1). Optimistic on failure the row
+ * simply reappears on the next detection load — there is nothing to roll
+ * back client-side, so a failed POST just surfaces a banner and leaves
+ * `asDismissed` untouched.
+ */
+async function dismissAgentSwitchRecommendation(): Promise<void> {
+    try {
+        await apiFetch('/api/v1/wizard/dismiss-recommendation', {
+            method: 'POST',
+            body: { id: 'agent-switch' },
+        });
+    } catch (err) {
+        banner.value = {
+            message: err instanceof Error ? err.message : String(err),
+            tone: 'error',
+        };
+        return;
+    }
+    asDismissed.value = true;
+}
+
+/**
+ * agent-switch passive-row recommendation on the identity step
+ * (road-to-reciprocal-ecosystem § Phase 1 — S0.1 honest-null council
+ * verdict, 2026-07-28: PASSIVE ROW ONLY, never a proactive card).
+ * Detection-driven, read-only, copy-only (no install button — the AC never
+ * auto-installs). Renders nothing while undetected (no flash), nothing
+ * when installed, and nothing once permanently dismissed.
+ */
+function AgentSwitchRow(): preact.JSX.Element | null {
+    if (!asDetectionLoaded.value || asInstalled.value !== false || asDismissed.value) return null;
+    return (
+        <div class="ac-rtk-row">
+            <div class="ac-rtk-row__head">
+                <span class="ac-rtk-row__label">agent-switch <small>(third-party, MIT)</small></span>
+                <span class="ac-badge ac-badge--missing">not installed</span>
+            </div>
+            <div class="ac-rtk-row__install">
+                <p class="ac-field__description">
+                    agent-switch isolates multiple agent accounts into per-account
+                    profiles (<code>CLAUDE_CONFIG_DIR</code>) so switching accounts
+                    never requires a re-login. Free and MIT-licensed.
+                </p>
+                {asInstallCommand.value !== null
+                    ? <code class="ac-rtk-row__cmd">{asInstallCommand.value}</code>
+                    : null}
+                <a class="ac-button" href={`https://github.com/${asRepo.value}`} target="_blank" rel="noreferrer noopener">
+                    Open agent-switch repo
+                </a>
+                <button
+                    type="button"
+                    class="ac-button ac-button--small"
+                    onClick={(): void => { void dismissAgentSwitchRecommendation(); }}
+                >
+                    Don't show again
+                </button>
+            </div>
         </div>
     );
 }
@@ -1363,6 +1540,7 @@ function StepBody(): preact.JSX.Element | null {
         return (
             <>
                 {step.id === 'identity' ? <RtkRow /> : null}
+                {step.id === 'identity' ? <AgentSwitchRow /> : null}
                 <SchemaForm
                     schema={sliced}
                     values={values.value}

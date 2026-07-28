@@ -2,11 +2,9 @@
 
 # Agent Config — every claim machine-checked, including "zero runtime daemon"
 
+[![MCP Toplist](https://mcptoplist.com/badge/glama%2Fevent4u-app%2Fagent-config.svg)](https://mcptoplist.com/server/glama%2Fevent4u-app%2Fagent-config)
+
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config)
-
-[![Skills](https://img.shields.io/badge/Skills-278-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-105-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-190-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-101-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
-
-> **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
 **Try it in 30 seconds** — drop one read-only subagent into any repo and watch it gate "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Start at the proof, not the catalog: **[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/)**.
 
@@ -14,7 +12,11 @@
 
 **Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
-**A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
+> **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
+
+[![Skills](https://img.shields.io/badge/Skills-286-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-111-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-190-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-101-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+
+**A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into **20 host agents** — of 23 detected, 3 being export-only<!-- claim:host-agent-count --> (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini CLI, Codex, Continue, Zed, JetBrains, Aider and more) — with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
 ### What's different
 
@@ -25,7 +27,7 @@ It is both deep **and** disciplined — and honest about what it deliberately is
 - **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.<!-- claim:surgical-uninstall -->
 - **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
 
-**What it deliberately is *not*** — a content + governance layer, not a runtime: **no background daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
+**What it deliberately is *not*** — the core is a governance layer with optional, individually opt-in embedded engines (code intelligence, gated reach, the setup GUI, the bench lab — [ADR-124](docs/decisions/ADR-124-embedded-engine-doctrine.md)): **no background daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** Engines are never mandatory, never default-on without measured lift, and terminate with the command that invoked them. The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
 
 > **Where this comes from (honest provenance).** The skills, rules and personas
 > are distilled from real production work on TypeScript and PHP codebases. The
@@ -170,7 +172,7 @@ full suite:
 
 ```bash
 # 1. Install — on a terminal with a display, the browser wizard launches
-#    automatically; the same install.py runs the real install behind it.
+#    automatically; the same TypeScript installer runs the real install behind it.
 npx -y @event4u/agent-config init
 
 # 2. Pick your profile + tools in the wizard, click Finish.
@@ -180,7 +182,7 @@ npx -y @event4u/agent-config init
 /work "your first real task"
 ```
 
-**Headless / CI:** `init` skips the GUI automatically when `CI` is set, stdout is not a TTY, `--no-ui` is passed, **or** an explicit `--tools=` selection is given — it then runs the non-interactive installer directly. Pass flags (`--profile=developer --tools=claude-code,cursor`); add `--dry-run` to preview writes. The GUI and the CLI share one installer (`scripts/install.py`), so both produce identical results. Reference: [`docs/wizard.md`](docs/wizard.md).
+**Headless / CI:** `init` skips the GUI automatically when `CI` is set, stdout is not a TTY, `--no-ui` is passed, **or** an explicit `--tools=` selection is given — it then runs the non-interactive installer directly. Pass flags (`--profile=developer --tools=claude-code,cursor`); add `--dry-run` to preview writes. The GUI and the CLI share one installer (`scripts/install.ts`), so both produce identical results. Reference: [`docs/wizard.md`](docs/wizard.md).
 
 **Pick specific AIs:** `--tools=claude-code,cursor,augment,windsurf,cline,gemini-cli,copilot,roocode,aider,codex,claude-desktop,continue` (any subset). Visual picker: add `--gui` (loopback-bound, CSRF-gated; contract [`gui-wizard`](docs/contracts/gui-wizard.md)).
 
@@ -414,6 +416,21 @@ For platforms where the package's scripts cannot run, artefacts are built for pa
 
 ---
 
+## Works with agent-switch
+
+[`agent-switch`](https://github.com/event4u-app/agent-switch) is the companion
+CLI for running several agent accounts on one machine: it isolates each account
+in its own profile (`CLAUDE_CONFIG_DIR` per profile), so switching accounts
+never means logging out and back in. The two compose — **agent-switch isolates
+the accounts, agent-config governs what the agents do inside them**. When
+agent-config runs under an agent-switch profile it says so in the settings hub,
+warns before writes that would land in a shared (cross-profile) tree, and
+accepts a host-supplied config root so its own settings stay profile-scoped.
+
+→ [How the two compose →](docs/guides/works-with-agent-switch.md)
+
+---
+
 ## Who this is for
 
 Stack-agnostic governance core (orchestration · role modes · command clusters · quality gates · audit-discipline) plus parallel stack-specific skill sets:
@@ -437,6 +454,20 @@ The same orchestration core drives non-software trades via [`user-types/`](src/a
 ## Data governance & domain safety
 
 Three domain-safety rules ([`domain-safety-pii`](src/rules/domain-safety-pii.md), [`domain-safety-disclaimer`](src/rules/domain-safety-disclaimer.md), [`domain-safety-retention`](src/rules/domain-safety-retention.md)) act as per-domain output floors across ~12 areas — PII redaction (support / finance / recruiting / marketing), advice disclaimers (legal / financial / medical / consulting), retention guidance (finance / support), ops floors (logging / export). Full surface → rule → floor matrix: [`docs/safety.md`](docs/safety.md). Beta contracts: [`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) · [`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
+
+### Code provenance & license governance
+
+Every diff is checked against a **license policy derived from the target repo's own detected license** (`LICENSE`/`package.json`/`composer.json`, precedence-ordered; sources disagree → escalate, never guess) and a **strict linter over our own borrow ledger** ([`provenance/borrows.jsonl`](provenance/) → [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md)) that fails a deny-class license, an unknown license, a missing transformation note or a rename-only-phrased one — wired into `ci`/`ci-strict` from day one. A third piece, `license-compliance-audit`, runs an offline/online similarity scan on demand — a human invokes it deliberately, never a pipeline. This is **provenance-governed**, **license-policy-enforced** borrow discipline backed by an **audited borrow trail** — not a copy detector.
+
+<!-- provenance-scope-box -->
+#### Scope & limits
+
+- **Unconscious training-data reproduction is not detectable at this layer.** No tool here — or anywhere — can see what a model's training data contained; this system governs what gets consciously borrowed and recorded, never what a model silently recalls.
+- **Detection, where it exists, covers a knowledge base of known OSS only** — a subset of all code that has ever existed, never a model's training corpus.
+- **No CI-facing detection gate exists.** A deterministic scanner (jscpd offline + SCANOSS online) was built and measured against a frozen synthetic corpus, but missed its own pre-registered thresholds (measured: recall 12/16, false positives 2/12, SCANOSS rename-only recall 0/8) — see [`docs/CLAIMS.md`](docs/CLAIMS.md#claim-provenance-gate-effectiveness). It ships in **no form** in CI, not even advisory — only as the on-demand skill above.
+- **Rename-only laundering is not detected** by anything we ship or evaluated. The ledger's transformation-note check rejects a rename-only-*phrased* note, but it cannot catch an undisclosed rename-only copy that was never logged.
+
+Reduces and documents risk — never eliminates it.
 
 ### Maintainer telemetry (opt-in, default-off)
 
@@ -568,10 +599,27 @@ task dev:setup        # boot the onboarding wizard against the working tree
 
 ## Requirements
 
-- **Node ≥ 18** — `npx @event4u/agent-config init` is the canonical install path.
-- **Python 3.10+** — bridge stage only; missing → installer skips bridges.
-- **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks; native PowerShell / cmd unsupported. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
+- **Node ≥ 20.11** — `npx @event4u/agent-config init` is the canonical install path. No Python anywhere on the install path (the Python installer retired with the TypeScript migration).
+- **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
+
+### Windows
+
+Native PowerShell / cmd is **not supported for the file install** — use WSL2
+for the full installed tree. The supported native-Windows surface is the
+**MCP stdio server**: point any MCP client at
+
+```bash
+npx -y @event4u/agent-config mcp-server
+```
+
+and the governance content (prompts, resources, tools) is available without
+the file install. Porting the bash dispatcher to native Windows is
+**demand-gated**: a named Windows adopter who cannot use WSL2 or the MCP
+path reopens it (see `agents/roadmaps/` — road-to-credible-install Phase 3).
 
 ## License
 
 [MIT](LICENSE).
+
+<!-- Official MCP Registry package validation marker -->
+mcp-name: io.github.event4u-app/agent-config

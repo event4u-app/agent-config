@@ -16,6 +16,8 @@ validator_ignore:
     reason: "See-also routes to docs/threat-model.md — the canonical attack-surface doc lives there by design."
 workspaces: [engineering]
 packs: [engineering-base]
+enforced_by:
+  - "none"
 ---
 
 # Security-Sensitive Stop Rule
@@ -100,4 +102,12 @@ Authorization and tenancy bugs are often invisible in logs and fire silently
 until an auditor or attacker finds them. The cheapest moment to catch them
 is before the first edit — this rule makes that the default path.
 
-See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-safe-diff` · `think-before-action` · [`untrusted-input-defense`](untrusted-input-defense.md) · [`lethal-trifecta-guard`](lethal-trifecta-guard.md) · [`docs/threat-model.md`](../../docs/threat-model.md).
+## Enforcement — stated honestly (`enforced_by: none`)
+
+No script can enforce "threat-model before you edit": the obligation is a
+pre-edit reasoning step only the model observes (ADR-135 classifies it HIGH —
+model-carried, honestly uncovered). Adjacent validators (`check_secret_leak`,
+`lint_agent_security`) cover neighbouring surfaces, not this stop — claiming
+them here would inflate coverage, so they are not claimed.
+
+See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-safe-diff` · `think-before-action` · [`untrusted-input-defense`](untrusted-input-defense.md) · [`lethal-trifecta-guard`](lethal-trifecta-guard.md) · [`secret-vcs-guard`](secret-vcs-guard.md) · [`docs/threat-model.md`](../../docs/threat-model.md).

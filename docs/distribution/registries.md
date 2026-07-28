@@ -37,7 +37,7 @@ No bespoke `BREAKING_CHANGES.md` is maintained — the changelog is the authorit
 
 | # | Registry | URL | Submission shape | Status | PR link |
 |---|---|---|---|---|---|
-| 1 | `punkpeye/awesome-mcp-servers` | <https://github.com/punkpeye/awesome-mcp-servers> | One-line entry under the Developer-Tools section + Glama score badge | 🟡 PR open (awaiting maintainer review) | <https://github.com/punkpeye/awesome-mcp-servers/pull/6865> |
+| 1 | `punkpeye/awesome-mcp-servers` | <https://github.com/punkpeye/awesome-mcp-servers> | One-line entry under the Developer-Tools section + Glama score badge | ❌ **PR closed unmerged 2026-06-11** (verified live 2026-07-25 via `gh pr view 6865`; this row previously read "PR open" for six weeks) | <https://github.com/punkpeye/awesome-mcp-servers/pull/6865> |
 | 2 | `mcp.so` | <https://mcp.so/> | Submit via the directory form; same one-line shape | ✅ submitted (maintainer-confirmed 2026-06) | — |
 | 3 | `mcpservers.org` | <https://mcpservers.org/> | Submit via the directory form; same one-line shape (verify URL current at submission time) | ✅ submitted (maintainer-confirmed 2026-06) | — |
 | 4 | `glama.ai` | <https://glama.ai/mcp/servers/event4u-app/agent-config> | Server page live; score badge embedded in the awesome-mcp-servers entry (PR #6865) | ✅ listed (server page + badge return HTTP 200, verified 2026-06-08) | <https://glama.ai/mcp/servers/event4u-app/agent-config> |
@@ -50,37 +50,46 @@ Use this exact text for the awesome-list entry. Adjust the link anchor per direc
 - [event4u/agent-config](https://github.com/event4u-app/agent-config#readme) — Universal AI Agent OS. Audited skills, governance rules, commands, and templates for Claude Code, Cursor, Windsurf, Copilot. Bring your own provider.
 ```
 
-## PR body update — 3.2.0 reality
+## Submission body — ledger-bound, version-agnostic
 
-When the maintainer opens the PR / posts the directory entry, the
-description block carries the concrete reality the 3.2.0 review
-named. Reviewer verbatim quote: *"deutlich mehr vorzuweisen als bei
-jedem vorherigen Erwähnungszeitpunkt."* The numbers below mirror the  <!-- md-language-check: ignore -->
-3.2.0 release notes and the `task adoption:status` snapshot from
-that release; refresh them before posting if a later release has
-shipped.
+Reuse this block in any directory submission or PR description.
+
+It deliberately carries **no artefact counts and no version number.** The block
+this replaced described version 3.2.0 with figures like "4929 tests" and role
+experiences that no longer exist; it sat here for months while the package
+reached 9.7.0, because this file is not scanned by the artefact-count gate
+(it is now — see § Drift guard). A stale number on a public growth surface is
+precisely what this package positions against, so the shape below cannot rot:
+every figure resolves through [`docs/CLAIMS.md`](../CLAIMS.md), and anything you
+add needs a ledger entry or it does not go in.
 
 ```
-event4u/agent-config 3.2.0 ships:
+event4u/agent-config — a governance and content layer for AI coding agents,
+compiled into each host's native format. Bring your own provider: no SaaS, no
+remote sync, and no background daemon (claim: no-runtime-daemon).
 
-- 4929 tests across Python + TypeScript matrix (Linux + macOS).
-- /knowledge cluster — local-only document ingestion via markitdown;
-  per-namespace memory_retrieve with trust scoring.
-- Three role experiences (galabau / content-creator / consultant) +
-  daily workspace browser surface in the modern Preact shell.
-- Cinematic AI-video pipeline (/video:from-script, /video:scene,
-  /video:storyboard, /video:stitch) — provider-agnostic; dry-run
-  default; the package never sees API keys.
-- 9 Iron-Law rules + tier-1/2 routed kernel; ai-council
-  second-opinion loop for high-impact decisions.
+What is different is falsifiability. Every public claim binds to evidence a
+skeptic can reproduce on a fresh checkout, and the runs where the layer changed
+nothing are published too (claim: positioning-honest-nulls). The measured wedge
+is deliberately narrow: on weak or cheap hosts the `essential` tier transplants
+scope and downstream-change discipline at a measured 1.71x corpus cost, and it
+switches itself off on hosts where the effect measured null.
 
-Bring your own provider (Anthropic / OpenAI / Google / Cloudflare).
-No SaaS; no remote sync; npx-quickstart installs in ~3 minutes.
+Start at the proof, not the catalog:
+https://event4u-app.github.io/agent-config/proof/
 ```
 
-Drop this block into the PR description once and reuse it across
-the three registries; it is the "deutlich mehr vorzuweisen" frame
-condensed to a half-screen.
+Before pasting, verify: `task check-claims` is green on `main`, and each
+`claim:` id above still resolves to a `backed` entry. Artefact counts belong in
+the README badges (`update_counts` owns them) — never hand-typed into a listing.
+
+## Drift guard
+
+`docs/distribution/registries.md` is in
+[`check_artefact_count_messaging`](../../src/scripts/check_artefact_count_messaging.ts)
+`SURFACES`, so any artefact count that appears here must match the canonical
+number or CI fails. That is the structural fix for the rot described above:
+the previous block went stale silently because nothing watched this file.
 
 ## Submission checklist
 

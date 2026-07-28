@@ -87,6 +87,50 @@ orchestration telemetry (statically pinned tiers record `"static"`;
 session-tier runs record `"inherit"`) so the evidence gate can score inferred
 routing separately from static pinning.
 
+## Lookup-class rung (L0 — road-to-lean-agent-init, BELOW the tiers)
+
+Before any spawn decision, a lookup-shaped task routes to a **deterministic
+primitive** — no subagent, no tier. Live evidence (2026-07-28): four
+`general-purpose` workers burned ~1.21M tokens on four lookup tasks a
+primitive answers for <1k each.
+
+```
+LOOKUP-SHAPED TASK → DETERMINISTIC PRIMITIVE. NO SUBAGENT SPAWN.
+INDEX-MISS OR GENUINE AMBIGUITY → REGULAR ESCALATION TO A SUBAGENT —
+NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
+```
+
+| Task pattern | Lookup class | Primitive |
+|---|---|---|
+| "where is X defined" / "confirm X's definition location" | `definition` | capped `rg` (definition-shaped patterns, `--max-count`); `code_graph query` only as an opportunistic accelerant when an index is present + fresh + `hooks.code_graph.enabled: true` |
+| "who calls / imports X" / "confirm call sites" | `references` | capped `rg` (reference-shaped patterns); same optional `code_graph affected` accelerant clause |
+| "does string Y exist" / "probe candidate strings" | `string-existence` | FTS one-shot (`memory_lookup` for the knowledge corpus) or capped `rg -n --max-count` for the codebase |
+| "run report Z" / "run check_*" | `report-run` | direct script run, wrapped per the **measured** rtk allowlist (`internal/bench/rtk-savings/RESULTS.md` — wrap only the ~55%-savings class) |
+
+**Why rg-first for definition/references** (council debate 2026-07-28,
+claude-sonnet-4-5 + gpt-4o, 2 rounds): the pre-registered benchmark behind the
+`code-graph-retrieval-null` claim (`docs/CLAIMS.md`) measured native-graph
+recall 0.365 vs grep 0.797 on graph-shaped questions, root cause an **indexing
+gap** (TS arrow-function exports produce no symbol nodes) that hits structured
+lookups exactly as it hits NL retrieval — and the recorded consequence bound
+keeps `code_graph.enabled` false permanently. The accelerant clause is the
+escape hatch that bound names ("unless external evidence appears"); today it
+is inert.
+
+**Escalation, not degradation:** a primitive that returns nothing (index miss,
+pattern too ambiguous, report script absent) — **or an unusable result**
+(empty, ambiguous between candidates, or visibly off-target because the
+lookup pattern matched a task that was not actually a lookup, e.g. a
+dynamically constructed symbol name) — escalates to the regular
+classification path above — the answer quality bar never drops. The
+"primitive ran but the result is unusable" case escalates exactly like the
+"class unknown" case. `unknown` resolves to the regular path (`inherit`
+semantics), never down-guessed.
+
+Correctness floor: the golden comparison in `internal/bench/lean-init/`
+(primitive answer ≡ agent answer on ≥10 lookup tasks, including the four
+observed shapes); any mismatch is a routing bug, not a rounding error.
+
 ## v2+ (deferred, gated on Phase 6 evidence)
 
 LLM-based classification — only if the deterministic rules prove too coarse
@@ -97,8 +141,11 @@ budgeted (consume part of the N=3 autonomous budget) and opt-in. Not in v1.
 
 The deterministic rules are encoded in
 [`src/scripts/_lib/auto_dispatch.ts`](../../../../src/scripts/_lib/auto_dispatch.ts)
-(`classifyTask`), covered by
-[`tests/scripts/_lib_auto_dispatch.test.ts`](../../../../tests/scripts/_lib_auto_dispatch.test.ts).
+(`classifyTask`, `classifyLookup` for the lookup-class rung), covered by
+[`tests/scripts/_lib_auto_dispatch.test.ts`](../../../../tests/scripts/_lib_auto_dispatch.test.ts)
+and the lookup corpus in
+[`src/scripts/_lib/auto_dispatch.corpus.test.ts`](../../../../src/scripts/_lib/auto_dispatch.corpus.test.ts)
+(`LOOKUP_CORPUS` — the four live-observed shapes + negative controls).
 
 ## Related
 

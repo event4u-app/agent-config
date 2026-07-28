@@ -143,7 +143,7 @@ export const STUB_BLOB: ContentBlob = {
   uris: {},
   tool_catalog: {
     schema_version: 1,
-    install_hint_stdio: "pip install agent-config[mcp] && ./agent-config mcp:run",
+    install_hint_stdio: "npx -y @event4u/agent-config mcp-server",
     tools: [],
   },
   manifest: {

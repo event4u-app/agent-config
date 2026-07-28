@@ -8,6 +8,8 @@ triggers:
   - intent: "external API"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/lint_agent_security.ts"
 ---
 
 # Tool Safety
@@ -30,7 +32,7 @@ Tools are permissions, not abilities. Every tool access must be declared and rev
 ## Scoped grants + deny-list (U3, ecosystem harvest 2026-07-13)
 
 - **Prefer scoped-grant syntax over bare tool names** where the host supports
-  it: `Bash(npm test:*)` grants one command family; a bare `Bash` grants a
+  it: `Bash(npm test:*)` / `Bash(pytest:*)` grants one command family; a bare `Bash` grants a
   shell. The narrowest grant that satisfies the task is the Least-Agency
   default.
 - **Optional `disallowed_tools` deny-list** (execution block, schema-backed):
@@ -65,3 +67,4 @@ If a skill needs a tool that is not in the registry:
 - [`lethal-trifecta-guard`](lethal-trifecta-guard.md) — an over-broad tool grant is the standing egress leg of the lethal trifecta (OWASP ASI). Least Agency here breaks that leg by construction.
 - [`supply-chain-intake`](../skills/supply-chain-intake/SKILL.md) — the MCP-server intake gate applies this rule's Least-Agency tool-grant review before a new server is connected.
 - [`untrusted-input-defense`](untrusted-input-defense.md) — the least-agency + human-approval controls (OWASP LLM06 / ASI excessive-agency) that bound an untrusted-content path.
+- [`secret-vcs-guard`](secret-vcs-guard.md) — a raw credential in a shipped file is the "no hidden credentials" violation this rule names; that rule blocks it at write/commit time.

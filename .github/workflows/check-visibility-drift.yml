@@ -6,6 +6,16 @@ name: Visibility Drift Check
 # diffs against `.github/topics.yml` + `.github/about.yml`, fails when
 # drift exists. NEVER mutates the remote.
 #
+# PR carve-out: a PR whose NET diff changes the manifests themselves
+# (`topics.yml` / `about.yml`) is an INTENTIONAL visibility change —
+# remote drift is expected there until a maintainer dispatches
+# `sync-visibility.yml` (dry_run=false) after merge, so the detector
+# runs in advisory mode (prints the pending diff, exits 0) instead of
+# failing the PR. Strict mode still guards every other trigger: the
+# weekly sweep, manual dispatch, and PRs that only touch the sync
+# tooling (those must NOT observe drift — it would mean someone edited
+# the GitHub UI directly).
+#
 # Mutating sync lives in `sync-visibility.yml` (workflow_dispatch only,
 # `administration: write`). Split-by-design per the AI-Council security
 # review of the strategic-visibility roadmap.
@@ -33,6 +43,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read # classify step reads the PR's changed-file list
 
 concurrency:
   group: visibility-drift-${{ github.ref }}
@@ -59,7 +70,32 @@ jobs:
       - name: Lint topics.yml
         run: ./scripts-run src/scripts/lint_topics_yaml
 
-      - name: Detect drift (read-only)
+      - name: Classify PR — intentional manifest change?
+        # NET-diff file list via the API (same rationale as the ADR-051
+        # guard in consistency.yml: no base-fetch race, and a file added
+        # then reverted within the PR does not count).
+        if: github.event_name == 'pull_request'
+        id: classify
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          changed=$(gh pr diff "${{ github.event.pull_request.number }}" --name-only --repo "${{ github.repository }}")
+          if grep -qxE '\.github/(topics|about)\.yml' <<<"$changed"; then
+            echo "manifests_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "manifests_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Detect drift (read-only, strict)
+        if: github.event_name != 'pull_request' || steps.classify.outputs.manifests_changed != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts-run src/scripts/sync_github_metadata --strict
+
+      - name: Detect drift (read-only, advisory — PR changes the manifests)
+        if: github.event_name == 'pull_request' && steps.classify.outputs.manifests_changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./scripts-run src/scripts/sync_github_metadata
+          echo "::notice::This PR intentionally changes the visibility manifests — the diff above is the PENDING change. After merge, a maintainer applies it via sync-visibility.yml (workflow_dispatch, dry_run=false)."

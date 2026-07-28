@@ -138,7 +138,7 @@ analysis output — applies to every `project-analysis-*` specialist
 this skill hands off to:
 
 ```bash
-./scripts-run src/scripts/emit_knowledge_event --type convention_detected \
+npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts --type convention_detected \
     --pattern "<pattern>" --evidence "file:line" --sample-size <N> --scope project
 ```
 

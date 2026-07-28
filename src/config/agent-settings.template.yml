@@ -40,18 +40,25 @@ profile:
 # trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs'
 # artefacts. See docs/decisions/ADR-040 and docs/contracts/capability-packs.md.
 #
-# legacy-all = (DEFAULT, non-breaking) project the full surface, exactly as
-#              5.x did. An `npm update` to 6.0.0 changes nothing here.
-# scoped     = project only the active profile's `packs` unioned with the
-#              runtime.active_packs overlay, expanded over the `requires`
-#              graph. Opt in with `agent-config use --profile=<id>`.
+# scoped     = (DEFAULT for new installs — road-to-credible-install Phase 2,
+#              2026-07-27) project only the active profile's `packs` unioned
+#              with the runtime.active_packs overlay, expanded over the
+#              `requires` graph. With the default `profile.id: developer`
+#              this ships the engineering surface only; the full catalog is
+#              one explicit opt-in away (`legacy-all` below, or
+#              `agent-config use --profile=<id>` / packs overlay).
+# legacy-all = project the full surface, exactly as 5.x did. EXISTING
+#              installs keep their recorded setting on upgrade (this file is
+#              never rewritten by `npm update`); a missing key also still
+#              means legacy-all, so only fresh installs get the scoped
+#              default. See MIGRATION.md for the flip note.
 #
-# Scoping is opt-in by THIS key alone — never inferred from profile.id (every
-# install has `developer` by default). A failed scoped projection restores the
-# full tree. The committed plugin marketplace (.claude-plugin/) and the Augment
-# tree (.augment/) always project the full set in 6.0.0.
+# Scoping is controlled by THIS key alone — never inferred from profile.id.
+# A failed scoped projection restores the full tree. The committed plugin
+# marketplace (.claude-plugin/) and the Augment tree (.augment/) always
+# project the full set.
 projection:
-  mode: legacy-all
+  mode: scoped
   # --- Consumer-scoped RULE projection (road-to-request-scoped-rule-load P1,
   #     opt-in) ---
   # Workspace scope for the RULE layer only (independent of `mode` above,
@@ -213,6 +220,14 @@ personal:
   # true  = briefly share intermediate findings as you go
   # false = silently investigate, only report the conclusion
   play_by_play: false
+
+  # Session canary — the name the agent addresses you with at the start of
+  # every new task (e.g. "Alex"). Like a canary in a coal mine: when the
+  # greeting silently disappears, the context window is degrading and it is
+  # time for a fresh conversation. Also keeps the reply-close markers alive
+  # (ONE end-summary; PR URL as the literal last line).
+  # Empty = feature off. See rules/session-canary.md.
+  canary_name: ""
 
   # Prefix PR comment replies with a bot icon 🤖 (true, false)
   # Personal preference — each developer decides for themselves.
@@ -546,6 +561,39 @@ consistency:
   #        reading of whichever source it happened to read).
   cross_source: "on"
 
+# --- Documentation screenshots ---
+#
+# When the agent creates screenshots for documentation (e.g. generating a docs
+# site) and embeds them, sensitive data visible on the screenshot MUST be
+# anonymized / pixelated before it ships. Consumed by the `doc-screenshot-hygiene`
+# rule and the `screenshot-hygiene` skill. Automated detection is a helper that
+# flags + pre-redacts — never a clearance; the gate for a data-bearing screenshot
+# is human confirmation (routing into `non-destructive-by-default`, since a
+# shipped screenshot is an irreversible published egress).
+screenshots:
+  # Public identity tokens that are SAFE to show unredacted — the maintainer's
+  # OWN public handles (e.g. a username shown in an admin panel) plus well-known
+  # fake-data tokens. This is NOT a general fake-data dictionary and NOT
+  # identity-resolution: everything not on this list is treated as sensitive by
+  # default. A public handle co-located with a real name does NOT whitelist the
+  # real name. Default: [] (nothing auto-allowed; every identity is human-decided).
+  identity_allowlist: []
+
+  # true | false  (default: true)
+  # true  = terminal / CLI / IDE screenshots are FORBIDDEN (highest leak vector:
+  #         absolute local paths, env tokens). Use text code blocks with text
+  #         redaction instead.
+  # false = allowed, but still subject to the data-bearing human gate.
+  forbid_terminal_capture: true
+
+  # on | off  (default: on)
+  # on  = a data-bearing screenshot embed is gated behind this-turn human
+  #       confirmation; uncertain/unresolved regions → redact-or-refuse, never
+  #       ship-and-hope. Illustrative / no-data screenshots (diagrams, logos,
+  #       placeholder-only UI) may embed with a stated justification.
+  # off = no data-bearing gate (legacy; the anonymization taxonomy still applies).
+  data_bearing_gate: "on"
+
 code_style:
   # minimal | full  (default: minimal)
   #
@@ -707,9 +755,12 @@ ai_team:
 
   # Per-day cap on team calls. Team calls count into the EXISTING
   # cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json,
-  # daily UTC reset) — one subscription, one counter, never a parallel
-  # count. This key is the team-side ceiling read against that shared
-  # bucket. 0 = block all team calls; raise if you review heavily.
+  # daily UTC reset) — the counter tracks MACHINE-WIDE spend across ALL
+  # subscriptions/profiles on this machine (an `agent-switch` profile
+  # switch does NOT get its own counter; the bucket is deliberately one
+  # per machine, never parallel counts). This key is the team-side
+  # ceiling read against that shared bucket. 0 = block all team calls;
+  # raise if you review heavily.
   max_calls_per_day: 50
 
   # Suppress the one-line wizard/init recommendation to set up the codex
@@ -882,6 +933,17 @@ memory:
   #   on  = inject the compact index (spotlighted as DATA).
   session_index: "off"
 
+  # session_end learning-sidecar aggregation (road-to-reachable-code-memory
+  # Phase 4). When true, the session_end hook aggregates
+  # agents/memory/intake/*.jsonl through the learning sidecar (30-day decay,
+  # ≥2-origin corroboration) into the gitignored .agent-learning.json +
+  # LESSONS.md and emits the one-line memory-visibility marker. Local-only,
+  # budget-capped (2 s), fail-open; promotion into curated memory stays
+  # human via /memory:propose. SHIPS OFF (council 2026-07-27): the default
+  # flip is proposed only after the 30-day dogfood shows non-trivial signal
+  # AND session-end p95 < 2 s.
+  learn_on_session_end: false
+
 # --- Knowledge cards: global cross-project sharing (ADR-100) ---
 #
 # Structure-grounding v2. Promote *expensive* (remote) knowledge cards from
@@ -1005,6 +1067,25 @@ hooks:
   # this hook is a host-limited convenience layer (pre_tool_use fires on ~2-3
   # hosts). Opt in once you trust the signal-to-noise on your UI.
   design_slop:
+    enabled: false
+
+  # PreToolUse code-graph nudge (ADR-124 Phase 4). Default-OFF. When enabled
+  # AND a native code-graph engine has built a cache (or the repo ships a
+  # graph.json / SCIP index), WARNS once per session (exit 2, never blocks) as
+  # the agent is about to Grep/Glob or Read a source file: query the graph
+  # first for "who calls / where used / impact" questions (or rebuild if the
+  # index is stale, or build one if absent). Source G's strict block-first-read
+  # mode is deliberately un-ported. Build the cache with
+  # `agent-config code-graph build`.
+  #
+  # DEPRECATED (honest null, 2026-07-28): the pre-registered 2-arm retrieval
+  # benchmark measured the native graph at recall 0.365 vs grep 0.797 on
+  # graph-shaped questions across 3 real repos (internal/bench/reports/
+  # code-graph-vs-grep.md; claim code-graph-retrieval-null). `enabled: false`
+  # is permanent; deprecation notice lands at the next major, removal the
+  # major after — unless external evidence (a consumer case the graph answers
+  # and grep cannot) appears first.
+  code_graph:
     enabled: false
 
 # --- Decision engine ---

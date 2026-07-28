@@ -8,7 +8,8 @@
 # Creates tool-specific directories for Claude Code, Cursor, Cline, Windsurf, Gemini.
 #
 # Does NOT render .agent-settings.yml or bridge JSONs — that is the job of
-# scripts/install.py. The primary entry point scripts/install orchestrates both.
+# scripts/install.ts (run via the bundled dist/install/install.mjs). The
+# primary entry point scripts/install orchestrates both.
 # Running this script on its own installs the payload only.
 #
 # Usage:
@@ -50,7 +51,7 @@ SKIP_GITIGNORE=false
 # that require both channels.
 LEGACY_BOTH=false
 # When true, skip payload sync entirely and only install the project-local
-# `./agent-config` wrapper (Step 7 Phase 2). The bridge stage (install.py)
+# `./agent-config` wrapper (Step 7 Phase 2). The bridge stage (install.ts)
 # handles the .agent-settings.yml stub + nested-install guard.
 MINIMAL=false
 # Comma-separated tool IDs (default: all). Set by --tools or the
@@ -91,7 +92,7 @@ parse_args() {
             --skip-gitignore) SKIP_GITIGNORE=true; shift ;;
             --tools)   TOOLS="$2"; shift 2 ;;
             --tools=*) TOOLS="${1#*=}"; shift ;;
-            # --user-type is consumed by install.py (settings persistence).
+            # --user-type is consumed by install.ts (settings persistence).
             # Accepted here so direct `bash scripts/install.sh --user-type=...`
             # invocations from the `install` wrapper / standalone users do not
             # trip the "Unknown argument" guard. Value is intentionally unused
@@ -1171,7 +1172,7 @@ main() {
 
     # Minimal-init short-circuit (Step 7 Phase 2): skip every payload-sync
     # stage and only install the project-local `./agent-config` wrapper.
-    # The bridge stage (install.py) handles the .agent-settings.yml stub
+    # The bridge stage (install.ts) handles the .agent-settings.yml stub
     # + nested-install guard. No .augment/, no AGENTS.md, no symlinks.
     if $MINIMAL; then
         if ! $QUIET; then

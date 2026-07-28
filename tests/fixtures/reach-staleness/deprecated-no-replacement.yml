@@ -1,0 +1,20 @@
+# Negative fixture — rule (b): `lifecycle: deprecated` with no `replacement:`.
+#
+# REFERENCE DATE: --today 2026-07-24. `last_verified` is 14 days before it and
+# there is no `removal_after`, so neither of the other two rules can fire: the
+# single finding this file provokes is the missing migration target.
+schema_version: reach-channels-v1
+
+channels:
+  - id: legacy-feed
+    description: Superseded feed retrieval with no successor declared.
+    tier: zero-config
+    lifecycle: deprecated
+    override_key: reach.channels.legacy-feed.backend
+    last_verified: "2026-07-10"
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--version"]
+        install:
+          default: "os-baseline: a system curl is assumed present"

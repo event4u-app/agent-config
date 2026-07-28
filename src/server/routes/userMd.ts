@@ -27,7 +27,16 @@ import {
     parseUserIdentity,
 } from '../../shared/userMd/utils.js';
 import { writeAtomic } from '../io/atomicWrite.js';
+import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
+
+/**
+ * Shared-write collision message (road-to-reciprocal-ecosystem Phase 2)
+ * — surfaced verbatim in the 409 body the GUI's blocking confirm reads.
+ */
+const SHARED_WRITE_MESSAGE =
+    'This write lands through an agent-switch shared symlink and affects ALL profiles. ' +
+    'Re-send with confirmSharedWrite:true to proceed, or run `agent-switch share off` for profile-local writes.';
 
 export interface UserMdRouteOptions {
     /** Write root — every PUT lands here as `settings/.agent-user.yml`. */
@@ -146,7 +155,7 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
         });
 
         app.put('/api/v1/user-md', async (request, reply) => {
-            const body = (request.body ?? {}) as { identity?: unknown };
+            const body = (request.body ?? {}) as { identity?: unknown; confirmSharedWrite?: unknown };
             const parsed = userIdentitySchema.safeParse(body.identity);
             if (!parsed.success) {
                 await reply.code(422).send({
@@ -182,10 +191,20 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
                         preview: { path: USER_IDENTITY_RELATIVE, identity: parsed.data, body: yamlBody },
                     };
                 }
-                const path = join(opts.writeRoot, USER_IDENTITY_RELATIVE);
-                await fs.mkdir(dirname(path), { recursive: true, mode: 0o700 });
-                await writeAtomic(path, yamlBody, { mode: 0o600 });
-                const stat = await fs.stat(path);
+                const targetPath = join(opts.writeRoot, USER_IDENTITY_RELATIVE);
+                // Shared-write collision gate (road-to-reciprocal-ecosystem
+                // Phase 2) — see settings.ts's PUT handler for the same gate;
+                // kept in lockstep intentionally rather than factored out,
+                // since the two routes' surrounding try/catch shapes differ.
+                const sharedPath = sharedWriteTarget(targetPath);
+                if (sharedPath !== null && body.confirmSharedWrite !== true) {
+                    await reply.code(409).send({ error: 'shared-write', sharedPath, message: SHARED_WRITE_MESSAGE });
+                    return reply;
+                }
+                const writePath = sharedPath !== null ? resolveThroughSymlinks(targetPath) : targetPath;
+                await fs.mkdir(dirname(writePath), { recursive: true, mode: 0o700 });
+                await writeAtomic(writePath, yamlBody, { mode: 0o600 });
+                const stat = await fs.stat(writePath);
                 return { lastModified: Math.trunc(stat.mtimeMs), writtenPaths: [USER_IDENTITY_RELATIVE] };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'atomic write failed';

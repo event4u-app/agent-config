@@ -965,17 +965,25 @@ function _read_rule_packs(): string[] | null {
 }
 
 /**
- * Whether a rule source file projects under the given workspace + pack
- * scopes. Both scopes are independent constraints: when configured, the
- * rule's frontmatter list must intersect (installed workspaces AND
- * installed packs). Kernel always projects; untagged axes fail safe.
+ * Whether a rule source file projects under the given workspace + pack +
+ * role scopes. Each configured scope is an independent constraint: the
+ * rule's frontmatter list must intersect it. Kernel always projects;
+ * untagged axes fail safe.
+ *
+ * `role_scope` is the subagent-role axis (road-to-lean-agent-init Phase 4):
+ * a `roles:` frontmatter list, parallel to `workspaces:`/`packs:`, so a
+ * review-worker subagent's rule projection can be scoped to review-shaped
+ * rules instead of the full set. Additive — the new param defaults to
+ * `null` (no role filtering), so every existing 2- and 3-arg call site
+ * compiles and behaves unchanged.
  */
 export function rule_in_scope(
     source_path: string,
     scope: readonly string[] | null,
     pack_scope: readonly string[] | null = null,
+    role_scope: readonly string[] | null = null,
 ): boolean {
-    if (scope === null && pack_scope === null) {
+    if (scope === null && pack_scope === null && role_scope === null) {
         return true;
     }
     const [meta] = _parse_frontmatter(_readText(source_path));
@@ -994,7 +1002,7 @@ export function rule_in_scope(
         }
         return values.some((v) => configured.includes(v));
     };
-    return axis('workspaces', scope) && axis('packs', pack_scope);
+    return axis('workspaces', scope) && axis('packs', pack_scope) && axis('roles', role_scope);
 }
 
 /** List rule basenames under RULES_SOURCE, workspace/pack scope applied. */

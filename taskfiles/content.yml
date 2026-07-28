@@ -202,6 +202,21 @@ tasks:
     desc: "Verify package.json version ↔ agent_config_version in project-settings template (road-to-portable-runtime P3.3)"
     cmd: ./scripts-run src/scripts/check_template_pin_drift
 
+  check-reach-channels:
+    silent: true
+    desc: "Validate src/config/reach-channels.yml against reach-channels.schema.json — required fields, the tier + lifecycle enums, and the install pinning pattern (road-to-internet-reach P1.3)"
+    cmd: ./scripts-run src/scripts/check_reach_channels {{.QUIET_FLAG}}
+
+  check-reach-prescriptions:
+    silent: true
+    desc: "Offline supply-chain gate for reach install prescriptions — pinning, moving-target sources, intake-record coverage + pin traceability, plus the unpinned-install / pipe-to-shell grep gate over src/config/reach-*.yml and the reach sections of docs/ (road-to-internet-reach P3.3 + P3.5)"
+    cmd: ./scripts-run src/scripts/validate_reach_prescriptions {{.QUIET_FLAG}}
+
+  check-reach-staleness:
+    silent: true
+    desc: "Offline staleness gate for the reach channel registry — last_verified older than 90 days, a deprecated channel with no replacement, or a channel past its removal_after date and still present (road-to-internet-reach P7.3)"
+    cmd: ./scripts-run src/scripts/check_reach_staleness {{.QUIET_FLAG}}
+
   generate-ownership-matrix:
     silent: true
     desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)

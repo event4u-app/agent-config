@@ -17,6 +17,38 @@ and holds no user data. Threats are about **artifact integrity** and
 | e | **Malicious metadata / frontmatter injection** — a PR embeds hostile YAML in a skill's frontmatter (e.g. injecting a trigger keyword that causes a dangerous skill to fire in unintended contexts, or adding `permissionMode: bypassPermissions`) | PR contributor adds `permissionMode: bypassPermissions` or a wildcard `allowed_tools: ["*"]` entry to an existing skill's frontmatter; or crafts a trigger keyword to hijack routing | `lint_skill_frontmatter_safety.py` — HIGH-severity block on `bypassPermissions`, wildcard `allowed_tools`, unsafe `execution.type: automated` without safety floor; `lint_hidden_unicode.py` — catches invisible chars inside frontmatter YAML values; PR review gate; `scripts/validate_frontmatter.py` schema validation | Schema validation does not verify trigger-keyword semantic safety (a plausible keyword that causes over-broad firing is not caught) | Extend `validate_frontmatter.py` to flag trigger keywords that match security-sensitive path prefixes (e.g. a skill triggering on `"auth"` when it has `execution.type: automated`) |
 | f | **Skill self-update — safety-floor rewrite** — an agent is social-engineered (via chat or a PR) into weakening a kernel rule, safety floor, or MCP/tool allowlist | A PR removes the Iron Law block from `non-destructive-by-default.md`; or a chat prompt instructs the agent to edit `security-sensitive-stop.md` to narrow its self-modification clause; or a PR modifies `scope-control` to remove the Hard Floor | `src/rules/security-sensitive-stop.md` — "self-modification via chat" clause: requests to weaken safety floors / kernel rules / MCP allowlists must route through `scope-control` gates; `src/rules/scope-control.md` — kernel-rule edits require own PR + ≥ 24 h soak; `dist/agent-src/` is read-only (source-of-truth rule); `scripts/check_condensation.py` detects Iron-Law section deletion or downgrade | No automated per-rule diff check that fires specifically when a kernel rule's Iron Law section is removed; relies on PR reviewer recognising the file class | Add a CI check (`scripts/check_kernel_rule_integrity.py` — P3+) that asserts Iron Law fenced-code blocks survive unchanged in all files listed in `docs/contracts/kernel-membership.md` |
 | g | **Subprocess spawn-env inheritance** — AC's own transport spawns an external CLI (the AI-council provider CLIs; consumer-runtime hooks spawn `git`) with the full parent `process.env`, so an attacker-influenced env var in the parent becomes RCE when the child (or a `git` it invokes internally) runs | A poisoned `GIT_EXTERNAL_DIFF` / `core.pager` / `GIT_SSH_COMMAND`, the `GIT_CONFIG_COUNT`/`_KEY_<n>`/`_VALUE_<n>` config-injection trio (sets `core.fsmonitor` → shell on every `git status`), a dynamic-loader `LD_PRELOAD` / `DYLD_INSERT_LIBRARIES` / `GCONV_PATH`, `GIT_ALTERNATE_OBJECT_DIRECTORIES` / `HOSTALIASES`, or a runtime hook `NODE_OPTIONS` / `BASH_ENV` / `PYTHONSTARTUP` present in the parent env executes attacker code inside the spawned process (CWE-426, CWE-88, CWE-427) | `src/scripts/_lib/spawn_env.ts::hardenedSpawnEnv()` scrubs the code-execution-injection env families (deny-by-family: loader `LD_*`/`DYLD_*`/`GCONV_PATH`, git `*_COMMAND` + the whole `GIT_CONFIG`/`GIT_CONFIG_*` family + `GIT_ALTERNATE_OBJECT_DIRECTORIES`/`HOSTALIASES`/`GIT_EXTERNAL_DIFF`/`GIT_SSH_COMMAND`/`GIT_PAGER`/`PAGER`, runtime hooks `NODE_OPTIONS`/`BASH_ENV`/`ENV`/`PYTHON*`/`PERL5*`/`RUBYOPT`, `IFS`) and preserves the rest; wired into ALL consumer-runtime spawns — `clients.ts::_runSubprocess`, `hooks/dispatch_hook.ts`, `roadmap_progress_hook.ts`, `hot_context_hook.ts`; falsifiable regression test in `tests/scripts/ai_council/spawn_env.test.ts` (ADR-123 + 2026-07-21 follow-up) | — (consumer-runtime surface fully hardened; maintainer/CI/install sites are env-controlled, not attacker-influenced) | Spawn sites classified in `docs/spawn-site-policy.md` (Consumer Runtime MUST harden / Maintainer / CI / install exempt with rationale); the deferred lint was rejected — the policy doc is the self-enforcing substitute |
+| h | **Secret committed to version control** (CWE-798) — a credential (API key, token, private key, DB password) is written into a tracked file and committed/pushed, leaking it into history, clones, forks, and public scrapers; `git rm` does not un-leak it | An agent (or developer) pastes or generates a real credential into source, `.env`, config, or a fixture and commits it; once pushed to a public remote it is scraped within minutes | `src/rules/secret-vcs-guard.md` (agent-side write/commit-time block → ask → tiered alternative → rotate-first, VCS-agnostic); `src/scripts/_lib/secret_detector.ts` (regex rule pack + Shannon entropy + keyword detector); `src/scripts/check_secret_leak.ts` wired into `task ci` / `ci-strict` as the diff-scoped, non-bypassable CI net; `src/agent-src/templates/github-workflows/secret-scan.yml` (gitleaks) consumer template | The agent-side gate covers only what the agent writes and is one layer; developer-side / GUI commits need the CI net or host push-protection, which the consumer must enable | Ship + document the `secret-scan.yml` template; recommend enabling GitHub Secret Scanning + Push Protection; the optional TruffleHog step adds live-credential verification. Canonical reference: `secret-vcs-guard.md` + `skill:secrets-management` — do not re-describe here |
+
+## Kernel immutability — the three-layer stack (row f, completed 2026-07-27)
+
+Row f's surface (safety-floor / kernel-rule rewrite) is now held by three
+INDEPENDENT layers — three different failure modes have to be beaten
+together, not one:
+
+1. **Layer 1 — tool-call-time deny (pre-write).** The `PreToolUse` hook
+   `src/scripts/hooks/block_kernel_rule_writes.ts` (registered
+   `fail_closed: true`, red/green-tested) denies Write/Edit tool calls
+   whose target is a kernel rule file — matched via the single-sourced
+   list in `src/scripts/_lib/kernel_rules.ts`, in the source tree and in
+   projections. Hook-capable hosts only (see
+   `docs/enforcement-by-host.md`).
+2. **Layer 2 — projected immutability statement (instruction-time).** The
+   consumer projection states the rule set's immutability explicitly
+   (consumer `AGENTS.md` template: kernel rules are immutable, never
+   propose an edit, tighten-only via the override exception registry) —
+   the model-cooperative layer that reaches every host, including
+   static-only ones.
+3. **Layer 3 — post-write SHA comparison (after the fact).** Already
+   shipped: condensation hashes + the kernel-bundle check
+   (`check_kernel_rule_bundle`) + the one-kernel-rule-per-PR soak gate
+   fail the build when a kernel rule changed outside the sanctioned flow.
+
+**Residual risk (stated, not papered over):** a technically valid change
+inside a WRITABLE surface — a non-kernel rule, a skill, an override file
+whose `extend` prose subverts intent — is caught by none of the three
+layers; provenance (git history, provenance stamps) makes such a change
+auditable, not preventable. Layer 1 also does not bind on hosts without a
+hook API, where Layer 2's prose and Layer 3's CI are the remaining two.
 
 ## Review cadence
 

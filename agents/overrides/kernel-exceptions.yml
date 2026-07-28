@@ -1,0 +1,19 @@
+# Registered exceptions — overrides on kernel / safety-floor rules.
+#
+# The non-overridable class (src/agent-src/contexts/override-system.md) refuses a
+# `replace` on a kernel or safety-floor rule outright. An `extend` — a TIGHTENING
+# — is allowed, but only when it is registered here, so that a reviewer can tell
+# an intentional narrowing from an accident without reading the override itself.
+#
+# Checked by: src/scripts/lint_override_kernel_guard.ts
+schema_version: 1
+
+exceptions:
+  - rule: verify-before-complete
+    mode: extend
+    justification: >-
+      This package ships a browser UI (the wizard and settings panels served by
+      `agent-config setup`). Unit and CLI e2e tests cannot prove that what the
+      user sees matches the promise, so the override adds a mandatory Playwright
+      step for UI-affecting changes. It only tightens the rule.
+    approved_by: maintainer

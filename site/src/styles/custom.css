@@ -1,0 +1,55 @@
+/* agent-config docs — event4u orange accents over the rapide theme.
+   Mirrors the sibling data-helpers site for a shared visual identity. */
+
+:root {
+  --sl-color-accent: #c74624;
+  --sl-color-accent-high: #a33a1d;
+  --sl-color-accent-low: #e85a32;
+}
+
+/* Dark mode — lighter orange for contrast on dark backgrounds. */
+:root[data-theme='dark'] {
+  --sl-color-accent: #ff7a50;
+  --sl-color-accent-high: #ff9470;
+  --sl-color-accent-low: #e85a32;
+}
+
+/* Splash hero action buttons — orange border on a dark fill. */
+.hero .actions a[data-variant='primary'],
+.hero .actions a.primary,
+.sl-flex.actions a {
+  background-color: #3e1e1b !important;
+  border: 2px solid var(--sl-color-accent) !important;
+  color: white !important;
+}
+
+.hero .actions a[data-variant='primary']:hover,
+.hero .actions a.primary:hover,
+.sl-flex.actions a:hover {
+  background-color: var(--sl-color-accent) !important;
+  border-color: var(--sl-color-accent) !important;
+}
+
+/* Banner in the splash hero. */
+.hero img[alt*='agent-config'],
+.hero img[alt*='Agent Config'] {
+  border-radius: 8px;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Code blocks. */
+pre {
+  border-radius: 0.5rem;
+}
+
+/* Tables read as one system. */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background-color: var(--sl-color-gray-6);
+  font-weight: 600;
+}

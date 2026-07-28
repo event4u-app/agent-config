@@ -1,0 +1,37 @@
+# CONTROL fixture — must PASS validate_reach_prescriptions.
+#
+# Without a passing control, four red fixtures prove only that the validator
+# can say "no"; they cannot distinguish a working gate from one that rejects
+# everything. Every field here mirrors the real registry's shape: a pinned
+# external install whose backend IS in the intake record (`gh`, 2.96.0), and a
+# declared OS baseline (`curl`) that carries no pin on purpose.
+schema_version: reach-channels-v1
+
+channels:
+  - id: github
+    description: Repository metadata from the GitHub API (control fixture).
+    tier: free-key
+    lifecycle: stable
+    override_key: reach.channels.github.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: gh
+        probe_cmd: gh
+        probe_args: ["--version"]
+        install:
+          darwin: asdf plugin add github-cli && asdf install github-cli 2.96.0
+          win32: winget install --id GitHub.cli --version 2.96.0
+          default: asdf plugin add github-cli && asdf install github-cli 2.96.0
+
+  - id: web-read
+    description: Single public web page fetch (control fixture).
+    tier: zero-config
+    lifecycle: stable
+    override_key: reach.channels.web-read.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: curl
+        probe_cmd: curl
+        probe_args: ["--version"]
+        install:
+          default: "os-baseline: a system curl is assumed present; if absent, take it from the platform package manager"

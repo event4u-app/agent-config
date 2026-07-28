@@ -54,6 +54,65 @@ describe('createApp', () => {
         expect(body).toMatchObject({ ok: true, projectRoot: '/tmp/fake-project' });
     });
 
+    it('advertises the configRoot capability in the ping readout', async () => {
+        const res = await app.inject({
+            method: 'GET',
+            url: '/api/v1/ping',
+            headers: { host: HOST, authorization: `Bearer ${TOKEN}` },
+        });
+        expect(res.statusCode).toBe(200);
+        expect(res.json()).toMatchObject({ capabilities: { configRoot: true } });
+    });
+
+    it('reports agentSwitchProfile.active=false by default (road-to-reciprocal-ecosystem Phase 2)', async () => {
+        // Clear + restore explicitly rather than trusting an ambient shell —
+        // a machine that also runs agent-switch may have these set for real.
+        const saved = {
+            AGENT_SWITCH_HOME: process.env.AGENT_SWITCH_HOME,
+            CLAUDE_CONFIG_DIR: process.env.CLAUDE_CONFIG_DIR,
+            CODEX_HOME: process.env.CODEX_HOME,
+        };
+        delete process.env.AGENT_SWITCH_HOME;
+        delete process.env.CLAUDE_CONFIG_DIR;
+        delete process.env.CODEX_HOME;
+        try {
+            const res = await app.inject({
+                method: 'GET',
+                url: '/api/v1/ping',
+                headers: { host: HOST, authorization: `Bearer ${TOKEN}` },
+            });
+            expect(res.statusCode).toBe(200);
+            expect(res.json()).toMatchObject({ agentSwitchProfile: { active: false, provider: null, profile: null } });
+        } finally {
+            for (const [key, value] of Object.entries(saved)) {
+                if (value === undefined) delete process.env[key];
+                else process.env[key] = value;
+            }
+        }
+    });
+
+    it('reports the active agent-switch profile when CLAUDE_CONFIG_DIR points inside .agent-switch', async () => {
+        const savedAgentSwitchHome = process.env.AGENT_SWITCH_HOME;
+        const savedClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
+        const root = join(tmpdir(), 'app-test-agent-switch-root');
+        process.env.AGENT_SWITCH_HOME = root;
+        process.env.CLAUDE_CONFIG_DIR = join(root, 'claude', 'work', 'config');
+        try {
+            const res = await app.inject({
+                method: 'GET',
+                url: '/api/v1/ping',
+                headers: { host: HOST, authorization: `Bearer ${TOKEN}` },
+            });
+            expect(res.statusCode).toBe(200);
+            expect(res.json()).toMatchObject({ agentSwitchProfile: { active: true, provider: 'claude', profile: 'work' } });
+        } finally {
+            if (savedAgentSwitchHome === undefined) delete process.env.AGENT_SWITCH_HOME;
+            else process.env.AGENT_SWITCH_HOME = savedAgentSwitchHome;
+            if (savedClaudeConfigDir === undefined) delete process.env.CLAUDE_CONFIG_DIR;
+            else process.env.CLAUDE_CONFIG_DIR = savedClaudeConfigDir;
+        }
+    });
+
     it('accepts the token via ?token= query param', async () => {
         const res = await app.inject({
             method: 'GET',

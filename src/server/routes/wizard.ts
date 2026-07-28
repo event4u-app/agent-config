@@ -30,8 +30,11 @@ import { composeUserIdentity } from '../../shared/userMd/utils.js';
 import { mergeIntoTemplate, parseYaml, replaceScalar } from '../io/yamlIO.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
-import { detectInstalledTools, isBinaryOnPath, knownToolIds } from '../../install/toolDetection.js';
+import { detectInstalledTools, knownToolIds } from '../../install/toolDetection.js';
+import { detectRtk, rtkInstallCommands, RTK_UPSTREAM_REPO } from '../../install/rtkDetection.js';
 import { readSelectedTools, readSelectedPacks, writeSelectedTools } from '../../install/selectedTools.js';
+import { detectAgentSwitch, AGENT_SWITCH_INSTALL_COMMAND, AGENT_SWITCH_REPO } from '../../install/agentSwitchDetection.js';
+import { readDismissedRecommendations, dismissRecommendation } from '../../install/wizardDismissals.js';
 
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
@@ -626,6 +629,14 @@ const aiCouncilPayloadSchema = z.object({
     decision: z.record(z.enum(['agent', 'council', 'user'])).optional(),
 }).strict();
 
+// road-to-reciprocal-ecosystem § Phase 1 — the closed set of dismissible
+// passive-row recommendations. `agent-switch` is the only member today;
+// widen the enum (never a bare `z.string()`) when a second passive
+// recommendation ships.
+const dismissRecommendationPayloadSchema = z.object({
+    id: z.enum(['agent-switch']),
+}).strict();
+
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
     const extended = opts.extendedSteps === true;
     const totalSteps = opts.totalSteps ?? (extended ? EXTENDED_TOTAL_STEPS : DEFAULT_TOTAL_STEPS);
@@ -702,34 +713,69 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             };
         });
 
-        // road-to-wizard-ux-improvements § Phase 7 — rtk presence on the
-        // Editor-and-tooling step. Detection is the ONLY source of truth (the
-        // value is never loaded from `.agent-settings.yml`). When rtk is
-        // missing, return the suggested per-OS install command + repo so the
-        // UI can offer a copy-and-run button (we surface the command rather
-        // than shelling out an unverified package install — non-destructive
-        // by default). Read-only; extended-mode only.
-        app.get('/api/v1/wizard/detect-rtk', async (_request, reply) => {
-            if (!extended) {
-                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
-                return reply;
-            }
-            const installed = isBinaryOnPath('rtk');
-            // Per-OS install hint (maintainer-tunable). `cargo install --git`
-            // is the portable fallback for the Rust tool when no packaged
-            // formula is known.
-            const repo = 'https://github.com/event4u-app/rtk';
-            const installCommandByOs: Record<string, string> = {
-                darwin: 'brew install rtk',
-                linux: `cargo install --git ${repo}`,
-                win32: `cargo install --git ${repo}`,
-            };
+        // road-to-rtk-onboarding-correctness — rtk presence + identity on the
+        // identity step. Detection is the ONLY source of truth (the value is
+        // never loaded from `.agent-settings.yml`), and it is a two-stage
+        // probe: PATH presence AND an `rtk gain` output-signature identity
+        // check — the binary name collides with the unrelated Rust Type Kit,
+        // so presence alone is not an answer. When rtk is missing, return the
+        // per-OS install command from verified upstream paths so the UI can
+        // offer a copy-and-run button (we surface the command rather than
+        // shelling out an unverified package install — non-destructive by
+        // default). Read-only; available in BOTH wizard modes (council
+        // 2026-07-28: the recommendation is dead weight when only extended
+        // runs ever see it).
+        app.get('/api/v1/wizard/detect-rtk', async () => {
+            const detection = detectRtk();
+            // Legacy `installed` field: true ONLY for a verified Rust Token
+            // Killer — a colliding binary is never reported as installed.
+            const installed = detection.present && detection.identity === 'token-killer';
+            const commands = rtkInstallCommands(process.platform);
             return {
                 installed,
+                present: detection.present,
+                identity: detection.identity ?? null,
+                version: detection.version ?? null,
                 platform: process.platform,
-                repo,
-                installCommand: installed ? null : (installCommandByOs[process.platform] ?? `cargo install --git ${repo}`),
+                repo: RTK_UPSTREAM_REPO,
+                installCommand: detection.present ? null : commands.recommended,
+                installCommands: detection.present ? null : commands,
             };
+        });
+
+        // road-to-reciprocal-ecosystem § Phase 1 — agent-switch passive-row
+        // recommendation (S0.1 honest-null council verdict, 2026-07-28: a
+        // PASSIVE ROW ONLY, never a proactive card). Exactly two states —
+        // not installed → recommend the (single, OS-independent) install
+        // command; installed (binary on PATH OR the `~/.agent-switch/`
+        // directory) → the row disappears. No outdated state is ever
+        // reported — detection does not probe version currency — and the
+        // AC never auto-installs; the command is surfaced for copy only,
+        // the same stance as rtk above. Read-only; available in BOTH
+        // wizard modes, same reasoning as detect-rtk.
+        app.get('/api/v1/wizard/detect-agent-switch', async () => {
+            const detection = detectAgentSwitch();
+            return {
+                installed: detection.installed,
+                version: detection.version,
+                installCommand: detection.installed ? null : AGENT_SWITCH_INSTALL_COMMAND,
+                repo: AGENT_SWITCH_REPO,
+                dismissed: readDismissedRecommendations().includes('agent-switch'),
+            };
+        });
+
+        // Permanent dismissal for a passive-row recommendation — see
+        // `wizardDismissals.ts`: there is no un-dismiss, by design.
+        app.post('/api/v1/wizard/dismiss-recommendation', async (request, reply) => {
+            const parsed = dismissRecommendationPayloadSchema.safeParse(request.body ?? {});
+            if (!parsed.success) {
+                await reply.code(422).send({
+                    error: { code: 'VALIDATION', message: 'invalid dismiss-recommendation payload', fields: zodIssuesToFields(parsed.error.issues) },
+                });
+                return reply;
+            }
+            dismissRecommendation(parsed.data.id);
+            return { ok: true, dismissed: readDismissedRecommendations() };
         });
 
         // road-to-wizard-ux-improvements § Phase 8 — AI Council config.

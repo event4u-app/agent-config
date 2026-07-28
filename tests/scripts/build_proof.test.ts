@@ -10,7 +10,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { render, OUT_REL } from '../../src/scripts/build_proof.js';
+import { render, OUT_REL, PREVENTED_FAILURES, renderPreventedFailures } from '../../src/scripts/build_proof.js';
+import { load_ledger } from '../../src/scripts/check_claims.js';
 
 const REPO_ROOT = join(fileURLToPath(import.meta.url), '..', '..', '..');
 
@@ -43,5 +44,39 @@ describe('build_proof — render()', () => {
     it('the committed docs/proof.md is in sync (drift guard)', () => {
         const committed = readFileSync(join(REPO_ROOT, OUT_REL), 'utf8');
         expect(committed).toBe(render());
+    });
+});
+
+describe('build_proof — the prevented-failure table may not outlive its evidence', () => {
+    it('renders a row per declared failure mode', () => {
+        const out = renderPreventedFailures(load_ledger());
+        expect(out).toContain('## What this prevents');
+        for (const row of PREVENTED_FAILURES) {
+            expect(out).toContain(`[\`${row.backs}\`](CLAIMS.md)`);
+        }
+    });
+
+    it('every declared row cites a claim that is actually backed today', () => {
+        const ledger = load_ledger();
+        for (const row of PREVENTED_FAILURES) {
+            expect(ledger.get(row.backs)?.status, `row cites ${row.backs}`).toBe('backed');
+        }
+    });
+
+    it('THROWS when a cited claim has no ledger entry — the anti-marketing gate', () => {
+        // The failure this table exists to avoid: a cell whose number resolves
+        // nowhere. If a claim is renamed or dropped, generation must break
+        // rather than silently ship a stale row.
+        const ledger = load_ledger();
+        ledger.delete(PREVENTED_FAILURES[0]!.backs);
+        expect(() => renderPreventedFailures(ledger)).toThrow(/no ledger entry/);
+    });
+
+    it('THROWS when a cited claim is downgraded to unbacked', () => {
+        const ledger = load_ledger();
+        const id = PREVENTED_FAILURES[0]!.backs;
+        const entry = ledger.get(id)!;
+        ledger.set(id, { ...entry, status: 'unbacked' });
+        expect(() => renderPreventedFailures(ledger)).toThrow(/not 'backed'/);
     });
 });

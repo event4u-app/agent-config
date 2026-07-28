@@ -48,7 +48,12 @@ from inflated metrics.
 
 - [x] Proof surface + CLAIMS ledger + honest-null benchmark live.
 - [x] 8.0.0 distribution scaffolding merged (site, GIF, fleet, awesome draft).
-- [ ] A single-install wedge artifact (this roadmap, Phase 1).
+- [x] A single-install wedge artifact (this roadmap, Phase 1).
+      <!-- met 2026-07-25: verified live, not inherited from the Phase-1 [x] —
+      docs/wedge/production-validator/{README.md,production-validator.md,
+      first-run-check.sh} present, the one-command curl install is in README
+      §quickstart, and tests/scripts/subagent_distribution.test.ts (byte-equality
+      + wedge-only invariants) is 5/5 green this run. -->
 
 ## Phase 0 — Quick wins already verified missing (autonomous, hours not weeks)
 
@@ -67,7 +72,7 @@ nothing downstream. All verified open on 2026-07-08.
       GitHub About (`.github/about.yml` homepage → deliberately event4u.app, a
       branding call) + the Glama listing description are DEFERRED — maintainer
       positioning/external. Item stays open until those land. -->
-- [ ] **README aha-moment pass (maintainer's own standing ask):** restructure
+- [x] **README aha-moment pass (maintainer's own standing ask):** restructure
       the README opening to lead with the felt value + the 30-second install,
       before the governance/proof framing — WITHOUT introducing any number
       that lacks a CLAIMS pointer. The proof identity stays; it moves from
@@ -78,6 +83,21 @@ nothing downstream. All verified open on 2026-07-08.
       number (check-claims green), honest-provenance note intact. A deeper
       destructive restructure of the maintainer's proof-identity lede is a
       voice/positioning call left to the maintainer, so this stays open. -->
+      <!-- done 2026-07-25: the DESTRUCTIVE restructure the 2026-07-09 pass deferred
+      is now landed — the opening body was reordered, not just appended to. New order
+      after the H1 + CI badges: (1) the 30-second wedge teaser, (2) the proof-demo GIF,
+      (3) the "every claim machine-checked" line as SUBSTANTIATION, (4) the profile
+      picker, (5) the artefact-count badges last. The catalog no longer leads.
+      Verified: numeral multiset byte-identical before/after (no number added or
+      removed, so no unbacked number can have been introduced), honest-provenance note
+      intact, check-claims + update_counts --check + both count-messaging gates +
+      check-refs + check-md-language + build-proof-check all green, and the
+      lint-positioning verdict is byte-identical to the pre-edit one (no new drift).
+      BOUNDARY, stated rather than glossed: the H1 still leads with the proof framing.
+      It is the canonical positioning anchor that lint_positioning binds to
+      package.json + .github/about.yml, both of which are ALREADY drifted from it
+      (pre-existing red, unrelated to this roadmap) — rewriting it is a branding
+      decision plus that debt, so it stays the maintainer's call. -->
 - [x] **Release-notes discoverability:** verify the site's proof/benchmark
       pages are linked from the README claims section (one hop from "every
       claim machine-checked" to the evidence).
@@ -138,6 +158,27 @@ first-run success signal.
       <!-- BLOCKED 2026-07-20: outward-facing submissions are a Hard-Floor
       action (submit/post) — maintainer executes; listing texts can reuse the
       launch-story canonical body + CLAIMS verbatim. -->
+      <!-- GROUNDWORK DONE 2026-07-25 (the submission itself stays Hard-Floor):
+      the listing text the maintainer would paste was in violation of this very
+      step's "claims match CLAIMS verbatim" clause. docs/distribution/registries.md
+      carried a "PR body update — 3.2.0 reality" block describing version 3.2.0
+      with figures like "4929 tests" and role experiences that no longer exist,
+      while the package is at 9.7.0 — unresolvable numbers on a public growth
+      surface. Replaced with a ledger-bound, version-agnostic body carrying NO
+      artefact count and NO version (claims: no-runtime-daemon,
+      positioning-honest-nulls, and the measured 1.71x corpus cost). Note: the
+      roadmap prose elsewhere says "1.71-3.3x" — only 1.71x is ledger-backed, so
+      3.3x was deliberately NOT propagated; the launch story already had this right.
+      Also corrected: the status table claimed awesome-mcp-servers PR #6865 was
+      "PR open" — verified live, it was CLOSED UNMERGED on 2026-06-11, so that
+      entry is NOT live. Structural fix so this cannot rot again:
+      docs/distribution/registries.md added to check_artefact_count_messaging
+      SURFACES, proven to bite (a planted "264 skills" fails with file:line).
+      HONEST READ on this step's exit criterion: mcp.so + mcpservers.org +
+      glama.ai are listed, but those are MCP-server directories; the CATEGORY
+      surfaces this step names (where the competitors appear) remain unsubmitted,
+      so ">= 3 category directories" is NOT met. Only the Hard-Floor submission
+      remains agent-blocked. -->
 - [ ] Publish ONE launch story built entirely on reproducible artifacts: the
       cost-factor sweep (11.7× → 1.71–3.3×, auto-off on null hosts) with the
       "verify it yourself on a fresh checkout" block. The hook is the honesty,
@@ -225,6 +266,25 @@ recorded decision to keep the wedge standalone).
 - Any telemetry is opt-in, default-off, aggregate — adoption instrumentation
   does not contradict the no-runtime / privacy posture.
 - The positioning claims are themselves falsifiable, not superlatives.
+
+> **Exhibit inputs (2026-07-27, from sibling roadmaps).** Two filed
+> adoption exhibits await Phase-2/launch use:
+> `agents/evidence/reports/coworker-capability-audit.md` (honest
+> eight-capability table on an external category rubric — six N/A/No
+> rows, two Strong; the concession IS the positioning artifact) and
+> `agents/evidence/reports/what-you-get-adoption-input.md`
+> (prevented-failure-mode rows, every cell ledger-backed).
+
+> **Funnel-lesson input (2026-07-27, from
+> `archive/road-to-persona-catalog-disposition.md`).** The persona-catalog intake's
+> top non-technical lesson: a contribution funnel (issue-form intake →
+> originality gate → external-PR stream) drove Source R's external
+> contribution volume (headline figure unverified — directional, not
+> evidence). The GATE half is already shipped here (`lint_originality.ts` +
+> committed `agents/reports/originality.*`); the FUNNEL half — a contributor
+> intake path that routes submissions through that gate — is adoption work
+> and is owned by this roadmap: a candidate Phase-2/Phase-4 lever once
+> external interest materializes. No new mechanism before then.
 
 > **Status (2026-07-20).** Second autonomous slice landed: Phase 1 is done
 > except the B9 human session (wedge verified shipping + lock-test green;

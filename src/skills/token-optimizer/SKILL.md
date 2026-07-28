@@ -50,7 +50,7 @@ INTENT
 │     → cite [cli-output-handling](../../rules/cli-output-handling.md)
 │       (Iron Law: redirect / tail / grep / wrap)
 │     → cite [rtk-output-filtering](../rtk-output-filtering/SKILL.md)
-│       (rtk wrapper, 60-90% savings on tests/linters/git)
+│       (rtk wrapper — upstream reports 60-90% on tests/linters/git)
 │
 ├── Large document or paste (PDF, DOCX, HTML, transcript)
 │     → cite markitdown (upstream: https://github.com/microsoft/markitdown)
@@ -61,7 +61,7 @@ INTENT
 │       (batch, parallelize, prune; one tool call > many)
 │
 ├── Near context limit, work not finished
-│     → cite [agent-handoff](../../../.claude/skills/agent-handoff/SKILL.md)
+│     → cite [agent-handoff](../../domains/meta/agent-handoff/command.md)
 │       (structured handoff envelope; resume in fresh chat)
 │
 ├── Cost-aware decision (model pick, budget, stop-criterion)
@@ -82,7 +82,7 @@ INTENT
 | `cli-output-handling` | `.agent-src.uncondensed/rules/cli-output-handling.md` | `verbose`, `tail`, `grep`, `CLI` | Wrap-tail-grep contract for any verbose command |
 | `rtk-output-filtering` | `.agent-src.uncondensed/skills/rtk-output-filtering/SKILL.md` | `rtk`, `verbose`, `filter`, `wrap` | Project-local rtk filters; wrapper command |
 | `token-efficiency` | `.agent-src.uncondensed/rules/token-efficiency.md` | `redirect`, `verbose`, `concise`, `tool` | Batch + parallelize tool calls; brevity floor |
-| `agent-handoff` | `.claude/skills/agent-handoff/SKILL.md` | `handoff`, `fresh`, `chat`, `context` | Context envelope for fresh-chat continuation |
+| `agent-handoff` | `src/domains/meta/agent-handoff/command.md` | `handoff`, `fresh`, `chat`, `context` | Context envelope for fresh-chat continuation |
 | `direct-answers` | `.agent-src.uncondensed/rules/direct-answers.md` | `brevity`, `flattery`, `severity`, `tiered` | Iron-Law brevity floor (kernel) |
 | `markitdown` | upstream: github.com/microsoft/markitdown | `PDF`, `DOCX`, `HTML`, `convert` | Document → markdown converter (authoritative-link only) |
 | `/cost:report` | TBD — an internal roadmap (local-only) § P1.2` | `cost`, `model spend`, `budget` | Per-session cost telemetry (planned) |

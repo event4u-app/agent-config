@@ -130,6 +130,7 @@ __pycache__/
 # triggers.json is tracked, last-run.json is per-run output)
 .agent-src.uncondensed/skills/*/evals/last-run.json
 dist/agent-src/skills/*/evals/last-run.json
+src/skills/*/evals/last-run.json
 # Live trigger-eval outputs — timestamped JSON per run, not committed.
 internal/evals/results/
 
@@ -288,6 +289,7 @@ agents/runtime/council/sessions/
 /site/src/content/docs/benchmark.md
 /site/src/content/docs/claims.md
 /site/src/content/docs/catalog.md
+/site/src/content/docs/works-with-agent-switch.md
 # Media assets copied from docs/media/ by sync-docs.mjs (source lives in docs/media/).
 /site/public/media/
 # Field replay corpora await operator privacy review before any commit
@@ -299,3 +301,6 @@ internal/bench/corpora/*.local.yaml
 /agents/memory/.agent-learning.json
 /agents/memory/LESSONS.md
 /fleet.yaml
+
+# scale-history bench artifacts are LLM-generated untrusted output — never committed (PR #1016 review)
+/internal/bench/scale-history/artifacts/

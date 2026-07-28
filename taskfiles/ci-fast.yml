@@ -398,10 +398,69 @@ tasks:
     desc: "Fail on leftover merge/stash conflict state — unmerged index entries or <<<<<<< / >>>>>>> markers in tracked files (conflict-marker-guard hardening, 2026-06-15)"
     cmd: ./scripts-run src/scripts/check_no_conflict_markers {{.QUIET_FLAG}}
 
+  check-secret-leak:
+    silent: true
+    desc: "Fail on a high-confidence secret in the changed set (diff vs origin/main + untracked) — the non-bypassable CI net behind the secret-vcs-guard rule (secret_detector)"
+    cmd: ./scripts-run src/scripts/check_secret_leak
+
   check-claims:
     silent: true
     desc: "Claims-Ledger gate — every <!-- claim:ID --> marker in README/docs binds to a backed, resolvable entry in docs/CLAIMS.md (road-to-final-state-and-market-readiness B1)"
     cmd: ./scripts-run src/scripts/check_claims {{.QUIET_FLAG}}
+
+  check-adr-frontmatter:
+    silent: true
+    desc: "ADR frontmatter gate — required fields, valid status, and a named `review_trigger` CONDITION (not a cadence) on every ADR dated 2026-07-25 or later. Earlier ADRs warn; grandfathering is by date, not an allowlist (road-to-enforcement-proof P4.1-P4.4)"
+    cmd: ./scripts-run src/scripts/check_adr_frontmatter
+
+  check-subagent-floor:
+    silent: true
+    desc: "Subagent safety-floor freshness — every dispatch prompt carries the generated floor derived from the kernel rules; drift FAILS (not WARN, unlike the reference implementation we took the idea from) (road-to-enforcement-proof P3.3)"
+    cmd: ./scripts-run src/scripts/generate_subagent_floor --check
+
+  lint-override-kernel-guard:
+    silent: true
+    desc: "Kernel-override audit — a `replace` on a kernel/safety-floor rule is refused, an `extend` on one needs a registered exception. Reports what exists; hard-fails only on this repo's own authoring surface, because the override layer is model-resolved and other relax routes are not visible to a linter (road-to-enforcement-proof P2.6)"
+    cmd: ./scripts-run src/scripts/lint_override_kernel_guard --strict
+
+  lint-output-slop:
+    silent: true
+    desc: "Fail on placeholder prose in the package's own authored artefacts (Lorem ipsum, `// rest of component`, `for brevity`, TODO-implement stubs) — the CI net the output-discipline rule has always claimed and, until now, did not have"
+    cmd: ./scripts-run src/scripts/lint_output_slop
+
+  lint-spawn-payload:
+    silent: true
+    desc: "WARN-ONLY — makes the subagent-spawn-contract.md Iron Law (never bulk-dump context into a subagent) deterministic: per-tier payload size cap, no inline knowledge_refs bodies, no uncut >40-line file dumps, over JSON spawn fixtures + golden-transcript spawn payloads (road-to-lean-agent-init Phase 3). Promotion path: add --strict once caps hold across a clean observation window"
+    cmd: ./scripts-run src/scripts/lint_spawn_payload
+
+  lint-pre-migration-refs:
+    silent: true
+    desc: "Fail on pre-migration install hints (pip install agent-config, python install.py, retired Python MCP entry) in shipped files — the doc-rot net from road-to-credible-install Phase 0 (ADR-200 retired the Python installer)"
+    cmd: ./scripts-run src/scripts/lint_pre_migration_refs
+
+  lint-consumer-internal-refs:
+    silent: true
+    desc: "Fail on maintainer-internal path/task references (Taskfile verbs, .agent-src.uncondensed/, src/scripts/ without the node_modules prefix, this package's own tests/scripts/, the ./scripts-run dispatcher) in consumer-projected skills — the doc-rot net from road-to-credible-install Phase 4 step 2 (review claimed 84/281, verified 17)"
+    cmd: ./scripts-run src/scripts/lint_consumer_internal_refs
+
+  lint-budget-ownership:
+    silent: true
+    desc: "Every gate-budget config under src/config/*budget*.json carries an owner + review date — anti-ossification lint (road-to-credible-install Phase 6.2); overdue review warns, missing date fails"
+    cmd: ./scripts-run src/scripts/lint_budget_ownership
+
+  evaluator-umbrella:
+    desc: "The external evaluator's first five minutes as ONE suite over the PACKED artifact — audit, publint, headless tarball install, staleness lints, hook bench, cold-start/size/surface budgets, npx smoke (road-to-credible-install Phase 6.1; CI: evaluator-umbrella.yml on release PRs + nightly)"
+    cmd: bash src/scripts/evaluator_umbrella.sh
+
+  lint-governed-writes:
+    silent: true
+    desc: "Static scan for direct fs writes to protected ledger/governance surfaces (claims ledger, append-only intake/audit jsonl) that bypass the atomic-write layer — allowlist-free; zero findings is the pre-registered null (road-to-enforcement-peer-disposition P1)"
+    cmd: ./scripts-run src/scripts/lint_governed_writes
+
+  check-enforcement-coverage:
+    silent: true
+    desc: "Enforcement-coverage ratchet — each rule's enforced_by is RESOLVED, not trusted: the script must exist AND be reachable from a taskfile/workflow/hook manifest, and a fail_closed:false hook counts as observer, never validator. Blocking coverage may not fall; unwired declarations may not rise (road-to-enforcement-proof P1.4)"
+    cmd: ./scripts-run src/scripts/check_enforcement_coverage --check
 
   check-artefact-counts:
     silent: true
@@ -673,6 +732,45 @@ tasks:
     desc: Enforce the legal-safety-floor backstops (attorney-review line, Jurisdiction tag, freshness shape) over every legal-pack skill (road-to-legal-pack Phase 1)
     cmd: ./scripts-run src/scripts/lint_legal_pack {{.QUIET_FLAG}}
 
+  lint-provenance:
+    silent: true
+    desc: >-
+      Provenance ledger gate (road-to-provenance-and-license-governance S1.3) —
+      STRICT from day one, no warn-only phase: checks provenance/borrows.jsonl
+      against our own closed schema (not fuzzy similarity), fails every
+      deny-class or unknown license and every missing/rename-only
+      transformation_note, and fails if docs/THIRD-PARTY-NOTICES.md drifts
+      from the ledger.
+    cmd: ./scripts-run src/scripts/lint_provenance {{.QUIET_FLAG}}
+
+  reuse-lint:
+    silent: true
+    desc: >-
+      REUSE 3.3 compliance gate (road-to-provenance-and-license-governance
+      S4.2) — ci-strict only, since it needs the `reuse` Python tool present.
+      Licensing is declared via path globs in REUSE.toml rather than ~1,700
+      per-file SPDX headers: the same compliance outcome with a reviewable
+      diff, and every declared path is first-party MIT. Skips cleanly with a
+      notice when `reuse` is not installed, so a missing optional tool never
+      fails the build.
+    cmd: |
+      if command -v reuse >/dev/null 2>&1; then
+        reuse lint
+      else
+        echo "reuse-lint: skipped — the 'reuse' tool is not installed (pip install reuse)"
+      fi
+
+  lint-provenance-vocabulary:
+    silent: true
+    desc: >-
+      Provenance-vocabulary gate (road-to-provenance-and-license-governance
+      S3.2/S3.3) — STRICT from day one: bans "copyright-safe" and its near
+      variants across README.md + docs/**, requires every approved-vocabulary
+      use ("provenance-governed", etc.) to co-locate a "Scope & limits" box
+      naming what is NOT detectable, and cross-checks every measured N/D
+      figure in that box against docs/CLAIMS.md.
+    cmd: ./scripts-run src/scripts/lint_provenance_vocabulary {{.QUIET_FLAG}}
+
   lint-explain-trace:
     silent: true
     desc: Validate an ExplainTrace v1 JSON file against docs/contracts/explain-trace.schema.json (explainability v2 Phase 1.2)
@@ -841,6 +939,16 @@ tasks:
     silent: true
     desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
     cmd: ./scripts-run src/scripts/check_no_roadmap_refs
+
+  lint-documented-commands:
+    silent: true
+    desc: Every documented package command in shipped skill/rule/command docs resolves (reachability bug class; road-to-reachable-code-memory Phase 1)
+    cmd: ./scripts-run src/scripts/lint_documented_commands
+
+  lint-store-boundary:
+    silent: true
+    desc: No global-root literal in memory/knowledge index code outside the sanctioned path modules (ADR-130 invariant 1)
+    cmd: ./scripts-run src/scripts/lint_store_boundary
 
   check-knowledge-cards:
     silent: true

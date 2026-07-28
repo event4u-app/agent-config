@@ -76,6 +76,21 @@ concerns:
     script: src/scripts/hooks/block_no_verify.ts
     args: []
     fail_closed: true
+  # road-to-ai-employee-borrowings Phase 1 — kernel immutability Layer 1.
+  # PreToolUse guard: DENIES Write/Edit/NotebookEdit (and cross-platform
+  # equivalents) whose target path is a kernel rule file — the source tree
+  # (src/rules/<kernel>.md) or any projection (dist/agent-src/rules/,
+  # .claude/**/rules/, .augment/rules/, …). ADR-127 permits more than one
+  # blocking hook; this is the second (after block-no-verify). fail_closed:
+  # a parse/detection failure never crashes into a false block — the
+  # guarantee applies to a DETECTED kernel-rule write, which this hook
+  # always catches deterministically (no I/O beyond stdin). No
+  # agent-accessible override — the only legitimate bypass is the
+  # human-owned exception registry named in the deny message.
+  block-kernel-rule-writes:
+    script: src/scripts/hooks/block_kernel_rule_writes.ts
+    args: []
+    fail_closed: true
   # token-saving Phase 3 — PreToolUse RTK-wrap nudge. DETERMINISTIC: keys off a
   # live `which rtk` probe (not the self-reported flag). When rtk is installed
   # and the agent is about to run a single verbose CLI command that is NOT
@@ -97,6 +112,29 @@ concerns:
   # is a host-limited convenience layer. fail_closed: false.
   design-slop:
     script: src/scripts/hooks/design_slop_hook.ts
+    args: []
+    fail_closed: false
+  # ADR-124 Phase 4 — OPTIONAL PreToolUse code-graph nudge. When a code-graph
+  # source is present and the agent is about to search/read source, WARNS
+  # (exit 2) once per session to query the graph first (or rebuild if stale,
+  # or build if absent). Never blocks — Source G's strict block-first-read
+  # mode is deliberately un-ported. Default-OFF (hooks.code_graph.enabled).
+  # fail_closed: false.
+  code-graph-nudge:
+    script: src/scripts/hooks/code_graph_nudge_hook.ts
+    args: []
+    fail_closed: false
+  # road-to-reachable-code-memory Phase 4 — session_end learning-sidecar
+  # aggregation. Joins the EXISTING session_end concern set (no new platform
+  # wiring). Aggregates agents/memory/intake/*.jsonl through the learning
+  # sidecar into the gitignored .agent-learning.json + LESSONS.md; emits the
+  # one-line memory-visibility marker when lessons exist. Default-OFF
+  # (memory.learn_on_session_end — council 2026-07-27: ships off; flip is
+  # proposed only after the 30-day dogfood shows non-trivial signal AND
+  # session-end p95 < 2 s). Budget-capped (2 s), fail-open. Promotion stays
+  # human via /memory:propose. fail_closed: false.
+  memory-learn:
+    script: src/scripts/memory_learn_hook.ts
     args: []
     fail_closed: false
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
@@ -156,21 +194,32 @@ concerns:
     script: src/scripts/pr_url_reminder_hook.ts
     args: []
     fail_closed: false
+  # session_start canary injection — deterministic carrier for the
+  # session-canary rule (greet-by-name at task start + reply-close markers
+  # as a user-observable context-degradation signal). Gated on
+  # `personal.canary_name` in .agent-settings.yml (empty = clean no-op),
+  # so unconfigured consumers pay nothing. Emits a `context` block the
+  # dispatcher forwards on session_start (hot-context mechanism).
+  # Never blocks. fail_closed: false.
+  session-canary:
+    script: src/scripts/session_canary_hook.ts
+    args: []
+    fail_closed: false
 
 platforms:
   augment:
-    session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:      [chat-history]
+    session_start:    [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
+    session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete]
-    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
+    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   claude:
-    session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:      [chat-history]
+    session_start:    [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
+    session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
+    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
@@ -188,11 +237,11 @@ platforms:
   # Decision matrix + upstream blockers tracked in
   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
-    session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:      [chat-history]
+    session_start:    [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
+    session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
+    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
@@ -203,8 +252,8 @@ platforms:
   # IDE-only — CLI-only users fall back to /checkpoint per
   # agents/settings/contexts/chat-history-platform-hooks.md.
   cursor:
-    session_start:      [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:        [chat-history]
+    session_start:      [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
+    session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
@@ -218,8 +267,8 @@ platforms:
   # both map to session_start. TaskCancel maps to stop because the
   # session is interrupted with partial state (mirrors Augment Stop).
   cline:
-    session_start:      [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:        [chat-history]
+    session_start:      [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
+    session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
@@ -237,7 +286,7 @@ platforms:
   # surface to record verification commands; documented limitation).
   # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
   windsurf:
-    session_start:      [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, surface-probe]
+    session_start:      [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, surface-probe]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete]
 
@@ -252,8 +301,8 @@ platforms:
   # turn-check semantics. AfterAgent fires when the agent loop ends
   # — this is our `stop` slot.
   gemini:
-    session_start:      [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:        [chat-history]
+    session_start:      [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
+    session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]

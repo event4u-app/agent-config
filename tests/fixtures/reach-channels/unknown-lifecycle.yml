@@ -1,0 +1,23 @@
+# NEGATIVE FIXTURE — must FAIL `check_reach_channels`.
+# Defect: `lifecycle: beta` invents a fifth value instead of reusing the
+# four-value vocabulary from docs/contracts/provider-lifecycle.md. Expected
+# finding: enum at $.channels[0].lifecycle.
+# Everything else is deliberately valid so exactly one rule fires.
+schema_version: reach-channels-v1
+
+channels:
+  - id: github
+    description: Repository metadata from the GitHub API (fixture channel).
+    tier: free-key
+    lifecycle: beta
+    override_key: reach.channels.github.backend
+    last_verified: "2026-07-24"
+    backends:
+      - id: gh
+        probe_cmd: gh
+        probe_args: ["--version"]
+        install:
+          darwin: asdf plugin add github-cli && asdf install github-cli 2.96.0
+          linux: asdf plugin add github-cli && asdf install github-cli 2.96.0
+          win32: winget install --id GitHub.cli --version 2.96.0
+          default: asdf plugin add github-cli && asdf install github-cli 2.96.0

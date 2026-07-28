@@ -10,6 +10,7 @@
 import { existsSync } from 'node:fs';
 import { BASH_ENTRY, BASH_SHIM, CONSUMER_ROOT, PACKAGE_ROOT } from '../paths.js';
 import { logger } from '../log/logger.js';
+import { detectRtk } from '../../install/rtkDetection.js';
 
 interface Check {
     name: string;
@@ -57,12 +58,31 @@ function checkBashShim(): Check {
     };
 }
 
+/**
+ * rtk is an OPTIONAL third-party tool — its absence never fails the doctor
+ * (ok stays true for every state); the row is an informational readout of
+ * the two-stage identity probe (docs/contracts/rtk-detection.md).
+ */
+function checkRtk(): Check {
+    const d = detectRtk();
+    if (!d.present) return { name: 'rtk', ok: true, detail: 'not installed (optional; see `agent-config rtk:detect`)' };
+    switch (d.identity) {
+        case 'token-killer':
+            return { name: 'rtk', ok: true, detail: `Rust Token Killer${d.version !== undefined ? ` v${d.version}` : ''} (${d.binPath ?? 'on PATH'})` };
+        case 'unknown-rtk':
+            return { name: 'rtk', ok: true, detail: 'DIFFERENT TOOL on PATH (name collision, not Rust Token Killer) — see `agent-config rtk:detect`' };
+        default:
+            return { name: 'rtk', ok: true, detail: 'present but unverified — run `rtk gain` manually' };
+    }
+}
+
 export function runDoctorShell(): number {
     const checks: Check[] = [
         checkNode(),
         checkPackageRoot(),
         checkBashEntry(),
         checkBashShim(),
+        checkRtk(),
     ];
 
     logger.info(`consumer_root: ${CONSUMER_ROOT}`);

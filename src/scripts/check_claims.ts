@@ -15,10 +15,17 @@
  * Ledger entries with `status: unbacked` are inventory (documented debt) and do
  * NOT fail the build — but marking such an entry's claim in prose does.
  *
- * Evidence-pointer grammar (v1):
+ * Evidence-pointer grammar (v2):
  *   <repo-path>[:line]        → the repo file exists (line advisory).
  *   <repo-path>#<substring>   → the file exists AND contains <substring>.
  *   https://… (YYYY-MM-DD)    → external cite with a dated stamp (not fetched).
+ *   exec:<command> -> <code>  → the command RE-RUNS and its exit code matches.
+ *
+ * The first three are existence checks and cannot tell a live claim from a
+ * stale one: a pointer at a report nobody regenerated resolves forever. The
+ * fourth re-derives the claim. It runs in CI only — locally it reports
+ * UNVERIFIED rather than executing anything, because a consumer's checkout has
+ * no business re-running this package's evidence commands.
  *
  * Exit codes: 0 = clean · 2 = unbacked/dangling/missing-entry finding OR usage
  * error. Success prints to stdout; findings print to stderr.
@@ -26,10 +33,17 @@
  * Usage:
  *     ./scripts-run src/scripts/check_claims
  *     ./scripts-run src/scripts/check_claims --quiet
+ *     CI=true ./scripts-run src/scripts/check_claims     # re-runs exec: claims
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import {
+    exec_allowed_here,
+    exec_static_error,
+    parse_exec_pointer,
+    run_exec_evidence,
+} from './_lib/exec_evidence.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const _HERE = path.dirname(_FILE);
@@ -46,8 +60,47 @@ const URL_DATED = /^https?:\/\/\S+\(\d{4}-\d{2}-\d{2}\)\s*$/;
  *  not appear as a capability claim. docs/proof.md and docs/comparison.yaml
  *  are structurally witnessed (pointer columns + their own linters). */
 const WITNESS_SURFACES = ['README.md', 'CAPABILITIES.yaml'];
-/** A percentage or multiplier reading as a measured capability figure. */
-const QUANTIFIED_CLAIM = /\b\d+(?:\.\d+)?\s*(?:%|[x×](?![A-Za-z0-9]))/;
+
+/**
+ * Shapes that read as a measured capability figure.
+ *
+ * The ratio pattern was written against the "84.8%-style headline" anti-lesson
+ * and catches exactly that. It missed the shape that actually bit us: the README
+ * shipped "compiled into 7+ host agents" while the real, test-pinned number was
+ * 23 detected / 20 emitted — understating coverage by 3x, for months, on the one
+ * surface this sweep already watched. A bare integer carries no `%` and no `x`,
+ * so no ratio pattern could see it and no unit allowlist would either.
+ *
+ * Three narrow classes:
+ *   - RATIO      — percentages and multipliers (the original).
+ *   - MAGNITUDE  — a number carrying a measurement unit. Unit-gated, not
+ *                  digit-gated: a thousands-separator heuristic would catch
+ *                  `22,077` and also every year and large ordinal.
+ *   - SELF_COUNT — a count-shaped assertion about the package's own reach.
+ *                  This is the class that shipped wrong.
+ *
+ * Excluded from MAGNITUDE in v1: time units. "wait 30 seconds" is an
+ * instruction, not a claim, and a gate that false-positives is a gate that gets
+ * bypassed (`narrow > recall`, as with the credential floor).
+ *
+ * Deliberately NOT widened to more surfaces, and this was measured rather than
+ * assumed: `docs/benchmark.md` alone matches the ratio pattern on 54 lines — it
+ * is a methodology document whose job is to be full of statistics, and sweeping
+ * it would produce exactly the flood that teaches a maintainer to bypass the
+ * gate. `docs/proof.md` and `docs/comparison.yaml` are pointer-enforced by their
+ * own linters, so an unmarkered figure cannot originate there. The gap was never
+ * the surface list; it was the pattern.
+ */
+const RATIO = /\b\d+(?:\.\d+)?\s*(?:%|[x×](?![A-Za-z0-9]))/;
+// The optional `<word>-` allows a qualified unit: `13,881 GPT-tokens` is the
+// same claim shape as `13,881 tokens` and was missed without it.
+const MAGNITUDE = /\b\d[\d,._]*\s*(?:[A-Za-z]+-)?(?:tokens?|ms|USD|KB|MB|GB|chars?)\b/i;
+const SELF_COUNT = /\b\d+\+?\s+(?:host agents?|hosts|supported (?:agents?|hosts))\b/i;
+
+/** True when a line carries any figure shape that must bind to a claim. */
+export function is_quantified_claim(line: string): boolean {
+    return RATIO.test(line) || MAGNITUDE.test(line) || SELF_COUNT.test(line);
+}
 
 class ExitCode extends Error {
     code: number;
@@ -57,7 +110,7 @@ class ExitCode extends Error {
     }
 }
 
-interface LedgerEntry {
+export interface LedgerEntry {
     id: string;
     claim: string;
     kind: string;
@@ -170,10 +223,24 @@ function scan_markers(): { id: string; file: string }[] {
     return found;
 }
 
-/** Does an evidence pointer resolve? Returns null on success, else a reason. */
+/**
+ * Does an evidence pointer resolve? Returns null on success, else a reason.
+ *
+ * For `exec:` this is the STATIC half only — is the pointer well-formed and is
+ * the command allowlisted. A malformed or non-allowlisted command fails
+ * everywhere, including locally, because that is a defect in the ledger rather
+ * than a property of the environment. Re-execution is the separate CI-gated
+ * pass in `main`, so a laptop never runs an evidence command.
+ */
 function pointer_unresolved(evidence: string): string | null {
     const ev = evidence.trim();
     if (!ev) return 'empty evidence pointer';
+
+    const exec = parse_exec_pointer(ev);
+    if (exec !== null) {
+        return 'error' in exec ? exec.error : exec_static_error(exec);
+    }
+
     if (/^https?:\/\//.test(ev)) {
         return URL_DATED.test(ev) ? null : 'external URL missing a (YYYY-MM-DD) stamp';
     }
@@ -254,13 +321,97 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 continue;
             }
             if (inFence) continue;
-            if (!QUANTIFIED_CLAIM.test(line)) continue;
-            if (/<!--\s*claim:/.test(line) || /unverified/i.test(line)) continue;
+            if (!is_quantified_claim(line)) continue;
+            if (/unverified/i.test(line)) continue;
+
+            // A marker on the line is not enough — it must be a marker that can
+            // LICENSE A NUMBER. This is how "7+ host agents" survived: the line
+            // already carried `claim:no-runtime-daemon`, a `kind: qual` claim
+            // about having no daemon, and any-marker-exempts-the-line let the
+            // unrelated figure ride along on it. A qualitative claim says nothing
+            // about a quantity, so only a `kind: quant` entry clears a figure.
+            const markers = [...line.matchAll(/<!--\s*claim:([A-Za-z0-9._-]+)\s*-->/g)].map((m) => m[1] as string);
+            const licensed = markers.some((id) => ledger.get(id)?.kind === 'quant');
+            if (licensed) continue;
+
+            const why =
+                markers.length > 0
+                    ? `figure carried only by non-quantitative claim marker(s) [${markers.join(', ')}] — a \`kind: qual\` claim cannot license a number`
+                    : 'quantified claim without a claim marker or \'unverified\' annotation';
             findings.push({
                 id: '(unmarkered)',
                 file: `${rel}:${i + 1}`,
-                reason: `quantified claim without a claim marker or 'unverified' annotation — ${line.trim().slice(0, 70)}`,
+                reason: `${why} — ${line.trim().slice(0, 70)}`,
             });
+        }
+    }
+
+    // A published denominator must match the live ledger.
+    //
+    // `exec-evidence-feasibility.json` records how many backed claims the
+    // feasibility measurement was taken over. That number was hand-written and
+    // drifted twice inside two days — 25 when the ledger held 26, then 26 when it
+    // held 27 — and CI stayed green both times, because the claim's evidence
+    // pointer resolved. Pointer-resolution is not truth: that is the very thing
+    // `ledger-exec-verifiability` says about the ledger, demonstrated by its own
+    // entry. The classification in that file is a human judgment and stays one;
+    // the denominator is mechanical, so it gets checked.
+    {
+        const rel = 'internal/reports/exec-evidence-feasibility.json';
+        const abs = path.join(REPO, rel);
+        if (fs.existsSync(abs)) {
+            try {
+                const stored = JSON.parse(fs.readFileSync(abs, 'utf8')) as { backed_claims?: number };
+                const live = [...ledger.values()].filter((e) => e.status === 'backed').length;
+                if (typeof stored.backed_claims === 'number' && stored.backed_claims !== live) {
+                    findings.push({
+                        id: '(derived-count)',
+                        file: rel,
+                        reason:
+                            `backed_claims is ${stored.backed_claims} but the ledger holds ${live} — ` +
+                            `a published denominator drifted from its source. Re-measure and update the report.`,
+                    });
+                }
+            } catch {
+                findings.push({
+                    id: '(derived-count)',
+                    file: rel,
+                    reason: 'unparseable JSON — the derived-count check cannot verify the published denominator',
+                });
+            }
+        }
+    }
+
+    // 4. Re-execution pass (`exec:` evidence). CI only — locally every exec
+    //    claim reports UNVERIFIED and nothing runs. A mismatch is a finding: the
+    //    command ran and disagreed with the claim. A skip is NOT a finding —
+    //    collapsing "could not run" into "failed" is how a verifier degrades
+    //    into a rubber stamp in the other direction.
+    const execEntries = [...ledger.values()]
+        .filter((e) => e.status === 'backed')
+        .map((e) => ({ entry: e, ptr: parse_exec_pointer(e.evidence) }))
+        .filter((x): x is { entry: LedgerEntry; ptr: { command: string; expected: number } } =>
+            x.ptr !== null && !('error' in x.ptr),
+        );
+
+    const execSkipped: string[] = [];
+    const execVerified: string[] = [];
+
+    if (execEntries.length > 0) {
+        const allowed = exec_allowed_here();
+        for (const { entry, ptr } of execEntries) {
+            if (!allowed) {
+                execSkipped.push(entry.id);
+                continue;
+            }
+            const outcome = run_exec_evidence(ptr, REPO);
+            if (outcome.mismatch) {
+                findings.push({ id: entry.id, file: LEDGER_REL, reason: outcome.reason });
+            } else if (outcome.verified) {
+                execVerified.push(entry.id);
+            } else {
+                execSkipped.push(entry.id);
+            }
         }
     }
 
@@ -279,6 +430,14 @@ function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             `✅  check_claims: ${markers.length} markered claim(s) bound · ledger ${ledger.size} entries (${backed} backed, ${unbacked} unbacked inventory)\n`,
         );
+        if (execEntries.length > 0) {
+            const detail = execVerified.length > 0 ? ` (${execVerified.length} re-verified)` : '';
+            process.stdout.write(
+                execSkipped.length === execEntries.length
+                    ? `    exec: ${execEntries.length} claim(s) UNVERIFIED — re-execution is CI-only, skipped locally\n`
+                    : `    exec: ${execEntries.length} claim(s)${detail}, ${execSkipped.length} skipped\n`,
+            );
+        }
     }
     return 0;
 }
@@ -308,3 +467,24 @@ if (_isCliEntry()) {
 }
 
 export { REPO, LEDGER_REL, main, parse_args, load_ledger, scan_markers, pointer_unresolved, ExitCode };
+
+/**
+ * Live count of `status: backed` ledger entries.
+ *
+ * Exists so a published denominator can be DERIVED instead of typed. The
+ * `ledger-exec-verifiability` entry hard-coded this number twice and drifted
+ * within a day both times — first 25 when the ledger held 26, then 26 when it
+ * held 27 — while `check_claims` stayed green because its evidence pointer
+ * resolved. A number a human retypes on every ledger edit will drift; the only
+ * fix is to stop retyping it.
+ *
+ * Note this is not the same as `grep -c '^- status: backed'`, which also counts
+ * the entry-schema template in the document header.
+ */
+export function count_backed(): number {
+    let n = 0;
+    for (const e of load_ledger().values()) {
+        if (e.status === 'backed') n += 1;
+    }
+    return n;
+}

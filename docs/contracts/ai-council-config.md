@@ -436,6 +436,24 @@ non-deliberating member → annotated host fallback. The billable chairman
 dispatch (rendering the synthesis as one member call in `cmd_run`) is the
 remaining wiring step.
 
+**Blind synthesis — the default (road-to-council-blind-review adoption
+U1, adopted 2026-07-28).** The chairman/synthesis stage is BLIND by default on
+`council:run`: member responses reach the synthesizing stage as shuffled
+A–E labels (`consensus.anonymize_responses`, deterministic question-hash
+order), on both the member-chairman transcript and the host-path render.
+The **post-verdict de-anonymization map is a mandatory audit step** — the
+persisted artifact always carries the full `label → provider · model`
+mapping after the synthesis slot; blind is only the synthesizer at
+decision time, never the archive. Per-invocation opt-out:
+`--no-blind-chairman`. Adoption basis: pre-registered n=10 A/B with
+0/10 + 0/10 degradation triggers (`internal/bench/council-blind-review/`)
++ the measured self-preference/naming-bias literature; reverting the
+default requires a new measured decision (test-pinned). Structural note:
+at member count 2 a member chairman is impossible (both deliberate,
+generator-cannot-self-judge) — blind rendering is then the host path's
+protection. `--stances` / `--chairman-fields` remain default-off pending
+the maintainer blind ratings (the roadmap's U2/U3 rules).
+
 ### Debate enforcement gates (Phase 3 — opt-in)
 
 - `debate_gates.enabled` (bool, default `false`) — when on, round-2+ debate
@@ -510,6 +528,30 @@ decision_resolution:
       mode: user            # LOCKED — Iron Law
       confidence_threshold: 0.6
 ```
+
+### Prior negative result in the wild — and what would falsify OUR design
+
+An unaffiliated agent project publicly DELETED its 6-judge LLM content
+review, recording it as "cost without signal" (2026-07, external
+AI-employee analysis intake; source anonymized per source-confidentiality).
+External falsification pressure gets answered in writing, not left for
+readers to notice:
+
+- **The distinction.** That panel judged ARTIFACT CONTENT with free-form
+  LLM opinions — N models reading the same text and emitting takes. This
+  package's council judges CONFIG DELTAS and DECISIONS under a neutrality
+  contract: pre-registered thresholds fixed before data, honest-null
+  consequences that bind, stance tallies over free prose, necessity
+  classifier gating whether a debate runs at all, and cost disclosure per
+  call. Same word ("judges"), different mechanism class.
+- **What would falsify OUR design** (recorded criterion): a measured run
+  showing council-consulted decisions do not differ in outcome quality
+  from solo-model decisions at matched cost — i.e. our own
+  `council-vs-solo-baseline` claim failing its threshold on a
+  pre-registered re-run — or the necessity classifier's "unnecessary"
+  verdicts exceeding its budget while verdict quality stays flat. If that
+  evidence lands, the honest disposition is the external project's:
+  delete the cost, publish the null, keep the deterministic gates.
 
 ### Low-impact council opt-in
 
@@ -686,7 +728,12 @@ Since the A3 slice of `road-to-api-cost-optimization` (2026-07-20):
 ```yaml
 model_downgrade:
   enabled: true        # default; false disables the size-fit gate entirely
-  auto_apply: true     # DEFAULT since A3 — auto-downgrade is opt-OUT
+  auto_apply: false    # DEFAULT since 2026-07-28 — suggest, don't silently
+                       # apply. The A3 auto-ON default (2026-07-20) shipped
+                       # without a paired quality measurement (the only
+                       # default-ON surface without one); it re-flips to true
+                       # when a paired eval (full vs downgraded members,
+                       # blind judge) shows held quality. Set true to opt in.
   model_tier_override: # per-run escape hatch: member -> pinned model id
     anthropic: claude-sonnet-4-5
 ```

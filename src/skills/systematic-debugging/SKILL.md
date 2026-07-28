@@ -275,7 +275,7 @@ API shape page was stale, a procedure was incomplete), append a
 mid-task (see [`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)):
 
 ```bash
-./scripts-run src/scripts/emit_knowledge_event \
+npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts \
     --type mistake_made \
     --error-category "<one or two words>" \
     --context-source "<agents/knowledge/... path, or 'null' if no page was followed>" \
@@ -293,7 +293,7 @@ this is the hybrid immediate-fix case instead — surface the proposed
 correction and ask before continuing (see
 [`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)
 § Contested entries). Approved → isolated fix commit. Declined →
-`./scripts-run src/scripts/append_contested` on that page, then still
+`npx tsx node_modules/@event4u/agent-config/src/scripts/append_contested.ts` on that page, then still
 emit the `context_stale` event above it for the consolidation pass.
 
 ## Gotchas

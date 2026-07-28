@@ -37,6 +37,7 @@ import { fileURLToPath } from 'node:url';
 
 import { hardenedSpawnEnv } from './_lib/spawn_env.js';
 import { redact_low_impact_entry } from './ai_council/redact_low_impact_entry.js';
+import { readHookStdin } from './hooks/hook_stdin.js';
 
 export const HOT_CONTEXT_REL = path.join('agents', 'runtime', 'state', 'hot-context.md');
 
@@ -350,11 +351,7 @@ function _session_index_block_or_null(root: string): string | null {
 // ---------------------------------------------------------------------
 
 function _read_stdin(): string {
-    try {
-        return fs.readFileSync(0, 'utf-8');
-    } catch {
-        return '';
-    }
+    return readHookStdin();
 }
 
 export function main(): number {
@@ -414,6 +411,10 @@ export function main(): number {
     return 0; // never blocks
 }
 
-if (fileURLToPath(import.meta.url) === path.resolve(process.argv[1] ?? '')) {
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+const _bundled = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
+if (!_bundled && fileURLToPath(import.meta.url) === path.resolve(process.argv[1] ?? '')) {
     process.exit(main());
 }

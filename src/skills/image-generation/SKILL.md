@@ -41,7 +41,8 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
 4. **Reuse ref-image / seed for consistency** — if the brief is part of a series, carry
    the seed value or ref-image path forward. Seed reuse is the primary consistency lever;
    re-describing the subject each time is not.
-5. **Invoke the adapter (dry-run today)** — run `src/scripts/ai-image/adapters/<provider>.sh`
+5. **Invoke the adapter (dry-run today)** — run
+   `node_modules/@event4u/agent-config/src/scripts/ai-image/adapters/<provider>.sh`
    with the assembled params. Validate the returned artifact path or dry-run confirmation.
    All adapters are `experimental` (scaffold-tier); no live generation occurs until a
    maintainer promotes the adapter via `provider-lifecycle-discipline`.

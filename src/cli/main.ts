@@ -12,15 +12,19 @@
  * Phase 5 will reverse the delegation direction.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { Command } from 'commander';
-import { PACKAGE_JSON } from './paths.js';
+import { PACKAGE_JSON, PACKAGE_ROOT } from './paths.js';
 import { delegateToBash } from './bash/runBash.js';
 import { runVersions } from './commands/versions.js';
 import { runRecordTriggerEval } from './commands/recordTriggerEval.js';
 import { runDoctorShell } from './commands/doctorShell.js';
+import { runRtkDetect } from './commands/rtkDetect.js';
 import { runUiServe } from './commands/uiServe.js';
 import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation } from './initRouting.js';
+import { maybePrintFirstRunNotice } from './firstRunNotice.js';
 import { runSettings } from './commands/settings.js';
 import { runConfig } from './commands/config.js';
 import { runMcpServer } from './commands/mcpServer.js';
@@ -29,13 +33,21 @@ import { runPacksLs } from './commands/packs.js';
 import { runCommandsLs, runCommandsExplain, looksLikeCommandTarget } from './commands/commands.js';
 import { logger } from './log/logger.js';
 import { buildHelp } from './help.js';
+import { applyConfigRootFromArgv } from './configRoot.js';
+import { buildVersionReadout } from '../shared/capabilities.js';
 
 function readVersion(): string {
     const pkg = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as { version?: unknown };
     return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
 }
 
-async function main(argv: readonly string[]): Promise<number> {
+async function main(rawArgv: readonly string[]): Promise<number> {
+    // Accept a host-supplied config root (`--config-root <path>`) before
+    // anything resolves the config home. Applied by exporting into
+    // `EVENT4U_CONFIG_HOME`, so the scripts family, the server family, and
+    // every Bash-delegated subprocess (inherits `process.env`) observe the
+    // override. Absent flag → pure passthrough, byte-identical behaviour.
+    const { argv } = applyConfigRootFromArgv(rawArgv);
     const program = new Command();
     program
         .name('agent-config')
@@ -61,6 +73,15 @@ async function main(argv: readonly string[]): Promise<number> {
         .description('Probe the TS-shell environment')
         .action(() => {
             const code = runDoctorShell();
+            process.exit(code);
+        });
+
+    program
+        .command('rtk:detect')
+        .description('Detect rtk (Rust Token Killer) — two-stage presence + identity probe (docs/contracts/rtk-detection.md)')
+        .option('--json', 'Emit the machine-readable contract shape')
+        .action((opts: { json?: boolean }) => {
+            const code = runRtkDetect(opts);
             process.exit(code);
         });
 
@@ -329,17 +350,47 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     const head = argv[0];
+
+    // Hook hot path (road-to-credible-install Phase 1): dispatch:hook runs
+    // IN THIS PROCESS via the precompiled dist/hooks bundle — no bash
+    // delegation, no tsx, no per-concern re-spawn. Placed before every
+    // other route so a hook event pays nothing but the bundle import.
+    // Fallback: bundle missing (stale dev tree) → historical bash path.
+    if (head === 'dispatch:hook') {
+        const bundle = resolve(PACKAGE_ROOT, 'dist', 'hooks', 'dispatch.js');
+        if (existsSync(bundle)) {
+            const mod = (await import(pathToFileURL(bundle).href)) as {
+                main: (argv?: string[]) => number;
+            };
+            return mod.main(argv.slice(1));
+        }
+        return delegateToBash({ args: argv });
+    }
+
+    // One-time GUI notice on the first interactive invocation — the honest
+    // replacement for an install-time banner (the package has no postinstall
+    // side effect by design). TTY-gated, so hooks / MCP / CI never see it.
+    maybePrintFirstRunNotice(head);
+
     if (head === '--help' || head === '-h') {
         process.stdout.write(`${buildHelp()}\n`);
         return 0;
     }
     if (head === '--version' || head === '-V') {
-        process.stdout.write(`${readVersion()}\n`);
+        // `--version --json` is the host-facing capability readout: emits
+        // `{ version, capabilities: { configRoot: true } }` so a spawner
+        // can detect support before relying on `--config-root`. Plain
+        // `--version` keeps printing just the version string.
+        if (argv.includes('--json')) {
+            process.stdout.write(`${JSON.stringify(buildVersionReadout(readVersion()))}\n`);
+        } else {
+            process.stdout.write(`${readVersion()}\n`);
+        }
         return 0;
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'mcp-server', 'ui:serve', 'settings', 'config', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
+    const native = ['versions', 'doctor-shell', 'rtk:detect', 'mcp-server', 'ui:serve', 'settings', 'config', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         // Actions that don't hard-exit signal failure via process.exitCode.
@@ -369,6 +420,9 @@ async function main(argv: readonly string[]): Promise<number> {
         }
     }
     if (head === 'init' && shouldInitLaunchGui(argv.slice(1))) {
+        // Announce the automatic GUI choice AND its off-switch (install-time
+        // side-effect honesty: any GUI launch names its suppress var).
+        logger.info('Opening the browser install wizard (set AGENT_CONFIG_NO_UI=1 or pass --no-ui for the CLI install).');
         return runUiServe(buildInitGuiOptions(argv.slice(1)));
     }
 

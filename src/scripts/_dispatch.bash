@@ -76,6 +76,7 @@ TS-shell native (run via the installed `agent-config` binary):
   commands [ls|explain]      List/explain the command surface from the discovery manifest
   mcp-server                 Turnkey read-only stdio MCP server (no repo clone; ADR-085)
   doctor-shell               Probe the TS-shell environment
+  rtk:detect                 rtk (Rust Token Killer) presence + identity readout (--json)
   eval:record                Record a live trigger-eval result into a corpus manifest
 EOF
 
@@ -173,6 +174,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              relation-graph with a node budget. Flags: --budget N
   benchmark                  Report context-token reduction vs the full always-loaded
                              projection (from the pinned token baseline). Flags: --format
+  code-graph                 Deterministic code-graph engine (ADR-124, Class A).
+                             Usage: code-graph build|validate|detect|query|explain|affected|path [options]
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
@@ -205,13 +208,31 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              Usage: hooks:replay --platform <name> --event <event>
                                     --payload <path|event-name> [--native-event <native>]
                                     [--manifest <path>] [--json] [--dry-run]
+  reach:doctor               Health report over the reach channel registry: per channel
+                             the active backend, lifecycle, and the pinned install command
+                             for this platform when a backend is missing/broken.
+                             Read-only — no writes, no installs; NOT a router and NOT an
+                             agent-facing recommendation.
+                             Flags: --format json|table, --strict (CI), --channel <id>,
+                             --registry <path>, --deep (⚠️  opt-in NETWORK: one real
+                             read-only request per declared backend; never runs in CI,
+                             writes nothing)
   memory:lookup              Retrieve memory entries (text or JSON envelope)
+  memory:get                 Batch-fetch full memory entries by id (CLI twin of the
+                             memory_get MCP tool). Usage: memory:get <id> [<id> ...] [--format text|json]
   linked-projects:list       List opted-in IDE-attached sibling repos (path · detected_via · large)
                              Flags: --all (show undecided too), --format json
   memory:signal              Append a provisional intake signal (memory proposal)
   memory:hash                Hash a memory entry (YAML or JSON stdin)
   memory:check               Validate memory YAML schema + staleness
   memory:check-proposal      Run the admission gate on a memory proposal
+  memory:learn               Aggregate memory intake signals into the local learning
+                             sidecar (read-only; --write to emit). Usage: memory:learn [--intake-dir DIR]
+                             [--out-dir DIR] [--now ISO] [--write] [--format text|json]
+  analytics                  Local-only workspace analytics (emit|show|prune|migrate).
+                             Usage: analytics show [--window 30d|7d|24h] · analytics prune
+  knowledge                  Global knowledge-card store (list|show|trace|forget|promote|
+                             validate|lead-check|purge). Usage: knowledge list [--json]
   proposal:check             Validate a learning/skill/rule proposal markdown
   refine-ticket:detect       Run the deterministic refine-ticket detection helper
   chat-history:hook          Platform hook entry point (read JSON from stdin)
@@ -296,8 +317,12 @@ Examples (Tier 2):
   ./agent-config hooks:install
   ./agent-config hooks:replay --platform augment --event post_tool_use --payload post_tool_use --json
   ./agent-config memory:lookup --types domain-invariants --key billing
+  ./agent-config memory:get a1-crosshost-subagent-degradation
   ./agent-config memory:signal --type architecture-decision --path src/Foo.php --body "…"
   ./agent-config memory:check --path agents/memory
+  ./agent-config memory:learn --format json
+  ./agent-config code-graph detect
+  ./agent-config code-graph query <symbol>
   ./agent-config refine-ticket:detect ticket-body.txt
   ./agent-config telemetry:status
   ./agent-config telemetry:status --format json
@@ -455,6 +480,15 @@ cmd_benchmark() {
   exec_ts "$script" "$@"
 }
 
+# `agent-config code-graph` — deterministic code-graph engine (ADR-124,
+# Class A). Delegates 1:1 to the engine CLI's own subcommand dispatch
+# (build|validate|detect|query|explain|affected|path); no re-parsing here.
+cmd_code_graph() {
+  local script
+  script="$(resolve_script "src/scripts/code_graph/cli.ts")"
+  exec_ts "$script" "$@"
+}
+
 cmd_mcp_check() {
   local script
   script="$(resolve_script "src/scripts/mcp_render.ts")"
@@ -471,6 +505,13 @@ cmd_mcp_setup() {
 # package (PACKAGE_ROOT/src/scripts/mcp_server/) as a TypeScript module run
 # via tsx — no Python venv / SDK install any more (the runtime is Node/tsx).
 cmd_mcp_run() {
+  # Precompiled bundle first (road-to-credible-install Phase 1 tsx sweep):
+  # one node start, no tsx in the runtime tree. tsx path is the dev-tree
+  # fallback only.
+  local server_bundle="$PACKAGE_ROOT/dist/mcp/server.mjs"
+  if [[ -f "$server_bundle" ]]; then
+    exec node "$server_bundle" "$@"
+  fi
   local server_main="$PACKAGE_ROOT/src/scripts/mcp_server/__main__.ts"
   if [[ ! -f "$server_main" ]]; then
     echo "❌  agent-config: MCP server module not found at $server_main" >&2
@@ -539,6 +580,43 @@ cmd_work() {
 cmd_memory_lookup() {
   local script
   script="$(resolve_template_script "memory_lookup.ts")" || return 1
+  exec_ts "$script" "$@"
+}
+
+# `agent-config memory:get` — CLI twin of the `memory_get` MCP tool
+# (batch full-entry fetch by id). Package-internal handler
+# (src/scripts/_cli/cmd_memory_get.ts) reuses `memory_get_v1` from
+# src/scripts/memory_lookup.ts — no separate resolve needed, same
+# direct-PACKAGE_ROOT pattern as cmd_export / cmd_sync / cmd_validate.
+cmd_memory_get() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_memory_get.ts" "$@"
+}
+
+# `agent-config memory:learn` — aggregate the memory intake signal log
+# into the local, gitignored learning sidecar (road-to-retrieval-
+# substrate-hardening B3). Read-only by default (the sidecar's own
+# default); `--write` emits `.agent-learning.json` + `LESSONS.md`.
+cmd_memory_learn() {
+  local script
+  script="$(resolve_script "src/scripts/learning_sidecar.ts")" || return 1
+  exec_ts "$script" "$@"
+}
+
+# `agent-config analytics` — local-only workspace analytics
+# (docs/contracts/local-analytics.md). Delegates 1:1 to the module's own
+# subcommand dispatch (emit|show|prune|migrate|decrypt-all|rekey).
+cmd_analytics() {
+  local script
+  script="$(resolve_script "src/cli/python/workspace_analytics.ts")" || return 1
+  exec_ts "$script" "$@"
+}
+
+# `agent-config knowledge` — file-first global knowledge-card store
+# (ADR-100). Delegates 1:1 to the store CLI's own subcommand dispatch
+# (list|show|trace|forget|promote|validate|lead-check|purge).
+cmd_knowledge() {
+  local script
+  script="$(resolve_script "src/scripts/knowledge_global_cli.ts")" || return 1
   exec_ts "$script" "$@"
 }
 
@@ -621,6 +699,13 @@ cmd_context_hygiene_hook() {
 }
 
 cmd_dispatch_hook() {
+  # Hook hot path (road-to-credible-install Phase 1): prefer the precompiled
+  # single-process bundle — one node start, concerns in-process, no tsx.
+  # Fallback to the tsx path only on a stale dev tree without dist/.
+  local bundle="$PACKAGE_ROOT/dist/hooks/dispatch.js"
+  if [[ -f "$bundle" ]]; then
+    exec node "$bundle" "$@"
+  fi
   exec_hook "src/scripts/hooks/dispatch_hook" "$@"
 }
 
@@ -634,6 +719,11 @@ cmd_hooks_doctor() {
 
 cmd_hooks_replay() {
   exec_hook "src/scripts/hooks/replay_hook" "$@"
+}
+
+# Read-only reach-channel health report. Never installs, never writes.
+cmd_reach_doctor() {
+  exec_hook "src/scripts/reach_doctor" "$@"
 }
 
 cmd_chat_history_checkpoint() {
@@ -1058,6 +1148,7 @@ main() {
     affected)                cmd_affected "$@" ;;
     graph-explain)           cmd_graph_explain "$@" ;;
     benchmark)               cmd_benchmark "$@" ;;
+    code-graph)              cmd_code_graph "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
@@ -1069,11 +1160,15 @@ main() {
     implement-ticket)        cmd_implement_ticket "$@" ;;
     work)                    cmd_work "$@" ;;
     memory:lookup)           cmd_memory_lookup "$@" ;;
+    memory:get)              cmd_memory_get "$@" ;;
     linked-projects:list)    cmd_linked_projects_list "$@" ;;
     memory:signal)           cmd_memory_signal "$@" ;;
     memory:hash)             cmd_memory_hash "$@" ;;
     memory:check)            cmd_memory_check "$@" ;;
     memory:check-proposal)   cmd_memory_check_proposal "$@" ;;
+    memory:learn)            cmd_memory_learn "$@" ;;
+    analytics)               cmd_analytics "$@" ;;
+    knowledge)               cmd_knowledge "$@" ;;
     proposal:check)          cmd_proposal_check "$@" ;;
     refine-ticket:detect)    cmd_refine_ticket_detect "$@" ;;
     chat-history:hook)       cmd_chat_history_hook "$@" ;;
@@ -1085,6 +1180,7 @@ main() {
     hooks:status)            cmd_hooks_status "$@" ;;
     hooks:doctor)            cmd_hooks_doctor "$@" ;;
     hooks:replay)            cmd_hooks_replay "$@" ;;
+    reach:doctor)            cmd_reach_doctor "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
     telemetry:status)        cmd_telemetry_status "$@" ;;
     telemetry:report)        cmd_telemetry_report "$@" ;;

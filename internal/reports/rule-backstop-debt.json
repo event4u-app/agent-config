@@ -1,0 +1,26 @@
+{
+  "_doc": "Pre-existing findings in rule backstops that were red when they were first wired into CI — they had been failing invisibly because no workflow ran them. Counts may FALL freely; a rise fails the build. This is debt made visible, not debt tolerated: every number here is a rule whose declared backstop is currently not clean. Regenerate with --write-baseline only when the change is deliberate.",
+  "gates": {
+    "lint_framework_leakage": {
+      "rule": "framework-neutrality-in-generic-skills",
+      "findings": 0
+    },
+    "check_no_roadmap_refs": {
+      "rule": "no-roadmap-references",
+      "findings": 0
+    },
+    "check_council_references": {
+      "rule": "no-roadmap-references",
+      "findings": 0
+    },
+    "check_no_external_sources": {
+      "rule": "source-confidentiality",
+      "findings": 0
+    },
+    "check_token_optimizer_freshness": {
+      "rule": "token-optimizer-maintenance",
+      "findings": 0
+    }
+  },
+  "total": 0
+}

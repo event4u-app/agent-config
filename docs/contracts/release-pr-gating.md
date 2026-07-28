@@ -83,6 +83,34 @@ the feature-PR floor by adding:
 | `consumer-matrix.yml` | `consumer-matrix` · `publish-dry-run` · `mcp-worker-dry-run` · `plugin-bootstrap` | pack-based consumer E2E + pre-tag dry-runs of the release-adjacent workflows — see the exemption note below |
 | (maintainer-local) | `task smoke-host-loadability REQUIRE=1` | real-host loadability — `claude plugin validate` + temp-home plugin install + metadata cross-consistency (marketplace ↔ plugin dirs ↔ docs). Optional in CI (runners lack the claude CLI, the step self-skips); **required before a release is cut** — `REQUIRE=1` turns a missing CLI into a failure |
 
+## Release install E2E — the packed artifact, not just the source diff
+
+`release-validation.yml`'s fourth job, `release-install-e2e`
+(`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
+does not cover: "release PRs cannot regress install or runtime behaviour"
+is a claim about the **source diff**, not about whether the **packed
+tarball** actually installs, upgrades, and boots as a real npm global
+package. Every release PR now proves, against the real tarball:
+
+- a fresh `npm install -g` into an isolated npm prefix resolves the
+  `agent-config` binary and ships no silent postinstall/GUI side effect;
+- upgrading from a cached 9.7.0 baseline lands the release version cleanly;
+- the code-graph engine's WASM (`web-tree-sitter` / `tree-sitter-wasms`)
+  loads and builds/validates a graph on a fixture repo;
+- the GUI server boots headless (`--allow-headless --dry-run`) and
+  answers an HTTP ping;
+- `reach:doctor` (read-only) and the repo-side secret-leak gate both run
+  clean;
+- `npm uninstall -g` leaves no orphaned files.
+
+The baseline tarball is cached tarball-to-tarball (`actions/cache@v4`,
+key `npm-baseline-9.7.0`) so an npm-registry hiccup blocks the cache-miss
+**setup** step, never the validation itself — a failed baseline fetch is
+reported as a setup failure, distinct from an actual install regression.
+This is the job required per `branch-protection-policy.md`'s Release-PR
+row; it means the 9.8.0-class skip (a release shipping without a piece
+the source diff couldn't see was missing) cannot recur silently.
+
 ## Consumer-matrix exemption — the tarball window
 
 The cut surface above rests on "release PRs cannot regress install or
@@ -138,7 +166,9 @@ name alone never bypasses the heavy matrix.
 - `docs/contracts/ci-cost-budget.md` — measured baselines + quarterly review
   cadence (Phase C).
 - `.github/workflows/release-validation.yml` — the tight release-shape
-  validation workflow (Phase B).
+  validation workflow (Phase B) + the `release-install-e2e` job.
+- `tests/test_release_install_e2e.sh` — the packed-tarball install /
+  upgrade / boot gate (`task release-install-e2e` to run locally).
 - `src/scripts/check_release_pr_shape.ts` — the shape detector (Phase A).
 - `src/scripts/release.ts` § `_RELEASE_BRANCH_RE` — source of truth for the
   release-branch naming convention.

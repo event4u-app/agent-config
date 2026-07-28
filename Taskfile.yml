@@ -80,9 +80,23 @@ tasks:
       - task: check-condensed-paths
       - task: check-overlay-cascade-subdirs
       - task: check-template-pin-drift
+      - task: check-reach-channels
+      - task: check-reach-prescriptions
+      - task: check-reach-staleness
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: check-secret-leak
       - task: check-claims
+      - task: check-adr-frontmatter
+      - task: check-subagent-floor
+      - task: lint-override-kernel-guard
+      - task: lint-output-slop
+      - task: lint-spawn-payload
+      - task: lint-pre-migration-refs
+      - task: lint-consumer-internal-refs
+      - task: lint-budget-ownership
+      - task: lint-governed-writes
+      - task: check-enforcement-coverage
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay
@@ -129,6 +143,8 @@ tasks:
       - task: lint-model-tier-coverage
       - task: lint-trust-coherence
       - task: lint-legal-pack
+      - task: lint-provenance
+      - task: lint-provenance-vocabulary
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums
@@ -155,6 +171,8 @@ tasks:
       - task: lint-load-context
       - task: check-context-paths
       - task: check-no-roadmap-refs
+      - task: lint-documented-commands
+      - task: lint-store-boundary
       - task: check-knowledge-cards
       - task: check-knowledge-pages
       - task: lint-knowledge-scale
@@ -266,9 +284,23 @@ tasks:
       - task: check-condensed-paths
       - task: check-overlay-cascade-subdirs
       - task: check-template-pin-drift
+      - task: check-reach-channels
+      - task: check-reach-prescriptions
+      - task: check-reach-staleness
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: check-secret-leak
       - task: check-claims
+      - task: check-adr-frontmatter
+      - task: check-subagent-floor
+      - task: lint-override-kernel-guard
+      - task: lint-output-slop
+      - task: lint-spawn-payload
+      - task: lint-pre-migration-refs
+      - task: lint-consumer-internal-refs
+      - task: lint-budget-ownership
+      - task: lint-governed-writes
+      - task: check-enforcement-coverage
       - task: check-artefact-counts
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay
@@ -315,6 +347,9 @@ tasks:
       - task: lint-model-tier-coverage
       - task: lint-trust-coherence
       - task: lint-legal-pack
+      - task: reuse-lint
+      - task: lint-provenance
+      - task: lint-provenance-vocabulary
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums
@@ -341,6 +376,8 @@ tasks:
       - task: lint-load-context
       - task: check-context-paths
       - task: check-no-roadmap-refs
+      - task: lint-documented-commands
+      - task: lint-store-boundary
       - task: check-knowledge-cards
       - task: check-knowledge-pages
       - task: lint-knowledge-scale

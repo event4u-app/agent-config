@@ -132,9 +132,25 @@ jobs:
         # property of this workflow, not a branch-protection configuration.
         run: ./scripts-run src/scripts/lint_agent_security
 
+      - name: Resolve dist-tag channel (docs/releases.md contract)
+        if: steps.check.outputs.already_published != 'true'
+        id: channel
+        # Channel routing (road-to-credible-install Phase 5): prerelease
+        # versions (any semver prerelease suffix, e.g. X.Y.Z-next.N) publish
+        # to the `next` dist-tag; plain X.Y.Z publishes to `latest`. The
+        # cadence contract lives in docs/releases.md.
+        run: |
+          tag="${{ steps.tag.outputs.name }}"
+          if [[ "$tag" == *-* ]]; then
+            echo "dist_tag=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+          echo "dist-tag channel: $(grep -o 'next\|latest' <<< "${tag/*-*/next}" | head -1)"
+
       - name: Publish via OIDC Trusted Publishing
         if: steps.check.outputs.already_published != 'true'
-        run: npm publish
+        run: npm publish --tag "${{ steps.channel.outputs.dist_tag }}"
 
       - name: Job summary
         if: always()

@@ -1,13 +1,32 @@
-# Agent memory — append-only JSONL, union-merged.
+# Agent memory — merge-safety attributes for parallel-branch memory writes.
 # Append this block to the consumer project's root .gitattributes.
-# See: agents/roadmaps/road-to-memory-merge-safety.md
+# See: agents/roadmaps/archive/road-to-reachable-code-memory.md (Phase 5)
 
-# Intake layer — agent-written, append-only. Union merge concats both
-# sides on conflict instead of failing. Reader deduplicates by id.
+# Intake layer — agent-written, append-only JSONL. Union merge concats both
+# sides on conflict instead of failing. Reader (_iter_intake_entries in
+# memory_lookup.ts) resolves supersede chains keyed by id, so a duplicate
+# line surviving a bad merge collapses harmlessly — same id, later line wins.
 agents/memory/intake/*.jsonl merge=union eol=lf
 
-# Curated memory — content-addressed drop-ins. One file per entry.
-# Normal merge is fine; filename collisions are content-identity.
+# Curated memory — flat layout: one YAML file per type holding an `entries:`
+# list (agents/memory/<type>.yml). Two branches each appending a genuinely
+# NEW entry — the common case — union-merges cleanly (concats both sides).
+# CAVEAT: union merge operates per LINE, not per YAML block. If both branches
+# touch overlapping lines (not pure appends), the result can interleave
+# partial multi-line list items into invalid YAML. The reader
+# (_iter_curated_entries in memory_lookup.ts) does NOT dedup entries by id for
+# this layout, so an exact duplicate block surviving a bad union merge would
+# surface twice. Treat this as a best-effort safety net for the append-only
+# case, not a guarantee — the directory layout below has no such caveat.
+agents/memory/ownership.yml              merge=union text eol=lf
+agents/memory/historical-patterns.yml    merge=union text eol=lf
+agents/memory/domain-invariants.yml      merge=union text eol=lf
+agents/memory/incident-learnings.yml     merge=union text eol=lf
+agents/memory/product-rules.yml          merge=union text eol=lf
+
+# Curated memory — directory layout: one file per entry, content-addressed
+# by hash. Filename collisions are content-identity, so normal (non-union)
+# merge is fine here; only line-ending normalization matters.
 agents/memory/ownership/*.yml              text eol=lf
 agents/memory/historical-patterns/*.yml    text eol=lf
 agents/memory/domain-invariants/*.yml      text eol=lf

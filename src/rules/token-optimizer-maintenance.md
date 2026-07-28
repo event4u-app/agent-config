@@ -17,6 +17,8 @@ validator_ignore:
     reason: "Rule lists the authoring-tree paths that must stay in sync with the catalog."
 workspaces: [agent-config-maintainer]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/check_token_optimizer_freshness.ts"
 ---
 
 # Token Optimizer Maintenance
@@ -36,7 +38,7 @@ About to edit any of:
 - `.agent-src.uncondensed/rules/token-efficiency.md`
 - `.agent-src.uncondensed/rules/direct-answers.md`
 - `.agent-src.uncondensed/skills/rtk-output-filtering/SKILL.md`
-- `.claude/skills/agent-handoff/SKILL.md`
+- `src/domains/meta/agent-handoff/command.md`
 - Any other asset cited by
   [`token-optimizer`](../skills/token-optimizer/SKILL.md) (catalog
   table is the canonical list).

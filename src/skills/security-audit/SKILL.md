@@ -165,7 +165,7 @@ reaches it"). An audit that rejects nothing has usually skipped the gate.
 ## Gotcha
 
 - Don't report theoretical vulnerabilities without a concrete attack vector — false positives erode trust.
-- The model tends to flag framework-handled security as issues (e.g., Laravel's CSRF is already handled).
+- The model tends to flag framework-handled security as issues (e.g., Laravel's CSRF or Rails' `protect_from_forgery` is already handled).
 - Always check if a finding is already mitigated by middleware or configuration before reporting it.
 
 ## Do NOT

@@ -1,7 +1,8 @@
 {
     "name": "@event4u/agent-config",
-    "version": "9.7.0",
-    "description": "Universal AI Agent OS — audited skills, governance rules, commands and templates for AI coding tools (Claude Code, Cursor, Windsurf, Copilot).",
+    "mcpName": "io.github.event4u-app/agent-config",
+    "version": "9.8.0",
+    "description": "Governed skills, rules and commands for AI coding tools (Claude Code, Cursor, Windsurf, Copilot) — every claim machine-checked, including \"zero runtime daemon\".",
     "license": "MIT",
     "private": false,
     "type": "module",
@@ -22,13 +23,11 @@
         "copilot",
         "llm",
         "agent-governance",
-        "ai-video",
         "skills",
         "prompt-engineering",
         "typescript",
         "python",
-        "agent-skills",
-        "cinematic-ai-video"
+        "agent-skills"
     ],
     "files": [
         "dist/agent-src/",
@@ -36,7 +35,7 @@
         ".claude-plugin/",
         "src/config/",
         "dist/",
-        "docs/",
+        "docs/guidelines/",
         "src/scripts/",
         "src/server/schemas/",
         "src/shared/",
@@ -62,13 +61,19 @@
     "scripts": {
         "build:cli": "tsc -p tsconfig.json && chmod +x dist/cli/agent-config.js",
         "build:install-bundle": "esbuild src/scripts/install.ts --bundle --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/install/install.mjs --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url);\"",
+        "build:hooks": "esbuild src/scripts/hooks/dispatch_entry.ts --bundle --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/hooks/dispatch.js --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url); const __acPath = require('node:path'); const __acFs = require('node:fs'); const __acUrl = require('node:url'); const __acReal = (p) => { try { return __acFs.realpathSync(p); } catch { return p; } }; const __acSelf = __acReal(__acUrl.fileURLToPath(import.meta.url)); if (process.argv[1] !== undefined && __acReal(__acPath.resolve(process.argv[1])) === __acSelf) { globalThis.__AC_HOOKS_BUNDLE_DIRECT = true; process.argv = [process.argv[0], __acSelf + '.__direct__', ...process.argv.slice(2)]; }\"",
+        "build:mcp-bundle": "esbuild src/scripts/mcp_server/__main__.ts --bundle --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/mcp/server.mjs --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url); const __acPath = require('node:path'); const __acFs = require('node:fs'); const __acUrl = require('node:url'); const __acReal = (p) => { try { return __acFs.realpathSync(p); } catch { return p; } }; const __acSelf = __acReal(__acUrl.fileURLToPath(import.meta.url)); if (process.argv[1] !== undefined && __acReal(__acPath.resolve(process.argv[1])) === __acSelf) { globalThis.__AC_MCP_BUNDLE_DIRECT = true; process.argv = [process.argv[0], __acSelf + '.__direct__', ...process.argv.slice(2)]; }\"",
         "build:ui": "vite build",
+        "tokens:build": "node tokens/build-ac.mjs && node tokens/build-as.mjs",
+        "tokens:check": "node tokens/build-ac.mjs --check && node tokens/build-as.mjs --check && node tokens/check-contrast.mjs",
         "build:discovery": "./scripts-run src/scripts/build_discovery_manifest --write --strict",
         "build:mcp-manifest": "./scripts-run src/scripts/build_mcp_registry_manifest --write --strict",
-        "build": "npm run build:cli && npm run build:install-bundle && npm run build:ui",
+        "build:mcp-catalog": "./scripts-run src/scripts/build_mcp_catalog --write --strict",
+        "build": "npm run build:cli && npm run build:install-bundle && npm run build:hooks && npm run build:mcp-bundle && npm run build:ui",
         "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.scripts.json",
         "lint:ts": "eslint 'src/**/*.ts'",
         "test:ts": "vitest run",
+        "lint:publint": "publint",
         "prepack": "npm run build && npm run build:discovery && npm run build:mcp-manifest && node src/scripts/prepack-check.mjs",
         "prepublishOnly": "./scripts-run src/scripts/check_release_includes_discovery",
         "prepare": "[ -d .git ] && bash src/scripts/install-hooks.sh || true"
@@ -89,12 +94,14 @@
         "eslint": "^9.39.4",
         "happy-dom": "^20.9.0",
         "js-tiktoken": "^1.0.21",
+        "publint": "^0.3.22",
+        "tsx": "^4.22.3",
         "typescript": "^5.9.3",
         "vite": "^5.4.21",
         "vitest": "^2.1.9"
     },
     "dependencies": {
-        "@fastify/static": "^9.1.0",
+        "@fastify/static": "^10.1.2",
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@preact/signals": "^2.9.0",
         "commander": "^12.1.0",
@@ -103,9 +110,13 @@
         "js-yaml": "^4.1.0",
         "open": "^10.2.0",
         "preact": "^10.29.0",
-        "tsx": "^4.22.3",
+        "tree-sitter-wasms": "0.1.13",
+        "web-tree-sitter": "0.24.7",
         "yaml": "^2.9.0",
         "zod": "^3.25.0",
         "zod-to-json-schema": "^3.25.0"
+    },
+    "overrides": {
+        "@hono/node-server": "^2.0.5"
     }
 }

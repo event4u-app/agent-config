@@ -67,9 +67,9 @@ human voice there; don't inject personality or restructure.
 4. **Final rewrite** addressing the audit. Keep em/en dashes at or under
    ~2 per 500 words (density cap, not zero — house precedent CP1).
 5. **Verify mechanically** when runtime available:
-   `npx tsx src/scripts/detect_ai_tells.ts --stdin --fail` on final
-   draft. No runtime → step-3 audit is the fallback (degrade, don't
-   skip audit).
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/detect_ai_tells.ts --stdin --fail`
+   on final draft. No runtime → step-3 audit is the fallback (degrade,
+   don't skip audit).
 6. **Deterministic self-check + factual-integrity guard.** Re-scan the
    final draft against the [`anti-aiisms.md`](references/anti-aiisms.md)
    self-validation thresholds (dash density, consecutive-staccato cap,

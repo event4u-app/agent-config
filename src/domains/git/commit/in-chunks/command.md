@@ -70,6 +70,14 @@ Splitting rules:
 
 Generate commit messages per [`commit-conventions`](../../rules/commit-conventions.md).
 
+### 3b. Secret-leak pre-flight — MANDATORY, not autonomy-lifted
+
+Run `./scripts-run src/scripts/check_secret_leak`. A high-confidence hit is a
+safety surface: **STOP even under this autonomous flow** (autonomy never lifts
+it), hand to [`secret-vcs-guard`](../../rules/secret-vcs-guard.md) — show the
+match, ask, offer the alternative. Never auto-commit a secret; never silently
+strip one.
+
 ### 4. Validate, then commit immediately
 
 Before staging anything, run the same `preview-on-error` validator as

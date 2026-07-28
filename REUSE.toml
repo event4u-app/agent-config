@@ -1,0 +1,14 @@
+version = 1
+SPDX-PackageName = "@event4u/agent-config"
+SPDX-PackageSupplier = "event4u <m.berg@galawork.de>"
+SPDX-PackageDownloadLocation = "https://github.com/event4u-app/agent-config"
+
+# Path-glob declarations instead of per-file headers: REUSE 3.3's supported
+# alternative. Chosen deliberately — stamping ~1,700 source files (plus their
+# generated projections) would produce an unreviewable diff for zero
+# additional compliance, and every path below is first-party MIT.
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025-2026 event4u"
+SPDX-License-Identifier = "MIT"

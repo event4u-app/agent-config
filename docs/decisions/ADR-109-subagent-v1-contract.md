@@ -7,6 +7,8 @@ supersedes: —
 superseded_by: —
 phase: road-to-final-state-and-market-readiness
 type: standing
+review_trigger: >-
+  When a host ships a spawn primitive whose memory-inheritance semantics are documented, OR when a dispatched subagent is observed taking an action the floor forbids
 ---
 
 # ADR-109 — The `subagent-v1` contract (new discovery category, default-off, static projection)

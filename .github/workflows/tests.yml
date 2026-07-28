@@ -132,6 +132,13 @@ jobs:
           npm run build:install-bundle
           git diff --exit-code -- dist/install/
 
+      # road-to-feedback-9.2.0-followups Phase 4: three 9.1 commits each
+      # manually rebuilt this bundle to strip a leaked build-machine path
+      # (worktree-relative, repo-relative, and full /Users/<name>/... module
+      # comments). This makes that class fail the build instead.
+      - name: Install bundle has no build-machine path leakage
+        run: ./scripts-run src/scripts/check_bundle_path_leakage
+
       - name: Run install orchestrator integration tests
         # Default nproc on macOS-arm64 runners returns 3, bottlenecking
         # the ~40-test orchestrator suite. Explicit -P 8 keeps wall-clock
@@ -250,6 +257,13 @@ jobs:
       - name: Typecheck (tsc --noEmit)
         run: npm run typecheck --silent
 
+      - name: MCP catalog drift (--strict)
+        # Phase 3 of road-to-credible-install: consumer_tool_catalog.json is
+        # generated FROM the tool registry (ALLOWLIST in mcp_server/tools.ts
+        # + STUB_TOOLS in mcp_server/tool_catalog_source.ts) — a hand-edit
+        # or an un-regenerated registry change both fail this gate red.
+        run: ./scripts-run src/scripts/build_mcp_catalog --strict
+
       - name: Build (dist/cli + UI bundle)
         # prepack-check asserts the chmod +x hook applied by build:cli.
         run: npm run build --silent
@@ -259,8 +273,29 @@ jobs:
         # import reachable from the shipped src/ trees resolves to a file the
         # package.json `files` whitelist actually ships (the 8.3.0
         # ERR_MODULE_NOT_FOUND class — doctor/conformance crashed in the
-        # global install because src/install/ was never packed).
+        # global install because src/install/ was never packed), and that
+        # every consumer-side lifecycle script target exists + ships (the
+        # 9.8.0 dead-postinstall class).
         run: node src/scripts/prepack-check.mjs
+
+      - name: hook-latency bench gate (pre-registered budget)
+        # Standing published gate (road-to-credible-install Phase 1): 50
+        # invocations per hook event against dist/hooks/dispatch.js; p95
+        # must meet src/config/hook-latency-budget.json and must not
+        # regress >20% vs the recorded docs/hook-latency.json numbers.
+        run: ./scripts-run src/scripts/bench_hook_latency --gate
+
+      - name: publint (published-package shape)
+        # Release-gate addition (road-to-credible-install Phase 0): catches
+        # dead script targets / broken exports / files[] mistakes in the
+        # packed artifact structurally, on every PR instead of at publish.
+        run: npm run lint:publint --silent
+
+      - name: npm audit (runtime deps, high+)
+        # Standing audit gate (road-to-credible-install Phase 0): the same
+        # floor status as ci-green. Dev-only advisories do not block; the
+        # runtime dependency tree must stay free of high/critical findings.
+        run: npm audit --omit=dev --audit-level=high
 
   golden-tests:
     # Golden-transcript replay — 29 scenarios × `./agent-config` (dist/cli)

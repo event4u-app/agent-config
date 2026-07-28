@@ -120,3 +120,4 @@ agent's, in-session.
 - [`image-creator`](../image-creator/SKILL.md) — consumes the diff; the loop partner.
 - [`character-consistency`](../character-consistency/SKILL.md) — consumes the load-bearing token subset of the `identity` layer.
 - [`canon-spec.md`](canon-spec.md) — schema, rubric, fidelity loop.
+- [`screenshot-hygiene`](../screenshot-hygiene/SKILL.md) — reuses this skill's OCR text-read to detect sensitive data in a documentation screenshot before it ships.

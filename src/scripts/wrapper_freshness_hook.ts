@@ -38,6 +38,7 @@ import {
   install_cli_wrapper,
   needs_refresh,
 } from "./_lib/cli_wrapper.js";
+import { readHookStdin } from "./hooks/hook_stdin.js";
 
 export const EXIT_ALLOW = 0;
 
@@ -112,13 +113,7 @@ function _is_source_repo(project_root: string): boolean {
 }
 
 function _readStdinIfNotTty(): void {
-  try {
-    if (!process.stdin.isTTY) {
-      fs.readFileSync(0, "utf-8");
-    }
-  } catch {
-    /* ignore */
-  }
+  readHookStdin();
 }
 
 function _parseRoot(argv: string[]): string | null {
@@ -249,7 +244,13 @@ export function main(argv?: string[]): number {
   return EXIT_ALLOW;
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }
