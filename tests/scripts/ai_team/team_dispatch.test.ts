@@ -17,6 +17,7 @@ import {
 } from '../../../src/scripts/ai_council/clients';
 import { build_ai_team_config } from '../../../src/scripts/ai_team/config';
 import {
+    assert_delegate_allowed,
     build_repo_context_bundle,
     DIFF_BUNDLE_MAX_CHARS,
     type GitRunner,
@@ -26,6 +27,7 @@ import {
     render_review_user_prompt,
     run_team_review,
     TEAM_REVIEW_SYSTEM_PROMPT,
+    TeamDelegateDisabledError,
     TeamDisabledError,
     TeamReviewCliClient,
     truncation_marker,
@@ -227,6 +229,35 @@ describe('run_team_review — fail-closed when disabled', () => {
             expect((exc as Error).message).toContain('ai_team.enabled: true');
             expect((exc as Error).message).toContain('.agent-settings.yml');
         }
+    });
+});
+
+// === delegate double gate ==================================================
+
+describe('assert_delegate_allowed — /team:delegate double gate', () => {
+    it('enabled: false (default) → TeamDisabledError; allow_delegate alone never opens the gate', () => {
+        expect(() => assert_delegate_allowed(build_ai_team_config({}))).toThrow(TeamDisabledError);
+        expect(() =>
+            assert_delegate_allowed(build_ai_team_config({ allow_delegate: true })),
+        ).toThrow(TeamDisabledError);
+    });
+
+    it('enabled: true + allow_delegate: false (default) → TeamDelegateDisabledError with the opt-in pointer', () => {
+        expect(() => assert_delegate_allowed(build_ai_team_config({ enabled: true }))).toThrow(
+            TeamDelegateDisabledError,
+        );
+        try {
+            assert_delegate_allowed(build_ai_team_config({ enabled: true }));
+        } catch (exc) {
+            expect((exc as Error).message).toContain('ai_team.allow_delegate: true');
+            expect((exc as Error).message).toContain('write access');
+        }
+    });
+
+    it('both true → gate opens (no throw)', () => {
+        expect(() =>
+            assert_delegate_allowed(build_ai_team_config({ enabled: true, allow_delegate: true })),
+        ).not.toThrow();
     });
 });
 
