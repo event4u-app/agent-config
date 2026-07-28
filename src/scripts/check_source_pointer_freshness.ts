@@ -17,9 +17,12 @@
  * genuinely-historical line inside an allowlisted file is exempted with an
  * inline `<!-- pointer-freshness: historical -->` marker.
  *
- * Extend AUTHORING_FILES as the broader `.agent-src.uncondensed` cleanup lands
- * (186 files still carry the token; see road-to-doc-follows-code Phase 4/5
- * follow-up).
+ * Extend AUTHORING_FILES as the broader `.agent-src.uncondensed` cleanup lands.
+ * road-to-retire-stale-authoring-pointers (2026-07-28) migrated the stale
+ * *authoring-source* pointers (43 `.md` lines) to `src/` and added the now
+ * token-free files here; the remaining `.agent-src.uncondensed/` references in
+ * `src/` are live code constants / pipeline descriptions / catalog paths that
+ * are correct and must stay (not authoring pointers).
  *
  * Exit codes: 0 = clean, 1 = a retired pointer in an allowlisted authoring
  * file, 2 = usage / self-test failure.
@@ -41,8 +44,30 @@ const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 // name the retired `.agent-src.uncondensed/` tree as current. Extend as the
 // broader cleanup lands.
 const AUTHORING_FILES: readonly string[] = [
+    // Seeded by #989 (the source-of-truth README + thin-root skill).
     'src/agent-src/README.md',
     'src/skills/agents-md-thin-root/SKILL.md',
+    // Added by road-to-retire-stale-authoring-pointers (2026-07-28): files whose
+    // stale "edit `.agent-src.uncondensed/`" authoring pointers were migrated to
+    // `src/` and are now token-free — locking them against regression. Files that
+    // retain legitimate `.agent-src.uncondensed/` references (pipeline
+    // descriptions, catalog-asset paths, validator_ignore config, fenced code)
+    // are intentionally NOT listed — they are guarded behaviorally by the
+    // downstream-changes § Doc-Impact rule, not by this any-occurrence scan.
+    'src/agent-src/templates/persona.md',
+    'src/domains/ai-video/image/command.md',
+    'src/domains/ai-video/video/command.md',
+    'src/domains/engineering-base/fix/portability/command.md',
+    'src/domains/engineering-base/fix/refs/command.md',
+    'src/domains/gtm-marketing/post-as/command.md',
+    'src/domains/meta/agents/command.md',
+    'src/domains/meta/agents/user/command.md',
+    'src/domains/meta/optimize/augmentignore/command.md',
+    'src/domains/product-basic/roadmap/ai-council/command.md',
+    'src/domains/product-discovery/research/command.md',
+    'src/skills/md-language-check/SKILL.md',
+    'src/skills/override-management/SKILL.md',
+    'src/skills/rule-refactor/SKILL.md',
 ];
 
 // Retired source-of-truth pointer. Matches both the bare token and the older

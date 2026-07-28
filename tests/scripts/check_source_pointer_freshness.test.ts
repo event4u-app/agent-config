@@ -13,11 +13,13 @@ import { join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+    AUTHORING_FILES,
     _scanFile,
     _selftest,
     HISTORICAL_MARKER,
     RETIRED_POINTER,
 } from '../../src/scripts/check_source_pointer_freshness.js';
+import { existsSync, readFileSync } from 'node:fs';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 // A temp fixture dir UNDER the repo root, so the ROOT-relative _scanFile resolves it.
@@ -79,6 +81,34 @@ describe('_scanFile', () => {
         const hits = _scanFile(`${FIX_REL}/does-not-exist.md`);
         expect(hits.length).toBe(1);
         expect(hits[0]?.line).toBe(0);
+    });
+});
+
+describe('AUTHORING_FILES allowlist (broadened by road-to-retire-stale-authoring-pointers)', () => {
+    it('locks the migrated authoring files against regression', () => {
+        // The #989 seed + the 14 files whose stale authoring pointers were migrated.
+        for (const f of [
+            'src/agent-src/README.md',
+            'src/skills/agents-md-thin-root/SKILL.md',
+            'src/skills/rule-refactor/SKILL.md',
+            'src/domains/meta/agents/command.md',
+            'src/agent-src/templates/persona.md',
+        ]) {
+            expect(AUTHORING_FILES).toContain(f);
+        }
+    });
+    it('every allowlisted file exists and is free of the retired token (else the gate would false-fail)', () => {
+        for (const rel of AUTHORING_FILES) {
+            const abs = join(REPO_ROOT, rel);
+            expect(existsSync(abs), `${rel} missing`).toBe(true);
+            const nonHistorical = readFileSync(abs, 'utf-8')
+                .split('\n')
+                .filter((l) => !l.includes(HISTORICAL_MARKER));
+            expect(
+                nonHistorical.some((l) => RETIRED_POINTER.test(l)),
+                `${rel} still carries a retired pointer on a non-historical line`,
+            ).toBe(false);
+        }
     });
 });
 
