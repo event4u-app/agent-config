@@ -16,6 +16,25 @@ complexity: medium
 > `rules_carried`/`rules_used` per-worker audit fields shipped by
 > `road-to-lean-agent-init` (2026-07-28): a sustained low usage quota
 > (rules carried but not applied) IS the datum this condition asks for.
+>
+> **Gate (1) HAS FIRED — as an honest null (2026-07-28).** The first native
+> engine's Phase-5 verdict is published: the code graph measured recall
+> **0.365 vs disciplined grep 0.797** (Δ −43.2 pp), is permanently
+> `enabled: false`, and carries a deprecation date (`docs/CLAIMS.md`
+> `code-graph-retrieval-null`; `docs/MIGRATION.md` § Scheduled deprecations).
+> The ADR-124 sequencing rule therefore no longer blocks this roadmap — gate
+> (2), the three-condition demand signal, is now the only gate.
+>
+> **But read the null before building.** Council 2026-07-28
+> (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds) flagged that the
+> null's root cause is a category limit of static indexes over dynamic code,
+> and that *rule retrieval is also a retrieval problem* — a lexical/BM25 core
+> already ships (`_lib/lexical_index.ts`) and is the cheaper baseline any new
+> retriever must beat on a pre-registered measurement BEFORE it is built, not
+> after. The house pattern is now established: build-then-measure cost a full
+> engine; measure-then-build is the lesson. If gate (2) converts, the first
+> deliverable is the pre-registered comparison against the shipped lexical
+> core, not the retriever.
 
 ## What this is — and what it is not
 

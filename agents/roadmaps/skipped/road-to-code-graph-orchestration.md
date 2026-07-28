@@ -12,6 +12,19 @@ complexity: medium
 > nudge, staleness governance, injection-sanitization, honest-benchmark
 > protocol) as its interop tier. Kept for traceability of the pre-registered
 > thresholds the successor cites.
+>
+> **Epilogue 2026-07-28 — the successor closed with an honest null, and this
+> draft's original premise was partly vindicated.** The successor is archived
+> at `archive/road-to-native-code-intelligence.md`: the native engine was
+> built, then measured at recall 0.365 vs disciplined grep 0.797 (Δ −43.2 pp)
+> and permanently defaulted off (`docs/CLAIMS.md`
+> `code-graph-retrieval-null`). The "orchestrator only" posture this draft
+> proposed — interop with a consumer-shipped index rather than owning one —
+> was reversed by maintainer directive and then, on the measurement, turned
+> out to be the cheaper read of the same question. Recorded here plainly
+> because a skipped roadmap that called it right is worth more as evidence
+> than as a tombstone; the ADR-124 doctrine still stands (see its 2026-07-28
+> addendum), but its first application priced it.
 
 # Road to code-graph orchestration — make the interop rule executable, enforce query-first, benchmark honestly
 

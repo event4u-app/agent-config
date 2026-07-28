@@ -73,10 +73,16 @@ strictly zero-delta.
 ## Non-goals — parked owners stay intact
 
 - Default-on for `hooks.code_graph.enabled` and `memory.session_index`:
-  STAYS in `later/road-to-native-code-intelligence.md` Phase 5 and
+  STAYS in `archive/road-to-native-code-intelligence.md` Phase 5 and
   `road-to-memory-retrieval-economy` Phase 5, both behind
   benchmark-spend authorization. This roadmap only makes those benchmarks
   RUNNABLE.
+  <!-- update 2026-07-28: the code-graph half is CLOSED — that Phase 5 was
+  cancelled on a failed correctness precondition and `code_graph.enabled:
+  false` is permanent (docs/CLAIMS.md `code-graph-retrieval-null`). The
+  default-on question it owned no longer exists; the memory/session_index half
+  is unaffected. Path updated later/ → archive/. -->
+
 - **D5 five-verb MCP graph surface**: gated on the maintainer scope
   decision + N0 batch, and sequenced BEHIND the launch (MCP on a package
   nobody installed moves adoption by zero).

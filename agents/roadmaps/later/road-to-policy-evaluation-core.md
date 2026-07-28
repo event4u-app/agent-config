@@ -10,6 +10,29 @@ complexity: medium
 > sequencing plan in `road-to-native-code-intelligence.md`), AND (2) a named
 > consumer demand signal exists for machine-evaluable policy verdicts —
 > not "two models suggested it" (the operator-harvest reopen standard).
+>
+> **Gate (1) HAS FIRED — and it fired AGAINST this roadmap (2026-07-28).** The
+> first native engine's verdict is an honest null: the code graph measured
+> recall **0.365 vs disciplined grep 0.797** (Δ −43.2 pp) and is now
+> permanently `enabled: false` with a deprecation date
+> (`docs/CLAIMS.md` `code-graph-retrieval-null`; `docs/MIGRATION.md`
+> § Scheduled deprecations). So the sequencing rule no longer blocks this
+> roadmap — but the evidence it produced argues against starting it as
+> designed. Council 2026-07-28 (anthropic/claude-sonnet-4-5 + openai/gpt-4o,
+> 2 rounds) read the null's root cause as a **category limit, not a bug**:
+> static graphs cannot represent dynamic dispatch, runtime-constructed
+> identifiers, or non-hoisted arrow functions (170 TS vs 13,428 PHP symbol
+> nodes on same-shaped repos). Both members recommended treating this roadmap
+> as **approach-invalidated** rather than unblocked.
+>
+> **Consequence for the resume decision:** gate (2) — a named consumer demand
+> signal — is now the ONLY gate, and it must be met by a demand signal for
+> *policy verdicts*, not for graph retrieval. If that signal arrives, the
+> roadmap needs a re-scope to a non-graph mechanism before any build, and the
+> re-scope must state how it avoids the measured category limit above.
+> Whether the file is instead archived outright is the maintainer's
+> disposition call — recorded here rather than executed unilaterally, since
+> archiving buries planned work.
 
 ## What this is — and what it is not
 

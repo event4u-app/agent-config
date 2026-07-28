@@ -266,6 +266,21 @@ disposition of unproven surfaces** — not from another capability.
 
 ## Phase 2 — Code-graph proof: 2-arm, pre-registered, physical null-consequence
 
+> **Downstream effect on another roadmap (recorded 2026-07-28, protocol
+> amendment — not a silent retrofit):** this Phase-2 null also **cancelled**
+> `road-to-native-code-intelligence` Phase 5 (its pre-registered three-arm,
+> LLM-judged, token-reduction benchmark). That phase's decision rule gated
+> every branch on *"at non-inferior correctness"*; this run measured
+> correctness directly and found it inferior by 43.2 pp, so the token
+> measurement became impossible to perform as specified. It is recorded there
+> as **CANCELLED (precondition failed)** — deliberately NOT as "superseded by
+> this benchmark", because a pre-registration exists to prevent substituting a
+> cheaper measurement even when the substitute reaches the correct conclusion.
+> The two designs are not interchangeable: this one dropped the third arm, the
+> LLM judge, the κ sample, and the token metric. Council 2026-07-28
+> (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds) — round 1 both for
+> closing it, round 2 converged on the cancelled-not-superseded framing.
+
 > The engine is technically strong and product-unproven (reviewer scores:
 > engineering 9.4–9.5, product evidence 6.5–7.5). ADR-124's own test —
 > "changes WHAT the tool can answer, not just how fast" — is measurable.
