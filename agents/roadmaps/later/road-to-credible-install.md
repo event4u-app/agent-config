@@ -1,10 +1,23 @@
 ---
 complexity: structural
-status: ready
+status: later
 ---
 
 # Road to credible install — survive the first five minutes of an external evaluation
 
+> **Parked in `later/` (2026-07-28, council closeout sweep — 2-round debate,
+> anthropic/claude-sonnet-4-5 + openai/gpt-4o).** All 29 buildable steps are
+> closed. The single remaining item — the Phase-5 post-flip cadence observation
+> — is real work with deliverables (four weeks of `latest`-channel monitoring,
+> analysis, a recorded met/missed note), not a passive calendar event, so it
+> belongs in `later/` rather than being re-homed into `docs/releases.md` (that
+> doc is the *recording* location for the findings, not the tracking mechanism).
+> **Resume when** the breaking release carrying the Phase-2 scoped-projection
+> flip ships (human-gated) — then wait out the four-week window and record
+> met-or-honestly-missed in `docs/releases.md` § Verification with the actual
+> release list (`npm view @event4u/agent-config time --json`). The open `[ ]`
+> item is intentionally kept open; this roadmap is parked whole, not dropped.
+>
 > **Source:** external adversarial review of 9.8.0
 > (`agents/tmp.old/feedback-critical-1.txt`) — fresh clone, real registry
 > install, measured findings, two pre-drafted remediation plans.

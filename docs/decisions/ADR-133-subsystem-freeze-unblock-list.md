@@ -99,7 +99,7 @@ Explicitly refused while the freeze holds (council-confirmed, 2026-07-26 Q6):
 
 ## References
 
-- `agents/roadmaps/road-to-feedback-9.8.0-followups.md` — § Council
+- `road-to-feedback-9.8.0-followups.md` — § Council
   convergence (Q4, Q6) + Phase 1.
 - ADR-124 — embedded-engine doctrine (defines the engine classes the freeze
   gates).

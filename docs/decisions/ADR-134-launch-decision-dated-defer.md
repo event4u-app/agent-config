@@ -96,7 +96,7 @@ symmetric trigger: decide then, do not sit on the date.
 
 ## References
 
-- `agents/roadmaps/road-to-feedback-9.8.0-followups.md` — § Council
+- `road-to-feedback-9.8.0-followups.md` — § Council
   convergence (Q7) + Phase 1.
 - `agents/roadmaps/road-to-adoption-without-narrative-debt.md` — the
   execution surface once posting is greenlit; its Phase 1 blocker (real

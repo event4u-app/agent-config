@@ -1,11 +1,20 @@
 ---
 complexity: structural
-status: ready
+status: later
 parent_roadmap: road-to-token-saving
 ---
 
 # Road to request-scoped rule load — ship only what the request needs
 
+> **Parked in `later/` (2026-07-28, council closeout sweep — 2-round debate,
+> anthropic/claude-sonnet-4-5 + openai/gpt-4o, unanimous).** 34 of 36 steps
+> done; both remaining items are the SAME council-parked Phase 4 (rules-as-skills
+> falsification probe, parked by verdict 2026-07-07 with its design locked).
+> **Resume when** its recorded promotion trigger fires: `discipline_profile:
+> essential` baseline has landed AND thin un-deferral is actually scheduled
+> (HUMAN-MEASUREMENT resumed). Open `[ ]` items are intentionally kept open —
+> parked whole, neither silently executed nor silently deleted.
+>
 > Close the structural gaps the thin-projection work does not touch:
 > (1) **consumer scoping** — originally 63 of 95 shipped rules were
 > exclusively maintainer-workspace-scoped and landed in every consumer

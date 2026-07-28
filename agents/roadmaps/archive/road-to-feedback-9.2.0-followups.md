@@ -1,10 +1,20 @@
 ---
 complexity: structural
-status: ready
+status: completed
 ---
 
 # Roadmap: Feedback 9.2.0 Follow-ups
 
+> **Closed 2026-07-28 (roadmap closeout sweep).** All buildable steps shipped
+> (cross-source-consistency rule + pre-registered eval + claims entry +
+> ask-rate telemetry facet, the `subagent-orchestration` size-budget split,
+> release-PR review mode, the bundle-path-leakage gate). Step 1.5 (generic
+> situational-rule harness) is closed by council decision (2026-07-28, 2-round
+> debate, anthropic/claude-sonnet-4-5 + openai/gpt-4o, unanimous): the
+> extraction transfers to the SECOND situational rule's own build work, which
+> is where the duplication that justifies it will appear — a standing open
+> checkbox was not the tracking mechanism. No further work planned.
+>
 > **Source:** external review passes of Release 9.2.0 / `main` @ 9.2.0
 > (`agents/tmp.old/feedback-9.2.0-1.txt`, multiple independent reviewers, verdicts
 > 9.4–9.6/10 and 119/120). The reviews are overwhelmingly positive; this roadmap
@@ -132,8 +142,17 @@ once a **second** situational rule proves the abstraction boundary (step 1.5).
       new templates_telemetry_cross_source.test.ts (one-discrepancy → exactly one
       cross_source entry; consistent-sources task → field omitted entirely) +
       `task typecheck-ts` clean. -->
-- [ ] **1.5 (gated — do not start until a 2nd situational rule exists) Extract the
-      generic situational-rule harness.** When a second rule of this class actually
+- [-] **1.5 (gated — do not start until a 2nd situational rule exists) Extract the
+      generic situational-rule harness.**
+      <!-- closed by decision 2026-07-28 (council, 2-round debate,
+      anthropic/claude-sonnet-4-5 + openai/gpt-4o, unanimous): a standing open
+      checkbox is not the tracking mechanism for a conditional future
+      dependency. The extraction obligation transfers to the SECOND situational
+      rule's own build work — whoever fixtures rule #2 owns extracting the
+      common harness from the two concrete instances (the gate re-fires
+      naturally via the duplication that work creates). Acceptance criteria
+      already exclude 1.5 from Phase 1. Original gated text follows for the
+      audit trail. --> When a second rule of this class actually
       needs the same fixture shape (e.g. a future scope-control / design-fidelity /
       evidence-freshness eval), extract the common format from the *two concrete
       instances* — proven need, not anticipated need. Until then this stays open by
