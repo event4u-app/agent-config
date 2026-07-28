@@ -154,6 +154,18 @@ _2 blockers resolved._
     `yt-dlp` and a JavaScript runtime are installed **by a human** on
   - **Resolved when:** condition described above clears
 
+### [road-to-lean-agent-init.md](roadmaps/road-to-lean-agent-init.md)
+
+**Lean Agent Init — tool-not-agent routing, worker stop-loss, spawn-payload truth** — 0 / 14 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | L0: tool-not-agent routing for lookup-class tasks | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | L0b: hard per-worker token stop-loss | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Telemetry + spawn-payload truth (measure, then lint) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Cheap payload wins (reuse-only, no new mechanisms) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Disposition and closure | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
 **Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 12 done (58%)
