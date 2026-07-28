@@ -315,3 +315,10 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively
 - status: backed
 - last_verified: 2026-07-28
+
+### claim: cross-source-consistency-precision
+- claim: On the shared 30-fixture false-premise corpus (20 positives across the four discrepancy classes text-image / silent-needed / spec-code / intra-ticket + 10 negative controls), the default-on `cross-source-consistency` rule surfaces real discrepancies at >= 85% precision with an unnecessary-ask (over-firing) rate <= 5% on the negative controls.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-07-28 (road-to-feedback-9.2.0-followups Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) fixtures + expected actions are pinned in `internal/bench/corpora/honesty-false-premise.yaml` (shared with the honesty bench, extended-not-forked); (2) the scorer is `src/scripts/bench_cross_source_eval.ts` (ask|proceed|warn classification, forbidden-assumption + over-firing checks) — precision = correctly-surfaced discrepancies / all surfaced; over-firing = asks on negative controls / negative controls; (3) the run needs real model responses per fixture (paid, maintainer-gated spend) — this entry stands as documented debt until that run lands; (4) HONEST NULL consequence bound: precision < 85% or over-firing > 5% → loosen the rule's default (`consistency.cross_source: on` → `auto`) or tighten its confidence tiers — never silently keep firing. This binds the weaker-evidenced default-on rule to a measurement like every other default-flip.
+- status: unbacked
+- last_verified:

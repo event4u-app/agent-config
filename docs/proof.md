@@ -123,7 +123,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 4 claim(s) are logged as
+We also publish our **debt**: 5 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -280,7 +280,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (85) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 35 ledger entries · 31 backed · 4 unbacked inventory.
+**Axis 2 — evidence form per public claim.** 36 ledger entries · 31 backed · 5 unbacked inventory.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
@@ -291,6 +291,7 @@ Undeclared rules (85) carry no row — an honest gap beats a false claim.
 | `context-token-reduction` | quant | backed | `internal/bench/reports/token-baseline.json#eager_rule_load` |
 | `council-vs-solo-baseline` | comparative | unbacked | `PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11 Phase 3 — no goalpost-moving after the numbers land; design at `docs/design/council-vs-solo-baseline.md`). Falsification criteria fixed BEFORE data: (1) quality = blind post-hoc grading against known ground-truth dispositions, two blind judges, admissible only at Cohen's κ ≥ 0.60 (reuse `check_quality_regression.ts` kappa machinery); (2) the five feedback-proposed admission dimensions are recorded per decision AT pre-registration, so "≥2-of-5" is a testable post-hoc correlate, never a pre-imposed gate; (3) NO lift on any subset (overall, per impact class, per dimension stratum) → honest null, deliberation-protocol phases stop (maintenance-only), recorded in road-to-opt-council-deliberation; lift on a subset → admission criteria derived FROM that subset's characteristics. Execution is spend-gated (user confirms rendered estimate in-session); shadow-log was absent/empty at design time — zero prior council-vs-solo data exists.` |
 | `cross-model-parity-count` | quant | backed | `internal/bench/reports/parity-count.json#min over hosts of median` |
+| `cross-source-consistency-precision` | quant | unbacked | `PRE-REGISTERED 2026-07-28 (road-to-feedback-9.2.0-followups Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) fixtures + expected actions are pinned in `internal/bench/corpora/honesty-false-premise.yaml` (shared with the honesty bench, extended-not-forked); (2) the scorer is `src/scripts/bench_cross_source_eval.ts` (ask\|proceed\|warn classification, forbidden-assumption + over-firing checks) — precision = correctly-surfaced discrepancies / all surfaced; over-firing = asks on negative controls / negative controls; (3) the run needs real model responses per fixture (paid, maintainer-gated spend) — this entry stands as documented debt until that run lands; (4) HONEST NULL consequence bound: precision < 85% or over-firing > 5% → loosen the rule's default (`consistency.cross_source: on` → `auto`) or tighten its confidence tiers — never silently keep firing. This binds the weaker-evidenced default-on rule to a measurement like every other default-flip.` |
 | `default-install-context-cost` | quant | backed | `docs/benchmark.md#Default-install context cost` |
 | `discipline-lift-weak-host` | quant | backed | `docs/benchmark.md#weak-host-specific` |
 | `domain-soundness-scoped` | qual | backed | `exec:domain_soundness_status --check -> 0` |

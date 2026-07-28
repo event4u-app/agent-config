@@ -1,11 +1,112 @@
-# Subagent Modes — worktree + live-app-judge + adversarial-council detail
+# Subagent Modes — per-mode detail (decision rows, contracts, heavy modes)
 
-Extended detail for the heaviest [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md)
-modes — `do-in-worktrees` (mode 7), `do-with-live-app-judge` (mode 8), and
-`adversarial-verification-council` (mode 9). Split out of the skill body to keep
-it under the size budget; the mode list, selection rules, and the six common
-modes stay inline in the skill. Pull this when you actually dispatch one of these
-modes.
+Extended detail for the [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md)
+modes. Split out of the skill body to keep it under the size budget; the mode
+list, form gate, selection rules, and procedure stay inline in the skill. Pull
+this when you dispatch a mode and need its decision row, execution contract, or
+the heavy-mode detail (modes 7–9).
+
+## Modes 1–6 — decision rows and execution contracts
+
+### Mode 1 — do-and-judge
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| Single-change task with non-trivial risk | Tiny fix, or spike/exploration | implementer = session; judge = one tier up |
+
+### Mode 2 — do-and-judge-two-stage
+
+Implementer produces a diff; **two judges run sequentially** — first a
+spec-compliance reviewer (does the diff satisfy the stated spec /
+acceptance criteria?), then a code-quality reviewer (is the diff well-
+written for the codebase it lands in?). The orchestrator only proceeds
+to stage two if stage one returns `DONE` or `DONE_WITH_CONCERNS`. A
+stage-one `BLOCKED` shortcuts the loop — there is no point quality-
+reviewing a diff that does not satisfy the spec.
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| Spec is contested or AC are detailed; diff size makes one judge prone to missing one axis (correctness vs craft) | Spec is one sentence, or the diff is one line (collapse to mode 1) | implementer = session; spec-judge = one tier up; quality-judge = same tier as spec-judge, fresh context |
+
+**Why two stages, not one judge with both rubrics:** combining the
+rubrics in one prompt reliably regresses one of them — the judge "spends
+attention" on whichever rubric appears last. Splitting the prompts
+forces each judge to commit fully to its rubric.
+
+**Stage-routing rule:**
+- Stage-1 returns `DONE` → run stage-2.
+- Stage-1 returns `DONE_WITH_CONCERNS` → run stage-2; concerns carry
+  forward to the final envelope.
+- Stage-1 returns `NEEDS_CONTEXT` → pause; stage-2 does not run.
+- Stage-1 returns `BLOCKED` → final verdict is `BLOCKED`; stage-2
+  does not run (saves cost).
+
+### Mode 3 — do-in-steps
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| Multi-step plan with ordered dependencies | Single-step change, or when steps are independent (use `do-in-parallel`) | implementer = session; judge = one tier up |
+
+### Mode 4 — do-in-parallel
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| Independent slices (different files, non-overlapping) | Any slice touches shared state | implementer = session; judge = one tier up, run once |
+
+### Mode 5 — do-competitively
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| Broad solution space (algorithm choice, API shape) | Well-defined problem with one good answer | implementers = same tier (≥2 instances); judge = one tier up |
+
+### Mode 6 — judge-with-debate
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| Security, data integrity, public API change | Routine internal refactor | judges = same tier (2x); meta-judge = one tier up |
+
+## Severity-conditioned team composition — conditions pattern
+
+Guidance, not a new object class (persona-catalog disposition; AI council
+2026-07-27, claude-sonnet-4-5 + gpt-4o: capture as guidance on this
+existing surface — no roster schema, no linter, no fourth scoping
+ontology). Incident-style severity tiers refine composition and
+activation **within** the form the static gate already picked — severity
+never overrides the form gate, the Iron Law, or any safety floor.
+
+| Severity | Composition + activation | Existing mode(s) |
+|---|---|---|
+| Critical — prod impact, security, data integrity | Full parallel team; debate-grade review on the aggregate | `do-in-parallel` + `judge-with-debate` (Mode 9 where opted in) |
+| High — contested spec, cross-layer risk | Implementer + two sequential judges | `do-and-judge-two-stage` |
+| Medium — routine multi-step | Implementer + judge between steps | `do-in-steps` / `do-and-judge` |
+| Low — small, reversible | Solo with async review | in-session (`none`); optional single async judge |
+
+At equal severity the cheapest-mode preference (skill § 3. Pick the mode)
+still applies; escalate one tier only on a named risk signal, never on
+vibes.
+
+## Status taxonomy — rationale and routing semantics
+
+Every implementer or judge return conforms to
+[`schemas/subagent-status.json`](../../../skills/subagent-orchestration/schemas/subagent-status.json).
+Four statuses, no free-form alternatives:
+
+| Status | Meaning | Required keys (beyond `status`, `summary`) |
+|---|---|---|
+| `DONE` | Work shipped, all gates green. | `evidence[]` |
+| `DONE_WITH_CONCERNS` | Work shipped but caller must act on concerns. | `evidence[]`, `concerns[]` |
+| `NEEDS_CONTEXT` | Paused; caller can unblock by answering. | `blocking_question` |
+| `BLOCKED` | No path forward exists. | `blocking_reason` |
+
+**Why a fixed taxonomy:** orchestrators (`/do-and-judge`, `/do-in-steps`)
+route on status. Free-form "kind of done" returns force the orchestrator
+to interpret prose, which silently regresses the two-revision ceiling and
+the judge-rejected-do-not-apply rule. The schema makes routing mechanical.
+
+**Distinguishing `NEEDS_CONTEXT` from `BLOCKED`:** `NEEDS_CONTEXT` means
+*"you, the caller, can fix this by telling me X"*. `BLOCKED` means
+*"no input from you unblocks this — escalate or rescope"*. If a subagent
+is unsure, it picks `BLOCKED` and the caller can downgrade.
 
 ## Mode 7 — do-in-worktrees
 
