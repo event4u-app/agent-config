@@ -351,22 +351,29 @@ a phase revival.
   unknown licenses outright (23/23 tests). The measured rename-only recall
   is published in the baseline report so nobody re-derives the refuted
   guarantee from a tool description -->`
-- [ ] **S2.3 Telemetry** — additive fields on the existing audit object
+- [-] **S2.3 Telemetry** — additive fields on the existing audit object
   (`schema_version` stays 1, reader-tolerance test like PR #1028):
   `provenance_scan` (ran|skipped|offline), `snippet_hits`,
   `license_class` (allow|conditional|deny|unknown), `ledger_ref`,
   `cleared_by` (rescan|ledger|human), `origin` (reusing the PR #1028
   field).
   *Verify:* old reader parses new lines; schema_version unchanged.
-  <!-- blocker 2026-07-28 (owner: maintainer — re-scope consequence): these
-  fields instrument a CI-facing scan that G0 cancelled. `provenance_scan` /
-  `snippet_hits` have no producer left; the meaningful remainder
-  (`license_class`, `ledger_ref`, `cleared_by`) is ALREADY in the ledger
-  record, so adding audit fields would create a second record of the same
-  facts — the no-second-ledger discipline forbids it. Landing them would
-  instrument a path that does not exist. Decision: drop entirely
-  (recommended — the ledger IS the record), or land only an on-demand
-  license-audit invocation counter if run-frequency becomes a real question -->`
+  <!-- CANCELLED 2026-07-28 — decided by applying an existing recorded lock,
+  not by fresh deliberation (stated so the method is auditable). The fields
+  instrument a CI-facing scan that G0 cancelled: `provenance_scan` /
+  `snippet_hits` have no producer left. The meaningful remainder
+  (`license_class`, `ledger_ref`, `cleared_by`) is ALREADY carried by the
+  ledger record itself, so landing audit fields would create a SECOND record
+  of the same facts — which the package's standing no-second-ledger
+  discipline forbids (the same lock that governs the lean-init audit-field
+  work: one canonical location, never a parallel one). The step's own verify
+  criterion ("old reader parses new lines; schema_version unchanged") is only
+  reachable by landing fields, so this is a cancellation, not a completion.
+  An on-demand invocation counter was considered and rejected as
+  instrumentation without a question: nobody has asked how often the audit
+  skill runs, and inventing the metric first is the speculative surface this
+  package subtracts. Revisit-if: audit-run frequency becomes a real decision
+  input -->`
 - [-] **S2.4 Strict promotion gate (pre-registered)**: promote to
   `ci-strict` only after ≥ 25 audited PR lines with 0 uncontested false
   positives (lint_spawn_payload evidentiary shape).

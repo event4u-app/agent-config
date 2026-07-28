@@ -1,7 +1,7 @@
 # Provenance golden corpus
 
 Phase 0 golden corpus for
-[`road-to-provenance-and-license-governance`](../../../agents/roadmaps/road-to-provenance-and-license-governance.md)
+[`road-to-provenance-and-license-governance`](../../../agents/roadmaps/archive/road-to-provenance-and-license-governance.md)
 (step S0.1). This corpus is the fixed input the S0.2 pre-registered
 acceptance thresholds and the S0.3 baseline run (jscpd offline, SCANOSS
 online) are measured against, and it never ships in the npm package —

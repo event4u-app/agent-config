@@ -1,0 +1,52 @@
+{
+    "skill": "license-compliance-credits",
+    "last_eval": "2026-07-28",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers regenerating THIRD-PARTY-NOTICES.md after a ledger change, and asking whether notices are in sync. Should-not-trigger covers near-miss neighbours (drafting a new ledger entry, running a similarity scan, generic changelog/readme updates) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "the borrows ledger just got a new entry, regenerate the notices file",
+            "trigger": true
+        },
+        {
+            "q": "are our third-party notices up to date with provenance/borrows.jsonl?",
+            "trigger": true
+        },
+        {
+            "q": "lint_provenance says NOTICES.md is out of sync, fix that",
+            "trigger": true
+        },
+        {
+            "q": "regenerate the credits file from the ledger",
+            "trigger": true
+        },
+        {
+            "q": "rebuild THIRD-PARTY-NOTICES.md after I appended to borrows.jsonl",
+            "trigger": true
+        },
+        {
+            "q": "draft a new ledger entry for this snippet I want to borrow from an MIT repo",
+            "trigger": false,
+            "note": "new borrow drafting → license-compliance-borrow-check"
+        },
+        {
+            "q": "scan this diff for copied code against known OSS",
+            "trigger": false,
+            "note": "similarity scan → license-compliance-audit"
+        },
+        {
+            "q": "update the CHANGELOG for this release",
+            "trigger": false,
+            "note": "unrelated generated doc, not the provenance ledger"
+        },
+        {
+            "q": "add a new section to the README about installation",
+            "trigger": false,
+            "note": "generic README editing, no ledger involved"
+        },
+        {
+            "q": "check whether this dependency's license is compatible with GPL",
+            "trigger": false,
+            "note": "license compatibility check on a new dep, not notices regeneration"
+        }
+    ]
+}

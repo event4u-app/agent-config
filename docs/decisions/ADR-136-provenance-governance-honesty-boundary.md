@@ -128,7 +128,7 @@ that box are cross-checked against the claims ledger.
 
 ## References
 
-- `agents/roadmaps/road-to-provenance-and-license-governance.md` — the plan,
+- `agents/roadmaps/archive/road-to-provenance-and-license-governance.md` — the plan,
   the G0 verdict, the refuted principle 6, and the phase-by-phase record.
 - `internal/bench/provenance/reports/baseline-2026-07-28.md` — both layers'
   measured numbers and the pre-declared sensitivity sweep.
