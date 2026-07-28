@@ -20,7 +20,7 @@ packs:
 Use when creating or managing project-level overrides for shared skills, rules, commands, or guidelines — customizing `.augment/` content without modifying originals.
 
 Do NOT use when:
-- Changing shared content that should affect all projects (edit `.agent-src.uncondensed/` directly)
+- Changing shared content that should affect all projects (edit `src/` directly)
 - Creating new skills from scratch (use `skill-writing` skill)
 
 ## Purpose

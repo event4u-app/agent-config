@@ -23,7 +23,7 @@ packs:
 
 Fire this skill **before** writing or saving any `.md` file under:
 
-- `.agent-src.uncondensed/` (source of truth — skills, rules, commands, guidelines, templates, contexts)
+- `src/` (source of truth — skills, rules, commands, guidelines, templates, contexts)
 - `dist/agent-src/` (condensed projection)
 - `.augment/` (local agent projection)
 - `agents/` (project-specific roadmaps, contexts, sessions)

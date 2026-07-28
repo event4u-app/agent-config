@@ -25,7 +25,7 @@ duplicate triggers, verifies the Thin-Root contract, and flags stale references.
 **Suggest only — never auto-apply.** Fixes happen via `/agents optimize` (file
 refactor) or rule-/skill-level commands.
 
-**Source of truth:** `.agent-src.uncondensed/` — never read or edit
+**Source of truth:** `src/` — never read or edit
 `dist/agent-src/` or `.augment/` directly.
 
 ## Steps

@@ -80,13 +80,13 @@ For each approved verdict:
 
 * **merge** → rewrite the surviving rule to cover both domains;
   delete the absorbed one; update any `routes_to:` references.
-* **delete** → remove the file from `.agent-src.uncondensed/rules/`
+* **delete** → remove the file from `src/rules/`
   and the corresponding `dist/agent-src/rules/` projection.
 * **move-to-context** → extract the body into
-  `.agent-src.uncondensed/contexts/<area>/<name>.md`, replace the
+  `src/agent-src/contexts/<area>/<name>.md`, replace the
   rule body with the obligation + a `load_context:` pointer.
 * **promote-to-skill** → create
-  `.agent-src.uncondensed/skills/<name>/SKILL.md`, replace the rule
+  `src/skills/<name>/SKILL.md`, replace the rule
   with an auto-trigger stub that routes to it (or delete the rule
   entirely if the skill's own trigger suffices).
 

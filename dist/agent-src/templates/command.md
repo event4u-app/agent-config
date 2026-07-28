@@ -1,10 +1,10 @@
 # Command Template
 
-> Template for creating new commands in `.agent-src.uncondensed/commands/{command-name}.md`.
+> Template for creating new commands in `src/agent-src/commands/{command-name}.md`.
 
 ## Instructions
 
-1. Create file: `.agent-src.uncondensed/commands/{command-name}.md`
+1. Create file: `src/agent-src/commands/{command-name}.md`
 2. Copy the template below
 3. Replace all `{placeholders}` with actual content
 4. Remove all `<!-- comments -->` when done
@@ -97,7 +97,7 @@ Before considering a command complete:
 
 - [ ] **Frontmatter**: has `name`, `description`, `disable-model-invocation: true`, `suggestion` block
 - [ ] **Steps**: numbered sub-headings (`### 1.`, `### 2.`, ...)
-- [ ] **Source of truth**: works on `.agent-src.uncondensed/`, not `dist/agent-src/` or `.augment/`
+- [ ] **Source of truth**: works on `src/`, not `dist/agent-src/` or `.augment/`
 - [ ] **No auto-apply**: presents findings, asks before destructive changes
 - [ ] **Linter passes**: `./scripts-run src/scripts/skill_linter` reports 0 FAIL
 - [ ] **English only**: all content in English

@@ -80,7 +80,7 @@ Cluster locked in
   [`ghostwriter-schema § exclusions`](../docs/contracts/ghostwriter-schema.md).
 - **No commit / push / PR** unless the sub-command explicitly authorises
   it (none currently do).
-- **Edit `.agent-src.uncondensed/` only.** `dist/agent-src/` and `.augment/`
+- **Edit `src/` only.** `dist/agent-src/` and `.augment/`
   regenerate from source.
 
 ## Storage model (recap)

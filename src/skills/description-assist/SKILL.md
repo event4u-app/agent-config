@@ -124,7 +124,7 @@ counter-proposal.
 
 Only after the user picks:
 
-* Edit the frontmatter in `.agent-src.uncondensed/{kind}/{name}.{md,SKILL.md}`.
+* Edit the frontmatter in the artifact's source under `src/` (`src/rules/`, `src/skills/{name}/SKILL.md`, `src/agent-src/commands/`, …).
 * Re-copy / re-sync as the target artifact's writing skill prescribes.
 * Run `./scripts-run src/scripts/skill_linter {path}` — must report 0 FAIL.
 * Report the diff and exit.

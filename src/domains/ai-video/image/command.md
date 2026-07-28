@@ -66,7 +66,7 @@ default** and requires explicit per-turn confirmation per
 - **Governance first.** A real-person likeness routes through
   [`media-governance-routing`](../rules/media-governance-routing.md)
   before any prompt is emitted.
-- **Edit `.agent-src.uncondensed/` only.** Generated mirrors regenerate.
+- **Edit `src/` only.** Generated mirrors regenerate.
 
 ## See also
 

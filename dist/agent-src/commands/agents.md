@@ -64,5 +64,5 @@ Sub-command names match the locked contract in
 - **Do NOT chain sub-commands.** One `/agents <sub>` per turn.
 - If the user invokes `/agents` with no argument, **show the menu** — do
   not guess which sub-command they meant.
-- **Edit `.agent-src.uncondensed/` only.** `dist/agent-src/` and `.augment/`
+- **Edit `src/` only.** `dist/agent-src/` and `.augment/`
   regenerate from source.
