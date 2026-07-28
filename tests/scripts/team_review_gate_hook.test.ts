@@ -39,16 +39,21 @@ interface Env {
     jobsDir: string;
 }
 
-function make_env(managed: boolean): Env {
+function make_env(managed: boolean, settings_override?: string | null): Env {
     const base = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'gate-hook-')));
     tmp_dirs.push(base);
     const root = path.join(base, 'proj');
     fs.mkdirSync(root, { recursive: true });
-    fs.writeFileSync(
-        path.join(root, '.agent-settings.yml'),
-        'ai_team:\n  enabled: true\n' +
-            (managed ? '  review_gate:\n    managed: true\n    max_consecutive_blocks: 3\n' : ''),
-    );
+    if (settings_override !== null) {
+        fs.writeFileSync(
+            path.join(root, '.agent-settings.yml'),
+            settings_override ??
+                'ai_team:\n  enabled: true\n' +
+                    (managed
+                        ? '  review_gate:\n    managed: true\n    max_consecutive_blocks: 3\n'
+                        : ''),
+        );
+    }
     const claudeDir = path.join(base, 'claude');
     const canonical = fs.realpathSync.native(root);
     const hash = crypto.createHash('sha256').update(canonical).digest('hex').slice(0, 16);
@@ -113,6 +118,37 @@ describe('team_review_gate_hook — stop-concern call-site (E2E via tsx)', () =>
         seed_gate_job(env, 'task-1', 'BLOCK: something', '2026-07-12T10:00:00Z');
         const r = run_stop(env);
         expect(r.status).toBe(0);
+        expect(r.stdout).toBe('');
+        expect(
+            fs.existsSync(path.join(env.root, 'agents', 'runtime', 'state', 'team-review-gate.json')),
+        ).toBe(false);
+        expect(fs.existsSync(path.join(env.root, 'agents', 'runtime', 'team', 'events.log'))).toBe(
+            false,
+        );
+    });
+
+    it('default posture: ai_team absent (no .agent-settings.yml) → strict no-op, exit 0, no output, no state', () => {
+        const env = make_env(false, null);
+        seed_gate_job(env, 'task-1', 'BLOCK: something', '2026-07-12T10:00:00Z');
+        const r = run_stop(env);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).toBe('');
+        expect(
+            fs.existsSync(path.join(env.root, 'agents', 'runtime', 'state', 'team-review-gate.json')),
+        ).toBe(false);
+        expect(fs.existsSync(path.join(env.root, 'agents', 'runtime', 'team', 'events.log'))).toBe(
+            false,
+        );
+    });
+
+    it('enabled: false dominates managed: true → strict no-op (the !enabled disjunct)', () => {
+        const env = make_env(
+            false,
+            'ai_team:\n  enabled: false\n  review_gate:\n    managed: true\n    max_consecutive_blocks: 3\n',
+        );
+        seed_gate_job(env, 'task-1', 'BLOCK: something', '2026-07-12T10:00:00Z');
+        const r = run_stop(env);
+        expect(r.status, r.stderr).toBe(0);
         expect(r.stdout).toBe('');
         expect(
             fs.existsSync(path.join(env.root, 'agents', 'runtime', 'state', 'team-review-gate.json')),
