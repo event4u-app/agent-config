@@ -1,0 +1,52 @@
+{
+    "skill": "license-compliance-audit",
+    "last_eval": "2026-07-28",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers running the on-demand jscpd/scanoss similarity scan on a diff or path, and asking whether a diff looks copied from known OSS. Should-not-trigger covers near-miss neighbours (a single named-source license check, notices regeneration, generic code review, dependency vetting) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "this diff looks suspiciously similar to something I've seen, run a similarity scan against known OSS",
+            "trigger": true
+        },
+        {
+            "q": "run jscpd and scanoss on this PR to check for copied code",
+            "trigger": true
+        },
+        {
+            "q": "do a self-audit of the whole repo for potential license violations",
+            "trigger": true
+        },
+        {
+            "q": "check whether this file matches anything in the SCANOSS knowledge base",
+            "trigger": true
+        },
+        {
+            "q": "the reviewer flagged this function as possibly lifted from elsewhere, scan for a match",
+            "trigger": true
+        },
+        {
+            "q": "I want to borrow this specific function from https://github.com/example/repo, check its license",
+            "trigger": false,
+            "note": "single named source, targeted license check → license-compliance-borrow-check"
+        },
+        {
+            "q": "regenerate the third-party notices file from the ledger",
+            "trigger": false,
+            "note": "notices regeneration → license-compliance-credits"
+        },
+        {
+            "q": "review this diff for null-safety and edge cases",
+            "trigger": false,
+            "note": "correctness review, not a similarity scan"
+        },
+        {
+            "q": "is this new npm package real or a hallucinated name?",
+            "trigger": false,
+            "note": "dependency existence check → supply-chain-intake"
+        },
+        {
+            "q": "set up a CI job that blocks merges on copied code",
+            "trigger": false,
+            "note": "no CI gate exists or is planned here — Gate G0 cancelled it; this skill is on-demand only"
+        }
+    ]
+}

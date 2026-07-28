@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "license-policy.schema.json",
+  "title": "license-policy.yaml — derived borrow-compatibility policy",
+  "description": "Contract for the S1.2 override surface (road-to-provenance-and-license-governance). `policy.{allow,conditional,deny}` are the closed compatibility-matrix source classes; the top-level `deny` array is a flattened, concrete-SPDX-id view of `policy.deny` — it is the shape `src/scripts/lint_provenance.ts`'s `resolveDenyPolicy()` already reads directly, so this file works as its override surface without any change on that side. `derived_from: manual` marks the file as a consumer override the detector must never silently overwrite (loosening any class below the derived verdict is rejected unless this is set). Enforced by the hand-rolled Draft-07 subset validator in validate_frontmatter.ts (`validate()`/`load_schema()`) — keep to its supported keyword set: type, required, properties, additionalProperties, items, minItems, pattern, minLength, maxLength, enum. No oneOf/const/patternProperties.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "derived_from", "detection", "target_class", "workspace_scope", "policy", "deny", "warnings", "derived_at"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [1]
+    },
+    "derived_from": {
+      "type": "string",
+      "enum": [
+        "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD",
+        "MPL-2.0", "LGPL-2.1", "LGPL-3.0", "GPL-2.0", "GPL-3.0", "AGPL-3.0",
+        "SSPL-1.0", "Unlicense", "CC0-1.0",
+        "none-detected", "manual"
+      ],
+      "description": "The SPDX id the policy was derived from; 'none-detected' when no license source resolved; 'manual' when a consumer authored this file directly (never auto-overwritten, and the only value allowed to loosen policy below the derived verdict)."
+    },
+    "detection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "license_sha256"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": ["license-file", "package-json", "composer-json", "none", "manual"]
+        },
+        "license_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hex digest of the detected LICENSE/LICENSE.md/COPYING file content; null when no such file exists. A later change to that file's content changes this hash, which is the invalidation trigger (re-derive on mismatch, escalate on downgrade)."
+        }
+      }
+    },
+    "target_class": {
+      "type": "string",
+      "enum": ["permissive", "weak-copyleft", "gpl-2.0", "gpl-3.0", "agpl", "none"]
+    },
+    "workspace_scope": {
+      "type": "string",
+      "enum": ["single", "homogeneous-multi"],
+      "description": "'single' when the repo declares no workspaces; 'homogeneous-multi' when workspaces are declared and none diverge from the root SPDX id. A divergent workspace escalates instead of writing this file at all (v1 scope-limiter — full per-workspace derivation is parked, see agents/roadmaps/later/road-to-per-workspace-license-policy.md)."
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allow", "conditional", "deny"],
+      "description": "The closed compatibility-matrix verdict, keyed by SOURCE license class (not concrete SPDX id) — this is the roadmap S1.2 matrix output. The three arrays repeat the same item schema inline (not $ref — the hand-rolled Draft-07 subset validator this file is checked against does not resolve $ref).",
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["permissive", "public-domain", "weak-copyleft", "gpl-2.0", "gpl-3.0", "agpl", "sspl", "unknown"] }
+        },
+        "conditional": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["permissive", "public-domain", "weak-copyleft", "gpl-2.0", "gpl-3.0", "agpl", "sspl", "unknown"] }
+        },
+        "deny": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["permissive", "public-domain", "weak-copyleft", "gpl-2.0", "gpl-3.0", "agpl", "sspl", "unknown"] }
+        }
+      }
+    },
+    "deny": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD",
+          "MPL-2.0", "LGPL-2.1", "LGPL-3.0", "GPL-2.0", "GPL-3.0", "AGPL-3.0",
+          "SSPL-1.0", "Unlicense", "CC0-1.0"
+        ]
+      },
+      "description": "Flattened concrete-SPDX-id expansion of policy.deny — the shape lint_provenance.ts's resolveDenyPolicy() reads directly (top-level `deny: [<SPDX id>, ...]`). Never hand-edit; loosening this array without derived_from: manual is rejected by the merge step."
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "derived_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}"
+    }
+  }
+}
