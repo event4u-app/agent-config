@@ -436,8 +436,8 @@ non-deliberating member → annotated host fallback. The billable chairman
 dispatch (rendering the synthesis as one member call in `cmd_run`) is the
 remaining wiring step.
 
-**Blind synthesis — the default (Ü1, road-to-council-blind-review,
-adopted 2026-07-28).** The chairman/synthesis stage is BLIND by default on
+**Blind synthesis — the default (road-to-council-blind-review adoption
+U1, adopted 2026-07-28).** The chairman/synthesis stage is BLIND by default on
 `council:run`: member responses reach the synthesizing stage as shuffled
 A–E labels (`consensus.anonymize_responses`, deterministic question-hash
 order), on both the member-chairman transcript and the host-path render.
@@ -452,7 +452,7 @@ default requires a new measured decision (test-pinned). Structural note:
 at member count 2 a member chairman is impossible (both deliberate,
 generator-cannot-self-judge) — blind rendering is then the host path's
 protection. `--stances` / `--chairman-fields` remain default-off pending
-the maintainer blind ratings (Ü2/Ü3 rules).
+the maintainer blind ratings (the roadmap's U2/U3 rules).
 
 ### Debate enforcement gates (Phase 3 — opt-in)
 
