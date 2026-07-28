@@ -53,13 +53,13 @@ that rule. Run both checks; treat neither as a substitute for the other.
    SPDX id, the license is `unknown` — never guess permissive.
 3. **Detect this repo's target policy.** Run:
    ```bash
-   npx tsx src/scripts/detect_target_license.ts . --json
+   npx tsx node_modules/@event4u/agent-config/src/scripts/detect_target_license.ts . --json
    ```
    If `license-policy.yaml` exists at the repo root, read its
    `policy.{allow,conditional,deny}` buckets directly. If it doesn't (dry
    run only), derive the same buckets by hand from this repo's own
    `LICENSE` file and the compatibility matrix in
-   `src/scripts/_lib/detect_target_license.ts`
+   `node_modules/@event4u/agent-config/src/scripts/_lib/detect_target_license.ts`
    (`COMPATIBILITY_MATRIX`/`classifyBorrow`).
 4. **Classify the borrow.** Map the source's SPDX id to its source class
    (permissive / weak-copyleft / gpl-2.0 / gpl-3.0 / agpl / sspl /
@@ -76,7 +76,7 @@ that rule. Run both checks; treat neither as a substitute for the other.
      scratch, find a permissively-licensed equivalent, or ask the
      maintainer for an explicit, recorded exception.
 6. **Draft the ledger entry** — one JSON object matching
-   `src/scripts/schemas/provenance-borrow.schema.json` (`source_url`,
+   `node_modules/@event4u/agent-config/src/scripts/schemas/provenance-borrow.schema.json` (`source_url`,
    `license`, `source_sha`, `borrowed_at`, `files`, `transformation_note`,
    `cleared_by`). Write a `transformation_note` that names a real
    structural change — rename-only phrasing (e.g. "renamed variables",
@@ -87,7 +87,7 @@ that rule. Run both checks; treat neither as a substitute for the other.
    re-derived code lands, append the confirmed entry to
    `provenance/borrows.jsonl` and verify:
    ```bash
-   ./scripts-run src/scripts/lint_provenance
+   npx tsx node_modules/@event4u/agent-config/src/scripts/lint_provenance.ts
    ```
    Exit 0 confirms the entry is schema-valid, license-compliant, and its
    transformation note passed the rename-only phrase check.
@@ -137,9 +137,9 @@ that rule. Run both checks; treat neither as a substitute for the other.
 - [`license-compliance-audit`](../license-compliance-audit/SKILL.md) — the
   on-demand similarity scan for suspicious diffs, not for a single known
   source.
-- `src/scripts/detect_target_license.ts`, `src/scripts/_lib/detect_target_license.ts` — the license-policy derivation this skill consumes.
-- `src/scripts/lint_provenance.ts`, `provenance/README.md`,
-  `src/scripts/schemas/provenance-borrow.schema.json` — the ledger + its
+- `node_modules/@event4u/agent-config/src/scripts/detect_target_license.ts`, `node_modules/@event4u/agent-config/src/scripts/_lib/detect_target_license.ts` — the license-policy derivation this skill consumes.
+- `node_modules/@event4u/agent-config/src/scripts/lint_provenance.ts`, `provenance/README.md`,
+  `node_modules/@event4u/agent-config/src/scripts/schemas/provenance-borrow.schema.json` — the ledger + its
   contract.
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — the escalation
   shape for `conditional`/`unknown` verdicts.

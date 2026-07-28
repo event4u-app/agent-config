@@ -17,7 +17,7 @@ packs:
   borrow was ledgered via
   [`license-compliance-borrow-check`](../license-compliance-borrow-check/SKILL.md),
   or a correction line was appended).
-- `task lint-provenance` (or `./scripts-run src/scripts/lint_provenance`)
+- `npx tsx node_modules/@event4u/agent-config/src/scripts/lint_provenance.ts`
   reports the notices file is out of sync with the ledger.
 - Someone asks "are our third-party notices up to date?" or "regenerate the
   credits file".
@@ -39,14 +39,14 @@ Do NOT use when:
    diff is checkable.
 2. **Regenerate the notices file:**
    ```bash
-   ./scripts-run src/scripts/lint_provenance --regenerate-notices
+   npx tsx node_modules/@event4u/agent-config/src/scripts/lint_provenance.ts --regenerate-notices
    ```
 3. **Diff `docs/THIRD-PARTY-NOTICES.md`** before vs. after — confirm only
    that generated file changed, and that `provenance/borrows.jsonl` itself
    was not touched (it's append-only; this command never writes to it).
 4. **Verify sync + validity** with a plain run (no flag):
    ```bash
-   ./scripts-run src/scripts/lint_provenance
+   npx tsx node_modules/@event4u/agent-config/src/scripts/lint_provenance.ts
    ```
    Exit code 0 confirms every ledger record is schema-valid, no deny-class
    or `unknown` license slipped through, no transformation note reads as
@@ -94,4 +94,4 @@ Do NOT use when:
 - [`license-compliance-borrow-check`](../license-compliance-borrow-check/SKILL.md) —
   where new ledger entries are drafted and fixed.
 - `provenance/README.md` — the ledger's append-only contract.
-- `src/scripts/lint_provenance.ts` — the linter this skill wraps.
+- `node_modules/@event4u/agent-config/src/scripts/lint_provenance.ts` — the linter this skill wraps.
