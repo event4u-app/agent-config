@@ -76,7 +76,13 @@ pre-registered gates and a binary consequence.
   bad ones on paper review before any run. Non-code verticals (posts,
   lyrics, docs) are OUT of the spike entirely.
 - [ ] Pre-register claim `sparring-defect-lift` in `docs/CLAIMS.md` as
-  `unbacked`, with the decision gates below verbatim, BEFORE the run.
+  `unbacked`, with the decision gates below verbatim, BEFORE the run —
+  including the SHA-256 of the FROZEN critic prompt and of the rubric file.
+  The acceptance gate is the most prompt-sensitive of the three AND-gates;
+  freezing the prompt makes a FAIL attributable ("mechanism null under
+  prompt `<sha>`", citable) instead of contestable ("maybe the prompt was
+  weak") — exactly because this would be the third null in the family, it
+  must be unassailable.
 
 ## Phase 2 — The spike run (spend-gated)
 
