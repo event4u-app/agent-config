@@ -1,10 +1,20 @@
 ---
 complexity: structural
-status: ready
+status: completed
 ---
 
 # Roadmap: Feedback 9.8.0 Follow-ups — stabilize, prove, dispose, decide
 
+> **Closed 2026-07-28 (roadmap closeout sweep).** All 21 buildable steps
+> shipped (release install E2E unskippable, ADR-133/134/135, the code-graph
+> bench disposition, backstop-debt ratchet, honest-null dispositions, the
+> bench-roadmap archive check). The final utilization-window sweep was
+> **re-homed verbatim** to `road-to-surface-consolidation.md` Phase 3 by
+> council verdict (2026-07-28, 2-round debate, anthropic/claude-sonnet-4-5 +
+> openai/gpt-4o, unanimous) — the step's own text says it "extends
+> road-to-surface-consolidation.md, not forking it", so the one active roadmap
+> carries the ~2026-08-26 gate. No further work planned here.
+>
 > **Source:** seven independent external review passes of Release 9.8.0
 > (`agents/tmp.old/feedback-9.8.0-1.txt`, verdicts 9.5–9.8/10 and 2× 119/120).
 > **Council:** AI council debate 2026-07-26 (anthropic/claude-sonnet-4-5 +
@@ -450,11 +460,18 @@ disposition of unproven surfaces** — not from another capability.
   capability question); adversarial-council + recursive-verification bench
   roadmaps were already archived in earlier PRs (see CHANGELOG 9.7.0).
   Nothing left to move; no closed-null bench roadmap in the active tree. -->
-- [ ] <!-- run-note 2026-07-28: intentionally left open by the process-full
+- [-] <!-- re-homed 2026-07-28 (council closeout sweep, 2-round debate,
+  anthropic/claude-sonnet-4-5 + openai/gpt-4o, unanimous): the step's own text
+  says it "extends road-to-surface-consolidation.md, not forking it" — it now
+  lives VERBATIM (date gate + verify unchanged) as Phase 3 of
+  road-to-surface-consolidation.md, the active roadmap that owns the
+  utilization sweep. This roadmap archives at 100 %; the earlier run-note
+  ("stays active until the window closes") predates the later/-disposition
+  Iron Law and is superseded by the council verdict. -->
+  <!-- earlier run-note 2026-07-28: intentionally left open by the process-full
   run — the step is time-gated to AFTER the pre-registered window elapses
   (~2026-08-26) and its own verify forbids pre-window deletions; executing
-  it now would violate the step, not complete it. The roadmap stays active
-  until the window closes. -->
+  it now would violate the step, not complete it. -->
   **Utilization-window disposition (after ~2026-08-26).** When the
   pre-registered window elapses, run the KEEP / MERGE / DEMOTE / REMOVE
   sweep on commands + skills with the window's data; target the reviewers'

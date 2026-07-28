@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 11 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **11** open blockers
 
 ## Overall
 
-**169 / 238 steps done · 71%**
+**66 / 130 steps done · 51%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   71%
+████████████████████░░░░░░░░░░░░░░░░░░░░   51%
 ```
 
 ## Open roadmaps
@@ -19,19 +19,14 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 6 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 62% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 4 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 1 | 29 | 0 | 0 | 0 | ██████████ 97% |
-| 5 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
-| 6 | [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md) | 4 | 11 | 1 | 10 | 0 | 0 | 0 | █████████░ 91% |
-| 7 | [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md) | 5 | 22 | 1 | 21 | 0 | 0 | 0 | ██████████ 95% |
-| 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 11 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 15 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 9 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 6 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | █████░░░░░ 50% |
+| 10 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 11 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -80,51 +75,6 @@ _2 blockers resolved._
 | 1 | Protocol diff (no model calls) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
-
-### [road-to-credible-install.md](roadmaps/road-to-credible-install.md)
-
-**Road to credible install — survive the first five minutes of an external evaluation** — 29 / 30 done (97%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Supply-chain and metadata hotfix (ships as a security patch) | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 1 | Hook latency: make enforcement real or switch it off | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Default projection: ship the engineering surface | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | MCP hygiene: generated truth, honest stubs, registry paperwork | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 4 | Published verification surface (the trust fix) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 5 | Release cadence policy (types, not versions) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 6 | Outside-in umbrella gate (added 2026-07-26 per the self-critical council cut) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-
-### [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md)
-
-**Ecosystem-Harvest — Prose Authenticity** — 9 / 10 done (90%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Adopt-now plate (≤ 3 units) | 🟡 in progress | 1 | 9 | 0 | 0 | 90% |
-
-### [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md)
-
-**Feedback 9.2.0 Follow-ups** — 10 / 11 done (91%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | A behavioral eval for `cross-source-consistency` (minimal-first) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
-| 2 | Bring `subagent-orchestration` back under its size budget | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3 | Tag-aware release-PR review | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 4 | Hermetic, reproducible install-bundle build | ✅ done | 0 | 2 | 0 | 0 | 100% |
-
-### [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md)
-
-**Feedback 9.8.0 Follow-ups — stabilize, prove, dispose, decide** — 21 / 22 done (95%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Stabilization floor: installable, honest, convention-clean | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Decisions made falsifiable: positioning, freeze, launch | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Code-graph proof: 2-arm, pre-registered, physical null-consequence | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Enforcement truth: debt down, existing axes surfaced, meters hardened | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 4 | Disposition and physical surface (window-gated) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
@@ -186,28 +136,6 @@ _1 blocker resolved._
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
 
-### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
-
-**Road to request-scoped rule load — ship only what the request needs** — 34 / 36 done (94%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Workspace/pack fields into the router (schema, additive) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Consumer-scoped rule projection (the ~50k lever) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1b | Pipeline B: make scoping reach actual consumer installs | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 5 | P4 rule-body migration batches (feedback-8.11 routing, 2026-07-12) | 🟡 in progress | 1 | 12 | 0 | 1 | 92% |
-
-<a id="blockers-road-to-request-scoped-rule-load"></a>
-**Blockers**
-
-- **phase-0-golden-set (inherited)** (owner: maintainer) — blocks the held-quality verification arm of Phase 1's default flip — the flip therefore needs a DETERMINISTIC verification arm (anchor-scoring) instead of the retired LLM-judge batch; it stays evidence-blocked until one is built and run. Does **not** block Phases 0, 2, 3 or the opt-in build of Phase 1 (mechanical, CI-verified).
-  - **What to do:**
-    labelled golden set; the live 3-host canary tick stays as the second half.
-  - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0. - **Evidence update 2026-07-11 (real run landed — gate is RED, not just pending):** the consumer golden set is complete (PR #885) and a full sonnet n=90 `check_quality_regression --as-flip-gate` ran (PR #887). It **FAILS** (thin win-rate 36.2% < 48% floor; length-confound 60%, judge inconsistency 31%). CAVEAT: that run measured the **thin** projection (kernel bodies + non-kernel pointers), NOT this roadmap's **workspace-scoping** reduction — a milder, different cut with **no dedicated arm** in `bench_quality_run` yet. So the held-quality arm is **not** directly resolved, but the strongest same-class reduction failed the gate decisively → treat context-reduction-for-tokens as **quality-risky by prior** on this eval. **Disposition (maintainer, 2026-07-11): do NOT spend another ~$33 on a workspace-scoped arm** that shares the same verbosity confound and would most likely reconfirm the negative; the Phase-1 DEFAULT flip stays **evidence-blocked**. The opt-in build path is unaffected (per Blocks above). Revisit only with a length-normalised arm that kills the confound.
-
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 
 **Road to the scale-history bench run — fire the pre-registered Phase-4 bench** — 0 / 2 done (0%)
@@ -253,12 +181,13 @@ _1 blocker resolved._
 
 ### [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md)
 
-**Road to surface consolidation — collapse the proactive mental surface, remove don't add** — 6 / 11 done (55%)
+**Road to surface consolidation — collapse the proactive mental surface, remove don't add** — 6 / 12 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Collapse the proactive suggestion surface (the core) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Supporting net-reductions (remove / fold, never add) | 🟡 in progress | 5 | 3 | 2 | 0 | 38% |
+| 2 | Supporting net-reductions (remove / fold, never add) | ✅ done | 0 | 3 | 2 | 0 | 100% |
+| 3 | Utilization-window disposition sweep (re-homed 2026-07-28) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-surface-consolidation"></a>
 **Blockers**

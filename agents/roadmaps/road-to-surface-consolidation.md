@@ -128,6 +128,24 @@ Exit: CHANGELOG `[Unreleased]` clean; learning-tutor de-eligible; the
 complexity-budget lives in the drafting checklist (net-zero); restraint +
 locked-decision notes recorded. Rollback: each is an isolated reversible edit.
 
+## Phase 3 — Utilization-window disposition sweep (re-homed 2026-07-28)
+
+> Re-homed verbatim from `road-to-feedback-9.8.0-followups.md` Phase 4 at its
+> archive time (council 2026-07-28, 2-round debate, anthropic/claude-sonnet-4-5
+> + openai/gpt-4o, unanimous) — that step's own text says it "extends
+> road-to-surface-consolidation.md, not forking it", so the one active roadmap
+> carries it. Time-gated: the pre-registered window elapses ~2026-08-26; its
+> verify forbids pre-window deletions. Gate tracked by the existing
+> `repo-admin-and-usage` blocker below.
+
+- [ ] **Utilization-window disposition (after ~2026-08-26).** When the
+      pre-registered window elapses, run the KEEP / MERGE / DEMOTE / REMOVE
+      sweep on commands + skills with the window's data; target the reviewers'
+      190 → <150 commands direction by folding variants into cluster-head modes
+      and deleting de-eligibled, unused commands.
+      *Verify:* post-window decision log exists; command count and the per-item
+      decisions recorded; no pre-window deletions.
+
 ## Acceptance criteria (anti-dump — the review's own rule)
 
 - [ ] **Net-negative surface:** the diff removes/retires more surface than it
