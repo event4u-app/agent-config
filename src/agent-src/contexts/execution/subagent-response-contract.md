@@ -21,6 +21,26 @@ orchestrator synthesises and re-verifies.
   never inline content — same minimal-slice / privacy floor as the spawn contract.
 - `mutating` marks a finding whose action changes files/state (feeds the verify link).
 
+## Budget-hit partial result
+
+When the worker's `max_tokens_per_worker` stop-loss fires
+([spawn contract § Per-worker token stop-loss](subagent-spawn-contract.md#per-worker-token-stop-loss-l0b--hard-budget-structured-escalation)),
+the return is a `BLOCKED` envelope whose body is this shape instead:
+
+```json
+{
+  "budget_hit": true,
+  "found": ["file:line | id | path"],
+  "remaining": "<what stays unexplored, one sentence>",
+  "suggested_next_rung": "primitive | higher-tier-subagent | in-session"
+}
+```
+
+`budget_hit: true` is the escalation flag; `found` follows the same
+refs-not-bodies floor as `evidence_refs`. Validator:
+`worker_budget.validateWorkerPartialResult` — the orchestrator never adopts an
+invalid partial return.
+
 ## Orchestrator synthesis duties
 
 ```

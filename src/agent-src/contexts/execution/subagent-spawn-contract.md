@@ -13,7 +13,8 @@ task without re-inventing any taxonomy.
   "role_mode": "developer|reviewer|tester|po|incident|planner|null",
   "profile": "<active profile id or null>",
   "personas": ["<persona id>", "..."],
-  "knowledge_refs": ["<id-or-path>", "..."]
+  "knowledge_refs": ["<id-or-path>", "..."],
+  "max_tokens_per_worker": 15000
 }
 ```
 
@@ -41,6 +42,28 @@ private-data leg stays narrow: the composer rejects inline bodies (multi-line /
 oversized entries), accepts only ref-like tokens, and caps the count. Anything
 dropped is recorded in `warnings` and surfaced — never silently widened.
 
+## Per-worker token stop-loss (L0b) — hard budget, structured escalation
+
+```
+EVERY DISPATCHED WORKER CARRIES A max_tokens_per_worker BUDGET FOR ITS TIER.
+ON HIT: RETURN A STRUCTURED PARTIAL RESULT + ESCALATION FLAG — STOP EXPLORING.
+A WORKER OVERRUNNING ITS BUDGET 20× IS A DISPATCH ERROR ON THE WRONG RUNG,
+NOT DILIGENCE.
+```
+
+Budgets are keyed by the worker's resolved tier
+(`worker_budget.budgetForTier`; start values `lite: 15k` — the lookup-class
+seed — `medium: 60k`, `high: 150k`, refined from `budget_hit` telemetry, never
+final). On hit the worker returns a `BLOCKED` envelope whose body is the
+partial-result shape from the
+[response contract](subagent-response-contract.md#budget-hit-partial-result):
+what was found (refs), what remains, suggested next rung. The stop-loss
+**composes** with the N=3 validation budget
+([`autonomous-execution`](../../rules/autonomous-execution.md)) and the
+ADR-109 response contract — it replaces nothing. Live evidence
+(2026-07-28): four lookup-class workers burned 280–327k tokens each on tasks
+a deterministic primitive answers for <1k.
+
 ## Bundle resolver — bind to the existing surfaces
 
 The brief is **resolved**, not hand-built. `resolveBundle(slice)` maps a task
@@ -64,9 +87,36 @@ only, never bodies.
 
 [`src/scripts/_lib/subagent_spawn.ts`](../../../../src/scripts/_lib/subagent_spawn.ts)
 (`composeSpawnBrief`) + [`src/scripts/_lib/subagent_bundle.ts`](../../../../src/scripts/_lib/subagent_bundle.ts)
-(`resolveBundle`, `filterKnowledgeByPolicy`, `bundleAuditLine`), covered by
+(`resolveBundle`, `filterKnowledgeByPolicy`, `bundleAuditLine`) +
+[`src/scripts/_lib/worker_budget.ts`](../../../../src/scripts/_lib/worker_budget.ts)
+(`budgetForTier`, `evaluateWorkerBudget`, `validateWorkerPartialResult`),
+covered by
 [`tests/scripts/_lib_subagent_spawn.test.ts`](../../../../tests/scripts/_lib_subagent_spawn.test.ts)
-+ [`tests/scripts/_lib_subagent_bundle.test.ts`](../../../../tests/scripts/_lib_subagent_bundle.test.ts).
++ [`tests/scripts/_lib_subagent_bundle.test.ts`](../../../../tests/scripts/_lib_subagent_bundle.test.ts)
++ [`tests/scripts/_lib_worker_budget.test.ts`](../../../../tests/scripts/_lib_worker_budget.test.ts)
+(the budget-hit partial-result fixture).
+
+## Worker rtk allowlist — wrap only the measured class
+
+A worker's tool loop wraps a command with rtk **only** when that command
+class measured ≥ ~50% output saving in
+`internal/bench/rtk-savings/RESULTS.md` (`git status`, full-format
+`git log -N`, `ls -la`); the ~0%-class (`--oneline`, `--stat` views,
+`npm ls`) stays unwrapped — wrap overhead without return. Deterministic
+list: `src/scripts/_lib/rtk_allowlist.ts` (`shouldWrapWithRtk`); congruence
+with RESULTS.md is test-enforced (`tests/scripts/_lib_rtk_allowlist.test.ts`)
+— the numbers live in the bench file, referenced, never duplicated.
+
+## Prefix stability — deterministic payload ordering
+
+Spawn payloads serialize **static prefix first** (role contract, profile,
+personas, budget — byte-identical across dispatches of the same
+configuration), **variable task part last**; no timestamps, no random IDs
+(`serializeSpawnPayload` / `spawnPayloadHash`). Provider prompt-caching keys
+on the stable prefix; the `payload_hash` + `cache_hit` audit fields
+([`orchestration-telemetry`](orchestration-telemetry.md)) measure whether it
+actually hits. Measurement only — no savings claim without provider-response
+evidence.
 
 ## Worker-prompt rules — verbatim at spawn
 
