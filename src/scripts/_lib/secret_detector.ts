@@ -66,6 +66,9 @@ const RULES: readonly Rule[] = [
     { rule: 'aws-access-key', kind: 'aws-access-key', regex: /AKIA[0-9A-Z]{16}/g },
     { rule: 'google-api-key', kind: 'google-api-key', regex: /AIza[0-9A-Za-z_-]{35}/g },
     { rule: 'github-pat', kind: 'github-pat', regex: /ghp_[0-9A-Za-z]{36}/g },
+    // Fine-grained PATs (github_pat_…) were a measured detector gap: the
+    // 2026-07-28 adversarial corpus pass flagged them as missed positives.
+    { rule: 'github-fine-grained-pat', kind: 'github-pat', regex: /github_pat_[0-9A-Za-z_]{22,}/g },
     {
         rule: 'jwt',
         kind: 'jwt',
@@ -281,6 +284,12 @@ export function scanText(text: string, opts: ScanOptions = {}): SecretFinding[] 
                 }
                 if (UUID.test(token)) {
                     continue; // benign identifier
+                }
+                if (/^sha(?:256|384|512)-/.test(token)) {
+                    // SRI / npm-lockfile integrity digest (`sha512-<base64>`) —
+                    // a hash, not a credential. Measured FP class on the
+                    // 2026-07-28 adversarial corpus pass.
+                    continue;
                 }
                 const entropy = shannonEntropy(token);
                 const isHex = IS_HEX.test(token);

@@ -710,7 +710,12 @@ Since the A3 slice of `road-to-api-cost-optimization` (2026-07-20):
 ```yaml
 model_downgrade:
   enabled: true        # default; false disables the size-fit gate entirely
-  auto_apply: true     # DEFAULT since A3 — auto-downgrade is opt-OUT
+  auto_apply: false    # DEFAULT since 2026-07-28 — suggest, don't silently
+                       # apply. The A3 auto-ON default (2026-07-20) shipped
+                       # without a paired quality measurement (the only
+                       # default-ON surface without one); it re-flips to true
+                       # when a paired eval (full vs downgraded members,
+                       # blind judge) shows held quality. Set true to opt in.
   model_tier_override: # per-run escape hatch: member -> pinned model id
     anthropic: claude-sonnet-4-5
 ```

@@ -283,6 +283,8 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 * regenerate docs/proof.md for the +1 rule count ([620614c](https://github.com/event4u-app/agent-config/commit/620614c901b1c7971c8c55d97477c74e5b2f2ba2))
 * regenerate dist projections + counts, archive completed roadmap ([55052c9](https://github.com/event4u-app/agent-config/commit/55052c941be45cea1d4dfc65fc048a0c8f450958))
 
+Tests: 8391 (+537 since 9.7.0)
+
 ## [9.7.0](https://github.com/event4u-app/agent-config/compare/9.6.0...9.7.0) (2026-07-21)
 
 ### Features

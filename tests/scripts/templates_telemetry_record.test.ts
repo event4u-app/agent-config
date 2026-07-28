@@ -203,4 +203,85 @@ describe('telemetry_record — template contract', () => {
           "
         `);
     });
+
+    // road-to-feedback-9.2.0-followups 1.4 — --cross-source facet.
+    it('a simulated task with one real discrepancy records exactly one cross_source entry', () => {
+        const dir = mkTmp();
+        const logPath = path.join(dir, 'eng.jsonl');
+        const args = [
+            '--settings', settingsFile(dir, true), '--ts', '2026-07-28T00:00:00Z',
+            '--task-id', 'task-with-discrepancy', '--consulted', 'rules:cross-source-consistency',
+            '--cross-source', 'd1:text-image:ask',
+        ];
+        const ts = runTs(TS_SCRIPT, args, logPath);
+        expect(ts.status).toBe(0);
+        expect(ts.log).toMatchInlineSnapshot(`
+          "{"applied":{},"boundary_kind":"task","consulted":{"rules":["cross-source-consistency"]},"cross_source":[{"asked":true,"id":"d1","type":"text-image"}],"schema_version":1,"task_id":"task-with-discrepancy","ts":"2026-07-28T00:00:00Z"}
+          "
+        `);
+    });
+
+    it('a consistent-sources task (no --cross-source) records zero — no cross_source field written', () => {
+        const dir = mkTmp();
+        const logPath = path.join(dir, 'eng.jsonl');
+        const args = [
+            '--settings', settingsFile(dir, true), '--ts', '2026-07-28T00:00:00Z',
+            '--task-id', 'consistent-task', '--consulted', 'rules:cross-source-consistency',
+        ];
+        const ts = runTs(TS_SCRIPT, args, logPath);
+        expect(ts.status).toBe(0);
+        expect(ts.log).not.toContain('cross_source');
+        expect(ts.log).toMatchInlineSnapshot(`
+          "{"applied":{},"boundary_kind":"task","consulted":{"rules":["cross-source-consistency"]},"schema_version":1,"task_id":"consistent-task","ts":"2026-07-28T00:00:00Z"}
+          "
+        `);
+    });
+
+    it('--cross-source with a warn verdict records asked:false', () => {
+        const dir = mkTmp();
+        const logPath = path.join(dir, 'eng.jsonl');
+        const args = [
+            '--settings', settingsFile(dir, true), '--ts', '2026-07-28T00:00:00Z',
+            '--task-id', 't', '--cross-source', 'd2:silent-needed:warn',
+        ];
+        const ts = runTs(TS_SCRIPT, args, logPath);
+        expect(ts.status).toBe(0);
+        expect(ts.log).toContain('"cross_source":[{"asked":false,"id":"d2","type":"silent-needed"}]');
+    });
+
+    it('malformed --cross-source (missing parts) → error + exit 1', () => {
+        const dir = mkTmp();
+        const logPath = path.join(dir, 'eng.jsonl');
+        const args = ['--settings', settingsFile(dir, true), '--task-id', 't', '--cross-source', 'd1:text-image'];
+        const ts = runTs(TS_SCRIPT, args, logPath);
+        expect(ts.status).toBe(1);
+        expect(ts.stderr).toMatchInlineSnapshot(`
+          "❌  --cross-source must be 'id:type:ask|warn', got 'd1:text-image'
+          "
+        `);
+    });
+
+    it('--cross-source with a bogus verdict → error + exit 1', () => {
+        const dir = mkTmp();
+        const logPath = path.join(dir, 'eng.jsonl');
+        const args = ['--settings', settingsFile(dir, true), '--task-id', 't', '--cross-source', 'd1:text-image:maybe'];
+        const ts = runTs(TS_SCRIPT, args, logPath);
+        expect(ts.status).toBe(1);
+        expect(ts.stderr).toMatchInlineSnapshot(`
+          "❌  --cross-source verdict must be 'ask' or 'warn', got 'maybe'
+          "
+        `);
+    });
+
+    it('--cross-source with an unknown discrepancy type → schema error + exit 1', () => {
+        const dir = mkTmp();
+        const logPath = path.join(dir, 'eng.jsonl');
+        const args = ['--settings', settingsFile(dir, true), '--task-id', 't', '--cross-source', 'd1:bogus-type:ask'];
+        const ts = runTs(TS_SCRIPT, args, logPath);
+        expect(ts.status).toBe(1);
+        expect(ts.stderr).toMatchInlineSnapshot(`
+          "❌  schema validation failed: cross_source.type must be one of ('text-image', 'silent-needed', 'spec-code', 'intra-ticket'), got 'bogus-type'
+          "
+        `);
+    });
 });

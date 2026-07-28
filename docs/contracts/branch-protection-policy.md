@@ -46,6 +46,7 @@ per branch name.
 | `Release Validation / release-shape` | — | ✅ | — |
 | `Release Validation / changelog-entry` | — | ✅ | — |
 | `Release Validation / version-consistency` | — | ✅ | — |
+| `Release Validation / release-install-e2e` | — | ✅ | — |
 | `Migration Dry-Run` | path-filter only | path-filter only | — |
 | `Release Guard` (tag-trigger) | — | (post-merge tag) | — |
 

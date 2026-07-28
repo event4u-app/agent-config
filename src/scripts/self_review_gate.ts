@@ -83,9 +83,9 @@ export function isReviewablePath(p: string): boolean {
     return !SKIP_PREFIXES.some((pre) => p.startsWith(pre));
 }
 
-function changedFiles(baseRef: string): string[] {
+function changedFiles(baseRef: string, cwd: string = REPO_ROOT): string[] {
     const r = spawnSync('git', ['diff', '--name-only', `${baseRef}...HEAD`], {
-        cwd: REPO_ROOT,
+        cwd,
         encoding: 'utf8',
     });
     if (r.status !== 0) {
@@ -98,10 +98,10 @@ function changedFiles(baseRef: string): string[] {
         .filter(isReviewablePath);
 }
 
-function diffText(baseRef: string, files: string[]): string {
+function diffText(baseRef: string, files: string[], cwd: string = REPO_ROOT): string {
     if (files.length === 0) return '';
     const r = spawnSync('git', ['diff', `${baseRef}...HEAD`, '--', ...files], {
-        cwd: REPO_ROOT,
+        cwd,
         encoding: 'utf8',
         maxBuffer: 32 * 1024 * 1024,
     });
@@ -109,10 +109,10 @@ function diffText(baseRef: string, files: string[]): string {
 }
 
 /** Sum of added+deleted lines across `files` (binary files count 0). */
-function changedLineCount(baseRef: string, files: string[]): number {
+function changedLineCount(baseRef: string, files: string[], cwd: string = REPO_ROOT): number {
     if (files.length === 0) return 0;
     const r = spawnSync('git', ['diff', '--numstat', `${baseRef}...HEAD`, '--', ...files], {
-        cwd: REPO_ROOT,
+        cwd,
         encoding: 'utf8',
         maxBuffer: 32 * 1024 * 1024,
     });
@@ -122,6 +122,94 @@ function changedLineCount(baseRef: string, files: string[]): number {
         if (m) total += Number(m[1]) + Number(m[2]);
     }
     return total;
+}
+
+// ── Release-PR detection (road-to-feedback-9.2.0-followups Phase 3) ────
+/**
+ * A release PR is detected from its own packaging diff (baseRef...HEAD,
+ * scoped to CHANGELOG.md + package.json): an added changelog heading and an
+ * added package.json version bump, agreeing on the same version. Pure over
+ * the patch text — no git call — so it is unit-testable with synthetic
+ * patches. See docs/design/release-pr-review-mode.md.
+ */
+export function detectReleaseVersion(patchText: string): string | null {
+    const addedLines = patchText
+        .split('\n')
+        .filter((l) => l.startsWith('+') && !l.startsWith('+++'))
+        .map((l) => l.slice(1));
+
+    let changelogVersion: string | null = null;
+    let packageVersion: string | null = null;
+    for (const line of addedLines) {
+        const changelogMatch = /^##\s*\[(\d+\.\d+\.\d+)\]/.exec(line);
+        if (changelogMatch) changelogVersion = changelogMatch[1] ?? null;
+        const packageMatch = /^\s*"version"\s*:\s*"(\d+\.\d+\.\d+)"/.exec(line);
+        if (packageMatch) packageVersion = packageMatch[1] ?? null;
+    }
+    if (changelogVersion && packageVersion && changelogVersion === packageVersion) {
+        return changelogVersion;
+    }
+    return null;
+}
+
+function releaseDetectionPatch(baseRef: string, cwd: string): string {
+    const r = spawnSync('git', ['diff', `${baseRef}...HEAD`, '--', 'CHANGELOG.md', 'package.json'], {
+        cwd,
+        encoding: 'utf8',
+        maxBuffer: 8 * 1024 * 1024,
+    });
+    return (r.stdout ?? '').toString();
+}
+
+/** Impure wrapper: collects the packaging patch via git, then detects. */
+export function detectReleaseVersionFromGit(baseRef: string, cwd: string = REPO_ROOT): string | null {
+    return detectReleaseVersion(releaseDetectionPatch(baseRef, cwd));
+}
+
+/** `major.minor.patch`, tolerating an optional `v` prefix; null if not semver-shaped. */
+function parseSemver(raw: string): [number, number, number] | null {
+    const m = /^v?(\d+)\.(\d+)\.(\d+)$/.exec(raw.trim());
+    if (!m) return null;
+    return [Number(m[1]), Number(m[2]), Number(m[3])];
+}
+
+function semverLessThan(a: [number, number, number], b: [number, number, number]): boolean {
+    const [aMajor, aMinor, aPatch] = a;
+    const [bMajor, bMinor, bPatch] = b;
+    if (aMajor !== bMajor) return aMajor < bMajor;
+    if (aMinor !== bMinor) return aMinor < bMinor;
+    return aPatch < bPatch;
+}
+
+/**
+ * Highest semver-shaped tag strictly below `version`, or null if none. Pure
+ * over the supplied tag list — no git call. Non-semver tags (branch-backup
+ * names etc.) are ignored rather than throwing.
+ */
+export function pickPreviousTag(version: string, tags: readonly string[]): string | null {
+    const target = parseSemver(version);
+    if (!target) return null;
+    let best: { raw: string; parsed: [number, number, number] } | null = null;
+    for (const raw of tags) {
+        const parsed = parseSemver(raw);
+        if (!parsed) continue;
+        if (!semverLessThan(parsed, target)) continue;
+        if (!best || semverLessThan(best.parsed, parsed)) best = { raw, parsed };
+    }
+    return best ? best.raw : null;
+}
+
+function listGitTags(cwd: string): string[] {
+    const r = spawnSync('git', ['tag'], { cwd, encoding: 'utf8' });
+    return (r.stdout ?? '')
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean);
+}
+
+/** Impure wrapper: lists tags via git, then picks the previous one. */
+export function resolvePreviousTagFromGit(version: string, cwd: string = REPO_ROOT): string | null {
+    return pickPreviousTag(version, listGitTags(cwd));
 }
 
 // ── Escalation classifier (large / claim-affecting → full ai-council) ──
@@ -157,9 +245,31 @@ function loadSkillBody(name: string): string {
     return readFileSync(p, 'utf8');
 }
 
-function buildSystemPrompt(): string {
+/** Info about a detected release PR — see docs/design/release-pr-review-mode.md. */
+export interface ReleaseInfo {
+    version: string;
+    previousTag: string;
+    /** Files touched by the packaging diff (baseRef...HEAD) — for context only. */
+    packagingFiles: string[];
+}
+
+/**
+ * Release-mode note appended to the system prompt so the model analyzes the
+ * feature range instead of reporting release features as "not in the diff"
+ * (the PR #957 false-advisory shape — see docs/design/release-pr-review-mode.md).
+ */
+function releaseNoteText(release: ReleaseInfo, baseRef: string): string {
+    const fileList = release.packagingFiles.length > 0 ? release.packagingFiles.join(', ') : '(none)';
+    return (
+        `\n\nRelease PR for ${release.version}: analysis range is ${release.previousTag}...HEAD ` +
+        `(the full release commit range). The packaging diff vs ${baseRef} touches: ${fileList}. ` +
+        "Do NOT report a feature as 'not in the diff' when it is present in the release range."
+    );
+}
+
+function buildSystemPrompt(release?: ReleaseInfo, baseRef?: string): string {
     const bodies = REVIEW_SKILLS.map((s) => `# Skill: ${s}\n\n${loadSkillBody(s)}`).join('\n\n---\n\n');
-    return [
+    const base = [
         'You are the self-review gate for an AI-agent governance package. Apply the',
         'two skills below to the supplied PR diff. Return ONLY a JSON object of the',
         'shape {"findings":[{"severity":"critical|high|medium|low",',
@@ -170,6 +280,7 @@ function buildSystemPrompt(): string {
         '',
         bodies,
     ].join('\n');
+    return release && baseRef ? base + releaseNoteText(release, baseRef) : base;
 }
 
 // ── Plan (dry-run) ────────────────────────────────────────────────────
@@ -179,22 +290,47 @@ export interface ReviewPlan {
     promptChars: number;
     note: string;
     escalation: string[];
+    /** The base actually analyzed for `files`/diff: `baseRef`, or `release.previousTag`. */
+    analysisBase: string;
+    /** Present iff a release PR was detected — see docs/design/release-pr-review-mode.md. */
+    release?: ReleaseInfo;
 }
 
-export function buildPlan(baseRef: string): ReviewPlan {
-    const files = changedFiles(baseRef);
-    const diff = diffText(baseRef, files);
-    const escalation = escalationReasons(files, changedLineCount(baseRef, files));
+export function buildPlan(baseRef: string, cwd: string = REPO_ROOT): ReviewPlan {
+    const packagingFiles = changedFiles(baseRef, cwd);
+    const releaseVersion = detectReleaseVersionFromGit(baseRef, cwd);
+
+    let release: ReleaseInfo | undefined;
+    let analysisBase = baseRef;
+    if (releaseVersion) {
+        const previousTag = resolvePreviousTagFromGit(releaseVersion, cwd);
+        if (previousTag) {
+            release = { version: releaseVersion, previousTag, packagingFiles };
+            analysisBase = previousTag;
+        } else {
+            process.stdout.write(
+                `::notice::self-review-gate — release ${releaseVersion} detected but no previous tag ` +
+                    `found; falling back to the normal base (${baseRef}).\n`,
+            );
+        }
+    }
+
+    const files = analysisBase === baseRef ? packagingFiles : changedFiles(analysisBase, cwd);
+    const diff = diffText(analysisBase, files, cwd);
+    const escalation = escalationReasons(files, changedLineCount(analysisBase, files, cwd));
+    const systemPrompt = buildSystemPrompt(release, baseRef);
     return {
         skills: [...REVIEW_SKILLS],
         files,
-        promptChars: buildSystemPrompt().length + diff.length,
+        analysisBase,
+        ...(release ? { release } : {}),
+        promptChars: systemPrompt.length + diff.length,
         escalation,
         note:
             files.length === 0
                 ? 'No reviewable (non-generated) files changed — the live review would no-op.'
                 : `${files.length} reviewable file(s); live review would send ~${Math.ceil(
-                      (buildSystemPrompt().length + diff.length) / 4,
+                      (systemPrompt.length + diff.length) / 4,
                   )} input tokens.`,
     };
 }
@@ -302,6 +438,10 @@ export function main(argv: string[]): 0 | 2 {
         process.stdout.write(
             `self-review-gate (dry-run — no spend, advisory):\n` +
                 `  skills: ${plan.skills.join(', ')}\n` +
+                (plan.release
+                    ? `  mode:   release (${plan.release.version}; feature range ${plan.release.previousTag}...HEAD; ` +
+                      `packaging diff ${plan.release.packagingFiles.length} file(s))\n`
+                    : '') +
                 `  files:  ${plan.files.length}\n` +
                 `  ${plan.note}\n` +
                 (plan.escalation.length
@@ -341,7 +481,7 @@ export function main(argv: string[]): 0 | 2 {
     // findings returns 2 — an error is not a finding.)
     try {
         const client = new AnthropicClient({ api_key: key });
-        const resp = client.ask(buildSystemPrompt(), diffText(baseRef, plan.files), 4096);
+        const resp = client.ask(buildSystemPrompt(plan.release, baseRef), diffText(plan.analysisBase, plan.files), 4096);
         if (resp.error) {
             process.stdout.write(
                 `::warning::self-review-gate NEUTRAL — model call did not complete (${resp.error}); ` +

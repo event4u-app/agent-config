@@ -21,6 +21,10 @@
  *              (same PII-exclusion-by-construction shape as consulted).
  *       "outcomes":  ["blocked", "verification_failed", ...]  # optional
  *       "tokens_estimate": {"consulted_load": <int>}   # optional
+ *       "cross_source": [{"id": "d1", "type": "text-image", "asked": true}]  # optional
+ *              (road-to-feedback-9.2.0-followups 1.4): per-task ask-rate facet
+ *              for the cross-source-consistency rule. Structural only — id +
+ *              a closed type enum + a bool, no free-form fields.
  *     }
  */
 import * as fs from 'node:fs';
@@ -54,6 +58,18 @@ export const ALLOWED_OUTCOMES = [
     'stop_rule_triggered',
 ] as const;
 export const MAX_OUTCOMES_PER_EVENT = ALLOWED_OUTCOMES.length;
+
+// cross_source facet (road-to-feedback-9.2.0-followups 1.4) — the
+// cross-source-consistency rule's discrepancy taxonomy (a)-(d) from
+// src/rules/cross-source-consistency.md.
+export const ALLOWED_CROSS_SOURCE_TYPES = [
+    'text-image',
+    'silent-needed',
+    'spec-code',
+    'intra-ticket',
+] as const;
+export const MAX_CROSS_SOURCE_PER_EVENT = 32;
+const _CROSS_SOURCE_KEYS = ['asked', 'id', 'type'] as const;
 
 // Phase 5 redaction validator — keep id fields from leaking paths,
 // free-text, or filenames.
@@ -125,6 +141,13 @@ export function check_id_redaction(label: string, value: unknown): void {
     }
 }
 
+/** One surfaced cross-source discrepancy — structural only, no free text. */
+export interface CrossSourceEntry {
+    id: string;
+    type: string;
+    asked: boolean;
+}
+
 export interface EngagementEventInit {
     ts: string;
     task_id: string;
@@ -134,6 +157,7 @@ export interface EngagementEventInit {
     loaded?: Record<string, string[]> | null;
     outcomes?: string[] | null;
     tokens_estimate?: Record<string, number> | null;
+    cross_source?: CrossSourceEntry[] | null;
     schema_version?: number;
 }
 
@@ -146,6 +170,7 @@ export class EngagementEvent {
     loaded: Record<string, string[]> | null;
     outcomes: string[] | null;
     tokens_estimate: Record<string, number> | null;
+    cross_source: CrossSourceEntry[] | null;
     schema_version: number;
 
     constructor(init: EngagementEventInit) {
@@ -157,6 +182,7 @@ export class EngagementEvent {
         this.loaded = init.loaded ?? null;
         this.outcomes = init.outcomes ?? null;
         this.tokens_estimate = init.tokens_estimate ?? null;
+        this.cross_source = init.cross_source ?? null;
         this.schema_version = init.schema_version ?? SCHEMA_VERSION;
     }
 
@@ -194,6 +220,9 @@ export class EngagementEvent {
         }
         if (this.outcomes !== null) {
             _validate_outcomes(this.outcomes);
+        }
+        if (this.cross_source !== null) {
+            _validate_cross_source(this.cross_source);
         }
         if (this.tokens_estimate !== null) {
             if (!_isPlainObject(this.tokens_estimate)) {
@@ -235,6 +264,13 @@ export class EngagementEvent {
         }
         if (this.outcomes && this.outcomes.length > 0) {
             out['outcomes'] = [...this.outcomes];
+        }
+        if (this.cross_source && this.cross_source.length > 0) {
+            out['cross_source'] = this.cross_source.map((e) => ({
+                id: e.id,
+                type: e.type,
+                asked: e.asked,
+            }));
         }
         if (this.tokens_estimate && Object.keys(this.tokens_estimate).length > 0) {
             out['tokens_estimate'] = { ...this.tokens_estimate };
@@ -317,6 +353,46 @@ function _validate_outcomes(payload: unknown): void {
     }
 }
 
+function _validate_cross_source(payload: unknown): void {
+    if (!Array.isArray(payload)) {
+        throw new EngagementSchemaError('cross_source must be a list of dict or None');
+    }
+    if (payload.length > MAX_CROSS_SOURCE_PER_EVENT) {
+        throw new EngagementSchemaError(
+            `cross_source exceeds ${MAX_CROSS_SOURCE_PER_EVENT} entries`,
+        );
+    }
+    for (const entry of payload) {
+        if (!_isPlainObject(entry)) {
+            throw new EngagementSchemaError('cross_source entries must be dict[str, ...]');
+        }
+        const keys = Object.keys(entry);
+        const extra = keys.filter((k) => !(_CROSS_SOURCE_KEYS as readonly string[]).includes(k));
+        if (extra.length > 0) {
+            throw new EngagementSchemaError(
+                `cross_source entry has unexpected key(s): ${extra.sort().join(', ')}; `
+                + `allowed keys: ${_CROSS_SOURCE_KEYS.join(', ')}`,
+            );
+        }
+        for (const required of _CROSS_SOURCE_KEYS) {
+            if (!(required in entry)) {
+                throw new EngagementSchemaError(`cross_source entry missing required key '${required}'`);
+            }
+        }
+        check_id_redaction('cross_source.id', entry['id']);
+        const type_val = entry['type'];
+        if (typeof type_val !== 'string' || !(ALLOWED_CROSS_SOURCE_TYPES as readonly string[]).includes(type_val)) {
+            throw new EngagementSchemaError(
+                `cross_source.type must be one of ${_reprTuple(ALLOWED_CROSS_SOURCE_TYPES)}, `
+                + `got ${_reprScalar(type_val)}`,
+            );
+        }
+        if (typeof entry['asked'] !== 'boolean') {
+            throw new EngagementSchemaError('cross_source.asked must be a bool');
+        }
+    }
+}
+
 export function parse_event(line: string): EngagementEvent {
     if (typeof line !== 'string' || !line.trim()) {
         throw new EngagementSchemaError('line must be a non-empty JSONL record');
@@ -342,6 +418,7 @@ export function parse_event(line: string): EngagementEvent {
             : _orEmptyDict(r['loaded']),
         outcomes: (r['outcomes'] as string[] | null | undefined) ?? null,
         tokens_estimate: (r['tokens_estimate'] as Record<string, number> | null | undefined) ?? null,
+        cross_source: (r['cross_source'] as CrossSourceEntry[] | null | undefined) ?? null,
         schema_version: r['schema_version'] === undefined
             ? SCHEMA_VERSION
             : (r['schema_version'] as number),

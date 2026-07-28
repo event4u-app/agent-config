@@ -132,6 +132,13 @@ jobs:
           npm run build:install-bundle
           git diff --exit-code -- dist/install/
 
+      # road-to-feedback-9.2.0-followups Phase 4: three 9.1 commits each
+      # manually rebuilt this bundle to strip a leaked build-machine path
+      # (worktree-relative, repo-relative, and full /Users/<name>/... module
+      # comments). This makes that class fail the build instead.
+      - name: Install bundle has no build-machine path leakage
+        run: ./scripts-run src/scripts/check_bundle_path_leakage
+
       - name: Run install orchestrator integration tests
         # Default nproc on macOS-arm64 runners returns 3, bottlenecking
         # the ~40-test orchestrator suite. Explicit -P 8 keeps wall-clock

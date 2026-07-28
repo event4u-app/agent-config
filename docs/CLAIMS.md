@@ -232,11 +232,11 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-11
 
 ### claim: positioning-honest-nulls
-- claim: The only agent layer that publishes the runs where it changed nothing. Deliberately falsifiable — if a reader finds a comparable agent layer publishing its own honest-null benchmark runs, this line updates; that is the point.
-- kind: comparative
+- claim: We publish our own measured null results and retire or constrain features when the evidence does not support them. Deliberately falsifiable — every published null links the run that produced it; find one that does not resolve and this line updates.
+- kind: qual
 - evidence: docs/benchmark.md#honest
 - status: backed
-- last_verified: 2026-07-20
+- last_verified: 2026-07-28
 
 ### claim: persona-identity-placebo-null
 - claim: On a 12-fixture option-decision corpus (3 arms × 2 providers, blind rubric judge claude-opus-4-8, pre-registered hypotheses), famous-figure identity framing added nothing beyond the underlying method text (method 5.04 vs figure 4.88, Δ=0.17, sign-test p=0.607), and provider diversity moved judged quality ~15× more than persona identity (provider Δ=2.58 vs identity Δ=0.17); the whole persona layer lifted only +0.08 over bare prompts. Honest null — persona panel-mode stays CUT, evidence-closed.
@@ -308,3 +308,17 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/benchmark.md#Default-install context cost
 - status: backed
 - last_verified: 2026-07-27
+
+### claim: code-graph-retrieval-null
+- claim: On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos, ground truth hash-bound before the run, deterministic, zero model calls), the native code graph scored mean recall 0.365 vs grep 0.797 on the 15 graph-shaped questions (delta -43.2 pp against a pre-declared +10 pp win threshold) and 0.111 vs 0.833 on the negative controls. HONEST NULL — measured root cause: TS arrow-function exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed dynamic consumers have no static edge. Consequence bound: code_graph.enabled stays false permanently; deprecation at the next major, removal the major after unless external evidence appears.
+- kind: quant
+- evidence: internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively
+- status: backed
+- last_verified: 2026-07-28
+
+### claim: cross-source-consistency-precision
+- claim: On the shared 30-fixture false-premise corpus (20 positives across the four discrepancy classes text-image / silent-needed / spec-code / intra-ticket + 10 negative controls), the default-on `cross-source-consistency` rule surfaces real discrepancies at >= 85% precision with an unnecessary-ask (over-firing) rate <= 5% on the negative controls.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-07-28 (road-to-feedback-9.2.0-followups Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) fixtures + expected actions are pinned in `internal/bench/corpora/honesty-false-premise.yaml` (shared with the honesty bench, extended-not-forked); (2) the scorer is `src/scripts/bench_cross_source_eval.ts` (ask|proceed|warn classification, forbidden-assumption + over-firing checks) — precision = correctly-surfaced discrepancies / all surfaced; over-firing = asks on negative controls / negative controls; (3) the run needs real model responses per fixture (paid, maintainer-gated spend) — this entry stands as documented debt until that run lands; (4) HONEST NULL consequence bound: precision < 85% or over-firing > 5% → loosen the rule's default (`consistency.cross_source: on` → `auto`) or tighten its confidence tiers — never silently keep firing. This binds the weaker-evidenced default-on rule to a measurement like every other default-flip.
+- status: unbacked
+- last_verified:

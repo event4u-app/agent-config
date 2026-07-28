@@ -8,6 +8,8 @@ triggers:
   - intent: "external API"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+enforced_by:
+  - "validator:src/scripts/lint_agent_security.ts"
 ---
 
 # Tool Safety

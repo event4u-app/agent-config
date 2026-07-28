@@ -52,6 +52,14 @@ ai_team:
     max_consecutive_blocks: <int >= 1>  # default 3; circuit-breaker loop bound
 ```
 
+> **Disposition (2026-07-28, honest-null survivor).** The team-mode outcome
+> benchmark never produced a measured lift (spend-gated, unrun — the feature
+> ships without a quality claim). `enabled: false` stays the bound default;
+> deprecation notice at the next major, removal the major after, unless
+> external evidence (a consumer-filed outcome case) appears first. Team mode
+> is NOT sold as a verified quality mechanism — its honest value is workflow
+> convenience for operators who already run the codex CLI.
+
 | Key | Type | Default | Semantics |
 |---|---|---|---|
 | `enabled` | bool | `false` | Master switch. `false` = `/team` commands are never suggested and every invocation refuses with an enable pointer — byte-identical to pre-feature behavior. `true` = the family is live; per-command gates below still apply. |

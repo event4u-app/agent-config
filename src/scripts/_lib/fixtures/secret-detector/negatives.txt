@@ -8,3 +8,8 @@ bundle integrity 3a7bd3e2360a3d29eea436fcfb7e44c735d117c42d1c1835420b6b9942dd4f1
 data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAElFTkSuQmCC
 API_KEY=your-key-here
 aws_key = "AKIAZ4Q7WXYT2H9RVBKL"  # secret-allow
+aws docs example AKIAIOSFODNN7EXAMPLE
+stripe_key = "sk_test_placeholder"
+token = "[REDACTED]"
+password = "********"
+checksum sha512-VGhpcyBpcyBub3QgYSBzZWNyZXQgYXQgYWxsIGp1c3QgYSBkaWdlc3Q=

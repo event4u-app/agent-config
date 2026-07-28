@@ -1,6 +1,6 @@
 # Architecture
 
-> **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
+> **agent-config is a governance layer with optional, individually opt-in embedded engines ([ADR-124](decisions/ADR-124-embedded-engine-doctrine.md)) — it ships a deterministic orchestration contract / state machine for host agents, never a resident process.** Engines (code intelligence, gated reach, setup GUI, bench lab) are per-command, terminate on completion, and are never default-on without measured lift.
 
 ## System overview
 

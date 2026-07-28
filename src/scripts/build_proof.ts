@@ -24,6 +24,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { REPO, LEDGER_REL, load_ledger, pointer_unresolved } from './check_claims.js';
+import { collect as collectEnforcement, summarise as summariseEnforcement } from './check_enforcement_coverage.js';
 import { collectSkillGaps } from './check_skill_gaps.js';
 import { loadRows as loadComparisonRows } from './check_comparison.js';
 import { computeStatus as domainSoundnessStatus } from './domain_soundness_status.js';
@@ -386,6 +387,50 @@ function render(): string {
         }
     }
 
+    L.push('');
+    L.push('## 4b. The two existing axes — enforcement level per rule, evidence form per claim');
+    L.push('');
+    L.push('Pure projection of what the repo already knows — the `enforced_by`');
+    L.push('resolution (`check_enforcement_coverage`) and the claims ledger');
+    L.push(`(\`${LEDGER_REL}\`). No new taxonomy, zero hand-written rows.`);
+    L.push('');
+    {
+        const rows = collectEnforcement();
+        const s = summariseEnforcement(rows);
+        L.push(
+            `**Axis 1 — enforcement level per rule.** ${s.total} rules · ` +
+                `${s.blocking} blocking (${s.blocking_pct}%) · ${s.observer} observer · ` +
+                `${s.local_only} local-only · ${s.undeclared} undeclared (no \`enforced_by\` yet).`,
+        );
+        L.push('');
+        L.push('| Rule | Effective level | Declared backstop(s) |');
+        L.push('|---|---|---|');
+        const declared = rows
+            .filter((r) => r.declared.length > 0)
+            .sort((a, b) => a.id.localeCompare(b.id));
+        for (const r of declared) {
+            const decl = r.declared.map((d) => `\`${d}\``).join('<br>');
+            L.push(`| \`${r.id}\` | ${r.effective} | ${decl} |`);
+        }
+        L.push('');
+        L.push(`Undeclared rules (${s.undeclared}) carry no row — an honest gap beats a false claim.`);
+    }
+    L.push('');
+    {
+        const ledger = [...load_ledger().values()].sort((a, b) => a.id.localeCompare(b.id));
+        const backed = ledger.filter((e) => e.status === 'backed').length;
+        L.push(
+            `**Axis 2 — evidence form per public claim.** ${ledger.length} ledger entries · ` +
+                `${backed} backed · ${ledger.length - backed} unbacked inventory.`,
+        );
+        L.push('');
+        L.push('| Claim id | Kind | Status | Evidence pointer |');
+        L.push('|---|---|---|---|');
+        for (const e of ledger) {
+            const ev = e.evidence.length > 0 ? `\`${e.evidence.replace(/\|/g, '\\|')}\`` : '—';
+            L.push(`| \`${e.id}\` | ${e.kind} | ${e.status} | ${ev} |`);
+        }
+    }
     L.push('');
     L.push('## 5. Verify it yourself');
     L.push('');

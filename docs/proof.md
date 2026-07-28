@@ -46,6 +46,7 @@ evidence pointer, or `task check-claims` fails the build.
 | Claim | Kind | Evidence | Resolves |
 |---|---|---|---|
 | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. | qual | `docs/succession.md#trailing 90 days` | ✅ |
+| On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos, ground truth hash-bound before the run, deterministic, zero model calls), the native code graph scored mean recall 0.365 vs grep 0.797 on the 15 graph-shaped questions (delta -43.2 pp against a pre-declared +10 pp win threshold) and 0.111 vs 0.833 on the negative controls. HONEST NULL — measured root cause: TS arrow-function exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed dynamic consumers have no static edge. Consequence bound: code_graph.enabled stays false permanently; deprecation at the next major, removal the major after unless external evidence appears. | quant | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` | ✅ |
 | 190 commands. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
 | A MEASURED-BUT-NOT-SHIPPED experiment — the thin rule projection reduced eager rule load 78,513 → 13,881 GPT-tokens (whole always-loaded projection 98,529 → 33,897, ~65.6%), but FAILED the quality gate (thin win-rate 36.2% vs required 48%) and does not ship; it un-defers only behind `discipline_profile: essential`. Shipped behavior does NOT include this reduction. Method: `agent-config benchmark` over the pinned token baseline; the baseline is the honest "what the user pays if everything loads eagerly", NOT a synthetic full-corpus strawman (council Q4); quality gate per the Phase-0 paired judge run. | quant | `internal/bench/reports/token-baseline.json#eager_rule_load` | ✅ |
 | The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts via the council transport, $0.16) measured real per-host finding-count differences — claude-sonnet-4-5 surfaced ~2× the findings of gpt-4o on the multi-file analysis task (median 11 vs 5) while both vendors were identical on the planted hollow-implementation task (2 vs 2) and perfectly silent on the clean-code negative control (0 vs 0, no spurious findings). The per-task `finding_floor` values are calibrated from the cross-host lower envelope and the gate is armed. | quant | `internal/bench/reports/parity-count.json#min over hosts of median` | ✅ |
@@ -66,7 +67,7 @@ evidence pointer, or `task check-claims` fails the build.
 | A hand-rolled, dependency-free BM25 + trigram lexical index resolves the "recalls but does not rank" gap: on the retrieval-precision corpus (9 keyword-overlapping-confuser tasks) it drives the mean top tie-set from 3.333 (the `_score` bucket scorer) to 1.0 — every needed decision uniquely top-ranked — with precision@1 and precision@5 unchanged at 1.0. Method: deterministic, model-free re-ranking of the SAME retrieved entry set; both scorers measured over the identical store via `measure_lexical_ranking.ts`. Cross-artefact note (2026-07-25): this baseline (3.333) is the value in THIS claim's own artefact and is cited correctly, but the retrieval-precision artefact records 4.111 for the same scorer on the same corpus — two bench scripts disagree. The lift direction (ties collapse to 1.0) holds under either baseline; the discrepancy itself is unresolved and recorded rather than smoothed. | quant | `exec:measure_lexical_ranking -> 0` | ✅ |
 | The whole layer is compiled into host agents with zero runtime daemon. | qual | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` | ✅ |
 | On a 12-fixture option-decision corpus (3 arms × 2 providers, blind rubric judge claude-opus-4-8, pre-registered hypotheses), famous-figure identity framing added nothing beyond the underlying method text (method 5.04 vs figure 4.88, Δ=0.17, sign-test p=0.607), and provider diversity moved judged quality ~15× more than persona identity (provider Δ=2.58 vs identity Δ=0.17); the whole persona layer lifted only +0.08 over bare prompts. Honest null — persona panel-mode stays CUT, evidence-closed. | quant | `internal/bench/reports/persona-placebo.json#honest-null` | ✅ |
-| The only agent layer that publishes the runs where it changed nothing. Deliberately falsifiable — if a reader finds a comparable agent layer publishing its own honest-null benchmark runs, this line updates; that is the point. | comparative | `docs/benchmark.md#honest` | ✅ |
+| We publish our own measured null results and retire or constrain features when the evidence does not support them. Deliberately falsifiable — every published null links the run that produced it; find one that does not resolve and this line updates. | qual | `docs/benchmark.md#honest` | ✅ |
 | On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with keyword-overlapping confusers), the memory retrieval substrate scored precision@5 = 100% (9/9) with 100% poisoned-entry rejection, and the retrieval-on arm passed 27/27 model-scored tasks vs 2/27 with retrieval off and 4/27 with a placebo injection. Known limit stays published: mean tie-set 4.111 means top-k ties break by store order, not relevance (the ADR-116/FTS5 signal). SOLE RECORD for this artefact as of 2026-07-25: a second entry (`second-brain-retrieval-precision`) described the same measurement from the precision angle and had drifted to 5/27, 5/27 and tie-set 3.3 — figures absent from the shared artefact. Two entries over one artefact is what allowed them to disagree while both resolved, so the pair was folded into this one. | quant | `internal/bench/reports/second-brain-retrieval.json#retrieval-on` | ✅ |
 | 110 governed rules. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
@@ -76,14 +77,14 @@ evidence pointer, or `task check-claims` fails the build.
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**30 backed claim(s)** — all evidence pointers resolve in CI.
+**31 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**10 of 30** backed claims carry `exec:` evidence —
+**10 of 31** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**20** rest on a pointer: CI checks that the artefact
+**21** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -95,6 +96,7 @@ given:
 | Claim | Why it cannot re-execute |
 |---|---|
 | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (tr | prose or contract artefact — no exit code carries the verdict |
+| On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | A MEASURED-BUT-NOT-SHIPPED experiment — the thin rule projection reduced eager rule load 78,513 → 13,881 GPT-t | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts vi | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | The scoped-projection default for new installs ships 212 of 283 skills (untagged core plus engineering/maintai | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
@@ -108,7 +110,7 @@ given:
 | NONE of the backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for exist | prose or contract artefact — no exit code carries the verdict |
 | The whole layer is compiled into host agents with zero runtime daemon. | prose or contract artefact — no exit code carries the verdict |
 | On a 12-fixture option-decision corpus (3 arms × 2 providers, blind rubric judge claude-opus-4-8, pre-register | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
-| The only agent layer that publishes the runs where it changed nothing. Deliberately falsifiable — if a reader  | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+| We publish our own measured null results and retire or constrain features when the evidence does not support t | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with key | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled r | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour too | prose or contract artefact — no exit code carries the verdict |
@@ -121,7 +123,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 4 claim(s) are logged as
+We also publish our **debt**: 5 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -239,6 +241,85 @@ keep in sync.
 | You pay tokens for prompt theater that was never measured against the method text it wraps. | The persona-identity question was tested and published as an honest null (identity swap ~zero effect, provider choice ~15x larger) instead of being shipped as theater. | [`internal/bench/reports/persona-placebo.json#honest-null`](../internal/bench/reports/persona-placebo.json) |
 | An install instruction silently follows a moving target — an unpinned package or a piped remote script — so what lands in your repo is whatever the source held that day. | Every upstream-tool install prescription the package ships is version-pinned, intake-recorded, and enforced offline in CI — an unpinned version, a branch/archive install source, or a pipe-remote-to-shell instruction fails the build. | [`src/scripts/validate_reach_prescriptions.ts`](../src/scripts/validate_reach_prescriptions.ts) |
 | You hand over a credential — or your account — for a read the tools could already do, and you cannot tell which channels actually work because the capability was claimed rather than measured. | Platform reads that the host's own web tools cannot perform at all (a refused domain, an HTTP 402) are shipped as credential-free prescriptions whose reliability was measured per channel against a native control, with the thresholds frozen before the run and the narrowing caveat published alongside the pass. | [`docs/benchmark.md#ship-gated-reach`](../docs/benchmark.md) |
+
+## 4b. The two existing axes — enforcement level per rule, evidence form per claim
+
+Pure projection of what the repo already knows — the `enforced_by`
+resolution (`check_enforcement_coverage`) and the claims ledger
+(`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
+
+**Axis 1 — enforcement level per rule.** 110 rules · 15 blocking (13.6%) · 7 observer · 0 local-only · 85 undeclared (no `enforced_by` yet).
+
+| Rule | Effective level | Declared backstop(s) |
+|---|---|---|
+| `context-hygiene` | observer | `hook:context-hygiene` |
+| `framework-neutrality-in-generic-skills` | validator | `validator:src/scripts/lint_framework_leakage.ts` |
+| `git-history-discipline` | hook | `hook:block-no-verify` |
+| `language-and-tone` | validator | `validator:src/scripts/check_md_language.ts` |
+| `lethal-trifecta-guard` | validator | `validator:src/scripts/lint_skill_frontmatter_safety.ts` |
+| `media-governance-routing` | validator | `validator:src/scripts/lint_media_policy_linkage.ts` |
+| `minimal-safe-diff` | observer | `hook:minimal-safe-diff` |
+| `no-roadmap-references` | validator | `validator:src/scripts/check_no_roadmap_refs.ts`<br>`validator:src/scripts/check_council_references.ts` |
+| `non-destructive-by-default` | none | `none` |
+| `onboarding-gate` | observer | `hook:onboarding-gate` |
+| `output-discipline` | validator | `validator:src/scripts/lint_output_slop.ts` |
+| `persona-governance` | validator | `validator:src/scripts/lint_persona_governance.ts` |
+| `preservation-guard` | validator | `validator:src/scripts/check_condensation.ts`<br>`validator:src/scripts/skill_linter.ts` |
+| `roadmap-progress-sync` | observer | `hook:roadmap-progress` |
+| `secret-vcs-guard` | validator | `validator:src/scripts/check_secret_leak.ts` |
+| `security-sensitive-stop` | none | `none` |
+| `session-canary` | observer | `hook:session-canary` |
+| `skill-quality` | validator | `validator:src/scripts/skill_linter.ts` |
+| `source-confidentiality` | validator | `validator:src/scripts/check_no_external_sources.ts` |
+| `source-of-truth` | validator | `validator:src/scripts/check_condensation.ts` |
+| `telegraph-speak` | observer | `observer:maintainer-review` |
+| `token-optimizer-maintenance` | validator | `validator:src/scripts/check_token_optimizer_freshness.ts` |
+| `tool-safety` | validator | `validator:src/scripts/lint_agent_security.ts` |
+| `untrusted-input-defense` | none | `none` |
+| `verify-before-complete` | observer | `hook:verify-before-complete` |
+
+Undeclared rules (85) carry no row — an honest gap beats a false claim.
+
+**Axis 2 — evidence form per public claim.** 36 ledger entries · 31 backed · 5 unbacked inventory.
+
+| Claim id | Kind | Status | Evidence pointer |
+|---|---|---|---|
+| `adversarial-council-finding-coverage` | quant | unbacked | `docs/benchmark.md#adversarial-verification-council` |
+| `bus-factor-tracked` | qual | backed | `docs/succession.md#trailing 90 days` |
+| `code-graph-retrieval-null` | quant | backed | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` |
+| `command-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
+| `context-token-reduction` | quant | backed | `internal/bench/reports/token-baseline.json#eager_rule_load` |
+| `council-vs-solo-baseline` | comparative | unbacked | `PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11 Phase 3 — no goalpost-moving after the numbers land; design at `docs/design/council-vs-solo-baseline.md`). Falsification criteria fixed BEFORE data: (1) quality = blind post-hoc grading against known ground-truth dispositions, two blind judges, admissible only at Cohen's κ ≥ 0.60 (reuse `check_quality_regression.ts` kappa machinery); (2) the five feedback-proposed admission dimensions are recorded per decision AT pre-registration, so "≥2-of-5" is a testable post-hoc correlate, never a pre-imposed gate; (3) NO lift on any subset (overall, per impact class, per dimension stratum) → honest null, deliberation-protocol phases stop (maintenance-only), recorded in road-to-opt-council-deliberation; lift on a subset → admission criteria derived FROM that subset's characteristics. Execution is spend-gated (user confirms rendered estimate in-session); shadow-log was absent/empty at design time — zero prior council-vs-solo data exists.` |
+| `cross-model-parity-count` | quant | backed | `internal/bench/reports/parity-count.json#min over hosts of median` |
+| `cross-source-consistency-precision` | quant | unbacked | `PRE-REGISTERED 2026-07-28 (road-to-feedback-9.2.0-followups Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) fixtures + expected actions are pinned in `internal/bench/corpora/honesty-false-premise.yaml` (shared with the honesty bench, extended-not-forked); (2) the scorer is `src/scripts/bench_cross_source_eval.ts` (ask\|proceed\|warn classification, forbidden-assumption + over-firing checks) — precision = correctly-surfaced discrepancies / all surfaced; over-firing = asks on negative controls / negative controls; (3) the run needs real model responses per fixture (paid, maintainer-gated spend) — this entry stands as documented debt until that run lands; (4) HONEST NULL consequence bound: precision < 85% or over-firing > 5% → loosen the rule's default (`consistency.cross_source: on` → `auto`) or tighten its confidence tiers — never silently keep firing. This binds the weaker-evidenced default-on rule to a measurement like every other default-flip.` |
+| `default-install-context-cost` | quant | backed | `docs/benchmark.md#Default-install context cost` |
+| `discipline-lift-weak-host` | quant | backed | `docs/benchmark.md#weak-host-specific` |
+| `domain-soundness-scoped` | qual | backed | `exec:domain_soundness_status --check -> 0` |
+| `domain-soundness-validated-count` | quant | backed | `exec:domain_soundness_status -> 0` |
+| `downshift-cost-reduction` | quant | backed | `internal/bench/routing-downshift/results-2026-07-08.md#FAMILY-SCOPED PROVE` |
+| `enforcement-coverage-resolved` | quant | backed | `exec:check_enforcement_coverage --check -> 0` |
+| `essential-tier-cost-factor` | quant | backed | `docs/benchmark.md#REPLICATION FAILED` |
+| `eval-coverage-ratcheted` | qual | backed | `exec:skill_eval_coverage --check -> 0` |
+| `gated-platform-reads` | quant | backed | `docs/benchmark.md#ship-gated-reach` |
+| `hook-dispatch-latency` | quant | backed | `docs/hook-latency.json#pre_tool_use` |
+| `host-agent-count` | quant | backed | `exec:vitest run tests/install/toolDetection.test.ts -> 0` |
+| `humanizer-tell-reduction` | quant | backed | `internal/bench/reports/humanizer-v1.md#prefers the humanized text` |
+| `install-audit-clean` | quant | backed | `.github/workflows/release-validation.yml#npm audit --omit=dev --audit-level=high` |
+| `ledger-exec-verifiability` | quant | backed | `internal/reports/exec-evidence-feasibility.json#"exec_feasible"` |
+| `lexical-ranking-lift` | quant | backed | `exec:measure_lexical_ranking -> 0` |
+| `no-runtime-daemon` | qual | backed | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` |
+| `orchestration-dispatch-net-win` | comparative | unbacked | `PRE-REGISTERED 2026-07-11 (road-to-orchestration-scope-decision Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) held quality is deterministic, scored by `src/scripts/check_quality_regression.ts` thresholds — a token/wall win that degrades output below the regression threshold FAILS the claim; (2) negative control — `pv-02-negative-control` must NOT trigger dispatch (a classifier that fires on everything is a cost leak, not a win); (3) win metric — ≥15% reduction in token-or-wall on `orch-02`+`orch-03` vs the single-agent baseline, read from `agents/runtime/state/audit/*.jsonl` orchestration lines through `gateVerdict()` / `resolveShippedDefault()`. Binds to a resolving report once ≥20 real `ask`-mode telemetry lines exist (Phase 2 — maintainer-run; the corpus `--run` agent-spawn is gated out of auto-mode). PROVE → flip to backed for the proven family only; DROP → renewed honest-null, keep `ask`, demote orchestration from the public value proposition.` |
+| `persona-identity-placebo-null` | quant | backed | `internal/bench/reports/persona-placebo.json#honest-null` |
+| `positioning-honest-nulls` | qual | backed | `docs/benchmark.md#honest` |
+| `retrieval-substrate-live-pass` | quant | backed | `internal/bench/reports/second-brain-retrieval.json#retrieval-on` |
+| `rule-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
+| `second-brain-recall-lift` | quant | backed | `internal/bench/reports/second-brain-delta.json` |
+| `shipped-artifacts-hidden-instruction-scanned` | qual | backed | `exec:lint_agent_security -> 0` |
+| `skill-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
+| `surgical-uninstall` | qual | backed | `docs/contracts/install-layout.md#JSON-pointer` |
+| `team-defect-finding-null` | quant | backed | `internal/bench/reports/defect-finding.json#honest_null` |
+| `utilization-window-decidability` | comparative | unbacked | `PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11-2 Phase 0 — no goalpost-moving after the numbers land; criteria at `docs/design/utilization-window-criteria.md`). Floor fixed BEFORE data: >=100 task boundaries AND >=2 hosts (or the documented degraded form) AND >=45 elapsed days; decision rules D1 (loaded-never-consulted -> retirement-candidate list), D2 (consulted-never-applied <10% applied-ratio at >=5 consultations -> trigger-review queue), D3 (above floor -> >=1 named decision per kind or a recorded why-not), D4 (below floor after one extension -> honest null, lifecycle/ledger gates stay closed). Kernel + safety floors exempt by construction.` |
+| `wedge-hollow-detection` | quant | backed | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` |
 
 ## 5. Verify it yourself
 
