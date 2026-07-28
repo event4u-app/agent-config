@@ -1,0 +1,326 @@
+{
+  "generated": "2026-07-28",
+  "questions": 18,
+  "graph_shaped": 15,
+  "negative_controls": 3,
+  "build_ms": {
+    "repo-a": 2458,
+    "repo-b": 6916,
+    "repo-c": 6658
+  },
+  "graph_shaped_mean": {
+    "grep": {
+      "precision": 0.67,
+      "recall": 0.797
+    },
+    "graph": {
+      "precision": 0.413,
+      "recall": 0.365
+    }
+  },
+  "negative_controls_mean": {
+    "grep": {
+      "recall": 0.833
+    },
+    "graph": {
+      "recall": 0.111
+    }
+  },
+  "threshold": {
+    "recall_delta_pp": -43.2,
+    "recall_delta_required_pp": 10,
+    "precision_floor_ok": false,
+    "negative_control_ok": false
+  },
+  "verdict": "NULL — threshold not cleared",
+  "rows": [
+    {
+      "id": "repo-a-q1",
+      "category": "impact-analysis",
+      "grep": {
+        "precision": 1,
+        "recall": 0.286,
+        "wall_ms": 76,
+        "output_bytes": 216
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 0.143,
+        "wall_ms": 1195,
+        "output_bytes": 1890
+      }
+    },
+    {
+      "id": "repo-a-q2",
+      "category": "impact-analysis",
+      "grep": {
+        "precision": 0.733,
+        "recall": 1,
+        "wall_ms": 207,
+        "output_bytes": 4185
+      },
+      "graph": {
+        "precision": 0.846,
+        "recall": 1,
+        "wall_ms": 1085,
+        "output_bytes": 5348
+      }
+    },
+    {
+      "id": "repo-a-q3",
+      "category": "call-path",
+      "grep": {
+        "precision": 0.5,
+        "recall": 0.5,
+        "wall_ms": 52,
+        "output_bytes": 570
+      },
+      "graph": {
+        "precision": 0.167,
+        "recall": 0.25,
+        "wall_ms": 1100,
+        "output_bytes": 8953
+      }
+    },
+    {
+      "id": "repo-a-q4",
+      "category": "symbol-ownership",
+      "grep": {
+        "precision": 0.5,
+        "recall": 1,
+        "wall_ms": 55,
+        "output_bytes": 2013
+      },
+      "graph": {
+        "precision": 0.667,
+        "recall": 0.667,
+        "wall_ms": 1143,
+        "output_bytes": 913
+      }
+    },
+    {
+      "id": "repo-a-q5",
+      "category": "refactor-scope",
+      "grep": {
+        "precision": 0.8,
+        "recall": 1,
+        "wall_ms": 57,
+        "output_bytes": 2530
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 0.25,
+        "wall_ms": 1046,
+        "output_bytes": 7596
+      }
+    },
+    {
+      "id": "repo-a-q6",
+      "category": "hidden-dynamic-dispatch",
+      "grep": {
+        "precision": 0.4,
+        "recall": 0.667,
+        "wall_ms": 52,
+        "output_bytes": 1334
+      },
+      "graph": {
+        "precision": 0.333,
+        "recall": 0.667,
+        "wall_ms": 1043,
+        "output_bytes": 1937
+      }
+    },
+    {
+      "id": "repo-a-q7",
+      "category": "negative-control",
+      "grep": {
+        "precision": 1,
+        "recall": 0.5,
+        "wall_ms": 46,
+        "output_bytes": 124
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 1108,
+        "output_bytes": 8131
+      }
+    },
+    {
+      "id": "repo-b-q1",
+      "category": "impact-analysis",
+      "grep": {
+        "precision": 0.6,
+        "recall": 1,
+        "wall_ms": 222,
+        "output_bytes": 2304
+      },
+      "graph": {
+        "precision": 0.75,
+        "recall": 1,
+        "wall_ms": 2447,
+        "output_bytes": 3654
+      }
+    },
+    {
+      "id": "repo-b-q2",
+      "category": "impact-analysis",
+      "grep": {
+        "precision": 0.462,
+        "recall": 1,
+        "wall_ms": 224,
+        "output_bytes": 3149
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 2563,
+        "output_bytes": 1349
+      }
+    },
+    {
+      "id": "repo-b-q3",
+      "category": "call-path",
+      "grep": {
+        "precision": 1,
+        "recall": 0.667,
+        "wall_ms": 232,
+        "output_bytes": 246
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 2510,
+        "output_bytes": 262
+      }
+    },
+    {
+      "id": "repo-b-q4",
+      "category": "symbol-ownership",
+      "grep": {
+        "precision": 0.111,
+        "recall": 1,
+        "wall_ms": 89,
+        "output_bytes": 34740
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 2429,
+        "output_bytes": 262
+      }
+    },
+    {
+      "id": "repo-b-q5",
+      "category": "refactor-scope",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 92,
+        "output_bytes": 1068
+      },
+      "graph": {
+        "precision": 0.429,
+        "recall": 1,
+        "wall_ms": 2405,
+        "output_bytes": 1019
+      }
+    },
+    {
+      "id": "repo-b-q6",
+      "category": "hidden-dynamic-dispatch",
+      "grep": {
+        "precision": 0.143,
+        "recall": 0.5,
+        "wall_ms": 51,
+        "output_bytes": 1755
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 2624,
+        "output_bytes": 14271
+      }
+    },
+    {
+      "id": "repo-b-q7",
+      "category": "negative-control",
+      "grep": {
+        "precision": 0.333,
+        "recall": 1,
+        "wall_ms": 224,
+        "output_bytes": 511
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 2430,
+        "output_bytes": 15939
+      }
+    },
+    {
+      "id": "repo-c-q1",
+      "category": "impact-analysis-php",
+      "grep": {
+        "precision": 0.8,
+        "recall": 1,
+        "wall_ms": 159,
+        "output_bytes": 664
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 0.5,
+        "wall_ms": 2517,
+        "output_bytes": 363022
+      }
+    },
+    {
+      "id": "repo-c-q2",
+      "category": "impact-analysis-ts",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 48,
+        "output_bytes": 418
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 2474,
+        "output_bytes": 3751
+      }
+    },
+    {
+      "id": "repo-c-q3",
+      "category": "hidden-dynamic-dispatch",
+      "grep": {
+        "precision": 1,
+        "recall": 0.333,
+        "wall_ms": 53,
+        "output_bytes": 492
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 2446,
+        "output_bytes": 262
+      }
+    },
+    {
+      "id": "repo-c-q4",
+      "category": "negative-control-cross-language",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 50,
+        "output_bytes": 1035
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 0.333,
+        "wall_ms": 2545,
+        "output_bytes": 1865
+      }
+    }
+  ]
+}
