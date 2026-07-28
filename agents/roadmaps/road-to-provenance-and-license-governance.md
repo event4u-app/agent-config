@@ -415,14 +415,27 @@ Gives the parked `later/road-to-sparring-critic-spike.md` its first
 concrete non-cosmetic vertical — but ONLY if the deterministic layer
 leaves a measurable gap.
 
-- [ ] **S5.1 Gap measurement first**: on the Phase-0 corpus the
+- [x] **S5.1 Gap measurement first**: on the Phase-0 corpus the
   structural-rewrite seeded copies define the residual class. If
   deterministic recall on the FULL seeded corpus ≥ 21/24 (87.5% — the
   ratio the merged draft's unreachable "14/16" froze), **DROP this phase**
   (an LLM layer riding on a solved problem = sippenhaft-coupling in
   reverse; record the drop like L2/L3).
   *Verify:* drop-or-proceed verdict recorded against the corpus report.
-- [ ] **S5.2 If gap confirmed: IP-Critic rubric** for the sparring
+  <!-- verdict 2026-07-28: full seeded recall = 18/24 (union of both layers),
+  BELOW the >=21/24 drop threshold — so the mechanical drop condition does
+  NOT fire and a residual class demonstrably exists (6 seeded copies no layer
+  detected, incl. 4 of 8 rename-only). BUT Phase 5 is DROPPED anyway on a
+  stronger, independent ground: G0 killed the deterministic layer entirely
+  (K1), so there is no "solved problem" for an LLM layer to ride on — and
+  more decisively, the residual class here is dominated by RENAME-ONLY
+  laundering, which an IP-Critic cannot fix either: council finding 6 already
+  bounds probe answers to transformation-depth evidence ONLY, never
+  provenance proof (a derivation narrative can be confabulated), so a critic
+  would produce exactly the unverifiable signal the G0 re-scope just refused
+  to ship. Building it would re-create the illusory-compliance failure mode
+  one layer up -->`
+- [-] **S5.2 If gap confirmed: IP-Critic rubric** for the sparring
   loop — derivation probes ("walk me through the derivation of this
   function", "what changes if the requirement were X"),
   transformation-depth scoring. Rubric-mandatory, budget-capped per
@@ -433,11 +446,14 @@ leaves a measurable gap.
   so a fluent answer clears nothing by itself.
   *Verify:* rubric + PASS/FAIL registered before first critic run;
   rubric text carries the evidence-only bound.
-- [ ] **S5.3 Critic trigger discipline**: runs only on
+  <!-- CANCELLED 2026-07-28 per S5.1's verdict: no critic is built. K4 says
+  no appeal path; revival requires a new roadmap -->`
+- [-] **S5.3 Critic trigger discipline**: runs only on
   `origin: uncertain` flags (S1.1) and residual-class file types —
   never blanket (lean-init token lesson).
   *Verify:* trigger conditions encoded in the dispatch config;
   blanket-run impossible by construction.
+  <!-- CANCELLED 2026-07-28: nothing to trigger — S5.2 cancelled -->`
 
 ## Explicitly NOT in scope (cuts)
 

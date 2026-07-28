@@ -6,10 +6,10 @@
 
 ## Overall
 
-**178 / 288 steps done · 62%**
+**179 / 286 steps done · 63%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   62%
+█████████████████████████░░░░░░░░░░░░░░░   63%
 ```
 
 ## Open roadmaps
@@ -27,7 +27,7 @@
 | 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 12 | [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md) | 6 | 22 | 13 | 7 | 0 | 2 | 0 | ████░░░░░░ 35% |
+| 12 | [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md) | 6 | 22 | 10 | 8 | 0 | 4 | 0 | ████░░░░░░ 44% |
 | 13 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
 | 14 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -211,7 +211,7 @@ _1 blocker resolved._
 
 ### [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md)
 
-**Road to provenance and license governance — code borrows get a paper trail** — 7 / 20 done (35%)
+**Road to provenance and license governance — code borrows get a paper trail** — 8 / 18 done (44%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -220,7 +220,7 @@ _1 blocker resolved._
 | 2 | RE-SCOPED by Gate G0 (behavioural-only; no CI gate) | 🟡 in progress | 1 | 1 | 0 | 2 | 50% |
 | 3 | Claims + measurement | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Dogfood + hygiene (practice before preach) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | IP-Critic vertical (conditional; sparring-critic unpark) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | IP-Critic vertical (conditional; sparring-critic unpark) | ✅ done | 0 | 1 | 0 | 2 | 100% |
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
