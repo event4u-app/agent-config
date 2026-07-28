@@ -268,9 +268,9 @@ not stay buried here (S3.3).
   note that after the G0 finding this ledger discipline is the PRIMARY
   anti-launder control, not a backstop -->`
 - [x] **S1.4 Skill family `license-compliance/`** (consumer-facing):
-  `borrow-check` (paste URL ⇒ license fetch ⇒ policy verdict ⇒ ledger
-  entry draft), `credits` (regenerate NOTICES from jsonl),
-  `license-audit` (run Phase-2 scanners on demand). Descriptions follow
+  `license-compliance-borrow-check` (paste URL ⇒ license fetch ⇒ policy verdict ⇒ ledger
+  entry draft), `license-compliance-credits` (regenerate NOTICES from jsonl),
+  `license-compliance-audit` (run Phase-2 scanners on demand). Descriptions follow
   the contributor-precheck pattern; content passes
   `lint_originality --changed`.
   *Verify:* skills pass lint-skills; borrow-check golden transcript
@@ -303,7 +303,7 @@ recall unmeasurable — a statistical accident, not a property to stake a gate
 on.
 
 **What Phase 2 therefore is:** the deterministic layer exists ONLY as the
-on-demand `license-audit` skill (S1.4) a human invokes deliberately — where
+on-demand `license-compliance-audit` skill (S1.4) a human invokes deliberately — where
 every hit gets investigated *because* the human asked for it. CI carries
 only `lint_provenance.ts` (S1.3), which checks OUR OWN RECORDS and is
 unaffected by any of this (it is not a similarity detector).
@@ -377,7 +377,7 @@ a phase revival.
 
 ## Phase 3 — Claims + measurement
 
-- [ ] **S3.1 Pre-register `provenance-gate-effectiveness` in
+- [x] **S3.1 Pre-register `provenance-gate-effectiveness` in
   `docs/CLAIMS.md`, unbacked.** Claim text (maximum honest form): "AC's
   provenance gate detects seeded verbatim and rename-only OSS copies at
   the Phase-0 measured rate and enforces a documented borrow trail; it
@@ -390,12 +390,29 @@ a phase revival.
   is not a backed claim (council finding 3).
   *Verify:* check_claims passes; entry marked unbacked with the
   triple trigger.
-- [ ] **S3.2 README section under claims discipline**: no
+  <!-- done 2026-07-28 (sonnet subagent + verified: check_claims green, 39
+  entries). CLAIM TEXT REWRITTEN — the roadmap's original wording ("AC's
+  provenance gate detects seeded verbatim and rename-only OSS copies…") is
+  FALSE after G0: there is no gate and rename-only is not detected. The
+  registered claim describes what actually shipped (derived license policy +
+  strict own-records ledger linter in CI + the on-demand
+  license-compliance-audit skill) and states explicitly what it is NOT: not
+  a detection gate, not a certification of absence of copying, not
+  rename-only detection. kind: qual (there is no gate rate left to quantify);
+  cites the G0 honest null via the sibling
+  provenance-detector-transformation-sensitivity entry rather than a
+  roadmap path (no-roadmap-references) -->`
+- [x] **S3.2 README section under claims discipline**: no
   "copyright-safe" language anywhere, ever. Approved vocabulary:
   "provenance-governed", "license-policy-enforced", "audited borrow
   trail". Banned-phrases list added to the docs linter.
   *Verify:* docs linter fails a fixture containing "copyright-safe".
-- [ ] **S3.3 User-facing "Scope & limits" box (council finding 1)**:
+  <!-- done 2026-07-28: lint_provenance_vocabulary.ts (444 lines, 15 tests)
+  bans "copyright-safe" + near variants across README + docs/**, strict from
+  day one, wired into ci + ci-strict. A quoted-span exemption mirrors the
+  existing banned-phrase carve-out so a doc that CITES the vocabulary as
+  documentation (ADR-136 does) is not treated as making the claim -->`
+- [x] **S3.3 User-facing "Scope & limits" box (council finding 1)**:
   every user-facing surface that uses an approved-vocabulary term
   (README section, marketing page, install output) MUST co-locate a
   quantified scope statement: (a) unconscious training-data
@@ -409,6 +426,14 @@ a phase revival.
   *Verify:* linter fixture with "provenance-governed" and no box
   fails; fixture with box passes; numbers cross-checked against
   CLAIMS.md by the linter.
+  <!-- done 2026-07-28: anchor `<!-- provenance-scope-box -->` + a
+  `#### Scope & limits` heading within 5 lines; the box must state
+  unconscious-training-data non-detectability, known-OSS-only KB scope, that
+  NO CI-facing detection gate exists (the G0 consequence, added beyond the
+  roadmap's three required elements), rename-only non-detection, and >=1
+  measured N/D figure that must appear verbatim in docs/CLAIMS.md — the
+  cross-check the roadmap demanded. Real README section shipped and passes
+  the repo's own new linter (exit 0) -->`
 
 ## Phase 4 — Dogfood + hygiene (practice before preach)
 
@@ -459,9 +484,19 @@ a phase revival.
   file with no borrows would be decoration. State recorded in the self-audit
   exhibit; no cross-repo commits made (another repo's history needs its own
   authorization) -->`
-- [ ] **S4.4 ADR `provenance-governance`** recording the legal-honesty
+- [x] **S4.4 ADR `provenance-governance`** recording the legal-honesty
   boundary (§ Anti-thesis) so future marketing cannot drift past it.
   *Verify:* ADR merged + indexed; cites the banned-vocabulary list.
+  <!-- done 2026-07-28: ADR-136-provenance-governance-honesty-boundary.md +
+  INDEX row. Records the five decisions (no gate in any form incl. advisory,
+  scan lives in the on-demand skill, the ledger IS the anti-launder control
+  since principle 6 is refuted, REUSE by glob not by stamping, vocabulary
+  boundary linter-enforced) and the five consequences — including the two
+  findings that only dogfooding produced: the 551/552 self-match hazard and
+  canonical-algorithm convergence producing true-looking false positives.
+  review_trigger names the only route back to a gate (>=10k real files at
+  FP <=1%). Every rejected alternative is recorded with its reason so future
+  marketing cannot drift past the boundary -->`
 
 ## Phase 5 — IP-Critic vertical (conditional; sparring-critic unpark)
 
@@ -579,7 +614,7 @@ binding for this execution; dissent recorded where it was real.
   behavioral layer ships alone; null published.
 - **K2** SCANOSS API unusable at our cadence (rate limits, latency
   > 60s per PR scan, or instability across 2 weeks) ⇒ L0 demoted to
-  on-demand skill (`license-audit`); CI keeps only L-1.
+  on-demand skill (`license-compliance-audit`); CI keeps only L-1.
 - **K3** Warn-only phase produces > 2 uncontested false positives in
   the first 25 lines ⇒ strict promotion blocked pending normalizer fix
   + fresh 25-line window (ratchet resets, no creep).

@@ -453,6 +453,20 @@ The same orchestration core drives non-software trades via [`user-types/`](src/a
 
 Three domain-safety rules ([`domain-safety-pii`](src/rules/domain-safety-pii.md), [`domain-safety-disclaimer`](src/rules/domain-safety-disclaimer.md), [`domain-safety-retention`](src/rules/domain-safety-retention.md)) act as per-domain output floors across ~12 areas — PII redaction (support / finance / recruiting / marketing), advice disclaimers (legal / financial / medical / consulting), retention guidance (finance / support), ops floors (logging / export). Full surface → rule → floor matrix: [`docs/safety.md`](docs/safety.md). Beta contracts: [`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) · [`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
 
+### Code provenance & license governance
+
+Every diff is checked against a **license policy derived from the target repo's own detected license** (`LICENSE`/`package.json`/`composer.json`, precedence-ordered; sources disagree → escalate, never guess) and a **strict linter over our own borrow ledger** ([`provenance/borrows.jsonl`](provenance/) → [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md)) that fails a deny-class license, an unknown license, a missing transformation note or a rename-only-phrased one — wired into `ci`/`ci-strict` from day one. A third piece, `license-compliance-audit`, runs an offline/online similarity scan on demand — a human invokes it deliberately, never a pipeline. This is **provenance-governed**, **license-policy-enforced** borrow discipline backed by an **audited borrow trail** — not a copy detector.
+
+<!-- provenance-scope-box -->
+#### Scope & limits
+
+- **Unconscious training-data reproduction is not detectable at this layer.** No tool here — or anywhere — can see what a model's training data contained; this system governs what gets consciously borrowed and recorded, never what a model silently recalls.
+- **Detection, where it exists, covers a knowledge base of known OSS only** — a subset of all code that has ever existed, never a model's training corpus.
+- **No CI-facing detection gate exists.** A deterministic scanner (jscpd offline + SCANOSS online) was built and measured against a frozen synthetic corpus, but missed its own pre-registered thresholds (measured: recall 12/16, false positives 2/12, SCANOSS rename-only recall 0/8) — see [`docs/CLAIMS.md`](docs/CLAIMS.md#claim-provenance-gate-effectiveness). It ships in **no form** in CI, not even advisory — only as the on-demand skill above.
+- **Rename-only laundering is not detected** by anything we ship or evaluated. The ledger's transformation-note check rejects a rename-only-*phrased* note, but it cannot catch an undisclosed rename-only copy that was never logged.
+
+Reduces and documents risk — never eliminates it.
+
 ### Maintainer telemetry (opt-in, default-off)
 
 Local-only artefact-engagement log. Set `telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. Records which skills / rules / commands / guidelines the agent consults during `/implement-ticket` / `/work`. JSONL under the project root, nothing uploaded. Reports: `npx @event4u/agent-config telemetry:report`.
