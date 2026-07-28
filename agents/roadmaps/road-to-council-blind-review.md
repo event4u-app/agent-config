@@ -1,5 +1,5 @@
 ---
-complexity: medium
+complexity: structural
 status: ready
 ---
 

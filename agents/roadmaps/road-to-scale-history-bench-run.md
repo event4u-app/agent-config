@@ -1,5 +1,5 @@
 ---
-complexity: simple
+complexity: lightweight
 status: ready
 ---
 
