@@ -71,6 +71,32 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Fixed
 
+- **`/team delegate` double gate is now enforced in code, not only in prose**
+  (team mode stays default-off; closing `road-to-team-mode`). The gate on the
+  only write-access wrapper existed as agent-followed instructions in the
+  command doc — nothing mechanical checked `ai_team.allow_delegate`, and no
+  test covered any of the three flag combinations. Added
+  `assert_delegate_allowed()` + `TeamDelegateDisabledError` in
+  `src/scripts/ai_team/team_dispatch.ts` (mirroring the existing
+  `run_team_review` fail-closed shape) plus a `--delegate-gate` CLI mode that
+  exits non-zero with the opt-in pointer unless **both** `ai_team.enabled` and
+  `ai_team.allow_delegate` are true; all three combinations are test-pinned.
+- **Default-off parity for team mode is now pinned where it was only
+  claimed**: the Stop-hook E2E covered `enabled: true` + `managed: false`
+  only, so the shipped default posture (`ai_team` absent, or
+  `enabled: false`) was never exercised — two new pins assert a strict no-op
+  (exit 0, no stdout, no state, no ledger). The command-suggestion surface
+  gained its own pin (exactly one eligible team command, its
+  `trigger_context` carrying the `ai_team.enabled is true` agent-side
+  precondition, all sub-commands ineligible, and zero `ai_team` awareness in
+  the deterministic suggester — so its output is invariant with respect to
+  that config).
+- Stale `not yet manifest-wired` header comments in
+  `src/scripts/ai_team/review_gate.ts` and
+  `src/scripts/team_review_gate_hook.ts`: the Stop-concern registration
+  landed with team-mode Phase 4 (`hook_manifest.yaml`, claude `stop` chain),
+  so the comments told a reviewer auditing default-off that the hook was
+  still inert.
 - Source-of-truth pointer drift: `src/agent-src/README.md` and the
   `agents-md-thin-root` skill named the retired `.agent-src.uncondensed/`
   tree; corrected to `src/`.
