@@ -12,7 +12,7 @@
 
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
-[![Skills](https://img.shields.io/badge/Skills-283-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-110-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-190-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-101-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+[![Skills](https://img.shields.io/badge/Skills-286-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-111-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-190-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-101-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
 
 **A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into **20 host agents** — of 23 detected, 3 being export-only<!-- claim:host-agent-count --> (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini CLI, Codex, Continue, Zed, JetBrains, Aider and more) — with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
@@ -452,6 +452,20 @@ The same orchestration core drives non-software trades via [`user-types/`](src/a
 ## Data governance & domain safety
 
 Three domain-safety rules ([`domain-safety-pii`](src/rules/domain-safety-pii.md), [`domain-safety-disclaimer`](src/rules/domain-safety-disclaimer.md), [`domain-safety-retention`](src/rules/domain-safety-retention.md)) act as per-domain output floors across ~12 areas — PII redaction (support / finance / recruiting / marketing), advice disclaimers (legal / financial / medical / consulting), retention guidance (finance / support), ops floors (logging / export). Full surface → rule → floor matrix: [`docs/safety.md`](docs/safety.md). Beta contracts: [`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) · [`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
+
+### Code provenance & license governance
+
+Every diff is checked against a **license policy derived from the target repo's own detected license** (`LICENSE`/`package.json`/`composer.json`, precedence-ordered; sources disagree → escalate, never guess) and a **strict linter over our own borrow ledger** ([`provenance/borrows.jsonl`](provenance/) → [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md)) that fails a deny-class license, an unknown license, a missing transformation note or a rename-only-phrased one — wired into `ci`/`ci-strict` from day one. A third piece, `license-compliance-audit`, runs an offline/online similarity scan on demand — a human invokes it deliberately, never a pipeline. This is **provenance-governed**, **license-policy-enforced** borrow discipline backed by an **audited borrow trail** — not a copy detector.
+
+<!-- provenance-scope-box -->
+#### Scope & limits
+
+- **Unconscious training-data reproduction is not detectable at this layer.** No tool here — or anywhere — can see what a model's training data contained; this system governs what gets consciously borrowed and recorded, never what a model silently recalls.
+- **Detection, where it exists, covers a knowledge base of known OSS only** — a subset of all code that has ever existed, never a model's training corpus.
+- **No CI-facing detection gate exists.** A deterministic scanner (jscpd offline + SCANOSS online) was built and measured against a frozen synthetic corpus, but missed its own pre-registered thresholds (measured: recall 12/16, false positives 2/12, SCANOSS rename-only recall 0/8) — see [`docs/CLAIMS.md`](docs/CLAIMS.md#claim-provenance-gate-effectiveness). It ships in **no form** in CI, not even advisory — only as the on-demand skill above.
+- **Rename-only laundering is not detected** by anything we ship or evaluated. The ledger's transformation-note check rejects a rename-only-*phrased* note, but it cannot catch an undisclosed rename-only copy that was never logged.
+
+Reduces and documents risk — never eliminates it.
 
 ### Maintainer telemetry (opt-in, default-off)
 
