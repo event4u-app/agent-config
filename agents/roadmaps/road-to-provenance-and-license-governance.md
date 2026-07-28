@@ -450,7 +450,10 @@ PR that lands roadmap + council trace.
 
 ### Predecessor council trace
 
-`agents/runtime/council/responses/road-to-provenance-and-license-governance-roadmap.json/debate-round-{1,2,3}.json` (this run).
+Debate run 2026-07-28, members anthropic/claude-sonnet-4-5 +
+openai/gpt-4o, 3 rounds, roadmap input mode. Raw response JSONs are
+local-only and auto-pruned per the council retention policy — the
+convergence, clashes, and host verdict above are the durable record.
 
 ### Host verdict
 
