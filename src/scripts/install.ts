@@ -2893,7 +2893,11 @@ export function _apply_claude_flat_command_wrappers(
         current_files.delete(`commands/${fname}`);
         reserved.push(slug);
     }
-    // Tier-0/1 visible command slugs from the locked discovery manifest.
+    // Visible command slugs from the locked discovery manifest. `visibility`
+    // is the source of truth (ADR-090/092); the integer `tier` stays only as
+    // the fallback for a manifest published before `visibility` was emitted,
+    // so an older locked manifest keeps resolving. Neither key present → the
+    // artefact is skipped rather than silently treated as visible.
     const eligible = new Set<string>(_CLAUDE_FLAT_WRAPPER_EXTRA);
     try {
         const manifest = JSON.parse(
@@ -2901,7 +2905,13 @@ export function _apply_claude_flat_command_wrappers(
         ) as { artefacts?: Array<{ category?: string; slug?: string; tier?: number; visibility?: string }> };
         for (const a of manifest.artefacts ?? []) {
             if (a.category !== 'command' || typeof a.slug !== 'string') continue;
-            if ((a.tier ?? 2) <= 1 && a.visibility !== 'internal') eligible.add(a.slug);
+            const visible =
+                typeof a.visibility === 'string'
+                    ? a.visibility !== 'internal'
+                    : typeof a.tier === 'number'
+                      ? a.tier <= 1
+                      : false;
+            if (visible) eligible.add(a.slug);
         }
     } catch {
         // No manifest → wrap only the hardcoded essentials.

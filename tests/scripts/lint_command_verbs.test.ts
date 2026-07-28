@@ -100,6 +100,38 @@ describe('lint_command_verbs.check', () => {
         writeCmd(rel, '---\nname: ci\ntier: 0\nsub: fix\n---\n# ci\n');
         expect(cv.check(rel, 'A', 'main', APPROVED, BANNED, GRANDFATHERED)).toEqual([]);
     });
+
+    it('gates a visible command declared via `visibility` alone (no tier alias)', () => {
+        const rel = '.agent-src.uncondensed/commands/_py2ts_test_vis_only.md';
+        writeCmd(rel, '---\nname: zztop\nvisibility: visible\n---\n# zztop\n');
+        const v = cv.check(rel, 'A', 'main', APPROVED, BANNED, GRANDFATHERED);
+        expect(v).toHaveLength(1);
+        expect(v[0]!.rule).toBe('approved-verb');
+    });
+
+    it('ignores an internal command declared via `visibility` alone', () => {
+        const rel = '.agent-src.uncondensed/commands/_py2ts_test_vis_internal.md';
+        writeCmd(rel, '---\nname: zztop\nvisibility: internal\n---\n# zztop\n');
+        expect(cv.check(rel, 'A', 'main', APPROVED, BANNED, GRANDFATHERED)).toEqual([]);
+    });
+
+    it('prefers `visibility` over the deprecated `tier` alias when both are present', () => {
+        const rel = '.agent-src.uncondensed/commands/_py2ts_test_vis_wins.md';
+        writeCmd(rel, '---\nname: zztop\ntier: 0\nvisibility: internal\n---\n# zztop\n');
+        expect(cv.check(rel, 'A', 'main', APPROVED, BANNED, GRANDFATHERED)).toEqual([]);
+    });
+
+    it('reports a command carrying NEITHER visibility nor tier instead of silently skipping it', () => {
+        // Regression lock (2026-07-28 audit, road-to-tier-removal Phase 2): an
+        // absent `tier` used to default to 2 and skip the file, so dropping the
+        // frontmatter key would have silently un-gated every command.
+        const rel = '.agent-src.uncondensed/commands/_py2ts_test_no_keys.md';
+        writeCmd(rel, '---\nname: zztop\n---\n# zztop\n');
+        const v = cv.check(rel, 'A', 'main', APPROVED, BANNED, GRANDFATHERED);
+        expect(v).toHaveLength(1);
+        expect(v[0]!.rule).toBe('visibility');
+        expect(v[0]!.reason).toContain('missing `visibility`');
+    });
 });
 
 describe('lint_command_verbs.load_config', () => {
