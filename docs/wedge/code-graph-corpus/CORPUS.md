@@ -1,10 +1,20 @@
 # Code-graph benchmark corpus — candidates and floor clearance
 
 > Registry of external-repo candidates for consumer-scale code-graph
-> measurements (S0b of `road-to-reachable-code-memory`, and the parked
-> benchmark arms in `later/road-to-native-code-intelligence.md`).
+> measurements (S0b of `road-to-reachable-code-memory`, and the
+> benchmark arms in `archive/road-to-native-code-intelligence.md`).
 > Floor (NOT lowered to fit candidates): one PHP repo ≥ 50k LOC and one
 > TS repo ≥ 30k LOC.
+>
+> **Status 2026-07-28 — this corpus is no longer feeding a pending decision.**
+> The code-graph benchmark it was assembled for was cancelled on a failed
+> correctness precondition: a separate pre-registered 2-arm run measured the
+> graph at recall 0.365 vs disciplined grep 0.797 (Δ −43.2 pp), and
+> `code_graph.enabled: false` is now permanent with a deprecation date
+> (`docs/CLAIMS.md` `code-graph-retrieval-null`; `docs/MIGRATION.md`
+> § Scheduled deprecations). The registry is kept as-is because its
+> floor-clearance work is reusable for any future retrieval measurement — it
+> is a candidate list, not a commitment to run one.
 
 | Candidate | Stack | LOC (app code) | SHA at measurement | License / access | Floor clearance |
 |---|---|---|---:|---|---|
