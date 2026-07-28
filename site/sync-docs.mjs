@@ -24,6 +24,11 @@ const PAGES = [
   { src: 'benchmark.md', slug: 'benchmark', title: 'Discipline-axis benchmark' },
   { src: 'CLAIMS.md', slug: 'claims', title: 'Claims ledger' },
   { src: 'catalog.md', slug: 'catalog', title: 'Catalog' },
+  {
+    src: 'guides/works-with-agent-switch.md',
+    slug: 'works-with-agent-switch',
+    title: 'Works with agent-switch',
+  },
 ];
 const BASE = '/agent-config';
 // The catalog links to source files (../dist/…, ../docs/…, ../README.md) that

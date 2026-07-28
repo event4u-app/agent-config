@@ -90,6 +90,11 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Guides',
+          collapsed: true,
+          items: [{ label: 'Works with agent-switch', slug: 'works-with-agent-switch' }],
+        },
+        {
           label: 'Reference',
           collapsed: true,
           items: [
