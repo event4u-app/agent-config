@@ -25,16 +25,14 @@
  *      the same `AGENT_CONFIG_NO_EVENTS_LOG` kill-switch, no free-form
  *      content — verdict enum + counter only, PII-excluded by construction).
  *
- * Composition point (documented, not yet manifest-wired): the minimal
- * call-site is `src/scripts/team_review_gate_hook.ts`, a `stop` concern in
- * the dispatcher shape. Claude Code gives sibling Stop hooks no view of the
- * plugin gate's own stdout, so the hook reads the gate verdict from the
- * plugin's persisted job record (`jobs/<id>.json` → `result.rawOutput`,
- * title `Codex Stop Gate Review`) — see `find_latest_gate_transcript`.
- * Registering the concern in `src/scripts/hook_manifest.yaml` (claude/
- * cowork `stop`, after `chat-history`) is the one remaining wiring step;
- * it drags the manifest lint + installer + tests/hooks snapshot surface and
- * is deliberately left to the orchestrator. With
+ * Composition point (manifest-wired): the minimal call-site is
+ * `src/scripts/team_review_gate_hook.ts`, a `stop` concern in the
+ * dispatcher shape, registered in `src/scripts/hook_manifest.yaml` under
+ * `claude.stop` (after `chat-history`). Claude Code gives sibling Stop
+ * hooks no view of the plugin gate's own stdout, so the hook reads the
+ * gate verdict from the plugin's persisted job record (`jobs/<id>.json` →
+ * `result.rawOutput`, title `Codex Stop Gate Review`) — see
+ * `find_latest_gate_transcript`. With
  * `ai_team.review_gate.managed: false` (default) every entry point here is
  * a no-op — byte-identical pre-Phase-4 behavior.
  */

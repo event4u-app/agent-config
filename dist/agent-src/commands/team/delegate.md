@@ -50,6 +50,10 @@ refuse with the enable pointer and **STOP**:
 >
 > Key reference: `docs/contracts/ai-team-config.md`.
 
+Deterministic mirror of gates 1+2: `npx tsx src/scripts/ai_team/team_dispatch.ts
+--delegate-gate` exits non-zero (pointer on stderr) unless BOTH flags true — run
+it instead of hand-parsing YAML when a shell is available.
+
 ### 3. Gate — plugin presence (fail closed)
 
 On a Claude Code host, verify the official plugin is installed. Absent →

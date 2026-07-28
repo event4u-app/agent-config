@@ -47,7 +47,7 @@ Everything below either feeds this chain or checks it.
 - **Subagents / orchestration** — in-session delegation with a form gate
   before mode selection; implementer/judge separation; telemetry on the
   audit JSONL. Team mode (cross-model builder/reviewer WITH repo access) is
-  the depth complement — `agents/roadmaps/road-to-team-mode.md`.
+  the depth complement — `agents/roadmaps/archive/road-to-team-mode.md`.
 
 - **Telemetry + measurement** — engagement records (id-only,
   PII-excluded-by-construction, default-off; ON in this repo since

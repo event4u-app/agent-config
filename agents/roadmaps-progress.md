@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**169 / 238 steps done · 71%**
+**138 / 201 steps done · 69%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   71%
+████████████████████████████░░░░░░░░░░░░   69%
 ```
 
 ## Open roadmaps
@@ -30,8 +30,7 @@
 | 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 15 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -272,38 +271,6 @@ _1 blocker resolved._
 - **benchmark-spend** (owner: user) — blocks lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
   - **What to do:**
   - **Resolved when:** the maintainer authorizes the specific run with an estimate.
-
-### [road-to-team-mode.md](roadmaps/road-to-team-mode.md)
-
-**Road to team mode — govern the official cross-model pair, don't rebuild it** — 31 / 37 done (84%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Facts, claims hygiene, boundary prose | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | Detection + guided setup | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | `/team` command family (Claude-Code path) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 3 | Multi-host fallback (the gap only we can fill) | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 4 | Review-Gate governance | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Defect-finding benchmark (measure the marketing) | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 6 | Close-out | 🟡 in progress | 6 | 5 | 0 | 0 | 45% |
-
-<a id="blockers-road-to-team-mode"></a>
-**Blockers**
-
-- **model-id-verification** (owner: maintainer) — blocks Phase 2 config-doc examples, Phase 5 arm pinning
-  - **What to do:**
-    1. At execution, list the actual codex CLI model IDs (`codex /model` or CLI
-    docs) and pin the benchmark arms to verified IDs.
-    2. The trigger guide's `gpt-5.6-sol` is unverified marketing copy — the
-    plugin's own prompting skill still targets `gpt-5-4`. Append the verified
-    list here.
-  - **Resolved when:** a dated model-ID list exists in this file. - **Resolution (2026-07-12, verified live):** codex-cli 0.134.0 on the maintainer machine, subscription-authed; model list read from the CLI's own server-fetched cache (`~/.codex/models_cache.json`, fetched_at 2026-07-12T09:54Z) and cross-checked by a live `codex exec` header: - `gpt-5.5` — GPT-5.5, the CLI's current default (live exec header shows `model: gpt-5.5`) - `gpt-5.4` — GPT-5.4 - `gpt-5.4-mini` — GPT-5.4-Mini - `codex-auto-review` — Codex Auto Review (review-specialised) A bogus id is rejected with "not supported when using Codex with a ChatGPT account" (HTTP 400) — so arm pinning MUST use ids from this list. The trigger guide's `gpt-5.6-sol` is confirmed NOT available. Benchmark arms: pin builder/reviewer arms to `gpt-5.5` (default) and consider `codex-auto-review` for the review arm; re-read the cache at Phase 5 execution time (model lists rotate).
-- **benchmark-spend-authorization** (owner: user) — blocks Phase 5 execution (authoring fixtures is unblocked)
-  - **What to do:**
-    1. Approve the run once the fixture count is fixed; three arms × N fixtures
-    land on the ChatGPT subscription quota (arms a/b) and the council budget
-    (arm c). Estimate rendered before the first call.
-  - **Resolved when:** the user confirms the run budget in-session.
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 
