@@ -24,7 +24,6 @@ import {
     parse_review_findings,
     render_capability_delta_header,
     render_manual_block,
-    render_review_user_prompt,
     run_team_review,
     TEAM_REVIEW_SYSTEM_PROMPT,
     TeamDelegateDisabledError,
