@@ -24,6 +24,7 @@ import { runDoctorShell } from './commands/doctorShell.js';
 import { runRtkDetect } from './commands/rtkDetect.js';
 import { runUiServe } from './commands/uiServe.js';
 import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation } from './initRouting.js';
+import { maybePrintFirstRunNotice } from './firstRunNotice.js';
 import { runSettings } from './commands/settings.js';
 import { runConfig } from './commands/config.js';
 import { runMcpServer } from './commands/mcpServer.js';
@@ -366,6 +367,11 @@ async function main(rawArgv: readonly string[]): Promise<number> {
         return delegateToBash({ args: argv });
     }
 
+    // One-time GUI notice on the first interactive invocation — the honest
+    // replacement for an install-time banner (the package has no postinstall
+    // side effect by design). TTY-gated, so hooks / MCP / CI never see it.
+    maybePrintFirstRunNotice(head);
+
     if (head === '--help' || head === '-h') {
         process.stdout.write(`${buildHelp()}\n`);
         return 0;
@@ -414,6 +420,9 @@ async function main(rawArgv: readonly string[]): Promise<number> {
         }
     }
     if (head === 'init' && shouldInitLaunchGui(argv.slice(1))) {
+        // Announce the automatic GUI choice AND its off-switch (install-time
+        // side-effect honesty: any GUI launch names its suppress var).
+        logger.info('Opening the browser install wizard (set AGENT_CONFIG_NO_UI=1 or pass --no-ui for the CLI install).');
         return runUiServe(buildInitGuiOptions(argv.slice(1)));
     }
 

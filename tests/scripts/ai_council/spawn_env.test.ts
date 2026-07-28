@@ -38,6 +38,11 @@ const INJECTION_VARS: Record<string, string> = {
     GIT_CONFIG_GLOBAL: '/tmp/evil.gitconfig',
     GIT_ALTERNATE_OBJECT_DIRECTORIES: '/tmp/evil-objects',
     HOSTALIASES: '/tmp/evil-hostaliases',
+    // git path-redirection: point git at an attacker-controlled repo/index/
+    // ref-namespace so a child's ordinary git ops read+write attacker state.
+    GIT_DIR: '/tmp/evil-repo/.git',
+    GIT_INDEX_FILE: '/tmp/evil-index',
+    GIT_NAMESPACE: 'evil-ns',
 };
 
 function withEnv<T>(vars: Record<string, string>, fn: () => T): T {

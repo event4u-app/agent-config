@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 ---
 
 # Roadmap: Feedback 9.2.0 Follow-ups
@@ -71,7 +71,7 @@ of five named-but-unfixtured future rules (premature abstraction; the package's 
 `minimal-safe-diff` / evidence discipline). The generic harness is extracted later,
 once a **second** situational rule proves the abstraction boundary (step 1.5).
 
-- [ ] **1.1 Add a `cross_source`-specific eval fixture format + runner.** A fixture
+- [x] **1.1 Add a `cross_source`-specific eval fixture format + runner.** A fixture
       declares `sources:` (ticket / mockup_description / spec / code_state / api_contract)
       and `expected:` (`action: ask | proceed | warn`, `question_contains`,
       `forbidden_assumptions`). Scope the runner to what `cross_source` needs — no
@@ -79,6 +79,14 @@ once a **second** situational rule proves the abstraction boundary (step 1.5).
       rule could later reuse it, but do not build the generic abstraction yet.
       verify: the runner loads a fixture and produces a pass/fail against the
       `expected` block on a hand-written sample; runs under the repo's TS test tool.
+      <!-- done 2026-07-28: src/scripts/bench_cross_source_eval.ts loads +
+      validates the real internal/bench/corpora/honesty-false-premise.yaml
+      corpus, classifies a raw response string into ask|proceed|warn, and
+      reuses bench_honesty_score.ts's scoreFalsePremiseItem for the match
+      logic; tests/scripts/bench_cross_source_eval.test.ts (21 tests, all
+      green) proves loading + pass/fail on hand-written samples incl. fp-01
+      (ask) and fp-21 (proceed control) plus a malformed-fixture rejection
+      suite. -->
 - [ ] **1.2 Author the `cross-source-consistency` fixture set — positives AND the
       negative control.** Positives: text↔image (birthday-today vs mockup-two-days-ago),
       spec-silent-on-holidays (no unrequested scope), ticket↔codebase, intra-ticket.

@@ -1,11 +1,11 @@
 # Us vs. the category — the honest version
 
-<!-- claim:positioning-honest-nulls -->**The only agent layer that publishes
-the runs where it changed nothing.**<!-- /claim --> That line is deliberately
-falsifiable: find a comparable agent layer publishing its own honest-null
-benchmark runs and it updates — that is the point. The category's growth
-playbook is headline numbers nobody can re-run; ours is a claims ledger CI
-refuses to let drift.
+<!-- claim:positioning-honest-nulls -->**We publish our own measured null
+results and retire or constrain features when the evidence does not support
+them.**<!-- /claim --> That line is deliberately falsifiable: every published
+null links the run that produced it — find one that does not resolve and this
+line updates; that is the point. The category's growth playbook is headline
+numbers nobody can re-run; ours is a claims ledger CI refuses to let drift.
 
 This page is the adoption-context frame around the CI-locked comparison table.
 The table itself lives on the proof page — every "our evidence" pointer is

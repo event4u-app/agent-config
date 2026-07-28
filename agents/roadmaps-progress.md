@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **16** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **16** open blockers
 
 ## Overall
 
-**137 / 270 steps done · 51%**
+**159 / 281 steps done · 57%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+███████████████████████░░░░░░░░░░░░░░░░░   57%
 ```
 
 ## Open roadmaps
@@ -21,17 +21,18 @@
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 1 | 29 | 0 | 0 | 0 | ██████████ 97% |
 | 5 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
-| 6 | [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md) | 5 | 22 | 22 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 10 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
-| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
-| 15 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 6 | [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md) | 4 | 11 | 10 | 1 | 0 | 0 | 0 | █░░░░░░░░░ 9% |
+| 7 | [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md) | 5 | 22 | 1 | 21 | 0 | 0 | 0 | ██████████ 95% |
+| 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 11 | [road-to-reciprocal-ecosystem.md](roadmaps/road-to-reciprocal-ecosystem.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-reciprocal-ecosystem) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
+| 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 16 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
+| 17 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -114,17 +115,28 @@ _2 blockers resolved._
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Adopt-now plate (≤ 3 units) | 🟡 in progress | 1 | 9 | 0 | 0 | 90% |
 
-### [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md)
+### [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md)
 
-**Feedback 9.8.0 Follow-ups — stabilize, prove, dispose, decide** — 0 / 22 done (0%)
+**Feedback 9.2.0 Follow-ups** — 1 / 11 done (9%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Stabilization floor: installable, honest, convention-clean | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 1 | Decisions made falsifiable: positioning, freeze, launch | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Code-graph proof: 2-arm, pre-registered, physical null-consequence | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Enforcement truth: debt down, existing axes surfaced, meters hardened | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | Disposition and physical surface (window-gated) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | A behavioral eval for `cross-source-consistency` (minimal-first) | 🟡 in progress | 4 | 1 | 0 | 0 | 20% |
+| 2 | Bring `subagent-orchestration` back under its size budget | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Tag-aware release-PR review | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | Hermetic, reproducible install-bundle build | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+### [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md)
+
+**Feedback 9.8.0 Follow-ups — stabilize, prove, dispose, decide** — 21 / 22 done (95%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Stabilization floor: installable, honest, convention-clean | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 1 | Decisions made falsifiable: positioning, freeze, launch | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Code-graph proof: 2-arm, pre-registered, physical null-consequence | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Enforcement truth: debt down, existing axes surfaced, meters hardened | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 4 | Disposition and physical surface (window-gated) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 

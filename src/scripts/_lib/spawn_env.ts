@@ -54,6 +54,13 @@ const DENY_EXACT: ReadonlySet<string> = new Set([
     // attacker-controlled object stores; the GIT_CONFIG* family is handled by
     // prefix below (it is a general arbitrary-config-injection primitive).
     'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+    // git path-redirection: GIT_DIR / GIT_INDEX_FILE / GIT_NAMESPACE point a
+    // child's git at an attacker-controlled repo, index file, or ref namespace
+    // — ordinary git ops then read and write attacker state (low severity,
+    // same family as GIT_ALTERNATE_OBJECT_DIRECTORIES above).
+    'GIT_DIR',
+    'GIT_INDEX_FILE',
+    'GIT_NAMESPACE',
     // resolver hijack: HOSTALIASES remaps hostnames via an attacker file,
     // redirecting any network fetch the child performs (CWE-427-adjacent).
     'HOSTALIASES',

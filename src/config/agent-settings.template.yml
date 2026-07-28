@@ -1077,6 +1077,14 @@ hooks:
   # index is stale, or build one if absent). Source G's strict block-first-read
   # mode is deliberately un-ported. Build the cache with
   # `agent-config code-graph build`.
+  #
+  # DEPRECATED (honest null, 2026-07-28): the pre-registered 2-arm retrieval
+  # benchmark measured the native graph at recall 0.365 vs grep 0.797 on
+  # graph-shaped questions across 3 real repos (internal/bench/reports/
+  # code-graph-vs-grep.md; claim code-graph-retrieval-null). `enabled: false`
+  # is permanent; deprecation notice lands at the next major, removal the
+  # major after — unless external evidence (a consumer case the graph answers
+  # and grep cannot) appears first.
   code_graph:
     enabled: false
 
