@@ -258,6 +258,14 @@ opt-in high-risk changes only; registered claim + high-risk tier need
 cross-*vendor* skeptics. Invariants, skeptic prompt, reconciliation, prove-or-drop
 gate → [`subagent-modes-detail`](../../agent-src/contexts/execution/subagent-modes-detail.md) § Mode 9
 + [`prompts/adversarial-verification-council.md`](prompts/adversarial-verification-council.md)
+
+> **Disposition (2026-07-28, honest null).** The adversarial-council finding-
+> coverage benchmark resolved as a published null (see `docs/benchmark.md`) —
+> this mode is NOT sold as a defect-detection capability. It stays default-off
+> bound to that null; scheduled for removal at the next major unless external
+> evidence (a consumer-filed case where the panel surfaced a real defect the
+> single verifier missed) appears first. Its remaining honest value is
+> perspective diversity + decision documentation, nothing more.
 (ADR-122).
 
 ## Status taxonomy — every subagent return uses one envelope
