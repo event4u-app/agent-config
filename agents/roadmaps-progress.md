@@ -6,7 +6,7 @@
 
 ## Overall
 
-**183 / 286 steps done · 64%**
+**184 / 286 steps done · 64%**
 
 ```text
 ██████████████████████████░░░░░░░░░░░░░░   64%
@@ -27,7 +27,7 @@
 | 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 12 | [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md) | 6 | 22 | 6 | 12 | 0 | 4 | 0 | ███████░░░ 67% |
+| 12 | [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md) | 6 | 22 | 5 | 13 | 0 | 4 | 0 | ███████░░░ 72% |
 | 13 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
 | 14 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -211,7 +211,7 @@ _1 blocker resolved._
 
 ### [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md)
 
-**Road to provenance and license governance — code borrows get a paper trail** — 12 / 18 done (67%)
+**Road to provenance and license governance — code borrows get a paper trail** — 13 / 18 done (72%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -219,7 +219,7 @@ _1 blocker resolved._
 | 1 | Behavioral layer (rules + skill; zero external deps) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | RE-SCOPED by Gate G0 (behavioural-only; no CI gate) | 🟡 in progress | 1 | 1 | 0 | 2 | 50% |
 | 3 | Claims + measurement | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Dogfood + hygiene (practice before preach) | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
+| 4 | Dogfood + hygiene (practice before preach) | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 5 | IP-Critic vertical (conditional; sparring-critic unpark) | ✅ done | 0 | 1 | 0 | 2 | 100% |
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)

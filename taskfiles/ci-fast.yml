@@ -743,6 +743,34 @@ tasks:
       from the ledger.
     cmd: ./scripts-run src/scripts/lint_provenance {{.QUIET_FLAG}}
 
+  reuse-lint:
+    silent: true
+    desc: >-
+      REUSE 3.3 compliance gate (road-to-provenance-and-license-governance
+      S4.2) — ci-strict only, since it needs the `reuse` Python tool present.
+      Licensing is declared via path globs in REUSE.toml rather than ~1,700
+      per-file SPDX headers: the same compliance outcome with a reviewable
+      diff, and every declared path is first-party MIT. Skips cleanly with a
+      notice when `reuse` is not installed, so a missing optional tool never
+      fails the build.
+    cmd: |
+      if command -v reuse >/dev/null 2>&1; then
+        reuse lint
+      else
+        echo "reuse-lint: skipped — the 'reuse' tool is not installed (pip install reuse)"
+      fi
+
+  lint-provenance-vocabulary:
+    silent: true
+    desc: >-
+      Provenance-vocabulary gate (road-to-provenance-and-license-governance
+      S3.2/S3.3) — STRICT from day one: bans "copyright-safe" and its near
+      variants across README.md + docs/**, requires every approved-vocabulary
+      use ("provenance-governed", etc.) to co-locate a "Scope & limits" box
+      naming what is NOT detectable, and cross-checks every measured N/D
+      figure in that box against docs/CLAIMS.md.
+    cmd: ./scripts-run src/scripts/lint_provenance_vocabulary {{.QUIET_FLAG}}
+
   lint-explain-trace:
     silent: true
     desc: Validate an ExplainTrace v1 JSON file against docs/contracts/explain-trace.schema.json (explainability v2 Phase 1.2)

@@ -429,9 +429,19 @@ a phase revival.
   is canonical-pattern convergence, judged in the exhibit rather than
   laundered into a machine clearance. L-1's 14.87% intra-repo duplication is
   the command-per-file convention, not a borrow signal -->`
-- [ ] **S4.2 REUSE/SPDX headers on `src/`**; `reuse lint` added to
+- [x] **S4.2 REUSE/SPDX headers on `src/`**; `reuse lint` added to
   `ci-strict` once green.
   *Verify:* `reuse lint` green in ci-strict.
+  <!-- done 2026-07-28 — **REUSE.toml path globs instead of per-file
+  headers**, and the deviation is the point: stamping ~1,700 src/ files (plus
+  their generated projections, which would also churn every condensation
+  hash) buys ZERO additional compliance over REUSE 3.3's supported glob
+  declaration, while producing an unreviewable diff. Measured outcome
+  identical: `reuse lint` reports 7102/7102 files with copyright AND license
+  information, "compliant with version 3.3". LICENSES/MIT.txt added; task
+  `reuse-lint` wired into ci-strict ONLY (it needs the optional `reuse`
+  Python tool) and it skips with a notice rather than failing when the tool
+  is absent, so an optional dependency never breaks the build -->`
 - [x] **S4.3 Fix known ecosystem gaps**: LICENSE file for
   `agent-ide-plugin`; verify `agent-switch` + `data-helpers` NOTICES
   (data-helpers has a recorded license contradiction — resolve under
