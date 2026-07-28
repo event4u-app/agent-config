@@ -428,6 +428,11 @@ tasks:
     desc: "Fail on placeholder prose in the package's own authored artefacts (Lorem ipsum, `// rest of component`, `for brevity`, TODO-implement stubs) — the CI net the output-discipline rule has always claimed and, until now, did not have"
     cmd: ./scripts-run src/scripts/lint_output_slop
 
+  lint-spawn-payload:
+    silent: true
+    desc: "WARN-ONLY — makes the subagent-spawn-contract.md Iron Law (never bulk-dump context into a subagent) deterministic: per-tier payload size cap, no inline knowledge_refs bodies, no uncut >40-line file dumps, over JSON spawn fixtures + golden-transcript spawn payloads (road-to-lean-agent-init Phase 3). Promotion path: add --strict once caps hold across a clean observation window"
+    cmd: ./scripts-run src/scripts/lint_spawn_payload
+
   lint-pre-migration-refs:
     silent: true
     desc: "Fail on pre-migration install hints (pip install agent-config, python install.py, retired Python MCP entry) in shipped files — the doc-rot net from road-to-credible-install Phase 0 (ADR-200 retired the Python installer)"

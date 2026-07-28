@@ -203,6 +203,13 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-07-25
 
+### claim: lean-init-cost-reduction
+- claim: On the LOOKUP-CLASS task family ONLY (definition-location, reference/call-site, string-existence, report-run — `classifyLookup` in `src/scripts/_lib/auto_dispatch.ts`), routing to deterministic primitives instead of subagent spawns nets a ≥90% token reduction at held answer quality vs the observed subagent baseline (live 2026-07-28 evidence: 280–327k tokens per lookup worker; the 12-golden primitive run answered all 12 for <1.6k tokens total, 12/12 correctness match).
+- kind: quant
+- evidence: PRE-REGISTERED 2026-07-28 (road-to-lean-agent-init Phase 3 — registered BEFORE any savings number is cited anywhere; family-scoped, modeled on `downshift-cost-reduction`; quality definition reused from the correctness-comparison acceptance, no second truth). Falsification criteria fixed BEFORE data: (1) correctness floor — primitive answer ≡ agent answer on the golden corpus (`internal/bench/lean-init/results-2026-07-28.md`, 12/12); ANY mismatch on a routed real task recorded via `correctness_match: false` counts against the claim; (2) negative control — a non-lookup task never routes to a primitive (`LOOKUP_CORPUS` lk-n1..n4, FP=0); (3) cost metric — read from `agents/runtime/state/audit/*.jsonl` orchestration lines tagged `origin: lean-init-2026` with `lookup_class != null`, comparing `route_taken: primitive` token cost against `route_taken: subagent` lines of the same class (n and family scope stated at backing time); (4) segregation — lines carry `origin: lean-init-2026` so the `road-to-orchestration-scope-decision` sample stays uncontaminated (council Q5, 2026-07-28). PROVE → flip to backed for the lookup family only; DROP → honest null, primitives stay (correctness-validated) but no savings number is ever cited.
+- status: unbacked
+- last_verified:
+
 ### claim: orchestration-dispatch-net-win
 - claim: On the ordered-refactor + competitive-impl families (`orch-02`, `orch-03`), contract-governed subagent dispatch nets ≥15% token-or-wall reduction at non-regressed quality vs single-agent execution.
 - kind: comparative

@@ -12,6 +12,9 @@
  *     --tier-chosen lite --tier-source inferred --task-class read-only-fanout \
  *     [--tiers sonnet,opus] [--agent-combo implementer,judge] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
  *     [--first-pass-success true|false] [--escalated true|false] \
+ *     [--init-tokens 1200] [--payload-hash <hex8-64>] [--lookup-class definition|references|string-existence|report-run] \
+ *     [--route-taken primitive|subagent] [--budget-hit true|false] [--correctness-match true|false] \
+ *     [--cache-hit true|false] [--origin lean-init-2026] \
  *     [--dir <audit-dir>] [--dry-run]
  *
  * Read by `src/scripts/orchestration_savings_report.ts`.
@@ -22,6 +25,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import type { LookupClass } from './_lib/auto_dispatch.js';
 import {
     buildOrchestrationLine,
     type Provenance,
@@ -33,6 +37,7 @@ import {
     type LinePhase,
     type LineOutcome,
     type RecordInput,
+    type RouteTaken,
 } from './_lib/orchestration_record.js';
 
 const DEFAULT_DIR = 'agents/runtime/state/audit';
@@ -122,6 +127,14 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         verify_mode: str(flags, 'verify-mode') as VerifyMode | undefined,
         first_pass_success: bool(flags, 'first-pass-success'),
         escalated: bool(flags, 'escalated'),
+        init_tokens: int(flags, 'init-tokens'),
+        payload_hash: str(flags, 'payload-hash'),
+        lookup_class: str(flags, 'lookup-class') as LookupClass | undefined,
+        route_taken: str(flags, 'route-taken') as RouteTaken | undefined,
+        budget_hit: bool(flags, 'budget-hit'),
+        correctness_match: bool(flags, 'correctness-match'),
+        cache_hit: bool(flags, 'cache-hit'),
+        origin: str(flags, 'origin'),
         phase: str(flags, 'phase') as LinePhase | undefined,
         outcome: str(flags, 'outcome') as LineOutcome | undefined,
         confidence_band: str(flags, 'confidence-band') as Band | undefined,

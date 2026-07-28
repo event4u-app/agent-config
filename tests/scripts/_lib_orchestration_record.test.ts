@@ -103,3 +103,63 @@ describe('buildOrchestrationLine', () => {
         expect(buildOrchestrationLine({ ...BASE, escalated: 1 as never }).errors.join(' ')).toMatch(/escalated/);
     });
 });
+
+describe('lean-init additive fields (road-to-lean-agent-init Phase 3, schema_version stays 1)', () => {
+    const LEAN = {
+        init_tokens: 1_200,
+        payload_hash: 'a1b2c3d4e5f6',
+        lookup_class: 'references',
+        route_taken: 'primitive',
+        budget_hit: false,
+        correctness_match: true,
+        cache_hit: true,
+        origin: 'lean-init-2026',
+    } as const;
+
+    it('carries all lean-init fields into the orchestration object', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE, ...LEAN });
+        expect(errors).toEqual([]);
+        expect(line!.orchestration).toMatchObject(LEAN);
+        expect(line).toMatchObject({ schema_version: 1 });
+    });
+
+    it('defaults every lean-init field to null when omitted (old callers stay valid)', () => {
+        const o = buildOrchestrationLine(BASE).line!.orchestration as Record<string, unknown>;
+        for (const k of ['init_tokens', 'payload_hash', 'lookup_class', 'route_taken', 'budget_hit', 'correctness_match', 'cache_hit', 'origin']) {
+            expect(o[k]).toBeNull();
+        }
+    });
+
+    it('rejects malformed lean-init values with named errors', () => {
+        expect(buildOrchestrationLine({ ...BASE, init_tokens: -1 }).errors.join(' ')).toMatch(/init_tokens/);
+        expect(buildOrchestrationLine({ ...BASE, payload_hash: 'not hex!' }).errors.join(' ')).toMatch(/payload_hash/);
+        expect(buildOrchestrationLine({ ...BASE, lookup_class: 'vibes' as never }).errors.join(' ')).toMatch(/lookup_class/);
+        expect(buildOrchestrationLine({ ...BASE, route_taken: 'sideways' as never }).errors.join(' ')).toMatch(/route_taken/);
+        expect(buildOrchestrationLine({ ...BASE, budget_hit: 'maybe' as never }).errors.join(' ')).toMatch(/budget_hit/);
+        expect(buildOrchestrationLine({ ...BASE, origin: 'Free form prose!' }).errors.join(' ')).toMatch(/origin/);
+    });
+
+    it('a primitive lookup route records with spawn_count 0 (the one zero-spawn exception)', () => {
+        const { line, errors } = buildOrchestrationLine({
+            ...BASE,
+            spawn_count: 0,
+            route_taken: 'primitive',
+            lookup_class: 'definition',
+            origin: 'lean-init-2026',
+        });
+        expect(errors).toEqual([]);
+        expect(line!.orchestration).toMatchObject({ spawn_count: 0, route_taken: 'primitive' });
+    });
+
+    it('zero spawns WITHOUT a primitive route stays unrecordable (in-session work)', () => {
+        expect(buildOrchestrationLine({ ...BASE, spawn_count: 0 }).errors.join(' ')).toMatch(/spawn_count/);
+        expect(buildOrchestrationLine({ ...BASE, spawn_count: 0, route_taken: 'subagent' }).errors.join(' ')).toMatch(/spawn_count/);
+    });
+
+    it('origin cleanly segregates the lean-init sample from the scope-decision sample (council Q5)', () => {
+        const lean = buildOrchestrationLine({ ...BASE, origin: 'lean-init-2026' }).line!.orchestration as Record<string, unknown>;
+        const scope = buildOrchestrationLine(BASE).line!.orchestration as Record<string, unknown>;
+        expect(lean.origin).toBe('lean-init-2026');
+        expect(scope.origin).toBeNull();
+    });
+});

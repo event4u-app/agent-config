@@ -16,7 +16,11 @@
  * add one. (Mirrors `domain-safety-pii` § Surface 2 / artifact-engagement.)
  */
 
+import type { LookupClass } from './auto_dispatch.js';
+
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
+/** Which route the lookup-class rung took (lean-init L0). */
+export type RouteTaken = 'primitive' | 'subagent';
 export type VerifyMode = 'deterministic' | 'judge' | 'none';
 export type Provenance = 'measured' | 'estimated';
 export type TierChosen = 'lite' | 'medium' | 'high';
@@ -66,6 +70,25 @@ export interface RecordInput {
      *  ran (ordered agent-type ids, e.g. ['implementer','implementer','judge']) —
      *  with `outcome`, lets the orchestrator prefer combos that worked. Ids only. */
     agent_combo?: string[] | undefined;
+    // ── lean-init additive fields (road-to-lean-agent-init Phase 3) —
+    //    schema_version stays 1 per audit-log-v1 forward-compat rule.
+    //    ALL remain counts / enums / hashes / ids — never free-form content. ──
+    /** Spawn-payload tokens at worker init (the payload-truth measurement). */
+    init_tokens?: number | null | undefined;
+    /** Hash of the spawn payload (prefix-stability / cache measurement). Hex only, never content. */
+    payload_hash?: string | null | undefined;
+    /** Lookup class the L0 rung matched, or null for non-lookup dispatches. */
+    lookup_class?: LookupClass | null | undefined;
+    /** Route the lookup rung took: deterministic primitive vs subagent escalation. */
+    route_taken?: RouteTaken | null | undefined;
+    /** Worker hit its max_tokens_per_worker stop-loss (L0b). */
+    budget_hit?: boolean | undefined;
+    /** Golden/correctness comparison verdict for a primitive route (null = not compared). */
+    correctness_match?: boolean | undefined;
+    /** Provider-reported prompt-cache hit on the spawn payload (Phase 4 prefix stability). */
+    cache_hit?: boolean | undefined;
+    /** Sample-segregation tag (council Q5), e.g. 'lean-init-2026'. Id-shaped, never free-form. */
+    origin?: string | null | undefined;
     // Audit-log envelope (sensible defaults for a dispatch record)
     phase?: LinePhase | undefined;
     outcome?: LineOutcome | undefined;
@@ -91,6 +114,12 @@ const TIERS_CHOSEN: readonly TierChosen[] = ['lite', 'medium', 'high'];
 const TIER_SOURCES: readonly TierSource[] = ['static', 'inferred', 'inherit'];
 const BANDS: readonly Band[] = ['low', 'medium', 'high'];
 const PHASES: readonly LinePhase[] = ['refine', 'memory', 'analyze', 'plan', 'implement', 'test', 'verify', 'report'];
+const LOOKUP_CLASSES: readonly LookupClass[] = ['definition', 'references', 'string-existence', 'report-run'];
+const ROUTES_TAKEN: readonly RouteTaken[] = ['primitive', 'subagent'];
+/** Hex-only payload hash — a hash can never smuggle content (privacy by construction). */
+const PAYLOAD_HASH_RE = /^[a-f0-9]{8,64}$/i;
+/** Id-shaped origin tag — enum-ish, never free-form prose. */
+const ORIGIN_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 /** Map a dispatch outcome to the audit-log envelope outcome enum. */
 function envelopeOutcome(d: DispatchOutcome): LineOutcome {
@@ -111,8 +140,13 @@ function isInt(n: unknown): n is number {
 export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     const errors: string[] = [];
 
-    if (!isInt(input.spawn_count) || input.spawn_count < 1) {
-        errors.push('spawn_count must be an integer ≥ 1 (0 = handled in-session, not a dispatch — do not record)');
+    // A lookup-class primitive route is the ONE recordable zero-spawn event
+    // (lean-init L0): the routing decision itself is the datum the
+    // cost-reduction claim reads. Everything else with spawn_count 0 stays
+    // unrecordable in-session work.
+    const zeroSpawnPrimitive = input.route_taken === 'primitive' && input.spawn_count === 0;
+    if (!zeroSpawnPrimitive && (!isInt(input.spawn_count) || input.spawn_count < 1)) {
+        errors.push('spawn_count must be an integer ≥ 1 (0 = handled in-session, not a dispatch — do not record; exception: route_taken=primitive lookup routes record with spawn_count 0)');
     }
     if (!isInt(input.token_delta)) errors.push('token_delta must be an integer (negative = net saved vs the in-session baseline)');
     if (input.task_size_estimate !== undefined && (!isInt(input.task_size_estimate) || input.task_size_estimate < 0)) {
@@ -155,6 +189,30 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         errors.push('escalated must be a boolean (true = retried on a higher tier after verification failure) or omitted');
     }
 
+    // ── lean-init additive fields ──
+    if (input.init_tokens != null && (!isInt(input.init_tokens) || input.init_tokens < 0)) {
+        errors.push('init_tokens must be a non-negative integer (spawn-payload tokens at worker init)');
+    }
+    if (input.payload_hash != null && !PAYLOAD_HASH_RE.test(input.payload_hash)) {
+        errors.push('payload_hash must be an 8–64 char hex digest (never content)');
+    }
+    if (input.lookup_class != null && !LOOKUP_CLASSES.includes(input.lookup_class)) {
+        errors.push(`lookup_class must be one of ${LOOKUP_CLASSES.join(' | ')} (or omitted)`);
+    }
+    if (input.route_taken != null && !ROUTES_TAKEN.includes(input.route_taken)) {
+        errors.push(`route_taken must be one of ${ROUTES_TAKEN.join(' | ')} (or omitted)`);
+    }
+    for (const [key, v] of [
+        ['budget_hit', input.budget_hit],
+        ['correctness_match', input.correctness_match],
+        ['cache_hit', input.cache_hit],
+    ] as const) {
+        if (v !== undefined && typeof v !== 'boolean') errors.push(`${key} must be a boolean or omitted`);
+    }
+    if (input.origin != null && !ORIGIN_RE.test(input.origin)) {
+        errors.push("origin must be an id-shaped tag like 'lean-init-2026' (lowercase alnum + hyphens)");
+    }
+
     if (!input.ts) errors.push('ts (ISO-8601 UTC) is required');
     if (!input.id) errors.push('id (ULID or content hash) is required');
 
@@ -178,6 +236,15 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         first_pass_success: input.first_pass_success ?? null,
         escalated: input.escalated ?? null,
         agent_combo: input.agent_combo ?? [],
+        // lean-init additive fields — readers ignore unknowns per audit-log-v1
+        init_tokens: input.init_tokens ?? null,
+        payload_hash: input.payload_hash ?? null,
+        lookup_class: input.lookup_class ?? null,
+        route_taken: input.route_taken ?? null,
+        budget_hit: input.budget_hit ?? null,
+        correctness_match: input.correctness_match ?? null,
+        cache_hit: input.cache_hit ?? null,
+        origin: input.origin ?? null,
     };
 
     const line: Record<string, unknown> = {
