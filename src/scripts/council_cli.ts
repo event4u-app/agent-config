@@ -2826,7 +2826,12 @@ function _defaultArgs(): Args {
         auto_continue: false,
         continue_as_debate: null,
         chairman: null,
-        blind_chairman: false,
+        // Ü1 ADOPTED (road-to-council-blind-review Phase 3, 2026-07-28):
+        // blind synthesis is the default — 0/10 + 0/10 pre-registered
+        // degradation triggers on the n=10 A/B; opt out per-invocation
+        // with --no-blind-chairman (the audit artifact always keeps the
+        // post-verdict de-anonymization map either way).
+        blind_chairman: true,
         stances: false,
         chairman_fields: false,
         responses: null,
@@ -2894,6 +2899,7 @@ function _specsFor(cmd: string): { positionals: string[]; opts: OptSpec[]; requi
                     // road-to-council-blind-review Phase 1 — flag-gated, default-off.
                     { flag: '--chairman', takesValue: true, apply: (o, v) => (o.chairman = v) },
                     { flag: '--blind-chairman', takesValue: false, apply: (o) => (o.blind_chairman = true) },
+                    { flag: '--no-blind-chairman', takesValue: false, apply: (o) => (o.blind_chairman = false) },
                     { flag: '--stances', takesValue: false, apply: (o) => (o.stances = true) },
                     { flag: '--chairman-fields', takesValue: false, apply: (o) => (o.chairman_fields = true) },
                 ],

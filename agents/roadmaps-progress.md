@@ -6,10 +6,10 @@
 
 ## Overall
 
-**170 / 269 steps done · 63%**
+**171 / 268 steps done · 64%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   63%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-ac-embeddable-gui.md](roadmaps/road-to-ac-embeddable-gui.md) | 4 | 30 | 28 | 2 | 0 | 0 | [2](#blockers-road-to-ac-embeddable-gui) | █░░░░░░░░░ 7% |
 | 2 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 6 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 62% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 4 | 2 | 0 | 0 | 0 | ███░░░░░░░ 33% |
+| 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 1 | 29 | 0 | 0 | 0 | ██████████ 97% |
 | 6 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
 | 7 | [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md) | 4 | 11 | 1 | 10 | 0 | 0 | 0 | █████████░ 91% |
@@ -95,13 +95,13 @@ _2 blockers resolved._
 
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 
-**Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern** — 2 / 6 done (33%)
+**Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern** — 3 / 5 done (60%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Protocol diff (no model calls) | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | Re-run test on existing artifacts (minimal spend) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Landing & close | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
 
 ### [road-to-credible-install.md](roadmaps/road-to-credible-install.md)
 

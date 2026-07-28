@@ -57,6 +57,15 @@ So Ü1 is a REAL change on two paths, and it must argue against a recorded
 decision-revisit gate: the comment is an authored preference, not a
 measured lock; the counter-evidence (E1/E2) is measured.
 
+**Phase-2 structural discovery (2026-07-28):** with the current TWO-member
+council, a member chairman is IMPOSSIBLE — both members deliberate and
+`select_chairman` hard-enforces generator-cannot-self-judge (explicit
+`member:` requests fall back to host too). The Ü1 member-chairman path is
+dead code at member count 2 and becomes live only with a third configured
+member. The A/B therefore uses a fresh isolated synthesizer session per arm
+(artifact-only input) as the chairman stand-in — a STRONGER blind than
+production host mode; method in `internal/bench/council-blind-review/`.
+
 ## Evidence
 
 - **E1 — self-preference is real and causally coupled to self-recognition.**
@@ -124,7 +133,7 @@ measured lock; the counter-evidence (E1/E2) is measured.
 
 ## Phase 2 — Re-run test on existing artifacts (minimal spend)
 
-- [ ] Re-run already-decided council questions (the 2026-07-28 debate
+- [x] Re-run already-decided council questions (the 2026-07-28 debate
   artifacts exist locally under `agents/runtime/council/responses/`) in two
   arms: (a) current protocol, (b) Ü1+Ü2+Ü3 — **≥10 paired re-runs**
   (available questions × repeats; per-run cost measured at ~$0.05, so the
@@ -135,6 +144,15 @@ measured lock; the counter-evidence (E1/E2) is measured.
   content quality.
 - [ ] **Pre-registered decision rules (council-TIGHTENED versions, fixed
   now):**
+  <!-- blocker 2026-07-28 (owner: maintainer — partially decided): Ü1 DECIDED — ADOPTED, 0/10 +
+  0/10 degradation triggers on the n=10 A/B ($1.58 spend, 0 failed runs),
+  default flipped + test-pinned. Ü2/Ü3 PENDING the maintainer blind ratings
+  (internal/bench/council-blind-review/blind-rating-packet.md — R1 for Ü2
+  majority preference over the 9 substantively-differing pairs, R2 for Ü3
+  decision-influencing ≥2/3); substituting an AI rater would break the
+  pre-registration (and would itself be the self-preference bias this
+  roadmap is about). Evaluator facts: ü3-field present+specific 10/10;
+  verdict drift 9/10 (bundled-arm caveat recorded in results file) -->
   - **Ü3** is adopted only if the maintainer — blind to arms — rates the
     `collective_blind_spot` field as *decision-influencing* (not merely
     non-trivial text; boilerplate like "insufficient testing discussion"
@@ -161,8 +179,15 @@ measured lock; the counter-evidence (E1/E2) is measured.
 - [ ] Merge accepted adoptions into the deliberation protocol; anchor the
   de-anonymization step (Ü1) in the council audit log; document rejected
   parts as honest nulls in this roadmap at archive time.
-- [ ] Optional (only on explicit maintainer request): the N1 `council-lite`
+  <!-- blocker 2026-07-28 (owner: maintainer — Ü1 half done): Ü1 MERGED — blind_chairman
+  default true on council:run, --no-blind-chairman opt-out, mandatory
+  post-verdict de-anon map in the artifact, § Blind synthesis anchored in
+  docs/contracts/ai-council-config.md, default test-pinned (26/26 green).
+  Ü2/Ü3 merge-or-null waits on the maintainer ratings above -->
+- [-] Optional (only on explicit maintainer request): the N1 `council-lite`
   documentation paragraph in the council context.
+  <!-- skipped 2026-07-28: no explicit maintainer request — per N1 the
+  paragraph exists only on demand; the exclusion zone stands -->
 - Acceptance: protocol lint green; one real council run under the new
   protocol documented; roadmap archived with a results summary.
 

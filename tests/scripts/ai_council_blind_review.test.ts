@@ -275,3 +275,25 @@ describe('parse_chairman_override / apply_chairman_override', () => {
         expect(apply_chairman_override(base, null)).toBe(base);
     });
 });
+
+describe('Ü1 adoption — blind synthesis is the CLI default (Phase 3, 2026-07-28)', () => {
+    // Source-level pin, same technique as the neutrality-contract hash: the
+    // n=10 A/B measured 0/10 + 0/10 pre-registered degradation triggers, so
+    // the pre-registered rule ADOPTS Ü1. Reverting the default without a new
+    // measured decision must fail this test.
+    const cliSource = fs.readFileSync(path.join(process.cwd(), 'src/scripts/council_cli.ts'), 'utf8');
+
+    it('blind_chairman defaults to true in the Args defaults block', () => {
+        expect(cliSource).toMatch(/blind_chairman:\s*true,/);
+        expect(cliSource).not.toMatch(/blind_chairman:\s*false,\n\s*stances/);
+    });
+
+    it('--no-blind-chairman opt-out flag exists (per-invocation escape, audit map always kept)', () => {
+        expect(cliSource).toContain("'--no-blind-chairman'");
+    });
+
+    it('stances + chairman_fields stay default-off pending the maintainer blind ratings', () => {
+        expect(cliSource).toMatch(/stances:\s*false,/);
+        expect(cliSource).toMatch(/chairman_fields:\s*false,/);
+    });
+});
