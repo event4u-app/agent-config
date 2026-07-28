@@ -68,8 +68,8 @@ run needs no significance test.
 - **No second ledger:** all telemetry is additive fields on the existing
   audit stream (`agents/runtime/state/audit/YYYY-MM.jsonl`);
   `readOrchestrationMetrics` (`src/scripts/orchestration_record.ts`) reads
-  new fields tolerantly. (Anti-fragmentation lesson from the ruflo audit —
-  one canonical location, never CWD-relative.)
+  new fields tolerantly. (Anti-fragmentation lesson from the external
+  orchestrator-reference audit — one canonical location, never CWD-relative.)
 - **ADR-124 / MCP-REJECT untouched:** no resident retrieval server, no second
   engine; `later/road-to-deferred-rule-retriever.md` stays parked — this
   roadmap only produces the demand-signal datum its parked condition asks for
@@ -78,7 +78,7 @@ run needs no significance test.
   deterministic v1 classifier (`src/scripts/_lib/auto_dispatch.ts`,
   `auto-dispatch-classification.md`); no LLM classifier fallback (cut C3).
 - **User-spec inviolability:** routing chooses HOW a task runs, never WHAT
-  was asked (ruflo queen-agent anti-pattern).
+  was asked (the external reference's queen-agent anti-pattern).
 - **Subordination:** while `road-to-orchestration-scope-decision.md` is open,
   no new PUBLIC orchestration claim is created here; the one claim below is
   an internal efficiency claim, family-scoped, modeled on
