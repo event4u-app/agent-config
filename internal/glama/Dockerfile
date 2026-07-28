@@ -12,11 +12,19 @@
 # toolchain below is a DATED SNAPSHOT of glama's generated Dockerfile, not a
 # live mirror. See internal/glama/README.md before trusting it for glama
 # sync debugging.
+# Node 24 comes from the official node image, NOT the nodesource apt repo:
+# deb.nodesource.com's setup script fails with a swallowed curl 403 and exits
+# 0 (first seen 2026-07-27), leaving apt to resolve Debian's distro nodejs
+# 20.x — which ships WITHOUT npm, so the image broke with `npm: not found`.
+# The multi-stage copy is hermetic (Docker Hub only, no third-party apt repo)
+# and keeps glibc parity: both stages are trixie. The `command -v npm` probe
+# fails the build loudly if the toolchain ever silently regresses again.
+FROM node:24-trixie-slim AS node24
 FROM debian:trixie-slim
 ENV DEBIAN_FRONTEND=noninteractive
+COPY --from=node24 /usr/local /usr/local
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl git \
-    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+    && command -v npm \
     && npm install -g mcp-proxy@6.4.3 pnpm@10.14.0 \
     && node --version \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
