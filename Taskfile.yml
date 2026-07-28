@@ -91,6 +91,7 @@ tasks:
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop
+      - task: lint-spawn-payload
       - task: lint-pre-migration-refs
       - task: lint-consumer-internal-refs
       - task: lint-budget-ownership
@@ -292,6 +293,7 @@ tasks:
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop
+      - task: lint-spawn-payload
       - task: lint-pre-migration-refs
       - task: lint-consumer-internal-refs
       - task: lint-budget-ownership

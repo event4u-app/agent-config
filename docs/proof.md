@@ -123,7 +123,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 5 claim(s) are logged as
+We also publish our **debt**: 6 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -280,7 +280,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (85) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 36 ledger entries · 31 backed · 5 unbacked inventory.
+**Axis 2 — evidence form per public claim.** 37 ledger entries · 31 backed · 6 unbacked inventory.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
@@ -305,6 +305,7 @@ Undeclared rules (85) carry no row — an honest gap beats a false claim.
 | `host-agent-count` | quant | backed | `exec:vitest run tests/install/toolDetection.test.ts -> 0` |
 | `humanizer-tell-reduction` | quant | backed | `internal/bench/reports/humanizer-v1.md#prefers the humanized text` |
 | `install-audit-clean` | quant | backed | `.github/workflows/release-validation.yml#npm audit --omit=dev --audit-level=high` |
+| `lean-init-cost-reduction` | quant | unbacked | `PRE-REGISTERED 2026-07-28 (road-to-lean-agent-init Phase 3 — registered BEFORE any savings number is cited anywhere; family-scoped, modeled on `downshift-cost-reduction`; quality definition reused from the correctness-comparison acceptance, no second truth). Falsification criteria fixed BEFORE data: (1) correctness floor — primitive answer ≡ agent answer on the golden corpus (`internal/bench/lean-init/results-2026-07-28.md`, 12/12); ANY mismatch on a routed real task recorded via `correctness_match: false` counts against the claim; (2) negative control — a non-lookup task never routes to a primitive (`LOOKUP_CORPUS` lk-n1..n4, FP=0); (3) cost metric — read from `agents/runtime/state/audit/*.jsonl` orchestration lines tagged `origin: lean-init-2026` with `lookup_class != null`, comparing `route_taken: primitive` token cost against `route_taken: subagent` lines of the same class (n and family scope stated at backing time); (4) segregation — lines carry `origin: lean-init-2026` so the `road-to-orchestration-scope-decision` sample stays uncontaminated (council Q5, 2026-07-28). PROVE → flip to backed for the lookup family only; DROP → honest null, primitives stay (correctness-validated) but no savings number is ever cited.` |
 | `ledger-exec-verifiability` | quant | backed | `internal/reports/exec-evidence-feasibility.json#"exec_feasible"` |
 | `lexical-ranking-lift` | quant | backed | `exec:measure_lexical_ranking -> 0` |
 | `no-runtime-daemon` | qual | backed | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` |

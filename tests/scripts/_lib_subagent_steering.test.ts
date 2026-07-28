@@ -62,6 +62,23 @@ describe('readOrchestrationMetrics — aggregate from JSONL lines', () => {
             },
         });
 
+    it('reads lines carrying the lean-init additive fields tolerantly (audit-log-v1 forward-compat)', () => {
+        const withLeanInit = makeOrchLine({
+            init_tokens: 1200,
+            payload_hash: 'a1b2c3d4e5f6',
+            lookup_class: 'references',
+            route_taken: 'primitive',
+            budget_hit: false,
+            correctness_match: true,
+            cache_hit: true,
+            origin: 'lean-init-2026',
+        });
+        const m = readOrchestrationMetrics([withLeanInit]);
+        expect(m.token_ratio).toBeGreaterThan(0);
+        expect(m.spawn_failure_rate).toBe(0); // outcome DONE parsed despite extra fields
+        expect(m.verify_skip_rate).toBe(0); // verify_mode deterministic parsed despite extra fields
+    });
+
     it('empty lines → safe defaults', () => {
         const m = readOrchestrationMetrics([]);
         expect(m.token_ratio).toBe(1);

@@ -12,6 +12,7 @@ routes_to:
   - "skill:review-routing"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+roles: [reviewer]
 ---
 
 # Reviewer Awareness

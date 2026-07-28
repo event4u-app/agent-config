@@ -36,10 +36,16 @@ import { rule_in_scope } from '../scripts/condense.js';
  */
 export const COMPAT_ALWAYS_EXCLUDED: readonly string[] = ['source-of-truth.md'];
 
-/** Workspace/pack scope read from consumer settings. `null` axis = unset. */
+/**
+ * Workspace/pack/role scope read from consumer settings. `null` axis =
+ * unset. `roles` is optional (additive — road-to-lean-agent-init Phase 4,
+ * the subagent role-scoping axis) so pre-existing `RuleScope` literals
+ * without the field keep compiling unchanged.
+ */
 export interface RuleScope {
     readonly workspaces: readonly string[] | null;
     readonly packs: readonly string[] | null;
+    readonly roles?: readonly string[] | null;
 }
 
 export const LEGACY_ALL: RuleScope = { workspaces: null, packs: null };
@@ -66,6 +72,7 @@ export function ruleScopeFromSettings(settings: Record<string, unknown>): RuleSc
     return {
         workspaces: _list(p['rule_workspaces']),
         packs: _list(p['rule_packs']),
+        roles: _list(p['rule_roles']),
     };
 }
 
@@ -85,7 +92,7 @@ export function ruleFileArrives(sourcePath: string, scope: RuleScope): boolean {
     if (COMPAT_ALWAYS_EXCLUDED.includes(basename)) {
         return false;
     }
-    return rule_in_scope(sourcePath, scope.workspaces, scope.packs);
+    return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
 }
 
 /**

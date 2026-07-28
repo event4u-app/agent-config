@@ -94,6 +94,82 @@ export function classifyTask(signals: TaskSignals, activation: ActivationInputs)
     return { delegable: true, action, mode, reason };
 }
 
+// ── Lookup-class routing (L0 — road-to-lean-agent-init) ──
+
+/**
+ * Lookup-class task shapes that route to a deterministic primitive INSTEAD of
+ * a subagent spawn. Contract:
+ * `auto-dispatch-classification.md § Lookup-class rung`.
+ *
+ * Live evidence (2026-07-28): four `general-purpose` subagents burned ~1.21M
+ * tokens on tasks of exactly these shapes; the primitives answer each for <1k.
+ */
+export type LookupClass =
+    | 'definition' // "where is X defined" → code_graph query
+    | 'references' // "who calls / imports X" → code_graph query
+    | 'string-existence' // "does string Y exist" → FTS one-shot / capped grep
+    | 'report-run'; // "run report Z" → script-run with rtk wrap
+
+export type LookupPrimitive = 'code-graph-query' | 'fts-or-capped-grep' | 'script-run-rtk';
+
+export interface LookupRoute {
+    /** Matched lookup class, or null when the task is not lookup-shaped. */
+    lookup_class: LookupClass | null;
+    /** `primitive` = skip the spawn; `escalate` = normal classification path. */
+    route: 'primitive' | 'escalate';
+    primitive: LookupPrimitive | null;
+    reason: string;
+}
+
+const LOOKUP_PATTERNS: Array<{ cls: LookupClass; primitive: LookupPrimitive; re: RegExp }> = [
+    {
+        cls: 'definition',
+        primitive: 'code-graph-query',
+        re: /\b(where\s+is\s+\S+\s+defined|definition\s+(location|of|site)|find\s+the\s+definition|locate\s+the\s+(class|enum|function|type|interface|symbol)|confirm\w*\s+\S+\s+definition)\b/i,
+    },
+    {
+        cls: 'references',
+        primitive: 'code-graph-query',
+        re: /\b(who\s+(calls|imports|uses|references)|call\s*sites?|import\s+(call\s*)?sites?|reverse\s+references|where\s+is\s+\S+\s+(used|imported|referenced|called)|all\s+(callers|usages|references)\s+of)\b/i,
+    },
+    {
+        cls: 'string-existence',
+        primitive: 'fts-or-capped-grep',
+        re: /\b(does\s+(the\s+)?string\s+.*\bexist|is\s+(the\s+)?string\s+.*\b(present|used)\b|prob\w+\s+(candidate\s+)?strings?|search\s+for\s+the\s+(exact\s+)?string|(grep|check)\s+(for\s+)?(the\s+)?(literal|string)\b|does\s+\S+\s+appear\s+anywhere)/i,
+    },
+    {
+        cls: 'report-run',
+        primitive: 'script-run-rtk',
+        re: /\b(run(ning)?\s+(the\s+)?\S*(report|check|lint\w*|coverage)\b|run(ning)?\s+(check|lint|report)_\w+|regenerate\s+the\s+\S+\s+report)/i,
+    },
+];
+
+/**
+ * Route a task description to a lookup-class primitive or the regular
+ * escalation path. Deterministic regex layer, no LLM call (design lock:
+ * no LLM classifier fallback — cut C3). Non-matches escalate — never a
+ * silently degraded answer; an index-miss at execution time escalates the
+ * same way (runtime concern, documented in the classification context).
+ */
+export function classifyLookup(taskText: string): LookupRoute {
+    for (const p of LOOKUP_PATTERNS) {
+        if (p.re.test(taskText)) {
+            return {
+                lookup_class: p.cls,
+                route: 'primitive',
+                primitive: p.primitive,
+                reason: `lookup-class ${p.cls} — deterministic primitive, no spawn`,
+            };
+        }
+    }
+    return {
+        lookup_class: null,
+        route: 'escalate',
+        primitive: null,
+        reason: 'not lookup-shaped — regular classification path (never down-guessed)',
+    };
+}
+
 // ── Per-slice tier inference (v1.5 — road-to-cost-aware-model-routing) ──
 
 /**

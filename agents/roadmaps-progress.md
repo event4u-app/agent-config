@@ -6,10 +6,10 @@
 
 ## Overall
 
-**168 / 299 steps done · 56%**
+**171 / 290 steps done · 59%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   56%
+████████████████████████░░░░░░░░░░░░░░░░   59%
 ```
 
 ## Open roadmaps
@@ -19,12 +19,12 @@
 | 1 | [road-to-ac-embeddable-gui.md](roadmaps/road-to-ac-embeddable-gui.md) | 4 | 30 | 28 | 2 | 0 | 0 | [2](#blockers-road-to-ac-embeddable-gui) | █░░░░░░░░░ 7% |
 | 2 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 6 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 62% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 1 | 29 | 0 | 0 | 0 | ██████████ 97% |
-| 5 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
-| 6 | [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md) | 4 | 11 | 1 | 10 | 0 | 0 | 0 | █████████░ 91% |
-| 7 | [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md) | 5 | 22 | 1 | 21 | 0 | 0 | 0 | ██████████ 95% |
-| 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-lean-agent-init.md](roadmaps/road-to-lean-agent-init.md) | 5 | 14 | 14 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+| 5 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 1 | 29 | 0 | 0 | 0 | ██████████ 97% |
+| 6 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
+| 7 | [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md) | 4 | 11 | 1 | 10 | 0 | 0 | 0 | █████████░ 91% |
+| 8 | [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md) | 5 | 22 | 1 | 21 | 0 | 0 | 0 | ██████████ 95% |
+| 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 12 | [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md) | 6 | 22 | 22 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -94,6 +94,16 @@ _2 blockers resolved._
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
+### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
+
+**Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern** — 3 / 5 done (60%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Protocol diff (no model calls) | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
+
 ### [road-to-credible-install.md](roadmaps/road-to-credible-install.md)
 
 **Road to credible install — survive the first five minutes of an external evaluation** — 29 / 30 done (97%)
@@ -154,18 +164,6 @@ _2 blockers resolved._
   - **What to do:**
     `yt-dlp` and a JavaScript runtime are installed **by a human** on
   - **Resolved when:** condition described above clears
-
-### [road-to-lean-agent-init.md](roadmaps/road-to-lean-agent-init.md)
-
-**Lean Agent Init — tool-not-agent routing, worker stop-loss, spawn-payload truth** — 0 / 14 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | L0: tool-not-agent routing for lookup-class tasks | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | L0b: hard per-worker token stop-loss | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Telemetry + spawn-payload truth (measure, then lint) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Cheap payload wins (reuse-only, no new mechanisms) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Disposition and closure | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 

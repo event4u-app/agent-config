@@ -130,6 +130,34 @@ no runtime resolver.
   in `src/config/discovery/{workspaces,packs}.yml` — unknown ids fail
   lint before they can reach the router.
 
+### `roles:` — subagent role-scoping axis (road-to-lean-agent-init Phase 4)
+
+A third, additive, optional frontmatter list — `roles:` — parallel to
+`workspaces:`/`packs:` but consumed by a different mechanism: `rule_in_scope`
+(`src/scripts/condense.ts`) and `RuleScope`/`ruleFileArrives`
+(`src/install/rule_scope.ts`), not the `router.json` entry shape above (it
+is not currently mirrored into router entries — router.json governs
+trigger-based activation, `roles:` governs which rules project into a
+given subagent's rule set).
+
+- **Vocabulary:** the six `RoleMode` ids from
+  `src/scripts/_lib/subagent_spawn.ts` — `developer`, `reviewer`, `tester`,
+  `po`, `incident`, `planner`. Closed vocabulary enforced by the JSON
+  Schema `enum` in `src/scripts/schemas/rule.schema.json` (not a
+  `src/config/discovery/*.yml` file — see the schema's `roles` property
+  description for why).
+- **Fail-safe:** an untagged rule (no `roles:` key, or an empty list)
+  projects to every role, exactly like an untagged `workspaces:`/`packs:`.
+  Kernel rules (`type: always`) always project regardless of `roles:`.
+- **Consumer knob:** `projection.rule_roles` in `.agent-settings.yml` (a
+  string list), read by `ruleScopeFromSettings` the same way as
+  `projection.rule_workspaces` / `projection.rule_packs` — absent/empty =
+  no role filtering (today's behaviour, unchanged). `condense.ts`'s
+  maintainer-side projection (`generate_rule_symlinks` and friends) does
+  not read this key — role scoping is a subagent-spawn-time concern, not
+  a package-projection concern; `rule_in_scope`'s new `role_scope`
+  parameter is additive and defaults to `null` there.
+
 ## Host-native glob activation (Cursor / Windsurf)
 
 Since 2026-07-07 (`road-to-request-scoped-rule-load` Phase 2) the
