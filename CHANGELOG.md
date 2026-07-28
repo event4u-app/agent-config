@@ -11,7 +11,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > History is split into **eras**. The current era keeps full entries
 > inline; prior eras collapse into a single pointer to an archive file
 > under [`docs/archive/`](docs/archive/). A drift test
-> (`tests/test_changelog_eras.py`) forces an era split before the
+> (`tests/lib/changelog_eras.test.ts`) forces an era split before the
 > current era grows past 250 lines.
 
 ## [Unreleased]
@@ -125,7 +125,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-5.4.0 — archived
 
@@ -134,7 +134,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-5.9.0 — archived
 
@@ -143,7 +143,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-6.0.0 — archived
 
@@ -152,7 +152,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-7.0.0 — archived
 
@@ -161,7 +161,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-8.0.0 — archived
 
@@ -170,7 +170,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-8.1.0 — archived
 
@@ -179,7 +179,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-8.9.0 — archived
 
@@ -188,7 +188,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-8.12.0 — archived
 
@@ -197,7 +197,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-9.2.0 — archived
 
@@ -206,7 +206,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The archive is read-only; git tags remain the canonical
 > source for what shipped. Splitting them out of the main file
 > keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: 9.2.x — current
 
@@ -517,7 +517,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tags `3.2.0` and `3.3.0` remain the
 > canonical source for what shipped. Splitting them out of the main
 > file keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-3.2.0 — archived
 
@@ -526,7 +526,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tags `3.1.0` and `3.1.1` remain the
 > canonical source for what shipped. Splitting them out of the main
 > file keeps the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-3.1.0 — archived
 
@@ -535,7 +535,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tag `3.0.0` remains the canonical
 > source for what shipped. Splitting it out of the main file keeps
 > the active era under the 250-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-3.0.0 — archived
 
@@ -544,7 +544,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tags `2.26.0` and prior remain the
 > canonical source for what shipped. Splitting these out of the main
 > file keeps the active era under the 200-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-2.25.0 — archived
 
@@ -553,7 +553,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tags `2.24.0` and prior remain the
 > canonical source for what shipped. Splitting these out of the main
 > file keeps the active era under the 200-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-2.20.0 — archived
 
@@ -562,7 +562,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tags `2.19.0` and prior remain the
 > canonical source for what shipped. Splitting these out of the main
 > file keeps the active era under the 200-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-2.17.0 — archived
 
@@ -571,7 +571,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tag `2.16.0` remains the canonical
 > source for what shipped. Splitting these out of the main file keeps
 > the active era under the 200-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-2.16.0 — archived
 
@@ -580,7 +580,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tag `2.15.0` remains the canonical
 > source for what shipped. Splitting these out of the main file keeps
 > the active era under the 200-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-2.15.0 — archived
 
@@ -589,7 +589,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tags `2.14.0` and prior remain the
 > canonical source for what shipped. Splitting these out of the main
 > file keeps the active era under the 200-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-2.11.0 — archived
 
@@ -598,7 +598,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tags `2.10.0` and prior remain the
 > canonical source for what shipped. Splitting these out of the main
 > file keeps the active era under the 200-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 
 # Era: pre-2.7.0 — archived
@@ -608,7 +608,7 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tags `2.6.1` and prior remain the
 > canonical source for what shipped. Splitting these out of the main
 > file keeps the active era under the 200-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 # Era: pre-2.2.0 — archived
 
@@ -617,4 +617,4 @@ Tests: 7764 (+27 since 9.1.0)
 > The archive is read-only; git tags `2.1.0` and prior remain the
 > canonical source for what shipped. Splitting these out of the main
 > file keeps the active era under the 200-line drift cap enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
