@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 11 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **11** open blockers
+> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**66 / 130 steps done · 51%**
+**138 / 201 steps done · 69%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+████████████████████████████░░░░░░░░░░░░   69%
 ```
 
 ## Open roadmaps
@@ -19,14 +19,18 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 16 | 6 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 62% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 9 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 6 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | █████░░░░░ 50% |
-| 10 | [road-to-team-mode.md](roadmaps/road-to-team-mode.md) | 7 | 39 | 6 | 31 | 2 | 0 | [2](#blockers-road-to-team-mode) | ████████░░ 84% |
-| 11 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 4 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 1 | 29 | 0 | 0 | 0 | ██████████ 97% |
+| 5 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
+| 6 | [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md) | 4 | 11 | 1 | 10 | 0 | 0 | 0 | █████████░ 91% |
+| 7 | [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md) | 5 | 22 | 1 | 21 | 0 | 0 | 0 | ██████████ 95% |
+| 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 11 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
+| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 2 | 13 | 5 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | ██████░░░░ 55% |
+| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
 
 ---
 
@@ -201,38 +205,6 @@ _1 blocker resolved._
 - **benchmark-spend** (owner: user) — blocks lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
   - **What to do:**
   - **Resolved when:** the maintainer authorizes the specific run with an estimate.
-
-### [road-to-team-mode.md](roadmaps/road-to-team-mode.md)
-
-**Road to team mode — govern the official cross-model pair, don't rebuild it** — 31 / 37 done (84%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Facts, claims hygiene, boundary prose | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | Detection + guided setup | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | `/team` command family (Claude-Code path) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 3 | Multi-host fallback (the gap only we can fill) | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 4 | Review-Gate governance | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Defect-finding benchmark (measure the marketing) | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 6 | Close-out | 🟡 in progress | 6 | 5 | 0 | 0 | 45% |
-
-<a id="blockers-road-to-team-mode"></a>
-**Blockers**
-
-- **model-id-verification** (owner: maintainer) — blocks Phase 2 config-doc examples, Phase 5 arm pinning
-  - **What to do:**
-    1. At execution, list the actual codex CLI model IDs (`codex /model` or CLI
-    docs) and pin the benchmark arms to verified IDs.
-    2. The trigger guide's `gpt-5.6-sol` is unverified marketing copy — the
-    plugin's own prompting skill still targets `gpt-5-4`. Append the verified
-    list here.
-  - **Resolved when:** a dated model-ID list exists in this file. - **Resolution (2026-07-12, verified live):** codex-cli 0.134.0 on the maintainer machine, subscription-authed; model list read from the CLI's own server-fetched cache (`~/.codex/models_cache.json`, fetched_at 2026-07-12T09:54Z) and cross-checked by a live `codex exec` header: - `gpt-5.5` — GPT-5.5, the CLI's current default (live exec header shows `model: gpt-5.5`) - `gpt-5.4` — GPT-5.4 - `gpt-5.4-mini` — GPT-5.4-Mini - `codex-auto-review` — Codex Auto Review (review-specialised) A bogus id is rejected with "not supported when using Codex with a ChatGPT account" (HTTP 400) — so arm pinning MUST use ids from this list. The trigger guide's `gpt-5.6-sol` is confirmed NOT available. Benchmark arms: pin builder/reviewer arms to `gpt-5.5` (default) and consider `codex-auto-review` for the review arm; re-read the cache at Phase 5 execution time (model lists rotate).
-- **benchmark-spend-authorization** (owner: user) — blocks Phase 5 execution (authoring fixtures is unblocked)
-  - **What to do:**
-    1. Approve the run once the fixture count is fixed; three arms × N fixtures
-    land on the ChatGPT subscription quota (arms a/b) and the council budget
-    (arm c). Estimate rendered before the first call.
-  - **Resolved when:** the user confirms the run budget in-session.
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 

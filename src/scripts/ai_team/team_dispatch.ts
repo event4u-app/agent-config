@@ -64,6 +64,42 @@ export class TeamDisabledError extends TeamDispatchError {
     }
 }
 
+/**
+ * Thrown by `assert_delegate_allowed` when `ai_team.enabled` is true but the
+ * second opt-in (`ai_team.allow_delegate`) is not. `/team delegate` is the
+ * only wrapper that hands WRITE access to the second model, so it is
+ * double-gated; `enabled: true` alone is never delegate authorization.
+ */
+export class TeamDelegateDisabledError extends TeamDispatchError {
+    constructor() {
+        super(
+            '`/team delegate` is disabled (`ai_team.allow_delegate: false`, the shipped ' +
+                'default). It is the only team-mode wrapper that hands write access to ' +
+                'the second model, so it needs its own opt-in: set both ' +
+                '`ai_team.enabled: true` and `ai_team.allow_delegate: true` in ' +
+                '`.agent-settings.yml` — see docs/contracts/ai-team-config.md.',
+        );
+        this.name = 'TeamDelegateDisabledError';
+    }
+}
+
+/**
+ * Deterministic mirror of the `/team delegate` double gate: throws
+ * `TeamDisabledError` unless `ai_team.enabled`, then
+ * `TeamDelegateDisabledError` unless `ai_team.allow_delegate`. The command
+ * doc's prose gates instruct the agent; this guard is the machine-checkable
+ * contract (`--delegate-gate` CLI mode) tests pin against.
+ */
+export function assert_delegate_allowed(config?: AiTeamConfig, cwd?: string | null): void {
+    const cfg = config ?? load_ai_team_config({ cwd: cwd ?? null });
+    if (!cfg.enabled) {
+        throw new TeamDisabledError();
+    }
+    if (!cfg.allow_delegate) {
+        throw new TeamDelegateDisabledError();
+    }
+}
+
 // ── repo-context bundle (READ-ONLY) ─────────────────────────────────────
 
 /**
@@ -572,6 +608,18 @@ export function run_team_review(opts: RunTeamReviewOptions = {}): TeamReviewRunR
 // ── CLI entry ───────────────────────────────────────────────────────────
 
 function _main(argv: string[]): number {
+    if (argv.includes('--delegate-gate')) {
+        try {
+            assert_delegate_allowed();
+            return 0;
+        } catch (exc) {
+            if (exc instanceof TeamDispatchError) {
+                process.stderr.write(`${exc.message}\n`);
+                return 2;
+            }
+            throw exc;
+        }
+    }
     const manual = argv.includes('--manual');
     try {
         const result = run_team_review({ manual });
