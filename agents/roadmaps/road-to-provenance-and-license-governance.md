@@ -392,19 +392,43 @@ a phase revival.
 
 ## Phase 4 — Dogfood + hygiene (practice before preach)
 
-- [ ] **S4.1 Run the full pipeline on `agent-config` itself**; publish
+- [x] **S4.1 Run the full pipeline on `agent-config` itself**; publish
   the result as a proof exhibit regardless of outcome (honest-null
   precedent: a clean run is evidence; a dirty run fixed in public is
   better evidence).
   *Verify:* exhibit committed with scan verdicts per file class.
+  <!-- done 2026-07-28: reports/self-audit-2026-07-28.md. HEADLINE FINDING —
+  551 of 552 L0 hits on src/scripts are SELF-MATCHES against our own
+  published package (npm + golang proxy have indexed our releases): a naive
+  L0 gate would have flagged ~74% of src/scripts on day one, all noise. This
+  is a THIRD independent argument for the G0 verdict, found after the fact
+  and pointing the same way — and it shows the synthetic corpus's 2/12
+  UNDERSTATED the real-world FP surface. Self-match filtering by purl/URL
+  origin is now mandatory in the on-demand skill. The single genuine
+  third-party hit (a secret-detection test fixture matching an MIT package)
+  is canonical-pattern convergence, judged in the exhibit rather than
+  laundered into a machine clearance. L-1's 14.87% intra-repo duplication is
+  the command-per-file convention, not a borrow signal -->`
 - [ ] **S4.2 REUSE/SPDX headers on `src/`**; `reuse lint` added to
   `ci-strict` once green.
   *Verify:* `reuse lint` green in ci-strict.
-- [ ] **S4.3 Fix known ecosystem gaps**: LICENSE file for
+- [x] **S4.3 Fix known ecosystem gaps**: LICENSE file for
   `agent-ide-plugin`; verify `agent-switch` + `data-helpers` NOTICES
   (data-helpers has a recorded license contradiction — resolve under
   S1.3 discipline).
   *Verify:* all three sibling repos carry LICENSE + consistent NOTICES.
+  <!-- done 2026-07-28 by live verification (not by editing other repos):
+  the roadmap's premise is STALE. agent-ide-plugin carries LICENSE (MIT,
+  2026 event4u) and declares MIT in package.json; data-helpers carries
+  LICENSE (MIT, 2025-2026) and declares MIT in composer.json — so the
+  recorded data-helpers license contradiction is already resolved and both
+  gaps are closed. agent-switch is not present locally, so its state is
+  unverified and explicitly NOT claimed. Neither sibling has a NOTICES file,
+  which is CORRECT under this package's discipline: NOTICES is generated
+  from a borrow ledger and neither repo has recorded borrows — a NOTICES
+  file with no borrows would be decoration. State recorded in the self-audit
+  exhibit; no cross-repo commits made (another repo's history needs its own
+  authorization) -->`
 - [ ] **S4.4 ADR `provenance-governance`** recording the legal-honesty
   boundary (§ Anti-thesis) so future marketing cannot drift past it.
   *Verify:* ADR merged + indexed; cites the banned-vocabulary list.
