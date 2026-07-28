@@ -30,9 +30,10 @@ not a fix task, it names the right specialist instead of forcing a fix sub.
 1. Read the free-text problem.
 2. Run the `/fix` cluster's detection table (see the cluster head) over it:
    CI failure → `fix ci`; broken cross-refs → `fix refs`; PR review threads →
-   `fix pr-comments`; code-comment noise → `fix comments`; seeder/FK →
-   `fix seeder`; type/lint/format errors → `fix quality`; project-leak in the
-   shared package → `fix portability`.
+   `fix pr-comments`; loop-until-clean review ask ("keep fixing until Copilot
+   is happy") + a PR URL → `fix pr-comments-loop`; code-comment noise →
+   `fix comments`; seeder/FK → `fix seeder`; type/lint/format errors →
+   `fix quality`; project-leak in the shared package → `fix portability`.
 3. **HIGH confidence** → route to that sub-command and follow its instructions.
 4. **Not a fix task** (a new feature, an analysis, a design question) → do NOT
    force a fix sub; name the correct surface instead (`/feature`, a
