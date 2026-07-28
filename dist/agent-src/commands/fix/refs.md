@@ -78,7 +78,7 @@ Present a summary before applying:
 
 ### 5. Apply fixes
 
-Edit files in `.agent-src.uncondensed/` (source of truth). Regenerate `dist/agent-src/` and `.augment/` via `bash src/scripts/condense.sh --sync`.
+Edit files in `src/` (source of truth). Regenerate `dist/agent-src/` and `.augment/` via `bash src/scripts/condense.sh --sync`.
 
 After all fixes:
 
@@ -98,7 +98,7 @@ For each modified file:
 
 ## Rules
 
-- **Always fix in `.agent-src.uncondensed/`** — never edit `dist/agent-src/` or `.augment/` directly.
+- **Always fix in `src/`** — never edit `dist/agent-src/` or `.augment/` directly.
 - **Run `bash src/scripts/condense.sh --sync`** after fixing to regenerate `dist/agent-src/` and `.augment/`.
 - **Do NOT commit or push** — the user decides.
 - **Do NOT fix references in code blocks** — they are examples, not live refs.

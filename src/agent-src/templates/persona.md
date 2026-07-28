@@ -1,14 +1,14 @@
 # Persona Template
 
 > Template for creating a new persona in
-> `.agent-src.uncondensed/personas/{persona-id}.md`. Personas declare
+> `src/agent-src/personas/{persona-id}.md`. Personas declare
 > a *voice* — focus, mindset, unique questions, output expectations.
 > Skills cite personas in a `personas:` frontmatter key. Users invoke
 > them via `--personas=<id>`.
 
 ## Instructions
 
-1. Create the file: `.agent-src.uncondensed/personas/{persona-id}.md`.
+1. Create the file: `src/agent-src/personas/{persona-id}.md`.
 2. Copy the template below.
 3. Replace all `{placeholders}` with real content.
 4. Pass the Unique-Questions heuristic — ≥ 3 questions that no other

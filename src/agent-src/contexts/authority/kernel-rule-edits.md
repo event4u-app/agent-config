@@ -2,7 +2,7 @@
 
 Loaded by [`scope-control`](../../rules/scope-control.md). Codifies the
 soak-time guarantee for edits to always-loaded (kernel) rules under
-`.agent-src.uncondensed/rules/`.
+`src/rules/`.
 
 **Size budget:** ≤ 1,500 chars.
 

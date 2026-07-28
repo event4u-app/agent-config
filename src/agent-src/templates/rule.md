@@ -1,13 +1,13 @@
 # Rule Template
 
-> Template for creating new rules in `.agent-src.uncondensed/rules/{rule-name}.md`.
+> Template for creating new rules in `src/rules/{rule-name}.md`.
 > Rules ship to `dist/agent-src/rules/` (condensed) and `.augment/rules/` (projected).
 > Schema: `scripts/schemas/rule.schema.json`.
 
 ## Instructions
 
 1. Pick a kebab-case `{rule-name}` matching the file stem.
-2. Copy the template below into `.agent-src.uncondensed/rules/{rule-name}.md`.
+2. Copy the template below into `src/rules/{rule-name}.md`.
 3. Replace placeholders, drop sections that don't apply.
 4. Run `task lint-skills` and `./scripts-run src/scripts/lint_load_context`.
 5. Condense: `bash scripts/condense.sh --changed` then follow the agent flow.

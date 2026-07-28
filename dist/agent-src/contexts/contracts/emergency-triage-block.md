@@ -26,7 +26,7 @@ Use this variant in `AGENTS.md` at the package root.
 
 ## Consumer-template variant
 
-Use this variant in `.agent-src.uncondensed/templates/AGENTS.md`. The
+Use this variant in `src/agent-src/templates/AGENTS.md`. The
 consumer's `AGENTS.md` lands at the consumer-project root after install.
 
 ```
@@ -45,7 +45,7 @@ The package-root and the consumer template answer the same five
 questions but in different repos:
 
 - The package-root variant points at this repo's authoring layer
-  (`.agent-src.uncondensed/`) and the package's CI entry point.
+  (`src/`) and the package's CI entry point.
 - The consumer variant tells the agent it is in a **consumer** project
   where `.augment/` is an installed artifact and editing it is wrong.
 

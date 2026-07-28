@@ -119,8 +119,8 @@ Decide what to create:
 > the exact wording is recoverable, and verify against it rather than trusting
 > the summary.
 
-- **New rule** → create in `.agent-src.uncondensed/rules/`, follow rule conventions
-- **New skill** → use `skill-writing` skill, create in `.agent-src.uncondensed/skills/`
+- **New rule** → create in `src/rules/`, follow rule conventions
+- **New skill** → use `skill-writing` skill, create in `src/skills/`
 - **Update existing** → use `skill-management` skill
 
 After creation:
@@ -179,7 +179,7 @@ Ask the user:
 - Do NOT skip the promotion gate — it prevents skill/rule bloat
 - Do NOT create both a rule AND a skill for the same learning
 - Do NOT auto-push without user permission
-- Do NOT create project-specific content in `.agent-src.uncondensed/`
+- Do NOT create project-specific content in `src/`
 - Do NOT run this pipeline for trivial learnings
 
 ## References

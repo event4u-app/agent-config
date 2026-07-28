@@ -54,7 +54,7 @@ Default: the AGENTS.md the user is editing right now. If unclear,
 ask:
 
 > 1. project root — `AGENTS.md`
-> 2. consumer template — `.agent-src.uncondensed/templates/AGENTS.md`
+> 2. consumer template — `src/agent-src/templates/AGENTS.md`
 > 3. package root — `AGENTS.md` of `event4u/agent-config` itself
 > 4. monorepo package — `<path>/AGENTS.md` (specify path)
 
@@ -170,7 +170,7 @@ final reply per
 ## What this command does NOT do
 
 - **No edits to** `.augment/` **or** `dist/agent-src/` — those regenerate
-  from `.agent-src.uncondensed/`. Edit the source.
+  from `src/`. Edit the source.
 - **No commits, no push, no PR** — finishing the refactor is a user
   decision; cite [`commit-policy`](../../rules/commit-policy.md).
 - **No broader agent-infra audit** — for token overhead, rule

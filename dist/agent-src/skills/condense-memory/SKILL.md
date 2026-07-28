@@ -30,7 +30,7 @@ Use when:
 
 - Condense reply, commit message, PR body, ticket summary, or any deliverable written *for* human reader — those are carve-outs in [`telegraph-speak § Carve-outs`](../../rules/telegraph-speak.md) and stay verbatim.
 - Condense path matching sensitive-file denylist (`.env*`, `.netrc`, `credentials*`, `secrets*`, `id_rsa*`, `*.pem|key|p12|pfx|crt|cer|jks`, `.ssh/*`) — script refuses with `SensitivePathError` and so should you.
-- Condense generated file (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) — edit source in `.agent-src.uncondensed/` and regenerate via package's sync + generate-tools scripts (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`).
+- Condense generated file (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) — edit source in `src/` and regenerate via package's sync + generate-tools scripts (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`).
 - Hand-edit condensed memory file in place — run `--decondense` first; next condense pass refuses on body-hash drift (`CondensationRefused`).
 - Commit condensed file without committing matching `.original.md` backup — round-trip breaks otherwise.
 

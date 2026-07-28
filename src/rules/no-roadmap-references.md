@@ -73,6 +73,6 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 - [`roadmap-progress-sync`](roadmap-progress-sync.md) — sync dashboard
   on roadmap touch
 - [`source-of-truth`](source-of-truth.md) — edit
-  `.agent-src.uncondensed/`
+  `src/`
 - [`ai-council`](../skills/ai-council/SKILL.md) — output path
   convention and convergence-summary format

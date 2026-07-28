@@ -62,7 +62,7 @@ Schema contract:
 - **Do NOT introduce network code** in this package. External
   enrichment is rejected for v1 — see the
   [determinism floor](../../../docs/contracts/agent-user-schema.md#determinism-floor).
-- **Edit `.agent-src.uncondensed/` only.** `dist/agent-src/` and
+- **Edit `src/` only.** `dist/agent-src/` and
   `.augment/` regenerate from source.
 
 ## See also

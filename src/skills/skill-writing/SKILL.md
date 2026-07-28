@@ -189,7 +189,7 @@ approval-gated propose / pick loop with at most two rounds.
 ### 1c. Propose a trigger-eval stub (new skills only)
 
 When creating a new skill, propose a stub
-`.agent-src.uncondensed/skills/{name}/evals/triggers.json` before writing
+`src/skills/{name}/evals/triggers.json` before writing
 the body. Draw the queries from Phase A of the drafting protocol (the
 user's "should trigger" and "must not trigger" answers).
 

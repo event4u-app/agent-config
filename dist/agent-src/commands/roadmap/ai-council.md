@@ -27,7 +27,7 @@ Council-driven challenge + refactor scope of the
 artefact), then drives the user through applying convergence
 findings as numbered patches against the roadmap file.
 
-**Source of truth:** `.agent-src.uncondensed/` — never read or edit
+**Source of truth:** `src/` — never read or edit
 `dist/agent-src/` or `.augment/` directly.
 
 ## Instructions

@@ -96,9 +96,9 @@ Apply all fixes** for ≤2 findings or when all are pure translations.
 
 Edit only the source-of-truth file:
 
-- Path under `.agent-src.uncondensed/` → edit there directly
+- Path under `src/` → edit there directly
 - Path under `dist/agent-src/` → edit the matching
-  `.agent-src.uncondensed/` file instead, then run
+  `src/` file instead, then run
   `bash scripts/condense.sh --sync`
 - Path under `.augment/` → same as `dist/agent-src/` (it's a projection)
 - Path under `agents/` → edit directly (no condensation layer)
@@ -123,7 +123,7 @@ This keeps `.condensation-hashes.json` consistent with the new content.
 
 - **Never edit `.augment/` directly** — it's a generated projection.
   Per [`source-of-truth`](../rules/source-of-truth.md),
-  the source is `.agent-src.uncondensed/`.
+  the source is `src/`.
 - **Per-line ignore marker is reserved** for meta-documentation that
   must quote German tokens; do NOT use it as a generic mute.
 - **Frontmatter is exempt** — the checker skips YAML frontmatter at
