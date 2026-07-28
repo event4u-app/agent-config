@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **683 public artefacts** shipped by
+Consumer-facing catalog of all **688 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (283)
+## Skills (286)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -170,6 +170,9 @@ are excluded.
 | skill | [`learning-tutor`](../dist/agent-src/skills/learning-tutor/SKILL.md) | official | Use when the user wants to learn a topic or verify real understanding — rapid-competence session, error drills, learning sprint, gap probe, Feynman check. Triggers 'teach me X', 'quiz me'. |
 | skill | [`legal-intake-triage`](../dist/agent-src/skills/legal-intake-triage/SKILL.md) | official | Use when triaging the quick legal-question channel + intake; classifies and ROUTES, never reviews. Triggers on 'is this a legal problem', 'do we need a lawyer for this', 'quick legal question'. |
 | skill | [`legal-practice-profile`](../dist/agent-src/skills/legal-practice-profile/SKILL.md) | official | Use when setting up the legal pack — captures jurisdiction, role, escalation, and playbook into a plain-prose profile every legal skill reads. Triggers on \"set up legal\", \"legal profile\". |
+| skill | [`license-compliance-audit`](../dist/agent-src/skills/license-compliance-audit/SKILL.md) | official | Run the offline (jscpd) and online (scanoss-py) similarity scanners on demand against a diff or path — the ONLY home of this repo's detection capability; no CI gate exists or ever ran it automatically |
+| skill | [`license-compliance-borrow-check`](../dist/agent-src/skills/license-compliance-borrow-check/SKILL.md) | official | Paste a URL/snippet before you borrow it — detects its license, runs the derived compatibility policy, and drafts a provenance ledger entry — even before any code is written, not after |
+| skill | [`license-compliance-credits`](../dist/agent-src/skills/license-compliance-credits/SKILL.md) | official | Regenerate docs/THIRD-PARTY-NOTICES.md from provenance/borrows.jsonl after any ledger change — even a single new entry — never hand-edit the notices file |
 | skill | [`lint-skills`](../dist/agent-src/skills/lint-skills/SKILL.md) | official | Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata. |
 | skill | [`livewire`](../dist/agent-src/skills/livewire/SKILL.md) | official | Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers reactive state, events, lifecycle hooks, and component/view separation. |
 | skill | [`livewire-architect`](../dist/agent-src/skills/livewire-architect/SKILL.md) | official | Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'. |
@@ -253,7 +256,7 @@ are excluded.
 | skill | [`roadmap-management`](../dist/agent-src/skills/roadmap-management/SKILL.md) | official | Use when the user says \"create roadmap\", \"show roadmap\", or \"execute roadmap\". Creates, reads, and manages roadmap files with phase tracking. |
 | skill | [`roadmap-writing`](../dist/agent-src/skills/roadmap-writing/SKILL.md) | official | Use when authoring or rewriting a roadmap in agents/roadmaps/ — phases, goal, acceptance criteria, council notes; fires even on 'write a plan for X' / 'draft a roadmap'. |
 | skill | [`root-cause-frameworks`](../dist/agent-src/skills/root-cause-frameworks/SKILL.md) | official | Use when tracing the root cause of a resolved incident or recurring bug — 5-whys chain, fishbone categorisation, contributing-factors split — even if the user says 'why does this keep breaking?'. |
-| skill | [`rtk-output-filtering`](../dist/agent-src/skills/rtk-output-filtering/SKILL.md) | official | Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns. |
+| skill | [`rtk-output-filtering`](../dist/agent-src/skills/rtk-output-filtering/SKILL.md) | official | Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer, third-party Apache-2.0; upstream reports 60-90% token savings). Covers installation, configuration, and usage patterns. |
 | skill | [`rule-refactor`](../dist/agent-src/skills/rule-refactor/SKILL.md) | official | Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule. |
 | skill | [`rule-writing`](../dist/agent-src/skills/rule-writing/SKILL.md) | official | Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'. |
 | skill | [`runway-cognition`](../dist/agent-src/skills/runway-cognition/SKILL.md) | official | Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'. |
@@ -311,7 +314,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (109)
+## Rules (110)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -329,6 +332,7 @@ are excluded.
 | rule | [`broken-access-control`](../dist/agent-src/rules/broken-access-control.md) | auto | Endpoint/query returning user or tenant data — authenticated ≠ authorized; enforce a server-derived ownership/tenant/role check + the three negative tests (401/non-owner/cross-tenant) |
 | rule | [`cli-output-handling`](../dist/agent-src/rules/cli-output-handling.md) | auto | Verbose CLI output (git, tests, linters, docker, npm, composer) — wrap with rtk; tail/grep fallback |
 | rule | [`code-comment-discipline`](../dist/agent-src/rules/code-comment-discipline.md) | auto | Writing/editing code in any language — a comment states a WHY or a constraint the code cannot show; never restate what names/types already say; no signature-mirroring docblocks |
+| rule | [`code-provenance`](../dist/agent-src/rules/code-provenance.md) | auto | About to port/adapt/reuse external code (algorithm, structure, >~10 lines) — read, close the source, re-derive; conscious borrows need a ledger entry + license check first |
 | rule | [`command-suggestion-policy`](../dist/agent-src/rules/command-suggestion-policy.md) | auto | Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute |
 | rule | [`commit-conventions`](../dist/agent-src/rules/commit-conventions.md) | auto | Git commit format, branch naming, conventional commits, committing, pushing, creating PRs |
 | rule | [`commit-policy`](../dist/agent-src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
@@ -425,7 +429,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (190)
+## Commands (191)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -495,6 +499,7 @@ are excluded.
 | command | [`fix-ci`](../dist/agent-src/commands/fix/ci.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix-comments`](../dist/agent-src/commands/fix/comments.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
 | command | [`fix-portability`](../dist/agent-src/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
+| command | [`fix-pr-comments-loop`](../dist/agent-src/commands/fix/pr-comments-loop.md) | cluster: fix | Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments |
 | command | [`fix-pr-comments`](../dist/agent-src/commands/fix/pr-comments.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR |
 | command | [`fix-quality`](../dist/agent-src/commands/fix/quality.md) | cluster: fix | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`fix-refs`](../dist/agent-src/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
