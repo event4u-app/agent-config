@@ -915,10 +915,15 @@ function _build_model_downgrade(d: Dict): ModelDowngradeConfig {
     if (!_isBool(enabled)) {
         throw new CouncilConfigError('`model_downgrade.enabled` must be a bool.');
     }
-    // A3 (2026-07-20): auto_apply default flipped to TRUE — auto-downgrade is
-    // the default and `auto_apply: false` (or `enabled: false`) is the opt-out.
-    // The cache-coupling gate in council_cli._size_fit_gate keeps it honest.
-    const auto_apply = _get(d, 'auto_apply', true);
+    // 2026-07-28 (road-to-feedback-9.8.0-followups Phase 3): auto_apply
+    // default downgraded back to FALSE (suggest, don't silently apply). The
+    // A3 flip to TRUE (2026-07-20) shipped without a paired quality
+    // measurement and was the only default-ON surface without one (R7
+    // watch-item); until a paired eval measures downgraded-member council
+    // quality, the downgrade surfaces as a suggestion the caller applies
+    // explicitly. Revisit: a paired eval (full-tier vs downgraded, blind
+    // judge) showing held quality re-flips this to true.
+    const auto_apply = _get(d, 'auto_apply', false);
     if (!_isBool(auto_apply)) {
         throw new CouncilConfigError('`model_downgrade.auto_apply` must be a bool.');
     }
@@ -1331,8 +1336,9 @@ function _build_lens_overrides(d: Dict): LensOverridesConfig {
                     `\`lenses.${lens_name}.model_downgrade.enabled\` must be a bool.`,
                 );
             }
-            // Lens overrides inherit the A3 auto-by-default posture.
-            const md_auto = _get(md_block, 'auto_apply', true);
+            // Lens overrides inherit the suggest-by-default posture
+            // (2026-07-28 downgrade of the unmeasured A3 auto-default).
+            const md_auto = _get(md_block, 'auto_apply', false);
             if (!_isBool(md_auto)) {
                 throw new CouncilConfigError(
                     `\`lenses.${lens_name}.model_downgrade.auto_apply\` must be a bool.`,
