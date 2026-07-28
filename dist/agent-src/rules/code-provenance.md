@@ -6,7 +6,7 @@ description: "About to port/adapt/reuse external code (algorithm, structure, >~1
 triggers:
   - intent: "porting or adapting code from an external source"
   - intent: "implementing an algorithm or structure seen in another project"
-  - intent: "reusing a snippet found online, in another repo, or from a training-data recall"
+  - intent: "reusing a snippet from online / another repo / a training-data recall"
   - keyword: "port this"
   - keyword: "adapt this"
   - keyword: "based on this repo"
