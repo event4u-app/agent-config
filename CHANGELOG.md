@@ -74,6 +74,20 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 - Source-of-truth pointer drift: `src/agent-src/README.md` and the
   `agents-md-thin-root` skill named the retired `.agent-src.uncondensed/`
   tree; corrected to `src/`.
+- **Embed-contract docs completed + de-drifted**
+  ([`docs/contracts/local-server-ports.md`](docs/contracts/local-server-ports.md),
+  [`docs/contracts/local-server-api.md`](docs/contracts/local-server-api.md)):
+  the host-facing contract now carries the framing-DENY council reasoning, the
+  `local-server.json` discovery-file rules (`url` embeds `?token=` — hosts
+  rebuild from `port` + a fresh token read; `0600` is a contract invariant),
+  the `?token=` accepted-risk statement, the wizard-out-of-scope-for-embed-v1
+  note, and a Host-lifecycle section (idle-shutdown watchdog + keepalive,
+  headless refusal). `local-server-api.md` had three stale claims corrected:
+  the token IS persisted (`local-server.token`, mode `0600`) — not
+  "never written to disk"; headless `ui:serve` refuses with exit 2 — it does
+  not silently boot browserless; the ping example now shows the
+  `capabilities` block. Plus an explicit `capabilities.embed` assertion in
+  `tests/server/app.test.ts`. Closes `road-to-ac-embeddable-gui`.
 
 > The former "6.0.0 at a glance" overview was drained on 2026-07-21 to
 > [`docs/archive/CHANGELOG-6.0.0-overview.md`](docs/archive/CHANGELOG-6.0.0-overview.md).

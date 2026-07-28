@@ -64,6 +64,20 @@ describe('createApp', () => {
         expect(res.json()).toMatchObject({ capabilities: { configRoot: true } });
     });
 
+    it('advertises the embed capability block in the ping readout', async () => {
+        const res = await app.inject({
+            method: 'GET',
+            url: '/api/v1/ping',
+            headers: { host: HOST, authorization: `Bearer ${TOKEN}` },
+        });
+        expect(res.statusCode).toBe(200);
+        expect(res.json()).toMatchObject({
+            capabilities: {
+                embed: { supported: true, version: 1, features: ['theme', 'deepLink'] },
+            },
+        });
+    });
+
     it('reports agentSwitchProfile.active=false by default (road-to-reciprocal-ecosystem Phase 2)', async () => {
         // Clear + restore explicitly rather than trusting an ambient shell —
         // a machine that also runs agent-switch may have these set for real.
