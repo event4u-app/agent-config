@@ -6,10 +6,10 @@
 
 ## Overall
 
-**39 / 94 steps done · 41%**
+**45 / 95 steps done · 47%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
 ```
 
 ## Open roadmaps
@@ -24,7 +24,7 @@
 | 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 9 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 6 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | █████░░░░░ 50% |
+| 9 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 10 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 
 ---
@@ -180,13 +180,13 @@ _1 blocker resolved._
 
 ### [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md)
 
-**Road to surface consolidation — collapse the proactive mental surface, remove don't add** — 6 / 12 done (50%)
+**Road to surface consolidation — collapse the proactive mental surface, remove don't add** — 12 / 13 done (92%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Collapse the proactive suggestion surface (the core) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Supporting net-reductions (remove / fold, never add) | ✅ done | 0 | 3 | 2 | 0 | 100% |
-| 3 | Utilization-window disposition sweep (re-homed 2026-07-28) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 2 | Supporting net-reductions (remove / fold, never add) | ✅ done | 0 | 4 | 1 | 0 | 100% |
+| 3 | Utilization-window disposition sweep (re-homed 2026-07-28) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 
 <a id="blockers-road-to-surface-consolidation"></a>
 **Blockers**
