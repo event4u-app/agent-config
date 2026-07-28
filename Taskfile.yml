@@ -143,6 +143,7 @@ tasks:
       - task: lint-model-tier-coverage
       - task: lint-trust-coherence
       - task: lint-legal-pack
+      - task: lint-provenance
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums
@@ -345,6 +346,7 @@ tasks:
       - task: lint-model-tier-coverage
       - task: lint-trust-coherence
       - task: lint-legal-pack
+      - task: lint-provenance
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums

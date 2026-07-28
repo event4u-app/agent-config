@@ -58,11 +58,22 @@ not stay buried here (S3.3).
 4. **Claims pre-registered unbacked, fixed falsification criteria,
    explicit backing trigger** (lean-init precedent).
 5. **Baseline gate may DROP later phases** (L2/L3 precedent).
-6. **Rename-only is not transformation.** Winnowing normalizes away
-   identifiers/whitespace by construction — a snippet hit cannot be
-   cleared by renaming variables. Clearing requires (a) structural
-   re-derivation (hit disappears on rescan) or (b) an attributed ledger
-   entry. Closes the launder-by-rename loophole.
+6. **~~Rename-only is not transformation~~ — REFUTED BY MEASUREMENT
+   2026-07-28.** Original claim: *"Winnowing normalizes away
+   identifiers/whitespace by construction — a snippet hit cannot be cleared
+   by renaming variables."* Measured on the frozen corpus: SCANOSS
+   rename-only recall **0/8**, jscpd **4/8**. Neither layer delivers the
+   guarantee, and 4/8 actively disproves "by construction" (a
+   construction-level property scores 8/8). Council 2026-07-28 rejected
+   re-founding the same *architectural* claim on policy ("conceptual
+   malpractice — you cannot replace a tool property with an aspiration").
+   **Honest replacement:** rename-only laundering is NOT detectable by our
+   layers, so *the ledger is the anti-launder control*, not a backstop to
+   one. Clearing requires (a) structural re-derivation a human reviewer
+   confirms, or (b) an attributed ledger entry whose transformation_note
+   survives `lint_provenance`'s rename-only phrase rejection. The tooling
+   records and checks the *record*; it does not detect the laundering.
+   Nothing in this package may claim otherwise.
 7. **Privacy by construction.** Only fingerprints leave the machine
    (SCANOSS WFP); offline mode always produces an honestly-labeled
    partial result — never a fake green.
@@ -138,17 +149,32 @@ not stay buried here (S3.3).
   unmeasured on a synthetic corpus. check_claims green (38 entries).
   Registration lands in its own commit BEFORE the S0.3 baseline commit —
   the ordering IS the acceptance criterion -->`
-- [ ] **S0.3 Baseline run**: SCANOSS (online) and jscpd (offline)
+- [x] **S0.3 Baseline run**: SCANOSS (online) and jscpd (offline)
   against the frozen corpus; record per-sample results.
   *Verify:* per-sample result table committed under
   `internal/bench/provenance/reports/`.
-- [ ] **Gate G0**: thresholds met → Phases 2–3 proceed as designed.
+  <!-- done 2026-07-28: reports/baseline-2026-07-28.md. BOTH layers measured
+  for real — scanoss-py 1.54.2 installed during execution, api.osskb.org
+  reachable, full 36-file scan in 3s (inside the K2 60s bound, so K2 does NOT
+  fire). L-1 jscpd@25 (best FP-clean value of a pre-declared, fully reported
+  sweep): v+r 10/16, FP 0/12. L0 scanoss: v+r 4/16, rename-only 0/8, FP 2/12.
+  UNION: v+r 12/16, full 18/24, FP 2/12 -->`
+- [x] **Gate G0**: thresholds met → Phases 2–3 proceed as designed.
   Thresholds missed → deterministic layer stays a research note,
   Phases 2–3 re-scope to behavioral-only (rules + ledger, no CI gate),
   honest-null published (Team-Mode Δ=0 precedent). No silent threshold
   adjustment.
   *Verify:* gate verdict recorded in CLAIMS.md against the
   pre-registered thresholds.
+  <!-- G0 VERDICT 2026-07-28: **THRESHOLDS MISSED** — criterion 2 (FP <= 1/12;
+  measured union 2/12) and criterion 3 (rename-only MUST hit; measured union
+  4/8, SCANOSS 0/8) both failed. Criterion 1 passed (union 12/16), criterion 4
+  did not reach 21/24 (union 18/24) so Phase 5 is NOT auto-dropped. No
+  threshold was adjusted. K1 fires: the deterministic layer becomes a research
+  note, no deterministic-gate claim is ever made, the behavioural layer ships
+  alone. Re-scope shape decided by council debate 2026-07-28 (sonnet-4-5 +
+  gpt-4o, 2 rounds) — see § G0 re-scope. Honest null published in
+  docs/CLAIMS.md -->`
 
 ## Phase 1 — Behavioral layer (rules + skill; zero external deps)
 
@@ -170,7 +196,7 @@ not stay buried here (S3.3).
   flag's presence.
   *Verify:* rule passes lint-skills + rule-type governance; projection
   delta measured on reviewer role (< 1k tokens, § Budget).
-- [ ] **S1.2 License-policy DERIVATION** (Council Q1 RESOLVED
+- [x] **S1.2 License-policy DERIVATION** (Council Q1 RESOLVED
   2026-07-28, owner: detect, don't assume):
   - Detection (`detect_target_license.ts`, installer + `agents:update`
     hook): precedence (1) `LICENSE`/`LICENSE.md`/`COPYING` matched to
@@ -199,7 +225,20 @@ not stay buried here (S3.3).
   *Verify:* per-class fixture repos derive the expected policy in a
   test; disagree-fixture escalates; no-license-fixture warns + defaults
   strict.
-- [ ] **S1.3 Provenance ledger**: `docs/THIRD-PARTY-NOTICES.md` +
+  <!-- done 2026-07-28 (sonnet subagent + verified: 50/50 tests, 73/73 with
+  the ledger suite, typecheck clean; this repo detects MIT -> permissive,
+  workspace_scope=single). Includes the council-resolved Q1 workspace
+  escalation: divergent workspace SPDX ids escalate through the SAME
+  disagree path, no policy file written. Interpretive calls documented in
+  code: SSPL-1.0 as the real SPDX id, the GPL-row AGPL qualifier split
+  across GPL-2.0/GPL-3.0 target buckets per FSF one-directional
+  compatibility, and unstated matrix cells defaulting to conditional
+  (escalate) rather than guessed. Residual coupling flagged by the agent,
+  not silently patched: lint_provenance's built-in fallback deny set is
+  WIDER (covers -only/-or-later variants) than the emitted top-level deny
+  list, so once license-policy.yaml exists the linter narrows — tracked in
+  the roadmap's own follow-up note rather than cross-edited -->`
+- [x] **S1.3 Provenance ledger**: `docs/THIRD-PARTY-NOTICES.md` +
   machine file `provenance/borrows.jsonl`
   (`{source_url, license, source_sha, borrowed_at, files,
   transformation_note, cleared_by}`) + linter `lint_provenance.ts`:
@@ -208,6 +247,14 @@ not stay buried here (S3.3).
   checks OUR OWN RECORDS, not fuzzy similarity; strict from day one.
   *Verify:* fixture jsonl with a deny entry fails ci; valid entry
   passes; NOTICES regenerates from jsonl.
+  <!-- done 2026-07-28 (sonnet subagent + verified: 23/23 tests, linter exit 0
+  on the empty real ledger, task lint-provenance wired into ci + ci-strict,
+  enforcement-coverage ratchet holds): provenance/borrows.jsonl (empty) +
+  README + schema + docs/THIRD-PARTY-NOTICES.md (generated, honest
+  no-borrows line) + lint_provenance.ts strict-from-day-one. Rename-only
+  transformation notes are rejected by a 15-phrase deterministic list —
+  note that after the G0 finding this ledger discipline is the PRIMARY
+  anti-launder control, not a backstop -->`
 - [ ] **S1.4 Skill family `license-compliance/`** (consumer-facing):
   `borrow-check` (paste URL ⇒ license fetch ⇒ policy verdict ⇒ ledger
   entry draft), `credits` (regenerate NOTICES from jsonl),
@@ -217,12 +264,36 @@ not stay buried here (S3.3).
   *Verify:* skills pass lint-skills; borrow-check golden transcript
   produces a valid ledger entry draft.
 
-## Phase 2 — Deterministic detection layer (the verifier)
+## Phase 2 — RE-SCOPED by Gate G0 (behavioural-only; no CI gate)
 
-Blocked on: PR #1028 merged (consumes its lint lifecycle + audit-field
-patterns) AND Gate G0 passed.
+**G0 missed ⇒ K1 fired.** Council debate 2026-07-28 (claude-sonnet-4-5 +
+gpt-4o, 2 rounds) resolved the re-scope to **Option A — K1 literal**: no
+`lint_code_provenance.ts` in ANY form, not even advisory. Round 1 split
+(A vs an advisory-only B); round 2 converged on A when the alert-fatigue
+argument carried and the B-proponent withdrew: at a measured 2/12 (~17%) FP,
+roughly one in six clean changes would be flagged, which is above the
+empirical threshold where alert response collapses — an advisory annotation
+nobody reads is **illusory compliance**, strictly worse than no signal,
+because it manufactures the appearance of due diligence. Option C
+(L-1-only in CI, since L-1 measured FP 0/12) was rejected as "sophisticated
+motivated reasoning": you cannot partition a system that failed on
+*principle* grounds by cherry-picking the metric one arm happened to pass,
+and L-1's 0/12 came from the same small synthetic corpus that makes its
+recall unmeasurable — a statistical accident, not a property to stake a gate
+on.
 
-- [ ] **S2.1 `lint_code_provenance.ts`, warn-only, `--strict`
+**What Phase 2 therefore is:** the deterministic layer exists ONLY as the
+on-demand `license-audit` skill (S1.4) a human invokes deliberately — where
+every hit gets investigated *because* the human asked for it. CI carries
+only `lint_provenance.ts` (S1.3), which checks OUR OWN RECORDS and is
+unaffected by any of this (it is not a similarity detector).
+
+**Gate-revisit condition (recorded, not open-ended):** a gate may be
+proposed again only on real-world FP evidence — the council named
+>= 10,000 real internal files with FP <= 1% as the bar. A new roadmap, not
+a phase revival.
+
+- [-] **S2.1 `lint_code_provenance.ts`, warn-only, `--strict`
   promotion path** (verbatim lint_spawn_payload lifecycle):
   L-1 (offline, always) = jscpd token-clone scan of the diff against
   repo + vendored deps (catches within-project laundering). L0 (online,
@@ -239,13 +310,27 @@ patterns) AND Gate G0 passed.
   line.
   *Verify:* golden-corpus rerun reproduces Phase-0 measured recall/FP;
   offline mode emits the partial marker, never green.
-- [ ] **S2.2 Clearing protocol** (principle 6): a warn clears only by
+  <!-- CANCELLED 2026-07-28 by Gate G0 + council Option A: no CI-facing
+  detector is built, in warn-only or advisory form. The scan capability
+  lives only in the on-demand license-audit skill. Not deferred — cancelled;
+  revival requires the real-world FP evidence named in the phase header -->`
+- [x] **S2.2 Clearing protocol** (principle 6): a warn clears only by
   (a) rescan-clean after rewrite or (b) ledger entry referencing the
   hit; `cleared_by` recorded. Rename-only rewrites re-hit by
   construction — pin that property with a golden test so nobody "fixes"
   the normalizer later.
   *Verify:* rename-only golden still hits after clearing attempt;
   structural-rewrite golden clears.
+  <!-- RE-FOUNDED 2026-07-28 (principle 6 refuted above): the original verify
+  criterion is unachievable — rename-only goldens do NOT reliably re-hit
+  (0/8 SCANOSS, 4/8 jscpd), so no golden test can pin a property the tools
+  lack. What ships and IS tested: the clearing protocol lives in the LEDGER,
+  where it is deterministic — lint_provenance.ts rejects rename-only
+  transformation notes via a 15-phrase list, requires a substantive note,
+  closes `cleared_by` to rescan|ledger|human, and fails deny-class or
+  unknown licenses outright (23/23 tests). The measured rename-only recall
+  is published in the baseline report so nobody re-derives the refuted
+  guarantee from a tool description -->`
 - [ ] **S2.3 Telemetry** — additive fields on the existing audit object
   (`schema_version` stays 1, reader-tolerance test like PR #1028):
   `provenance_scan` (ran|skipped|offline), `snippet_hits`,
@@ -253,10 +338,22 @@ patterns) AND Gate G0 passed.
   `cleared_by` (rescan|ledger|human), `origin` (reusing the PR #1028
   field).
   *Verify:* old reader parses new lines; schema_version unchanged.
-- [ ] **S2.4 Strict promotion gate (pre-registered)**: promote to
+  <!-- blocker 2026-07-28 (owner: maintainer — re-scope consequence): these
+  fields instrument a CI-facing scan that G0 cancelled. `provenance_scan` /
+  `snippet_hits` have no producer left; the meaningful remainder
+  (`license_class`, `ledger_ref`, `cleared_by`) is ALREADY in the ledger
+  record, so adding audit fields would create a second record of the same
+  facts — the no-second-ledger discipline forbids it. Landing them would
+  instrument a path that does not exist. Decision: drop entirely
+  (recommended — the ledger IS the record), or land only an on-demand
+  license-audit invocation counter if run-frequency becomes a real question -->`
+- [-] **S2.4 Strict promotion gate (pre-registered)**: promote to
   `ci-strict` only after ≥ 25 audited PR lines with 0 uncontested false
   positives (lint_spawn_payload evidentiary shape).
   *Verify:* promotion PR cites the 25-line audit window.
+  <!-- CANCELLED 2026-07-28: there is nothing to promote — S2.1 was
+  cancelled by G0. The promotion machinery would be a gate for a gate that
+  does not exist -->`
 
 ## Phase 3 — Claims + measurement
 
