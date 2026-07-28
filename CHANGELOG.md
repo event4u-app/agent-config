@@ -16,6 +16,17 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Changed
+
+- **Docs hygiene — retired stale authoring-source pointers.** 43 stale
+  "edit `.agent-src.uncondensed/`" *authoring* pointers across 28 `.md` files
+  repointed at `src/` (the authoring source of truth per ADR-051); continues
+  the #989 README/thin-root fixes. `check_source_pointer_freshness`'s allowlist
+  broadened (2 → 16 files) to lock the cleaned files against regression. Live
+  `.agent-src.uncondensed/` **code constants, pipeline descriptions, and
+  catalog paths were deliberately left untouched** — that tree is a live
+  generated intermediate, not dead debt; a blind sweep was explicitly rejected.
+
 ### Added
 
 - **Internet-reach operator tooling** — upstream-tool health and install-pinning
