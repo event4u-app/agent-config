@@ -533,6 +533,19 @@ Phase-1 inventory table gains the Class-A-adoption-measured row below.
   post ships and produces zero engagement across a full quarter, that IS an
   adoption datum and re-prioritizes the remaining phases behind adoption
   work.
+  **OUTCOME 2026-07-28 — this risk landed, and the named mitigation did not.**
+  The "one deliberate inversion" above assumed the Phase-5 bench would yield
+  launch-story material ("measured N× token reduction, $0 LLM build cost").
+  It yielded a null instead, so capability and adoption push did NOT converge:
+  the subsystem was built while the launch stayed unposted, and the measurement
+  retired it. The salvage is real but smaller than the mitigation promised —
+  the *published null* is itself the launch-story material (see the new
+  `docs/comparison.yaml` row: a vendor retiring its own feature on its own
+  measurement is the checkable claim), and the durable lesson is priced into
+  ADR-124's addendum + the Phase-1 table row: **measure against the cheap
+  baseline before building the engine.** Recorded here rather than quietly
+  dropped, because a mitigation that failed is the most useful line in a risk
+  register.
 - **ABI drift** between `web-tree-sitter` and grammar `.wasm` — exact pins +
   the Phase-2 CI smoke test; bump PRs re-run the edge-sample acceptance.
 - **Call-edge precision on dynamic languages** — the honest taxonomy (most
