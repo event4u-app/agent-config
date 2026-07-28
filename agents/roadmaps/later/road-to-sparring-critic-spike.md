@@ -106,10 +106,23 @@ pre-registered gates and a binary consequence.
   (C1), never a second ledger (C2); settings consolidation LAST, one
   migration; opens ONLY while `road-to-orchestration-scope-decision.md` has
   not resolved EXIT, and pauses with a salvage path if it resolves
-  mid-flight).
+  mid-flight). The substrate design annex MUST carry a **vertical-extension
+  disposition** for the non-code verticals (posts, lyrics, long-form docs —
+  the origin of the whole ai-pairing feedback): one rubric pack per
+  vertical, each admitted only through the same paper-review acceptance
+  gate as the code rubric (10 curated good pass / 10 bad fail) after the
+  three spike AND-gates have held. Without this line the verticals have no
+  surface to ever resurface on — forgetting would decide, not the council.
 - [ ] **FAIL →** archive this roadmap with the published honest-null in the
   claims ledger (third null in the family: 9.5.0 team-mode, A3 Gate-A,
   sparring spike) — a citable negative result with method, not a failure.
   No implementation roadmap is ever created; the standing alternative
   (recursive-verification skill, default-off) remains the documented
-  fallback.
+  fallback. **Decoupling clause:** a FAIL kills only sparring-shaped work.
+  The substrate parts that are logically independent of whether a critic
+  finds defects — the dispatcher autonomy ladder (suggest/routine/full),
+  the eco/balanced/max-quality profiles, settings consolidation, the
+  "user never has to manually ask for council/team" UX — MAY be re-proposed
+  as a regular `road-to-orchestration-substrate-without-sparring` roadmap,
+  informed by the `road-to-orchestration-scope-decision.md` outcome. They
+  were never tested by this spike and do not inherit its verdict.

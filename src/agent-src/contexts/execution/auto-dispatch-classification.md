@@ -118,9 +118,14 @@ escape hatch that bound names ("unless external evidence appears"); today it
 is inert.
 
 **Escalation, not degradation:** a primitive that returns nothing (index miss,
-pattern too ambiguous, report script absent) escalates to the regular
-classification path above — the answer quality bar never drops. `unknown`
-resolves to the regular path (`inherit` semantics), never down-guessed.
+pattern too ambiguous, report script absent) — **or an unusable result**
+(empty, ambiguous between candidates, or visibly off-target because the
+lookup pattern matched a task that was not actually a lookup, e.g. a
+dynamically constructed symbol name) — escalates to the regular
+classification path above — the answer quality bar never drops. The
+"primitive ran but the result is unusable" case escalates exactly like the
+"class unknown" case. `unknown` resolves to the regular path (`inherit`
+semantics), never down-guessed.
 
 Correctness floor: the golden comparison in `internal/bench/lean-init/`
 (primitive answer ≡ agent answer on ≥10 lookup tasks, including the four

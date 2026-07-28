@@ -15,6 +15,7 @@
  *     [--init-tokens 1200] [--payload-hash <hex8-64>] [--lookup-class definition|references|string-existence|report-run] \
  *     [--route-taken primitive|subagent] [--budget-hit true|false] [--correctness-match true|false] \
  *     [--cache-hit true|false] [--origin lean-init-2026] \
+ *     [--rules-carried 32] [--rules-used 5] \
  *     [--dir <audit-dir>] [--dry-run]
  *
  * Read by `src/scripts/orchestration_savings_report.ts`.
@@ -135,6 +136,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         correctness_match: bool(flags, 'correctness-match'),
         cache_hit: bool(flags, 'cache-hit'),
         origin: str(flags, 'origin'),
+        rules_carried: int(flags, 'rules-carried'),
+        rules_used: int(flags, 'rules-used'),
         phase: str(flags, 'phase') as LinePhase | undefined,
         outcome: str(flags, 'outcome') as LineOutcome | undefined,
         confidence_band: str(flags, 'confidence-band') as Band | undefined,

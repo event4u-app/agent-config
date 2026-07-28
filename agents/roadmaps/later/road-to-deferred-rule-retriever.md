@@ -12,7 +12,10 @@ complexity: medium
 > conditions from the archived flow-learnings REJECT (council, 2026-07-07)
 > convert into a real demand signal: (a) the `essential` discipline profile
 > shipped + baseline-measured, (b) the MCP surface grown materially beyond
-> ~3k tokens, (c) telemetry showing real retrieval demand.
+> ~3k tokens, (c) telemetry showing real retrieval demand — measured by the
+> `rules_carried`/`rules_used` per-worker audit fields shipped by
+> `road-to-lean-agent-init` (2026-07-28): a sustained low usage quota
+> (rules carried but not applied) IS the datum this condition asks for.
 
 ## What this is — and what it is not
 

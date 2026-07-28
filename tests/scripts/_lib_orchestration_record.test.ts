@@ -156,6 +156,14 @@ describe('lean-init additive fields (road-to-lean-agent-init Phase 3, schema_ver
         expect(buildOrchestrationLine({ ...BASE, spawn_count: 0, route_taken: 'subagent' }).errors.join(' ')).toMatch(/spawn_count/);
     });
 
+    it('carries the L6 rule-usage pair; rules_used may never exceed rules_carried', () => {
+        const ok = buildOrchestrationLine({ ...BASE, rules_carried: 32, rules_used: 5 });
+        expect(ok.errors).toEqual([]);
+        expect(ok.line!.orchestration).toMatchObject({ rules_carried: 32, rules_used: 5 });
+        expect(buildOrchestrationLine({ ...BASE, rules_carried: 5, rules_used: 6 }).errors.join(' ')).toMatch(/rules_used cannot exceed/);
+        expect(buildOrchestrationLine({ ...BASE, rules_carried: -1 }).errors.join(' ')).toMatch(/rules_carried/);
+    });
+
     it('origin cleanly segregates the lean-init sample from the scope-decision sample (council Q5)', () => {
         const lean = buildOrchestrationLine({ ...BASE, origin: 'lean-init-2026' }).line!.orchestration as Record<string, unknown>;
         const scope = buildOrchestrationLine(BASE).line!.orchestration as Record<string, unknown>;

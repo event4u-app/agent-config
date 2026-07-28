@@ -89,6 +89,13 @@ export interface RecordInput {
     cache_hit?: boolean | undefined;
     /** Sample-segregation tag (council Q5), e.g. 'lean-init-2026'. Id-shaped, never free-form. */
     origin?: string | null | undefined;
+    /** Rules in the worker's scoped projection (the carried set). The L6 demand
+     *  signal: `rules_used`/`rules_carried` is the per-worker usage quota the
+     *  parked deferred-rule-retriever's resume condition asks for. Counts only. */
+    rules_carried?: number | null | undefined;
+    /** Rules the worker actually applied/cited (count of the envelope's
+     *  `rules_applied`-equivalent on the worker side). Counts only. */
+    rules_used?: number | null | undefined;
     // Audit-log envelope (sensible defaults for a dispatch record)
     phase?: LinePhase | undefined;
     outcome?: LineOutcome | undefined;
@@ -212,6 +219,19 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     if (input.origin != null && !ORIGIN_RE.test(input.origin)) {
         errors.push("origin must be an id-shaped tag like 'lean-init-2026' (lowercase alnum + hyphens)");
     }
+    for (const [key, v] of [
+        ['rules_carried', input.rules_carried],
+        ['rules_used', input.rules_used],
+    ] as const) {
+        if (v != null && (!isInt(v) || v < 0)) errors.push(`${key} must be a non-negative integer count`);
+    }
+    if (
+        input.rules_carried != null &&
+        input.rules_used != null &&
+        input.rules_used > input.rules_carried
+    ) {
+        errors.push('rules_used cannot exceed rules_carried (a worker cannot apply a rule it was not given)');
+    }
 
     if (!input.ts) errors.push('ts (ISO-8601 UTC) is required');
     if (!input.id) errors.push('id (ULID or content hash) is required');
@@ -245,6 +265,8 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         correctness_match: input.correctness_match ?? null,
         cache_hit: input.cache_hit ?? null,
         origin: input.origin ?? null,
+        rules_carried: input.rules_carried ?? null,
+        rules_used: input.rules_used ?? null,
     };
 
     const line: Record<string, unknown> = {
