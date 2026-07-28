@@ -12,14 +12,11 @@
  * hook exits 0 without touching anything — byte-identical pre-Phase-4
  * Stop behavior.
  *
- * Composition point (documented, not yet wired): register this script as a
- * `team-review-gate` concern in `src/scripts/hook_manifest.yaml` on the
- * claude / cowork `stop` slots, after `chat-history` (ordering relative to
- * the PLUGIN's own Stop hook is host-scheduled and irrelevant here — the
- * verdict is read from the plugin's persisted job record, not from sibling
- * hook output). Manifest registration drags the lint_hook_manifest +
- * installer + tests/hooks snapshot surface, so it is left to the
- * orchestrator; this file is dispatcher-shaped and drop-in ready.
+ * Composition point (wired): registered as the `team-review-gate` concern
+ * in `src/scripts/hook_manifest.yaml` on the claude `stop` slot, after
+ * `chat-history` (ordering relative to the PLUGIN's own Stop hook is
+ * host-scheduled and irrelevant here — the verdict is read from the
+ * plugin's persisted job record, not from sibling hook output).
  *
  * Contract: never blocks, exit 0 on every path, `fail_closed: false`.
  */
