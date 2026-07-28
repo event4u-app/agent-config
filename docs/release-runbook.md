@@ -37,6 +37,12 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
       to recover a partial run — see § 5).
 - [ ] You have read [`succession.md`](succession.md) if any secret-gated
       downstream (npm publish, cloud deploy) must succeed this release.
+- [ ] **On a `release:major` only** — read
+      [`MIGRATION.md` § Scheduled deprecations](MIGRATION.md#scheduled-deprecations-forward-looking--read-before-cutting-a-major)
+      and act on every row whose "deprecation notice due" or "removal due"
+      lands on this major: ship the notice, or perform the removal, or record
+      why the reversal condition fired. A row left unread is how a removal
+      commitment becomes folklore.
 - [ ] The release satisfies [`release-sizing.md`](contracts/release-sizing.md) —
       one primary product goal, and a `Rollback:` line for every new /
       substantially reworked subsystem (gate: `src/scripts/lint_changelog_rollback.ts`).
