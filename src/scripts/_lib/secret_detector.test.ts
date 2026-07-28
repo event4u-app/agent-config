@@ -33,6 +33,11 @@ const EXPECTED_KIND: Readonly<Record<string, string>> = {
     jwt: 'jwt',
     dburl: 'db-connection-uri',
     assignment: 'generic-assignment',
+    // adversarial-corpus additions (road-to-feedback-9.8.0-followups Phase 3)
+    'github-fine-grained': 'github-pat',
+    'env-db-password': 'generic-assignment',
+    'env-api-key': 'generic-assignment',
+    'dburl-mysql': 'db-connection-uri',
 };
 
 function isReal(f: SecretFinding): boolean {
