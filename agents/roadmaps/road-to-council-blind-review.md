@@ -1,0 +1,186 @@
+---
+complexity: medium
+status: ready
+---
+
+# Roadmap: Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern
+
+> **Source:** maintainer feedback `agents/tmp.old/lean-agent-2.txt` (2026-07-28) —
+> a widely shared one-model "LLM Council" prompt (five advisor personas →
+> anonymized peer review → chairman one-line verdict) proposed for adoption.
+> **Pre-analysis verdict:** do NOT adopt the whole mechanism — five personas in
+> one session share one bias vector and one context; that is the same-session
+> trap the cross-context evidence (28.6% vs 21.7% F1) and the entire council
+> design stand against. Three sub-mechanisms ARE genuine protocol upgrades.
+> **Council:** AI council debate 2026-07-28 (anthropic/claude-sonnet-4-5 +
+> openai/gpt-4o, 2 rounds). Round 1 split on Ü1 (REJECT — "the
+> non-deliberating chairman constraint already eliminates self-preference;
+> blinding discards legitimate calibration signal" — vs adopt-with-changes);
+> round 2 converged on **adopt-with-changes**: (a) shared-provider training
+> fingerprints keep the naming-effect channel open even for a
+> non-deliberating chairman (synthesis is still next-token prediction over a
+> prompt that contains provider names), and (b) the identities-visible
+> status quo was itself never measured — demanding an A/B for the change
+> while granting the incumbent a free pass is asymmetric. All three
+> decision rules were TIGHTENED on council demand (boilerplate risk for Ü3,
+> n=3 underpowered for Ü1, p-hacking risk in Ü2's "at least one" rule) —
+> the tightened rules below are the council-final versions. Recorded
+> revisit condition (from the dissent): an A/B on n≥20 technical questions
+> showing attributed synthesis yields HIGHER expert agreement than blind
+> would reopen Ü1.
+
+## Goal
+
+Three small, separately gated upgrades to the AI-council deliberation
+protocol: (Ü1) blind the chairman/synthesis stage, (Ü2) orthogonal stance
+assignment per seat incl. an ablated-context outsider seat, (Ü3) two
+mandatory chairman output fields — plus one explicit non-adoption (N1: the
+one-model five-persona pattern never becomes a council replacement or a new
+surface). Expected protocol diff < 30 lines; no new mode, no new surface.
+
+## V1 — source-verified baseline (2026-07-28, not an assumption)
+
+- The **peer-review pass** and the **finding-scoring pass** are ALREADY
+  blind: `consensus.anonymize_responses` / `anonymize_findings` hand
+  reviewers A–E labels; `label_to_source` is kept engine-side for
+  de-anonymization (`orchestrator.ts:1431`, `:1591`).
+- The **member-chairman synthesis** is NOT blind — by recorded design
+  intent: the transcript is built "WITH identities (the chairman judges
+  attributed positions)" as `## <provider> - <model>` blocks
+  (`council_cli.ts:1171-1180`).
+- The **host-synthesis path** (`chairman.mode: host`, the default) renders
+  response blocks headed `## <provider> · <model>` (`orchestrator.ts` render)
+  — identities visible to the synthesizing host agent as well.
+
+So Ü1 is a REAL change on two paths, and it must argue against a recorded
+(commented, not benchmarked) design intent — surfaced per the
+decision-revisit gate: the comment is an authored preference, not a
+measured lock; the counter-evidence (E1/E2) is measured.
+
+## Evidence
+
+- **E1 — self-preference is real and causally coupled to self-recognition.**
+  Panickssery/Bowman/Feng (NeurIPS 2024, arXiv:2404.13076): LLM evaluators
+  rate their own outputs higher while humans rate them equal; models
+  recognize their own outputs out-of-the-box; self-preference strength
+  correlates linearly with self-recognition ability.
+- **E2 — naming shifts judgments.** Koo et al. 2024: real model names vs
+  anonymous aliases measurably change evaluations.
+- **E3 — stance steering as prior art.** Multi-model consensus with assigned
+  stances is productive prior art; stance × model yields more diversity than
+  model alone. The outsider seat (deliberately ablated context) is the
+  council translation of the isolation evidence carrying the sparring spike.
+- **Honest relevance condition:** E1/E2 are measured on answer *ranking*;
+  our chairman partly *synthesizes*. The effect on synthesis is plausible,
+  not 1:1 proven — hence Phase 1 is a re-run test, not blind adoption.
+
+## The three adoptions + one non-adoption
+
+- **Ü1 — blind synthesis (hygiene candidate, council: adopt-with-changes).**
+  Before the chairman stage (BOTH paths — council Q3 verdict: uniform
+  standard), shuffle responses and strip provider identity to A–E labels —
+  reusing the EXISTING `anonymize_responses` seam, no new mechanism.
+  De-anonymization happens after the verdict is written (audit log keeps
+  the full mapping — blind is only the chairman at decision time, never the
+  archive). **Honest limitation on the host path** (`chairman.mode: host`,
+  the default): the orchestrating host agent saw identified responses
+  stream in during the session — render-time A–E labels reduce salience at
+  synthesis time, they do not erase memory. Full blinding exists only on
+  the member-chairman path; the doc states this instead of overclaiming.
+- **Ü2 — stance assignment per seat (experimental).** Five orthogonal
+  stances (skeptic / first-principles / opportunity / outsider / operator)
+  rotated deterministically over providers (e.g. question-hash mod 5),
+  UNDER the existing neutrality contract (a stance means "examine from
+  perspective Y", never "recommend X"). The outsider seat gets deliberately
+  ablated context (question + artifact only, no `project_context`).
+- **Ü3 — two mandatory chairman fields.** `collective_blind_spot` ("what did
+  ALL members miss") and `one_line_verdict` + `single_strongest_reason`.
+  Extends the option-level stance tallying; replaces nothing.
+- **N1 — NOT adopted:** the one-model five-persona mechanism as a council
+  replacement or new core surface. At most a `council-lite` documentation
+  paragraph in the existing council context (honestly labeled: "shared bias
+  vector, not a council"), and only on an explicit demand signal —
+  subtraction before addition.
+
+## Phase 1 — Protocol diff (no model calls)
+
+- [ ] Draft the protocol/code diff for Ü1–Ü3 (expected < 30 lines protocol +
+  a small engine change): Ü1 wires `anonymize_responses` into the
+  member-chairman transcript builder (`council_cli.ts` `_maybe_run_chairman`)
+  and the host-synthesis render path, with mandatory post-verdict
+  de-anonymization in the audit artifact; Ü2 as a deterministic stance
+  rotation (question-hash mod 5) in the deliberation prompts; Ü3 as two
+  required fields in the synthesis template. Neutrality-contract text stays
+  byte-identical (lint asserts it).
+- [ ] Stance prompts linted against the neutrality contract (no "recommend
+  X" phrasing, only "examine from perspective Y"); the outsider seat's
+  context ablation documented as an explicit special case of the
+  artifact-only principle.
+
+## Phase 2 — Re-run test on existing artifacts (minimal spend)
+
+- [ ] Re-run already-decided council questions (the 2026-07-28 debate
+  artifacts exist locally under `agents/runtime/council/responses/`) in two
+  arms: (a) current protocol, (b) Ü1+Ü2+Ü3 — **≥10 paired re-runs**
+  (available questions × repeats; per-run cost measured at ~$0.05, so the
+  council-demanded n sits comfortably below the spend threshold). Same
+  models, same budgets. Metrics: verdict changes; maintainer blind
+  preference over the chairman syntheses (arms hidden); the two
+  pre-registered degradation criteria below; `collective_blind_spot`
+  content quality.
+- [ ] **Pre-registered decision rules (council-TIGHTENED versions, fixed
+  now):**
+  - **Ü3** is adopted only if the maintainer — blind to arms — rates the
+    `collective_blind_spot` field as *decision-influencing* (not merely
+    non-trivial text; boilerplate like "insufficient testing discussion"
+    does not count) in ≥2 of 3 sampled runs.
+  - **Ü1** is adopted when ZERO of the ≥10 paired re-runs triggers a
+    pre-registered degradation criterion: (a) the blind chairman contradicts
+    a position ALL members agreed on, or (b) the blind verdict cites
+    evidence present in no member response. Literature evidence carries the
+    prior; the n≥10 non-degradation run is the floor the council demanded
+    over the original n=3. Honest limit stated: the maintainer blind
+    preference is a 1-person sample — recorded as such, never inflated into
+    a significance claim.
+  - **Ü2** — the experimental part — is adopted ONLY if the maintainer
+    blind-prefers the stance-arm's verdict or reasoning in the MAJORITY of
+    re-runs where the arms differ substantively (council: the original
+    "at least one of many" rule was a p-hacking shape); otherwise honest
+    null and Ü2 is dropped entirely (outsider seat included).
+- Blocker: none — re-runs on existing questions, 2 rounds, existing budgets
+  sit below the spend-authorization threshold; if that does not hold in a
+  given case, `benchmark-spend-authorization` applies as usual.
+
+## Phase 3 — Landing & close
+
+- [ ] Merge accepted adoptions into the deliberation protocol; anchor the
+  de-anonymization step (Ü1) in the council audit log; document rejected
+  parts as honest nulls in this roadmap at archive time.
+- [ ] Optional (only on explicit maintainer request): the N1 `council-lite`
+  documentation paragraph in the council context.
+- Acceptance: protocol lint green; one real council run under the new
+  protocol documented; roadmap archived with a results summary.
+
+## Risks
+
+1. **Stance theater** — assigned roles produce performative rather than
+   substantive divergence → the Phase-2 rule demands a blind-preferred
+   *content* change, not merely a different tone.
+2. **Neutrality-contract erosion via stances** → the contract stays the top
+   layer; stance prompts are linted against the contract text (no
+   "recommend X", only "examine from perspective Y").
+3. **Blind review breaks audit traceability** → post-verdict
+   de-anonymization is a mandatory step; the full mapping lands in the log;
+   blind is only the chairman at decision time, never the archive.
+4. **Scope creep toward a council-lite feature** → N1 is the exclusion zone;
+   a documentation paragraph at most, with a demand-signal condition for
+   anything beyond.
+
+## Explicitly NOT in this roadmap
+
+- No adoption of the one-model five-persona mechanism as a mode, skill, or
+  surface (N1).
+- No changes to the sparring spike, the scope decision, or the archived
+  lean-init roadmap.
+- No new aggregator, ledger, or engine — Ü1 reuses the existing
+  anonymization seam.
