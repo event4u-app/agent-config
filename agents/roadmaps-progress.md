@@ -6,10 +6,10 @@
 
 ## Overall
 
-**159 / 281 steps done · 57%**
+**168 / 281 steps done · 60%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   57%
+████████████████████████░░░░░░░░░░░░░░░░   60%
 ```
 
 ## Open roadmaps
@@ -21,7 +21,7 @@
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-credible-install.md](roadmaps/road-to-credible-install.md) | 7 | 30 | 1 | 29 | 0 | 0 | 0 | ██████████ 97% |
 | 5 | [road-to-ecosystem-harvest-prose-authenticity.md](roadmaps/road-to-ecosystem-harvest-prose-authenticity.md) | 1 | 10 | 1 | 9 | 0 | 0 | 0 | █████████░ 90% |
-| 6 | [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md) | 4 | 11 | 10 | 1 | 0 | 0 | 0 | █░░░░░░░░░ 9% |
+| 6 | [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md) | 4 | 11 | 1 | 10 | 0 | 0 | 0 | █████████░ 91% |
 | 7 | [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md) | 5 | 22 | 1 | 21 | 0 | 0 | 0 | ██████████ 95% |
 | 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
@@ -117,14 +117,14 @@ _2 blockers resolved._
 
 ### [road-to-feedback-9.2.0-followups.md](roadmaps/road-to-feedback-9.2.0-followups.md)
 
-**Feedback 9.2.0 Follow-ups** — 1 / 11 done (9%)
+**Feedback 9.2.0 Follow-ups** — 10 / 11 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | A behavioral eval for `cross-source-consistency` (minimal-first) | 🟡 in progress | 4 | 1 | 0 | 0 | 20% |
-| 2 | Bring `subagent-orchestration` back under its size budget | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Tag-aware release-PR review | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | Hermetic, reproducible install-bundle build | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | A behavioral eval for `cross-source-consistency` (minimal-first) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
+| 2 | Bring `subagent-orchestration` back under its size budget | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 3 | Tag-aware release-PR review | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 4 | Hermetic, reproducible install-bundle build | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 ### [road-to-feedback-9.8.0-followups.md](roadmaps/road-to-feedback-9.8.0-followups.md)
 
