@@ -37,9 +37,14 @@ against it.
     browser can bootstrap from the URL).
 - Token comparison runs through `tokensMatch` — constant-time over
   equal-length inputs.
-- The token is printed to **stderr** by `ui:serve` once, prefixed
-  with `agent-config: token=` so log scrapers can redact it. Never
-  written to disk by the package.
+- The token is persisted to
+  `~/.event4u/agent-config/local-server.token` (mode `0600`, replaced
+  on every boot — `src/server/token.ts#mintToken`; suppressed in
+  dry-run, in-memory only). `ui:serve` logs the token **file path**,
+  not the token value; the tokenized URL is printed once for the
+  browser bootstrap. Hosts re-read the token file after every respawn
+  — see `docs/contracts/local-server-ports.md` for the host-facing
+  transport contract.
 - Static UI files under `/` are **not** gated — the browser must be
   able to fetch the HTML before it can present the token.
 
@@ -69,13 +74,20 @@ Liveness probe. Used by:
 
 **Request:** no body. Token via header or query.
 
-**Response — `200 OK`:**
+**Response — `200 OK`** (abridged; schema is the source of truth):
 
 ```json
 {
   "ok": true,
-  "version": "2.26.0",
-  "projectRoot": "/abs/path/to/project"
+  "version": "9.8.0",
+  "projectRoot": "/abs/path/to/project",
+  "writeRoot": "/abs/path/to/project/agents",
+  "mode": "package-sandbox",
+  "dryRun": false,
+  "capabilities": {
+    "configRoot": true,
+    "embed": { "supported": true, "version": 1, "features": ["theme", "deepLink"] }
+  }
 }
 ```
 
@@ -83,6 +95,11 @@ Liveness probe. Used by:
 - `version` — value of `package.json#version` at boot time.
 - `projectRoot` — absolute path the CLI resolved (see
   `src/cli/paths.ts`).
+- `capabilities` — host-facing capability advertisement
+  (`src/shared/capabilities.ts`); the same block is mirrored in
+  `agent-config --version --json` so a host can decide **before**
+  booting a server. An older server omits it — hosts degrade to a
+  clear "not supported" instead of version-guessing.
 
 Schema source of truth: `src/server/routes/ping.ts#PingResponseSchema`
 (zod). Test gate: `tests/server/app.test.ts`.
@@ -110,11 +127,25 @@ Reserved namespace under `/api/v1/`. Adding a new route requires:
   the Fastify app via `createApp`, and prints the URL + token to
   stderr. By default it also opens the OS browser at `/` with the
   token in the query string; `--no-open` suppresses that step.
-- **Headless detection.** When `process.stdout.isTTY === false` AND
-  `--open` was not explicitly passed, the server boots but does not
-  attempt to spawn a browser. Useful for CI and SSH sessions.
+- **Discovery file.** Real-serve boot writes
+  `~/.event4u/agent-config/local-server.json` (`pid`, `port`, `url`,
+  `startedAt`, mode `0600` — `src/server/serverInfo.ts`); graceful
+  shutdown removes it. Host-facing consumption rules live in
+  `docs/contracts/local-server-ports.md § Discovery file`.
+- **Headless refusal.** `ui:serve` **refuses to start** (exit code
+  `2`, guidance message) when it detects a headless session —
+  `SSH_CONNECTION` set, or Linux with no `DISPLAY` — unless
+  `--allow-headless` is passed
+  (`src/cli/commands/uiServe.ts#isHeadless`). It does not silently
+  boot without a browser.
+- **Idle-shutdown watchdog.** Disarmed until the first authed
+  `/api/*` request, then self-terminates after 30 minutes without
+  one; `POST /api/v1/shutdown` is the immediate shutdown beacon
+  (`src/server/app.ts`). Keepalive expectations for hosts:
+  `docs/contracts/local-server-ports.md § Host lifecycle`.
 - **Shutdown.** SIGINT / SIGTERM stops the server cleanly; the
-  per-process token is dropped from memory.
+  per-process token is dropped from memory and the discovery file is
+  removed.
 
 ## § 7 — Stability commitments
 
