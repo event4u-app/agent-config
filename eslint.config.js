@@ -16,6 +16,11 @@ export default [
             'scripts/**',
             'dist/agent-src/**',
             'tests/fixtures/**',
+            // Provenance golden corpus: deliberately-crafted algorithm samples
+            // at three transformation depths, not project source. Linting them
+            // would enforce house style on inputs whose whole purpose is to
+            // vary in shape (road-to-provenance-and-license-governance S0.1).
+            'internal/bench/provenance/samples/**',
             '.agent-src.uncondensed/**',
             '.augment/**',
             '.claude/**',
