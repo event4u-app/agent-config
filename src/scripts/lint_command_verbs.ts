@@ -10,7 +10,8 @@
  * visible command under `--all`), and the same sorted iteration order.
  * snake_case kept. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
- * A VISIBLE command (tier 0/1) must have a leading token drawn from the
+ * A VISIBLE command (`visibility: visible|advanced`, i.e. the legacy tier 0/1)
+ * must have a leading token drawn from the
  * approved verb allowlist in `src/config/discovery/command-verbs.yml`.
  * `create-*` is a banned leading token for new visible commands
  * (`create-pr` is grandfathered).
@@ -32,8 +33,13 @@ const VERBS_YML = path.join(ROOT, 'src', 'config', 'discovery', 'command-verbs.y
 const _CMD_PATH_RE = /\.agent-src\.uncondensed\/commands\/.+\.md$/;
 const NAME_RE = /^name:\s*(.*)$/m;
 const TIER_RE = /^tier:\s*(\d+)/m;
+const VISIBILITY_RE = /^visibility:\s*['"]?([A-Za-z-]+)/m;
 const SUB_RE = /^sub:\s*(.*)$/m;
 const VISIBLE_TIERS: ReadonlySet<number> = new Set([0, 1]);
+// ADR-090/092: `visibility` is the source of truth; the integer `tier` is the
+// back-compat alias. `visible`/`advanced` are the two gated (non-internal)
+// values — the named equivalent of VISIBLE_TIERS {0, 1}.
+const VISIBLE_VISIBILITIES: ReadonlySet<string> = new Set(['visible', 'advanced']);
 
 interface Violation {
     file: string;
@@ -109,15 +115,31 @@ function _git(args: string[], tolerant = false): string {
     return r.stdout;
 }
 
-/** (name, tier, sub) from frontmatter text; tier defaults to 2 (internal). */
-function _parse(text: string): { name: string | null; tier: number; sub: string | null } {
+/**
+ * (name, visible, sub) from frontmatter text.
+ *
+ * `visible` reads `visibility` first and falls back to the deprecated integer
+ * `tier` alias, which is what PAST git revisions carry — the promotion check
+ * below parses pre-ADR-090 blobs, so the alias fallback must stay until those
+ * revisions age out. `null` means NEITHER key was present: that is the
+ * silent-default hole this linter used to have (absent tier → 2 → skipped, so
+ * the gate quietly stopped gating), and callers must treat it as a violation
+ * rather than as "internal".
+ */
+function _parse(text: string): { name: string | null; visible: boolean | null; sub: string | null } {
     const nm = NAME_RE.exec(text);
     const name = nm ? _stripQuotes(nm[1]!.trim()) : null;
+    const vm = VISIBILITY_RE.exec(text);
     const tm = TIER_RE.exec(text);
-    const tier = tm ? parseInt(tm[1]!, 10) : 2;
+    let visible: boolean | null = null;
+    if (vm) {
+        visible = VISIBLE_VISIBILITIES.has(vm[1]!);
+    } else if (tm) {
+        visible = VISIBLE_TIERS.has(parseInt(tm[1]!, 10));
+    }
     const sm = SUB_RE.exec(text);
     const sub = sm ? _stripQuotes(sm[1]!.trim()) : null;
-    return { name, tier, sub };
+    return { name, visible, sub };
 }
 
 function changed_command_files(baseline: string): Record<string, string> {
@@ -223,16 +245,27 @@ function check(
     if (!_exists(abs_path)) {
         return []; // deleted
     }
-    const { name, tier, sub } = _parse(fs.readFileSync(abs_path, 'utf-8'));
-    if (name === null || !VISIBLE_TIERS.has(tier)) {
+    const { name, visible, sub } = _parse(fs.readFileSync(abs_path, 'utf-8'));
+    if (visible === null) {
+        // Neither `visibility` nor the `tier` alias — fail loudly instead of
+        // defaulting to internal, which would silently un-gate the command.
+        return [
+            {
+                file: relpath,
+                rule: 'visibility',
+                reason: 'missing `visibility` (and no `tier` alias) — cannot determine whether this command is gated',
+            },
+        ];
+    }
+    if (name === null || !visible) {
         return []; // internal / unnamed — not gated
     }
     if (kind === 'M') {
         // Only a PROMOTION into visibility counts as a new visible surface.
         const prev = _git(['show', `${baseline}:${relpath}`], true);
         if (prev) {
-            const { tier: prev_tier } = _parse(prev);
-            if (VISIBLE_TIERS.has(prev_tier)) {
+            const { visible: prev_visible } = _parse(prev);
+            if (prev_visible === true) {
                 return []; // already visible before — grandfathered
             }
         }

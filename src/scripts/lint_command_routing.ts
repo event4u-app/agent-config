@@ -34,11 +34,34 @@ const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 // anchors to string start and `.*?` is non-greedy across newlines.
 const FM_RE = /^---\n([\s\S]*?)\n---/;
 const VISIBLE_TIERS: ReadonlySet<number> = new Set([0, 1]);
+// ADR-090/092: `visibility` is the source of truth; the integer `tier` is the
+// back-compat alias kept only as a fallback until it is removed.
+const VISIBLE_VISIBILITIES: ReadonlySet<string> = new Set(['visible', 'advanced']);
 const MIN_CASES = 5; // roadmap Step 5: "5–10 example prompts"
 
 interface Violation {
     file: string;
     reason: string;
+}
+
+/**
+ * Is this command part of the gated visible surface?
+ *
+ * Reads `visibility` first, falls back to the deprecated `tier` alias.
+ * `null` = NEITHER key present — the silent-default hole this linter used to
+ * have (absent tier → 2 → skipped), which callers must report rather than
+ * treat as internal.
+ */
+function _isVisible(fm: Record<string, unknown>): boolean | null {
+    const vis = fm['visibility'];
+    if (typeof vis === 'string') {
+        return VISIBLE_VISIBILITIES.has(vis);
+    }
+    const tier = fm['tier'];
+    if (typeof tier === 'number') {
+        return VISIBLE_TIERS.has(tier);
+    }
+    return null;
 }
 
 function _isDir(p: string): boolean {
@@ -170,11 +193,19 @@ function _isNonEmptyString(v: unknown): v is string {
 
 function check(md: string): Violation[] {
     const fm = _frontmatter(fs.readFileSync(md, 'utf-8'));
-    const tier = 'tier' in fm ? (fm['tier'] as unknown) : 2;
-    if (typeof tier !== 'number' || !VISIBLE_TIERS.has(tier)) {
+    const visible = _isVisible(fm);
+    const rel = _relTo(md, ROOT);
+    if (visible === null) {
+        return [
+            {
+                file: rel,
+                reason: 'missing `visibility` (and no `tier` alias) — cannot determine whether routing metadata is required',
+            },
+        ];
+    }
+    if (!visible) {
         return [];
     }
-    const rel = _relTo(md, ROOT);
     const vio: Violation[] = [];
 
     const intent = fm['intent'];
@@ -310,8 +341,7 @@ function main(): number {
             continue;
         }
         const fm = _frontmatter(fs.readFileSync(md, 'utf-8'));
-        const tier = 'tier' in fm ? (fm['tier'] as unknown) : 2;
-        if (typeof tier === 'number' && VISIBLE_TIERS.has(tier)) {
+        if (_isVisible(fm) === true) {
             visible += 1;
         }
         violations.push(...check(md));

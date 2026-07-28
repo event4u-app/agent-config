@@ -38,9 +38,34 @@ describe('lint_command_routing — behavioural spec', () => {
         expect(lcr.check(md)).toHaveLength(0);
     });
 
-    it('exempts a command with no tier (defaults to 2)', () => {
-        const md = write('cmd.md', '---\nname: thing\n---\nbody\n');
+    it('exempts an internal command declared via `visibility` alone', () => {
+        const md = write('cmd.md', '---\nvisibility: internal\nname: internal\n---\nbody\n');
         expect(lcr.check(md)).toHaveLength(0);
+    });
+
+    it('gates a visible command declared via `visibility` alone (no tier alias)', () => {
+        const md = write('cmd.md', '---\nvisibility: advanced\nname: vis\n---\nbody\n');
+        const reasons = lcr.check(md).map((x) => x.reason);
+        expect(reasons).toContain('missing/empty `intent` (Step 4b)');
+    });
+
+    it('prefers `visibility` over the deprecated `tier` alias when both are present', () => {
+        // Disagreeing pair (lint_command_tiers hard-fails on this repo-wide, so
+        // it can only reach here from an unlinted external file): `visibility`
+        // wins, so the command is treated as internal and exempt.
+        const md = write('cmd.md', '---\ntier: 0\nvisibility: internal\nname: x\n---\nbody\n');
+        expect(lcr.check(md)).toHaveLength(0);
+    });
+
+    it('reports a command carrying NEITHER visibility nor tier instead of silently exempting it', () => {
+        // Regression lock (2026-07-28 audit, road-to-tier-removal Phase 2): the
+        // linter used to default an absent `tier` to 2 and skip the file, so
+        // dropping the frontmatter key would have silently un-gated every
+        // command. Absence must be loud.
+        const md = write('cmd.md', '---\nname: thing\n---\nbody\n');
+        const v = lcr.check(md);
+        expect(v).toHaveLength(1);
+        expect(v[0]!.reason).toContain('missing `visibility`');
     });
 
     it('flags missing intent / routes_to / replaces on a visible command', () => {

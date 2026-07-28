@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **9** open blockers
+> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**35 / 93 steps done · 38%**
+**39 / 94 steps done · 41%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
 ```
 
 ## Open roadmaps
@@ -25,7 +25,7 @@
 | 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 9 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 6 | 6 | 2 | 0 | [3](#blockers-road-to-surface-consolidation) | █████░░░░░ 50% |
-| 10 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 5 | 2 | 0 | 0 | 0 | ███░░░░░░░ 29% |
+| 10 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 
 ---
 
@@ -203,14 +203,28 @@ _1 blocker resolved._
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 
-**Command `tier:` Alias Removal** — 2 / 7 done (29%)
+**Command `tier:` Alias Removal** — 6 / 8 done (75%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Evidence mechanism build-out | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 2 | Internal dependency audit (just-in-time) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 1 | Evidence mechanism build-out | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Internal dependency audit (just-in-time) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | External soak confirmation | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 4 | Removal execution (blocked on Phases 1–3) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | Removal execution (blocked on Phases 1–3) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+
+<a id="blockers-road-to-tier-removal"></a>
+**Blockers**
+
+- **trigger-set-amendment** (owner: maintainer) — blocks Phase 3 (soak confirmation) and Phase 4 (the external removal half). Everything agent-executable is done: the audit, the internal `visibility` migration, and the reversibility analysis all landed 2026-07-28.
+  - **What to do:**
+    needs a sunset that was never set; Trigger 2 is impossible in a no-runtime
+    package). [`ADR-137`](../../docs/decisions/ADR-137-amend-tier-removal-reopen-triggers.md)
+    records the amendment: Trigger 2 is withdrawn as structurally impossible, and
+    Trigger 1 becomes the sole gate. Its remaining leg needs ONE maintainer act —
+    set a concrete `sunset` date in the `deprecations` block of
+    `build_discovery_manifest.ts`, publish it, and let that date pass. The council
+    ruled the date itself is not an agent decision.
+  - **Resolved when:** a concrete `sunset` date is published in the manifest's `tier` deprecation entry AND that date has passed with no external breakage reported — at which point Phase 3 records the confirmation and Phase 4's external half becomes executable.
 
 ---
 

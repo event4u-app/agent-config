@@ -18892,7 +18892,8 @@ function _apply_claude_flat_command_wrappers(anchor, package_root, current_files
     );
     for (const a of manifest.artefacts ?? []) {
       if (a.category !== "command" || typeof a.slug !== "string") continue;
-      if ((a.tier ?? 2) <= 1 && a.visibility !== "internal") eligible.add(a.slug);
+      const visible = typeof a.visibility === "string" ? a.visibility !== "internal" : typeof a.tier === "number" ? a.tier <= 1 : false;
+      if (visible) eligible.add(a.slug);
     }
   } catch {
   }
