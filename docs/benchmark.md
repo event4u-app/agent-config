@@ -241,7 +241,7 @@ pack whose `workspaces` intersects {engineering, agent-config-maintainer}
 
 | Surface | legacy-all (before) | scoped (after) | Δ |
 |---|--:|--:|--:|
-| Skills projected | 283 | 212 | −71 (−25%) |
+| Skills projected | 286 | 215 | −71 (−25%) |
 | Skill-surface size (chars) | 2,309,968 | 1,710,353 | −599,615 |
 | Skill-surface size (≈ GPT tokens, chars/4) | ≈ 577k | ≈ 428k | **−26%** |
 
