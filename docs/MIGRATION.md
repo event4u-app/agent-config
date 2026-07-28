@@ -6,6 +6,22 @@ only the version you are upgrading to.
 
 > Symbol legend — 🔄 automatic, ✋ manual, 💡 advisory.
 
+## Scheduled deprecations (forward-looking — read before cutting a major)
+
+Every section below this one records a change that **already shipped**. This
+table is the opposite: commitments made now, due at a **future** major. It
+exists so a "deprecate at the next major, remove the major after" promise
+cannot decay into folklore — the release runbook's pre-flight (§ 1) sends the
+releaser here on every `release:major`.
+
+| Surface | Committed | Deprecation notice due | Removal due | Reversal condition |
+|---|---|---|---|---|
+| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`) | 2026-07-28 | next major after 9.x | the major after that | A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`). Until then `enabled: false` is permanent. |
+
+**Adding a row:** any change that ships a capability as default-off-pending-removal,
+or that promises a future breaking removal, gets a row here in the same commit
+that makes the promise. A promise with no row is not tracked and will be missed.
+
 ## 8.x → 9.0.0 — consumer rule projection scoped by default
 
 9.0.0 flips the consumer rule-projection default to **scoped**: fresh

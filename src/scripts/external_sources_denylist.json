@@ -93,8 +93,7 @@
     "agents/roadmaps/archive/road-to-subagent-value-realization.md",
     "agents/roadmap-assets/road-to-image-brand-typography.assets.md",
     "CREDITS.md",
-    "agents/roadmaps/archive/road-to-ecosystem-harvest-index.md",
-    "agents/roadmaps/archive/road-to-opt-retrieval-and-memory.md"
+    "agents/roadmaps/archive/road-to-ecosystem-harvest-index.md"
   ],
   "skip_reason": {
     "vendored_cluster": "design-intelligence/corpus-grounding/design-tokens/react-shadcn-ui/tailwind-engineer + cost/*.mjs ship vendored Apache/MIT code; their upstream attribution is license-required and must NOT be stripped (ADR-061). CREDITS.md is the repo-level attribution file FOR that same cluster — it names the upstreams because the licenses require it, which is the one case source-confidentiality explicitly exempts. It was missing here, so the gate flagged the very attribution the rule mandates.",
@@ -102,7 +101,7 @@
     "generated_bundles": "content.json* bundle the vendored-cluster skill bodies above.",
     "self": "the linter + its denylist + the source-confidentiality rule necessarily contain the deny tokens as data.",
     "validate_safe_paths": "telegraph-derived (MIT) ported code; upstream attribution is license-required.",
-    "archived_roadmaps_newly_tracked": "Archived roadmaps (and their assets) that predate the source-confidentiality sweep became tracked via the 2026-07 agents-dir gitignore hygiene change. They are frozen historical records; the claudekit mentions are ADR-061 license-attribution work and the remaining names are historical planning references. New roadmaps stay subject to the gate. road-to-ecosystem-harvest-index.md is the sharpest case: the flagged line is its own acceptance criterion, 'No harvest-family artifact names a real external source' — it quotes the names in order to assert their absence, so the gate fires on the sentence that records the cleanup. road-to-opt-retrieval-and-memory.md names a harvest input file it moved to tmp.old."
+    "archived_roadmaps_newly_tracked": "Archived roadmaps (and their assets) that predate the source-confidentiality sweep became tracked via the 2026-07 agents-dir gitignore hygiene change. They are frozen historical records; the claudekit mentions are ADR-061 license-attribution work and the remaining names are historical planning references. New roadmaps stay subject to the gate. road-to-ecosystem-harvest-index.md is the sharpest case: the flagged line is its own acceptance criterion, 'No harvest-family artifact names a real external source' — it quotes the names in order to assert their absence, so the gate fires on the sentence that records the cleanup. road-to-opt-retrieval-and-memory.md was REMOVED from this list on 2026-07-28 (road-to-native-code-intelligence Phase 6): its two clear-text mentions named a gitignored borrow-catalogue inbox file, which carries no historical value that a neutral descriptor loses — so the mentions were rewritten and the exception retired rather than kept. Retiring an exception is preferred over holding one whenever the named token is not license-required attribution and not load-bearing for the record."
   },
   "_excluded_tokens": {
     "agent-os": "collides with our own coined 'Agent-OS primitive' term (universal-skills) — too FP-prone to auto-deny; scrub external 'agent-os' mentions by review.",

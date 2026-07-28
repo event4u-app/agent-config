@@ -207,6 +207,44 @@ implementing roadmap carries, in the same change-set as the first engine:
   gates, the sequencing rule, and the § 4 table as the only intake path for
   further engines.
 
+### Addendum 2026-07-28 — the first engine under this doctrine returned an honest null
+
+The doctrine stands; its **first application did not pay off**, and that is
+recorded here rather than only in the implementing roadmap (which is now
+archived).
+
+- **What was built:** the native code-graph engine (extract / build / query /
+  detect / affected / update), the `code-intelligence` routing skill, and the
+  PreToolUse nudge — merged and working.
+- **What was measured:** on a pre-registered 2-arm run (18 hand-verified
+  questions, 3 real consumer-shaped repos, truth hash-bound before the run,
+  zero model calls), the graph scored mean recall **0.365 vs disciplined grep
+  0.797** on graph-shaped questions (**Δ −43.2 pp** against a pre-declared
+  +10 pp win threshold), and 0.111 vs 0.833 on negative controls.
+- **Measured root cause — a category limit, not a bug:** TS arrow-function
+  exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on
+  same-shaped repos), and string-keyed dynamic consumers have no static edge.
+  Static indexes cannot represent dynamic dispatch or runtime-constructed
+  identifiers.
+- **Consequence:** `code_graph.enabled: false` permanently, deprecation at the
+  next major and removal the major after (`docs/CLAIMS.md`
+  `code-graph-retrieval-null`; tracked in `docs/MIGRATION.md` § Scheduled
+  deprecations). The doctrine's own § 3 gates worked as designed — they
+  produced a measurement that retired the feature instead of shipping it.
+- **Sequencing rule — satisfied, and now advisory in the other direction.**
+  The rule ("no second native engine before the first publishes its verdict")
+  is met: the verdict is published. It no longer blocks the § 4 queue. But the
+  null's root cause generalizes to any static index over dynamic code, so the
+  queued Class-A retrieval engines (`policy-evaluation-core`,
+  `deferred-rule-retriever`) carry a recorded warning to run the
+  pre-registered comparison against the already-shipped cheap baseline
+  (`_lib/lexical_index.ts`) **before** building, not after. That inversion —
+  measure the cheap baseline first — is the concrete lesson this doctrine's
+  first cycle bought, and the § 4 table row records it.
+- **Not changed by this addendum:** the Class A / B / C boundaries, the
+  service/daemon prohibition, and the § 4 table as the only intake path. One
+  null on one instance does not falsify the doctrine; it prices it.
+
 ## Alternatives considered
 
 - **Keep the orchestrator-only posture** — rejected by maintainer directive:

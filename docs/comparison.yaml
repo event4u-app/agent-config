@@ -85,3 +85,12 @@ rows:
       You hand over a credential — or your account — for a read the tools could
       already do, and you cannot tell which channels actually work because the
       capability was claimed rather than measured.
+
+  - claim: "A code-intelligence engine was built natively, measured against plain disciplined grep, and then permanently defaulted off when it lost — the retrieval null (recall 0.365 vs grep 0.797 on graph-shaped questions) is published, and a deprecation date is on it."
+    our_evidence: "internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively"
+    their_evidence: "Code-graph / semantic-index retrieval is shipped as a headline capability across this category; a published measurement against a plain-grep control — let alone one that retires the feature the vendor built — is not a standard artifact."
+    checkable: true
+    failure_mode: >-
+      You adopt an indexing engine on the promise that structure beats search,
+      and nobody ever measured it against the search it replaces — so the index
+      keeps costing build time and staleness risk for retrieval that got worse.

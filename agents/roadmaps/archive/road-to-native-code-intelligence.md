@@ -1,25 +1,48 @@
 ---
-status: later
+status: completed
 complexity: heavy
 ---
 
 # Road to native code intelligence — own the engine, sweep the rejected inventory, keep the gates
 
-> **Parked in `later/` 2026-07-23 (72% — Phases 0–4 landed).** The doctrine
-> (ADR-124), the reclassification sweep, and the native engine
-> (extract/build/query/detect/affected/update + the code-intelligence skill +
-> the PreToolUse nudge) are all merged and working. What remains is **not
-> autonomously workable now**:
+> **CLOSED 2026-07-28 — engine built, measured, and retired on its own
+> evidence.** Phases 0–4 landed (ADR-124 doctrine, the reclassification
+> sweep, and the native engine: extract/build/query/detect/affected/update +
+> the `code-intelligence` skill + the PreToolUse nudge — all merged and
+> working). **Phase 5 is CANCELLED on a failed precondition**, and Phase 6
+> closed out. The outcome is an honest null, not a shipped capability: the
+> graph measured recall **0.365 vs disciplined grep 0.797** (Δ −43.2 pp) on a
+> separate pre-registered 2-arm run, so `code_graph.enabled: false` is
+> permanent with a deprecation date. See Phase 5 for why that is recorded as
+> *cancelled* rather than *superseded* — the distinction is the whole
+> protocol-integrity point, and it was the council's one substantive
+> amendment.
 >
-> **Resume when** `benchmark-spend-authorization` is granted AND a
-> consumer-scale test corpus is available (the peer CLI + a Laravel ~50–150k
-> LOC + a TS ~30–100k LOC repo) — that unblocks **Phase 5** (the judged
-> three-arm benchmark → default-on decision) and, in turn, the bench-linked
-> **Phase 6** close-out (archive at the landing SHA; the CAPABILITIES regen and
-> the comparison verdict are already done). The one deferred wiring item
-> (`[~]` dedicated session-start freshness hook + installer post-commit git
-> hook) rides the same resume. Per the Later-disposition Iron Law this roadmap
-> is parked, not left active, until that trigger fires.
+> **What this roadmap is now useful for:** it is the durable record that a
+> Class-A native engine was actually tried, at full build cost, and did not
+> pay off. Read the Phase-1 table row and Phase 5 before proposing the next
+> one. The lesson the null bought: **measure against the cheap baseline
+> before building the engine, not after.**
+>
+> **Superseded resume condition (for the record):** this file previously said
+> "resume when `benchmark-spend-authorization` is granted AND a consumer-scale
+> corpus is available". That spend was never granted and is no longer owed —
+> the decision it would have funded was reached by a cheaper run that
+> falsified the benchmark's own precondition.
+>
+> Council 2026-07-28 (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds,
+> $0.10). Round 1: both members independently recommended closing Phase 5 and
+> executing Phase 6. Round 2 (blind rebuttal round) tightened the framing —
+> `CANCELLED (precondition failed)`, never `SUPERSEDED`, because a
+> pre-registration exists to prevent substituting a cheaper measurement even
+> when the substitute reaches the correct conclusion; research registries
+> record *terminated, with reason*, not *superseded by a different design*.
+> The dissenting demand (show that recall bears on the correctness
+> precondition) is answered by the decision rule's own text: every branch is
+> gated on "at non-inferior correctness", and recall is a direct correctness
+> measurement. Recorded revisit condition: a consumer case the graph answers
+> and grep cannot reopens the engine (`docs/MIGRATION.md` § Scheduled
+> deprecations).
 
 > **Supersedes** `skipped/road-to-code-graph-orchestration.md` (2026-07-23,
 > same-day draft) after the maintainer's directive: the "orchestrator only"
@@ -156,6 +179,16 @@ exists and is fresh.
   active/archive/later/skipped/stubs); anonymization per house style. The
   headline dispositions to carry:
   - **Code-graph engine (Source G class) → A → RE-OPENED, this roadmap.**
+    **CLASS-A ADOPTION TRIED AND MEASURED → HONEST NULL (2026-07-28).** The
+    pre-registered `<1.2×` branch's mandated record: the engine was built
+    (Phases 2–4, merged and working), measured against disciplined grep on
+    real consumer-shaped repos, and lost decisively on correctness (recall
+    0.365 vs 0.797, Δ −43.2 pp; `docs/CLAIMS.md`
+    `code-graph-retrieval-null`). Disposition: `code_graph.enabled: false`
+    permanently, deprecation at the next major per `docs/deprecations.md`.
+    This row is the durable answer to "was Class-A adoption actually tried?"
+    — yes, once, at full build cost, and it did not pay off. Read it before
+    proposing the next Class-A engine.
   - Lexical/BM25 in-process core → A → already shipped
     (`_lib/lexical_index.ts`); no action. Embedded FTS5 (`node:sqlite`) → A →
     stays pre-decided behind its ADR-116 tripwire; note honestly that the
@@ -278,7 +311,18 @@ malformed variants covered by tests.
   latch, warn-only (never blocks — Source G's strict block-first-read
   un-ported), branches present→query / stale→rebuild / absent→build-offer.
   Tested (enabled-gate, tool eligibility, branch selection).
-- [~] Freshness loop — **partially done, rest deferred.** Staleness IS surfaced:
+- [-] Freshness loop — **partially done; the deferred remainder is now
+  CANCELLED (2026-07-28), not silently archived.** The shipped half stands
+  (the nudge's stale branch). The two deferred pieces — a dedicated
+  session-start freshness hook and an installer-offered post-commit git hook —
+  are cancelled because the capability they would keep fresh is permanently
+  `enabled: false` and scheduled for deprecation (Phase 5 above): adding
+  session_start concern budget (already 9>8) and installer scope to maintain
+  freshness for a deprecating default-off index is spend against a retired
+  path. Re-opens only with the engine itself (the `docs/deprecations.md`
+  reversal condition: a consumer case the graph answers and grep cannot).
+  Original text, for the record:
+  Staleness IS surfaced:
   the nudge's stale branch tells the agent "index N commits behind — rebuild".
   A *dedicated session-start* freshness hook is deferred (the session_start
   concern budget already warns at 9>8; adding one worsens it for marginal gain
@@ -302,14 +346,49 @@ no-index → build-offer branch; all hosts' rows updated.
 
 ## Phase 5 — Honest benchmark → default decision
 
-- [ ] Pinned bench under `internal/bench/code-graph/` (house convention:
+> **CANCELLED (2026-07-28) — correctness precondition failed. The
+> pre-registered three-arm token-reduction benchmark was NOT run.**
+>
+> **Precondition falsified by:** the 2-arm deterministic retrieval benchmark
+> in `road-to-feedback-9.8.0-followups` Phase 2 (archived) — 18 hand-verified
+> code-structure questions across 3 real consumer-shaped repos, ground truth
+> hash-bound before the run, zero model calls. Native graph mean recall
+> **0.365 vs grep 0.797** on graph-shaped questions (**Δ −43.2 pp** against a
+> pre-declared +10 pp win threshold); 0.111 vs 0.833 on negative controls.
+> Measured root cause: TS arrow-function exports produce no symbol nodes
+> (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed
+> dynamic consumers have no static edge.
+>
+> **Why cancelled, not "superseded"** (council-mandated distinction, see
+> § Council notes — Phase-5 disposition): every branch of the decision rule
+> below is gated on *"at non-inferior correctness"*. That gate provably
+> fails by 43.2 pp, so the token-reduction measurement became **impossible to
+> perform as specified** — not "answered by a cheaper substitute". A
+> pre-registration exists to prevent measurement substitution even when the
+> substitute reaches the correct conclusion; recording this as SUPERSEDED
+> would license optimizing away any expensive pre-registered protocol
+> whenever a cheaper run lands on the same decision. Research registries
+> record *terminated, with reason* — never *superseded by a different
+> design*. This protocol stays in the file as what WOULD have been measured
+> had the precondition held.
+>
+> **The decision the phase existed to make is already made and bound** — and
+> it is identical to what the `<1.2×` branch below mandates (honest-null
+> exhibit, engine stays maintainer-workspace-only): `docs/CLAIMS.md`
+> `claim: code-graph-retrieval-null` (`status: backed`, `last_verified:
+> 2026-07-28`) + `src/config/agent-settings.template.yml`
+> `code_graph.enabled: false` ("is permanent"; deprecation at the next major,
+> removal the major after, unless a consumer case the graph answers and grep
+> cannot appears first — tracked in `docs/deprecations.md`, not here).
+
+- [-] Pinned bench under `internal/bench/code-graph/` (house convention:
   `README.md`, settings pair, `corpus/`, committed results): the S0a protocol
   formalized — golden questions committed, **three arms** (native graph /
   disciplined grep / consumer-shipped index where available), grader rubric
   written before the run, second-judge κ sample per the 9.5.0 house pattern.
   **Spend gate:** the judged run is billable — surfaced to the maintainer,
   never auto-fired (`benchmark-spend-authorization`).
-- [ ] **Confound controls (council patch, 2026-07-23) — pre-registered with
+- [-] **Confound controls (council patch, 2026-07-23) — pre-registered with
   the question set, hash published before any arm runs:**
   - Question-set selection bias: questions sampled from real issue shapes on
     consumer-style repos, balanced mix pinned in the rubric (~40 %
@@ -324,39 +403,118 @@ no-index → build-offer branch; all hosts' rows updated.
   - Cold-build amortization: token/time accounting runs per simulated
     session (≥5 queries/session), not per isolated query, so the build cost
     is honestly amortized rather than hidden or over-weighted.
-- [ ] Decision rule, pre-registered: median ≥2.0× token reduction at
+- [-] Decision rule, pre-registered: median ≥2.0× token reduction at
   non-inferior correctness → `code-intelligence` skill projects
   **default-on** for engineering workspaces (nudge stays opt-in); 1.2–2.0× →
   ships default-off with the numbers in the README; <1.2× → honest-null
   exhibit, engine stays maintainer-workspace-only, and the Phase-1 table
   gains a row recording that Class-A adoption was tried and measured.
-- [ ] Claims Ledger: pre-run ceiling claim only ("native deterministic code
+- [x] Claims Ledger: pre-run ceiling claim only ("native deterministic code
   graph; savings pending"); post-run claims bind to the bench row. CI gate.
+  <!-- done 2026-07-28: the ledger obligation was MET on the substituting
+  path, not skipped — `docs/CLAIMS.md` carries `code-graph-retrieval-null`
+  (kind: quant, status: backed, evidence pointer
+  internal/bench/reports/code-graph-vs-grep.md#Verdict), and `check-claims`
+  gates it like every other backed row. No ceiling claim survives anywhere:
+  the null IS the published claim. -->
+
+**Phase-5 exit (recorded, 2026-07-28):** cancelled on a failed precondition;
+the default-decision it existed to produce is bound in the claims ledger and
+shipped in the settings template. Per the pre-registered `<1.2×` branch, the
+Phase-1 inventory table gains the Class-A-adoption-measured row below.
 
 ## Phase 6 — Close-out
 
-- [ ] Regenerate `CAPABILITIES.yaml` (`generate_capabilities_index.ts`);
+- [x] Regenerate `CAPABILITIES.yaml` (`generate_capabilities_index.ts`);
   `docs/comparison.yaml` verdict vs Source G updated to "builds natively
   (launch-set languages) + interops"; positioning language per ADR-124
   Consequences.
-- [ ] Anonymization debt: fix the two clear-text external-source mentions in
+  <!-- done 2026-07-28: `generate_capabilities_index.ts` re-run → byte-identical
+  (30 areas, `code-intelligence` already listed), so the index needed no change
+  and that is now VERIFIED rather than assumed. The comparison row is the part
+  that was genuinely missing — `docs/comparison.yaml` had NO code-graph row at
+  all. Added one, but NOT with the wording this step pre-specified: "builds
+  natively + interops" became false the moment the retrieval null landed. The
+  shipped row states the honest version — built natively, measured against
+  disciplined grep, lost on recall (0.365 vs 0.797), permanently default-off
+  with a deprecation date — with `our_evidence` resolving to
+  internal/bench/reports/code-graph-vs-grep.md#Verdict. `check_comparison.ts`
+  green (9 rows, 9 checkable, all pointers resolve). Deviating from this step's
+  own wording IS the point: the row must match measured reality, not the plan. -->
+
+- [x] **Deprecation tracking (council sub-Q5, 2026-07-28) — added because
+  archiving a roadmap must not bury a live removal commitment.** The null
+  binds `code_graph.enabled: false` "permanently, deprecation at the next
+  major, removal the major after". That promise lived only in a settings
+  comment and in this roadmap — which is about to be archived, i.e. exactly
+  how a commitment becomes folklore. Now tracked in a LIVING doc:
+  `docs/MIGRATION.md` § Scheduled deprecations (a forward-looking table, the
+  inverse of that file's already-shipped sections), plus a `release:major`
+  pre-flight checkpoint in `docs/release-runbook.md` § 1 that sends the
+  releaser there. No new file, no new CI gate, no new surface — a section in
+  an existing living doc and one runbook line (surface-consolidation holds).
+- [x] Anonymization debt: fix the two clear-text external-source mentions in
   `agents/roadmaps/archive/road-to-opt-retrieval-and-memory.md` (lines
   18/159 — confirmed live denylist violations of
   `external_sources_denylist.json`, documented as known debt in the
   ecosystem-harvest-index archive) so the `check-no-external-sources` gate
   runs clean without the standing exception.
-- [ ] Archive this roadmap with the standard verified-checkbox sweep at the
+  <!-- done 2026-07-28: both mentions rewritten to a neutral descriptor ("the
+  maintainer's borrow catalogue", "the borrow-catalogue inbox file") — the
+  token named a gitignored inbox file, so nothing load-bearing is lost. The
+  `skip_paths` entry for this file was then REMOVED from
+  external_sources_denylist.json (the whole point of the step: retire the
+  exception, don't hold it) and `skip_reason.archived_roadmaps_newly_tracked`
+  records why, plus the general preference — retire an exception whenever the
+  token is neither license-required attribution nor load-bearing for the
+  record. VERIFIED: `check_no_external_sources.ts` green WITHOUT the
+  exception. Only src/ holds this file in the tracked tree (the .claude/
+  worktree copies are separate checkouts), so no projection regen. -->
+
+- [x] **ADR-124 sequencing rule — verdict published, consequence recorded.**
+  The standing rule ("no second native engine starts before Phase 5 publishes
+  its verdict") is now satisfied: the verdict exists and is an honest null.
+  Council 2026-07-28 split the two halves deliberately — the null DOES count
+  as the verdict for sequencing, but does NOT unblock the queue, because its
+  root cause is a category limit of static indexes over dynamic code (no
+  symbol nodes for TS arrow-function exports; no static edge for string-keyed
+  dynamic consumers), and the queued engines are also retrieval problems over
+  the same dynamic code. Both queued roadmaps'
+  park headers now carry the fired-but-invalidating gate + the
+  measure-before-build lesson (`later/road-to-policy-evaluation-core.md`,
+  `later/road-to-deferred-rule-retriever.md`) — a false "waiting on a verdict
+  that already landed" gate would have been the folklore failure. The council
+  recommended archiving both outright; that is recorded there as the
+  maintainer's disposition call, NOT executed here (archiving buries planned
+  work, and it is outside this roadmap's scope).
+- [x] Archive this roadmap with the standard verified-checkbox sweep at the
   landing SHA; the superseded draft stays in `skipped/` with its pointer
   here.
+  <!-- done 2026-07-28: moved later/ → archive/ in the close-out commit; the
+  skipped/road-to-code-graph-orchestration.md pointer still resolves here.
+  Every checkbox in this file was swept: Phases 0-4 verified [x] as landed,
+  Phase 5 [-] cancelled on a failed precondition (NOT silently archived —
+  roadmap-progress-sync Iron Law 3), the Phase-4 [~] freshness remainder
+  resolved to [-] cancelled with its reason, Phase 6 closed. No [ ] and no
+  [~] remain. -->
 
 ## Standing blockers
 
 - `adr-124-ratification` — Phases 2+ do not merge before the ADR lands
   (Phase-0/1 artifacts may be drafted; they ride the same PR as the ADR).
+  **RESOLVED** — ADR-124 landed; Phases 2–4 merged under it.
 - `benchmark-spend-authorization` — Phase-5 judged run.
+  **RESOLVED WITHOUT SPEND (2026-07-28)** — never granted, and no longer
+  needed: Phase 5 is cancelled on a failed precondition, so the billable
+  judged run is not owed. The gate is closed by the phase's cancellation, not
+  by an authorization. Recorded this way so nobody reads a closed roadmap as
+  evidence that the spend was approved.
 - **Sequencing rule (ADR-124):** no second native engine (policy-evaluation
   core, deferred-rule retriever, …) starts before Phase 5 publishes its
   verdict. The Phase-1 table is the queue, not a starting gun.
+  **SATISFIED (2026-07-28)** — verdict published as an honest null; see the
+  Phase-6 sequencing item. The queue is no longer blocked by this rule, and
+  the null argues against restarting it as designed.
 
 ## Risk register
 
@@ -375,6 +533,19 @@ no-index → build-offer branch; all hosts' rows updated.
   post ships and produces zero engagement across a full quarter, that IS an
   adoption datum and re-prioritizes the remaining phases behind adoption
   work.
+  **OUTCOME 2026-07-28 — this risk landed, and the named mitigation did not.**
+  The "one deliberate inversion" above assumed the Phase-5 bench would yield
+  launch-story material ("measured N× token reduction, $0 LLM build cost").
+  It yielded a null instead, so capability and adoption push did NOT converge:
+  the subsystem was built while the launch stayed unposted, and the measurement
+  retired it. The salvage is real but smaller than the mitigation promised —
+  the *published null* is itself the launch-story material (see the new
+  `docs/comparison.yaml` row: a vendor retiring its own feature on its own
+  measurement is the checkable claim), and the durable lesson is priced into
+  ADR-124's addendum + the Phase-1 table row: **measure against the cheap
+  baseline before building the engine.** Recorded here rather than quietly
+  dropped, because a mitigation that failed is the most useful line in a risk
+  register.
 - **ABI drift** between `web-tree-sitter` and grammar `.wasm` — exact pins +
   the Phase-2 CI smoke test; bump PRs re-run the edge-sample acceptance.
 - **Call-edge precision on dynamic languages** — the honest taxonomy (most
