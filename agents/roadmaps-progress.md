@@ -6,10 +6,10 @@
 
 ## Overall
 
-**171 / 290 steps done · 59%**
+**173 / 290 steps done · 60%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   59%
+████████████████████████░░░░░░░░░░░░░░░░   60%
 ```
 
 ## Open roadmaps
@@ -27,7 +27,7 @@
 | 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 12 | [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md) | 6 | 22 | 22 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 12 | [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md) | 6 | 22 | 20 | 2 | 0 | 0 | 0 | █░░░░░░░░░ 9% |
 | 13 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | [1](#blockers-road-to-request-scoped-rule-load) | █████████░ 94% |
 | 14 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -211,11 +211,11 @@ _1 blocker resolved._
 
 ### [road-to-provenance-and-license-governance.md](roadmaps/road-to-provenance-and-license-governance.md)
 
-**Road to provenance and license governance — code borrows get a paper trail** — 0 / 22 done (0%)
+**Road to provenance and license governance — code borrows get a paper trail** — 2 / 22 done (9%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Golden corpus + baseline (gate for everything) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Golden corpus + baseline (gate for everything) | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 1 | Behavioral layer (rules + skill; zero external deps) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Deterministic detection layer (the verifier) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Claims + measurement | ⬜ not started | 3 | 0 | 0 | 0 | 0% |

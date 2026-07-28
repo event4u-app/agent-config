@@ -82,7 +82,7 @@ not stay buried here (S3.3).
 
 ## Phase 0 — Golden corpus + baseline (gate for everything)
 
-- [ ] **S0.1 Build `internal/bench/provenance/` golden corpus**:
+- [x] **S0.1 Build `internal/bench/provenance/` golden corpus**:
   24 seeded-copy samples (real snippets from permissive MIT/Apache/BSD
   and copyleft GPL/AGPL repos, eight per transformation depth — four TS
   + four PHP each: verbatim / rename-only / structural-rewrite) + 12
@@ -93,6 +93,23 @@ not stay buried here (S3.3).
   it enforces.
   *Verify:* corpus README lists all 36 samples with source URL +
   license per seeded sample; npm pack output contains none of them.
+  <!-- done 2026-07-28 (sonnet subagent + verified: 36 samples, 8 per
+  depth, 18 TS / 18 PHP, 13/13 tests green). DOCUMENTED DEVIATION with a
+  load-bearing consequence: samples are `synthetic-canonical` —
+  independently authored implementations of widely-known algorithm shapes
+  (debounce, LRU, Levenshtein, topo-sort, semver, backoff, deep-merge,
+  binary-insert + 4 FP-only extras), NEVER fetched or pasted from any
+  upstream file, so the corpus itself carries zero third-party license
+  exposure and practices what the roadmap enforces. CONSEQUENCE the G0
+  verdict must carry: a synthetic corpus can measure transformation-depth
+  sensitivity and the false-positive rate on independently authored code,
+  but it CANNOT measure L0 recall against SCANOSS's real-OSS KB — none of
+  these snippets are indexed anywhere, so a KB lookup would return zero
+  hits for reasons that say nothing about the detector. Measuring real-KB
+  recall needs a second, real-snippet corpus. npm-pack exclusion asserted
+  via the package.json `files` allowlist (a live `npm pack --dry-run`
+  triggers the repo's prepack build chain — not a deterministic per-test
+  check); documented in the README + test header -->`
   <!-- fix 2026-07-28 (pre-S0.2-freeze, reviewer-found denominator bug):
   the merged draft said 12 seeded / "three per transformation depth" —
   arithmetically inconsistent with every threshold (S0.2 ≥10/16 needs a
@@ -100,7 +117,7 @@ not stay buried here (S3.3).
   Corpus enlarged to 24 seeded (8/depth) so 10/16 parses; S5.1 rebased
   ratio-preserving to 21/24 (87.5%). More samples per depth also makes
   the G0 gate statistically steadier — one-time corpus cost -->`
-- [ ] **S0.2 Pre-register acceptance thresholds in `docs/CLAIMS.md`
+- [x] **S0.2 Pre-register acceptance thresholds in `docs/CLAIMS.md`
   BEFORE any scanner runs** (SHA-freeze the corpus — implements the
   Critic-prompt-freeze gap recorded in the quality-stack review):
   detector recall on verbatim+rename-only seeded copies ≥ 10/16 (the
@@ -111,6 +128,16 @@ not stay buried here (S3.3).
   published per S3.1/S3.3 (council patch 2026-07-28).
   *Verify:* CLAIMS.md entry carries the corpus tree-SHA; entry commit
   predates the first baseline-run commit.
+  <!-- done 2026-07-28: claim `provenance-detector-transformation-sensitivity`
+  registered unbacked, corpus frozen at content-sha256 dbbc84a7…34bb3 over
+  internal/bench/provenance/ (36 files); four thresholds fixed BEFORE any
+  scanner ran (>=10/16 verbatim+rename recall, <=1/12 FP on the independent
+  controls, rename-only MUST hit per principle 6, structural-rewrite recall
+  feeds the Phase-5 >=21/24 drop gate) + K1 honest-null consequence. The
+  claim carries the S0.1 scope bound: real-KB recall is explicitly
+  unmeasured on a synthetic corpus. check_claims green (38 entries).
+  Registration lands in its own commit BEFORE the S0.3 baseline commit —
+  the ordering IS the acceptance criterion -->`
 - [ ] **S0.3 Baseline run**: SCANOSS (online) and jscpd (offline)
   against the frozen corpus; record per-sample results.
   *Verify:* per-sample result table committed under
@@ -328,13 +355,46 @@ leaves a measurable gap.
 - **C5** Non-code assets (images, lyrics, docs beyond existing
   originality linting). One roadmap, one domain.
 
-## Council questions (pre-registered for the debate round)
+## Council questions — ALL RESOLVED (debate 2026-07-28, execution round)
 
-1. ~~Static GPL-deny vs installer license detection~~ **RESOLVED
-   2026-07-28 (owner): detect and derive** — landed in S1.2. Residual:
-   does monorepo/workspace layout need per-workspace derivation via the
-   `workspaces:` axis, or is root-LICENSE sufficient for v1? (Leaning
-   root-only v1, per-workspace as `later/` note.)
+Second debate (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds,
+`--input-mode prompt`) resolved every open question below. Resolutions are
+binding for this execution; dissent recorded where it was real.
+
+- **Q1-residual → workspace-license ESCALATION (v1 scope-limiter).** Real
+  clash: one member held per-workspace derivation day-one mandatory (root
+  Apache-2.0 silently deriving "GPL borrow permitted" while the borrow
+  lands in an MIT-published workspace is a latent legal liability that
+  surfaces only at external audit — "a compliance incident, not feature
+  adoption metrics"); the other held root-only v1 sufficient (YAGNI,
+  ship-and-learn). Adopted: the mind-changer the dissenting member itself
+  named — an explicit v1 scope-limiter. S1.2 scans declared workspaces for
+  their own license declarations; ANY divergence from the root SPDX id
+  **escalates** through the existing sources-disagree path (no second
+  mechanism, no policy file written); homogeneous or single-workspace repos
+  derive root-only as designed. Full per-workspace policy derivation stays
+  out of v1 → `later/` note.
+- **Q2 → NEW SURFACE (both members, unanimous).** `provenance/borrows.jsonl`
+  is structurally incompatible with the prose Claims ledger: forcing them
+  together either constrains claims prose to jsonl (killing readability) or
+  relaxes the legal records to narrative (killing machine parsability, and
+  "license compliance has zero error budget"). Separate surfaces + a
+  dedicated strict linter, shared append-only culture.
+- **Q3 → changed-files + verdict cache is sufficient; self-host parked
+  (both members).** K2 already demotes L0 to on-demand if latency or
+  instability bites, and offline always yields an honest partial — so a
+  self-host bet is a `later/` note, not v1 scope.
+- **Q4 → NO anomaly bound in v1 (converged in round 2).** Round 1 split
+  (necessary vs over-engineering); the round-2 rebuttal carried: because
+  the flag is non-load-bearing by construction, no gate outcome depends on
+  it, so there is nothing to route around — the misuse incentive does not
+  exist. Anomaly bounds are a solution to a currently non-existent problem.
+  **Revisit-if:** the flag ever becomes load-bearing, OR empirical data
+  shows systematic overuse degrading review quality.
+- **Q5 → project to ALL roles.** The clause costs ~0 tokens, and a
+  planner-mode exclusion buys nothing while creating a hole exactly where
+  a planner drafts implementation sketches. Measured projection delta
+  stays the budget check.
 2. Is `borrows.jsonl` a new surface or a record *type inside* the
    Claims Ledger? (Consolidation vs clean legal-export path.)
 3. Free-tier SCANOSS limits: changed-files + verdict cache enough for

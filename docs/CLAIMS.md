@@ -203,6 +203,13 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-07-25
 
+### claim: provenance-detector-transformation-sensitivity
+- claim: On the frozen synthetic provenance corpus (24 seeded samples across three transformation depths + 12 independently authored controls, 18 TS / 18 PHP), the offline deterministic layer (jscpd token-clone scan) detects verbatim and rename-only copies at the Phase-0 measured rate with a bounded false-positive rate on the independent controls. SCOPE BOUND, stated before any run: this measures TRANSFORMATION-DEPTH SENSITIVITY and FP behaviour only. It does NOT measure recall against SCANOSS's real-OSS knowledge base — the corpus is synthetic-canonical (independently authored algorithm shapes, never upstream copies), so no sample is indexed in any KB and a KB lookup would return zero hits for reasons that say nothing about the detector. Real-KB recall requires a second, real-snippet corpus and is explicitly unmeasured here.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-07-28 BEFORE the S0.3 baseline run (road-to-provenance-and-license-governance Phase 0; corpus frozen at content-sha256 dbbc84a7325e4fa38483ba05d35d9c0c98fa822ae25d873bd5efbafaf2534bb3 over internal/bench/provenance/, 36 files). Thresholds fixed BEFORE data, per the roadmap's S0.2 and its denominator fix: (1) detector recall on the verbatim+rename-only subset >= 10/16 (8 verbatim + 8 rename-only); (2) false positives on the 12 independent controls <= 1/12; (3) rename-only samples MUST hit (principle 6 — laundering by rename cannot clear a hit); (4) structural-rewrite samples form the residual class and their recall feeds the Phase-5 drop gate (>= 21/24 on the full seeded corpus DROPS Phase 5). The floor is a GO/NO-GO gate for building the CI layer, never the marketed capability — the marketed capability is the measured rate published per S3.1/S3.3 with the scope bound above co-located. HONEST-NULL consequence (K1): thresholds missed => no deterministic-gate claim ever, the behavioural layer ships alone, null published; no silent threshold adjustment.
+- status: unbacked
+- last_verified:
+
 ### claim: lean-init-cost-reduction
 - claim: On the LOOKUP-CLASS task family ONLY (definition-location, reference/call-site, string-existence, report-run — `classifyLookup` in `src/scripts/_lib/auto_dispatch.ts`), routing to deterministic primitives instead of subagent spawns nets a ≥90% token reduction at held answer quality vs the observed subagent baseline (live 2026-07-28 evidence: 280–327k tokens per lookup worker; the 12-golden primitive run answered all 12 for <1.6k tokens total, 12/12 correctness match).
 - kind: quant
