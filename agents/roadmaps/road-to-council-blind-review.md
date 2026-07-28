@@ -104,18 +104,23 @@ measured lock; the counter-evidence (E1/E2) is measured.
 
 ## Phase 1 — Protocol diff (no model calls)
 
-- [ ] Draft the protocol/code diff for Ü1–Ü3 (expected < 30 lines protocol +
+- [x] Draft the protocol/code diff for Ü1–Ü3 (expected < 30 lines protocol +
   a small engine change): Ü1 wires `anonymize_responses` into the
   member-chairman transcript builder (`council_cli.ts` `_maybe_run_chairman`)
   and the host-synthesis render path, with mandatory post-verdict
   de-anonymization in the audit artifact; Ü2 as a deterministic stance
   rotation (question-hash mod 5) in the deliberation prompts; Ü3 as two
   required fields in the synthesis template. Neutrality-contract text stays
-  byte-identical (lint asserts it).
-- [ ] Stance prompts linted against the neutrality contract (no "recommend
+  byte-identical (lint asserts it). Implemented as a new
+  `src/scripts/ai_council/blind_review.ts` module + four default-off CLI
+  flags on `council:run` (`--chairman`, `--blind-chairman`, `--stances`,
+  `--chairman-fields`) — `debate` intentionally out of scope for Phase 1.
+- [x] Stance prompts linted against the neutrality contract (no "recommend
   X" phrasing, only "examine from perspective Y"); the outsider seat's
   context ablation documented as an explicit special case of the
-  artifact-only principle.
+  artifact-only principle. Enforced by
+  `tests/scripts/ai_council_blind_review.test.ts` (neutrality-lint test +
+  the pinned sha256 of the Iron Law of Neutrality bullet).
 
 ## Phase 2 — Re-run test on existing artifacts (minimal spend)
 

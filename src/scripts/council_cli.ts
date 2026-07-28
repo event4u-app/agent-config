@@ -117,6 +117,15 @@ import {
 } from './ai_council/consensus.js';
 import * as _shadow from './ai_council/shadow_dispatch.js';
 import * as _lowimpact from './ai_council/low_impact.js';
+import {
+    apply_chairman_override,
+    assign_stances,
+    build_blind_labels,
+    OUTSIDER_STANCE_NAME,
+    parse_chairman_override,
+    render_deanonymization_block,
+    with_chairman_fields,
+} from './ai_council/blind_review.js';
 
 // ── argparse-style exit plumbing ────────────────────────────────────
 // Mirror CPython argparse: a `prog: error: …` line on stderr + exit 2.
@@ -1168,16 +1177,36 @@ function _maybe_run_chairman(
             response: null,
         };
     }
-    // Transcript WITH identities (the chairman judges attributed positions) +
-    // the lens synthesis template as the authoring instruction.
-    const transcript = responses
-        .filter((r) => r.error === null && r.text.trim() !== '')
-        .map((r) => `## ${r.provider} - ${r.model}\n\n${r.text.trim()}`)
-        .join('\n\n---\n\n');
-    const synth_prompt =
-        `You are the council CHAIRMAN. You did not deliberate. Author the synthesis ` +
-        `of the attributed member positions below, following the template.\n\n` +
-        `${synthesis_template(question.mode)}\n\n---\n\n${transcript}`;
+    // road-to-council-blind-review Phase 1 (Ü1): --blind-chairman shuffles the
+    // transcript deterministically (seeded by the question text) and strips
+    // identity to Response-A/B/… labels, reusing the EXISTING
+    // `consensus.anonymize_responses` seam. The default path below (transcript
+    // WITH identities — "the chairman judges attributed positions") is
+    // byte-identical to today.
+    const blind = args.blind_chairman === true;
+    let transcript: string;
+    let blind_label_to_source: Map<string, string> | null = null;
+    const successful = responses.filter((r) => r.error === null && r.text.trim() !== '');
+    if (blind) {
+        const pairs: Array<[string, string]> = successful.map((r) => [`${r.provider}:${r.model}`, r.text]);
+        const built = build_blind_labels(question.user_prompt, pairs);
+        transcript = built.transcript;
+        blind_label_to_source = built.label_to_source;
+    } else {
+        transcript = successful
+            .map((r) => `## ${r.provider} - ${r.model}\n\n${r.text.trim()}`)
+            .join('\n\n---\n\n');
+    }
+    // Ü3: --chairman-fields appends the two mandatory trailing sections.
+    const template =
+        args.chairman_fields === true ? with_chairman_fields(synthesis_template(question.mode)) : synthesis_template(question.mode);
+    const synth_prompt = blind
+        ? `You are the council CHAIRMAN. You did not deliberate. Author the synthesis ` +
+          `of the anonymized member positions below (labels A–E). Do not guess ` +
+          `identities.\n\n${template}\n\n---\n\n${transcript}`
+        : `You are the council CHAIRMAN. You did not deliberate. Author the synthesis ` +
+          `of the attributed member positions below, following the template.\n\n` +
+          `${template}\n\n---\n\n${transcript}`;
     const synthQ = new CouncilQuestion({
         mode: question.mode,
         user_prompt: synth_prompt,
@@ -1197,7 +1226,13 @@ function _maybe_run_chairman(
             response: r,
         };
     }
-    return { member: sel.member, annotation: sel.annotation, text: r.text, response: r };
+    // Blind is only at decision time — de-anonymization lands in the audit
+    // artifact immediately after the verdict, never fed back into a prompt.
+    const final_text =
+        blind && blind_label_to_source !== null
+            ? `${r.text.trim()}\n\n${render_deanonymization_block('### De-anonymization (post-verdict)', blind_label_to_source)}`
+            : r.text;
+    return { member: sel.member, annotation: sel.annotation, text: final_text, response: r };
 }
 
 function _maybe_run_peer_review(
@@ -1840,6 +1875,15 @@ function _apply_solo_dispatch(members: ExternalAIClient[]): [ExternalAIClient[],
     ];
 }
 
+/** `--chairman` value → parsed override, or `ArgumentTypeError` on malformed input. */
+function _resolved_chairman_override(raw: string | null) {
+    try {
+        return parse_chairman_override(raw);
+    } catch (exc) {
+        throw new ArgumentTypeError(exc instanceof Error ? exc.message : String(exc));
+    }
+}
+
 function cmd_run(
     args: Args,
     opts: { settings?: Dict | null; members?: ExternalAIClient[] | null; table?: PriceTable | null } = {},
@@ -1850,7 +1894,12 @@ function cmd_run(
     if (settings === null) {
         settings = load_settings();
     }
-    const ai_cfg = _isDict(settings) ? ((settings['ai_council'] as Dict) || {}) : {};
+    // road-to-council-blind-review Phase 1: `--chairman host|auto|member:NAME`
+    // is a pure runtime override, never a config write.
+    const ai_cfg = apply_chairman_override(
+        _isDict(settings) ? ((settings['ai_council'] as Dict) || {}) : {},
+        _resolved_chairman_override(_getattr<string | null>(args, 'chairman', null)),
+    ) as Dict;
     const advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT);
     const explicit_overrides = _parse_model_overrides(_getattr<string[] | null>(args, 'model', null));
     const skipped: Dict[] = [];
@@ -1978,6 +2027,21 @@ function cmd_run(
         _isDict(ai_cfg) &&
         _isDict(ai_cfg['stance_tally']) &&
         (ai_cfg['stance_tally'] as Dict)['enabled'] === true;
+    // road-to-council-blind-review Phase 1 (Ü2): five orthogonal stances
+    // rotated deterministically over the config-ordered member list; the
+    // outsider seat additionally drops project_context. Default off.
+    const stances_on = args.stances === true;
+    const stance_assignment = stances_on ? assign_stances(members.map((m) => m.name), question.user_prompt) : null;
+    const member_prompt_suffix = stance_assignment
+        ? new Map(Array.from(stance_assignment.entries()).map(([name, s]) => [name, s.prompt]))
+        : null;
+    const no_project_context_members = stance_assignment
+        ? new Set(
+              Array.from(stance_assignment.entries())
+                  .filter(([, s]) => s.name === OUTSIDER_STANCE_NAME)
+                  .map(([name]) => name),
+          )
+        : null;
     const stance_repairs: CouncilResponse[] = [];
     const responses = consult(members, question, budget, {
         table,
@@ -1986,6 +2050,8 @@ function cmd_run(
         rounds,
         advisor_plans,
         stance_tally: stance_tally_on,
+        member_prompt_suffix,
+        no_project_context_members,
         // Interactive one-line confirm (cmd_run has no --auto-continue); the
         // repaired-call cost is collected so cost_usd_actual stays honest.
         on_stance_repair: stance_tally_on
@@ -2009,6 +2075,22 @@ function cmd_run(
     );
     const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args);
     const chairman = _maybe_run_chairman(ai_cfg, question, members, responses, budget, table, project, args);
+    // road-to-council-blind-review Phase 1 (Ü1), host-path only: when no
+    // member chairman ran (mode === 'host'), the blind mapping is computed
+    // here (seeded from the question text) and persisted for a later
+    // `council:render` to blind the response headers. The member-chairman
+    // path (below, inside `_maybe_run_chairman`) blinds inline instead.
+    const blind_chairman_on = args.blind_chairman === true;
+    const chairman_fields_on = args.chairman_fields === true;
+    let blind_review_map: Map<string, string> | null = null;
+    if (blind_chairman_on && chairman === null) {
+        const pairs: Array<[string, string]> = responses
+            .filter((r) => r.error === null && r.text.trim() !== '')
+            .map((r) => [`${r.provider}:${r.model}`, r.text]);
+        if (pairs.length > 0) {
+            blind_review_map = build_blind_labels(question.user_prompt, pairs).label_to_source;
+        }
+    }
     const estimated_total = estimates.reduce((acc, e) => acc + _total_usd(e), 0.0);
     let actual_total = 0.0;
     const all_responses: CouncilResponse[] = [...responses];
@@ -2043,6 +2125,9 @@ function cmd_run(
         cost_usd_estimated: _pyRound(estimated_total, 6),
         cost_usd_actual: _pyRound(actual_total, 6),
         stance_tally: stance_tally_on,
+        stances: stances_on,
+        blind_chairman: blind_chairman_on,
+        chairman_fields: chairman_fields_on,
         responses: _serialise_responses(responses),
     };
     if (peer_review !== null) {
@@ -2053,6 +2138,9 @@ function cmd_run(
     }
     if (chairman !== null) {
         payload['chairman'] = { member: chairman.member, annotation: chairman.annotation, text: chairman.text };
+    }
+    if (blind_review_map !== null) {
+        payload['blind_review_map'] = _mapToObject(blind_review_map);
     }
     const out_path = _validate_council_output_path(args.output as string, {
         kind: 'responses',
@@ -2452,12 +2540,18 @@ function cmd_render(args: Args): number {
     }
     const consensus = _deserialise_consensus(payload['consensus'] as Dict);
     const peer_review = _deserialise_peer_review(payload['peer_review'] as Dict);
+    // road-to-council-blind-review Phase 1: a persisted `blind_review_map`
+    // means `--blind-chairman` ran on the host path (no member chairman) —
+    // blind the response headers + append the de-anonymization map.
+    const blind_map_raw = payload['blind_review_map'];
     const body = render(_deserialise_responses(items), {
         mode: mode ?? null,
         prose_synthesis: prose,
         consensus,
         peer_review,
         stance_tally: payload['stance_tally'] === true,
+        chairman_fields: payload['chairman_fields'] === true,
+        blind: _isDict(blind_map_raw) ? { label_to_source: _objToMap(blind_map_raw as Dict) } : null,
         chairman: _isDict(payload['chairman'])
             ? (payload['chairman'] as { member: string | null; annotation: string; text: string | null })
             : null,
@@ -2672,6 +2766,11 @@ interface Args {
     auto_continue: boolean;
     restate?: boolean;
     continue_as_debate: string | null;
+    // road-to-council-blind-review Phase 1 — flag-gated, default-off (`run` only)
+    chairman: string | null;
+    blind_chairman: boolean;
+    stances: boolean;
+    chairman_fields: boolean;
     // render / replay
     responses?: string | null;
     include_member_arguments: boolean | null;
@@ -2726,6 +2825,10 @@ function _defaultArgs(): Args {
         prose_synthesis: null,
         auto_continue: false,
         continue_as_debate: null,
+        chairman: null,
+        blind_chairman: false,
+        stances: false,
+        chairman_fields: false,
         responses: null,
         include_member_arguments: null,
         low_impact_stats: false,
@@ -2788,6 +2891,11 @@ function _specsFor(cmd: string): { positionals: string[]; opts: OptSpec[]; requi
                     { flag: '--single', takesValue: false, apply: (o) => (o.single = true) },
                     { flag: '--prose-synthesis', takesValue: false, apply: (o) => (o.prose_synthesis = true) },
                     { flag: '--no-prose-synthesis', takesValue: false, apply: (o) => (o.prose_synthesis = false) },
+                    // road-to-council-blind-review Phase 1 — flag-gated, default-off.
+                    { flag: '--chairman', takesValue: true, apply: (o, v) => (o.chairman = v) },
+                    { flag: '--blind-chairman', takesValue: false, apply: (o) => (o.blind_chairman = true) },
+                    { flag: '--stances', takesValue: false, apply: (o) => (o.stances = true) },
+                    { flag: '--chairman-fields', takesValue: false, apply: (o) => (o.chairman_fields = true) },
                 ],
                 requiredOpts: ['--output'],
             };
