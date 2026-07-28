@@ -178,7 +178,7 @@ not stay buried here (S3.3).
 
 ## Phase 1 — Behavioral layer (rules + skill; zero external deps)
 
-- [ ] **S1.1 New rule `code-provenance`** (roles: all; kernel-adjacent):
+- [x] **S1.1 New rule `code-provenance`** (roles: all; kernel-adjacent):
   NEVER adopt external code verbatim — borrowing = read → close the
   source → re-derive against house standards → adapt. Any *conscious*
   borrow (algorithm, non-trivial structure, >~10 lines of logic shape)
@@ -196,6 +196,18 @@ not stay buried here (S3.3).
   flag's presence.
   *Verify:* rule passes lint-skills + rule-type governance; projection
   delta measured on reviewer role (< 1k tokens, § Budget).
+  <!-- done 2026-07-28 (sonnet subagent + verified: skill_linter 428 pass /
+  0 fail, validate_frontmatter 428/0, typecheck clean). type: auto, tier 2a,
+  roles = all six (council Q5). BUDGET OVERAGE STATED HONESTLY: measured
+  1,219 Claude tokens vs the roadmap's aspirational <1k — already trimmed
+  from ~1,587; further cuts would drop required content (Iron Law, the
+  non-load-bearing self-interrogation rationale, the honest no-backstop
+  section) rather than prose fat. Not CI-gated (the hard per-rule cap
+  applies to `type: always` kernel rules only), and the rule is role-scoped
+  so it does not load for every turn. `enforced_by: ["none"]` — deliberately
+  NOT pointing at lint_provenance, which enforces the ledger's record shape,
+  not the borrowing discipline; claiming it would overclaim exactly the gap
+  G0 exists to name -->`
 - [x] **S1.2 License-policy DERIVATION** (Council Q1 RESOLVED
   2026-07-28, owner: detect, don't assume):
   - Detection (`detect_target_license.ts`, installer + `agents:update`
@@ -255,7 +267,7 @@ not stay buried here (S3.3).
   transformation notes are rejected by a 15-phrase deterministic list —
   note that after the G0 finding this ledger discipline is the PRIMARY
   anti-launder control, not a backstop -->`
-- [ ] **S1.4 Skill family `license-compliance/`** (consumer-facing):
+- [x] **S1.4 Skill family `license-compliance/`** (consumer-facing):
   `borrow-check` (paste URL ⇒ license fetch ⇒ policy verdict ⇒ ledger
   entry draft), `credits` (regenerate NOTICES from jsonl),
   `license-audit` (run Phase-2 scanners on demand). Descriptions follow
@@ -263,6 +275,14 @@ not stay buried here (S3.3).
   `lint_originality --changed`.
   *Verify:* skills pass lint-skills; borrow-check golden transcript
   produces a valid ledger entry draft.
+  <!-- done 2026-07-28 (sonnet subagent + verified): three skills
+  license-compliance-{borrow-check,credits,audit} (flat dirs with a shared
+  prefix, matching the judge-* family convention where `name` must equal the
+  parent dir), each with a trigger-eval set. borrow-check states up front
+  that a passing verdict is NOT a copying clearance; audit is now the ONLY
+  home of the scan capability post-G0 and carries the measured baseline plus
+  its synthetic-corpus scope bound + the mandatory self-match filter from
+  the S4.1 exhibit. lint_originality --changed: no overlap >= 40% -->`
 
 ## Phase 2 — RE-SCOPED by Gate G0 (behavioural-only; no CI gate)
 
