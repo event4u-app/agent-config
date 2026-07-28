@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**190 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**191 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -107,6 +107,7 @@ _Ship it. Commit in logical chunks, open the PR, answer review comments, and pre
 - `fix-comments` — Review the code comments touched by the current branch and simplify, shorten, or remove each one
 - `fix-portability` — Find and fix project-specific references in shared .augment/ package files
 - `fix-pr-comments` — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
+- `fix-pr-comments-loop` — Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no ne…
 - `fix-refs` — Find and fix broken cross-references in .augment/ and agents/ files
 - `fix-seeder` — Scan seeder data files for broken foreign key references — find constants used without getReference() and f…
 - `git-pr-create` — Create a GitHub PR with structured description from Jira ticket and code changes
@@ -170,7 +171,7 @@ _The system/admin surface (NOT a flow): memory · analytics · governance · con
 - `context` — Context orchestrator — routes to create, refactor
 - `context-create` — Analyze a codebase area and create a structured context document
 - `context-refactor` — Analyze, update, and extend an existing context document
-- `contribution-precheck` — Contributor self-service precheck — run the PR-relevant lint subset (skill linter, originality gate, frontm…
+- `contribution-precheck` — Contributor self-service precheck: run the PR-relevant lint subset (skill linter, originality gate, frontma…
 - `cost` — Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_load…
 - `cost-profile` — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 - `cost-report` — Capture token cost from the active Claude Code session, append to the local sessions store, and surface the…

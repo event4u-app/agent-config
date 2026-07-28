@@ -2,10 +2,10 @@
 model_tier: medium
 name: fix
 disable-model-invocation: true
-argument-hint: "[ci|refs|portability|seeder|pr-comments|comments|quality|route] [args]"
+argument-hint: "[ci|refs|portability|seeder|pr-comments|pr-comments-loop|comments|quality|route] [args]"
 pack: engineering-base
-intent: "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability, comments, quality"
-routes_to: [fix-ci, fix-pr-comments, fix-refs, fix-seeder, fix-portability, fix-comments, fix-quality, fix-route]
+intent: "Fix-workflow dispatcher — ci, pr-comments, pr-comments-loop, refs, seeder, portability, comments, quality"
+routes_to: [fix-ci, fix-pr-comments, fix-pr-comments-loop, fix-refs, fix-seeder, fix-portability, fix-comments, fix-quality, fix-route]
 replaces: []
 tier: 1
 visibility: advanced
@@ -37,6 +37,7 @@ with a single entry point + sub-command dispatch.
 | `/fix portability` | `commands/fix/portability.md` | Find and fix project-specific references in shared `.augment/` files |
 | `/fix seeder` | `commands/fix/seeder.md` | Scan seeder data files for broken FK references |
 | `/fix pr-comments` | `commands/fix/pr-comments.md` | Fix and reply to all open review comments — **bot + human, classified per comment**; dedupes by comment id + reply marker |
+| `/fix pr-comments-loop` | `commands/fix/pr-comments-loop.md` | Autonomous loop over `pr-comments` (auto mode): fix → commit+push → re-request Copilot review → wait — repeats until Copilot has no new comments; requires a PR URL |
 | `/fix comments` | `commands/fix/comments.md` | Review the **code comments** in the current branch's diff and simplify, shorten, or remove each one (≠ `pr-comments`, which targets GitHub review threads) |
 | `/fix quality` | `commands/fix/quality.md` | Run the quality pipeline (type-checker / linter / formatter, PHP and/or JS/TS) and fix every error — auto-detects language from changed files |
 | `/fix route` | `commands/fix/route.md` | Classify a vaguely-described problem and dispatch to the right fix sub (or name the specialist when it is not a fix task) — the `/smart-fix` front door, folded into the `fix` verb |
@@ -56,6 +57,7 @@ the `auto_detect` kill-switch, rollback). Detection table:
 | CI run failing / "fix CI" / a CI log in context | `fix/ci` | HIGH |
 | Broken cross-references named (`/fix refs`, ref-check output) | `fix/refs` | HIGH |
 | PR review comments are the target (any "address review", PR # in context) | `fix/pr-comments` (it then resolves bot/human/both) | HIGH |
+| Loop-until-clean review ask ("keep fixing until Copilot is happy", "loop the review fixes") + a PR URL | `fix/pr-comments-loop` | HIGH |
 | Source-code comments are the target ("simplify/clean up the comments in my branch", "trim comment noise") | `fix/comments` | HIGH |
 | Seeder / FK breakage named | `fix/seeder` | HIGH |
 | Type-checker / linter / formatter errors in context ("fix the quality errors", PHPStan/tsc/eslint output) | `fix/quality` | HIGH |
@@ -83,9 +85,10 @@ into it and removed.
    > 3. portability — purge project-specific refs from shared package
    > 4. seeder — scan seeders for broken FK references
    > 5. pr-comments — address open review comments (bot / human / both)
-   > 6. comments — simplify / shorten / remove code comments in the branch diff
-   > 7. quality — run the quality pipeline and fix every error
-   > 8. route — describe the problem; I classify and dispatch
+   > 6. pr-comments-loop — loop pr-comments + Copilot re-review until no new comments (needs PR URL)
+   > 7. comments — simplify / shorten / remove code comments in the branch diff
+   > 8. quality — run the quality pipeline and fix every error
+   > 9. route — describe the problem; I classify and dispatch
 
 ## Rules
 

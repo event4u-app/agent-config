@@ -97,6 +97,7 @@ commands:
     - fix/comments
     - fix/portability
     - fix/pr-comments
+    - fix/pr-comments-loop
     - fix/refs
     - fix/seeder
     - commit
