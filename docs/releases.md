@@ -48,7 +48,7 @@ Everything not listed is an internal surface and may change in a minor.
 - The cadence is observable from the registry:
   `npm view @event4u/agent-config time --json`.
 - Post-flip observation window (pre-registered in
-  `agents/roadmaps/road-to-credible-install.md` Phase 5): after the breaking
+  `road-to-credible-install.md` Phase 5): after the breaking
   release that carries the scoped-projection default flip, the first four
   weeks on `latest` are checked against this contract and the result is
   recorded here — met or honestly missed.

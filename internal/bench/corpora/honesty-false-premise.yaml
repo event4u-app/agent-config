@@ -1,5 +1,5 @@
 # False-premise fixtures — road-to-honesty-bench Phase 1 + cross-source-consistency
-# Phase-1 behavioral eval (agents/roadmaps/road-to-feedback-9.2.0-followups.md).
+# Phase-1 behavioral eval (road-to-feedback-9.2.0-followups.md).
 #
 # ONE corpus, TWO owners, no duplicate build:
 #   - Honesty bench (internal/bench/corpora/honesty-PREREG.md, "False-premise" row):
