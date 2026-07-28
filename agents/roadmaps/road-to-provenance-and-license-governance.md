@@ -83,21 +83,29 @@ not stay buried here (S3.3).
 ## Phase 0 — Golden corpus + baseline (gate for everything)
 
 - [ ] **S0.1 Build `internal/bench/provenance/` golden corpus**:
-  12 seeded-copy samples (real snippets from permissive MIT/Apache/BSD
-  and copyleft GPL/AGPL repos, TS + PHP, three per transformation
-  depth: verbatim / rename-only / structural-rewrite) + 12 independent
-  samples (same tasks solved in-house before seeing the source —
-  striking-similarity control, LiCoEval-style). Seeded-copy samples
-  live only in `internal/` (never shipped in the npm package), each
-  with source URL + license recorded — the corpus practices what it
-  enforces.
-  *Verify:* corpus README lists all 24 samples with source URL +
+  24 seeded-copy samples (real snippets from permissive MIT/Apache/BSD
+  and copyleft GPL/AGPL repos, eight per transformation depth — four TS
+  + four PHP each: verbatim / rename-only / structural-rewrite) + 12
+  independent samples (same tasks solved in-house before seeing the
+  source — striking-similarity control, LiCoEval-style). Seeded-copy
+  samples live only in `internal/` (never shipped in the npm package),
+  each with source URL + license recorded — the corpus practices what
+  it enforces.
+  *Verify:* corpus README lists all 36 samples with source URL +
   license per seeded sample; npm pack output contains none of them.
+  <!-- fix 2026-07-28 (pre-S0.2-freeze, reviewer-found denominator bug):
+  the merged draft said 12 seeded / "three per transformation depth" —
+  arithmetically inconsistent with every threshold (S0.2 ≥10/16 needs a
+  16-sample verbatim+rename subset; 12 seeded caps it at 8; 3×3 ≠ 12).
+  Corpus enlarged to 24 seeded (8/depth) so 10/16 parses; S5.1 rebased
+  ratio-preserving to 21/24 (87.5%). More samples per depth also makes
+  the G0 gate statistically steadier — one-time corpus cost -->`
 - [ ] **S0.2 Pre-register acceptance thresholds in `docs/CLAIMS.md`
   BEFORE any scanner runs** (SHA-freeze the corpus — implements the
   Critic-prompt-freeze gap recorded in the quality-stack review):
-  detector recall on verbatim+rename-only seeded copies ≥ 10/16; false
-  positives on independent samples ≤ 1/12. The floor is a GO/NO-GO
+  detector recall on verbatim+rename-only seeded copies ≥ 10/16 (the
+  16 = 8 verbatim + 8 rename-only samples of the 24-seeded corpus);
+  false positives on independent samples ≤ 1/12. The floor is a GO/NO-GO
   gate for building the CI layer — it is never the marketed
   capability; the marketed capability is the actual measured rate,
   published per S3.1/S3.3 (council patch 2026-07-28).
@@ -285,7 +293,8 @@ leaves a measurable gap.
 
 - [ ] **S5.1 Gap measurement first**: on the Phase-0 corpus the
   structural-rewrite seeded copies define the residual class. If
-  deterministic recall on the FULL corpus ≥ 14/16, **DROP this phase**
+  deterministic recall on the FULL seeded corpus ≥ 21/24 (87.5% — the
+  ratio the merged draft's unreachable "14/16" froze), **DROP this phase**
   (an LLM layer riding on a solved problem = sippenhaft-coupling in
   reverse; record the drop like L2/L3).
   *Verify:* drop-or-proceed verdict recorded against the corpus report.
