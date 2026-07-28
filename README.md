@@ -414,6 +414,21 @@ For platforms where the package's scripts cannot run, artefacts are built for pa
 
 ---
 
+## Works with agent-switch
+
+[`agent-switch`](https://github.com/event4u-app/agent-switch) is the companion
+CLI for running several agent accounts on one machine: it isolates each account
+in its own profile (`CLAUDE_CONFIG_DIR` per profile), so switching accounts
+never means logging out and back in. The two compose — **agent-switch isolates
+the accounts, agent-config governs what the agents do inside them**. When
+agent-config runs under an agent-switch profile it says so in the settings hub,
+warns before writes that would land in a shared (cross-profile) tree, and
+accepts a host-supplied config root so its own settings stay profile-scoped.
+
+→ [How the two compose →](docs/guides/works-with-agent-switch.md)
+
+---
+
 ## Who this is for
 
 Stack-agnostic governance core (orchestration · role modes · command clusters · quality gates · audit-discipline) plus parallel stack-specific skill sets:

@@ -24,7 +24,16 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
 import { parseYaml, mergeIntoTemplate, diffValues, deepMerge } from '../io/yamlIO.js';
 import { writeAtomic } from '../io/atomicWrite.js';
+import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
+
+/**
+ * Shared-write collision message (road-to-reciprocal-ecosystem Phase 2)
+ * — surfaced verbatim in the 409 body the GUI's blocking confirm reads.
+ */
+const SHARED_WRITE_MESSAGE =
+    'This write lands through an agent-switch shared symlink and affects ALL profiles. ' +
+    'Re-send with confirmSharedWrite:true to proceed, or run `agent-switch share off` for profile-local writes.';
 
 // Installer placeholders in `src/config/agent-settings.template.yml` that
 // `scripts/install.py` substitutes per-user. The TypeScript defaults layer
@@ -363,7 +372,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 await reply.code(412).send({ error: { code: 'PRECONDITION_REQUIRED', message: 'If-Unmodified-Since header required' } });
                 return reply;
             }
-            const body = (request.body ?? {}) as { values?: unknown };
+            const body = (request.body ?? {}) as { values?: unknown; confirmSharedWrite?: unknown };
             const parsed = settingsSchema.safeParse(body.values);
             if (!parsed.success) {
                 await reply.code(422).send({
@@ -395,10 +404,20 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                         preview: { path: SETTINGS_RELATIVE, body: merged },
                     };
                 }
-                const path = settingsPath(opts.writeRoot);
-                await fs.mkdir(dirname(path), { recursive: true, mode: 0o700 });
-                await writeAtomic(path, merged, { mode: 0o600 });
-                const stat = await fs.stat(path);
+                const targetPath = settingsPath(opts.writeRoot);
+                // Shared-write collision gate (road-to-reciprocal-ecosystem
+                // Phase 2) — a write that would land through an agent-switch
+                // shared symlink needs an explicit confirm; see
+                // `sharedWriteCheck.ts` for the detection contract.
+                const sharedPath = sharedWriteTarget(targetPath);
+                if (sharedPath !== null && body.confirmSharedWrite !== true) {
+                    await reply.code(409).send({ error: 'shared-write', sharedPath, message: SHARED_WRITE_MESSAGE });
+                    return reply;
+                }
+                const writePath = sharedPath !== null ? resolveThroughSymlinks(targetPath) : targetPath;
+                await fs.mkdir(dirname(writePath), { recursive: true, mode: 0o700 });
+                await writeAtomic(writePath, merged, { mode: 0o600 });
+                const stat = await fs.stat(writePath);
                 return { lastModified: Math.trunc(stat.mtimeMs), writtenPaths: [SETTINGS_RELATIVE] };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'atomic write failed';

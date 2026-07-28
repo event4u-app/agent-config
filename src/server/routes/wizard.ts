@@ -33,6 +33,8 @@ import { writeAtomic } from '../io/atomicWrite.js';
 import { detectInstalledTools, knownToolIds } from '../../install/toolDetection.js';
 import { detectRtk, rtkInstallCommands, RTK_UPSTREAM_REPO } from '../../install/rtkDetection.js';
 import { readSelectedTools, readSelectedPacks, writeSelectedTools } from '../../install/selectedTools.js';
+import { detectAgentSwitch, AGENT_SWITCH_INSTALL_COMMAND, AGENT_SWITCH_REPO } from '../../install/agentSwitchDetection.js';
+import { readDismissedRecommendations, dismissRecommendation } from '../../install/wizardDismissals.js';
 
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
@@ -627,6 +629,14 @@ const aiCouncilPayloadSchema = z.object({
     decision: z.record(z.enum(['agent', 'council', 'user'])).optional(),
 }).strict();
 
+// road-to-reciprocal-ecosystem § Phase 1 — the closed set of dismissible
+// passive-row recommendations. `agent-switch` is the only member today;
+// widen the enum (never a bare `z.string()`) when a second passive
+// recommendation ships.
+const dismissRecommendationPayloadSchema = z.object({
+    id: z.enum(['agent-switch']),
+}).strict();
+
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
     const extended = opts.extendedSteps === true;
     const totalSteps = opts.totalSteps ?? (extended ? EXTENDED_TOTAL_STEPS : DEFAULT_TOTAL_STEPS);
@@ -731,6 +741,41 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 installCommand: detection.present ? null : commands.recommended,
                 installCommands: detection.present ? null : commands,
             };
+        });
+
+        // road-to-reciprocal-ecosystem § Phase 1 — agent-switch passive-row
+        // recommendation (S0.1 honest-null council verdict, 2026-07-28: a
+        // PASSIVE ROW ONLY, never a proactive card). Exactly two states —
+        // not installed → recommend the (single, OS-independent) install
+        // command; installed (binary on PATH OR the `~/.agent-switch/`
+        // directory) → the row disappears. No outdated state is ever
+        // reported — detection does not probe version currency — and the
+        // AC never auto-installs; the command is surfaced for copy only,
+        // the same stance as rtk above. Read-only; available in BOTH
+        // wizard modes, same reasoning as detect-rtk.
+        app.get('/api/v1/wizard/detect-agent-switch', async () => {
+            const detection = detectAgentSwitch();
+            return {
+                installed: detection.installed,
+                version: detection.version,
+                installCommand: detection.installed ? null : AGENT_SWITCH_INSTALL_COMMAND,
+                repo: AGENT_SWITCH_REPO,
+                dismissed: readDismissedRecommendations().includes('agent-switch'),
+            };
+        });
+
+        // Permanent dismissal for a passive-row recommendation — see
+        // `wizardDismissals.ts`: there is no un-dismiss, by design.
+        app.post('/api/v1/wizard/dismiss-recommendation', async (request, reply) => {
+            const parsed = dismissRecommendationPayloadSchema.safeParse(request.body ?? {});
+            if (!parsed.success) {
+                await reply.code(422).send({
+                    error: { code: 'VALIDATION', message: 'invalid dismiss-recommendation payload', fields: zodIssuesToFields(parsed.error.issues) },
+                });
+                return reply;
+            }
+            dismissRecommendation(parsed.data.id);
+            return { ok: true, dismissed: readDismissedRecommendations() };
         });
 
         // road-to-wizard-ux-improvements § Phase 8 — AI Council config.

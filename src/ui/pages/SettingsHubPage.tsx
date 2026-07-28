@@ -30,6 +30,7 @@ import {
 import { isBasicPath } from '../settings/basicPaths.js';
 import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
 import { SettingsChangesBanner } from './SettingsChangesPage.js';
+import { serverStatus } from '../serverStatus.js';
 
 interface SettingsGetResponse {
     values: Record<string, JsonValue>;
@@ -55,6 +56,13 @@ const errors = signal<Record<string, string>>({});
 const banner = signal<string | null>(null);
 const saving = signal(false);
 const pendingDiff = signal<DiffChange[] | null>(null);
+/**
+ * Set when a PUT is blocked by the shared-write collision gate
+ * (road-to-reciprocal-ecosystem Phase 2) — renders `SharedWriteModal`
+ * instead of silently failing or (worse) a toast a user could miss
+ * while a write affects every agent-switch profile.
+ */
+const sharedWriteBlock = signal<{ sharedPath: string; message: string } | null>(null);
 const searchQuery = signal('');
 const modifiedOnly = signal(false);
 /** Per-section advanced-disclosure state, keyed by section path. */
@@ -131,19 +139,34 @@ async function preview(): Promise<void> {
     }
 }
 
-async function commit(): Promise<void> {
+async function commit(confirmSharedWrite = false): Promise<void> {
     saving.value = true;
     try {
         const res = await apiFetch<{ lastModified: number; writtenPaths: string[] }>('/api/v1/settings', {
             method: 'PUT',
             headers: { 'If-Unmodified-Since': String(lastModified.value) },
-            body: { values: values.value },
+            body: confirmSharedWrite ? { values: values.value, confirmSharedWrite: true } : { values: values.value },
         });
         lastModified.value = res.lastModified;
         pendingDiff.value = null;
+        sharedWriteBlock.value = null;
         banner.value = `Saved (${res.writtenPaths.join(', ')}).`;
     } catch (err) {
         if (err instanceof ApiCallError) {
+            // Shared-write collision (road-to-reciprocal-ecosystem Phase 2)
+            // — a distinct 409 shape (`error` is the literal string
+            // 'shared-write', not the usual `{ code, message }` object).
+            // Route to the blocking confirm modal instead of the generic
+            // error-banner path below.
+            const raw = err.body as { error?: unknown; sharedPath?: unknown; message?: unknown };
+            if (err.status === 409 && raw.error === 'shared-write') {
+                pendingDiff.value = null;
+                sharedWriteBlock.value = {
+                    sharedPath: typeof raw.sharedPath === 'string' ? raw.sharedPath : '',
+                    message: typeof raw.message === 'string' ? raw.message : 'This write affects a shared agent-switch profile.',
+                };
+                return;
+            }
             const ctx = err.body.error ?? { code: 'UNKNOWN', message: err.message };
             errors.value = fieldErrorMap(ctx);
             banner.value = topLevelCopy(ctx);
@@ -239,6 +262,54 @@ function toggleSection(key: string): void {
     expandedSections.value = { ...expandedSections.value, [key]: expandedSections.value[key] !== true };
 }
 
+/**
+ * Says which agent-switch (AS) profile is active, so a user who
+ * switches profiles and sees a different settings tree does not
+ * mistake profile-scoping for lost config (road-to-reciprocal-
+ * ecosystem Phase 2). Renders nothing when no AS profile is active,
+ * or against an older server bundle that omits the ping field.
+ */
+function AgentSwitchProfileBanner(): preact.JSX.Element | null {
+    const asp = serverStatus.value?.agentSwitchProfile;
+    if (asp === undefined || asp.active !== true) return null;
+    const label = asp.provider !== null && asp.profile !== null
+        ? `${asp.provider}/${asp.profile}`
+        : 'an unidentified profile';
+    return (
+        <div class="ac-banner" role="status">
+            <span>
+                Running under agent-switch profile <code>{label}</code> — settings shown and saved here are
+                profile-scoped. Switching profiles shows that profile's own settings; nothing is lost.
+            </span>
+        </div>
+    );
+}
+
+function SharedWriteModal({ block }: { block: { sharedPath: string; message: string } }): preact.JSX.Element {
+    return (
+        <div class="ac-modal" role="dialog" aria-modal="true" aria-labelledby="shared-write-title">
+            <div class="ac-modal__panel">
+                <h2 id="shared-write-title">Shared write — affects all profiles</h2>
+                <p>{block.message}</p>
+                <p><code>{block.sharedPath}</code></p>
+                <div class="ac-modal__actions">
+                    <button type="button" class="ac-button" onClick={(): void => { sharedWriteBlock.value = null; }}>
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        class="ac-button ac-button--primary"
+                        disabled={saving.value}
+                        onClick={(): void => { void commit(true); }}
+                    >
+                        {saving.value ? 'Writing…' : 'Write (affects all profiles)'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function DiffModal({ changes }: { changes: DiffChange[] }): preact.JSX.Element {
     return (
         <div class="ac-modal" role="dialog" aria-modal="true" aria-labelledby="diff-title">
@@ -299,6 +370,7 @@ export function SettingsHubPage(): preact.JSX.Element {
                 </nav>
             </header>
             <SettingsChangesBanner />
+            <AgentSwitchProfileBanner />
             <div class="ac-settings-hub__toolbar" role="search">
                 <input
                     class="ac-input ac-settings-hub__search"
@@ -357,6 +429,7 @@ export function SettingsHubPage(): preact.JSX.Element {
                 </div>
             </form>
             {pendingDiff.value !== null ? <DiffModal changes={pendingDiff.value} /> : null}
+            {sharedWriteBlock.value !== null ? <SharedWriteModal block={sharedWriteBlock.value} /> : null}
         </div>
     );
 }

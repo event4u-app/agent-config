@@ -34,6 +34,12 @@ import { BackupScreen } from '../wizard/BackupScreen.js';
 import { FinishChecklist } from '../wizard/FinishChecklist.js';
 import {
     activeTotalSteps,
+    asDetectionLoaded,
+    asDismissed,
+    asInstallCommand,
+    asInstalled,
+    asRepo,
+    asVersion,
     banner,
     clampStep,
     continueAcknowledged,
@@ -290,6 +296,7 @@ async function loadAll(): Promise<void> {
         }
         if (resumed.id === 'identity') {
             void loadRtkDetectionOnce();
+            void loadAgentSwitchDetectionOnce();
         }
         if (resumed.kind === 'review') {
             void refreshDiff();
@@ -549,6 +556,37 @@ async function loadRtkDetectionOnce(): Promise<void> {
     }
 }
 
+interface DetectAgentSwitchResponse {
+    installed?: boolean;
+    version?: string | null;
+    installCommand?: string | null;
+    repo?: string;
+    dismissed?: boolean;
+}
+
+/**
+ * Detect agent-switch presence once per session
+ * (road-to-reciprocal-ecosystem § Phase 1 — S0.1 honest-null council
+ * verdict, 2026-07-28: a PASSIVE ROW, never persisted into settings — this
+ * is a recommendation, not a configuration toggle). `asDismissed` mirrors
+ * the server's permanent-dismissal record so a previously closed row stays
+ * closed after a page reload within the same session.
+ */
+async function loadAgentSwitchDetectionOnce(): Promise<void> {
+    if (asDetectionLoaded.value) return;
+    asDetectionLoaded.value = true;
+    try {
+        const res = await apiFetch<DetectAgentSwitchResponse>('/api/v1/wizard/detect-agent-switch');
+        asInstalled.value = res.installed === true;
+        asVersion.value = res.version ?? null;
+        asInstallCommand.value = res.installCommand ?? null;
+        if (typeof res.repo === 'string') asRepo.value = res.repo;
+        asDismissed.value = res.dismissed === true;
+    } catch {
+        // Detection failure → leave asInstalled null (row stays hidden until
+        // a later successful load).
+    }
+}
 
 async function persistStep(nextIndex: number, partial: Record<string, JsonValue>): Promise<void> {
     try {
@@ -625,6 +663,7 @@ async function goTo(nextIndex: number): Promise<void> {
     }
     if (next.id === 'identity') {
         void loadRtkDetectionOnce();
+        void loadAgentSwitchDetectionOnce();
     }
     if (next.kind === 'review') {
         void refreshDiff();
@@ -1417,6 +1456,69 @@ function RtkRow(): preact.JSX.Element {
     );
 }
 
+/**
+ * Permanently dismiss the agent-switch recommendation
+ * (road-to-reciprocal-ecosystem § Phase 1). Optimistic on failure the row
+ * simply reappears on the next detection load — there is nothing to roll
+ * back client-side, so a failed POST just surfaces a banner and leaves
+ * `asDismissed` untouched.
+ */
+async function dismissAgentSwitchRecommendation(): Promise<void> {
+    try {
+        await apiFetch('/api/v1/wizard/dismiss-recommendation', {
+            method: 'POST',
+            body: { id: 'agent-switch' },
+        });
+    } catch (err) {
+        banner.value = {
+            message: err instanceof Error ? err.message : String(err),
+            tone: 'error',
+        };
+        return;
+    }
+    asDismissed.value = true;
+}
+
+/**
+ * agent-switch passive-row recommendation on the identity step
+ * (road-to-reciprocal-ecosystem § Phase 1 — S0.1 honest-null council
+ * verdict, 2026-07-28: PASSIVE ROW ONLY, never a proactive card).
+ * Detection-driven, read-only, copy-only (no install button — the AC never
+ * auto-installs). Renders nothing while undetected (no flash), nothing
+ * when installed, and nothing once permanently dismissed.
+ */
+function AgentSwitchRow(): preact.JSX.Element | null {
+    if (!asDetectionLoaded.value || asInstalled.value !== false || asDismissed.value) return null;
+    return (
+        <div class="ac-rtk-row">
+            <div class="ac-rtk-row__head">
+                <span class="ac-rtk-row__label">agent-switch <small>(third-party, MIT)</small></span>
+                <span class="ac-badge ac-badge--missing">not installed</span>
+            </div>
+            <div class="ac-rtk-row__install">
+                <p class="ac-field__description">
+                    agent-switch isolates multiple agent accounts into per-account
+                    profiles (<code>CLAUDE_CONFIG_DIR</code>) so switching accounts
+                    never requires a re-login. Free and MIT-licensed.
+                </p>
+                {asInstallCommand.value !== null
+                    ? <code class="ac-rtk-row__cmd">{asInstallCommand.value}</code>
+                    : null}
+                <a class="ac-button" href={`https://github.com/${asRepo.value}`} target="_blank" rel="noreferrer noopener">
+                    Open agent-switch repo
+                </a>
+                <button
+                    type="button"
+                    class="ac-button ac-button--small"
+                    onClick={(): void => { void dismissAgentSwitchRecommendation(); }}
+                >
+                    Don't show again
+                </button>
+            </div>
+        </div>
+    );
+}
+
 function StepBody(): preact.JSX.Element | null {
     const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
     // road-to-unified-setup § B5 — hard-stop continue-screen between the
@@ -1438,6 +1540,7 @@ function StepBody(): preact.JSX.Element | null {
         return (
             <>
                 {step.id === 'identity' ? <RtkRow /> : null}
+                {step.id === 'identity' ? <AgentSwitchRow /> : null}
                 <SchemaForm
                     schema={sliced}
                     values={values.value}

@@ -323,6 +323,23 @@ export const rtkInstallTiers = signal<RtkInstallCommandTiers | null>(null);
 export const rtkRepo = signal<string>('https://github.com/rtk-ai/rtk');
 
 /**
+ * agent-switch presence on the identity step (road-to-reciprocal-ecosystem
+ * § Phase 1 — S0.1 honest-null council verdict, 2026-07-28: PASSIVE ROW
+ * ONLY). Always detected at runtime via
+ * `GET /api/v1/wizard/detect-agent-switch` — never read from settings, and
+ * unlike rtk there is no identity-collision concern, so a single boolean
+ * `asInstalled` is enough. `asDismissed` is permanent once the user closes
+ * the row (`POST /api/v1/wizard/dismiss-recommendation`) — never reset by
+ * a fresh detection load.
+ */
+export const asDetectionLoaded = signal(false);
+export const asInstalled = signal<boolean | null>(null);
+export const asVersion = signal<string | null>(null);
+export const asInstallCommand = signal<string | null>(null);
+export const asRepo = signal<string>('event4u-app/agent-switch');
+export const asDismissed = signal(false);
+
+/**
  * AI Council step (road-to-wizard-ux-improvements § Phase 8). The
  * wizard-controlled scalar subset of `.ai-council.yml`, loaded from
  * `GET /api/v1/wizard/ai-council` and persisted on finish via POST. Only the
