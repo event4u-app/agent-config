@@ -297,11 +297,23 @@ null).
       auth behavior (`_AUTH_FAILURE_PATTERNS` reused). Manual-mode parity per
       council precedent: `--manual` renders the bundle between `═` rules for
       paste-into-web usage.
-- [~] **Step 4:** Worker-via-bundle fallback **delegate** (write path on
-      non-Claude-Code hosts) — **deferred**: this is codex-as-worker on a
-      foreign host, the exact flow-learnings honest-null. Re-open only if the
-      Phase 5 review verdict shows lift.
-      <!-- deferred: gated on Phase 5 review-lift; worker mechanism = flow-learnings HONEST-NULL -->
+- [-] **Step 4:** Worker-via-bundle fallback **delegate** (write path on
+      non-Claude-Code hosts) — **cancelled**: this is codex-as-worker on a
+      foreign host, the exact flow-learnings honest-null. Re-open condition
+      was "the Phase 5 review verdict shows lift" — it fired and resolved
+      NEGATIVE.
+      <!-- cancelled 2026-07-28 at closure (AI council, claude-sonnet-4-5 +
+      gpt-4o, 2 rounds, deferred-disposition question): the named re-open
+      condition RAN and came back negative — Phase 5 is a backed NULL (CLAIMS
+      `team-defect-finding-null`, no cross-model lift, all arms at recall
+      ceiling 1.00). Round 1 was unanimous for cancel; round 2's adversarial
+      rebuttal argued the condition stays structurally evaluable (a FUTURE
+      benchmark could show lift) — host consolidation rejects that reading:
+      the condition names THIS roadmap's Phase-5 verdict, which is recorded
+      and terminal. A future lift finding would be a new roadmap's evidence,
+      not this item's gate. `[~]` would falsely imply the gate may still
+      trip. The worker mechanism additionally remains a recorded
+      flow-learnings honest-null. -->
 - [x] <!-- done 2026-07-12: 29 tests — cap boundary red/green,
       marker, header ordering, auth-fail→BLOCKED, quota-exhausted no-spawn,
       manual render, envelope parse + raw fallback, auto-vs-pinned model. -->
@@ -387,6 +399,14 @@ existing bench-rig discipline before any public copy exists.
       A blind rubric (preference) judge is moot given the recall ceiling (all
       arms 1.00); it re-opens with a judge-survivable-subtlety corpus that
       breaks the ceiling. Secondary metric, no spend incurred. -->
+      <!-- closure disposition 2026-07-28 (AI council, unanimous across both
+      rounds): KEEP-IN-ARCHIVE as deferred, no follow-up roadmap. The re-open
+      condition (a judge-survivable-subtlety corpus that breaks the recall
+      ceiling) is neither met nor falsified — no such corpus exists or is
+      planned, and the primary verdict is already recorded. Spawning a
+      follow-up would contradict the no-speculative-roadmap doctrine; `[~]`
+      with this annotation is the honest encoding and stays greppable in
+      archive/. -->
 - [x] **Step 4:** Verdict in `docs/proof.md` + CLAIMS.md shape: per-arm
       detection rates; pre-registered hypothesis (b > a on correctness-class
       defects; c competitive on design-class); honest-null reporting if arms
@@ -442,28 +462,94 @@ the disposition step executed either way.
 
 ## Acceptance Criteria (anti-dump)
 
-- [ ] Every new capability is default-off; with `ai_team` absent or
+- [x] Every new capability is default-off; with `ai_team` absent or
       `enabled: false`, doctor output aside, all paths are byte-identical to
       pre-roadmap behavior (parity snapshots for Stop-hook dispatch and the
       command-suggestion surface).
-- [ ] Nothing upstream-maintained is reimplemented: no broker, no companion, no
+      <!-- verified + hardened 2026-07-28. Defaults: AI_TEAM_DEFAULTS all-off
+      (config.ts:65-72); run_team_review throws before any repo access
+      (team_dispatch.ts:528); record_gate_verdict strict no-op unless
+      review_gate.managed (review_gate.ts:330); hook gates on
+      !enabled || !managed before reading anything (team_review_gate_hook.ts).
+      Stop-hook parity: the sonnet audit found only enabled:true+managed:false
+      was tested — closed with two new E2E pins: ai_team ABSENT (no settings
+      file) and enabled:false-dominates-managed:true, both strict no-op
+      (exit 0, no stdout, no state, no ledger) — team_review_gate_hook.test.ts
+      6/6. Command-suggestion parity: council 2026-07-28 (sonnet-4-5 + gpt-4o,
+      2 rounds, option C) — the /team master stays suggestion-eligible because
+      suggestions never auto-execute and its trigger_context carries the
+      "ai_team.enabled is true" agent-side precondition; pinned by
+      tests/scripts/ai_team/suggestion_parity.test.ts (exactly one eligible
+      team command, precondition text present, all subs ineligible, suggester
+      source has ZERO ai_team awareness → output invariant w.r.t. the config).
+      Honest limit: suggestion parity is agent-side conditional + config
+      invariance, not a byte-snapshot of the eligibility pool — the pool
+      legitimately grew by the /team entry. -->
+- [x] Nothing upstream-maintained is reimplemented: no broker, no companion, no
       background-job runtime, no gate hook in our tree; `team_dispatch.ts`
       imports transport from `clients.ts` only.
-- [ ] The council's neutrality contract is textually unchanged except the
+      <!-- verified 2026-07-28 (sonnet audit): only transport import is
+      OpenAICliClient from ai_council/clients.js (team_dispatch.ts:35-39;
+      TeamReviewCliClient at :422 is a thin subclass); grep for
+      app-server/broker/companion/daemon patterns → zero implementations
+      (review_gate.ts:468 is a READ-ONLY path constant into upstream's own
+      tmpdir state; team_dispatch.ts:194 is the honesty-banner string). Our
+      team_review_gate_hook.ts is the Phase-4-sanctioned read-only GOVERNANCE
+      wrapper ("the gate itself stays upstream's") — never produces a verdict,
+      fail_closed: false, exit 0 on every path. Stale "not yet manifest-wired"
+      comments in review_gate.ts + team_review_gate_hook.ts corrected in the
+      same change (hook_manifest.yaml claude.stop wiring landed 2026-07-12). -->
+- [x] The council's neutrality contract is textually unchanged except the
       Phase-0 boundary paragraph; no council code path gains repo access.
-- [ ] All new config keys live in `docs/contracts/ai-team-config.md` with
+      <!-- verified 2026-07-28 (sonnet audit): git diff af7ffeb9b..HEAD —
+      Iron Law of Neutrality bullet (ai-council-config.md:782-785) and
+      SKILL.md § Neutrality guidelines byte-identical; the only Phase-0
+      change was the new boundary "Do NOT use when" bullet (different
+      section). sha256 pin green (ai_council_blind_review.test.ts, 26/26).
+      No fs/git/spawn added to any ai_council/*.ts in the window; council
+      transport import in team_dispatch.ts is one-way (team uses clients,
+      council gains nothing). -->
+- [x] All new config keys live in `docs/contracts/ai-team-config.md` with
       schema validation rejecting unknown values; the shared quota bucket is
       documented.
+      <!-- verified 2026-07-28 (sonnet audit): all 7 keys in the contract's
+      schema table (lines 63-71); fail-closed rejection in config.ts
+      build_ai_team_config (_KNOWN_KEYS :177-184, nested review_gate
+      :127-134, TeamConfigError); explicit unknown-key tests in
+      tests/scripts/ai_team/config.test.ts (33 tests); quota bucket fully
+      documented in § "Quota — one machine, one counter" (two-ceilings-
+      one-counter example + /team status contract). 87/87 green incl.
+      schema↔template parity. Note: wizard Zod schema is non-strict by
+      design — rejection duty lives in config.ts, doc says so. -->
 - [x] No public claim about cross-model quality exists without the Phase 5
       verdict bound in CLAIMS.md — workflow-value prose allowed, lift claims
       not.
       <!-- satisfied 2026-07-20: the Phase-5 verdict is a backed NULL
       (CLAIMS team-defect-finding-null); no lift claim exists anywhere,
       workflow-value prose only. -->
-- [ ] `/team:delegate` is unreachable until both `ai_team.enabled` and
+- [x] `/team:delegate` is unreachable until both `ai_team.enabled` and
       `ai_team.allow_delegate` are true.
-- [ ] All quality gates pass (delegated to remote CI per
+      <!-- verified + hardened 2026-07-28: prose gates existed
+      (delegate/command.md §§ 1-2, STOP on either flag missing/false;
+      allow_delegate default false in config.ts:68) but the double gate had
+      no code enforcement and zero test coverage (sonnet audit: PARTIAL).
+      Closed in the same change: assert_delegate_allowed() +
+      TeamDelegateDisabledError in team_dispatch.ts (mirrors the
+      run_team_review TeamDisabledError pattern), --delegate-gate CLI mode
+      (exit 2 + pointer on stderr unless BOTH flags true), command doc now
+      names the deterministic mirror, and all three flag combinations are
+      test-pinned (enabled=false / enabled-only / both → open) —
+      team_dispatch.test.ts 32/32 green. -->
+- [-] All quality gates pass (delegated to remote CI per
       `quality.local_auto_run`).
+      <!-- skipped: quality.local_auto_run=false → remote CI is the gate
+      (roadmap-ci-steps-policy). Targeted local evidence for THIS change,
+      2026-07-28: `task typecheck-ts` exit 0; `npx vitest run
+      tests/scripts/ai_team/ tests/scripts/team_review_gate_hook.test.ts
+      tests/scripts/ai_council_blind_review.test.ts` → 6 files, 123/123 green;
+      condensation hashes in sync + `check_condensation` passed;
+      `task sync` + `task generate-tools` clean. The full pipeline runs on the
+      PR. -->
 
 ## Blockers
 
