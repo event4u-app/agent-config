@@ -113,23 +113,12 @@ Rules:
 
 ## Severity-conditioned team composition — conditions pattern
 
-Guidance, not a new object class (persona-catalog disposition; AI council
-2026-07-27, claude-sonnet-4-5 + gpt-4o: capture as guidance on this
-existing surface — no roster schema, no linter, no fourth scoping
-ontology). Incident-style severity tiers refine composition and
-activation **within** the form the static gate already picked — severity
-never overrides the form gate, the Iron Law, or any safety floor.
-
-| Severity | Composition + activation | Existing mode(s) |
-|---|---|---|
-| Critical — prod impact, security, data integrity | Full parallel team; debate-grade review on the aggregate | `do-in-parallel` + `judge-with-debate` (Mode 9 where opted in) |
-| High — contested spec, cross-layer risk | Implementer + two sequential judges | `do-and-judge-two-stage` |
-| Medium — routine multi-step | Implementer + judge between steps | `do-in-steps` / `do-and-judge` |
-| Low — small, reversible | Solo with async review | in-session (`none`); optional single async judge |
-
-At equal severity the cheapest-mode preference (§ 3. Pick the mode)
-still applies; escalate one tier only on a named risk signal, never on
-vibes.
+Incident-style severity tiers (Critical / High / Medium / Low) refine
+composition and activation **within** the form the static gate already
+picked — severity never overrides the form gate, the Iron Law, or any
+safety floor. Guidance, not a new object class (persona-catalog
+disposition). Severity→composition table + escalation rule →
+[`subagent-modes-detail` § Severity-conditioned team composition](../../agent-src/contexts/execution/subagent-modes-detail.md).
 
 ## The nine modes
 
@@ -144,42 +133,23 @@ glossary) lives in
 [`subagent-topologies`](../../agent-src/contexts/execution/subagent-topologies.md) —
 pull it for capacity planning; it is metadata, not runtime-enforced.
 
+Per-mode decision rows (when to use / when not / model pairing) and the
+mode-2 stage-routing contract live in
+[`subagent-modes-detail` § Modes 1–6](../../agent-src/contexts/execution/subagent-modes-detail.md) —
+pull them at dispatch time.
+
 ### 1. do-and-judge
 
 Implementer produces a diff; judge reviews; loop applies, revises, or
 hands off. Hard ceiling: **two revision cycles**, then stop and hand
 back to the user.
 
-| When to use | When not | Model pairing |
-|---|---|---|
-| Single-change task with non-trivial risk | Tiny fix, or spike/exploration | implementer = session; judge = one tier up |
-
 ### 2. do-and-judge-two-stage
 
-Implementer produces a diff; **two judges run sequentially** — first a
-spec-compliance reviewer (does the diff satisfy the stated spec /
-acceptance criteria?), then a code-quality reviewer (is the diff well-
-written for the codebase it lands in?). The orchestrator only proceeds
-to stage two if stage one returns `DONE` or `DONE_WITH_CONCERNS`. A
-stage-one `BLOCKED` shortcuts the loop — there is no point quality-
-reviewing a diff that does not satisfy the spec.
-
-| When to use | When not | Model pairing |
-|---|---|---|
-| Spec is contested or AC are detailed; diff size makes one judge prone to missing one axis (correctness vs craft) | Spec is one sentence, or the diff is one line (collapse to mode 1) | implementer = session; spec-judge = one tier up; quality-judge = same tier as spec-judge, fresh context |
-
-**Why two stages, not one judge with both rubrics:** combining the
-rubrics in one prompt reliably regresses one of them — the judge "spends
-attention" on whichever rubric appears last. Splitting the prompts
-forces each judge to commit fully to its rubric.
-
-**Stage-routing rule:**
-- Stage-1 returns `DONE` → run stage-2.
-- Stage-1 returns `DONE_WITH_CONCERNS` → run stage-2; concerns carry
-  forward to the final envelope.
-- Stage-1 returns `NEEDS_CONTEXT` → pause; stage-2 does not run.
-- Stage-1 returns `BLOCKED` → final verdict is `BLOCKED`; stage-2
-  does not run (saves cost).
+Implementer produces a diff; **two judges run sequentially** — spec
+compliance first, code quality second. Stage-one `BLOCKED` shortcuts the
+loop (no point quality-reviewing a diff that misses the spec). Stage
+routing + why-two-stages rationale → modes-detail § Mode 2.
 
 ### 3. do-in-steps
 
@@ -187,19 +157,11 @@ Plan is split into N steps; judge runs **between** steps. A step that
 fails judgment is revised before the next step starts. Used for
 multi-file changes where a mid-plan mistake would cascade.
 
-| When to use | When not | Model pairing |
-|---|---|---|
-| Multi-step plan with ordered dependencies | Single-step change, or when steps are independent (use `do-in-parallel`) | implementer = session; judge = one tier up |
-
 ### 4. do-in-parallel
 
 Independent slices run concurrently. No judge per slice — judge runs
 once on the aggregated result. Parallelism capped by
 `subagents.max_parallel` in `.agent-settings.yml`.
-
-| When to use | When not | Model pairing |
-|---|---|---|
-| Independent slices (different files, non-overlapping) | Any slice touches shared state | implementer = session; judge = one tier up, run once |
 
 ### 5. do-competitively
 
@@ -207,19 +169,11 @@ Multiple implementers produce candidate diffs for the **same** slice.
 Judge picks the winner and rejects the losers. Expensive — use only
 when the solution space is genuinely broad.
 
-| When to use | When not | Model pairing |
-|---|---|---|
-| Broad solution space (algorithm choice, API shape) | Well-defined problem with one good answer | implementers = same tier (≥2 instances); judge = one tier up |
-
 ### 6. judge-with-debate
 
 Two judges each produce a verdict; a meta-judge reconciles
 disagreements. Used for high-stakes changes (security, data
 migration, public API) where a single judge is too easy to fool.
-
-| When to use | When not | Model pairing |
-|---|---|---|
-| Security, data integrity, public API change | Routine internal refactor | judges = same tier (2x); meta-judge = one tier up |
 
 Mode 6 = **go/no-go** (strict-er verdict wins); for defect-FINDING coverage (the
 *union* of what diverse models catch) use Mode 9.
@@ -271,29 +225,12 @@ gate → [`subagent-modes-detail`](../../agent-src/contexts/execution/subagent-m
 ## Status taxonomy — every subagent return uses one envelope
 
 Every implementer or judge return must conform to
-[`schemas/subagent-status.json`](schemas/subagent-status.json). Four
-statuses, no free-form alternatives:
-
-| Status | Meaning | Required keys (beyond `status`, `summary`) |
-|---|---|---|
-| `DONE` | Work shipped, all gates green. | `evidence[]` |
-| `DONE_WITH_CONCERNS` | Work shipped but caller must act on concerns. | `evidence[]`, `concerns[]` |
-| `NEEDS_CONTEXT` | Paused; caller can unblock by answering. | `blocking_question` |
-| `BLOCKED` | No path forward exists. | `blocking_reason` |
-
-**Why a fixed taxonomy:** orchestrators (`/do-and-judge`, `/do-in-steps`)
-route on status. Free-form "kind of done" returns force the orchestrator
-to interpret prose, which silently regresses the two-revision ceiling and
-the judge-rejected-do-not-apply rule. The schema makes routing mechanical.
-
-**Tests:** `tests/test_subagent_status_schema.py` exercises all four
-statuses plus rejection cases (missing required keys, unknown status,
-extra fields, conditional-key violations).
-
-**Distinguishing `NEEDS_CONTEXT` from `BLOCKED`:** `NEEDS_CONTEXT` means
-*"you, the caller, can fix this by telling me X"*. `BLOCKED` means
-*"no input from you unblocks this — escalate or rescope"*. If a subagent
-is unsure, it picks `BLOCKED` and the caller can downgrade.
+[`schemas/subagent-status.json`](schemas/subagent-status.json). Exactly
+four statuses — `DONE` · `DONE_WITH_CONCERNS` · `NEEDS_CONTEXT` ·
+`BLOCKED` — no free-form alternatives; orchestrators route on status
+mechanically. Meaning/required-keys table, why-fixed rationale, and the
+`NEEDS_CONTEXT`-vs-`BLOCKED` distinction →
+[`subagent-modes-detail` § Status taxonomy](../../agent-src/contexts/execution/subagent-modes-detail.md).
 
 ## Dispatch prompts — externalized
 
@@ -301,9 +238,12 @@ Each mode's literal dispatch template lives under
 [`prompts/{mode}.md`](prompts/README.md). The orchestrator loads the
 matching prompt at dispatch time and substitutes `{{placeholders}}`.
 Edits to a prompt do not bloat this skill against the 400-line sunset
-trigger; `tests/test_subagent_prompt_loading.py` confirms each of the
-nine modes resolves to a loadable prompt that cites all four taxonomy
-statuses.
+trigger. Eight prompt files cover modes 1–7 and 9 (the standalone judge
+reuses [`prompts/do-and-judge.md`](prompts/do-and-judge.md); mode 8's
+live-app rubric lives in
+[`subagent-modes-detail` § Mode 8](../../agent-src/contexts/execution/subagent-modes-detail.md));
+each prompt cites all four taxonomy statuses — see
+[`prompts/README.md`](prompts/README.md).
 
 ## Procedure
 
@@ -367,21 +307,13 @@ the judge verdict.
 
 ### 6. Emit telemetry
 
-After every auto-dispatched run, write one telemetry line to
-`agents/runtime/state/audit/YYYY-MM.jsonl` (current UTC month — use
-`new Date().toISOString().slice(0, 7)` to compute the filename).
-The line is a standard audit-log-v1 object with `input_kind:
-"orchestration"` and an `orchestration` sub-object per
-[`orchestration-telemetry.md`](../../agent-src/contexts/execution/orchestration-telemetry.md).
-
-Minimal emit (fill what is observable; `token_delta_provenance: "estimated"` if
-host usage metadata is unavailable):
-
-```json
-{"schema_version":1,"id":"<ulid>","ts":"<iso>","work_id":"<work_id>","phase":"implement","outcome":"success","confidence_band":"high","risk_class":"low","input_kind":"orchestration","type":"phase","orchestration":{"task_size_estimate":<int>,"spawn_count":<int>,"tiers":[...],"token_delta":<int>,"token_delta_provenance":"estimated","wall_clock_ms":<int>,"outcome":"DONE","verify_mode":"deterministic"}}
-```
-
-Skip emit when `subagents.enabled: false` or `spawn_count == 0` (in-session run).
+After every auto-dispatched run, write one audit-log-v1 line
+(`input_kind: "orchestration"`) via the `orchestration_record` recorder —
+never hand-author the JSON. Line shape, field semantics, recorder
+invocation, and `token_delta` sourcing priority →
+[`orchestration-telemetry` § Emit procedure](../../agent-src/contexts/execution/orchestration-telemetry.md).
+Skip emit when `subagents.enabled: false` or `spawn_count == 0`
+(in-session run).
 
 ## Gotcha
 

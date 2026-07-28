@@ -21,7 +21,7 @@ skill above the 400-line sunset trigger.
 Every prompt cites the status taxonomy in
 [`../schemas/subagent-status.json`](../schemas/subagent-status.json) and
 ends with the **return-envelope** instruction so the subagent's reply
-validates against `tests/test_subagent_status_schema.py`.
+validates against that schema.
 
 ## Prompt-cache discipline
 
@@ -47,6 +47,7 @@ dispatch. Verify a cohort is actually reading, not re-writing, by checking
 
 ## Loading
 
-`tests/test_subagent_prompt_loading.py` asserts that every mode named
-in `SKILL.md` § *The nine modes* has a loadable prompt file under this
-directory and that each prompt mentions all four status enum values.
+Every dispatchable mode named in `SKILL.md` § *The nine modes* maps to a
+prompt file in the table above (mode 8 is gated/experimental — its
+live-app rubric lives in the `subagent-modes-detail` context, not here);
+each prompt mentions all four status enum values.
