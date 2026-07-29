@@ -37,6 +37,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # This job runs INSIDE a container, so the checkout is owned by a
+      # different UID than the container user and git refuses every command
+      # with "fatal: detected dubious ownership". The umbrella shells out to
+      # git for its staleness lints (lint_pre_migration_refs), so mark the
+      # workspace safe before anything reaches git. Non-containerized jobs
+      # never hit this, which is why it surfaced only when this job first ran
+      # on a release PR.
+      - name: Mark the workspace safe for git (containerized checkout)
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Install dependencies (build toolchain for npm pack's prepack chain)
         run: |
           npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
