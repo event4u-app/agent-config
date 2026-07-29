@@ -53,8 +53,13 @@ fi
 step "publint (published-package shape)"
 npm run lint:publint --silent
 
+# `--ignore-scripts` is NOT honoured for `prepare` by every npm version: on the
+# node-20 container npm still runs it, and this repo's prepare installs the git
+# hooks and prints a banner — straight into the `--json` stdout we parse. Slice
+# from the first `[` so any lifecycle banner ahead of the payload is tolerated
+# instead of turning into `SyntaxError: Unexpected token '✅'`.
 UNPACKED_BYTES="$(npm pack --dry-run --json --ignore-scripts --silent 2>/dev/null \
-  | node -e 'let b="";process.stdin.on("data",c=>b+=c).on("end",()=>{const j=JSON.parse(b);console.log(j[0].unpackedSize)})')"
+  | node -e 'let b="";process.stdin.on("data",c=>b+=c).on("end",()=>{const i=b.indexOf("[");const j=JSON.parse(i>=0?b.slice(i):b);console.log(j[0].unpackedSize)})')"
 
 # ------------------------------------------------------- 3. headless install
 step "headless consumer install from the tarball"
