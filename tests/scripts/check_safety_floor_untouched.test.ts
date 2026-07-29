@@ -27,12 +27,14 @@ describe('check_safety_floor_untouched — behavioural spec', () => {
         ]);
     });
 
-    it('watches the CURRENT authoring root, and keeps the legacy one for old ranges', () => {
-        // Current first — a diff naming src/rules/* is what today's edits produce.
+    it('watches the CURRENT authoring root only — no retired container', () => {
         expect(sf.RULES_DIR_REL).toBe('src/rules');
-        // Legacy retained on purpose: a baseline predating ADR-051 still names it,
-        // and dropping it would blind the guard on exactly those ranges.
-        expect([...sf.RULES_DIRS_REL]).toContain('.agent-src.uncondensed/rules');
+        // The retired source container must not creep back in: a dead path kept
+        // alive for an unmeasured scenario is how the original defect survived
+        // (and `check_no_new_legacy_path` enforces the same thing repo-wide).
+        expect(sf._floor_candidates().every((p) => !p.includes('.agent-src.uncondensed'))).toBe(
+            true,
+        );
     });
 
     it('every guarded floor file resolves on disk (the guard is not watching phantoms)', () => {
@@ -53,9 +55,12 @@ describe('check_safety_floor_untouched — behavioural spec', () => {
         expect(breaches).toEqual(['src/rules/commit-policy.md']);
     });
 
-    it('rejects a floor rule named under the legacy root too', () => {
-        expect(sf._breaches(['.agent-src.uncondensed/rules/scope-control.md'])).toEqual([
-            '.agent-src.uncondensed/rules/scope-control.md',
+    it('rejects every guarded floor rule, not just the first', () => {
+        expect(sf._breaches(['src/rules/scope-control.md'])).toEqual([
+            'src/rules/scope-control.md',
+        ]);
+        expect(sf._breaches(['src/rules/verify-before-complete.md'])).toEqual([
+            'src/rules/verify-before-complete.md',
         ]);
     });
 

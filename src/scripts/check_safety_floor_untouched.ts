@@ -29,21 +29,22 @@ import { assertWatchlistResolves } from './_lib/scan_scope.js';
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 /**
- * Roots the four floor rules may live under, current first.
+ * Root the four floor rules live under (ADR-051).
  *
- * `src/rules` is where they live since ADR-051. The legacy
- * `.agent-src.uncondensed/rules` entry is RETAINED on purpose: this gate diffs
- * a baseline against HEAD, and a baseline predating ADR-051 still names the old
- * path — dropping it would blind the guard on exactly those ranges.
- *
- * Until 2026-07-29 the legacy path was the ONLY entry, so the guard compared
- * diffs against paths that no longer exist and reported
+ * Until 2026-07-29 this named the retired source container, so the guard
+ * compared diffs against paths absent from every commit and reported
  * `✅ Safety-floor untouched (4 rules guarded)` no matter what was edited.
- * `assertWatchlistResolves` below now makes that state a loud failure instead.
+ * `assertWatchlistResolves` below now makes that state a loud failure instead
+ * of a clean bill of health.
+ *
+ * A first pass also kept the legacy path "in case a pre-ADR-051 baseline names
+ * it". That was speculative — CI always diffs against current `main` — and it
+ * tripped `check_no_new_legacy_path`, which is right: the source of truth is
+ * `src/`, and a dead path kept alive for an unmeasured scenario is how the
+ * original defect survived.
  */
-const RULES_DIRS_REL = ['src/rules', '.agent-src.uncondensed/rules'] as const;
-/** Back-compat alias — the current authoring root. */
-const RULES_DIR_REL = RULES_DIRS_REL[0];
+const RULES_DIR_REL = 'src/rules';
+const RULES_DIRS_REL = [RULES_DIR_REL] as const;
 const SAFETY_FLOOR = [
     'non-destructive-by-default.md',
     'commit-policy.md',
