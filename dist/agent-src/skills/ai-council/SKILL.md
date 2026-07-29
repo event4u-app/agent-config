@@ -332,6 +332,66 @@ DO NOT BLINDLY ACCEPT FINDINGS. DO NOT BLINDLY REJECT THEM.
 EVERY FINDING GETS A REASONED VERDICT BEFORE IT REACHES THE USER.
 ```
 
+### Mechanism claims need a probe, not a second opinion
+
+```
+A MECHANISM CLAIM IN A COUNCIL ARTEFACT IS MARKED `unverified:` UNTIL A PROBE COVERS IT.
+A VERDICT RESTING ON AN UNVERIFIED MECHANISM CLAIM DOES NOT BIND.
+SEVERAL MODELS AGREEING MULTIPLIES PLAUSIBILITY. IT DOES NOT PRODUCE EVIDENCE.
+```
+
+A **mechanism claim** asserts how the machine behaves: "this toggle removes the
+cost", "that gate scans X", "the host reads the router". The council deliberates
+over **arguments**, never against the running system — it cannot execute a command,
+so it has no way to falsify one. Marking such a claim `unverified:` in the artefact
+keeps the reader from mistaking a well-argued mechanism for a measured one, and the
+non-binding clause means the fix for a wrong claim is a probe, not a re-vote.
+
+**Case zero (2026-07-29).** An accepted ADR claimed a compile-time toggle gave
+"zero-cost dormancy" because the rule was dropped from `dist/router.json`. Two
+council members praised the reasoning; neither could check it. A one-line `grep`
+later showed the toggle was read by the router compiler and by **nothing in the
+projector**, so the rule's body kept shipping as a file — and the host reads the
+file. The claim was half wrong, the verdict that rested on it was void, and what
+caught it was a probe, not a third opinion.
+
+The council is **uninformed about the codebase, ADRs, locked
+contracts, prior decisions, and project history** — it sees only the
+artefact + neutrality preamble. That is the source of its diversity
+**and** its blind spots. Convergence between members can mean shared
+generic best-practice priors, not project-specific correctness.
+
+The host applies a critical lens to **every finding** (convergence
+**and** divergence) before surfacing it as a numbered option:
+
+| Check | Question | Tool |
+|---|---|---|
+| **Codebase fit** | Does the finding match the actual code, files, signatures, conventions? | `view` / `codebase-retrieval` / `grep` |
+| **Locked-decision conflict** | Does it contradict an ADR, kernel rule, contract under `docs/contracts/`, or `docs/decisions/`? | `view` |
+| **Already addressed** | Is it a generic best-practice already covered by an existing rule, skill, or test? | `view` / `grep` |
+| **Cost / benefit** | Is the change worth the diff size, churn, and review cost vs. the marginal benefit? | reasoning |
+| **Hallucination** | Does the finding cite a file, function, or behavior that does not exist? | `view` |
+
+Each finding receives one of three verdicts:
+
+- **`accept`** — codebase fits, no locked-decision conflict, benefit clears cost. Surface as a normal numbered option.
+- **`accept-with-modification`** — core insight valid, but the proposed shape needs adjusting (wrong file, contradicts ADR detail, scope creep). Surface with the **modified** patch and a one-line note.
+- **`reject`** — finding is wrong (hallucinated reference, contradicts a locked decision, already addressed, generic noise). Surface as a **Rejected by host** entry with a one-line reason. Still visible — the user can override.
+
+The verdict is the host's **own** reasoning, not the council's.
+Pretending convergence equals correctness, or paraphrasing council
+output as host analysis, both breach the [`direct-answers`](../../rules/direct-answers.md)
+no-invented-facts rule. When the host cannot reach a confident
+verdict on a finding (mixed evidence, ambiguous scope), it surfaces
+the finding as `needs-input` with the open question — the user
+decides, the host does not guess.
+
+### What this is NOT
+
+- **Not a re-review by the host.** The host did not write the artefact independently and cannot critique it independently — that boundary still holds.
+- **Not a vote against the council.** Rejecting a finding requires evidence (file, line, contract reference), not preference.
+- **Not silent filtering.** Every finding reaches the user with its verdict and reason. The user can pick a `reject` option and override the host.
+
 The council is **uninformed about the codebase, ADRs, locked
 contracts, prior decisions, and project history** — it sees only the
 artefact + neutrality preamble. That is the source of its diversity
