@@ -10,7 +10,7 @@ triggers:
   - keyword: "mobile track"
   - keyword: "ml track"
   - keyword: "blockchain track"
-  - path_prefix: ".agent-src.uncondensed/skills/"
+  - path_prefix: "src/skills/"
 validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
