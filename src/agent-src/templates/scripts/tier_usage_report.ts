@@ -234,7 +234,7 @@ function _within_window(ts_bucket: string, window_days: number | null): boolean 
     return ms >= Date.now() - window_days * 24 * 60 * 60 * 1000;
 }
 
-type BucketKey = string; // `${tier} ${command}` — composite (tier, command) key.
+type BucketKey = string; // `${tier}\0${command}` — composite (tier, command) key.
 interface RowStats {
     count: number;
     distinct_users: number;
@@ -274,7 +274,7 @@ function aggregate(log_path: string, window_days: number): AggregateResult {
         }
         kept += 1;
         const tier = Math.trunc(rec.tier);
-        const key = `${tier} ${rec.command}`;
+        const key = `${tier}\0${rec.command}`;
         if (!keyMeta.has(key)) {
             keyMeta.set(key, { tier, command: rec.command });
             counts.set(key, 0);

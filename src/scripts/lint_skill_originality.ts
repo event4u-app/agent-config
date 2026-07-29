@@ -351,7 +351,7 @@ function _sortedSkillMds(root: string): string[] {
 
 /** frozenset((a, b)) — order-independent membership key. */
 function _frozenKey(a: string, b: string): string {
-    return a <= b ? `${a} ${b}` : `${b} ${a}`;
+    return a <= b ? `${a}\0${b}` : `${b}\0${a}`;
 }
 
 /** sorted(a & b) — codepoint-sorted intersection. */
