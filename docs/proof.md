@@ -55,6 +55,8 @@ evidence pointer, or `task check-claims` fails the build.
 | The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted. | qual | `exec:domain_soundness_status --check -> 0` | ✅ |
 | The validated non-coding domain-skill count is pinned and CI-ratcheted at a maintainer-set floor (9 of 20 default-surface skills carry a sourced `evals/domain-truth.json` fixture at pin time, 2026-07-11 — 5 deterministic, keys from cited formulas; 4 rubric, criteria matching a named external practice); the floor only rises via a maintainer `--write-floor` after a new sourced fixture lands. | quant | `exec:domain_soundness_status -> 0` | ✅ |
 | On the READ-ONLY FAN-OUT slice family, tier-downshifted subagent dispatch (lite/haiku vs session-tier-proxy sonnet) nets a ≥30% USD-weighted token-cost reduction at held quality — measured 2026-07-08 (n=10 paired live dispatches, 20 telemetry lines): 10/10 exact-match on BOTH arms, 29.4% fewer raw tokens, 76.5% USD-weighted cost reduction at the 3x haiku↔sonnet price ratio. FAMILY-SCOPED — the mechanical-edit family is unmeasured and its downshift (incl. the deferred tier downgrades of existing units) stays gated. Negative control held: an open-ended synthesis/unknown slice never resolves below the session tier (inferSliceTier → medium/inherit, never lite). | quant | `internal/bench/routing-downshift/results-2026-07-08.md#FAMILY-SCOPED PROVE` | ✅ |
+| The text-layer-only boundary above is machine-enforced, not asserted: a scope-guard test fails if any corpus entry declares a non-text layer, and that guard is itself falsified by a test that splices in a `layer: file` PNG-metadata fixture and requires the guard to fail. The corpus is sha256-frozen and was committed BEFORE any detector existed, so no detector was tuned against it. | qual | `tests/scripts/encoding_corpus.test.ts#FAILS when a deliberately out-of-scope fixture is added` | ✅ |
+| The retrieval sanitize floor covers the TEXT layer only, by construction — never file or network channels (image / audio / PDF / DNS / TCP / file-metadata steganography) and never semantic evasion (word choice, phrasing, garden-path constructions, word-order permutation). On the frozen 653-entry corpus it strips or flags 99.00% of in-scope positives (100.00% on the unambiguous zero-width / bidi / variation-selector classes) at a 0.00% false-positive rate over 353 real in-repo negatives, with zero added model spend and 0.018 ms p95 per message. Exactly ONE of the seven added channels removes bytes; the other six report and pass the text through unchanged — this is NOT a claim to block steganography. | quant | `agents/evidence/reports/encoding-floor-measurement.md#Selected branch: ADOPT` | ✅ |
 | 14 of 111 governed rules (12.6%) carry a backstop that fails a CI build. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107 at the time; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly, 37 findings deep. Those are now CLEARED: the baseline in `rule-backstop-debt.json` stands at 0, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. 88 rules declare nothing and count as uncovered, not excluded (the two scale/history pack rules ship enforced by `lint_persistence` in consumer CI, which this resolver — scoped to THIS repo's workflows — correctly does not count). | quant | `exec:check_enforcement_coverage --check -> 0` | ✅ |
 | The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed. | quant | `docs/benchmark.md#REPLICATION FAILED` | ✅ |
 | Behavioural-eval coverage is measured per tier and CI-ratcheted so it can only rise; the current coverage and its gap are published, never implied as "264 evaluated skills". | qual | `exec:skill_eval_coverage --check -> 0` | ✅ |
@@ -77,14 +79,14 @@ evidence pointer, or `task check-claims` fails the build.
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**31 backed claim(s)** — all evidence pointers resolve in CI.
+**33 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**10 of 31** backed claims carry `exec:` evidence —
+**10 of 33** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**21** rest on a pointer: CI checks that the artefact
+**23** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -102,6 +104,8 @@ given:
 | The scoped-projection default for new installs ships 215 of 286 skills (untagged core plus engineering/maintai | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on sc | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | On the READ-ONLY FAN-OUT slice family, tier-downshifted subagent dispatch (lite/haiku vs session-tier-proxy so | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+| The text-layer-only boundary above is machine-enforced, not asserted: a scope-guard test fails if any corpus e | prose or contract artefact — no exit code carries the verdict |
+| The retrieval sanitize floor covers the TEXT layer only, by construction — never file or network channels (ima | prose or contract artefact — no exit code carries the verdict |
 | The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | A credential-free prescription layer reads content the host's own web tools cannot fetch at all — Reddit threa | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | Hook dispatch runs as one precompiled node process with all concerns in-process — measured p50 76–103 ms / p95 | prose or contract artefact — no exit code carries the verdict |
@@ -283,7 +287,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (85) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 39 ledger entries · 31 backed · 8 unbacked inventory.
+**Axis 2 — evidence form per public claim.** 41 ledger entries · 33 backed · 8 unbacked inventory.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
@@ -300,6 +304,8 @@ Undeclared rules (85) carry no row — an honest gap beats a false claim.
 | `domain-soundness-scoped` | qual | backed | `exec:domain_soundness_status --check -> 0` |
 | `domain-soundness-validated-count` | quant | backed | `exec:domain_soundness_status -> 0` |
 | `downshift-cost-reduction` | quant | backed | `internal/bench/routing-downshift/results-2026-07-08.md#FAMILY-SCOPED PROVE` |
+| `encoding-corpus-scope-guard` | qual | backed | `tests/scripts/encoding_corpus.test.ts#FAILS when a deliberately out-of-scope fixture is added` |
+| `encoding-floor-text-layer-only` | quant | backed | `agents/evidence/reports/encoding-floor-measurement.md#Selected branch: ADOPT` |
 | `enforcement-coverage-resolved` | quant | backed | `exec:check_enforcement_coverage --check -> 0` |
 | `essential-tier-cost-factor` | quant | backed | `docs/benchmark.md#REPLICATION FAILED` |
 | `eval-coverage-ratcheted` | qual | backed | `exec:skill_eval_coverage --check -> 0` |
