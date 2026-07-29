@@ -141,15 +141,15 @@ Run the project's fastest test target. If the baseline **fails**, stop
 and report — ask whether to fix main first or proceed. Never silently
 continue with a red baseline.
 
-**Optional `env-bootstrap` entry — stand-up beyond deps.** Some projects need
-more than package install to stand up (start services, seed fixtures, generate
-config). A project MAY declare a single bootstrap entry — an `env-bootstrap`
-target in its runner file (`Taskfile.yml` / `Makefile` / `package.json`
-`scripts`) or a documented equivalent. When one exists, **surface it as the
-suggested next action** after the baseline — suggest, never auto-execute (no new
-autonomous surface). Long-running work then reads one deterministic stand-up
-entry instead of re-deriving it each session. If none exists, deps + baseline is
-the whole stand-up.
+**Optional `env-bootstrap` entry — stand-up beyond deps.** Some projects
+need more than package install to stand up (start services, seed fixtures,
+generate config). A project MAY declare a single bootstrap entry — an
+`env-bootstrap` target in its runner file (`Taskfile.yml` / `Makefile` /
+`package.json` `scripts`) or a documented equivalent. When one exists,
+**surface it as the suggested next action** after the baseline — suggest,
+never auto-execute (no new autonomous surface). Long-running work then reads
+one deterministic stand-up entry instead of re-deriving it each session. If
+none exists, deps + baseline is the whole stand-up.
 
 ## Multi-tool parallel work
 

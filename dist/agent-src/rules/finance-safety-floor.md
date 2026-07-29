@@ -36,7 +36,7 @@ trust:
   human_review_required: true
 ---
 <!-- agent-config:human-review-banner -->
-> HUMAN REVIEW REQUIRED · trust: advisory · owner: finance
+> HUMAN REVIEW REQUIRED · trust: advisory · owner: unknown
 
 # Finance Safety Floor
 

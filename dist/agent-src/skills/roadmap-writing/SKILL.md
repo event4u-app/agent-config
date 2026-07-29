@@ -106,14 +106,14 @@ and council-pass notes capture the *why*; checkboxes capture the
 Iron Law #2.
 
 **Bind a `verify:` on behavior-changing steps.** A step that changes
-behavior (a new guard, migration, wired endpoint, mechanism edit) SHOULD
-carry a narrow `verify:` command in an inline annotation —
-`- [ ] Wire the guard <!-- verify: task test -- --filter=GuardTest -->` —
-so its `[x]` flip is machine-checkable, not just agent-asserted (template
+behavior (a new guard, a migration, a wired endpoint, a mechanism edit)
+SHOULD carry a narrow `verify:` command in an inline annotation —
+`- [ ] Wire the guard <!-- verify: task test -- --filter=GuardTest -->`
+— so its `[x]` flip is machine-checkable, not just agent-asserted (template
 rule 23; enforced by the flip-guard). Bind it only where a single narrow
 command (targeted test / grep / build of the touched surface) proves the
-step; leave it off doc-only / prose steps, never the full CI suite
-(`roadmap-ci-steps-policy`).
+step; leave it off doc-only / prose steps and never make it the full CI
+suite (`roadmap-ci-steps-policy`).
 
 ### 4b. Declare the execution mode (frontmatter)
 
@@ -121,22 +121,23 @@ Every new roadmap declares how a later `/roadmap:process-*` run should
 interact, via `execution.mode:` in frontmatter — `autonomous` (one
 run-start execution-contract confirmation, then uninterrupted except
 safety floors), `phase-checkpoints` (halt + compact status per phase
-boundary), or `interactive` (absent-field default; omit field).
-Semantics: [`templates/roadmaps.md` rule 19](../../templates/roadmaps.md);
+boundary), or `interactive` (absent-field default; omit the field).
+Semantics: [`templates/roadmaps.md` rule 18](../../templates/roadmaps.md);
 run mechanics:
 [`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md).
-Field is intent, never a permission grant — grants happen only at the
-run-start contract. `/roadmap:create` asks this as one question; when
-authoring a roadmap directly, ask it too (follow-ups pre-select the
-parent's mode but always re-ask). **Author every roadmap to be
+The field is intent, never a permission grant — grants happen only at
+the run-start contract. `/roadmap:create` asks this as one question;
+when authoring a roadmap directly, ask it too (follow-ups pre-select
+the parent's mode but always re-ask). **Author every roadmap to be
 autonomy-capable (§ 4c); recommend `autonomous`** when evidence,
 rollback coverage, and risk profile support unattended execution —
-mode remains the user's risk preference, not a property of the
-document. **Authoring duty for `autonomous`:**
-steps must be precise enough to clear `ask-when-uncertain` vague-
-trigger patterns — vagueness resolved at authoring time, not mid-run;
-pre-existing `[~]` items in an `autonomous` roadmap draw a lint
-warning (they guarantee the archival gate fires later).
+the mode remains the user's risk preference, not a property of the
+document. **Authoring duty for `autonomous`:** steps must be precise
+enough to clear the
+`ask-when-uncertain` vague-trigger patterns — vagueness is resolved at
+authoring time, not mid-run; pre-existing `[~]` items in an
+`autonomous` roadmap draw a lint warning (they guarantee the archival
+gate fires later).
 
 ### 4c. Autonomy-first — zero human gates by default
 
@@ -145,8 +146,8 @@ Canonical rule:
 Default human-checkpoint count: **zero**. Every step is
 agent-executable — `- [ ] User verifies X` steps and "Review /
 Sign-off" phases are authoring bugs; replace each with an
-agent-verifiable check (command, targeted test, grep). Never restate
-run-time safety floors as steps.
+agent-verifiable check (a command, a targeted test, a grep). Never
+restate run-time safety floors as steps.
 
 Gate-test before any checkpoint: *"Could the agent clear this with a
 tool or command during the run?"* Yes → step, not gate. No →
@@ -155,8 +156,8 @@ structured `## Blockers` entry (§ 5b), distinguishing per rule 22:
 authorization, billable spend, contested decision) vs **external
 blocker** (agent cannot resolve but CAN probe status — CI run, package
 release, upstream PR; `Resolved when:` carries the probe, owner is
-not a human). Merge is never a completion requirement — may appear as
-a blocker only when later roadmap work depends on the merged state.
+not a human). Merge is never a completion requirement — it may appear
+as a blocker only when later roadmap work depends on the merged state.
 `lint_roadmap_complexity` warns on human-gate patterns in every mode.
 
 ### 5. Exit & rollback per phase
@@ -169,42 +170,45 @@ file exists, test passes — never "user reviews" / "looks good" (§ 4c).
 
 ### 5b. Blockers are structured, not free prose
 
-Gate only user or maintainer can clear — decision, external
-dependency, evidence threshold, kernel-budget soak window — records
-as `## Blockers` entry (`### blocker: <id>` with `Status` / `Owner` /
-`Blocks` / `What to do` / `Resolved when`), never a stray "blocked on
-X" sentence. Dashboard generator parses these into overview's
-`Blocker` column and per-roadmap breakdown. Full shape:
-[`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
-Omit section entirely when roadmap has no such gate; run the § 4c
-gate-test before adding one.
+A gate only the user or a maintainer can clear — a decision, an
+external dependency, an evidence threshold, a kernel-budget soak
+window — is recorded as a `## Blockers` entry (`### blocker: <id>`
+with `Status` / `Owner` / `Blocks` / `What to do` / `Resolved when`),
+never a stray "blocked on X" sentence. The dashboard generator parses
+these into the overview's `Blocker` column and the per-roadmap
+breakdown. Full shape: [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
+Omit the section entirely when the roadmap has no such gate; run the
+§ 4c gate-test before adding one.
 
 ### 6. Step-marker semantics — pick `[~]` (defer) vs `[-]` (cancel) honestly
 
-Difference carries load when authoring (and especially when rewriting
-mid-flight):
+When authoring (and especially when rewriting a roadmap mid-flight),
+the difference between the two non-`[x]`-non-`[ ]` markers carries
+load:
 
 | Glyph | Semantic | When to use |
 |---|---|---|
-| `[~]` | **deferred** — planned, will be done, just not in this roadmap | Scope-cut + clear intent to revisit. Triggers Iron Law 3 follow-up flow before archive — info preservation enforced. |
-| `[-]` | **cancelled** — won't be done at all | Scope rejected, design changed, replaced by another roadmap. Decision final; no follow-up implied. |
+| `[~]` | **deferred** — planned, will be done, just not in this roadmap | Scope-cut + clear intent to revisit. Triggers the Iron Law 3 follow-up flow before archive — info preservation is enforced. |
+| `[-]` | **cancelled** — won't be done at all | Scope rejected, design changed, replaced by another roadmap. The decision is final; no follow-up implied. |
 
-Optional inline annotations on same line:
+Optional inline annotations live on the same line:
 
 ```markdown
 - [~] Migrate the bulk-import job to chunked dispatch. <!-- deferred: ops capacity in Q3 -->
 - [-] Wire SQS retry topic. <!-- cancelled: superseded by Lambda DLQ in road-to-event-bridge -->
 ```
 
-Annotation for next human reader (and for migration procedure when
-[`roadmap-management`](../roadmap-management/SKILL.md) spawns a follow-up).
-Bare `[~]` / `[-]` allowed; annotated preferred.
+The annotation is for the next human reader (and for the migration
+procedure when [`roadmap-management`](../roadmap-management/SKILL.md)
+spawns a follow-up). Bare `[~]` / `[-]` is allowed; annotated is
+preferred.
 
 ### 7. Follow-up roadmaps spawn from deferred items — frontmatter shape
 
-When parent roadmap closes with `[~]` items,
+When a parent roadmap closes with `[~]` items, the
 [`roadmap-management`](../roadmap-management/SKILL.md) skill spawns a
-follow-up. Authors and reviewers must recognise the shape:
+follow-up. Authors and reviewers must know the shape so they can
+recognise it:
 
 ```markdown
 ---
@@ -227,20 +231,21 @@ This roadmap collects items deferred from
 > Blocked until <condition>. Execution starts when the condition clears.
 ```
 
-Two states author picks between (mirrors Iron Law 3 numbered-options
-block in [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)):
+Two states the author picks between (mirrors the Iron Law 3
+numbered-options block in [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)):
 
-- **`status: draft`** → hidden from `agents/roadmaps-progress.md` until
-  flipped. Use for items user wants captured but not surfaced to
-  active backlog yet.
-- **`status: ready` (default; omit key)** plus body `> Blocked until …`
-  note → visible in dashboard, execution gated by documented
-  condition. Blocking is body convention, not enforced by dashboard
-  generator — readers honor the note.
+- **`status: draft`** → hidden from `agents/roadmaps-progress.md`
+  until flipped. Use for items the user wants captured but not
+  surfaced to the active backlog yet.
+- **`status: ready` (default; omit the key)** plus body
+  `> Blocked until …` note → visible in the dashboard, execution
+  gated by the documented condition. The blocking is a body
+  convention, not enforced by the dashboard generator — readers
+  honor the note.
 
-Follow-up is **not** authored from scratch — deferred steps copied
-verbatim (with phase context). Preserves plan exactly as author
-originally wrote it.
+The follow-up roadmap is **not** authored from scratch — the
+deferred steps are copied verbatim (with their phase context). This
+preserves the plan exactly as the author originally wrote it.
 
 ### 8. Source-derived & capability-adoption roadmaps (conditional)
 
@@ -297,14 +302,16 @@ to every roadmap you author.
 5. Is content duplicated from another roadmap (supersession instead)?
 6. Any human-gate steps or sign-off phases (§ 4c violation) —
    agent-verifiable check or structured blocker instead?
-7. *Source-derived/adoption only (§ 8):* gap-table (`KEEP`/`FOLD`/`CUT`)
-   behind the scope? `## Provenance` block with `ENC1:` link? inlined
-   council convergence? anti-dump acceptance criterion? (Internally
-   originated → these must be **absent**, not empty.)
-8. *Inbox-sourced only:* roadmap consumed an `agents/tmp/` file as input →
-   file moved to `agents/tmp.old/<name>` in the SAME reply, Source line
-   pointing at the `tmp.old/` path? (Per `agents-layout § User Inbox
-   Workflow`. Move only the named input file(s); never sweep the inbox.)
+7. *Source-derived/adoption only (§ 8):* is there a `KEEP`/`FOLD`/`CUT`
+   gap-table behind the scope, a `## Provenance` block with an `ENC1:`
+   link, inlined council convergence, and an anti-dump acceptance
+   criterion? (Internally-originated roadmap → these must be **absent**,
+   not empty.)
+8. *Inbox-sourced only:* if the roadmap consumed an `agents/tmp/` file as
+   its input, is that file moved to `agents/tmp.old/<name>` in the SAME
+   reply, with the Source line pointing at the `tmp.old/` path? (Per
+   `agents-layout § User Inbox Workflow`. Move only the explicitly named
+   input file(s); never sweep the rest of the inbox.)
 
 ## Do NOT
 
@@ -328,7 +335,7 @@ to every roadmap you author.
   `quality.local_auto_run: false` — blocked by
   `task lint-roadmap-ci-steps` per
   [`roadmap-ci-steps-policy`](../../rules/roadmap-ci-steps-policy.md).
-  Reword as narrow verifications, or mark with
+  Reword as narrow verifications, or mark the step with
   `<!-- carve-out: new-gate-verification -->` when it verifies a NEW
   gate this roadmap introduces.
 * Use ALL-CAPS Iron-Law fenced blocks — those belong in
@@ -336,7 +343,7 @@ to every roadmap you author.
   rules, not roadmaps.
 * Adopt items from an external source / harvest **without a
   `KEEP`/`FOLD`/`CUT` gap-table** against the existing surface (§ 8) —
-  skill dump, not integration.
+  that is a skill dump, not integration.
 * Add a `## Provenance` block (or gap-table) to an **internally
   originated** roadmap — § 8 is conditional; an empty Provenance section
   is noise (template rule 19).
@@ -352,8 +359,8 @@ to every roadmap you author.
 - **Vague goal sentence** — "Improve roadmap quality" forces every
   reader to re-derive intent and blocks decidable acceptance.
 - **Human-gate steps sprinkled through phases** — each one interrupts
-  an autonomous run; dashboard counts open work the agent can never
-  close. § 4c: agent-verifiable check or structured blocker.
+  an autonomous run, and the dashboard counts open work the agent can
+  never close. § 4c: agent-verifiable check or structured blocker.
 - **Restating template rules** — pasting structural rules into the
   roadmap body creates two sources of truth that drift over months.
 - **Version numbers in phase names** — `Phase 1 — v1.8.0` violates
@@ -366,14 +373,14 @@ to every roadmap you author.
   operations the user has not authorized. Roadmap completion is
   decoupled from delivery; ship-the-PR is its own decision.
 - **Adopting an external suggestion verbatim** — a harvest/suggestion
-  roadmap copying the source's item list without the § 8
-  `KEEP`/`FOLD`/`CUT` audit becomes a skill dump: existing items get
-  rebuilt, fold-candidates spawn duplicates. The gap-table is the
-  integration discipline.
-- **Council-as-afterthought** — running council only *after* a contested
-  roadmap is written wastes the convergence: the plan still reads as
-  open questions. Source-derived/contested → council *first* (§ 8.B),
-  then author the verdicts.
+  roadmap that copies the source's proposed item list without the § 8
+  `KEEP`/`FOLD`/`CUT` audit becomes a skill dump: items that already
+  exist get rebuilt, items that should fold into an existing artefact
+  spawn a duplicate. The gap-table is the integration discipline.
+- **Council-as-afterthought** — running the council only *after* a
+  contested roadmap is written wastes the convergence: the plan still
+  reads as open questions. For source-derived/contested plans, council
+  *first* (§ 8.B), then author the verdicts.
 
 ## Examples
 

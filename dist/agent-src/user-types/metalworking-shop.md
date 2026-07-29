@@ -10,47 +10,48 @@ source: project
 
 ## Focus
 
-Small-to-mid metalworking shop — laser-cut, press-brake, weld,
-finish. Two surfaces: shop-floor tablets bolted near machines
-(loud, dirty, gloves) and an office desktop where quoting,
-scheduling, and material-cert tracking happen. Shop runs on **job
-travelers** (route cards) — one per job following the work through
-every station, getting stamped, ending in the shipping bay.
-Material certificates (heat numbers, mill certs) must trace from
-incoming bar stock through to the customer; losing the chain
-breaks the audit and can void the order.
+This lens simulates a small-to-mid metalworking shop — laser-cut,
+press-brake, weld, finish. Two surfaces: shop-floor tablets bolted
+near the machines (loud, dirty, gloves) and an office desktop where
+quoting, scheduling, and material-cert tracking happen. The shop
+runs on **job travelers** (route cards) — one per job that follows
+the work through every station, gets stamped, and ends in the
+shipping bay. Material certificates (heat numbers, mill certs) must
+trace from incoming bar stock through to the customer; losing the
+chain breaks the audit and can void the order.
 
-Review lens only, never operational instruction source. No
-welding-procedure spec, no electrical guidance, no
-structural-engineering advice. Trade execution stays with the
-certified welder, the EHS officer, and the engineer.
+This lens is a **review lens only**, never an operational
+instruction source. No welding-procedure spec, no electrical
+guidance, no structural-engineering advice. Trade execution stays
+with the certified welder, the EHS officer, and the engineer.
 
 ## Daily Workflow
 
-- 06:00 — shift starts, lead reviews day's travelers at office
-  desktop; priority shifts printed and pinned at the station.
+- 06:00 — shift starts, lead reviews the day's travelers at the
+  office desktop; priority shifts get printed and pinned at the
+  station.
 - 07:00–15:30 — execution per station; each station scans the
-  traveler QR or punches job number on tablet to start / pause /
-  complete time on that step.
-- Material check-in — incoming bar stock photographed with mill
-  cert; heat number bound to lot at moment of receipt, not later
-  from memory.
-- Safety sign-off — process steps requiring PPE or second-person
+  traveler QR or punches the job number on the tablet to start /
+  pause / complete time on that step.
+- Material check-in — incoming bar stock is photographed with the
+  mill cert; heat number bound to the lot at the moment of
+  receipt, not later from memory.
+- Safety sign-off — process steps requiring PPE or a second-person
   check (overhead crane, confined-space weld) cannot start until
-  sign-off is recorded on the tablet.
+  the sign-off is recorded on the tablet.
 - 15:30 — end-of-shift, lead reconciles open travelers, flags any
   step where the material-cert chain is broken.
 
 ## Vocabulary
 
-- **Job traveler / route card** — single canonical record that
+- **Job traveler / route card** — the single canonical record that
   moves with the part; never substitute with "ticket" or "task".
 - **Heat number / mill cert** — material identity; lose the link
   and the part is unsellable to a regulated customer.
 - **Sign-off** — recorded, named, timestamped; "approved" without
   a name fails audit.
-- **Setup vs run time** — booked separately on the machine;
-  merging them destroys costing accuracy.
+- **Setup vs run time** — booked separately on the machine; merging
+  them destroys costing accuracy.
 
 ## Operational Constraints
 
@@ -59,15 +60,15 @@ certified welder, the EHS officer, and the engineer.
   high contrast on by default.
 - **PPE prevents fine touch.** Welding gloves + safety glasses;
   drop-down pickers with > 6 options are a fail mode.
-- **Machine-time is money.** A flow adding 30 seconds per
-  job-step start, run 200 times/day, costs the shop one
-  machine-hour per shift.
-- **Material-cert chain is regulatory.** Every step touching
-  material must capture or carry the heat-number link; breaking
-  it silently is the worst failure mode.
+- **Machine-time is money.** A flow that adds 30 seconds per
+  job-step start, run 200 times/day, costs the shop one machine-
+  hour per shift.
+- **Material-cert chain is regulatory.** Every step that touches
+  material must capture or carry the heat-number link; breaking it
+  silently is the worst failure mode.
 - **Two-surface split.** Office desktop has Excel-grade density;
-  shop tablet has one-action-per-screen. Same flow cannot share
-  a layout.
+  shop tablet has one-action-per-screen. The same flow cannot
+  share a layout.
 
 ## Unique Questions
 

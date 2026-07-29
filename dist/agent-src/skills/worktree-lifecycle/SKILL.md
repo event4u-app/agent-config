@@ -101,7 +101,7 @@ A worktree is **merge-ready** only when ALL hold:
 
 ### 4. Cleanup discipline
 
-Removal gated by the deterministic helper (edge-case-tested: detached
+Removal is gated by the deterministic helper (edge-case-tested: detached
 HEAD, branch without remote, tag-only reachability, deleted remote
 branch, untracked files, paths with spaces):
 
@@ -125,8 +125,8 @@ Exit `0` → removal allowed; exit `1` → refuse, gates in order:
 Then: **remove, never delete** — `git worktree remove <path>`, then
 `git worktree prune`. Branch deletion is a separate, permission-gated
 step (`scope-control`); never force-delete (`-D`) as part of cleanup.
-Cross-worktree scope-lock overlaps: `worktree_cleanup_check scope-overlap`
-(surfaced by `/worktree status`).
+Cross-worktree scope-lock overlaps are scanned via
+`worktree_cleanup_check scope-overlap` (surfaced by `/worktree status`).
 
 ## Host-native mapping
 

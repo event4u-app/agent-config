@@ -12,8 +12,8 @@ packs:
 # api-endpoint
 
 
-> **Grounded corpus:** endpoint-shape decisions (pagination, error shape,
-> idempotency, rate limits) ground via the
+> **Grounded corpus:** endpoint-shape decisions (pagination, error
+> shape, idempotency, rate limits) are grounded via the
 > [`api-design`](../api-design/SKILL.md) corpus — `./scripts-run
 > <skills-root>/corpus-grounding/scripts/ground search
 > --manifest <skills-root>/api-design/data/manifest.json "<concern>"`.

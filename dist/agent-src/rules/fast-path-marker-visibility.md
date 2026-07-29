@@ -18,6 +18,12 @@ packs: [meta]
 
 # Fast-Path Marker Visibility
 
+When a decision resolves through the low-impact council fast-path (corpus
+match, fuzzy match, or any other `decision_resolution.classes.low_impact`
+opt-in route), the dispatcher emits a transparency marker. The host agent
+**must** surface that marker verbatim — never swallow it, never paraphrase
+it, never fold it into a same-sounding summary.
+
 ## The Iron Law
 
 ```
@@ -25,23 +31,53 @@ EVERY LOW-IMPACT COUNCIL FAST-PATH REPLY OPENS WITH THE EXACT MARKER.
 NEVER PARAPHRASE. NEVER SWALLOW. NEVER SUBSTITUTE THE AGENT'S OWN VERDICT.
 ```
 
-Markers (from `scripts/ai_council/low_impact.ts`):
+Applies to **every** fast-path outcome:
 
 - **Resolved** — `> Resolved via low-impact council fast-path: <verdict>.`
 - **Unavailable** — `> Low-impact council unavailable (no opted-in members) — escalating to user.`
 - **Split** — `> Low-impact council split — escalating to user (<m1>: X / <m2>: Y):`
 - **Aborted** — `> Low-impact council aborted (token cap) — escalating to user:`
 
-Verbatim = first non-whitespace line, English (no translation), no emoji prefix, no merged numbered-options. Marker is the only audit signal that distinguishes fast-path from local deliberation. See `.agent-src.uncondensed/rules/fast-path-marker-visibility.md` for full failure modes.
+Markers from `scripts/ai_council/low_impact.ts`. Wording is normative —
+case, punctuation, and the leading `> ` blockquote prefix all matter so
+that downstream agents and tooling can pattern-match.
+
+## What "verbatim" means
+
+- First non-whitespace line of the reply is the marker.
+- No prose, greeting, or restating-the-question above it.
+- No translation: the marker is English even when the user wrote in
+  another language. `language-and-tone` Iron-Law mirror applies to the
+  prose **after** the marker, not the marker itself.
+- No emoji decoration, no trailing rationale on the same line.
+- The marker appears **once**. Subsequent prose explains the verdict.
+
+## Why
+
+The marker is the only audit signal that distinguishes a fast-path
+resolution from the agent's own reasoning. Swallowing it converts an
+opt-in observability surface into a silent substitution — the user can no
+longer tell whether the council bypassed their judgement or the agent
+deliberated locally. This is the same failure mode that `direct-answers
+§ Iron Law 2` forbids for invented facts, applied to dispatch provenance.
 
 ## Failure modes
 
-- Opening with `Found it` / `Looks like` / `Here's the verdict` — drops the marker. **Violation.**
-- Translating the marker to non-English. **Violation.**
+- Opening with `Found it` / `Looks like` / `Here's the verdict` — drops
+  the marker. **Violation.**
+- Translating the marker to German / Spanish / any non-English. **Violation.**
 - Adding emoji prefix (`✅ Resolved via …`) — alters the literal. **Violation.**
-- Indenting beyond the leading `> ` — breaks pattern match. **Violation.**
+- Indenting the marker beyond the leading `> ` — breaks pattern match. **Violation.**
 - Merging marker into a numbered-options block. **Violation.**
 
-Scope: `low_impact` class only. `high_impact` and `user_required` never reach fast-path.
+## Scope
 
-See: [`ai-council-config § Low-impact council opt-in`](../docs/contracts/ai-council-config.md#low-impact-council-opt-in), [`direct-answers`](direct-answers.md) (invented-facts Iron Law kin).
+Only fires for `low_impact` dispatch outcomes. `high_impact` and
+`user_required` classes never reach the fast-path and have no marker —
+this rule does not constrain their output.
+
+## See also
+
+- [`ai-council-config § Low-impact council opt-in`](../docs/contracts/ai-council-config.md#low-impact-council-opt-in)
+- [`direct-answers`](direct-answers.md) — invented-facts Iron Law (provenance kin).
+- `scripts/ai_council/low_impact.ts` — marker source.

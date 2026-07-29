@@ -136,6 +136,6 @@ Cite the snapshot path so the consumer skill can read it.
 ## Provenance
 
 - Upstream tool: https://github.com/yamadashy/repomix (MIT).
-- Adopted from: an external reference (MIT, © 2025 an external reference) — wrapper-style adoption, no upstream code vendored.
+- Adopted from: an external reference (internal provenance, redacted) — wrapper-style adoption, no upstream code vendored.
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `repomix`).
 - Iron-Law floor: `non-destructive-by-default`, `missing-tool-handling`, `tool-safety`.

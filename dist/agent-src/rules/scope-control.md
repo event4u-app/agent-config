@@ -43,7 +43,7 @@ NEW TASK NEVER INHERITS PRIOR AUTONOMY.
 ARTIFACT SAVED → HARD STOP. NEVER AUTO-OFFER EXECUTION.
 ```
 
-`create / draft / write / erstelle …` → artifact only. Execution verbs flip scope; mixed → ask. The moment the artifact lands (roadmap, ADR, plan, pitch, ticket), the turn ends — never auto-offer execution; execution needs an explicit execution verb (`implement`, `build`, `start`, `arbeite ab`) on a later turn. Detail + anti-patterns: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
+`create / draft / write / erstelle …` → artifact only. Execution verbs flip scope; mixed → ask. The moment the artifact lands (roadmap, ADR, plan, pitch, ticket), the turn ends — never auto-offer execution. Execution requires an explicit execution verb (`implement`, `build`, `start`, `arbeite ab`) on a later turn. Detail + anti-pattern catalogue: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
 
 ## Production, infrastructure, bulk-destructive — Hard Floor
 

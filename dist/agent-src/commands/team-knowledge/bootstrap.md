@@ -22,9 +22,9 @@ packs:
 Seeds a fresh project's `agents/knowledge/` typed pages from
 **deterministic static analysis only** — directory names and known
 config filenames, never file content, never an LLM-invented claim.
-Fast first pass; the deeper analyzers (`project-analysis-*`,
-`standards-from-config`, `module-detect-on-the-fly`) remain the tools
-for filling in what this script cannot know.
+This is the fast first pass; the deeper analyzers
+(`project-analysis-*`, `standards-from-config`, `module-detect-on-the-fly`)
+remain the tools for filling in what this script cannot know.
 
 ## Steps
 
@@ -81,8 +81,9 @@ Then:
 ./scripts-run src/scripts/generate_knowledge_index
 ```
 
-The team-sharing gate still applies at commit time — none of these
-pages should carry `visibility: private`.
+The [team-sharing gate](../../../scripts/check_knowledge_sharing.ts)
+still applies at commit time — none of these pages should carry
+`visibility: private`.
 
 ### 4. Discard the rest
 
@@ -100,6 +101,6 @@ gitignored and regenerates on the next bootstrap run).
 
 ## See also
 
-- [`/team-knowledge consolidate`](consolidate.md) — the ongoing capture loop this one-shot seed feeds into.
-- [`standards-from-config`](../../skills/standards-from-config/SKILL.md) — the full pointer+digest derivation for coding standards.
-- [`project-analysis-core`](../../skills/project-analysis-core/SKILL.md) / [`module-detect-on-the-fly`](../../skills/module-detect-on-the-fly/SKILL.md) — the deeper analyzers for `modules.md`.
+- [`/team-knowledge consolidate`](../consolidate/command.md) — the ongoing capture loop this one-shot seed feeds into.
+- [`standards-from-config`](../../../skills/standards-from-config/SKILL.md) — the full pointer+digest derivation for coding standards.
+- [`project-analysis-core`](../../../skills/project-analysis-core/SKILL.md) / [`module-detect-on-the-fly`](../../../skills/module-detect-on-the-fly/SKILL.md) — the deeper analyzers for `modules.md`.

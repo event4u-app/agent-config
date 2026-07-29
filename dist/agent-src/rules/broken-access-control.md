@@ -25,7 +25,7 @@ packs: [engineering-base]
 
 # Broken Access Control
 
-The most common — and most damaging — failure in real systems and AI-written code: log in as one user, see another user's data. **Authenticated ≠ authorized** — the per-object ownership/tenant check is the separate line devs and AI omit, especially when the object id comes from the request (OWASP Web #1 A01:2021 / API #1 BOLA/IDOR).
+The most common — and most damaging — failure in real systems and AI-written code: log in as one user, see another user's data. **Authenticated ≠ authorized** — the per-object ownership/tenant check is a separate line devs and AI omit, especially when the object id comes from the request (OWASP Web #1 A01:2021 / API #1 BOLA/IDOR).
 
 ## The Iron Law
 
@@ -40,7 +40,7 @@ A LIVE CROSS-USER EXPOSURE IS A NOTIFIABLE BREACH — NEVER SILENTLY PATCH IT.
 
 ## The three negative tests — the completion gate
 
-A protected endpoint is **not complete** until these exist and pass (happy-path 200 alone is the tautology this rule stops):
+A protected endpoint is **not complete** until these exist and pass (happy-path 200 alone is the tautology this rule exists to stop):
 
 1. **unauthenticated → 401** (no token).
 2. **authenticated but not the owner → 403/404** (user A requests user B's object with A's token).
@@ -50,7 +50,7 @@ Small + task-aligned gap in code you touched → add the check **and** its negat
 
 ## When it fires
 
-Writing/modifying any endpoint, route, query, or serializer returning user- or tenant-owned data, or any auth/session/login/tenant path.
+Writing/modifying any endpoint, route, query, or serializer that returns user- or tenant-owned data, or any auth/session/login/tenant path.
 
 ## When NOT to fire
 

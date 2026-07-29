@@ -32,11 +32,11 @@ CONVERSATION HISTORY. A PR MAY ALREADY BE MERGED OR CLOSED REMOTELY.
 ASKING WHAT `gh pr view` ANSWERS IS A CHEAP QUESTION — CHECK, DON'T ASK.
 ```
 
-Local branch view + conversation memory both go stale the moment anyone else — a
-maintainer, a parallel agent, an auto-merge rule — acts on the remote. Acting or
-asking on stale state is the recurring failure this kills (canonical: asking
-"shall I merge these 4 PRs?" when all four were already merged remotely). Run
-first, **every time**:
+The local branch view and the conversation's memory both go stale the moment
+anyone else — a maintainer, a parallel agent, an auto-merge rule — acts on the
+remote. Acting or asking on stale state is the recurring failure this section
+kills (canonical: asking "shall I merge these 4 PRs?" when all four were already
+merged remotely). Run first, **every time**:
 
 ```bash
 git fetch origin --quiet
@@ -44,17 +44,17 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
 # state: OPEN | MERGED | CLOSED — act only on the live value
 ```
 
-- **A state question is self-answering** — never ask "is it merged?",
-  "mergeable?", "did it push?", "still open?". `gh pr view` / `git fetch` answers
-  it; asking is a cheap question (per `no-cheap-questions`).
-- **`MERGED` / `CLOSED`** → nothing to merge or push; report the live state and
-  stop.
-- **Before merging** → re-fetch + re-read `state` + `mergeStateStatus` in the
+- **A state question is self-answering** — never ask the user "is it merged?",
+  "is it mergeable?", "did it get pushed?", "is it still open?". `gh pr view` /
+  `git fetch` answers it. Asking is a cheap question (per `no-cheap-questions`).
+- **`MERGED` / `CLOSED`** → there is nothing to merge or push; report the live
+  state and stop — do not attempt the action.
+- **Before merging** → re-fetch and re-read `state` + `mergeStateStatus` in the
   **same turn**; never merge on a status seen earlier in the conversation.
 - **"Based on main" / "current"** → prove it with
-  `git rev-list --count HEAD..origin/main` (after `git fetch`); non-zero ⇒ behind
-  and **not** current — merge `main` in before opening a PR (see
-  [`/create-pr`](../../commands/pr/create.md) § 1b).
+  `git rev-list --count HEAD..origin/main` (after `git fetch`); non-zero ⇒ the
+  branch is behind and is **not** current — merge `main` in before opening a PR
+  (see [`/create-pr`](../../commands/pr/create.md) § 1b).
 
 ## Conventions
 
@@ -249,16 +249,16 @@ SHAs plus the tags created.
 ## Shared-branch & inherited commits — ask-before-drop protocol
 
 Depth for the [`git-history-discipline`](../../rules/git-history-discipline.md)
-Iron Law on inherited & shared-branch commits (migrated per P4 of
+Iron Law on inherited & shared-branch commits (migrated here per P4 of
 `road-to-kernel-and-router.md`).
 
-User often works in parallel with the agent, and multiple agents may share one
-PR branch. A commit that looks "unrelated" or "stray" may be deliberate
-in-flight work the user expects to keep. Reseating a branch onto a different
-base, `git reset --hard`-ing away inherited commits, force-pushing over a
-branch you did not create, or branching from a base with unexpected commits and
-then "cleaning" them out all **silently discard work** — the exact failure that
-law prevents.
+The user often works in parallel with the agent, and multiple agents may
+share one PR branch. A commit that looks "unrelated" or "stray" may be
+deliberate in-flight work the user expects to keep. Reseating a branch onto a
+different base, `git reset --hard`-ing away inherited commits, force-pushing
+over a branch you did not create, or branching from a base with unexpected
+commits and then "cleaning" them out all **silently discard work** — the exact
+failure that law prevents.
 
 Before ANY of these, STOP and ask (one numbered-options prompt per
 [`user-interaction`](../../rules/user-interaction.md)):
@@ -267,19 +267,19 @@ Before ANY of these, STOP and ask (one numbered-options prompt per
   in a way that drops commits already on the branch;
 - excluding / not-carrying-forward commits that were on the branch when you
   started this session;
-- force-pushing (or `push <local>:<remote>`-replacing) a branch carrying
+- force-pushing (or `push <local>:<remote>`-replacing) a branch that carries
   commits you did not author;
 - branching from a base with unexpected commits, then resetting them away.
 
-**Preserve-first is necessary but not sufficient.** Even when you keep commits
-reachable (a save-branch / tag), you still **ask before** the branch the user
-sees loses them — "I preserved them locally" is not a substitute for the
-question; the user may be mid-edit on the shared branch and a force-push would
-clobber their in-flight work regardless of your local backup.
+**Preserve-first is necessary but not sufficient.** Even when you keep the
+commits reachable (a save-branch / tag), you still **ask before** the branch
+the user sees loses them — "I preserved them locally" is not a substitute for
+the question, because the user may be mid-edit on the shared branch and a
+force-push would clobber their in-flight work regardless of your local backup.
 
 ## Two protective stops (for the protocol phase)
 
-1. **Pre-rewrite stop.** Before any squash / amend / rebase on a branch on origin: `git fetch && git rev-list --left-right --count HEAD...@{u}`. If **either** side is non-zero — STOP and run § Divergent-State Recovery. A blind `git pull --rebase` in this state is the documented failure mode. (§ Safe squash-after-push steps 1–2 implement this stop.)
+1. **Pre-rewrite stop.** Before any squash / amend / rebase on a branch that is on origin: `git fetch && git rev-list --left-right --count HEAD...@{u}`. If **either** side is non-zero — STOP and run § Divergent-State Recovery. A blind `git pull --rebase` in this state is the documented failure mode. (§ Safe squash-after-push steps 1–2 implement this stop.)
 
 2. **Post-rewrite stop.** After the rewrite, push in the **same turn** with `--force-with-lease=<branch>:<fetched-sha>` and verify `git rev-parse origin/<branch>` equals `git rev-parse HEAD`. If the push fails (hook, network, token budget) — fix the cause and re-push **before** ending the session, committing new work, or handing off. (§ Safe squash-after-push step 4 implements this stop.)
 
@@ -313,12 +313,12 @@ Recovery — never amend after a hook failure:
 3. Create a **NEW commit** (`git commit`, not `--amend`) — the prior commit was
    never overwritten and must stay intact.
 
-(Migrated from `git-history-discipline` — recovery now lives next to the
+(Migrated here from `git-history-discipline` — recovery now lives next to the
 mechanism it protects.)
 
 ## Why history discipline exists
 
-Interactive rebase + fixup loops generate disproportionate token cost every iteration: re-running CI per replayed commit, resolving the same content conflict in three derived files (`.condensation-hashes.json`, `dist/router.json`, `.windsurfrules`), losing the working tree to a stash that silently re-introduces older state. A single conflict can burn the budget of an entire feature.
+Interactive rebase + fixup loops generate disproportionate token cost on every iteration: re-running CI per replayed commit, resolving the same content conflict in three derived files (`.condensation-hashes.json`, `dist/router.json`, `.windsurfrules`), losing the working tree to a stash that silently re-introduces older state. A single conflict can burn the budget of an entire feature.
 
 A previous session squashed a pushed branch, the push hook failed at the token boundary, the session ended — and the next session saw local and origin pointing at different SHAs for the same logical work. A blind `git pull --rebase` cascaded into conflicts across every derived file. Recovery required forensic SHA-archaeology. The pre/post-rewrite stops make that sequence structurally impossible.
 
@@ -329,7 +329,7 @@ A previous session squashed a pushed branch, the push hook failed at the token b
 - "A linter caught an issue in commit 2 — let me fold the fix in." → don't. Add `fix(scope): …` on top.
 - "I want to drop the WIP commit before pushing." → ask the user first.
 - "Squash-merge when I open the PR will clean it anyway." → also true, also irrelevant — let the merge strategy do that work, not you.
-- "My branch inherited some unrelated commits — I'll reseat it on `origin/main` so my PR is clean." → **don't, ask first.** May be the user's parallel work or another agent's. Preserve them and ask which base the user wants.
+- "My branch inherited some unrelated commits — I'll reseat it on `origin/main` so my PR is clean." → **don't, ask first.** They may be the user's parallel work or another agent's. Preserve them and ask which base the user wants.
 - "The remote branch has commits I didn't author and no PR — I'll just force-push over it." → don't. No-PR is not no-owner; ask before replacing a branch you did not create.
 
 ## Output format

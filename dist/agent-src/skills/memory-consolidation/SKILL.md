@@ -162,10 +162,10 @@ skills — github.com/ViktorAxelsen/MemSkill, Apache-2.0, commit `9907c35f8cc7`)
 - **Threshold-tiered dedup decision** (enforced by `check_memory_similarity.ts`
   / `_lib/text_similarity.ts` — reuse its `MERGE_THRESHOLD` / `WARN_THRESHOLD`
   consts, never hardcode): similarity **≥ 0.80 → merge** into the existing
-  entry; **0.40–0.80 → read and judge**, merge as default; **< 0.40 → create**.
-  Cap new-entry creation per consolidation cycle. Rationale: over-merging is
-  cheap to undo; over-creating silently poisons downstream retrieval, so the
-  tie-break leans to merge.
+  entry; **0.40–0.80 → read and judge**, with merge as the default; **< 0.40 →
+  create**. Cap new-entry creation per consolidation cycle. Rationale:
+  over-merging is cheap to undo; over-creating silently poisons downstream
+  retrieval, so the tie-break leans to merge.
 - **Merge on refresh, preserve what still holds.** When a fact updates an
   existing entry, merge into one item and keep the details that remain true.
 - **Fact-change: invalidate-old-then-add-new, never silent overwrite.** When a

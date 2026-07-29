@@ -154,18 +154,27 @@ This is especially important for:
 - Create a **failing test** that reproduces the bug.
 - Implement a **single, focused fix** — not multiple changes.
 - Consider side effects — does the fix affect other code paths?
-- Check if similar patterns exist elsewhere that need the same fix — run variant analysis below before closing.
+- Check if similar patterns exist elsewhere that need the same fix — run the
+  variant analysis below before closing the bug.
 
 #### Variant analysis — one bug found, find its siblings
 
-Root cause confirmed → sweep for variants before closing:
+Once the root cause is confirmed, sweep for variants before closing:
 
-1. **Extract the signature** — minimal code shape that makes the bug (e.g. "optional relation accessed without null check after `first()`").
-2. **Sweep** — grep/`codebase-retrieval` for the shape, not the symptom: same API misuse, same copy-pasted block, same missing guard.
-3. **Verify each hit through the false-positive gate** (§ 4 proactive mode) — matching shape whose inputs cannot reach the bad state = rejected candidate, not a variant.
-4. **Report** — confirmed variants join the fix (same commit if within `minimal-safe-diff`'s remediation carve-out) or land as noted follow-up.
+1. **Extract the signature** — the minimal code shape that makes the bug
+   (e.g. "optional relation accessed without null check after `first()`").
+2. **Sweep** — grep/`codebase-retrieval` for the shape, not the symptom:
+   the same API misuse, the same copy-pasted block, the same missing guard.
+3. **Verify each hit through the false-positive gate** (§ 4 proactive mode)
+   — a matching shape whose inputs cannot reach the bad state is a rejected
+   candidate, not a variant.
+4. **Report** — confirmed variants join the fix (same commit if within
+   `minimal-safe-diff`'s remediation carve-out) or land as a noted follow-up.
 
-Worked example: root cause `$order->customer->email` crashes when customer soft-deleted. Signature: `->customer->` after unguarded relation. Sweep finds 3 more sites; 2 are variants (same nullable relation), 1 rejected (eager-loaded with `whereHas`, cannot be null there).
+Worked example: root cause `$order->customer->email` crashes when the
+customer was soft-deleted. Signature: `->customer->` after an unguarded
+relation. Sweep finds 3 more sites; 2 are variants (same nullable relation),
+1 is rejected (eager-loaded with `whereHas`, cannot be null there).
 - Add validation/monitoring (e.g. `MonitoringHelper::captureException()`) for data quality issues.
 - Verify the fix with the test from step 1.
 
@@ -200,15 +209,24 @@ For each code path, test these scenarios mentally:
 
 ### 4. False-positive gate (proactive mode)
 
-Before a candidate enters the report, restate as one falsifiable sentence: concrete input or state that triggers it + observable wrong behavior that follows. Candidate whose trigger you cannot name = **not a finding** — trace further or drop with one-line reason.
+Before a candidate enters the report, restate it as one falsifiable sentence:
+the concrete input or state that triggers it, and the observable wrong
+behavior that follows. A candidate whose trigger you cannot name is **not a
+finding** — trace further or drop it with a one-line reason.
 
-Route verification by severity: Low/Medium finding with traced trigger reports normally (**Standard**); High/Critical finding gets devil's-advocate pass first (**Deep**) — actively try to refute (guard clause upstream? framework default? unreachable input?), report only what survives. List killed candidates one-line under *Rejected candidates* so triage is auditable.
+Route verification by severity: a Low/Medium finding with a traced trigger
+reports normally (**Standard**); a High/Critical finding gets a
+devil's-advocate pass first (**Deep**) — actively try to refute it (guard
+clause upstream? framework default? unreachable input?) and report only what
+survives. List killed candidates one-line under *Rejected candidates* so the
+triage is auditable.
 
 ### 5. Output format (proactive mode)
 
 For each bug found: **Bug** → **Location** → **Severity** → **Root Cause** → **Trigger** → **Fix** → **Confidence**
 
-Close with **Rejected candidates** — one line per looks-broken-but-benign pattern the gate killed, with traced reason.
+Close with **Rejected candidates** — one line per looks-broken-but-benign
+pattern the gate killed, with the traced reason.
 
 ## Commands
 

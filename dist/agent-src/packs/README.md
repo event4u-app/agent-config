@@ -4,7 +4,7 @@ Seed packs that bundle `(profile + preset + command-set +
 skill-allowlist + personas)` into a single opinionated stance. A
 user adopts a pack instead of picking five independent settings.
 
-**Schema:** [`docs/contracts/workflow-packs.md`](../../docs/contracts/workflow-packs.md).
+**Schema:** [`docs/contracts/workflow-packs.md`](../docs/contracts/workflow-packs.md).
 
 ## Shipped packs
 

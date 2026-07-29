@@ -220,6 +220,16 @@ reviews the ticket through its lens and produces one paragraph:
 Optional: `--personas=+qa` adds the QA persona (edge cases, regression
 risk, test matrix).
 
+Optional: `--user-type=<id>` loads one user-type from `user-types/<id>.md`
+and adds an end-user simulation lens to the persona stack (e.g.
+`--user-type=galabau-field-crew`). User-types compose orthogonally with
+personas — persona = methodology / role lens; user-type = end-user / field
+lens. v1 is CLI-only (no skill-level default; no frontmatter list). The
+user-type voice renders as one paragraph in *Persona voices* labelled
+`**User: <label>**`, citing Daily Workflow, Vocabulary, Operational
+Constraints, and Ticket Red Flags from the loaded user-type. Contract:
+[`docs/contracts/user-type-schema.md`](../../../docs/contracts/user-type-schema.md).
+
 ### 5. Synthesize + close-prompt
 
 Produce the three-section output (template below). After rendering,
@@ -279,7 +289,7 @@ Run these three scans on the rendered output before the close-prompt. Each is a 
 
 Self-review is mechanical (gaps, leftovers, naming drift); persona voices and orchestration outputs handle reasoning critique. Both run; neither replaces the other.
 
-Source: adapted from an external reference `writing-plans/SKILL.md` § Self-Review (v5.1.0).
+Source: adapted from an external reference.
 
 ## Close-prompt (mandatory final step)
 
@@ -315,7 +325,11 @@ the session, re-probe on project change.
 
 ## Rubric pass (optional, surfacing-only)
 
-After refinement, run [`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md) with rubric `ticket-quality-score` to verify DoR readiness — AC, test plan, risk, estimate. Invoke when user asks for DoR check — not automatically.
+After refinement, run
+[`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md)
+with rubric `ticket-quality-score` to verify DoR readiness — acceptance
+criteria, test plan, risk, and estimate. Invoke when the user asks for a
+DoR check — not automatically on every refinement.
 
 ## Output format
 
@@ -339,6 +353,7 @@ After refinement, run [`judge-artifact-completeness`](../judge-artifact-complete
 - Do NOT duplicate logic from `validate-feature-fit` or `threat-modeling` — orchestrate by reference, cite findings, don't re-derive them.
 - Do NOT skip the close-prompt, even when the ticket looks fine and the user seems eager to move on — the prompt is the contract.
 - Do NOT emit persona voices outside the active set; if the user passed `--personas=+qa`, add QA, otherwise do not.
+- Do NOT emit a user-type voice unless `--user-type=<id>` was passed; loading a user-type proactively (e.g. "this ticket smells like field-crew") is forbidden — the axis is CLI-only in v1.
 
 ## See also
 

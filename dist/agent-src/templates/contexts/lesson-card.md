@@ -69,5 +69,5 @@ revalidate_if: "<condition that would invalidate — e.g. the endpoint gains a s
 
 ## See also
 
-- [`project-intelligence`](../contexts/execution/project-intelligence.md) — Class C safety spec, evidence/diagnosis split, decay rules, privacy floor.
-- [`evidence-discipline`](../contexts/execution/evidence-discipline.md) — v1 spine, trust tiers, the rollback target.
+- [`project-intelligence`](dist/agent-src/contexts/execution/project-intelligence.md) — Class C safety spec, evidence/diagnosis split, decay rules, privacy floor.
+- [`evidence-discipline`](dist/agent-src/contexts/execution/evidence-discipline.md) — v1 spine, trust tiers, the rollback target.

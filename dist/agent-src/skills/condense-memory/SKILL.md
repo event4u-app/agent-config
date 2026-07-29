@@ -16,63 +16,65 @@ packs:
 
 # condense-memory
 
-> **Experimental.** Output-side telegraph dialect did not meet kill-criterion in [`internal/bench/reports/telegraph-v1.md`](../../../bench/reports/telegraph-v1.md) (`vs_terse` median −9.27 %). Input-side memory condensation is orthogonal use case: savings target always-loaded memory budget, not reply stream. Treat ship-criterion as **per-target measurement**, not v1 verdict.
+<!-- cloud_safe: noop -->
+
+> **Experimental.** Output-side telegraph dialect did not meet the kill-criterion in [`internal/bench/reports/telegraph-v1.md`](../../../bench/reports/telegraph-v1.md) (`vs_terse` median −9.27 %). Input-side memory condensation is an orthogonal use case: the savings target the always-loaded memory budget, not the reply stream. Treat ship-criterion as **per-target measurement**, not the v1 verdict.
 
 ## When to use
 
 Use when:
 
-- Always-loaded memory file (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `GEMINI.md`, `.windsurfrules`) close to or above host tool's char budget and maintainer wants to recover input-token headroom.
-- Consumer-shipped `templates/AGENTS.md` failing `agents-md-thin-root` cap and pointer-extraction options exhausted.
-- Maintainer asks to "condense this memory file" or "shrink AGENTS.md" or names input-side telegraph.
+- An always-loaded memory file (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `GEMINI.md`, `.windsurfrules`) is close to or above the host tool's char budget and the maintainer wants to recover input-token headroom.
+- A consumer-shipped `templates/AGENTS.md` is failing the `agents-md-thin-root` cap and the pointer-extraction options are exhausted.
+- The maintainer asks to "condense this memory file" or "shrink AGENTS.md" or names input-side telegraph.
 
 ## Do NOT
 
-- Condense reply, commit message, PR body, ticket summary, or any deliverable written *for* human reader — those are carve-outs in [`telegraph-speak § Carve-outs`](../../rules/telegraph-speak.md) and stay verbatim.
-- Condense path matching sensitive-file denylist (`.env*`, `.netrc`, `credentials*`, `secrets*`, `id_rsa*`, `*.pem|key|p12|pfx|crt|cer|jks`, `.ssh/*`) — script refuses with `SensitivePathError` and so should you.
-- Condense generated file (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) — edit source in `src/` and regenerate via package's sync + generate-tools scripts (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`).
-- Hand-edit condensed memory file in place — run `--decondense` first; next condense pass refuses on body-hash drift (`CondensationRefused`).
-- Commit condensed file without committing matching `.original.md` backup — round-trip breaks otherwise.
+- Condense a reply, commit message, PR body, ticket summary, or any deliverable written *for* a human reader — those are carve-outs in [`telegraph-speak § Carve-outs`](../../rules/telegraph-speak.md) and stay verbatim.
+- Condense a path matching the sensitive-file denylist (`.env*`, `.netrc`, `credentials*`, `secrets*`, `id_rsa*`, `*.pem|key|p12|pfx|crt|cer|jks`, `.ssh/*`) — the script refuses with `SensitivePathError` and so should you.
+- Condense a generated file (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) — edit the source in `src/` and regenerate via the package's sync + generate-tools scripts (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`).
+- Hand-edit a condensed memory file in place — run `--decondense` first; the next condense pass refuses on body-hash drift (`CondensationRefused`).
+- Commit the condensed file without committing the matching `.original.md` backup — round-trip breaks otherwise.
 
 ## Procedure
 
-1. **Analyse target first.** Before any write, **inspect** target with `view` or `wc -l` to confirm it is always-loaded memory file (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `GEMINI.md`, `.windsurfrules`), not generated, and has prose paragraphs to condense (pointer-only Thin-Root file may net near-zero). Skip rest of procedure if any check fails.
-2. **Check denylist gate.** Run `./scripts-run src/scripts/condense_memory <path> --check` — exit 0 = safe; exit 2 = denylist hit, stop and surface refusal.
-3. **Record baseline.** `wc -c <path>` — capture pre-condensation char count for commit message.
-4. **Condense.** `./scripts-run src/scripts/condense_memory <path>`. Script writes `<path>.original.md` (verbatim backup) and rewrites `<path>` with `original_sha256:` + `condensed_at:` frontmatter.
-5. **Inspect diff.** Eyeball every Iron-Law fence, numbered-options block, code fence, backtick span, `❌`/`⚠️`/`✅` line, and frontmatter pair — all must be byte-identical. Body prose may have lost articles (`the`/`a`/`an`) and auxiliaries (`is`/`are`/`was`/`be`/`that`/`which`).
-6. **Validate idempotency.** Re-run `./scripts-run src/scripts/condense_memory <path>` — clean re-run is no-op (body hash matches). Non-zero exit = stop, escalate.
-7. **Commit both files together.** `<path>` and `<path>.original.md` ship as pair. Backup is rollback path; never commit one without other.
-8. **Rollback path.** If readability fails review at step 5: `./scripts-run src/scripts/condense_memory <path> --decondense` restores backup and deletes `.original.md`.
+1. **Analyse the target first.** Before any write, **inspect** the target with `view` or `wc -l` to confirm it is an always-loaded memory file (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `GEMINI.md`, `.windsurfrules`), is not generated, and has prose paragraphs to condense (a pointer-only Thin-Root file may net near-zero). Skip the rest of the procedure if any check fails.
+2. **Check denylist gate.** Run `./scripts-run src/scripts/condense_memory <path> --check` — exit 0 = safe; exit 2 = denylist hit, stop and surface the refusal.
+3. **Record baseline.** `wc -c <path>` — capture pre-condensation char count for the commit message.
+4. **Condense.** `./scripts-run src/scripts/condense_memory <path>`. The script writes `<path>.original.md` (verbatim backup) and rewrites `<path>` with `original_sha256:` + `condensed_at:` frontmatter.
+5. **Inspect the diff.** Eyeball every Iron-Law fence, numbered-options block, code fence, backtick span, `❌`/`⚠️`/`✅` line, and frontmatter pair — all must be byte-identical. Body prose may have lost articles (`the`/`a`/`an`) and auxiliaries (`is`/`are`/`was`/`be`/`that`/`which`).
+6. **Validate idempotency.** Re-run `./scripts-run src/scripts/condense_memory <path>` — clean re-run is a no-op (body hash matches). Non-zero exit = stop, escalate.
+7. **Commit both files together.** `<path>` and `<path>.original.md` ship as a pair. The backup is the rollback path; never commit one without the other.
+8. **Rollback path.** If readability fails review at step 5: `./scripts-run src/scripts/condense_memory <path> --decondense` restores the backup and deletes `.original.md`.
 
 ## Output format
 
-Maintainer-facing report after invoking script MUST contain, in this order:
+The maintainer-facing report after invoking the script MUST contain, in this order:
 
-1. **Diff line** — pre/post `wc -c` as single line (`AGENTS.md: 2,891 → 2,453 chars (−15.1 %)`).
-2. **Backup path** — full path of `.original.md` backup so maintainer can verify it landed on disk.
-3. **Carve-out check** — one line confirming seven carve-out classes round-tripped (`carve-outs: 7 classes preserved · idempotent re-run: clean`).
-4. **Exit-code surface** — on failure, surface verbatim exit code and exception name (`SensitivePathError → exit 2`, `CondensationRefused → exit 3`, `FileNotFoundError → exit 4`); do not paraphrase.
+1. **Diff line** — pre/post `wc -c` as a single line (`AGENTS.md: 2,891 → 2,453 chars (−15.1 %)`).
+2. **Backup path** — full path of the `.original.md` backup so the maintainer can verify it landed on disk.
+3. **Carve-out check** — one line confirming the seven carve-out classes round-tripped (`carve-outs: 7 classes preserved · idempotent re-run: clean`).
+4. **Exit-code surface** — on failure, surface the verbatim exit code and exception name (`SensitivePathError → exit 2`, `CondensationRefused → exit 3`, `FileNotFoundError → exit 4`); do not paraphrase.
 
-Do **not** narrate algorithm, grammar rules, or carve-out theory — rule and this skill document contract; output reports result.
+Do **not** narrate the algorithm, the grammar rules, or the carve-out theory — the rule and this skill document the contract; the output reports the result.
 
 ## Carve-outs — byte-for-byte preserved
 
-Mirrors seven carve-out classes in [`telegraph-speak`](../../rules/telegraph-speak.md). Condensation engine in [`src/scripts/condense_memory.ts`](../../../src/scripts/condense_memory.ts) preserves:
+Mirrors the seven carve-out classes in [`telegraph-speak`](../../rules/telegraph-speak.md). The condensation engine in [`src/scripts/condense_memory.ts`](../../../src/scripts/condense_memory.ts) preserves:
 
 1. **Triple-backtick fences** — any language, any depth.
-2. **Numbered-options lines** — `^>?\s*\d+\.\s` plus `**Recommendation:**` / `**Empfehlung:**` label.
+2. **Numbered-options lines** — `^>?\s*\d+\.\s` plus the `**Recommendation:**` / `**Empfehlung:**` label.
 3. **Backtick spans** — file paths, command names, identifiers inside body prose.
 4. **Status / error markers** — lines starting with `❌`, `⚠️`, `✅`.
 5. **Iron-Law ALL-CAPS lines** — `^[A-Z][A-Z0-9 ,.\-_/']{3,}$`.
-6. **Frontmatter blocks** — `---` fence pairs at head of file.
+6. **Frontmatter blocks** — `---` fence pairs at the head of the file.
 7. **Mode markers** per [`role-mode-adherence`](../../rules/role-mode-adherence.md).
 
-Mangling any of these breaks Iron-Law surface host tool reads. Unit tests in `tests/scripts/condense_memory.test.ts` lock each carve-out class as regression case.
+Mangling any of these breaks the Iron-Law surface the host tool reads. The unit tests in `tests/scripts/condense_memory.test.ts` lock each carve-out class as a regression case.
 
 ## Idempotency contract — Step 9 guard
 
-Script is **idempotent on clean re-runs**: running it twice on same target is no-op because body hash matches recondensed hash. Script **refuses** on **body drift**:
+The script is **idempotent on clean re-runs**: running it twice on the same target is a no-op because the body hash matches the recondensed hash. The script **refuses** on **body drift**:
 
 | State | Outcome |
 |---|---|
@@ -80,11 +82,11 @@ Script is **idempotent on clean re-runs**: running it twice on same target is no
 | SHA marker present, body re-condenses to same hash | No-op (return target unchanged). |
 | SHA marker present, body hash diverged | **Refuse** with `CondensationRefused` exit 3. |
 
-If you need to edit condensed memory file, run `--decondense` first, edit restored `.original.md` content, then re-run condenseor. Never hand-edit condensed body — next CI run will either silently corrupt your edit (if it happens to re-condense to same shape) or hard-fail next condense pass.
+If you need to edit a condensed memory file, run `--decondense` first, edit the restored `.original.md` content, then re-run the condenseor. Never hand-edit the condensed body — the next CI run will either silently corrupt your edit (if it happens to re-condense to the same shape) or hard-fail the next condense pass.
 
 ## Sensitive-path gate
 
-Every read path passes through [`src/scripts/validate_safe_paths.ts`](../../../src/scripts/validate_safe_paths.ts) `assert_safe()` before bytes leave disk. Gate is security floor for Phase 2 (input-side condensation) per `step-16-telegraph-substance.md` Phase 0; rollback of gate is rollback of this skill.
+Every read path passes through [`src/scripts/validate_safe_paths.ts`](../../../src/scripts/validate_safe_paths.ts) `assert_safe()` before bytes leave disk. The gate is the security floor for Phase 2 (input-side condensation) per `step-16-telegraph-substance.md` Phase 0; rollback of the gate is rollback of this skill.
 
 CLI exit codes:
 
@@ -95,30 +97,30 @@ CLI exit codes:
 
 ## Gotchas
 
-- **Body-hash drift after manual edit** — hand-editing condensed body breaks `original_sha256:` invariant. Next condense pass refuses with `CondensationRefused` (exit 3). Recovery: `--decondense`, edit restored body, re-condense.
-- **`.original.md` backup missing on `--decondense`** — exit 4 (`FileNotFoundError`). Either someone deleted backup or `--decondense` already ran. Restore from git history; never regenerate backup by hand (regenerated content would not be byte-identical).
-- **Denylist false positive** — sensitive-looking filename outside denylist surface (project-specific naming) will still pass `assert_safe()`. Denylist necessary but not sufficient; maintainer responsible for never feeding secrets to condenseor.
-- **Frontmatter ordering with existing keys** — if target already has frontmatter, condenseor preserves existing keys, drops any prior `original_sha256:` / `condensed_at:` entries, and appends new pair. Other agents reading file should treat SHA + timestamp pair as canonical condensation marker, not file size.
-- **Negative savings on pointer-heavy files** — `templates/AGENTS.md` already following Thin-Root (≥ 40 % pointers, ≥ 60-char *why*-clauses) has little prose left to drop; condensation may net near-zero or even add bytes via frontmatter. Run [`agents-md-thin-root`](../agents-md-thin-root/SKILL.md) first to maximise pointer share, then measure whether this skill still pays.
-- **Generated-tree drift** — condensing `.agent-src.uncondensed/templates/AGENTS.md` does NOT propagate to `.augment/`, `.claude/`, etc. until package's sync + generate-tools scripts run (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`). Always regenerate after condensing templated file.
+- **Body-hash drift after manual edit** — hand-editing the condensed body breaks the `original_sha256:` invariant. The next condense pass refuses with `CondensationRefused` (exit 3). Recovery: `--decondense`, edit the restored body, re-condense.
+- **`.original.md` backup missing on `--decondense`** — exit 4 (`FileNotFoundError`). Either someone deleted the backup or `--decondense` already ran. Restore from git history; never regenerate the backup by hand (the regenerated content would not be byte-identical).
+- **Denylist false positive** — a sensitive-looking filename outside the denylist surface (project-specific naming) will still pass `assert_safe()`. The denylist is necessary but not sufficient; the maintainer is responsible for never feeding secrets to the condenseor.
+- **Frontmatter ordering with existing keys** — if the target already has frontmatter, the condenseor preserves existing keys, drops any prior `original_sha256:` / `condensed_at:` entries, and appends the new pair. Other agents reading the file should treat the SHA + timestamp pair as the canonical condensation marker, not the file size.
+- **Negative savings on pointer-heavy files** — a `templates/AGENTS.md` that already follows Thin-Root (≥ 40 % pointers, ≥ 60-char *why*-clauses) has little prose left to drop; condensation may net near-zero or even add bytes via frontmatter. Run [`agents-md-thin-root`](../agents-md-thin-root/SKILL.md) first to maximise pointer share, then measure whether this skill still pays.
+- **Generated-tree drift** — condensing `.agent-src.uncondensed/templates/AGENTS.md` does NOT propagate to `.augment/`, `.claude/`, etc. until the package's sync + generate-tools scripts run (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`). Always regenerate after condensing a templated file.
 
 ## Measurement — when to condense
 
-No published `telegraph-v2` baseline for input-side savings yet (Step 11 of `step-16-telegraph-substance.md` ships that). Until then, maintainer judges per-target whether condensation pays its readability cost. Suggested workflow:
+There is no published `telegraph-v2` baseline for input-side savings yet (Step 11 of `step-16-telegraph-substance.md` ships that). Until then, the maintainer judges per-target whether the condensation pays its readability cost. Suggested workflow:
 
 1. `wc -c <path>` before — record baseline char count.
 2. `./scripts-run src/scripts/condense_memory <path>` — condense + back up.
 3. `wc -c <path>` after — record post-condensation char count.
-4. Eyeball diff: does prose stay legible? Are all Iron-Law fences intact?
+4. Eyeball the diff: does the prose stay legible? Are all Iron-Law fences intact?
 5. If yes → commit both `<path>` and `<path>.original.md`. If no → `--decondense`.
 
-Future `telegraph-v2.md` will tabulate realised input-token saving against `agents-md-thin-root` 40 % pointer-ratio constraint so maintainer has numerical floor.
+A future `telegraph-v2.md` will tabulate the realised input-token saving against the `agents-md-thin-root` 40 % pointer-ratio constraint so the maintainer has a numerical floor.
 
 ## Cross-references
 
-- [`telegraph-speak`](../../rules/telegraph-speak.md) — runtime rule script mirrors for input-side targets; `telegraph.speak_scope` does **not** gate this script (input-side runs regardless).
+- [`telegraph-speak`](../../rules/telegraph-speak.md) — runtime rule the script mirrors for input-side targets; `telegraph.speak_scope` does **not** gate this script (input-side runs regardless).
 - [`src/scripts/validate_safe_paths.ts`](../../../src/scripts/validate_safe_paths.ts) — Phase 0 gate; ported from upstream Telegraph `63a91ec`.
 - [`src/scripts/condense_memory.ts`](../../../src/scripts/condense_memory.ts) — implementation.
 - [`tests/scripts/condense_memory.test.ts`](../../../tests/scripts/condense_memory.test.ts) — regression locks for each carve-out + idempotency + denylist.
 - [`docs/contracts/condensation-default-kill-criterion.md`](../../../docs/contracts/condensation-default-kill-criterion.md) — v1 verdict (output-side; informs but does not gate this skill).
-- [`agents-md-thin-root`](../agents-md-thin-root/SKILL.md) — caps consumer-shipped `templates/AGENTS.md`; this skill is one tool to land under cap.
+- [`agents-md-thin-root`](../agents-md-thin-root/SKILL.md) — caps the consumer-shipped `templates/AGENTS.md`; this skill is one tool to land under the cap.

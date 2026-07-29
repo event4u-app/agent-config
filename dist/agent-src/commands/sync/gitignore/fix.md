@@ -190,5 +190,5 @@ If the check fails, offer to re-sync the block with the current template:
   ignored-but-tracked detection (Phase 5.2)
 - [`scripts/check_gitignore_freshness.ts`](../../../../src/scripts/check_gitignore_freshness.ts) —
   manifest vs block coverage check (Phase 3.4)
-- [`docs/contracts/agents-layout.md`](../../../../../../docs/contracts/agents-layout.md) —
+- [`docs/contracts/agents-layout.md`](../../../../../docs/contracts/agents-layout.md) —
   full classification contract for `agents/` entries

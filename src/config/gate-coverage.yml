@@ -72,7 +72,7 @@ gates:
       already used). The count is FILES INSPECTED, not declarers — "0 declarers"
       over 400 files is legitimate, "0 files" is blindness, and reporting declarers
       would have hidden exactly this dead root. LEGACY_PREFIX was deliberately NOT
-      retargeted: it detects stale `.agent-src.uncondensed/` entries and must keep
+      retargeted: it detects stale pre-relocation entries and must keep
       pointing at the old form.
 
   - id: skill_linter

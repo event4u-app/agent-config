@@ -41,11 +41,12 @@ Land a verified result by running a depth-bounded
 the only compute knob, every level budgeted, and the loop default-off
 until a benchmark gate authorises it per host.
 
-> **Disposition (2026-07-28, honest null — TERMINAL).** Recursive-verification
-> benchmark resolved as published null (no measured lift over single-pass
-> verification; see `docs/benchmark.md`). `verification.recursive` stays
-> default-off bound to that null; removal at next major unless external
-> evidence appears first. NOT sold as a quality-lift mechanism.
+> **Disposition (2026-07-28, honest null — TERMINAL).** The recursive-
+> verification benchmark resolved as a published null (no measured lift over
+> single-pass verification; see `docs/benchmark.md`). `verification.recursive`
+> stays default-off bound to that null; scheduled for removal at the next
+> major unless external evidence appears first. This skill is NOT sold as a
+> quality-lift mechanism.
 
 ## The Iron Law
 

@@ -49,7 +49,7 @@ New fixtures require reviewer sign-off on the allowlist change.
 
 ## Schema
 
-See [`docs/contracts/ghostwriter-schema.md`](../../docs/contracts/ghostwriter-schema.md)
+See [`docs/contracts/ghostwriter-schema.md`](../docs/contracts/ghostwriter-schema.md)
 for the locked v1 frontmatter, field reference, confidence derivation,
 verification enum, ethics floor, lint rules, and command surface.
 
@@ -57,5 +57,5 @@ verification enum, ethics floor, lint rules, and command surface.
 
 - [`personas/README.md`](../personas/README.md) — sibling primitive,
   distinct voice axis.
-- [`docs/contracts/agent-user-schema.md`](../../docs/contracts/agent-user-schema.md)
+- [`docs/contracts/agent-user-schema.md`](../docs/contracts/agent-user-schema.md)
   — the maintainer-self primitive that `/post-as:me` consumes.

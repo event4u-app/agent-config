@@ -124,13 +124,13 @@ Any "no" → revise that block before handing off.
 
 ## Policies
 
-11-block cinematic prompt is live-action shape — real-person + brand-impersonation risks highest in cluster. Before emitting:
+The 11-block cinematic prompt is live-action shape — real-person and brand-impersonation risks are the highest in the cluster. Before emitting:
 
-- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — prompt names / visually identifies real person on camera.
-- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — subject is recognised public figure.
-- [`agents/settings/policies/media/brand-impersonation.md`](../../../agents/settings/policies/media/brand-impersonation.md) — prompt copies journalism / broadcaster / regulated-industry visual identity.
-- [`agents/settings/policies/media/style.md`](../../../agents/settings/policies/media/style.md) — LIGHT / LENS anchored to named living cinematographer's signature.
-- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — every distributed live-action AI clip carries non-removable AI-generation disclosure.
+- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — when the prompt names or visually identifies a real person on camera.
+- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — when the subject is a recognised public figure.
+- [`agents/settings/policies/media/brand-impersonation.md`](../../../agents/settings/policies/media/brand-impersonation.md) — when the prompt copies a journalism / broadcaster / regulated-industry visual identity.
+- [`agents/settings/policies/media/style.md`](../../../agents/settings/policies/media/style.md) — when LIGHT / LENS choices are anchored to a named living cinematographer's signature.
+- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — every distributed live-action AI clip carries the non-removable AI-generation disclosure.
 
-Refuse-and-surface at directorial layer; live-action realism amplifies every downstream policy gap.
+Refuse-and-surface at the directorial layer; live-action realism amplifies every policy gap downstream.
 

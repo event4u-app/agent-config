@@ -129,31 +129,33 @@ Output the structured payload (below). The user — or
 ## Weighted-matrix mode (quantitative)
 
 Optional numeric variant of step 3. **Gate — fire only when ALL hold:**
-≥ 3 options · no single dominant criterion · costly / hard-to-reverse ·
-commensurable criteria (no values conflict). 2-option or reversible choice →
-one-line redirect: just decide, or qualitative matrix above. Full procedure,
-anchors, worked example: [`references/weighted-matrix.md`](references/weighted-matrix.md).
+≥ 3 options · no single dominant criterion · costly / hard-to-reverse
+decision · commensurable criteria (no values conflict). A 2-option or
+reversible choice gets a one-line redirect: just decide, or use the
+qualitative matrix above. Full procedure, anchors, worked example:
+[`references/weighted-matrix.md`](references/weighted-matrix.md).
 
-1. User states decision + options.
-2. **User lists criteria + weights (1-10) BEFORE any scoring** — AI may
-   append missed criteria afterward, each labeled `(AI-suggested)`. Never
-   propose criteria first (anchoring).
+1. User states the decision + options.
+2. **User lists criteria and weights (1-10) BEFORE any scoring** — the AI
+   may append missed criteria afterward, each labeled `(AI-suggested)`.
+   Never propose criteria first (anchoring).
 3. Criteria hygiene: cap 4-8, merge near-synonyms (double-counting check).
 4. Score options 1-10 against **fixed anchors** (each criterion declares
    what 1 and what 10 mean — never relative-to-best-in-set).
-5. Weighted sums, then **sensitivity block — the load-bearing gate**:
+5. Weighted sums, then the **sensitivity block — the load-bearing gate**:
    close-call margin (< 10 % = "no clear winner — decide on unquantified
    factors"), smallest weight change that flips the winner, ±1-score flip
-   test. Fragile winner reported as fragile, never as "the rational choice".
-6. Delegate argue-against to
+   test. A fragile winner is reported as fragile, never as "the rational
+   choice".
+6. Delegate the argue-against pass to
    [`adversarial-review`](../adversarial-review/SKILL.md), scoped: "attack
-   the winner, using the losing options' strongest criteria" (`premortem`
-   delegation pattern — never reimplemented inline).
+   the winner, using the losing options' strongest criteria" (the
+   `premortem` delegation pattern — never reimplemented inline).
 
-Output appends matrix + sensitivity block + attack summary + intuition
+Output appends matrix + sensitivity block + attack summary + the intuition
 caveat (resistance to the result signals a wrong weight or unquantified
 information — surface it, don't ignore it). **The score is a structured
-argument, not a verdict.** Hand-off to `adr-create` unchanged.
+argument, not a verdict.** Hand-off to `adr-create` is unchanged.
 
 ## Related Skills
 
@@ -189,8 +191,8 @@ argument, not a verdict.** Hand-off to `adr-create` unchanged.
 - "Wir müssen ein ADR draus machen."
 - "Trade-off-Matrix für X vs Y."
 - "Diese Entscheidung überschreibt das alte ADR-NN."
-- "Weighted decision matrix für die Optionen" / "score my options
-  against my criteria" — fires the weighted-matrix mode (gate permitting).
+- "Weighted decision matrix für die Optionen" / "score my options against
+  my criteria" — fires the weighted-matrix mode (gate permitting).
 
 ## Output
 

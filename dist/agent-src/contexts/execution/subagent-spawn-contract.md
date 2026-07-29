@@ -51,7 +51,7 @@ A WORKER OVERRUNNING ITS BUDGET 20× IS A DISPATCH ERROR ON THE WRONG RUNG,
 NOT DILIGENCE.
 ```
 
-Budgets keyed by the worker's resolved tier
+Budgets are keyed by the worker's resolved tier
 (`worker_budget.budgetForTier`; start values `lite: 15k` — the lookup-class
 seed — `medium: 60k`, `high: 150k`, refined from `budget_hit` telemetry, never
 final). On hit the worker returns a `BLOCKED` envelope whose body is the
@@ -60,9 +60,9 @@ partial-result shape from the
 what was found (refs), what remains, suggested next rung. The stop-loss
 **composes** with the N=3 validation budget
 ([`autonomous-execution`](../../rules/autonomous-execution.md)) and the
-ADR-109 response contract — replaces nothing. Live evidence (2026-07-28):
-four lookup-class workers burned 280–327k tokens each on tasks a
-deterministic primitive answers for <1k.
+ADR-109 response contract — it replaces nothing. Live evidence
+(2026-07-28): four lookup-class workers burned 280–327k tokens each on tasks
+a deterministic primitive answers for <1k.
 
 ## Bundle resolver — bind to the existing surfaces
 
@@ -98,14 +98,14 @@ covered by
 
 ## Worker rtk allowlist — wrap only the measured class
 
-Worker tool loops wrap a command with rtk **only** when that command class
-measured ≥ ~50% output saving in `internal/bench/rtk-savings/RESULTS.md`
-(`git status`, full-format `git log -N`, `ls -la`); the ~0%-class
-(`--oneline`, `--stat` views, `npm ls`) stays unwrapped — wrap overhead
-without return. Deterministic list: `src/scripts/_lib/rtk_allowlist.ts`
-(`shouldWrapWithRtk`); congruence with RESULTS.md is test-enforced
-(`tests/scripts/_lib_rtk_allowlist.test.ts`) — numbers live in the bench
-file, referenced, never duplicated.
+A worker's tool loop wraps a command with rtk **only** when that command
+class measured ≥ ~50% output saving in
+`internal/bench/rtk-savings/RESULTS.md` (`git status`, full-format
+`git log -N`, `ls -la`); the ~0%-class (`--oneline`, `--stat` views,
+`npm ls`) stays unwrapped — wrap overhead without return. Deterministic
+list: `src/scripts/_lib/rtk_allowlist.ts` (`shouldWrapWithRtk`); congruence
+with RESULTS.md is test-enforced (`tests/scripts/_lib_rtk_allowlist.test.ts`)
+— the numbers live in the bench file, referenced, never duplicated.
 
 ## Prefix stability — deterministic payload ordering
 
@@ -113,7 +113,7 @@ Spawn payloads serialize **static prefix first** (role contract, profile,
 personas, budget — byte-identical across dispatches of the same
 configuration), **variable task part last**; no timestamps, no random IDs
 (`serializeSpawnPayload` / `spawnPayloadHash`). Provider prompt-caching keys
-on the stable prefix; `payload_hash` + `cache_hit` audit fields
+on the stable prefix; the `payload_hash` + `cache_hit` audit fields
 ([`orchestration-telemetry`](orchestration-telemetry.md)) measure whether it
 actually hits. Measurement only — no savings claim without provider-response
 evidence.

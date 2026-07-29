@@ -46,11 +46,11 @@ Fresh evidence answers *may I claim done*; this answers *may I end the turn*. Pa
 them: **end the turn only when the work is complete-and-verified, OR you are blocked
 on input only the user can provide.** If the last paragraph is a plan, an open
 question the context already answers, or a promise of unexecuted work ("I'll…",
-"next I will…"), that is not a stop condition — do that work now with tool calls.
-Mechanics (N=3 / Hard-Floor bounds) live in the
-[`end-of-turn checkpoint`](../contexts/execution/autonomy-mechanics.md); this
-unifies its promissory-closing half with the Gate above so "done" means *verified
-and nothing promised-but-unbuilt remains*.
+"next I will…"), that is not a stop condition — do that work now with tool calls
+instead of ending. The mechanics (N=3 / Hard-Floor bounds) live in the
+[`end-of-turn checkpoint`](../contexts/execution/autonomy-mechanics.md); this line
+unifies its promissory-closing half with the verification Gate above so "done"
+means *verified and nothing promised-but-unbuilt remains*.
 
 ## Red flags — STOP immediately
 

@@ -97,7 +97,7 @@ Apply this floor **before** marking any ticket `lite`:
 - Any miss → split the ticket further, or escalate to `medium`
 - Architectural / multi-module → `high` (use `adr-create` first)
 
-**Gate:** run `./scripts-run src/scripts/lint_ticket_buildable agents/tickets/{slug}/`
+**Gate:** run `./scripts-run src/scripts/lint_ticket_buildable.ts agents/tickets/{slug}/`
 and fix all errors before declaring any ticket `lite`. This is the only
 authoritative check — do not skip it.
 

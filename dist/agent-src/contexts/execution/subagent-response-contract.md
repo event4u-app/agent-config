@@ -23,9 +23,9 @@ orchestrator synthesises and re-verifies.
 
 ## Budget-hit partial result
 
-Worker's `max_tokens_per_worker` stop-loss fires
-([spawn contract § Per-worker token stop-loss](subagent-spawn-contract.md#per-worker-token-stop-loss-l0b--hard-budget-structured-escalation))
-→ return is `BLOCKED` envelope whose body is this shape instead:
+When the worker's `max_tokens_per_worker` stop-loss fires
+([spawn contract § Per-worker token stop-loss](subagent-spawn-contract.md#per-worker-token-stop-loss-l0b--hard-budget-structured-escalation)),
+the return is a `BLOCKED` envelope whose body is this shape instead:
 
 ```json
 {
@@ -36,9 +36,9 @@ Worker's `max_tokens_per_worker` stop-loss fires
 }
 ```
 
-`budget_hit: true` is the escalation flag; `found` follows same
+`budget_hit: true` is the escalation flag; `found` follows the same
 refs-not-bodies floor as `evidence_refs`. Validator:
-`worker_budget.validateWorkerPartialResult` — orchestrator never adopts
+`worker_budget.validateWorkerPartialResult` — the orchestrator never adopts an
 invalid partial return.
 
 ## Orchestrator synthesis duties

@@ -11,26 +11,40 @@ packs:
 
 # judge-artifact-completeness
 
-> Judge specialized in **artifact completeness**. Score non-code deliverables — roadmap, PR review, ADR, ticket — against a rubric and surface missing/partial dimensions. Does **not** judge code quality, bugs, or security. Never auto-gates: score + gaps → human decides.
+> You are a judge specialized in **artifact completeness**. Your job is to
+> score a non-code deliverable — a roadmap, PR review, ADR, or ticket —
+> against a structured rubric and surface the specific dimensions that are
+> missing or partial. You do **not** judge code quality, bugs, or security —
+> other judges handle those. You never auto-gate: score + gaps go to the
+> human; the human decides.
 
 ## When to use
 
-* Roadmap produced — score completeness against AC, risk, migration surface.
-* PR review complete — check evidence quality + test coverage.
-* ADR drafted — alternatives / consequences / reversibility completeness pass.
-* Ticket exits refinement — DoR readiness check.
-* `/refine-ticket`, `/adr-create`, `/roadmap:create`, `/review-changes` surface score as optional output pass.
+* A roadmap is produced and its completeness against acceptance criteria,
+  risk coverage, and migration surface needs scoring.
+* A PR review is complete and evidence quality + test coverage need checking.
+* An ADR is drafted and its alternatives / consequences / reversibility need
+  a completeness pass.
+* A ticket exits refinement and its DoR readiness needs confirming.
+* `/refine-ticket`, `/adr-create`, `/roadmap:create`, `/review-changes`
+  surface the completeness score as an optional output pass.
 
 Do NOT use when:
 
-* Code quality / naming / DRY → [`judge-code-quality`](../judge-code-quality/SKILL.md)
-* Functional bug → [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md)
-* Missing test files → [`judge-test-coverage`](../judge-test-coverage/SKILL.md)
-* Security issue → [`judge-security-auditor`](../judge-security-auditor/SKILL.md)
+* The concern is code quality, naming, or DRY —
+  [`judge-code-quality`](../judge-code-quality/SKILL.md)
+* The concern is a functional bug —
+  [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md)
+* The concern is missing test files —
+  [`judge-test-coverage`](../judge-test-coverage/SKILL.md)
+* The concern is a security issue —
+  [`judge-security-auditor`](../judge-security-auditor/SKILL.md)
 
 ## Procedure
 
 ### 1. Identify artifact type
+
+Map the artifact to one of the four supported types and its rubric schema:
 
 | Artifact | Rubric schema |
 |---|---|
@@ -39,17 +53,25 @@ Do NOT use when:
 | ADR / architecture decision | `rubrics/architecture-score.json` |
 | Jira / Linear ticket | `rubrics/ticket-quality-score.json` |
 
-Ambiguous type → one question before scoring.
+If the artifact type is ambiguous, ask one question before scoring.
 
 ### 2. Score each dimension
 
-* **0** — absent. Criterion not addressed.
-* **1** — partial. Mentioned but too vague to be actionable (e.g., "risks exist" without naming one).
-* **weight** — fully present. Criterion met concretely and traceably.
+For each dimension in the rubric, assign:
 
-Use only `criterion` field. Do not penalise for style or length. Short artifact covering all dimensions scores same as long one — completeness ≠ verbosity.
+* **0** — absent. The criterion is not addressed at all.
+* **1** — partial. The criterion is mentioned but too vague to be
+  actionable (e.g., "risks exist" without naming one).
+* **weight** — fully present. The criterion is met concretely and
+  traceably in the artifact.
 
-Mark **N/A** (full credit) only when rubric schema explicitly allows it.
+Use only the dimension's `criterion` field to judge. Do not penalise
+for style or length. A short artifact that covers all dimensions
+fully scores the same as a long one — completeness is not verbosity.
+
+Mark a dimension **N/A** (full credit) only when the rubric schema
+explicitly allows it (e.g., `migration_effort` when no public interface
+changes).
 
 ### 3. Compute verdict
 
@@ -67,17 +89,19 @@ ratio          = total_earned / total_possible
 
 ### 4. Surface gaps
 
-Top 1–3 gaps — dimensions with score = 0 or 1, highest weight. Gap entry names dimension + specific unmet criterion.
+List the top 1–3 gaps — dimensions with score = 0 or score = 1 that
+have the highest weight. A gap entry names the dimension and the
+specific criterion that is not met.
 
 ## Validation
 
 Before finalising:
 
-1. Every scored dimension maps to rubric schema field.
-2. No dimension penalised for length or word count.
-3. N/A credit granted only where schema allows.
-4. Verdict follows ratio thresholds, not intuition.
-5. Top gaps = highest-weight missing — not every minor gap.
+1. Every scored dimension maps to a field in the rubric schema.
+2. No dimension was penalised for length or word count.
+3. N/A credit was granted only where the schema allows it.
+4. The verdict follows the ratio thresholds above, not intuition.
+5. Top gaps are the highest-weight missing dimensions — not every minor gap.
 
 ## Output format
 
@@ -104,33 +128,54 @@ Required fields (ordered):
 2. **Verdict** — `complete`, `partial`, or `incomplete`
 3. **Score** — raw earned/possible and percentage
 4. **Dimensions** — one line per dimension with emoji + score + note
-5. **Top gaps** — highest-weight missing with concrete close action
+5. **Top gaps** — highest-weight missing dimensions with concrete close action
 
-Output surfaced as recommendation. Human decides whether to act on gaps.
+The output is surfaced to the human as a recommendation. The human
+decides whether to act on the gaps.
 
 ## Gotcha
 
-* **Length ≠ completeness** — terse complete roadmap scores same as long one.
-* **N/A abuse** — `migration_effort` is only N/A when no public-interface change. Mark 1 (partial) when unsure.
-* **Partial credit creep** — "mentioned but vague" = partial (1), not full credit. "Risks exist" without naming one = partial.
-* **Verdict as gate** — recommendation, never blocker. Surface it; human decides.
+* **Length ≠ completeness** — a terse but complete roadmap scores the
+  same as a long one. Do not conflate word count with dimension coverage.
+* **N/A abuse** — `migration_effort` is only N/A when the artifact
+  genuinely introduces no public-interface change. Mark it 1 (partial)
+  when you are unsure rather than granting unearned N/A.
+* **Partial credit creep** — "mentioned but vague" is partial (1), not
+  full credit (weight). A risk section that says "risks exist" without
+  naming one is partial, not complete.
+* **Verdict as a gate** — the verdict is a recommendation, never a
+  blocker. Surface it; the human decides.
 
 ## Do NOT
 
-* NEVER penalise artifact for being short or concise
-* NEVER grant full credit to vague mention — that is partial (1)
-* NEVER auto-reject or auto-approve based on verdict alone
+* NEVER penalise an artifact for being short or concise
+* NEVER grant full credit to a vague mention — that is partial (1)
+* NEVER auto-reject or auto-approve work based on the verdict alone
 * NEVER score code quality, correctness, or security — out of scope
-* NEVER invent dimensions not in rubric schema
+* NEVER invent dimensions not in the rubric schema
 
 ## Calibration
 
-Fixtures: `calibration/fixtures.json`. Rubric designed monotone: removing a fully-present dimension lowers score by at least `dimension.weight`. No single dimension dominates (max weight = 3; total possible = 12–15 per rubric).
+Calibration fixtures live in `calibration/fixtures.json`. The rubric
+is designed to be monotone: removing a fully-present dimension from an
+artifact must lower the score by at least `dimension.weight`. No single
+dimension dominates (maximum weight is 3; total possible is 12–15
+depending on rubric).
 
-Anti-length: fixtures include `SHORT_COMPLETE` (short, all dimensions) and `LONG_INCOMPLETE` (verbose, missing high-weight dimensions). Correct judge scores `SHORT_COMPLETE` > `LONG_INCOMPLETE`.
+Anti-length property: the fixture set includes `SHORT_COMPLETE` (short,
+all dimensions present) and `LONG_INCOMPLETE` (long, missing
+high-weight dimensions). A correct judge scores
+`SHORT_COMPLETE` > `LONG_INCOMPLETE`.
 
 ## References
 
-- Sibling judges: [`judge-code-quality`](../judge-code-quality/SKILL.md), [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md), [`judge-security-auditor`](../judge-security-auditor/SKILL.md), [`judge-test-coverage`](../judge-test-coverage/SKILL.md).
-- Dispatchers: [`/refine-ticket`](../../commands/refine-ticket.md), [`/adr-create`](../../commands/adr-create.md), [`/review-changes`](../../commands/review/changes.md).
-- Rubric schemas: `rubrics/roadmap-score.json`, `rubrics/pr-review-score.json`, `rubrics/architecture-score.json`, `rubrics/ticket-quality-score.json`.
+- Sibling judges: [`judge-code-quality`](../judge-code-quality/SKILL.md),
+  [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),
+  [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
+  [`judge-test-coverage`](../judge-test-coverage/SKILL.md).
+- Dispatchers: [`/refine-ticket`](../../commands/refine-ticket.md),
+  [`/adr-create`](../../commands/adr-create.md),
+  [`/review-changes`](../../commands/review/changes.md).
+- Rubric schemas: `rubrics/roadmap-score.json`,
+  `rubrics/pr-review-score.json`, `rubrics/architecture-score.json`,
+  `rubrics/ticket-quality-score.json`.

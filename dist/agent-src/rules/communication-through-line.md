@@ -12,7 +12,7 @@ packs: [meta]
 
 # Communication Through-Line
 
-The user follows the work through your replies. A multi-step task whose replies jump between sub-topics with no visible thread forces the user to re-derive where things stand every turn. Give the work a **red thread**: a followable narrative from goal to result. Session-spanning coherence — distinct from single-reply brevity (`direct-answers`) and option formatting (`user-interaction`), which it never overrides.
+The user follows the work through your replies. A multi-step task whose replies jump between sub-topics with no visible thread forces the user to re-derive where things stand every turn. Give the work a **red thread**: a followable narrative from goal to result. This is session-spanning coherence — distinct from single-reply brevity (`direct-answers`) and option formatting (`user-interaction`), which it never overrides.
 
 ## The Iron Law
 
@@ -24,10 +24,10 @@ CLOSE THE LOOP WITH ONE END-SUMMARY. NEVER MAKE THE USER RE-DERIVE WHERE THINGS 
 ## Checkable behaviors
 
 - **Anchor once.** At the start of a multi-step task, state the goal/plan in one line (not re-stated every turn).
-- **Each turn locates itself.** A mid-task reply says, in a few words, where it sits in the plan ("step 3/5", "now the downstream wiring") — so the user never scrolls up to orient.
+- **Each turn locates itself.** A mid-task reply says, in a few words, where it sits in that plan ("step 3/5", "now the downstream wiring") — so the user never has to scroll up to orient.
 - **Name the delta.** On a continuation, say what changed since the last turn (what landed, what's next) rather than restating everything.
-- **Close the loop.** A work reply ends with ONE end-summary mapping back to the stated goal — reached or not, what remains. (Same single end-summary `direct-answers` requires; do not add a second.)
-- **Signal pivots.** If the work changes direction (new sub-task, interrupt, blocker), say so explicitly — a silent topic switch breaks the thread.
+- **Close the loop.** A work reply ends with ONE end-summary that maps back to the stated goal — did we reach it, what remains. (This is the same single end-summary `direct-answers` requires; do not add a second.)
+- **Signal pivots.** If the work changes direction (new sub-task, interrupt, a blocker), say so explicitly — a silent topic switch breaks the thread.
 
 ## When NOT to over-apply
 

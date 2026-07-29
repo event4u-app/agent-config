@@ -45,19 +45,23 @@ without it.
 
 ### Archival — preferred sweep, untracked-safe manual fallback
 
-Robust path: `archive_completed_roadmaps --all` — detects complete
-(`count_open == 0`, `count_deferred == 0`), moves to `agents/roadmaps/archive/`
-(`git mv` tracked, plain `mv` untracked / no-commit), rewrites inbound refs,
-regens dashboard. PR-independent.
+The robust path is the `archive_completed_roadmaps --all` sweep: it detects a
+completed roadmap (`count_open == 0`, `count_deferred == 0`), moves it to
+`agents/roadmaps/archive/` — `git mv` in a tracked repo, a plain `mv` in a
+pre-first-commit / untracked one — rewrites inbound refs, and regenerates the
+dashboard. It is **PR-independent**: it does not need `/create-pr` to have run.
 
-**Manual fallback (script not vendored)** — same response, never leave a
-100 %-complete roadmap active because `git mv` failed:
+**Manual fallback — script-less consumer** (the sweep is not vendored). Do it by
+hand, in the same response, and never leave a 100 %-complete roadmap in the
+active tree because `git mv` failed:
 
 1. `mkdir -p agents/roadmaps/archive`.
-2. `git mv agents/roadmaps/<x>.md agents/roadmaps/archive/<x>.md` (tracked); plain
-   `mv` if untracked / no commits.
-3. Rewrite inbound `agents/roadmaps/<x>.md` → `agents/roadmaps/archive/<x>.md`
-   across the tree (working tree, not just index, when untracked).
+2. Move the file — `git mv agents/roadmaps/<x>.md agents/roadmaps/archive/<x>.md`
+   in a tracked repo; a plain `mv` if the file is untracked or the repo has no
+   commits (`git mv` errors there).
+3. Rewrite inbound full-path references `agents/roadmaps/<x>.md` →
+   `agents/roadmaps/archive/<x>.md` across the tree — on the working tree, not
+   just the git index, when untracked.
 4. Regenerate `agents/roadmaps-progress.md`.
 
 ## Procedure: Manage a roadmap
@@ -154,8 +158,8 @@ Every roadmap follows this structure:
 Every roadmap implicitly includes the project's quality pipeline
 (static analysis, autofixes, tests). Whether the agent runs it locally
 at all is gated by `quality.local_auto_run`: `false` or missing (the
-default) → agent never runs the pipeline locally; user runs it
-manually, remote CI on the PR is the authoritative gate (run-end
+default) → the agent never runs the pipeline locally; the user runs it
+manually and remote CI on the PR is the authoritative gate (run-end
 report: *"quality gates delegated to remote CI"*; new-gate carve-out
 steps still run once). When `local_auto_run: true`, **when** the
 pipeline runs during `/roadmap:process-step|phase|full` is controlled
@@ -266,16 +270,16 @@ After the last step of a roadmap is done, check completion status:
 
 3. **Decision rule — `count_open == 0` means the roadmap has no active
    work left. `[x]`, `[-]` are final states. `[~]` deferred items
-   block silent closure — they carry plans user has not consented to drop
-   (enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
+   block silent closure — they carry plans the user has not consented
+   to drop (enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
    Iron Law 3).**
 
    | count_x | count_open | count_deferred | count_cancelled | Action |
    |---|---|---|---|---|
    | ≥ 1 | 0 | 0 | 0 | **Auto-archive** (silent) — pure completion |
    | ≥ 1 | 0 | 0 | ≥ 1 | **Auto-archive** (silent) — done with explicit drops |
-   | ≥ 1 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Surface deferred items, present follow-up options, wait. Step 4b. |
-   | 0 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Scope-drop or deferred-to-later? Same options as 4b. |
+   | ≥ 1 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Surface deferred items, present follow-up options, wait. See step 4b. |
+   | 0 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Was this a scope-drop or deferred-to-later? Same options as 4b. |
    | 0 | 0 | 0 | ≥ 1 | **Auto-skip** (silent) — no work, all cancelled |
    | ≥ 0 | ≥ 1 | ≥ 0 | ≥ 0 | **Ask the user** — open work remains (step 4a) |
 
@@ -285,10 +289,10 @@ After the last step of a roadmap is done, check completion status:
    - Skip:    `⏭️  Roadmap skipped → agents/roadmaps/skipped/{filename}`
    - Later:   `🕒  Roadmap parked for later → agents/roadmaps/later/{filename}`
 
-   `[-]` cancelled items remain searchable in archived file — they were
-   explicit drops. `[~]` deferred items, by contrast, may not silently
-   follow file into archive: they represent work user planned and would
-   lose track of. Step 4b is the gate.
+   `[-]` cancelled items remain searchable inside the archived file —
+   they were explicit drops. `[~]` deferred items, by contrast, may
+   not silently follow the file into archive: they represent work the
+   user planned and would lose track of. Step 4b is the gate.
 
 4a. **Open items remain (`count_open ≥ 1`)** → **Ask the user.** Show what's incomplete:
 
@@ -307,22 +311,25 @@ After the last step of a roadmap is done, check completion status:
    > 5. Later — park in later/ (open work is blocked on an external trigger / decision but will resume)
    ```
 
-   Option 4 only appropriate when `count_x == 0` or completed items were
-   trivial (e.g. prerequisites). If user picks 4 despite meaningful work
-   done, confirm once — archive usually right. Picking option 3 does
-   NOT archive immediately — converts open → deferred, re-enters the
+   Option 4 is only appropriate when `count_x == 0` or the completed items were
+   trivial (e.g. prerequisites only). If the user picks 4 despite meaningful work
+   being done, confirm once — archive is usually the right choice. Picking option 3
+   does NOT archive immediately — it converts open → deferred and re-enters the
    `count_deferred > 0` branch, which runs step 4b.
 
-   **Option 5 (Later) — right when open items are real but cannot proceed
-   now** (gated on an external trigger or a decision). Set frontmatter
-   `status: later`, ensure a `Blocked until` / `Trigger` resume line, `git mv`
-   to `agents/roadmaps/later/`, migrate inbound refs to the new path, regen.
-   Open `[ ]` items stay open (not cancelled/deferred) — parked whole, ready to
-   resume when the trigger fires. **Roadmaps with open tasks deferred for later
-   are always moved to `later/`**, never left to rot in the active tree.
+   **Option 5 (Later) is the right choice when the open items are real but
+   cannot proceed now** — gated on an external trigger or a decision. Set the
+   roadmap's frontmatter `status: later`, ensure it carries a `Blocked until` /
+   `Trigger` resume line, `git mv` it to `agents/roadmaps/later/`, migrate any
+   inbound references to the new path, and regenerate the dashboard. The open
+   `[ ]` items stay open (they are not cancelled or deferred) — the roadmap is
+   parked whole, ready to resume when the trigger fires. **Roadmaps with open
+   tasks deferred for later are always moved to `later/`**, never left to rot in
+   the active tree.
 
 4b. **Deferred items present (`count_deferred ≥ 1`, `count_open == 0`)** — Iron Law 3 flow.
-   Archive **blocked** until user resolves deferrals. Surface plan and ask:
+   The archive is **blocked** until the user resolves the deferrals. Surface
+   the plan and ask:
 
    ```
    📋 Roadmap closure check — deferred items must resolve before archive:
@@ -348,19 +355,20 @@ After the last step of a roadmap is done, check completion status:
    > 5. Convert selected items to [-] cancelled — drop with rationale.
    ```
 
-   Picks 1 or 2 → see "Spawn follow-up from deferred items" below.
-   Picks 3, 4, or 5 → apply the change in this roadmap; re-evaluate
-   the decision table; archive when gate clears.
+   Picks 1 or 2 → see "Spawn follow-up from deferred items" procedure below.
+   Picks 3, 4, or 5 → apply the change in this roadmap; re-evaluate the
+   decision table; archive when the gate clears.
 
 ### Spawn follow-up from deferred items (procedure)
 
-When user picks option 1 or 2 in step 4b:
+When the user picks option 1 or 2 in step 4b:
 
-1. **Derive slug.** Default `<parent-slug>-followup` (e.g. `road-to-x.md`
-   → `road-to-x-followup.md`). User-supplied slug in picker → use that.
-   Avoid collisions with `agents/roadmaps/` (active + `archive/` + `skipped/`).
+1. **Derive the slug.** Default `<parent-slug>-followup` (e.g.
+   `road-to-x.md` → `road-to-x-followup.md`). If a user-supplied
+   slug was given in the picker, use that. Avoid collisions with
+   `agents/roadmaps/` (active + `archive/` + `skipped/`).
 
-2. **Write new file** at `agents/roadmaps/<slug>.md`:
+2. **Write the new file** at `agents/roadmaps/<slug>.md`:
 
    ```markdown
    ---
@@ -398,21 +406,22 @@ When user picks option 1 or 2 in step 4b:
    - [ ] All quality gates pass — see `quality-tools`.
    ```
 
-3. **In parent roadmap** (still in working tree), append a line at
-   bottom (above any final `---`):
+3. **In the parent roadmap** (still in the working tree), append a
+   line at the bottom (above any final `---`):
 
    ```
    <!-- Deferred items migrated to agents/roadmaps/<followup-slug>.md on YYYY-MM-DD -->
    ```
 
-   Do **not** delete `[~]` lines — keep visible in archived parent so
-   trail stays grep-able. Follow-up carries forward executable copy.
+   Do **not** delete the `[~]` lines — keep them visible in the
+   archived parent so the trail stays grep-able. The follow-up
+   carries forward the executable copy.
 
-4. **Regenerate dashboard.** Follow-up appears (draft hidden, ready
-   visible) and parent — once moved — drops off.
+4. **Regenerate the dashboard.** The follow-up appears (draft hidden,
+   ready visible) and the parent — once moved — drops off.
 
-5. **Archive parent** (`git mv` → `archive/`) and regen one more time
-   per [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
+5. **Archive the parent** (`git mv` → `archive/`) and regen one
+   more time per [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
    Iron Laws 1 + 3.
 
 5. **Move the file** with `git mv` so history is preserved:
@@ -472,18 +481,23 @@ The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate
 
 ### Blockers on the dashboard
 
-Overview table's `Blocker` column counts each roadmap's open
-`## Blockers` entries (or legacy `> Blocked until` note), links to
-per-roadmap breakdown, which lists every open blocker with owner,
-blocked scope, full instructions. Authoring shape:
+The overview table's `Blocker` column counts each roadmap's open
+`## Blockers` entries (or the legacy `> Blocked until` note) and links
+to the per-roadmap breakdown, which lists every open blocker with
+owner, blocked scope, and full instructions. Authoring shape:
 [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md);
 authoring guidance: [`roadmap-writing § 5b`](../roadmap-writing/SKILL.md).
-Clearing a blocker flips `Status: resolved`, regenerates dashboard in
-same reply — same cadence as a checkbox flip.
+Clearing a blocker flips its `Status: resolved` and regenerates the
+dashboard in the same reply, same cadence as a checkbox flip.
 
 ## Rubric pass (optional, surfacing-only)
 
-After producing roadmap, run [`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md) with rubric `roadmap-score` to surface missing dimensions (risk, tests, migration, maintainability). Score is a recommendation; never blocks shipping. Invoke only when user wants completeness check — not by default.
+After producing a roadmap, run
+[`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md)
+with rubric `roadmap-score` to surface missing dimensions (risk, tests per
+step, migration, maintainability). The score is a recommendation; it never
+blocks the roadmap from shipping. Invoke only when the user wants a
+completeness check — not on every roadmap creation by default.
 
 ## Output format
 

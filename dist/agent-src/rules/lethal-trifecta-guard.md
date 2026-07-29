@@ -23,11 +23,11 @@ enforced_by:
 Prompt injection is not solvable at the model layer (OWASP LLM01). It is
 contained **architecturally**: a tool/skill/command becomes dangerous only when
 it combines all three legs of the *lethal trifecta*. Remove one leg and an
-injected instruction can do no consequential harm. This is the agentic attack
-surface OWASP's Agentic Security Initiative (ASI Top 10) catalogues — excessive
-agency, tool misuse, confused-deputy data exfiltration; the Least-Agency
-discipline in [`tool-safety`](tool-safety.md) is the same defence applied to the
-tool grant.
+injected instruction can do no consequential harm. This is the agentic
+attack surface OWASP's Agentic Security Initiative (ASI Top 10) catalogues —
+excessive agency, tool misuse, and confused-deputy data exfiltration; the
+Least-Agency discipline in [`tool-safety`](tool-safety.md) is the same defence
+applied to the tool grant.
 
 ## The Iron Law
 

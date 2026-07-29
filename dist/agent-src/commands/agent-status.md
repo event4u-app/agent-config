@@ -57,9 +57,9 @@ the last record from `agents/cost-tracking/sessions.jsonl`. If the file
 does not exist (tracker never run for this project), skip this step and
 note `cost ledger: not initialised` in the dashboard.
 
-Extract from latest record:
+Extract from the latest record:
 
-- `total_usd` — dollars spent in current session
+- `total_usd` — dollars spent in the current session
 - `by_model[]` — per-tier (haiku / sonnet / opus) input / output / cache split
 - `budget.tier` — `under` / `50` / `75` / `90` / `100` (from `node scripts/cost/budget.mjs check`)
 
@@ -68,19 +68,20 @@ implementation: [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs).
 
 ### 3b. Read telegraph delta + per-conversation cost lens
 
-Run two read-only Python helpers (stdlib-only, no-op safe if JSONL missing):
+Run two read-only Python helpers (both stdlib-only, both no-op safe if the
+JSONL is missing):
 
 - `./scripts-run src/scripts/telegraph_stats --format json` — per-session +
-  per-conversation + lifetime telegraph delta. Honors suspended
-  multiplier (see [`docs/contracts/telegraph-telemetry.md`](../docs/contracts/telegraph-telemetry.md)) — delta reads `0` while suspended; display version + ACTIVE/SUSPENDED state regardless.
+  per-conversation + lifetime telegraph delta. Honors the suspended
+  multiplier (see [`docs/contracts/telegraph-telemetry.md`](../docs/contracts/telegraph-telemetry.md)) — delta reads `0` while suspended; display the version + ACTIVE/SUSPENDED state regardless.
 - `./scripts-run src/scripts/cost_by_conversation --format json` — per-conversation
-  total cost + model breakdown for current conversation, sourced
-  from same `agents/cost-tracking/sessions.jsonl` ledger.
+  total cost + model breakdown for the current conversation, sourced
+  from the same `agents/cost-tracking/sessions.jsonl` ledger.
 
-Surface in dashboard as one line:
+Surface in the dashboard as one line:
 `[telegraph: {lifetime.delta_tokens:+,} tok lifetime · {current_conv.delta_tokens:+,} this conv · multiplier v{multiplier_version} {ACTIVE|SUSPENDED}] · [conv cost: ${current_conv.total_cost_usd:.4f}]`.
 
-If both JSONLs missing or empty, omit line silently.
+If both JSONLs are missing or empty, omit the line silently.
 
 ### 4. Calculate freshness thresholds
 
@@ -113,7 +114,7 @@ Use Markdown tables and headings — NOT ASCII box art (breaks in non-monospace 
 
 **💵 Session cost (measured)**
 
-If ledger exists, render:
+If the ledger exists, render:
 
 | | |
 |---|---|
@@ -122,7 +123,7 @@ If ledger exists, render:
 | 🎯 Budget tier | {emoji} {tier} ({utilization_pct}% of cap) |
 
 Tier-emoji map: `under` / `50` → ✅ · `75` → ⚠️ · `90` → ⚠️⚠️ · `100` → ❌.
-If ledger does not exist, render `Session cost: not initialised — run \`task cost:track\` to start measuring`.
+If the ledger does not exist, render `Session cost: not initialised — run \`task cost:track\` to start measuring`.
 
 **⚡ Freshness**
 

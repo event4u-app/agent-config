@@ -10,20 +10,22 @@ source: project
 
 ## Focus
 
-Commercial truck driver doing regional or long-haul delivery —
-typically single driver, phone or in-cab tablet on a mount, gloves
-optional but hands often busy with the wheel, paperwork, or a
-pallet jack. Day is gated by **hours-of-service (HOS)** — legally
-bounded driving and rest windows that cannot be ignored without
-losing the licence. Cargo moves through warehouses, loading docks,
-customer yards; signal drops in tunnels, basements, rural
-stretches. Proof-of-delivery (photo + signature + GPS + timestamp)
-is the moment the invoice becomes collectable.
+This lens simulates a commercial truck driver doing regional or
+long-haul delivery — typically a single driver, a phone or
+in-cab tablet on a mount, gloves optional but hands often busy
+with the wheel, paperwork, or a pallet jack. The day is gated by
+**hours-of-service (HOS)** — legally bounded driving and rest
+windows that cannot be ignored without losing the licence. Cargo
+moves through warehouses, loading docks, customer yards; signal
+drops in tunnels, basements, and rural stretches. Proof-of-delivery
+(photo + signature + GPS + timestamp) is the moment the invoice
+becomes collectable.
 
-Review lens only, never operational instruction source. No driving
-advice, no HOS legal interpretation, no vehicle-maintenance
-guidance, no hazmat procedure. Trade execution stays with the
-dispatcher, the safety officer, and the certified driver-trainer.
+This lens is a **review lens only**, never an operational
+instruction source. No driving advice, no HOS legal
+interpretation, no vehicle-maintenance guidance, no hazmat
+procedure. Trade execution stays with the dispatcher, the safety
+officer, and the certified driver-trainer.
 
 ## Daily Workflow
 
@@ -40,8 +42,8 @@ dispatcher, the safety officer, and the certified driver-trainer.
 - Per delivery — photo of the pallet, customer signature
   on-screen, GPS pin, timestamp; the four-tuple is the invoice
   trigger.
-- End of duty — HOS clock closes; if next break-window starts
-  mid-route, system warns **before** the driver commits.
+- End of duty — HOS clock closes; if the next break-window starts
+  mid-route, the system warns **before** the driver commits.
 
 ## Vocabulary
 
@@ -66,7 +68,7 @@ dispatcher, the safety officer, and the certified driver-trainer.
 - **Dead zones are routine.** Tunnels, basements, rural roads;
   every write queues, every read works from cache, and POD
   uploads sync with photo intact when signal returns.
-- **One-handed operation.** Other hand on the wheel, paperwork,
+- **One-handed operation.** Other hand is on the wheel, paperwork,
   or pallet jack; bottom-thumb-reachable primary actions, no
   precision drag.
 - **Cold / wet / glare.** Outdoor docks in winter; gloves on,
@@ -95,8 +97,8 @@ dispatcher, the safety officer, and the certified driver-trainer.
   than a constraint on what stops can be accepted.
 - Sync described as online-only; no queue + retry sketched for
   dead-zone delivery.
-- Dock-dwell capture left to manual tap with no arrival-trigger
-  fallback.
+- Dock-dwell capture left to manual tap with no
+  arrival-trigger fallback.
 
 ## Anti-Patterns
 
@@ -106,7 +108,7 @@ dispatcher, the safety officer, and the certified driver-trainer.
 - **No generic prose.** "Consider mobile usability" fails the
   Anti-Generic Quality Bar — every observation cites HOS, POD,
   dock-dwell, dead-zone, or hands-busy.
-- **No in-motion typing on the critical path.** A flow needing
+- **No in-motion typing on the critical path.** A flow that needs
   the driver to type while driving is rejected outright.
 - **No partial POD acceptance.** Missing any element of the
   four-tuple = unbilled; the flow must hold the action open

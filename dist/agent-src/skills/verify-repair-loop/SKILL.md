@@ -11,32 +11,33 @@ packs:
 
 # verify-repair-loop
 
-> Bounded **generate → run → revise → re-run** cycle; pass signal = the
-> **executed verdict** (real test/quality output, scored vs a numeric
-> threshold), escalated to a **judge** for qualitative confirmation only
-> *after* the numeric gate passes (staged escalation). Loop is the
-> conversation, not a process: no daemon, no persistent cross-session state.
-> Use to drive a change to green when the verdict source is *runtime
-> execution*, not a judge reading a diff.
+> A bounded **generate → run → revise → re-run** cycle whose pass signal is the
+> **executed verdict** — the project's real test/quality output, scored against a
+> numeric threshold — escalated to a **judge** for qualitative confirmation only
+> *after* the numeric gate passes (staged escalation). The loop is the
+> conversation, not a process: no daemon, no persistent cross-session state. Use
+> it to drive a change to green when the verdict source is *runtime execution*,
+> not a judge reading a diff.
 
 ## When to use
 
-* Change must converge against the project's **test runner / quality tools**;
-  iterate until checks pass before review.
+* A change must converge against the project's **test runner / quality tools**
+  and you want the agent to iterate until checks pass before asking for review.
 * Test/quality coverage is the authoritative signal (high coverage, actionable
   failures) — not subjective craft.
-* Bounded auto-repair with a hard stop, not an open-ended fix loop.
+* You want bounded auto-repair with a hard stop, not an open-ended fix loop.
 
 Do NOT use when:
 
-* Verdict is **subjective craft** (naming, architecture, style) or coverage
-  incomplete → `do-and-judge` in
+* The verdict is **subjective craft** (naming, architecture, style) or coverage
+  is incomplete → use `do-and-judge` in
   [`subagent-orchestration`](../subagent-orchestration/SKILL.md) (judge reads the
-  diff, sovereign).
-* Only a **one-shot** multi-judge review of a finished diff →
+  diff and is sovereign).
+* You only need a **one-shot** multi-judge review of a finished diff → use
   [`/review-changes`](../../commands/review/changes.md).
-* Verdict must come from a **live app** (Playwright vs running services) →
-  **deferred** (see Scope); use test/quality verdicts until that trigger fires.
+* The verdict must come from a **live app** (Playwright against running services)
+  → **deferred** (see Scope below); use test/quality verdicts until that trigger
+  fires.
 
 ## The Iron Law
 
@@ -48,22 +49,22 @@ EVEN IF THE OVERALL SCORE ROSE.
 GENERATOR NEVER APPROVES ITS OWN CHANGE.
 ```
 
-A loop optimizing for `pass_count ≥ N` can game the metric — delete tests, skip
-assertions, weaken checks — and still hit the threshold. The numeric gate only
-decides **when to escalate**; a judge with veto confirms the change is real.
+A loop that optimizes for `pass_count ≥ N` can game the metric — delete tests,
+skip assertions, weaken checks — and still hit the threshold. The numeric gate
+only decides **when to escalate**; a judge with veto confirms the change is real.
 
 ## Procedure
 
 ### 1. Freeze the contract (spec fingerprint)
 
-Before the first run, snapshot what "done" means:
+Before the first run, capture what "done" means and snapshot it:
 
 * the task's acceptance criteria / requirement,
-* the check set defining the verdict (test files + quality commands),
-* a **spec fingerprint** = hash of (requirement text + check set).
+* the set of checks that define the verdict (test files + quality commands),
+* a **spec fingerprint** = a hash of (requirement text + the check set).
 
-Record the **baseline green set** — checks passing *before* any edit — so
-regressions are detectable. Pick verdict commands per the project's
+Record the **baseline green set** — which checks pass *before* any edit — so
+regressions are detectable. Pick the verdict commands per the project's
 [`toolchain-resolver`](../../contexts/execution/toolchain-resolver.md) (PHP / JS-TS
 / Python / Go / Rust), not a hardcoded runner.
 
@@ -81,37 +82,39 @@ regressions are detectable. Pick verdict commands per the project's
 
 Each iteration is agent turns, never executing control-flow code:
 
-1. **Generate / revise** — smallest change toward the contract.
-2. **Run** — execute verdict commands; parse the **structured** result
-   (green/total, which checks failed). One tool call, read in context.
-3. **Score + regression check** — compute the score; compare failures vs the
-   baseline green set.
+1. **Generate / revise** — make the smallest change toward the contract.
+2. **Run** — execute the verdict commands; parse the **structured** result
+   (counts green/total, which checks failed). This is one tool call, read in
+   context.
+3. **Score + regression check** — compute the numeric score; compare failures
+   against the baseline green set.
    * **Regression** (a baseline-green check now fails) → STOP, hand back with the
      regression named, even if the score rose. No whack-a-mole.
    * **Plateau** (last `plateau_window` scores within `tolerance`) → STOP; surface
      suspected flakiness or a stuck point. Do not thrash.
    * **`attempts == max_attempts`** → STOP, hand back the best envelope.
 4. **Numeric gate** — score `< threshold` and attempts remain → back to step 1
-   (attempts++). Score `≥ threshold`, no regression → **escalate** (step 4).
+   (attempts++). Score `≥ threshold`, no regression → **escalate** (step 4 of the
+   stage).
 
 ### 4. Judge escalation (only after the numeric gate passes)
 
 Dispatch the judge as a **subagent with fresh context** (the `judge-*` cluster via
-[`subagent-orchestration`](../subagent-orchestration/SKILL.md)) seeing **only the
-diff + executed results** — never the generator's reasoning. This is the real
+[`subagent-orchestration`](../subagent-orchestration/SKILL.md)) that sees **only the
+diff + the executed results** — never the generator's reasoning. This is the real
 generator ≠ judge separation; single-agent persona-switching is theater.
 
 * judge `apply` → DONE.
-* judge `revise` → back to step 3.1 (attempts++; bounded).
+* judge `revise` → back to step 3.1 (attempts++; still bounded).
 * judge `reject` → STOP, hand back; the approach must change.
 
 ### 5. Mid-loop invalidation (user-interrupt-priority)
 
-Re-check the spec fingerprint each iteration. If the user changes the requirement
-mid-loop (a new instruction in the conversation), the fingerprint changes →
-**abort and hand back** per
-[`user-interrupt-priority`](../../rules/user-interrupt-priority.md). Never iterate
-against a stale contract.
+Re-check the spec fingerprint each iteration. If the user changes the
+requirement mid-loop (a new instruction in the conversation), the fingerprint
+changes → **abort and hand back** per
+[`user-interrupt-priority`](../../rules/user-interrupt-priority.md). Never keep
+iterating against a stale contract.
 
 ## Scope — what runs, what is deferred
 
@@ -131,8 +134,8 @@ Before finalizing, confirm:
 
 1. The numeric gate **escalated to a judge** — it did not apply on its own.
 2. No baseline-green check regressed (or the loop stopped and said so).
-3. The loop stopped at `max_attempts`, a plateau, or a judge `apply` — never ran
-   unbounded.
+3. The loop stopped at `max_attempts`, a plateau, or a judge `apply` — never
+   ran unbounded.
 4. The judge saw only the diff + results, dispatched in fresh context.
 5. No daemon / persistent runtime introduced.
 
@@ -149,12 +152,12 @@ Evidence:   <green/total> · regressions: none | <named checks>
 
 Required fields (ordered):
 
-1. **Contract** — frozen requirement + threshold + `allow_regressions`.
-2. **Attempts** — `k/max`, score history, exact stop reason
+1. **Contract** — the frozen requirement + threshold + `allow_regressions`.
+2. **Attempts** — `k/max`, the score history, and the exact stop reason
    (`threshold` / `plateau` / `cap` / `regression` / `reject`).
 3. **Verdict** — `DONE`, `DONE_WITH_CONCERNS`, or `BLOCKED`.
-4. **Judge** — dispatched judge skill + its `apply` / `revise` / `reject` verdict
-   (omit only when the loop stopped before escalation).
+4. **Judge** — the dispatched judge skill and its `apply` / `revise` /
+   `reject` verdict (omit only when the loop stopped before escalation).
 5. **Evidence** — final `green/total` and any regressed checks by name.
 
 ## Examples
@@ -173,20 +176,23 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
 
 ## Gotcha
 
-* **Metric gaming** — agent "passes" by deleting a failing test or weakening an
-  assertion. The numeric gate can't catch this; the fresh-context judge is the
-  safeguard. A diff that *removes* checks is a `reject`, not a `pass`.
-* **Flake mistaken for a plateau** — one non-deterministic test flips the score
-  and the window-comparison reads "no improvement". Re-run the suspected check
-  before declaring a plateau; surface flakiness instead of thrashing.
-* **Score rose, but a regression hid inside it** — fixing 6 checks while breaking
-  2 still raises the total. Without the regression guard the loop ships a
-  regression. Diff failures against the baseline green set, not just the aggregate.
-* **Persona-switch theater** — asking the same agent to "now judge what you wrote"
-  is not separation. Dispatch the judge as a fresh-context subagent that never saw
-  the generator's reasoning.
-* **Stale contract** — iterating against a requirement the user changed mid-loop.
-  Re-check the spec fingerprint each turn; a change aborts.
+* **Metric gaming** — the agent "passes" by deleting a failing test or
+  weakening an assertion. The numeric gate cannot catch this; the
+  fresh-context judge is the safeguard. If the diff *removes* checks,
+  that is a `reject`, not a `pass`.
+* **Flake mistaken for a plateau** — a single non-deterministic test flips
+  the score and the window-comparison reads it as "no improvement". Re-run
+  the suspected check before declaring a plateau; surface flakiness instead
+  of thrashing.
+* **Score rose, but a regression hid inside it** — fixing 6 checks while
+  breaking 2 still raises the total. Without the regression guard the loop
+  ships a regression. Always diff failures against the baseline green set,
+  not just the aggregate score.
+* **Persona-switch theater** — asking the same agent to "now judge what you
+  wrote" is not separation. Dispatch the judge as a fresh-context subagent
+  that never saw the generator's reasoning.
+* **Stale contract** — iterating against a requirement the user changed
+  mid-loop. Re-check the spec fingerprint each turn; a change aborts.
 
 ## Do NOT
 
@@ -208,6 +214,6 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
 * [`no-runtime-boundary`](../../../docs/contracts/no-runtime-boundary.md) — the
   runtime-free constraint this loop honors.
 * Optional impact pre-step (when a code-graph is present, ADR-124): run
-  `agent-config code-graph affected --since <ref>` to scope which symbols a change touches
-  before choosing verdict sources — cited, not duplicated; the loop itself is
-  unchanged when no graph exists.
+  `agent-config code-graph affected --since <ref>` to scope which symbols a
+  change touches before choosing verdict sources — cited, not duplicated; the
+  loop itself is unchanged when no graph exists.

@@ -33,9 +33,9 @@ When a tool returns a value (branch name, file path, PR number), use that EXACT 
 ## API-dollar levers
 
 Large stable context reused across turns (caching), non-interactive bulk
-cohorts (batch), or cost-aware model/effort decision → route via
+cohorts (batch), or a cost-aware model/effort decision → route via the
 [`token-optimizer`](../skills/token-optimizer/SKILL.md) index branch
-(`api-cost-levers` row) — single source of truth for billing levers.
+(`api-cost-levers` row) — single source of truth for the billing levers.
 
 ## Mechanics
 

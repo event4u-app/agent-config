@@ -78,7 +78,7 @@ report per [`docs/contracts/prelaunch-diagnostics.md`](../../../docs/contracts/p
   (`prelaunch-areas.yml`): auth · migrations · secrets · observability ·
   rollback · agent-governance. No ad-hoc areas.
 - **Every area gets one state:** `pass` (cited evidence REQUIRED) ·
-  `finding` (IDs listed) · `unknown` (honest default — **absence of
+  `finding` (IDs listed) · `unknown` (the honest default — **absence of
   findings is Unknown, never an automatic Pass**) · `not-applicable`
   (reason required).
 - **Findings carry immutable IDs** (`AC-<AREA>-NNN`) — retitle freely,

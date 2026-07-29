@@ -21,7 +21,7 @@ The two axes compose orthogonally:
 ```
 
 QA methodology applied through a truck-driver end-user lens. The
-split is locked in [`../../docs/contracts/adr-user-types-axis.md`](../../docs/contracts/adr-user-types-axis.md).
+split is locked in [`../docs/contracts/adr-user-types-axis.md`](../../docs/contracts/adr-user-types-axis.md).
 
 ## What a user-type is — and is NOT
 
@@ -37,13 +37,13 @@ split is locked in [`../../docs/contracts/adr-user-types-axis.md`](../../docs/co
   encodes this floor.
 - **Is NOT**: an install-time filter. The vocabulary overlaps with
   the install-time `user-types/` axis at the package root (see
-  [`../../docs/contracts/adr-install-user-type-axis.md`](../../docs/contracts/adr-install-user-type-axis.md)),
+  [`../docs/contracts/adr-install-user-type-axis.md`](../../docs/contracts/adr-install-user-type-axis.md)),
   but the two live in different directories and consume different
   config keys. Same word, different layer — by design.
 
 ## Schema
 
-Locked in [`../../docs/contracts/user-type-schema.md`](../../docs/contracts/user-type-schema.md).
+Locked in [`../docs/contracts/user-type-schema.md`](../../docs/contracts/user-type-schema.md).
 
 - **Spine** — 7 sections (Focus · Daily Workflow · Vocabulary ·
   Operational Constraints · Unique Questions · Ticket Red Flags ·
@@ -88,7 +88,7 @@ ticket-requirement signals.
 
 CLI-only in v1 — skills do NOT declare a default `user-types:`
 frontmatter key. The migration path to v2 (skill-level default key)
-is documented in [`../../docs/contracts/adr-user-types-axis.md § Consequences`](../../docs/contracts/adr-user-types-axis.md).
+is documented in [`../docs/contracts/adr-user-types-axis.md § Consequences`](../docs/contracts/adr-user-types-axis.md).
 
 ```
 /refine-ticket --user-type=truck-driver PROJ-123
@@ -113,12 +113,12 @@ review proceeds without simulation.
 No existing persona moves into this directory. The three seeds
 shipped here (`galabau-field-crew`, `metalworking-shop`,
 `truck-driver`) were born as user-types. Existing personas stay as
-personas. See [`../../docs/contracts/adr-user-types-axis.md § Migration`](../../docs/contracts/adr-user-types-axis.md).
+personas. See [`../docs/contracts/adr-user-types-axis.md § Migration`](../docs/contracts/adr-user-types-axis.md).
 
 ## Related
 
-- [`../../docs/contracts/user-type-schema.md`](../../docs/contracts/user-type-schema.md) — locked schema
-- [`../../docs/contracts/adr-user-types-axis.md`](../../docs/contracts/adr-user-types-axis.md) — the axis split decision
-- [`../../docs/contracts/adr-install-user-type-axis.md`](../../docs/contracts/adr-install-user-type-axis.md) — install-time `user_type` axis (distinct layer)
+- [`../docs/contracts/user-type-schema.md`](../../docs/contracts/user-type-schema.md) — locked schema
+- [`../docs/contracts/adr-user-types-axis.md`](../../docs/contracts/adr-user-types-axis.md) — the axis split decision
+- [`../docs/contracts/adr-install-user-type-axis.md`](../../docs/contracts/adr-install-user-type-axis.md) — install-time `user_type` axis (distinct layer)
 - [`../personas/README.md`](../personas/README.md) — sister axis (methodology vs end-user)
 - [`../rules/artifact-drafting-protocol.md`](../rules/artifact-drafting-protocol.md) — mandatory per new user-type

@@ -17,7 +17,7 @@ packs: [engineering-base]
 
 # Prefer Enums Over Literal Values
 
-When a field/property holds **two or more non-boolean states** — strings (`'active'`, `'pending'`, `'archived'`) or meaningful numeric codes (priority `1`/`2`/`3`, tier levels) — model it as an **enum**, not a bare string/int. An enum names the value in code (readable), makes it greppable + safe to rename, gives exhaustiveness/typo safety, and makes filtering + editing relations far easier than raw literals scattered across the codebase.
+When a field or property can hold **two or more non-boolean states** — strings (`'active'`, `'pending'`, `'archived'`) or meaningful numeric codes (priority `1`/`2`/`3`, tier levels) — model it as an **enum**, not a bare string/int. An enum names the value in code (readable), makes the value greppable and safe to rename, gives exhaustiveness/typo safety, and makes filtering and editing relations far easier than raw literals scattered across the codebase.
 
 ## The Iron Law
 
@@ -35,26 +35,26 @@ FOUND OLD-STYLE LITERALS WHERE AN ENUM FITS? NOTE IT, FINISH THE TASK, THEN ASK 
 
 ## Do NOT force an enum when
 
-- A boolean (`true`/`false`) — a flag, not an enum.
+- A boolean (`true`/`false`) — that's a flag, not an enum.
 - Open/unbounded free text — name, description, URL, comment.
 - A genuine numeric **quantity** used in arithmetic — price, count, age, bytes.
 - A set owned entirely by a volatile external system — unless you map it to your own enum at the boundary.
 
 ## How (framework-neutral)
 
-- Use the language's native construct: backed enum (PHP `enum Status: string`), string-literal union or `enum` (TypeScript), `enum.Enum` (Python), an enum/`CHECK`-constrained column or lookup table + FK (database).
+- Use the language's native construct: a backed enum (PHP `enum Status: string`), a string-literal union or `enum` (TypeScript), `enum.Enum` (Python), an enum/`CHECK`-constrained column or a lookup table + FK (database).
 - Persist the enum's backing value; reference the **named case** in code, never the raw literal.
 
 ## Found old-style literals where an enum fits — defer, do not disrupt
 
-Apply exactly this order so the current task's flow is never interrupted:
+The proactive part — apply exactly this order so the current task's flow is never interrupted:
 
-1. **While doing the actual task**, if you pass code using raw string/numeric literals for a multi-state field where an enum fits, do **NOT** refactor inline (a drive-by edit — see `minimal-safe-diff`) and do **NOT** stop to ask mid-flow.
+1. **While doing the actual task**, if you pass code using raw string/numeric literals for a multi-state field where an enum would be better, do **NOT** refactor it inline (that is a drive-by edit — see `minimal-safe-diff`) and do **NOT** stop to ask mid-flow.
 2. **Note the site** — file:line + the literal set — in your working notes.
-3. **After the actual task is delivered**, surface the noted candidates as **one** numbered-options prompt (per `user-interaction`): list each enum-candidate site, ask whether to replace — all / selected / none.
-4. **Only on an explicit yes** do you refactor, as a **separate change** with its own scope (`downstream-changes` applies — update every caller, migration, test, serializer).
+3. **After the actual task is delivered**, surface the noted candidates as **one** numbered-options prompt (per `user-interaction`): list each enum-candidate site, and ask whether to replace — all / selected / none.
+4. **Only on an explicit yes** do you refactor, and treat it as a **separate change** with its own scope (`downstream-changes` applies — update every caller, migration, test, serializer).
 
-If the task itself is *adding* the field, apply the enum from the start — no deferral; the defer-and-ask flow is only for pre-existing literals you encounter.
+If the task itself is *adding* the field, apply the enum from the start — no deferral needed; the defer-and-ask flow is only for pre-existing literals you happen to encounter.
 
 ## See also
 

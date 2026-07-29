@@ -107,7 +107,7 @@ For each changed `.md` file:
      "validate copy/paste safety", you can add "Check: no nested backticks, fully selectable".
      But don't add unrelated sections.
    - **Do NOT condense weak skills.** If the source has no procedure or no validation, fix structure first.
-   - **Reference skill:** See `src/skills/skill-writing/SKILL.md` for the gold standard
+   - **Reference skill:** See [skill-writing](../skills/skill-writing/SKILL.md) for the gold standard
 6. Write the condensed output to `dist/agent-src/{path}`
 7. **MANDATORY: Run condensation quality check on this file:**
 
@@ -202,7 +202,9 @@ If an Iron Law section genuinely contains filler (rare): edit the SOURCE in
 
 ## Condensation quality checklist
 
-**Also apply the `preservation-guard` rule** — strongest validation, example, anti-pattern, and decision hints must survive condensation. Iron Laws are non-negotiable.
+**Also apply the [preservation-guard](../rules/preservation-guard.md) rule** — strongest validation, example, anti-pattern, and decision hints must survive condensation. Iron Laws are non-negotiable.
+
+See also: [markdown-safe-codeblocks](../rules/markdown-safe-codeblocks.md) for fenced-block hygiene.
 
 After condensing each file, verify:
 

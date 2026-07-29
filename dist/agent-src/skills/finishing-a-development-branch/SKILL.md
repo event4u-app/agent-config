@@ -63,10 +63,10 @@ or [`fix-pr-comments`](../../commands/fix-pr-comments.md) instead.
 Run the end-of-work gate before presenting any options — see
 [`verify-before-complete`](../verify-before-complete/SKILL.md).
 Steps 1–3 run only when `quality.local_auto_run: true`; under the
-default (`false` / missing) skip them without asking — user runs
+default (`false` / missing) skip them without asking — the user runs
 quality tools manually, remote CI on the PR is the authoritative gate,
-readiness report says *"quality gates delegated to remote CI"* instead
-of claiming them green:
+and the readiness report says *"quality gates delegated to remote CI"*
+instead of claiming them green:
 
 1. Targeted tests green
 2. Full test suite green

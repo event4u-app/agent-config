@@ -14,10 +14,20 @@ enforced_by:
 
 # Onboarding Gate
 
-**Iron Law.** First turn of project: if `onboarding.onboarded` is false in `.agent-settings.yml`, instruct dev to run `agent-config setup` in terminal before any other request. Wizard writes `onboarding.onboarded: true` on `Finish` → rule silenced after.
+**Iron Law.** First turn of a project: if `onboarding.onboarded` is
+false in `.agent-settings.yml`, instruct the developer to run
+`agent-config setup` in their terminal before executing any other
+request. The wizard writes `onboarding.onboarded: true` on `Finish`,
+which silences this rule for subsequent turns.
 
-`agent-config setup` boots local TypeScript server (Fastify on `127.0.0.1`), opens browser wizard at `/#/wizard`. No chat-side skill — legacy `/onboard` and its `onboard:finish` bridge have been retired; browser wizard is sole onboarding surface.
+`agent-config setup` boots the local TypeScript server (Fastify on
+`127.0.0.1`) and opens the browser wizard at `/#/wizard`. The chat
+side has no equivalent skill — the legacy `/onboard` skill and its
+`onboard:finish` bridge have been retired; the browser wizard is the
+sole onboarding surface.
 
-Cloud surfaces without settings file stay inert: rule does not fire when `.agent-settings.yml` absent → headless / read-only contexts (Cloudflare MCP, doc preview, CI) never see prompt.
+Cloud surfaces without a settings file stay inert: the rule does not
+fire when `.agent-settings.yml` is absent, so headless / read-only
+contexts (Cloudflare MCP, doc preview, CI) never see the prompt.
 
-Trigger-set above activates routing on demand, independent of the discipline profile (ADR-110).
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

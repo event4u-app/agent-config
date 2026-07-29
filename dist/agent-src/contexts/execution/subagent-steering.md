@@ -31,22 +31,22 @@ dispatch → monitor → status → escalate / kill
 
 ## Transient-failure retry — tier downshift
 
-On transient subagent failure (HTTP 429, 5xx, timeout), retry **once** at the
-next-lower model tier (haiku → if already haiku, escalate to `spawn_failure`
-counter) before counting a failed attempt. Max one downshift per call.
-Downshifted retry also fails → increment `spawn_failure_rate` normally. Never
-downshift twice on the same slot — deterministic cap prevents silent drift to the
-cheapest model on every failure.
+On a transient subagent failure (HTTP 429, 5xx, or timeout), retry **once** at
+the next-lower model tier (haiku → if already haiku, escalate to the `spawn_failure`
+counter) before counting a failed attempt. Maximum one downshift per subagent
+call. If the downshifted retry also fails, increment the `spawn_failure_rate`
+counter normally. Never downshift twice on the same slot — deterministic cap
+prevents silent drift to the cheapest model on every failure.
 
-Only automatic response to a transient failure; structural/semantic errors (e.g.
-`BLOCKED` envelope) do **not** trigger a downshift — escalate to the orchestrator
-immediately.
+This is the only automatic response to a transient failure; structural or
+semantic errors (e.g. `BLOCKED` status envelope) do not trigger a tier
+downshift — they escalate to the orchestrator immediately.
 
 ## Verify-fail escalation — the downshift cascade (M3)
 
 Cheap-first cascade for DOWNSHIFTED slices only
 (road-to-cost-aware-model-routing, council 2026-07-08). Transient failures
-(above) and verify-fails are distinct: transient retries downward once; a
+(above) and verify-fails are distinct: a transient retries downward once; a
 **verification failure escalates upward**.
 
 ```
@@ -59,16 +59,16 @@ NEVER THE SUBAGENT'S OWN CONFIDENCE.
 ```
 
 - **Scope:** slices with `tier_source: static | inferred` only. `inherit`
-  slices keep existing same-tier retry semantics — no behavior change outside
-  the downshift path.
+  slices keep the existing same-tier retry semantics — no behavior change
+  outside the downshift path.
 - **Budget accounting:** each escalated attempt consumes one of the slice's
   three attempts (`budgetHalt()` unchanged). Two failed attempts mark the
   slice failed; the orchestrator replans — a slice's verify-fail never
   poisons the orchestrator trajectory, only the final verified return (or
-  failure mark) enters its context.
+  the failure mark) enters its context.
 - **Telemetry:** the re-dispatch records `escalated_from: <failed tier>` and
   appends to `verify_result_by_tier`.
-- **Economics guard:** a class escalating > 40% of the time is cheaper
+- **Economics guard:** a class that escalates > 40% of the time is cheaper
   started on the higher tier — the escalation-rate tripwire (below) promotes
   its static default; the cascade is for the tail, not the norm.
 
@@ -76,29 +76,30 @@ Deterministic reference: `escalateOnVerifyFail()`.
 
 ## Failure-type stop — the N=3 budget applied per subagent type
 
-Two consecutive **verification-failed** returns from one subagent type in a
-session exhaust that type's dispatch budget: 2 failures + escalation ARE the
-three N=3 attempts — an application of that budget at type granularity,
-**not a new mechanism, not a circuit breaker**. On fire the orchestrator:
+Two consecutive **verification-failed** returns from the same subagent type in
+one session exhaust that type's dispatch budget: the two failures plus the
+escalation step ARE the three attempts of the existing N=3 budget — this is an
+application of that budget at type granularity, **not a new mechanism and not
+a circuit breaker**. When it fires the orchestrator:
 
-1. stops dispatching that type for the rest of the session,
+1. stops dispatching that subagent type for the rest of the session,
 2. surfaces both failed returns to the human,
 3. runs the remaining slices in-session.
 
-Iron Law below unchanged — no automatic cohort-disable; the stop is
-session-scoped orchestrator state, never a persisted flip. Deterministic
-reference: `typeStop()`.
+The Iron Law below stands unchanged — there is still no automatic
+cohort-disable, and the stop is session-scoped state the orchestrator holds,
+never a persisted flip. Deterministic reference: `typeStop()`.
 
 ## Ordered-slice dependency gate (do-in-steps)
 
-An ordered slice **declares its parent**; no slice dispatches before the
-parent's return is verified by the orchestrator. Makes the implicit
-`do-in-steps` contract ("step N output → judge → step N+1 input") explicit
-and checkable: `sliceDispatchAllowed(declaredParent, verifiedReturns)`
-refuses dispatch while the parent lacks a verified return in session state.
-Root / independent slices (no declared parent) always pass. A refused slice
-is not an error — the ordering contract doing its job; verify (or revise)
-the parent first.
+An ordered slice **declares its parent**; no slice dispatches before its
+parent's return has been verified by the orchestrator. This makes the
+implicit `do-in-steps` contract ("step N output → judge → step N+1 input")
+explicit and checkable: `sliceDispatchAllowed(declaredParent,
+verifiedReturns)` refuses the dispatch while the parent lacks a verified
+return in session state. Root / independent slices (no declared parent)
+always pass. A refused slice is not an error — it is the ordering contract
+doing its job; the orchestrator verifies (or revises) the parent first.
 
 ## Rollback guardrails — surfaced, not auto-disabled
 
@@ -131,13 +132,13 @@ not a new mechanism:
 
 | Tripwire | Threshold | Action when fired |
 |---|---|---|
-| **Escalation-rate promotion** | per-class escalation rate > 40% over the rolling window | Class's default tier is wrong — cascading it costs more than starting high (decision-theoretic escalation analysis). Promote the class's static default one tier, log the promotion; do not keep cascading. |
-| **Verify-pass drift** | a tier's verify-pass rate drops below its trailing baseline | Verifier or model drift — a drifting verifier silently escalates everything (cost ~3x). Surface the drift with per-tier numbers; never silently absorb the extra escalations. |
+| **Escalation-rate promotion** | per-class escalation rate > 40% over the rolling window | The class's default tier is wrong — cascading it costs more than starting high (decision-theoretic escalation analysis). Promote the class's static default one tier and log the promotion; do not keep cascading. |
+| **Verify-pass drift** | a tier's verify-pass rate drops below its trailing baseline | Verifier or model drift — a drifting verifier silently escalates everything (cost ~3x). Surface the drift to the user with the per-tier numbers; never silently absorb the extra escalations. |
 
 Deterministic references: `escalationPromotionCandidates()` and
-`verifyPassDrift()` over `readTierRoutingMetrics()` aggregates. Per-tier
+`verifyPassDrift()` over `readTierRoutingMetrics()` aggregates. The per-tier
 quality view (spend by tier, escalation count by class, verify-pass rate by
-tier) surfaces via `/cost:report` — the delayed-signal quality guard: cost
+tier) is surfaced via `/cost:report` — the delayed-signal quality guard: cost
 dashboards alone look fine while quality regresses.
 
 ## Kill-switch
@@ -162,3 +163,4 @@ This is the canonical disable — no code change, effective on the next run.
 - [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 budget.
 - [`auto-orchestration-activation`](auto-orchestration-activation.md) — `enabled`/`auto` keys.
 - [`orchestration-telemetry`](orchestration-telemetry.md) — the audit signals the guardrails read.
+- [`subagent-response-contract`](subagent-response-contract.md) — the structured body returned inside this 4-status envelope + the orchestrator's synthesis duties.

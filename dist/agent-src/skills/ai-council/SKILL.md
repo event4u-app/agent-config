@@ -11,9 +11,9 @@ packs:
   - meta
 ---
 
-<!-- cloud_safe: degrade -->
-
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
+
+<!-- cloud_safe: degrade -->
 
 # ai-council
 
@@ -34,10 +34,11 @@ Do NOT use when:
   of opinion → use `subagent-orchestration` (in-session, no network,
   no money).
 * The task is **iterated build → review → fix with full repo access by a
-  single strong model** → that is **team mode** (`/team`), the depth
-  complement to the council's breadth. Council is artefact-only, never
-  grants repo access or host framing; team mode deliberately inverts that.
-  Neither replaces the other.
+  single strong model** (the reviewer needs to see the working diff and
+  return actionable fixes) → that is **team mode** (`/team`), the depth
+  complement to the council's breadth. The council is artefact-only and
+  never grants the external model repo access or the host's framing; team
+  mode deliberately does the opposite. Neither replaces the other.
 * The artefact contains secrets that cannot be redacted with the
   bundler's pattern set → ask the user before sending.
 * The user has not configured any council member → state that and stop;
@@ -52,47 +53,49 @@ THE ABSENCE OF A COUNCIL FILE IN A PROJECT SAYS NOTHING ABOUT WHETHER
 THE COUNCIL IS CONFIGURED. ONLY THE CLI / RESOLVER DECIDES THAT.
 ```
 
-Council config lives at one place only:
+The council config lives at one place only:
 `~/.event4u/agent-config/settings/.ai-council.yml` (per
 [ADR-104](../../../docs/decisions/ADR-104-ai-council-config-global-only.md),
-superseding ADR-093). Configured **once per developer**; works in **every**
-project, worktree, and CWD — including consumer repos carrying none of this
-package's internals.
+superseding ADR-093). It is configured **once per developer** and works
+in **every** project, worktree, and CWD — including consumer repos that
+carry none of this package's internals.
 
-Before claiming the council unavailable, run the CLI (`council:estimate`) and
-read its exit code + message. **Never** conclude "council not configured in
-this project" from missing project files: `scripts/ai_council` (package-internal,
-absent from every consumer repo), `.agent-settings.yml` (legacy block removed in
-ADR-093), or a project-local `.ai-council.yml` (never read — ADR-104). Eyeballing
-the project for these, then deciding solo instead of running the resolver, is the
-canonical failure ADR-104 stops.
+Before claiming the council is unavailable, you MUST run the CLI
+(`council:estimate`) and read its exit code + message. **Never** conclude
+"council not configured in this project" from missing project files:
+`scripts/ai_council` (a package-internal directory, absent from every
+consumer repo), `.agent-settings.yml` (the legacy block was removed in
+ADR-093), or a project-local `.ai-council.yml` (never read — ADR-104).
+Eyeballing the project for any of these and then deciding solo — instead
+of running the resolver — is the canonical failure ADR-104 exists to stop.
 
-Only escape from user-global: `$AI_COUNCIL_CONFIG`, an explicit absolute path
-for tests / power users — still not a project search.
+The only escape from the user-global location is `$AI_COUNCIL_CONFIG`, an
+explicit absolute path for tests / power users — still not a project search.
 
 ## When NOT to invoke — necessity self-check
 
-Phase 6 necessity classifier (see
+The Phase 6 necessity classifier (see
 [`ai-council-config § Necessity classifier`](../../../docs/contracts/ai-council-config.md))
-runs as pre-flight gate inside CLI, skips council when prompt looks
-like routine work. Route around it BEFORE gate fires so user never pays
-classifier-pause cost on request that obviously did not need council.
+runs as a pre-flight gate inside the CLI and skips the council when
+the prompt looks like routine work. Route around it BEFORE the gate
+fires so the user never pays the classifier-pause cost on a request
+that obviously did not need a council in the first place.
 
-Skip council, stay in-session for:
+Skip the council and stay in-session for:
 
 * **Bugfix shape** — stack trace, error, crash, failing test, "broken",
   regression. Use `systematic-debugging` or `bug-investigate`.
 * **Syntax / format / lint** — `typo`, `formatting`, `lint`, `indent`,
-  `import order`, simple rename. Use language skill directly
-  (`php-coder`, `eloquent`, `nextjs-patterns`).
+  `import order`, simple rename. Use the language skill directly
+  (`php-coder`, `eloquent`, `nextjs-patterns`, etc).
 * **Single-file implementation** — "this function", "this method",
-  "this file", "one-liner", "small change", "add a getter". Use
+  "this file", "one-liner", "small change", "add a getter". Use the
   language skill directly.
 * **Documentation lookup** — "what is X", "how does Y work", "example
-  of Z", "syntax of W". Use `codebase-retrieval` or docs skill, never
-  council.
+  of Z", "syntax of W". Use `codebase-retrieval` or the docs skill,
+  never the council.
 
-Invoke council when:
+Invoke the council when:
 
 * **Architectural / structural** — system boundaries, coupling,
   refactor strategy, migration plan, rewrite vs redesign.
@@ -100,13 +103,14 @@ Invoke council when:
   alternatives need weighing; "pros and cons" is the actual ask.
 * **Strategic / direction** — "should we …", "shall we …", roadmap
   shape, long-term technical direction.
-* **Explicit ambiguity** — user wrote "unsure / uncertain / ambiguous
-  / second opinion / sanity check".
+* **Explicit ambiguity** — the user wrote "unsure / uncertain /
+  ambiguous / second opinion / sanity check".
 
-Agent orchestration MUST call `council_cli` with `--invocation agent`
-so gate can skip silently on routine requests. User-typed `/council`
-keeps default (`--invocation user_explicit`); user gets educational
-message + `--proceed-anyway` override path. Mode `block` ignores
+Agent orchestration MUST call `council_cli` with
+`--invocation agent` so the gate can skip silently on routine
+requests. User-typed `/council` keeps the default
+(`--invocation user_explicit`); the user gets the educational message
++ `--proceed-anyway` override path. Mode `block` ignores
 `--proceed-anyway` by design — cost-strict opt-in.
 
 ## Goal
@@ -170,7 +174,7 @@ travel changes.
 |---|---|---|---|---|
 | `api` | `AnthropicClient` / `OpenAIClient` / `GeminiClient` / `XAIClient` / `PerplexityClient` | yes | provider SDK + key from `~/.event4u/agent-config/<provider>.key` (legacy `~/.config/agent-config/<provider>.key` read as fallback) | shipped |
 | `manual` | `ManualClient` | no | `stdout` (prompt block) + `stdin` (user pastes the web-UI reply, terminated by a line containing only `END`) | shipped (Phase 2b) |
-| `cli` | `AnthropicCliClient` / `OpenAICliClient` / `GeminiCliClient` | no (subscription-authed) | local subprocess against the vendor CLI (`claude`, `codex`, `gemini`); auth delegated to the CLI's own session, no API key in this process | shipped (anthropic/openai/gemini · Phase 3) |
+| `cli` | `AnthropicCliClient` / `OpenAICliClient` / `GeminiCliClient` | no (subscription-authed) | local subprocess against the vendor CLI (`claude`, `codex`, `gemini`); auth delegated to the CLI's own session, no API key flows through this process | shipped (anthropic/openai/gemini · Phase 3) |
 
 Resolution lives in `scripts/ai_council/modes.ts`:
 `resolve_mode(name, invocation_mode, member_settings, global_mode)`
@@ -201,19 +205,19 @@ that member and the orchestrator stops the fan-out.
 ### CLI-mode UX
 
 `mode: cli` runs the council through the vendor's local CLI
-instead of the API. Auth is delegated — user logs into each CLI
-once (`claude login`, `codex login`, `gemini`), orchestrator
-inherits the subscription. No API key in this process.
-`billable=False` → cost gate bypassed; the local
-`cli_call_budget.max_calls_per_day.<provider>` quota (state at
-`~/.event4u/agent-config/cli-calls.json`, daily UTC reset) is the
-only per-day brake.
+instead of the API. Authentication is delegated — the user logs
+into each CLI once (`claude login`, `codex login`, `gemini`), and
+the orchestrator inherits the subscription. No API key flows
+through this process. `billable=False`, so the cost gate is
+bypassed; the local `cli_call_budget.max_calls_per_day.<provider>`
+quota (state at `~/.event4u/agent-config/cli-calls.json`, daily
+UTC reset) is the only per-day brake.
 
-Three vendor CLIs wired:
+Three vendor CLIs are wired:
 
-- **Anthropic / Claude** — invokes `claude --print --output-format json`,
-  parses standard envelope (`result` + `usage` + `session_id` +
-  `total_cost_usd`). Token counts and reported cost survive to
+- **Anthropic / Claude** — invokes `claude --print --output-format json`
+  and parses the standard envelope (`result` + `usage` + `session_id`
+  + `total_cost_usd`). Token counts and reported cost survive to
   `metadata` for audit.
 
   ```yaml
@@ -224,10 +228,10 @@ Three vendor CLIs wired:
       model: claude-sonnet-4-5
   ```
 
-- **OpenAI / Codex** — invokes `codex exec --json`, walks the
-  newline-delimited JSON event stream, pulls text from
+- **OpenAI / Codex** — invokes `codex exec --json` and walks the
+  newline-delimited JSON event stream, pulling text from
   `item.completed` and tokens from `turn.completed`. Session id
-  preserved.
+  is preserved.
 
   ```yaml
   members:
@@ -238,7 +242,7 @@ Three vendor CLIs wired:
   ```
 
 - **Google / Gemini** — invokes `gemini --output-format json` with
-  prompt piped on stdin, parses `response` + `stats.models.<m>.tokens`
+  the prompt piped on stdin, parses the `response` + `stats.models.<m>.tokens`
   envelope. OAuth consent must be granted once interactively before
   the CLI is usable from a non-interactive shell.
 
@@ -252,25 +256,26 @@ Three vendor CLIs wired:
 
 Auth-failure stderr from any vendor CLI surfaces as
 `error="auth_expired"` with the original stderr tail in
-`metadata.stderr_tail` so the user knows to re-login. Missing
+`metadata.stderr_tail` so the user knows to re-login. A missing
 binary at construction time fails fast with `CouncilDisabledError`
 naming the binary and the YAML override path — never silently
 substitutes.
 
 `xai` + `perplexity` accept `mode: cli` from Phase 4 onward, but
 their community CLIs DO consume the API key and DO NOT bypass
-per-token billing — contract doc warns explicitly.
+per-token billing — the contract doc warns explicitly.
 
 ### Cost-gate bypass for non-billable members
 
 `ExternalAIClient.billable` is the contract. Clients with
 `billable=False` (`ManualClient`, `AnthropicCliClient`,
 `OpenAICliClient`, `GeminiCliClient`) bypass the cost gate entirely —
-orchestrator skips the projection check, the `on_overrun` callback,
-and the USD-budget short-circuit for that member, but still records
-the response's token counts (from the manual-paste length heuristic
-or the provider's reply, when available) for observability. Mixed
-runs (one cli + one api) gate only the api members.
+the orchestrator skips the
+projection check, the `on_overrun` callback, and the USD-budget
+short-circuit for that member, but still records the response's
+token counts (from the manual-paste length heuristic or the
+provider's reply, when available) for observability. Mixed runs
+(one cli + one api) gate only the api members.
 
 ## Degradation modes
 
@@ -392,43 +397,6 @@ decides, the host does not guess.
 - **Not a vote against the council.** Rejecting a finding requires evidence (file, line, contract reference), not preference.
 - **Not silent filtering.** Every finding reaches the user with its verdict and reason. The user can pick a `reject` option and override the host.
 
-The council is **uninformed about the codebase, ADRs, locked
-contracts, prior decisions, and project history** — it sees only the
-artefact + neutrality preamble. That is the source of its diversity
-**and** its blind spots. Convergence between members can mean shared
-generic best-practice priors, not project-specific correctness.
-
-The host applies a critical lens to **every finding** (convergence
-**and** divergence) before surfacing it as a numbered option:
-
-| Check | Question | Tool |
-|---|---|---|
-| **Codebase fit** | Does the finding match the actual code, files, signatures, conventions? | `view` / `codebase-retrieval` / `grep` |
-| **Locked-decision conflict** | Does it contradict an ADR, kernel rule, contract under `docs/contracts/`, or `docs/decisions/`? | `view` |
-| **Already addressed** | Is it a generic best-practice already covered by an existing rule, skill, or test? | `view` / `grep` |
-| **Cost / benefit** | Is the change worth the diff size, churn, and review cost vs. the marginal benefit? | reasoning |
-| **Hallucination** | Does the finding cite a file, function, or behavior that does not exist? | `view` |
-
-Each finding receives one of three verdicts:
-
-- **`accept`** — codebase fits, no locked-decision conflict, benefit clears cost. Surface as a normal numbered option.
-- **`accept-with-modification`** — core insight valid, but the proposed shape needs adjusting (wrong file, contradicts ADR detail, scope creep). Surface with the **modified** patch and a one-line note.
-- **`reject`** — finding is wrong (hallucinated reference, contradicts a locked decision, already addressed, generic noise). Surface as a **Rejected by host** entry with a one-line reason. Still visible — the user can override.
-
-The verdict is the host's **own** reasoning, not the council's.
-Pretending convergence equals correctness, or paraphrasing council
-output as host analysis, both breach the [`direct-answers`](../../rules/direct-answers.md)
-no-invented-facts rule. When the host cannot reach a confident
-verdict on a finding (mixed evidence, ambiguous scope), it surfaces
-the finding as `needs-input` with the open question — the user
-decides, the host does not guess.
-
-### What this is NOT
-
-- **Not a re-review by the host.** The host did not write the artefact independently and cannot critique it independently — that boundary still holds.
-- **Not a vote against the council.** Rejecting a finding requires evidence (file, line, contract reference), not preference.
-- **Not silent filtering.** Every finding reaches the user with its verdict and reason. The user can pick a `reject` option and override the host.
-
 ## Output path convention
 
 Council artefacts (questions, responses, sessions) are **dev-time
@@ -472,13 +440,13 @@ matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
 
 ### Exempt
 
-- `agents/audit-*/` — historical audit bundles. Canonical council
-  dirs are gitignored; audit bundles are tracked, cohesive narratives
-  that may include council artefacts as part of their evidence trail
-  (e.g. `audit-2026-05-14-north-star/` bundles its triggering
-  question, raw responses, and synthesis alongside the audit's
-  findings). The layout linter (`scripts/check_council_layout.ts`)
-  skips these directories.
+- `agents/evidence/audits/` — historical audit bundles. The canonical
+  council dirs are gitignored; audit bundles are tracked,
+  cohesive narratives that may include council artefacts as
+  part of their evidence trail (e.g. `audits/2026-05-14-north-star/`
+  bundling its triggering question, raw responses, and synthesis
+  alongside the audit's findings). The layout linter
+  (`scripts/check_council_layout.ts`) skips this directory.
 
 `scripts/check_council_layout.ts` is the mechanical check for the
 output path convention — wire it into the package's CI pipeline so
@@ -538,12 +506,12 @@ templates live in `scripts/ai_council/prompts.ts::_SYNTHESIS_TABLE`
 and are exposed via `synthesis_template(mode)`.
 
 **R4 Q4 split** — decision lenses get a structured Karpathy-style
-template; creative lenses keep an open-ended prose body. **Every lens now
-closes with two required verdict-discipline sections** — **Kill criteria**
-(observable falsifiers with a threshold or event, checkable without
-re-convening the council) and **Concrete next step** (exactly one
-artefact-producing action) — so no synthesis ships an unfalsifiable verdict
-(road-to-opt-council-deliberation Phase 0):
+template; creative lenses keep an open-ended prose body. **Every lens
+now closes with two required verdict-discipline sections** — **Kill
+criteria** (observable falsifiers with a threshold or event, checkable
+without re-convening the council) and **Concrete next step** (exactly
+one artefact-producing action) — added so no synthesis ships an
+unfalsifiable verdict (road-to-opt-council-deliberation Phase 0):
 
 | Lens | Class | Synthesis sections |
 |---|---|---|
@@ -889,11 +857,12 @@ impossible — a member never sees its own response.
 
 ## Thinking-style advisors (replace-mode)
 
-Phase 6 introduces five **advisor personas** the council adopts in
-*replace-mode*: an enabled advisor substitutes its bound member's
-plain call with the same provider running the advisor's persona
-prompt. Total call count stays the same — only the system prompt
-swaps.
+Phase 6 introduces five **advisor personas** that the council can adopt
+in *replace-mode*: an enabled advisor substitutes its bound member's
+plain call with the same provider running the advisor's persona prompt.
+Total call count stays the same as a plain run — only the system prompt
+swaps. Five advisors mirror an external advisor set, each a substantial
+persona file (not a tagline):
 
 | Advisor | Default bound member | Focus |
 |---|---|---|
@@ -904,9 +873,9 @@ swaps.
 | **Executor** | `anthropic` | what ships this quarter, what blocks delivery |
 
 Activation — edit `~/.event4u/agent-config/settings/.ai-council.yml` and flip the advisor's
-`enabled: true`. Optional `model: <name>` overrides the bound
-member's default model. An advisor referencing a disabled member
-fails closed at config load — never silently skipped.
+`enabled: true`. Optional `model: <name>` overrides the bound member's
+default model. Validation rule: an advisor referencing a disabled
+member fails closed at config load — never silently skipped.
 
 ```yaml
 advisors:
@@ -916,8 +885,8 @@ advisors:
     # model: claude-opus-4   # optional pin
 ```
 
-`council:estimate` surfaces every active swap on a dedicated line
-above the cost table:
+`council:estimate` surfaces every active swap on a dedicated line above
+the cost table:
 
 ```
 council:estimate · mode=prompt · members=2 (billable=2)
@@ -926,63 +895,90 @@ anthropic/claude-sonnet-4-5: ~991 in + 256 out  =  $0.0068
 openai/gpt-4o: ~208 in + 256 out  =  $0.0031
 ```
 
-Cost-bounded — replace-mode never adds calls. The persona prompt is
-larger than plain (~1k extra input tokens per swap); output tokens
-and call count are unaffected. Peer-review preserves the advisor
-label while stripping provider identity (`Response A (Contrarian)`).
-Two enabled advisors on the same member is a config error.
+Cost-bounded guarantee — replace-mode never adds calls. The advisor
+persona prompt is larger than a plain prompt (~1k extra input tokens
+per swap), so the per-call estimate widens slightly. Output tokens and
+call count are unaffected.
+
+Peer-review interaction — when peer-review fires on an advisor-mode
+run, anonymisation **preserves the advisor persona label** while
+stripping provider identity: `Response A (Contrarian)` instead of bare
+`Response A`. See §Karpathy peer-review point 4 for the contract.
+
+One-per-provider invariant — two enabled advisors targeting the same
+member is a config error (replace-mode runs exactly one advisor per
+provider; the call plan never doubles up by accident).
 
 ## Decision-replay artefact (Phase 9, audit trail)
 
-Every session that runs consensus scoring drops a `decision-replay.md`
-next to `responses.json`. Pure projection of consensus + final-round
-member texts — **no extra model calls, no extra spend**. Surfaces per
-top finding: verdict band (Strong/Moderate/Weak), evidence-quality
-(H/M/L), agree/dissent split, one key argument per member.
+Every session that runs consensus scoring drops a
+`decision-replay.md` next to the saved `responses.json`. Pure
+projection of the consensus block plus the final-round per-member
+texts — **no extra model calls, no extra spend**. Surfaces, per top
+finding: verdict band (Strong/Moderate/Weak), evidence-quality bucket
+(H/M/L), agree/dissent split, and one key argument per member.
 
-Two render modes — **Full** (per-member arguments attributed to
-`provider:model`) and **Redacted** (verdict + evidence-quality + counts
-only). Toggles: `ai_council.decision_replay.{enabled,
-include_member_arguments}` global; `ai_council.lenses.<lens>.decision_replay.*`
-per-lens override.
+Two render modes:
 
-CLI — written automatically by `council run` on lenses that score
-consensus. `council replay <responses.json>` re-renders from a saved
-session; `--redact-member-arguments` / `--include-member-arguments`
-flip the view independent of config (share redacted variant of an
-already-paid run).
+* **Full** (default) — per-member arguments attributed to
+  `provider:model`. Reasoning is traceable, vendor identity is
+  visible.
+* **Redacted** — verdict + evidence-quality + counts only. Use for
+  surfaces where attributing reasoning to a specific model would leak
+  vendor-preference signal.
+
+Toggles (config, see `ai-council-config § Decision-replay artefact`):
+
+* `ai_council.decision_replay.enabled` — master switch (default
+  `true`).
+* `ai_council.decision_replay.include_member_arguments` — flip to
+  `false` for redacted-by-default.
+* `ai_council.lenses.<lens>.decision_replay.*` — per-lens override
+  beats the global block.
+
+CLI:
+
+* Written automatically by `council run` whenever the lens triggers
+  consensus scoring.
+* `council replay <responses.json>` re-renders from a saved session;
+  `--redact-member-arguments` / `--include-member-arguments` flip the
+  view independent of config. Useful for sharing a redacted variant
+  of an already-paid run.
 
 ## Lightweight-QA fast-path (Phase 11)
 
-Low-impact questions from Phase 10's impact router → restricted fast-path
-in place of full debate. Trade-off explicit: **1 round · ≤2 members ·
-$0.05/answer · 2500 tokens**. No advisors, no peer-review, no consensus
-scoring — quick answer + transparency marker, not deliberation.
+Low-impact questions classified by Phase 10's impact router can route
+to a restricted fast-path instead of the full debate loop. The
+trade-off is explicit: **1 round · ≤2 members · $0.05/answer · 2500
+tokens**. No advisors, no peer-review, no consensus scoring — the goal
+is a quick answer with a transparency marker, not a deliberation.
 
 ### Iron Law
 
-`high_impact` and `user_required` **never** route to fast-path,
-regardless of config. Schema validation rejects override. Fast-path
-activates only when:
+`high_impact` and `user_required` **never** route to the fast-path,
+regardless of config. Schema validation rejects the override. The
+fast-path only activates when:
 
 1. `ai_council.enabled: true` AND
 2. `decision_resolution.low_impact.mode: council` AND
-3. ≥1 member has `participate_low_impact: true` (default `false` —
-   explicit opt-in per member).
+3. At least one member has `participate_low_impact: true` (default
+   `false` — explicit opt-in per member).
 
-Default `low_impact` route = **`agent`** — nothing reaches council
-without explicit two-knob opt-in (flip class → `council` *and* mark
-≥1 member `participate_low_impact: true`). Worked YAML, validation,
-unavailable-marker contract → [`ai-council-config § Low-impact council opt-in`](../../../docs/contracts/ai-council-config.md#low-impact-council-opt-in).
+Default route for `low_impact` is **`agent`** — nothing reaches the
+council without an explicit two-knob opt-in (flip the class to
+`council` *and* mark at least one member `participate_low_impact: true`).
+See [`ai-council-config § Low-impact council opt-in`](../../../docs/contracts/ai-council-config.md#low-impact-council-opt-in)
+for the worked YAML example, validation behaviour, and unavailable-marker
+contract.
 
 ### Output marker (always surfaced)
 
-* **Resolved** — `> Resolved via low-impact council (anthropic): <answer>`
+* **Resolved** — `> Resolved via low-impact council (anthropic): <one-line answer>`
 * **Split** — `> Low-impact council split — escalating to user (anthropic: X / openai: Y):`
 * **Aborted** — `> Low-impact council aborted (token cap) — escalating to user:`
 
-Marker mandatory — agent never silently substitutes fast-path verdict
-for its own answer.
+The marker is mandatory: the agent never silently substitutes a
+fast-path verdict for its own answer.
 
 ### Session artefact
 
@@ -993,12 +989,13 @@ Every fast-path attempt appends one line to
 2025-05-14T10:00:00Z | resolved | members=2/2 | members(anthropic, openai) cost=$0.0034 | Q=Service vs Repository for this read path?
 ```
 
-Append-only, one line per resolution. Parser tolerates free-form
-headers around canonical lines.
+Append-only, one line per resolution. The parser tolerates free-form
+section headers around the canonical lines, so the artefact may grow
+human notes without breaking aggregation.
 
 ### `council replay --low-impact-stats`
 
-Re-projection of session log → summary block:
+Re-projection of the session log into a summary block:
 
 ```
 $ council replay agents/runtime/council/sessions/2025-05-14-foo/responses.json --low-impact-stats
@@ -1010,8 +1007,8 @@ $ council replay agents/runtime/council/sessions/2025-05-14-foo/responses.json -
 - total cost: $0.0096
 ```
 
-No model calls — pure markdown parse. Returns 0 when session has no
-fast-path entries (clean session is not an error).
+No model calls — pure parse of the markdown log. Returns 0 when the
+session had no fast-path entries (a clean session is not an error).
 
 ## See also
 

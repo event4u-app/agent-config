@@ -31,7 +31,7 @@ enforced_by:
 AI coding agents can emit code near-verbatim from training data — output-side
 legal exposure is live (*Doe v. GitHub* proceeds on that factual premise). No
 rule previously told a worker what to do on a **conscious** borrow at the
-code layer — this rule closes that gap.
+code layer. This rule closes that gap.
 
 ## The Iron Law
 

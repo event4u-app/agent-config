@@ -15,10 +15,10 @@ Gate G0 (`road-to-provenance-and-license-governance`, Phase 0) measured both
 candidate similarity detectors against a frozen golden corpus and neither
 met the pre-registered bar for a CI gate. Council resolved (2026-07-28,
 Option A): **no `lint_code_provenance.ts` in any form — not even
-advisory.** This skill is the result: the scan capability that used to be a
-planned CI gate now exists only as something a human invokes deliberately,
-so every hit gets investigated *because* a human asked for it — never as a
-silent pipeline signal nobody reads.
+advisory.** This skill is the result of that decision: the scan capability
+that used to be a planned CI gate now exists only as something a human
+invokes deliberately, so every hit gets investigated *because* a human
+asked for it — never as a silent pipeline signal nobody reads.
 
 ## When to use
 
@@ -47,13 +47,13 @@ Do NOT use when:
    ```bash
    npx jscpd --version
    ```
-   The online layer (L0) is optional — check whether it's installed and
+   The online layer (L0) is optional — check whether it is installed and
    reachable:
    ```bash
    scanoss-py --version   # or: pip show scanoss
    ```
-   Offline-only is expected and fine in most environments — report it
-   honestly, not as a failure.
+   Offline-only is expected and fine in most environments; report it
+   honestly rather than treating it as a failure.
 2. **Run the offline scan (L-1)** against the target path or diff:
    ```bash
    npx jscpd <path> --min-tokens 25

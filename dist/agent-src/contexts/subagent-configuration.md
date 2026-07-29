@@ -29,9 +29,9 @@ If the session runs on **haiku**, judge defaults to sonnet.
 implementer on a downshifted tier (per the category → tier defaults in
 [`model-recommendations § Subagent Category → Tier Defaults`](model-recommendations.md)),
 the judge still resolves one tier above the IMPLEMENTER's resolved tier —
-a `lite` implementer gets at least a `medium` judge. Downshifting an
+so a `lite` implementer gets at least a `medium` judge. Downshifting an
 implementer never downshifts its judge below what the verify contract
-requires; a judge is never `lite`.
+requires, and a judge is never `lite`.
 
 ## Resolution order
 
@@ -67,5 +67,5 @@ The commands read `.agent-settings.yml` fresh on each run.
 
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — the skill
 - [`model-recommendations`](model-recommendations.md) — tier definitions
-- `guideline:agent-infra/model-recommendation` § Orchestrator → subagent model routing — per-subtask model right-sizing (downgrade easy work, keep strong model for hard)
+- `guideline:agent-infra/model-recommendation` § Orchestrator → subagent model routing — per-subtask model right-sizing (downgrade easy work, keep the strong model for hard)
 - [`/do-and-judge`](../commands/do-and-judge.md), [`/do-in-steps`](../commands/do-in-steps.md), [`/judge`](../commands/judge.md) — commands that read these keys
