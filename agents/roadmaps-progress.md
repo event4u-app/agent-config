@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 11 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**45 / 95 steps done · 47%**
+**48 / 120 steps done · 40%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
 ```
 
 ## Open roadmaps
@@ -20,12 +20,13 @@
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 9 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 10 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 5 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
+| 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 10 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 11 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 
 ---
 
@@ -90,6 +91,40 @@ _2 blockers resolved._
   - **What to do:**
     `yt-dlp` and a JavaScript runtime are installed **by a human** on
   - **Resolved when:** condition described above clears
+
+### [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md)
+
+**Road to gates that can fail — make every check prove it read something** — 3 / 25 done (12%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Zero-scope is a failure (the one change that kills the class) | ✅ done | 0 | 1 | 2 | 0 | 100% |
+| 2 | Repair the safety-floor guard first, and un-pin its test | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 3 | Test the invocation CI actually runs | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | Exercise the release-gated checks before the release | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | Stop baselines and pointers from rotting | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 6 | Adversarial fixtures for gates that parse repo conventions | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 7 | Mutation canary (extends the accepted canary contract) | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-gates-that-can-fail"></a>
+**Blockers**
+
+- **dead-gate-finding-triage** (owner: maintainer) — blocks Phase 1's third step, partially — repairing 14 scan roots will surface violations that have been invisible for weeks (namespace collisions, Iron-Law placement, load_context budgets, description caps, verb allowlist across 191 commands). The repair is agent-executable; deciding whether a newly-surfaced violation is fixed, grandfathered, or reclassifies the rule is not.
+  - **What to do:**
+    precedent for the rest (fix vs. documented grandfather list vs. rule change).
+    **The measurement this blocker was waiting for now exists** — see
+    `agents/evidence/reports/gate-scope-census.md` § Triage detail:
+    `lint_handoffs` 19 (18 are `tier='unset'` on a linked-to skill; 1 is a
+    genuinely dangling link, `competitive-positioning` → `analyze-reference-repo`),
+    `check_augment_description_cap` 16 (auto-rule descriptions over the 150-char
+    Augment budget), `check_context_paths` 1 (one orphaned context). Total 36, not
+    hundreds — small enough to decide per gate rather than needing a blanket
+    grandfather policy.
+  - **Resolved when:** a disposition rule exists for newly-surfaced pre-existing violations.
+- **nightly-visibility-owner** (owner: maintainer) — blocks Phase 5's value, not its build — measurements can be published autonomously, but a nightly nobody reads is not a gate.
+  - **What to do:**
+    or a check that turns a later PR red) and who acts on it.
+  - **Resolved when:** a drifting measurement reaches a human by a named route.
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
