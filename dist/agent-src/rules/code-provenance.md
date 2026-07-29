@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "About to port/adapt/reuse external code (algorithm, structure, >~10 lines) — read, close the source, re-derive; conscious borrows need a ledger entry + license check first"
+description: "Porting/adapting external code (algorithm, structure, >~10 lines) — close the source, re-derive; conscious borrows need a ledger entry + license check"
 triggers:
   - intent: "porting or adapting code from an external source"
   - intent: "implementing an algorithm or structure seen in another project"

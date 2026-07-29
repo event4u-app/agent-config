@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Modeling a field/property with multiple non-boolean states — prefer an enum over bare string/numeric literals; found old-style literals where an enum fits → note, finish the task, ask after"
+description: "Field with multiple non-boolean states — prefer an enum over string/numeric literals; old-style literals found → note, finish the task, ask after"
 triggers:
   - intent: "modeling a field with multiple states"
   - intent: "adding a status or type field"

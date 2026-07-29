@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Spotted an issue while working (security gap, missing test, bad code, duplication, stale idiom) — never ignore; fix small+aligned inline, ask on bigger, propose a follow-up PR for many"
+description: "Spotted an issue (security gap, missing test, bad code, duplication, stale idiom) — never ignore: small→fix inline, bigger→ask, many→follow-up PR"
 triggers:
   - intent: "spotted an unrelated issue while working"
   - intent: "found legacy or duplicated code"

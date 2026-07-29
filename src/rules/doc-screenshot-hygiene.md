@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Screenshots for docs — anonymize sensitive data before shipping; data-bearing shots are human-gated (published egress); terminal/CLI/IDE screenshots forbidden"
+description: "Doc screenshots — anonymize sensitive data before shipping; data-bearing shots human-gated (published egress); terminal/CLI/IDE shots forbidden"
 triggers:
   - keyword: "screenshot"
   - keyword: "screenshots"

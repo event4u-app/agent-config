@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When the repo ships an external code-graph index (a graph.json-shaped artifact or a SCIP index), query IT first for codebase-structure questions — do not grep from scratch"
+description: "Repo ships a code-graph index (graph.json-shaped or SCIP) — query IT first for codebase-structure questions, do not grep from scratch"
 triggers:
   - keyword: "scip"
   - keyword: "code-graph"

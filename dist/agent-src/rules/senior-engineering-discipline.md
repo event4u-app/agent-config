@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Writing/generating code — generalize (no overfit or tautological tests), supply the invisible cross-cutting controls the prompt didn't name, never invent an API/field/package"
+description: "Writing/generating code — generalize (no overfit/tautological tests), supply the invisible cross-cutting controls, never invent an API/field/package"
 triggers:
   - intent: "writing or generating code"
   - intent: "implementing a feature"
