@@ -1,0 +1,108 @@
+# Gate coverage manifest — the input to `check_gate_coverage.ts`.
+#
+# WHY THIS EXISTS
+# ---------------
+# On 2026-07-29 a sweep found gates that scanned a tree emptied by the ADR-051
+# flat-`src/` migration, reported success, and were wired into CI. One printed
+# `TOTAL | 0 | 0 | 0 | 0%`; another printed "All 0 auto-rule descriptions ≤ 150
+# chars"; a third "clean (0 declarer(s))". Each exited 0. A gate that inspects
+# nothing does not pass — it certifies coverage that does not exist, which is
+# worse than having no gate, because the green is believed.
+#
+# Per-case retargeting does not close this: the next migration recreates it. This
+# manifest plus the guard closes it structurally.
+#
+# THE CONTRACT (three rules, each from a real failure)
+# ----------------------------------------------------
+# 1. MACHINE-READABLE COUNT. Every listed gate emits exactly one line
+#    `scanned: <N>` (stdout or stderr), N = artefacts it actually inspected. The
+#    guard never parses a gate's human output — that would make the guard itself
+#    fragile, and a fragile guard is the thing being replaced.
+#
+# 2. CI-IDENTICAL INVOCATION. `argv` MUST match how CI/Taskfile calls the gate.
+#    A bare probe produced a false alarm during the sweep: `skill_linter` looked
+#    blind when called with no arguments, but CI passes `--all` and it scans 429
+#    artefacts. The guard must reproduce the real call or it invents defects.
+#
+# 3. BASELINE, NOT `> 0`. `min_scanned` is a floor, not a zero-check. A gate that
+#    drops from 428 artefacts to 3 is as broken as one that drops to 0, and `> 0`
+#    cannot see it. Set the floor below the true corpus (room for legitimate
+#    deletions) but far above a collapse.
+#
+# FIELDS
+#   id           script stem under src/scripts/
+#   argv         CI-identical arguments (list; empty list = bare call)
+#   min_scanned  hard floor; guard fails when the reported count is below it
+#   corpus       what the count means — so a future reader can re-derive the floor
+#   status       enforced | pending
+#                pending = not yet emitting `scanned:`. The guard REPORTS these
+#                rather than skipping silently: its own partial coverage must be
+#                visible, or it repeats the sin it exists to catch.
+gates:
+  - id: check_condensation
+    argv: []
+    min_scanned: 380
+    corpus: "src/ ↔ dist/agent-src/ .md pairs (429 at baseline: 111 rules + 318 skills)"
+    status: enforced
+
+  - id: check_augment_description_cap
+    argv: []
+    min_scanned: 80
+    corpus: "auto-type rules carrying a description (98 at baseline)"
+    status: enforced
+    note: >
+      Retargeted 2026-07-29 from the ADR-051-emptied tree (0 -> 98). It printed
+      "All 0 auto-rule descriptions" and exited 0 in CI. Retargeting surfaced 16
+      real violations (max 189 chars); all 16 were shortened under explicit
+      operator review, with every matching term programmatically verified as
+      preserved. The cap was deliberately NOT raised to fit the violations —
+      letting a gate adapt to the as-is state is the inversion that produced three
+      blind gates in the first place.
+
+  - id: lint_load_context
+    argv: []
+    min_scanned: 180
+    corpus: "md files inspected for a load_context block: src/rules + src/agent-src/contexts + agents/settings/contexts (231 at baseline, 17 declarers)"
+    status: enforced
+    note: >
+      Retargeted 2026-07-29 from the ADR-051-emptied tree: 0 -> 231 files, and it
+      immediately found a real violation the blindness had hidden
+      (src/rules/model-recommendation.md declared `../contexts/…`, a disallowed
+      relative root; normalised to the canonical `contexts/…` the rule's own prose
+      already used). The count is FILES INSPECTED, not declarers — "0 declarers"
+      over 400 files is legitimate, "0 files" is blindness, and reporting declarers
+      would have hidden exactly this dead root. LEGACY_PREFIX was deliberately NOT
+      retargeted: it detects stale `.agent-src.uncondensed/` entries and must keep
+      pointing at the old form.
+
+  - id: skill_linter
+    argv: ["--all"]
+    min_scanned: 380
+    corpus: "skills + rules under artefact_roots() (429 at baseline)"
+    status: enforced
+    note: >
+      NOT blind — the manifest's regression case for rule 2. The sweep's bare
+      probe made it look blind; `--all` scans 429. Enforced precisely so that
+      changing `argv` to a bare call fails the guard instead of silently
+      reproducing the false alarm.
+
+  - id: check_no_roadmap_refs
+    argv: []
+    min_scanned: 700
+    corpus: "stable artefacts across src/{rules,skills,agent-src/*} + docs/ + agents/settings/contexts (872 at baseline)"
+    status: enforced
+    note: >
+      Retargeted 2026-07-29 from the ADR-051-emptied tree. It had been enforcing the
+      no-roadmap-references rule for docs/ only while the rule + skill layer went
+      unscanned — 0 -> 872 artefacts. No violation had slipped through (verified),
+      so this closed a latent gap, not a live breach.
+
+  - id: check_context_paths
+    argv: []
+    min_scanned: 900
+    corpus: "reference corpus: src/{rules,skills,agent-src/commands,agent-src/contexts,domains} + agents/roadmaps (1170 at baseline)"
+    status: enforced
+    note: >
+      Retargeted 2026-07-29. An empty reference corpus makes every "unreferenced
+      context" verdict vacuous, which is how the dead root stayed invisible.
+

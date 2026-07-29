@@ -1035,6 +1035,14 @@ tasks:
     desc: Fail PRs that touch > 1 kernel rule (override label `bundled-always-rules-acknowledged`)
     cmd: ./scripts-run src/scripts/check_kernel_rule_bundle
 
+  check-gate-coverage:
+    silent: true
+    desc: >-
+      Meta-gate — verifies the gates in src/config/gate-coverage.yml actually inspect
+      something (baseline floor, CI-identical argv, machine-readable `scanned:` count).
+      Catches the class where a gate scans a dead root and exits 0; see ADR-201 context.
+    cmd: ./scripts-run src/scripts/check_gate_coverage
+
   check-augment-description-cap:
     silent: true
     desc: Auto-rule description-length gate (≤ 150 chars) — see road-to-augment-limit-fit P1.3
