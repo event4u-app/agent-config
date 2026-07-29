@@ -6,10 +6,10 @@
  * Ported from the retired Python `src/scripts/check_augment_description_cap.py` (ADR-200,
  * Phase 4 / Wave 4c). The CLI contract is pinned — no flags, exit
  * codes (0 pass, 1 over-cap), stdout/stderr split, byte-identical finding
- * messages, same scan scope (`.agent-src.uncondensed/rules/*.md`) and file
+ * messages, same scan scope (`src/rules/*.md`) and file
  * ordering. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
- * For every `type: auto` rule under `.agent-src.uncondensed/rules/`,
+ * For every `type: auto` rule under `src/rules/`,
  * fail CI when the frontmatter `description:` exceeds DESC_CAP chars.
  *
  * Why: Augment injects each auto-rule's description into the
@@ -17,7 +17,7 @@
  * analysis showed this channel consuming 25 % of the workspace-guidelines
  * ceiling. Capping descriptions guards future drift.
  *
- * Source of truth: `.agent-src.uncondensed/rules/`. The condensed
+ * Source of truth: `src/rules/`. The condensed
  * projection is regenerated; the source dictates what ships.
  *
  * Exit codes: 0 = pass, 1 = at least one rule over cap.
@@ -31,7 +31,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // Mirrors the Python `Path(__file__).resolve().parent.parent.parent`.
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const RULES_DIR = path.join(REPO_ROOT, '.agent-src.uncondensed', 'rules');
+// Retargeted 2026-07-29: pointed at the tree emptied by the ADR-051 flat-`src/`
+// migration, so this gate printed "All 0 auto-rule descriptions ≤ 150 chars." and
+// exited 0 while wired into CI — the count sat in its own output the whole time.
+// Retargeting surfaced 16 real cap violations (98 auto-rules, max 189); all 16
+// were shortened under an explicit operator review that kept every matching term.
+const RULES_DIR = path.join(REPO_ROOT, 'src', 'rules');
 const DESC_CAP = 150;
 
 const _FM_LINE_RE = /^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$/;
@@ -102,6 +107,12 @@ export function main(): number {
             failures.push([path.basename(p), desc.length, desc]);
         }
     }
+
+    // Gate-coverage contract (src/config/gate-coverage.yml): emitted BEFORE the
+    // pass/fail branch. Coverage and verdict are different questions — a gate that
+    // found real violations still scanned its corpus, and reporting the count only
+    // on the success path would make it look 'silent' to check_gate_coverage.
+    process.stdout.write(`scanned: ${String(checked)}\n`);
 
     if (failures.length) {
         process.stderr.write(

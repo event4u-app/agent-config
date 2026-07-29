@@ -50,11 +50,15 @@ describe('lint_load_context.cap_for', () => {
 });
 
 describe('lint_load_context.resolve_entry', () => {
+    // Expectation retargeted 2026-07-29 with SOURCE_ROOT: it asserted the
+    // pre-relocation source tree, emptied by ADR-051 — so this test actively
+    // pinned the dead root that made the gate scan 0 files. Phrased without the
+    // dead path literal because `check_no_new_legacy_path` now covers tests/ too.
     it('resolves logical names under the source root', () => {
         const p = lc.resolve_entry('contexts/area/file.md');
-        expect(p.endsWith(path.join('.agent-src.uncondensed', 'contexts', 'area', 'file.md'))).toBe(
-            true,
-        );
+        expect(
+            p.endsWith(path.join('src', 'agent-src', 'contexts', 'area', 'file.md')),
+        ).toBe(true);
     });
     it('resolves other prefixes repo-root-relative', () => {
         const p = lc.resolve_entry('agents/settings/contexts/x.md');

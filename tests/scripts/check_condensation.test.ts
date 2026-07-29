@@ -121,11 +121,30 @@ describe('check_condensation golden parity — synthetic issues', () => {
         }
     });
 
-    it('matches Python on a missing root (no source/target dirs → clean)', () => {
+    // Was: "missing root → clean (exit 0)". That assertion PINNED A REAL BUG.
+    // `SOURCE_DIR` pointed at `.agent-src.uncondensed`, a tree emptied by the
+    // ADR-051 migration, so this gate ran in CI against 0 pairs and exited 0 —
+    // green because it inspected nothing. Zero findings over zero inputs is a
+    // broken gate, not a pass, so a missing/empty root is now an error.
+    it('a missing root is an ERROR, not a clean pass (scans nothing → cannot pass)', () => {
         const root = join(tmpdir(), 'condfx-missing-does-not-exist-xyz');
         expect(existsSync(root)).toBe(false);
         const ts = runTs(['--root', root]);
-        expect(ts.status, ts.stderr).toBe(0);
+        expect(ts.status, ts.stderr).not.toBe(0);
+        expect(ts.stdout + ts.stderr).toMatch(/scanned_nothing/);
+    });
+
+    it('an existing but EMPTY source tree is also an error (the exact shipped bug)', () => {
+        const root = mkdtempSync(join(tmpdir(), 'condfx-empty-'));
+        try {
+            mkdirSync(join(root, 'src'), { recursive: true });
+            mkdirSync(join(root, 'dist', 'agent-src'), { recursive: true });
+            const ts = runTs(['--root', root]);
+            expect(ts.status, ts.stderr).not.toBe(0);
+            expect(ts.stdout + ts.stderr).toMatch(/scanned_nothing/);
+        } finally {
+            rmSync(root, { recursive: true, force: true });
+        }
     });
 });
 

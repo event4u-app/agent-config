@@ -30,13 +30,13 @@ describe('check_no_roadmap_refs — behavioural spec', () => {
     // --- Forbidden: specific roadmap-file citations in stable artifacts. ---
     it('flags a roadmap-file citation in a stable rule', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/rules/some-rule.md'),
+            path.join(tmp, 'src/rules/some-rule.md'),
             'See agents/roadmaps/road-to-x.md for the plan.',
         );
         const v = nrr.scan(tmp);
         expect(v).toHaveLength(1);
         expect(v[0]!.match).toBe('agents/roadmaps/road-to-x.md');
-        expect(v[0]!.file).toBe('.agent-src.uncondensed/rules/some-rule.md');
+        expect(v[0]!.file).toBe('src/rules/some-rule.md');
         expect(v[0]!.line).toBe(1);
     });
 
@@ -62,7 +62,7 @@ describe('check_no_roadmap_refs — behavioural spec', () => {
     // --- Allowed: directory mentions + angle-bracket placeholders. ---
     it('allows a bare directory mention', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/rules/some-rule.md'),
+            path.join(tmp, 'src/rules/some-rule.md'),
             'Roadmaps live under agents/roadmaps/ and rotate.',
         );
         expect(nrr.scan(tmp)).toHaveLength(0);
@@ -91,7 +91,7 @@ describe('check_no_roadmap_refs — behavioural spec', () => {
     // --- Self-documenting allowlist files are exempt. ---
     it('exempts the self-documenting rule file', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/rules/no-roadmap-references.md'),
+            path.join(tmp, 'src/rules/no-roadmap-references.md'),
             'Forbidden: agents/roadmaps/road-to-x.md',
         );
         expect(nrr.scan(tmp)).toHaveLength(0);
@@ -115,7 +115,7 @@ describe('check_no_roadmap_refs — behavioural spec', () => {
     });
 
     it('clean repo passes', () => {
-        write(path.join(tmp, '.agent-src.uncondensed/rules/ok.md'), 'All good.');
+        write(path.join(tmp, 'src/rules/ok.md'), 'All good.');
         expect(nrr.scan(tmp)).toHaveLength(0);
     });
 

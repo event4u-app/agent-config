@@ -3642,6 +3642,11 @@ export function format_text(results: LintResult[], quiet = false): string {
     const passes = results.filter((r) => r.status === 'pass').length;
     const suffix = maliceTotal ? `, ${maliceTotal} malice` : '';
     lines.push(`Summary: ${passes} pass, ${warns} warn, ${fails} fail, ${total} total${suffix}`);
+    // Gate-coverage contract (src/config/gate-coverage.yml): one machine-readable
+    // count so `check_gate_coverage` never parses the human summary above. This
+    // gate is also the manifest's regression case for CI-identical invocation —
+    // called bare it legitimately scans 0, so the manifest pins `--all`.
+    lines.push(`scanned: ${total}`);
     return lines.join('\n');
 }
 

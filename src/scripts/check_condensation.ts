@@ -8,7 +8,7 @@
  * exit codes (0 = clean, 1 = issues found, 3 = internal error),
  * stdout/stderr split, and byte-identical finding messages.
  *
- * Compares .agent-src.uncondensed/ source files with their dist/agent-src/
+ * Compares src/ source files with their dist/agent-src/
  * condensed versions. Checks that condensation preserved structural
  * integrity:
  * - All headings from source present in condensed
@@ -33,7 +33,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 type Severity = 'error' | 'warning' | 'info';
 
-const SOURCE_DIR = '.agent-src.uncondensed';
+// The authoring tree. Was `.agent-src.uncondensed` until 2026-07-29 — that tree
+// has held ZERO files since the flat-`src/` migration (ADR-051), so this gate
+// scanned nothing and exited 0 while wired into CI. `src/` is the single source
+// of truth per `src/rules/source-of-truth.md`; pairs resolve for `rules/` and
+// `skills/`, and any `src/` subtree without a `dist/agent-src/` counterpart is
+// skipped by the missing-target guard in `scanAll`.
+const SOURCE_DIR = 'src';
 const TARGET_DIR = 'dist/agent-src';
 
 interface Issue {
@@ -619,15 +625,31 @@ function rglobMdSorted(dir: string): string[] {
     return out;
 }
 
+/** A gate that scans nothing must never report success. This fired for real:
+ * `SOURCE_DIR` pointed at a tree emptied by the ADR-051 migration, so the check
+ * ran in CI against 0 pairs and exited 0 for as long as the tree stayed dead.
+ * Zero findings over zero inputs is a broken gate, not a pass. */
+function scannedNothing(sourceDir: string): Issue {
+    return {
+        file: SOURCE_DIR,
+        check: 'scanned_nothing',
+        severity: 'error',
+        message:
+            `scanned 0 source/target pairs under '${sourceDir}' — a gate that inspects ` +
+            `nothing cannot pass. Check SOURCE_DIR/TARGET_DIR against the real tree.`,
+    };
+}
+
 function scanAll(root: string): Issue[] {
     const issues: Issue[] = [];
     const sourceDir = path.join(root, SOURCE_DIR);
     const targetDir = path.join(root, TARGET_DIR);
 
     if (!fs.existsSync(sourceDir) || !fs.existsSync(targetDir)) {
-        return issues;
+        return [scannedNothing(sourceDir)];
     }
 
+    let scanned = 0;
     for (const sourceFile of rglobMdSorted(sourceDir)) {
         const rel = path.relative(sourceDir, sourceFile);
         const targetFile = path.join(targetDir, rel);
@@ -644,9 +666,17 @@ function scanAll(root: string): Issue[] {
         let sourceText = fs.readFileSync(sourceFile, 'utf-8');
         const targetText = fs.readFileSync(targetFile, 'utf-8');
         sourceText = _rewritePaths(sourceText, relStr);
+        scanned += 1;
         issues.push(...checkPair(relStr, sourceText, targetText));
     }
 
+    if (scanned === 0) {
+        issues.push(scannedNothing(sourceDir));
+    }
+    // Gate-coverage contract (src/config/gate-coverage.yml): emit exactly one
+    // machine-readable count so `check_gate_coverage` never has to parse the
+    // human report. A guard that parses prose is the fragile thing it replaces.
+    process.stdout.write(`scanned: ${String(scanned)}\n`);
     return issues;
 }
 
