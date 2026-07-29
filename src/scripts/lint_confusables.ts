@@ -34,11 +34,7 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as sl from './_lib/security_lint.js';
-import {
-    MIN_LETTERS as SHARED_MIN_LETTERS,
-    TOKEN_RE,
-    classifyToken,
-} from './_lib/confusables.js';
+import { TOKEN_RE, classifyToken } from './_lib/confusables.js';
 
 export const CHECK = 'mixed-script-confusable';
 
@@ -47,7 +43,6 @@ export const CHECK = 'mixed-script-confusable';
 // (road-to-runtime-encoding-hardening Phase 3). `_classify_token` stays exported
 // under its original name — it is this module's published surface and its tests
 // address it here.
-const MIN_LETTERS = SHARED_MIN_LETTERS;
 const _TOKEN = TOKEN_RE;
 
 /**

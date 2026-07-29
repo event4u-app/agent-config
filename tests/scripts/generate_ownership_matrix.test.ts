@@ -2,7 +2,6 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -11,23 +10,6 @@ import {
     type Edge,
 } from '../../src/scripts/generate_ownership_matrix.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'generate_ownership_matrix.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-const JSON_OUT = path.join(REPO_ROOT, 'docs', 'contracts', 'file-ownership-matrix.json');
-const MD_OUT = path.join(
-    REPO_ROOT,
-    'agents',
-    'settings',
-    'contexts',
-    'structural',
-    'file-ownership-matrix.md',
-);
 
 // --- Layer 1: ported build_matrix contract (tmp fixture) --------------------
 
