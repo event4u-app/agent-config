@@ -351,20 +351,54 @@ nothing shipped yet.
 
 Only the channels Phase 1 proved uncovered, only the dispositions Phase 1 chose.
 
-- [ ] Reuse `lint_confusables`' TR39 confusable set as the single source of
+- [x] Reuse `lint_confusables`' TR39 confusable set as the single source of
       truth for the visible mixed-script signature — import it, do not restate
       it. Same containment discipline (math operators are not confusables).
       *Verify:* one table in the tree; a test asserts both call sites agree.
-- [ ] Add the remaining uncovered structural checks per the Phase 1 table
+      **DONE** — extracted to `src/scripts/_lib/confusables.ts`; both
+      `lint_confusables` and the runtime scanner import it, and
+      `_classify_token` is now a re-export of the shared `classifyToken`. The
+      test asserts **identity** (`_classify_token === classifyToken`), not
+      equivalence — two functions that merely agree today can drift tomorrow.
+      Extraction rather than a direct import because the dependency direction
+      matters: the shared module imports nothing, so the runtime retrieval path
+      does not pull the authoring-time lint framework (`fs`, `security_lint`)
+      into a request. `lint_confusables` still reports clean and its 13 tests
+      pass unchanged.
+- [x] Add the remaining uncovered structural checks per the Phase 1 table
       (variation-selector runs · combining-mark density bound · invisible
       fillers folded into the existing invisible set · Unicode style-block fold ·
       punycode/IDN in text-expected fields · nested-multibase depth guard ·
       structured-data key-order canonicalization before comparison).
       *Verify:* each emits a structured finding; none rewrites visible text
       except where Phase 1 explicitly chose folding.
-- [ ] Keep the deterministic property: no model call, no network, CI-runnable.
+      **DONE, per Phase 1's dispositions rather than this list verbatim.**
+      Shipped: variation-selector runs (≥ 3 — a single selector is legitimate
+      emoji presentation), combining-mark runs (≥ 5 — ordinary diacritics are
+      not signal), invisible fillers **folded into the strip set** (the one
+      channel Phase 1 chose to rewrite), math-alphanumeric and fullwidth
+      **flagged, not folded** (NFKC is not surgical: it also rewrites ligatures
+      and CJK punctuation in legitimate content), punycode/IDN flagged, and
+      confusables via the shared signature.
+      **Two items on this list were NOT shipped, by Phase 1's measured
+      decision, with the reason recorded in code and in the report rather than
+      dropped silently:** the *nested-multibase depth guard* (base64 is
+      pervasive and legitimate throughout this repo — precision too low, and the
+      judgement is semantic rather than structural) and *structured-data
+      key-order canonicalization* (not a codepoint channel at all; the concern is
+      canonical order before **comparison**, and the sanitizer does not compare —
+      reordering keys would also break the byte-identical v1 envelope contract).
+      Phase 1's table row 23 now records the latter explicitly; it had been
+      missing from the table's first version.
+      `scan_encoding_findings` returns structured `{channel, detail}` findings
+      and a test asserts it **never mutates its input**.
+- [x] Keep the deterministic property: no model call, no network, CI-runnable.
       *Verify:* the added path is pure and exercised by the frozen corpus.
-- [ ] **Named exclusion, so it does not return as a suggestion:** the
+      **DONE** — pure functions, no I/O, no network, no model call; measured
+      p95 **0.018 ms** per message over the 653-entry corpus. Exercised by the
+      frozen corpus through `encoding_corpus_report`, which is itself asserted in
+      CI by `tests/scripts/encoding_floor.test.ts`.
+- [x] **Named exclusion, so it does not return as a suggestion:** the
       word-order-permutation channel. The source draft carried it as a stretch
       item and said itself that its precision is likely poor. It sits on the wrong
       side of the line this roadmap draws — carrier text with legitimate word
@@ -373,37 +407,104 @@ Only the channels Phase 1 proved uncovered, only the dispositions Phase 1 chose.
       length and misspelling.
       *Verify:* the channel appears in the Phase 1 table marked out-of-scope with
       this reason, not omitted silently.
+      **DONE** — present in the Phase 1 disposition table as **OUT OF SCOPE**
+      with exactly this reason, and restated in the scanner's own header comment
+      alongside the other deliberate non-scans, so a later reader cannot mistake
+      the silence for an oversight.
 
 ## Phase 4 — Gate on the frozen corpus
 
-- [ ] **Pre-registered acceptance (adopt ⇔ all true):** recall on in-scope
+- [x] **Pre-registered acceptance (adopt ⇔ all true):** recall on in-scope
       positives ≥ **0.95**, with the unambiguous classes (zero-width, bidi,
       variation-selector) ≥ **0.99**; false-positive rate on the clean negative
       corpus ≤ **0.5 %**; zero added runtime model spend; added latency
       < **2 ms p95** per message.
       *Verify:* the numbers render from a committed report, never hand-typed.
-- [ ] **Honest-null exit:** recall clears but FP > 0.5 % → ship
+      **ALL FIVE PASS.** recall **99.00 %** · unambiguous **100.00 %** · FP
+      **0.00 %** · model calls **0** (structural — no model call on the path) ·
+      p95 **0.018 ms**. Rendered by `encoding_corpus_report`, with the
+      thresholds encoded as `THRESHOLDS` so a run cannot pass by moving the bar:
+      [`encoding-floor-measurement.md`](../evidence/reports/encoding-floor-measurement.md).
+- [x] **Honest-null exit:** recall clears but FP > 0.5 % → ship
       **detect-and-flag only**, no automatic quarantine, and publish the FP
       number. Do not claim "blocks steganography".
       *Verify:* the shipped default matches whichever branch the measurement
       selected.
-- [ ] Record the coverage boundary as a claim: **text-layer only, by
+      **Branch selected: ADOPT** — the null exit did not fire (FP 0.00 %, well
+      inside 0.5 %). The distinction is recorded rather than glossed: nothing
+      here quarantines *regardless* of branch, because six of the seven channels
+      are flag-only by Phase 1's disposition, so the shipped behaviour matches
+      the selected branch trivially. **No "blocks steganography" claim is made
+      anywhere** — exactly one channel removes bytes; the other six report and
+      pass the text through.
+      **Three misses are published, not engineered away.** Two are corpus
+      artifacts (single-letter tokens, below `MIN_LETTERS = 3`, and not a
+      realistic attack); one is a **real named limitation** — `dαtα`, where
+      foreign letters tie Latin ones, so the containment rule reads it as a
+      foreign word. An attacker swapping ≥ half a token's letters escapes this
+      signature. That is the deliberate price of the 0.00 % FP rate: the
+      detector catches the *subtle* swap a reviewer cannot see, and not the
+      blatant one a reviewer has a fair chance of noticing. Adjusting
+      `MIN_LETTERS` or re-emitting the corpus without the awkward fixtures would
+      be tuning against the test split — the precise thing `golden-set-freeze`
+      exists to prevent.
+- [x] Record the coverage boundary as a claim: **text-layer only, by
       construction**, backed by the Phase 2 scope-guard test. Never for
       file/network channels; never for semantic evasion (word choice, phrasing,
       garden-path constructions) — a sanitizer cannot own those and the claim
       surface must say so.
       *Verify:* the claim entry names the scope-guard test as its evidence.
+      **DONE** — the boundary is recorded in
+      [`encoding-floor-measurement.md`](../evidence/reports/encoding-floor-measurement.md)
+      § Coverage boundary, naming the Phase-2 scope-guard test as its evidence
+      **and** naming the test that falsifies the guard (splice in a `layer: file`
+      PNG-metadata fixture, require the guard to fail). Semantic evasion and
+      word-order permutation are named as permanently out of scope, with the
+      reason a structural check cannot own them.
 
 ## Acceptance criteria
 
-- [ ] The S0.0 wiring table exists with an end-to-end probe per read surface,
+- [x] The S0.0 wiring table exists with an end-to-end probe per read surface,
       and the header prose matches it.
-- [ ] The Phase 1 coverage table exists with a citation per row, and the
+      → [`sanitize-floor-wiring.md`](../evidence/reports/sanitize-floor-wiring.md);
+      the sanitizer's `WHERE IT ACTUALLY RUNS` block enumerates each surface with
+      the probe row behind it. Two MCP rows are honestly marked
+      code-path-to-a-proven-callee (the transport itself is un-probed).
+- [x] The Phase 1 coverage table exists with a citation per row, and the
       normalise-vs-flag decision is recorded per channel.
-- [ ] Either the honest null is published, **or** the union corpus is frozen with
+      → [`encoding-channel-coverage.md`](../evidence/reports/encoding-channel-coverage.md):
+      23 rows, each citing a codepoint range or a file:line, plus the disposition
+      table (one strip, six flags, four no-actions, one named exclusion, zero
+      quarantines).
+- [x] Either the honest null is published, **or** the union corpus is frozen with
       its scope guard green and the detector deltas ship on the branch the
       measurement selected.
-- [ ] `lint_confusables`' confusable table has exactly one definition in the
+      → Second branch. Corpus frozen (300 positives / 353 negatives, sha256
+      manifest), scope guard green **and itself falsified by a test**, detector
+      deltas shipped on the **ADOPT** branch the measurement selected:
+      [`encoding-floor-measurement.md`](../evidence/reports/encoding-floor-measurement.md).
+      The Phase-1 null was separately evaluated and did not fire (50 % vs a 90 %
+      threshold).
+- [x] `lint_confusables`' confusable table has exactly one definition in the
       tree.
-- [ ] No AGPL code in the tree; no coverage claim past the text layer.
-- [ ] All quality gates pass — see `quality-tools`.
+      → `src/scripts/_lib/confusables.ts`. `_classify_token` is a re-export, and
+      the test asserts **identity** (`_classify_token === classifyToken`), not
+      mere agreement.
+- [x] No AGPL code in the tree; no coverage claim past the text layer.
+      → Every encoder, fixture and check is own code derived from this roadmap's
+      own Phase-1 measurement; no source, no payload, and no carrier taken from
+      any external repo. The coverage claim is text-layer-only by construction,
+      backed by the scope-guard test **and** by the test that falsifies it.
+- [x] All quality gates pass — see `quality-tools`.
+      → **Delegated to remote CI**, per `quality.local_auto_run: false` (the
+      shipped default: the full pipeline is not run locally, remote CI is the
+      authoritative gate). Local evidence actually produced, rather than a
+      full-pipeline pass claim: `task typecheck-ts` clean after every change ·
+      the five affected suites green (55 tests) · `lint_hidden_unicode` and
+      `lint_confusables` both reporting clean · `encoding_corpus --check` green ·
+      `encoding_corpus_report` at ADOPT · the full 838-file vitest run green once
+      the fresh worktree's build artifacts existed (`task build-ts`), whose
+      absence — not this change — caused all 32 initial failures.
+      One **pre-existing** failure is explicitly NOT attributed to this work:
+      `check_artefact_count_messaging`'s in-process `main(["--quiet"])` returns 1
+      while the CLI returns 0, and it reproduces identically on `main`.
