@@ -98,6 +98,18 @@ nothing downstream. All verified open on 2026-07-08.
       package.json + .github/about.yml, both of which are ALREADY drifted from it
       (pre-existing red, unrelated to this roadmap) — rewriting it is a branding
       decision plus that debt, so it stays the maintainer's call. -->
+- [ ] **Donation path exists at all (added 2026-07-29):** the stated
+      monetisation decision is **donation-only** — no paid tier, no
+      dual-licensing, ever — and `.github/FUNDING.yml` does not exist, so the
+      in-repo sponsor button is absent. This is execution, not design: a
+      two-line file plus a short, guilt-free funding paragraph in the README.
+      Two facts an agent must **not** invent and the maintainer has to supply:
+      whether GitHub Sponsors is enabled for the org, and the donation target if
+      it is not. Verify by loading the rendered repo page and seeing the button.
+      Cut rationale (a council explicitly declined to roadmap this on its own):
+      [`elder-ponytail-harvest-cut`](../settings/contexts/elder-ponytail-harvest-cut.md).
+      Note also settled there: the license is **already MIT**, so the drafted
+      AGPL→permissive relicensing question is moot.
 - [x] **Release-notes discoverability:** verify the site's proof/benchmark
       pages are linked from the README claims section (one hop from "every
       claim machine-checked" to the evidence).
