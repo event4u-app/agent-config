@@ -446,6 +446,8 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 * Add MCP Toplist rank badge ([b32a3ab](https://github.com/event4u-app/agent-config/commit/b32a3ab3b88c5433df0e5e4a9ab10fa95ad58838))
 
+Tests: 9080 (+689 since 9.8.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
