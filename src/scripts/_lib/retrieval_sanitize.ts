@@ -36,9 +36,27 @@
  * probe row to back it.
  */
 import { _classify } from '../lint_hidden_unicode.js';
+import { TOKEN_RE, classifyToken } from './confusables.js';
 
 /** Hard per-field length cap — bounds a runaway/adversarial body. */
 export const MAX_FIELD_CHARS = 8192;
+
+/**
+ * Invisible fillers — render as blank but are not whitespace, so they sit in
+ * neither the zero-width nor the bidi set and survived the original floor
+ * (measured: `agents/evidence/reports/encoding-channel-coverage.md` row 18).
+ *
+ * These are the ONLY channel Phase 1 chose to strip rather than flag: invisible
+ * by nature, with no legitimate role in this corpus, so folding them into the
+ * existing invisible set carries no corruption risk. Every other uncovered
+ * channel is a flag, because rewriting visible text can corrupt legitimate
+ * content.
+ */
+const _INVISIBLE_FILLERS: ReadonlySet<number> = new Set([
+    0x3164, // HANGUL FILLER
+    0x115f, // HANGUL CHOSEONG FILLER
+    0x1160, // HANGUL JUNGSEONG FILLER
+]);
 
 /** True for a C0/C1 control char that is NOT a benign whitespace (\t, \n). */
 function _isStrippableControl(cp: number): boolean {
@@ -61,9 +79,136 @@ export function sanitize_text(s: string): string {
         if (cp === undefined) continue;
         if (_classify(cp) !== null) continue; // hidden-instruction vector → drop
         if (_isStrippableControl(cp)) continue; // control-char noise → drop
+        if (_INVISIBLE_FILLERS.has(cp)) continue; // blank-but-not-whitespace → drop
         out += ch;
     }
     return out.length > MAX_FIELD_CHARS ? out.slice(0, MAX_FIELD_CHARS) : out;
+}
+
+// ---------------------------------------------------------------------------
+// Visible-layer scanner — FLAG ONLY, never rewrites
+// ---------------------------------------------------------------------------
+//
+// `sanitize_text` strips the invisible layer. This reports the VISIBLE layer,
+// which the floor deliberately does not touch: folding a confusable to a Latin
+// skeleton, or NFKC-normalising a math-alphanumeric run, corrupts any body that
+// legitimately contains mixed script, CJK punctuation, or a ligature. Phase 1
+// measured each channel and chose flag-not-rewrite for every one of these:
+// `agents/evidence/reports/encoding-channel-coverage.md` § Disposition.
+//
+// Deterministic and pure: no model call, no network, no I/O. Safe to run in CI
+// and on a request path.
+//
+// Not scanned, deliberately, with the reason recorded so it is not mistaken for
+// an oversight:
+//   - confusable whitespace (NBSP, figure space) — pervasive in real prose
+//   - HTML/XML entities — decoding them would CREATE the payload
+//   - nested multibase (base64) — legitimate throughout this repo; semantic,
+//     not structural
+//   - structured-data key ordering — not a codepoint channel at all, and
+//     reordering keys would break the byte-identical v1 envelope contract
+//   - word-order permutation — carrier text with legitimate word order is
+//     indistinguishable from permuted text without semantics
+
+/** Codepoint thresholds — a run is the signal; a single occurrence is not. */
+const _VS_RUN_MIN = 3;
+const _COMBINING_RUN_MIN = 5;
+
+export interface EncodingFinding {
+    /** Stable channel id, matching the frozen corpus labels. */
+    readonly channel: string;
+    /** Why it fired, with the concrete evidence (codepoint or token). */
+    readonly detail: string;
+}
+
+function _isVariationSelector(cp: number): boolean {
+    return (cp >= 0xfe00 && cp <= 0xfe0f) || (cp >= 0xe0100 && cp <= 0xe01ef);
+}
+
+function _isCombiningMark(cp: number): boolean {
+    return cp >= 0x0300 && cp <= 0x036f;
+}
+
+/**
+ * Report visible-layer encoding signals in a string. Never mutates it.
+ *
+ * The confusable signature is NOT reimplemented here — it is the shared
+ * `classifyToken` from `_lib/confusables.ts`, the single definition this
+ * package's authoring-time linter also uses, so the two surfaces cannot drift
+ * apart on what counts as a homoglyph.
+ */
+export function scan_encoding_findings(s: string): EncodingFinding[] {
+    const out: EncodingFinding[] = [];
+
+    // Longest run of variation selectors / combining marks anywhere in the
+    // string. A run is what distinguishes steganography from legitimate use:
+    // U+FE0F is the emoji presentation selector and diacritics are normal in
+    // many languages, so a single occurrence is never the signal.
+    let vsRun = 0;
+    let vsMax = 0;
+    let cmRun = 0;
+    let cmMax = 0;
+    let hasMathAlnum = false;
+    let hasFullwidth = false;
+    for (const ch of s) {
+        const cp = ch.codePointAt(0);
+        if (cp === undefined) continue;
+        if (_isVariationSelector(cp)) {
+            vsRun += 1;
+            vsMax = Math.max(vsMax, vsRun);
+        } else {
+            vsRun = 0;
+        }
+        if (_isCombiningMark(cp)) {
+            cmRun += 1;
+            cmMax = Math.max(cmMax, cmRun);
+        } else {
+            cmRun = 0;
+        }
+        if (cp >= 0x1d400 && cp <= 0x1d7ff) hasMathAlnum = true;
+        if (cp >= 0xff01 && cp <= 0xff5e) hasFullwidth = true;
+    }
+    if (vsMax >= _VS_RUN_MIN) {
+        out.push({
+            channel: 'variation-selector-run',
+            detail: `variation-selector run x${vsMax} (steganography signature)`,
+        });
+    }
+    if (cmMax >= _COMBINING_RUN_MIN) {
+        out.push({
+            channel: 'combining-mark-run',
+            detail: `combining-mark run x${cmMax} on one base character`,
+        });
+    }
+    if (hasMathAlnum) {
+        out.push({
+            channel: 'math-alphanumeric',
+            detail: 'Mathematical Alphanumeric Symbols used as letters (U+1D400–1D7FF)',
+        });
+    }
+    if (hasFullwidth) {
+        out.push({
+            channel: 'fullwidth-forms',
+            detail: 'Halfwidth/Fullwidth Forms used as ASCII letters (U+FF01–FF5E)',
+        });
+    }
+
+    // Mixed-script confusable tokens — shared signature, one table in the tree.
+    for (const m of s.matchAll(TOKEN_RE)) {
+        const verdict = classifyToken(m[0]);
+        if (verdict !== null) {
+            const script = verdict.startsWith('latin+greek') ? 'greek' : 'cyrillic';
+            out.push({ channel: `confusable-${script}`, detail: `${m[0]} — ${verdict}` });
+        }
+    }
+
+    // Punycode / IDN in a text-expected field. Flagged, never rewritten:
+    // `xn--` labels are valid DNS and rewriting one would break a real link.
+    for (const m of s.matchAll(/\bxn--[a-z0-9-]+/gi)) {
+        out.push({ channel: 'punycode-idn', detail: `punycode label ${m[0]}` });
+    }
+
+    return out;
 }
 
 /**

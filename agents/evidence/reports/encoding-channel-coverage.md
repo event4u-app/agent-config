@@ -53,6 +53,14 @@ filter to act on.
 | 20 | punycode / IDN (`xn--…`) | no-op | ASCII; nothing for a codepoint filter to strip |
 | 21 | HTML / XML entities (`&#x200b;`) | no-op | ASCII; nothing to strip |
 | 22 | nested multibase (base64) | no-op | ASCII; nothing to strip |
+| 23 | structured-data key ordering | **not a codepoint channel** | `sanitize_entry` preserves insertion order (`retrieval_sanitize.ts:56`) |
+
+> Row 23 was named in the roadmap's channel list and was **missing from the
+> first version of this table** — recorded here rather than left dropped. It is
+> not a codepoint channel at all: the concern is canonical ordering before
+> *comparison*, and the sanitizer does not compare. Reordering keys would also
+> change the emitted JSON and break the byte-identical v1 envelope contract, so
+> the disposition is **no action**.
 
 ## Finding A — the visible layer is exactly as open as documented
 
