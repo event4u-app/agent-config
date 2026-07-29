@@ -113,8 +113,16 @@ jobs:
           const version = process.argv[1];
           const text = fs.readFileSync("CHANGELOG.md", "utf8");
           const esc = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          // Find the first heading line containing the version as a whole word.
-          const pat = new RegExp(`^(#+) [^\\n]*\\b${esc}\\b[^\\n]*$`, "m");
+          // Find the first RELEASE heading containing the version as a whole
+          // word. Release entries are `## [X.Y.Z](...)` — level 2 or deeper.
+          // Level-1 headings are era banners (`# Era: pre-9.9.0 — archived`,
+          // `# Era: 9.9.x — current`), and an era split names the archived era
+          // after the INCOMING version, so a `#+` match would anchor on the
+          // archive pointer — whose body is a two-line blockquote with no
+          // Tests: footer — and fail a perfectly good release section. That is
+          // exactly what happened on 9.9.0, the first release whose era split
+          // produced a `pre-<this version>` banner.
+          const pat = new RegExp(`^(#{2,}) [^\\n]*\\b${esc}\\b[^\\n]*$`, "m");
           const m = pat.exec(text);
           if (!m) {
             console.error(`::error::Could not re-locate ${version} heading in CHANGELOG.md`);

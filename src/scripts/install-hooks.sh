@@ -91,7 +91,7 @@ fi
 EOF
 
 chmod +x "$HOOKS_DIR/pre-push"
-echo "✅  Pre-push hook installed."
+echo "✅  Pre-push hook installed." >&2
 
 # Pre-commit: marketplace consistency -----------------------------------------
 #
@@ -184,7 +184,7 @@ fi
 EOF
 
 chmod +x "$HOOKS_DIR/pre-commit"
-echo "✅  Pre-commit hook installed."
+echo "✅  Pre-commit hook installed." >&2
 
 # Chat-history bridge hooks ----------------------------------------------------
 #
@@ -218,7 +218,7 @@ fi
 # command above is guarded by "|| true", so the implicit exit is 0.
 EOF
     chmod +x "$HOOKS_DIR/$name"
-    echo "✅  $name hook installed."
+    echo "✅  $name hook installed." >&2
 }
 
 write_chat_history_hook "post-commit"   "git:post-commit"
@@ -275,4 +275,4 @@ EOF
 
 append_auto_sync_block "post-merge"    "1"
 append_auto_sync_block "post-checkout" "3"
-echo "✅  Auto-sync block appended to post-merge / post-checkout hooks."
+echo "✅  Auto-sync block appended to post-merge / post-checkout hooks." >&2
