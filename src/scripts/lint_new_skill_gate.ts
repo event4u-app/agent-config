@@ -105,9 +105,15 @@ function _skill_roots(): string[] {
             }
         }
     }
-    const legacy = path.join(ROOT, '.agent-src.uncondensed', 'skills');
-    if (roots.length === 0 && _isDir(legacy)) {
-        roots = [legacy];
+    // ADR-051 moved skill authoring to `src/skills`; a later commit deleted
+    // `packages/` entirely. Until 2026-07-29 the only fallback was the retired
+    // container, so this resolved to [] and the overlap gate silently passed
+    // every new skill.
+    if (roots.length === 0) {
+        const cand = path.join(ROOT, 'src', 'skills');
+        if (_isDir(cand)) {
+            roots = [cand];
+        }
     }
     return roots;
 }
