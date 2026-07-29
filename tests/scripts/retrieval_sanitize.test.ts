@@ -27,7 +27,7 @@ describe('sanitize_text', () => {
         expect(sanitize_text(evil)).toBe('safetexthere');
     });
     it('strips C0/C1/DEL control noise but keeps tab + newline', () => {
-        expect(sanitize_text('a\0b\x07cde\tf\ng')).toBe('abcde\tf\ng');
+        expect(sanitize_text('a\0b\x07c\x7Fd\u009Fe\tf\ng')).toBe('abcde\tf\ng');
     });
     it('preserves ordinary visible content byte-for-byte', () => {
         const clean = 'Decision: use REST.\n- edge caching\n\tindented `code`; ünïcödé ok.';

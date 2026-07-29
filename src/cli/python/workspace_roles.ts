@@ -191,7 +191,7 @@ function pyStripChars(s: string, chars: string): string {
 
 /** `str.rstrip()` — strip trailing ASCII+unicode whitespace. */
 function pyRstrip(s: string): string {
-    return s.replace(/[\s]+$/u, '');
+    return s.replace(/[\s\u0085]+$/u, '');
 }
 
 /** `str.title()` — capitalize first letter of each run of alphabetic chars. */
@@ -266,7 +266,7 @@ function pyLstripNewlines(s: string): string {
 
 /** `str.lstrip()` — strip leading whitespace. */
 function pyLstripWs(s: string): string {
-    return s.replace(/^[\s]+/u, '');
+    return s.replace(/^[\s\u0085]+/u, '');
 }
 
 /** Find a `## First tasks` (or `## Tasks`) bullet list. */

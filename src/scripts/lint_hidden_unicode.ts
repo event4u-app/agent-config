@@ -323,16 +323,35 @@ const _GENERATED_PREFIXES: readonly string[] = [
     // preserve. If a capture needs to stay grep-readable, the fix is to escape
     // at capture time — never to edit the artifact afterwards.
     'agents/evidence/analysis/',
+    // The frozen hostile-encoding corpus. Its positives ARE raw control
+    // characters — that is the thing under test, so flagging them would demand
+    // escaping the fixtures and thereby delete the test. The corpus has its own,
+    // stronger integrity controls: a sha256 freeze plus a scope-guard test that
+    // is itself falsified by an out-of-scope fixture. Excluded here because it
+    // is DATA, on the same principle as the captures above.
+    'internal/bench/corpora/encoding-channels/',
 ];
 
 function _isGenerated(rel: string): boolean {
     return _GENERATED_PREFIXES.some((p) => rel.startsWith(p));
 }
 
-/** True for a raw C0 control that is not benign whitespace (tab / LF / CR). */
-function _isRawControlByte(byte: number): boolean {
-    if (byte === 0x09 || byte === 0x0a || byte === 0x0d) return false;
-    return byte <= 0x1f;
+/**
+ * True for a raw control CODEPOINT that is not benign whitespace.
+ *
+ * Codepoints, not bytes, and that distinction is the whole point. A first cut
+ * of this pass tested bytes ≤ 0x1F and let two classes through: DEL (U+007F,
+ * a single byte above the range) and the C1 controls (U+0080–009F, which encode
+ * to a two-byte UTF-8 sequence containing no byte ≤ 0x1F). Both make `file(1)`
+ * and git classify a file as binary — `tests/scripts/retrieval_sanitize.test.ts`
+ * carried U+007F and U+009F, rendered as `Bin` in `git diff`, unreviewable on a
+ * PR, and passed the byte-level check. A gate that misses the thing it exists to
+ * catch is the failure this whole roadmap is about, so the range now matches
+ * `_classify`'s: C0 + DEL + C1, minus tab / LF / CR.
+ */
+function _isRawControlCodepoint(cp: number): boolean {
+    if (cp === 0x09 || cp === 0x0a || cp === 0x0d) return false;
+    return cp <= 0x1f || (cp >= 0x7f && cp <= 0x9f);
 }
 
 function _extensionOf(rel: string): string {
@@ -399,23 +418,27 @@ export function _scanSourceControlBytes(files: readonly string[] | null = null):
         } catch {
             continue;
         }
+        // Iterate CODEPOINTS (the string is already known-valid UTF-8 here), so
+        // DEL and the C1 range are visible — see `_isRawControlCodepoint`.
         let line = 1;
-        for (const byte of data) {
-            if (byte === 0x0a) {
+        for (const ch of data.toString('utf-8')) {
+            const cp = ch.codePointAt(0);
+            if (cp === undefined) continue;
+            if (cp === 0x0a) {
                 line += 1;
                 continue;
             }
-            if (!_isRawControlByte(byte)) continue;
-            const hex = byte.toString(16).toUpperCase().padStart(2, '0');
+            if (!_isRawControlCodepoint(cp)) continue;
+            const hex = cp.toString(16).toUpperCase().padStart(2, '0');
             out.push(
                 new sl.Finding(
                     rel,
                     line,
                     CHECK,
                     'HIGH',
-                    `raw control byte 0x${hex} in a text source — makes grep/file(1) ` +
-                        'treat this file as binary and skip it silently; use the ' +
-                        'language escape (e.g. \\0) instead',
+                    `raw control character U+${hex} in a text source — makes ` +
+                        'grep/file(1)/git treat this file as binary and skip it ' +
+                        'silently; use the language escape (e.g. \\0, \\x7F) instead',
                     1.0,
                 ),
             );

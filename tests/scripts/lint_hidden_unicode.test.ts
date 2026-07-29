@@ -129,7 +129,7 @@ describe('lint_hidden_unicode — _scanSourceControlBytes (source pass)', () => 
             expect(hits[0]!.line).toBe(2);
             expect(hits[0]!.severity).toBe('HIGH');
             expect(hits[0]!.is_fail).toBe(true);
-            expect(hits[0]!.message).toContain('raw control byte 0x00');
+            expect(hits[0]!.message).toContain('raw control character U+00');
             expect(hits[0]!.message).toContain('\\0');
         });
     });
@@ -139,8 +139,30 @@ describe('lint_hidden_unicode — _scanSourceControlBytes (source pass)', () => 
         withRepoFile('tmp-hu-source-ctrl.ts', body, (rel) => {
             const hits = lhu._scanSourceControlBytes([rel]);
             expect(hits).toHaveLength(1);
-            expect(hits[0]!.message).toContain('raw control byte 0x07');
+            expect(hits[0]!.message).toContain('raw control character U+07');
             expect(hits[0]!.line).toBe(2);
+        });
+    });
+
+    it('flags DEL and the C1 range, which a byte-level check misses', () => {
+        // Regression lock on a real hole. The first version of this pass tested
+        // BYTES <= 0x1F, so DEL (a single byte ABOVE the range) and the C1
+        // controls (two-byte UTF-8, no byte <= 0x1F) both slipped through — and
+        // `tests/scripts/retrieval_sanitize.test.ts` was consequently rendered
+        // as `Bin` by git, unreviewable on a PR, while passing this check.
+        const body = Buffer.from(`const a = 'x${String.fromCodePoint(0x7f)}';\n`, 'utf-8');
+        withRepoFile('tmp-hu-source-del.ts', body, (rel) => {
+            const hits = lhu._scanSourceControlBytes([rel]);
+            expect(hits).toHaveLength(1);
+            expect(hits[0]!.message).toContain('U+7F');
+        });
+        const c1 = Buffer.from(`const b = 'y${String.fromCodePoint(0x85)}';\n`, 'utf-8');
+        // Prove the trap: the C1 encoding really contains no byte <= 0x1F.
+        expect([...c1].some((b) => b !== 0x0a && b <= 0x1f)).toBe(false);
+        withRepoFile('tmp-hu-source-c1.ts', c1, (rel) => {
+            const hits = lhu._scanSourceControlBytes([rel]);
+            expect(hits).toHaveLength(1);
+            expect(hits[0]!.message).toContain('U+85');
         });
     });
 
