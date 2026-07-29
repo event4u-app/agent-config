@@ -29,6 +29,33 @@ const TSX_BIN = path.join(
 
 // --- Layer 1: build() shape + serialization ---------------------------------
 
+describe('COMPILE_TIME_TOGGLES.telegraph-speak — dormant by default (ADR telegraph/0002)', () => {
+    const toggle = cr.COMPILE_TIME_TOGGLES['telegraph-speak'];
+
+    it('an ABSENT telegraph key means DORMANT — the rule is omitted from the router', () => {
+        // The fallback used to be `true`, which silently contradicted ADR 0001
+        // (accepted, "default off until bench"). Measured basis: median vs_terse
+        // −9.27% / −5.47% exact — telegraph emits MORE than a plain "be terse".
+        expect(toggle?.({})).toBe(false);
+        expect(toggle?.({ telegraph: {} })).toBe(false);
+    });
+
+    it('opting in requires an EXPLICIT telegraph.speak: true', () => {
+        expect(toggle?.({ telegraph: { speak: true } })).toBe(true);
+    });
+
+    it('the family master switch still wins over an explicit opt-in', () => {
+        expect(toggle?.({ telegraph: { enabled: false, speak: true } })).toBe(false);
+    });
+
+    it('speak_scope is NOT consulted — it disables behaviour, never the token cost', () => {
+        // The trap this decision exposed: `speak_scope: off` leaves the ~982-token
+        // body inlined under eager-all. Only `speak` controls router membership.
+        expect(toggle?.({ telegraph: { speak: true, speak_scope: 'off' } })).toBe(true);
+        expect(toggle?.({ telegraph: { speak_scope: 'aggressive' } })).toBe(false);
+    });
+});
+
 describe('compile_router.build — shape', () => {
     it('has the expected top-level keys and profiles', () => {
         const out = cr.build() as Record<string, unknown>;

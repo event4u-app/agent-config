@@ -217,10 +217,64 @@ describe('sync_non_md', () => {
         expect(fs.existsSync(path.join(target, 'scripts', 'scan.php'))).toBe(true);
     });
 
-    it('skips condensable md files', () => {
+    // Contract CHANGED by ADR-201 (accepted 2026-07-29): this asserted that `.md`
+    // was SKIPPED here, because an agent wrote the condensed body into dist/ by
+    // hand. That LLM rewrite is removed — `.md` is now copied verbatim and
+    // path-rewritten, so dist is a deterministic derivation of src. The old
+    // assertion is preserved as the `COPY_MD_VERBATIM = false` branch's contract.
+    it('copies md files verbatim (ADR-201: no LLM rewrite in the pipeline)', () => {
         write(path.join(source, 'rules', 'test.md'), '# Rule');
-        expect(condense.sync_non_md(source, target)).toBe(0);
-        expect(fs.existsSync(path.join(target, 'rules', 'test.md'))).toBe(false);
+        expect(condense.sync_non_md(source, target)).toBe(1);
+        expect(fs.readFileSync(path.join(target, 'rules', 'test.md'), 'utf-8')).toBe('# Rule');
+    });
+
+    // ADR telegraph/0002 § part 1 — the coupling test. Router membership alone was
+    // never zero-cost: a compile-time-disabled rule was dropped from router.json
+    // while its body still shipped as a file, and the HOST READS THE FILE. Without
+    // this test the second half of "dormancy" would be asserted, not enforced —
+    // which is precisely the failure that ADR recorded against its own first draft.
+    const withSettings = (yaml: string): void => {
+        const f = path.join(tmp, 'settings.yml');
+        fs.writeFileSync(f, yaml, 'utf-8');
+        condense._setStateForTest({ SETTINGS_FILE: f });
+    };
+
+    it('a compile-time-DISABLED rule is not emitted into the projection', () => {
+        write(path.join(source, 'rules', 'telegraph-speak.md'), '# Telegraph\n');
+        withSettings('telegraph:\n  speak: false\n');
+        condense.sync_non_md(source, target);
+        expect(fs.existsSync(path.join(target, 'rules', 'telegraph-speak.md'))).toBe(false);
+    });
+
+    it('an ENABLED rule is emitted — the gate opts in, it does not allowlist', () => {
+        write(path.join(source, 'rules', 'telegraph-speak.md'), '# Telegraph\n');
+        withSettings('telegraph:\n  speak: true\n');
+        condense.sync_non_md(source, target);
+        expect(fs.existsSync(path.join(target, 'rules', 'telegraph-speak.md'))).toBe(true);
+    });
+
+    it('an ungated rule is unaffected by the toggle map', () => {
+        write(path.join(source, 'rules', 'some-other-rule.md'), '# Other\n');
+        withSettings('telegraph:\n  speak: false\n');
+        condense.sync_non_md(source, target);
+        expect(fs.existsSync(path.join(target, 'rules', 'some-other-rule.md'))).toBe(true);
+    });
+
+    it('the family master switch overrides an explicit opt-in', () => {
+        write(path.join(source, 'rules', 'telegraph-speak.md'), '# Telegraph\n');
+        withSettings('telegraph:\n  enabled: false\n  speak: true\n');
+        condense.sync_non_md(source, target);
+        expect(fs.existsSync(path.join(target, 'rules', 'telegraph-speak.md'))).toBe(false);
+    });
+
+    it('the copy is byte-exact — the property the removal exists to create', () => {
+        // Determinism was the sub-gate that FAILED before ADR-201: the hash covered
+        // the source and never the output, so dist could diverge undetectably.
+        // A verbatim copy makes `dist == rewrite(src)` checkable for the first time.
+        const body = '# Rule\n\nProse with **emphasis** and `code`.\n\n```\nNEVER X\n```\n';
+        write(path.join(source, 'rules', 'exact.md'), body);
+        condense.sync_non_md(source, target);
+        expect(fs.readFileSync(path.join(target, 'rules', 'exact.md'), 'utf-8')).toBe(body);
     });
 
     it('copies readme as-is', () => {

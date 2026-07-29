@@ -42,6 +42,7 @@ import {
 import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
+import { rule_is_compile_enabled } from './_lib/compile_time_toggles.js';
 import { info, success, flush_summary, resolve_level } from './_lib/script_output.js';
 import {
     TIER_TO_CLAUDE_MODEL as _TIER_TO_CLAUDE_MODEL,
@@ -660,19 +661,66 @@ export function cleanup_stale(_source_dir: string, target_dir: string): number {
     return deleted;
 }
 
+/** ADR-201 (accepted 2026-07-29): `.md` is COPIED + path-rewritten, never rewritten
+ * by an LLM. Set false to restore the pre-ADR-201 behaviour, where `.md` was skipped
+ * here and an agent wrote the condensed body into `dist/` by hand.
+ *
+ * Measured basis for the removal: 0/429 artifacts saved ≥500 tok, aggregate 0.86%,
+ * 267/429 byte-identical, and −36 tok on the always-loaded kernel (condensation made
+ * the per-request surface *worse*). Determinism failed by construction: the hash
+ * covered the source, never the output, so drift was undetectable — observed live.
+ *
+ * Council verdict A: `dist/agent-src/` STAYS as a deterministically-produced,
+ * git-diffable artifact. Only the *manner* of derivation changes. */
+export const COPY_MD_VERBATIM = true;
+
+/** True when `relative` is a rule whose compile-time toggle is off, so the projector
+ * must not emit it. Exported for the coupling test — without a pinned test the
+ * second half of "dormancy" would be asserted rather than enforced, which is the
+ * exact failure ADR telegraph/0002 § part 1 records. */
+export function skip_compile_disabled_rule(relative: string): boolean {
+    const posix = relative.split(path.sep).join('/');
+    if (!posix.startsWith('rules/') || !posix.endsWith('.md')) {
+        return false;
+    }
+    const rule_id = path.basename(posix, '.md');
+    const settings = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE }) as Record<
+        string,
+        unknown
+    >;
+    return !rule_is_compile_enabled(rule_id, settings);
+}
+
 export function sync_non_md(_source_dir: string, target_dir: string): number {
     let copied = 0;
     const seen = new Set<string>();
     for (const [source_file, relative] of _iter_sources()) {
-        if (should_condense(source_file)) {
-            continue; // .md files are condensed by the agent, not copied here
+        if (!COPY_MD_VERBATIM && should_condense(source_file)) {
+            continue; // pre-ADR-201: .md was condensed by the agent, not copied here
         }
         if (seen.has(relative)) {
+            continue;
+        }
+        // ADR telegraph/0002 § part 1: a compile-time-disabled RULE must not be
+        // emitted at all. Router membership alone was never zero-cost — the host
+        // reads the projected FILE, so a rule dropped from router.json while its
+        // body still shipped kept costing its full token price. One switch, both
+        // surfaces. Unknown ids are always emitted (the map gates, it does not
+        // allowlist), so this is a no-op for every rule but the gated ones.
+        if (skip_compile_disabled_rule(relative)) {
             continue;
         }
         seen.add(relative);
         const target_file = path.join(target_dir, relative);
         copy_file(source_file, target_file);
+        // ADR-201: a copied `.md` still needs the ONE deterministic transform the
+        // removal deliberately preserves — `apply_path_rewriter` fixes relative
+        // links so they resolve from the DELIVERED location (`../../docs/…` →
+        // `../docs/…`, ~38 artifacts). Without this the projection's links break.
+        // Idempotent: it returns false when nothing changed.
+        if (COPY_MD_VERBATIM && relative.endsWith('.md')) {
+            apply_path_rewriter(relative);
+        }
         _print(`  Copied: ${relative}`);
         copied += 1;
     }
