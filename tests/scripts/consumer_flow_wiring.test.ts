@@ -49,6 +49,16 @@ describe('gate 1 — retrieve (tripwire: empty layer skips at zero cost)', () =>
         const hits = retrieve(['domain-invariants'], ['public API', 'REST'], 5);
         expect(hits.length).toBeGreaterThan(0);
         expect(hits.length).toBeLessThanOrEqual(5); // budgeted top-k, never a dump
+        // The title claims the floor ran on the READ SURFACE, so assert exactly
+        // that: every emitted string is clean WITHOUT the test calling
+        // `sanitize_text` itself. Previously this case asserted only hit counts,
+        // so the floor could have been absent and it would still have passed
+        // (road-to-runtime-encoding-hardening S0.0).
+        for (const h of hits) {
+            for (const v of Object.values(h.entry)) {
+                if (typeof v === 'string') expect(HIDDEN.test(v)).toBe(false);
+            }
+        }
     });
 });
 
@@ -70,8 +80,13 @@ describe('gate 2 — quarantine (hostile fixture is neutralized as DATA)', () =>
         expect(sanitize_text(runaway).length).toBeLessThanOrEqual(MAX_FIELD_CHARS + 64);
     });
 
-    it('poisoned store entry is retrievable but its body sanitizes clean', () => {
+    it('poisoned store entry is retrievable and its body arrives ALREADY clean', () => {
         const store = path.resolve(__dirname, '../../internal/bench/second-brain/retrieval-store');
+        // The fixture must be genuinely hostile ON DISK, or the assertion below
+        // is vacuous — a clean fixture would pass even with no floor at all.
+        const onDisk = fs.readFileSync(path.join(store, 'domain-invariants.yml'), 'utf8');
+        expect(HIDDEN.test(onDisk)).toBe(true);
+
         _setMemoryRoot(store);
         _setKnowledgeRoot(path.join(store, 'knowledge-none'));
         _setIntakeRoot(path.join(store, 'intake-none'));
@@ -79,7 +94,14 @@ describe('gate 2 — quarantine (hostile fixture is neutralized as DATA)', () =>
         const poisoned = hits.find((h) => h.id === 'poison-api-style');
         expect(poisoned).toBeDefined();
         const body = String((poisoned!.entry as { body?: unknown }).body ?? '');
-        expect(HIDDEN.test(sanitize_text(body))).toBe(false);
+        // Assert the SURFACE, not the algorithm. The previous form was
+        // `HIDDEN.test(sanitize_text(body))` — the test applied the floor
+        // itself, so it proved `sanitize_text` works and said nothing about
+        // whether `retrieve()` runs it. It passed for months while the legacy
+        // read surfaces emitted every vector intact
+        // (road-to-runtime-encoding-hardening S0.0).
+        expect(HIDDEN.test(body)).toBe(false);
+        expect(body).not.toEqual(''); // the entry still carries its visible content
     });
 });
 

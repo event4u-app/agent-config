@@ -193,13 +193,22 @@ export async function run(opts: { mode: 'dry-run' | 'live'; host: string; seeds:
         const { topk, rank, tieSetSize } = retrieveFor(task, type, k);
         const ids = topk.map((r) => r.id);
         topkSlots += topk.length;
+        // Apply the floor ONCE, here, and prompt from the result below. The
+        // previous shape computed a sanitized body only to increment
+        // `poisonedNeutralized` and then prompted with the RAW body — so
+        // `poisoned_rejection_rate` measured the algorithm while the pipeline
+        // forwarded every vector intact. Measured, not inferred:
+        // `agents/evidence/reports/sanitize-floor-wiring.md` § Finding 2.
+        const safeBodies = new Map<string, string>();
         for (const hit of topk) {
+            const clean = sanitize_text(hit.body);
+            safeBodies.set(hit.id, clean);
             if (staleSet.has(hit.id)) staleHits += 1;
             if (poisonedSet.has(hit.id)) {
                 poisonedRetrieved += 1;
-                // Rejection = the sanitize floor strips every hidden-instruction
-                // vector before the body could reach a prompt.
-                const clean = sanitize_text(hit.body);
+                // Rejection = the sanitize floor stripped every
+                // hidden-instruction vector from the body that reaches the
+                // prompt — the same `clean` value, not a parallel computation.
                 if (!/[​-‏‪-‮⁦-⁩]/u.test(clean)) poisonedNeutralized += 1;
             }
         }
@@ -215,7 +224,8 @@ export async function run(opts: { mode: 'dry-run' | 'live'; host: string; seeds:
                 if (opts.mode === 'dry-run') {
                     transcript = stub(task, arm, neededInTopK);
                 } else {
-                    const r = await callAnthropic(opts.host, _prompt(task, arm, topk.map((x) => x.body), placebo), apiKey);
+                    const retrieved = topk.map((x) => safeBodies.get(x.id) ?? sanitize_text(x.body));
+                    const r = await callAnthropic(opts.host, _prompt(task, arm, retrieved, placebo), apiKey);
                     transcript = r.text; calls += 1; tIn += r.tokens_in; tOut += r.tokens_out;
                 }
                 armTotal[arm] += 1;

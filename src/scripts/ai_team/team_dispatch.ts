@@ -28,6 +28,7 @@
  * shape of an Apache-2.0 upstream — attribution in the repo-root NOTICE file.
  */
 import { spawnSync } from 'node:child_process';
+import { sanitize_text } from '../_lib/retrieval_sanitize.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -382,8 +383,14 @@ export function parse_review_findings(text: string): ParsedReview {
         parsed: false,
         status: 'DONE_WITH_CONCERNS',
         findings: [],
-        summary: 'model output was not parseable as the team-review JSON contract; raw text preserved.',
-        raw: text,
+        summary: 'model output was not parseable as the team-review JSON contract; raw text preserved (sanitized, length-capped).',
+        // Sanitize floor on the inbound inter-agent channel: this is another
+        // model's text about to be emitted into the host agent's context, the
+        // same class as a retrieved corpus body. Applied per emitted FIELD, not
+        // to the whole payload — `sanitize_text` caps at `MAX_FIELD_CHARS`, and
+        // capping the payload before `JSON.parse` would corrupt a long-but-valid
+        // review. See `agents/evidence/reports/sanitize-floor-wiring.md` § S0.0b.
+        raw: sanitize_text(text),
     };
     let data: unknown;
     try {
@@ -415,12 +422,16 @@ export function parse_review_findings(text: string): ParsedReview {
         }
         const raw_sev = typeof f['severity'] === 'string' ? (f['severity'] as string) : 'info';
         const severity = (_VALID_SEVERITIES.has(raw_sev) ? raw_sev : 'info') as FindingSeverity;
+        // Sanitize every emitted string field (see the fallback above for why
+        // this is per-field rather than payload-wide). Validation ran on the
+        // raw value so a field that is only whitespace-after-sanitize still
+        // fails the same way it did before.
         const finding: TeamReviewFinding = {
             severity,
-            evidence,
-            suggested_fix,
+            evidence: sanitize_text(evidence),
+            suggested_fix: sanitize_text(suggested_fix),
             ...(typeof f['location'] === 'string' && f['location'].trim() !== ''
-                ? { location: f['location'] as string }
+                ? { location: sanitize_text(f['location'] as string) }
                 : {}),
         };
         findings.push(finding);
@@ -439,7 +450,7 @@ export function parse_review_findings(text: string): ParsedReview {
     }
     const summary =
         typeof obj['summary'] === 'string' && obj['summary'].trim() !== ''
-            ? (obj['summary'] as string)
+            ? sanitize_text(obj['summary'] as string)
             : findings.length > 0
               ? `${findings.length} finding(s) from cross-model review.`
               : 'no findings above info from cross-model review.';

@@ -3,8 +3,8 @@
  * (road-to-retrieval-substrate-hardening B6).
  *
  * Corpus content — especially user-ingested knowledge chunks under
- * `agents/memory/knowledge/` — flows into the agent context via `retrieve_v1`
- * / `memory_get_v1`. An attacker (or a compromised ingested source) can embed
+ * `agents/memory/knowledge/` — flows into the agent context on the retrieval
+ * read surfaces. An attacker (or a compromised ingested source) can embed
  * hidden-instruction vectors (bidi controls, zero-width chars, Unicode Tag
  * block) or control-char noise that the model may act on — the untrusted-input
  * / lethal-trifecta injection surface. This floor strips those vectors from
@@ -15,6 +15,25 @@
  * layer + unbounded length; visible content is the agent's to read as data.
  * Codepoint classes are shared with `lint_hidden_unicode` (one source of truth
  * for what counts as a hidden-instruction vector).
+ *
+ * WHERE IT ACTUALLY RUNS — measured end-to-end, not asserted. Keep this list
+ * honest: an earlier version of this header named surfaces by intent, and the
+ * legacy-envelope gap below went unnoticed for exactly that reason. Every
+ * claim here is backed by a probe row in
+ * `agents/evidence/reports/sanitize-floor-wiring.md`:
+ *
+ *   - `retrieve_v1()`     — yes (`memory_lookup.ts` calls `sanitize_entry`)
+ *   - `memory_get_v1()`   — yes (same)
+ *   - MCP `memory_lookup` / `memory_get` tools — inherited from the two above
+ *   - `retrieve()` / `retrieve_with_meta()` — yes, since the S0.0 wiring fix;
+ *     before it they emitted every vector intact, and so did the CLI default
+ *     (`--envelope legacy`), which is the path the rules document
+ *   - inter-agent channels (`ai_team` / `ai_council` model replies) — the
+ *     inbound parse choke point only; the subagent boundary itself is a HOST
+ *     primitive this package cannot reach (see the report, § S0.0b)
+ *
+ * Anything not on that list is uncovered. Do not widen the list without a
+ * probe row to back it.
  */
 import { _classify } from '../lint_hidden_unicode.js';
 
