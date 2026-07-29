@@ -28,6 +28,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned } from './_lib/scan_scope.js';
+
 const HEADING_RE = /^(#{1,6})\s+(.+?)\s*$/;
 const IRON_LAW_RE = /\biron\s+laws?\b/i;
 const FENCE_RE = /^\s*```/;
@@ -247,7 +249,11 @@ function parse_args(argv: readonly string[]): Args {
         i++;
     }
     return {
-        paths: paths.length ? paths : ['.agent-src.uncondensed/rules'],
+        // ADR-051 moved rule authoring to `src/rules`. Until 2026-07-29 this
+        // default still named the retired container, so both CI call sites
+        // (consistency.yml + ci-fast.yml) resolved 0 targets and printed
+        // "✅ Iron Law prominence clean (0 file(s) scanned)" forever.
+        paths: paths.length ? paths : ['src/rules'],
         format,
         quiet,
     };
@@ -257,6 +263,21 @@ export function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     const targets = _resolve_targets(args.paths);
+
+    // Scope assertion: 0 targets means the root moved, not that the tree is
+    // clean. Without this the gate reported success while reading nothing.
+    try {
+        assertScanned({
+            gate: 'check_iron_law_prominence',
+            scanned: targets.length,
+            units: 'rule file(s)',
+            roots: args.paths,
+        });
+    } catch (exc) {
+        process.stderr.write(`❌  ${exc instanceof Error ? exc.message : String(exc)}\n`);
+        return 2;
+    }
+
     const all_violations: Violation[] = [];
     for (const p of targets) {
         if (!_exists(p)) {
