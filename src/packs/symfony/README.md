@@ -5,7 +5,7 @@
 Symfony framework patterns; depends on PHP at the artefact level.
 
 - **id**: `symfony`
-- **version**: `9.8.0`
+- **version**: `9.9.0`
 - **owner**: engineering
 - **requires**: php, engineering-base
 - **artefacts**: 3
