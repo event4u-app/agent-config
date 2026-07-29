@@ -24,15 +24,43 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const RULES_DIR_REL = '.agent-src.uncondensed/rules';
+/**
+ * Roots the four floor rules may live under, current first.
+ *
+ * `src/rules` is where they live since ADR-051. The legacy
+ * `.agent-src.uncondensed/rules` entry is RETAINED on purpose: this gate diffs
+ * a baseline against HEAD, and a baseline predating ADR-051 still names the old
+ * path — dropping it would blind the guard on exactly those ranges.
+ *
+ * Until 2026-07-29 the legacy path was the ONLY entry, so the guard compared
+ * diffs against paths that no longer exist and reported
+ * `✅ Safety-floor untouched (4 rules guarded)` no matter what was edited.
+ * `assertWatchlistResolves` below now makes that state a loud failure instead.
+ */
+const RULES_DIRS_REL = ['src/rules', '.agent-src.uncondensed/rules'] as const;
+/** Back-compat alias — the current authoring root. */
+const RULES_DIR_REL = RULES_DIRS_REL[0];
 const SAFETY_FLOOR = [
     'non-destructive-by-default.md',
     'commit-policy.md',
     'scope-control.md',
     'verify-before-complete.md',
 ] as const;
+
+/** Every repo-relative path this guard watches, across all known roots. */
+function _floor_candidates(): string[] {
+    return RULES_DIRS_REL.flatMap((dir) => SAFETY_FLOOR.map((name) => `${dir}/${name}`));
+}
+
+/** Which of `changed` are guarded floor files. Pure — the gate's whole decision. */
+function _breaches(changed: readonly string[]): string[] {
+    const floorPaths = new Set(_floor_candidates());
+    return changed.filter((p) => floorPaths.has(p)).sort();
+}
 
 function _run_git(args: string[]): [number, string] {
     const proc = spawnSync('git', args, {
@@ -48,8 +76,15 @@ function _baseline_exists(ref: string): boolean {
     return code === 0;
 }
 
-function _changed_files(baseline: string): string[] {
-    const [code, output] = _run_git(['diff', '--name-only', `${baseline}...HEAD`]);
+/**
+ * Files changed between `baseline` and `head`.
+ *
+ * `head` is parameterised (default `HEAD`) so the guard is verifiable against a
+ * real historical range — without it the only way to exercise a breach was to
+ * manufacture a commit, which is why this gate shipped untested for months.
+ */
+function _changed_files(baseline: string, head = 'HEAD'): string[] {
+    const [code, output] = _run_git(['diff', '--name-only', `${baseline}...${head}`]);
     if (code !== 0) {
         throw new Error(`git diff failed: ${output}`);
     }
@@ -61,11 +96,12 @@ function _changed_files(baseline: string): string[] {
 
 interface ParsedArgs {
     baseline: string;
+    head: string;
     skip_if_no_baseline: boolean;
 }
 
 function parse_args(argv: readonly string[]): ParsedArgs {
-    const args: ParsedArgs = { baseline: 'origin/main', skip_if_no_baseline: false };
+    const args: ParsedArgs = { baseline: 'origin/main', head: 'HEAD', skip_if_no_baseline: false };
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i]!;
         if (arg === '--baseline') {
@@ -79,11 +115,22 @@ function parse_args(argv: readonly string[]): ParsedArgs {
             args.baseline = v;
         } else if (arg.startsWith('--baseline=')) {
             args.baseline = arg.slice('--baseline='.length);
+        } else if (arg === '--head') {
+            const v = argv[++i];
+            if (v === undefined) {
+                process.stderr.write(
+                    'check_safety_floor_untouched: error: argument --head: expected one argument\n',
+                );
+                process.exit(2);
+            }
+            args.head = v;
+        } else if (arg.startsWith('--head=')) {
+            args.head = arg.slice('--head='.length);
         } else if (arg === '--skip-if-no-baseline') {
             args.skip_if_no_baseline = true;
         } else if (arg === '-h' || arg === '--help') {
             process.stdout.write(
-                'usage: check_safety_floor_untouched [-h] [--baseline BASELINE] [--skip-if-no-baseline]\n',
+                'usage: check_safety_floor_untouched [-h] [--baseline BASELINE] [--head HEAD] [--skip-if-no-baseline]\n',
             );
             process.exit(0);
         } else {
@@ -118,15 +165,30 @@ function main(): number {
 
     let changed: string[];
     try {
-        changed = _changed_files(args.baseline);
+        changed = _changed_files(args.baseline, args.head);
     } catch (exc) {
         const msg = exc instanceof Error ? exc.message : String(exc);
         process.stderr.write(`❌  ${msg}\n`);
         return 3;
     }
 
-    const floorPaths = new Set(SAFETY_FLOOR.map((name) => `${RULES_DIR_REL}/${name}`));
-    const breaches = changed.filter((p) => floorPaths.has(p)).sort();
+    // Scope assertion BEFORE the comparison: if none of the guarded paths exist
+    // on disk, this guard cannot fire and must say so loudly rather than
+    // reporting a clean floor it never looked at.
+    let guarded: string[];
+    try {
+        guarded = assertWatchlistResolves({
+            gate: 'check_safety_floor_untouched',
+            candidates: _floor_candidates(),
+            repoRoot: REPO_ROOT,
+        });
+    } catch (exc) {
+        const msg = exc instanceof Error ? exc.message : String(exc);
+        process.stderr.write(`❌  ${msg}\n`);
+        return 3;
+    }
+
+    const breaches = _breaches(changed);
 
     if (breaches.length) {
         process.stderr.write(
@@ -144,8 +206,11 @@ function main(): number {
         return 1;
     }
 
+    // Report the RESOLVED count, not the declared one — the old message printed
+    // `SAFETY_FLOOR.length` unconditionally, so it claimed 4 guarded rules while
+    // guarding zero.
     process.stdout.write(
-        `✅  Safety-floor untouched (${SAFETY_FLOOR.length} rules guarded ` +
+        `✅  Safety-floor untouched (${guarded.length} rule file(s) guarded ` +
             `vs. ${args.baseline}).\n`,
     );
     return 0;
@@ -177,4 +242,14 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
     process.exit(main());
 }
 
-export { REPO_ROOT, RULES_DIR_REL, SAFETY_FLOOR, _baseline_exists, _changed_files, main };
+export {
+    REPO_ROOT,
+    RULES_DIR_REL,
+    RULES_DIRS_REL,
+    SAFETY_FLOOR,
+    _baseline_exists,
+    _breaches,
+    _changed_files,
+    _floor_candidates,
+    main,
+};
