@@ -69,9 +69,12 @@ pressure corpus. Add no new security layer.
 
 ## Blockers
 
-- `golden-set-freeze` — the labelled corpus is frozen and hashed **before** any
-  detector runs against it. No tuning against the test split. Blocks Phase 2
-  onward.
+- ~~`golden-set-freeze`~~ — **RESOLVED 2026-07-29.** The labelled corpus is
+  frozen and hashed **before** any detector runs against it. No tuning against
+  the test split. (Was: blocks Phase 2 onward.) Satisfied by ordering, not by
+  waiver: `internal/bench/corpora/encoding-channels/` was emitted and its
+  sha256 manifest committed while Phase 3 was still unwritten, and
+  `encoding_corpus --check` is the standing drift gate.
 
 ## Phase 0 — Does the floor run at all? (this outranks the visible-layer question)
 
@@ -291,22 +294,58 @@ nothing shipped yet.
 
 ## Phase 2 — Frozen union corpus (gated on `golden-set-freeze`)
 
-- [ ] Own encoder emitting each **in-scope text-layer** channel with
+> `golden-set-freeze` **satisfied 2026-07-29**: the corpus was emitted, hashed
+> and committed **before** any Phase-3 detector existed, so there is nothing to
+> have tuned against. `encoding_corpus --check` is the standing freeze check.
+
+- [x] Own encoder emitting each **in-scope text-layer** channel with
       ground-truth labels. Own code, built from the taxonomy, never from any
       source repo.
       *Verify:* the encoder round-trips each channel and the label matches what
       it encoded.
-- [ ] Positives N ≥ 300, balanced across in-scope channels over varied carrier
+      **DONE** — `src/scripts/encoding_corpus.ts`, 15 channel encoders, all own
+      code derived from this roadmap's own Phase-1 table. **Deterministic by
+      construction**: no `Math.random`, no clock, carrier and variant chosen by
+      index, so the sha256 freeze means something (a test asserts two builds are
+      byte-identical). Carriers are **neutral engineering prose, not injection
+      strings** — the detectors are structural, so carrier semantics cannot
+      affect recall, and this keeps the corpus from becoming a reusable attack
+      library (matching the payload-free stance of
+      `judge-injection-defense/fixtures/perturbation-taxonomy.json`).
+      Round-trip is asserted per entry: a positive whose encoder silently
+      no-opped would corrupt the recall measurement, so every positive is
+      checked to actually carry its channel's codepoint class.
+- [x] Positives N ≥ 300, balanced across in-scope channels over varied carrier
       text. Negatives M ≥ 300 drawn from **real** rule snippets, retrieval
       chunks and inter-agent messages, so the false-positive rate is measured
       against realistic traffic rather than toy text.
       *Verify:* the channel histogram is balanced; the negatives are traceable
       to real files.
-- [ ] Freeze: `sha256` manifest committed. Add a **scope-guard test** asserting
+      **DONE — 300 positives (exactly 20 per channel across 15 channels) and 353
+      negatives.** Balance is by round-robin construction, not by luck (a test
+      asserts min == max per channel). Negatives are real in-repo content of all
+      three named kinds: rule bodies (`src/rules`), retrieval chunks
+      (`agents/memory` — literally what `retrieve()` reads — plus the
+      second-brain retrieval store), and inter-agent messages (the
+      subagent-orchestration prompt templates + `src/subagents`). The emitter
+      **refuses to pad a shortfall** with invented text: the first run failed at
+      236 negatives, which is why several real dirs per kind are declared rather
+      than one. A test also asserts every negative is genuinely **clean** of all
+      15 channels — a real rule body that happened to carry a confusable would be
+      a mislabel, and any FP rate measured against it would be meaningless.
+- [x] Freeze: `sha256` manifest committed. Add a **scope-guard test** asserting
       the corpus contains **zero** file/network-layer channels, so it can never
       silently drift into claiming out-of-scope coverage.
       *Verify:* the guard fails when a deliberately out-of-scope fixture is
       added.
+      **DONE** — `manifest.json` carries the per-file sha256 plus the counts and
+      the channel histogram; `encoding_corpus --check` fails on any drift with an
+      explicit re-emit-or-restore message. Both falsification tests are present
+      and passing: **the scope guard fails when a `layer: file` PNG-metadata
+      fixture is spliced in**, and **the freeze check fails on a mutated
+      corpus** (then passes again after restore). Without those two, "all
+      entries are text" and "the corpus matches its hash" would both be
+      decoration.
 
 ## Phase 3 — Extend the sanitizer, do not rebuild it
 

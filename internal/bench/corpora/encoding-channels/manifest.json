@@ -1,0 +1,30 @@
+{
+  "corpus_version": 1,
+  "note": "Frozen labelled corpus for text-layer encoding channels. Regenerate ONLY via encoding_corpus --emit after a deliberate source change; the sha256 entries are the freeze. Detectors are never tuned against this corpus (golden-set-freeze).",
+  "counts": {
+    "positives": 300,
+    "negatives": 353,
+    "channels": 15
+  },
+  "channel_histogram": {
+    "zero-width": 20,
+    "zero-width-joiner-bom": 20,
+    "bidi-control": 20,
+    "invisible-tag-block": 20,
+    "deprecated-format": 20,
+    "private-use-area": 20,
+    "control-char": 20,
+    "invisible-filler": 20,
+    "variation-selector-run": 20,
+    "confusable-cyrillic": 20,
+    "confusable-greek": 20,
+    "math-alphanumeric": 20,
+    "fullwidth-forms": 20,
+    "combining-mark-run": 20,
+    "punycode-idn": 20
+  },
+  "sha256": {
+    "positives.jsonl": "47932617159c8eee464eda2a23f8a40835254d0a38e17e3132acb304c2e573e2",
+    "negatives.jsonl": "a558162f6908972a1429caad962b889d44951dd5ac36bd7dac2d3ebb849daae6"
+  }
+}

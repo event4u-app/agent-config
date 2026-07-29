@@ -1,0 +1,300 @@
+{"id":"pos-zero-width-000","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"The migr​ation must remain reversible before it reaches production."}
+{"id":"pos-zero-width-001","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Ev‌ery list endpoint paginates or declares an explicit bound."}
+{"id":"pos-zero-width-002","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Ten‍ant scope is derived server side, never taken from the request body."}
+{"id":"pos-zero-width-003","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"In​dex parity is checked for each foreign key column."}
+{"id":"pos-zero-width-004","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"The dispa‌tcher refuses to advance without recorded audit findings."}
+{"id":"pos-zero-width-005","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Rete‍ntion policy is declared for every append only table."}
+{"id":"pos-zero-width-006","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Sec​rets rotate through the configured manager, not through committed files."}
+{"id":"pos-zero-width-007","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"A qu‌eue consumer retries with backoff and a dead letter path."}
+{"id":"pos-zero-width-008","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Resp‍onse shape changes require a documented deprecation window."}
+{"id":"pos-zero-width-009","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Ca​che invalidation happens inside the same transaction boundary."}
+{"id":"pos-zero-width-010","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"The sche‌duler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-zero-width-011","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Struc‍tured logging omits every direct identifier by construction."}
+{"id":"pos-zero-width-012","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Fea​ture flags default to the safe branch when the store is unreachable."}
+{"id":"pos-zero-width-013","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Backg‌round jobs are idempotent because delivery is at least once."}
+{"id":"pos-zero-width-014","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"The hea‍lth endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-zero-width-015","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Sch​ema migrations expand first and contract in a later release."}
+{"id":"pos-zero-width-016","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Author‌ization is asserted per object, not once per session."}
+{"id":"pos-zero-width-017","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Upl‍oads are validated server side against an allow list of types."}
+{"id":"pos-zero-width-018","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Outb​ound requests carry a timeout and a bounded retry budget."}
+{"id":"pos-zero-width-019","label":"positive","channel":"zero-width","layer":"text","disposition":"strip","text":"Te‌st data is generated from the schema so drift surfaces early."}
+{"id":"pos-zero-width-joiner-bom-000","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"The migr﻿ation must remain reversible before it reaches production."}
+{"id":"pos-zero-width-joiner-bom-001","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Ev⁠ery list endpoint paginates or declares an explicit bound."}
+{"id":"pos-zero-width-joiner-bom-002","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Ten­ant scope is derived server side, never taken from the request body."}
+{"id":"pos-zero-width-joiner-bom-003","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"In﻿dex parity is checked for each foreign key column."}
+{"id":"pos-zero-width-joiner-bom-004","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"The dispa⁠tcher refuses to advance without recorded audit findings."}
+{"id":"pos-zero-width-joiner-bom-005","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Rete­ntion policy is declared for every append only table."}
+{"id":"pos-zero-width-joiner-bom-006","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Sec﻿rets rotate through the configured manager, not through committed files."}
+{"id":"pos-zero-width-joiner-bom-007","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"A qu⁠eue consumer retries with backoff and a dead letter path."}
+{"id":"pos-zero-width-joiner-bom-008","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Resp­onse shape changes require a documented deprecation window."}
+{"id":"pos-zero-width-joiner-bom-009","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Ca﻿che invalidation happens inside the same transaction boundary."}
+{"id":"pos-zero-width-joiner-bom-010","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"The sche⁠duler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-zero-width-joiner-bom-011","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Struc­tured logging omits every direct identifier by construction."}
+{"id":"pos-zero-width-joiner-bom-012","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Fea﻿ture flags default to the safe branch when the store is unreachable."}
+{"id":"pos-zero-width-joiner-bom-013","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Backg⁠round jobs are idempotent because delivery is at least once."}
+{"id":"pos-zero-width-joiner-bom-014","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"The hea­lth endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-zero-width-joiner-bom-015","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Sch﻿ema migrations expand first and contract in a later release."}
+{"id":"pos-zero-width-joiner-bom-016","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Author⁠ization is asserted per object, not once per session."}
+{"id":"pos-zero-width-joiner-bom-017","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Upl­oads are validated server side against an allow list of types."}
+{"id":"pos-zero-width-joiner-bom-018","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Outb﻿ound requests carry a timeout and a bounded retry budget."}
+{"id":"pos-zero-width-joiner-bom-019","label":"positive","channel":"zero-width-joiner-bom","layer":"text","disposition":"strip","text":"Te⁠st data is generated from the schema so drift surfaces early."}
+{"id":"pos-bidi-control-000","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‮The migration must remain reversible before it reaches production.‬"}
+{"id":"pos-bidi-control-001","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‭Every list endpoint paginates or declares an explicit bound.‬"}
+{"id":"pos-bidi-control-002","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁦Tenant scope is derived server side, never taken from the request body.‬"}
+{"id":"pos-bidi-control-003","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁧Index parity is checked for each foreign key column.‬"}
+{"id":"pos-bidi-control-004","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‮The dispatcher refuses to advance without recorded audit findings.‬"}
+{"id":"pos-bidi-control-005","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‭Retention policy is declared for every append only table.‬"}
+{"id":"pos-bidi-control-006","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁦Secrets rotate through the configured manager, not through committed files.‬"}
+{"id":"pos-bidi-control-007","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁧A queue consumer retries with backoff and a dead letter path.‬"}
+{"id":"pos-bidi-control-008","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‮Response shape changes require a documented deprecation window.‬"}
+{"id":"pos-bidi-control-009","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‭Cache invalidation happens inside the same transaction boundary.‬"}
+{"id":"pos-bidi-control-010","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁦The scheduler holds a lock so concurrent runs cannot overlap.‬"}
+{"id":"pos-bidi-control-011","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁧Structured logging omits every direct identifier by construction.‬"}
+{"id":"pos-bidi-control-012","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‮Feature flags default to the safe branch when the store is unreachable.‬"}
+{"id":"pos-bidi-control-013","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‭Background jobs are idempotent because delivery is at least once.‬"}
+{"id":"pos-bidi-control-014","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁦The health endpoint reports dependency status without leaking hostnames.‬"}
+{"id":"pos-bidi-control-015","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁧Schema migrations expand first and contract in a later release.‬"}
+{"id":"pos-bidi-control-016","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‮Authorization is asserted per object, not once per session.‬"}
+{"id":"pos-bidi-control-017","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"‭Uploads are validated server side against an allow list of types.‬"}
+{"id":"pos-bidi-control-018","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁦Outbound requests carry a timeout and a bounded retry budget.‬"}
+{"id":"pos-bidi-control-019","label":"positive","channel":"bidi-control","layer":"text","disposition":"strip","text":"⁧Test data is generated from the schema so drift surfaces early.‬"}
+{"id":"pos-invisible-tag-block-000","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"The migr󠁁ation must remain reversible before it reaches production."}
+{"id":"pos-invisible-tag-block-001","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Ev󠁂ery list endpoint paginates or declares an explicit bound."}
+{"id":"pos-invisible-tag-block-002","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Ten󠁃ant scope is derived server side, never taken from the request body."}
+{"id":"pos-invisible-tag-block-003","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"In󠁄dex parity is checked for each foreign key column."}
+{"id":"pos-invisible-tag-block-004","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"The dispa󠁅tcher refuses to advance without recorded audit findings."}
+{"id":"pos-invisible-tag-block-005","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Rete󠁆ntion policy is declared for every append only table."}
+{"id":"pos-invisible-tag-block-006","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Sec󠁇rets rotate through the configured manager, not through committed files."}
+{"id":"pos-invisible-tag-block-007","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"A qu󠁈eue consumer retries with backoff and a dead letter path."}
+{"id":"pos-invisible-tag-block-008","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Resp󠁉onse shape changes require a documented deprecation window."}
+{"id":"pos-invisible-tag-block-009","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Ca󠁊che invalidation happens inside the same transaction boundary."}
+{"id":"pos-invisible-tag-block-010","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"The sche󠁋duler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-invisible-tag-block-011","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Struc󠁌tured logging omits every direct identifier by construction."}
+{"id":"pos-invisible-tag-block-012","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Fea󠁍ture flags default to the safe branch when the store is unreachable."}
+{"id":"pos-invisible-tag-block-013","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Backg󠁎round jobs are idempotent because delivery is at least once."}
+{"id":"pos-invisible-tag-block-014","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"The hea󠁏lth endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-invisible-tag-block-015","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Sch󠁐ema migrations expand first and contract in a later release."}
+{"id":"pos-invisible-tag-block-016","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Author󠁑ization is asserted per object, not once per session."}
+{"id":"pos-invisible-tag-block-017","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Upl󠁒oads are validated server side against an allow list of types."}
+{"id":"pos-invisible-tag-block-018","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Outb󠁓ound requests carry a timeout and a bounded retry budget."}
+{"id":"pos-invisible-tag-block-019","label":"positive","channel":"invisible-tag-block","layer":"text","disposition":"strip","text":"Te󠁔st data is generated from the schema so drift surfaces early."}
+{"id":"pos-deprecated-format-000","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"The migr⁪ation must remain reversible before it reaches production."}
+{"id":"pos-deprecated-format-001","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Ev⁬ery list endpoint paginates or declares an explicit bound."}
+{"id":"pos-deprecated-format-002","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Ten⁮ant scope is derived server side, never taken from the request body."}
+{"id":"pos-deprecated-format-003","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"In￹dex parity is checked for each foreign key column."}
+{"id":"pos-deprecated-format-004","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"The dispa⁪tcher refuses to advance without recorded audit findings."}
+{"id":"pos-deprecated-format-005","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Rete⁬ntion policy is declared for every append only table."}
+{"id":"pos-deprecated-format-006","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Sec⁮rets rotate through the configured manager, not through committed files."}
+{"id":"pos-deprecated-format-007","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"A qu￹eue consumer retries with backoff and a dead letter path."}
+{"id":"pos-deprecated-format-008","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Resp⁪onse shape changes require a documented deprecation window."}
+{"id":"pos-deprecated-format-009","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Ca⁬che invalidation happens inside the same transaction boundary."}
+{"id":"pos-deprecated-format-010","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"The sche⁮duler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-deprecated-format-011","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Struc￹tured logging omits every direct identifier by construction."}
+{"id":"pos-deprecated-format-012","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Fea⁪ture flags default to the safe branch when the store is unreachable."}
+{"id":"pos-deprecated-format-013","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Backg⁬round jobs are idempotent because delivery is at least once."}
+{"id":"pos-deprecated-format-014","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"The hea⁮lth endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-deprecated-format-015","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Sch￹ema migrations expand first and contract in a later release."}
+{"id":"pos-deprecated-format-016","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Author⁪ization is asserted per object, not once per session."}
+{"id":"pos-deprecated-format-017","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Upl⁬oads are validated server side against an allow list of types."}
+{"id":"pos-deprecated-format-018","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Outb⁮ound requests carry a timeout and a bounded retry budget."}
+{"id":"pos-deprecated-format-019","label":"positive","channel":"deprecated-format","layer":"text","disposition":"strip","text":"Te￹st data is generated from the schema so drift surfaces early."}
+{"id":"pos-private-use-area-000","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"The migration must remain reversible before it reaches production."}
+{"id":"pos-private-use-area-001","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Every list endpoint paginates or declares an explicit bound."}
+{"id":"pos-private-use-area-002","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Tenant scope is derived server side, never taken from the request body."}
+{"id":"pos-private-use-area-003","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Index parity is checked for each foreign key column."}
+{"id":"pos-private-use-area-004","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"The dispatcher refuses to advance without recorded audit findings."}
+{"id":"pos-private-use-area-005","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Retention policy is declared for every append only table."}
+{"id":"pos-private-use-area-006","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Secrets rotate through the configured manager, not through committed files."}
+{"id":"pos-private-use-area-007","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"A queue consumer retries with backoff and a dead letter path."}
+{"id":"pos-private-use-area-008","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Response shape changes require a documented deprecation window."}
+{"id":"pos-private-use-area-009","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Cache invalidation happens inside the same transaction boundary."}
+{"id":"pos-private-use-area-010","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"The scheduler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-private-use-area-011","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Structured logging omits every direct identifier by construction."}
+{"id":"pos-private-use-area-012","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Feature flags default to the safe branch when the store is unreachable."}
+{"id":"pos-private-use-area-013","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Background jobs are idempotent because delivery is at least once."}
+{"id":"pos-private-use-area-014","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"The health endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-private-use-area-015","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Schema migrations expand first and contract in a later release."}
+{"id":"pos-private-use-area-016","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Authorization is asserted per object, not once per session."}
+{"id":"pos-private-use-area-017","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Uploads are validated server side against an allow list of types."}
+{"id":"pos-private-use-area-018","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Outbound requests carry a timeout and a bounded retry budget."}
+{"id":"pos-private-use-area-019","label":"positive","channel":"private-use-area","layer":"text","disposition":"strip","text":"Test data is generated from the schema so drift surfaces early."}
+{"id":"pos-control-char-000","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"The migr\u0001ation must remain reversible before it reaches production."}
+{"id":"pos-control-char-001","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Ev\u000bery list endpoint paginates or declares an explicit bound."}
+{"id":"pos-control-char-002","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Ten\u001bant scope is derived server side, never taken from the request body."}
+{"id":"pos-control-char-003","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Index parity is checked for each foreign key column."}
+{"id":"pos-control-char-004","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"The dispatcher refuses to advance without recorded audit findings."}
+{"id":"pos-control-char-005","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Retention policy is declared for every append only table."}
+{"id":"pos-control-char-006","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Sec\u0001rets rotate through the configured manager, not through committed files."}
+{"id":"pos-control-char-007","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"A qu\u000beue consumer retries with backoff and a dead letter path."}
+{"id":"pos-control-char-008","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Resp\u001bonse shape changes require a documented deprecation window."}
+{"id":"pos-control-char-009","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Cache invalidation happens inside the same transaction boundary."}
+{"id":"pos-control-char-010","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"The scheduler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-control-char-011","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Structured logging omits every direct identifier by construction."}
+{"id":"pos-control-char-012","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Fea\u0001ture flags default to the safe branch when the store is unreachable."}
+{"id":"pos-control-char-013","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Backg\u000bround jobs are idempotent because delivery is at least once."}
+{"id":"pos-control-char-014","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"The hea\u001blth endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-control-char-015","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Schema migrations expand first and contract in a later release."}
+{"id":"pos-control-char-016","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Authorization is asserted per object, not once per session."}
+{"id":"pos-control-char-017","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Uploads are validated server side against an allow list of types."}
+{"id":"pos-control-char-018","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Outb\u0001ound requests carry a timeout and a bounded retry budget."}
+{"id":"pos-control-char-019","label":"positive","channel":"control-char","layer":"text","disposition":"strip","text":"Te\u000bst data is generated from the schema so drift surfaces early."}
+{"id":"pos-invisible-filler-000","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"The migrㅤation must remain reversible before it reaches production."}
+{"id":"pos-invisible-filler-001","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Evᅟery list endpoint paginates or declares an explicit bound."}
+{"id":"pos-invisible-filler-002","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Tenᅠant scope is derived server side, never taken from the request body."}
+{"id":"pos-invisible-filler-003","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Inㅤdex parity is checked for each foreign key column."}
+{"id":"pos-invisible-filler-004","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"The dispaᅟtcher refuses to advance without recorded audit findings."}
+{"id":"pos-invisible-filler-005","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Reteᅠntion policy is declared for every append only table."}
+{"id":"pos-invisible-filler-006","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Secㅤrets rotate through the configured manager, not through committed files."}
+{"id":"pos-invisible-filler-007","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"A quᅟeue consumer retries with backoff and a dead letter path."}
+{"id":"pos-invisible-filler-008","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Respᅠonse shape changes require a documented deprecation window."}
+{"id":"pos-invisible-filler-009","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Caㅤche invalidation happens inside the same transaction boundary."}
+{"id":"pos-invisible-filler-010","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"The scheᅟduler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-invisible-filler-011","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Strucᅠtured logging omits every direct identifier by construction."}
+{"id":"pos-invisible-filler-012","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Feaㅤture flags default to the safe branch when the store is unreachable."}
+{"id":"pos-invisible-filler-013","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Backgᅟround jobs are idempotent because delivery is at least once."}
+{"id":"pos-invisible-filler-014","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"The heaᅠlth endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-invisible-filler-015","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Schㅤema migrations expand first and contract in a later release."}
+{"id":"pos-invisible-filler-016","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Authorᅟization is asserted per object, not once per session."}
+{"id":"pos-invisible-filler-017","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Uplᅠoads are validated server side against an allow list of types."}
+{"id":"pos-invisible-filler-018","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Outbㅤound requests carry a timeout and a bounded retry budget."}
+{"id":"pos-invisible-filler-019","label":"positive","channel":"invisible-filler","layer":"text","disposition":"strip","text":"Teᅟst data is generated from the schema so drift surfaces early."}
+{"id":"pos-variation-selector-run-000","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"The migr󠄀󠄁󠄂ation must remain reversible before it reaches production."}
+{"id":"pos-variation-selector-run-001","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Ev󠄁󠄂󠄃󠄄ery list endpoint paginates or declares an explicit bound."}
+{"id":"pos-variation-selector-run-002","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Ten󠄂󠄃󠄄ant scope is derived server side, never taken from the request body."}
+{"id":"pos-variation-selector-run-003","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"In󠄃󠄄󠄅󠄆dex parity is checked for each foreign key column."}
+{"id":"pos-variation-selector-run-004","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"The dispa󠄄󠄅󠄆tcher refuses to advance without recorded audit findings."}
+{"id":"pos-variation-selector-run-005","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Rete󠄅󠄆󠄇󠄈ntion policy is declared for every append only table."}
+{"id":"pos-variation-selector-run-006","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Sec󠄆󠄇󠄈rets rotate through the configured manager, not through committed files."}
+{"id":"pos-variation-selector-run-007","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"A qu󠄇󠄈󠄉󠄊eue consumer retries with backoff and a dead letter path."}
+{"id":"pos-variation-selector-run-008","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Resp󠄀󠄁󠄂onse shape changes require a documented deprecation window."}
+{"id":"pos-variation-selector-run-009","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Ca󠄁󠄂󠄃󠄄che invalidation happens inside the same transaction boundary."}
+{"id":"pos-variation-selector-run-010","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"The sche󠄂󠄃󠄄duler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-variation-selector-run-011","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Struc󠄃󠄄󠄅󠄆tured logging omits every direct identifier by construction."}
+{"id":"pos-variation-selector-run-012","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Fea󠄄󠄅󠄆ture flags default to the safe branch when the store is unreachable."}
+{"id":"pos-variation-selector-run-013","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Backg󠄅󠄆󠄇󠄈round jobs are idempotent because delivery is at least once."}
+{"id":"pos-variation-selector-run-014","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"The hea󠄆󠄇󠄈lth endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-variation-selector-run-015","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Sch󠄇󠄈󠄉󠄊ema migrations expand first and contract in a later release."}
+{"id":"pos-variation-selector-run-016","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Author󠄀󠄁󠄂ization is asserted per object, not once per session."}
+{"id":"pos-variation-selector-run-017","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Upl󠄁󠄂󠄃󠄄oads are validated server side against an allow list of types."}
+{"id":"pos-variation-selector-run-018","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Outb󠄂󠄃󠄄ound requests carry a timeout and a bounded retry budget."}
+{"id":"pos-variation-selector-run-019","label":"positive","channel":"variation-selector-run","layer":"text","disposition":"flag","text":"Te󠄃󠄄󠄅󠄆st data is generated from the schema so drift surfaces early."}
+{"id":"pos-confusable-cyrillic-000","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Thе migration must remain reversible before it reaches production."}
+{"id":"pos-confusable-cyrillic-001","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"еvеry list endpoint paginates or declares an explicit bound."}
+{"id":"pos-confusable-cyrillic-002","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Tеnаnt scope is derived server side, never taken from the request body."}
+{"id":"pos-confusable-cyrillic-003","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"іndеx parity is checked for each foreign key column."}
+{"id":"pos-confusable-cyrillic-004","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Thе dispatcher refuses to advance without recorded audit findings."}
+{"id":"pos-confusable-cyrillic-005","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Rеtеntіоn policy is declared for every append only table."}
+{"id":"pos-confusable-cyrillic-006","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Sеcrеts rotate through the configured manager, not through committed files."}
+{"id":"pos-confusable-cyrillic-007","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"а queue consumer retries with backoff and a dead letter path."}
+{"id":"pos-confusable-cyrillic-008","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Rеspоnsе shape changes require a documented deprecation window."}
+{"id":"pos-confusable-cyrillic-009","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Cаchе invalidation happens inside the same transaction boundary."}
+{"id":"pos-confusable-cyrillic-010","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Thе scheduler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-confusable-cyrillic-011","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Structurеd logging omits every direct identifier by construction."}
+{"id":"pos-confusable-cyrillic-012","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Fеаturе flags default to the safe branch when the store is unreachable."}
+{"id":"pos-confusable-cyrillic-013","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Bаckgrоund jobs are idempotent because delivery is at least once."}
+{"id":"pos-confusable-cyrillic-014","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Thе health endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-confusable-cyrillic-015","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Schеmа migrations expand first and contract in a later release."}
+{"id":"pos-confusable-cyrillic-016","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"аuthоrіzаtіоn is asserted per object, not once per session."}
+{"id":"pos-confusable-cyrillic-017","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Uplоаds are validated server side against an allow list of types."}
+{"id":"pos-confusable-cyrillic-018","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"оutbоund requests carry a timeout and a bounded retry budget."}
+{"id":"pos-confusable-cyrillic-019","label":"positive","channel":"confusable-cyrillic","layer":"text","disposition":"flag","text":"Tеst data is generated from the schema so drift surfaces early."}
+{"id":"pos-confusable-greek-000","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"The migrαtiοn must remain reversible before it reaches production."}
+{"id":"pos-confusable-greek-001","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Every list endροint paginates or declares an explicit bound."}
+{"id":"pos-confusable-greek-002","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Tenαnt scope is derived server side, never taken from the request body."}
+{"id":"pos-confusable-greek-003","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Index ραrity is checked for each foreign key column."}
+{"id":"pos-confusable-greek-004","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"The disραtcher refuses to advance without recorded audit findings."}
+{"id":"pos-confusable-greek-005","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Retentiοn policy is declared for every append only table."}
+{"id":"pos-confusable-greek-006","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Secrets rοtαte through the configured manager, not through committed files."}
+{"id":"pos-confusable-greek-007","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"α queue consumer retries with backoff and a dead letter path."}
+{"id":"pos-confusable-greek-008","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Resροnse shape changes require a documented deprecation window."}
+{"id":"pos-confusable-greek-009","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Cαche invalidation happens inside the same transaction boundary."}
+{"id":"pos-confusable-greek-010","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"The scheduler hοlds a lock so concurrent runs cannot overlap."}
+{"id":"pos-confusable-greek-011","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Structured lοgging omits every direct identifier by construction."}
+{"id":"pos-confusable-greek-012","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Feαture flags default to the safe branch when the store is unreachable."}
+{"id":"pos-confusable-greek-013","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Bαckgrοund jobs are idempotent because delivery is at least once."}
+{"id":"pos-confusable-greek-014","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"The heαlth endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-confusable-greek-015","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Schemα migrations expand first and contract in a later release."}
+{"id":"pos-confusable-greek-016","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"αuthοrizαtiοn is asserted per object, not once per session."}
+{"id":"pos-confusable-greek-017","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Uρlοαds are validated server side against an allow list of types."}
+{"id":"pos-confusable-greek-018","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"οutbοund requests carry a timeout and a bounded retry budget."}
+{"id":"pos-confusable-greek-019","label":"positive","channel":"confusable-greek","layer":"text","disposition":"flag","text":"Test dαtα is generated from the schema so drift surfaces early."}
+{"id":"pos-math-alphanumeric-000","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"The 𝗆𝗂𝗀𝗋𝖺𝗍𝗂𝗈𝗇 must remain reversible before it reaches production."}
+{"id":"pos-math-alphanumeric-001","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖤𝗏𝖾𝗋𝗒 list endpoint paginates or declares an explicit bound."}
+{"id":"pos-math-alphanumeric-002","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖳𝖾𝗇𝖺𝗇𝗍 scope is derived server side, never taken from the request body."}
+{"id":"pos-math-alphanumeric-003","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖨𝗇𝖽𝖾𝗑 parity is checked for each foreign key column."}
+{"id":"pos-math-alphanumeric-004","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"The 𝖽𝗂𝗌𝗉𝖺𝗍𝖼𝗁𝖾𝗋 refuses to advance without recorded audit findings."}
+{"id":"pos-math-alphanumeric-005","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖱𝖾𝗍𝖾𝗇𝗍𝗂𝗈𝗇 policy is declared for every append only table."}
+{"id":"pos-math-alphanumeric-006","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖲𝖾𝖼𝗋𝖾𝗍𝗌 rotate through the configured manager, not through committed files."}
+{"id":"pos-math-alphanumeric-007","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"A 𝗊𝗎𝖾𝗎𝖾 consumer retries with backoff and a dead letter path."}
+{"id":"pos-math-alphanumeric-008","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖱𝖾𝗌𝗉𝗈𝗇𝗌𝖾 shape changes require a documented deprecation window."}
+{"id":"pos-math-alphanumeric-009","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖢𝖺𝖼𝗁𝖾 invalidation happens inside the same transaction boundary."}
+{"id":"pos-math-alphanumeric-010","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"The 𝗌𝖼𝗁𝖾𝖽𝗎𝗅𝖾𝗋 holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-math-alphanumeric-011","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖲𝗍𝗋𝗎𝖼𝗍𝗎𝗋𝖾𝖽 logging omits every direct identifier by construction."}
+{"id":"pos-math-alphanumeric-012","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖥𝖾𝖺𝗍𝗎𝗋𝖾 flags default to the safe branch when the store is unreachable."}
+{"id":"pos-math-alphanumeric-013","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖡𝖺𝖼𝗄𝗀𝗋𝗈𝗎𝗇𝖽 jobs are idempotent because delivery is at least once."}
+{"id":"pos-math-alphanumeric-014","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"The 𝗁𝖾𝖺𝗅𝗍𝗁 endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-math-alphanumeric-015","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖲𝖼𝗁𝖾𝗆𝖺 migrations expand first and contract in a later release."}
+{"id":"pos-math-alphanumeric-016","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖠𝗎𝗍𝗁𝗈𝗋𝗂𝗓𝖺𝗍𝗂𝗈𝗇 is asserted per object, not once per session."}
+{"id":"pos-math-alphanumeric-017","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖴𝗉𝗅𝗈𝖺𝖽𝗌 are validated server side against an allow list of types."}
+{"id":"pos-math-alphanumeric-018","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖮𝗎𝗍𝖻𝗈𝗎𝗇𝖽 requests carry a timeout and a bounded retry budget."}
+{"id":"pos-math-alphanumeric-019","label":"positive","channel":"math-alphanumeric","layer":"text","disposition":"flag","text":"𝖳𝖾𝗌𝗍 data is generated from the schema so drift surfaces early."}
+{"id":"pos-fullwidth-forms-000","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"The ｍｉｇｒａｔｉｏｎ must remain reversible before it reaches production."}
+{"id":"pos-fullwidth-forms-001","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｅｖｅｒｙ list endpoint paginates or declares an explicit bound."}
+{"id":"pos-fullwidth-forms-002","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｔｅｎａｎｔ scope is derived server side, never taken from the request body."}
+{"id":"pos-fullwidth-forms-003","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｉｎｄｅｘ parity is checked for each foreign key column."}
+{"id":"pos-fullwidth-forms-004","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"The ｄｉｓｐａｔｃｈｅｒ refuses to advance without recorded audit findings."}
+{"id":"pos-fullwidth-forms-005","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｒｅｔｅｎｔｉｏｎ policy is declared for every append only table."}
+{"id":"pos-fullwidth-forms-006","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｓｅｃｒｅｔｓ rotate through the configured manager, not through committed files."}
+{"id":"pos-fullwidth-forms-007","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"A ｑｕｅｕｅ consumer retries with backoff and a dead letter path."}
+{"id":"pos-fullwidth-forms-008","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｒｅｓｐｏｎｓｅ shape changes require a documented deprecation window."}
+{"id":"pos-fullwidth-forms-009","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｃａｃｈｅ invalidation happens inside the same transaction boundary."}
+{"id":"pos-fullwidth-forms-010","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"The ｓｃｈｅｄｕｌｅｒ holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-fullwidth-forms-011","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｓｔｒｕｃｔｕｒｅｄ logging omits every direct identifier by construction."}
+{"id":"pos-fullwidth-forms-012","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｆｅａｔｕｒｅ flags default to the safe branch when the store is unreachable."}
+{"id":"pos-fullwidth-forms-013","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｂａｃｋｇｒｏｕｎｄ jobs are idempotent because delivery is at least once."}
+{"id":"pos-fullwidth-forms-014","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"The ｈｅａｌｔｈ endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-fullwidth-forms-015","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｓｃｈｅｍａ migrations expand first and contract in a later release."}
+{"id":"pos-fullwidth-forms-016","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ａｕｔｈｏｒｉｚａｔｉｏｎ is asserted per object, not once per session."}
+{"id":"pos-fullwidth-forms-017","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｕｐｌｏａｄｓ are validated server side against an allow list of types."}
+{"id":"pos-fullwidth-forms-018","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｏｕｔｂｏｕｎｄ requests carry a timeout and a bounded retry budget."}
+{"id":"pos-fullwidth-forms-019","label":"positive","channel":"fullwidth-forms","layer":"text","disposition":"flag","text":"Ｔｅｓｔ data is generated from the schema so drift surfaces early."}
+{"id":"pos-combining-mark-run-000","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"The migŕ́́́́́́́ation must remain reversible before it reaches production."}
+{"id":"pos-combining-mark-run-001","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Ev́́́́́́́́́ery list endpoint paginates or declares an explicit bound."}
+{"id":"pos-combining-mark-run-002","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Teń́́́́́́́́́ant scope is derived server side, never taken from the request body."}
+{"id":"pos-combining-mark-run-003","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Iń́́́́́́́́́́dex parity is checked for each foreign key column."}
+{"id":"pos-combining-mark-run-004","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"The dispá́́́́́́́́́́́tcher refuses to advance without recorded audit findings."}
+{"id":"pos-combining-mark-run-005","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Reté́́́́́́́́́́́́ntion policy is declared for every append only table."}
+{"id":"pos-combining-mark-run-006","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Seć́́́́́́́́́́́́́rets rotate through the configured manager, not through committed files."}
+{"id":"pos-combining-mark-run-007","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"A qú́́́́́́́́́́́́́́eue consumer retries with backoff and a dead letter path."}
+{"id":"pos-combining-mark-run-008","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Resṕ́́́́́́́onse shape changes require a documented deprecation window."}
+{"id":"pos-combining-mark-run-009","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Cá́́́́́́́́che invalidation happens inside the same transaction boundary."}
+{"id":"pos-combining-mark-run-010","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"The sché́́́́́́́́́duler holds a lock so concurrent runs cannot overlap."}
+{"id":"pos-combining-mark-run-011","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Struć́́́́́́́́́́tured logging omits every direct identifier by construction."}
+{"id":"pos-combining-mark-run-012","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Feá́́́́́́́́́́́ture flags default to the safe branch when the store is unreachable."}
+{"id":"pos-combining-mark-run-013","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Backǵ́́́́́́́́́́́́round jobs are idempotent because delivery is at least once."}
+{"id":"pos-combining-mark-run-014","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"The heá́́́́́́́́́́́́́lth endpoint reports dependency status without leaking hostnames."}
+{"id":"pos-combining-mark-run-015","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Sch́́́́́́́́́́́́́́́ema migrations expand first and contract in a later release."}
+{"id":"pos-combining-mark-run-016","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Authoŕ́́́́́́́ization is asserted per object, not once per session."}
+{"id":"pos-combining-mark-run-017","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Upĺ́́́́́́́́oads are validated server side against an allow list of types."}
+{"id":"pos-combining-mark-run-018","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Outb́́́́́́́́́́ound requests carry a timeout and a bounded retry budget."}
+{"id":"pos-combining-mark-run-019","label":"positive","channel":"combining-mark-run","layer":"text","disposition":"flag","text":"Té́́́́́́́́́́st data is generated from the schema so drift surfaces early."}
+{"id":"pos-punycode-idn-000","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"The migration must remain reversible before it reaches production. see xn--80ak6aa92e.example for detail"}
+{"id":"pos-punycode-idn-001","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Every list endpoint paginates or declares an explicit bound. see xn--e1afmkfd.example for detail"}
+{"id":"pos-punycode-idn-002","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Tenant scope is derived server side, never taken from the request body. see xn--mgbh0fb.example for detail"}
+{"id":"pos-punycode-idn-003","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Index parity is checked for each foreign key column. see xn--80ak6aa92e.example for detail"}
+{"id":"pos-punycode-idn-004","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"The dispatcher refuses to advance without recorded audit findings. see xn--e1afmkfd.example for detail"}
+{"id":"pos-punycode-idn-005","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Retention policy is declared for every append only table. see xn--mgbh0fb.example for detail"}
+{"id":"pos-punycode-idn-006","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Secrets rotate through the configured manager, not through committed files. see xn--80ak6aa92e.example for detail"}
+{"id":"pos-punycode-idn-007","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"A queue consumer retries with backoff and a dead letter path. see xn--e1afmkfd.example for detail"}
+{"id":"pos-punycode-idn-008","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Response shape changes require a documented deprecation window. see xn--mgbh0fb.example for detail"}
+{"id":"pos-punycode-idn-009","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Cache invalidation happens inside the same transaction boundary. see xn--80ak6aa92e.example for detail"}
+{"id":"pos-punycode-idn-010","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"The scheduler holds a lock so concurrent runs cannot overlap. see xn--e1afmkfd.example for detail"}
+{"id":"pos-punycode-idn-011","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Structured logging omits every direct identifier by construction. see xn--mgbh0fb.example for detail"}
+{"id":"pos-punycode-idn-012","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Feature flags default to the safe branch when the store is unreachable. see xn--80ak6aa92e.example for detail"}
+{"id":"pos-punycode-idn-013","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Background jobs are idempotent because delivery is at least once. see xn--e1afmkfd.example for detail"}
+{"id":"pos-punycode-idn-014","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"The health endpoint reports dependency status without leaking hostnames. see xn--mgbh0fb.example for detail"}
+{"id":"pos-punycode-idn-015","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Schema migrations expand first and contract in a later release. see xn--80ak6aa92e.example for detail"}
+{"id":"pos-punycode-idn-016","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Authorization is asserted per object, not once per session. see xn--e1afmkfd.example for detail"}
+{"id":"pos-punycode-idn-017","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Uploads are validated server side against an allow list of types. see xn--mgbh0fb.example for detail"}
+{"id":"pos-punycode-idn-018","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Outbound requests carry a timeout and a bounded retry budget. see xn--80ak6aa92e.example for detail"}
+{"id":"pos-punycode-idn-019","label":"positive","channel":"punycode-idn","layer":"text","disposition":"flag","text":"Test data is generated from the schema so drift surfaces early. see xn--e1afmkfd.example for detail"}
