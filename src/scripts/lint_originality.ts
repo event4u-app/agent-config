@@ -373,7 +373,7 @@ function _changed(files: string[]): { pairs: Pair[]; fails: number } {
     const seen = new Set<string>();
     const record = (a: Artifact, b: Artifact): void => {
         if (a.relpath === b.relpath) return;
-        const key = [a.relpath, b.relpath].sort().join(' ');
+        const key = [a.relpath, b.relpath].sort().join('\0');
         if (seen.has(key)) return;
         const o = overlap(a, b);
         if (o >= WARN) {

@@ -838,7 +838,7 @@ function lint(): number {
                 } else {
                     // fm.get("id") is None → set contains None; an id-less ticket
                     // file. Represent the Python None membership separately.
-                    file_ids.add(' __none__');
+                    file_ids.add('\0__none__');
                 }
             }
         }

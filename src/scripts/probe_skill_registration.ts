@@ -416,7 +416,7 @@ export function run_probe(opts?: {
     // Group by (tool, skill_id). ≥ 2 entries → DUPLICATE.
     const by_key = new Map<string, Registration[]>();
     for (const reg of result.registrations) {
-        const k = `${reg.tool} ${reg.skill_id}`;
+        const k = `${reg.tool}\0${reg.skill_id}`;
         const arr = by_key.get(k) ?? [];
         arr.push(reg);
         by_key.set(k, arr);
@@ -426,7 +426,7 @@ export function run_probe(opts?: {
         if (regs.length < 2) {
             continue;
         }
-        const [tool, skill_id] = composite.split(' ');
+        const [tool, skill_id] = composite.split('\0');
         const key = `${tool}:${skill_id}`;
         result.duplicates.set(key, regs);
         const hashes = new Set<string>();

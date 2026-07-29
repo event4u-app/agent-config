@@ -336,7 +336,7 @@ function _classify_token_violations(
     tokens: Record<string, Any>,
 ): [Record<string, Any>[], Record<string, Any>[]] {
     const matched: Record<string, Any>[] = [];
-    // Insertion-ordered map keyed by `${category} ${value}` to mirror the
+    // Insertion-ordered map keyed by `${category}\0${value}` to mirror the
     // Python `dict[tuple[str, str], int]` insertion order.
     const unmatched_counts = new Map<string, { category: string; value: string; count: number }>();
     for (const finding of findings) {
@@ -356,7 +356,7 @@ function _classify_token_violations(
             matched.push(finding);
             continue;
         }
-        const key = `${category} ${value}`;
+        const key = `${category}\0${value}`;
         const existing = unmatched_counts.get(key);
         if (existing) {
             existing.count += 1;

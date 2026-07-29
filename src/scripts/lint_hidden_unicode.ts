@@ -30,6 +30,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as sl from './_lib/security_lint.js';
@@ -261,6 +262,191 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
     return out;
 }
 
+// ---------------------------------------------------------------------------
+// Source-file pass — raw C0 control bytes make a text file INVISIBLE to tools
+// ---------------------------------------------------------------------------
+//
+// The `.md` corpus pass above defends the model's eyes. This pass defends the
+// *reviewer's* and the *gate's* eyes, which is a different failure.
+//
+// A raw control byte (NUL above all) in a text-intended source file makes
+// `file(1)`, `grep`, and every tool that sniffs for binary content classify the
+// file as binary and SKIP IT SILENTLY. A linter grepping such a file reads
+// nothing and reports clean; an agent gathering evidence concludes the code
+// does not exist. That is indistinguishable from a pass, which is the point.
+//
+// Discovered the hard way: `road-to-runtime-encoding-hardening` was authored on
+// the premise that `memory_lookup.ts` had "zero imports" and that the sanitize
+// floor therefore ran nowhere. The file simply carried a raw NUL as a composite
+// map-key separator, so `grep` never read it. The premise was a measurement
+// artifact. See `agents/evidence/reports/nul-byte-source-census.md`.
+//
+// Precision by construction — this pass flags ONLY raw C0 controls, never the
+// invisible/confusable classes `_scan` owns. In a `.ts` file a real bidi or
+// zero-width codepoint is usually a deliberate test fixture or a regex
+// character class (this repo has several, legitimately), so flagging those here
+// would demand an allowlist that grows until the gate is worthless. A raw
+// control byte has NO legitimate use in text-intended source: the language
+// escape (`\0`, `\x01`) compiles to the identical runtime string and keeps the
+// file readable by tools. The fix is always available, so the false-positive
+// rate is structurally zero rather than merely low.
+
+/** Extensions whose content is legitimately binary — never flagged. */
+const _BINARY_EXT: ReadonlySet<string> = new Set([
+    'png', 'jpg', 'jpeg', 'gif', 'ico', 'webp', 'avif', 'bmp', 'tiff',
+    'pdf', 'woff', 'woff2', 'ttf', 'otf', 'eot',
+    'zip', 'gz', 'tgz', 'bz2', 'xz', 'zst', '7z', 'rar',
+    'wasm', 'mp3', 'mp4', 'wav', 'ogg', 'webm', 'mov', 'avi',
+    'so', 'dylib', 'dll', 'node', 'a', 'o', 'exe',
+    'jar', 'class', 'pyc', 'pyo',
+    'db', 'sqlite', 'sqlite3', 'bin', 'dat',
+    'docx', 'xlsx', 'pptx', 'doc', 'xls', 'ppt', 'odt', 'ods', 'odp',
+]);
+
+/**
+ * Generated trees — skipped, because this is an AUTHORING rule.
+ *
+ * `dist/` and the per-tool projections are outputs of `src/` (see the
+ * `source-of-truth` rule: a projection is never edited by hand). Flagging a
+ * control byte there would point the author at a file they must not touch, and
+ * `dist/install/*.mjs` is a bundler artifact whose bytes are not even
+ * hand-authorable. Fix the source; the projection follows on `task sync`.
+ */
+const _GENERATED_PREFIXES: readonly string[] = [
+    'dist/',
+    '.augment/',
+    '.claude/',
+    '.cursor/',
+    '.clinerules/',
+    // Verbatim captured tool output, not authored text. These are RECORDINGS:
+    // escaping a control byte inside one would falsify the record it exists to
+    // preserve. If a capture needs to stay grep-readable, the fix is to escape
+    // at capture time — never to edit the artifact afterwards.
+    'agents/evidence/analysis/',
+    // The frozen hostile-encoding corpus. Its positives ARE raw control
+    // characters — that is the thing under test, so flagging them would demand
+    // escaping the fixtures and thereby delete the test. The corpus has its own,
+    // stronger integrity controls: a sha256 freeze plus a scope-guard test that
+    // is itself falsified by an out-of-scope fixture. Excluded here because it
+    // is DATA, on the same principle as the captures above.
+    'internal/bench/corpora/encoding-channels/',
+];
+
+function _isGenerated(rel: string): boolean {
+    return _GENERATED_PREFIXES.some((p) => rel.startsWith(p));
+}
+
+/**
+ * True for a raw control CODEPOINT that is not benign whitespace.
+ *
+ * Codepoints, not bytes, and that distinction is the whole point. A first cut
+ * of this pass tested bytes ≤ 0x1F and let two classes through: DEL (U+007F,
+ * a single byte above the range) and the C1 controls (U+0080–009F, which encode
+ * to a two-byte UTF-8 sequence containing no byte ≤ 0x1F). Both make `file(1)`
+ * and git classify a file as binary — `tests/scripts/retrieval_sanitize.test.ts`
+ * carried U+007F and U+009F, rendered as `Bin` in `git diff`, unreviewable on a
+ * PR, and passed the byte-level check. A gate that misses the thing it exists to
+ * catch is the failure this whole roadmap is about, so the range now matches
+ * `_classify`'s: C0 + DEL + C1, minus tab / LF / CR.
+ */
+function _isRawControlCodepoint(cp: number): boolean {
+    if (cp === 0x09 || cp === 0x0a || cp === 0x0d) return false;
+    return cp <= 0x1f || (cp >= 0x7f && cp <= 0x9f);
+}
+
+function _extensionOf(rel: string): string {
+    const base = rel.slice(rel.lastIndexOf('/') + 1);
+    const dot = base.lastIndexOf('.');
+    return dot <= 0 ? '' : base.slice(dot + 1).toLowerCase();
+}
+
+/** Tracked files, or `null` when git is unavailable (then the pass no-ops). */
+function _trackedFiles(): string[] | null {
+    const res = spawnSync('git', ['ls-files', '-z'], {
+        cwd: sl.ROOT,
+        maxBuffer: 64 * 1024 * 1024,
+    });
+    if (res.status !== 0 || res.stdout === null) return null;
+    return res.stdout
+        .toString('utf-8')
+        .split('\0')
+        .filter((p) => p !== '');
+}
+
+/**
+ * Tracked files this pass is responsible for — text-intended, non-generated.
+ *
+ * Exported so a green run can state HOW MANY files it actually read. A check
+ * that reports "clean" without naming its scope is indistinguishable from a
+ * check whose scope matched nothing, which is the failure class this repo has
+ * already been bitten by.
+ */
+export function _eligibleSourceFiles(): string[] | null {
+    const tracked = _trackedFiles();
+    if (tracked === null) return null;
+    return tracked.filter((rel) => !_isGenerated(rel) && !_BINARY_EXT.has(_extensionOf(rel)));
+}
+
+/**
+ * Flag raw C0 control bytes in every tracked, text-intended file.
+ *
+ * `files` is injectable so the regression test can assert a synthetic NUL is
+ * caught — without that assertion there is no way to know this pass can still
+ * fail, which is the failure mode the whole check exists to prevent.
+ */
+export function _scanSourceControlBytes(files: readonly string[] | null = null): sl.Finding[] {
+    const tracked = files ?? _eligibleSourceFiles();
+    if (tracked === null) return [];
+    const out: sl.Finding[] = [];
+    for (const rel of tracked) {
+        // Re-applied here, not only in `_eligibleSourceFiles`: the exclusions
+        // are a property of the CHECK, so an explicit `files` list (a caller, a
+        // test) can never widen the scan past what the check is willing to
+        // claim. `_eligibleSourceFiles` exists to count, not to be the gate.
+        if (_isGenerated(rel)) continue;
+        if (_BINARY_EXT.has(_extensionOf(rel))) continue;
+        let data: Buffer;
+        try {
+            data = fs.readFileSync(path.join(sl.ROOT, rel));
+        } catch {
+            continue; // deleted, unreadable, or a submodule pointer
+        }
+        // A file that is not valid UTF-8 is binary regardless of its extension
+        // (an extensionless fixture, say) — not this check's business.
+        try {
+            new TextDecoder('utf-8', { fatal: true }).decode(data);
+        } catch {
+            continue;
+        }
+        // Iterate CODEPOINTS (the string is already known-valid UTF-8 here), so
+        // DEL and the C1 range are visible — see `_isRawControlCodepoint`.
+        let line = 1;
+        for (const ch of data.toString('utf-8')) {
+            const cp = ch.codePointAt(0);
+            if (cp === undefined) continue;
+            if (cp === 0x0a) {
+                line += 1;
+                continue;
+            }
+            if (!_isRawControlCodepoint(cp)) continue;
+            const hex = cp.toString(16).toUpperCase().padStart(2, '0');
+            out.push(
+                new sl.Finding(
+                    rel,
+                    line,
+                    CHECK,
+                    'HIGH',
+                    `raw control character U+${hex} in a text source — makes ` +
+                        'grep/file(1)/git treat this file as binary and skip it ' +
+                        'silently; use the language escape (e.g. \\0, \\x7F) instead',
+                    1.0,
+                ),
+            );
+        }
+    }
+    return out;
+}
+
 export function _sanitize(filePath: string): string {
     const raw = fs.readFileSync(filePath, 'utf-8');
     let cleaned = '';
@@ -321,6 +507,28 @@ export function main(argv: readonly string[] | null = null): number {
         if (hits.length > 0) {
             flagged.add(sf.path);
         }
+    }
+
+    // Second pass — raw control bytes in text-intended SOURCE files, which the
+    // `.md` corpus above does not cover. Deliberately not folded into
+    // `iter_corpus`: different scope (all tracked text files, not the `.md`
+    // corpus) and a narrower codepoint set (C0 only). `--fix` does not touch
+    // these — rewriting a source file's bytes is the author's call, and the
+    // finding names the escape to use.
+    const sourceFiles = _eligibleSourceFiles();
+    for (const h of _scanSourceControlBytes(sourceFiles)) {
+        findings.push(h);
+    }
+    if (!args.json) {
+        // State the scope on every run. A bare "clean" cannot be told apart
+        // from a pass whose file list was empty.
+        const n = sourceFiles === null ? 0 : sourceFiles.length;
+        process.stdout.write(
+            sourceFiles === null
+                ? '  source pass: SKIPPED — `git ls-files` unavailable, 0 files read for raw control bytes\n'
+                : `  source pass: ${n} tracked text file(s) read for raw C0 control bytes ` +
+                      '(generated trees + verbatim captures excluded)\n',
+        );
     }
 
     if (args.fix) {

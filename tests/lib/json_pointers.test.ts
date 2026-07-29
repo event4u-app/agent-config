@@ -342,7 +342,7 @@ describe("differential vs Python reference", () => {
       { b: 2, a: 1 }, // insertion order must not matter
       ["Grüße ☃", "naïve"], // non-ASCII → ensure_ascii escapes
       ["🎉 emoji", "line\nbreak\ttab"], // astral + control chars
-      ['quote " and backslash \\', ""],
+      ['quote " and backslash \\', "\x01\x1F"],
       { "key/with~specials": ["a", "b"], "ümlaut": 1.5 },
       [0.1, 2.5, -3, 100000],
       {},

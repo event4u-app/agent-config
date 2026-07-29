@@ -294,7 +294,7 @@ function _filter_known(violations: Any[], known: Any[]): Any[] {
  * scalars, mirroring Python tuple-equality in a JS `Set`.
  */
 function _keyOf(rule: Any, selector: Any): string {
-    return `${_tag(rule)} ${_tag(selector)}`;
+    return `${_tag(rule)}\0${_tag(selector)}`;
 }
 
 function _tag(v: Any): string {

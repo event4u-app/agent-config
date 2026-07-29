@@ -511,7 +511,7 @@ function splitlines(text: string): string[] {
 
 /** Python `str.rstrip()` (default whitespace, ASCII+Unicode). */
 function rstrip(s: string): string {
-    return s.replace(/[\s ]+$/u, '');
+    return s.replace(/[\s\u0085 ]+$/u, '');
 }
 
 /** Python `value.strip().strip("'\"")` tail (after `.strip()` already done). */

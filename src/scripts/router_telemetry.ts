@@ -595,7 +595,7 @@ export function aggregate_replay(
           // Skip kernel — always-on by definition, no signal.
           continue;
         }
-        seen_in_prompt.set(`${act.tier} ${String(rid)}`, [act.tier, String(rid)]);
+        seen_in_prompt.set(`${act.tier}\0${String(rid)}`, [act.tier, String(rid)]);
       }
       const activated_ids = new Set<string>();
       for (const [, rid] of seen_in_prompt.values()) {

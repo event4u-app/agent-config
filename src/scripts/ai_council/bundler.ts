@@ -263,7 +263,7 @@ export function bundle_diff_with_context(
     }
 
     const root = cwd ? cwd : '.';
-    const seen = new Set<string>(); // `${file} ${signature_line}`
+    const seen = new Set<string>(); // `${file}\0${signature_line}`
     // Preserve insertion order of first-seen files (Python dict order).
     const byFile = new Map<string, Array<[number, string]>>();
 
@@ -279,7 +279,7 @@ export function bundle_diff_with_context(
         if (sig === null) {
             continue;
         }
-        const key = `${filePath} ${sig[0]}`;
+        const key = `${filePath}\0${sig[0]}`;
         if (seen.has(key)) {
             continue;
         }
