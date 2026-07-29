@@ -29,13 +29,41 @@ unrelated roadmap's S0.1 step; no roadmap follows from it.
    guessed at a differently-named file). It strips the **invisible** class
    (bidi, zero-width, Unicode-Tag, deprecated-format — codepoint classes shared
    with `lint_hidden_unicode._classify`) plus C0/C1 controls, and caps fields at
-   8192 chars, on the `retrieve_v1` / `memory_get_v1` read surfaces. Its header
-   records a **deliberate** decision not to rewrite visible text, because that
-   would corrupt legitimate rule bodies and code snippets.
-   → invisible layer already covered at runtime; **visible layer
-   (homoglyph/confusable, math-alphanumeric, full-width, punycode) is not, by
-   design**. That design tension — normalise vs. corrupt — is the real question,
-   not "is there a sanitizer".
+   8192 chars. Its header records a **deliberate** decision not to rewrite
+   visible text, because that would corrupt legitimate rule bodies and code
+   snippets.
+   → the **visible layer** (homoglyph/confusable, math-alphanumeric,
+   full-width, punycode) is not covered, by design. That design tension —
+   normalise vs. corrupt — is a real question.
+
+   **1b. CORRECTION to my own first pass, and the more severe finding.** The
+   sentence above originally continued "…on the `retrieve_v1` / `memory_get_v1`
+   read surfaces", because that is what the sanitizer's header prose says. Read
+   as fact, it is exactly the error this whole harvest is about. Measured
+   instead:
+   - `retrieve_v1` and `memory_get_v1` are defined in `memory_lookup.ts`, and
+     **`memory_lookup.ts` has zero imports** — it cannot be applying the
+     sanitizer.
+   - `mcp_server/tools.ts` calls `memoryLookup.retrieve_v1(...)` and
+     `memoryLookup.memory_get_v1(...)` **directly**, with no sanitize call in
+     that file.
+   - The sanitizer's only production caller is `second_brain_retrieval.ts`.
+   - `tests/scripts/consumer_flow_wiring.test.ts` has a case literally titled
+     "sanitize floor **already applied on the read surface**" — and every
+     assertion in it calls `sanitize_text(...)` on a fixture directly. It proves
+     the **algorithm**; it does not exercise the read surface at all.
+
+   So the honest state is: **the algorithm is proven, its wiring into the
+   primary read path is unasserted and appears absent, and the header claims
+   otherwise.** This is the same class the active gates-that-can-fail work
+   named — proven through an injection seam, unproven at the default entry
+   point — applied to a security floor rather than a lint. It outranks the
+   visible-layer question, because "the invisible layer is already handled at
+   runtime" is only true on the paths that actually call the floor.
+
+   The drafts also named a **second** threat surface which I initially dropped:
+   the **inter-agent / subagent message channel**. It has no sanitizer at all —
+   no `sanitize` call anywhere under the hook or subagent scripts.
 2. **`lint_confusables.ts` + `lint_hidden_unicode.ts` are authoring-time CI
    linters** over `src/{skills,rules,agent-src,domains}/**/*.md`. They protect
    this package's own corpus, not runtime retrieved content. The
@@ -81,11 +109,14 @@ unrelated roadmap's S0.1 step; no roadmap follows from it.
 
 **Three roadmaps land, not six.**
 
-- **`road-to-visible-layer-encoding-hardening`** — absorbs conlang Track A +
+- **`road-to-runtime-encoding-hardening`** — absorbs conlang Track A +
   jailbreak-frontend T1 + the encoding-corpus consolidation. All three address
   one surface: text normalisation before the model reads it. Amendment-shaped:
   the infrastructure and the design decision exist; this closes the visible-layer
   gap against a verified channel taxonomy, with file/network stego scoped out.
+  **Re-scoped after finding 1b** — its first phase now proves the floor runs at
+  all, because the visible-layer question is meaningless on a surface the floor
+  never touches.
 - **`road-to-governance-invariants`** — absorbs the council anti-refusal
   question + the decomposition-laundering question. Both ask the same
   meta-question: *do the governance mechanisms degrade when the violation
@@ -176,6 +207,31 @@ against this package. Both spikes therefore run as falsifications whose expected
 outcome is a publishable null, and the roadmap says so up front rather than
 implying a known vulnerability.
 
+### Considered and deliberately left with no roadmap home
+
+Recorded so a later reader can tell "we decided against it" from "we missed it":
+
+- **A leaked host system prompt** from the same sweep. Useful only to understand
+  which host prompt these projections run *alongside* — but it is an unverified
+  leak, so nothing here may be hard-coded against it. Reference, never a
+  dependency.
+- **A Selenium-driven red-team harness** (permissively licensed, so no copyleft
+  obstacle) — but it drives a vendor chat UI and is stale; the technique does not
+  align with this package's bench. No adoption.
+- **A leaderboard/consensus mechanic** from the same author set: it is the
+  concrete implementation of the telemetry/leaderboard pattern the abliteration
+  draft already proposed and the council already rejected. Cross-reference only;
+  a separate roadmap would be duplicate planning twice over.
+- **Off-domain repos** in the sweep (image watermarking, personal projects): not
+  package-relevant. One of them is interesting to the maintainer personally and
+  is noted as such, not as work.
+- **A stale council question** about an unrelated roadmap's S0.1 disposition.
+  Verified closed: that roadmap is archived, with its commit stating the QA
+  matrix was recorded at closure. No action — checked, not assumed.
+- **A local benchmark artefact directory** left in the inbox (probe and question
+  YAMLs plus a run detail file). Not feedback prose; left where it was rather
+  than swept, since only the named feedback files were consumed.
+
 ### Also recorded from the sources (no build attached)
 
 - The highest-quality repo in the adversarial set independently ships this
@@ -261,6 +317,6 @@ rounds violate the first rung. Folded in directly, recorded here:
 
 ## See also
 
-- [`road-to-visible-layer-encoding-hardening`](../../roadmaps/road-to-visible-layer-encoding-hardening.md)
+- [`road-to-runtime-encoding-hardening`](../../roadmaps/road-to-runtime-encoding-hardening.md)
 - [`road-to-governance-invariants`](../../roadmaps/road-to-governance-invariants.md)
 - [`road-to-solution-minimalism`](../../roadmaps/road-to-solution-minimalism.md)
