@@ -12,6 +12,7 @@
  * clean text.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -20,14 +21,13 @@ import {
     MIN_NEGATIVES,
     MIN_POSITIVES,
     OUT_DIR,
-    buildManifest,
     buildNegatives,
     buildPositives,
     main,
+    verifyFreeze,
     type CorpusEntry,
+    type buildManifest,
 } from '../../src/scripts/encoding_corpus.js';
-
-const cp = (n: number): string => String.fromCodePoint(n);
 
 function readJsonl(name: string): CorpusEntry[] {
     const raw = fs.readFileSync(path.join(OUT_DIR, name), 'utf-8');
@@ -173,16 +173,27 @@ describe('encoding corpus — the freeze', () => {
     });
 
     it('a mutated corpus is detected by the freeze check', () => {
-        // Falsifies the freeze itself: if --check passed regardless of content,
-        // the manifest would be decoration.
-        const target = path.join(OUT_DIR, 'positives.jsonl');
-        const original = fs.readFileSync(target, 'utf-8');
+        // Falsifies the freeze itself: if the check passed regardless of
+        // content, the manifest would be decoration.
+        //
+        // Tampering happens on a THROWAWAY COPY, never on the committed corpus.
+        // The obvious version (mutate, assert, restore) races with any suite
+        // reading the same corpus — vitest runs files in parallel — and produced
+        // exactly that intermittent failure before this was fixed. An
+        // intermittently red gate is worse than a missing one.
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'enc-freeze-'));
         try {
-            fs.writeFileSync(target, original + JSON.stringify({ id: 'tamper' }) + '\n', 'utf-8');
-            expect(main(['--check'])).toBe(1);
+            for (const name of ['positives.jsonl', 'negatives.jsonl', 'manifest.json']) {
+                fs.copyFileSync(path.join(OUT_DIR, name), path.join(tmp, name));
+            }
+            expect(verifyFreeze(tmp)).toBe(0); // the copy starts faithful
+            const target = path.join(tmp, 'positives.jsonl');
+            fs.appendFileSync(target, JSON.stringify({ id: 'tamper' }) + '\n', 'utf-8');
+            expect(verifyFreeze(tmp)).toBe(1); // …and drift is caught
         } finally {
-            fs.writeFileSync(target, original, 'utf-8');
+            fs.rmSync(tmp, { recursive: true, force: true });
         }
+        // The committed corpus was never touched.
         expect(main(['--check'])).toBe(0);
     });
 });

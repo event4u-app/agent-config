@@ -434,8 +434,18 @@ function _emit(): number {
     return 0;
 }
 
-function _check(): number {
-    const manifestPath = path.join(OUT_DIR, 'manifest.json');
+/**
+ * Verify an on-disk corpus against its manifest.
+ *
+ * `dir` is injectable so a test can prove the drift detection actually fires
+ * **on a throwaway copy**. The obvious version of that test — tamper with the
+ * committed corpus, assert failure, restore — introduces a shared-state race:
+ * vitest runs files in parallel, so another suite reading the same corpus while
+ * it is briefly tampered fails intermittently. An intermittently red gate is
+ * worse than a missing one, so the seam exists to remove the mutation entirely.
+ */
+export function verifyFreeze(dir: string = OUT_DIR): number {
+    const manifestPath = path.join(dir, 'manifest.json');
     if (!fs.existsSync(manifestPath)) {
         process.stderr.write('error: manifest.json missing — run encoding_corpus --emit\n');
         return 1;
@@ -443,7 +453,7 @@ function _check(): number {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as Manifest;
     let bad = 0;
     for (const [name, want] of Object.entries(manifest.sha256)) {
-        const got = _sha256(fs.readFileSync(path.join(OUT_DIR, name), 'utf-8'));
+        const got = _sha256(fs.readFileSync(path.join(dir, name), 'utf-8'));
         if (got !== want) {
             process.stderr.write(`❌  ${name}: sha256 drift\n    manifest ${want}\n    on disk  ${got}\n`);
             bad += 1;
@@ -467,7 +477,7 @@ export function main(argv: readonly string[] | null = null): number {
         return 0;
     }
     if (args.includes('--emit')) return _emit();
-    if (args.includes('--check')) return _check();
+    if (args.includes('--check')) return verifyFreeze();
     process.stderr.write('usage: encoding_corpus [--emit | --check]\n');
     return 2;
 }
