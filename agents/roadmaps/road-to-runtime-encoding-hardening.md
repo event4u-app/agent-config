@@ -222,7 +222,7 @@ own right and is tracked as S0.0c below.
 
 ## Phase 1 — Measure the visible-layer gap before writing a single check
 
-- [ ] Author the in-scope channel list as an explicit table: zero-width ·
+- [x] Author the in-scope channel list as an explicit table: zero-width ·
       invisible-tag · variation-selector · homoglyph/confusable ·
       bidi/directional-override · combining-diacritic runs · invisible fillers
       (e.g. Hangul filler) · math-alphanumeric and other Unicode style blocks ·
@@ -232,12 +232,25 @@ own right and is tracked as S0.0c below.
       codepoint class or the sanitizer line that decides it.
       *Verify:* every row cites a file:line or a codepoint range; the
       out-of-scope rows name the reason (not text, or semantic).
-- [ ] Run the uncovered channels through the **live** sanitizer as a throwaway
+      **DONE** — 22-row table, every row citing a codepoint range or a
+      file:line:
+      [`encoding-channel-coverage.md`](../evidence/reports/encoding-channel-coverage.md).
+- [x] Run the uncovered channels through the **live** sanitizer as a throwaway
       probe and record what survives verbatim.
       *Verify:* a committed before/after table; the invisible-class rows must
       show the sanitizer already neutralising them (if they do not, that is a
       higher-severity finding than this roadmap assumed — stop and surface it).
-- [ ] **Pre-registered null condition:** if the live sanitizer already
+      **DONE — 11 COVERED/CAPPED, 11 THROUGH.** Every bidi, zero-width,
+      tag-block, deprecated-format, PUA and C0/C1 channel is neutralised; the
+      8192-char cap holds. **Two invisible-class rows DO survive** and are
+      surfaced rather than glossed: **variation-selector runs** (`_isVS` is a
+      lint-only concept — `_classify`, the set the runtime shares, excludes it,
+      because U+FE0F is legitimate emoji presentation) and **Hangul fillers**
+      (U+3164 / U+115F — invisible, in neither set, and with no legitimate role
+      in this corpus). Neither exceeds what Phase 3 already planned to add, so
+      this is a correction to the "invisible class is covered" blanket claim, not
+      a new severity tier.
+- [x] **Pre-registered null condition:** if the live sanitizer already
       neutralises ≥ 90 % of the uncovered in-scope channels, publish
       `honest-null: runtime-sanitizer-already-covers-visible-layer` with the
       numbers and **close this roadmap** without shipping a detector.
@@ -245,7 +258,11 @@ own right and is tracked as S0.0c below.
       expected outcome is *partial* coverage: the invisible class covered, the
       visible class (confusable, math-alphanumeric, full-width, punycode) fully
       through.
-- [ ] Decide and record the **normalise-vs-flag** question, which is the real
+      **NULL DID NOT FIRE — 11/22 = 50 %, against a 90 % threshold.** The
+      prediction (written into this roadmap before any measurement) is
+      **confirmed exactly**: invisible + control covered, visible layer fully
+      through. Roadmap continues into Phase 2.
+- [x] Decide and record the **normalise-vs-flag** question, which is the real
       design decision and the reason the sanitizer stopped where it did: a
       visible-layer finding may (a) be folded to a Latin skeleton, corrupting
       any body that legitimately contains mixed script, (b) be flagged in a
@@ -254,6 +271,20 @@ own right and is tracked as S0.0c below.
       each named.
       *Verify:* the decision table exists and the default for anything with a
       false-positive risk is **flag, not rewrite**.
+      **DONE — one strip, six flags, three no-actions, one named exclusion; zero
+      quarantines.** Only Hangul fillers are stripped (invisible by nature, no
+      legitimate use, folds into the set that already exists). Everything with a
+      corruption risk is a flag: confusables (folding to a Latin skeleton
+      corrupts genuinely mixed-script bodies), math-alphanumeric and fullwidth
+      (NFKC is not surgical — it also rewrites ligatures and CJK punctuation),
+      combining runs (diacritics are legitimate; only absurd density is signal),
+      punycode (`xn--` is valid DNS). Three get **no action** because the fix
+      would be worse than the gap: HTML entities (decoding would *create* the
+      payload), nested multibase (base64 is pervasive and legitimate here), and
+      confusable whitespace (NBSP is normal prose). **Nothing is quarantined** —
+      dropping a whole entry on an ambiguous signal would deny the agent real
+      content on a guess. Net: exactly one channel changes emitted bytes, so the
+      byte-identical-for-clean-content property the v1 envelope needs survives.
 
 **Exit:** a measured coverage table and a per-channel disposition. **Rollback:**
 nothing shipped yet.

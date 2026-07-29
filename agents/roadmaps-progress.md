@@ -6,10 +6,10 @@
 
 ## Overall
 
-**52 / 200 steps done · 26%**
+**56 / 200 steps done · 28%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
 ```
 
 ## Open roadmaps
@@ -24,7 +24,7 @@
 | 6 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 8 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 9 | [road-to-runtime-encoding-hardening.md](roadmaps/road-to-runtime-encoding-hardening.md) | 5 | 24 | 20 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 17% |
+| 9 | [road-to-runtime-encoding-hardening.md](roadmaps/road-to-runtime-encoding-hardening.md) | 5 | 24 | 16 | 8 | 0 | 0 | 0 | ███░░░░░░░ 33% |
 | 10 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -187,12 +187,12 @@ _1 blocker resolved._
 
 ### [road-to-runtime-encoding-hardening.md](roadmaps/road-to-runtime-encoding-hardening.md)
 
-**Road to runtime encoding hardening — prove the sanitize floor runs, then close the half it deliberately left open** — 4 / 24 done (17%)
+**Road to runtime encoding hardening — prove the sanitize floor runs, then close the half it deliberately left open** — 8 / 24 done (33%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Does the floor run at all? (this outranks the visible-layer question) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | Measure the visible-layer gap before writing a single check | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Measure the visible-layer gap before writing a single check | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Frozen union corpus (gated on `golden-set-freeze`) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Extend the sanitizer, do not rebuild it | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Gate on the frozen corpus | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
