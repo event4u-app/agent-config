@@ -79,7 +79,7 @@ The first pass of this roadmap read the sanitizer's header as fact and recorded
 "applied on the `retrieve_v1` / `memory_get_v1` read surfaces". Measuring instead
 produced a more severe finding, so it goes first.
 
-- [ ] **S0.0 — Wiring, not algorithm.** Establish for **every** named read
+- [x] **S0.0 — Wiring, not algorithm.** Establish for **every** named read
       surface whether the sanitize floor is actually on the path. Measured
       starting point, to be confirmed or refuted: `retrieve_v1` and
       `memory_get_v1` are defined in `memory_lookup.ts`, which has **zero
@@ -98,7 +98,24 @@ produced a more severe finding, so it goes first.
       exercises the **entry point** — not a new detector. Same class as the
       active gates-that-can-fail work: proven through an injection seam,
       unproven at the default entry.
-- [ ] **S0.0b — The second surface the drafts named and the first pass dropped:
+      **RESULT (2026-07-29) — the starting point above was REFUTED, and the
+      reason is itself a finding.** The "zero imports" reading was a
+      **measurement artifact**: `memory_lookup.ts` carries a raw NUL byte
+      (line 125), so `grep` classifies it as binary and silently skips it; with
+      `grep -a` it imports `sanitize_entry` at line 38. End-to-end probes then
+      showed the header is **accurate** — `retrieve_v1` (`:1140`) and
+      `memory_get_v1` (`:1264`) strip every invisible + control class. The real
+      gap is the surface the header never names: `retrieve()` /
+      `retrieve_with_meta()` and therefore the **CLI default** (`--envelope`
+      defaults to `legacy` at `:1337` → `:1435`), which emits every vector
+      intact — and that is the path `rules/security-sensitive-stop.md:63`
+      documents for agents. Separately `second_brain_retrieval.ts` computes the
+      sanitized body at `:202` for a **counter only** and prompts with the raw
+      body at `:218`, making its `poisoned_rejection_rate` a property of the
+      algorithm rather than of the pipeline. Full table, method, and explicit
+      non-claims:
+      [`sanitize-floor-wiring.md`](../evidence/reports/sanitize-floor-wiring.md).
+- [x] **S0.0b — The second surface the drafts named and the first pass dropped:
       the inter-agent / subagent message channel.** No `sanitize` call exists
       anywhere under the hook or subagent scripts. Decide, with evidence,
       whether content crossing that boundary is untrusted in the same sense
@@ -107,14 +124,101 @@ produced a more severe finding, so it goes first.
       *Verify:* a stated verdict per direction (orchestrator → subagent,
       subagent → orchestrator) with the reasoning, so a later reader cannot
       mistake silence for coverage.
-- [ ] **Header-vs-wiring hygiene, once the table exists:** whichever way S0.0
+      **RESULT (2026-07-29).** Outbound (orchestrator → subagent): **not
+      untrusted in the same sense** — our own material, and knowledge crosses as
+      **refs, never bodies** (`subagent_spawn.ts:63` rejects newlines / >200
+      chars, max 5 refs). Inbound (subagent → orchestrator): **untrusted in
+      kind, but the floor is structurally impossible to apply** — the spawn and
+      return are the host's primitive, no code we own ever holds the bytes,
+      there is no `SubagentStop` hook event to attach to, and
+      `subagent-boundary.md:56-60` already disclaims the limit. The existing
+      `delegation-policy` / `verify-budget` machinery is **not** coverage here:
+      it guards claim-correctness, not injection. **Two genuinely uncovered
+      items surfaced instead** — (a) `ai_team/team_dispatch.ts:386` preserves
+      verbatim model text (`raw: text`) with zero sanitize calls anywhere in
+      `ai_team/` or `ai_council/`, a real in-repo inter-agent carrier; (b)
+      `untrusted-input-defense.md:28` enumerates untrusted sources without
+      naming a subagent return. Both are closed in Phase 3.
+      Verdict table + reasoning:
+      [`sanitize-floor-wiring.md`](../evidence/reports/sanitize-floor-wiring.md)
+      § S0.0b.
+- [x] **Header-vs-wiring hygiene, once the table exists:** whichever way S0.0
       lands, the sanitizer's header prose must describe what it actually does.
       A doc claiming a surface it does not cover is the failure class this
       package's own claims discipline exists to prevent.
       *Verify:* the header and the wiring table agree line for line.
+      **DONE.** `retrieval_sanitize.ts` now carries a `WHERE IT ACTUALLY RUNS`
+      block enumerating each surface with the probe row that backs it, plus the
+      explicit instruction not to widen the list without a probe. The wiring
+      gaps S0.0 measured are closed in the same change rather than documented as
+      known holes:
+      1. **`_retrieve_internal` choke point** (`memory_lookup.ts:997`) —
+         sanitizes after scoring/ranking, so `retrieve()`,
+         `retrieve_with_meta()`, `find_duplicate()` and the CLI default are all
+         covered by one 3-line change; ranking and hit order unchanged;
+         idempotent, so `retrieve_v1`'s existing pass is a no-op and the v1
+         envelope contract holds. Re-probed: the CLI default now strips all four
+         invisible/control classes and still preserves the visible confusable.
+      2. **`second_brain_retrieval.ts`** — the sanitized body is now the value
+         that reaches `_prompt`, so `poisoned_rejection_rate` describes the
+         pipeline instead of the algorithm.
+      3. **`ai_team/team_dispatch.ts`** — `sanitize_text` per emitted field
+         (`raw`, `evidence`, `suggested_fix`, `location`, `summary`).
+         Deliberately NOT payload-wide: `MAX_FIELD_CHARS` would truncate a
+         long-but-valid review before `JSON.parse`.
+      4. **The two tautological tests** in `consumer_flow_wiring.test.ts` now
+         assert the **surface** — no `sanitize_text` call inside the test, and
+         the fixture's on-disk hostility is asserted so the check cannot go
+         vacuous. **Mutation-verified:** removing the wiring fix turns both red
+         (2 failed), restoring it turns them green (10 passed).
+
+- [x] **S0.0c — Raw control bytes make a text source invisible to tools.**
+      *Added during execution, not planned* — this is the defect that produced
+      S0.0's wrong premise, so closing it is part of closing Phase 0.
+      25 tracked text-intended source files carried a raw C0 control byte
+      (almost always `NUL`, used as a composite map-key separator written as the
+      literal byte instead of `\0`). Valid TypeScript, correct behaviour — but
+      `file(1)`, `grep`, and every binary-sniffing tool classify such a file as
+      binary and **skip it silently**, so `grep -n "sanitize_entry"
+      src/scripts/memory_lookup.ts` exited 0 with no output. Indistinguishable
+      from "the symbol is not there", which is exactly how this roadmap came to
+      assert "zero imports".
+      *Verify:* every occurrence escaped; the census committed; an EXISTING gate
+      owns detection; the gate states its own scope; a regression test proves the
+      gate can still fail.
+      **DONE.** (a) All 51 NUL occurrences plus four other raw C0 bytes
+      (`0x01`, `0x07`, `0x1F`) replaced with language escapes — machine-applied,
+      machine-checked for the `\0`-before-a-digit octal hazard (none present),
+      `typecheck-ts` clean. `dist/` was regenerated via `task sync`, never
+      hand-edited. (b) Detection **extends `lint_hidden_unicode`** rather than
+      adding a gate: its `_classify` already flagged NUL as `control-char`; only
+      its `.md`-only scope was wrong. The new `_scanSourceControlBytes` pass
+      flags raw C0 **only** — a bidi or zero-width codepoint in a `.ts` file is
+      often a legitimate regex class or hostile-input fixture, so flagging those
+      would need an allowlist that grows until the gate is worthless; a raw
+      control byte always has a behaviour-identical escape, so the
+      false-positive rate is structurally zero. (c) Two exclusions, both stated:
+      generated projections (an authoring rule — fix the source) and
+      `agents/evidence/analysis/` (verbatim captures — escaping one would
+      falsify the record). (d) The gate now **prints its scope on every run**
+      (`source pass: 5982 tracked text file(s) read …`) because a bare "clean"
+      cannot be told apart from a pass whose file list was empty. (e) Six
+      regression assertions, including a `> 500` eligible-file scope assertion
+      so the lock cannot pass vacuously.
+      Census + fix rationale + honest scope:
+      [`nul-byte-source-census.md`](../evidence/reports/nul-byte-source-census.md).
 
 **Exit:** it is known whether the floor runs on each named surface.
 **Rollback:** read-only.
+
+**PHASE 0 OUTCOME.** The floor's algorithm was never the problem and the header
+was not lying about `retrieve_v1` / `memory_get_v1`. Three things were true and
+unmeasured: the legacy default envelope bypassed the floor entirely, one caller
+measured the floor instead of applying it, and one in-repo inter-agent carrier
+had no floor at all. All three are closed and mutation-verified. The severity-1
+framing in this roadmap's header is therefore **superseded** — see the S0.0
+result. The `grep`-blindness that produced the wrong premise is a defect in its
+own right and is tracked as S0.0c below.
 
 ## Phase 1 — Measure the visible-layer gap before writing a single check
 
