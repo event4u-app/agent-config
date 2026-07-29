@@ -336,14 +336,14 @@ After the last step of a roadmap is done, check completion status:
 
    > 1. Spawn follow-up roadmap as DRAFT
    >    → agents/roadmaps/road-to-{auto-slug}.md, status: draft,
-   >      parent_roadmap: {this-slug}. Hidden from dashboard until you
-   >      flip status to "ready".
+   >      parent_roadmap: {this-slug}. Hidden from the dashboard until
+   >      you flip status to "ready".
    > 2. Spawn follow-up roadmap as READY (with blocked-until note)
    >    → status: ready (default), parent_roadmap: {this-slug}, plus
-   >      `> Blocked until <condition>` line in body. Visible in
-   >      dashboard; execution waits on condition.
+   >      a `> Blocked until <condition>` line in the body. Visible
+   >      in the dashboard; execution waits on the condition.
    > 3. Keep deferred items in this archive — confirm "no follow-up"
-   >    intentional drop. Items stay searchable in archive/.
+   >    is an intentional drop. Items stay searchable in archive/.
    > 4. Restore selected items to [ ] — finish them here before archive.
    > 5. Convert selected items to [-] cancelled — drop with rationale.
    ```
@@ -364,28 +364,28 @@ When user picks option 1 or 2 in step 4b:
 
    ```markdown
    ---
-   complexity: lightweight            # bump if parent was structural
+   complexity: lightweight            # bump if the parent was structural
    status: draft                      # option 1; omit for option 2 (= ready)
    parent_roadmap: <parent-slug>      # back-link to source
    ---
 
    # Roadmap: Follow-up to <parent-title>
 
-   > <One sentence stating carried-over outcome.>
+   > <One sentence stating the carried-over outcome.>
 
    ## Context
 
    This roadmap collects items deferred from
    [`agents/roadmaps/archive/<parent-slug>.md`](archive/<parent-slug>.md).
-   See parent's archive entry for original rationale.
+   See the parent's archive entry for the original rationale.
 
    ## Prerequisites
 
-   - [ ] Read `AGENTS.md` and parent archive entry.
+   - [ ] Read `AGENTS.md` and the parent archive entry.
    {parent prerequisites still relevant, copied verbatim}
 
    <!-- Option 2 only — body note, NOT a frontmatter key: -->
-   > Blocked until <condition>. Execution starts when condition clears.
+   > Blocked until <condition>. Execution starts when the condition clears.
 
    ## Phase 1: <name carried from parent>
 
@@ -394,7 +394,7 @@ When user picks option 1 or 2 in step 4b:
 
    ## Acceptance Criteria
 
-   - [ ] {restate or adjust per deferred scope}
+   - [ ] {restate or adjust per the deferred scope}
    - [ ] All quality gates pass — see `quality-tools`.
    ```
 

@@ -154,7 +154,7 @@ If the file does not exist, create it with the `bundles:` root.
 ### §8 — Run the buildability gate
 
 ```bash
-./scripts-run src/scripts/lint_ticket_buildable agents/tickets/{slug}/
+./scripts-run src/scripts/lint_ticket_buildable.ts agents/tickets/{slug}/
 ```
 
 Fix every reported error. Re-run until exit code 0. Max 3 attempts; if still

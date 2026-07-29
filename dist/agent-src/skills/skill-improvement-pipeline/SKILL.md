@@ -11,6 +11,8 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
+requires_skills:
+  - learning-to-rule-or-skill
 ---
 
 # skill-improvement-pipeline
@@ -71,7 +73,7 @@ Same learning now seen in **≥ 2 distinct projects** → strong candidate for a
 project-local note. **Surface** it; do **not** auto-write:
 
 ```
-> Cross-project: also seen in {other-project}.
+> Cross-project: this learning was also seen in {other-project}.
 > ≥2 projects ⇒ candidate for a shared surface (global rule / skill / pattern).
 > → surface for promotion (human decides; no auto-write)
 ```

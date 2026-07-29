@@ -192,7 +192,7 @@ mid-flight):
 Optional inline annotations on same line:
 
 ```markdown
-- [~] Migrate bulk-import job to chunked dispatch. <!-- deferred: ops capacity in Q3 -->
+- [~] Migrate the bulk-import job to chunked dispatch. <!-- deferred: ops capacity in Q3 -->
 - [-] Wire SQS retry topic. <!-- cancelled: superseded by Lambda DLQ in road-to-event-bridge -->
 ```
 
@@ -210,7 +210,7 @@ follow-up. Authors and reviewers must recognise the shape:
 ---
 complexity: lightweight
 status: draft                      # optional — draft hides from dashboard
-parent_roadmap: <parent-slug>      # back-link to archived source
+parent_roadmap: <parent-slug>      # back-link to the archived source
 ---
 
 # Roadmap: Follow-up to <parent-title>
@@ -223,8 +223,8 @@ This roadmap collects items deferred from
 [`agents/roadmaps/archive/<parent-slug>.md`](../archive/<parent-slug>.md).
 { … original phases preserved verbatim … }
 
-<!-- For option 2 (ready + blocked), add as body note, NOT in frontmatter: -->
-> Blocked until <condition>. Execution starts when condition clears.
+<!-- For option 2 (ready + blocked), add this as a body note, NOT in frontmatter: -->
+> Blocked until <condition>. Execution starts when the condition clears.
 ```
 
 Two states author picks between (mirrors Iron Law 3 numbered-options
