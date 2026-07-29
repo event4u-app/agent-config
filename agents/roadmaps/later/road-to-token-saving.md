@@ -124,8 +124,14 @@ resolved (council, above), so execution does not stop to ask which lever to pull
   all measurement are agent-executable and verified by the Phase 0 rig + CI gates
   — no user input needed beyond the standard commit/push authorization.
 - **The falsification checklist is a script, not a judgement call.** Phase 4's
-  six gates (a–f) ship as one `task tokensave:falsify` script that emits
+  six gates (a–f) were to ship as one `task tokensave:falsify` script emitting
   pass/fail per gate; the thin flip is data-gated, never vibe-gated.
+  <!-- NEVER BUILT, intentionally (2026-07-29). Phase 4 is the thin flip, and its
+  quality gate returned RED (36.2% < 48%, 2026-07-11) before the aggregate runner
+  was needed — building it would aggregate a decided-negative result. The task
+  name appears in no Taskfile and has no other consumer; the individual gate
+  scripts exist and are CI-wired. The principle held: the data said no. -->
+  <!-- carve-out: historical-design-statement -->
 - **Two — and only two — human gates:**
   1. **Phase 4 thin-projection rollout to real consumers.** Flipping the default
      and ramping 10%→100% changes behaviour for downstream projects → explicit
