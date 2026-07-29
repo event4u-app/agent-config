@@ -51,8 +51,29 @@ skill / guideline per `rule-classification.md`.
 
 ## § 2 — Empirical condensation rate (pilot)
 
+> **⚠️ The locked `r` below is CONTRADICTED BY MEASUREMENT (2026-07-29) and must
+> not be used for sizing.** Re-measuring the three pilot files as they ship today
+> (`wc -m`, src → dist) gives `agent-authority` 1645→1645 (**r = 1.000**),
+> `direct-answers` 3534→3525 (**r = 0.997**), `language-and-tone` 3614→3605
+> (**r = 0.998**) — a median of **≈ 0.998**, not 0.712. The locked 28.8% saving
+> does not exist anywhere in the current tree.
+>
+> Corpus-wide confirmation (exact tiktoken `cl100k_base`, n = 429 artifacts,
+> src → dist): aggregate saving **0.86%**, median per-artifact delta **0 tokens**,
+> **267/429 pairs byte-identical**, and on the 9 always-loaded kernel rules the
+> projection is **net −36 tokens** — condensation makes the per-request surface
+> slightly *worse*. Full record: the H3 measurement in
+> `road-to-token-saving-HUMAN-MEASUREMENT.md`.
+>
+> **Blast radius: documentation only.** `grep -rn '0\.712'` across `src/` and
+> `internal/` returns no code or config consumer, so nothing sizes against this
+> number today — the risk was a future reader trusting it. The pilot table is
+> retained below as the historical record of the P1.3/P1.4 decision, not as a
+> live parameter. The removal decision for condensation itself is recorded
+> separately (council 2026-07-29: remove, unanimous).
+
 Pilot picks (per P1.3 algorithm: shortest / median / longest of the 9
-always-rules in `rule-classification.md` § 3.1):
+always-rules in `rule-classification.md` § 3.1) — **historical, 2026-05-06**:
 
 | pilot | original | condensed | r | per-rule cap (2.5k) | Iron-Law SHA |
 |---|---:|---:|---:|---|---|
