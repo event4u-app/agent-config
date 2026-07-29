@@ -5,7 +5,7 @@
 Non-essential social/fun workflows (prediction-pool tips, etc.).
 
 - **id**: `fun`
-- **version**: `9.8.0`
+- **version**: `9.9.0`
 - **owner**: small-business
 - **requires**: —
 - **artefacts**: 2

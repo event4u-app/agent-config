@@ -5,7 +5,7 @@
 Core PO/PM artefacts (ticket refinement, AC, estimation).
 
 - **id**: `product-basic`
-- **version**: `9.8.0`
+- **version**: `9.9.0`
 - **owner**: product
 - **requires**: engineering-base
 - **artefacts**: 12
