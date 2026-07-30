@@ -247,6 +247,31 @@ scanning a dead root. A clearly-worded model-carried instruction with no
 mechanical enforcement held for 62% of the corpus and failed silently on the rest —
 which is the case for removing the rewrite rather than restating the instruction.
 
+## Step 4 (delete the hash cache) — NOT executed, and why
+
+Steps 1–3 and 5–8 are done. Step 4 — deleting `internal/.condensation-hashes.json`
+plus the `--check-hashes` / `--mark-done` surface — was **not** executed, because
+tracing it surfaced a dependency the council verdict did not account for.
+
+**`--changed` is built on the cache.** It answers "which sources changed since
+someone last condensed them" by comparing stored hashes, and it is Step 2 of the
+`/condense` flow, referenced by `src/domains/meta/condense/command.md` and
+`taskfiles/content.yml`. Deleting the cache does not merely remove machinery — it
+removes the input `--changed` computes from.
+
+So step 4 is not a deletion, it is a **reimplementation**: with byte-exactness
+enforced, staleness becomes directly computable as `dist != rewrite(src)`, which is
+both simpler and strictly stronger than the hash comparison (it looks at the output,
+which is exactly what the cache never did). But it changes `--changed`'s semantics
+from *"source moved since last mark"* to *"projection is out of date"*, and four
+artefacts reference the current behaviour.
+
+That is a bounded, well-understood piece of work — recorded here rather than
+half-applied at the end of a long run. Nothing depends on it: the cache is now
+redundant rather than harmful, because `check_condensation` no longer trusts it.
+The remaining risk it carries is naming, not correctness: `.condensation-hashes.json`
+and `--check-hashes` describe a condensation step that no longer exists.
+
 ## Open question (deliberately NOT decided here)
 
 If `dist/agent-src/**/*.md` is a copy plus a deterministic rewrite, **should
