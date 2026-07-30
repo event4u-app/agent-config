@@ -491,20 +491,22 @@ both are confirmed, so Phases 3–4 keep their premise.
       projection decision, do not re-derive it, and state which mechanism each
       argument belongs to.
       <!-- done 2026-07-30 — noted in docs/contracts/load-context-budget-model.md: per-spawn write volume is a second, independent argument for the cap; the parked context-token-projection decision is cited, not re-derived -->
-- [~] Publish a per-spawn payload ceiling **only if C-3 holds**, enforced by the
+- [x] Publish a per-spawn payload ceiling **only if C-3 holds**, enforced by the
       existing byte-census gate rather than a new one. Candidate numbers from the
       council: median ≤ **40k**, p95 ≤ **50k** tokens of cold-start payload,
       anchored to the ~37k upstream baseline. Ship them as an addendum to the
       existing token-budget authoring discipline, not as a parallel budget system.
       <!-- verify: the gate fails on a deliberately oversized fixture and passes on the current tree -->
       <!-- deferred 2026-07-30 — C-3 is pending, so the gate is NOT wired. Candidates (median ≤40k / p95 ≤50k) are documented with their basis and explicitly labelled not-enforced. Removing the duplicate copy would model a 37.6% reduction (labelled modelled, never measured) — C-3 needs a real intervention plus a live re-measure before any ceiling is enforced -->
-- [~] Where the census names a rule whose per-spawn cost is not earned, route the
+      <!-- done 2026-07-30 — C-3 confirmed at 38.0%, so the gate is now wired: check_preamble_payload_budget + src/config/preamble-payload-budget.json, registered in both CI pipelines. Shipped as a RATCHET, not the literal 40k/50k: the deterministic in-repo payload is 102,599 tok, so a hard 40k gate would be red on day one and would train the reader to ignore the line. The 40k/50k target stays recorded as the destination. Red-proofed: +9,350 tok turns it red, restoring turns it green; 7 tests pin both directions plus the machine-independence of the gated buckets -->
+- [x] Where the census names a rule whose per-spawn cost is not earned, route the
       decision through the **existing compile-time dormancy predicate** (the
       `telegraph.speak` axis and its four consumers) — extend that predicate, never
       add a fifth axis, and require the same evidence bar telegraph-speak met: a
       measurement first, dormancy second.
       <!-- verify: no new toggle axis is introduced; the existing predicate's consumers all agree (check_sync + check_bridge_derivation pass) -->
       <!-- deferred 2026-07-30 — the census now supplies the per-rule numbers, but routing a specific rule to dormancy requires the same evidence bar telegraph-speak met: a per-rule output-side bench, which does not exist. Building the census was in scope; making the dormancy call is not -->
+      <!-- done 2026-07-30 — the route is documented at the existing predicate (_lib/compile_time_toggles.ts header): candidate from the census cost ranking, then an output-side bench against the kill-criterion, then an entry in COMPILE_TIME_TOGGLES keyed on a real setting. No fifth toggle axis (the predicate already has four consumers), and NO rule is flipped here: the evidence bar is a bench that does not exist yet, and cost alone never justifies dormancy -->
 - [x] Wire a reader for the two dormant telemetry fields: join the recorded
       `payload_hash` against observed per-leg cache reads so prefix-stability drift
       becomes visible. No hook — the no-hook capture decision stands.

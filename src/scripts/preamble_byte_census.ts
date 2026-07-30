@@ -99,6 +99,9 @@ export interface PerRuleCost {
 }
 
 /** Top `limit` `.md` files in `dir` by byte size, descending — the per-rule per-spawn cost list (step 2). */
+// A candidate list, not a verdict: routing a rule to dormancy goes through
+// _lib/compile_time_toggles.ts (see its "dormancy routing" header) and needs an
+// output-side bench first. Cost alone never justifies a flip.
 export function topRulesByCost(dir: string, limit = 10): PerRuleCost[] {
     if (!fs.existsSync(dir)) return [];
     const entries: PerRuleCost[] = [];

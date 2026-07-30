@@ -18,6 +18,33 @@
  * to match a partial implementation.
  */
 
+/**
+ * HOW A RULE GETS HERE — the dormancy routing (road-to-cache-economy Phase 3)
+ * --------------------------------------------------------------------------
+ * A rule body is re-written on EVERY subagent spawn, so an always-loaded rule
+ * that is not earning its keep is paid per spawn, not once. That makes "should
+ * this rule be dormant?" a real question — and this map is the ONLY place the
+ * answer may land. The route, in order:
+ *
+ *   1. **Candidate** — `preamble_byte_census` ranks always-loaded rules by
+ *      per-spawn token cost (`--top`). A candidate is a number, never an
+ *      impression: telegraph-speak was ~982 tokens.
+ *   2. **Evidence** — the same bar telegraph-speak had to clear: an output-side
+ *      bench showing the rule does not pay for itself, judged against the
+ *      kill-criterion, BEFORE dormancy. A preference is not evidence, and
+ *      "it looks verbose" is not a measurement.
+ *   3. **Landing** — a new entry in the map below, keyed on a real setting the
+ *      consumer can flip back. Never a fifth toggle axis: this predicate already
+ *      has four consumers (the router compiler, the dist writer, `check_sync`,
+ *      and the per-tool symlink generator), and a rule wired into three of four
+ *      is how the last attempt blocked its own push.
+ *
+ * What is explicitly NOT this route: dropping a rule from the router while its
+ * body still ships (that was the measured half-truth this file exists to fix),
+ * and gating bodies behind triggers wholesale — that is thin projection, which
+ * failed a 48% quality floor at 36.2% and stays disabled.
+ */
+
 /** Loose settings shape — the toggles only ever read nested plain objects. */
 export type ToggleSettings = Record<string, unknown>;
 

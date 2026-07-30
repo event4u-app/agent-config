@@ -6,10 +6,10 @@
 
 ## Overall
 
-**120 / 248 steps done · 48%**
+**122 / 250 steps done · 49%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
+████████████████████░░░░░░░░░░░░░░░░░░░░   49%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -18,7 +18,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 
 | Roadmap | Done | Deferred | Cancelled |
 |---|---:|---:|---:|
-| [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 28 | 4 | 0 |
+| [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 30 | 2 | 0 |
 | [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 44 | 4 | 0 |
 
 ## Open roadmaps
@@ -26,7 +26,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
-| 2 | [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 5 | 32 | 0 | 28 | 4 | 0 | 0 | ██████████ 100% |
+| 2 | [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 5 | 32 | 0 | 30 | 2 | 0 | 0 | ██████████ 100% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
@@ -72,13 +72,13 @@ _2 blockers resolved._
 
 ### [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md)
 
-**Road to cache economy — pay read rates, not write rates** — 28 / 28 done (100%)
+**Road to cache economy — pay read rates, not write rates** — 30 / 30 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Make the two shipped cost surfaces correct (a bug fix, not a research track) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | Pre-register the claims the rest of the roadmap can fail | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Per-spawn payload: the one large lever we own | ✅ done | 0 | 6 | 2 | 0 | 100% |
+| 3 | Per-spawn payload: the one large lever we own | ✅ done | 0 | 8 | 0 | 0 | 100% |
 | 4 | TTL and authoring guidance, gated and version-stamped | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 5 | Refusals, recorded so nobody rebuilds them | ✅ done | 0 | 6 | 2 | 0 | 100% |
 
