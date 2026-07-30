@@ -117,6 +117,14 @@ jobs:
       - name: Verify current sync state
         run: task sync-check
 
+      # agents/index.md + docs/catalog.md embed every artefact description
+      # verbatim, so any description edit makes them stale. `task ci` has caught
+      # this locally for a long time; CI never did — which is how 16 stale rows
+      # reached main after a description-shortening pass. A gate that only exists
+      # on one side drifts silently on the other.
+      - name: Verify the artefact index + catalog are regenerated
+        run: task check-index
+
       - name: Verify dist == rewrite(src) byte-for-byte
         run: task check-condensation
 
