@@ -205,9 +205,28 @@ jobs:
         # keys, so the whole REQUIRED Consistency check died on main — while the
         # local `yaml.safe_load` validation reported OK, because safe_load keeps
         # the last duplicate silently. actionlint catches that class before merge.
+        #
+        # PR-SCOPED ON PURPOSE. Run repo-wide, actionlint reports pre-existing
+        # findings in workflows this PR never touched (shellcheck style nits, and
+        # one real one: an unknown `administration` permission scope in
+        # sync-visibility.yml). Cleaning those is its own change with its own
+        # review; gating on them here would either block unrelated work or invite
+        # a blanket ignore-list. Linting what the PR changed is what catches the
+        # #1059 class, which is the reason this step exists.
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mapfile -t WF < <(gh pr diff "${{ github.event.pull_request.number }}" \
+            --name-only | grep -E '^\.github/workflows/.*\.ya?ml$' || true)
+          if [ "${#WF[@]}" -eq 0 ]; then
+            echo "No workflow files changed in this PR — nothing to lint."
+            exit 0
+          fi
+          printf 'linting %s changed workflow file(s):\n' "${#WF[@]}"
+          printf '  %s\n' "${WF[@]}"
           bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-          ./actionlint -color
+          ./actionlint -color "${WF[@]}"
 
       - name: Kernel-rule budget (bucket + per-rule caps)
         # Wired here as the condition ADR-203 attaches to narrowing the
