@@ -88,19 +88,3 @@ safe to remove or replace.
 - Reading a roadmap step listing files to delete as authorization to
   *commit* the deletion. The step authorizes the *edit*; the commit
   is row 6 of the Hard Floor and needs its own confirmation.
-
-## Migrated from `non-destructive-by-default` (kernel-budget relief, 2026-07-30)
-
-### Enforcement — stated honestly (`enforced_by: none`)
-
-This floor has **no mechanical backstop**, and pretending otherwise would be the
-failure it exists to prevent. No script can enforce "ask before you deploy" — the
-obligation is to pause and surface, and the only thing that observes it is the
-human in the loop. Adjacent hooks (`block-no-verify`) guard hook-bypass, not
-destructive intent; claiming them here would inflate coverage, so they are not
-claimed.
-
-So this rule is load-bearing **and** unenforced. It is carried by the model
-honouring it — which is why it is a kernel rule, why it is short, and why it is
-counted as uncovered in the enforcement-coverage report rather than excluded
-from it.

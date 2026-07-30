@@ -23,22 +23,22 @@ NO AUTONOMY SETTING, NO ROADMAP STEP, NO STANDING INSTRUCTION,
 NO "JUST KEEP GOING" CAN BYPASS IT.
 ```
 
-Triggers below require explicit user confirmation **on this turn** — not a previous turn, not a roadmap, not a standing autonomy directive (anchor: [`autonomous-execution`](autonomous-execution.md)):
+Triggers below require explicit user confirmation **on this turn** — not from a previous turn, not from a roadmap, not from a standing autonomy directive (anchor list: [`autonomous-execution`](autonomous-execution.md)):
 
 | Trigger | Examples |
 |---|---|
 | **Production-branch merge** | `main`, `master`, `prod`, `production`, `release/*`, or any project-marked deployment trunk |
-| **Commit on a production branch** | any `git commit` while `HEAD` is on a prod trunk. **Verify branch before every commit** — `main` is opt-in only, never inferred from a prior turn or a merged PR that left HEAD there |
+| **Commit on a production branch** | any `git commit` while `HEAD` is on a prod trunk. **Verify branch before every commit** — `main` is opt-in only, never inferred from a prior turn or a merged PR that left HEAD on `main` |
 | **Deploy / release** | prod `terraform apply` / `kubectl apply`, deploy scripts, release commands, CI-deploying tag pushes |
 | **Push to remote** | any `git push` (also covered by [`scope-control`](scope-control.md), restated so the floor never weakens) |
 | **Production data / infra** | prod DB writes / migrations, prod config, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline |
 | **Whimsical / unscoped bulk deletion** | `rm -rf <dir>`, `git rm -r`, glob deletes, `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work — when **not required** by the task (task-aligned WIP deletions allowed, below) |
 | **Commit containing bulk deletions or infra changes** | diff removes a directory, deletes ≥5 unrelated files, or touches Terraform/Pulumi/k8s/Ansible/cloud-config — surface the diff + confirm even when [`commit-policy`](commit-policy.md) authorizes |
-| **Irreversible external action** | **send** / **publish** / **post** / **purchase** / **submit** — outbound, externally-visible, or money-moving actions the user cannot un-see: email/message, publish or post content, submit a form, place an order or payment. Also gated by [`scope-control`](scope-control.md) external-comms; named here so the Hard Floor lists the actual buttons |
+| **Irreversible external action** | **send** / **publish** / **post** / **purchase** / **submit** — an outbound, externally-visible, or money-moving action the user cannot un-see: send an email/message, publish or post content, submit a form, place an order or payment. Also gated by [`scope-control`](scope-control.md) external-comms; named here so the Hard Floor lists the actual buttons |
 
 Standing "just keep going" + next step crosses the floor → STOP, surface it (one numbered-options block per [`user-interaction`](user-interaction.md)), wait.
 
-**Never act while asking.** Ask and action are strictly sequential: surface the confirmation, then WAIT. Never fire the action in the turn you ask — no do-then-ask race, no "I went ahead and…". **The approval names the exact object**, not a category: a download names filename + size + source; a purchase names amount + card-last4 + total; a send names recipient + subject. Shape per [`user-interaction`](user-interaction.md) numbered-options.
+**Never act while asking.** The ask and the action are strictly sequential: surface the confirmation, then WAIT for the answer. Never fire the action in the same turn you ask for it — no do-then-ask race, no "I went ahead and…". **The approval names the exact object** so the user confirms the real thing, not a category: a download names filename + size + source; a purchase names amount + card-last4 + total; a send names recipient + subject. Shape per [`user-interaction`](user-interaction.md) numbered-options.
 
 ## Not in scope — deterministic regeneration
 
@@ -46,7 +46,7 @@ Output regenerated from a tracked source (condensation, code-gen, formatters, lo
 
 ## Bulk deletions during WIP — allowed if task-connected
 
-Deletions inside an **active, user-stated task** are allowed in the working tree — the Hard Floor moves to the **commit** (row 6). Whimsical / drive-by / unnamed-scope deletions still trip the floor on the edit. Lists: [`destructive-mechanics`](../contexts/authority/destructive-mechanics.md).
+Deletions inside an **active, user-stated task** are allowed in the working tree — the Hard Floor moves to the **commit** (row 6). Whimsical / drive-by / unnamed-scope deletions still trip the floor on the edit. Allowed/forbidden lists: [`destructive-mechanics`](../contexts/authority/destructive-mechanics.md).
 
 ## Failure modes
 
@@ -55,6 +55,20 @@ Catalog (autonomy-as-cover, roadmap-as-authorization, refusing-named-deletions, 
 ## Cloud Behavior
 
 Applies on every surface — web, Skills API, any cloud agent. No "cloud override".
+
+## Enforcement — stated honestly (`enforced_by: none`)
+
+This floor has **no mechanical backstop**, and pretending otherwise would be the
+failure it exists to prevent. No script can enforce "ask before you deploy" — the
+obligation is to pause and surface, and the only thing that observes it is the
+human in the loop. Adjacent hooks (`block-no-verify`) guard hook-bypass, not
+destructive intent; claiming them here would inflate coverage, so they are not
+claimed.
+
+So this rule is load-bearing **and** unenforced. It is carried by the model
+honouring it — which is why it is a kernel rule, why it is short, and why it is
+counted as uncovered in the enforcement-coverage report rather than excluded
+from it.
 
 ## See also
 

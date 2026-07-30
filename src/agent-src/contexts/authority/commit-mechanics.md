@@ -99,10 +99,3 @@ any roadmap-producing flow), do **not** include commit steps unless
 the user explicitly requested them — commits are a delivery decision;
 roadmaps plan **work**. If the user explicitly wants commit steps,
 write them clearly (e.g. "Commit phase X: chore: …").
-
-## Migrated from `commit-policy` (kernel-budget relief, 2026-07-30)
-
-### See also
-
-- [`scope-control`](../../../rules/scope-control.md) — git-ops permission gate (push, merge, branch, PR, tag).
-- [`no-cheap-questions`](../../../rules/no-cheap-questions.md) — canonical Iron Law. · [`autonomous-execution`](../../../rules/autonomous-execution.md) · [`/commit`](../../commands/commit.md) · [`/commit:in-chunks`](../../commands/commit/in-chunks.md).

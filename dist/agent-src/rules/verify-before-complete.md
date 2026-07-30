@@ -25,7 +25,7 @@ No verification command run **in this message** → you cannot claim it passes.
 
 Before claiming ANY work is complete:
 
-1. **IDENTIFY** — What command proves this claim? (tests, type-checker, linter, build — whichever the project runs)
+1. **IDENTIFY** — What command proves this claim? (tests, type-checker, linter, build — whichever the project actually runs)
 2. **RUN** — Execute the full command (fresh, complete, not cached)
 3. **READ** — Full output, check exit code, count failures
 4. **VERIFY** — Does the output actually confirm the claim?
@@ -42,7 +42,15 @@ Skip any step = the claim is unverified.
 
 ## Turn-completion — one explicit stop condition
 
-Fresh evidence answers *may I claim done*; this answers *may I end the turn*. **End the turn only when work is complete-and-verified, OR blocked on input only the user can provide.** Last paragraph a plan, an open question the context already answers, or a promise of unexecuted work ("I'll…", "next I will…") → not a stop condition; do that work now with tool calls. Mechanics (N=3 / Hard-Floor bounds): [`end-of-turn checkpoint`](../contexts/execution/autonomy-mechanics.md) — unifies its promissory-closing half with the Gate above, so "done" means *verified and nothing promised-but-unbuilt remains*.
+Fresh evidence answers *may I claim done*; this answers *may I end the turn*. Pair
+them: **end the turn only when the work is complete-and-verified, OR you are blocked
+on input only the user can provide.** If the last paragraph is a plan, an open
+question the context already answers, or a promise of unexecuted work ("I'll…",
+"next I will…"), that is not a stop condition — do that work now with tool calls
+instead of ending. The mechanics (N=3 / Hard-Floor bounds) live in the
+[`end-of-turn checkpoint`](../contexts/execution/autonomy-mechanics.md); this line
+unifies its promissory-closing half with the verification Gate above so "done"
+means *verified and nothing promised-but-unbuilt remains*.
 
 ## Red flags — STOP immediately
 
@@ -55,8 +63,20 @@ Fresh evidence answers *may I claim done*; this answers *may I end the turn*. **
 
 ## Verification commands
 
-Commands → `quality-tools`. Evidence-gate playbook (claim→command mapping, output inspection, end-of-work sequence) → `verify-completion-evidence`.
+Specific commands → `quality-tools` skill. Evidence-gate playbook
+(claim→command mapping, output inspection, end-of-work sequence) →
+`verify-completion-evidence` skill.
 
 ## Mechanics — when to run what, per-task evidence, confidence, break-glass
 
-Quality-tools-vs-tests timing, per-task minimum-evidence table, confidence gating (High/Medium/Low), break-glass reduction: [`verification-mechanics`](../contexts/execution/verification-mechanics.md) — pull when the Gate fires.
+When to run quality tools vs. tests, the per-task minimum-evidence table,
+confidence gating (High/Medium/Low), and the break-glass reduction live in
+[`verification-mechanics`](../contexts/execution/verification-mechanics.md) —
+pull it when the Gate fires.
+
+## Examples
+
+Wrong/right/why demos (hedged claims, trusting earlier runs,
+partial-verification creep): [`verify-before-complete-demos`](../docs/guidelines/agent-infra/verify-before-complete-demos.md).
+Outcome baseline:
+[`tests/golden/outcomes/verify_before_complete.json`](../../tests/golden/outcomes/verify_before_complete.json).

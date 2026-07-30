@@ -90,12 +90,3 @@ Minimum evidence:
 Completion wording: _"hotfix applied, full verification deferred per
 break-glass"_ — never _"done"_ or _"verified"_. The normal gate resumes
 on the follow-up PR.
-
-## Migrated from `verify-before-complete` (kernel-budget relief, 2026-07-30)
-
-### Examples
-
-Wrong/right/why demos (hedged claims, trusting earlier runs,
-partial-verification creep): [`verify-before-complete-demos`](../../../../docs/guidelines/agent-infra/verify-before-complete-demos.md).
-Outcome baseline:
-[`tests/golden/outcomes/verify_before_complete.json`](../../../../tests/golden/outcomes/verify_before_complete.json).
