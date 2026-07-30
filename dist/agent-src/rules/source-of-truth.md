@@ -54,17 +54,18 @@ ALWAYS WORK IN src/ — THEN CONDENSE VIA THE /condense COMMAND.
 **STOP. Edit `src/` first. Always.** A projection is an output, not an input —
 editing one is editing build output, and the next `/condense` overwrites it.
 
-Direct edits to `dist/agent-src/` break condensation hashes, cause CI failures
-("Verify condensation hashes" step), and create drift between source and output.
+Direct edits to `dist/agent-src/` break the byte-exactness invariant
+`dist == rewrite(src)` and fail CI (the "Verify dist == rewrite(src)
+byte-for-byte" step) — a hand-edited projection is detected, not tolerated.
 
-**Condensation is ONLY done via the `/condense` command.** The command handles
-hashing, sync verification, and quality checks automatically.
+**The projection is written ONLY by `task sync`.** It copies every `.md`
+verbatim and applies the path rewriter; nothing has to be marked afterwards.
 
 ## Pre-review consistency checkpoints
 
 Before asking for review or creating a PR, verify derived outputs are not stale:
 
-1. Run `bash src/scripts/condense.sh --changed` — check if `src/` has changes not yet condensed
+1. Run `bash src/scripts/condense.sh --changed` — lists every projection that is out of date (`dist != rewrite(src)`)
 2. If stale files exist: run `/condense` before pushing
 3. Before merge: verify derived outputs (`dist/agent-src/`, `.augment/`, `.claude/skills/`) are regenerated
 4. Do NOT leave `dist/agent-src/` stale across review cycles

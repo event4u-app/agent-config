@@ -88,14 +88,6 @@ After all fixes:
 
 Show final result.
 
-### 6. Mark hashes
-
-For each modified file:
-
-```bash
-./scripts-run src/scripts/condense --mark-done "{relative_path}"
-```
-
 ## Rules
 
 - **Always fix in `src/`** — never edit `dist/agent-src/` or `.augment/` directly.

@@ -23,8 +23,8 @@ packs:
 Condense agent config `.md` files from `src/` into token-efficient telegraph format
 and write the condensed output to `dist/agent-src/`.
 
-Uses SHA-256 hashes to track which source files changed since last condensation.
-Only changed files need recondensation — saving tokens and time.
+The projection is deterministic: `dist == rewrite(src)` byte-for-byte. A file is
+out of date only when its projection does not match that rewrite.
 
 ## Step 1: Sync non-.md files
 
@@ -41,8 +41,8 @@ changed `.md` files that need condensation.
 bash scripts/condense.sh --changed
 ```
 
-This lists only `.md` files whose source has changed since the last condensation (based on
-stored SHA-256 hashes). If no files changed → you're done.
+This lists only `.md` files whose projection is out of date (`dist != rewrite(src)`).
+If no files are listed → you're done.
 
 If you need to see ALL files regardless of change status:
 `bash scripts/condense.sh --list`.
@@ -81,7 +81,7 @@ Run BOTH checks. Both must pass before finishing.
 bash scripts/condense.sh --check
 ```
 
-Must show ✅ (hashes in sync).
+Must show ✅ (`dist/agent-src/` in sync with source).
 
 ```bash
 ./scripts-run src/scripts/check_condensation
@@ -99,14 +99,6 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
 - `minimal` (default) → one line: `→ N files condensed (avg X% savings)`.
 - `full` → multi-line table with per-category stats (files condensed,
   avg savings).
-
-## Hash management
-
-- Hashes are stored in `.augment/.condensation-hashes.json` (committed to Git).
-- `bash scripts/condense.sh --sync` automatically cleans up hashes for deleted source files.
-- `bash scripts/condense.sh --mark-all-done` marks ALL current `.md` files as condensed
-  (useful after an initial full condensation or when bootstrapping the hash file).
-- A file with no stored hash is always treated as "changed".
 
 ## Iron Laws — do not touch
 
@@ -177,4 +169,3 @@ Unsafe (DO NOT do this):
 - **Only write to `.augment/`** — the condensed output directory.
 - **Preserve ALL technical content** — only condense natural language prose.
 - **YAML frontmatter** in command/skill files must be preserved exactly.
-- **Always run `bash scripts/condense.sh --mark-done {path}`** after writing each condensed file.

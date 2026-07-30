@@ -56,7 +56,9 @@ A skill claiming `rich` MUST satisfy ALL three:
 
 ## Telegraph-speak amendment
 
-The `telegraph-speak` rule (Tier 1, always-on) **exempts** skills marked
+The telegraph-speak rule is **dormant by default** — absent
+`telegraph.speak` it does not project at all, so there is nothing to exempt
+from. Where a consumer has enabled it, it **exempts** skills marked
 `token_budget_class: rich`. When such a skill is active:
 
 - Do not apply telegraph-speak condensation to its guidance prose
@@ -109,10 +111,10 @@ These skills are approved `rich` by this roadmap's council:
 
 - `tokens.rich_skills` setting in `.agent-settings.yml` (consumer override)
 - `lint_token_budget_discipline.ts` (cap + justification CI check)
-- `telegraph-speak.md` (amended to except rich-tagged skills)
+- the telegraph-speak rule, where enabled (amended to except rich-tagged skills)
 
 ## See also
 
 - `token_budget_class` key in `src/scripts/schemas/skill.schema.json`
 - `tokens.rich_skills` in `src/config/agent-settings.template.yml`
-- `telegraph-speak` rule — the frugality canon this rule amends
+- the telegraph-speak rule, where enabled — the frugality canon this rule amends
