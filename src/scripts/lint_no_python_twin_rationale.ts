@@ -26,9 +26,24 @@ const _HERE = fileURLToPath(import.meta.url);
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const SCOPE = path.join(ROOT, 'src', 'scripts');
 
-/** Banned rationale shapes (case-insensitive). */
+/**
+ * Banned rationale shapes (case-insensitive).
+ *
+ * `twin-of` is qualified with a Python signal on purpose. The bare `/\btwin of\b/`
+ * it replaced banned an English word rather than a claim shape, and produced 6 false
+ * positives out of 7 findings: a CLI twin of an MCP tool, a sync twin of an async
+ * probe in the same file, a debate twin of a sibling function, a SQLite twin of a
+ * JSON cache. None of those rationalise anything by fidelity to a deleted Python
+ * original — which is the only thing this gate exists to stop — and rewording correct
+ * comments to dodge a word would have been the tail wagging the dog.
+ *
+ * The narrowing does not weaken the gate: every shape it targets names Python by
+ * construction ("TypeScript twin of the Python original", "twin of the retired
+ * .py"), so the qualifier is satisfied precisely when the claim is the banned one.
+ * The other three patterns already carry their own Python signal.
+ */
 export const BANNED: ReadonlyArray<[string, RegExp]> = [
-    ['twin-of', /\btwin of\b/i],
+    ['twin-of', /\btwin of\b[^\n]*\b(?:python|py2ts|\.py)\b|\b(?:python|py2ts|\.py)\b[^\n]*\btwin of\b/i],
     ['latent-quirks', /latent (?:python )?(?:quirks|bugs) replicated/i],
     ['byte-identical-python', /byte-identical to the python/i],
     ['python-original', /\bthe python original\b/i],
