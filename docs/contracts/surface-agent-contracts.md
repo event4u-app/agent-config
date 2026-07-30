@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2026-09-04
 ---
 
 # Surface-Agent Contracts — medium invariants, not one generic agent

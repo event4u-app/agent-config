@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2026-09-04
 ---
 
 # Pre-Launch Diagnostics — finding IDs, epistemics, regression gate
