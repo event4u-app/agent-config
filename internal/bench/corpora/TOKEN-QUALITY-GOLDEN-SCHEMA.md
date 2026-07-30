@@ -46,6 +46,25 @@ structural error — nominal-only coverage cannot enter the corpus.
 A `labelled` task MUST have a non-TODO `rubric` and at least one `must_include`
 anchor. A `stub` task is structurally valid but excluded from a judge run.
 
+### Authoring consequence — a path in the prompt is not a `path_prefix` match
+
+`path_prefix` and `file_pattern` are matched **only** against `context_files:`.
+Writing the path into the prompt text does not satisfy them, however literal it
+looks: a prompt reading *"fix the typo in `dist/agent-src/rules/scope-control.md`"*
+still fails the falsifiability check for `source-of-truth` unless the task also
+carries `context_files: ["dist/agent-src/rules/scope-control.md"]`.
+
+The sharp case is a rule whose trigger set is **path_prefix-only** — today
+`skill-quality` (`src/skills/`), `rule-type-governance` (`src/rules/`), and
+`source-of-truth` (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`). For
+those, a task without `context_files:` is **not constructible at all**; there is
+no prompt wording that can fire them. Author the `context_files:` entry first and
+let the prompt describe the intent.
+
+The same asymmetry applies in reverse: `keyword`/`phrase` triggers match the
+prompt only, so adding a path to `context_files:` will not rescue a task whose
+tagged rule fires on vocabulary the prompt never uses.
+
 ## Validation
 
 ```

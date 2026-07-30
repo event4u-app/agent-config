@@ -272,6 +272,17 @@ _1 blocker resolved._
   - **What to do:**
   - **Resolved when:** the maintainer authorizes the specific run with an estimate.
 
+### [road-to-thin-flip-under-anchor-scoring.md](roadmaps/road-to-thin-flip-under-anchor-scoring.md)
+
+**Road to a Thin Flip Under Anchor-Scoring** — 0 / 17 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Scoring pass | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Host canary | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | essential decoupling | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 4 | The decision | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 
 **Command `tier:` Alias Removal** — 6 / 8 done (75%)
