@@ -123,6 +123,12 @@ The 40 % floor catches "only power users use this"; the 30 % floor catches
 "the loop proposes mostly junk". Either floor alone is sufficient to trigger
 the review — they are not both required.
 
+> **The 40 % breadth floor above is REMOVED (2026-07-30) and is retained only as
+> the decision record.** It is unimplementable under the enumeration
+> prohibition — see § *Breadth limb removed* below for the argument and the
+> consequence. As shipped, the criterion has ONE live limb: the 30 % accept-rate
+> floor. Read the two paragraphs above as history, not as the operative gate.
+
 **Non-self-locking argument.** The metric this gate reads is a **count of
 human accepts**, not a count of profile *loads*. A user who never has the
 global profile read into a session can still generate a proposed observation

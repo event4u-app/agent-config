@@ -439,7 +439,27 @@ function _dedupable_rules(tool_dir: string, rules: readonly string[], userHome: 
     if (relative === undefined) {
         return new Set();
     }
+    // A hostile or simply absent $HOME must make the dedup inert, not
+    // adventurous. In a container `$HOME` is often unset (so `homedir()` can
+    // resolve to `/`) or world-writable, and this function decides which rules
+    // to STOP emitting — reading an unexpected tree there is how a projection
+    // silently loses a rule. Council review of PR #1055 raised exactly this.
+    let userDirStat: fs.Stats;
     const userDir = path.join(userHome, relative);
+    try {
+        userDirStat = fs.statSync(userDir);
+    } catch {
+        return new Set();
+    }
+    if (!userDirStat.isDirectory()) {
+        return new Set();
+    }
+    // World-writable user scope: anyone on the box could plant a byte-identical
+    // twin and thereby delete a rule from the project projection. Refuse.
+    if ((userDirStat.mode & 0o002) !== 0) {
+        _print(`  ⚠️  ${tool_dir}: user-scope rules dir is world-writable — scope-dedup skipped`);
+        return new Set();
+    }
     const skip = new Set<string>();
     for (const rule of rules) {
         const twin = path.join(userDir, rule);
@@ -1091,7 +1111,13 @@ export function generate_rule_symlinks(): number {
     const source_count = rules.length;
     for (const tool_dir of Object.keys(tool_dirs)) {
         const target_dir = path.join(MODULE_STATE.PROJECT_ROOT, tool_dir);
-        const tool_count = _iterdirSorted(target_dir).filter((f) => f.endsWith('.md')).length;
+        // Count only the RULES this run emitted, not every `.md` in the tree.
+        // Some tool trees legitimately receive other artefact classes — the cline
+        // tree also carries `*.subagent.md` — and counting those produced a
+        // permanent "111 rules (expected 110)" warning that was pure noise. A
+        // warning that is always on is a warning nobody reads.
+        const emitted = new Set(rules);
+        const tool_count = _iterdirSorted(target_dir).filter((f) => emitted.has(path.basename(f))).length;
         // Expect the de-duplicated count, not the source count: a skipped rule is
         // an intended absence, so warning on it would train the reader to ignore
         // this line — which is how a real drift gets missed.
