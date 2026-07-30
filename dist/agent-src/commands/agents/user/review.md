@@ -45,9 +45,9 @@ ls .agent-user.observations.jsonl 2>/dev/null
 ```
 
 Resolve the global buffer's path via `user_global_observations.
-resolveGlobalObservationsPath()` (honours `$EVENT4U_CONFIG_HOME` and the
-legacy `~/.config/agent-config/` fallback, exactly like every other
-global artefact).
+resolveGlobalObservationsPath()` — it honours the config-home override
+env var and the legacy fallback root exactly like every other global
+artefact, so never hard-code either path here.
 
 | State (either buffer) | Action |
 |---|---|
