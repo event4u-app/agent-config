@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-09-04
+---
+
 # Design-Artifact Lifecycle Contract
 
 Phase 1 of `road-to-design-artifact-fidelity`.

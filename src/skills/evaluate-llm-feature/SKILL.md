@@ -2,7 +2,6 @@
 model_tier: high
 name: evaluate-llm-feature
 description: "Black-box evaluation of a shipped LLM feature — adversarial probes for hallucination, prompt-injection, and cost-runaway vs stated expectations. Not RAG/embedding. Triggers 'review my chatbot'."
-source: package
 personas:
   - security-engineer
 domain: quality

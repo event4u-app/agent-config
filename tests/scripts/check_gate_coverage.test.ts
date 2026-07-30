@@ -130,3 +130,43 @@ describe('the real manifest', () => {
         }
     });
 });
+
+describe('classify — unavailable: prerequisite absent, not silence', () => {
+    // A gate whose inputs do not exist locally (check_site_links needs a built site)
+    // must not read as `silent`. Failing there would make the guard red for an
+    // environmental reason, which teaches people to ignore it — worse than no gate.
+    const spec = {
+        id: 'check_site_links',
+        argv: [],
+        min_scanned: 20,
+        corpus: 'built HTML pages',
+        status: 'enforced' as const,
+        unavailable_exit: 2,
+    };
+
+    it('the declared exit code yields unavailable, not silent', () => {
+        const r = classify(spec, null, false, 2);
+        expect(r.verdict).toBe('unavailable');
+        expect(r.message).toMatch(/prerequisite absent/);
+    });
+
+    it('any OTHER exit code with no count is still silent', () => {
+        // The carve-out is one specific code, not "non-zero" — a gate that crashes or
+        // fails while emitting nothing is still a coverage defect.
+        expect(classify(spec, null, false, 1).verdict).toBe('silent');
+        expect(classify(spec, null, false, 0).verdict).toBe('silent');
+    });
+
+    it('the floor still applies when the gate DID run', () => {
+        expect(classify(spec, 3, false, 0).verdict).toBe('below_floor');
+        expect(classify(spec, 25, false, 0).verdict).toBe('ok');
+    });
+
+    it('a gate without unavailable_exit never gets the carve-out', () => {
+        // Build the spec WITHOUT the key rather than setting it to undefined —
+        // exactOptionalPropertyTypes distinguishes the two, and the loader omits the
+        // key entirely when the manifest does not declare it.
+        const { unavailable_exit: _omitted, ...strict } = spec;
+        expect(classify(strict, null, false, 2).verdict).toBe('silent');
+    });
+});

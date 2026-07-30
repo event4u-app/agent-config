@@ -33,7 +33,9 @@ clusters:
   ai-image: lab          # AI image-generation adapters (pack ai-image, experimental)
   ai-video: lab          # AI video pipeline adapters (pack ai-video, experimental)
   ai_council: lab         # multi-model council orchestration, external API deps
+  ai_team: lab            # multi-agent team dispatch + review gate — ai_council's sibling, external API deps
   command_suggester: lab # context-aware command suggestion engine, pilot
+  code_graph: lab        # native code-graph engine — default-off and benchmark-gated per ADR-124
   cost: lab              # cost tracking / budget gate (observability, Node .mjs)
   mcp_exec: lab          # compiled safety envelope for MCP exec-tier tools (run_tests pilot)
   mcp_server: lab        # MCP stdio server, separate runtime, pilot distribution

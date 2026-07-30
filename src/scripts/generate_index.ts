@@ -25,6 +25,7 @@ import {
     strip_source_prefix,
 } from './_lib/agent_src.js';
 import { computeStatus as domainSoundnessStatus } from './domain_soundness_status.js';
+import { skip_compile_disabled_rule } from './condense.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -243,6 +244,12 @@ export function _collect_skills(): Entry[] {
     return _sortedKeys(seen).map((k) => seen.get(k) as Entry);
 }
 
+// docs/catalog.md is a SHIPPED file, so a relative link from it must resolve inside
+// package.json#files. docs/proof.md is not shipped and cannot be: it is 58KB of
+// generated output linking eight paths under internal/bench/, tests/ and src/scripts/
+// that are themselves unshipped, so shipping it would hand consumers a page of dead
+// links. The published site URL is the honest target for a consumer-facing pointer.
+
 export function _collect_rules(): Entry[] {
     const seen = new Map<string, Entry>();
     for (const srcRoot of artefact_roots()) {
@@ -253,6 +260,14 @@ export function _collect_rules(): Entry[] {
         for (const ruleMd of _globMdSorted(rulesRoot)) {
             const stem = _stem(ruleMd);
             if (seen.has(stem)) {
+                continue;
+            }
+            // A compile-disabled rule has no dist/agent-src/ counterpart, and the
+            // table links the SHIPPED path — so listing it emits a dead link. The
+            // toggle is a separate axis from the source file's existence; this is its
+            // fifth consumer after the router compiler, the dist writer, check_sync,
+            // and the per-tool symlink generator. Same predicate in all five.
+            if (skip_compile_disabled_rule(`rules/${stem}.md`)) {
                 continue;
             }
             const fm = _parse_frontmatter(fs.readFileSync(ruleMd, 'utf-8'));
@@ -420,7 +435,8 @@ export function _render_catalog(
         '> not yet. Coverage is reported per tier (`./scripts-run',
         '> src/scripts/skill_eval_coverage`) and CI-ratcheted so it can only rise.',
         '> Listing here never implies a skill is behaviourally tested — the',
-        '> current coverage and its gap are published on [the proof page](proof.md).',
+        '> current coverage and its gap are published on [the proof page]' +
+            '(https://event4u-app.github.io/agent-config/proof/).',
         '',
         '> **Non-coding domain correctness is scoped, not proven.** The',
         '> `finance` / `founder` / `ops` / `content` skills are forged on TS/PHP',
@@ -429,7 +445,8 @@ export function _render_catalog(
         '> cited formulas, or rubric targets matching a named external practice);',
         '> the rest are labeled `unvalidated` until they pass one',
         '> (`./scripts-run src/scripts/domain_soundness_status`). A disclaimer',
-        '> floor bounds liability, not correctness — see [the proof page](proof.md).',
+        '> floor bounds liability, not correctness — see [the proof page]' +
+            '(https://event4u-app.github.io/agent-config/proof/).',
         '',
         _render_table(skills, ['kind', 'name', 'source', 'description'], '../', _to_shipped_path),
         '',

@@ -2,7 +2,6 @@
 model_tier: inherit
 name: llm-provider-knowledge
 description: "Before stating any specific fact about an LLM provider's product — models, pricing, limits, context windows, SDK/API — for OpenAI, Gemini, Claude & others, verify against official docs, not memory."
-source: package
 domain: process
 personas: []
 workspaces:
