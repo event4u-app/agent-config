@@ -968,6 +968,12 @@ function _scoped_rule_basenames(): string[] {
     return _iterdirSorted(MODULE_STATE.RULES_SOURCE)
         .filter((p) => p.endsWith('.md') && _isFile(p))
         .filter((p) => rule_in_scope(p, scope, pack_scope))
+        // A compile-disabled rule has no dist/agent-src/ counterpart, so a per-tool
+        // symlink to it would dangle. The source file still exists, which is why the
+        // scope filters alone let it through — the toggle is a separate axis and this
+        // is its fourth consumer, after the router compiler, the dist writer, and
+        // check_sync. Same predicate in all four; that is the point.
+        .filter((p) => !skip_compile_disabled_rule(`rules/${path.basename(p)}`))
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
