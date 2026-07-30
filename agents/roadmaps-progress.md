@@ -6,7 +6,7 @@
 
 ## Overall
 
-**122 / 250 steps done · 49%**
+**123 / 251 steps done · 49%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   49%
@@ -19,7 +19,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | Roadmap | Done | Deferred | Cancelled |
 |---|---:|---:|---:|
 | [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 30 | 2 | 0 |
-| [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 44 | 4 | 0 |
+| [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 45 | 3 | 0 |
 
 ## Open roadmaps
 
@@ -31,7 +31,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
-| 7 | [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 6 | 48 | 0 | 44 | 4 | 0 | 0 | ██████████ 100% |
+| 7 | [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 6 | 48 | 0 | 45 | 3 | 0 | 0 | ██████████ 100% |
 | 8 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -153,13 +153,13 @@ _2 blockers resolved._
 
 ### [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md)
 
-**Road to a global user-memory layer — the agent remembers the user, not just the repo** — 44 / 44 done (100%)
+**Road to a global user-memory layer — the agent remembers the user, not just the repo** — 45 / 45 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Ground the prerequisite: is this a managed `agents/` folder? | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | The global user profile (read path) | ✅ done | 0 | 8 | 0 | 0 | 100% |
-| 2 | The learning channel (write path + the guards) | ✅ done | 0 | 7 | 1 | 0 | 100% |
+| 2 | The learning channel (write path + the guards) | ✅ done | 0 | 8 | 0 | 0 | 100% |
 | 3 | Project attribution and the generalisation promotion | ✅ done | 0 | 9 | 0 | 0 | 100% |
 | 4 | Delete, revoke, audit | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | The gate that can actually fire | ✅ done | 0 | 12 | 3 | 0 | 100% |

@@ -158,7 +158,7 @@ letting anything reach the profile unaccepted.
       never read by the profile loader directly, mirroring the existing
       project-local buffer's contract exactly.
       <!-- done 2026-07-30 — src/scripts/_lib/user_global_observations.ts: append-only writer, path via user_global_paths, never rewrites on refusal -->
-- [~] Give `memory-consolidation` a **second, user-scoped channel**: user-attribute
+- [x] Give `memory-consolidation` a **second, user-scoped channel**: user-attribute
       matches route here instead of being discarded. The project-scoped rule in
       Phase 2 of that skill is **unchanged** — no user fact enters
       `agents/memory/` curated YAML, so the recorded lock stays literally intact.
@@ -166,6 +166,7 @@ letting anything reach the profile unaccepted.
       "WHEN NOT to use this" sections, which currently send user-attribute facts
       to the onboard flow.
       <!-- partial 2026-07-30 — mineUserObservationCandidates() ships and is independently tested (the signals mine() used to discard now shape a candidate), and the skill documents the channel. NOT wired: the --commit-intake CLI does not yet auto-append, because the existing pinned parity suite spawns that script with no $HOME/$EVENT4U_CONFIG_HOME isolation and a real write would land in the live global root. Follow-up: isolate that suite env first, then wire the last mile -->
+      <!-- completed 2026-07-30 — the blocker is gone, not worked around: the Wave-8g spawn rig now hands children a sandbox $HOME/$EVENT4U_CONFIG_HOME (explicit inheritHome opt-out), verified as its own green state across all 11 consuming suites before the wiring was touched. --commit-intake then landed the global append, shared ≤5 cap honoured, guards + redaction on every write, and a test snapshots the REAL buffer size around a run to prove it stays untouched -->
 - [x] Enforce the ≤ 5-normalised-facts-per-cycle gate **globally across both
       channels**, not per channel, so the second channel cannot double the write
       volume. Make the shared counter explicit in the skill text — a per-channel
