@@ -29,7 +29,7 @@ Exactly four:
 3. **Commit command invoked** — `/commit` (confirmed) or `/commit:in-chunks` (auto-split).
 4. **Roadmap authorization** — roadmap lists explicit commit steps and the user invoked roadmap execution.
 
-Anything else → no commit. Hard Floor (bulk deletions, infra changes) still fires on top of any exception — see [`commit-mechanics`](../contexts/authority/commit-mechanics.md) for diff triggers and roadmap-authorized commit flow.
+Anything else → no commit. Hard Floor (bulk deletions, infra changes) still fires on top of any exception — diff triggers + roadmap-authorized flow: [`commit-mechanics`](../contexts/authority/commit-mechanics.md).
 
 ## One-shot authorization is not a standing license
 
@@ -39,7 +39,7 @@ IT NEVER BECOMES A STANDING LICENSE FOR LATER COMMITS OR PUSHES.
 EACH FURTHER COMMIT / PUSH NEEDS ITS OWN FRESH, EXPLICIT GO-AHEAD.
 ```
 
-"Commit this", "push it", "open the PR", "create the PRs" authorize **that operation, once** — not the commits/pushes that follow later in the **same** task. "Create the PR" is spent on the initial branch + commit + push + PR; the next change (a follow-up fix, a review response, a quality pass, a "while I'm here" cleanup) waits for a new instruction. A task instruction that only asks for **code** ("fix X", "use file Y for tests", "there's a linter error") authorizes the code change **only** — never a commit or push. Re-using an earlier authorization for a later operation is exactly the inference (exception 2 misread as "standing") this rule forbids.
+"Commit this", "push it", "open the PR", "create the PRs" authorize **that operation, once** — not later commits/pushes in the **same** task. "Create the PR" is spent on the initial branch + commit + push + PR; the next change (follow-up fix, review response, quality pass, "while I'm here" cleanup) waits for a new instruction. A task instruction asking only for **code** ("fix X", "use file Y for tests", "there's a linter error") authorizes the code change **only** — never a commit or push. Re-using an earlier authorization for a later operation is exactly the inference (exception 2 misread as "standing") this rule forbids.
 
 ## NEVER ask about committing
 
@@ -55,13 +55,8 @@ NEVER ASK "ONE COMMIT OR MULTIPLE?", "HOW SHOULD I SPLIT?",
 "WHICH CHUNK FIRST?". THE AGENT PICKS THE SPLIT.
 ```
 
-One chunk per concern, foundation-first; generated files ride with their source. Full mechanics + carve-outs: [`commit-mechanics`](../contexts/authority/commit-mechanics.md).
+One chunk per concern, foundation-first; generated files ride with their source. Mechanics + carve-outs: [`commit-mechanics`](../contexts/authority/commit-mechanics.md).
 
 ## NEVER write commit steps into roadmaps unsolicited
 
-Roadmaps plan **work**, not commits — when creating a roadmap, never add commit steps unless the user explicitly asked. Detail: [`commit-mechanics`](../contexts/authority/commit-mechanics.md).
-
-## See also
-
-- [`scope-control`](scope-control.md) — git-ops permission gate (push, merge, branch, PR, tag).
-- [`no-cheap-questions`](no-cheap-questions.md) — canonical Iron Law. · [`autonomous-execution`](autonomous-execution.md) · [`/commit`](../commands/commit.md) · [`/commit:in-chunks`](../commands/commit/in-chunks.md).
+Roadmaps plan **work**, not commits — never add commit steps to a roadmap unless the user explicitly asked. Detail: [`commit-mechanics`](../contexts/authority/commit-mechanics.md).

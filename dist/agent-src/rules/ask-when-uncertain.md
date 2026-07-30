@@ -60,7 +60,3 @@ Council enabled → questions route per `decision_resolution`. **Iron Law: `high
 ## Creating new agent artifacts
 
 Skill / rule / command / guideline → [`artifact-drafting-protocol`](artifact-drafting-protocol.md) (Understand → Research → Draft).
-
-## Examples
-
-Pattern Memory (wrong / right / why): [`ask-when-uncertain-demos`](../docs/guidelines/agent-infra/ask-when-uncertain-demos.md). Outcome baseline: [`tests/golden/outcomes/ask_when_uncertain.json`](../../tests/golden/outcomes/ask_when_uncertain.json).
