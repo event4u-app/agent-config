@@ -2,7 +2,7 @@
 /**
  * C-3 measurement harness — scope de-duplication of the rule projection.
  *
- * Pre-registered in `agents/roadmaps/road-to-cache-economy.md` § "C-3
+ * Pre-registered in `road-to-cache-economy.md` § "C-3
  * pre-registration" BEFORE this script produced a number. Metric, threshold and
  * honest-null consequence are fixed there; this file only measures.
  *

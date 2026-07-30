@@ -21,7 +21,7 @@ review_trigger: >-
 ## Status
 
 Accepted (2026-07-30). Implements Phase 1 (read path) of
-`agents/roadmaps/road-to-global-user-memory.md`, per the council cut recorded
+`road-to-global-user-memory.md`, per the council cut recorded
 in [`global-user-memory-cut`](../../agents/settings/contexts/global-user-memory-cut.md).
 
 ## Context
@@ -208,7 +208,7 @@ enumeration by 90 days.
 
 ## References
 
-- `agents/roadmaps/road-to-global-user-memory.md` — Phase 1.
+- `road-to-global-user-memory.md` — Phase 1.
 - [`global-user-memory-cut`](../../agents/settings/contexts/global-user-memory-cut.md) — council convergence record.
 - [`agent-user-schema.md`](../contracts/agent-user-schema.md) — the updated loader/merge contract.
 - [`user_global_paths.ts`](../../src/scripts/_lib/user_global_paths.ts) — the shared global-root resolver.

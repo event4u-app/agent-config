@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Cache-realization report — pre-registers and evaluates the five claims
- * (C-1..C-5) from `agents/roadmaps/road-to-cache-economy.md` Phase 2.
+ * (C-1..C-5) from `road-to-cache-economy.md` Phase 2.
  *
  * Metric definition (load-bearing, restated from `_lib/cc_transcript.ts`):
  *

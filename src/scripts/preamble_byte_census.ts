@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Preamble byte census — attributes the measured subagent cold-start payload
- * to named sources (`agents/roadmaps/road-to-cache-economy.md` Phase 3,
+ * to named sources (`road-to-cache-economy.md` Phase 3,
  * steps 1-2): user-scope rules, project-scope rules, the CLAUDE.md
  * hierarchy (project + user + `@`-imports + `CLAUDE.local.md`), the global
  * user `profile.md` (road-to-global-user-memory), and the preloaded skills

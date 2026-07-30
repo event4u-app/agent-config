@@ -162,7 +162,7 @@ needs, as a one-rule worked example. It is cited here rather than re-invented:
 
 ### Adjacent roadmap on main — overlap verdict: DISTINCT, one interaction
 
-`agents/roadmaps/road-to-global-user-memory.md` (merged 2026-07-30) moves the
+`road-to-global-user-memory.md` (merged 2026-07-30) moves the
 user-memory layer to a global root with a learning channel and an accept-gate.
 Checked for overlap against this roadmap: **no shared file, no shared claim, no
 shared mechanism** — that roadmap governs *what the agent remembers about the

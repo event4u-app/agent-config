@@ -2,7 +2,7 @@
  * Tests for the Phase 4 ("delete, revoke, audit") addition to
  * `src/scripts/_lib/agent_user_profile.ts` — `revokeGlobalProfileField`, the
  * delete counterpart of `applyObservationToGlobalProfile`, per
- * `agents/roadmaps/road-to-global-user-memory.md` Phase 4.
+ * `road-to-global-user-memory.md` Phase 4.
  *
  * Every test injects `EVENT4U_CONFIG_HOME` at a temp dir and pins `$HOME`
  * to an empty temp dir (mirrors `tests/lib/agent_user_profile.test.ts`) so
