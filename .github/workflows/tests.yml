@@ -127,6 +127,9 @@ jobs:
       # The committed dist/install/install.mjs is the raw-source consumer
       # bridge runner (node, no tsx) used by setup.sh. Rebuild it and assert
       # no drift — a stale bundle ships old install behavior to consumers.
+      # Scope note: esbuild only, so this covers install.mjs and NOT the tsc
+      # output in the same directory — that is the static-checks job's
+      # "Committed build output is fresh (dist/install/)" gate.
       - name: Install bundle is fresh (dist/install/install.mjs)
         run: |
           npm run build:install-bundle
@@ -267,6 +270,31 @@ jobs:
       - name: Build (dist/cli + UI bundle)
         # prepack-check asserts the chmod +x hook applied by build:cli.
         run: npm run build --silent
+
+      # dist/install/ is a TRACKED, npm-shipped tree (package.json `files`), and
+      # the build above emits tsc output straight into it — but nothing asserted
+      # the committed output still derives from src/install/. Two drift classes
+      # shipped to consumers before PR #1052 caught them by hand: rule_scope.js
+      # built without the `roles` scope dimension (so the shipped build ignored
+      # `rule_roles` while the source honoured it), and three sources
+      # (agentSwitchDetection, agentSwitchProfile, wizardDismissals) with no
+      # compiled counterpart at all.
+      #
+      # Neither was visible: the sibling "Install bundle is fresh" gate in
+      # install-aux-tests rebuilds only install.mjs via esbuild, so it never
+      # exercises the tsc side, and node-tests runs build:cli without asserting
+      # drift. `--porcelain` over `git diff --exit-code` on purpose — diff sees
+      # modified files only, and MISSING output is untracked, not modified.
+      # Free ride: this reuses the build already run above, no extra compile.
+      - name: Committed build output is fresh (dist/install/)
+        run: |
+          drift="$(git status --porcelain -- dist/install/)"
+          if [ -n "$drift" ]; then
+            echo "::error::dist/install/ no longer derives from src/install/. Run 'npm run build:cli' and commit the result."
+            echo "$drift"
+            git --no-pager diff -- dist/install/
+            exit 1
+          fi
 
       - name: prepack-check (compiled bin shape + shipped-import completeness)
         # Dry-run of the publish gate on every PR: also asserts every relative
