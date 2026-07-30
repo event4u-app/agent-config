@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Agent-config sync — condense .agent-src.uncondensed/ → dist/agent-src/
+ * Agent-config sync — project the artefact roots under src/ → dist/agent-src/
  * and project dist/agent-src/ → .augment/ (copies for rules by default,
  * symlinks for the rest; opt into rule symlinks via
  * augment.rules_use_symlinks in .agent-settings.yml).
@@ -752,6 +752,12 @@ export function check_sync(_source_dir: string, target_dir: string): [string[], 
             continue;
         }
         seen.add(relative);
+        // A compile-disabled rule is deliberately absent from the projection,
+        // so demanding a counterpart would report the intended state as a defect.
+        // Same predicate the projector and the router compiler use.
+        if (skip_compile_disabled_rule(relative)) {
+            continue;
+        }
         if (!_exists(path.join(target_dir, relative))) {
             missing.push(relative);
         }
@@ -762,7 +768,10 @@ export function check_sync(_source_dir: string, target_dir: string): [string[], 
                 continue;
             }
             const relative = _relativeToPosix(target_file, target_dir);
-            if (_resolve_source(relative) === null) {
+            // Two ways a projected file is stale: no source at all, or a source
+            // that is compile-disabled — the second is how a re-enabled-then-
+            // disabled rule leaves weight behind.
+            if (_resolve_source(relative) === null || skip_compile_disabled_rule(relative)) {
                 stale.push(relative);
             }
         }
@@ -2332,7 +2341,7 @@ function _print(line: string): void {
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if (!_exists(MODULE_STATE.SOURCE_DIR) && !_any_source_root_exists()) {
         _print(
-            `❌  No source directory found (looked at ${MODULE_STATE.SOURCE_DIR} and packages/*/.agent-src.uncondensed)`,
+            `❌  No source directory found (looked at the artefact roots under src/ and ${MODULE_STATE.SOURCE_DIR})`,
         );
         return 1;
     }
@@ -2366,7 +2375,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     } else if (arg === '--check') {
         const [missing, stale] = check_sync(MODULE_STATE.SOURCE_DIR, MODULE_STATE.TARGET_DIR);
         if (missing.length === 0 && stale.length === 0) {
-            _print('✅  dist/agent-src/ is in sync with .agent-src.uncondensed/');
+            _print('✅  dist/agent-src/ is in sync with the artefact roots under src/');
             return 0;
         }
         if (missing.length > 0) {
@@ -2381,10 +2390,12 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
                 _print(`  ${f}`);
             }
         }
-        _print(`\nRun 'task sync' to fix non-.md files, then ask the agent to condense .md files.`);
+        _print(`\nRun 'task sync' — the projection is a deterministic copy, so it needs no agent step.`);
         return 1;
     } else if (arg === '--sync') {
-        _print(`Source: ${MODULE_STATE.SOURCE_DIR}`);
+        // SOURCE_DIR is the pre-ADR-051 single root, kept only as a fallback probe;
+        // the real inputs are the artefact roots the multi-root iterator walks.
+        _print(`Source: the artefact roots under src/`);
         _print(`Target: ${MODULE_STATE.TARGET_DIR}\n`);
         _print('--- Syncing non-.md files ---');
         const copied = sync_non_md(MODULE_STATE.SOURCE_DIR, MODULE_STATE.TARGET_DIR);

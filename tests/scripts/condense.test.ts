@@ -1,35 +1,24 @@
 // Tests for src/scripts/condense.ts (py2ts Phase 5 — the content-pipeline crown jewel).
 //
-// Two layers:
-//   1. Unit suites ported 1:1 from tests/test_condense.py + tests/test_condense_paths.py.
-//      The pytest suites monkeypatch module globals (condense.PROJECT_ROOT,
-//      condense.HASH_FILE, condense.TARGET_DIR, …) and the multi-root helper
-//      functions (condense.iter_all_sources / resolve_logical / artefact_roots).
-//      The TS twin exposes the same surface through MODULE_STATE + the
-//      _setStateForTest / _getStateForTest / _resetStateForTest seams; each
-//      suite saves+restores the state it mutates (≈ pytest setUp/tearDown).
-//   2. Golden-parity differential suites — run python3 vs tsx of condense on
-//      the REAL repo for the read-only subcommands (byte-identical stdout +
-//      stderr + exit), and assert that `--sync` then `--generate-tools` leave
-//      ZERO git drift on the committed generated trees (the critical gate).
-//      Each write test snapshots the tree and restores it in afterEach.
+// Unit suites ported 1:1 from tests/test_condense.py + tests/test_condense_paths.py.
+// The pytest suites monkeypatch module globals (condense.PROJECT_ROOT,
+// condense.HASH_FILE, condense.TARGET_DIR, …) and the multi-root helper
+// functions (condense.iter_all_sources / resolve_logical / artefact_roots).
+// The TS twin exposes the same surface through MODULE_STATE + the
+// _setStateForTest / _getStateForTest / _resetStateForTest seams; each
+// suite saves+restores the state it mutates (≈ pytest setUp/tearDown).
+//
+// The python twin these suites were ported from is gone, so the golden-parity
+// differential layer this header used to describe is gone with it — the whole-repo
+// projection is now covered by check_condensation's byte-exactness invariant
+// (dist == rewrite(src)), which is stronger than a py-vs-tsx stdout diff.
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as condense from '../../src/scripts/condense.js';
-
-const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-const TS = path.join(REPO_ROOT, 'src', 'scripts', 'condense.ts');
 
 // ---------------------------------------------------------------------------
 // Helpers
