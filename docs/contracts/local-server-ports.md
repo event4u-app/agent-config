@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Contract: local server ports + host integration
 
 > The loopback/port contract `src/server/port.ts` enforces, plus the

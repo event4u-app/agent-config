@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Design-Artifact Verification — Host-Capability & Degrade Contract
 
 Phase 0 substrate for `road-to-design-artifact-fidelity`.

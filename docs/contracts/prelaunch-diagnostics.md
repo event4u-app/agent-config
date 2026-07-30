@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Pre-Launch Diagnostics — finding IDs, epistemics, regression gate
 
 > Contract for the consumer-facing launch diagnostic

@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Design-Artifact Lifecycle Contract
 
 Phase 1 of `road-to-design-artifact-fidelity`.
