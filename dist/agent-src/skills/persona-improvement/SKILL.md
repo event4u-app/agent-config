@@ -11,8 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-requires_skills:
-  - persona-governance
 ---
 
 # persona-improvement
