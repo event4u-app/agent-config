@@ -10,7 +10,6 @@
 
 # Authoring + dev tooling
 /.agent-src.uncondensed export-ignore
-/.condensation-hashes.json export-ignore
 /.augmentignore          export-ignore
 /.agent-settings         export-ignore
 /agents                  export-ignore
