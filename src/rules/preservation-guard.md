@@ -52,7 +52,10 @@ want. What's forbidden is **deletion**: the rationale paragraph stays, the
 canonical-failure example stays, every "NEVER X" bullet stays.
 
 `scripts/check_condensation.ts` enforces these mechanically — any violation is
-an `error`, not a warning.
+an `error`, not a warning. Since ADR-201 it enforces them the strongest way
+available: byte-exactness between source and projection. Structural findings
+(lost heading, mangled fence, dropped passage) are retained as diagnostics that
+name *what* differs when the bytes do.
 
 ## Mandatory preservation checklist
 
@@ -86,7 +89,12 @@ Before completing any transformation, verify:
 - Skill merges (combining two skills into one)
 - Skill splits (extracting part of a skill)
 - Refactoring (restructuring without behavior change)
-- Condensation (`.agent-src.uncondensed/` → `dist/agent-src/`)
+- ~~Condensation (source tree → `dist/agent-src/`)~~ — **no longer applicable
+  (ADR-201, accepted 2026-07-29).** `.md` is copied verbatim and path-rewritten,
+  so the projection cannot drop a passage, downgrade an Iron Law heading, or
+  mangle a code block: `check_condensation` now asserts `dist == rewrite(src)`
+  byte-for-byte. The obligations below still bind every *authoring* transform in
+  this list — they simply have nothing left to police in the projection.
 - Rule consolidation
 - Guideline restructuring
 
