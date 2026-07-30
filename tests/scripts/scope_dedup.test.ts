@@ -101,3 +101,53 @@ describe('scope dedup — byte-identity gate', () => {
         );
     });
 });
+
+describe('scope dedup — hostile or degenerate user scope (council review of #1055)', () => {
+    it('treats a CRLF-vs-LF twin as DIFFERENT, so a line-ending change never silently drops a rule', () => {
+        const root = tmpdir();
+        const source = writeRules(path.join(root, 'source'), { 'a.md': 'line one\nline two\n' });
+        const user = writeRules(path.join(root, 'user'), { 'a.md': 'line one\r\nline two\r\n' });
+
+        // Same characters, different bytes — the gate is byte-identity, not
+        // text-equivalence, precisely so a CRLF checkout cannot make the two
+        // scopes look interchangeable when the host would load different bytes.
+        expect(dedupableCount(user, source).skipped).toBe(0);
+    });
+
+    it('de-duplicates a symlinked twin only when the RESOLVED bytes match', () => {
+        const root = tmpdir();
+        const source = writeRules(path.join(root, 'source'), { 'a.md': 'same\n', 'b.md': 'same\n' });
+        const user = path.join(root, 'user');
+        fs.mkdirSync(user, { recursive: true });
+        // a.md → a symlink to identical content; b.md → a symlink to different content.
+        const identical = path.join(root, 'identical.md');
+        const different = path.join(root, 'different.md');
+        fs.writeFileSync(identical, 'same\n', 'utf-8');
+        fs.writeFileSync(different, 'other\n', 'utf-8');
+        fs.symlinkSync(identical, path.join(user, 'a.md'));
+        fs.symlinkSync(different, path.join(user, 'b.md'));
+
+        const result = dedupableCount(user, source);
+        expect(result.skipped).toBe(1);
+        expect(result.chars).toBe(Buffer.byteLength('same\n'));
+    });
+
+    it('is inert when the twin symlink dangles rather than throwing', () => {
+        const root = tmpdir();
+        const source = writeRules(path.join(root, 'source'), { 'a.md': 'x\n' });
+        const user = path.join(root, 'user');
+        fs.mkdirSync(user, { recursive: true });
+        fs.symlinkSync(path.join(root, 'nowhere.md'), path.join(user, 'a.md'));
+
+        expect(dedupableCount(user, source).skipped).toBe(0);
+    });
+
+    it('is inert when the user scope is a FILE where a directory was expected', () => {
+        const root = tmpdir();
+        const source = writeRules(path.join(root, 'source'), { 'a.md': 'x\n' });
+        const notADir = path.join(root, 'user');
+        fs.writeFileSync(notADir, 'not a directory\n', 'utf-8');
+
+        expect(dedupableCount(notADir, source).skipped).toBe(0);
+    });
+});

@@ -439,7 +439,27 @@ function _dedupable_rules(tool_dir: string, rules: readonly string[], userHome: 
     if (relative === undefined) {
         return new Set();
     }
+    // A hostile or simply absent $HOME must make the dedup inert, not
+    // adventurous. In a container `$HOME` is often unset (so `homedir()` can
+    // resolve to `/`) or world-writable, and this function decides which rules
+    // to STOP emitting — reading an unexpected tree there is how a projection
+    // silently loses a rule. Council review of PR #1055 raised exactly this.
+    let userDirStat: fs.Stats;
     const userDir = path.join(userHome, relative);
+    try {
+        userDirStat = fs.statSync(userDir);
+    } catch {
+        return new Set();
+    }
+    if (!userDirStat.isDirectory()) {
+        return new Set();
+    }
+    // World-writable user scope: anyone on the box could plant a byte-identical
+    // twin and thereby delete a rule from the project projection. Refuse.
+    if ((userDirStat.mode & 0o002) !== 0) {
+        _print(`  ⚠️  ${tool_dir}: user-scope rules dir is world-writable — scope-dedup skipped`);
+        return new Set();
+    }
     const skip = new Set<string>();
     for (const rule of rules) {
         const twin = path.join(userDir, rule);
