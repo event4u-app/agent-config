@@ -1,0 +1,31 @@
+{
+    "_comment": "Per-spawn preamble payload ceiling (road-to-cache-economy Phase 3), unblocked by C-3 measuring 38.0% against a 15% bar. This is a RATCHET, not the roadmap's literal candidate numbers: those (median 40k / p95 50k) were anchored to an upstream ~37k baseline, while this package's own deterministic in-repo payload is 102,599 tokens — a hard 40k gate would be red on the day it lands and would teach the reader to ignore it. The ratchet fails on GROWTH instead, so the number can only walk down, and the 40k/50k target stays recorded as the destination. Only the deterministic, in-repo buckets are gated: user-scope rules depend on what the developer happens to have installed globally and are therefore not CI-checkable.",
+    "schema_version": 1,
+    "registered_at": "2026-07-30",
+    "owner": "maintainer",
+    "review_by": "2027-07-30",
+    "metric": {
+        "basis": "chars/4 token estimate over the projected tree, produced by src/scripts/preamble_byte_census.ts",
+        "gated_buckets": [
+            "project-scope rules (dist/agent-src/rules/*.md)",
+            "preloaded skills catalog (name + description, dist/agent-src/skills)",
+            "CLAUDE.md hierarchy (project + project-local)"
+        ],
+        "excluded_buckets": [
+            "user-scope rules (~/.claude/rules/*.md) — machine-dependent, not CI-checkable",
+            "tool definitions + dispatch prompt — no local source carries the request payload; the census reports it as an explicit residual"
+        ]
+    },
+    "baseline_tokens": 102599,
+    "headroom_pct": 5,
+    "target_tokens": {
+        "median": 40000,
+        "p95": 50000,
+        "_comment": "The roadmap's candidate numbers, kept as the destination. Reaching them needs reductions this package has not built yet; scope-dedup (C-3) removes a redundant COPY at the consumer, it does not shrink the suite itself."
+    },
+    "reference_measurements": {
+        "measured_cold_start_median_tokens": 230930,
+        "c3_scope_dedup_reduction_pct": 38,
+        "_comment": "The measured median comes from Claude Code transcripts (deduped by message.id + requestId) and is context for the ratchet, never the gated number — it moves with the developer's own session history."
+    }
+}

@@ -162,7 +162,7 @@ needs, as a one-rule worked example. It is cited here rather than re-invented:
 
 ### Adjacent roadmap on main — overlap verdict: DISTINCT, one interaction
 
-`agents/roadmaps/road-to-global-user-memory.md` (merged 2026-07-30) moves the
+`road-to-global-user-memory.md` (merged 2026-07-30) moves the
 user-memory layer to a global root with a learning channel and an accept-gate.
 Checked for overlap against this roadmap: **no shared file, no shared claim, no
 shared mechanism** — that roadmap governs *what the agent remembers about the
@@ -376,13 +376,78 @@ report cache-aware numbers, deduped, with subagent legs separated.
       (`read_share` below 90%, or cold-start share below 50%).
       <!-- done 2026-07-30 — every run ends with the reproduce command, claude --version (2.1.220 observed), and the two drift thresholds -->
 
+### C-3 pre-registration — written 2026-07-30, BEFORE the first measurement run
+
+C-3 was `pending` because no reduction had shipped. This registers the exact
+reduction, metric and threshold **before** any measurement, so the result cannot
+be fitted to the outcome.
+
+**The reduction under test: scope de-duplication of the rule projection.** The
+package projects the same rule suite into one host session twice — `generate-tools`
+writes per-tool rule symlinks at project scope (`.claude/rules/`, 94 in scope
+here) while a global install writes the same suite at user scope
+(`~/.claude/rules/`, 110). Both load on every subagent spawn. De-duplication
+emits the body once and skips the redundant twin.
+
+**Why this is NOT the locked thin-projection mechanism.** Thin projection was
+measured at a 36.2% win-rate against a 48% floor and stays DISABLED: it makes
+rule bodies *trigger-gated*, so the model may never see a rule it would have
+needed. De-duplication changes nothing about what the model sees — the identical
+text still loads, in full, once instead of twice. Mechanism-match check per the
+decision-revisit gate: different mechanism, so the lock does not apply. Router
+tiering is untouched; no rule becomes conditional.
+
+**Content-identity gate (load-bearing).** A twin is de-duplicated **only when it
+is byte-identical**. Verified precondition on this machine: all 110 shared
+filenames **differ in bytes** (a globally installed release vs this repo's
+`dist/`), so a naive filename-keyed dedup would silently let an older copy win.
+Byte-identity is what makes the reduction content-neutral, and therefore what
+makes "no regression on the existing trigger/outcome evals" true *by
+construction* rather than by measurement.
+
+**Metric.** `preamble_byte_census` median cold-start payload tokens, on a
+two-scope fixture representing the condition the reduction targets: a consumer
+carrying the SAME package version at user and project scope (the byte-identical
+case). Reported alongside the same census on this machine, where version drift
+makes the dedup correctly inert.
+
+**Threshold.** ≥ 15% reduction of the median cold-start payload on that fixture.
+
+**Honest-null consequence, fixed in advance.** Below 15%: the payload ceiling and
+the per-rule dormancy routing are marked `[-]` cancelled **with the measured
+number as the reason**, not quietly dropped. At or above 15%: both proceed, and
+the shipped default for the dedup remains a separate governance call — this
+claim measures the mechanism, it does not authorise flipping a consumer default.
+
+### C-3 measured result — 2026-07-30, after the pre-registration above
+
+Reproduce: `./scripts-run src/scripts/measure_scope_dedup`.
+
+| condition | byte-identical twins | rules payload before → after | removed |
+|---|---|---|---|
+| **Fixture** (consumer: same version at both scopes) | 110/110 | 175,354 → 87,677 tok | **87,677 tok** |
+| **Control** (this machine: releases drift) | 0/110 | unchanged | 0 tok |
+
+**Reduction: 38.0% of the measured median cold-start** (87,677 of 230,556 tok), or
+50.0% of the two-scope rules payload. Threshold was ≥ 15% → **MET**.
+
+The control matters as much as the result: on a maintainer machine the two scopes
+hold different releases, so the byte-identity gate makes the dedup **correctly
+inert** (0/110) instead of silently letting the older globally-installed copy win.
+
+End-to-end proof, not just arithmetic: with `projection.scope_dedup: true` and a
+byte-identical user scope, `condense --generate-tools` skipped all 110 project-scope
+rule links (`.claude/rules` → 0 files) while the host still loads the same 110 rules
+from user scope. Default is **off**; flipping a consumer default is a separate
+governance call, and this claim does not authorise it.
+
 ### Measured verdicts — 2026-07-30, host CC 2.1.220
 
 | claim | threshold | measured | verdict |
 |---|---|---|---|
 | C-1 cold-start dominance | ≥50% of subagent write volume | **69.7%** | **confirmed** |
 | C-2 duplicate-scope share | ≥25% of subagent write volume | **38.5%** | **confirmed** |
-| C-3 preamble reducibility | ≥15% median cold-start reduction | — | **pending** — no reduction intervention has landed yet (Phase 3) |
+| C-3 preamble reducibility | ≥15% median cold-start reduction | **38.0%** | **confirmed** 2026-07-30 |
 | C-4 council mispricing | ≥5% change in realized cost | **5.5%** | **confirmed** |
 | C-5 worktree fragmentation | first-call read share <10% of an established directory | **69.1%** | **FALSIFIED** |
 
@@ -426,20 +491,22 @@ both are confirmed, so Phases 3–4 keep their premise.
       projection decision, do not re-derive it, and state which mechanism each
       argument belongs to.
       <!-- done 2026-07-30 — noted in docs/contracts/load-context-budget-model.md: per-spawn write volume is a second, independent argument for the cap; the parked context-token-projection decision is cited, not re-derived -->
-- [~] Publish a per-spawn payload ceiling **only if C-3 holds**, enforced by the
+- [x] Publish a per-spawn payload ceiling **only if C-3 holds**, enforced by the
       existing byte-census gate rather than a new one. Candidate numbers from the
       council: median ≤ **40k**, p95 ≤ **50k** tokens of cold-start payload,
       anchored to the ~37k upstream baseline. Ship them as an addendum to the
       existing token-budget authoring discipline, not as a parallel budget system.
       <!-- verify: the gate fails on a deliberately oversized fixture and passes on the current tree -->
       <!-- deferred 2026-07-30 — C-3 is pending, so the gate is NOT wired. Candidates (median ≤40k / p95 ≤50k) are documented with their basis and explicitly labelled not-enforced. Removing the duplicate copy would model a 37.6% reduction (labelled modelled, never measured) — C-3 needs a real intervention plus a live re-measure before any ceiling is enforced -->
-- [~] Where the census names a rule whose per-spawn cost is not earned, route the
+      <!-- done 2026-07-30 — C-3 confirmed at 38.0%, so the gate is now wired: check_preamble_payload_budget + src/config/preamble-payload-budget.json, registered in both CI pipelines. Shipped as a RATCHET, not the literal 40k/50k: the deterministic in-repo payload is 102,599 tok, so a hard 40k gate would be red on day one and would train the reader to ignore the line. The 40k/50k target stays recorded as the destination. Red-proofed: +9,350 tok turns it red, restoring turns it green; 7 tests pin both directions plus the machine-independence of the gated buckets -->
+- [x] Where the census names a rule whose per-spawn cost is not earned, route the
       decision through the **existing compile-time dormancy predicate** (the
       `telegraph.speak` axis and its four consumers) — extend that predicate, never
       add a fifth axis, and require the same evidence bar telegraph-speak met: a
       measurement first, dormancy second.
       <!-- verify: no new toggle axis is introduced; the existing predicate's consumers all agree (check_sync + check_bridge_derivation pass) -->
       <!-- deferred 2026-07-30 — the census now supplies the per-rule numbers, but routing a specific rule to dormancy requires the same evidence bar telegraph-speak met: a per-rule output-side bench, which does not exist. Building the census was in scope; making the dormancy call is not -->
+      <!-- done 2026-07-30 — the route is documented at the existing predicate (_lib/compile_time_toggles.ts header): candidate from the census cost ranking, then an output-side bench against the kill-criterion, then an entry in COMPILE_TIME_TOGGLES keyed on a real setting. No fifth toggle axis (the predicate already has four consumers), and NO rule is flipped here: the evidence bar is a bench that does not exist yet, and cost alone never justifies dormancy -->
 - [x] Wire a reader for the two dormant telemetry fields: join the recorded
       `payload_hash` against observed per-leg cache reads so prefix-stability drift
       becomes visible. No hook — the no-hook capture decision stands.
@@ -543,12 +610,14 @@ today's behaviour.
       bucket and per-leg cache figures, deduped, with the dedup ratio and host
       version in its output.
       <!-- verified — cache_realization_report + preamble_byte_census run with no daemon, no beta flag, no network; both print the dedup ratio and the observed host version -->
-- [~] `track.mjs` and the council's realized cost are both cache-correct; a live
+- [x] `track.mjs` and the council's realized cost are both cache-correct; a live
       debate's ledger entry carries cache token fields.
       <!-- partial — repricing verified LIVE from the worktree: a real 1-round debate reported cost_usd_actual 0.010016 through reprice_with_cache, and the artefact carries the new prompt_cache_round_gap_ms field. track.mjs verified against real transcripts (dedup 57.3%, subagent legs split). NOT shown live: a ledger ENTRY — orchestrator.ts gates record_spend on budget.daily_limit_usd > 0, unset in this environment, so no ledger file is produced at all. The cache fields are threaded at that call site and round-tripped by unit tests -->
-- [~] C-1 … C-5 are each marked confirmed or falsified, and every phase whose claim
+      <!-- closed 2026-07-30 — the ledger is now PROVEN LIVE. The gap was not configuration but wiring: daily_limit_usd existed on CostBudget and gated the append, yet the typed config had no such field and load_settings replaces the ai_council block with a synthesized one, so a raw YAML key could never reach it. Threaded end to end (default still 0), then a real 1-round debate with the cap temporarily at 5.0 wrote two entries carrying cache_read_input_tokens, cache_creation_input_tokens and cache_ttl: 5m. Temporary config change reverted and verified byte-identical to its backup -->
+- [x] C-1 … C-5 are each marked confirmed or falsified, and every phase whose claim
       failed is cancelled in the file rather than quietly dropped.
       <!-- partial — C-1 confirmed 69.7%, C-2 confirmed 38.5%, C-4 confirmed 5.5%, C-5 FALSIFIED 69.1% (and its dependent refusal resolved in Phase 5). C-3 is pending BY CONSTRUCTION: it measures the effect of a reduction intervention, and no reduction has shipped — the two steps that depend on it are [~], not silently dropped -->
+      <!-- closed 2026-07-30 — all five now resolved: C-1 confirmed 69.7%, C-2 confirmed 38.5%, C-3 confirmed 38.0% (the reduction was built and measured against a threshold registered beforehand), C-4 confirmed 5.5%, C-5 FALSIFIED 69.1% with its dependent refusal resolved. No claim is left pending -->
 - [x] The council TTL default remains `5m` unless the 30-debate gap sample clears
       40%; the falsification condition sits next to the key.
       <!-- verified — default 5m (which omits the ttl field entirely, so the wire shape is unchanged); the 40%-of-30-debates condition and the cost-comparison falsifier sit next to the key in the config contract -->

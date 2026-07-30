@@ -37,6 +37,13 @@ Emits a Markdown summary of the session (model breakdown, per-tier cost,
 total USD) and appends a JSON record to
 `agents/cost-tracking/sessions.jsonl`.
 
+The summary now also reports a **replay dedup ratio** and splits **main session vs
+subagent legs**. Both matter for reading the number honestly: Claude Code replays
+the same assistant turn into many transcripts, so before the dedup fix this report
+overstated tokens and cost by roughly 2x — and the overstatement grew with
+conversation length. Any cost figure quoted from a run before that fix should be
+treated as pre-dedup.
+
 If `track.mjs` exits 2 with `no Claude Code project dir`, the user is not in
 a Claude Code session — surface that and stop.
 

@@ -489,6 +489,7 @@ function _synthesize_ai_council_block(cfg: CouncilConfig): Dict {
             max_output_tokens: cfg.cost_budget.max_output_tokens,
             max_calls: cfg.cost_budget.max_calls,
             max_total_usd: cfg.cost_budget.max_total_usd,
+            daily_limit_usd: cfg.cost_budget.daily_limit_usd,
         },
         consensus_scoring: {
             enabled: cfg.consensus_scoring.enabled,
@@ -2040,6 +2041,11 @@ function cmd_run(
         max_output_tokens: _pyInt(cost_cfg['max_output_tokens'] ?? 20_000, 20_000),
         max_calls: _pyInt(cost_cfg['max_calls'] ?? 10, 10),
         max_total_usd: _pyFloat(cost_cfg['max_total_usd'] ?? 0.0, 0.0) || 0.0,
+        // Rolling 24h cap. Unwired until now: the field existed on CostBudget and
+        // gated the spend-ledger append, but no caller ever passed it, so the
+        // ledger could not be written at all — an archived acceptance criterion
+        // claimed otherwise. 0 keeps the cap disabled, which stays the default.
+        daily_limit_usd: _pyFloat(cost_cfg['daily_limit_usd'] ?? 0.0, 0.0) || 0.0,
     });
     const rounds = _resolve_rounds(args, ai_cfg);
     // Phase 1: stance tally — defensive read; malformed/absent block reads as off.
@@ -2436,6 +2442,11 @@ function cmd_debate(
         max_output_tokens: _pyInt(cost_cfg['max_output_tokens'] ?? 20_000, 20_000),
         max_calls: _pyInt(cost_cfg['max_calls'] ?? 10, 10),
         max_total_usd: _pyFloat(cost_cfg['max_total_usd'] ?? 0.0, 0.0) || 0.0,
+        // Rolling 24h cap. Unwired until now: the field existed on CostBudget and
+        // gated the spend-ledger append, but no caller ever passed it, so the
+        // ledger could not be written at all — an archived acceptance criterion
+        // claimed otherwise. 0 keeps the cap disabled, which stays the default.
+        daily_limit_usd: _pyFloat(cost_cfg['daily_limit_usd'] ?? 0.0, 0.0) || 0.0,
     });
 
     const out_dir = _validate_council_output_path(args.output as string, {

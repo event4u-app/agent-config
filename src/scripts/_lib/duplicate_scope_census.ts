@@ -6,7 +6,7 @@
  * surfaces can never drift on what counts as "shared" or how a redundant
  * copy's size is estimated.
  *
- * `agents/roadmaps/road-to-cache-economy.md` Phase 3: the same 110 rule
+ * `road-to-cache-economy.md` Phase 3: the same 110 rule
  * filenames observed at both `~/.claude/rules` (user scope) and
  * `dist/agent-src/rules` (project scope) on this maintainer's own checkout —
  * C-2 confirmed at 38.5% of subagent write volume. This module answers only

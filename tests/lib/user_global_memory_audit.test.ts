@@ -2,7 +2,7 @@
  * Tests for `src/scripts/_lib/user_global_memory_audit.ts` — the Phase 4
  * ("delete, revoke, audit") read surface that renders what the global
  * layer currently holds, per
- * `agents/roadmaps/road-to-global-user-memory.md` Phase 4.
+ * `road-to-global-user-memory.md` Phase 4.
  *
  * Every test injects `EVENT4U_CONFIG_HOME` at a temp dir and pins `$HOME`
  * to an empty temp dir (mirrors the sibling Phase 2/3/4 suites) so the real

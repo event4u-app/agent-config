@@ -362,6 +362,9 @@ export interface CostBudgetConfig {
     readonly max_output_tokens: number;
     readonly max_calls: number;
     readonly max_total_usd: number;
+    /** Rolling 24h cap. 0 disables it — and disabling it also disables the spend
+     * ledger, since the orchestrator only appends an entry while a cap is live. */
+    readonly daily_limit_usd: number;
 }
 
 export interface MemberConfig {
@@ -1598,12 +1601,14 @@ function _build_cost_budget(d: Dict): CostBudgetConfig {
         max_output_tokens: _pyInt(_get(d, 'max_output_tokens', 200_000)),
         max_calls: _pyInt(_get(d, 'max_calls', 50)),
         max_total_usd: _pyFloat(_get(d, 'max_total_usd', 20.0)),
+        daily_limit_usd: _pyFloat(_get(d, 'daily_limit_usd', 0.0)),
     };
     const fields: Array<[keyof CostBudgetConfig, boolean]> = [
         ['max_input_tokens', false],
         ['max_output_tokens', false],
         ['max_calls', false],
         ['max_total_usd', true],
+        ['daily_limit_usd', true],
     ];
     for (const [fname, isFloat] of fields) {
         const val = cb[fname];

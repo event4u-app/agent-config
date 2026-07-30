@@ -2,7 +2,7 @@
  * Tests for the Phase 3 additions to
  * `src/scripts/_lib/user_global_observations.ts` — project attribution and
  * the generalisation promotion (road-to-global-user-memory Phase 3, per
- * `agents/roadmaps/road-to-global-user-memory.md` and the council cut at
+ * `road-to-global-user-memory.md` and the council cut at
  * `agents/settings/contexts/global-user-memory-cut.md`).
  *
  * Every test injects `EVENT4U_CONFIG_HOME` at a temp dir and pins `$HOME` to

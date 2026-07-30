@@ -1,7 +1,7 @@
 /**
  * Payload-hash × cache-hit drift aggregator (pure, no-I/O).
  *
- * `agents/roadmaps/road-to-cache-economy.md` Phase 3, step 6: the
+ * `road-to-cache-economy.md` Phase 3, step 6: the
  * `orchestration` object's `payload_hash` and `cache_hit` fields are both
  * `null`-by-default and read by nothing (per the roadmap's own defect list).
  * This module is the reader: it joins the two fields recorded on the SAME
