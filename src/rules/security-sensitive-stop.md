@@ -22,9 +22,17 @@ enforced_by:
 
 # Security-Sensitive Stop Rule
 
-Before editing any file that matches a security-sensitive surface, **stop and
-run a threat analysis first**. Shipping a security-sensitive change without a
-prior threat pass is the #1 driver of authorization and data-exposure bugs.
+## The Iron Law
+
+```
+A SECURITY-SENSITIVE SURFACE IS THREAT-MODELLED BEFORE THE FIRST EDIT, NEVER AFTER.
+STOP WRITING CODE. RUN THE MATCHING ANALYSIS SKILL. IMPLEMENT AGAINST ITS OUTPUT,
+NOT AGAINST YOUR FIRST INSTINCT.
+NEVER SILENTLY FALL BACK TO EDITING WITHOUT THE ANALYSIS — IF IT IS BLOCKED, ASK.
+```
+
+Shipping a security-sensitive change without a prior threat pass is the #1 driver
+of authorization and data-exposure bugs.
 
 ## What counts as security-sensitive
 
@@ -47,7 +55,7 @@ If the change touches any of these, the rule fires.
 
 ## What to do when it fires
 
-STOP writing code. Run the matching analysis skill first:
+Run the matching analysis skill first:
 
 | Change type | Analysis skill |
 |---|---|
@@ -72,10 +80,8 @@ A prior security incident on the same path is the cheapest possible
 input to a threat pass — cite any matching `id` in the analysis output
 so the required control or regression test ships with the fix.
 
-Capture the analysis output (abuse cases, missing controls, required
-negative tests) — implement against that list, not against your first
-instinct. Never silently fall back to editing without the analysis; if
-it is blocked, ask the user.
+Capture the analysis output — abuse cases, missing controls, required negative
+tests — and implement against that list.
 
 ## When NOT to fire
 
