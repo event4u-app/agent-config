@@ -2,7 +2,6 @@
 model_tier: inherit
 name: code-intelligence
 description: "Route codebase-structure questions (who calls X, where used, what imports, change-impact) to a code-graph first, grep fallback. Triggers 'who calls', 'where is this used', 'call graph'."
-source: package
 domain: engineering
 workspaces:
   - engineering
