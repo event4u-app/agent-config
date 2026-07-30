@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
 
 ## Overall
 
-**48 / 196 steps done · 24%**
+**48 / 243 steps done · 20%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
+████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   20%
 ```
 
 ## Open roadmaps
@@ -31,6 +31,8 @@
 | 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 14 | [road-to-thin-flip-under-anchor-scoring.md](roadmaps/road-to-thin-flip-under-anchor-scoring.md) | 4 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 16 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
+| 17 | [road-to-zero-ceremony-install.md](roadmaps/road-to-zero-ceremony-install.md) | 6 | 22 | 22 | 0 | 0 | 0 | [2](#blockers-road-to-zero-ceremony-install) | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -308,6 +310,96 @@ _1 blocker resolved._
     `build_discovery_manifest.ts`, publish it, and let that date pass. The council
     ruled the date itself is not an agent decision.
   - **Resolved when:** a concrete `sunset` date is published in the manifest's `tier` deprecation entry AND that date has passed with no external breakage reported — at which point Phase 3 records the confirmation and Phase 4's external half becomes executable.
+
+### [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md)
+
+**Road to zero-ceremony detection — detection reports, consent still decides** — 0 / 25 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | The detector module | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Make the documented transport default actually load | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 3 | Detection informs consent; it does not replace it | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 4 | Extend `doctor`, do not duplicate it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Pin the `CLAUDE_CONFIG_DIR` inheritance decision | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-zero-ceremony-detection"></a>
+**Blockers**
+
+- **council-availability-semantics** (owner: maintainer) — blocks any removal of `members.*.enabled` (Phase 3 ships reporting and a one-line enable command instead)
+  - **What to do:**
+    1. Read the shipped council template's rationale for the flag ("installing a
+    key is not the same as wanting the agent to spend money on it") and the
+    config contract's fail-closed rules (at least one enabled member; no
+    silent skips; low-impact fast-path as a two-knob opt-in).
+    2. Decide whether detection-derived availability is acceptable given that it
+    converts "a key exists on this machine" into "this provider may be
+    called". Per ADR-049 this class of scope expansion requires a threat
+    model, not a product rationale.
+    3. If yes, write the ADR that supersedes the contract's enabled-member rules
+    and states how the ask-gate alone preserves the no-silent-spend property.
+  - **Resolved when:** an ADR exists naming the superseded contract sections, or this roadmap records the flag as retained by decision.
+- **transport-auto-default-flip** (owner: maintainer) — blocks making `auto` the effective default (Phase 2 ships it opt-in)
+  - **What to do:**
+    1. Confirm the intent: a user with both a logged-in CLI and an installed key
+    moves from per-token dollars onto subscription quota with no config edit.
+    2. If yes, authorize the breaking-change entry and the migration note, and
+    confirm `cli_call_budget` ships populated in the same change.
+  - **Resolved when:** the breaking-change entry is authorized, or `auto` is recorded as permanently opt-in.
+- **claude-config-dir-inheritance-decision** (owner: maintainer) — blocks any behaviour change to the spawn hardening's handling of `CLAUDE_CONFIG_DIR` (Phase 5 ships only the test and the documented row)
+  - **What to do:**
+    1. Read the Phase-5 threat-model row and the ADR that chose deny-by-family
+    over an allowlist.
+    2. Pick one: (a) leave inheritance as-is, keeping the row as accepted risk;
+    (b) deny the variable, accepting that a legitimate setter loses it for
+    children; (c) strip inherited and permit only a validated assignment.
+    3. If (b) or (c), record an ADR amendment — this reverses a considered
+    decision and must not land as an unexplained diff.
+  - **Resolved when:** an ADR amendment names the chosen option, or the threat-model row is marked accepted-risk with a dated rationale.
+
+### [road-to-zero-ceremony-install.md](roadmaps/road-to-zero-ceremony-install.md)
+
+**Road to zero-ceremony install — make the install claim true before making it shorter** — 0 / 22 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Make every install statement true | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Cover the npm failure mode the rescue door absorbs | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Door consolidation, gated on Phase 2 | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Payload budget with CI teeth | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | Narrow emitter audit (what survives of the unification proposal) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | Cold-start evidence | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-zero-ceremony-install"></a>
+**Blockers**
+
+- **curl-door-disposition** (owner: maintainer) — blocks Phase 3
+  - **What to do:**
+    1. Read the Phase-2 result: does the npx path now handle the registry
+    resolution failure without prose?
+    2. Decide whether a registry-independent install path is still wanted for
+    restricted networks and mirrored registries.
+    3. Note the constraint either way: the raw URL is a declared public contract
+    with CI coverage across 3 OS × 2 Node versions — it must keep resolving
+    even if the script becomes a stub.
+  - **Resolved when:** the disposition is recorded in this roadmap with its reason, and the smoke workflow reflects it.
+- **browser-handoff-default** (owner: maintainer) — blocks any change making the non-browser path the default
+  - **What to do:**
+    1. Note what is already true: the terminal path is already prompt-free, the
+    Recommended path already asks zero questions (two confirmations), and
+    detection already pre-selects. The remaining delta is the browser handoff
+    itself, not choice overload.
+    2. Note what stands in the way: an accepted ADR makes the browser handoff the
+    interactive default, and the onboarding-gate rule — tier-1, hook-enforced
+    — names the browser wizard the sole onboarding surface. Inverting this is
+    a kernel-rule edit: own PR, ≥ 24 h between merges, per the slow-rollout
+    gate.
+    3. Note what is missing: there is no usage evidence either way, because zero
+    external onboarding sessions have completed. The instrument that would
+    produce it is the recruited session already open in the adoption roadmap.
+    4. Decide: supersede the ADR and edit the rule, or keep the handoff and let
+    `--no-ui` remain the documented escape.
+  - **Resolved when:** an ADR supersession plus a kernel-rule edit PR exists, or this roadmap records the handoff as retained by decision.
 
 ---
 
