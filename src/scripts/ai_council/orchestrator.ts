@@ -51,6 +51,7 @@ import type {
 import {
     estimate_cost,
     estimate_input_tokens,
+    reprice_with_cache,
 } from './pricing.js';
 import type { ProjectContext } from './project_context.js';
 import type { AdvisorPlan } from './advisors.js';
@@ -779,22 +780,34 @@ function _run_round(
         spent.output += response.output_tokens;
         let actual_usd: number | null = null;
         if (estimates !== null && table !== null) {
-            // Bill the actual output against the budget using the
-            // member's per-1M output rate. Re-use estimate_cost with
-            // the *real* token count.
-            const actual = estimate_cost(
+            // Realized cost bills the OBSERVED cache read/write tokens
+            // (Anthropic's usage.input_tokens excludes them), unlike the
+            // cache-agnostic pre-flight estimate above — see
+            // `reprice_with_cache`'s docstring for why the two stay separate.
+            // ttl is '5m': the request builder emits `cache_control:
+            // {type:'ephemeral'}` with no explicit ttl, i.e. the 5-min default.
+            const actual = reprice_with_cache(
                 member.name,
                 member.model,
-                response.input_tokens,
-                response.output_tokens,
+                {
+                    input_tokens: response.input_tokens,
+                    cache_read_input_tokens: response.cache_read_input_tokens,
+                    cache_creation_input_tokens: response.cache_creation_input_tokens,
+                    output_tokens: response.output_tokens,
+                },
                 table,
+                '5m',
             );
             actual_usd = _total_usd(actual);
             spent.usd += _total_usd(actual);
             // Persist to the rolling 24h ledger when the daily cap is
             // active. Errors are swallowed inside record_spend.
             if (budget.daily_limit_usd > 0 && !response.error) {
-                _record_daily_spend(_total_usd(actual), member.name, member.model);
+                _record_daily_spend(_total_usd(actual), member.name, member.model, {
+                    cache_read_input_tokens: response.cache_read_input_tokens,
+                    cache_creation_input_tokens: response.cache_creation_input_tokens,
+                    cache_ttl: '5m',
+                });
             }
         }
         _stamp_transport_metadata(response, member, actual_usd);
@@ -1116,12 +1129,32 @@ export interface RunDebateOptions {
     project?: ProjectContext | null;
     original_ask?: string;
     max_rounds?: number;
+    /**
+     * Third argument (road-to-cache-economy Phase 4): the observed
+     * wall-clock gap, in ms, between the PREVIOUS round finishing (≈ when
+     * its stable prefix was written to the prompt cache) and THIS round
+     * starting (≈ when the same prefix would be read, if byte-identical).
+     * `null` on round 1 — nothing was written yet. Existing callers that
+     * declare only the first two parameters keep working unchanged (JS
+     * ignores extra call arguments).
+     */
     on_round_complete?:
-        | ((round_number: number, responses: CouncilResponse[]) => void)
+        | ((
+              round_number: number,
+              responses: CouncilResponse[],
+              cache_gap_ms_since_previous_round?: number | null,
+          ) => void)
         | null;
     on_continue?: DebateContinuePrompt | null;
     advisor_plans?: Map<string, AdvisorPlan> | null;
     seed_round_1?: CouncilResponse[] | null;
+    /**
+     * Injectable wall-clock source for the Phase-4 gap measurement above.
+     * Defaults to `Date.now`. Tests inject a scripted clock so "rounds
+     * seconds apart" vs "a >5-minute gap" can be asserted deterministically,
+     * without a real multi-minute sleep.
+     */
+    now?: (() => number) | null;
     /**
      * Phase 3: when true (from `ai_council.debate_gates.enabled`), round-2+
      * prompts carry the anti-conformity directive. Default `false` → the debate
@@ -1186,6 +1219,7 @@ export function run_debate(
     const on_continue = opts.on_continue ?? null;
     const advisor_plans = opts.advisor_plans ?? null;
     const seed_round_1 = opts.seed_round_1 ?? null;
+    const now = opts.now ?? Date.now;
 
     if (max_rounds < 1) {
         throw new Error(`max_rounds must be >= 1 (got ${max_rounds})`);
@@ -1207,6 +1241,9 @@ export function run_debate(
     // per-round positions block rides in a volatile suffix (see consult loop).
     let current_suffix = '';
     let current_user_prompt = question.user_prompt;
+    // road-to-cache-economy Phase 4: wall-clock marker for the inter-round
+    // cache-gap measurement. `null` until round 1 finishes.
+    let previous_round_end_ms: number | null = null;
 
     // Phase 3 restate: one pre-round-1 call per member. Runs BEFORE any debate
     // spend so a diverging restatement can be flagged before round-2 cost.
@@ -1231,6 +1268,9 @@ export function run_debate(
 
     for (let round_idx = 0; round_idx < max_rounds; round_idx++) {
         const round_number = round_idx + 1;
+        const round_start_ms = now();
+        const cache_gap_ms_since_previous_round: number | null =
+            previous_round_end_ms === null ? null : round_start_ms - previous_round_end_ms;
         let results: CouncilResponse[];
         if (round_idx === 0 && seed_round_1 !== null) {
             // Pivot from /council default — reuse the existing round 1
@@ -1276,7 +1316,7 @@ export function run_debate(
         }
         all_rounds.push(results);
         if (on_round_complete !== null) {
-            on_round_complete(round_number, results);
+            on_round_complete(round_number, results, cache_gap_ms_since_previous_round);
         }
 
         // Prep the user-prompt for the next round so the cost estimate
@@ -1334,6 +1374,11 @@ export function run_debate(
                 }
             }
         }
+        // road-to-cache-economy Phase 4: mark the end of this round AFTER the
+        // continue-prompt gate above — an interactive pause there is exactly
+        // the kind of real-world inter-round gap this measurement exists to
+        // observe, so it must fall inside the window, not before it.
+        previous_round_end_ms = now();
     }
 
     return all_rounds;

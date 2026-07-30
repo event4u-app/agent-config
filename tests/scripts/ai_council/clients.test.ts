@@ -40,6 +40,7 @@ import type {
 import {
     AnthropicClient,
     AnthropicCliClient,
+    assertCacheBreakpointOrder,
     CliClient,
     DEFAULT_ANTHROPIC_MODEL,
     DEFAULT_CLI_TIMEOUT_SECONDS,
@@ -47,6 +48,7 @@ import {
     DEFAULT_MAX_TOKENS,
     DEFAULT_OPENAI_MODEL,
     DEFAULT_PERPLEXITY_MODEL,
+    DEFAULT_PROMPT_CACHE_TTL,
     DEFAULT_XAI_MODEL,
     GeminiClient,
     GeminiCliClient,
@@ -1101,5 +1103,88 @@ describe('ask_split — A3 cross-round read unlock', () => {
             system: 'SYS',
             messages: [{ role: 'user', content: 'AB' }],
         });
+    });
+});
+
+describe('assertCacheBreakpointOrder — Anthropic 1h-before-5m ordering rule', () => {
+    it('accepts a uniform-ttl breakpoint list (the only shape this client ever builds)', () => {
+        expect(() => assertCacheBreakpointOrder(['5m', '5m'])).not.toThrow();
+        expect(() => assertCacheBreakpointOrder(['1h', '1h'])).not.toThrow();
+        expect(() => assertCacheBreakpointOrder([])).not.toThrow();
+    });
+
+    it('accepts a 1h breakpoint positioned before a 5m one', () => {
+        expect(() => assertCacheBreakpointOrder(['1h', '5m'])).not.toThrow();
+    });
+
+    it('rejects a 5m breakpoint positioned before a 1h one', () => {
+        expect(() => assertCacheBreakpointOrder(['5m', '1h'])).toThrow(
+            /cache_control breakpoint order violation/,
+        );
+    });
+
+    it('DEFAULT_PROMPT_CACHE_TTL is the permanent 5m default', () => {
+        expect(DEFAULT_PROMPT_CACHE_TTL).toBe('5m');
+    });
+});
+
+describe('prompt_cache_ttl (road-to-cache-economy Phase 4)', () => {
+    it('default (omitted) sends NO ttl field — byte-identical to the pre-Phase-4 shape', () => {
+        let captured: Record<string, unknown> | null = null;
+        const mock = {
+            messages: {
+                create(kwargs: Record<string, unknown>) {
+                    captured = kwargs;
+                    return fakeAnthropicResponse('ok', 1, 2);
+                },
+            },
+        };
+        new AnthropicClient({ client: mock, enable_prompt_cache: true }).ask('SYS', 'USER', 99);
+        const sys = (captured as unknown as { system: Array<{ cache_control: unknown }> }).system;
+        expect(sys[0]?.cache_control).toEqual({ type: 'ephemeral' });
+    });
+
+    it("prompt_cache_ttl: '1h' reaches BOTH breakpoints (system + stable prefix), never the volatile suffix", () => {
+        let captured: Record<string, unknown> | null = null;
+        const mock = {
+            messages: {
+                create(kwargs: Record<string, unknown>) {
+                    captured = kwargs;
+                    return fakeAnthropicResponse('ok', 1, 2);
+                },
+            },
+        };
+        new AnthropicClient({
+            client: mock,
+            enable_prompt_cache: true,
+            prompt_cache_ttl: '1h',
+        }).ask_split('SYS', 'STABLE-ARTEFACT', '\n\n---\n\nROUND CRITIQUES', 99);
+        expect(captured).toEqual({
+            model: 'claude-sonnet-4-5',
+            max_tokens: 99,
+            system: [{ type: 'text', text: 'SYS', cache_control: { type: 'ephemeral', ttl: '1h' } }],
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'text',
+                            text: 'STABLE-ARTEFACT',
+                            cache_control: { type: 'ephemeral', ttl: '1h' },
+                        },
+                        // No cache_control key at all on the volatile suffix —
+                        // the ttl reaches only the stable prefix.
+                        { type: 'text', text: '\n\n---\n\nROUND CRITIQUES' },
+                    ],
+                },
+            ],
+        });
+    });
+
+    it("prompt_cache_ttl: '1h' never regresses the breakpoint-order invariant (both breakpoints share the tier)", () => {
+        // Regression guard: the client always feeds [ttl, ttl] into
+        // assertCacheBreakpointOrder, so a '1h' config can never produce a
+        // '5m'-before-'1h' request — assert the equivalent pure check directly.
+        expect(() => assertCacheBreakpointOrder(['1h', '1h'])).not.toThrow();
     });
 });

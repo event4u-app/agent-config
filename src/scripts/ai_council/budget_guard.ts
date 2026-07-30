@@ -12,9 +12,13 @@
  * same permission discipline as the API keys). The legacy
  * `~/.config/agent-config/council-spend.jsonl` is read as a fallback.
  *
- * Contract (verbatim from the Python module):
+ * Contract (verbatim from the Python module, plus the additive TS-only
+ * cache extension below):
  * - The ledger is **append-only**. Each line is `{"ts": ISO-8601 UTC,
- *   "usd": float, "provider": str, "model": str}`.
+ *   "usd": float, "provider": str, "model": str}`, optionally followed by
+ *   `"cache_read_input_tokens": int, "cache_creation_input_tokens": int,
+ *   "cache_ttl": "5m"|"1h"` when the caller reports cache activity — absent
+ *   on every entry recorded before this extension shipped.
  * - `today_spend_usd()` sums entries within the last 24h from "now".
  * - `would_exceed(limit_usd, next_call_usd)` returns true iff the next call
  *   would push the rolling window past the limit.
@@ -75,6 +79,12 @@ export interface SpendEntry {
     usd: number;
     provider: string;
     model: string;
+    // Prompt-cache accounting (additive — absent on entries recorded before
+    // this field existed, and on calls with no cache activity to report).
+    cache_read_input_tokens?: number;
+    cache_creation_input_tokens?: number;
+    /** Write-multiplier TTL tier in effect when this entry was recorded. */
+    cache_ttl?: '5m' | '1h';
 }
 
 function _nowUtcMs(): number {
@@ -259,14 +269,37 @@ function _pyJsonString(s: string): string {
  * `json.dumps({"ts": ts, "usd": round(usd, 6), "provider": provider,
  * "model": model})` does: default separators (`", "`, `": "`), insertion
  * order (NOT sorted). `usd` is a float (`pyFloatRepr`); the rest are strings.
+ *
+ * The three cache params are appended only when the CALLER passed them
+ * (`!== undefined`) — a call with none of the three reproduces the original
+ * 4-key line byte-for-byte, which is what keeps every pre-existing caller
+ * (and the python3 byte-parity test, which has no Python-side cache
+ * counterpart) unaffected by this additive extension.
  */
-function _dumpEntry(ts: string, usd: number, provider: string, model: string): string {
-    return (
-        `{${_pyJsonString('ts')}: ${_pyJsonString(ts)}, ` +
+function _dumpEntry(
+    ts: string,
+    usd: number,
+    provider: string,
+    model: string,
+    cacheRead?: number,
+    cacheWrite?: number,
+    cacheTtl?: '5m' | '1h',
+): string {
+    let body =
+        `${_pyJsonString('ts')}: ${_pyJsonString(ts)}, ` +
         `${_pyJsonString('usd')}: ${pyFloatRepr(usd)}, ` +
         `${_pyJsonString('provider')}: ${_pyJsonString(provider)}, ` +
-        `${_pyJsonString('model')}: ${_pyJsonString(model)}}`
-    );
+        `${_pyJsonString('model')}: ${_pyJsonString(model)}`;
+    if (cacheRead !== undefined) {
+        body += `, ${_pyJsonString('cache_read_input_tokens')}: ${Math.trunc(cacheRead)}`;
+    }
+    if (cacheWrite !== undefined) {
+        body += `, ${_pyJsonString('cache_creation_input_tokens')}: ${Math.trunc(cacheWrite)}`;
+    }
+    if (cacheTtl !== undefined) {
+        body += `, ${_pyJsonString('cache_ttl')}: ${_pyJsonString(cacheTtl)}`;
+    }
+    return `{${body}}`;
 }
 
 /** Coerce a parsed JSON value to a float like Python's `float(obj.get(...))`. */
@@ -366,14 +399,44 @@ export function read_entries(p: string | null = null): SpendEntry[] {
         if (usd === null) {
             continue;
         }
-        out.push({
+        const entry: SpendEntry = {
             ts,
             usd,
             provider: _toStr(record.provider, ''),
             model: _toStr(record.model, ''),
-        });
+        };
+        // exactOptionalPropertyTypes forbids `key: undefined` on an object
+        // literal — assign conditionally so a legacy (or cache-less) line
+        // leaves these keys absent rather than present-but-undefined.
+        const cacheRead = _toOptionalNonNegInt(record.cache_read_input_tokens);
+        if (cacheRead !== undefined) {
+            entry.cache_read_input_tokens = cacheRead;
+        }
+        const cacheWrite = _toOptionalNonNegInt(record.cache_creation_input_tokens);
+        if (cacheWrite !== undefined) {
+            entry.cache_creation_input_tokens = cacheWrite;
+        }
+        const cacheTtl = _toOptionalTtl(record.cache_ttl);
+        if (cacheTtl !== undefined) {
+            entry.cache_ttl = cacheTtl;
+        }
+        out.push(entry);
     }
     return out;
+}
+
+/** A non-negative finite number, or `undefined` when absent/malformed. */
+function _toOptionalNonNegInt(v: unknown): number | undefined {
+    if (v === undefined || v === null) {
+        return undefined;
+    }
+    const n = _toFloat(v);
+    return n === null || n < 0 ? undefined : n;
+}
+
+/** `'5m' | '1h'`, or `undefined` for anything else (including absent). */
+function _toOptionalTtl(v: unknown): '5m' | '1h' | undefined {
+    return v === '5m' || v === '1h' ? v : undefined;
 }
 
 /** `str(obj.get("ts", ""))` — the timestamp is read as a string before parsing. */
@@ -424,7 +487,15 @@ export function record_spend(
     usd: number,
     provider: string,
     model: string,
-    options: { path?: string | null; now?: number | null } = {},
+    options: {
+        path?: string | null;
+        now?: number | null;
+        // Additive prompt-cache accounting (Step B). Omitting all three
+        // reproduces the original 4-field ledger line exactly.
+        cache_read_input_tokens?: number;
+        cache_creation_input_tokens?: number;
+        cache_ttl?: '5m' | '1h';
+    } = {},
 ): boolean {
     if (usd <= 0) {
         return true; // zero-cost calls (manual mode) skip the ledger
@@ -435,7 +506,15 @@ export function record_spend(
     }
     const nowMs = options.now ?? _nowUtcMs();
     const ts = nowUtcIso(nowMs);
-    const entry = `${_dumpEntry(ts, _pyRound6(usd), provider, model)}\n`;
+    const entry = `${_dumpEntry(
+        ts,
+        _pyRound6(usd),
+        provider,
+        model,
+        options.cache_read_input_tokens,
+        options.cache_creation_input_tokens,
+        options.cache_ttl,
+    )}\n`;
     try {
         fs.appendFileSync(p, entry, { encoding: 'utf-8' });
     } catch (exc) {

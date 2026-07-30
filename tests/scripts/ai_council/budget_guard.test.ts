@@ -143,6 +143,48 @@ describe('budget_guard — read_entries robustness', () => {
     });
 });
 
+describe('budget_guard — cache fields (additive Step B)', () => {
+    it('round-trips cache_read/cache_creation/cache_ttl through record_spend + read_entries', () => {
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        record_spend(0.05, 'anthropic', 'claude-sonnet-4-5', {
+            path: p,
+            now: NOW,
+            cache_read_input_tokens: 12_345,
+            cache_creation_input_tokens: 678,
+            cache_ttl: '5m',
+        });
+        const entries = read_entries(p);
+        expect(entries.length).toBe(1);
+        expect(entries[0]?.cache_read_input_tokens).toBe(12_345);
+        expect(entries[0]?.cache_creation_input_tokens).toBe(678);
+        expect(entries[0]?.cache_ttl).toBe('5m');
+    });
+
+    it('a legacy entry recorded without cache fields still parses, with the fields absent', () => {
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        fs.writeFileSync(
+            p,
+            '{"ts": "2026-05-02T12:00:00+00:00", "usd": 0.05, "provider": "a", "model": "m"}\n',
+            'utf-8',
+        );
+        const entries = read_entries(p);
+        expect(entries.length).toBe(1);
+        expect(entries[0]?.usd).toBe(0.05);
+        expect(entries[0]?.cache_read_input_tokens).toBeUndefined();
+        expect(entries[0]?.cache_creation_input_tokens).toBeUndefined();
+        expect(entries[0]?.cache_ttl).toBeUndefined();
+    });
+
+    it('omitting cache options at record time reproduces the original 4-key line byte-for-byte', () => {
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        record_spend(0.05, 'anthropic', 'claude-sonnet-4-5', { path: p, now: NOW });
+        const line = fs.readFileSync(p, 'utf-8').trimEnd();
+        expect(line).toBe(
+            '{"ts": "2026-05-02T12:00:00+00:00", "usd": 0.05, "provider": "anthropic", "model": "claude-sonnet-4-5"}',
+        );
+    });
+});
+
 describe.skipIf(!py3)('budget_guard — JSONL byte-parity vs python3', () => {
     // Record an identical sequence in both runtimes against a pinned `now` and
     // diff the raw ledger bytes. Covers the float-repr edge cases where JS

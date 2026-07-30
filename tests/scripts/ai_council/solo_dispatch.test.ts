@@ -29,6 +29,7 @@ function member(name: string, enabled: boolean, model = 'm'): MemberConfig {
         binary: null,
         model_ladder: [],
         participate_low_impact: true,
+        prompt_cache_ttl: '5m',
     };
 }
 

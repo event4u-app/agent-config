@@ -45,6 +45,7 @@ function mem(name: string, enabled = true, pli = true): MemberConfig {
         mode: null,
         binary: null,
         model_ladder: [],
+        prompt_cache_ttl: '5m',
     };
 }
 

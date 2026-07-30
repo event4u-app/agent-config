@@ -64,6 +64,11 @@ interface KvBucket {
     total_cost_usd: number;
     input_tokens: number;
     output_tokens: number;
+    // Additive (cost-summary/v1 stays additive-only per the schema doc):
+    // absent-on-row reads as 0 via `_int`, so rows written before this
+    // extension aggregate identically to explicit zeros.
+    cache_read_input_tokens: number;
+    cache_creation_input_tokens: number;
     telegraph_delta_tokens: number;
 }
 
@@ -73,6 +78,8 @@ function _zero_kv(): KvBucket {
         total_cost_usd: 0.0,
         input_tokens: 0,
         output_tokens: 0,
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 0,
         telegraph_delta_tokens: 0,
     };
 }
@@ -83,10 +90,21 @@ interface ModelBucket {
     total_cost_usd: number;
     input_tokens: number;
     output_tokens: number;
+    // Unlike telegraph fields, cache accounting IS model-scoped (the prompt
+    // cache itself is model-scoped — see pricing.ts), so by_model carries it.
+    cache_read_input_tokens: number;
+    cache_creation_input_tokens: number;
 }
 
 function _zero_model(): ModelBucket {
-    return { sessions: 0, total_cost_usd: 0.0, input_tokens: 0, output_tokens: 0 };
+    return {
+        sessions: 0,
+        total_cost_usd: 0.0,
+        input_tokens: 0,
+        output_tokens: 0,
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 0,
+    };
 }
 
 /** Aggregate rows into the cost-summary structure (PyFloat-aware output). */
@@ -104,6 +122,8 @@ export function aggregate(rows: Row[]): Json {
         const cost = _float(row['total_cost_usd']);
         const itok = _int(row['input_tokens']);
         const otok = _int(row['output_tokens']);
+        const cread = _int(row['cache_read_input_tokens']);
+        const cwrite = _int(row['cache_creation_input_tokens']);
         const delta = _delta(row);
 
         const sessBucket = _getOr(by_sess, sid, _zero_kv);
@@ -113,6 +133,8 @@ export function aggregate(rows: Row[]): Json {
             bucket.total_cost_usd += cost;
             bucket.input_tokens += itok;
             bucket.output_tokens += otok;
+            bucket.cache_read_input_tokens += cread;
+            bucket.cache_creation_input_tokens += cwrite;
             bucket.telegraph_delta_tokens += delta;
         }
         const m = _getOr(by_model, model, _zero_model);
@@ -120,6 +142,8 @@ export function aggregate(rows: Row[]): Json {
         m.total_cost_usd += cost;
         m.input_tokens += itok;
         m.output_tokens += otok;
+        m.cache_read_input_tokens += cread;
+        m.cache_creation_input_tokens += cwrite;
     }
 
     return {
@@ -130,6 +154,8 @@ export function aggregate(rows: Row[]): Json {
             total_cost_usd: new PyFloat(totals.total_cost_usd),
             input_tokens: totals.input_tokens,
             output_tokens: totals.output_tokens,
+            cache_read_input_tokens: totals.cache_read_input_tokens,
+            cache_creation_input_tokens: totals.cache_creation_input_tokens,
             telegraph_delta_tokens: totals.telegraph_delta_tokens,
             telegraph_multiplier_version: MULTIPLIER_VERSION,
             telegraph_multiplier_active: MULTIPLIER_ACTIVE,
@@ -140,6 +166,8 @@ export function aggregate(rows: Row[]): Json {
             total_cost_usd: new PyFloat(v.total_cost_usd),
             input_tokens: v.input_tokens,
             output_tokens: v.output_tokens,
+            cache_read_input_tokens: v.cache_read_input_tokens,
+            cache_creation_input_tokens: v.cache_creation_input_tokens,
             telegraph_delta_tokens: v.telegraph_delta_tokens,
         })),
         by_conversation: _sortedEntries(by_conv).map(([k, v]) => ({
@@ -148,6 +176,8 @@ export function aggregate(rows: Row[]): Json {
             total_cost_usd: new PyFloat(v.total_cost_usd),
             input_tokens: v.input_tokens,
             output_tokens: v.output_tokens,
+            cache_read_input_tokens: v.cache_read_input_tokens,
+            cache_creation_input_tokens: v.cache_creation_input_tokens,
             telegraph_delta_tokens: v.telegraph_delta_tokens,
         })),
         by_model: _sortedEntries(by_model).map(([k, v]) => ({
@@ -156,6 +186,8 @@ export function aggregate(rows: Row[]): Json {
             total_cost_usd: new PyFloat(v.total_cost_usd),
             input_tokens: v.input_tokens,
             output_tokens: v.output_tokens,
+            cache_read_input_tokens: v.cache_read_input_tokens,
+            cache_creation_input_tokens: v.cache_creation_input_tokens,
         })),
     };
 }

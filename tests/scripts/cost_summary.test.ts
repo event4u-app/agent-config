@@ -31,6 +31,8 @@ const SAMPLE_ROWS = [
         total_cost_usd: 1.5,
         input_tokens: 100,
         output_tokens: 50,
+        cache_read_input_tokens: 40,
+        cache_creation_input_tokens: 10,
     },
     {
         session_id: 's1',
@@ -39,8 +41,10 @@ const SAMPLE_ROWS = [
         total_cost_usd: 0.5,
         input_tokens: 20,
         output_tokens: 10,
+        cache_read_input_tokens: 5,
     },
     {
+        // Legacy-shaped row (no cache fields) — must aggregate as 0, not throw.
         sessionId: 's2',
         model: 'opus',
         total_cost_usd: 2,
@@ -65,6 +69,11 @@ describe('cost_summary — aggregate() differential', () => {
         expect((totals.total_cost_usd as { value: number }).value).toBeCloseTo(4.0);
         expect(totals.input_tokens).toBe(150);
         expect(totals.output_tokens).toBe(65);
+        // cache fields: 40+5+0=45 read, 10+0+0=10 creation (additive; the
+        // third, legacy-shaped row contributes 0 for both, same as a row
+        // missing input_tokens contributes 0 there).
+        expect(totals.cache_read_input_tokens).toBe(45);
+        expect(totals.cache_creation_input_tokens).toBe(10);
         expect(totals.telegraph_delta_tokens).toBe(0);
         expect(totals.telegraph_multiplier_version).toBe('v1');
         expect(totals.telegraph_multiplier_active).toBe(false);
@@ -73,10 +82,18 @@ describe('cost_summary — aggregate() differential', () => {
         // sorted by session key: s1 (2 rows), s2 (1 row)
         expect(bySess.map((s) => s.key)).toEqual(['s1', 's2']);
         expect(bySess[0]!.sessions).toBe(2);
+        expect(bySess[0]!.cache_read_input_tokens).toBe(45); // 40 + 5, both s1 rows
+        expect(bySess[1]!.cache_read_input_tokens).toBe(0); // s2 row is legacy-shaped
 
         const byModel = out.by_model as Array<Record<string, unknown>>;
         expect(byModel.map((m) => m.model)).toEqual(['opus', 'sonnet']);
         expect(byModel[0]!.sessions).toBe(2); // opus appears twice
+        // opus: row1 (read 40, write 10) + row3 (legacy, 0/0) = 40/10.
+        expect(byModel[0]!.cache_read_input_tokens).toBe(40);
+        expect(byModel[0]!.cache_creation_input_tokens).toBe(10);
+        // sonnet: row2 only — read 5, write absent → 0.
+        expect(byModel[1]!.cache_read_input_tokens).toBe(5);
+        expect(byModel[1]!.cache_creation_input_tokens).toBe(0);
     });
 
     it('empty input → zero totals', () => {

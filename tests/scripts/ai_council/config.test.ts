@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import * as cfg from '../../../src/scripts/ai_council/config';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const _REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
 const tmp_dirs: string[] = [];
 const saved_env: Array<[string, string | undefined]> = [];
@@ -160,6 +160,49 @@ describe('load_council_config — happy path', () => {
         );
         expect(() => cfg.load_council_config(write_yaml(make_tmp(), payload))).toThrow(
             /tier must be an integer/,
+        );
+    });
+
+    it('members.<name>.prompt_cache.ttl defaults to 5m when unset', () => {
+        const c = cfg.load_council_config(write_yaml(make_tmp(), MINIMAL_VALID));
+        expect(c.members.get('anthropic')!.prompt_cache_ttl).toBe('5m');
+    });
+
+    it('members.<name>.prompt_cache: false (the pre-existing bool form) leaves ttl at 5m', () => {
+        const payload = MINIMAL_VALID.replace(
+            'api_key_ref: env:ANTHROPIC_KEY',
+            'api_key_ref: env:ANTHROPIC_KEY\n    prompt_cache: false',
+        );
+        const c = cfg.load_council_config(write_yaml(make_tmp(), payload));
+        expect(c.members.get('anthropic')!.prompt_cache_ttl).toBe('5m');
+    });
+
+    it('members.<name>.prompt_cache.ttl: 1h is honoured (an explicit, gated override)', () => {
+        const payload = MINIMAL_VALID.replace(
+            'api_key_ref: env:ANTHROPIC_KEY',
+            'api_key_ref: env:ANTHROPIC_KEY\n    prompt_cache:\n      ttl: 1h',
+        );
+        const c = cfg.load_council_config(write_yaml(make_tmp(), payload));
+        expect(c.members.get('anthropic')!.prompt_cache_ttl).toBe('1h');
+    });
+
+    it('members.<name>.prompt_cache.ttl rejects a value outside {5m, 1h}', () => {
+        const payload = MINIMAL_VALID.replace(
+            'api_key_ref: env:ANTHROPIC_KEY',
+            'api_key_ref: env:ANTHROPIC_KEY\n    prompt_cache:\n      ttl: 10m',
+        );
+        expect(() => cfg.load_council_config(write_yaml(make_tmp(), payload))).toThrow(
+            /prompt_cache\.ttl must be '5m' or '1h'/,
+        );
+    });
+
+    it('members.<name>.prompt_cache rejects a non-bool, non-mapping value', () => {
+        const payload = MINIMAL_VALID.replace(
+            'api_key_ref: env:ANTHROPIC_KEY',
+            'api_key_ref: env:ANTHROPIC_KEY\n    prompt_cache: "yes"',
+        );
+        expect(() => cfg.load_council_config(write_yaml(make_tmp(), payload))).toThrow(
+            /prompt_cache must be a bool or a mapping/,
         );
     });
 
@@ -410,7 +453,7 @@ describe('resolve_config_path — precedence', () => {
 });
 
 /** JSON-able view of the TS config that matches the Python `to_jsonable`. */
-function ts_jsonable(c: cfg.CouncilConfig): Record<string, unknown> {
+function _ts_jsonable(c: cfg.CouncilConfig): Record<string, unknown> {
     const map = <V>(m: ReadonlyMap<string, V>, fn?: (v: V) => unknown): Record<string, unknown> => {
         const o: Record<string, unknown> = {};
         for (const [k, v] of m) {
@@ -458,7 +501,7 @@ function ts_jsonable(c: cfg.CouncilConfig): Record<string, unknown> {
     };
 }
 
-const FULL_FIXTURE = `enabled: true
+const _FULL_FIXTURE = `enabled: true
 defaults:
   mode: cli
   member_mode: api

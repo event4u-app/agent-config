@@ -751,6 +751,48 @@ model_downgrade:
 - Requires `model_ladder` on the member (smallest → largest, must include the
   active `model`).
 
+## `prompt_cache.ttl` — cache-control TTL tier (Phase 4, road-to-cache-economy)
+
+```yaml
+members:
+  anthropic:
+    # prompt_cache: false                # pre-existing bare-bool form — unchanged
+    prompt_cache:
+      ttl: 5m                            # '5m' | '1h' — DEFAULT '5m'
+```
+
+`prompt_cache` accepts either its pre-existing bare boolean (enable/disable —
+untouched by this section) or a mapping carrying `ttl`. When a mapping is
+given without `ttl`, or the key is absent entirely, `ttl` resolves to `'5m'`.
+The resolved value is threaded into **both** `cache_control` breakpoints
+Anthropic's client builds (the neutral system prompt and the round-stable
+artefact prefix — never the per-round volatile suffix); `'5m'` never appears
+on the wire (omitting `ttl` is Anthropic's own 5-minute default), so an
+unconfigured member's request is byte-identical to the pre-Phase-4 shape.
+Anthropic's own ordering rule — any `1h` breakpoint must precede every `5m`
+breakpoint in one request — is asserted defensively at construction time,
+though this client can never violate it: both breakpoints always share the
+same configured tier.
+
+**Falsification condition — `'5m'` is the permanent default until this
+clears.** Enable `'1h'` **only if** ≥40% of a 30-debate sample shows
+inter-round gaps ≥5 minutes (measured via `run_debate`'s
+`on_round_complete` third argument, recorded as `prompt_cache_round_gap_ms`
+in each `debate-round-N.json` artefact; `null` on round 1). Even if that
+sample clears, run the same debate at both `ttl: 5m` and `ttl: 1h` and
+compare weighted cache-accounting units (`pricing.ts`'s 0.1×/1.25×/2.0×
+multipliers): if `1h` costs more, `'5m'` stays the default **permanently**
+and `ttl: 1h` ships only as a documented niche override. A blanket `1h`
+default was measured **+8.6% worse** upstream
+(anthropics/claude-code#74318) — this package does not repeat that mistake
+without its own evidence.
+
+**Host subagents are unaffected.** This key governs ONLY the council's own
+Anthropic API calls (`clients.ts` builds the request; the council pays the
+bill directly). Claude Code's host-dispatched subagents are pinned to a
+5-minute TTL regardless of any config here or any environment variable —
+see `docs/guidelines/agent-infra/api-cost-levers.md § Claude Code note`.
+
 ## `api_key_ref` forms
 
 Exactly two forms. Raw keys in the yml are a hard validation error.

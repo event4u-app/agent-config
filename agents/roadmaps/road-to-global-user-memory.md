@@ -68,69 +68,81 @@ The whole P-routing question ("does this project have a managed folder, or does
 the fact go global?") depends on a detector nobody has found yet. Build the
 answer before building on top of it.
 
-- [ ] Confirm by search that no managed-`agents/`-folder detector exists today —
+- [x] Confirm by search that no managed-`agents/`-folder detector exists today —
       `find_project_root` resolves a repo root, and the consumer-slim profile is
       prose in `docs/contracts/agents-layout.md`. Record the finding either way;
       if one *does* exist, this phase collapses to "reuse it" and the rest of the
       roadmap binds to that function instead.
-- [ ] Decide and document the detection predicate. Candidate signals, cheapest
+      <!-- done 2026-07-30 — does NOT collapse to reuse: find_project_root_with_anchor (src/scripts/_lib/agent_settings.ts:368-401) is a settings-cascade root walker, returns [root, anchor] | null with no third state, and two of its four _AGENTS_DIR_MARKERS never exist in an installed consumer -->
+- [x] Decide and document the detection predicate. Candidate signals, cheapest
       first: an `agents/` directory exists **and** a package-managed marker is
       present (the managed `.gitignore` block, an `agents/overrides/` dir, or a
       resolvable `.agent-settings.yml`). Pick the set that cannot false-positive
       on an unrelated `agents/` folder in a third-party repo — that false positive
       writes project facts into someone else's tree.
-- [ ] Implement it as one pure, read-only helper in `src/scripts/_lib/`
+      <!-- done 2026-07-30 — predicate: agents/ dir AND any managed marker (the .gitignore SECTION_HEADER imported from sync_gitignore.ts, agents/overrides/, or a resolvable .agent-settings.yml); rejected agents/-existence-alone and agents/roadmaps/ (Optional in the slim profile). Rationale + rejects recorded in the helper -->
+- [x] Implement it as one pure, read-only helper in `src/scripts/_lib/`
       returning a three-state answer — `managed` / `unmanaged` /
       `not-a-project` — never a boolean. The third state is what a bare directory
       outside any repo resolves to, and it must route differently from an
       unmanaged repo.
-- [ ] Unit-test the three states plus the adversarial case: a third-party repo
+      <!-- done 2026-07-30 — src/scripts/_lib/managed_agents_folder.ts, single named export, three-state union, injectable start dir, no ancestor walk, no writes -->
+- [x] Unit-test the three states plus the adversarial case: a third-party repo
       that happens to contain an `agents/` directory resolves `unmanaged`.
+      <!-- done 2026-07-30 — 10 cases; exit gate proven red-then-green: removing the marker guard fails exactly the adversarial third-party-agents/-dir case -->
 
 **Exit gate:** the predicate is named, implemented, and its false-positive case
 is covered by a test that fails without the guard.
 
 ## Phase 1 — The global user profile (read path)
 
-- [ ] Write the ADR. It records: the loader-order change (the contract currently
+- [x] Write the ADR. It records: the loader-order change (the contract currently
       reads, literally, "(1) `.agent-user.md` at project root, (2) nothing"), the
       mechanism-match verdict that this changes **location, not richness**, and
       the explicit note that the deferred-demographics exclusion is *strengthened*
       rather than reopened by the move to global scope.
-- [ ] Add `~/.event4u/agent-config/user/profile.md` as the **weakest** layer via
+      <!-- done 2026-07-30 — docs/decisions/ADR-138-global-user-profile-layer.md; records the loader-order change, the location-not-richness mechanism-match verdict, and that the demographics exclusion is strengthened not reopened -->
+- [x] Add `~/.event4u/agent-config/user/profile.md` as the **weakest** layer via
       `user_global_paths.write_target(...)`, honouring `$EVENT4U_CONFIG_HOME` and
       the legacy `~/.config/agent-config/` read-only fallback like every sibling
       global artefact.
-- [ ] Extend the overlay/settings whitelist to admit the user layer at the global
+      <!-- done 2026-07-30 — src/scripts/_lib/agent_user_profile.ts resolves via user_global_paths write_target/resolve_with_fallback, honours $EVENT4U_CONFIG_HOME + the legacy read-only fallback -->
+- [x] Extend the overlay/settings whitelist to admit the user layer at the global
       level — and in the same edit, add a comment at
       `USER_GLOBAL_OVERLAY_KINDS` recording **why** `contexts/` and `decisions/`
       remain excluded, so the next reader does not mistake this addition for the
       asymmetry being relaxed.
-- [ ] Pin the merge rule in `docs/contracts/agent-user-schema.md`: the authoring
+      <!-- done 2026-07-30 — comment added at USER_GLOBAL_OVERLAY_KINDS recording why contexts/ and decisions/ stay excluded: the profile is a different mechanism, the asymmetry is NOT relaxed -->
+- [x] Pin the merge rule in `docs/contracts/agent-user-schema.md`: the authoring
       discipline is **disjoint fields** (global owns durable identity and style;
       project-local owns project-specific addenda, and the two should not carry
       the same field), and the mechanism for when they do anyway is
       **primitive-level deepest-wins** — project `style.pace` replaces global
       `style.pace`, no object merging. `# Notes` **concatenates** with `[global]`
       / `[project]` provenance markers so neither voice is silently dropped.
-- [ ] Apply the **100-line cap per layer**, not shared. A shared total forces the
+      <!-- done 2026-07-30 — disjoint-fields discipline + primitive-level deepest-wins (no object merging) + # Notes concatenation with [global]/[project] markers -->
+- [x] Apply the **100-line cap per layer**, not shared. A shared total forces the
       pathological choice the council named: deleting global identity to make room
       for project context.
-- [ ] State the load model in the contract: the global profile is read at session
+      <!-- done 2026-07-30 — per-layer cap; a test asserts the shared-total anti-pattern is NOT what ships -->
+- [x] State the load model in the contract: the global profile is read at session
       start **exactly as the project-local file is read today** — same loader,
       same cap. This is parity, not new always-on cost. No session-start digest
       mechanism ships in this phase (the 200-word-digest proposal is the recorded
       Q6 dissent, and it needs its own measurement).
-- [ ] Cover the cascade with tests: global-only · project-only · both (deepest
+      <!-- done 2026-07-30 — parity statement in the contract: same loader, same cap, no session-start digest in this phase (the 200-word digest stays recorded dissent) -->
+- [x] Cover the cascade with tests: global-only · project-only · both (deepest
       wins per primitive) · neither (the existing "agent uses generic address
       forms" path must still work) · `# Notes` concatenation order and markers ·
       per-layer cap enforcement.
-- [ ] Downstream sweep for the contract change: `agent-user-schema.md`,
+      <!-- done 2026-07-30 — 14 new cases (global-only / project-only / both-deepest-wins / neither / notes concatenation + markers / per-layer cap) plus 37 sibling regression tests green -->
+- [x] Downstream sweep for the contract change: `agent-user-schema.md`,
       `agents-md-thin-root` (the user-state vs project-state boundary it
       complements), the `/agents:user *` command bodies, the gitignore block
       (the global file lives outside any repo, so confirm nothing new needs
       ignoring), and the staleness warning path (`last_updated` > 90 days) which
       must now consider both layers.
+      <!-- done 2026-07-30 — agent-user-schema.md + /agents:user command.md + show/command.md changed; agents-md-thin-root needs none (never described the storage location); gitignore needs none (global root is outside every repo); staleness now keys off the merged last_updated -->
 
 **Exit gate:** a project with **no** `.agent-user.md` picks the user up from the
 global profile; a project **with** one still wins on the fields it declares; the
@@ -142,21 +154,24 @@ The miner already carries a **Preference** signal family and is instructed to
 drop what it matches. This phase gives those matches a destination without
 letting anything reach the profile unaccepted.
 
-- [ ] Add `~/.event4u/agent-config/user/observations.jsonl` — append-only,
+- [x] Add `~/.event4u/agent-config/user/observations.jsonl` — append-only,
       never read by the profile loader directly, mirroring the existing
       project-local buffer's contract exactly.
-- [ ] Give `memory-consolidation` a **second, user-scoped channel**: user-attribute
+      <!-- done 2026-07-30 — src/scripts/_lib/user_global_observations.ts: append-only writer, path via user_global_paths, never rewrites on refusal -->
+- [~] Give `memory-consolidation` a **second, user-scoped channel**: user-attribute
       matches route here instead of being discarded. The project-scoped rule in
       Phase 2 of that skill is **unchanged** — no user fact enters
       `agents/memory/` curated YAML, so the recorded lock stays literally intact.
       Add the routing as an explicit branch, and update the skill's "Do NOT" and
       "WHEN NOT to use this" sections, which currently send user-attribute facts
       to the onboard flow.
-- [ ] Enforce the ≤ 5-normalised-facts-per-cycle gate **globally across both
+      <!-- partial 2026-07-30 — mineUserObservationCandidates() ships and is independently tested (the signals mine() used to discard now shape a candidate), and the skill documents the channel. NOT wired: the --commit-intake CLI does not yet auto-append, because the existing pinned parity suite spawns that script with no $HOME/$EVENT4U_CONFIG_HOME isolation and a real write would land in the live global root. Follow-up: isolate that suite env first, then wire the last mile -->
+- [x] Enforce the ≤ 5-normalised-facts-per-cycle gate **globally across both
       channels**, not per channel, so the second channel cannot double the write
       volume. Make the shared counter explicit in the skill text — a per-channel
       reading of the existing gate is the obvious misimplementation.
-- [ ] Restate — not cross-reference — three persist-time write-guards in the user
+      <!-- done 2026-07-30 — applySharedFactCap enforces one shared budget across both channels, not one per channel; covered by a test that fails if the cap is applied per-channel -->
+- [x] Restate — not cross-reference — three persist-time write-guards in the user
       layer, because each one gets *worse* at global scope:
       **(a)** never persist a verbatim standing command (a stored directive
       becomes a durable injection that re-fires forever, and now in every
@@ -166,25 +181,30 @@ letting anything reach the profile unaccepted.
       answers it, store the *surprising* part, not the derivable value.
       The `reference`-shape rule may stay a cross-reference; its mechanics do not
       change with scope.
-- [ ] Turn the `.agent-user.md` exclusion list into **capture-time write-guards**:
+      <!-- done 2026-07-30 — restated in the user-scoped surface where the write happens, not linked -->
+- [x] Turn the `.agent-user.md` exclusion list into **capture-time write-guards**:
       credentials · third-party names and birthdays · financial figures ·
       health / legal / therapy status · demographics · external-source
       identifiers are refused when the observation is captured, not filtered at
       review. Rejecting the same class fifty times at review is the noise problem
       this avoids.
-- [ ] Route every write through the existing `knowledge_global_redaction.ts` gate,
+      <!-- done 2026-07-30 — four guard classes, each independently tested: standing_command + self_harmful_preference (own matchers) · exclusion_list + hidden_unicode (routed through redaction_scan). Capture-time, before the append -->
+- [x] Route every write through the existing `knowledge_global_redaction.ts` gate,
       **including** the `hidden_unicode` class. That class exists because the
       zero-width-smuggling probe failed on first run during the ADR-119
       validation — reuse the hardened gate rather than writing a second one.
-- [ ] Extend `/agents:user review` and `accept` to read the global buffer
+      <!-- done 2026-07-30 — every write passes the gate; a redaction hit REFUSES the observation rather than silently rewriting it -->
+- [x] Extend `/agents:user review` and `accept` to read the global buffer
       alongside the project-local one, showing the layer per proposed observation.
       The accept step remains the **only** writer of `profile.md`; keep the closed
       `field` allowlist and keep dropping anything outside it on read.
-- [ ] Tests: a preference signal reaches the global buffer · a standing command is
+      <!-- done 2026-07-30 — review + accept read both buffers; applyObservationToGlobalProfile is the ONLY function that writes profile.md, and a test asserts appendGlobalObservation never touches it -->
+- [x] Tests: a preference signal reaches the global buffer · a standing command is
       refused at capture · a self-harmful preference is surfaced not stored · a
       credential-shaped and a hidden-unicode-carrying observation are both
       refused · the shared ≤ 5 cap holds when both channels fire in one cycle ·
       `accept` writes the profile and `review` alone never does.
+      <!-- done 2026-07-30 — 18 buffer cases + 5 sole-writer/cap cases; tests/lib green at 580 passed / 2 skipped -->
 
 **Exit gate:** a real session's preference signal lands in the global buffer,
 survives review, and only reaches `profile.md` through an explicit accept — and
@@ -196,33 +216,39 @@ This is the operator's third ask, implemented as the council's round-2 reading:
 **attribution, not isolation.** No global project registry, no project-indexed
 directory tree, no fourth sensitivity class.
 
-- [ ] Add a `context` object to the observation schema —
+- [x] Add a `context` object to the observation schema —
       `{project_path, project_name, first_seen}` — plus `seen_count` and
       `seen_in[]`, reusing the semantics of the global knowledge card's `seen_in`
       provenance footer rather than inventing a parallel primitive.
-- [ ] Wire the Phase 0 predicate as the router: `managed` → the fact stays in that
+      <!-- done 2026-07-30 — ObservationContext {project_path, project_name, first_seen}; additive, so every Phase 2 test still passes unmodified -->
+- [x] Wire the Phase 0 predicate as the router: `managed` → the fact stays in that
       project's `agents/memory/` exactly as today; `unmanaged` / `not-a-project` →
       the observation goes to the global user buffer **with** its `context`. Cover
       both branches with a test.
-- [ ] Increment `seen_count` and append to `seen_in[]` when the same observation
+      <!-- done 2026-07-30 — routeProjectObservation calls detect_managed_agents_folder: managed → local (nothing reaches the global buffer), unmanaged + not-a-project → global via the Phase 2 guard pipeline. One detector, not a second one -->
+- [x] Increment `seen_count` and append to `seen_in[]` when the same observation
       recurs in a different project. Reuse the existing similarity thresholds from
       `_lib/text_similarity.ts` (`MERGE_THRESHOLD` / `WARN_THRESHOLD`) — never
       hardcode a new one — so "same observation" means the same thing here as it
       does in the curated-memory dedup path.
-- [ ] At `seen_count ≥ 3`, surface the observation in `review` as a **promotion
+      <!-- done 2026-07-30 — computeRecurrence merges on Jaccard similarity via the existing text_similarity lib, cross-project only -->
+- [x] At `seen_count ≥ 3`, surface the observation in `review` as a **promotion
       candidate** for the durable profile, with a mandatory `promotion_reason` as
       human input — mirroring ADR-121's rule that there is no auto-`shareable`
       path. Show the count and the project list so the human can judge "seen in
       five projects" against "seen in one, three times".
-- [ ] Document in the schema contract that this is the **only** generalisation
+      <!-- done 2026-07-30 — PROMOTION_SEEN_COUNT_THRESHOLD = 3; review surfaces a candidate and accept collects a mandatory promotion_reason. Never an automatic promotion -->
+- [x] Document in the schema contract that this is the **only** generalisation
       path, and that the agent never infers the cross-project pattern itself
       (non-goal above). The counter is a human-confirmation tally, not a detector.
-- [ ] Add the guard that makes the refused design stay refused: a test asserting
+      <!-- done 2026-07-30 — recorded in agent-user-schema.md § Project attribution as the only generalisation path -->
+- [x] Add the guard that makes the refused design stay refused: a test asserting
       **no project-indexed directory is ever created** under the global root.
       The metadata-enumeration risk — any `readdir` on a per-project parent
       handing the agent the user's whole project history — is precisely why the
       namespace was rejected, and a future contributor will otherwise re-propose
       it as an obvious optimisation.
+      <!-- done 2026-07-30 — a test appends observations from 5 distinct projects and asserts the global user dir contains only observations.jsonl and no directory entry. Fails the moment anyone adds a project-indexed dir -->
 
 ### `seen_in[]` is a narrower metadata surface, not a null one
 
@@ -242,7 +268,7 @@ is acceptable, but it is a difference in *surface*, not in *kind*:
 Narrower, not zero. Two consequences follow, both cheap enough to build now
 rather than defer:
 
-- [ ] **Put the buffer in the redaction paths.** The buffer must never reach a
+- [x] **Put the buffer in the redaction paths.** The buffer must never reach a
       project-tracked artefact or a hook capture. Verified constraint (read
       2026-07-30): `src/scripts/redact_hook_capture.ts` exists but its policy
       deliberately **preserves** path-shaped envelope keys (`cwd`,
@@ -253,17 +279,20 @@ rather than defer:
       `project_path`, and `project_name`, and add a fixture proving a captured
       payload carrying the observation shape comes out redacted. Route the same
       keys through `knowledge_global_redaction.ts` on write, per Phase 2.
-- [ ] **Prune `seen_in[]` on promotion.** The counter is *counting evidence*, and
+      <!-- done 2026-07-30 — seen_in / project_path / project_name added to the hook-capture redaction key set, with a fixture test proving an observation-carrying capture comes out redacted; the append path already ran the redaction gate from Phase 2 -->
+- [x] **Prune `seen_in[]` on promotion.** The counter is *counting evidence*, and
       only the buffer entry needs it. Once a fact is promoted, the profile entry
       carries the fact and **no `seen_in` list** — not a truncated one, not a
       count, none. The buffer entry keeps its list until the entry itself is
       pruned or revoked.
-- [ ] **Test the resulting invariant:** the long-lived artefact (`profile.md`)
+      <!-- done 2026-07-30 — the per-project list is dropped at promotion; the counter was counting evidence, not carrying it forward -->
+- [x] **Test the resulting invariant:** the long-lived artefact (`profile.md`)
       converges to **zero project references**, and only the short-lived buffer
       ever holds any. Assert it directly — a test that greps the profile for a
       path-shaped or project-name-shaped value and fails on a hit. This is the
       property that makes the whole layer defensible over time: the thing that
       persists longest is the thing that names no project.
+      <!-- done 2026-07-30 — asserted: profile.md holds zero project references after a promotion -->
 
 **Exit gate:** an observation from an unmanaged project persists globally with its
 project attribution, survives that project's deletion, reaches promotion
@@ -273,20 +302,24 @@ holds zero project references after a promotion.
 
 ## Phase 4 — Delete, revoke, audit
 
-- [ ] Implement per-observation delete and whole-project-context purge, writing an
+- [x] Implement per-observation delete and whole-project-context purge, writing an
       append-only tombstone **before** deletion — reusing ADR-121's
       `.revocations.jsonl` pattern verbatim, not a variant of it.
-- [ ] Add a read surface that renders what the global layer currently holds, so
+      <!-- done 2026-07-30 — user_global_revocations.ts reuses ADR-121 verbatim (same .revocations.jsonl filename, append-per-entry, tolerant reader, tombstone-before-delete). One disclosed adaptation: entity_id replaces card_id because neither a buffered observation nor a profile field has a content-slug analogue. Deletion is GATED on the tombstone succeeding — proven by a test that makes the tombstone throw and asserts the buffer is byte-identical -->
+- [x] Add a read surface that renders what the global layer currently holds, so
       the user can audit their own profile and buffer without reading raw JSONL.
-- [ ] Confirm and document that the global tree is outside every repo and
+      <!-- done 2026-07-30 — /agents user show --audit on the existing cluster (no new top-level command), rendered through the same redaction gate the write path uses -->
+- [x] Confirm and document that the global tree is outside every repo and
       therefore unignorable-by-construction — and that no code path copies it into
       a project, a committed artefact, or a PR body. `installed.lock` is the
       precedent for a global, `$HOME`-leaking, never-committed inventory; state
       that the same posture applies, and that the profile's *content* stays out of
       any generated or committed file.
-- [ ] Tests: tombstone precedes deletion · a purged project context leaves no
+      <!-- done 2026-07-30 — documented with the installed.lock posture as precedent. Claim deliberately NARROWED after checking: the guarantee stated is that the three Phase 2-4 modules only ever write under the global root — a repo-wide no-path-ever-surfaces claim would have been false, since the byte census reads the resolved profile path for a token count -->
+- [x] Tests: tombstone precedes deletion · a purged project context leaves no
       residue in the buffer · the audit render carries no secret and no path
       outside the allowlist.
+      <!-- done 2026-07-30 — 33 Phase-4 cases incl. purge-leaves-no-residue and a redaction assertion on the audit render -->
 
 **Exit gate:** every write has a matching user-invocable delete, and the deletion
 is auditable after the fact.
@@ -298,22 +331,26 @@ could only accrue while the layer was ON, and ON was withheld pending reuse. Thi
 gate is keyed to **promotion behaviour**, which is observable whether or not the
 layer ever loads.
 
-- [ ] Instrument counts only — no content, no PII: projects with ≥ 10 sessions ·
+- [~] Instrument counts only — no content, no PII: projects with ≥ 10 sessions ·
       projects with ≥ 1 promoted global observation · observations proposed ·
       observations accepted.
-- [ ] Pin the kill-criterion in the ADR: after 90 days live, **< 40 %** of
+      <!-- partial 2026-07-30 — the two observable counters are WIRED where the writes land: recordObservationProposed inside appendGlobalObservation, recordObservationAccepted inside applyObservationToGlobalProfile (both fail-open: a counter never gates the user own data). The two project-level counters exist and are tested but stay UNWIRED on purpose — no per-project session counter exists, and building one would recreate the per-project enumeration surface the council refused. Wiring them needs a design that counts without enumerating -->
+- [x] Pin the kill-criterion in the ADR: after 90 days live, **< 40 %** of
       projects with ≥ 10 sessions carrying ≥ 1 promoted observation, **or** a
       median review→accept rate **< 30 %**, triggers a mandatory teardown review
       whose default outcome is deprecation-with-archive unless defended with
       evidence.
-- [ ] Write the non-self-locking argument into the ADR explicitly: promotion
+      <!-- done 2026-07-30 — ADR-138 § Promotion-behaviour gate: 90-day window, <40% of projects with ≥10 sessions carrying ≥1 promoted observation OR median review→accept <30%, default outcome deprecation-with-archive unless defended with evidence -->
+- [x] Write the non-self-locking argument into the ADR explicitly: promotion
       happens through human accepts regardless of whether the profile loads at
       session start, so the metric moves independently of further package work.
       Record the residual dissent on the window (90 days vs 6 months) and which
       one shipped.
-- [ ] Add the counters to the enforcement/telemetry surface using the existing
+      <!-- done 2026-07-30 — recorded: promotion moves through human accepts whether or not the profile ever loads, so the metric is independent of further package work. Residual dissent (90 days vs 6 months) recorded with the shipped choice -->
+- [x] Add the counters to the enforcement/telemetry surface using the existing
       PII-exclusion-by-construction shape — a struct of allowlisted scalars with
       no field capable of holding free-form content.
+      <!-- done 2026-07-30 — PromotionGateCounters is four readonly number fields; no field can hold free-form content (a compile-time fact, not a scrubbing pass), and coerceCounters drops any key outside the closed allowlist on read. Both halves tested -->
 
 **Exit gate:** the four counters are recorded, the criterion is written with its
 window, and the ADR states in one line why the gate can fire.
@@ -361,33 +398,44 @@ hypothesis about a need, and the honest state is deferred rather than built.
 
 ## Acceptance criteria
 
-- [ ] A fresh session in a project with no `.agent-user.md` addresses the user
+- [x] A fresh session in a project with no `.agent-user.md` addresses the user
       correctly and applies their style, sourced from the global profile.
-- [ ] A project-local `.agent-user.md` still wins on the fields it declares, and
+      <!-- verified — cascade tests cover global-only; the weakest-layer resolution honours $EVENT4U_CONFIG_HOME and the legacy fallback -->
+- [x] A project-local `.agent-user.md` still wins on the fields it declares, and
       `# Notes` from both layers survive with provenance markers.
-- [ ] The miner's preference signals reach the global buffer; nothing reaches
+      <!-- verified — primitive-level deepest-wins per field, and # Notes concatenates with [global]/[project] markers; both covered -->
+- [~] The miner's preference signals reach the global buffer; nothing reaches
       `profile.md` without an explicit human accept.
-- [ ] `agents/memory/` curated YAML still contains **zero** user-attribute facts —
+      <!-- partial — the second half holds outright: applyObservationToGlobalProfile is the ONLY writer of profile.md and a test asserts appendGlobalObservation never touches it. The first half is a callable, tested primitive (mineUserObservationCandidates) that the skill instructs CONSOLIDATE to call, but the --commit-intake CLI does not yet auto-append: the pinned parity suite spawns that script without $HOME/$EVENT4U_CONFIG_HOME isolation, so a real write would land in the live global root. Isolate that suite first, then wire the last mile -->
+- [x] `agents/memory/` curated YAML still contains **zero** user-attribute facts —
       the recorded lock is verifiably intact, with a test asserting it.
-- [ ] No project-indexed directory exists anywhere under the global root, with a
+      <!-- verified 2026-07-30 — tests/lib/curated_memory_no_user_attributes.test.ts asserts the lock, deriving the forbidden key set from the observation schema enum so the two cannot drift. Red-proofed: planting voice_sample turns it red, restoring turns it green, curated memory left byte-identical. The first draft of this test failed on a clean tree by matching bare words in prose — fixed to match declarations only -->
+- [x] No project-indexed directory exists anywhere under the global root, with a
       test that fails if one is created.
-- [ ] `profile.md` holds **zero** project references after a promotion — the
+      <!-- verified — red-proofed by injecting a per-project mkdir into the append path: the guard fires, and it asserts the INVARIANT (no directory entry, no project-named entry) rather than an exact file list, so a legitimate flat sibling file cannot tempt a later reader to loosen it -->
+- [x] `profile.md` holds **zero** project references after a promotion — the
       `seen_in[]` list is pruned at promotion and lives only on the short-lived
       buffer entry, with a test that fails on a path- or project-name-shaped
       value in the profile.
-- [ ] The observation buffer is covered by **both** redaction paths — the
+      <!-- verified — seen_in[] pruned at promotion; a test fails on a path- or project-name-shaped value in the profile -->
+- [x] The observation buffer is covered by **both** redaction paths — the
       write-time `knowledge_global_redaction.ts` gate and an extended
       `redact_hook_capture` key set — with a fixture proving a hook capture
       carrying `seen_in` / `project_path` / `project_name` comes out redacted.
-- [ ] Every one of the four capture-time guard classes (standing command ·
+      <!-- verified — write-time knowledge_global_redaction gate plus seen_in / project_path / project_name added to the hook-capture key set, with a fixture proving a capture carrying them comes out redacted -->
+- [x] Every one of the four capture-time guard classes (standing command ·
       self-harmful preference · exclusion-list content · hidden unicode) has a
       test that fails when its guard is removed.
-- [ ] Every write has a user-invocable delete, and deletion leaves a tombstone.
-- [ ] The kill-criterion counters are recorded and the criterion is written with
+      <!-- verified — sampled red-proof: neutralising detectStandingCommand turns exactly its two tests red (guard-class test + write-path test) and restoring turns them green -->
+- [x] Every write has a user-invocable delete, and deletion leaves a tombstone.
+      <!-- verified — three write paths mapped to deleteGlobalObservation / purgeProjectContext / revokeGlobalProfileField; deletion is gated on the tombstone succeeding, proven by making the tombstone throw and asserting the buffer is byte-identical -->
+- [~] The kill-criterion counters are recorded and the criterion is written with
       its window and its non-self-locking argument.
-- [ ] `agent-user-schema.md` and the layout contract describe what the code
+      <!-- partial — the criterion, its 90-day window, the non-self-locking argument and the residual dissent are written in ADR-138. Two of four counters are wired at the real write sites; the two project-level counters remain deliberately unwired because no per-project session counter exists and building one would recreate the per-project enumeration surface the council refused -->
+- [x] `agent-user-schema.md` and the layout contract describe what the code
       actually does — loader order, merge rule, per-layer caps, and the global
       path.
+      <!-- verified — loader order, merge rule, per-layer caps, global path, project attribution, and the delete/revoke/audit surface all documented against the shipped code -->
 
 ## Risks
 

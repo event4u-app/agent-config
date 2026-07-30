@@ -16,6 +16,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { DEFAULT_PRICES } from '../../../src/scripts/ai_council/_default_prices.js';
 import {
+    CACHE_READ_MULTIPLIER,
+    CACHE_WRITE_MULTIPLIER_1H,
+    CACHE_WRITE_MULTIPLIER_5M,
     bootstrap_from_defaults,
     downgrade_coupling,
     estimate_cost,
@@ -230,6 +233,84 @@ describe('reprice_with_cache', () => {
         );
         expect(e.input_usd).toBe(0.0);
         expect(e.input_tokens).toBe(30);
+    });
+});
+
+// ── realized (cache-aware) vs pre-flight (cache-blind) — orchestrator's
+// realized-cost site (Step A) must actually diverge from the estimator, by
+// exactly the multiplier arithmetic — never a hardcoded dollar literal. ──
+
+describe('reprice_with_cache vs estimate_cost — realized cost diverges by the multiplier math', () => {
+    it('a response with non-zero cache_read + cache_creation prices differently than the cache-blind estimate, by the exact multiplier delta', () => {
+        const p = path.join(mkTmp(), 'prices.md');
+        bootstrap_from_defaults(p);
+        const table = load_prices(p);
+        const price = lookup(table, 'anthropic', 'claude-sonnet-4-5');
+        expect(price).not.toBeNull();
+        const inputRate = (price as { input_per_1m_usd: number }).input_per_1m_usd;
+
+        // Fixture token counts standing in for one real council-member call.
+        const inputTokens = 200_000;
+        const cacheReadTokens = 300_000;
+        const cacheWriteTokens = 50_000;
+        const outputTokens = 10_000;
+
+        // Cache-blind pre-flight estimator: everything billed at the full
+        // input rate (its deliberate 0%-cache-hit conservative prior).
+        const blind = estimate_cost(
+            'anthropic',
+            'claude-sonnet-4-5',
+            inputTokens + cacheReadTokens + cacheWriteTokens,
+            outputTokens,
+            table,
+        );
+
+        const realized5m = reprice_with_cache(
+            'anthropic',
+            'claude-sonnet-4-5',
+            {
+                input_tokens: inputTokens,
+                cache_read_input_tokens: cacheReadTokens,
+                cache_creation_input_tokens: cacheWriteTokens,
+                output_tokens: outputTokens,
+            },
+            table,
+            '5m',
+        );
+
+        // Expected value derived from the multipliers + fixture counts —
+        // never a hardcoded dollar figure.
+        const expected5mInputUsd =
+            (inputTokens / 1_000_000) * inputRate +
+            (cacheReadTokens / 1_000_000) * inputRate * CACHE_READ_MULTIPLIER +
+            (cacheWriteTokens / 1_000_000) * inputRate * CACHE_WRITE_MULTIPLIER_5M;
+
+        expect(realized5m.input_usd).toBeCloseTo(expected5mInputUsd, 10);
+        expect(realized5m.input_usd).toBeLessThan(blind.input_usd);
+        expect(realized5m.input_usd).not.toBeCloseTo(blind.input_usd, 6);
+
+        // Swapping the TTL swaps only the write multiplier — also derived,
+        // never a literal — and must move the price in the expected direction
+        // (1h write multiplier > 5m write multiplier ⇒ realized1h > realized5m).
+        const realized1h = reprice_with_cache(
+            'anthropic',
+            'claude-sonnet-4-5',
+            {
+                input_tokens: inputTokens,
+                cache_read_input_tokens: cacheReadTokens,
+                cache_creation_input_tokens: cacheWriteTokens,
+                output_tokens: outputTokens,
+            },
+            table,
+            '1h',
+        );
+        const expected1hInputUsd =
+            (inputTokens / 1_000_000) * inputRate +
+            (cacheReadTokens / 1_000_000) * inputRate * CACHE_READ_MULTIPLIER +
+            (cacheWriteTokens / 1_000_000) * inputRate * CACHE_WRITE_MULTIPLIER_1H;
+
+        expect(realized1h.input_usd).toBeCloseTo(expected1hInputUsd, 10);
+        expect(realized1h.input_usd).toBeGreaterThan(realized5m.input_usd);
     });
 });
 
