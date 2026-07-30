@@ -376,6 +376,49 @@ report cache-aware numbers, deduped, with subagent legs separated.
       (`read_share` below 90%, or cold-start share below 50%).
       <!-- done 2026-07-30 — every run ends with the reproduce command, claude --version (2.1.220 observed), and the two drift thresholds -->
 
+### C-3 pre-registration — written 2026-07-30, BEFORE the first measurement run
+
+C-3 was `pending` because no reduction had shipped. This registers the exact
+reduction, metric and threshold **before** any measurement, so the result cannot
+be fitted to the outcome.
+
+**The reduction under test: scope de-duplication of the rule projection.** The
+package projects the same rule suite into one host session twice — `generate-tools`
+writes per-tool rule symlinks at project scope (`.claude/rules/`, 94 in scope
+here) while a global install writes the same suite at user scope
+(`~/.claude/rules/`, 110). Both load on every subagent spawn. De-duplication
+emits the body once and skips the redundant twin.
+
+**Why this is NOT the locked thin-projection mechanism.** Thin projection was
+measured at a 36.2% win-rate against a 48% floor and stays DISABLED: it makes
+rule bodies *trigger-gated*, so the model may never see a rule it would have
+needed. De-duplication changes nothing about what the model sees — the identical
+text still loads, in full, once instead of twice. Mechanism-match check per the
+decision-revisit gate: different mechanism, so the lock does not apply. Router
+tiering is untouched; no rule becomes conditional.
+
+**Content-identity gate (load-bearing).** A twin is de-duplicated **only when it
+is byte-identical**. Verified precondition on this machine: all 110 shared
+filenames **differ in bytes** (a globally installed release vs this repo's
+`dist/`), so a naive filename-keyed dedup would silently let an older copy win.
+Byte-identity is what makes the reduction content-neutral, and therefore what
+makes "no regression on the existing trigger/outcome evals" true *by
+construction* rather than by measurement.
+
+**Metric.** `preamble_byte_census` median cold-start payload tokens, on a
+two-scope fixture representing the condition the reduction targets: a consumer
+carrying the SAME package version at user and project scope (the byte-identical
+case). Reported alongside the same census on this machine, where version drift
+makes the dedup correctly inert.
+
+**Threshold.** ≥ 15% reduction of the median cold-start payload on that fixture.
+
+**Honest-null consequence, fixed in advance.** Below 15%: the payload ceiling and
+the per-rule dormancy routing are marked `[-]` cancelled **with the measured
+number as the reason**, not quietly dropped. At or above 15%: both proceed, and
+the shipped default for the dedup remains a separate governance call — this
+claim measures the mechanism, it does not authorise flipping a consumer default.
+
 ### Measured verdicts — 2026-07-30, host CC 2.1.220
 
 | claim | threshold | measured | verdict |
