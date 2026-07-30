@@ -61,6 +61,16 @@ export const GATE_COUNTERS_RELATIVE = path.join('user', 'promotion-gate-counters
  * the type itself (verified by `tests/lib/user_memory_gate_counters.test.ts`'s
  * shape test).
  */
+/**
+ * The two project-level fields are **CANCELLED 2026-07-30** — kept in the struct
+ * so a reader finds the decision instead of the absence, never incremented. Both
+ * need a per-project record, and every primitive that can hold one either exposes
+ * the project set or, once coarsened past membership-testability, cannot resolve a
+ * 40% ratio at a cardinality in the tens. Reason + rejected candidates + the
+ * council review that forced the wording:
+ * agents/settings/contexts/promotion-gate-counting-primitive.md; the resulting
+ * narrowing of the kill criterion is recorded in ADR-138.
+ */
 export interface PromotionGateCounters {
     readonly projects_with_ge_10_sessions: number;
     readonly projects_with_promoted_observation: number;

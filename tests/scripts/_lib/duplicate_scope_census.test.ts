@@ -1,5 +1,5 @@
 // Unit tests for the shared duplicate-scope byte-comparison primitive
-// (`agents/roadmaps/road-to-cache-economy.md` Phase 3, C-2) — reused by
+// (`road-to-cache-economy.md` Phase 3, C-2) — reused by
 // `cache_realization_report.ts#computeDuplicateScope` and the `doctor`
 // `duplicate-scope-rules` check so both surfaces agree on what's shared.
 

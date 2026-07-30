@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Preamble byte census — attributes the measured subagent cold-start payload
- * to named sources (`agents/roadmaps/road-to-cache-economy.md` Phase 3,
+ * to named sources (`road-to-cache-economy.md` Phase 3,
  * steps 1-2): user-scope rules, project-scope rules, the CLAUDE.md
  * hierarchy (project + user + `@`-imports + `CLAUDE.local.md`), the global
  * user `profile.md` (road-to-global-user-memory), and the preloaded skills
@@ -76,7 +76,7 @@ export interface RuleDirCensus {
     chars: number;
 }
 
-function censusRuleDir(dir: string): RuleDirCensus {
+export function censusRuleDir(dir: string): RuleDirCensus {
     if (!fs.existsSync(dir)) return { files: 0, chars: 0 };
     let files = 0;
     let chars = 0;
@@ -99,6 +99,9 @@ export interface PerRuleCost {
 }
 
 /** Top `limit` `.md` files in `dir` by byte size, descending — the per-rule per-spawn cost list (step 2). */
+// A candidate list, not a verdict: routing a rule to dormancy goes through
+// _lib/compile_time_toggles.ts (see its "dormancy routing" header) and needs an
+// output-side bench first. Cost alone never justifies a flip.
 export function topRulesByCost(dir: string, limit = 10): PerRuleCost[] {
     if (!fs.existsSync(dir)) return [];
     const entries: PerRuleCost[] = [];

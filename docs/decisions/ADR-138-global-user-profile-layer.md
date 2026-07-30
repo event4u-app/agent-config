@@ -21,7 +21,7 @@ review_trigger: >-
 ## Status
 
 Accepted (2026-07-30). Implements Phase 1 (read path) of
-`agents/roadmaps/road-to-global-user-memory.md`, per the council cut recorded
+`road-to-global-user-memory.md`, per the council cut recorded
 in [`global-user-memory-cut`](../../agents/settings/contexts/global-user-memory-cut.md).
 
 ## Context
@@ -154,6 +154,31 @@ grows through actual use of the write path — never through the mere existence
 of the read path — so it cannot be starved by the same "measurement requires
 the very thing being measured" deadlock that made ADR-119 necessary.
 
+### Breadth limb removed — the narrowing, stated in the open (2026-07-30)
+
+The breadth limb of the promotion-behaviour kill criterion (**< 40% of projects
+with ≥ 10 sessions carrying ≥ 1 promoted observation**) is **unimplementable under
+the global-layer enumeration prohibition and is removed.** The criterion now fires
+only on accept rate (**< 30% median review→accept**). This narrows the gate to
+quality-of-adoption and excludes breadth-of-adoption: **a layer used well in few
+projects will pass the 90-day gate.** This is a known limitation accepted to
+preserve the no-enumeration guarantee.
+
+Why it is unimplementable rather than merely unbuilt: both breadth counters need a
+per-project record, and every primitive that can hold one either exposes the
+project set (a directory to `readdir`, a digest set to a membership test, a
+small-cardinality sketch whose empty registers prove absence for any guessable
+path) or, once coarsened past testability, cannot resolve a 40% ratio at a
+cardinality in the tens. Accurate implies enumerable; non-enumerable implies
+non-decisional. The worked argument, the rejected candidates, and the council
+review that forced this wording live in
+[`promotion-gate-counting-primitive`](../../agents/settings/contexts/promotion-gate-counting-primitive.md).
+
+A human counting their own projects at review time was considered and rejected as
+the remedy: it outsources the automated gate's job and merely defers the same
+enumeration by 90 days.
+
+
 ## Consequences
 
 - A fresh session in a project with no `.agent-user.md` now addresses the
@@ -183,7 +208,7 @@ the very thing being measured" deadlock that made ADR-119 necessary.
 
 ## References
 
-- `agents/roadmaps/road-to-global-user-memory.md` — Phase 1.
+- `road-to-global-user-memory.md` — Phase 1.
 - [`global-user-memory-cut`](../../agents/settings/contexts/global-user-memory-cut.md) — council convergence record.
 - [`agent-user-schema.md`](../contracts/agent-user-schema.md) — the updated loader/merge contract.
 - [`user_global_paths.ts`](../../src/scripts/_lib/user_global_paths.ts) — the shared global-root resolver.

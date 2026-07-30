@@ -158,7 +158,7 @@ letting anything reach the profile unaccepted.
       never read by the profile loader directly, mirroring the existing
       project-local buffer's contract exactly.
       <!-- done 2026-07-30 — src/scripts/_lib/user_global_observations.ts: append-only writer, path via user_global_paths, never rewrites on refusal -->
-- [~] Give `memory-consolidation` a **second, user-scoped channel**: user-attribute
+- [x] Give `memory-consolidation` a **second, user-scoped channel**: user-attribute
       matches route here instead of being discarded. The project-scoped rule in
       Phase 2 of that skill is **unchanged** — no user fact enters
       `agents/memory/` curated YAML, so the recorded lock stays literally intact.
@@ -166,6 +166,7 @@ letting anything reach the profile unaccepted.
       "WHEN NOT to use this" sections, which currently send user-attribute facts
       to the onboard flow.
       <!-- partial 2026-07-30 — mineUserObservationCandidates() ships and is independently tested (the signals mine() used to discard now shape a candidate), and the skill documents the channel. NOT wired: the --commit-intake CLI does not yet auto-append, because the existing pinned parity suite spawns that script with no $HOME/$EVENT4U_CONFIG_HOME isolation and a real write would land in the live global root. Follow-up: isolate that suite env first, then wire the last mile -->
+      <!-- completed 2026-07-30 — the blocker is gone, not worked around: the Wave-8g spawn rig now hands children a sandbox $HOME/$EVENT4U_CONFIG_HOME (explicit inheritHome opt-out), verified as its own green state across all 11 consuming suites before the wiring was touched. --commit-intake then landed the global append, shared ≤5 cap honoured, guards + redaction on every write, and a test snapshots the REAL buffer size around a run to prove it stays untouched -->
 - [x] Enforce the ≤ 5-normalised-facts-per-cycle gate **globally across both
       channels**, not per channel, so the second channel cannot double the write
       volume. Make the shared counter explicit in the skill text — a per-channel
@@ -331,10 +332,11 @@ could only accrue while the layer was ON, and ON was withheld pending reuse. Thi
 gate is keyed to **promotion behaviour**, which is observable whether or not the
 layer ever loads.
 
-- [~] Instrument counts only — no content, no PII: projects with ≥ 10 sessions ·
+- [-] Instrument counts only — no content, no PII: projects with ≥ 10 sessions ·
       projects with ≥ 1 promoted global observation · observations proposed ·
       observations accepted.
       <!-- partial 2026-07-30 — the two observable counters are WIRED where the writes land: recordObservationProposed inside appendGlobalObservation, recordObservationAccepted inside applyObservationToGlobalProfile (both fail-open: a counter never gates the user own data). The two project-level counters exist and are tested but stay UNWIRED on purpose — no per-project session counter exists, and building one would recreate the per-project enumeration surface the council refused. Wiring them needs a design that counts without enumerating -->
+      <!-- cancelled 2026-07-30 for the two PROJECT-level counters; the two behavioural ones (proposed/accepted) shipped and are wired at the real write sites. Reason: a design note (agents/settings/contexts/promotion-gate-counting-primitive.md) tested every candidate primitive against the enumeration locks and found a scissor — accurate at n in the tens implies membership-testable state, non-testable implies it cannot resolve the 40% ratio. Council reviewed one pass (sonnet + gpt-4o, $0.038): both reached cancel, sonnet explicitly "but not for the reason the note gives", and its reason replaced mine -->
 - [x] Pin the kill-criterion in the ADR: after 90 days live, **< 40 %** of
       projects with ≥ 10 sessions carrying ≥ 1 promoted observation, **or** a
       median review→accept rate **< 30 %**, triggers a mandatory teardown review
@@ -404,9 +406,10 @@ hypothesis about a need, and the honest state is deferred rather than built.
 - [x] A project-local `.agent-user.md` still wins on the fields it declares, and
       `# Notes` from both layers survive with provenance markers.
       <!-- verified — primitive-level deepest-wins per field, and # Notes concatenates with [global]/[project] markers; both covered -->
-- [~] The miner's preference signals reach the global buffer; nothing reaches
+- [x] The miner's preference signals reach the global buffer; nothing reaches
       `profile.md` without an explicit human accept.
       <!-- partial — the second half holds outright: applyObservationToGlobalProfile is the ONLY writer of profile.md and a test asserts appendGlobalObservation never touches it. The first half is a callable, tested primitive (mineUserObservationCandidates) that the skill instructs CONSOLIDATE to call, but the --commit-intake CLI does not yet auto-append: the pinned parity suite spawns that script without $HOME/$EVENT4U_CONFIG_HOME isolation, so a real write would land in the live global root. Isolate that suite first, then wire the last mile -->
+      <!-- closed 2026-07-30 — both halves now hold. The blocker was removed rather than worked around: the spawn rig isolates $HOME/$EVENT4U_CONFIG_HOME (verified green across all 11 consuming suites first), then --commit-intake landed the global append with the shared ≤5 cap and every capture guard. A test snapshots the REAL buffer size around a run to prove it stays untouched, and applyObservationToGlobalProfile remains the only writer of profile.md -->
 - [x] `agents/memory/` curated YAML still contains **zero** user-attribute facts —
       the recorded lock is verifiably intact, with a test asserting it.
       <!-- verified 2026-07-30 — tests/lib/curated_memory_no_user_attributes.test.ts asserts the lock, deriving the forbidden key set from the observation schema enum so the two cannot drift. Red-proofed: planting voice_sample turns it red, restoring turns it green, curated memory left byte-identical. The first draft of this test failed on a clean tree by matching bare words in prose — fixed to match declarations only -->
@@ -429,9 +432,10 @@ hypothesis about a need, and the honest state is deferred rather than built.
       <!-- verified — sampled red-proof: neutralising detectStandingCommand turns exactly its two tests red (guard-class test + write-path test) and restoring turns them green -->
 - [x] Every write has a user-invocable delete, and deletion leaves a tombstone.
       <!-- verified — three write paths mapped to deleteGlobalObservation / purgeProjectContext / revokeGlobalProfileField; deletion is gated on the tombstone succeeding, proven by making the tombstone throw and asserting the buffer is byte-identical -->
-- [~] The kill-criterion counters are recorded and the criterion is written with
+- [-] The kill-criterion counters are recorded and the criterion is written with
       its window and its non-self-locking argument.
       <!-- partial — the criterion, its 90-day window, the non-self-locking argument and the residual dissent are written in ADR-138. Two of four counters are wired at the real write sites; the two project-level counters remain deliberately unwired because no per-project session counter exists and building one would recreate the per-project enumeration surface the council refused -->
+      <!-- cancelled-in-part 2026-07-30 — the criterion, its 90-day window, the non-self-locking argument and the residual dissent ARE written in ADR-138, and the two behavioural counters are recorded. The breadth limb is removed rather than left aspirational: ADR-138 now states in the open that the gate fires only on accept rate, that a layer used well in few projects will pass, and that this is a known limitation accepted to preserve the no-enumeration guarantee -->
 - [x] `agent-user-schema.md` and the layout contract describe what the code
       actually does — loader order, merge rule, per-layer caps, and the global
       path.

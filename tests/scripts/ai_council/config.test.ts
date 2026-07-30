@@ -598,3 +598,28 @@ lenses:
     decision_replay:
       enabled: false
 `;
+
+describe('cost_budget.daily_limit_usd — the rolling 24h cap (and the ledger switch)', () => {
+    // The field existed on CostBudget and gated the spend-ledger append, but no
+    // caller ever passed it and the typed parse dropped the key — so the ledger
+    // could not be written at all while an archived acceptance criterion claimed
+    // otherwise. These pin the whole chain: raw YAML -> typed config -> validation.
+    it('defaults to 0, which keeps both the cap and the ledger off', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        expect(c.cost_budget.daily_limit_usd).toBe(0);
+    });
+
+    it('parses an explicit cap out of cost_budget', () => {
+        const tmp = make_tmp();
+        const payload = MINIMAL_VALID.replace('  max_total_usd: 20.0', '  max_total_usd: 20.0\n  daily_limit_usd: 5.0');
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.cost_budget.daily_limit_usd).toBe(5.0);
+    });
+
+    it('rejects a negative cap like every sibling budget field', () => {
+        const tmp = make_tmp();
+        const payload = MINIMAL_VALID.replace('  max_total_usd: 20.0', '  max_total_usd: 20.0\n  daily_limit_usd: -1');
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/daily_limit_usd must be >= 0/u);
+    });
+});

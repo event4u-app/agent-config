@@ -486,6 +486,11 @@ tasks:
     desc: "Artefact-count messaging gate — every count-shaped prose mention of skills/commands/governed rules/guidelines/personas on a flagship surface matches the source count; internal inconsistency (two different numbers for one kind) fails (road-to-truth-and-reference-hygiene Phase 1)"
     cmd: ./scripts-run src/scripts/check_artefact_count_messaging {{.QUIET_FLAG}}
 
+  check-preamble-payload:
+    silent: true
+    desc: "Per-spawn preamble payload ratchet — the deterministic in-repo payload (project-scope rules + skills catalog + project CLAUDE.md) may not grow past the pinned baseline + headroom. Every token here is re-written on EVERY subagent spawn, so growth is paid per spawn (road-to-cache-economy Phase 3, unblocked by C-3 at 38.0%)"
+    cmd: ./scripts-run src/scripts/check_preamble_payload_budget
+
   check-memory-replay:
     silent: true
     desc: "Memory-retrieval replay regression — the corpus-derived replay set's payload must stay within +5% of the pinned baseline (inert until internal/bench/reports/memory-retrieval-baseline.json exists; road-to-memory-retrieval-economy Phase 0)"

@@ -2,45 +2,35 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**120 / 251 steps done · 48%**
+**48 / 196 steps done · 24%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
 ```
-
-## ⚠️ Iron Law 3 — unresolved deferred items
-
-These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
-
-| Roadmap | Done | Deferred | Cancelled |
-|---|---:|---:|---:|
-| [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 28 | 4 | 0 |
-| [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 44 | 4 | 0 |
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
-| 2 | [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 5 | 32 | 0 | 28 | 4 | 0 | 0 | ██████████ 100% |
-| 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
-| 7 | [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 6 | 48 | 0 | 44 | 4 | 0 | 0 | ██████████ 100% |
-| 8 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 9 | [road-to-local-ci-trust.md](roadmaps/road-to-local-ci-trust.md) | 3 | 6 | 3 | 0 | 3 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
+| 6 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 7 | [road-to-local-ci-trust.md](roadmaps/road-to-local-ci-trust.md) | 3 | 6 | 3 | 0 | 3 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 10 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 14 | [road-to-thin-flip-under-anchor-scoring.md](roadmaps/road-to-thin-flip-under-anchor-scoring.md) | 4 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 
 ---
 
@@ -70,18 +60,6 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
   - **Resolved when:** ≥1 completed session record exists under `agents/recruit-sessions/` with findings distributed per `_findings-distribution.md`.
 
 _2 blockers resolved._
-
-### [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md)
-
-**Road to cache economy — pay read rates, not write rates** — 28 / 28 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Make the two shipped cost surfaces correct (a bug fix, not a research track) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Pre-register the claims the rest of the roadmap can fail | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Per-spawn payload: the one large lever we own | ✅ done | 0 | 6 | 2 | 0 | 100% |
-| 4 | TTL and authoring guidance, gated and version-stamped | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 5 | Refusals, recorded so nobody rebuilds them | ✅ done | 0 | 6 | 2 | 0 | 100% |
 
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
@@ -151,19 +129,6 @@ _2 blockers resolved._
   - **What to do:**
     or a check that turns a later PR red) and who acts on it.
   - **Resolved when:** a drifting measurement reaches a human by a named route.
-
-### [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md)
-
-**Road to a global user-memory layer — the agent remembers the user, not just the repo** — 44 / 44 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Ground the prerequisite: is this a managed `agents/` folder? | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | The global user profile (read path) | ✅ done | 0 | 8 | 0 | 0 | 100% |
-| 2 | The learning channel (write path + the guards) | ✅ done | 0 | 7 | 1 | 0 | 100% |
-| 3 | Project attribution and the generalisation promotion | ✅ done | 0 | 9 | 0 | 0 | 100% |
-| 4 | Delete, revoke, audit | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | The gate that can actually fire | ✅ done | 0 | 12 | 3 | 0 | 100% |
 
 ### [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md)
 

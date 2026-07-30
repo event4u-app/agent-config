@@ -2,7 +2,7 @@
 /**
  * Payload-hash × cache-hit drift report — CLI.
  *
- * `agents/roadmaps/road-to-cache-economy.md` Phase 3, steps 6-7. Reads the
+ * `road-to-cache-economy.md` Phase 3, steps 6-7. Reads the
  * accumulated audit-log-v1 telemetry (reuses `readAuditLines` from
  * `orchestration_savings_report.ts` — the same reader, not a reimplementation)
  * and joins `orchestration.payload_hash` against `orchestration.cache_hit`

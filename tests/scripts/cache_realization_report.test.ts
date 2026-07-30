@@ -1,6 +1,6 @@
 // Unit tests for the cache-realization report
 // (`src/scripts/cache_realization_report.ts`) — the C-1..C-5 pre-registered
-// claims from `agents/roadmaps/road-to-cache-economy.md` Phase 2.
+// claims from `road-to-cache-economy.md` Phase 2.
 //
 // Style follows `tests/scripts/ai_council/pricing.test.ts`: pure functions
 // imported and called directly (no CLI shell-out), fixtures built from named
