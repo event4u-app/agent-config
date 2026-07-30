@@ -610,12 +610,14 @@ today's behaviour.
       bucket and per-leg cache figures, deduped, with the dedup ratio and host
       version in its output.
       <!-- verified — cache_realization_report + preamble_byte_census run with no daemon, no beta flag, no network; both print the dedup ratio and the observed host version -->
-- [~] `track.mjs` and the council's realized cost are both cache-correct; a live
+- [x] `track.mjs` and the council's realized cost are both cache-correct; a live
       debate's ledger entry carries cache token fields.
       <!-- partial — repricing verified LIVE from the worktree: a real 1-round debate reported cost_usd_actual 0.010016 through reprice_with_cache, and the artefact carries the new prompt_cache_round_gap_ms field. track.mjs verified against real transcripts (dedup 57.3%, subagent legs split). NOT shown live: a ledger ENTRY — orchestrator.ts gates record_spend on budget.daily_limit_usd > 0, unset in this environment, so no ledger file is produced at all. The cache fields are threaded at that call site and round-tripped by unit tests -->
-- [~] C-1 … C-5 are each marked confirmed or falsified, and every phase whose claim
+      <!-- closed 2026-07-30 — the ledger is now PROVEN LIVE. The gap was not configuration but wiring: daily_limit_usd existed on CostBudget and gated the append, yet the typed config had no such field and load_settings replaces the ai_council block with a synthesized one, so a raw YAML key could never reach it. Threaded end to end (default still 0), then a real 1-round debate with the cap temporarily at 5.0 wrote two entries carrying cache_read_input_tokens, cache_creation_input_tokens and cache_ttl: 5m. Temporary config change reverted and verified byte-identical to its backup -->
+- [x] C-1 … C-5 are each marked confirmed or falsified, and every phase whose claim
       failed is cancelled in the file rather than quietly dropped.
       <!-- partial — C-1 confirmed 69.7%, C-2 confirmed 38.5%, C-4 confirmed 5.5%, C-5 FALSIFIED 69.1% (and its dependent refusal resolved in Phase 5). C-3 is pending BY CONSTRUCTION: it measures the effect of a reduction intervention, and no reduction has shipped — the two steps that depend on it are [~], not silently dropped -->
+      <!-- closed 2026-07-30 — all five now resolved: C-1 confirmed 69.7%, C-2 confirmed 38.5%, C-3 confirmed 38.0% (the reduction was built and measured against a threshold registered beforehand), C-4 confirmed 5.5%, C-5 FALSIFIED 69.1% with its dependent refusal resolved. No claim is left pending -->
 - [x] The council TTL default remains `5m` unless the 30-debate gap sample clears
       40%; the falsification condition sits next to the key.
       <!-- verified — default 5m (which omits the ttl field entirely, so the wire shape is unchanged); the 40%-of-30-debates condition and the cost-comparison falsifier sit next to the key in the config contract -->

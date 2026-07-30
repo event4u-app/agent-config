@@ -6,32 +6,32 @@
 
 ## Overall
 
-**123 / 251 steps done · 49%**
+**126 / 254 steps done · 50%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   49%
+████████████████████░░░░░░░░░░░░░░░░░░░░   50%
 ```
 
-## ⚠️ Iron Law 3 — unresolved deferred items
+## ✅ Completed — pending archival
 
-These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
 
-| Roadmap | Done | Deferred | Cancelled |
-|---|---:|---:|---:|
-| [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 30 | 2 | 0 |
-| [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 45 | 3 | 0 |
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 32 | 32 |
+| [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 46 | 46 |
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
-| 2 | [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 5 | 32 | 0 | 30 | 2 | 0 | 0 | ██████████ 100% |
+| 2 | [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md) | 5 | 32 | 0 | 32 | 0 | 0 | 0 | ██████████ 100% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
-| 7 | [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 6 | 48 | 0 | 45 | 3 | 0 | 0 | ██████████ 100% |
+| 7 | [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md) | 6 | 48 | 0 | 46 | 0 | 2 | 0 | ██████████ 100% |
 | 8 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -72,7 +72,7 @@ _2 blockers resolved._
 
 ### [road-to-cache-economy.md](roadmaps/road-to-cache-economy.md)
 
-**Road to cache economy — pay read rates, not write rates** — 30 / 30 done (100%)
+**Road to cache economy — pay read rates, not write rates** — 32 / 32 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -80,7 +80,7 @@ _2 blockers resolved._
 | 2 | Pre-register the claims the rest of the roadmap can fail | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | Per-spawn payload: the one large lever we own | ✅ done | 0 | 8 | 0 | 0 | 100% |
 | 4 | TTL and authoring guidance, gated and version-stamped | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 5 | Refusals, recorded so nobody rebuilds them | ✅ done | 0 | 6 | 2 | 0 | 100% |
+| 5 | Refusals, recorded so nobody rebuilds them | ✅ done | 0 | 8 | 0 | 0 | 100% |
 
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
@@ -153,7 +153,7 @@ _2 blockers resolved._
 
 ### [road-to-global-user-memory.md](roadmaps/road-to-global-user-memory.md)
 
-**Road to a global user-memory layer — the agent remembers the user, not just the repo** — 45 / 45 done (100%)
+**Road to a global user-memory layer — the agent remembers the user, not just the repo** — 46 / 46 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -162,7 +162,7 @@ _2 blockers resolved._
 | 2 | The learning channel (write path + the guards) | ✅ done | 0 | 8 | 0 | 0 | 100% |
 | 3 | Project attribution and the generalisation promotion | ✅ done | 0 | 9 | 0 | 0 | 100% |
 | 4 | Delete, revoke, audit | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | The gate that can actually fire | ✅ done | 0 | 12 | 3 | 0 | 100% |
+| 5 | The gate that can actually fire | ✅ done | 0 | 13 | 0 | 2 | 100% |
 
 ### [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md)
 
