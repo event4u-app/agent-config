@@ -103,7 +103,8 @@ Ordered steps both council members converged on:
 3. Delete the LLM condensation instruction set from `condense.ts` and the
    `/condense` command's Step 3.
 4. Delete `internal/.condensation-hashes.json` (744 source-hash keys) and the
-   `--check-hashes` / `--mark-done` cache surface that depends on it.
+   `--check-hashes` / `--mark-done` cache surface that depends on it. *(Executed as
+   a reimplementation — see the Step 4 section below.)*
 5. Delete `check_condensation.ts` and its CI step.
 6. Update `preservation-guard`'s condensation applicability (its checklist still
    names condensation as a covered transformation).
@@ -247,30 +248,83 @@ scanning a dead root. A clearly-worded model-carried instruction with no
 mechanical enforcement held for 62% of the corpus and failed silently on the rest —
 which is the case for removing the rewrite rather than restating the instruction.
 
-## Step 4 (delete the hash cache) — NOT executed, and why
+## Step 4 (delete the hash cache) — executed, as a reimplementation
 
-Steps 1–3 and 5–8 are done. Step 4 — deleting `internal/.condensation-hashes.json`
-plus the `--check-hashes` / `--mark-done` surface — was **not** executed, because
-tracing it surfaced a dependency the council verdict did not account for.
+All eight steps are done. Step 4 was **first deferred, then executed as a
+reimplementation** rather than the deletion the verdict described — because tracing
+it surfaced a dependency the council did not account for.
 
-**`--changed` is built on the cache.** It answers "which sources changed since
-someone last condensed them" by comparing stored hashes, and it is Step 2 of the
-`/condense` flow, referenced by `src/domains/meta/condense/command.md` and
-`taskfiles/content.yml`. Deleting the cache does not merely remove machinery — it
-removes the input `--changed` computes from.
+**`--changed` was built on the cache.** It answered "which sources moved since
+someone last claimed to have condensed them" by comparing stored source hashes, and
+it is Step 2 of the `/condense` flow. Deleting the cache would not merely have
+removed machinery, it would have removed the input `--changed` computed from.
 
-So step 4 is not a deletion, it is a **reimplementation**: with byte-exactness
-enforced, staleness becomes directly computable as `dist != rewrite(src)`, which is
-both simpler and strictly stronger than the hash comparison (it looks at the output,
-which is exactly what the cache never did). But it changes `--changed`'s semantics
-from *"source moved since last mark"* to *"projection is out of date"*, and four
-artefacts reference the current behaviour.
+### The new basis, and why it is strictly stronger
 
-That is a bounded, well-understood piece of work — recorded here rather than
-half-applied at the end of a long run. Nothing depends on it: the cache is now
-redundant rather than harmful, because `check_condensation` no longer trusts it.
-The remaining risk it carries is naming, not correctness: `.condensation-hashes.json`
-and `--check-hashes` describe a condensation step that no longer exists.
+`is_projection_stale(relative)` answers the question directly:
+
+```
+stale  ⟺  dist/<rel> is missing  OR  dist/<rel> != rewrite(src/<rel>)
+```
+
+The cache **never looked at `dist`**. It compared a stored hash against the source,
+so a hand-edited, truncated, or half-written projection read as *current* — the
+failure mode that matters most, invisible to the mechanism meant to catch it. The
+new basis inspects the artefact whose correctness is actually in question. Pinned by
+a test that corrupts `dist` while leaving the source untouched: the old cache would
+have reported clean, the new predicate reports stale.
+
+### What was dropped, and the probe that justified it
+
+`effective_hash` folded the hashes of a file's `skills:` / `rules:` frontmatter
+dependencies into its own, so editing a dependency marked its dependents stale. That
+existed because an **LLM rewrite could be influenced by a dependency's content**.
+Under a pure rewrite it cannot be, so the folding models a mechanism that no longer
+exists.
+
+That is a mechanism claim, so it was **probed rather than asserted** (per the
+council operating rule this branch added): the whole rewriter chain — `_depth_prefix`,
+`_split_frontmatter`, `_rewrite_body_links`, `_rewrite_frontmatter_lines`,
+`_parse_trust_and_owner`, `_inject_hrr_banner` — was checked for any read outside its
+own input. All six are pure in `(content, relative_path)`. No dependency's change can
+alter another file's projection, so nothing detectable was lost.
+
+### One finding that changed the shape of the work
+
+`check_condensation.ts` carried its **own 187-line copy** of the rewriter, on the
+stated grounds that `condense.py` was not yet migrated to TS. It is (ADR-200), so the
+copy had become a standing drift hazard: the gate asserting `dist == rewrite(src)`
+was comparing `dist` against a *different* rewriter than the projector runs. Two
+reference implementations = two definitions of correct — the same blind-gate shape
+this branch exists to remove, in a new costume. The copy is gone; the gate now
+imports the real `_rewrite_paths`. Verified equivalent on all 556 real pairs before
+deletion.
+
+The `minimal_reduction` info diagnostic was retired in the same pass. Under a
+verbatim copy the expected reduction is 0%, so it fired on **413 of 428 files by
+design** — a diagnostic that flags 96% of its inputs trains the reader to skip the
+output. The `excessive_reduction` warning stays: under byte-exactness it can only
+fire if something upstream mangled a file.
+
+### Blast radius — larger than the four artefacts first estimated
+
+The deferral note named four dependents. The real inventory was 30+, including one
+hard blocker the note missed entirely: **`annotate_discovery.ts` read *and wrote*
+the same hash file**, so deleting the cache without touching it would have silently
+resurrected a one-key ghost. Its stated reason for doing so ("so `task
+check-condensation` stays green") had already stopped being true.
+
+Also corrected: `taskfiles/content.yml` (four tasks deleted, one dangling reference
+in `consistency` that would have hard-failed go-task and with it `ci` and the
+pre-push hook), the CI step, 14 agent-facing command/skill/context surfaces that
+instructed an agent to run a subcommand that no longer exists, and ~15 documents.
+
+**The pre-push gate needed care.** The hook runs only `task consistency`, so the
+`sync-check-hashes` step inside it was what gave a push its condensation guarantee.
+Dropping it without replacement would have silently weakened pre-push; `consistency`
+now runs `check-condensation` instead, even though `ci` also names it separately
+(0.72s, and the duplicate is documented in the taskfile so it does not get "cleaned
+up" later).
 
 ## Open question (deliberately NOT decided here)
 

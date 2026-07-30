@@ -215,7 +215,7 @@ gate) was *falsified*, not replaced by a better plan.
     rules/fast-path-marker-visibility (4 sections, and it redirects the reader to
     a file that does not exist), rules/user-interaction, skills/laravel-validation,
     skills/php-coder. Passes largely BECAUSE the transform is near-no-op. -->
-- [ ] Decide per the gate and apply (keep, or remove the rule-condensation
+- [x] Decide per the gate and apply (keep, or remove the rule-condensation
   machinery if it does not clear the bar) — a measurement-gated decision.
   <!-- COUNCIL 2026-07-29 (claude-sonnet-4-5 + gpt-4o, 2 rounds): REMOVE,
   UNANIMOUS, no dissent. Sonnet: "the locked number never existed"; "the
@@ -229,7 +229,17 @@ gate) was *falsified*, not replaced by a better plan.
   + its CI step; (6) update preservation-guard's condensation applicability;
   (7) verify all 430 pairs still pass structural checks; (8) record an ADR.
   APPLYING this needs operator authorization (deletes shipped CI machinery +
-  raises whether dist/agent-src should exist as a separate tree at all). -->
+  raises whether dist/agent-src should exist as a separate tree at all).
+  CLOSED 2026-07-30 — operator authorized; ADR-201 accepted and all eight steps
+  executed. Two departures from the ordered list, both recorded in the ADR:
+  step (4) became a REIMPLEMENTATION not a deletion (--changed was built on the
+  cache, so staleness was re-derived as dist != rewrite(src) — which also fixes
+  the DETERMINISM failure above: the new predicate inspects the OUTPUT, which is
+  exactly what --check-hashes never did, so the 2026-07-29 live drift is now
+  detectable by construction); step (5) KEPT check_condensation.ts and its CI
+  step, repurposed from prose-quality heuristics to enforcing the byte-exactness
+  invariant — deleting it would have removed the only thing that can catch a
+  hand-edited projection. -->
 
 ### H3 incidental findings — independently re-verified 2026-07-29
 
