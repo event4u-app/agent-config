@@ -1,0 +1,52 @@
+{
+    "skill": "persona-improvement",
+    "last_eval": "2026-07-30",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for an explicit request to refine an EXISTING persona's Unique Questions from a correction sample (≥ 3 misses the lens should have caught). Should-not-trigger covers the near-miss neighbours (new-persona authoring, the governance rule, the skill-side improvement pipeline, skill description tuning, persona scope changes) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "improve this persona — its review lens keeps missing the same class of bug",
+            "trigger": true
+        },
+        {
+            "q": "refine the reviewer persona's Unique Questions from the last few review misses",
+            "trigger": true
+        },
+        {
+            "q": "schärfe die Unique Questions dieser Persona anhand der letzten Korrekturen nach",
+            "trigger": true
+        },
+        {
+            "q": "the security persona missed tenant scoping three times now — tighten its questions so it fires next time",
+            "trigger": true
+        },
+        {
+            "q": "here are four corrections the architecture lens should have surfaced; sharpen that lens against them",
+            "trigger": true
+        },
+        {
+            "q": "create a new persona for a database reviewer voice",
+            "trigger": false,
+            "note": "authoring a NEW persona file (voice / focus / output expectations), not refining an existing lens → persona-writing"
+        },
+        {
+            "q": "can I add a third specialist persona to this domain, or do I have to deprecate one?",
+            "trigger": false,
+            "note": "per-domain cap / citation floor / deprecation path question → persona-governance (rule)"
+        },
+        {
+            "q": "the persona should now also cover frontend performance, widen its scope",
+            "trigger": false,
+            "note": "identity / scope change is a new-id change, explicitly out of this loop's scope → persona-governance (rule)"
+        },
+        {
+            "q": "run the skill improvement pipeline now that we captured that learning",
+            "trigger": false,
+            "note": "skill-side capture → classify → create → validate → apply loop, not the persona analog → skill-improvement-pipeline"
+        },
+        {
+            "q": "this skill's description is too vague, rewrite it so it triggers reliably",
+            "trigger": false,
+            "note": "SKILL.md description / trigger tuning, not a persona's Unique Questions → description-assist (authoring rules in skill-writing)"
+        }
+    ]
+}

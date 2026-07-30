@@ -43,6 +43,27 @@ lives here**; each sub loads the skill and drives its named phase.
    and drive ONLY the named phase, honoring that phase's Forbidden block.
 3. LOW confidence / bare `/tdd` → show the three-row menu and ask.
 
+## Non-interactive & auto-detection
+
+`/tdd` declares `auto_detect: true`, so it honors the
+[`non-interactive-contract`](../contexts/execution/non-interactive-contract.md)
+(surface detection, confidence tiers, `--yes` / `--json`, abort schemas, and the
+`auto_detect` kill-switch). The inference in § Dispatch is that contract's detection
+step; the table below names the signal each verdict rests on.
+
+| Basis (signal) | Sub-command | Confidence |
+|---|---|---|
+| Explicit sub given (`/tdd green`) | that one | — (detection skipped) |
+| No test exists for the named behavior | `red` | HIGH |
+| A test fails at an assertion (not a collection/compile error) | `green` | HIGH |
+| Tests green and a defect is reported | `red` | HIGH |
+| Tests green, no defect, recent implementation churn | `refactor` | MEDIUM |
+| Bare `/tdd`, none of the above resolves | none — show the three-row menu and ask | LOW |
+
+A collection or compile error is deliberately NOT a `green` signal: the test never
+reached an assertion, so there is no red to make pass yet. MEDIUM and below never
+auto-run under `--yes`; they surface the menu, per the contract's confidence tiers.
+
 ## Rules
 
 - **One phase per turn.** Do NOT chain red→green→refactor silently — each sub is one turn.

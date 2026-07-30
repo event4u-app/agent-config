@@ -1,0 +1,52 @@
+{
+    "skill": "docx-authoring",
+    "last_eval": "2026-07-30",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for WRITING a Word .docx — create from content, fill a supplied template, surgical body-XML edit. Should-not-trigger covers the near-miss neighbours (docx→Markdown reading, PDF authoring, spreadsheets, slide decks, prose co-authoring) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "generate a .docx report from this content",
+            "trigger": true
+        },
+        {
+            "q": "fill this Word template with these values and save a copy",
+            "trigger": true
+        },
+        {
+            "q": "edit the heading and one table cell inside this existing .docx",
+            "trigger": true
+        },
+        {
+            "q": "erzeuge daraus ein Word-Dokument mit A4-Seitenformat und einer Tabelle",
+            "trigger": true
+        },
+        {
+            "q": "produce the contract as a Word file, not a PDF",
+            "trigger": true
+        },
+        {
+            "q": "extract the text of this .docx into Markdown so I can read it here",
+            "trigger": false,
+            "note": "reading a docx into the conversation, not writing one → markitdown"
+        },
+        {
+            "q": "merge these PDFs and fill the PDF form fields",
+            "trigger": false,
+            "note": "PDF authoring surface, different library-per-task path → pdf-tools"
+        },
+        {
+            "q": "build me a budget model with formulas in a spreadsheet",
+            "trigger": false,
+            "note": "spreadsheet/model authoring, not an OOXML text document → spreadsheet-authoring"
+        },
+        {
+            "q": "turn this into a slide deck for the pitch tomorrow",
+            "trigger": false,
+            "note": "presentation surface; pptx is gated, decks go to → html-deck"
+        },
+        {
+            "q": "help me write the PRD itself — structure the sections and stress-test the reader test",
+            "trigger": false,
+            "note": "authoring the prose/content of a spec, not producing the .docx container → doc-coauthoring"
+        }
+    ]
+}

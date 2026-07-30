@@ -97,10 +97,10 @@ export type ToolSideEffect = 'ro' | 'fs-write' | 'shell';
  * each `tools/call`. `handler` is an async function that receives the
  * validated arguments + the resolved `consumer_root` path.
  *
- * Mirrors the Python frozen dataclass `BuiltinTool` (field order
- * preserved). `side_effect` is a TS-only addition (Phase 3 of
- * road-to-credible-install) — the Python original predates the generated
- * catalog and had no analogous field.
+ * Shape is pinned by `consumer_tool_catalog.json`: `build_mcp_catalog` derives
+ * the catalog from `ALLOWLIST` here, and `build_mcp_catalog --strict` fails CI
+ * on any drift (`.github/workflows/tests.yml`). `side_effect` is consumed by that
+ * generator, so adding or reordering a field means regenerating the catalog.
  */
 export interface BuiltinTool {
     readonly name: string;

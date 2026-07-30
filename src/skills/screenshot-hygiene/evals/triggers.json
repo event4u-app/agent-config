@@ -1,0 +1,52 @@
+{
+    "skill": "screenshot-hygiene",
+    "last_eval": "2026-07-30",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for capturing and anonymising a screenshot that is about to ship into documentation — risk tier, OCR detection, deterministic redaction, the pre-embed human gate. Should-not-trigger covers the near-miss neighbours (image analysis, image editing/inpaint, image generation, the provided-design spec path, PII scrubbing on text surfaces) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "capture a screenshot of the admin dashboard for the feature docs",
+            "trigger": true
+        },
+        {
+            "q": "I want to embed a screenshot of this settings page in the README — is it safe to ship?",
+            "trigger": true
+        },
+        {
+            "q": "redact the customer names and the local path in this screenshot before it lands in docs/media/",
+            "trigger": true
+        },
+        {
+            "q": "mach einen Screenshot für das Doku-Kapitel und anonymisiere vorher alles Sensible",
+            "trigger": true
+        },
+        {
+            "q": "can this dashboard screenshot go on the docs site, or does it leak PII?",
+            "trigger": true
+        },
+        {
+            "q": "analyse this character image feature by feature and diff it against the canon",
+            "trigger": false,
+            "note": "per-feature image analysis / canon drift, not doc-shipping anonymisation → image-analyser (this skill only borrows its OCR read)"
+        },
+        {
+            "q": "inpaint the background out of this photo and give me a couple of variations",
+            "trigger": false,
+            "note": "image editing / lossy inpaint — explicitly forbidden as a redaction method here → image-editing"
+        },
+        {
+            "q": "generate a banner image for the launch post",
+            "trigger": false,
+            "note": "image generation from a brief, not a captured screenshot → image-generation (brand assets → brand-asset-generation)"
+        },
+        {
+            "q": "here's a screenshot of the mockup — build the UI to match it 1:1",
+            "trigger": false,
+            "note": "a user-supplied screenshot used as a design spec to build against → design-fidelity (rule) / cross-source-consistency"
+        },
+        {
+            "q": "scrub the email addresses and tokens out of these log lines before we ship them",
+            "trigger": false,
+            "note": "PII redaction on a text surface (drafts / logs / exports), not inside an image → domain-safety-pii (rule)"
+        }
+    ]
+}

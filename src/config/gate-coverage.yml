@@ -106,3 +106,22 @@ gates:
       Retargeted 2026-07-29. An empty reference corpus makes every "unreferenced
       context" verdict vacuous, which is how the dead root stayed invisible.
 
+  - id: check_site_links
+    argv: []
+    min_scanned: 20
+    unavailable_exit: 2
+    corpus: "built HTML pages under site/dist (25 content sources at baseline)"
+    status: enforced
+    note: >
+      Registered 2026-07-30 after it was caught reporting green over a stale build —
+      6 pages against 25 content sources, every source newer than the newest page.
+      The missing-dist path already exited 2; the stale path did not, so the gate
+      could pass while inspecting a build that did not contain the pages under test.
+      It now exits 2 on stale, and the floor here catches the partial-build case the
+      guard exists for. The lesson of the find is the manifest, not the gate: the
+      guard never flagged this because the gate was never listed. A sibling
+      silent-green found in the same sweep — the per-pack lint matrix, whose path was
+      a double ADR-051 casualty and which exited 0 on an empty match across 17 CI
+      shards — is NOT listed here because it was deleted rather than repaired
+      (skill_linter --all already covers all 429 artefacts in 0.5s).
+
