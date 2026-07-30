@@ -312,31 +312,78 @@ describe('list_md_files', () => {
     });
 });
 
-describe('file_hash', () => {
-    it('returns consistent hash', () => {
-        const tmp = mkTmp();
-        const p = path.join(tmp, 'x.md');
-        write(p, 'hello world');
-        try {
-            const h1 = condense.file_hash(p);
-            const h2 = condense.file_hash(p);
-            expect(h1).toBe(h2);
-            expect(h1.length).toBe(64);
-        } finally {
-            fs.rmSync(tmp, { recursive: true, force: true });
-        }
+describe('is_projection_stale / list_changed_md — the post-ADR-201 basis', () => {
+    // The hash cache is gone. Staleness is now read off the projection itself:
+    // `dist != rewrite(src)`. These two suites pin the property the cache never
+    // had (it looked at the source only) and the property its absence must keep.
+    let tmp: string;
+    let source: string;
+    let target: string;
+    let saved: ReturnType<typeof condense._getStateForTest>;
+
+    beforeEach(() => {
+        saved = condense._getStateForTest();
+        tmp = mkTmp('stale-');
+        source = path.join(tmp, 'source');
+        target = path.join(tmp, 'target');
+        fs.mkdirSync(source);
+        fs.mkdirSync(target);
+        isolateMultiRoot(source);
+        condense._setStateForTest({ TARGET_DIR: target });
+    });
+    afterEach(() => {
+        condense._setStateForTest(saved);
+        fs.rmSync(tmp, { recursive: true, force: true });
     });
 
-    it('different content different hash', () => {
-        const tmp = mkTmp();
-        const a = path.join(tmp, 'a.md');
-        const b = path.join(tmp, 'b.md');
-        write(a, 'content a');
-        write(b, 'content b');
-        try {
-            expect(condense.file_hash(a)).not.toBe(condense.file_hash(b));
-        } finally {
-            fs.rmSync(tmp, { recursive: true, force: true });
-        }
+    /** Write a source file and its correct projection, so the pair starts in sync. */
+    function writeSyncedPair(rel: string, body: string): void {
+        const src = path.join(source, rel);
+        write(src, body);
+        write(path.join(target, rel), condense._rewrite_paths(body, rel));
+    }
+
+    it('an in-sync pair is not stale', () => {
+        writeSyncedPair('rules/a.md', '---\ntype: "auto"\n---\n\n# A\n\nbody\n');
+        expect(condense.is_projection_stale('rules/a.md')).toBe(false);
+        expect(condense.list_changed_md(source)).toEqual([]);
+    });
+
+    it('finds a pair desynchronised in dist — the case the hash cache could not see', () => {
+        // The old cache stored a hash of the SOURCE. Corrupting dist left the
+        // stored hash matching, so a hand-edited projection read as current.
+        writeSyncedPair('rules/b.md', '---\ntype: "auto"\n---\n\n# B\n\nbody\n');
+        expect(condense.is_projection_stale('rules/b.md')).toBe(false);
+        write(path.join(target, 'rules/b.md'), 'someone hand-edited the projection\n');
+        expect(condense.is_projection_stale('rules/b.md')).toBe(true);
+        expect(condense.list_changed_md(source)).toContain('rules/b.md');
+    });
+
+    it('finds a pair desynchronised at the source', () => {
+        writeSyncedPair('rules/c.md', '---\ntype: "auto"\n---\n\n# C\n\nbody\n');
+        write(path.join(source, 'rules/c.md'), '---\ntype: "auto"\n---\n\n# C\n\nedited\n');
+        expect(condense.is_projection_stale('rules/c.md')).toBe(true);
+        expect(condense.list_changed_md(source)).toContain('rules/c.md');
+    });
+
+    it('a never-projected source is stale', () => {
+        write(path.join(source, 'rules/d.md'), '# D\n');
+        expect(condense.is_projection_stale('rules/d.md')).toBe(true);
+    });
+
+    it('a source that does not exist is not stale — check_sync owns that verdict', () => {
+        expect(condense.is_projection_stale('rules/nope.md')).toBe(false);
+    });
+
+    it('needs no hash file: nothing reads or writes one', () => {
+        // The permanent post-removal state. If any code path resurrected a cache,
+        // it would appear on disk here — annotate_discovery used to do exactly that.
+        writeSyncedPair('rules/e.md', '---\ntype: "auto"\n---\n\n# E\n\nbody\n');
+        write(path.join(source, 'rules/f.md'), '# F\n');
+        const before = fs.readdirSync(tmp).sort();
+        expect(condense.list_changed_md(source)).toEqual(['rules/f.md']);
+        expect(condense.is_projection_stale('rules/e.md')).toBe(false);
+        expect(fs.readdirSync(tmp).sort()).toEqual(before);
+        expect(fs.existsSync(path.join(tmp, 'internal'))).toBe(false);
     });
 });
