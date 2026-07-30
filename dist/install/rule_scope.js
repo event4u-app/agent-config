@@ -54,6 +54,7 @@ export function ruleScopeFromSettings(settings) {
     return {
         workspaces: _list(p['rule_workspaces']),
         packs: _list(p['rule_packs']),
+        roles: _list(p['rule_roles']),
     };
 }
 /**
@@ -72,7 +73,7 @@ export function ruleFileArrives(sourcePath, scope) {
     if (COMPAT_ALWAYS_EXCLUDED.includes(basename)) {
         return false;
     }
-    return rule_in_scope(sourcePath, scope.workspaces, scope.packs);
+    return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
 }
 /**
  * Basenames from `rulesDir` that are EXCLUDED under `scope` — the shape the
