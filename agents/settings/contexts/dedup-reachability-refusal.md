@@ -39,12 +39,18 @@ The risk side of both mechanisms is real and was not talked down:
   for every already-stamped installation, with two ownership paths supported for
   at least one deprecation cycle.
 
-The benefit side currently has an **empty recipient set**. The ≈86.8k tokens per
-spawn are only paid by a **dual-scope** installation — the same rule set present
-at user scope *and* project scope. No external consumer with such an
-installation is known to exist. The one dual-scope machine that does exist is a
-development checkout, and there the dedup is **correctly inert** because the two
-scopes hold different releases.
+The benefit side has **no known recipient**. The ≈86.8k tokens per spawn are only
+paid by a **dual-scope** installation — the same rule set present at user scope
+*and* project scope. No such external consumer is known to exist.
+
+**Stated honestly, because this is an absence claim and absence claims are the
+weakest kind:** we have no consumer telemetry, so "no known recipient" means
+exactly that — not "no recipient exists". What is *measured* rather than assumed
+is the other half: on the one dual-scope machine that does exist (a development
+checkout) the dedup is **correctly inert**, because the two scopes hold different
+releases. So the honest form of the argument is: the cost is real and immediate,
+the benefit is unevidenced, and the cheapest way to settle it is reopen
+condition 5 — a single demonstrated dual-scope consumer flips it.
 
 So the decision is **sequencing, not a judgement on the mechanisms**: neither is
 wrong, both are premature. Nobody is paying the cost the mechanism would remove,
@@ -82,7 +88,7 @@ of the median cold-start payload. It is nonetheless **inert for every consumer**
 
 | measurement | value | how to reproduce |
 |---|---|---|
-| installed rules carrying `package:` / `source_path:` | 110 / 110 | `measure_scope_dedup` § REACHABILITY |
+| installed rules carrying `package:` / `source_path:` | 110 / 110 | `src/scripts/measure_scope_dedup.ts` § REACHABILITY |
 | in-repo project-scope rules carrying the same | 0 / 110 | same |
 | differ only in the ownership stamp | 61 / 110 | same |
 | differ in body **and** stamp | 49 / 110 | same |

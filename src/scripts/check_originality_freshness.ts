@@ -40,12 +40,28 @@ function snapshot(files: readonly string[]): Map<string, Buffer | null> {
     return out;
 }
 
+/**
+ * Put the committed bytes back. Best-effort per file and never throwing: this
+ * check runs inside pipelines, so a restore failure (read-only mount, a
+ * concurrent writer) must not become the exception that fails the build for an
+ * advisory. A file it could not restore is named loudly instead — that is the
+ * one case where the tree is left dirty, and the reader has to know.
+ */
 function restore(before: Map<string, Buffer | null>): void {
     for (const [f, buf] of before) {
-        if (buf === null) {
-            fs.rmSync(f, { force: true });
-        } else {
-            fs.writeFileSync(f, buf);
+        try {
+            if (buf === null) {
+                fs.rmSync(f, { force: true });
+            } else {
+                fs.writeFileSync(f, buf);
+            }
+        } catch (err) {
+            const why = err instanceof Error ? err.message : String(err);
+            process.stdout.write(
+                `⚠️  could not restore ${f} after the freshness sweep: ${why}\n` +
+                    '    The working tree now holds a REGENERATED report. Restore it with\n' +
+                    `    \`git checkout -- ${f}\` if that was not intended.\n`,
+            );
         }
     }
 }

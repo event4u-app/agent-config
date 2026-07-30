@@ -53,6 +53,28 @@ describe('originality freshness — detection', () => {
     });
 });
 
+describe('originality freshness — the DEFAULT report set, not just one path', () => {
+    // Every test above passes an explicit single-file list, which would leave the
+    // shipped default (both the .json and the .md) unexercised — so a future edit
+    // could drop the .md from REPORTS and no test would notice.
+    it('checks both committed reports when called with no argument', () => {
+        const md = path.join(REPO, 'agents', 'reports', 'originality.md');
+        const savedMd = fs.readFileSync(md);
+        try {
+            fs.writeFileSync(md, `${savedMd.toString('utf-8')}\nstale trailer\n`);
+            // Only the .md was touched, so only the .md may be reported — which
+            // also proves the default set includes it.
+            expect(checkFreshness().drifted).toEqual([md]);
+        } finally {
+            fs.writeFileSync(md, savedMd);
+        }
+    });
+
+    it('reports a fresh default set as clean', () => {
+        expect(checkFreshness()).toEqual({ drifted: [], missing: [] });
+    });
+});
+
 describe('originality freshness — the tree is restored either way', () => {
     it('leaves a FRESH report byte-identical', () => {
         const before = fs.readFileSync(REPORT);
