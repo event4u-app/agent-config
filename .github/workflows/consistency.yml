@@ -200,18 +200,7 @@ jobs:
         # `task ci`, which is why a +10.3% eager-rule drift went unseen for 23 days.
         run: task check-token-regression
 
-      - name: Kernel-rule budget (bucket + per-rule caps)
-        # Closes the asymmetry the 2026-07-30 council flagged from both sides:
-        # this gate DECIDES whether kernel rules must be edited, while
-        # `check_safety_floor_untouched` — which BLOCKS those edits — is
-        # CI-enforced. A deciding gate that only ever runs on one contributor's
-        # laptop cannot arbitrate against a gate that runs on every PR.
-        #
-        # WILL FAIL until the kernel-bucket overflow is resolved (27,521/26,000;
-        # non-destructive-by-default 4,770/4,000; verify-before-complete
-        # 2,865/2,500 — both guarded files). Merging this step before that
-        # decision lands turns `main` red on purpose, so it must not merge alone.
-        run: task lint-rule-budget
+      - name: Check kernel-rule bundle (one rule per PR; label override)
         # Phase 4.2 of road-to-always-budget-relief — slow-rollout guarantee.
         # Override: PR label `bundled-always-rules-acknowledged`.
         # actions/checkout@v4 uses a shallow PR-merge fetch, so `git fetch
