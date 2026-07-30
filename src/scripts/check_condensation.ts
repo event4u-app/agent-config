@@ -163,8 +163,15 @@ const _FM_PLAIN_LIST_RE = /^\s*-\s*(["']?)([^"'\n]+?)\1\s*$/;
 const _HRR_BANNER_MARKER = '<!-- agent-config:human-review-banner -->';
 
 function _depthPrefix(sourceRelativePath: string): string {
+    // The depth MUST be measured the way the projector measures it — relative to the
+    // artefact root, not to SOURCE_DIR. `src/agent-src/**` artefacts sit one level
+    // deeper under `src/` than under their own root, so counting from `src/` gave
+    // `../../` where the projector wrote `../`. For `rules/` and `skills/` the two
+    // happen to coincide, which is why only `agent-src/profiles/README.md` exposed
+    // it — and it took the byte-exactness invariant to surface at all.
+    const normalised = sourceRelativePath.replace(/^agent-src\//, '');
     // Python: Path(...).parts — split on path separators, drop empty parts.
-    const parts = sourceRelativePath.split('/').filter((p) => p.length > 0);
+    const parts = normalised.split('/').filter((p) => p.length > 0);
     const depth = Math.max(parts.length - 1, 1);
     return '../'.repeat(depth);
 }
@@ -460,6 +467,32 @@ function extractIronLawSections(text: string): Array<[string, number, string]> {
 function checkPair(relPath: string, source: string, condensed: string): Issue[] {
     const issues: Issue[] = [];
 
+    // ADR-201 + council verdict B: the PRIMARY invariant. `source` reaching this
+    // function has already had the deterministic path rewrite applied, so
+    // `source === condensed` is exactly `dist == rewrite(src)` — byte-for-byte.
+    //
+    // This assertion was IMPOSSIBLE before ADR-201: an LLM prose rewrite has no
+    // expected output, which is why the determinism sub-gate failed by construction
+    // and why the old source-keyed hash certified drift as clean (observed three
+    // times in one session). With the rewrite removed, the property the gate was
+    // always supposed to hold finally becomes checkable.
+    //
+    // The structural checks below are retained as DIAGNOSTICS: when bytes differ
+    // they name what differs (frontmatter, a lost Iron Law, a mangled code block)
+    // instead of leaving the operator with an opaque inequality. If bytes match,
+    // every structural check is trivially satisfied.
+    if (source !== condensed) {
+        issues.push({
+            file: relPath,
+            check: 'not_byte_exact',
+            severity: 'error',
+            message:
+                'dist is not the byte-exact path-rewritten copy of src — either the ' +
+                'projection is stale (run the sync) or dist was hand-edited. ' +
+                'Diagnostics below name the difference.',
+        });
+    }
+
     // Frontmatter check
     const srcFm = extractFrontmatter(source);
     const cmpFm = extractFrontmatter(condensed);
@@ -661,6 +694,23 @@ function scanAll(root: string): Issue[] {
         const relStr = rel.split(path.sep).join('/');
         if (relStr.startsWith('commands/')) {
             continue;
+        }
+
+        // Pair via the projector's root PRECEDENCE, not by naive src/-relative
+        // pathing. `src/` and `src/agent-src/` are both artefact roots, so the same
+        // relative path can name two UNRELATED files — `profiles/README.md` exists
+        // under both, documenting different things (the CLI's profile YAMLs vs the
+        // agent-src seed profiles). Pairing them by string produced a byte-exactness
+        // failure that looked like a stale shadow file and was really a collision in
+        // this loop. `src/agent-src/<rel>` wins because that is the root the
+        // projector resolves first.
+        const agentSrcCandidate = path.join(sourceDir, 'agent-src', rel);
+        const effectiveSource =
+            !sourceFile.includes(`${path.sep}agent-src${path.sep}`) && fs.existsSync(agentSrcCandidate)
+                ? agentSrcCandidate
+                : sourceFile;
+        if (effectiveSource !== sourceFile) {
+            continue; // the agent-src copy is the real pair; it gets its own iteration
         }
 
         let sourceText = fs.readFileSync(sourceFile, 'utf-8');
