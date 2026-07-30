@@ -35,7 +35,7 @@ trust:
   human_review_required: true
 ---
 <!-- agent-config:human-review-banner -->
-> HUMAN REVIEW REQUIRED · trust: advisory · owner: founder
+> HUMAN REVIEW REQUIRED · trust: advisory · owner: unknown
 
 # Strategy Safety Floor
 

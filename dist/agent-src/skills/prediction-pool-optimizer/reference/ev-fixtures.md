@@ -26,15 +26,15 @@ EV-max tip : 1:0  (EV 1.574)
   2:0  1.477
 ```
 
-**Reasoning:** top of the EV surface is **flat** — 1:0, 2:1, 2:0 all bank the
-tendency (2) plus goal-difference (3) on many neighbours, within hundredths of
-each other. Grid puts **1:0 narrowly first**; eyeballing the modal *result*
-(2:1) lands a near-tie, not the optimum. Run the grid — don't assert the
-favourite's "obvious" score.
+**Reasoning:** the top of the EV surface is **flat** — 1:0, 2:1 and 2:0 all
+bank the tendency (2) plus goal-difference (3) on many neighbours and sit
+within hundredths of each other. The grid puts **1:0 narrowly first**;
+eyeballing the modal *result* (2:1) lands a near-tie, not the optimum. Run the
+grid — do not assert the favourite's "obvious" score.
 
-**Known-good tip:** **1:0 home** (2:1 essentially tied; with the real de-vigged
-λ either can lead — the grid decides). (Risk: low.) **Not** contrarian — under
-fixed points only your own tip scores, so deviating costs EV.
+**Known-good tip:** **1:0 home** (2:1 essentially tied; with the real
+de-vigged λ either can lead — the grid decides). (Risk: low.) **Not**
+contrarian — under fixed points only your own tip scores, so deviating costs EV.
 
 ---
 
@@ -63,17 +63,17 @@ the multiplier; take the max.
 **Match (football):** a near-coin-flip favourite, Home 52% / Draw 26% /
 Away 22%.
 
-**Reasoning:** N ≥ 100 and you behind → pure EV converges with the field, can't
-create the gap; target is **P(finish 1st)**, not E(points). Don't guess the
-variance: run `pool_winsim.ts` with the pool's `N` and your `my_lead`. Shows
-P(win) collapsing under EV-max-everywhere, returns the **specific flips**
-(higher-variance scorelines on high-consensus matches) that raise P(win) most
-per unit EV given up.
+**Reasoning:** with N ≥ 100 and you behind, pure EV converges with the field
+and cannot create the gap you need — the target is **P(finish 1st)**, not
+E(points). Don't guess the variance: run `pool_winsim.ts` with the pool's `N`
+and your `my_lead`. It shows P(win) collapsing under EV-max-everywhere and
+returns the **specific flips** (higher-variance scorelines on high-consensus
+matches) that raise P(win) most per unit of EV given up.
 
 **Known-good tip:** EV-max on the safe matches; the **simulator's suggested
 flips** on the 2–4 matches it names, to manufacture upside. (Risk: high —
-intentional.) Verify the sim shows a P(win) gain — flips not moving it (small
-N) → don't add variance you don't need.
+intentional.) Verify the sim shows a P(win) gain — if flips don't move it
+(small N), don't add variance you don't need.
 
 ---
 
@@ -94,18 +94,18 @@ spread). Tip the winner plus the modal margin bucket.
 
 ## Fixture 5 — multi-book consensus (de-vig per book, sharp-weighted)
 
-**Rule:** any — checks the **odds base**, not the EV map.
+**Rule:** any — this fixture checks the **odds base**, not the EV map.
 
 **Market (football, 1X2):** two books.
 - Book S (sharp, weight 3): 1.80 / 3.60 / 4.50 → de-vig 0.526 / 0.263 / 0.210.
 - Book R (recreational, weight 1): 1.75 / 3.50 / 4.20 → de-vig 0.522 / 0.261 / 0.217.
 
 **Reasoning:** de-vig **each book** first (raw `1/o` sums to >1; normalise),
-then sharp-weighted mean per outcome and renormalise. Aggregating raw odds, or
-using one book, is wrong.
+then take the sharp-weighted mean per outcome and renormalise. Aggregating
+the raw odds, or using one book, is wrong.
 
-**Known-good base:** **Home 0.525 / Draw 0.262 / Away 0.212.** A run that fed
-the EV grid one book's raw odds has the wrong base — fix it before the tip.
+**Known-good base:** **Home 0.525 / Draw 0.262 / Away 0.212.** A run that
+fed the EV grid one book's raw odds has the wrong base — fix it before the tip.
 
 ---
 
@@ -115,16 +115,16 @@ the EV grid one book's raw odds has the wrong base — fix it before the tip.
 scorer?"
 
 **Market (top-goalscorer outright, de-vigged player probabilities):**
-- Team A: A1 14%, A2 5% → team A total **19%**.
-- Team B: B1 16% → team B total **16%**.
-- Team C: C1 9%, C2 4% → team C total **13%**.
+- Team A: player A1 14%, player A2 5% → team A total **19%**.
+- Team B: player B1 16% → team B total **16%**.
+- Team C: player C1 9%, player C2 4% → team C total **13%**.
 
-**Reasoning:** the most-likely *player* (B1, 16%) is on team B, but the
-question asks the **team** — sum each squad's players. Team A 19% beats team B
-16%. Answer the asked question, not the adjacent one.
+**Reasoning:** the single most-likely *player* (B1 at 16%) belongs to team B,
+but the question asks for the **team** — sum each squad's players. Team A's
+19% beats team B's 16%. Answer the asked question, not the adjacent one.
 
-**Known-good answer:** **Team A.** (Source: market, aggregated by team. Risk:
-medium.) **Not** team B — the modal-player trap.
+**Known-good answer:** **Team A.** (Source: market, aggregated by team.
+Risk: medium.) **Not** team B — that is the modal-player trap.
 
 ---
 
@@ -137,7 +137,7 @@ medium.) **Not** team B — the modal-player trap.
 | Match (λ) | EV-max | a high tip's EV | verdict |
 |---|---|---|---|
 | Senegal–Iraq (2.0:0.7) | **1:0** (1.881) | 4:1 ≈ 1.55 | high tip leaks ~0.33 |
-| Qatar–Switzerland (0.6:2.1) | **0:1** (1.981) | 1:4 ≈ 1.65 | tipping the underdog's goals = costliest move on the board |
+| Qatar–Switzerland (0.6:2.1) | **0:1** (1.981) | 1:4 ≈ 1.65 | tipping the underdog's goals is the costliest move on the board |
 | Spain–CapeVerde (2.3:0.6) | **2:0** (2.033) | 3:1 ≈ 1.88 | only at λ ≳ 2.3 does 2:0 edge past 1:0; never higher |
 
 **Reasoning:** under partial points the value sits in the tendency and
@@ -147,8 +147,9 @@ only near λ ≈ 2.3–2.4; above that, never. **3:2 / 4:1 / 4:2 / 1:4 are never
 EV-max.** Adding goals — especially the underdog's — only shrinks the hit
 probability without protecting the diff/tendency points.
 
-**Known-good behaviour:** any 3:2 / 4:x / x:4 tip in the run → the grid wasn't
-run; `score_ev.ts` is the gate. (Risk: low; correctness fixture, not strategy.)
+**Known-good behaviour:** if the run emits any 3:2 / 4:x / x:4 tip, the grid
+was not run — `score_ev.ts` is the gate. (Risk: low; this is a correctness
+fixture, not a strategy one.)
 
 ---
 
@@ -168,8 +169,8 @@ run; `score_ev.ts` is the gate. (Risk: low; correctness fixture, not strategy.)
 goal-difference tier (3) on *every* draw scoreline, so in a **low-scoring even
 match (λ ≲ 1.0/side) the draw — usually 0:0 — is the EV-max**, tied with 1:1.
 As λ rises past ~1.1 a one-goal win edges ahead, but the draw stays in the top
-tips. Grid surfaces this; intuition suppresses it.
+tips. The grid surfaces this; intuition suppresses it.
 
 **Known-good behaviour:** a tip set with **near-zero draws across many
-low-scoring even matches** is a red flag — re-run `score_ev.ts`, let the grid
-decide, don't default every close game to 1:0.
+low-scoring even matches** is a red flag — re-run `score_ev.ts` and let the
+grid decide, don't default every close game to 1:0.

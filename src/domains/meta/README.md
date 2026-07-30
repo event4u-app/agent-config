@@ -173,19 +173,19 @@ Artefacts that maintain this package (agent-config itself).
 - **`autonomous-execution`** — Ask-or-act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor stays
 - **`cli-output-handling`** — Verbose CLI output (git, tests, linters, docker, npm, composer) — wrap with rtk; tail/grep fallback
 - **`command-suggestion-policy`** — Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute
-- **`communication-through-line`** — Multi-step or continuation replies carry a red thread — state the goal once, tie each turn back to it, name what changed since last turn, close the loop with one end-summary
+- **`communication-through-line`** — Multi-step or continuation replies carry a red thread — goal once, each turn tied to it, name what changed, close with one end-summary
 - **`content-quoting-floor`** — Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default
 - **`context-hygiene`** — Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers
 - **`copilot-routing`** — Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config
-- **`decision-revisit-gate`** — A beneficial change blocked by a past lock (honest-null, don't-relitigate memory, budget canon, ADR) must be surfaced with a council re-evaluation offer, never silently dropped
+- **`decision-revisit-gate`** — Beneficial change blocked by a lock (honest-null, don't-relitigate memory, budget canon, ADR) — surface a council re-evaluation offer, never drop
 - **`devcontainer-routing`** — Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill
 - **`direct-answers`** — Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default.
-- **`doc-screenshot-hygiene`** — Screenshots for docs — anonymize sensitive data before shipping; data-bearing shots are human-gated (published egress); terminal/CLI/IDE screenshots forbidden
+- **`doc-screenshot-hygiene`** — Doc screenshots — anonymize sensitive data before shipping; data-bearing shots human-gated (published egress); terminal/CLI/IDE shots forbidden
 - **`domain-adoption-policy`** — Adopting a new domain track (mobile, ML, IoT…) — demand/owner/CI gates BEFORE harvest
 - **`domain-safety-disclaimer`** — Advisory content (legal, medical, financial, consulting) — matching 'not X advice' disclaimer; refuse diagnosis/dosage
 - **`domain-safety-pii`** — Drafts/logs/exports with real customer/candidate data — redact direct IDs, placeholders, flag quasi-ID re-identification
 - **`domain-safety-retention`** — Data retention — jurisdiction gap, longest floor, honor DSR/audit holds; never delete under inquiry
-- **`external-code-graph-interop`** — When the repo ships an external code-graph index (a graph.json-shaped artifact or a SCIP index), query IT first for codebase-structure questions — do not grep from scratch
+- **`external-code-graph-interop`** — Repo ships a code-graph index (graph.json-shaped or SCIP) — query IT first for codebase-structure questions, do not grep from scratch
 - **`external-reference-deep-dive`** — User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README
 - **`fast-path-marker-visibility`** — Low-impact council fast-path — surface the transparency marker verbatim as the reply opener
 - **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead
@@ -206,14 +206,14 @@ Artefacts that maintain this package (agent-config itself).
 - **`package-ci-checks`** — Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
 - **`preservation-guard`** — Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss
-- **`question-not-instruction`** — A question is a request for an ANSWER, never authorization to act — answer first; never treat 'why…?' / 'can you…?' / 'what do you think?' as a green light to build, change, or execute
+- **`question-not-instruction`** — A question requests an ANSWER, never authorization to act — answer first; 'why…?' / 'can you…?' is no green light to build, change, or execute
 - **`reviewer-awareness`** — Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary
 - **`roadmap-ci-steps-policy`** — Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline
 - **`roadmap-progress-sync`** — Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open
 - **`role-mode-adherence`** — When roles.active_role is set — closing outputs must match mode contract and emit structured mode marker
 - **`rule-type-governance`** — Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto
 - **`runtime-safety`** — Skill declares execution metadata — enforce safety constraints for assisted/automated execution types
-- **`session-canary`** — personal.canary_name is set — open every new task by addressing the user by name (liveness canary) and keep the reply-close markers (ONE end-summary, PR URL as literal last line) alive
+- **`session-canary`** — personal.canary_name set — open every new task by name (liveness canary); keep the reply-close markers alive (ONE end-summary, PR URL last)
 - **`size-enforcement`** — Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits
 - **`skill-improvement-trigger`** — After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled
 - **`skill-quality`** — Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained

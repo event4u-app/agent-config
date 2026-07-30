@@ -43,7 +43,7 @@ behavior. Cannot → read more.
 ## Consult memory before editing
 
 Invariants live in the memory layer; architectural rationale lives in ADRs.
-Via [`memory-access`](../../../../../../docs/guidelines/agent-infra/memory-access.md),
+Via [`memory-access`](../../../../../docs/guidelines/agent-infra/memory-access.md),
 call `retrieve(types=["domain-invariants"], keys=<touched paths>, limit=3)` —
 a matching `domain-invariant` is a hard constraint. For *why* the current
 shape exists, check the ADR index `docs/decisions/INDEX.md`. Cite the `id` /

@@ -68,8 +68,8 @@ Do not use this skill when:
 * One-off or too narrow → do not create anything yet
 * Standard tool knowledge (jq, docker, git basics) → **Nothing** — the model knows this
 * If unsure between skill and guideline: does it need step-by-step decisions? → Skill. Just conventions? → Guideline
-* If unsure between guideline and pattern: prose convention ("how to write code in X")? → Guideline. Keyed recipe ("problem P → recipe + verification + reliability")? → **Pattern**
-* When a related workflow fires, **surface** a matching `src/patterns/` recipe (never auto-apply) — the human decides
+* If unsure between guideline and pattern: is it *"how to write code in X"* (prose convention)? → Guideline. Is it *"I have problem P — here's the proven recipe + a verification step + how reliable it is"*? → **Pattern**
+* When a related workflow fires, **surface** a matching `src/patterns/` recipe (never auto-apply) — the human decides whether to use it
 
 ## Procedure
 
@@ -238,8 +238,8 @@ to stage `gated`.
 If the learning came from an `agents/knowledge/procedures/skill-candidates.md`
 entry or any other `agents/knowledge/` page (see § "Knowledge-candidate
 learnings" below), promotion is **not complete** until the source is
-degraded to a pointer — this prevents double-maintenance between the
-knowledge page and the new artifact:
+degraded to a pointer — this is what prevents double-maintenance between
+the knowledge page and the new artifact:
 
 ```bash
 ./scripts-run src/scripts/degrade_to_pointer \
@@ -249,9 +249,9 @@ knowledge page and the new artifact:
 ```
 
 This rewrites the source entry to `Promoted to <artifact> on <date>; see
-<path>.` and regenerates `agents/knowledge/INDEX.md`. Skip when the
-learning's source was NOT a knowledge page (direct user request,
-audit-log pattern, one-off observation).
+<path>.` and regenerates `agents/knowledge/INDEX.md`. Skip this step
+only when the learning's source was NOT a knowledge page (e.g. a direct
+user request, an audit-log pattern, or a one-off observation).
 
 ## Output format
 

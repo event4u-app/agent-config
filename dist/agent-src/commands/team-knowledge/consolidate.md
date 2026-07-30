@@ -24,7 +24,7 @@ Turns the gitignored, in-flight typed-observation events
 `context_stale` — see `src/scripts/_lib/knowledge_events.ts`) into
 committed `agents/knowledge/` pages. This is the ONLY path from intake
 to a tracked page — no skill or rule writes a tracked knowledge page
-mid-task (see [`knowledge-pages`](../../templates/contexts/knowledge-pages.md)
+mid-task (see [`knowledge-pages`](../../../agent-src/templates/contexts/knowledge-pages.md)
 § Storage location).
 
 ## Steps
@@ -44,7 +44,7 @@ No pending topics → tell the user and stop. Nothing to do.
 ### 2. Triage each topic
 
 For each aggregate in the report, apply the same taxonomy
-[`memory-consolidation`](../../skills/memory-consolidation/SKILL.md)
+[`memory-consolidation`](../../../skills/memory-consolidation/SKILL.md)
 uses for engineering-memory facts:
 
 | Triage | Condition | Action |
@@ -61,7 +61,7 @@ events before deciding.
 ### 3. Draft and present the batch
 
 For every `NEW` / `EXTEND` / `CONFLICT` aggregate, draft the page
-content (following [`knowledge-pages`](../../templates/contexts/knowledge-pages.md) —
+content (following [`knowledge-pages`](../../../agent-src/templates/contexts/knowledge-pages.md) —
 `date + what + why` for session entries, ≤ 200 lines per page) and
 present the full batch to the user:
 
@@ -81,7 +81,7 @@ present the full batch to the user:
 
 On approval:
 
-1. Write each approved page (respecting the team-sharing gate —
+1. Write each approved page (respecting the [team-sharing gate](../../../scripts/check_knowledge_sharing.ts) —
    never set `visibility: private` on a page landing here).
 2. Regenerate the index: `./scripts-run src/scripts/generate_knowledge_index`.
 3. Clear the consumed intake: `./scripts-run src/scripts/consolidate_knowledge_events --commit`
@@ -96,9 +96,10 @@ On approval:
   land in the page, human resolves later.
 - Never writes a page with `visibility: private` (belongs in the
   ADR-100 global store instead).
-- Do NOT commit the written pages — that is the user's call.
+- Do NOT commit the written pages — that is the user's call, per
+  [`commit-policy`](../../../rules/commit-policy.md).
 
 ## See also
 
-- [`memory-consolidation`](../../skills/memory-consolidation/SKILL.md) — the sibling loop for the 5 fixed engineering-memory types; this command is its knowledge-page counterpart.
-- [`learning-to-rule-or-skill`](../../skills/learning-to-rule-or-skill/SKILL.md) — where a page's recurring topic graduates into a skill/rule once it crosses the skill-candidate threshold.
+- [`memory-consolidation`](../../../skills/memory-consolidation/SKILL.md) — the sibling loop for the 5 fixed engineering-memory types; this command is its knowledge-page counterpart.
+- [`learning-to-rule-or-skill`](../../../skills/learning-to-rule-or-skill/SKILL.md) — where a page's recurring topic graduates into a skill/rule once it crosses the skill-candidate threshold.

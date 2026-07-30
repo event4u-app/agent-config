@@ -42,11 +42,11 @@ MEDIA POLICIES IN agents/settings/policies/media/ BEFORE EMITTING THE PROMPT TO
 THE PROVIDER. REFUSE-AND-SURFACE OVER GUESS-AND-RENDER.
 ```
 
-Routes agent to project-local media governance policy layer at [`agents/settings/policies/media/`](../../agents/settings/policies/media/) when video / image / voice surface fires. Policies are LLM-readable decision frameworks consulted in-session, not Python-enforced gates — see [`agents/settings/policies/media/README.md § Enforcement model`](../../agents/settings/policies/media/README.md) for full agent-in-the-loop contract.
+This rule routes the agent to the **project-local** media governance policy layer at [`agents/settings/policies/media/`](../../agents/settings/policies/media/) whenever a video / image / voice surface fires. The policies themselves are LLM-readable decision frameworks consulted in-session, not Python-enforced gates — see [`agents/settings/policies/media/README.md § Enforcement model`](../../agents/settings/policies/media/README.md) for the full agent-in-the-loop contract.
 
 ## What this rule surfaces
 
-Any trigger match → agent loads into context:
+When any trigger above matches in the user prompt or in a tool invocation, the agent loads into context:
 
 - [`agents/settings/policies/media/likeness.md`](../../agents/settings/policies/media/likeness.md) — real person's visual likeness.
 - [`agents/settings/policies/media/style.md`](../../agents/settings/policies/media/style.md) — named living artist's distinctive style.
@@ -56,30 +56,30 @@ Any trigger match → agent loads into context:
 - [`agents/settings/policies/media/brand-impersonation.md`](../../agents/settings/policies/media/brand-impersonation.md) — brand / broadcaster identity imitation.
 - [`agents/settings/policies/media/transparency.md`](../../agents/settings/policies/media/transparency.md) — provenance metadata (C2PA, SynthID).
 
-Each policy carries own trigger block → within active context agent narrows from superset to policies whose specific patterns actually fired (e.g. prompt naming public figure → `public-figures.md` + `disclosure.md`; `--no-disclosure` → `disclosure.md` standalone).
+Each policy carries its own trigger block, so within the active context the agent narrows from this superset to the policies whose specific patterns actually fired (e.g., a prompt naming a public figure activates `public-figures.md` and `disclosure.md`; a prompt requesting `--no-disclosure` activates `disclosure.md` standalone).
 
 ## Why project-local, not `.agent-src.uncondensed/rules/`
 
-Seven media policies live under [`agents/settings/policies/media/`](../../agents/settings/policies/media/), not as `.agent-src.uncondensed/rules/domain-safety-media-*.md`, for three reasons:
+The seven media policies live under [`agents/settings/policies/media/`](../../agents/settings/policies/media/), not as `.agent-src.uncondensed/rules/domain-safety-media-*.md`, for three reasons:
 
-1. **Consumed by skills + adapters**, not surfaced as standalone always-loaded prose. Cost non-trivial (7 × ~80 lines = ~560 lines always-context if hoisted to rules), and most sessions never touch video / image / voice surface.
-2. **Enforcement model project-local** — working precedent (`/ghostwriter:*` mandatory footer in `write-engine.md`) + audit log (session transcripts) are project artifacts. Rules under `.agent-src.uncondensed/` are tool-portable governance; these policies are domain-specific bindings.
-3. **Extraction to reusable domain pack explicitly deferred** until second non-video domain (audio, image, docs, exports) lands with overlapping execution surfaces. Until then, one-domain abstraction structurally premature — policies stay project-local, routing rule on-demand bridge.
+1. **They are consumed by skills and adapters**, not surfaced as standalone always-loaded prose. The cost is non-trivial (7 × ~80 lines = ~560 lines into the always-context if hoisted to rules), and most sessions never touch a video / image / voice surface.
+2. **The enforcement model is project-local** — the working precedent (`/ghostwriter:*` mandatory footer in `write-engine.md`) and the audit log (session transcripts) are project artifacts. Rules under `.agent-src.uncondensed/` are tool-portable governance; these policies are domain-specific bindings.
+3. **Extraction to a reusable domain pack is explicitly deferred** until a second non-video domain (audio, image, docs, exports) lands with overlapping execution surfaces. Until then, a one-domain abstraction is structurally premature — the policies stay project-local and the routing rule is the on-demand bridge.
 
-This routing rule is the bridge: sits in always-loaded rule set so trigger keywords surface project-local policies into context on demand, without paying full always-loaded cost.
+This routing rule is the bridge: it sits in the always-loaded rule set so the trigger keywords surface the project-local policies into context on demand, without paying the full always-loaded cost.
 
 ## CI reachability guarantee
 
-[`scripts/lint_media_policy_linkage.ts`](../../scripts/lint_media_policy_linkage.ts) fails build if any policy file under `agents/settings/policies/media/` not linked from:
+[`scripts/lint_media_policy_linkage.ts`](../../scripts/lint_media_policy_linkage.ts) fails the build if any policy file under `agents/settings/policies/media/` is not linked from:
 
 - this routing rule, **or**
 - a skill's `## Policies` see-also block, **or**
 - another policy file's `## See also` block.
 
-Policy that no skill, rule, or sibling policy references → silent policy. CI check is structural reachability guarantee that agent-in-the-loop model rests on.
+A policy that no skill, rule, or sibling policy references is a silent policy. The CI check is the structural reachability guarantee that the agent-in-the-loop model rests on.
 
 ## See also
 
-- [`agents/settings/policies/media/README.md`](../../agents/settings/policies/media/README.md) — full enforcement-model contract.
-- [`ask-when-uncertain`](ask-when-uncertain.md) — single-question refusal-path discipline every policy depends on.
-- [`docs/contracts/write-engine.md`](../docs/contracts/write-engine.md) — prose-disclosure precedent extended to media by [`disclosure.md`](../../agents/settings/policies/media/disclosure.md).
+- [`agents/settings/policies/media/README.md`](../../agents/settings/policies/media/README.md) — the full enforcement-model contract.
+- [`ask-when-uncertain`](ask-when-uncertain.md) — the single-question refusal-path discipline every policy depends on.
+- [`docs/contracts/write-engine.md`](../docs/contracts/write-engine.md) — the prose-disclosure precedent extended to media by [`disclosure.md`](../../agents/settings/policies/media/disclosure.md).

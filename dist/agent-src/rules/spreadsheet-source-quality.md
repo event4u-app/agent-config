@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Financial data in a spreadsheet uses official sources first (IR, regulatory filings); aggregator/news/social figures need explicit permission + a cell-level unofficial mark"
+description: "Spreadsheet financial data uses official sources (IR, regulatory filings); aggregator/news/social figures need permission + cell-level unofficial mark"
 triggers:
   - keyword: "financial data"
   - keyword: "financial model"
@@ -57,5 +57,5 @@ Entering, updating, or charting **financial figures** in a spreadsheet / model.
 ## See also
 
 - [`spreadsheet-authoring`](../skills/spreadsheet-authoring/SKILL.md) — the spreadsheet surface floor this rule's sourcing discipline plugs into.
-- [`surface-agent-contracts`](../../docs/contracts/surface-agent-contracts.md) — the spreadsheet surface's invariants + truth source.
+- [`surface-agent-contracts`](../docs/contracts/surface-agent-contracts.md) — the spreadsheet surface's invariants + truth source.
 - [`finance-safety-floor`](finance-safety-floor.md) — the finance-pack advisory floor (not-investment-advice, sensitivity) this complements.

@@ -30,8 +30,8 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 # the old hook only verified dist sync + the COMMAND count — it missed
 # guideline/skill/rule count drift and the generate-tools / router / corpus
 # outputs (e.g. a new guideline bumping the count in README + docs/architecture).
-# `task consistency` is the EXACT CI mirror (sync-check + sync-check-hashes +
-# sync + generate-tools + compile-router + compile-corpus + `git diff --quiet`),
+# `task consistency` is the EXACT CI mirror (sync-check + sync + generate-tools
+# + compile-router + compile-corpus + `git diff --quiet`),
 # so any derived-output drift blocks the push here. Runtime ~15-40s (it
 # regenerates the tool trees) — cheaper than a red CI run and a fixup re-push.
 

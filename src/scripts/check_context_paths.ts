@@ -9,7 +9,7 @@
  * scan trees / order / locked sub-trees / grandfathered files, same
  * orphan self-reference subtraction (latent: substring replace).
  *
- * Validates that every `*.md` under `.agent-src.uncondensed/contexts/`:
+ * Validates that every `*.md` under `src/agent-src/contexts/`:
  *   1. Lives in a locked sub-tree (or is a grandfathered root file).
  *   2. Does not collide on basename with another context in another sub-tree.
  *   3. Is referenced by at least one rule, skill, command, or other context.
@@ -24,8 +24,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const CONTEXTS_ROOT = path.join(ROOT, '.agent-src.uncondensed', 'contexts');
-// Logical relpath of the contexts root under ROOT (e.g. ".agent-src.uncondensed/contexts").
+const CONTEXTS_ROOT = path.join(ROOT, 'src', 'agent-src', 'contexts');
+// Logical relpath of the contexts root under ROOT (e.g. "src/agent-src/contexts").
 const CONTEXTS_REL = path.relative(ROOT, CONTEXTS_ROOT).split(path.sep).join('/');
 
 const LOCKED_SUBTREES = [
@@ -49,11 +49,21 @@ const GRANDFATHERED_ROOT_FILES: ReadonlySet<string> = new Set([
     'subagent-configuration.md',
 ]);
 
+// Retargeted 2026-07-29 — see the note in check_no_roadmap_refs: these pointed at
+// the tree emptied by ADR-051, so only `agents/roadmaps` was ever scanned.
+//
+// `src/domains` is NOT a 1:1 rename of an old entry — it is a root that did not
+// exist in the pre-migration layout and holds pack command definitions that cite
+// contexts. A straight four-for-four remap produced three false "orphan" verdicts
+// (research-schema, host-capability-manifest, non-interactive-contract — each in
+// fact referenced 8/11/12 times) because their citations live under src/domains.
+// A retarget has to follow where the references moved, not just where the files did.
 const REFERENCE_SCAN_DIRS = [
-    '.agent-src.uncondensed/rules',
-    '.agent-src.uncondensed/skills',
-    '.agent-src.uncondensed/commands',
-    '.agent-src.uncondensed/contexts',
+    'src/rules',
+    'src/skills',
+    'src/agent-src/commands',
+    'src/agent-src/contexts',
+    'src/domains',
     'agents/roadmaps',
 ] as const;
 
@@ -198,6 +208,10 @@ function _build_reference_corpus(root: string): string {
             }
         }
     }
+    // Gate-coverage contract (src/config/gate-coverage.yml): the reference corpus
+    // size IS this gate's scan count — an empty corpus makes every "unreferenced"
+    // verdict vacuous, which is exactly how the dead root went unnoticed.
+    process.stdout.write(`scanned: ${String(chunks.length)}\n`);
     return chunks.join('\n');
 }
 
@@ -212,11 +226,26 @@ function _replaceAll(haystack: string, needle: string): string {
 function _check_orphans(contexts: string[], corpus: string, root: string): Violation[] {
     const out: Violation[] = [];
     for (const ctx of contexts) {
-        const rel_src = _relToPosix(ctx, root); // .agent-src.uncondensed/contexts/...
+        const rel_src = _relToPosix(ctx, root); // src/agent-src/contexts/...
         const rel_short = rel_src.includes('contexts/')
             ? rel_src.slice(rel_src.indexOf('contexts/') + 'contexts/'.length)
             : rel_src;
-        const candidates = [rel_src, `contexts/${rel_short}`, rel_short];
+        // Sibling contexts link each other by BARE BASENAME —
+        // `[`x`](x.md)` — which none of the three path-qualified candidates
+        // below can see. That gap was invisible until 2026-07-29: the old
+        // contexts scan root was the ADR-051-emptied tree, so context→context
+        // references were never in the corpus at all, and no orphan verdict
+        // ever depended on them. Matched as a LINK TARGET (`](…)`) rather than
+        // a loose substring, so a prose mention of the filename does not count
+        // as a reference.
+        const base = path.basename(ctx);
+        const candidates = [
+            rel_src,
+            `contexts/${rel_short}`,
+            rel_short,
+            `](${base})`,
+            `](./${base})`,
+        ];
         let own_text = '';
         try {
             own_text = fs.readFileSync(ctx, 'utf-8');

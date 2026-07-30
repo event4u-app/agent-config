@@ -168,6 +168,17 @@ step entirely (feature off). Never auto-promote.
 - Type directory is empty — respond with "no entries yet, use
   `/memory-add` to start".
 
+## Retrieval-trigger signals
+
+Before deciding whether to call `/memory:load` or a targeted
+`memory_lookup`, recognise these implicit-continuity signals in the
+user's message: **possessives** ("my/our X"), **definite references to
+unnamed prior work** ("that bug", "the migration"), and **past-time
+cues** ("last week", "back then"). These phrasings imply the user
+expects continuity with prior sessions — consult memory before
+answering from scratch. Full guidance:
+[`memory-consolidation § Retrieval-trigger linguistics`](../../skills/memory-consolidation/SKILL.md#retrieval-trigger-linguistics).
+
 ## Read-escalation ladder (cheap → precise)
 
 When resolving a knowledge/memory read — including cross-project access — climb

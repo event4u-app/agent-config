@@ -126,7 +126,7 @@ Exactly **one** layer translates internal errors to the egress format (HTTP stat
 
 ## Provenance
 
-- Adopted from: an external reference (MIT, © 2025 an external reference) — **Sunset Policy applied**: 636-line source reduced to a ~150-line decision framework; language catalogues externalized to the upstream resources below.
+- Adopted from: an external reference (internal provenance, redacted) — **Sunset Policy applied**: a large source reduced to a ~150-line decision framework; language catalogues externalized to the upstream resources below.
 - Externalized catalogues:
   - Python: https://docs.python.org/3/tutorial/errors.html · https://docs.python.org/3/library/exceptions.html
   - PHP / Laravel: https://laravel.com/docs/errors · https://www.php.net/manual/en/language.exceptions.php

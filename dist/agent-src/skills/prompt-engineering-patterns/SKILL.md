@@ -144,7 +144,7 @@ Production prompts handle their own failure cases:
 
 ## Provenance
 
-- Adopted from: an external reference (MIT, © 2025 an external reference) — restructured into a decision-framework shape; vendor `prompt_optimizer` Python snippets dropped (project-specific to an external reference).
+- Adopted from: an external reference (internal provenance, redacted) — restructured into a decision-framework shape; source-specific vendor Python snippets dropped.
 - Cross-linked: [`prompt-optimizer`](../prompt-optimizer/SKILL.md), [`refine-prompt`](../refine-prompt/SKILL.md), [`mcp-builder`](../mcp-builder/SKILL.md), [`async-python-patterns`](../async-python-patterns/SKILL.md).
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `prompt-engineering-patterns`).
 - Iron-Law floor: `verify-before-complete`, `skill-quality`, `non-destructive-by-default`.

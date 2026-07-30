@@ -19,9 +19,30 @@ prose only — carve-outs preserved byte-for-byte.
 
 Read `telegraph.speak_scope` from `.agent-settings.yml`:
 
-- `off` — rule inactive.
-- `prose_only` (default) — telegraph in body prose; carve-outs preserved.
+- `off` (**default**) — rule inactive.
+- `prose_only` — telegraph in body prose; carve-outs preserved.
 - `aggressive` — telegraph everywhere except Iron-Law literals.
+
+> **Default corrected 2026-07-29.** This section previously claimed `prose_only`
+> was the default, contradicting `docs/adrs/telegraph/0001-default-off-until-bench.md`
+> (`Status: accepted`, 2026-05-16), which locks `off`, and
+> `docs/contracts/condensation-default-kill-criterion.md`, which calls the feature
+> "non-promoted". Two sources said `off`, one said `prose_only`, and the key
+> existed in **no** config file, **no** loader default, and **no** schema property —
+> so the runtime default lived only in prose, and the prose disagreed. The accepted
+> ADR wins. The measured basis: median `vs_terse` is **−9.27%** (API counts) /
+> **−5.47%** (exact `cl100k_base` re-analysis of the same 30 replies) — telegraph
+> emits *more* tokens than a plain "be terse" instruction, so the kill-criterion
+> table lands on "criterion not met — defer" and the telemetry multiplier stays
+> suspended at 0.9155 < 1.0. Flipping this to `prose_only` or `aggressive` requires
+> a passing output-side bench first, not a preference.
+>
+> **`off` does NOT stop the token cost** — verified 2026-07-29:
+> `compile_router.ts` gates this rule on `telegraph.enabled` / `telegraph.speak`
+> and never reads `speak_scope` (0 hits across the projector). Under
+> `lean_projection.mode: eager-all` the ~982-token body is injected regardless.
+> The zero-cost dormancy lever is **`telegraph.speak: false`**, which omits the
+> rule from `dist/router.json` entirely.
 
 Compile-time toggle `telegraph.speak`: `false` → rule omitted from
 `dist/router.json` (zero runtime cost). `telegraph.enabled: false` forces all
@@ -78,7 +99,7 @@ Example: *"I will now check the file and see if it exists"* →
 |---|---|---|
 | `telegraph.enabled` | `true` | Master — `false` forces all sub-switches off. |
 | `telegraph.speak` | `true` | Compile-time include in `dist/router.json`. |
-| `telegraph.speak_scope` | `prose_only` | Runtime scope of telegraph grammar. |
+| `telegraph.speak_scope` | `off` | Runtime scope of telegraph grammar. `off` per ADR 0001 (accepted) until an output-side bench passes. Does NOT remove the token cost — see § Scope. |
 
 - Input-side memory condensation (shrinking always-loaded memory files like `AGENTS.md` / `CLAUDE.md` / `.cursorrules` rather than the reply stream) runs independently of `speak_scope` — see [`condense-memory`](../skills/condense-memory/SKILL.md) for the script wrapper, sensitive-path refusal contract, and `.original.md` round-trip.
 - Skills marked `token_budget_class: rich` are **exempt** from telegraph condensation + thin-projector trimming (gated by `tokens.rich_skills`, default `on`) — full model in [`token-budget-discipline`](token-budget-discipline.md).

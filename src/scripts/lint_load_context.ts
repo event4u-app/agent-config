@@ -36,9 +36,15 @@ const QUIET = process.argv.slice(2).includes('--quiet');
 // src/scripts/lint_load_context.ts → three dirs up is the repo root.
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
+// Retargeted 2026-07-29: the first two pointed at the ADR-051-emptied tree, so
+// this gate reported "clean (0 declarer(s))" in CI — the count was in its own
+// output the whole time. `agents/contexts` does not exist either (project-local
+// contexts live under agents/settings/contexts) and is kept only as a no-op for
+// consumer layouts that do have it.
 const SCAN_DIRS = [
-    path.join(ROOT, '.agent-src.uncondensed', 'rules'),
-    path.join(ROOT, '.agent-src.uncondensed', 'contexts'),
+    path.join(ROOT, 'src', 'rules'),
+    path.join(ROOT, 'src', 'agent-src', 'contexts'),
+    path.join(ROOT, 'agents', 'settings', 'contexts'),
     path.join(ROOT, 'agents', 'contexts'),
 ];
 
@@ -50,9 +56,10 @@ const ALLOWED_PREFIXES = [
 
 const LEGACY_PREFIX = '.agent-src.uncondensed/contexts/';
 
-const SOURCE_ROOT = path.join(ROOT, '.agent-src.uncondensed');
+// Base for resolving a logical `contexts/...` entry to a real file.
+const SOURCE_ROOT = path.join(ROOT, 'src', 'agent-src');
 
-const PUBLIC_RULE_PREFIX = '.agent-src.uncondensed/rules/';
+const PUBLIC_RULE_PREFIX = 'src/rules/';
 const PROJECT_LOCAL_PREFIX = 'agents/settings/contexts/';
 
 const HARD_FLOOR_RULES: ReadonlySet<string> = new Set([
@@ -217,7 +224,12 @@ function main(): number {
     const warnings: string[] = [];
     const graph: Record<string, string[]> = {};
 
-    for (const f of collect_files()) {
+    const _files = collect_files();
+    // Gate-coverage contract (src/config/gate-coverage.yml): count FILES INSPECTED,
+    // not declarers — "0 declarers" over 400 files is a legitimate result, "0 files"
+    // is blindness. Reporting declarers here would have hidden the dead root.
+    process.stdout.write(`scanned: ${String(_files.length)}\n`);
+    for (const f of _files) {
         const fm = parse_frontmatter(f);
         const lazyRaw = fm['load_context'];
         const eagerRaw = fm['load_context_eager'];

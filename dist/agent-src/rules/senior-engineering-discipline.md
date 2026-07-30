@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Writing/generating code — generalize (no overfit or tautological tests), supply the invisible cross-cutting controls the prompt didn't name, never invent an API/field/package"
+description: "Writing/generating code — generalize (no overfit/tautological tests), supply the invisible cross-cutting controls, never invent an API/field/package"
 triggers:
   - intent: "writing or generating code"
   - intent: "implementing a feature"
@@ -25,7 +25,7 @@ packs: [engineering-base]
 
 # Senior Engineering Discipline
 
-Dominant failure mode of AI-written code isn't ignorance — **omission**. Model writes happy-path code satisfying the literal task + passing shallow tests, silently drops the invisible cross-cutting controls a senior supplies from unstated context. Baseline (2025 studies): a large share of AI-generated code ships a known vulnerability even at high syntax-correctness, and automation bias makes devs trust it *more* while it's *less* safe. Write like a senior: general not overfit; invisible controls present; verified against real sources, not memory. Act like a senior **owner**, not a passive typist — work in the interest of the product, the user, and the company, especially on security and quality; see a problem → react (fix it if small and task-aligned, else ask — per [`active-remediation`](active-remediation.md)) — never look away.
+The dominant failure mode of AI-written code is not ignorance — it is **omission**. The model writes the happy-path code that satisfies the literal task and passes shallow tests, and silently drops the invisible cross-cutting controls a senior engineer supplies from context the prompt never states. Baseline (2025 studies): a large share of AI-generated code ships a known vulnerability even at high syntax-correctness, and automation bias makes developers trust it *more* while it is *less* safe. Write code the way a senior does: general, not overfit; with the invisible controls present; verified against real sources, not memory. Act like a senior **owner**, not a passive typist — work in the interest of the product, the user, and the company, especially on security and quality; when you see a problem, react (fix it if small and task-aligned, otherwise ask — per [`active-remediation`](active-remediation.md)) — never look away.
 
 ## The Iron Law
 
@@ -40,39 +40,39 @@ THE HAPPY PATH THAT PASSES ONE TEST IS NOT A FINISHED CHANGE.
 
 ### 1. Generalize — never overfit
 
-- Implementation expresses the general rule, not a special case that happens to satisfy the example. Don't hardcode a derivable value; don't branch on one literal where a rule covers all inputs; don't paste a near-duplicate where an existing abstraction fits.
-- Tests assert **general behavior**, never a fixed value or narrow regex passing only for one crafted input. Derive expected from inputs + seeded/random data — never hardcode what the code emits. Cover happy **and** boundary (empty / null / max / Unicode) **and** error **and**, on security paths, an abuse case. Lone happy-path assertion = tautology. → `skill:testing-anti-patterns`.
+- The implementation expresses the general rule, not a special case that happens to satisfy the example. Do not hardcode a value that should be derived; do not branch on one literal where a rule covers all inputs; do not paste a near-duplicate block where an existing abstraction should be reused.
+- Tests assert **general behavior**, never a fixed value or narrow regex that only passes for one crafted input. Derive expected values from the inputs and from seeded/random test data — never hardcode what the code will emit. Cover multiple cases: happy path **and** boundary (empty / null / max / Unicode) **and** error **and**, on security-sensitive paths, an abuse case. A lone happy-path assertion is a tautology, not a test. → `skill:testing-anti-patterns`.
 
 ### 2. Cover the invisible controls for what you touched
 
-Before done, assert the unmentioned cross-cutting control is present, matched to surface:
+Before the change is done, assert the cross-cutting control the prompt didn't mention is present — matched to the surface:
 
-- **endpoint / route** → authorization + tenant scope + input validation + rate limit; state-changing → CSRF + audit. (`security-sensitive-stop` gates the sensitive ones.)
-- **database query / migration** → parameterized (never string-built), tenant-scoped, transaction around multi-step writes, reversible migration (expand-contract, never bare `DROP`), index on filtered / FK columns.
-- **user-controlled render** → output-encode; never `dangerouslySetInnerHTML` / `v-html` / `innerHTML` / `eval` on non-constant input; no secret / token in client code. → `skill:frontend-render-security`.
+- **endpoint / route** → authorization + tenant scope + input validation + rate limit; state-changing route → CSRF + audit. (`security-sensitive-stop` gates the sensitive ones.)
+- **database query / migration** → parameterized (never string-built), tenant-scoped, transaction around multi-step writes, reversible migration (expand-contract, never a bare `DROP`), index on filtered / FK columns.
+- **user-controlled render** → output-encode; never `dangerouslySetInnerHTML` / `v-html` / `innerHTML` / `eval` on non-constant input; no secret or token in client code. → `skill:frontend-render-security`.
 - **file / outbound fetch** → path-confinement + SSRF allow-list; validate server-side, never client-only.
-- **infra / IaC** → least-privilege (no `Action:*` / `Resource:*`), encryption at rest, no `0.0.0.0/0` to mgmt / DB ports, no hardcoded creds; real scanner (Checkov / Trivy) is the backstop — `plan` succeeding isn't.
-- **new dependency** → verify it exists on the real registry before install (hallucinated / "slopsquatted" packages ~1 in 5 AI suggestions); pin + lockfile; CVE scan. → `skill:supply-chain-intake`.
+- **infra / IaC** → least-privilege (no `Action:*` / `Resource:*`), encryption at rest, no `0.0.0.0/0` to management / DB ports, no hardcoded creds; a real scanner (Checkov / Trivy) is the backstop — `plan` succeeding is not.
+- **new dependency** → verify it exists on the real registry before install (hallucinated / "slopsquatted" packages are ~1 in 5 AI suggestions); pin + lockfile; CVE scan. → `skill:supply-chain-intake`.
 
-Full surface→controls table + backstop greps: → `skill:ai-code-blindspots`.
+The full surface→controls table with authoring-time backstop greps: → `skill:ai-code-blindspots`.
 
 ### 3. Verify — never assert from memory
 
-No completion claim without exercising the real path (running endpoint / UI / test — not "the code looks right"). "Defined but not wired" (middleware written, never connected to the route) = **not done**. **Before pushing code / opening a PR, run a changed-files static pass — type-checker + linter scoped to the diff (`tsc --noEmit` on the touched project, linter on changed files) — even when `quality.local_auto_run` is false: a narrow probe of your own diff, NOT the suppressed full pipeline. Letting a compile/lint error hit remote CI = completion claim without evidence (the beginner error this guards).** → `verify-before-complete`, `source-discovery-gate`.
+No completion claim without exercising the real path (the running endpoint / UI / test — not "the code looks right"). "Defined but not wired" (middleware written but never connected to the route) counts as **not done**. **Before pushing code or opening a PR, run a changed-files static pass — type-checker + linter scoped to the diff (e.g. `tsc --noEmit` on the touched project, the project linter on the changed files) — even when `quality.local_auto_run` is false. This is a narrow probe of your own diff, NOT the suppressed full quality pipeline; skipping it and letting a compile/lint error hit remote CI is a completion claim without evidence (the exact beginner error this guards against).** → `verify-before-complete`, `source-discovery-gate`.
 
 ## When it fires
 
-Any turn that writes, generates, or modifies code — feature, endpoint, query, migration, component, test, seeder, dependency, infra resource.
+Any turn that writes, generates, or modifies code — a feature, endpoint, query, migration, component, test, seeder, dependency, or infra resource.
 
 ## When NOT to fire
 
-- Prose / docs / config-only edits, no code behavior.
-- One-line rename / typo / formatting.
-- User fenced the scope ("just this one line", "skip the checks").
+- Prose / docs / config-only edits with no code behavior.
+- A one-line rename / typo / formatting change.
+- The user explicitly fenced the scope ("just this one line", "skip the checks").
 
 ## Relationship to existing rules
 
-Cross-cutting **anchor**; depth lives elsewhere and this routes to it. Doesn't replace `security-sensitive-stop` (threat-model before editing auth / billing / tenant / secret paths), `minimal-safe-diff` (smallest change), `think-before-action` (analyze first), `downstream-changes` (update all callers), `output-discipline` (no placeholder / TODO code). When one fires it wins on its subject; this adds the "generalized + invisible controls?" gate on top.
+This is the cross-cutting **anchor**; the depth lives elsewhere and this rule routes to it. It does not replace `security-sensitive-stop` (stop-and-threat-model before editing auth / billing / tenant / secret paths), `minimal-safe-diff` (smallest change), `think-before-action` (analyze first), `downstream-changes` (update all callers), or `output-discipline` (no placeholder / TODO code). When one of those fires it wins on its own subject; this rule adds the "did I generalize and supply the invisible controls?" gate on top.
 
 ## See also
 

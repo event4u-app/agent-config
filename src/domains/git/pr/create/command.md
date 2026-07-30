@@ -90,14 +90,14 @@ improvise the base or silently proceed when behind **and** overlapping. The
 
 **On merge conflict: regenerate, don't abort.** Most conflicts on this class of
 branch are in **generated files** — the roadmap dashboard
-(`agents/roadmaps-progress.md`), `docs/proof.md`, condensation hashes, tool
-projections. Those are resolved **by regenerating from the merged sources**,
+(`agents/roadmaps-progress.md`), `docs/proof.md`, the `dist/agent-src/`
+projection, tool projections. Those are resolved **by regenerating from the merged sources**,
 never by hand-picking hunks:
 
 1. `./agent-config roadmap:progress` → resolves the dashboard.
 2. `./scripts-run src/scripts/build_proof` → resolves `docs/proof.md`.
-3. `bash src/scripts/condense.sh --check` (and re-`--mark-done` dependents on
-   a hash conflict) → resolves condensation state.
+3. `bash src/scripts/condense.sh --sync`, then `--check` → resolves any
+   conflict inside `dist/agent-src/` by re-projecting from the merged source.
 4. Stage the regenerated files, complete the merge, and re-run the touched
    verification before pushing.
 

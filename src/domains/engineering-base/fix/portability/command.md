@@ -91,14 +91,6 @@ After all fixes, re-run:
 ./scripts-run src/scripts/check_portability
 ```
 
-### 6. Mark hashes
-
-For each modified file:
-
-```bash
-./scripts-run src/scripts/condense --mark-done "{relative_path}"
-```
-
 ## Rules
 
 - **Always fix in `src/`** — never edit `.augment/` directly.

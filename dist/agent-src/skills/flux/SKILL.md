@@ -115,7 +115,7 @@ current state on the next polish round.
 
 ## Taste Dials
 
-`DESIGN.md` `## Taste Dials` → honour: Variance → layout-family spread + asymmetry; Motion → animation budget + reduced-motion posture; Density → spacing scale + info-per-viewport. Absent → follow brief's inferred dials.
+When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-family spread + asymmetry tolerance; Motion → animation budget + reduced-motion posture; Density → spacing scale + information-per-viewport. Absent → follow the design brief's inferred dials.
 
 ## Do NOT
 

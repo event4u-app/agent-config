@@ -56,7 +56,7 @@ that rule. Run both checks; treat neither as a substitute for the other.
    npx tsx node_modules/@event4u/agent-config/src/scripts/detect_target_license.ts . --json
    ```
    If `license-policy.yaml` exists at the repo root, read its
-   `policy.{allow,conditional,deny}` buckets directly. If it doesn't (dry
+   `policy.{allow,conditional,deny}` buckets directly. If it does not (dry
    run only), derive the same buckets by hand from this repo's own
    `LICENSE` file and the compatibility matrix in
    `node_modules/@event4u/agent-config/src/scripts/_lib/detect_target_license.ts`
@@ -68,7 +68,7 @@ that rule. Run both checks; treat neither as a substitute for the other.
    `unknown` is **always** `deny` — no exception.
 5. **Act on the verdict:**
    - `allow` → continue to step 6 (draft the ledger entry).
-   - `conditional` → STOP. Don't write the borrowed code yet. Escalate to
+   - `conditional` → STOP. Do not write the borrowed code yet. Escalate to
      the user with the exact matrix cell that triggered it (per
      [`ask-when-uncertain`](../../rules/ask-when-uncertain.md)) — never
      auto-clear a conditional verdict.
@@ -81,7 +81,7 @@ that rule. Run both checks; treat neither as a substitute for the other.
    `cleared_by`). Write a `transformation_note` that names a real
    structural change — rename-only phrasing (e.g. "renamed variables",
    "cosmetic rename") is rejected by `lint_provenance.ts` even if the code
-   hasn't landed yet, so draft it honestly against what will actually
+   has not landed yet, so draft it honestly against what will actually
    change.
 7. **Present the draft to the user before appending it.** Once the
    re-derived code lands, append the confirmed entry to

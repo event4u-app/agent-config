@@ -104,10 +104,10 @@ is before the first edit — this rule makes that the default path.
 
 ## Enforcement — stated honestly (`enforced_by: none`)
 
-No script can enforce "threat-model before you edit": obligation is a pre-edit
-reasoning step only the model observes (ADR-135 classifies it HIGH —
+No script can enforce "threat-model before you edit": the obligation is a
+pre-edit reasoning step only the model observes (ADR-135 classifies it HIGH —
 model-carried, honestly uncovered). Adjacent validators (`check_secret_leak`,
 `lint_agent_security`) cover neighbouring surfaces, not this stop — claiming
-them here would inflate coverage, so not claimed.
+them here would inflate coverage, so they are not claimed.
 
 See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-safe-diff` · `think-before-action` · [`untrusted-input-defense`](untrusted-input-defense.md) · [`lethal-trifecta-guard`](lethal-trifecta-guard.md) · [`secret-vcs-guard`](secret-vcs-guard.md) · [`docs/threat-model.md`](../../docs/threat-model.md).

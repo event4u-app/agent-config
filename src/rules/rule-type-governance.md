@@ -3,7 +3,7 @@ type: "auto"
 tier: "2a"
 description: "Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto"
 triggers:
-  - path_prefix: ".agent-src.uncondensed/rules/"
+  - path_prefix: "src/rules/"
 routes_to:
   - "guideline:agent-infra/rule-type-governance"
 workspaces: [agent-config-maintainer]

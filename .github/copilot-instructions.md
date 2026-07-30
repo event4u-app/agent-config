@@ -86,7 +86,7 @@ suggestions in a PR touching this repo, they are wrong.
 
 ## ✅ CI checks (must all pass)
 
-`task ci` runs: sync-check, sync-check-hashes, sync, generate-tools, consistency
+`task ci` runs: sync-check, check-condensation, sync, generate-tools, consistency
 (git clean), check-condensation, check-refs, check-portability, lint-skills, test
 (bash + pytest), lint-readme.
 

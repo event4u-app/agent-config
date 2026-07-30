@@ -1,6 +1,6 @@
 # Profiles
 
-Seed profiles for the [profile system](../../docs/contracts/profile-system.md).
+Seed profiles for the [profile system](../docs/contracts/profile-system.md).
 Each profile answers *who is the user?* — audience identity that
 selects the default skill/command surface, README entry-paragraph,
 and persona pre-selection. Boundary against `preset.id`, `pack.id`,
@@ -24,6 +24,6 @@ an ADR but MUST match the schema enforced by `task lint-config-schema`.
 
 ## See also
 
-- [`docs/contracts/profile-system.md`](../../docs/contracts/profile-system.md) — schema and loader contract.
-- [`docs/contracts/config-presets.md`](../../docs/contracts/config-presets.md) — preset axis.
+- [`docs/contracts/profile-system.md`](../docs/contracts/profile-system.md) — schema and loader contract.
+- [`docs/contracts/config-presets.md`](../docs/contracts/config-presets.md) — preset axis.
 - [`scripts/config/profiles.ts`](../../scripts/config/profiles.ts) — loader.

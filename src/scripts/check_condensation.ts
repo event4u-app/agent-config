@@ -8,7 +8,7 @@
  * exit codes (0 = clean, 1 = issues found, 3 = internal error),
  * stdout/stderr split, and byte-identical finding messages.
  *
- * Compares .agent-src.uncondensed/ source files with their dist/agent-src/
+ * Compares src/ source files with their dist/agent-src/
  * condensed versions. Checks that condensation preserved structural
  * integrity:
  * - All headings from source present in condensed
@@ -33,7 +33,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 type Severity = 'error' | 'warning' | 'info';
 
-const SOURCE_DIR = '.agent-src.uncondensed';
+// The authoring tree. Was `.agent-src.uncondensed` until 2026-07-29 — that tree
+// has held ZERO files since the flat-`src/` migration (ADR-051), so this gate
+// scanned nothing and exited 0 while wired into CI. `src/` is the single source
+// of truth per `src/rules/source-of-truth.md`; pairs resolve for `rules/` and
+// `skills/`, and any `src/` subtree without a `dist/agent-src/` counterpart is
+// skipped by the missing-target guard in `scanAll`.
+const SOURCE_DIR = 'src';
 const TARGET_DIR = 'dist/agent-src';
 
 interface Issue {
@@ -136,187 +142,19 @@ function pythonFormatFixed(x: number, n: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// _rewrite_paths — faithful port of condense.py's path-rewriter chain.
-// `condense.py` is not yet migrated; this replicates _rewrite_paths and its
-// helpers byte-for-byte so the source side normalises identically.
+// The path rewriter — imported, never re-implemented.
+//
+// This file used to carry its own 187-line copy of the rewriter chain, on the
+// grounds that `condense.py` was not yet migrated to TS. It is (ADR-200), so the
+// copy was a standing drift hazard: the invariant this gate asserts is
+// `dist == rewrite(src)`, and a private copy means the gate compares dist against
+// a *different* rewriter than the projector actually runs. Two implementations of
+// the reference = two definitions of correct, which is the same blind-gate shape
+// this gate exists to catch. Verified equivalent on all 556 real pairs before the
+// copy was deleted.
 // ---------------------------------------------------------------------------
 
-const _LEGACY_SRC_PREFIX = '.agent-src.uncondensed/';
-const _PROJECTED_SRC_PREFIX = 'dist/agent-src/';
-const _LEGACY_PROJECTED_SRC_PREFIX = '.agent-src/';
-
-// A YAML list item under load_context*: `  - some/path.md` (optionally quoted)
-const _FM_LIST_ITEM_RE = /^(\s*-\s*)(["']?)([^"'\n]+?\.md)(["']?)\s*$/;
-// `path_prefix:` line — top-level or under `triggers:` (with leading dash)
-const _FM_PATH_PREFIX_RE = /^(\s*(?:-\s+)?path_prefix:\s*)(["']?)([^"'\n]+?)(["']?)\s*$/;
-// Body-link patterns (relative two-up to docs/) — capture the docs/... tail
-const _BODY_DOCS_RE = /\.\.\/\.\.\/(docs\/(?:guidelines|contracts)\/[^)\s]+\.md)/g;
-// Plain YAML list item — any scalar (packs: / workspaces: blocks)
-const _FM_PLAIN_LIST_RE = /^\s*-\s*(["']?)([^"'\n]+?)\1\s*$/;
-
-const _HRR_BANNER_MARKER = '<!-- agent-config:human-review-banner -->';
-
-function _depthPrefix(sourceRelativePath: string): string {
-    // Python: Path(...).parts — split on path separators, drop empty parts.
-    const parts = sourceRelativePath.split('/').filter((p) => p.length > 0);
-    const depth = Math.max(parts.length - 1, 1);
-    return '../'.repeat(depth);
-}
-
-function _splitFrontmatter(content: string): [string[] | null, string] {
-    if (!content.startsWith('---\n')) return [null, content];
-    const end = content.indexOf('\n---\n', 4);
-    if (end === -1) return [null, content];
-    const fmText = content.slice(4, end);
-    const body = content.slice(end + '\n---\n'.length);
-    return [fmText.split('\n'), body];
-}
-
-function _rewriteLoadContextValue(value: string, prefix: string): string {
-    if (value.startsWith('../') || value.startsWith('./') || value.startsWith('/')) {
-        return value;
-    }
-    if (value.startsWith(_LEGACY_SRC_PREFIX)) {
-        return prefix + value.slice(_LEGACY_SRC_PREFIX.length);
-    }
-    if (value.startsWith(_PROJECTED_SRC_PREFIX)) {
-        return prefix + value.slice(_PROJECTED_SRC_PREFIX.length);
-    }
-    if (value.startsWith(_LEGACY_PROJECTED_SRC_PREFIX)) {
-        return prefix + value.slice(_LEGACY_PROJECTED_SRC_PREFIX.length);
-    }
-    return prefix + value;
-}
-
-function _rewritePathPrefixValue(value: string): string {
-    // No-op — path_prefix: is a literal match pattern, not a file reference.
-    return value;
-}
-
-function _lstrip(s: string): string {
-    return s.replace(/^\s+/u, '');
-}
-
-function _rewriteFrontmatterLines(lines: string[], prefix: string): string[] {
-    let inLoadContext = false;
-    const out: string[] = [];
-    for (const line of lines) {
-        const bare = _lstrip(line);
-        if (bare.startsWith('load_context:') || bare.startsWith('load_context_eager:')) {
-            inLoadContext = true;
-            out.push(line);
-            continue;
-        }
-        if (inLoadContext) {
-            const m = _FM_LIST_ITEM_RE.exec(line);
-            if (m) {
-                const indent = m[1] ?? '';
-                const q1 = m[2] ?? '';
-                const value = m[3] ?? '';
-                const q2 = m[4] ?? '';
-                const rewritten = _rewriteLoadContextValue(value, prefix);
-                out.push(`${indent}${q1}${rewritten}${q2}`);
-                continue;
-            }
-            inLoadContext = false;
-            // fall through to path_prefix / passthrough
-        }
-        const pm = _FM_PATH_PREFIX_RE.exec(line);
-        if (pm) {
-            const head = pm[1] ?? '';
-            const q1 = pm[2] ?? '';
-            const value = pm[3] ?? '';
-            const q2 = pm[4] ?? '';
-            out.push(`${head}${q1}${_rewritePathPrefixValue(value)}${q2}`);
-            continue;
-        }
-        out.push(line);
-    }
-    return out;
-}
-
-function _rewriteBodyLinks(body: string, prefix: string): string {
-    return body.replace(_BODY_DOCS_RE, (_match, tail: string) => prefix + tail);
-}
-
-function _parseTrustAndOwner(fmLines: string[]): [string, boolean, string] {
-    let level = 'core';
-    let hrr = false;
-    const packs: string[] = [];
-    const workspaces: string[] = [];
-    let inTrust = false;
-    let inPacks = false;
-    let inWorkspaces = false;
-    for (const line of fmLines) {
-        const stripped = _lstrip(line);
-        const indent = line.length - stripped.length;
-        if (indent === 0 && stripped.endsWith(':')) {
-            const key = stripped.slice(0, -1);
-            inTrust = key === 'trust';
-            inPacks = key === 'packs';
-            inWorkspaces = key === 'workspaces';
-            continue;
-        }
-        if (inTrust && stripped.startsWith('level:')) {
-            level = pyStrip(pyStrip(pyStrip(stripped.split(/:(.*)/s)[1] ?? '')).replace(/^"|"$/g, '')).replace(
-                /^'|'$/g,
-                '',
-            );
-            // Python: stripped.split(":", 1)[1].strip().strip('"').strip("'")
-            const after = stripped.slice(stripped.indexOf(':') + 1);
-            level = stripDoubleSingle(pyStrip(after));
-        } else if (inTrust && stripped.startsWith('human_review_required:')) {
-            const after = stripped.slice(stripped.indexOf(':') + 1);
-            const val = pyStrip(after);
-            hrr = val.toLowerCase() === 'true';
-        } else if (inPacks || inWorkspaces) {
-            const m = _FM_PLAIN_LIST_RE.exec(line);
-            if (m) {
-                const value = pyStrip(m[2] ?? '');
-                (inPacks ? packs : workspaces).push(value);
-            }
-        }
-    }
-    let owner = 'unknown';
-    if (packs.length > 0) {
-        owner = (packs[0] ?? '').split('-')[0] ?? '';
-    } else if (workspaces.length > 0) {
-        owner = workspaces[0] ?? '';
-    }
-    return [level, hrr, owner];
-}
-
-/** Python `.strip('"').strip("'")` — strip leading/trailing chars from a set. */
-function stripChars(s: string, chars: string): string {
-    let start = 0;
-    let end = s.length;
-    while (start < end && chars.includes(s[start] as string)) start += 1;
-    while (end > start && chars.includes(s[end - 1] as string)) end -= 1;
-    return s.slice(start, end);
-}
-
-function stripDoubleSingle(s: string): string {
-    return stripChars(stripChars(s, '"'), "'");
-}
-
-function _injectHrrBanner(body: string, level: string, owner: string): string {
-    if (body.includes(_HRR_BANNER_MARKER)) return body;
-    const banner = `${_HRR_BANNER_MARKER}\n> HUMAN REVIEW REQUIRED · trust: ${level} · owner: ${owner}\n\n`;
-    return banner + body.replace(/^\n+/, '');
-}
-
-function _rewritePaths(content: string, sourceRelativePath: string): string {
-    const prefix = _depthPrefix(sourceRelativePath);
-    const [fmLines, bodyInitial] = _splitFrontmatter(content);
-    let body = _rewriteBodyLinks(bodyInitial, prefix);
-    if (fmLines === null) return body;
-    const newFm = _rewriteFrontmatterLines(fmLines, prefix);
-    const [level, hrr, owner] = _parseTrustAndOwner(fmLines);
-    if (hrr && level) {
-        body = _injectHrrBanner(body, level, owner);
-    }
-    return `---\n${newFm.join('\n')}\n---\n${body}`;
-}
+import { _rewrite_paths as _rewritePaths } from './condense.js';
 
 // ---------------------------------------------------------------------------
 // Extraction helpers (port of check_condensation.py)
@@ -454,6 +292,32 @@ function extractIronLawSections(text: string): Array<[string, number, string]> {
 function checkPair(relPath: string, source: string, condensed: string): Issue[] {
     const issues: Issue[] = [];
 
+    // ADR-201 + council verdict B: the PRIMARY invariant. `source` reaching this
+    // function has already had the deterministic path rewrite applied, so
+    // `source === condensed` is exactly `dist == rewrite(src)` — byte-for-byte.
+    //
+    // This assertion was IMPOSSIBLE before ADR-201: an LLM prose rewrite has no
+    // expected output, which is why the determinism sub-gate failed by construction
+    // and why the old source-keyed hash certified drift as clean (observed three
+    // times in one session). With the rewrite removed, the property the gate was
+    // always supposed to hold finally becomes checkable.
+    //
+    // The structural checks below are retained as DIAGNOSTICS: when bytes differ
+    // they name what differs (frontmatter, a lost Iron Law, a mangled code block)
+    // instead of leaving the operator with an opaque inequality. If bytes match,
+    // every structural check is trivially satisfied.
+    if (source !== condensed) {
+        issues.push({
+            file: relPath,
+            check: 'not_byte_exact',
+            severity: 'error',
+            message:
+                'dist is not the byte-exact path-rewritten copy of src — either the ' +
+                'projection is stale (run the sync) or dist was hand-edited. ' +
+                'Diagnostics below name the difference.',
+        });
+    }
+
     // Frontmatter check
     const srcFm = extractFrontmatter(source);
     const cmpFm = extractFrontmatter(condensed);
@@ -567,7 +431,14 @@ function checkPair(relPath: string, source: string, condensed: string): Issue[] 
         }
     }
 
-    // Word count ratio
+    // Word-count ratio — kept ONLY as an excessive-reduction alarm.
+    //
+    // Post-ADR-201 the projection is a verbatim copy, so the expected reduction is
+    // 0% and the old `minimal_reduction` info fired on 413 of 428 files by design.
+    // A diagnostic that flags 96% of its inputs is not a diagnostic, it is noise
+    // that trains the reader to skip the output. The excessive-reduction warning
+    // stays: under byte-exactness it can only fire if something upstream mangled a
+    // file, which is exactly when a loud second signal earns its place.
     const srcWords = wordCount(source);
     const cmpWords = wordCount(condensed);
     if (srcWords > 0) {
@@ -578,15 +449,8 @@ function checkPair(relPath: string, source: string, condensed: string): Issue[] 
                 check: 'excessive_reduction',
                 severity: 'warning',
                 message:
-                    `Condensation reduced ${fmt0f(reduction)}% — possible content loss ` +
+                    `Projection lost ${fmt0f(reduction)}% of the words — content loss ` +
                     `(${srcWords} → ${cmpWords} words)`,
-            });
-        } else if (reduction < 5 && srcWords > 100) {
-            issues.push({
-                file: relPath,
-                check: 'minimal_reduction',
-                severity: 'info',
-                message: `Condensation only reduced ${fmt0f(reduction)}% (${srcWords} → ${cmpWords} words)`,
             });
         }
     }
@@ -619,15 +483,31 @@ function rglobMdSorted(dir: string): string[] {
     return out;
 }
 
+/** A gate that scans nothing must never report success. This fired for real:
+ * `SOURCE_DIR` pointed at a tree emptied by the ADR-051 migration, so the check
+ * ran in CI against 0 pairs and exited 0 for as long as the tree stayed dead.
+ * Zero findings over zero inputs is a broken gate, not a pass. */
+function scannedNothing(sourceDir: string): Issue {
+    return {
+        file: SOURCE_DIR,
+        check: 'scanned_nothing',
+        severity: 'error',
+        message:
+            `scanned 0 source/target pairs under '${sourceDir}' — a gate that inspects ` +
+            `nothing cannot pass. Check SOURCE_DIR/TARGET_DIR against the real tree.`,
+    };
+}
+
 function scanAll(root: string): Issue[] {
     const issues: Issue[] = [];
     const sourceDir = path.join(root, SOURCE_DIR);
     const targetDir = path.join(root, TARGET_DIR);
 
     if (!fs.existsSync(sourceDir) || !fs.existsSync(targetDir)) {
-        return issues;
+        return [scannedNothing(sourceDir)];
     }
 
+    let scanned = 0;
     for (const sourceFile of rglobMdSorted(sourceDir)) {
         const rel = path.relative(sourceDir, sourceFile);
         const targetFile = path.join(targetDir, rel);
@@ -641,12 +521,37 @@ function scanAll(root: string): Issue[] {
             continue;
         }
 
+        // Pair via the projector's root PRECEDENCE, not by naive src/-relative
+        // pathing. `src/` and `src/agent-src/` are both artefact roots, so the same
+        // relative path can name two UNRELATED files — `profiles/README.md` exists
+        // under both, documenting different things (the CLI's profile YAMLs vs the
+        // agent-src seed profiles). Pairing them by string produced a byte-exactness
+        // failure that looked like a stale shadow file and was really a collision in
+        // this loop. `src/agent-src/<rel>` wins because that is the root the
+        // projector resolves first.
+        const agentSrcCandidate = path.join(sourceDir, 'agent-src', rel);
+        const effectiveSource =
+            !sourceFile.includes(`${path.sep}agent-src${path.sep}`) && fs.existsSync(agentSrcCandidate)
+                ? agentSrcCandidate
+                : sourceFile;
+        if (effectiveSource !== sourceFile) {
+            continue; // the agent-src copy is the real pair; it gets its own iteration
+        }
+
         let sourceText = fs.readFileSync(sourceFile, 'utf-8');
         const targetText = fs.readFileSync(targetFile, 'utf-8');
         sourceText = _rewritePaths(sourceText, relStr);
+        scanned += 1;
         issues.push(...checkPair(relStr, sourceText, targetText));
     }
 
+    if (scanned === 0) {
+        issues.push(scannedNothing(sourceDir));
+    }
+    // Gate-coverage contract (src/config/gate-coverage.yml): emit exactly one
+    // machine-readable count so `check_gate_coverage` never has to parse the
+    // human report. A guard that parses prose is the fragile thing it replaces.
+    process.stdout.write(`scanned: ${String(scanned)}\n`);
     return issues;
 }
 

@@ -3,7 +3,7 @@ type: "auto"
 tier: "2a"
 description: "Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path"
 triggers:
-  - path_prefix: ".agent-src.uncondensed/personas/"
+  - path_prefix: "src/agent-src/personas/"
   - path_prefix: "dist/agent-src/personas/"
   - keyword: "persona"
   - keyword: "personas"
@@ -46,6 +46,6 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 ## See also
 
 - [`docs/contracts/persona-schema.md`](../docs/contracts/persona-schema.md) — schema lock, tiers, sections, size budgets, linter enforcement surface, and the migrated governance checks (§ 8).
-- [`docs/personas.md`](../docs/personas.md) — active persona catalog, citation map, ownership column.
+- [`docs/personas.md`](../../docs/personas.md) — active persona catalog, citation map, ownership column.
 - [`ai-council`](../skills/ai-council/SKILL.md) — neutral second-opinion mechanism used for merge / deprecation decisions.
 - [`skill-quality`](skill-quality.md) — sibling discipline rule for skill files.

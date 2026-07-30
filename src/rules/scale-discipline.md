@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Scale-safe persistence — indexes with the queries, bounded reads, safe migrations, growth budgets, thin request path, durable async. Pattern lints gate; heuristics advise."
+description: "Scale-safe persistence — indexes with the queries, bounded reads, safe migrations, growth budgets, thin request path, durable async; heuristics advise"
 triggers:
   - keyword: "migration"
   - keyword: "index"

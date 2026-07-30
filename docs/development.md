@@ -34,12 +34,8 @@ task consistency-fix           # Regenerate all derived outputs from source
 
 ```bash
 task sync                      # src/ → dist/agent-src/, then project → .augment/
-task sync-changed              # List .md files changed since last condensation
+task sync-changed              # List .md files whose projection is out of date
 task sync-check                # Check if dist/agent-src/ is in sync (for CI)
-task sync-check-hashes         # Verify condensed .md hashes match source
-task sync-mark-done <file>     # Mark a single file as condensed
-task sync-mark-all-done        # Mark ALL files as condensed
-task sync-clean-hashes         # Remove stale hashes for deleted source files
 ```
 
 ### Tool Generation
@@ -116,7 +112,7 @@ task install-hooks             # Install git hooks (pre-commit marketplace lint,
 ```
 
 The **pre-push hook runs `task consistency`** — the exact local mirror of the CI
-"Sync + Generate Tools Consistency" gate (sync + hashes + generate-tools +
+"Sync + Generate Tools Consistency" gate (sync-check + sync + generate-tools +
 router + corpus + `git diff --quiet`). Any derived-output drift (counts, dist,
 generated tool trees) is blocked **before** the push instead of failing remote
 CI; the fix is `task consistency-fix`, stage, re-push. The hook auto-installs on
@@ -188,7 +184,6 @@ scripts/
 ├── install.py                 ← Bridge files stage (.agent-settings.yml, JSONs)
 ├── postinstall.sh             ← npm postinstall hook → scripts/install
 ├── setup.sh                   ← One-time Composer hook setup
-├── condense.py                ← Condensation hash management
 ├── check_condensation.py       ← Condensation quality checker
 ├── skill_linter.py            ← Skill/rule/command linter
 ├── lint_regression.py         ← Branch regression detection
@@ -208,7 +203,7 @@ tests/
 
 .github/workflows/
 ├── skill-lint.yml             ← Lint + PR comment workflow
-└── consistency.yml            ← Sync + hash + tool verification
+└── consistency.yml            ← Sync + tool verification
 src/templates/consumer-settings/   ← Settings templates for consumer projects
 
 src/                            ← Source of truth (human-readable, verbose)

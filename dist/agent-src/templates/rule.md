@@ -10,7 +10,8 @@
 2. Copy the template below into `src/rules/{rule-name}.md`.
 3. Replace placeholders, drop sections that don't apply.
 4. Run `task lint-skills` and `./scripts-run src/scripts/lint_load_context`.
-5. Condense: `bash scripts/condense.sh --changed` then follow the agent flow.
+5. Project to `dist/agent-src/`: `task sync` (writes the projection, including the
+   path rewrite). Verify with `bash scripts/condense.sh --check`.
 
 ## Path conventions — load-bearing
 

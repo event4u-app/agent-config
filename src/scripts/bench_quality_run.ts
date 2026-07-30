@@ -126,6 +126,116 @@ export function run_golden_judge(
   });
 }
 
+// ── Export mode (--dump-answers): blinded pairs for an external instrument ──
+//
+// Needed because LLM-paired judging on thin-vs-eager is closed-by-diagnosis
+// (`docs/benchmark.md` § Length-neutral judge RERUN). Any admissible re-open
+// needs the raw answer pairs, whether the instrument is deterministic
+// anchor-scoring against `must_include`/`must_not` or a human judge. Export mode
+// makes NO judge calls, so it costs ~half a full judged run (2 arms, 0 judges).
+
+/** Deterministic per-task coin flip — FNV-1a over `seed:taskId`, low bit.
+ * Reproducible blinding without Math.random, so re-running the export yields
+ * the same A/B assignment and a partially-filled verdicts.csv stays valid. */
+export function blind_flip(taskId: string, seed: number): boolean {
+  const s = `${seed}:${taskId}`;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return (h & 1) === 1;
+}
+
+export interface BlindPair {
+  id: string;
+  /** Which arm was presented as ANSWER A. Belongs in _mapping.json ONLY. */
+  a_arm: 'thin' | 'eager';
+  answer_a: string;
+  answer_b: string;
+}
+
+export function build_blind_pair(
+  task: GoldenTask,
+  thinAnswer: string,
+  eagerAnswer: string,
+  seed: number,
+): BlindPair {
+  const thinIsA = blind_flip(task.id, seed);
+  return {
+    id: task.id,
+    a_arm: thinIsA ? 'thin' : 'eager',
+    answer_a: thinIsA ? thinAnswer : eagerAnswer,
+    answer_b: thinIsA ? eagerAnswer : thinAnswer,
+  };
+}
+
+/** Render the operator-facing pair file. MUST NOT leak the arm mapping —
+ * `tests/scripts/bench_quality_run.test.ts` asserts the blinding invariant. */
+export function render_pair_file(task: GoldenTask, pair: BlindPair): string {
+  const lines: string[] = [`# ${task.id}`, '', '## Request', '', task.prompt, '', '## Rubric', '', task.rubric, ''];
+  if (task.must_include.length) lines.push('## Must satisfy', '', ...task.must_include.map((s) => `- ${s}`), '');
+  if (task.must_not.length) lines.push('## Must avoid', '', ...task.must_not.map((s) => `- ${s}`), '');
+  lines.push(
+    '## Judging rules',
+    '',
+    '- Judge ONLY which answer better satisfies the rubric above.',
+    '- IGNORE length and verbosity. A longer answer is NOT a better answer.',
+    '- `tie` is a valid verdict — do not force a winner.',
+    '- Do NOT open `_mapping.json` until every verdict is recorded.',
+    '',
+    '## ANSWER A',
+    '',
+    pair.answer_a,
+    '',
+    '## ANSWER B',
+    '',
+    pair.answer_b,
+    '',
+    '## Verdict',
+    '',
+    `Append to verdicts.csv — one of: \`${task.id},A\` · \`${task.id},B\` · \`${task.id},tie\``,
+    '',
+  );
+  return lines.join('\n');
+}
+
+/** Write the blinded export: one file per task + the withheld mapping + a CSV stub. */
+export function write_export(
+  dir: string,
+  tasks: GoldenTask[],
+  pairs: BlindPair[],
+  meta: { seed: number; model: string; dry_run: boolean },
+): void {
+  fs.mkdirSync(dir, { recursive: true });
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+  for (const pair of pairs) {
+    const task = byId.get(pair.id);
+    if (task === undefined) continue;
+    fs.writeFileSync(path.join(dir, `${pair.id}.md`), render_pair_file(task, pair));
+  }
+  fs.writeFileSync(
+    path.join(dir, '_mapping.json'),
+    JSON.stringify(
+      {
+        generated_by: 'bench_quality_run --dump-answers',
+        warning: 'DO NOT READ until every verdict is recorded in verdicts.csv.',
+        seed: meta.seed,
+        answer_model: meta.model,
+        dry_run: meta.dry_run,
+        threshold: DEFAULT_THRESHOLD,
+        mapping: pairs.map((p) => ({ id: p.id, a_arm: p.a_arm })),
+      },
+      null,
+      2,
+    ) + '\n',
+  );
+  const csv = path.join(dir, 'verdicts.csv');
+  if (!fs.existsSync(csv)) {
+    fs.writeFileSync(csv, `task_id,verdict\n${pairs.map((p) => `${p.id},`).join('\n')}\n`);
+  }
+}
+
 // ── Mock model (--dry-run): deterministic, no API ───────────────────────────
 function mock_answer(_ctx: string, task: GoldenTask): string {
   return `Answer to ${task.id}: ${(task.must_include[0] ?? 'addresses the request')}.`;
@@ -137,16 +247,41 @@ interface Args {
   model: string;
   limit: number | null;
   output: string;
+  dumpAnswers: string | null;
+  seed: number;
 }
 
+const DEFAULT_SEED = 20260729;
+
 function parse_args(argv: string[]): Args | number {
-  const a: Args = { dryRun: false, model: 'claude-sonnet-4-5', limit: null, output: OUT };
+  const a: Args = {
+    dryRun: false,
+    model: 'claude-sonnet-4-5',
+    limit: null,
+    output: OUT,
+    dumpAnswers: null,
+    seed: DEFAULT_SEED,
+  };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--dry-run') a.dryRun = true;
     else if (arg === '--model') a.model = String(argv[(i += 1)] ?? a.model);
     else if (arg === '--output') a.output = String(argv[(i += 1)] ?? a.output);
-    else if (arg === '--limit') {
+    else if (arg === '--dump-answers') {
+      const v = argv[(i += 1)];
+      if (v === undefined || v.startsWith('--')) {
+        process.stderr.write('error: --dump-answers requires a directory path\n');
+        return 1;
+      }
+      a.dumpAnswers = v;
+    } else if (arg === '--seed') {
+      const v = Number(argv[(i += 1)]);
+      if (!Number.isInteger(v)) {
+        process.stderr.write('error: --seed must be an integer\n');
+        return 1;
+      }
+      a.seed = v;
+    } else if (arg === '--limit') {
       const v = Number(argv[(i += 1)]);
       if (!Number.isInteger(v) || v < 1) {
         process.stderr.write('error: --limit must be a positive integer\n');
@@ -154,7 +289,13 @@ function parse_args(argv: string[]): Args | number {
       }
       a.limit = v;
     } else if (arg === '-h' || arg === '--help') {
-      process.stdout.write('usage: bench_quality_run [--dry-run] [--model M] [--limit N] [--output PATH]\n');
+      process.stdout.write(
+        'usage: bench_quality_run [--dry-run] [--model M] [--limit N] [--output PATH]\n' +
+          '                        [--dump-answers DIR] [--seed N]\n\n' +
+          '  --dump-answers DIR  export blinded pairs for an external instrument; makes NO\n' +
+          '                      judge calls (~half the cost of a judged run)\n' +
+          `  --seed N            deterministic A/B blinding seed (default ${String(DEFAULT_SEED)})\n`,
+      );
       return 0;
     } else {
       process.stderr.write(`error: unknown argument: ${arg}\n`);
@@ -214,8 +355,31 @@ function main(argv: string[]): number {
       );
     modelLabel = args.model;
     process.stdout.write(
-      `Live run: ${tasks.length} tasks × 2 arms + 2 judge calls each via ${args.model}. This costs API $.\n`,
+      args.dumpAnswers === null
+        ? `Live run: ${tasks.length} tasks × 2 arms + 2 judge calls each via ${args.model}. This costs API $.\n`
+        : `Live export: ${tasks.length} tasks × 2 arms via ${args.model}, NO judge calls. This costs API $.\n`,
     );
+  }
+
+  // Export mode: generate both arms, blind them, write the pairs, judge nothing.
+  if (args.dumpAnswers !== null) {
+    let pairs: BlindPair[];
+    try {
+      pairs = tasks.map((task) =>
+        build_blind_pair(task, answer(contexts.thin, task), answer(contexts.eager, task), args.seed),
+      );
+    } catch (e) {
+      process.stderr.write(`error: answer generation failed: ${(e as Error).message}\n`);
+      return 1;
+    }
+    const dir = path.resolve(args.dumpAnswers);
+    write_export(dir, tasks, pairs, { seed: args.seed, model: modelLabel, dry_run: args.dryRun });
+    process.stdout.write(
+      `→ wrote ${pairs.length} blinded pairs to ${dir}\n` +
+        `   Arm mapping withheld in _mapping.json — do not open it until verdicts.csv is complete.\n` +
+        `   Judged nothing: LLM-paired judging is closed-by-diagnosis for this question.\n`,
+    );
+    return 0;
   }
 
   let results: PairResult[];

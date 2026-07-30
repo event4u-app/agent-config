@@ -1,7 +1,6 @@
 ---
 name: reasoning-orchestrator
 description: "Use for multi-step / ambiguous / end-to-end work — refactor a whole module, drive a vague ticket to a verified result, plan+build+verify a migration; coordinates the reasoning chain across skills."
-source: package
 domain: engineering
 status: active
 model_tier: medium
@@ -35,27 +34,28 @@ coordinates); on a standard host run the full chain.
 ## When to use
 
 Scope (eval-calibrated, L6): engage only for **interdependent multi-step** work
-— steps whose ordering/handoffs matter (schema → API → job → UI; staged
-migration; cross-cutting refactor). **Not** for single-turn analysis (explain /
-name / yes-no / pick-X-or-Y / one-shot edit): there the ordered chain is a no-op,
-only adds tokens.
+— multiple steps whose ordering and handoffs matter (schema → API → job → UI; a
+staged migration; a cross-cutting refactor). **Not** for single-turn analysis
+(explain / name / yes-no / pick-X-or-Y / one-shot edit): there the ordered chain
+is a no-op and only adds tokens.
 
-- Interdependent **multi-step** task on a standard host. Analyze the dependency
-  structure (what blocks what) before acting.
-- Work where a missed/out-of-order link (grounding, verification) compounds
+- An interdependent **multi-step** task on a standard host. Analyze the
+  dependency structure (what blocks what) before acting.
+- Work where a missed or out-of-order link (grounding, verification) compounds
   downstream.
 
 Do NOT use for trivial / linear / fully-specified tasks **or single-turn
-analysis** (the gate filters these); don't duplicate the work of the skills it
-coordinates.
+analysis** (the gate filters these), and do not let it duplicate the work of the
+skills it coordinates.
 
-> **Why scoped (L6, 2026-06-22).** Controlled distributed-vs-orchestrated eval
-> (N=16, independent rater): ordered chain gains **+19.2%** on multi-step,
-> **−1.1%** (no-op) on single-turn. Standard host classifies multi-step vs
-> single-turn at gate time 16/16; misclassification degrades gracefully (wrong
-> arm still functional). Revert trigger = re-run `tests/reasoning-layer-eval`
-> (eval is the telemetry — no-runtime package); RDP flip conditions judged
-> per-mechanism, never univariate aggregate. Evidence:
+> **Why scoped (L6, 2026-06-22).** A controlled distributed-vs-orchestrated eval
+> (N=16, independent rater) found the ordered chain gains **+19.2%** on
+> multi-step work but **−1.1%** (a no-op) on single-turn reasoning. The standard
+> host classifies multi-step vs single-turn at gate time with 16/16 accuracy, and
+> a misclassification degrades gracefully (wrong arm is still functional). The
+> revert trigger is a re-run of `tests/reasoning-layer-eval` (the eval is the
+> telemetry — this is a no-runtime package); RDP flip conditions are judged
+> per-mechanism, never on a univariate aggregate. Evidence:
 > `tests/reasoning-layer-eval/RESULTS-L6-largeN-2026-06-22.md`.
 
 ## When the agent should load this
@@ -81,8 +81,8 @@ Each link **delegates** to the artifact that owns it (no duplication):
 4. **gather** — resolve the load-bearing unknown first
    ([`complexity-first-planning`](../complexity-first-planning/SKILL.md)); dispatch
    independent subtasks async ([`subagent-orchestration` § RDP](../subagent-orchestration/SKILL.md)),
-   settings-gated per [`auto-orchestration-activation`](../../contexts/execution/auto-orchestration-activation.md)
-   (`subagents.enabled`/`auto` + host manifest).
+   auto-triggered by the [`delegation-policy`](../../rules/delegation-policy.md) rule
+   (gates on `subagents.enabled`/`auto` + host manifest).
 5. **audit** — check progress against real tool results
    ([`verify-before-complete`](../../rules/verify-before-complete.md)).
 6. **verify** — fresh-context verifier on the structural-complexity gate
@@ -99,11 +99,11 @@ not exclusivity.
 ## Output
 
 The task's actual deliverable, produced **through the chain** (analysis before
-action — grounding + load-bearing-unknown resolution precede any edit):
+action — grounding and the load-bearing-unknown resolution precede any edit):
 
-1. **Outcome first** — response leads with the result + its evidence.
-2. **Reasoning stays in notes** — hypotheses / predictions / decisions in the
-   notes file, never dumped into the response.
+1. **Outcome first** — the response leads with the result and its evidence.
+2. **Reasoning stays in notes** — hypotheses / predictions / decisions live in
+   the notes file, never dumped into the response.
 3. **Chain honoured in order** — ground → intent → notes → resolve-hardest-first
    → audit → verify ran as ordered links (with handoffs), not a buffet.
 4. **Verified before "done"** — no completion claim without the verifier link's

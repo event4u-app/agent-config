@@ -30,8 +30,8 @@ responsible for.
 
 ## Unique Questions
 
-Three or more questions no other persona asks verbatim. Each must
-be falsifiable against the artefact under review.
+Three or more questions no other persona asks verbatim. Each must be
+falsifiable against the artefact under review.
 
 - {Question 1 — direct, scoped, answerable from the diff/plan.}
 - {Question 2.}
@@ -44,7 +44,7 @@ How findings are phrased when this lens is invoked.
 
 - Format: bullets · table · numbered list — pick one.
 - Severity vocabulary: e.g. `must-fix · should-fix · nit`.
-- Citation rule: every finding cites a file:line or contract path.
+- Citation rule: every finding cites a file:line or a contract path.
 - Length: short — one screen unless the diff is genuinely large.
 
 ## Anti-Patterns

@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Regression guard: no NEW `.agent-src.uncondensed/` references in `src/`.
+ * Regression guard: no NEW dead-root references in `src/` or `tests/`.
  *
  * Ported from the retired Python `src/scripts/check_no_new_legacy_path.py` (ADR-200,
  * Phase 4 / Wave 4c). The CLI contract is pinned — `--base`
@@ -104,12 +104,22 @@ function find_offenders(diffText: string, twinCheck: TwinCheck = _is_faithful_tw
             continue;
         }
         if (line.startsWith('+') && !line.startsWith('+++')) {
-            // src/-scoped: a full diff (e.g. `gh pr diff`) carries every path;
-            // only added lines under src/ (minus the exempt detectors and
-            // faithful TS twins) count.
+            // Scoped to src/ + tests/: a full diff (e.g. `gh pr diff`) carries
+            // every path; only added lines under those roots (minus the exempt
+            // detectors and faithful TS twins) count.
+            //
+            // tests/ added 2026-07-29. Four separate tests were found pinning the
+            // dead root — two via fixture paths, one via a `resolve_entry`
+            // expectation, one asserting that a missing root exits 0 — and each
+            // kept a gate's blindness green because test and implementation agreed
+            // on a tree reality had abandoned. A FULL-tree lint over tests/ is the
+            // wrong shape (44 files / 213 hits, most of them legitimate: the
+            // legacy detectors' own tests, validator_ignore substrings, and
+            // synthetic fixtures under tmpdir()). Diff-scoping is what makes this
+            // tractable — existing debt stays, growth stops, no allowlist.
             if (
                 curFile &&
-                curFile.startsWith('src/') &&
+                (curFile.startsWith('src/') || curFile.startsWith('tests/')) &&
                 !EXEMPT.has(curFile) &&
                 line.includes(LEGACY) &&
                 !twinCheck(curFile)
@@ -135,7 +145,7 @@ function main(): number {
         // additions (robust locally and where the working tree is the branch tip).
         let proc: ReturnType<typeof spawnSync>;
         try {
-            proc = spawnSync('git', ['diff', base, '--', 'src/'], {
+            proc = spawnSync('git', ['diff', base, '--', 'src/', 'tests/'], {
                 encoding: 'utf-8',
             });
         } catch (exc) {

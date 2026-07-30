@@ -145,6 +145,36 @@ rule_loading_tier: __RULE_LOADING_TIER__
 lean_projection:
   mode: eager-all
 
+# --- Telegraph condensation (output-side) ---
+#
+# speak_scope: off | prose_only | aggressive   (QUOTE the value — bare `off` is a
+#                                              YAML 1.1 boolean, not the string)
+#
+# `off` is the shipped default per docs/adrs/telegraph/0001-default-off-until-bench.md
+# (Status: accepted) and docs/contracts/condensation-default-kill-criterion.md.
+# Reason it is off: the only output-side bench (telegraph-v1, n=10, 2026-05-16)
+# measured median vs_terse -9.27% (API counts) / -5.47% (exact cl100k_base
+# re-analysis) — telegraph emits MORE tokens than a plain "be terse" instruction.
+# The kill-criterion table therefore lands on "criterion not met — defer" and the
+# telemetry multiplier stays suspended (0.9155 < 1.0).
+#
+# NOTE: `speak_scope: off` disables the BEHAVIOUR but not the COST — the projector
+# gates this rule on `telegraph.speak`, never on speak_scope, so under
+# `lean_projection.mode: eager-all` the ~982-token body still ships every session.
+# Set `speak: false` for zero-cost dormancy.
+#
+# Stated explicitly here because until 2026-07-29 this default existed only in
+# prose — and two prose sources disagreed (the rule said prose_only, the accepted
+# ADR said off). Do not flip without a passing output-side bench.
+telegraph:
+  # speak: false = DORMANT (the shipped default per docs/adrs/telegraph/0002).
+  # The rule is omitted from dist/router.json entirely, so its ~982-token body
+  # never ships. This — not speak_scope — is the lever that stops the cost:
+  # compile_router gates on `speak` and never reads speak_scope.
+  # Set true only after an output-side bench clears the kill-criterion bar.
+  speak: false
+  speak_scope: "off"
+
 # --- Token-rich skills governance ---
 #
 # Skills marked `token_budget_class: rich` in their frontmatter are exempt
@@ -642,7 +672,7 @@ subagents:
   # delegate frontier-priced or speculative work. `resolveShippedDefault()`
   # remains the telemetry-driven DEMOTION gate: a measured regression demotes
   # back to `ask`.
-  auto: on
+  auto: "on"
 
   # Route delegable sub-tasks to the lowest-capable model tier (cost + speed
   # via model downshift). true (default) = downshift per declared model_tier;
@@ -1114,7 +1144,7 @@ decision_engine:
   #   low    = refuse to advance when band is below low
   #   medium = refuse when below medium
   #   high   = refuse when below high
-  min_confidence: off
+  min_confidence: "off"
 
   # Risk-class ceiling for Phase=Implement.
   #   off    = no ceiling (default)

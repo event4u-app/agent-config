@@ -21,17 +21,17 @@ NO SECRETS. NO EMAILS. NO PROJECT PATHS. NO CUSTOMER NAMES.
 NO INTERNAL HOSTNAMES. NO MONEY. NO BUSINESS SQL. NO LONG CODE.
 ```
 
-Redactor lives in `scripts/ai_council/redact_low_impact_entry.ts`
+The redactor lives in `scripts/ai_council/redact_low_impact_entry.ts`
 and runs at **both** gates:
 
 1. **Write gate** — every intake append to
    `agents/decisions/low-impact-decisions.md` (Phase 12 § Step 2).
 2. **Upstream gate** — every `/memory learn-low-impact` PR draft,
-   before diff leaves repo (Phase 12 § Step 5).
+   before the diff leaves the repo (Phase 12 § Step 5).
 
-Failure at either gate refuses the operation, surfaces offending
-pattern, asks user to rephrase. Redactor never auto-rewrites — silent
-rewriting is soft gate, this is hard.
+A failure at either gate refuses the operation, surfaces the
+offending pattern, and asks the user to rephrase. The redactor never
+auto-rewrites — silent rewriting is a soft gate, this is hard.
 
 ## Forbidden-content classes (8)
 
@@ -54,9 +54,10 @@ rewriting is soft gate, this is hard.
 
 ## When to invoke
 
-- Host agent just received user intake trigger (see
+- The host agent has just received a user intake trigger (see
   `scripts/ai_council/low_impact_intake.TRIGGER_PHRASES`).
-- Host agent about to write entry to corpus or open `/memory learn-low-impact` PR.
+- The host agent is about to write an entry to the corpus or to
+  open a `/memory learn-low-impact` PR.
 
 ## What to surface on refusal
 
@@ -66,7 +67,8 @@ One-line marker:
 > Low-impact corpus refused — <category>: <snippet…>. Rephrase or skip.
 ```
 
-Then agent stops intake/upstream flow. No silent retry, no auto-rewrite.
+Then the agent stops the intake / upstream flow. No silent retry, no
+auto-rewrite.
 
 ## See also
 

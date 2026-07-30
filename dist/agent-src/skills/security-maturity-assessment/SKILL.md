@@ -11,7 +11,10 @@ packs:
 
 # security-maturity-assessment
 
-Rate how mature a module's security **posture** is — category by category, every rating backed by `file:line` evidence — instead of hunting individual vulnerabilities. Output is a scorecard a maintainer can re-run and diff, not a finding list.
+Rate how mature a module's security **posture** is — category by category,
+every rating backed by `file:line` evidence — instead of hunting individual
+vulnerabilities. The output is a scorecard a maintainer can re-run and diff,
+not a finding list.
 
 ## When to use
 
@@ -53,34 +56,53 @@ Do NOT use when:
 
 ## Procedure
 
-1. **Scope** — name the module/paths under assessment; list entry points (routes, jobs, commands, webhooks). Scorecard without stated scope is not reproducible.
-2. **Assess each category** — inspect the code the category names. Every rating cites evidence:
+1. **Scope** — name the module/paths under assessment; list entry points
+   (routes, jobs, commands, webhooks). A scorecard without a stated scope is
+   not reproducible.
+2. **Assess each category** — inspect the code the category names. Every
+   rating cites evidence:
    - Positive evidence: `file:line` of the control (`app/Http/Requests/…:12`, `src/guards/auth.guard.ts:12`).
-   - Absence evidence: the searches run that came back empty (name the grep patterns) — "not found" beats "probably missing".
-   - Multi-tenant N/A: single-tenant systems rate category 8 `N/A`; drops out of the roll-up.
-3. **Roll up deterministically** — overall rating is computed, not vibed:
+   - Absence evidence: the searches run that came back empty (name the grep
+     patterns) — "not found" beats "probably missing".
+   - Multi-tenant N/A: single-tenant systems rate category 8 `N/A`; it drops
+     out of the roll-up.
+3. **Roll up deterministically** — the overall rating is computed, not vibed:
    - `overall = min( median(all rated categories), one step above the lowest critical-category rating )`
-   - Consequences: any critical category **Missing** caps overall at **Weak**; any critical **Weak** caps overall at **Moderate**. Non-critical categories move the median but never lift the cap.
-4. **Recommend** — max 3 next steps, ordered by which would raise the overall rating (fix the lowest critical category first).
+   - Consequences: any critical category **Missing** caps overall at **Weak**;
+     any critical **Weak** caps overall at **Moderate**. Non-critical
+     categories move the median but can never lift the cap.
+4. **Recommend** — max 3 next steps, ordered by which would raise the overall
+   rating (i.e. fix the lowest critical category first).
 
 ## Output format
 
-1. **Scope block** — module/paths + entry-point list, so the scorecard is re-runnable.
-2. **Scorecard table** — one row per category: `Category | Rating | Evidence (file:line or named empty searches) | Gap`. Every row MUST carry evidence; a rating without a citation is invalid.
-3. **Overall rating** — with the roll-up shown (`median=…, lowest critical=…, cap=… → overall=…`), never a bare verdict.
+1. **Scope block** — module/paths + entry-point list, so the scorecard is
+   re-runnable.
+2. **Scorecard table** — one row per category:
+   `Category | Rating | Evidence (file:line or named empty searches) | Gap`.
+   Every row MUST carry evidence; a rating without a citation is invalid.
+3. **Overall rating** — with the roll-up shown (`median=…, lowest critical=…,
+   cap=… → overall=…`), never a bare verdict.
 4. **Top-3 next steps** — ordered by roll-up impact.
 
 ## Gotcha
 
-- The model tends to rate from vibes ("looks well-structured") — a rating row without `file:line` or named empty searches is invalid; redo it.
-- Don't let a Strong non-critical category mask a Weak critical one — the cap rule exists precisely because a polished logging setup does not offset missing authorization.
-- A vulnerability found mid-assessment is **out of scope** for the scorecard — note it and route to [`security-audit`](../security-audit/SKILL.md) (with its false-positive gate) instead of inlining findings here.
+- The model tends to rate from vibes ("looks well-structured") — a rating
+  row without `file:line` or named empty searches is invalid; redo it.
+- Don't let a Strong non-critical category mask a Weak critical one — the
+  cap rule exists precisely because a polished logging setup does not offset
+  missing authorization.
+- A vulnerability found mid-assessment is **out of scope** for the scorecard
+  — note it and route to [`security-audit`](../security-audit/SKILL.md)
+  (with its false-positive gate) instead of inlining findings here.
 
 ## Do NOT
 
-- Do NOT emit a rating without evidence — every row cites `file:line` or the empty searches that prove absence.
+- Do NOT emit a rating without evidence — every row cites `file:line` or the
+  empty searches that prove absence.
 - Do NOT average away critical categories — the deterministic cap always wins.
-- Do NOT turn the scorecard into a finding list — posture assessment and vulnerability hunting are different deliverables.
+- Do NOT turn the scorecard into a finding list — posture assessment and
+  vulnerability hunting are different deliverables.
 - Do NOT assess unscoped ("the whole app") when the user named a module.
 
 ## See also

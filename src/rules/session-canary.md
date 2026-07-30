@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "personal.canary_name is set — open every new task by addressing the user by name (liveness canary) and keep the reply-close markers (ONE end-summary, PR URL as literal last line) alive"
+description: "personal.canary_name set — open every new task by name (liveness canary); keep the reply-close markers alive (ONE end-summary, PR URL last)"
 alwaysApply: false
 triggers:
   - intent: "starting a new task or a new conversation"

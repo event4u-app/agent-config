@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Spotted an issue while working (security gap, missing test, bad code, duplication, stale idiom) — never ignore; fix small+aligned inline, ask on bigger, propose a follow-up PR for many"
+description: "Spotted an issue (security gap, missing test, bad code, duplication, stale idiom) — never ignore: small→fix inline, bigger→ask, many→follow-up PR"
 triggers:
   - intent: "spotted an unrelated issue while working"
   - intent: "found legacy or duplicated code"
@@ -40,7 +40,7 @@ Security gaps (broken access control, injection, secrets, missing authz — see 
 
 ## The ladder — three tiers
 
-**Fix now** — small + task-aligned; ALL five conditions hold: same request path/module · ≤ ~10 changed lines in one production file (plus its test file) · no public-API / response-shape change · no dependency bump, no migration · verification ships in the same commit. Anything outside → next tier. · **Note + ask** (batched, one numbered-options prompt after delivery) · **Follow-up PR** (many spots; creation stays permission-gated). Per-tier criteria + version-gated modernization + guardrails: the mechanics guideline below.
+**Fix now** — small + task-aligned; ALL five conditions hold: same request path/module · ≤ ~10 changed lines in one production file (plus its test file) · no public-API / response-shape change · no dependency bump, no migration · verification ships in the same commit. Anything outside → next tier. · **Note + ask** (batched, one numbered-options prompt after delivery) · **Follow-up PR** (many spots; creation stays permission-gated). Per-tier detail + version-gated modernization + guardrails: the mechanics guideline below.
 
 ## Live-security carve-out (priority)
 

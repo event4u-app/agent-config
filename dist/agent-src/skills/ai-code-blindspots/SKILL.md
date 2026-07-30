@@ -11,17 +11,17 @@ packs:
 
 # ai-code-blindspots
 
-AI writes the code the prompt literally asked for and stops. The controls a senior adds from unstated context — authorization, tenant scope, validation, transactions, encryption, rate limiting, output encoding, error handling, edge cases, package existence — are *invisible* to a single-file prompt, so they're the first thing dropped. They're also the classes pattern-linters miss. This skill is the pre-ship checklist: for the surface you wrote, assert the matching control is present, run the backstop grep, route to the deep skill when it needs more than a check.
+AI writes the code the prompt literally asked for and stops. The controls a senior adds from unstated context — authorization, tenant scope, validation, transactions, encryption, rate limiting, output encoding, error handling, edge cases, package existence — are *invisible* to a single-file prompt, so they are the first thing dropped. They are also the classes pattern-linters miss. This skill is the pre-ship checklist: for the surface you just wrote, assert the matching control is present, run the backstop grep, and route to the deep skill when it needs more than a check.
 
-A **routing + verification** layer — doesn't re-teach what the deep skills own. The "did I supply the invisible controls?" gate `senior-engineering-discipline` points at.
+This is a **routing + verification** layer — it does not re-teach what the deep skills own. It is the "did I supply the invisible controls?" gate that `senior-engineering-discipline` points at.
 
 ## When to use
 
-- You wrote (or are finishing) an endpoint, query, migration, UI render, file/network op, infra resource, dependency change, or test — before calling it done.
-- Reviewing an AI-authored diff, asking "what did it silently omit?".
-- The `senior-engineering-discipline` rule fired and routed here.
+- You have written (or are about to finish) an endpoint, query, migration, UI render, file/network op, infra resource, dependency change, or test — before you call it done.
+- Reviewing an AI-authored diff and asking "what did it silently omit?".
+- The `senior-engineering-discipline` rule fired and routed you here.
 
-Do NOT use when: change is prose/docs/config-only, or a one-line rename — no code surface to check.
+Do NOT use when: the change is prose/docs/config-only, or a one-line rename — there is no code surface to check.
 
 ## The Iron Law
 
@@ -40,19 +40,19 @@ A CONTROL DEFINED BUT NOT WIRED IS ABSENT. A grep IS CHEAPER THAN A BREACH.
 
 ## Surface → invisible controls → backstop
 
-Run the row(s) for what you touched. The grep is a fast authoring-time backstop (not a substitute for reading the code); zero results = pass, a hit = look.
+Run the row(s) for what you touched. The grep is a fast authoring-time backstop (not a substitute for reading the code); zero results is the pass, a hit is a prompt to look.
 
 | Surface you wrote | Invisible controls to assert | Deep skill |
 |---|---|---|
-| **HTTP endpoint / route** | authorization (this principal may act on this resource — not just authenticated); tenant scope; **the three negative tests** (unauth→401, non-owner→403/404, cross-tenant→403/404); boundary input validation; rate limit actually wired; state-changing → CSRF + audit | `broken-access-control`, `authz-review`, `threat-modeling` |
+| **HTTP endpoint / route** | authorization (this principal may act on this resource — not just authenticated); tenant scope; **the three negative tests** (unauth→401, non-owner→403/404, cross-tenant→403/404); input validation at the boundary; rate limit actually wired; state-changing → CSRF + audit log | `broken-access-control`, `authz-review`, `threat-modeling` |
 | **DB query / ORM** | parameterized, never string-built; tenant predicate present; no `SELECT *` across a serialization boundary; N+1 avoided (eager load) | `source-discovery`, `security` |
 | **Migration** | reversible (`down`); expand-contract for drop/rename (never a bare `DROP COLUMN` before code stops reading it); transaction; index on new FK/filter column | `engineering-safety-floor`, `migration-architect` |
 | **User-controlled render (FE)** | output-encoded; no `dangerouslySetInnerHTML`/`v-html`/`innerHTML`/`eval` on non-constant input; no secret/token in client code; token not in `localStorage` | `frontend-render-security` |
-| **File / outbound fetch** | path confined to an allowed base; SSRF allow-list + private-IP block on user-supplied URLs; size limit; **explicit timeout** (no unbounded wait); server-side validation (never client-only) | `security`, `defense-in-depth` |
+| **File / outbound fetch** | path confined to an allowed base; SSRF allow-list + private-IP block on user-supplied URLs; size limit; **explicit timeout** (no unbounded/default-infinite wait); server-side validation (never client-only) | `security`, `defense-in-depth` |
 | **Infra / IaC** | least-privilege (no `Action:*`/`Resource:*`); encryption at rest; no `0.0.0.0/0` to mgmt/DB ports; no hardcoded creds; scanner-verified, not `plan`-verified | `engineering-safety-floor`, `terraform`, `secrets-management` |
-| **New dependency** | exists on the real registry (not hallucinated); not typo-adjacent to a popular one; pinned + lockfile committed; CVE-scanned | `supply-chain-intake`, `dependency-upgrade` |
+| **New dependency** | package exists on the real registry (not hallucinated); not typo-adjacent to a popular one; pinned + lockfile committed; CVE-scanned | `supply-chain-intake`, `dependency-upgrade` |
 | **Secrets/credentials** | never a literal in source; env / secret-manager reference; password columns use bcrypt/argon2, never MD5/SHA; **agent/MCP config too** — no raw key in `.mcp.json` / agent-config / CI YAML / a committed `.env` (env-var indirection, gitignored) | `secrets-management`, `domain-safety-pii` |
-| **Error path / timeout / retry** | failure handled, never silently swallowed (no empty `catch {}`); external call has a bounded timeout; retry capped + backed-off + idempotent (no retry storm); error surfaced to the caller carries no secret / stack / PII; partial failure leaves consistent state (no half-written record) | `systematic-debugging`, `defense-in-depth` |
+| **Error path / timeout / retry** | failure handled, never silently swallowed (no empty `catch {}`); external call has a bounded timeout; retry is capped + backed-off + idempotent (no retry storm); the error surfaced to the caller carries no secret / stack / PII; a partial failure leaves consistent state (no half-written record) | `systematic-debugging`, `defense-in-depth` |
 | **Concurrency / shared state** | check-then-act guarded (DB lock / atomic op / transaction — not a read-modify-write race); retried write carries an idempotency key; no unbounded parallel fan-out; shared mutable state synchronized | `source-discovery`, `security` |
 | **Test** | asserts general behavior; expected derived from inputs/seeded data, not hardcoded; boundary + error + abuse cases, not only happy path | `testing-anti-patterns`, `test-driven-development` |
 
@@ -74,25 +74,25 @@ rg -n '(sk_live_|sk-[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16}|ghp_[0-9A-Za-z]{36}|AIza[0-
 rg -n 'catch\s*\([^)]*\)\s*\{\s*\}|except[^:]*:\s*pass' .
 ```
 
-The greps name several ecosystems side by side on purpose: keep the ones for the stack in front of you; a hit means read that line, not auto-fix.
+Stack-specific patterns (the greps name several ecosystems side by side on purpose): keep the ones for the stack in front of you; a hit means read that line, not auto-fix.
 
 ## Output format
 
-1. A one-line per-surface confirmation for the change, e.g. `endpoint: authz ✓ tenant-scope ✓ rate-limit wired ✓ validation ✓`, naming file:line where each control lives (or `n/a — <reason>`).
-2. The backstop grep(s) run for the touched surface(s), with result (zero hits, or the hit + how resolved).
-3. For any control genuinely out of scope, an explicit note saying so — never a silent omission.
+1. A one-line per-surface confirmation for the change, e.g. `endpoint: authz ✓ tenant-scope ✓ rate-limit wired ✓ validation ✓`, naming the file:line where each control lives (or `n/a — <reason>`).
+2. The backstop grep(s) run for the touched surface(s), with their result (zero hits, or the hit + how it was resolved).
+3. For any control that is genuinely out of scope, an explicit note saying so — never a silent omission.
 
 ## Gotcha
 
-- **Defined-but-not-wired** is the signature AI failure: rate-limit middleware or CSRF guard is *written* but never attached to the route. Check is "wired on THIS path?", not "exists somewhere?".
-- **Semantically-valid-but-ignored**: an IaC attribute the provider silently ignores (a made-up `encrypted = true` on a resource that doesn't support it) *reads* as a present control but does nothing — a scanner catches it, a code read doesn't.
-- A green grep is necessary, not sufficient — proves the obvious anti-pattern absent, not that the control is correct. Read the seam for anything security-sensitive.
-- Routes; doesn't replace the deep skill. For auth/billing/tenant/secret paths, `security-sensitive-stop` still requires a threat pass *before* editing.
+- **Defined-but-not-wired** is the signature AI failure: the rate-limit middleware or CSRF guard is *written* but never attached to the route. The check is "is it wired on THIS path?", not "does the code exist somewhere?".
+- **Semantically-valid-but-ignored**: an IaC attribute that the provider silently ignores (a made-up `encrypted = true` on a resource that doesn't support it) *reads* as a present control but does nothing — a scanner catches it, a code read does not.
+- A green grep is necessary, not sufficient — it proves the obvious anti-pattern is absent, not that the control is correct. Read the seam for anything security-sensitive.
+- This checklist routes; it does not replace the deep skill. For an auth/billing/tenant/secret path, `security-sensitive-stop` still requires a threat pass *before* editing.
 - **Run it per surface, not once at the end.** In a multi-file / agentic change the omission compounds — each new endpoint, query, or fetch is its own blind spot. Re-run the matching row when each surface lands, not as a single sweep after the whole feature is "done" (by then the missing control is buried under later diffs).
 
 ## Do NOT
 
-- Do NOT treat "the prompt didn't ask for it" as a reason to omit a control — that's the exact blind spot.
+- Do NOT treat "the prompt didn't ask for it" as a reason to omit a control — that is the exact blind spot.
 - Do NOT mark a change done on a green happy-path test alone.
 - Do NOT auto-rewrite a grep hit without reading it — some are intentional and belong in an allow-list with a reason.
 - Do NOT duplicate the deep skills here — route to them.

@@ -53,7 +53,7 @@ or `auto`-after-opt-in, act on them.
 - "Should we commit now or after the next change?" — answered by the
   commit-default in [`commit-policy`](../../rules/commit-policy.md), no need to ask.
 - "How should I split the commits?" — never asked; either you are
-  invoked via `/commit-in-chunks` (split and commit) or you are not
+  invoked via `/commit:in-chunks` (split and commit) or you are not
   (don't commit at all).
 - "Should I run the linter / tests now or after the change?" — run
   what [`verify-before-complete`](../../rules/verify-before-complete.md)

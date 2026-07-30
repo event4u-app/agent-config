@@ -42,13 +42,18 @@ Do NOT use when:
 
 ### 0. False-positive gate — restate the claim before reporting
 
-Before any finding enters report, restate as one falsifiable sentence naming all three:
+Before any finding enters the report, restate it as one falsifiable sentence
+naming all three of:
 
-1. **Privilege level** — access attacker already has (anonymous, authenticated user, tenant admin, CI runner).
-2. **Execution context** — where vulnerable code runs (request handler, queue worker, sandboxed template, build step).
-3. **Attacker precondition** — concrete state or input attacker must control to trigger it.
+1. **Privilege level** — what access the attacker already has (anonymous,
+   authenticated user, tenant admin, CI runner).
+2. **Execution context** — where the vulnerable code runs (request handler,
+   queue worker, sandboxed template, build step).
+3. **Attacker precondition** — the concrete state or input the attacker must
+   control to trigger it.
 
-Any of the three not concretely nameable → **not a finding yet** — trace further or drop with one-line reason.
+If any of the three cannot be named concretely, the item is **not a finding
+yet** — trace further or drop it with a one-line reason.
 
 **Rationalizations to Reject:**
 
@@ -61,8 +66,14 @@ Any of the three not concretely nameable → **not a finding yet** — trace fur
 
 **Standard vs. Deep verification routing:**
 
-- **Standard** — traced data flow + all three claim elements named → report with normal field list.
-- **Deep** — severity High/Critical, OR precondition chain crosses trust boundary you did not trace → devil's-advocate pass first: actively try to refute finding (existing middleware? framework default? type system? config?). Report only what survives; killed findings listed one-line under *Rejected candidates* so triage is auditable.
+- **Standard** — traced data flow + all three claim elements named → report
+  with the normal field list.
+- **Deep** — severity would be High/Critical, OR the precondition chain
+  crosses a trust boundary you did not personally trace → run a
+  devil's-advocate pass first: actively try to refute the finding (existing
+  middleware? framework default? type system? config?). Report only what
+  survives; findings the pass killed are listed one-line under
+  *Rejected candidates* so the triage is auditable.
 
 ### 1. Map attack surface
 
@@ -104,7 +115,10 @@ User Input → Controller → Validation → Service → DB/File/External
 | **Header injection** | User input in response headers, email headers |
 | **Insecure defaults / fail-open** | Guards that allow on error (`catch { return true }` in an authz check), default-allow matchers, debug mode defaulting on, permissive CORS/`verify=false` fallbacks, feature flags whose missing value grants access |
 
-Worked example (fail-open): `if (!$gate->check($user)) { … }` wrapped in `try/catch` that logs and **continues** fails open — exception in gate grants access. Finding shape: Category *Insecure defaults*, Evidence the catch block `file:line`, Fix *fail closed — rethrow or deny on gate error*.
+Worked example (fail-open): `if (!$gate->check($user)) { … }` wrapped in a
+`try/catch` that logs and **continues** fails open — an exception in the gate
+grants access. Finding shape: Category *Insecure defaults*, Evidence the
+catch block `file:line`, Fix *fail closed — rethrow or deny on gate error*.
 
 ### 4. Framework-specific checks
 
@@ -135,7 +149,10 @@ For each vulnerability:
 - **Fix:** concrete mitigation
 - **Confidence:** Low / Medium / High
 
-After findings, add **Rejected candidates** section: one line per look-dangerous-but-benign pattern the Step-0 gate killed, with traced reason ("raw SQL string is a static migration constant — no user input reaches it"). Audit that rejects nothing has usually skipped the gate.
+After the findings, add a **Rejected candidates** section: one line per
+look-dangerous-but-benign pattern the Step-0 gate killed, with the traced
+reason ("raw SQL string is a static migration constant — no user input
+reaches it"). An audit that rejects nothing has usually skipped the gate.
 
 ## Integration with other skills
 

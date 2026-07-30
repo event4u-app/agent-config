@@ -29,8 +29,8 @@ Do NOT use when:
 
 **Inbound delegation:** [`decision-record`](../decision-record/SKILL.md)
 § Weighted-matrix mode delegates a scoped attack here after the weighted
-sums ("attack the winner, using the losing options' strongest criteria") —
-treat the matrix + sensitivity block as the artifact under review.
+sums ("attack the winner, using the losing options' strongest criteria")
+— treat the matrix + sensitivity block as the artifact under review.
 
 ## Procedure: Adversarial review
 

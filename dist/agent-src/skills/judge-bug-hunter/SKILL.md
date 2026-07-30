@@ -72,9 +72,19 @@ not reviewable — flag it and stop.
 
 ### 4. False-positive gate — restate before you flag
 
-Before an issue enters the verdict, restate as one falsifiable sentence naming the concrete input or state that triggers it + wrong behavior that follows. Issue whose trigger you cannot name from the diff is not a finding — drop it (or return `revise` asking for missing context, never a speculative flag).
+Before an issue enters the verdict, restate it as one falsifiable sentence
+naming the concrete input or state that triggers it and the wrong behavior
+that follows. An issue whose trigger you cannot name from the diff is not a
+finding — drop it (or return `revise` asking for the missing context, never
+a speculative flag).
 
-For 🔴 findings, run devil's-advocate pass before finalizing: actively try to refute (guard upstream in same diff? caller already validates? branch unreachable for claimed input?). Models systematically overrate severity — a 🔴 that survives refutation is credible; one never challenged is noise. Reject rationalizations "it looks wrong" (pattern-recognition is not analysis) and "flag it just in case" (over-reporting erodes the verdict's trust).
+For 🔴 findings, run a devil's-advocate pass before finalizing: actively try
+to refute the issue (guard upstream in the same diff? caller already
+validates? branch unreachable for the claimed input?). Models systematically
+overrate severity — a 🔴 that survives refutation is credible; one that was
+never challenged is noise. Reject the rationalizations "it looks wrong"
+(pattern-recognition is not analysis) and "flag it just in case"
+(over-reporting erodes the verdict's trust).
 
 ### 5. Verdict
 
@@ -125,8 +135,10 @@ Required fields (ordered):
    omit only when verdict is `apply`
 
 If a finding needs runtime confirmation, note it as a follow-up for
-the implementer (e.g. "run pest/phpunit on the new branch" or "curl
-the endpoint with an empty body") — the judge does not execute tools.
+the implementer with the concrete probe — backend: `curl` or
+`pest`/`phpunit` against the route; frontend: a Playwright spec, a
+`livewire test`, or a browser `screenshot` of the affected component.
+The judge itself never executes tools.
 
 ## Gotcha
 

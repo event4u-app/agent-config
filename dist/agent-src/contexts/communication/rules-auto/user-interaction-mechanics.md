@@ -180,6 +180,17 @@ When processing multiple items (e.g., review comments, test failures), show prog
 **Comment 3/7** — `filename.php:42`
 ```
 
+## Bullet floor
+
+Multi-step content earns bullets; each bullet is a complete 1–2-sentence
+statement, never a fragment masquerading as a list item ("Faster." /
+"Better UX." with no subject or verb). A decline or refusal is **never**
+rendered as a bulleted list of reasons — declines are short prose (one or
+two sentences), because a bulleted refusal reads as a checklist to argue
+against rather than a direct answer.
+
+Full example set: [`asking-and-brevity-examples § Bullet floor`](../../../../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#bullet-floor).
+
 ## Summaries
 
 After completing a batch of actions, provide a summary table:

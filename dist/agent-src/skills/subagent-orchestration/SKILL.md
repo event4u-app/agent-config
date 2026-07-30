@@ -213,13 +213,13 @@ cross-*vendor* skeptics. Invariants, skeptic prompt, reconciliation, prove-or-dr
 gate → [`subagent-modes-detail`](../../agent-src/contexts/execution/subagent-modes-detail.md) § Mode 9
 + [`prompts/adversarial-verification-council.md`](prompts/adversarial-verification-council.md)
 
-> **Disposition (2026-07-28, honest null).** Adversarial-council
-> finding-coverage benchmark resolved as published null (`docs/benchmark.md`)
-> — mode NOT sold as defect-detection capability. Stays default-off bound to
-> that null; removal at next major unless external evidence (consumer-filed
-> case where the panel surfaced a real defect the single verifier missed)
-> appears first. Remaining honest value: perspective diversity + decision
-> documentation, nothing more.
+> **Disposition (2026-07-28, honest null).** The adversarial-council finding-
+> coverage benchmark resolved as a published null (see `docs/benchmark.md`) —
+> this mode is NOT sold as a defect-detection capability. It stays default-off
+> bound to that null; scheduled for removal at the next major unless external
+> evidence (a consumer-filed case where the panel surfaced a real defect the
+> single verifier missed) appears first. Its remaining honest value is
+> perspective diversity + decision documentation, nothing more.
 (ADR-122).
 
 ## Status taxonomy — every subagent return uses one envelope
@@ -355,6 +355,6 @@ Skip emit when `subagents.enabled: false` or `spawn_count == 0`
 | Stepwise plan with judge gates       | Inline — see [`prompts/do-in-steps.md`](prompts/do-in-steps.md) |
 | Standalone judge on an existing diff | Inline — see judge prompt in [`prompts/do-and-judge.md`](prompts/do-and-judge.md) |
 | External / networked second opinion  | [`ai-council`](../ai-council/SKILL.md) |
-| Cross-model review WITH repo access   | [`/team`](../../commands/team.md) (collaborative; subagents are in-session same-weights) |
+| Cross-model review WITH repo access   | [`/team`](../../domains/meta/team/command.md) (collaborative; subagents are in-session same-weights) |
 | Verifying completeness               | [`verify-before-complete`](../verify-before-complete/SKILL.md) |
 | What a subagent owns vs never owns   | [`subagent-boundary`](../../../docs/contracts/subagent-boundary.md) |

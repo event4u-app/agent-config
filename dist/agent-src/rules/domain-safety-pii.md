@@ -91,7 +91,7 @@ EVER REACHES THE LOG STREAM. ALLOWLISTED STRUCTURED FIELDS ONLY.
 Required patterns:
 
 1. **Allowlisted structured fields only.** Log `user_id`, `tenant_id`, `request_id`, `event_type` — never `user` or `request` blobs.
-2. **PII-exclusion-by-construction (preferred over redaction).** Make the log/event **type physically incapable** of holding free-form content — struct of allowlisted scalars, no `payload`/`body`/`extra: any`. A type that cannot carry a phone number has no scrubber to fail; redaction (next) is the fallback when a content field is unavoidable.
+2. **PII-exclusion-by-construction (preferred over redaction).** Where possible, make the log/event **type physically incapable** of holding free-form content — a struct of allowlisted scalar fields, no `payload`/`body`/`extra: any`. A type that cannot carry a phone number has no scrubber to fail; redaction (next item) is the fallback when a content field is unavoidable, not the first line of defence.
 3. **Logger-level redaction.** Configure the logger to scrub `email`, `phone`, `name`, `address`, `token`, `password`, `card_number`, `iban` keys recursively from any payload.
 4. **No raw exception payloads.** Exceptions captured by Sentry / Bugsnag must scrub the request body via the SDK's `before_send` hook.
 5. **No log-and-forget for auth flows.** Login / password-reset / token-mint logs never include the credential itself, only the actor + outcome.

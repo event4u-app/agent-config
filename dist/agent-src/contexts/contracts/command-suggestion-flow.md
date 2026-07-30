@@ -100,6 +100,9 @@ journey that self-suggests; the sub-command is reached by routing from the head
 always works. This keeps the proactive surface to a few journeys, not one
 entry point per mode (9.4.0 review; `road-to-surface-consolidation`, council
 2026-07-20). Standalone commands (no `sub:`) and cluster heads may be eligible.
+Rationale: 160 eligible commands all competing to self-suggest IS the "190
+gleichwertig sichtbare Einstiegspunkte" the review flags; the sub-command flip
+collapses it without removing any command.
 
 ## Subordination — when to stay silent
 

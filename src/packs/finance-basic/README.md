@@ -13,7 +13,7 @@ Cashflow, runway, basic forecasting.
 ## Rules (2)
 
 - **`finance-safety-floor`** — Finance-pack output (runway, valuation, DCF, scenarios, unit economics) — never a final invest/raise call; disclosure footer
-- **`spreadsheet-source-quality`** — Financial data in a spreadsheet uses official sources first (IR, regulatory filings); aggregator/news/social figures need explicit permission + a cell-level unofficial mark
+- **`spreadsheet-source-quality`** — Spreadsheet financial data uses official sources (IR, regulatory filings); aggregator/news/social figures need permission + cell-level unofficial mark
 
 ## Skills (4)
 

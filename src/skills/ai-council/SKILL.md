@@ -337,6 +337,29 @@ DO NOT BLINDLY ACCEPT FINDINGS. DO NOT BLINDLY REJECT THEM.
 EVERY FINDING GETS A REASONED VERDICT BEFORE IT REACHES THE USER.
 ```
 
+### Mechanism claims need a probe, not a second opinion
+
+```
+A MECHANISM CLAIM IN A COUNCIL ARTEFACT IS MARKED `unverified:` UNTIL A PROBE COVERS IT.
+A VERDICT RESTING ON AN UNVERIFIED MECHANISM CLAIM DOES NOT BIND.
+SEVERAL MODELS AGREEING MULTIPLIES PLAUSIBILITY. IT DOES NOT PRODUCE EVIDENCE.
+```
+
+A **mechanism claim** asserts how the machine behaves: "this toggle removes the
+cost", "that gate scans X", "the host reads the router". The council deliberates
+over **arguments**, never against the running system — it cannot execute a command,
+so it has no way to falsify one. Marking such a claim `unverified:` in the artefact
+keeps the reader from mistaking a well-argued mechanism for a measured one, and the
+non-binding clause means the fix for a wrong claim is a probe, not a re-vote.
+
+**Case zero (2026-07-29).** An accepted ADR claimed a compile-time toggle gave
+"zero-cost dormancy" because the rule was dropped from `dist/router.json`. Two
+council members praised the reasoning; neither could check it. A one-line `grep`
+later showed the toggle was read by the router compiler and by **nothing in the
+projector**, so the rule's body kept shipping as a file — and the host reads the
+file. The claim was half wrong, the verdict that rested on it was void, and what
+caught it was a probe, not a third opinion.
+
 The council is **uninformed about the codebase, ADRs, locked
 contracts, prior decisions, and project history** — it sees only the
 artefact + neutrality preamble. That is the source of its diversity

@@ -109,16 +109,6 @@ After all fixes, re-run:
 ./scripts-run src/scripts/check_md_language <path> [<path> …]
 ```
 
-### 6. Mark hashes (only if `.agent-src.uncondensed/` was edited)
-
-For each modified source file:
-
-```bash
-./scripts-run src/scripts/condense --mark-done "{relative_path}"
-```
-
-This keeps `.condensation-hashes.json` consistent with the new content.
-
 ## Rules
 
 - **Never edit `.augment/` directly** — it's a generated projection.

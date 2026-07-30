@@ -17,7 +17,7 @@ packs:
 Use this skill when:
 
 * There is a concrete issue to explain
-* Multiple root → are plausible
+* Multiple root causes are plausible
 * The system spans several layers
 * A shallow single-explanation answer would be risky
 * `universal-project-analysis` or `bug-analyzer` routes here
@@ -33,7 +33,7 @@ Do NOT use when:
 * Never stop at the first plausible explanation
 * Code, docs, and evidence beat intuition
 * Rejected hypotheses matter
-* Multiple interacting → are common
+* Multiple interacting causes are common
 * Uncertainty must be marked explicitly
 
 ## Procedure
@@ -95,7 +95,7 @@ Ask:
 
 * does this fully explain the behavior?
 * what remains unexplained?
-* could multiple → interact?
+* could multiple causes interact?
 * does contradictory evidence exist?
 
 If anything major remains unexplained: continue analysis, do not present a final conclusion yet.
