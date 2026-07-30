@@ -109,7 +109,7 @@ export const UNLIMITED_TOKENS_FALLBACK = 16384;
 // OpenAI reasoning models (o1, o3, o4 families) reject `max_tokens` and the
 // `system` role; they require `max_completion_tokens` and accept only `user`
 // (and `developer`) messages.
-const _REASONING_PREFIXES: readonly string[] = ['o1', 'o3', 'o4'];
+const _REASONING_PREFIXES: readonly string[] = ['o1', 'o3', 'o4', 'gpt-5'];
 
 export function _is_reasoning_model(model: string): boolean {
     const name = model.toLowerCase();
