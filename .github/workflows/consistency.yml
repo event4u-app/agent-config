@@ -200,6 +200,23 @@ jobs:
         # `task ci`, which is why a +10.3% eager-rule drift went unseen for 23 days.
         run: task check-token-regression
 
+      - name: Lint workflow files (actionlint)
+        # PR #1059 shipped a step with two `run:` keys. GitHub rejects duplicate
+        # keys, so the whole REQUIRED Consistency check died on main — while the
+        # local `yaml.safe_load` validation reported OK, because safe_load keeps
+        # the last duplicate silently. actionlint catches that class before merge.
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
+      - name: Kernel-rule budget (bucket + per-rule caps)
+        # Wired here as the condition ADR-203 attaches to narrowing the
+        # safety-floor lock: the gate that DECIDES whether kernel rules must be
+        # edited may not stay local-only while the gate that BLOCKS those edits
+        # runs on every PR. Both council members required this, from opposite
+        # verdicts. It merges with the narrowing, never before it.
+        run: task lint-rule-budget
+
       - name: Check kernel-rule bundle (one rule per PR; label override)
         # Phase 4.2 of road-to-always-budget-relief — slow-rollout guarantee.
         # Override: PR label `bundled-always-rules-acknowledged`.
