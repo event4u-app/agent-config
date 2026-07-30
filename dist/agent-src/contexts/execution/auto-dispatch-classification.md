@@ -87,6 +87,33 @@ orchestration telemetry (statically pinned tiers record `"static"`;
 session-tier runs record `"inherit"`) so the evidence gate can score inferred
 routing separately from static pinning.
 
+## Dispatch-primitive output — fork vs. named subagent (road-to-cache-economy Phase 4)
+
+A third, ORTHOGONAL classifier output — independent of form and tier — on a
+host that exposes a fork primitive alongside named-subagent dispatch:
+
+```
+TOOL AND SCOPE FIT IS FIRST-ORDER. CACHE INHERITANCE IS SECOND-ORDER.
+NEVER "ALWAYS FORK" — THE BENEFIT CANNOT BE PREDICTED BEFORE THE FORK HAPPENS.
+```
+
+| Slice shape | `dispatch_primitive` |
+|---|---|
+| Continues the parent's task under IDENTICAL tools and constraints (no isolation need, no nested dispatch) | `fork` — its first request reads the parent's cache |
+| Needs isolation, a different tool set, or nested dispatch | `subagent` — a fork cannot nest and cannot change tools |
+| Ambiguous / host has no fork primitive | `subagent` — the only primitive this suite's `Agent`-tool dispatch uses today |
+
+A fork forces background mode, which changes the tool set and therefore
+invalidates the very prefix that motivated the fork — so a slice that would
+need a different tool set mid-flight is a `subagent` candidate even when it
+started as a fork candidate. This output never downgrades the form or tier
+decisions above; it only picks the primitive once a `parallel` / `steps` /
+`judge` form has already been selected. See
+[`subagent-orchestration/SKILL.md`](../../skills/subagent-orchestration/SKILL.md)
+§ Form gate and
+[`prompts/README.md`](../../skills/subagent-orchestration/prompts/README.md)
+§ Prompt-cache discipline for the full rationale.
+
 ## Lookup-class rung (L0 — road-to-lean-agent-init, BELOW the tiers)
 
 Before any spawn decision, a lookup-shaped task routes to a **deterministic

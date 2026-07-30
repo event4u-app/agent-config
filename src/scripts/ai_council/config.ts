@@ -380,6 +380,13 @@ export interface MemberConfig {
      * back to deterministic config order.
      */
     readonly tier: number | null;
+    /**
+     * Cache-control TTL tier for this member's Anthropic breakpoints
+     * (road-to-cache-economy Phase 4). `'5m'` is the permanent default —
+     * see `prompt_cache.ttl` in `docs/contracts/ai-council-config.md` for
+     * the falsification condition that gates ever enabling `'1h'`.
+     */
+    readonly prompt_cache_ttl: '5m' | '1h';
 }
 
 /**
@@ -1716,6 +1723,31 @@ function _build_member(
         }
         tier = tier_raw;
     }
+    // road-to-cache-economy Phase 4: `prompt_cache` stays accepted as a
+    // bare bool (the pre-existing, undocumented enable/disable form —
+    // untouched here) OR as a mapping carrying `ttl`. '5m' is the
+    // permanent default; see docs/contracts/ai-council-config.md
+    // § Prompt cache TTL for the falsification condition on '1h'.
+    const prompt_cache_raw = _get(cfg, 'prompt_cache', null);
+    let prompt_cache_ttl: '5m' | '1h' = '5m';
+    if (prompt_cache_raw !== null && prompt_cache_raw !== undefined && !_isBool(prompt_cache_raw)) {
+        if (!_isDict(prompt_cache_raw)) {
+            throw new CouncilConfigError(
+                `members.${name}.prompt_cache must be a bool or a mapping ` +
+                    `(got ${_pyTypeName(prompt_cache_raw)}).`,
+            );
+        }
+        const ttl_raw = _get(prompt_cache_raw, 'ttl', '5m');
+        if (ttl_raw !== '5m' && ttl_raw !== '1h') {
+            throw new CouncilConfigError(
+                `members.${name}.prompt_cache.ttl must be '5m' or '1h' (got ` +
+                    `${_pyRepr(ttl_raw)}). '5m' remains the default until a ` +
+                    `pre-registered 30-debate gap sample clears 40% at ` +
+                    `>=5-minute inter-round gaps.`,
+            );
+        }
+        prompt_cache_ttl = ttl_raw;
+    }
     return {
         name,
         enabled: member_enabled,
@@ -1726,6 +1758,7 @@ function _build_member(
         model_ladder: ladder,
         participate_low_impact: participate_raw,
         tier,
+        prompt_cache_ttl,
     };
 }
 

@@ -51,6 +51,19 @@ const _USER_CONTENT_KEYS = new Set<string>([
     'submitted_prompt', 'submittedprompt',
     // Free-form transcript bodies (path stays — content is in another file)
     'transcript', 'transcript_text',
+    // Additive hardening (road-to-global-user-memory Phase 3, 2026-07-30):
+    // the global observation buffer's project-attribution footer
+    // (`user_global_observations.ts`'s `context.project_path` /
+    // `context.project_name` / `seen_in`) is a partial project map by
+    // design (see agents/settings/contexts/global-user-memory-cut.md § the
+    // replacement's own metadata surface) — if any tool call ever passes an
+    // observation object through as an argument, a hook capture of that
+    // call must not preserve these keys the way `_ENVELOPE_KEYS_KEEP`
+    // preserves genuinely structural fields like `cwd`. Reusing this file's
+    // existing key-name match (not a second redactor) mirrors the ADR-103
+    // hidden_unicode precedent: additive, and inputs without these keys are
+    // unaffected.
+    'seen_in', 'project_path', 'project_name',
 ]);
 
 // Keys whose value is a structural / schema marker — keep as-is even when

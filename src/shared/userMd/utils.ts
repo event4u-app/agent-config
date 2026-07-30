@@ -89,3 +89,34 @@ export function parseLegacyUserMd(body: string): Record<string, unknown> {
     }
     return data;
 }
+
+/**
+ * Compose a legacy `.agent-user.md` body (fenced YAML frontmatter + a body
+ * tail) from a plain object — the write-side counterpart to
+ * `parseLegacyUserMd`. Used by
+ * `agent_user_profile.applyObservationToGlobalProfile` (road-to-global-user-memory
+ * Phase 2) to write the accepted-observation profile back in the same shape
+ * it was read in.
+ *
+ * `notes` renders as the body tail verbatim, WITHOUT an added `# Notes`
+ * heading — `parseLegacyUserMd` captures everything after the closing fence
+ * as `notes` as-is (it does not strip a heading back out), so adding one
+ * here would not round-trip: re-parsing the composed file would return
+ * `"# Notes\n\n<text>"` instead of `<text>`. (The convention of putting a
+ * literal `# Notes` heading in a hand-authored `.agent-user.md` — see
+ * `docs/examples/agent-user.example.md` — is an authoring style, not a
+ * structural marker the parser recognises; a file authored that way simply
+ * has that heading as the leading line of ITS `notes` value.) Every other
+ * key stays in the frontmatter block, in block style (matches
+ * `composeUserIdentity`'s diff-friendliness rationale).
+ *
+ * Drop alongside `parseLegacyUserMd` once `.agent-user.md`-shaped files are
+ * no longer in circulation.
+ */
+export function composeLegacyUserMd(data: Record<string, unknown>): string {
+    const { notes, ...frontmatter } = data;
+    const yamlBody = yaml.dump(frontmatter, { flowLevel: -1, lineWidth: -1, noRefs: true });
+    const notesText = typeof notes === 'string' ? notes.trim() : '';
+    const notesSection = notesText === '' ? '' : `\n${notesText}\n`;
+    return `---\n${yamlBody}---\n${notesSection}`;
+}

@@ -212,6 +212,12 @@ members:
     # members 2..N in a round (and round-2+ within the 5-min TTL) read
     # it at ~0.1x input cost. Kill-switch — uncomment to disable:
     # prompt_cache: false
+    # Phase 4 (road-to-cache-economy) — TTL tier for both breakpoints.
+    # '5m' is the permanent default; do NOT set '1h' without first
+    # confirming the falsification condition in
+    # docs/contracts/ai-council-config.md § prompt_cache.ttl.
+    # prompt_cache:
+    #   ttl: 5m
     # Phase 11 — opt this member in to the lightweight-QA fast-path.
     # Only opted-in members run when a `low_impact` question routes
     # to `council`. Defaults to false; flipping requires explicit

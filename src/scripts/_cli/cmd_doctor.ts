@@ -31,7 +31,7 @@
  * offline-readiness · python-runtime · humanizer-runtime · tier-usage-readiness ·
  * council-cli · team ·
  * unsupported-combos · wizard-state · settings-review-pending ·
- * memory-merge-union.
+ * memory-merge-union · duplicate-scope-rules.
  * Each emits a structured `{id, status, message, remedy}` record with
  * `status` ∈ `ok` / `warn` / `fail` / `skipped` (rendered
  * `✅` / `⚠️` / `❌` / `⏭️`). `--check <id>` runs a single check.
@@ -89,6 +89,7 @@ import * as installed_lock from '../_lib/installed_lock.js';
 import * as installed_tools from '../_lib/installed_tools.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import * as global_deploy_inventory from '../_lib/global_deploy_inventory.js';
+import { censusDuplicateScope } from '../_lib/duplicate_scope_census.js';
 import * as sync_gitattributes from '../sync_gitattributes.js';
 import {
     PROJECT_ROOT_ENV,
@@ -762,6 +763,7 @@ const CHECK_IDS = [
     'wizard-state',
     'settings-review-pending',
     'memory-merge-union',
+    'duplicate-scope-rules',
 ] as const;
 
 /** Checks that need only the project root and run regardless of a lockfile. */
@@ -786,6 +788,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'wizard-state',
     'settings-review-pending',
     'memory-merge-union',
+    'duplicate-scope-rules',
 ]);
 
 /** Checks that genuinely cannot run without the project manifest. */
@@ -1736,6 +1739,76 @@ function _check_rule_scope_drift(project_root: string): Dict {
         remedy:
             're-run `agent-config init --project` (or `agent-config global`) to re-project rules ' +
             'under the current scope — these are leftover from a pre-9.0 full/global projection',
+    };
+}
+
+/**
+ * Duplicate-scope rule detection (road-to-cache-economy Phase 3, C-2 —
+ * confirmed at 38.5% of subagent write volume on this maintainer's own
+ * checkout). When the same `.md` rule filenames are installed at BOTH the
+ * user-scope Claude Code config (`~/.claude/rules`) and the project scope,
+ * every session AND every subagent spawn injects two near-identical copies
+ * of the same rule set. This check is DETECTION ONLY: it reports the
+ * measured redundant-token estimate and names which copy is authoritative —
+ * it never deletes, rewrites, or otherwise touches a user's files (per
+ * `non-destructive-by-default`).
+ *
+ * Project scope resolves the same way the census in
+ * `cache_realization_report.ts` does: `dist/agent-src/rules` in this
+ * source repo itself (the only place the ~37% finding was measured), or the
+ * first populated {@link _RULE_PROJECTION_DIRS} entry in a consumer install.
+ * `userRulesDirOverride` exists solely so tests never touch the real
+ * `~/.claude/rules` on the machine running the suite.
+ */
+function _check_duplicate_scope_rules(project_root: string, userRulesDirOverride?: string): Dict {
+    const user_rules_dir = userRulesDirOverride ?? path.join(os.homedir(), '.claude', 'rules');
+
+    let project_rules_dir: string | null = null;
+    if (_is_source_repo(project_root)) {
+        const cand = path.join(project_root, 'dist', 'agent-src', 'rules');
+        if (isDir(cand)) project_rules_dir = cand;
+    } else {
+        for (const rel of _RULE_PROJECTION_DIRS) {
+            const cand = path.join(project_root, rel);
+            if (isDir(cand)) {
+                project_rules_dir = cand;
+                break;
+            }
+        }
+    }
+
+    if (project_rules_dir === null) {
+        return {
+            id: 'duplicate-scope-rules',
+            status: 'skipped',
+            message: 'no project-scope rule tree found (dist/agent-src/rules, .augment/rules, …) — nothing to compare against the user-scope copy',
+            remedy: '',
+        };
+    }
+
+    const census = censusDuplicateScope(user_rules_dir, project_rules_dir);
+    if (!census.evaluable) {
+        return {
+            id: 'duplicate-scope-rules',
+            status: 'ok',
+            message: census.reason ?? 'no duplicate-scope rule install detected',
+            remedy: '',
+        };
+    }
+
+    const tokens = Math.round(census.duplicate_chars / 4);
+    const rel_project = relativeTo(project_rules_dir, project_root) ?? project_rules_dir;
+    return {
+        id: 'duplicate-scope-rules',
+        status: 'warn',
+        message:
+            `${census.shared_filenames.length} rule(s) installed at BOTH user scope (${user_rules_dir}) and ` +
+            `project scope (${rel_project}) — an estimated ${tokens} redundant tokens are injected on every ` +
+            'session AND every subagent spawn (both copies are always-loaded). Project scope is authoritative ' +
+            'for this checkout.',
+        remedy:
+            'detection only — no file is modified. If the duplication is unwanted, refresh the user-scope copy ' +
+            '(e.g. `agent-config global`) to re-sync it with the project-scope version.',
     };
 }
 
@@ -2751,6 +2824,7 @@ function _run_checks(
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
         'memory-merge-union': () => _check_memory_merge_union(project_root),
+        'duplicate-scope-rules': () => _check_duplicate_scope_rules(project_root),
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
@@ -2826,6 +2900,7 @@ function _run_checks_no_manifest(
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
         'memory-merge-union': () => _check_memory_merge_union(project_root),
+        'duplicate-scope-rules': () => _check_duplicate_scope_rules(project_root),
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
@@ -3308,6 +3383,7 @@ export {
     _check_offline_readiness,
     _check_stale_orphans,
     _check_rule_scope_drift,
+    _check_duplicate_scope_rules,
     _check_python_runtime,
     _check_humanizer_runtime,
     _check_mcp_beta_readiness,

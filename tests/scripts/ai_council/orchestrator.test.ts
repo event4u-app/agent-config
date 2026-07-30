@@ -305,6 +305,79 @@ describe('orchestrator — run_debate', () => {
         const rounds = run_debate(members, q, { max_rounds: 3, on_continue: () => false });
         expect(rounds.length).toBe(1);
     });
+
+    // road-to-cache-economy Phase 4 — inter-round cache-gap measurement.
+    // The gap approximates the wall-clock time between the previous round's
+    // cache WRITE (≈ when it finished) and this round's cache READ attempt
+    // (≈ when it starts). An injectable clock avoids a real multi-minute
+    // sleep while still exercising the real dispatch loop.
+    function scriptedClock(values: readonly number[]): () => number {
+        let i = 0;
+        return () => {
+            const v = values[Math.min(i, values.length - 1)] as number;
+            i += 1;
+            return v;
+        };
+    }
+
+    it('on_round_complete receives null on round 1 (nothing written yet) and a real gap on round 2', () => {
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'topic' });
+        const members = [new Mock('anthropic', 'claude-sonnet-4-5', { text: 'a' }), new Mock('openai', 'gpt-4o', { text: 'b' })];
+        const gaps: Array<number | null | undefined> = [];
+        // round1 start=0, round1 end=1_000, round2 start=6_000 (gap=5_000), round2 end=7_000.
+        run_debate(members, q, {
+            max_rounds: 2,
+            now: scriptedClock([0, 1_000, 6_000, 7_000]),
+            on_round_complete: (_round_number, _responses, gap) => {
+                gaps.push(gap);
+            },
+        });
+        expect(gaps).toEqual([null, 5_000]);
+    });
+
+    it('two runs — rounds seconds apart vs a >5-minute gap — produce different recorded gaps', () => {
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'topic' });
+        const runWithRound2StartAt = (round2StartMs: number): number | null | undefined => {
+            const members = [
+                new Mock('anthropic', 'claude-sonnet-4-5', { text: 'a' }),
+                new Mock('openai', 'gpt-4o', { text: 'b' }),
+            ];
+            let captured: number | null | undefined;
+            run_debate(members, q, {
+                max_rounds: 2,
+                now: scriptedClock([0, 1_000, round2StartMs, round2StartMs + 1_000]),
+                on_round_complete: (round_number, _responses, gap) => {
+                    if (round_number === 2) {
+                        captured = gap;
+                    }
+                },
+            });
+            return captured;
+        };
+        const secondsApartGapMs = runWithRound2StartAt(6_000); // 5s after round 1 ended
+        const overFiveMinuteGapMs = runWithRound2StartAt(400_000); // ~6.65min after round 1 ended
+        const fiveMinutesMs = 5 * 60 * 1000;
+        expect(secondsApartGapMs).toBe(5_000);
+        expect(overFiveMinuteGapMs).toBe(399_000);
+        expect(secondsApartGapMs as number).toBeLessThan(fiveMinutesMs);
+        expect(overFiveMinuteGapMs as number).toBeGreaterThan(fiveMinutesMs);
+        expect(secondsApartGapMs).not.toBe(overFiveMinuteGapMs);
+    });
+
+    it('a caller declaring only (round_number, responses) keeps working — the third arg is additive', () => {
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'topic' });
+        const members = [new Mock('anthropic', 'claude-sonnet-4-5', { text: 'a' }), new Mock('openai', 'gpt-4o', { text: 'b' })];
+        const seen: number[] = [];
+        const rounds = run_debate(members, q, {
+            max_rounds: 2,
+            on_round_complete: (round_number: number, responses: CouncilResponse[]) => {
+                seen.push(round_number);
+                expect(responses.length).toBe(2);
+            },
+        });
+        expect(seen).toEqual([1, 2]);
+        expect(rounds.length).toBe(2);
+    });
 });
 
 describe('orchestrator — run_peer_review', () => {
