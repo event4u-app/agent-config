@@ -6,12 +6,13 @@
  * augment.rules_use_symlinks in .agent-settings.yml).
  *
  * Ported from the retired Python `src/scripts/condense.py` (ADR-200 — Python→TS
- * migration, Phase 5). Mirrors the Python CLI surface EXACTLY — every
- * subcommand (`--sync`, `--list`, `--changed`, `--check`, `--check-hashes`,
- * `--clean-hashes`, `--mark-done <path>`, `--mark-all-done`,
- * `--generate-tools`, `--clean-tools`, `--project-augment`) — same flags,
- * exit codes, stdout/stderr split, byte-identical messages. No behaviour
- * changes; historical quirks preserved and flagged.
+ * migration, Phase 5), which mirrored the Python CLI surface exactly.
+ * ADR-201 then narrowed it: `.md` is copied verbatim + path-rewritten instead of
+ * rewritten by an agent, so the condensation-hash cache and its subcommands
+ * (`--check-hashes`, `--clean-hashes`, `--mark-done`, `--mark-all-done`) are gone —
+ * staleness is read off the projection itself. Remaining surface: `--sync`,
+ * `--list`, `--changed`, `--check`, `--generate-tools`, `--clean-tools`,
+ * `--project-augment`.
  *
  * Path handling note: the retired Python implementation uses `pathlib.Path` objects.
  * This twin uses absolute path strings (the host filesystem on the
@@ -22,11 +23,10 @@
  * multi-root helper functions (iter_all_sources, resolve_logical,
  * artefact_roots) are exposed through a mutable module-state object so the
  * pytest suite's monkeypatch pattern — reassigning `condense.PROJECT_ROOT`,
- * `condense.HASH_FILE`, `condense.iter_all_sources`, … — has a faithful TS
+ * `condense.TARGET_DIR`, `condense.iter_all_sources`, … — has a faithful TS
  * equivalent. Tests mutate `MODULE_STATE` via the exported setters.
  */
 
-import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -224,7 +224,7 @@ function _stripChars(s: string, chars: string): string {
 // =============================================================================
 // Module state — mutable mirror of the Python module-level constants & hooks.
 //
-// The pytest suite reassigns `condense.PROJECT_ROOT`, `condense.HASH_FILE`,
+// The pytest suite reassigns `condense.PROJECT_ROOT`, `condense.TARGET_DIR`,
 // `condense.TARGET_DIR`, `condense.SOURCE_DIR`, `condense.RULES_SOURCE`,
 // `condense.SKILLS_SOURCE`, `condense.COMMANDS_SOURCE`,
 // `condense.CLAUDE_SKILLS_DIR`, `condense.AUGMENT_DIR`, `condense.SETTINGS_FILE`,
@@ -245,7 +245,6 @@ interface ModuleState {
     SOURCE_DIR: string;
     TARGET_DIR: string;
     AUGMENT_DIR: string;
-    HASH_FILE: string;
     SETTINGS_FILE: string;
     RULES_SOURCE: string;
     SKILLS_SOURCE: string;
@@ -268,7 +267,6 @@ function _deriveState(root: string): ModuleState {
         SOURCE_DIR: path.join(root, '.agent-src.uncondensed'),
         TARGET_DIR: path.join(root, 'dist/agent-src'),
         AUGMENT_DIR: path.join(root, '.augment'),
-        HASH_FILE: path.join(root, 'internal', '.condensation-hashes.json'),
         SETTINGS_FILE: project_settings_path(root),
         RULES_SOURCE: path.join(root, 'dist/agent-src', 'rules'),
         SKILLS_SOURCE: path.join(root, 'dist/agent-src', 'skills'),
@@ -415,112 +413,7 @@ function _lean_projection_mode(): string {
 
 // --- hashing -----------------------------------------------------------------
 
-export function file_hash(filepath: string): string {
-    const h = crypto.createHash('sha256');
-    h.update(fs.readFileSync(filepath));
-    return h.digest('hex');
-}
 
-const _DEP_FRONTMATTER_KEYS = ['skills', 'rules'] as const;
-
-function _slug_to_logical(slug: string): string | null {
-    for (const cand of [`skills/${slug}/SKILL.md`, `rules/${slug}.md`]) {
-        if (_resolve_source(cand) !== null) {
-            return cand;
-        }
-    }
-    return null;
-}
-
-function _direct_includes(relative: string): string[] {
-    const source = _resolve_source(relative);
-    if (source === null) {
-        return [];
-    }
-    let meta: Record<string, unknown>;
-    try {
-        [meta] = _parse_frontmatter(_readText(source));
-    } catch {
-        return [];
-    }
-    const deps: string[] = [];
-    for (const key of _DEP_FRONTMATTER_KEYS) {
-        const value = meta[key];
-        if (!Array.isArray(value)) {
-            continue;
-        }
-        for (const item of value) {
-            if (typeof item !== 'string') {
-                continue;
-            }
-            const logical = _slug_to_logical(item.trim());
-            if (logical !== null && logical !== relative) {
-                deps.push(logical);
-            }
-        }
-    }
-    return deps;
-}
-
-export function effective_hash(relative: string, _seen: ReadonlySet<string> | null = null): string {
-    const source = _resolve_source(relative);
-    if (source === null) {
-        return '';
-    }
-    const own = file_hash(source);
-    if (_seen !== null && _seen.has(relative)) {
-        return own; // cycle — fold own content only
-    }
-    const deps = [...new Set(_direct_includes(relative))].sort((a, b) =>
-        a < b ? -1 : a > b ? 1 : 0,
-    );
-    if (deps.length === 0) {
-        return own; // leaf — identical to plain file_hash
-    }
-    const seenNext = new Set(_seen ?? []);
-    seenNext.add(relative);
-    const parts = [own, ...deps.map((dep) => effective_hash(dep, seenNext))];
-    return crypto.createHash('sha256').update(parts.join('\n'), 'utf-8').digest('hex');
-}
-
-export function load_hashes(): Record<string, string> {
-    if (_exists(MODULE_STATE.HASH_FILE)) {
-        try {
-            return JSON.parse(_readText(MODULE_STATE.HASH_FILE)) as Record<string, string>;
-        } catch {
-            return {};
-        }
-    }
-    return {};
-}
-
-export function save_hashes(hashes: Record<string, string>): void {
-    _mkdirp(path.dirname(MODULE_STATE.HASH_FILE));
-    _writeText(MODULE_STATE.HASH_FILE, _jsonDumpsSorted(hashes) + '\n');
-}
-
-/** Mirror json.dumps(obj, indent=2, sort_keys=True) for a flat string map. */
-function _jsonDumpsSorted(obj: Record<string, string>): string {
-    const keys = Object.keys(obj).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    if (keys.length === 0) {
-        return '{}';
-    }
-    const lines = keys.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(obj[k])}`);
-    return `{\n${lines.join(',\n')}\n}`;
-}
-
-export function mark_done(relative_path: string): void {
-    const source_file = _resolve_source(relative_path);
-    if (source_file === null || !_exists(source_file)) {
-        _print(`❌  Source file not found: ${relative_path}`);
-        process.exit(1);
-    }
-    apply_path_rewriter(relative_path);
-    const hashes = load_hashes();
-    hashes[relative_path] = effective_hash(relative_path);
-    save_hashes(hashes);
-    _print(`✅  Marked as condensed: ${relative_path}`);
-}
 
 export function apply_path_rewriter(relative_path: string): boolean {
     const target = path.join(MODULE_STATE.TARGET_DIR, relative_path);
@@ -536,60 +429,66 @@ export function apply_path_rewriter(relative_path: string): boolean {
     return true;
 }
 
-export function mark_all_done(): void {
-    const hashes = load_hashes();
-    let count = 0;
-    for (const [source_file, relative] of _iter_sources()) {
-        if (!should_condense(source_file)) {
-            continue;
-        }
-        hashes[relative] = effective_hash(relative);
-        count += 1;
+
+/**
+ * Whether the projection of `relative` is out of date.
+ *
+ * Post-ADR-201 the projection IS `rewrite(source)` — a pure function of the
+ * source's own bytes and its own relative path. So staleness is *observable in
+ * the output* rather than inferred from a stored source hash, which is both
+ * simpler and strictly stronger: the old hash cache could only tell you the
+ * source had moved since someone last claimed to have condensed it. It never
+ * looked at dist, so a hand-edited or half-written projection read as current.
+ *
+ * The dropped dependency-folding (`effective_hash` mixed in the hashes of
+ * `skills:` / `rules:` frontmatter deps) has no counterpart here, and needs
+ * none: an LLM rewrite could be influenced by a dependency's content, a pure
+ * rewrite cannot. Probed rather than assumed — the whole rewriter chain
+ * (`_depth_prefix`, `_split_frontmatter`, `_rewrite_body_links`,
+ * `_rewrite_frontmatter_lines`, `_parse_trust_and_owner`,
+ * `_inject_hrr_banner`) touches no file but its own input.
+ */
+export function is_projection_stale(relative: string): boolean {
+    const source = _resolve_source(relative);
+    if (source === null) {
+        // No source at all — a leftover in dist. `check_sync` owns that verdict.
+        return false;
     }
-    save_hashes(hashes);
-    _print(`✅  Marked ${count} files as condensed`);
+    if (skip_compile_disabled_rule(relative)) {
+        // Deliberately absent from the projection, not out of date.
+        return false;
+    }
+    const target = path.join(MODULE_STATE.TARGET_DIR, relative);
+    if (!_exists(target)) {
+        return true; // never projected
+    }
+    return _readText(target) !== _rewrite_paths(_readText(source), relative);
 }
 
 export function list_changed_md(_source_dir?: string): string[] {
     // _source_dir retained for signature compatibility but ignored (multi-root).
-    const hashes = load_hashes();
     const changed: string[] = [];
-    for (const [source_file, relative] of _iter_sources()) {
-        if (!should_condense(source_file)) {
+    const seen = new Set<string>();
+    for (const [, relative] of _iter_sources()) {
+        if (seen.has(relative)) {
             continue;
         }
-        const current_hash = effective_hash(relative);
-        const stored_hash = hashes[relative];
-        if (stored_hash !== current_hash) {
+        seen.add(relative);
+        // Resolve through `_resolve_source` rather than trusting the iterator's
+        // physical hit: `src/` and `src/agent-src/` are both artefact roots, so
+        // one relative path can name two unrelated files and only the resolver
+        // knows which one wins.
+        const source = _resolve_source(relative);
+        if (source === null || !should_condense(source)) {
+            continue;
+        }
+        if (is_projection_stale(relative)) {
             changed.push(relative);
         }
     }
     return changed;
 }
 
-export function find_stale_hashes(_source_dir?: string): string[] {
-    const hashes = load_hashes();
-    const stale: string[] = [];
-    for (const relative of Object.keys(hashes).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))) {
-        if (_resolve_source(relative) === null) {
-            stale.push(relative);
-        }
-    }
-    return stale;
-}
-
-export function clean_stale_hashes(_source_dir?: string): number {
-    const stale = find_stale_hashes(_source_dir);
-    if (stale.length === 0) {
-        return 0;
-    }
-    const hashes = load_hashes();
-    for (const relative of stale) {
-        delete hashes[relative];
-    }
-    save_hashes(hashes);
-    return stale.length;
-}
 
 export function should_condense(filepath: string): boolean {
     if (path.extname(filepath) !== '.md') {
@@ -2357,21 +2256,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     } else if (arg === '--changed') {
         const changed = list_changed_md(MODULE_STATE.SOURCE_DIR);
         if (changed.length === 0) {
-            _print('✅  No .md files changed since last condensation');
+            _print('✅  Every .md projection matches its source');
             return 0;
         }
-        _print(`📝  ${changed.length} .md files changed since last condensation:\n`);
+        _print(`📝  ${changed.length} .md projection(s) out of date — run 'task sync':\n`);
         for (const f of changed) {
             _print(`  ${f}`);
         }
-    } else if (arg === '--mark-done') {
-        if (argv.length < 2) {
-            _print('Usage: python scripts/condense.py --mark-done <relative-path>');
-            return 1;
-        }
-        mark_done(argv[1] as string);
-    } else if (arg === '--mark-all-done') {
-        mark_all_done();
     } else if (arg === '--check') {
         const [missing, stale] = check_sync(MODULE_STATE.SOURCE_DIR, MODULE_STATE.TARGET_DIR);
         if (missing.length === 0 && stale.length === 0) {
@@ -2401,61 +2292,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const copied = sync_non_md(MODULE_STATE.SOURCE_DIR, MODULE_STATE.TARGET_DIR);
         _print(`\n--- Cleanup stale files ---`);
         const deleted = cleanup_stale(MODULE_STATE.SOURCE_DIR, MODULE_STATE.TARGET_DIR);
-        const hashes = load_hashes();
-        const stale_keys = Object.keys(hashes).filter((k) => _resolve_source(k) === null);
-        for (const k of stale_keys) {
-            delete hashes[k];
-        }
-        if (stale_keys.length > 0) {
-            save_hashes(hashes);
-            _print(`  Cleaned ${stale_keys.length} stale hash entries`);
-        }
         const changed = list_changed_md(MODULE_STATE.SOURCE_DIR);
         _print(`\n✅  Done: ${copied} copied, ${deleted} stale deleted`);
         if (changed.length > 0) {
-            _print(`📝  ${changed.length} .md files need condensation (run --changed to see them)`);
+            // --sync writes .md itself, so anything still stale here is a bug in
+            // the projector, not work left for a follow-up step.
+            _print(`❌  ${changed.length} .md projection(s) still out of date after sync (run --changed)`);
         } else {
-            _print(`✅  All .md files are up to date`);
+            _print(`✅  Every .md projection matches its source`);
         }
         _print(`\n--- Projecting dist/agent-src/ → .augment/ ---`);
         project_to_augment();
-    } else if (arg === '--check-hashes') {
-        let has_issues = false;
-        const changed = list_changed_md(MODULE_STATE.SOURCE_DIR);
-        const stale = find_stale_hashes(MODULE_STATE.SOURCE_DIR);
-
-        if (stale.length > 0) {
-            has_issues = true;
-            _print(`⚠️  ${stale.length} stale hash(es) for deleted source files:\n`);
-            for (const f of stale) {
-                _print(`  ${f}`);
-            }
-            _print(`\nRun 'task sync-clean-hashes' to remove them.\n`);
-        }
-
-        if (changed.length > 0) {
-            has_issues = true;
-            _print(`❌  ${changed.length} .md file(s) need recondensation:\n`);
-            for (const f of changed) {
-                const stored = load_hashes()[f];
-                const reason = stored === undefined ? 'no hash stored' : 'hash mismatch';
-                _print(`  ${f}  (${reason})`);
-            }
-            _print(`\nRun '/condense' command to recondense these files.`);
-        }
-
-        if (!has_issues) {
-            _print('✅  All condensation hashes are clean (no stale, no mismatches)');
-            return 0;
-        }
-        return 1;
-    } else if (arg === '--clean-hashes') {
-        const count = clean_stale_hashes(MODULE_STATE.SOURCE_DIR);
-        if (count) {
-            _print(`✅  Removed ${count} stale hash(es)`);
-        } else {
-            _print('✅  No stale hashes found');
-        }
     } else if (arg === '--generate-tools') {
         generate_tools();
     } else if (arg === '--clean-tools') {
@@ -2464,7 +2311,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         project_to_augment();
     } else {
         _print(
-            'Usage: python scripts/condense.py [--sync|--list|--changed|--check|--check-hashes|--clean-hashes|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools|--project-augment]',
+            'Usage: condense [--sync|--list|--changed|--check|--generate-tools|--clean-tools|--project-augment]',
         );
         return 1;
     }

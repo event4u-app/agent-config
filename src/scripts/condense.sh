@@ -4,12 +4,11 @@
 # Usage:
 #   ./scripts/condense.sh              # sync non-.md files + cleanup
 #   ./scripts/condense.sh --list       # list ALL .md files
-#   ./scripts/condense.sh --changed    # list .md files changed since last condensation
+#   ./scripts/condense.sh --changed    # list .md files whose projection is out of date
 #   ./scripts/condense.sh --check      # check if dirs are in sync
-#   ./scripts/condense.sh --mark-done <path>  # mark file as condensed
-#   ./scripts/condense.sh --mark-all-done     # mark all files as condensed
 #
-# .md condensation is done by the Augment agent interactively.
+# .md files are projected verbatim with the path rewriter applied — --sync
+# writes them; there is no separate condensation step.
 
 set -euo pipefail
 
