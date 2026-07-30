@@ -1,7 +1,7 @@
 # Toolchain Resolver Contract
 
 Loaded by every engineering command that runs tests or quality tools
-(`/tests execute`, `/tests create`, `/fix quality`, `/review-changes`,
+(`/tests execute`, `/tests create`, `/fix quality`, `/review changes`,
 `/work`). Holds the single source of truth for **stack-adaptive
 toolchain resolution**: detect the consumer's test runner / quality
 tools and run the right one — instead of a per-stack command explosion.

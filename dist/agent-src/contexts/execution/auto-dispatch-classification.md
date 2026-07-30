@@ -21,20 +21,20 @@ A task is classified **delegable** when **any** of these holds:
    `parallelizable: steps | files | independent` in its frontmatter.
    - `steps` → ordered plan → `do-in-steps`.
    - `files` / `independent` → independent slices → `do-in-parallel`.
-2. **Ordered-plan structure** — explicit ordered plan (numbered steps / a roadmap
-   phase / a checklist) → `do-in-steps`. Deterministic markers:
-   - `1. … 2. … 3.` numbered list in the user message.
-   - References a roadmap phase or checklist.
-   - "first … then … finally" with distinct deliverables.
-   - "in N steps" or "phase by phase".
+2. **Ordered-plan structure** — the task is an explicit ordered plan (numbered
+   steps / a roadmap phase / a checklist) → `do-in-steps`. Deterministic markers:
+   - User message contains `1. … 2. … 3.` numbered list.
+   - User message references a roadmap phase or checklist.
+   - User message uses "first … then … finally" with distinct deliverables.
+   - User message says "in N steps" or "phase by phase".
 3. **Independent-slices structure** — N ≥ 3 independent targets of the same shape
    → `do-in-parallel`. Deterministic markers (N ≥ 3 of the same form):
-   - N file paths, each a separate analysis/edit target.
-   - N named modules/components for the same action.
+   - N file paths listed where each is a separate analysis/edit target.
+   - N named modules/components to perform the same action on.
    - N named test files, adapters, endpoints, or services to convert/review/audit.
-   - "for each X in [list]" where list ≥ 3 items, no cross-item dependency.
-   Do **not** fire on interdependent lists (e.g. "add these 3 sequential
-   migrations") — those are ordered plans (signal 2).
+   - "for each X in [list]" where list has ≥ 3 items and no cross-item dependency.
+   Do **not** fire on lists where items are interdependent (e.g. "add these 3
+   sequential migrations") — those are ordered plans (signal 2).
 
 AND the **task-size floor** is cleared: the task's estimated size exceeds a
 minimum (trivial one-line edits never delegate — the dispatch overhead
@@ -58,9 +58,10 @@ dwarfs the work). Below the floor → in-session.
 ## Per-slice tier inference (v1.5 — deterministic, task-TYPE-keyed)
 
 Once a slice is classified **delegable**, a second deterministic table infers
-its `model_tier` (road-to-cost-aware-model-routing, council 2026-07-08).
-Keyed **exclusively on the classifier's task-TYPE outputs** — never raw size
-metrics; diff size anti-correlates with difficulty in refactoring domains.
+its `model_tier` (road-to-cost-aware-model-routing, council 2026-07-08). The
+inference is keyed **exclusively on the classifier's task-TYPE outputs** —
+never on raw size metrics; diff size anti-correlates with difficulty in
+refactoring domains.
 
 ```
 UNKNOWN / AMBIGUOUS → inherit (SESSION TIER). NEVER GUESS DOWN.
@@ -76,14 +77,15 @@ THEY NEVER CREATE ONE.
 | Delegable + synthesis / judgment (review, analysis slice) | `medium` — judge one tier up per the orchestration Iron Law |
 | Any other / ambiguous shape | `inherit` — session tier, no downshift |
 
-**Negative size guard:** slice scope exceeding the mechanical envelope
-(multi-file mutation, diff surface beyond single responsibility) loses `lite`
-candidacy, resolves one row down — size never argues FOR a downshift, only
-against one.
+**Negative size guard:** a slice whose scope exceeds the mechanical envelope
+(multi-file mutation, or a diff surface beyond a single responsibility) loses
+its `lite` candidacy and resolves one row down — size never argues FOR a
+downshift, only against one.
 
-Every inferred decision records `tier_source: "inferred"` in orchestration
-telemetry (static pins record `"static"`; session-tier runs `"inherit"`) so
-the evidence gate scores inferred routing separately from static pinning.
+Every inferred decision records `tier_source: "inferred"` in the
+orchestration telemetry (statically pinned tiers record `"static"`;
+session-tier runs record `"inherit"`) so the evidence gate can score inferred
+routing separately from static pinning.
 
 ## Lookup-class rung (L0 — road-to-lean-agent-init, BELOW the tiers)
 
@@ -100,7 +102,7 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
 
 | Task pattern | Lookup class | Primitive |
 |---|---|---|
-| "where is X defined" / "confirm X's definition location" | `definition` | capped `rg` (definition-shaped patterns, `--max-count`); `code_graph query` only as opportunistic accelerant when an index is present + fresh + `hooks.code_graph.enabled: true` |
+| "where is X defined" / "confirm X's definition location" | `definition` | capped `rg` (definition-shaped patterns, `--max-count`); `code_graph query` only as an opportunistic accelerant when an index is present + fresh + `hooks.code_graph.enabled: true` |
 | "who calls / imports X" / "confirm call sites" | `references` | capped `rg` (reference-shaped patterns); same optional `code_graph affected` accelerant clause |
 | "does string Y exist" / "probe candidate strings" | `string-existence` | FTS one-shot (`memory_lookup` for the knowledge corpus) or capped `rg -n --max-count` for the codebase |
 | "run report Z" / "run check_*" | `report-run` | direct script run, wrapped per the **measured** rtk allowlist (`internal/bench/rtk-savings/RESULTS.md` — wrap only the ~55%-savings class) |
@@ -112,21 +114,22 @@ recall 0.365 vs grep 0.797 on graph-shaped questions, root cause an **indexing
 gap** (TS arrow-function exports produce no symbol nodes) that hits structured
 lookups exactly as it hits NL retrieval — and the recorded consequence bound
 keeps `code_graph.enabled` false permanently. The accelerant clause is the
-escape hatch that bound names ("unless external evidence appears"); today
-inert.
+escape hatch that bound names ("unless external evidence appears"); today it
+is inert.
 
-**Escalation, not degradation:** a primitive returning nothing (index miss,
-ambiguous pattern, absent report script) — **or an unusable result** (empty,
-ambiguous between candidates, or visibly off-target because the lookup
-pattern matched a task that was not actually a lookup, e.g. a dynamically
-constructed symbol name) — escalates to the regular classification path —
-answer-quality bar never drops. "Primitive ran but result unusable"
-escalates exactly like "class unknown". `unknown` resolves to the regular
-path (`inherit` semantics), never down-guessed.
+**Escalation, not degradation:** a primitive that returns nothing (index miss,
+pattern too ambiguous, report script absent) — **or an unusable result**
+(empty, ambiguous between candidates, or visibly off-target because the
+lookup pattern matched a task that was not actually a lookup, e.g. a
+dynamically constructed symbol name) — escalates to the regular
+classification path above — the answer quality bar never drops. The
+"primitive ran but the result is unusable" case escalates exactly like the
+"class unknown" case. `unknown` resolves to the regular path (`inherit`
+semantics), never down-guessed.
 
-Correctness floor: golden comparison in `internal/bench/lean-init/`
-(primitive answer ≡ agent answer on ≥10 lookup tasks, incl. the four observed
-shapes); any mismatch is a routing bug, not a rounding error.
+Correctness floor: the golden comparison in `internal/bench/lean-init/`
+(primitive answer ≡ agent answer on ≥10 lookup tasks, including the four
+observed shapes); any mismatch is a routing bug, not a rounding error.
 
 ## v2+ (deferred, gated on Phase 6 evidence)
 

@@ -16,10 +16,10 @@ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..')
 
 function makeFakeRoot(tmp: string): string {
     for (const d of [
-        '.agent-src.uncondensed/contexts',
-        '.agent-src.uncondensed/rules',
-        '.agent-src.uncondensed/skills',
-        '.agent-src.uncondensed/commands',
+        'src/agent-src/contexts',
+        'src/rules',
+        'src/skills',
+        'src/agent-src/commands',
     ]) {
         fs.mkdirSync(path.join(tmp, d), { recursive: true });
     }
@@ -27,14 +27,14 @@ function makeFakeRoot(tmp: string): string {
 }
 
 function ctx(root: string, rel: string, body = 'stub'): string {
-    const p = path.join(root, '.agent-src.uncondensed', 'contexts', rel);
+    const p = path.join(root, 'src', 'agent-src', 'contexts', rel);
     fs.mkdirSync(path.dirname(p), { recursive: true });
     fs.writeFileSync(p, body, 'utf-8');
     return p;
 }
 
 function rule(root: string, name: string, body: string): string {
-    const p = path.join(root, '.agent-src.uncondensed', 'rules', `${name}.md`);
+    const p = path.join(root, 'src', 'rules', `${name}.md`);
     fs.writeFileSync(p, body, 'utf-8');
     return p;
 }
@@ -119,7 +119,7 @@ describe('check_context_paths — behavioural spec (1:1 port of pytest)', () => 
     it('full path reference form satisfies', () => {
         const root = makeFakeRoot(tmp);
         ctx(root, 'judges/foo.md');
-        rule(root, 'demo', 'load_context:\n  - .agent-src.uncondensed/contexts/judges/foo.md\n');
+        rule(root, 'demo', 'load_context:\n  - src/agent-src/contexts/judges/foo.md\n');
         expect(ccp.scan(root)).toEqual([]);
     });
 

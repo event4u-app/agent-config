@@ -1,35 +1,24 @@
 // Tests for src/scripts/condense.ts (py2ts Phase 5 — the content-pipeline crown jewel).
 //
-// Two layers:
-//   1. Unit suites ported 1:1 from tests/test_condense.py + tests/test_condense_paths.py.
-//      The pytest suites monkeypatch module globals (condense.PROJECT_ROOT,
-//      condense.HASH_FILE, condense.TARGET_DIR, …) and the multi-root helper
-//      functions (condense.iter_all_sources / resolve_logical / artefact_roots).
-//      The TS twin exposes the same surface through MODULE_STATE + the
-//      _setStateForTest / _getStateForTest / _resetStateForTest seams; each
-//      suite saves+restores the state it mutates (≈ pytest setUp/tearDown).
-//   2. Golden-parity differential suites — run python3 vs tsx of condense on
-//      the REAL repo for the read-only subcommands (byte-identical stdout +
-//      stderr + exit), and assert that `--sync` then `--generate-tools` leave
-//      ZERO git drift on the committed generated trees (the critical gate).
-//      Each write test snapshots the tree and restores it in afterEach.
+// Unit suites ported 1:1 from tests/test_condense.py + tests/test_condense_paths.py.
+// The pytest suites monkeypatch module globals (condense.PROJECT_ROOT,
+// condense.HASH_FILE, condense.TARGET_DIR, …) and the multi-root helper
+// functions (condense.iter_all_sources / resolve_logical / artefact_roots).
+// The TS twin exposes the same surface through MODULE_STATE + the
+// _setStateForTest / _getStateForTest / _resetStateForTest seams; each
+// suite saves+restores the state it mutates (≈ pytest setUp/tearDown).
+//
+// The python twin these suites were ported from is gone, so the golden-parity
+// differential layer this header used to describe is gone with it — the whole-repo
+// projection is now covered by check_condensation's byte-exactness invariant
+// (dist == rewrite(src)), which is stronger than a py-vs-tsx stdout diff.
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as condense from '../../src/scripts/condense.js';
-
-const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-const TS = path.join(REPO_ROOT, 'src', 'scripts', 'condense.ts');
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -217,10 +206,64 @@ describe('sync_non_md', () => {
         expect(fs.existsSync(path.join(target, 'scripts', 'scan.php'))).toBe(true);
     });
 
-    it('skips condensable md files', () => {
+    // Contract CHANGED by ADR-201 (accepted 2026-07-29): this asserted that `.md`
+    // was SKIPPED here, because an agent wrote the condensed body into dist/ by
+    // hand. That LLM rewrite is removed — `.md` is now copied verbatim and
+    // path-rewritten, so dist is a deterministic derivation of src. The old
+    // assertion is preserved as the `COPY_MD_VERBATIM = false` branch's contract.
+    it('copies md files verbatim (ADR-201: no LLM rewrite in the pipeline)', () => {
         write(path.join(source, 'rules', 'test.md'), '# Rule');
-        expect(condense.sync_non_md(source, target)).toBe(0);
-        expect(fs.existsSync(path.join(target, 'rules', 'test.md'))).toBe(false);
+        expect(condense.sync_non_md(source, target)).toBe(1);
+        expect(fs.readFileSync(path.join(target, 'rules', 'test.md'), 'utf-8')).toBe('# Rule');
+    });
+
+    // ADR telegraph/0002 § part 1 — the coupling test. Router membership alone was
+    // never zero-cost: a compile-time-disabled rule was dropped from router.json
+    // while its body still shipped as a file, and the HOST READS THE FILE. Without
+    // this test the second half of "dormancy" would be asserted, not enforced —
+    // which is precisely the failure that ADR recorded against its own first draft.
+    const withSettings = (yaml: string): void => {
+        const f = path.join(tmp, 'settings.yml');
+        fs.writeFileSync(f, yaml, 'utf-8');
+        condense._setStateForTest({ SETTINGS_FILE: f });
+    };
+
+    it('a compile-time-DISABLED rule is not emitted into the projection', () => {
+        write(path.join(source, 'rules', 'telegraph-speak.md'), '# Telegraph\n');
+        withSettings('telegraph:\n  speak: false\n');
+        condense.sync_non_md(source, target);
+        expect(fs.existsSync(path.join(target, 'rules', 'telegraph-speak.md'))).toBe(false);
+    });
+
+    it('an ENABLED rule is emitted — the gate opts in, it does not allowlist', () => {
+        write(path.join(source, 'rules', 'telegraph-speak.md'), '# Telegraph\n');
+        withSettings('telegraph:\n  speak: true\n');
+        condense.sync_non_md(source, target);
+        expect(fs.existsSync(path.join(target, 'rules', 'telegraph-speak.md'))).toBe(true);
+    });
+
+    it('an ungated rule is unaffected by the toggle map', () => {
+        write(path.join(source, 'rules', 'some-other-rule.md'), '# Other\n');
+        withSettings('telegraph:\n  speak: false\n');
+        condense.sync_non_md(source, target);
+        expect(fs.existsSync(path.join(target, 'rules', 'some-other-rule.md'))).toBe(true);
+    });
+
+    it('the family master switch overrides an explicit opt-in', () => {
+        write(path.join(source, 'rules', 'telegraph-speak.md'), '# Telegraph\n');
+        withSettings('telegraph:\n  enabled: false\n  speak: true\n');
+        condense.sync_non_md(source, target);
+        expect(fs.existsSync(path.join(target, 'rules', 'telegraph-speak.md'))).toBe(false);
+    });
+
+    it('the copy is byte-exact — the property the removal exists to create', () => {
+        // Determinism was the sub-gate that FAILED before ADR-201: the hash covered
+        // the source and never the output, so dist could diverge undetectably.
+        // A verbatim copy makes `dist == rewrite(src)` checkable for the first time.
+        const body = '# Rule\n\nProse with **emphasis** and `code`.\n\n```\nNEVER X\n```\n';
+        write(path.join(source, 'rules', 'exact.md'), body);
+        condense.sync_non_md(source, target);
+        expect(fs.readFileSync(path.join(target, 'rules', 'exact.md'), 'utf-8')).toBe(body);
     });
 
     it('copies readme as-is', () => {
@@ -269,31 +312,78 @@ describe('list_md_files', () => {
     });
 });
 
-describe('file_hash', () => {
-    it('returns consistent hash', () => {
-        const tmp = mkTmp();
-        const p = path.join(tmp, 'x.md');
-        write(p, 'hello world');
-        try {
-            const h1 = condense.file_hash(p);
-            const h2 = condense.file_hash(p);
-            expect(h1).toBe(h2);
-            expect(h1.length).toBe(64);
-        } finally {
-            fs.rmSync(tmp, { recursive: true, force: true });
-        }
+describe('is_projection_stale / list_changed_md — the post-ADR-201 basis', () => {
+    // The hash cache is gone. Staleness is now read off the projection itself:
+    // `dist != rewrite(src)`. These two suites pin the property the cache never
+    // had (it looked at the source only) and the property its absence must keep.
+    let tmp: string;
+    let source: string;
+    let target: string;
+    let saved: ReturnType<typeof condense._getStateForTest>;
+
+    beforeEach(() => {
+        saved = condense._getStateForTest();
+        tmp = mkTmp('stale-');
+        source = path.join(tmp, 'source');
+        target = path.join(tmp, 'target');
+        fs.mkdirSync(source);
+        fs.mkdirSync(target);
+        isolateMultiRoot(source);
+        condense._setStateForTest({ TARGET_DIR: target });
+    });
+    afterEach(() => {
+        condense._setStateForTest(saved);
+        fs.rmSync(tmp, { recursive: true, force: true });
     });
 
-    it('different content different hash', () => {
-        const tmp = mkTmp();
-        const a = path.join(tmp, 'a.md');
-        const b = path.join(tmp, 'b.md');
-        write(a, 'content a');
-        write(b, 'content b');
-        try {
-            expect(condense.file_hash(a)).not.toBe(condense.file_hash(b));
-        } finally {
-            fs.rmSync(tmp, { recursive: true, force: true });
-        }
+    /** Write a source file and its correct projection, so the pair starts in sync. */
+    function writeSyncedPair(rel: string, body: string): void {
+        const src = path.join(source, rel);
+        write(src, body);
+        write(path.join(target, rel), condense._rewrite_paths(body, rel));
+    }
+
+    it('an in-sync pair is not stale', () => {
+        writeSyncedPair('rules/a.md', '---\ntype: "auto"\n---\n\n# A\n\nbody\n');
+        expect(condense.is_projection_stale('rules/a.md')).toBe(false);
+        expect(condense.list_changed_md(source)).toEqual([]);
+    });
+
+    it('finds a pair desynchronised in dist — the case the hash cache could not see', () => {
+        // The old cache stored a hash of the SOURCE. Corrupting dist left the
+        // stored hash matching, so a hand-edited projection read as current.
+        writeSyncedPair('rules/b.md', '---\ntype: "auto"\n---\n\n# B\n\nbody\n');
+        expect(condense.is_projection_stale('rules/b.md')).toBe(false);
+        write(path.join(target, 'rules/b.md'), 'someone hand-edited the projection\n');
+        expect(condense.is_projection_stale('rules/b.md')).toBe(true);
+        expect(condense.list_changed_md(source)).toContain('rules/b.md');
+    });
+
+    it('finds a pair desynchronised at the source', () => {
+        writeSyncedPair('rules/c.md', '---\ntype: "auto"\n---\n\n# C\n\nbody\n');
+        write(path.join(source, 'rules/c.md'), '---\ntype: "auto"\n---\n\n# C\n\nedited\n');
+        expect(condense.is_projection_stale('rules/c.md')).toBe(true);
+        expect(condense.list_changed_md(source)).toContain('rules/c.md');
+    });
+
+    it('a never-projected source is stale', () => {
+        write(path.join(source, 'rules/d.md'), '# D\n');
+        expect(condense.is_projection_stale('rules/d.md')).toBe(true);
+    });
+
+    it('a source that does not exist is not stale — check_sync owns that verdict', () => {
+        expect(condense.is_projection_stale('rules/nope.md')).toBe(false);
+    });
+
+    it('needs no hash file: nothing reads or writes one', () => {
+        // The permanent post-removal state. If any code path resurrected a cache,
+        // it would appear on disk here — annotate_discovery used to do exactly that.
+        writeSyncedPair('rules/e.md', '---\ntype: "auto"\n---\n\n# E\n\nbody\n');
+        write(path.join(source, 'rules/f.md'), '# F\n');
+        const before = fs.readdirSync(tmp).sort();
+        expect(condense.list_changed_md(source)).toEqual(['rules/f.md']);
+        expect(condense.is_projection_stale('rules/e.md')).toBe(false);
+        expect(fs.readdirSync(tmp).sort()).toEqual(before);
+        expect(fs.existsSync(path.join(tmp, 'internal'))).toBe(false);
     });
 });

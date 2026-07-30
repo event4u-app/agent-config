@@ -50,16 +50,14 @@ const SETTINGS_PATH = project_settings_path(ROOT);
 // workspace-independent by definition.
 export const SCHEMA_VERSION = 2;
 
-// Compile-time rule toggles. Maps rule-id → settings predicate.
-// Rule omitted from router.json when predicate returns False.
-const COMPILE_TIME_TOGGLES: Record<string, (s: JsonObject) => boolean> = {
-    'telegraph-speak': (s: JsonObject): boolean => {
-        const tg = (s['telegraph'] as JsonObject | undefined) ?? {};
-        const enabled = tg['enabled'] === undefined ? true : tg['enabled'];
-        const speak = tg['speak'] === undefined ? true : tg['speak'];
-        return Boolean(enabled) && Boolean(speak);
-    },
-};
+// Compile-time rule toggles — the definition moved to
+// `_lib/compile_time_toggles.ts` on 2026-07-29 so the PROJECTOR honours it too.
+// Router membership alone was never zero-cost: a disabled rule kept shipping as a
+// file, and the host reads the file (docs/adrs/telegraph/0002 § part 1).
+// Re-exported here because tests and downstream consumers pin this name.
+import { COMPILE_TIME_TOGGLES, rule_is_compile_enabled } from './_lib/compile_time_toggles.js';
+
+export { COMPILE_TIME_TOGGLES };
 
 // Maps legacy tier values to the router-canonical names. See
 // docs/contracts/rule-router.md § Backward compatibility.
@@ -204,10 +202,8 @@ function _collect(): JsonObject {
             continue;
         }
         const rule_id = _stem(p);
-        if (rule_id in COMPILE_TIME_TOGGLES) {
-            if (!(COMPILE_TIME_TOGGLES[rule_id] as (s: JsonObject) => boolean)(settings)) {
-                continue;
-            }
+        if (!rule_is_compile_enabled(rule_id, settings)) {
+            continue;
         }
         const rule_type = String(fm['type'] ?? 'auto');
         // Manual rules are reference-only (ADR-004) — no router emission.

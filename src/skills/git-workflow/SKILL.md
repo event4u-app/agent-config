@@ -156,7 +156,7 @@ git commit -m "<conventional commit message>"
 ```
 
 Interactive rebase only when the user wants per-commit control — it
-replays derived files (`.condensation-hashes.json`, router projections)
+replays derived files (`dist/agent-src/`, router projections)
 per commit and conflicts on every replay.
 
 ### 4. Re-push in the SAME turn
@@ -318,7 +318,7 @@ mechanism it protects.)
 
 ## Why history discipline exists
 
-Interactive rebase + fixup loops generate disproportionate token cost on every iteration: re-running CI per replayed commit, resolving the same content conflict in three derived files (`.condensation-hashes.json`, `dist/router.json`, `.windsurfrules`), losing the working tree to a stash that silently re-introduces older state. A single conflict can burn the budget of an entire feature.
+Interactive rebase + fixup loops generate disproportionate token cost on every iteration: re-running CI per replayed commit, resolving the same content conflict in two derived files (`dist/router.json`, `.windsurfrules`), losing the working tree to a stash that silently re-introduces older state. A single conflict can burn the budget of an entire feature.
 
 A previous session squashed a pushed branch, the push hook failed at the token boundary, the session ended — and the next session saw local and origin pointing at different SHAs for the same logical work. A blind `git pull --rebase` cascaded into conflicts across every derived file. Recovery required forensic SHA-archaeology. The pre/post-rewrite stops make that sequence structurally impossible.
 

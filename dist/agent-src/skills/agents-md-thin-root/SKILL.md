@@ -13,9 +13,9 @@ packs:
   - meta
 ---
 
-<!-- cloud_safe: noop -->
-
 # agents-md-thin-root
+
+<!-- cloud_safe: noop -->
 
 ## When to use
 

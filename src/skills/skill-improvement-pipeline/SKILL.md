@@ -126,9 +126,8 @@ Decide what to create:
 After creation:
 1. Run `./scripts-run src/scripts/skill_linter {path}` — must pass (0 fail)
 2. Copy to `.augment/`
-3. Mark hash: `./scripts-run src/scripts/condense --mark-done "{relative_path}"`
-4. Regenerate tools: `./scripts-run src/scripts/condense --generate-tools`
-5. **If the learning came from a knowledge page** (`agents/knowledge/procedures/skill-candidates.md`
+3. Regenerate tools: `./scripts-run src/scripts/condense --generate-tools`
+4. **If the learning came from a knowledge page** (`agents/knowledge/procedures/skill-candidates.md`
    or any `agents/knowledge/` page) — degrade the source to a pointer;
    promotion is not complete otherwise (double-maintenance risk):
    `./scripts-run src/scripts/degrade_to_pointer --source "<knowledge-path>[#<anchor>]" --artifact "{relative_path}" --date "<YYYY-MM-DD>"`

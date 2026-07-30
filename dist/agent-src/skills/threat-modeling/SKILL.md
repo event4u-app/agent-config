@@ -15,16 +15,17 @@ packs:
 # threat-modeling
 
 
-> **Grounded corpus (Tier-1 consultation):** ground surface → threats →
-> controls before enumerating from memory — `./scripts-run
-> <skills-root>/corpus-grounding/scripts/ground ground --manifest
-> <skills-root>/threat-modeling/data/manifest.json "<surface description>"`
-> returns surface class, ATT&CK/CWE-cited threats, required controls, and
-> negative tests, with confidence + evidence-gap. Propose grounded
-> findings; human confirms. Corpus: [`data/threats.csv`](data/threats.csv)
-> (MITRE ATT&CK v16 / OWASP ASVS-derived; owner + cadence in the manifest).
+> **Grounded corpus (Tier-1 consultation):** before enumerating from
+> memory, ground surface → threats → controls in the adopted corpus —
+> `./scripts-run <skills-root>/corpus-grounding/scripts/ground ground
+> --manifest <skills-root>/threat-modeling/data/manifest.json
+> "<surface description>"` returns the surface class, ATT&CK/CWE-cited
+> threats, required controls, and negative tests, with confidence +
+> evidence-gap. Propose grounded findings; the human confirms. Corpus:
+> [`data/threats.csv`](data/threats.csv) (MITRE ATT&CK v16 / OWASP
+> ASVS-derived, owner + cadence in the manifest).
 
-> You are a reviewer specialized in **pre-impl threat analysis**.
+> You are a reviewer specialized in **pre-implementation threat analysis**.
 > Your only job is to produce a compact threat model for a planned change —
 > actors, assets, trust boundaries, abuse cases, and the minimum controls
 > the implementer must add. You do **not** audit existing code end-to-end,
@@ -95,7 +96,9 @@ OWASP bullets unless you can anchor them in a concrete file or line.
 
 ### 3b. STRIDE coverage check
 
-Sweep the six STRIDE categories once against the change so no threat class is silently skipped. Each row names the question + control family the suite already teaches — anchor any hit in a concrete file per § 3.
+Sweep the six STRIDE categories once against the change so no threat class
+is silently skipped. Each row names the question to ask and the control
+family the suite already teaches — anchor any hit in a concrete file per § 3.
 
 | STRIDE category | Ask about this change | Control family (suite reference) |
 |---|---|---|
@@ -106,7 +109,8 @@ Sweep the six STRIDE categories once against the change so no threat class is si
 | **D**enial of service | Can this path be made expensive or unbounded by an attacker? | Rate limiting + bounded queries/uploads — [`security-audit`](../security-audit/SKILL.md) § rate limiting, [`performance`](../performance/SKILL.md) |
 | **E**levation of privilege | Can a lower-privilege actor reach a higher-privilege action or object? | Per-object authorization + tenant scope — [`authz-review`](../authz-review/SKILL.md), [`broken-access-control`](../../rules/broken-access-control.md) |
 
-Category with no plausible abuse case for this change → mark "n/a — no boundary crossed", never silently omit.
+A category with no plausible abuse case for this change is marked "n/a —
+no boundary crossed", not silently omitted.
 
 ### 4. Convert risks to engineering actions
 
@@ -219,5 +223,7 @@ run tests**.
 - [`authz-review`](../authz-review/SKILL.md),
   [`data-exposure-review`](../data-exposure-review/SKILL.md),
   [`security`](../security/SKILL.md),
-  [`security-audit`](../security-audit/SKILL.md) — sibling review / impl skills.
+  [`security-audit`](../security-audit/SKILL.md) — sibling review / implementation skills.
+- Prompt-injection / agent-config defense: [`untrusted-input-defense`](../../rules/untrusted-input-defense.md),
+  [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) — always-on authoring rules; consult when modelling injection abuse cases.
 - Attack surface documentation: [`docs/threat-model.md`](../../docs/threat-model.md) — package trust boundaries, assets, and known risks.

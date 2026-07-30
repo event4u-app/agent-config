@@ -18,7 +18,7 @@
  * `agents/roadmaps/skipped/`). Forbidden: specific `*.md` files inside those
  * directories.
  *
- * Contract: .agent-src.uncondensed/rules/no-roadmap-references.md
+ * Contract: src/rules/no-roadmap-references.md
  *
  * Exit codes: 0 = clean, 1 = violations, 3 = internal error.
  */
@@ -34,13 +34,20 @@ const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 // Stable artefact trees — every `*.md` below MUST be free of roadmap-file
 // citations. Directory mentions stay allowed (the regex below excludes them).
+// Retargeted 2026-07-29: these six pointed at the pre-relocation source tree,
+// emptied by the ADR-051 flat-`src/` migration. The gate kept enforcing the rule
+// for `docs/` while the rule + skill layer — the layer `no-roadmap-references` is
+// actually about — went unscanned, and reported green. No violation had slipped
+// through yet (verified), so this closes a latent gap rather than a live breach.
+// (Phrased without the dead path literal on purpose: `check_no_new_legacy_path`
+// guards against those accumulating, and this comment tripped it.)
 const STABLE_TREES = [
-    '.agent-src.uncondensed/rules',
-    '.agent-src.uncondensed/skills',
-    '.agent-src.uncondensed/commands',
-    '.agent-src.uncondensed/contexts',
-    '.agent-src.uncondensed/templates',
-    '.agent-src.uncondensed/personas',
+    'src/rules',
+    'src/skills',
+    'src/agent-src/commands',
+    'src/agent-src/contexts',
+    'src/agent-src/templates',
+    'src/agent-src/personas',
     'agents/settings/contexts',
     'docs/guidelines',
     'docs/contracts',
@@ -69,7 +76,7 @@ const ROADMAP_FILE_RE =
 // documentation purposes — the rule itself, the companion CI script docs,
 // and the contract doc that names the rule.
 const SELF_DOCUMENTING_ALLOWLIST: ReadonlySet<string> = new Set([
-    '.agent-src.uncondensed/rules/no-roadmap-references.md',
+    'src/rules/no-roadmap-references.md',
     'docs/guidelines/agent-infra/no-roadmap-references.md',
 ]);
 
@@ -172,9 +179,15 @@ function _collect_targets(root: string): string[] {
 
 function scan(root: string): Violation[] {
     const out: Violation[] = [];
+    let scanned = 0;
     for (const p of _collect_targets(root)) {
+        scanned += 1;
         out.push(..._scan_file(p, root));
     }
+    // Gate-coverage contract (src/config/gate-coverage.yml): report what was
+    // actually inspected, so a future dead root fails `check_gate_coverage`
+    // instead of printing a green "no violations" over an empty set.
+    process.stdout.write(`scanned: ${String(scanned)}\n`);
     return out;
 }
 
@@ -190,7 +203,7 @@ function format_text(violations: Violation[]): string {
     }
     lines.push(
         '\nPromote the durable conclusion to agents/settings/contexts/ and cite that ' +
-            'instead. See .agent-src.uncondensed/rules/no-roadmap-references.md.',
+            'instead. See src/rules/no-roadmap-references.md.',
     );
     return lines.join('\n');
 }

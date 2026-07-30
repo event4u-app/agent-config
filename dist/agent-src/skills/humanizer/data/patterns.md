@@ -3,12 +3,12 @@
 > On-demand detail file for the [`humanizer`](../SKILL.md) skill — loaded
 > only during an active humanize pass. Root source: Wikipedia's public
 > "Signs of AI writing" guide (WikiProject AI Cleanup); wording and examples
-> authored fresh for this suite. Mechanically detectable subset
+> authored fresh for this suite. The mechanically detectable subset is
 > mirrored in `src/scripts/ai_tells_rules.ts`.
 
 Rewrite rule for every pattern: **rewrite, don't delete** — replace the
-tell with a plain alternative keeping full meaning. Original
-has five paragraphs → rewrite has five paragraphs.
+tell with a plain alternative that keeps the full meaning. If the original
+has five paragraphs, the rewrite has five paragraphs.
 
 ## Group 1 — Content patterns
 
@@ -28,16 +28,16 @@ proof of importance. Fix: one concrete, dated fact beats a list of logos.
 - After: *"In a 2024 interview she argued regulation should target
   outcomes, not methods."*
 
-**1.3 Superficial "-ing" analysis.** Present-participle tails faking
+**1.3 Superficial "-ing" analysis.** Present-participle tails that fake
 depth: "…, highlighting the region's heritage", "…, fostering community".
-Fix: claim has a source (state it) or it goes.
+Fix: either the claim has a source (state it) or it goes.
 
 **1.4 Promotional register.** "Nestled", "vibrant", "breathtaking",
 "boasts", "rich cultural heritage", "must-visit", "commitment to
 excellence". Fix: neutral description with verifiable detail.
 
 **1.5 Weasel attributions.** "Experts argue", "observers have cited",
-"industry reports suggest" with no named source. Fix: name source and
+"industry reports suggest" with no named source. Fix: name the source and
 date, or drop the claim.
 
 **1.6 Formulaic challenges/outlook sections.** "Despite these challenges…
@@ -60,7 +60,7 @@ song, but a statement", tailing fragments ("…, no guessing"). Fix: state
 the positive claim as one clause.
 
 **2.4 Rule-of-three padding.** Forced triplets ("innovation, inspiration,
-and insights"). Fix: keep items that carry information; two or four
+and insights"). Fix: keep the items that carry information; two or four
 honest items beat three decorative ones.
 
 **2.5 Synonym cycling.** The protagonist / the main character / the
@@ -68,7 +68,7 @@ central figure / the hero for the same referent. Fix: repeat the noun or
 use a pronoun.
 
 **2.6 False ranges.** "From the Big Bang to dark matter, from stars to
-galaxies" where endpoints are not on a scale. Fix: list the topics.
+galaxies" where the endpoints are not on a scale. Fix: list the topics.
 
 **2.7 Subjectless fragments / hidden actors.** "No configuration needed.
 Results are preserved automatically." Fix: restore the actor when it adds
@@ -76,12 +76,12 @@ clarity ("You don't need a config file; the system saves results").
 
 ## Group 3 — Style patterns
 
-**3.1 Em/en-dash density.** Single most reliable mechanical tell in
+**3.1 Em/en-dash density.** The single most reliable mechanical tell in
 AI copy. House rule: **density cap, not zero** — keep at or under ~2 per
 500 words (CP1 parity with `docs/guidelines/design-antipatterns.md`).
-Replace surplus dashes with period, comma, colon, or parentheses.
+Replace surplus dashes with a period, comma, colon, or parentheses.
 Spaced double hyphens (` -- `) always go. A captured voice fingerprint
-genuinely writing in dashes wins over this rule.
+that genuinely writes in dashes wins over this rule.
 
 **3.2 Mechanical boldface.** Bolding every key term. Fix: bold nothing or
 the one thing the reader must not miss.
@@ -92,13 +92,13 @@ prose, or a list whose items are real sentences.
 **3.4 Title Case Headings.** Fix: sentence case.
 
 **3.5 Emoji decoration.** Emoji-prefixed headings and bullets. Fix:
-remove; emoji only where the voice fingerprint explicitly allows.
+remove; emoji only where the voice fingerprint explicitly allows them.
 
 **3.6 Curly quotes.** Only meaningful in clusters — editors auto-curl.
 Normalize to straight quotes in plain-markdown deliverables.
 
-**3.7 Fragmented headers.** Heading followed by a one-liner restating
-the heading. Fix: cut the warm-up line.
+**3.7 Fragmented headers.** A heading followed by a one-liner that
+restates the heading. Fix: cut the warm-up line.
 
 **3.8 Staccato drama / manufactured punchlines.** Runs of short
 declarative fragments engineered for quotability. One short sentence

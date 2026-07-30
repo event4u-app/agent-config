@@ -174,7 +174,6 @@ The files must:
 ./scripts-run src/scripts/check_condensation            # No errors for this file
 ./scripts-run src/scripts/condense --generate-tools    # Regenerate symlinks
 bash scripts/condense.sh --check                # dist/agent-src/ in sync with source
-bash scripts/condense.sh --check-hashes         # All hashes match
 ```
 
 If not in the package repo, note that these checks will run in CI after the PR is created.

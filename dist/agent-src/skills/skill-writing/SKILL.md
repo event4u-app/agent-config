@@ -454,14 +454,15 @@ to every skill you author.
 ## Read-only-by-default scripts
 
 A script shipped inside a skill (`scripts/**`) is **side-effect-free by
-default** — inspects, computes, prints; does not mutate. Mutation (write /
-delete / rename / copy) gates behind an explicit flag named in this SKILL.md —
-`--writable` / `--apply` / `--write` / `--output` / `--fix` — so the default
-invocation is safe. A generator whose *declared purpose* is to write (emits an
-artifact to a caller-supplied path) is allowlisted with a rationale in
-`src/scripts/lint_skill_scripts_readonly_allowlist.json` instead of a redundant
-flag. `lint_skill_scripts_readonly` enforces this: an ungated, non-allowlisted
-write fails the build.
+default** — it inspects, computes, and prints; it does not mutate the
+filesystem. Any mutation (writing a file, deleting, rename/copy) must be gated
+behind an explicit flag named in this SKILL.md — `--writable` / `--apply` /
+`--write` / `--output` / `--fix` — so the default invocation is safe to run
+blind. A generator whose *declared purpose* is to write (it emits an artifact
+to a caller-supplied path) is allowlisted with a rationale in
+`src/scripts/lint_skill_scripts_readonly_allowlist.json` rather than carrying a
+redundant flag. `lint_skill_scripts_readonly` enforces this: an ungated,
+non-allowlisted write fails the build.
 
 ## Description-optimizer loop (U1 — held-out, not vibes)
 

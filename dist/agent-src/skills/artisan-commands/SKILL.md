@@ -51,7 +51,7 @@ Do NOT use when:
 - Destructive? → Add `--force` flag + confirmation.
 - Scheduled? → Ensure non-interactive, idempotent, loud failures.
 - Long-running? → Use chunking/cursors, progress bar.
-- Production? → Add env check if needed.
+- Production? → Add environment check if needed.
 
 ### Step 4: Test
 
@@ -72,7 +72,7 @@ Do NOT use when:
 
 - `$this->info()` is suppressed in quiet mode — use `$this->line()` for critical info.
 - Always add `--force` for destructive commands — never delete data without confirmation.
-- Add env checks for production commands.
+- Add environment checks for production commands.
 
 ## Do NOT
 

@@ -23,8 +23,8 @@ packs:
 Condense agent config `.md` files from `src/` into token-efficient telegraph format
 and write the condensed output to `dist/agent-src/`.
 
-Uses SHA-256 hashes to track which source files changed since last condensation.
-Only changed files need recondensation — saving tokens and time.
+The projection is deterministic: `dist == rewrite(src)` byte-for-byte. A file is
+out of date only when its projection does not match that rewrite.
 
 ## Step 1: Sync non-.md files
 
@@ -41,99 +41,37 @@ changed `.md` files that need condensation.
 bash scripts/condense.sh --changed
 ```
 
-This lists only `.md` files whose source has changed since the last condensation (based on
-stored SHA-256 hashes). If no files changed → you're done.
+This lists only `.md` files whose projection is out of date (`dist != rewrite(src)`).
+If no files are listed → you're done.
 
 If you need to see ALL files regardless of change status:
 `bash scripts/condense.sh --list`.
 
-## Step 3: Condense each changed .md file
+## Step 3: nothing to condense — the projection is a deterministic copy
 
-**Core principle:** Condensation must improve execution quality, not just reduce length.
-A condensed file should be easier to scan, easier to trigger, and easier to execute than the original.
+**ADR-201 (accepted 2026-07-29) removed the LLM prose rewrite from this command.**
+`.md` is copied verbatim and path-rewritten by `condense.sh --sync`; there is no
+per-file condensation step for the agent to perform any more.
 
-For each changed `.md` file:
+Why it was removed, measured with exact `tiktoken cl100k_base` over 429 artefacts:
+0 of them saved >= 500 tok, the aggregate saving was 0.86%, 267/429 pairs were
+byte-identical, and the 9 always-loaded kernel rules came out **36 tokens worse**.
+Determinism failed by construction — the hash covered the source and never the
+output, so divergence was undetectable, and it went undetected three times in a
+single session.
 
-1. Read the source from `src/{path}`
-2. Condense the prose using these rules:
-   - **Remove:** articles (a, an, the), filler (just, really, basically, actually, simply, essentially),
-     pleasantries, hedging, connective fluff (however, furthermore, additionally),
-     redundant wording, obvious framework knowledge, repeated explanations, decorative prose
-   - **Shorten:** "in order to" → "to", "make sure to" → "ensure", use short synonyms
-   - **Abbreviate** common terms when context is unambiguous: `DB`, `auth`,
-     `config`, `req`, `res`, `fn`, `impl`, `env`, `deps`, `ctx`. Skip if it
-     would be the first occurrence of the concept in the file, or if the
-     abbreviation collides with a domain term (e.g. `auth` stays
-     `authentication` inside an auth-module file). Never abbreviate inside
-     code blocks, frontmatter, file paths, command strings, or Iron Law
-     fenced blocks.
-   - **Arrows for causality:** `X causes Y` / `X leads to Y` / `X, then Y`
-     → `X → Y`. Keep arrows out of code blocks, frontmatter, and Iron Law
-     fenced blocks; only the surrounding prose uses them. (The example
-     phrases here are intentionally backticked so the inline-code
-     protection skips them — never strip those backticks.)
-   - **Fragments OK:** "Run tests before commit" not "You should always run tests before committing"
-   - **Drop:** "you should", "make sure to", "remember to" — state action directly
-   - **Merge** redundant bullets that say the same thing differently
-   - **Prefer** bullets over prose, direct instructions over explanatory paragraphs, one-line decisions over paragraphs
-3. **Copy-paste first, condense second:**
-   Before condensing ANY prose, extract and set aside these elements from the source.
-   They go into the condensed output **unchanged, byte-for-byte**:
-   - **All code blocks** (``` fenced or indented) — copy EVERY code block from source to output FIRST
-   - **YAML frontmatter** — copy verbatim
-   - **All inline code** (`backtick content`)
-   - **All URLs, links, file paths, commands**
-   - **All H1/H2 headings** — exact text preserved
-   - **Tables** (structure preserved, condense cell text only)
-   - **Technical terms, library names, API names**
-   - **Dates, version numbers, numeric values**
-   Then condense ONLY the prose around these preserved elements.
-4. **NEVER remove (even if verbose):**
-   - Trigger clarity (When to use / description)
-   - Decision hints that prevent mistakes
-   - Concrete validation checks
-   - Gotchas based on real failure patterns
-   - Anti-patterns that prevent recurring failures
-   - **Iron Law sections** — see "Iron Laws — do not touch" below
-5. **Enrich (SKILL.md files only):** During condensation, also improve agent-effectiveness:
-   - **Validation steps:** If a Procedure ends with a vague validation ("check if it works"),
-     replace with concrete checks (expected output, commands to verify, specific conditions)
-   - **Mini examples:** If no `Examples` section exists, add a short safe/unsafe or good/bad example
-     (2-4 lines max — not a tutorial)
-   - **Output format:** If the Output format section is vague ("explain everything"), sharpen it to
-     specific numbered expectations ("1. Code snippet 2. Where to register 3. Gotcha if relevant")
-   - **Anti-patterns:** If the same mistake keeps recurring, add a short anti-patterns section
-   - **Do NOT invent content.** Only concretize what the source implies. If the source says
-     "validate copy/paste safety", you can add "Check: no nested backticks, fully selectable".
-     But don't add unrelated sections.
-   - **Do NOT condense weak skills.** If the source has no procedure or no validation, fix structure first.
-   - **Reference skill:** See `src/skills/skill-writing/SKILL.md` for the gold standard
-6. Write the condensed output to `dist/agent-src/{path}`
-7. **MANDATORY: Run condensation quality check on this file:**
+The instruction that used to live here already demanded *"copy EVERY code block
+from source to output FIRST, unchanged, byte-for-byte"*. It was clear, and it was
+broken anyway in six artefacts — corrupting template blocks users copy verbatim —
+because nothing checked it. That is the case for removing the rewrite rather than
+restating the rule more firmly.
 
-```bash
-./scripts-run src/scripts/check_condensation --format text 2>&1 | grep "{path}"
-```
+What survives is the one deterministic transform: `apply_path_rewriter` fixes
+relative links so they resolve from the delivered location (`../../docs/…` →
+`../docs/…`, ~38 artefacts). It runs automatically on every copy.
 
-If the output contains 🔴 (error) for this file: **STOP. Fix the condensed file before continuing.**
-Common errors and how to fix them:
-- `lost_code_blocks` → You dropped a code block. Copy ALL code blocks from source.
-- `modified_code_block` → Code block content changed. Replace with exact source content.
-- `frontmatter_mismatch` → YAML frontmatter differs. Copy verbatim from source.
-
-**Do NOT call `mark-done` until this file has zero 🔴 errors.**
-
-8. Show word count: `{original} → {condensed} words ({saved}% saved)`
-9. **Mark as done:** `bash scripts/condense.sh --mark-done {path}`
-
-### Batch processing
-
-When condensing multiple files, process them in batches of ~10.
-Mark each file done after writing it. After each batch, show a progress summary:
-
-```
-Batch 1/5 complete: 10 files, avg 42% saved
-```
+**If you were sent here to condense a file: don't.** Edit `src/`, run
+`--sync`, and let Step 4 verify that `dist == rewrite(src)` byte-for-byte.
 
 ## Step 4: Final verification gate
 
@@ -143,7 +81,7 @@ Run BOTH checks. Both must pass before finishing.
 bash scripts/condense.sh --check
 ```
 
-Must show ✅ (hashes in sync).
+Must show ✅ (`dist/agent-src/` in sync with source).
 
 ```bash
 ./scripts-run src/scripts/check_condensation
@@ -161,14 +99,6 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
 - `minimal` (default) → one line: `→ N files condensed (avg X% savings)`.
 - `full` → multi-line table with per-category stats (files condensed,
   avg savings).
-
-## Hash management
-
-- Hashes are stored in `.augment/.condensation-hashes.json` (committed to Git).
-- `bash scripts/condense.sh --sync` automatically cleans up hashes for deleted source files.
-- `bash scripts/condense.sh --mark-all-done` marks ALL current `.md` files as condensed
-  (useful after an initial full condensation or when bootstrapping the hash file).
-- A file with no stored hash is always treated as "changed".
 
 ## Iron Laws — do not touch
 
@@ -202,7 +132,9 @@ If an Iron Law section genuinely contains filler (rare): edit the SOURCE in
 
 ## Condensation quality checklist
 
-**Also apply the `preservation-guard` rule** — strongest validation, example, anti-pattern, and decision hints must survive condensation. Iron Laws are non-negotiable.
+**Also apply the [preservation-guard](../rules/preservation-guard.md) rule** — strongest validation, example, anti-pattern, and decision hints must survive condensation. Iron Laws are non-negotiable.
+
+See also: [markdown-safe-codeblocks](../rules/markdown-safe-codeblocks.md) for fenced-block hygiene.
 
 After condensing each file, verify:
 
@@ -237,4 +169,3 @@ Unsafe (DO NOT do this):
 - **Only write to `.augment/`** — the condensed output directory.
 - **Preserve ALL technical content** — only condense natural language prose.
 - **YAML frontmatter** in command/skill files must be preserved exactly.
-- **Always run `bash scripts/condense.sh --mark-done {path}`** after writing each condensed file.

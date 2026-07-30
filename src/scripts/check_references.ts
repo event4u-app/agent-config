@@ -179,7 +179,6 @@ const EXAMPLE_PATH_PATTERNS: RegExp[] = [
     /skills\/[\w-]+\.md/, // short skill refs in examples (not SKILL.md path)
     /skills\/[\w-]+\/SKILL\.md/, // example skill paths in commands
     /\{/, // template placeholders like {module}
-    /\.condensation-hashes\.json/, // JSON file, not .md
     /-foo\.(md|json|yml|yaml)$/, // `-foo.<ext>` placeholder examples
     /-bar\.(md|json|yml|yaml)$/, // `-bar.<ext>` placeholder examples
     // ── docs/+src/ illustrative example paths (Phase-0 step 7a) ──

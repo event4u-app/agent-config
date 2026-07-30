@@ -35,7 +35,7 @@ counterpart to the write-engine's built-in step 4b audit.
 - `/humanize <path>` — read the file at `<path>` (read-only).
 - `/humanize --voice=<ghostwriter-slug|me>` — optionally resolve a voice
   via the write-engine's style-source resolution (§ 1 of the
-  [`write-engine`](../docs/contracts/write-engine.md) contract):
+  [`write-engine`](../../docs/contracts/write-engine.md) contract):
   a ghostwriter slug loads `agents/reference/ghostwriter/<slug>.md`, `me`
   loads `.agent-user.md`. The resolved fingerprint takes precedence over
   humanizer defaults (a voice that legitimately uses em dashes wins). No
@@ -96,7 +96,7 @@ never reworded, never dropped.
 
 - [`humanizer`](../../../src/skills/humanizer/SKILL.md) — the skill this
   command wraps.
-- [`write-engine § 4b`](../docs/contracts/write-engine.md) — the
+- [`write-engine § 4b`](../../docs/contracts/write-engine.md) — the
   built-in audit for ghostwriter/post-as drafts.
 - [`content-quoting-floor`](../../../src/rules/content-quoting-floor.md)
   — quoted text is never rewritten.

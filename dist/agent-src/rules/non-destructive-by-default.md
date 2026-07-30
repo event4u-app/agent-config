@@ -56,10 +56,6 @@ Catalog (autonomy-as-cover, roadmap-as-authorization, refusing-named-deletions, 
 
 Applies on every surface — web, Skills API, any cloud agent. No "cloud override".
 
-## See also
-
-[`autonomous-execution`](autonomous-execution.md) · [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) · [`user-interaction`](user-interaction.md).
-
 ## Enforcement — stated honestly (`enforced_by: none`)
 
 This floor has **no mechanical backstop**, and pretending otherwise would be the

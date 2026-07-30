@@ -3,7 +3,7 @@ type: "auto"
 tier: "2a"
 description: "Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path"
 triggers:
-  - path_prefix: ".agent-src.uncondensed/personas/"
+  - path_prefix: "src/agent-src/personas/"
   - path_prefix: "dist/agent-src/personas/"
   - keyword: "persona"
   - keyword: "personas"

@@ -52,17 +52,30 @@ describe('check_no_new_legacy_path — 1:1 port of test_check_no_new_legacy_path
     });
 
     it('test_non_src_files_are_ignored', () => {
-        // a full diff (gh pr diff) carries every path; only src/ is in scope —
-        // docs/, tests/, agents/, taskfiles/ mentions must NOT be flagged
+        // A full diff (gh pr diff) carries every path; only src/ and tests/ are in
+        // scope. `tests/` was REMOVED from this ignore list on 2026-07-29 — see the
+        // positive case below for why.
         for (const p of [
             'docs/governance.md',
-            'tests/test_check_no_new_legacy_path.py',
             'agents/roadmaps/x.md',
             'taskfiles/ci-fast.yml',
         ]) {
             const diff = _diff(p, `the \`${LEGACY}/\` literal`);
-            expect(g.find_offenders(diff), `${p} is outside src/ — must be ignored`).toEqual([]);
+            expect(g.find_offenders(diff), `${p} is out of scope — must be ignored`).toEqual([]);
         }
+    });
+
+    it('a NEW dead-root reference under tests/ is flagged (scope added 2026-07-29)', () => {
+        // Four tests were found pinning the dead root — two via fixture paths, one
+        // via a resolve_entry expectation, one asserting a missing root exits 0 —
+        // and each kept a gate's blindness green, because test and implementation
+        // agreed on a tree reality had abandoned. Diff-scoping is what makes this
+        // tractable: tests/ already holds ~213 legitimate mentions (the legacy
+        // detectors' own tests, validator_ignore substrings, tmpdir fixtures), so a
+        // full-tree lint would be ~200 false positives. Existing debt stays here;
+        // only NEW additions are caught.
+        const diff = _diff('tests/scripts/some_gate.test.ts', `fixture at \`${LEGACY}/rules/a.md\``);
+        expect(g.find_offenders(diff)).toHaveLength(1);
     });
 
     it('test_multiple_files_in_one_diff', () => {

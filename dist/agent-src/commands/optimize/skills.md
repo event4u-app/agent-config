@@ -27,7 +27,7 @@ Skill audit: measure, find duplicates/merge candidates, run linter, present find
 ### 1. Measure baseline
 
 ```bash
-total=$(ls -d src/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+total=$(ls -d .agent-src.uncondensed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 total_lines=$(cat .agent-src.uncondensed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 echo "Skills: $total, Total lines: $total_lines"
 

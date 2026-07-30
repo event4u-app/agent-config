@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Financial data in a spreadsheet uses official sources first (IR, regulatory filings); aggregator/news/social figures need explicit permission + a cell-level unofficial mark"
+description: "Spreadsheet financial data uses official sources (IR, regulatory filings); aggregator/news/social figures need permission + cell-level unofficial mark"
 triggers:
   - keyword: "financial data"
   - keyword: "financial model"

@@ -139,10 +139,10 @@ Dials persist in `DESIGN.md`; the stack executors (`tailwind-engineer`,
 design direction, cross-check your first impulse against the current-generation
 tells in [`design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
 (§ Current-generation tells — the warm-editorial C5+T2+T7 signature and the
-previous-generation C1/C2 gradient) plus the L1/L2 layout defaults. If a tell was
-your first reach, name a different direction or explicitly justify why this brief
-genuinely calls for it. (The finalization cross-check against the full catalog is
-under *Anti-slop discipline* below.)
+previous-generation C1/C2 gradient) plus the L1/L2 layout defaults. If a tell
+was your first reach, name a different direction or explicitly justify why this
+brief genuinely calls for it. (The finalization cross-check against the full
+catalog is under *Anti-slop discipline* below.)
 
 ## Honesty / real-system grounding
 

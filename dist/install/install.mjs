@@ -14302,6 +14302,14 @@ var settingsSchema = external_exports.object({
       "Consumed by the doc-screenshot-hygiene rule. on (default) = a data-bearing screenshot embed is gated behind this-turn human confirmation; uncertain/unresolved regions redact-or-refuse, never ship-and-hope; illustrative/no-data screenshots may embed with a stated justification. off = no data-bearing gate (the anonymization taxonomy still applies)."
     )
   }).default({ identity_allowlist: [], forbid_terminal_capture: true, data_bearing_gate: "on" }),
+  telegraph: external_exports.object({
+    speak: external_exports.boolean().default(false).describe(
+      "Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This \u2014 not speak_scope \u2014 is the lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002)."
+    ),
+    speak_scope: external_exports.enum(["off", "reply", "all"]).default("off").describe(
+      "Where telegraph condensation applies WHEN speak is true. off (default) = agent reply prose is exempt. compile_router never reads this key: with speak false the rule does not ship, so this setting has no effect on its own. Quote the value in YAML \u2014 bare `off` parses as a boolean under YAML 1.1 and is rejected."
+    )
+  }).default({ speak: false, speak_scope: "off" }),
   tokens: external_exports.object({
     rich_skills: richSkillsMode.default("on").describe(
       "Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading."

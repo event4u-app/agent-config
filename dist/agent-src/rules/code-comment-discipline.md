@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Writing/editing code in any language — a comment states a WHY or a constraint the code cannot show; never restate what names/types already say; no signature-mirroring docblocks"
+description: "Writing/editing code — a comment states a WHY or constraint the code cannot show; never restate what names/types say; no signature-mirroring docblocks"
 triggers:
   - intent: "writing or generating code"
   - intent: "adding a class / method / function"

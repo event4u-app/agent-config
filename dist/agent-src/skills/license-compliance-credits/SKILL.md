@@ -34,16 +34,16 @@ Do NOT use when:
 
 ## Procedure
 
-1. **Inspect the current state** — read `provenance/borrows.jsonl` (may be
-   legitimately empty) and note its line count before regenerating, so the
-   diff is checkable.
+1. **Inspect the current state** — read `provenance/borrows.jsonl` (it may
+   be legitimately empty) and note how many lines it has before
+   regenerating, so the diff is checkable.
 2. **Regenerate the notices file:**
    ```bash
    npx tsx node_modules/@event4u/agent-config/src/scripts/lint_provenance.ts --regenerate-notices
    ```
 3. **Diff `docs/THIRD-PARTY-NOTICES.md`** before vs. after — confirm only
    that generated file changed, and that `provenance/borrows.jsonl` itself
-   was not touched (it's append-only; this command never writes to it).
+   was not touched (it is append-only; this command never writes to it).
 4. **Verify sync + validity** with a plain run (no flag):
    ```bash
    npx tsx node_modules/@event4u/agent-config/src/scripts/lint_provenance.ts

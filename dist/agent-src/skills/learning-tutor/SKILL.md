@@ -12,15 +12,15 @@ packs:
 # learning-tutor
 
 > Structured tutoring modes for learning WITH the agent instead of consuming
-> explanations FROM it. Default agent behavior on "teach me X" = prose
+> explanations FROM it. The default agent behavior on "teach me X" is a prose
 > lecture — pedagogically the weakest format. This skill replaces the lecture
-> with six evidence-shaped modes: triage what to learn, practice before
-> theory, withhold answers until the learner has tried, verify understanding
-> with probes the learner cannot bluff through.
+> with six evidence-shaped modes: triage what to learn, practice before theory,
+> withhold answers until the learner has tried, verify understanding with
+> probes the learner cannot bluff through.
 
 ## When to use
 
-Use when the user:
+Use this skill when the user:
 
 - Wants to get functional in a new tool, framework, language or topic fast
   ("teach me X", "get me productive in X", "crash course").
@@ -28,32 +28,32 @@ Use when the user:
   "let me apply it", "give me exercises").
 - Pastes content they don't understand and asks for a real explanation
   ("I don't get this", "explain this doc so it clicks").
-- Has a concrete goal with a deadline, wants a learning plan
-  ("learning plan for X", "need to ship Y in two weeks, don't know Z").
-- Wants existing knowledge stress-tested ("quiz me", "do I actually
+- Has a concrete goal with a deadline and wants a learning plan
+  ("learning plan for X", "I need to ship Y in two weeks and don't know Z").
+- Wants their existing knowledge stress-tested ("quiz me", "do I actually
   understand X?", "find my blind spots").
-- Just learned something, wants to verify it stuck ("check my
+- Just learned something and wants to verify it stuck ("check my
   understanding", "let me explain it back to you").
 
 Do NOT use when:
 
-- User asks a direct factual or how-to question — answer it
+- The user asks a direct factual or how-to question — answer it
   (per `direct-answers`); don't convert a question into a curriculum.
-- User wants the agent to DO the task, not to learn it.
-- "Learning" target is this package's own artifacts (rules/skills) —
+- The user wants the agent to DO the task, not to learn it.
+- The "learning" target is this package's own artifacts (rules/skills) —
   that is `learning-to-rule-or-skill`, a different skill.
-- User wants a plan/idea stress-tested — that is `adversarial-review`
+- The user wants a plan/idea stress-tested — that is `adversarial-review`
   or `/challenge-me`, not knowledge tutoring.
 
 ## Procedure
 
-1. **Select the mode** from user intent (table below). Pick ONE; if two fit,
-   pick the one matching the user's verb ("learn" → teach modes 1–4,
+1. **Select the mode** from the user's intent (table below). Pick ONE; if two
+   fit, pick the one matching the user's verb ("learn" → teach modes 1–4,
    "check/quiz/verify" → probe modes 5–6) — don't ask.
-2. **State the chosen mode** in one line, freeze the target
+2. **State the chosen mode** in one line and freeze the target
    (skill/topic/goal).
 3. **Run the mode's own procedure** (sections below), holding its withhold
-   rules — they ARE the skill.
+   rules — they are the skill.
 4. **Carry the output header** (see `## Output format`) on every reply so a
    resumed session continues instead of restarting.
 5. **Close the session** with the mode's closing analysis and exactly one
@@ -72,16 +72,16 @@ Do NOT use when:
 
 ## Mode 1 — Rapid competence
 
-Frame: one time-boxed session (default 4 focused hours unless user names a
-budget), never met again — every minute must transfer skill. No theory block
-without immediate practical use.
+Frame: one time-boxed session (default 4 focused hours unless the user names
+a budget), never met again — every minute must transfer skill. No theory
+block without an immediate practical use.
 
 1. Answer three triage questions, in order, before anything else:
    - **First**: the one thing to learn first — and why exactly that.
    - **Ignore**: what to skip entirely for now — and why skipping is safe.
    - **Leverage exercise**: the single exercise that, done once, puts the
      learner ahead of most people who have "studied" the skill for months.
-2. Run the session practice-first: each concept introduced only at the
+2. Run the session practice-first: each concept is introduced only at the
    moment an exercise needs it.
 3. Close with the next leverage exercise for the learner's own follow-up.
 
@@ -97,25 +97,26 @@ mistake.
 3. Reveal the answer only after the learner has made **at least two** genuine
    attempts.
 4. Repeat the cycle with variations until the learner applies the concept
-   without hesitation; then say so explicitly, stop.
+   without hesitation; then say so explicitly and stop.
 
 ## Mode 3 — Keystone decoding
 
-Frame: user supplied content (doc, text, code, spec) that doesn't click.
+Frame: the user supplied content (doc, text, code, spec) that doesn't click.
 
 1. Identify the **one sentence** the learner must understand for the rest to
    fall into place. Name it verbatim from the content.
-2. Explain only that sentence first — with an everyday analogy, no technical
-   term left unexplained in the same breath.
-3. Ask exactly **3 comprehension questions** designed so only someone who
-   actually understood can answer (no yes/no, no recall of wording).
+2. Explain only that sentence first — with an everyday analogy, and no
+   technical term left unexplained in the same breath.
+3. Ask exactly **3 comprehension questions** designed so that only someone who
+   actually understood the concept can answer them (no yes/no, no recall of
+   the wording).
 4. Continue into the rest of the content only after all three are answered
-   correctly; on a wrong answer, re-explain from a different angle, re-ask.
+   correctly; on a wrong answer, re-explain from a different angle and re-ask.
 
 ## Mode 4 — Goal-backward sprint
 
-Frame: user has a specific outcome, a time frame, a current level. Plan
-targets the OUTCOME, not the subject in general.
+Frame: the user has a specific outcome, a time frame and a current level. The
+plan targets the OUTCOME, not the subject in general.
 
 1. Confirm the three inputs (goal/outcome, time frame, current level) from
    the message; ask for at most the one that is missing.
@@ -124,12 +125,12 @@ targets the OUTCOME, not the subject in general.
    - **One task**, completable in ~45 minutes.
    - **One success criterion** — how the learner verifies they did it right.
    - **One exclusion rule** — what they deliberately do NOT touch that day.
-3. Self-check the path against the goal: a day that doesn't causally move the
-   learner toward the stated outcome → rework before presenting.
+3. Self-check the path against the goal: if a day doesn't causally move the
+   learner toward the stated outcome, rework it before presenting.
 
 ## Mode 5 — Gap probe
 
-Frame: user believes they already know the subject. Job: prove otherwise.
+Frame: the user believes they already know the subject. Job: prove otherwise.
 
 1. Ask **5 questions** that look deceptively simple but expose the classic
    gaps of someone who never went deep — edge cases, "why" behind defaults,
@@ -142,8 +143,8 @@ Frame: user believes they already know the subject. Job: prove otherwise.
 
 ## Mode 6 — Feynman check
 
-Frame: user explains the freshly learned topic as if the agent were a
-10-year-old. Agent listens and interrupts.
+Frame: the user explains the freshly learned topic as if the agent were a
+10-year-old. The agent listens and interrupts.
 
 1. Invite the explanation; interrupt immediately when the learner:
    - uses a technical term without being able to say what it means,
@@ -151,7 +152,7 @@ Frame: user explains the freshly learned topic as if the agent were a
    - oversimplifies to the point of being factually wrong.
 2. Each interruption is one pointed question, not a correction.
 3. Close with a precise analysis: what the accumulated stumbles reveal about
-   which parts of the understanding are not yet solid — and which held.
+   which parts of the understanding are not yet solid — and which parts held.
 
 ## Output format
 
@@ -167,7 +168,7 @@ Next:     <what the learner does next>
 
 Required fields (ordered):
 
-1. **Mode line** — mode number + name, stated in the first reply, kept on
+1. **Mode line** — mode number + name, stated in the first reply and kept on
    every subsequent reply of the session.
 2. **Target** — the skill/topic/goal being tutored, frozen at session start;
    a target change starts a new mode selection.
@@ -180,14 +181,14 @@ Required fields (ordered):
 
 - **Lecture relapse** — after 2–3 turns the agent drifts back into
   explaining instead of asking. The withhold rules (mode 2: answer only
-  after 2 attempts; mode 3: proceed only after 3/3 correct) ARE the skill;
+  after 2 attempts; mode 3: proceed only after 3/3 correct) are the skill;
   dropping them silently turns every mode back into mode zero.
-- **Solving instead of tutoring** — learner pastes their broken attempt,
-  agent fixes it. In modes 2/5/6 the fix is withheld; the question comes
-  first. If the user explicitly switches intent to "just fix it", say the
-  tutoring session is paused and fix it — don't blend the two.
+- **Solving instead of tutoring** — the learner pastes their broken attempt
+  and the agent fixes it. In modes 2/5/6 the fix is withheld; the question
+  comes first. If the user explicitly switches intent to "just fix it",
+  say the tutoring session is paused and fix it — don't blend the two.
 - **Flattery corrupts the probe** — modes 5 and 6 only work blunt. "Great
-  answer!" on a shallow answer defeats the mode (`direct-answers`
+  answer!" on a shallow answer defeats the mode (and `direct-answers`
   Iron Law 1 already forbids it).
 - **Untested self-assessment** — taking "yes, understood" as passing a
   comprehension check. Only a correct answer to a probe question counts;

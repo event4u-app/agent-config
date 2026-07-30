@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Multi-step or continuation replies carry a red thread — state the goal once, tie each turn back to it, name what changed since last turn, close the loop with one end-summary"
+description: "Multi-step or continuation replies carry a red thread — goal once, each turn tied to it, name what changed, close with one end-summary"
 triggers:
   - intent: "producing a multi-step or continuation reply"
   - intent: "reporting progress on ongoing work"

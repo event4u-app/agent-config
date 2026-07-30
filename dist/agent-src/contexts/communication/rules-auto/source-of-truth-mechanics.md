@@ -12,17 +12,17 @@ when authoring or pre-review verification fires.
 1. **Create or edit** the file in `src/{path}` (e.g. `src/rules/`, `src/skills/`,
    `src/agent-src/`, `src/domains/<pack>/`)
 2. **Do NOT auto-condense.** Continue working.
-3. **Before commit/push:** Check if condensation is needed
-   (`bash src/scripts/condense.sh --changed`). If files need condensation,
-   ask the user:
+3. **Before commit/push:** Check whether any projection is out of date
+   (`bash src/scripts/condense.sh --changed` — `dist != rewrite(src)`). If files
+   are listed, ask the user:
    ```
-   > 📦 {N} dist/agent-src files need condensation before commit.
+   > 📦 {N} dist/agent-src files are out of date before commit.
    >
-   > 1. Condense now — run /condense
-   > 2. Later — commit without condensation
+   > 1. Sync now — run /condense
+   > 2. Later — commit without syncing
    ```
-4. If condensing: run `/condense` command, then
-   `bash src/scripts/condense.sh --mark-done {path}`
+4. If syncing: run the `/condense` command — `--sync` writes the projection,
+   nothing has to be marked afterwards.
 
 For new non-.md files (`.php`, configs):
 `bash src/scripts/condense.sh --sync` copies them automatically.
@@ -94,6 +94,5 @@ Commands have `disable-model-invocation: true` in their frontmatter.
 | Create new non-`.md` | Create in `src/`, run `bash src/scripts/condense.sh --sync` |
 | Create new command | Create in `src/agent-src/commands/`, sync, `./scripts-run src/scripts/condense --generate-tools` |
 | Delete a file | Delete from `src/` and `dist/agent-src/` |
-| Check what needs condensation | `bash src/scripts/condense.sh --changed` |
-| Mark file as condensed | `bash src/scripts/condense.sh --mark-done {path}` |
+| Check which projections are out of date | `bash src/scripts/condense.sh --changed` |
 | Verify everything is in sync | `bash src/scripts/condense.sh --check` |

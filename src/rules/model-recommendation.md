@@ -8,7 +8,7 @@ triggers:
   - phrase: "which model"
   - keyword: "model_tier"
 load_context:
-  - ../contexts/model-recommendations.md
+  - contexts/model-recommendations.md
 routes_to:
   - "guideline:agent-infra/model-recommendation"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]

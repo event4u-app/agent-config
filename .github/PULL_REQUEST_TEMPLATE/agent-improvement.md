@@ -20,7 +20,7 @@
 
 - [ ] Linter passes (`python3 src/scripts/skill_linter.py --all`)
 - [ ] Sync check passes (`task sync-check`)
-- [ ] Hash check passes (`task sync-check-hashes`)
+- [ ] Projection is byte-exact (`task check-condensation`)
 - [ ] Reference check passes (`python3 src/scripts/check_references.py`)
 - [ ] Portability check passes (`python3 src/scripts/check_portability.py`)
 

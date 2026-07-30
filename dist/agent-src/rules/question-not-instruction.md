@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "A question is a request for an ANSWER, never authorization to act — answer first; never treat 'why…?' / 'can you…?' / 'what do you think?' as a green light to build, change, or execute"
+description: "A question requests an ANSWER, never authorization to act — answer first; 'why…?' / 'can you…?' is no green light to build, change, or execute"
 triggers:
   - phrase: "warum"
   - phrase: "wieso"

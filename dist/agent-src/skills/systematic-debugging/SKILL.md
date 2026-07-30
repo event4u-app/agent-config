@@ -186,14 +186,14 @@ Pairs with [`context-hygiene § Read-Loop Detection`](../../rules/context-hygien
    the feedback loop.
 
 **Failure-signature triage — same taxonomy as [`context-hygiene § The 3-Failure Rule`](../../rules/context-hygiene.md#the-3-failure-rule).**
-The **failure signature** = **same target + same error class** (same failing test
-+ same assertion, same lint rule id, same build error). **Same failure signature
-twice → stop and pivot** — don't spend the next lap on a near-identical retry; a
-repeated identical signature means the hypothesis is wrong, not under-applied. A
-**new error signature each attempt = progress** and the counter continues. The
-**hard-blocker classes** (missing credentials, permission denied, spend/quota/rate
-limit, external-service `5xx`) skip retries entirely — surface on first
-occurrence; another lap cannot fix them.
+The **failure signature** is the **same target + same error class** (same failing
+test with the same assertion, same lint rule id, same build error). The **same
+failure signature twice → stop and pivot** — do not spend the next lap on a
+near-identical retry; a repeated identical signature means the hypothesis is
+wrong, not under-applied. A **new error signature each attempt = progress** and
+the counter continues. And the **hard-blocker classes** (missing credentials,
+permission denied, spend/quota/rate limit, external-service `5xx`) skip retries
+entirely — surface on first occurrence; another lap cannot fix them.
 
 **Anti-patterns this loop prevents:**
 
@@ -268,11 +268,11 @@ When reporting debug findings to the user:
 
 ## Knowledge capture (`mistake_made` event)
 
-Root cause traces to a `agents/knowledge/` page followed while
-implementing (documented convention wrong, API-shape page stale,
-procedure incomplete) → append a `mistake_made` event to the
-knowledge intake — never rewrite the page mid-task (see
-[`knowledge-pages`](../../templates/contexts/knowledge-pages.md)):
+If the root cause traces to a `agents/knowledge/` page that was
+followed while implementing (a documented convention was wrong, an
+API shape page was stale, a procedure was incomplete), append a
+`mistake_made` event to the knowledge intake — never rewrite the page
+mid-task (see [`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)):
 
 ```bash
 npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts \
@@ -283,17 +283,18 @@ npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts \
     --recurrence-key "<stable slug for this class of mistake>"
 ```
 
-Verify the append landed: check the command's exit code (0 =
-appended), then `grep <recurrenceKey> agents/knowledge/intake/events-*.jsonl`
+Verify the append landed: check the command's exit code (0 = appended),
+then `grep <recurrenceKey> agents/knowledge/intake/events-*.jsonl`
 finds the new line.
 
-**Live contradiction exception.** Followed page DEMONSTRABLY wrong
-right now (observed ≠ documented, not a one-off) → hybrid immediate-fix
-case instead — surface the correction, ask before continuing (see
-[`knowledge-pages`](../../templates/contexts/knowledge-pages.md) §
-Contested entries). Approved → isolated fix commit. Declined →
+**Live contradiction exception.** If the followed page is DEMONSTRABLY
+wrong right now (observed reality ≠ documented claim, not a one-off),
+this is the hybrid immediate-fix case instead — surface the proposed
+correction and ask before continuing (see
+[`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)
+§ Contested entries). Approved → isolated fix commit. Declined →
 `npx tsx node_modules/@event4u/agent-config/src/scripts/append_contested.ts` on that page, then still
-emit the `context_stale` event above for the consolidation pass.
+emit the `context_stale` event above it for the consolidation pass.
 
 ## Gotchas
 

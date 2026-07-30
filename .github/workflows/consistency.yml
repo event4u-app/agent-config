@@ -117,8 +117,8 @@ jobs:
       - name: Verify current sync state
         run: task sync-check
 
-      - name: Verify condensation hashes
-        run: task sync-check-hashes
+      - name: Verify dist == rewrite(src) byte-for-byte
+        run: task check-condensation
 
       - name: Regenerate .augment from source
         run: task sync

@@ -131,11 +131,11 @@ Check:
 
 ## Knowledge capture (`convention_detected` events)
 
-An architecture-map or stack finding that recurs (naming convention,
-module boundary, layering rule) is worth persisting for the team.
+An architecture map or stack finding that recurs (a naming convention,
+a module boundary, a layering rule) is worth persisting for the team.
 Append to the knowledge intake instead of leaving it in the one-off
-analysis output — applies to every `project-analysis-*` specialist
-this skill hands off to:
+analysis output (applies to every `project-analysis-*` specialist this
+skill hands off to, not just this one):
 
 ```bash
 npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts --type convention_detected \

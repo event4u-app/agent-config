@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Change history done right — audit coverage, cheapest-sufficient tier (default: row-level audit log; event sourcing only by waiver), audit hygiene + privacy interlocks."
+description: "Change history — audit coverage, cheapest-sufficient tier (default row-level audit log; event sourcing by waiver), hygiene + privacy interlocks"
 triggers:
   - keyword: "audit"
   - keyword: "audit log"

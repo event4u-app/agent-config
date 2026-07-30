@@ -10,7 +10,7 @@
 
 ```
 src/                    ← the ONLY thing you edit
-  → condensation        (condense.sh; hashes in internal/.condensation-hashes.json)
+  → projection          (condense.sh --sync; verbatim copy + path rewrite)
   → dist/agent-src/     (shipped projection — generated, read-only)
   → host projection     (task generate-tools → .claude/ .cursor/ .clinerules/ …)
   → installer           (npx @event4u/agent-config init → consumer's .augment/ etc.)

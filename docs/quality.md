@@ -11,7 +11,7 @@ task ci
 This runs, in order:
 
 1. **Sync check** — `dist/agent-src/` matches `src/` (non-`.md` files)
-2. **Condensation hashes** — Condensed `.md` hashes match source
+2. **Projection check** — Every `.md` in `dist/agent-src/` is byte-exact with the path-rewritten source
 3. **Reference check** — No broken cross-references between files
 4. **Portability check** — No project-specific paths in shared files
 5. **Schema validation** — Frontmatter of every skill/rule/command/persona matches its JSON-Schema contract
@@ -60,13 +60,12 @@ which is then projected into `.augment/` for Augment Code.
 - Source of truth is **always** `src/`
 - Never edit `dist/agent-src/` or `.augment/` directly
 - The `/condense` command produces token-efficient output
-- Condensation hashes track which files have been condensed
+- Every `.md` in `dist/agent-src/` is byte-exact with the path-rewritten source
 
 ### Verification
 
 ```bash
 task sync-check          # Non-.md files in sync?
-task sync-check-hashes   # .md hashes current?
 task check-condensation   # Condensation quality OK?
 task lint-skills-pairs   # Source vs condensed comparison
 ```
@@ -74,8 +73,7 @@ task lint-skills-pairs   # Source vs condensed comparison
 ### Fixing
 
 ```bash
-task sync                # Copy non-.md files
-task sync-mark-all-done  # Mark all hashes as current (after manual condense)
+task sync                # Rewrite the projection from src/
 task consistency-fix     # Regenerate ALL derived outputs
 ```
 

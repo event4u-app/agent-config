@@ -97,7 +97,7 @@ Apply this floor **before** marking any ticket `lite`:
 - Any miss → split the ticket further, or escalate to `medium`
 - Architectural / multi-module → `high` (use `adr-create` first)
 
-**Gate:** run `./scripts-run src/scripts/lint_ticket_buildable agents/tickets/{slug}/`
+**Gate:** run `./scripts-run src/scripts/lint_ticket_buildable.ts agents/tickets/{slug}/`
 and fix all errors before declaring any ticket `lite`. This is the only
 authoritative check — do not skip it.
 
@@ -154,7 +154,7 @@ If the file does not exist, create it with the `bundles:` root.
 ### §8 — Run the buildability gate
 
 ```bash
-./scripts-run src/scripts/lint_ticket_buildable agents/tickets/{slug}/
+./scripts-run src/scripts/lint_ticket_buildable.ts agents/tickets/{slug}/
 ```
 
 Fix every reported error. Re-run until exit code 0. Max 3 attempts; if still

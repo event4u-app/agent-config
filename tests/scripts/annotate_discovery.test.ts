@@ -16,7 +16,6 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
-    HASH_FILE,
     PACK_DEFAULTS,
     ROOT,
     SRC,
@@ -119,7 +118,6 @@ describe('annotate_discovery — CLI (tsx)', () => {
         const relArg = path.join('.agent-src.uncondensed', '_probe8g', '_wave8g_parity_probe.md');
         const original = '---\nname: probe\ndescription: parity probe\n---\nbody line\n';
 
-        guard(HASH_FILE);
         guard(srcFile);
 
         fs.writeFileSync(srcFile, original, 'utf-8');
@@ -136,18 +134,19 @@ describe('annotate_discovery — CLI (tsx)', () => {
         expect(written.endsWith('---\nbody line\n')).toBe(true);
         expect(written.startsWith('---\nname: probe\ndescription: parity probe\n')).toBe(true);
 
-        // Hash file rewritten and still valid JSON.
-        expect(() => JSON.parse(fs.readFileSync(HASH_FILE, 'utf-8'))).not.toThrow();
+        // ADR-201: the annotator no longer refreshes a condensation-hash ledger,
+        // so nothing outside the source and its dist mirror may be written.
+        expect(fs.existsSync(path.join(ROOT, 'internal', '.condensation-hashes.json'))).toBe(false);
     });
 
     it('skip (missing) path warns on stderr, annotates nothing, exits 0', () => {
-        guard(HASH_FILE);
         const relArg = path.join('.agent-src.uncondensed', 'rules', '_wave8g_does_not_exist.md');
         const r = runTs('annotate_discovery', ['--pack', 'meta', relArg]);
         expect(r.status).toBe(0);
         expect(r.stderr).toBe(`  skip (missing): ${relArg}\n`);
         expect(r.stdout).toBe('annotated 0 files with pack=meta\n');
-        // Hash file still rewritten to a valid JSON document.
-        expect(() => JSON.parse(fs.readFileSync(HASH_FILE, 'utf-8'))).not.toThrow();
+        // A skipped path writes nothing at all — the ledger it used to rewrite
+        // unconditionally on every run is gone.
+        expect(fs.existsSync(path.join(ROOT, 'internal', '.condensation-hashes.json'))).toBe(false);
     });
 });

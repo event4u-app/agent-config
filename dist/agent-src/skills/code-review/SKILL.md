@@ -26,17 +26,17 @@ Use this skill when:
 
 ### Mindset
 
-- **Be thorough but pragmatic** — catch real bugs, not style nitpicks tools handle.
-- **Understand intent first** — read PR description, linked ticket, commit messages before code.
-- **Check the full picture** — a service change may require test / migration / doc changes.
+- **Be thorough but pragmatic** — catch real bugs, not style nitpicks that tools handle.
+- **Understand intent first** — read the PR description, linked ticket, and commit messages before looking at code.
+- **Check the full picture** — a change in a service may require changes in tests, migrations, docs.
 - **Assume good intent** — suggest improvements, don't criticize.
 
 ### Review order
 
 1. **Understand the goal** — what is this change trying to achieve?
-2. **Detect the change-type + depth** — route to the right checklist, pick review depth (below).
-3. **Architecture** — approach sound? Right layer? Right pattern?
-4. **Correctness** — does it work? Edge cases? Error handling?
+2. **Detect the change-type + depth** — route to the right checklist and pick the review depth (below).
+3. **Architecture** — does the approach make sense? Right layer? Right pattern?
+4. **Correctness** — does it actually work? Edge cases? Error handling?
 5. **Quality** — types, naming, readability, DRY, SOLID?
 6. **Security** — input validation, authorization, injection?
 7. **Performance** — N+1 queries, missing indexes, unbounded queries?

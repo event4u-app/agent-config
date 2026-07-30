@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "About to port/adapt/reuse external code (algorithm, structure, >~10 lines) — read, close the source, re-derive; conscious borrows need a ledger entry + license check first"
+description: "Porting/adapting external code (algorithm, structure, >~10 lines) — close the source, re-derive; conscious borrows need a ledger entry + license check"
 triggers:
   - intent: "porting or adapting code from an external source"
   - intent: "implementing an algorithm or structure seen in another project"
@@ -31,7 +31,7 @@ enforced_by:
 AI coding agents can emit code near-verbatim from training data — output-side
 legal exposure is live (*Doe v. GitHub* proceeds on that factual premise). No
 rule previously told a worker what to do on a **conscious** borrow at the
-code layer — this rule closes that gap.
+code layer. This rule closes that gap.
 
 ## The Iron Law
 

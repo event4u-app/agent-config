@@ -3,7 +3,7 @@
 > On-demand reference for the [`humanizer`](../SKILL.md) skill
 > (road-to-ecosystem-harvest-prose-authenticity, Source I — a prose
 > anti-slop humanizer skill; provenance in the harvest index). Loaded only
-> during an active humanize pass. Five **pattern groups** live in
+> during an active humanize pass. The five **pattern groups** live in
 > [`../data/patterns.md`](../data/patterns.md); this file adds the
 > orthogonal **severity axis** (how reliable a tell each construction is)
 > and the **self-validation thresholds** the deterministic self-check reads.
@@ -16,14 +16,14 @@
 
 `patterns.md` groups tells by *kind* (content / language / style /
 communication / filler). This file grades them by *diagnostic weight* — how
-much a single occurrence tells you. Rewrite discipline is the same
+much a single occurrence tells you. The rewrite discipline is the same
 (rewrite, don't delete); the tier decides **how hard to look** and **whether
-one hit is worth acting on**. Clusters still win: two Medium tells
+one hit is even worth acting on**. Clusters still win: two Medium tells
 co-occurring outweigh one isolated High.
 
 ## Tier High — almost always a tell (act on a single occurrence)
 
-Single instance is strong evidence of machine authorship; these rarely
+A single instance is strong evidence of machine authorship; these rarely
 survive in genuine human prose.
 
 - **Chat artifacts** in a deliverable — "I hope this helps", "Let me know

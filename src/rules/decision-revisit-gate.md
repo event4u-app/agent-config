@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
-description: "A beneficial change blocked by a past lock (honest-null, don't-relitigate memory, budget canon, ADR) must be surfaced with a council re-evaluation offer, never silently dropped"
+description: "Beneficial change blocked by a lock (honest-null, don't-relitigate memory, budget canon, ADR) — surface a council re-evaluation offer, never drop"
 alwaysApply: false
 council_depth: deep
 triggers:

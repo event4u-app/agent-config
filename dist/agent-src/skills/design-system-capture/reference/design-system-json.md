@@ -1,10 +1,10 @@
 # `design-system.json` — import contract
 
 > Lazy-loaded by `design-system-capture` ONLY when importing an extracted design
-> system. Not in the always-on skill body. The **consumer-side contract**: any
-> external static-extraction tool (URL / git repo / local dir) emits this shape;
-> the skill READS it to seed/merge `DESIGN.md`. We own the contract, not the
-> crawler (council 2026-06-28).
+> system. Not part of the always-on skill body. This is the **consumer-side
+> contract**: any external static-extraction tool (URL / git repo / local dir
+> crawler) emits this shape; the skill READS it to seed/merge `DESIGN.md`. We
+> own the contract, not the crawler (council 2026-06-28).
 
 ## Shape
 
@@ -31,32 +31,35 @@
 ## Field rules
 
 - **Map to DTCG where it maps cleanly.** `colors` / `typography` / `spacing` /
-  `radius` / `shadow` = the DTCG `.tokens.json` shape `design-tokens` /
-  `brand-to-tokens` already author — reuse it; never a parallel token format.
-- **Mark extraction-only metadata.** Observation, not a token decision, lives
-  under `_meta` (`motion._meta.detected_libs`, `components[].observed`). Informs
-  the human; never becomes a token.
-- **`source` is mandatory** — `kind` + `ref` + `captured_at`. No provenance →
-  reject (can't confirm what you can't trace).
-- **`bundled_local`** is a flag, not an instruction: the package never
-  downloads/bundles fonts (out of scope); it records that the source did.
+  `radius` / `shadow` correspond to the DTCG `.tokens.json` shape that
+  `design-tokens` / `brand-to-tokens` already author — reuse it; do **not**
+  invent a parallel token format.
+- **Mark extraction-only metadata.** Anything that is *observation*, not a
+  token decision, lives under a `_meta` key (e.g. `motion._meta.detected_libs`,
+  `components[].observed`). It informs the human; it never becomes a token.
+- **`source` is mandatory** — `kind` + `ref` + `captured_at`. An artifact with
+  no provenance is rejected (you cannot confirm what you cannot trace).
+- **`bundled_local`** on a font family is a flag, not an instruction: the
+  package never downloads or bundles fonts (out of scope) — it records that the
+  source did.
 
 ## Trust posture (mandatory)
 
-An import is **observed, not authoritative** (mirrors `source-discovery`:
-evidence vs. authoritative). It seeds `DESIGN.md` as a **proposal the human
-confirms per field** — never a silent write. A field conflicting with a
-registered brand value (confirmed `.tokens.json` / brand token) is **flagged,
-never auto-applied** (`brand-source-of-truth`). Precedence: registered brand
-tokens > confirmed `DESIGN.md` > imported observation.
+An imported artifact is **observed, not authoritative** (mirrors
+`source-discovery`: evidence vs. authoritative). It seeds `DESIGN.md` as a
+**proposal the human confirms per field** — never a silent write. A field that
+conflicts with a registered brand value (a confirmed `.tokens.json` / brand
+token) is **flagged, never auto-applied** (`brand-source-of-truth`: consumer
+brand wins). Precedence on import: registered brand tokens > confirmed
+`DESIGN.md` > imported observation.
 
 ## Two sources, one shape
 
-- **External target** (a site/repo you don't own) → external standalone tool
-  emits `design-system.json`; hand it to `design-system-capture`.
+- **External target** (a site/repo you do not own) → an external standalone
+  tool emits `design-system.json`; hand it to `design-system-capture`.
 - **Current repo** → prefer [`existing-ui-audit`](../../existing-ui-audit/SKILL.md):
-  it inventories the codebase and emits the same shape, so the import path is
-  identical either way.
+  it already inventories the codebase's components/tokens and can emit the same
+  `design-system.json` shape, so the import path is identical either way.
 
-Package **owns this contract**; does **not** ship the crawler, the Playwright
-runtime, or a font-bundler.
+The package **owns this contract**; it does **not** ship the crawler, the
+Playwright runtime, or a font-bundler.
