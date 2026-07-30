@@ -104,6 +104,46 @@ describe('redact_hook_capture — ported pytest suite', () => {
         expect((rp['session_id'] as string).includes('abcdef')).toBe(true);
     });
 
+    it('redacts the global observation buffer project-attribution keys (road-to-global-user-memory Phase 3, additive)', () => {
+        // A tool-call capture that happened to carry a Phase 3 observation
+        // object (context.project_path / context.project_name / seen_in) as
+        // an argument must come out with those three keys redacted — the
+        // observation buffer must never reach a hook capture unredacted, per
+        // agents/settings/contexts/global-user-memory-cut.md.
+        const record: Rec = {
+            hook_event_name: 'PreToolUse',
+            raw_payload: {
+                observation: {
+                    ts: '2026-07-30T10:00:00Z',
+                    field: 'notes',
+                    suggest: 'always use pnpm instead of npm for installs',
+                    context: {
+                        project_path: '/Users/matze/projects/acme-web',
+                        project_name: 'acme-web',
+                        first_seen: '2026-07-30T10:00:00Z',
+                    },
+                    seen_count: 2,
+                    seen_in: ['acme-web', 'acme-api'],
+                },
+            },
+        };
+        const out = redact(record) as Rec;
+        const obs = ((out['raw_payload'] as Rec)['observation']) as Rec;
+        const ctx = obs['context'] as Rec;
+        expect(ctx['project_path']).toBe(REDACTED);
+        expect(ctx['project_name']).toBe(REDACTED);
+        expect(obs['seen_in']).toEqual([REDACTED, REDACTED]);
+        // Untouched: envelope + non-content fields survive as before.
+        expect(out['hook_event_name']).toBe('PreToolUse');
+        expect(obs['ts']).toBe('2026-07-30T10:00:00Z');
+        expect(obs['field']).toBe('notes');
+        expect(obs['seen_count']).toBe(2);
+        // suggest was already covered by an existing key elsewhere in this
+        // module's contract (it is free text, not in either key set) —
+        // confirm it is untouched by this addition specifically.
+        expect(obs['suggest']).toBe('always use pnpm instead of npm for installs');
+    });
+
     it('redacts lists and recurses', () => {
         const record: Rec = {
             raw_payload: {

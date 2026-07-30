@@ -60,6 +60,15 @@ export const CASCADE_ELIGIBLE_KINDS: ReadonlySet<string> = new Set([
  * layer (`~/.event4u/agent-config/agents/<kind>/`). `contexts/` and
  * `decisions/` are project-shaped and must not leak across projects;
  * only `overrides/` — the developer's personal layer — is whitelisted.
+ *
+ * Unrelated to the global USER-PROFILE layer added by ADR-138
+ * (`~/.event4u/agent-config/user/profile.md`, resolved by
+ * `agent_user_profile.ts`): that file is not an `agents/<kind>/<name>.md`
+ * overlay, so it does not extend this set. Read this comment as
+ * confirmation that ADR-138 is a *different* mechanism, not evidence
+ * that the `contexts/`/`decisions/` asymmetry above has been relaxed —
+ * it hasn't; that lock is unamended (see the global-user-memory council
+ * cut, `agents/settings/contexts/global-user-memory-cut.md`).
  */
 export const USER_GLOBAL_OVERLAY_KINDS: ReadonlySet<string> = new Set(['overrides']);
 

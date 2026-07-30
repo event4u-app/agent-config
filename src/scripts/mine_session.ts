@@ -296,6 +296,64 @@ function _nowIsoSeconds(): string {
     return new Date().toISOString().replace(/\.\d{3}Z$/, '+00:00');
 }
 
+/** One candidate the user-scoped channel below may propose to the global observation buffer. */
+export interface UserObservationSignal {
+    readonly ts: string;
+    readonly suggest: string;
+    readonly evidence: string;
+}
+
+/**
+ * The second, user-scoped channel (road-to-global-user-memory Phase 2).
+ * Scans the SAME entries `mine()` scans for the Preference family
+ * (`SIGNAL_FAMILIES`'s `'convention'` entry) and, for every match `mine()`
+ * would have silently discarded — because `_normalise` found no
+ * project-scoped path/symbol token, i.e. the match is about the USER, not
+ * the project — shapes a candidate observation instead of dropping it.
+ *
+ * Deliberately independent of `mine()`: it does not read or mutate `mine()`'s
+ * `facts` array, does not change `mine()`'s signature, return shape, or
+ * output, and does not touch disk. `mine()`'s byte-parity contract with the
+ * retired Python implementation is therefore untouched by this addition —
+ * this is a wholly new, additive export.
+ *
+ * The caller is responsible for the shared ≤5-per-cycle cap
+ * (`user_global_observations.applySharedFactCap`, counting THIS output
+ * together with `mine()`'s `facts.length`) and for guard evaluation +
+ * writing (`user_global_observations.appendGlobalObservation`) — this
+ * function only detects and shapes candidates.
+ */
+export function mineUserObservationCandidates(
+    entries: Iterable<Record<string, Json>>,
+    since: Date,
+): UserObservationSignal[] {
+    const preferenceFamily = SIGNAL_FAMILIES.find(([tag]) => tag === 'convention')?.[1];
+    if (!preferenceFamily) {
+        return [];
+    }
+    const out: UserObservationSignal[] = [];
+    for (const turn of entries) {
+        const tsStr = _turnTs(turn);
+        if (!_withinWindow(tsStr, since)) {
+            continue;
+        }
+        const text = _turnText(turn);
+        if (!text || !_search(preferenceFamily, text)) {
+            continue;
+        }
+        // Project-scoped → mine()'s job, not this channel.
+        if (_search(PATH_TOKEN, text) || _search(SYMBOL_TOKEN, text)) {
+            continue;
+        }
+        const cleaned = _redact(text, []).replace(/\s+/g, ' ').trim().slice(0, 240);
+        if (!cleaned) {
+            continue;
+        }
+        out.push({ ts: tsStr || _nowIsoSeconds(), suggest: cleaned, evidence: cleaned });
+    }
+    return out;
+}
+
 export function renderPreview(
     facts: Array<Record<string, Json>>,
     project: string,
