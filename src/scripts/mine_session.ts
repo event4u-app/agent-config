@@ -34,6 +34,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { appendGlobalObservation, applySharedFactCap } from './_lib/user_global_observations.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/mine_session.py → parent.parent.parent == repo root.
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -677,6 +679,44 @@ export function main(argv: string[] | null = null): number {
                 'files.\n   Next: /memory promote to lift validated lines ' +
                 'into curated YAML.\n',
         );
+        // Second channel (road-to-global-user-memory Phase 2): the preference
+        // signals `mine()` discards because they are about the USER, not the
+        // project, reach the global buffer instead of /dev/null. The ≤5 cap is
+        // SHARED — the project channel's facts are counted first, so this channel
+        // only ever uses the leftover headroom.
+        //
+        // `entries` is a consumed generator by now, so the source is re-read.
+        // Appending still goes through every capture guard and the redaction gate;
+        // nothing here can write `profile.md` — only a human `accept` does that.
+        const observationEntries =
+            kind === 'chat-history' ? _iterChatHistory(srcPath) : _iterClaudeCodeJsonl(srcPath);
+        const candidates = applySharedFactCap(
+            facts.length,
+            mineUserObservationCandidates(observationEntries, since),
+        );
+        let appended = 0;
+        const refused: string[] = [];
+        for (const candidate of candidates) {
+            const result = appendGlobalObservation({
+                ts: candidate.ts,
+                field: 'notes',
+                suggest: candidate.suggest,
+                source: 'mine_session',
+                evidence: candidate.evidence,
+            });
+            if (result.written) {
+                appended += 1;
+            } else if (result.category !== undefined) {
+                refused.push(result.category);
+            }
+        }
+        if (candidates.length > 0) {
+            const detail = refused.length > 0 ? ` (${refused.length} refused: ${refused.join(', ')})` : '';
+            process.stdout.write(
+                `✅ Appended ${appended} user observation(s) to the global buffer${detail}.\n` +
+                    '   Next: /agents user review to accept or drop them.\n',
+            );
+        }
         return 0;
     }
 
