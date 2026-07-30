@@ -52,10 +52,20 @@ export interface GateSpec {
   min_scanned: number;
   corpus: string;
   status: 'enforced' | 'pending';
+  /**
+   * Exit code meaning "my prerequisite is absent, so I inspected nothing" — e.g.
+   * check_site_links exits 2 when the site is unbuilt or stale. Without this the
+   * guard reads that as `silent` and fails, which would make it red on every machine
+   * lacking a build artefact: a gate that blocks for an environmental reason teaches
+   * people to ignore it, which is worse than no gate. Reported as `unavailable`
+   * rather than skipped, so the partial coverage stays visible — the same reason
+   * `pending` is reported instead of hidden.
+   */
+  unavailable_exit?: number;
   note?: string;
 }
 
-export type Verdict = 'ok' | 'below_floor' | 'silent' | 'crashed' | 'pending';
+export type Verdict = 'ok' | 'below_floor' | 'silent' | 'crashed' | 'pending' | 'unavailable';
 
 export interface GateResult {
   id: string;
@@ -64,6 +74,14 @@ export interface GateResult {
   scanned: number | null;
   min_scanned: number;
   message: string;
+}
+
+function _require_int(v: unknown, id: string, i: number): number {
+  const n = Number(v);
+  if (!Number.isInteger(n)) {
+    throw new Error(`gates[${String(i)}] (${id}): unavailable_exit must be an integer exit code`);
+  }
+  return n;
 }
 
 /** Parse + validate the manifest. Throws on anything that would make the guard
@@ -95,6 +113,9 @@ export function load_manifest(file = MANIFEST): GateSpec[] {
       min_scanned: min,
       corpus: String(e['corpus'] ?? ''),
       status,
+      ...(e['unavailable_exit'] === undefined
+        ? {}
+        : { unavailable_exit: _require_int(e['unavailable_exit'], id, i) }),
       ...(e['note'] === undefined ? {} : { note: String(e['note']) }),
     };
   });
@@ -108,7 +129,12 @@ export function parse_scanned(output: string): number | null {
 
 /** Classify one gate's run against its declared floor. Pure — testable without
  * spawning anything. */
-export function classify(spec: GateSpec, scanned: number | null, crashed: boolean): GateResult {
+export function classify(
+  spec: GateSpec,
+  scanned: number | null,
+  crashed: boolean,
+  exit_code?: number | null,
+): GateResult {
   const base = { id: spec.id, status: spec.status, scanned, min_scanned: spec.min_scanned };
   if (spec.status === 'pending') {
     return {
@@ -122,6 +148,20 @@ export function classify(spec: GateSpec, scanned: number | null, crashed: boolea
   }
   if (crashed) {
     return { ...base, verdict: 'crashed', message: 'gate could not be executed' };
+  }
+  if (
+    spec.unavailable_exit !== undefined &&
+    exit_code !== undefined &&
+    exit_code !== null &&
+    exit_code === spec.unavailable_exit
+  ) {
+    return {
+      ...base,
+      verdict: 'unavailable',
+      message:
+        `exited ${String(exit_code)} — prerequisite absent, nothing inspected. ` +
+        `Coverage unverified here; CI is where this gate has its inputs`,
+    };
   }
   if (scanned === null) {
     return {
@@ -142,16 +182,16 @@ export function classify(spec: GateSpec, scanned: number | null, crashed: boolea
   return { ...base, verdict: 'ok', message: `scanned ${String(scanned)} ≥ ${String(spec.min_scanned)}` };
 }
 
-function run_gate(spec: GateSpec): { scanned: number | null; crashed: boolean } {
+function run_gate(spec: GateSpec): { scanned: number | null; crashed: boolean; exit_code: number | null } {
   const runner = path.join(REPO_ROOT, 'scripts-run');
   const r = spawnSync(runner, [`src/scripts/${spec.id}`, ...spec.argv], {
     cwd: REPO_ROOT,
     encoding: 'utf8',
   });
-  if (r.error !== undefined || r.status === null) return { scanned: null, crashed: true };
+  if (r.error !== undefined || r.status === null) return { scanned: null, crashed: true, exit_code: null };
   // A gate may legitimately exit non-zero (it found real violations) and still
   // have scanned plenty — coverage and verdict are different questions.
-  return { scanned: parse_scanned(`${r.stdout}\n${r.stderr}`), crashed: false };
+  return { scanned: parse_scanned(`${r.stdout}\n${r.stderr}`), crashed: false, exit_code: r.status };
 }
 
 const ICON: Record<Verdict, string> = {
@@ -160,6 +200,7 @@ const ICON: Record<Verdict, string> = {
   silent: '❌',
   crashed: '❌',
   pending: '⚠️',
+  unavailable: '⚠️',
 };
 
 export function main(argv: readonly string[]): number {
@@ -186,8 +227,12 @@ export function main(argv: readonly string[]): number {
   }
 
   const results = specs.map((s) => {
-    const { scanned, crashed } = spec_is_pending(s) ? probe_pending(s) : run_gate(s);
-    return classify(s, scanned, crashed);
+    if (spec_is_pending(s)) {
+      const { scanned, crashed } = probe_pending(s);
+      return classify(s, scanned, crashed);
+    }
+    const { scanned, crashed, exit_code } = run_gate(s);
+    return classify(s, scanned, crashed, exit_code);
   });
 
   if (wantJson) {
@@ -200,13 +245,21 @@ export function main(argv: readonly string[]): number {
 
   const failed = results.filter((r) => r.verdict === 'below_floor' || r.verdict === 'silent' || r.verdict === 'crashed');
   const pending = results.filter((r) => r.verdict === 'pending');
+  const unavailable = results.filter((r) => r.verdict === 'unavailable');
 
   // The guard reports its OWN coverage. Hiding a pending gate behind a green
   // summary is exactly the failure mode this file exists to prevent.
   process.stdout.write(
     `\nscanned: ${String(results.length)}\n` +
-      `  enforced ${String(results.length - pending.length)} · pending ${String(pending.length)} · failing ${String(failed.length)}\n`,
+      `  enforced ${String(results.length - pending.length)} · pending ${String(pending.length)} · ` +
+      `unavailable ${String(unavailable.length)} · failing ${String(failed.length)}\n`,
   );
+  if (unavailable.length > 0) {
+    process.stdout.write(
+      `⚠️  ${String(unavailable.length)} gate(s) could not run here (prerequisite absent) — ` +
+        `their coverage is unverified locally, not proven.\n`,
+    );
+  }
   if (pending.length > 0) {
     process.stdout.write(
       `⚠️  ${String(pending.length)} gate(s) are listed but NOT enforced — this guard's coverage is partial by declaration.\n`,

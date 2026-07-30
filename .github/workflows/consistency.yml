@@ -192,6 +192,14 @@ jobs:
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget
 
+      - name: Token-surface regression (>5% over the recorded baseline)
+        # `internal/bench/reports/projection-cost.json` is gitignored, so it never
+        # exists on a fresh checkout. The task target carries `deps: [audit-tokens]`
+        # and regenerates it in-job — invoking the script directly would read a
+        # stale (or absent) report. Until 2026-07-30 this gate ran only in local
+        # `task ci`, which is why a +10.3% eager-rule drift went unseen for 23 days.
+        run: task check-token-regression
+
       - name: Check kernel-rule bundle (one rule per PR; label override)
         # Phase 4.2 of road-to-always-budget-relief — slow-rollout guarantee.
         # Override: PR label `bundled-always-rules-acknowledged`.

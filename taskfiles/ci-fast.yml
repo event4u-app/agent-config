@@ -1,6 +1,36 @@
 version: '3'
 
 tasks:
+  preflight:
+    silent: true
+    desc: |
+      Repo-content gates that CI runs and no local chain reached until 2026-07-30.
+      Measured 15s total — affordable before a push, which is the point: each of
+      these turned a PR red this session for something a local run would have caught.
+      Deliberately EXCLUDES check_enforcement_coverage (30.7s measured): a pre-push
+      gate that doubles the hook teaches people to skip it. That one stays in the
+      full `task ci` and belongs in the post-CI loop.
+      Parity with CI is enforced by `task check-ci-local-parity`.
+    cmds:
+      - ./scripts-run src/scripts/check_bridge_derivation
+      - ./scripts-run src/scripts/check_host_loadability --root .
+      - ./scripts-run src/scripts/check_bundle_path_leakage
+      - ./scripts-run src/scripts/check_backstop_debt
+      - ./scripts-run src/scripts/lint_topics_yaml
+      - ./scripts-run src/scripts/build_mcp_catalog --strict
+      - ./scripts-run src/scripts/check_safety_floor_untouched
+      - ./scripts-run src/scripts/check_no_new_legacy_path
+      - ./scripts-run src/scripts/check_kernel_rule_bundle
+      - ./scripts-run src/scripts/lint_regression
+
+  check-ci-local-parity:
+    silent: true
+    desc: |
+      Fail when a gate runs in CI but no local chain reaches it, or runs locally and
+      in no workflow — unless declared with a reason in src/config/ci-local-parity.yml.
+      Both directions cost real defects; see the manifest header.
+    cmd: ./scripts-run src/scripts/check_ci_local_parity {{.QUIET_FLAG}}
+
   lint-originality-shingles:
     desc: "Re-skin detector — entity-masked 8-word shingle overlap across skills/personas/subagents. Report-only (calibration); arm with --threshold <pct> once the allowlist is seeded."
     cmd: ./scripts-run src/scripts/lint_originality_shingles --top 10
@@ -64,17 +94,6 @@ tasks:
     silent: true
     desc: Check condensation quality between uncondensed and condensed pairs
     cmd: ./scripts-run src/scripts/skill_linter --all --pairs --condensation-quality
-
-  lint-pack:
-    silent: true
-    desc: |
-      Phase 4.4 (ADR-017) — lint a single package's uncondensed source
-      tree. Used by the per-pack CI matrix (.github/workflows/skill-lint.yml).
-      Pass the pack id via `-- PACK=<name>` (e.g. `task lint-pack -- PACK=pack-laravel`)
-      or set the env var directly. Resolves to `packages/<PACK>/.agent-src.uncondensed/`.
-    cmd: ./scripts-run src/scripts/skill_linter "packages/{{.PACK}}/.agent-src.uncondensed/" {{.QUIET_FLAG}}
-    requires:
-      vars: [PACK]
 
   skill-usage:collect:
     silent: true

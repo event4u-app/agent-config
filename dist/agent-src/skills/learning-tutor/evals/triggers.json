@@ -1,0 +1,52 @@
+{
+    "skill": "learning-tutor",
+    "last_eval": "2026-07-30",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for the six tutoring modes — rapid competence, error-driven drill, keystone decoding, goal-backward sprint, gap probe, Feynman check. Should-not-trigger covers the near-miss neighbours (package-artifact learning capture, plan stress-testing, long-form article analysis, employee onboarding programs, plain factual how-to answers) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "teach me Postgres query planning — get me functional fast, practice first",
+            "trigger": true
+        },
+        {
+            "q": "quiz me on database indexes and find my blind spots, don't go easy on me",
+            "trigger": true
+        },
+        {
+            "q": "I don't get this spec — explain it so it actually clicks and then check I understood",
+            "trigger": true
+        },
+        {
+            "q": "bring mir Kubernetes bei und drill mich, statt mir einen Vortrag zu halten",
+            "trigger": true
+        },
+        {
+            "q": "I have to ship a Terraform module in two weeks and I've never used it — give me a learning plan",
+            "trigger": true
+        },
+        {
+            "q": "I keep making this same mistake — turn that learning into a rule for the package",
+            "trigger": false,
+            "note": "capturing a learning as a package artifact (agent learns, not the user) → learning-to-rule-or-skill"
+        },
+        {
+            "q": "poke holes in this migration plan, be brutal",
+            "trigger": false,
+            "note": "stress-testing a plan/artifact, not a person's understanding → adversarial-review"
+        },
+        {
+            "q": "deep-dive this article and extract the insights with mental models",
+            "trigger": false,
+            "note": "long-form content analysis for the reader, no tutoring modes or comprehension gates → deep-reading-analyst"
+        },
+        {
+            "q": "design our onboarding so new hires ramp faster, with 30/60/90 milestones",
+            "trigger": false,
+            "note": "employee onboarding program design, not tutoring a topic → onboarding-program"
+        },
+        {
+            "q": "what's the difference between a left join and an inner join?",
+            "trigger": false,
+            "note": "direct factual question — answer it, never convert it into a curriculum (per direct-answers); the skill explicitly excludes this"
+        }
+    ]
+}

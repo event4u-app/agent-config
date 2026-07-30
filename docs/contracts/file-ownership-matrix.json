@@ -213,6 +213,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md": {
       "kind": "context",
       "rule_type": null,
@@ -220,6 +226,18 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/contexts/execution/roadmap-process-loop.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/contexts/execution/subagent-modes-detail.md": {
       "kind": "context",
       "rule_type": null,
       "load_context": [],
@@ -244,6 +262,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/contexts/execution/subagent-steering.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/contexts/execution/subagent-topologies.md": {
       "kind": "context",
       "rule_type": null,
       "load_context": [],
@@ -519,6 +543,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/rules/active-remediation.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/rules/agent-authority.md": {
       "kind": "rule",
       "rule_type": "always",
@@ -585,7 +615,25 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/rules/broken-access-control.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/rules/cli-output-handling.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/code-comment-discipline.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/code-provenance.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -613,6 +661,12 @@
       ],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/rules/communication-through-line.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/rules/content-quoting-floor.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -626,6 +680,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/rules/copilot-routing.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/cross-source-consistency.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -661,6 +721,12 @@
     ".agent-src.uncondensed/rules/direct-answers.md": {
       "kind": "rule",
       "rule_type": "always",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md": {
+      "kind": "rule",
+      "rule_type": "auto",
       "load_context": [],
       "load_context_eager": []
     },
@@ -706,6 +772,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/rules/external-code-graph-interop.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/rules/external-reference-deep-dive.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -742,6 +814,12 @@
       "load_context": [
         "contexts/communication/rules-auto/guidelines-mechanics.md"
       ],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/history-discipline.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
       "load_context_eager": []
     },
     ".agent-src.uncondensed/rules/icon-consistency.md": {
@@ -844,7 +922,7 @@
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [
-        "../contexts/model-recommendations.md"
+        "contexts/model-recommendations.md"
       ],
       "load_context_eager": []
     },
@@ -924,6 +1002,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/rules/prefer-enums-over-literals.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/rules/preservation-guard.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -931,6 +1015,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/rules/provider-lifecycle-discipline.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/question-not-instruction.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -972,6 +1062,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/rules/scale-discipline.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/rules/scope-control.md": {
       "kind": "rule",
       "rule_type": "always",
@@ -981,7 +1077,25 @@
       ],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/rules/secret-vcs-guard.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/rules/security-sensitive-stop.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/senior-engineering-discipline.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/session-canary.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -1032,6 +1146,12 @@
       "load_context": [
         "contexts/communication/rules-auto/source-of-truth-mechanics.md"
       ],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/spreadsheet-source-quality.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
       "load_context_eager": []
     },
     ".agent-src.uncondensed/rules/strategy-safety-floor.md": {
@@ -1165,6 +1285,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1332,6 +1458,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/code-intelligence/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/code-refactoring/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1339,6 +1471,54 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/code-review/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/code-review/checklists/backend.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/code-review/checklists/database.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/code-review/checklists/dependency.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/code-review/checklists/docs.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/code-review/checklists/frontend.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/code-review/checklists/infra.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/code-review/checklists/producing-the-review.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/code-review/checklists/test-only.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1494,6 +1674,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/decision-record/references/weighted-matrix.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/decision-review/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1608,6 +1794,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/docx-authoring/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/dpa-review/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1639,6 +1831,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/estimate-ticket/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1704,6 +1902,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/fundraising-narrative/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1711,6 +1915,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/funnel-analysis/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/gated-reach/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1752,7 +1962,37 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/history-design/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/html-deck/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/humanizer/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/humanizer/data/patterns.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/humanizer/references/anti-aiisms.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/humanizer/references/fixtures.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1962,6 +2202,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/learning-tutor/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/legal-intake-triage/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1969,6 +2215,24 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/legal-practice-profile/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/license-compliance-audit/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/license-compliance-credits/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1987,6 +2251,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/livewire/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/llm-provider-knowledge/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2142,6 +2412,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/pdf-tools/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/perf-feedback-craft/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2155,6 +2431,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/performance/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/persona-improvement/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2508,6 +2790,18 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/schema-review/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/script-writing/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2521,6 +2815,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/security-audit/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2580,6 +2880,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/sql-writing/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2605,6 +2911,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/subagent-orchestration/prompts/adversarial-verification-council.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2652,6 +2964,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/symfony-workflow/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2689,6 +3007,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/terragrunt/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2821,6 +3145,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/wireframe/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/worktree-lifecycle/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -3313,6 +3643,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
+      "target": ".agent-src.uncondensed/contexts/execution/autonomy-examples.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
       "target": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
       "type": "WRITE",
       "via": "self",
@@ -3321,6 +3658,13 @@
     {
       "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
       "target": ".agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
+      "target": ".agent-src.uncondensed/contexts/execution/rdp-gate.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -3348,6 +3692,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
+      "target": ".agent-src.uncondensed/rules/context-hygiene.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
       "target": ".agent-src.uncondensed/rules/no-cheap-questions.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -3356,6 +3707,13 @@
     {
       "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
       "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
+      "target": ".agent-src.uncondensed/rules/notes-first-reasoning.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -3641,6 +3999,41 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md",
+      "target": ".agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md",
+      "target": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md",
+      "target": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md",
+      "target": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md",
+      "target": ".agent-src.uncondensed/rules/verify-before-complete.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md",
       "target": ".agent-src.uncondensed/contexts/authority/commit-mechanics.md",
       "type": "READ_ONLY",
@@ -3726,6 +4119,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop.md",
+      "target": ".agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop.md",
       "target": ".agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -3748,6 +4148,13 @@
     {
       "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop.md",
       "target": ".agent-src.uncondensed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop.md",
+      "target": ".agent-src.uncondensed/rules/direct-answers.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -3802,6 +4209,97 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md",
+      "target": ".agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md",
+      "target": ".agent-src.uncondensed/rules/external-reference-deep-dive.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md",
+      "target": ".agent-src.uncondensed/rules/no-roadmap-references.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md",
+      "target": ".agent-src.uncondensed/rules/source-confidentiality.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md",
+      "target": ".agent-src.uncondensed/rules/think-before-action.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md",
+      "target": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-modes-detail.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-modes-detail.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-modes-detail.md",
+      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-modes-detail.md",
+      "target": ".agent-src.uncondensed/skills/design-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-modes-detail.md",
+      "target": ".agent-src.uncondensed/skills/finishing-a-development-branch/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-modes-detail.md",
+      "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-modes-detail.md",
+      "target": ".agent-src.uncondensed/skills/using-git-worktrees/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/contexts/execution/subagent-response-contract.md",
       "target": ".agent-src.uncondensed/contexts/execution/orchestration-telemetry.md",
       "type": "READ_ONLY",
@@ -3814,6 +4312,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-response-contract.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/subagent-response-contract.md",
@@ -3887,6 +4392,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-response-contract.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
       "target": ".agent-src.uncondensed/contexts/execution/subagent-routing.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -3898,6 +4410,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
+      "target": ".agent-src.uncondensed/rules/autonomous-execution.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
@@ -3964,6 +4483,20 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/subagent-steering.md",
+      "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-topologies.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-topologies.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-topologies.md",
       "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -4108,6 +4641,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/model-recommendations.md",
+      "target": ".agent-src.uncondensed/contexts/subagent-configuration.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/contexts/override-system.md",
@@ -4432,6 +4972,62 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/rules/active-remediation.md",
+      "target": ".agent-src.uncondensed/rules/active-remediation.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/active-remediation.md",
+      "target": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/active-remediation.md",
+      "target": ".agent-src.uncondensed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/active-remediation.md",
+      "target": ".agent-src.uncondensed/rules/improve-before-implement.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/active-remediation.md",
+      "target": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/active-remediation.md",
+      "target": ".agent-src.uncondensed/rules/prefer-enums-over-literals.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/active-remediation.md",
+      "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/active-remediation.md",
+      "target": ".agent-src.uncondensed/rules/source-discovery-gate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/agent-authority.md",
       "target": ".agent-src.uncondensed/rules/agent-authority.md",
       "type": "WRITE",
@@ -4496,6 +5092,27 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/architecture.md",
+      "target": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/architecture.md",
+      "target": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/architecture.md",
+      "target": ".agent-src.uncondensed/rules/ui-audit-gate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/architecture.md",
       "target": ".agent-src.uncondensed/skills/adr-create/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -4517,6 +5134,13 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/architecture.md",
+      "target": ".agent-src.uncondensed/skills/module-detect-on-the-fly/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/architecture.md",
       "target": ".agent-src.uncondensed/skills/nextjs-patterns/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -4531,24 +5155,10 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/artifact-drafting-protocol.md",
-      "target": ".agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/artifact-drafting-protocol.md",
       "target": ".agent-src.uncondensed/rules/artifact-drafting-protocol.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/artifact-drafting-protocol.md",
-      "target": ".agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/artifact-engagement-recording.md",
@@ -4629,13 +5239,6 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/autonomous-execution.md",
-      "target": ".agent-src.uncondensed/contexts/execution/rdp-gate.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/autonomous-execution.md",
       "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -4665,13 +5268,6 @@
     {
       "source": ".agent-src.uncondensed/rules/autonomous-execution.md",
       "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/autonomous-execution.md",
-      "target": ".agent-src.uncondensed/rules/notes-first-reasoning.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -4768,11 +5364,130 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "target": ".agent-src.uncondensed/rules/active-remediation.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "target": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "target": ".agent-src.uncondensed/rules/security-sensitive-stop.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "target": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "target": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "target": ".agent-src.uncondensed/skills/multi-tenancy/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "target": ".agent-src.uncondensed/skills/privacy-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "target": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/cli-output-handling.md",
       "target": ".agent-src.uncondensed/rules/cli-output-handling.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/code-comment-discipline.md",
+      "target": ".agent-src.uncondensed/rules/code-comment-discipline.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/code-comment-discipline.md",
+      "target": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/code-comment-discipline.md",
+      "target": ".agent-src.uncondensed/rules/output-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/code-provenance.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/code-provenance.md",
+      "target": ".agent-src.uncondensed/rules/code-provenance.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/code-provenance.md",
+      "target": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/code-provenance.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/code-provenance.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/code-provenance.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-credits/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/command-suggestion-policy.md",
@@ -4880,6 +5595,34 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/rules/communication-through-line.md",
+      "target": ".agent-src.uncondensed/rules/communication-through-line.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/communication-through-line.md",
+      "target": ".agent-src.uncondensed/rules/direct-answers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/communication-through-line.md",
+      "target": ".agent-src.uncondensed/rules/language-and-tone.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/communication-through-line.md",
+      "target": ".agent-src.uncondensed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/content-quoting-floor.md",
       "target": ".agent-src.uncondensed/rules/content-quoting-floor.md",
       "type": "WRITE",
@@ -4929,6 +5672,48 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "target": ".agent-src.uncondensed/rules/active-remediation.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "target": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "target": ".agent-src.uncondensed/rules/design-fidelity.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "target": ".agent-src.uncondensed/rules/no-cheap-questions.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
       "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
       "type": "READ_ONLY",
@@ -4951,21 +5736,7 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
-      "target": ".agent-src.uncondensed/rules/scope-control.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
       "target": ".agent-src.uncondensed/rules/token-budget-discipline.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
-      "target": ".agent-src.uncondensed/rules/user-interaction.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5001,6 +5772,13 @@
     {
       "source": ".agent-src.uncondensed/rules/delegation-policy.md",
       "target": ".agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/delegation-policy.md",
+      "target": ".agent-src.uncondensed/contexts/execution/orchestration-telemetry.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5133,13 +5911,6 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/design-fidelity.md",
-      "target": ".agent-src.uncondensed/rules/user-interaction.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/design-fidelity.md",
       "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -5190,6 +5961,62 @@
     {
       "source": ".agent-src.uncondensed/rules/direct-answers.md",
       "target": ".agent-src.uncondensed/skills/git-workflow/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "target": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "target": ".agent-src.uncondensed/rules/domain-safety-pii.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "target": ".agent-src.uncondensed/skills/image-editing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "target": ".agent-src.uncondensed/skills/readme-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "target": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5265,6 +6092,20 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/rules/downstream-changes.md",
+      "target": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/downstream-changes.md",
+      "target": ".agent-src.uncondensed/skills/agent-docs-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/engineering-safety-floor.md",
       "target": ".agent-src.uncondensed/rules/commit-policy.md",
       "type": "READ_ONLY",
@@ -5316,6 +6157,27 @@
     {
       "source": ".agent-src.uncondensed/rules/engineering-safety-floor.md",
       "target": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/external-code-graph-interop.md",
+      "target": ".agent-src.uncondensed/rules/external-code-graph-interop.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/external-code-graph-interop.md",
+      "target": ".agent-src.uncondensed/rules/think-before-action.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/external-code-graph-interop.md",
+      "target": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5405,20 +6267,6 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md",
-      "target": ".agent-src.uncondensed/skills/laravel-validation/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md",
-      "target": ".agent-src.uncondensed/skills/nextjs-patterns/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
       "source": ".agent-src.uncondensed/rules/git-history-discipline.md",
       "target": ".agent-src.uncondensed/rules/commit-policy.md",
       "type": "READ_ONLY",
@@ -5489,6 +6337,41 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/rules/history-discipline.md",
+      "target": ".agent-src.uncondensed/rules/domain-safety-pii.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/history-discipline.md",
+      "target": ".agent-src.uncondensed/rules/domain-safety-retention.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/history-discipline.md",
+      "target": ".agent-src.uncondensed/rules/history-discipline.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/history-discipline.md",
+      "target": ".agent-src.uncondensed/rules/scale-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/history-discipline.md",
+      "target": ".agent-src.uncondensed/skills/history-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/icon-consistency.md",
       "target": ".agent-src.uncondensed/rules/icon-consistency.md",
       "type": "WRITE",
@@ -5539,21 +6422,7 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/improve-before-implement.md",
-      "target": ".agent-src.uncondensed/contexts/execution/rdp-gate.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/improve-before-implement.md",
       "target": ".agent-src.uncondensed/rules/artifact-drafting-protocol.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/improve-before-implement.md",
-      "target": ".agent-src.uncondensed/rules/direct-answers.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5658,7 +6527,21 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/legal-safety-floor.md",
+      "target": ".agent-src.uncondensed/skills/legal-practice-profile/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/legal-safety-floor.md",
       "target": ".agent-src.uncondensed/skills/privacy-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
+      "target": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5694,6 +6577,13 @@
     {
       "source": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
       "target": ".agent-src.uncondensed/rules/security-sensitive-stop.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
+      "target": ".agent-src.uncondensed/rules/tool-safety.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5777,6 +6667,20 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
+      "target": ".agent-src.uncondensed/rules/active-remediation.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
+      "target": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
       "target": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
       "type": "WRITE",
       "via": "self",
@@ -5791,17 +6695,17 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/model-recommendation.md",
-      "target": "../contexts/model-recommendations.md",
-      "type": "READ_ONLY",
-      "via": "load_context",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/model-recommendation.md",
       "target": ".agent-src.uncondensed/rules/model-recommendation.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/model-recommendation.md",
+      "target": "contexts/model-recommendations.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/no-attribution-footers.md",
@@ -6091,18 +6995,53 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncondensed/rules/persona-governance.md",
-      "target": ".agent-src.uncondensed/skills/pixar-storyteller/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
       "source": ".agent-src.uncondensed/rules/php-coding.md",
       "target": ".agent-src.uncondensed/rules/php-coding.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/prefer-enums-over-literals.md",
+      "target": ".agent-src.uncondensed/rules/active-remediation.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/prefer-enums-over-literals.md",
+      "target": ".agent-src.uncondensed/rules/improve-before-implement.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/prefer-enums-over-literals.md",
+      "target": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/prefer-enums-over-literals.md",
+      "target": ".agent-src.uncondensed/rules/prefer-enums-over-literals.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/prefer-enums-over-literals.md",
+      "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/prefer-enums-over-literals.md",
+      "target": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/preservation-guard.md",
@@ -6133,11 +7072,53 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/rules/question-not-instruction.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/question-not-instruction.md",
+      "target": ".agent-src.uncondensed/rules/direct-answers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/question-not-instruction.md",
+      "target": ".agent-src.uncondensed/rules/question-not-instruction.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/question-not-instruction.md",
+      "target": ".agent-src.uncondensed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/question-not-instruction.md",
+      "target": ".agent-src.uncondensed/rules/user-interrupt-priority.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/reviewer-awareness.md",
       "target": ".agent-src.uncondensed/rules/reviewer-awareness.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
+      "target": ".agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
@@ -6163,13 +7144,6 @@
     {
       "source": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
       "target": ".agent-src.uncondensed/rules/verify-before-complete.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
-      "target": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6238,6 +7212,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/rules/scale-discipline.md",
+      "target": ".agent-src.uncondensed/rules/architecture.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/scale-discipline.md",
+      "target": ".agent-src.uncondensed/rules/history-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/scale-discipline.md",
+      "target": ".agent-src.uncondensed/rules/scale-discipline.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/scale-discipline.md",
+      "target": ".agent-src.uncondensed/skills/schema-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/scope-control.md",
       "target": ".agent-src.uncondensed/contexts/authority/kernel-rule-edits.md",
       "type": "READ_ONLY",
@@ -6287,6 +7289,55 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "target": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "target": ".agent-src.uncondensed/rules/security-sensitive-stop.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "target": ".agent-src.uncondensed/rules/tool-safety.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "target": ".agent-src.uncondensed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "target": ".agent-src.uncondensed/skills/secrets-management/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/security-sensitive-stop.md",
       "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
       "type": "READ_ONLY",
@@ -6296,6 +7347,13 @@
     {
       "source": ".agent-src.uncondensed/rules/security-sensitive-stop.md",
       "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/security-sensitive-stop.md",
+      "target": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6313,6 +7371,111 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/rules/active-remediation.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/rules/engineering-safety-floor.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/rules/security-sensitive-stop.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/rules/source-discovery-gate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/rules/verify-before-complete.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "target": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/session-canary.md",
+      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/session-canary.md",
+      "target": ".agent-src.uncondensed/rules/context-hygiene.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/session-canary.md",
+      "target": ".agent-src.uncondensed/rules/direct-answers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/session-canary.md",
+      "target": ".agent-src.uncondensed/rules/language-and-tone.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/session-canary.md",
+      "target": ".agent-src.uncondensed/rules/session-canary.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/rules/size-enforcement.md",
@@ -6455,6 +7618,27 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/rules/spreadsheet-source-quality.md",
+      "target": ".agent-src.uncondensed/rules/finance-safety-floor.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/spreadsheet-source-quality.md",
+      "target": ".agent-src.uncondensed/rules/spreadsheet-source-quality.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/spreadsheet-source-quality.md",
+      "target": ".agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/strategy-safety-floor.md",
       "target": ".agent-src.uncondensed/rules/strategy-safety-floor.md",
       "type": "WRITE",
@@ -6575,6 +7759,13 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/token-efficiency.md",
+      "target": ".agent-src.uncondensed/skills/token-optimizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/token-efficiency.md",
       "target": "contexts/communication/rules-auto/token-efficiency-mechanics.md",
       "type": "READ_ONLY",
       "via": "load_context",
@@ -6596,10 +7787,38 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/tool-safety.md",
+      "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/tool-safety.md",
+      "target": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/tool-safety.md",
       "target": ".agent-src.uncondensed/rules/tool-safety.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/tool-safety.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/tool-safety.md",
+      "target": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/ui-audit-gate.md",
@@ -6617,21 +7836,14 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "target": ".agent-src.uncondensed/rules/delegation-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
       "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
-      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
-      "target": ".agent-src.uncondensed/rules/scope-control.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6649,13 +7861,6 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
-      "target": ".agent-src.uncondensed/rules/verify-before-complete.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
@@ -6722,6 +7927,13 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/verify-before-complete.md",
+      "target": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/verify-before-complete.md",
       "target": ".agent-src.uncondensed/contexts/execution/verification-mechanics.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -6743,6 +7955,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/brand-consistency.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
       "target": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -6751,6 +7970,13 @@
     {
       "source": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
       "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6840,8 +8066,29 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/adversarial-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/agent-docs-writing/SKILL.md",
       "target": ".agent-src.uncondensed/contexts/contracts/frugality-charter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/agent-docs-writing/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/downstream-changes.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/agent-docs-writing/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/no-roadmap-references.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6859,6 +8106,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/agent-docs-writing/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/agent-security-review/SKILL.md",
@@ -6959,6 +8213,76 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/defense-in-depth/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/secrets-management/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/source-discovery/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
       "target": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
       "type": "READ_ONLY",
@@ -6985,6 +8309,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/analysis-autonomous-mode/SKILL.md",
@@ -7048,6 +8379,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/api-testing/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/architecture-review-lens/SKILL.md",
@@ -7128,6 +8466,20 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
       "target": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -7135,7 +8487,21 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/data-flow-mapper/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
       "target": ".agent-src.uncondensed/skills/judge-security-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/privacy-review/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -7597,6 +8963,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/bug-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/php-debugging/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/bug-analyzer/SKILL.md",
       "target": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -7615,6 +8988,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/build-buy-partner/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/build-buy-partner/SKILL.md",
@@ -7722,6 +9102,27 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/external-code-graph-interop.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/source-discovery/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/code-refactoring/SKILL.md",
       "target": ".agent-src.uncondensed/skills/code-refactoring/SKILL.md",
       "type": "WRITE",
@@ -7751,7 +9152,21 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
       "target": ".agent-src.uncondensed/skills/blade-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -7762,6 +9177,62 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/backend.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/database.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/dependency.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/docs.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/frontend.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/infra.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/producing-the-review.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/test-only.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/code-review/SKILL.md",
@@ -7825,6 +9296,153 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/backend.md",
+      "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/backend.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/backend.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/database.md",
+      "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/database.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/database.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/dependency.md",
+      "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/dependency.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/dependency.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/dependency.md",
+      "target": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/docs.md",
+      "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/docs.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/docs.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/frontend.md",
+      "target": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/frontend.md",
+      "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/frontend.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/frontend.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/frontend.md",
+      "target": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/infra.md",
+      "target": ".agent-src.uncondensed/skills/agent-security-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/infra.md",
+      "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/infra.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/infra.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/producing-the-review.md",
+      "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/producing-the-review.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/producing-the-review.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/producing-the-review.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/test-only.md",
+      "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/test-only.md",
+      "target": ".agent-src.uncondensed/skills/code-review/checklists/test-only.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/command-routing/SKILL.md",
@@ -8060,6 +9678,13 @@
     {
       "source": ".agent-src.uncondensed/skills/content-funnel-design/SKILL.md",
       "target": ".agent-src.uncondensed/skills/funnel-analysis/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/content-funnel-design/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -8416,10 +10041,31 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/adversarial-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
       "target": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/decision-record/references/weighted-matrix.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/rice-prioritization/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
@@ -8436,6 +10082,20 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/skills/decision-record/references/weighted-matrix.md",
+      "target": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-record/references/weighted-matrix.md",
+      "target": ".agent-src.uncondensed/skills/decision-record/references/weighted-matrix.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncondensed/skills/decision-review/SKILL.md",
       "target": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
       "type": "READ_ONLY",
@@ -8444,7 +10104,42 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/decision-review/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/no-cheap-questions.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-review/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-review/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/token-budget-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-review/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-review/SKILL.md",
       "target": ".agent-src.uncondensed/skills/adr-create/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -8487,6 +10182,20 @@
     {
       "source": ".agent-src.uncondensed/skills/defense-in-depth/SKILL.md",
       "target": ".agent-src.uncondensed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/dependency-upgrade/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/active-remediation.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/dependency-upgrade/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -8681,6 +10390,27 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/design-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/verify-repair-loop/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/design-system-capture/SKILL.md",
       "target": ".agent-src.uncondensed/skills/brand-to-tokens/SKILL.md",
       "type": "READ_ONLY",
@@ -8864,10 +10594,24 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/doc-coauthoring/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/doc-coauthoring/SKILL.md",
       "target": ".agent-src.uncondensed/skills/doc-coauthoring/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/doc-coauthoring/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/docker/SKILL.md",
@@ -8875,6 +10619,41 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/docx-authoring/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/docx-authoring/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/docx-authoring/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/html-deck/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/docx-authoring/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/markitdown/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/docx-authoring/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/pdf-tools/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/docx-authoring/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/dpa-review/SKILL.md",
@@ -8914,6 +10693,13 @@
     {
       "source": ".agent-src.uncondensed/skills/editorial-calendar/SKILL.md",
       "target": ".agent-src.uncondensed/skills/gtm-launch/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/editorial-calendar/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -8997,6 +10783,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/estimate-ticket/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/estimate-ticket/SKILL.md",
       "target": ".agent-src.uncondensed/skills/estimate-ticket/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -9005,6 +10798,69 @@
     {
       "source": ".agent-src.uncondensed/skills/estimate-ticket/SKILL.md",
       "target": ".agent-src.uncondensed/skills/refine-ticket/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/agent-security-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/judge-injection-defense/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/prompt-validator/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/evaluate-llm-feature/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -9124,6 +10980,13 @@
     {
       "source": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
       "target": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/feature-planning/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/cross-source-consistency.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -9311,6 +11174,55 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/defense-in-depth/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/secrets-management/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/fundraising-narrative/SKILL.md",
       "target": ".agent-src.uncondensed/skills/fundraising-narrative/SKILL.md",
       "type": "WRITE",
@@ -9362,6 +11274,76 @@
     {
       "source": ".agent-src.uncondensed/skills/funnel-analysis/SKILL.md",
       "target": ".agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/gated-reach/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/gated-reach/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/missing-tool-handling.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/gated-reach/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/gated-reach/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/gated-reach/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/gated-reach/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/markitdown/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/gated-reach/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/source-discovery/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/gated-reach/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/systematic-debugging/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/gated-reach/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/git-workflow/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/git-history-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/git-workflow/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/user-interaction.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -9500,6 +11482,20 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/skills/history-design/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/history-design/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/html-deck/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/design-fidelity.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/html-deck/SKILL.md",
       "target": ".agent-src.uncondensed/skills/brand-to-tokens/SKILL.md",
       "type": "READ_ONLY",
@@ -9551,6 +11547,118 @@
     {
       "source": ".agent-src.uncondensed/skills/html-deck/SKILL.md",
       "target": ".agent-src.uncondensed/skills/html-deck/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/content-quoting-floor.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/direct-answers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/media-governance-routing.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/data/patterns.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/references/anti-aiisms.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/references/fixtures.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/voice-and-tone-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/data/patterns.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/data/patterns.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/data/patterns.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/references/anti-aiisms.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/references/anti-aiisms.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/data/patterns.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/references/anti-aiisms.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/references/anti-aiisms.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/references/fixtures.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/humanizer/references/fixtures.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/references/fixtures.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -9614,6 +11722,13 @@
     {
       "source": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
       "target": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -9719,6 +11834,13 @@
     {
       "source": ".agent-src.uncondensed/skills/image-editing/SKILL.md",
       "target": ".agent-src.uncondensed/skills/prompt-engineering-image/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-editing/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -10020,6 +12142,13 @@
     {
       "source": ".agent-src.uncondensed/skills/judge-security-auditor/SKILL.md",
       "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/judge-synthesis/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -10333,6 +12462,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/skills/learning-tutor/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/learning-tutor/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncondensed/skills/legal-intake-triage/SKILL.md",
       "target": ".agent-src.uncondensed/skills/contract-review/SKILL.md",
       "type": "READ_ONLY",
@@ -10394,6 +12530,83 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/code-provenance.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-audit/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/code-provenance.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-credits/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-credits/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/code-provenance.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-credits/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-borrow-check/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/license-compliance-credits/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/license-compliance-credits/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/lint-skills/SKILL.md",
@@ -10478,6 +12691,13 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/llm-provider-knowledge/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/llm-provider-knowledge/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/logging-monitoring/SKILL.md",
@@ -10606,6 +12826,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/mcp/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/md-language-check/SKILL.md",
       "target": ".agent-src.uncondensed/rules/language-and-tone.md",
       "type": "READ_ONLY",
@@ -10628,7 +12855,28 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/memory-consolidation/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/direct-answers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/memory-consolidation/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/domain-safety-pii.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/memory-consolidation/SKILL.md",
       "target": ".agent-src.uncondensed/rules/notes-first-reasoning.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/memory-consolidation/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/source-discovery-gate.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -10977,6 +13225,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/pdf-tools/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/docx-authoring/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/pdf-tools/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/markitdown/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/pdf-tools/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/pdf-tools/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/pdf-tools/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/perf-feedback-craft/SKILL.md",
       "target": ".agent-src.uncondensed/skills/comp-banding/SKILL.md",
       "type": "READ_ONLY",
@@ -11026,6 +13302,27 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/persona-improvement/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/persona-governance.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/persona-improvement/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/persona-improvement/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/persona-improvement/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/skill-improvement-pipeline/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/persona-writing/SKILL.md",
       "target": ".agent-src.uncondensed/contexts/contracts/frugality-charter.md",
       "type": "READ_ONLY",
@@ -11066,6 +13363,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/pest-testing/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/pest-testing/SKILL.md",
@@ -11192,6 +13496,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/playwright-testing/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/po-discovery/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/po-discovery/SKILL.md",
@@ -11559,6 +13877,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
       "target": ".agent-src.uncondensed/skills/mcp/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -11601,6 +13926,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/readme-writing-package/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/readme-writing-package/SKILL.md",
       "target": ".agent-src.uncondensed/skills/readme-writing-package/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -11615,10 +13947,24 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/readme-writing/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/readme-writing/SKILL.md",
       "target": ".agent-src.uncondensed/skills/readme-writing/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/readme-writing/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/reasoning-orchestrator/SKILL.md",
@@ -11804,6 +14150,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/refine-ticket/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/cross-source-consistency.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/refine-ticket/SKILL.md",
       "target": ".agent-src.uncondensed/skills/adversarial-review/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -11854,6 +14207,13 @@
     {
       "source": ".agent-src.uncondensed/skills/release-comms/SKILL.md",
       "target": ".agent-src.uncondensed/skills/funnel-analysis/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/release-comms/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -12007,6 +14367,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/rice-prioritization/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/rice-prioritization/SKILL.md",
       "target": ".agent-src.uncondensed/skills/funnel-analysis/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -12126,14 +14493,7 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/external-reference-deep-dive.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/no-roadmap-references.md",
+      "target": ".agent-src.uncondensed/rules/cross-source-consistency.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -12168,13 +14528,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/think-before-action.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
       "target": ".agent-src.uncondensed/skills/adr-create/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -12183,13 +14536,6 @@
     {
       "source": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
       "target": ".agent-src.uncondensed/skills/agent-docs-writing/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
-      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -12426,6 +14772,62 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/schema-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/schema-review/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/doc-screenshot-hygiene.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/domain-safety-pii.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/image-editing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/readme-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncondensed/skills/script-writing/SKILL.md",
       "target": ".agent-src.uncondensed/contexts/contracts/frugality-charter.md",
       "type": "READ_ONLY",
@@ -12452,6 +14854,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/secrets-management/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/secrets-management/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/secret-vcs-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/secrets-management/SKILL.md",
@@ -12504,6 +14920,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/laravel/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
       "target": ".agent-src.uncondensed/skills/performance-analysis/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -12525,6 +14948,62 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/agent-security-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/defense-in-depth/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
       "target": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -12658,6 +15137,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/skill-writing/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/size-enforcement.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/skill-writing/SKILL.md",
       "target": ".agent-src.uncondensed/skills/description-assist/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -12755,6 +15241,20 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/spreadsheet-source-quality.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncondensed/skills/sql-writing/SKILL.md",
       "target": ".agent-src.uncondensed/skills/database/SKILL.md",
       "type": "READ_ONLY",
@@ -12826,6 +15326,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncondensed/contexts/subagent-configuration.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -12840,21 +15347,7 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
-      "target": ".agent-src.uncondensed/skills/finishing-a-development-branch/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -12869,6 +15362,13 @@
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/adversarial-verification-council.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -12918,6 +15418,13 @@
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/judge-with-debate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/token-optimizer/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -12945,6 +15452,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/adversarial-verification-council.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md",
       "target": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -12991,6 +15505,20 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/adversarial-verification-council.md",
+      "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/adversarial-verification-council.md",
+      "target": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/adversarial-verification-council.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md",
@@ -13100,6 +15628,69 @@
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/judge-with-debate.md",
       "target": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/judge-with-debate.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/senior-engineering-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/tool-safety.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/dependency-upgrade/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/secrets-management/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -13238,6 +15829,62 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/api-testing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/judge-test-coverage/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/pest-testing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/playwright-testing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/systematic-debugging/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/test-driven-development/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/test-driven-development/SKILL.md",
       "target": ".agent-src.uncondensed/skills/adr-create/SKILL.md",
       "type": "READ_ONLY",
@@ -13274,6 +15921,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/test-driven-development/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/test-driven-development/SKILL.md",
       "target": ".agent-src.uncondensed/skills/test-driven-development/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -13302,6 +15956,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
       "target": ".agent-src.uncondensed/skills/defense-in-depth/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -13324,6 +15985,13 @@
     {
       "source": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
       "target": ".agent-src.uncondensed/skills/systematic-debugging/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/test-case-discovery/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -13393,6 +16061,20 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/broken-access-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/domain-safety-pii.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
       "target": ".agent-src.uncondensed/rules/lethal-trifecta-guard.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -13421,6 +16103,27 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/logging-monitoring/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/performance/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
       "target": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -13429,6 +16132,13 @@
     {
       "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
       "target": ".agent-src.uncondensed/skills/security/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/sql-writing/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -13933,6 +16643,27 @@
     {
       "source": ".agent-src.uncondensed/skills/wireframe/SKILL.md",
       "target": ".agent-src.uncondensed/skills/wireframe/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/worktree-lifecycle/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/git-workflow/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/worktree-lifecycle/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/using-git-worktrees/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/worktree-lifecycle/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/worktree-lifecycle/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

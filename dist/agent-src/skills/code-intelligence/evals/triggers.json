@@ -1,0 +1,52 @@
+{
+    "skill": "code-intelligence",
+    "last_eval": "2026-07-30",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for code-graph-answerable STRUCTURE questions — callers, references, import graph, symbol change-impact, how two symbols connect. Should-not-trigger covers the near-miss neighbours (blast-radius impact narrative, source-discovery structural evidence, the refactor executor, deep codebase audit, content/semantic grep) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "who calls PaymentService::refund? build me the call graph",
+            "trigger": true
+        },
+        {
+            "q": "where is this helper actually used across the repo?",
+            "trigger": true
+        },
+        {
+            "q": "what breaks if I change the signature of this method — show me every referencing symbol",
+            "trigger": true
+        },
+        {
+            "q": "wer ruft diese Funktion auf und was importiert sie?",
+            "trigger": true
+        },
+        {
+            "q": "how do these two classes connect — is there a path from the controller to the mailer?",
+            "trigger": true
+        },
+        {
+            "q": "before I edit this shared trait, list every call site, queue worker, event consumer and migration it touches with file:line",
+            "trigger": false,
+            "note": "planned-edit dependency enumeration across runtime consumers, not a symbol-relation query → blast-radius-analyzer"
+        },
+        {
+            "q": "what columns does the orders table actually have before I code against it?",
+            "trigger": false,
+            "note": "structural evidence from a real DB/API source, not a code-symbol relation → source-discovery"
+        },
+        {
+            "q": "rename this class everywhere and update all the callers",
+            "trigger": false,
+            "note": "executing the change, not answering a relationship question → code-refactoring"
+        },
+        {
+            "q": "do a deep multi-pass audit of this codebase and map its architecture",
+            "trigger": false,
+            "note": "whole-project audit orchestration, not a targeted symbol lookup → universal-project-analysis"
+        },
+        {
+            "q": "find every place we log the string 'password' in the repo",
+            "trigger": false,
+            "note": "content/text search, not a symbol relationship — plain grep is correct; the skill explicitly excludes content questions"
+        }
+    ]
+}

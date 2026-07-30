@@ -73,6 +73,8 @@ tasks:
       - task: _ci-start
       - defer: { task: _ci-end }
       - task: consistency
+      - task: preflight
+      - task: check-ci-local-parity
       - task: counts-check
       - task: check-index
       - task: check-router

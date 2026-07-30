@@ -1,0 +1,52 @@
+{
+    "skill": "pdf-tools",
+    "last_eval": "2026-07-30",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for PDF write/transform work the skill owns — merge / split / rotate / encrypt, AcroForm fill + flatten decision, create-from-content, structured text/table extraction and OCR of a text-layer-less scan. Should-not-trigger covers the near-miss neighbours (PDF→Markdown ingestion, image OCR, Word authoring, spreadsheet authoring, legal document triage) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "merge these three PDFs into one file and drop the duplicate cover page",
+            "trigger": true
+        },
+        {
+            "q": "fill this AcroForm PDF with the applicant values, then flatten it so it ships as final",
+            "trigger": true
+        },
+        {
+            "q": "split the PDF into one file per page and rotate the landscape ones",
+            "trigger": true
+        },
+        {
+            "q": "erstelle aus diesem Inhalt ein PDF und verschlüssele es mit einem Passwort",
+            "trigger": true
+        },
+        {
+            "q": "extract the tables from this PDF — OCR the pages if there is no text layer",
+            "trigger": true
+        },
+        {
+            "q": "convert this PDF to Markdown so I can read it in the repo",
+            "trigger": false,
+            "note": "PDF → Markdown ingestion, not a PDF write/transform → markitdown"
+        },
+        {
+            "q": "OCR this screenshot into text for me",
+            "trigger": false,
+            "note": "OCR of a standalone image, not of a scanned PDF's rasterized pages → markitdown"
+        },
+        {
+            "q": "generate a Word document from this template and fill in the placeholders",
+            "trigger": false,
+            "note": "Word .docx authoring / template fill → docx-authoring"
+        },
+        {
+            "q": "build me a spreadsheet model from these numbers with formulas instead of hardcoded values",
+            "trigger": false,
+            "note": "spreadsheet / model authoring → spreadsheet-authoring"
+        },
+        {
+            "q": "review this NDA PDF and flag the risky clauses",
+            "trigger": false,
+            "note": "the PDF is only the container; the ask is legal clause triage → nda-triage"
+        }
+    ]
+}

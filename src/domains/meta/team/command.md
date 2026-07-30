@@ -77,7 +77,10 @@ a wrapper is invoked directly.
 
 ## Sub-commands
 
-| Sub-command | Delegates to (Claude Code) | Purpose |
+On Claude Code each sub-command **delegates** to the paired `/codex:*` command
+rather than routing to an in-suite skill — the second column names that target.
+
+| Sub-command | Routes to | Purpose |
 |---|---|---|
 | `/team review [--background]` | `/codex:review` | Cross-model review of the current working-tree / staged diff |
 | `/team adversarial <focus>` | `/codex:adversarial-review` | Adversarial cross-model review on a named focus — the escalation rung above the single-model `adversarial-review` skill |

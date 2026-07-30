@@ -129,6 +129,21 @@ Two distinct voice samples produce measurably different targets on these six
 axes; matching means moving the draft toward the sample's values, never
 inventing personality the sample does not show.
 
+When no voice sample is supplied, the two declared context-spine slots stand in for
+one — and they earn their place on the guard side, not the style side:
+
+- **product** — the product's real vocabulary. This is what prevents the canonical
+  over-correction below: a term that reads like a tell (`seamless`, `unlock`) may be
+  the product's own name for the thing, and replacing it silently corrupts the text.
+  Check a suspected tell against this slot before rewriting it.
+- **customer-segment** — the register the reader actually expects. It bounds axis 2 (vocabulary register)
+  and axis 4 (hedging density): the same draft is over-hedged for one segment and
+  glib for another, and without the slot "less AI-sounding" collapses into the
+  author's own taste.
+
+Absent both slots, hold intensity at the lowest level and say which slot was missing —
+do not infer a segment from the draft you were asked to edit.
+
 ## Principles (non-negotiable)
 
 - **Subtract, don't add.** AI tone is a *residue to remove*, not warmth to

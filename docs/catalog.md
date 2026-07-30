@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **689 public artefacts** shipped by
+Consumer-facing catalog of all **688 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -14,7 +14,7 @@ are excluded.
 > not yet. Coverage is reported per tier (`./scripts-run
 > src/scripts/skill_eval_coverage`) and CI-ratcheted so it can only rise.
 > Listing here never implies a skill is behaviourally tested — the
-> current coverage and its gap are published on [the proof page](proof.md).
+> current coverage and its gap are published on [the proof page](https://event4u-app.github.io/agent-config/proof/).
 
 > **Non-coding domain correctness is scoped, not proven.** The
 > `finance` / `founder` / `ops` / `content` skills are forged on TS/PHP
@@ -23,7 +23,7 @@ are excluded.
 > cited formulas, or rubric targets matching a named external practice);
 > the rest are labeled `unvalidated` until they pass one
 > (`./scripts-run src/scripts/domain_soundness_status`). A disclaimer
-> floor bounds liability, not correctness — see [the proof page](proof.md).
+> floor bounds liability, not correctness — see [the proof page](https://event4u-app.github.io/agent-config/proof/).
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -314,7 +314,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (110)
+## Rules (109)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -416,7 +416,6 @@ are excluded.
 | rule | [`spreadsheet-source-quality`](../dist/agent-src/rules/spreadsheet-source-quality.md) | auto | Spreadsheet financial data uses official sources (IR, regulatory filings); aggregator/news/social figures need permission + cell-level unofficial mark |
 | rule | [`strategy-safety-floor`](../dist/agent-src/rules/strategy-safety-floor.md) | auto | Founder-strategy output (vision, positioning, moats, OKRs) — never a final call; human owns the decision |
 | rule | [`symfony-routing`](../dist/agent-src/rules/symfony-routing.md) | auto | Symfony work (DI, bundles, Doctrine, Messenger, voters, console) — route to symfony-workflow |
-| rule | [`telegraph-speak`](../dist/agent-src/rules/telegraph-speak.md) | auto | telegraph.speak_scope != off — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable |
 | rule | [`think-before-action`](../dist/agent-src/rules/think-before-action.md) | auto | Before coding/modifying/debugging — analyze first, verify with real tools, never guess or trial-and-error |
 | rule | [`token-budget-discipline`](../dist/agent-src/rules/token-budget-discipline.md) | auto | rich-class skills are exempt from telegraph + thin-projector trims; enforce the 15% cap + justification |
 | rule | [`token-efficiency`](../dist/agent-src/rules/token-efficiency.md) | auto | CLI runs, log fetches, replies — redirect verbose output, minimize tool calls, stay concise |
@@ -444,7 +443,7 @@ are excluded.
 | command | [`agents-user-delete`](../dist/agent-src/commands/agents/user/delete.md) | cluster: agents | Delete one buffered global observation, purge every observation attributed to a project, or revoke a field from the global profile.md — each writes an append-only tombstone before deleting. |
 | command | [`agents-user-init`](../dist/agent-src/commands/agents/user/init.md) | cluster: agents | Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample). |
 | command | [`agents-user-review`](../dist/agent-src/commands/agents/user/review.md) | cluster: agents | List buffered observations from the project-local and global observation buffers with numbered options to inspect or accept individually. |
-| command | [`agents-user-show`](../dist/agent-src/commands/agents/user/show.md) | cluster: agents | Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md — the persona summary the host agent loads at session start. --audit renders the global layer's… |
+| command | [`agents-user-show`](../dist/agent-src/commands/agents/user/show.md) | cluster: agents | Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md. --audit renders the global layer raw for delete/revoke decisions. |
 | command | [`agents-user-update`](../dist/agent-src/commands/agents/user/update.md) | cluster: agents | Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save. |
 | command | [`analytics`](../dist/agent-src/commands/analytics.md) | cluster: analytics | Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`. |
 | command | [`analytics-prune`](../dist/agent-src/commands/analytics/prune.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |

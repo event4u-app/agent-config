@@ -1,0 +1,142 @@
+# CI ↔ local parity manifest — the input to `check_ci_local_parity.ts`.
+#
+# WHY THIS EXISTS
+# ---------------
+# The local aggregate (`task ci`) and the CI workflows drifted apart in BOTH
+# directions, and each direction cost real defects:
+#
+#   CI-only  — a gate CI runs that no local chain reaches. The contributor pushes,
+#              CI goes red, and the fix costs a round trip. Measured 2026-07-30:
+#              check_portability and check_adr_frontmatter turned a PR red that a
+#              local run would have caught, twice in one session.
+#
+#   local-only — a gate `task ci` runs that no workflow does. Nothing enforces it
+#              remotely, so a defect merges. Measured: check-index had verified the
+#              artefact index for a long time and ran in no workflow, which is how
+#              16 stale rows in agents/index.md + docs/catalog.md reached main.
+#              check_bridge_derivation is the same shape.
+#
+# A gate that exists on one side only drifts silently on the other. This manifest
+# plus the checker makes each direction a declared, reviewable choice instead of an
+# accident.
+#
+# THE CONTRACT
+# ------------
+# The checker DERIVES both sides — it never trusts a hand-maintained list of gates:
+#
+#   CI side     parsed from .github/workflows/*.yml — every `./scripts-run
+#               src/scripts/<name>`, `npx tsx src/scripts/<name>`, `node <path>` and
+#               `task <name>` invocation.
+#   local side  the transitive closure of the `task ci` / `task consistency` chains
+#               plus the pre-push hook, resolved through taskfiles/*.yml.
+#
+# Anything present on one side and absent on the other must appear below with a
+# reason, or the checker fails. That is the whole mechanism: drift is allowed, but
+# only on the record.
+#
+# Parity is by gate ID, not by argv. Three gates run locally in a cheap variant and
+# in CI in a strict one (check_release_published bare vs --strict --check-npm,
+# build_cloud_bundle --check vs --all --clean, build_linear_digest offline vs live).
+# They need no declaration: the parity question is "can a contributor run this before
+# pushing at all", and the answer is yes. Declaring them anyway produced exactly the
+# dead exemption the stale-declaration check exists to catch — it was removed rather
+# than kept, because an exemption nothing needs is one the next reader trusts.
+#
+# WHY NOT JUST "RUN task ci BEFORE EVERY PUSH"
+# --------------------------------------------
+# Because a pre-push gate that is red for a reason the contributor did not cause
+# either blocks every push or trains people to ignore it, and the second is worse
+# than no gate. Two measured bounds from the same sweep:
+#
+#   bucket A (repo-content gates) sum to ~14.5s  → affordable before a push
+#   check_enforcement_coverage alone is 30.7s    → belongs in the post-CI loop
+#
+# So `pre_push_budget_seconds` below is a real budget, not a wish. A gate declared
+# `local_only` or `both` that exceeds it is reported, not silently added to the hook.
+
+# Wall-clock ceiling for the pre-push gate set, in seconds. Derived from the
+# measured bucket-A sum (14.5s) plus headroom; the existing hook already costs
+# `task consistency` + eslint + tsc, so this is a bounded increase, not a new tax.
+pre_push_budget_seconds: 25
+
+# Gates CI runs that no local chain reaches — each needs a reason it cannot or
+# should not run locally. `reason` is free text; `class` is one of:
+#   network        needs a token, a registry, or a live API
+#   release        verifies tag / release / published-package state
+#   artifact       needs something only CI builds (site, tarball, bundle)
+#   benchmark      it is a measurement, timing-sensitive or paid
+#   matrix         needs an OS or Node version this machine is not
+ci_only:
+  - id: adoption_snapshot
+    class: network
+    reason: "live api.npmjs.org + api.github.com calls, reads GITHUB_TOKEN"
+  - id: sync_github_metadata
+    class: network
+    reason: "hard-fails without GITHUB_TOKEN; mutates repo topics/description via the API"
+  - id: check_release_pr_shape
+    class: release
+    reason: "shells out to `gh pr diff <n>` — needs a live PR and a token"
+  - id: check_release_adjacent_health
+    class: release
+    reason: "queries GitHub Actions run history via gh"
+  - id: bench_drift_check
+    class: benchmark
+    reason: "consumes rolling bench reports that only a bench run produces"
+  - id: bench_baseline_ready
+    class: benchmark
+    reason: "same — no local baseline to compare against"
+  - id: bench_hook_latency
+    class: benchmark
+    reason: "a latency measurement; 24.0s measured and timing-sensitive on a loaded machine"
+  - id: check_site_links
+    class: artifact
+    reason: "needs the built Starlight site; exits 2 unbuilt or stale (registered in gate-coverage.yml with unavailable_exit: 2)"
+  - id: pack_mcp_content
+    class: artifact
+    reason: "writes the tracked internal/workers/mcp/content.json deploy artifact — a local run dirties the tree"
+  - id: consumer_matrix
+    class: matrix
+    reason: "consumes the npm pack tarball across a Node version matrix"
+  - id: cross_model_smoke
+    class: network
+    reason: "paid cross-model canary calls, secret-gated"
+  - id: trigger_eval_rotation
+    class: network
+    reason: "paid model calls"
+  - id: self_review_gate
+    class: network
+    reason: "--dry-run in the PR job; the live variant is a paid model call on the PR diff"
+  - id: bench_run
+    class: benchmark
+    reason: "paid model calls against a corpus"
+  - id: bench_runner
+    class: benchmark
+    reason: "the runner behind bench_run — same paid calls"
+  - id: skill_trigger_eval
+    class: benchmark
+    reason: "paid cross-model trigger-activation eval; the offline structural half is check_trigger_evals, which IS local"
+  - id: evaluator_umbrella
+    class: artifact
+    reason: "shell umbrella over CI-only evaluator fixtures"
+  - id: smoke_host_loadability
+    class: artifact
+    reason: "temp-HOME install + `claude plugin validate`; measured >100s, did not finish inside a 2-minute budget"
+  - id: install
+    class: matrix
+    reason: "the installer end-to-end against a scratch HOME on the OS matrix; a local run would rewrite this machine's own agent config"
+  - id: release
+    class: release
+    reason: "tags, bumps, publishes, opens the release PR — the release itself"
+
+# Gates a local chain runs that no workflow does — each needs a reason it is not
+# worth remote enforcement, OR it should simply be added to a workflow. Prefer
+# adding it: a local-only gate is the direction that let real defects merge.
+local_only:
+  - id: check_knowledge_sharing
+    class: staging-scoped
+    reason: >
+      Inspects the STAGED set (a gitignored intake file staged anyway via `git add -f`),
+      and CI has no staged set — the commit already happened by the time a workflow
+      runs. The committed-tree equivalent ("a file that should be gitignored is
+      tracked") is a different invariant and would need its own mode, so this is not
+      the local-only-by-neglect case the manifest warns about.

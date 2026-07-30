@@ -23,7 +23,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`agents-user-delete`** — Delete one buffered global observation, purge every observation attributed to a project, or revoke a field from the global profile.md — each writes an append-only tombstone before deleting.
 - **`agents-user-init`** — Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample).
 - **`agents-user-review`** — List buffered observations from the project-local and global observation buffers with numbered options to inspect or accept individually.
-- **`agents-user-show`** — Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md — the persona summary the host agent loads at session start. --audit renders the global layer's raw holdings for delete/revoke decisions instead.
+- **`agents-user-show`** — Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md. --audit renders the global layer raw for delete/revoke decisions.
 - **`agents-user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)

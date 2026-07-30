@@ -1,0 +1,52 @@
+{
+    "skill": "evaluate-llm-feature",
+    "last_eval": "2026-07-30",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for black-box evaluation of a SHIPPED consumer LLM feature — hallucination, prompt-injection and cost-runaway probes against stated expectations. Should-not-trigger covers the near-miss neighbours (this suite's own agent config red-team, LLM app-building/RAG, prompt authoring, the single-response injection judge, code security audit) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "review my support chatbot before launch — does it hallucinate or leak its system prompt?",
+            "trigger": true
+        },
+        {
+            "q": "is my summariser safe to ship? probe it for prompt injection through the documents it retrieves",
+            "trigger": true
+        },
+        {
+            "q": "evaluate my deployed AI assistant against what it claims to do and its token budget",
+            "trigger": true
+        },
+        {
+            "q": "teste meinen ausgelieferten KI-Assistenten adversarial auf Halluzinationen und Kosten-Runaway",
+            "trigger": true
+        },
+        {
+            "q": "our doc-QA feature invents API names — run adversarial probes and give me a ship / do-not-ship verdict",
+            "trigger": true
+        },
+        {
+            "q": "red-team my own agent setup — my CLAUDE.md, hooks and MCP servers",
+            "trigger": false,
+            "note": "config-layer red/blue review of this suite's agents, not a shipped consumer feature → agent-security-review"
+        },
+        {
+            "q": "what chunk size and embedding model should I use for my RAG pipeline?",
+            "trigger": false,
+            "note": "building an LLM app (explicitly out of mission for this skill); provider facts → llm-provider-knowledge, prompt design → prompt-engineering-patterns"
+        },
+        {
+            "q": "make this system prompt better — add few-shot examples and self-verification",
+            "trigger": false,
+            "note": "authoring/optimising a prompt, not evaluating a running feature → prompt-engineering-patterns / prompt-optimizer"
+        },
+        {
+            "q": "score whether this single agent response resisted the injected instruction",
+            "trigger": false,
+            "note": "one-response injection-resistance scoring on an axis, not a feature-wide probe campaign → judge-injection-defense"
+        },
+        {
+            "q": "audit the source code of our chat backend for vulnerabilities",
+            "trigger": false,
+            "note": "white-box code vulnerability hunt; this skill is black-box only → security-audit"
+        }
+    ]
+}
