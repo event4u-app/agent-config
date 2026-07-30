@@ -82,6 +82,61 @@ function dedupableCount(userDir: string, sourceDir: string): { skipped: number; 
     return { skipped, chars };
 }
 
+/**
+ * Why the real user scope misses the fixture condition. Version drift is the
+ * benign half; the structural half is that `install.ts` stamps ownership
+ * frontmatter into every installed rule (`_set_key(fm_lines, 'package', …)` at
+ * install.ts:2723, `source_path` at install.ts:2725) while the in-repo
+ * projection stamps nothing — so a provenance-only difference survives even a
+ * perfect version alignment. Classifying the two apart is what turns "0/110"
+ * from a puzzle into an answer: `provenanceOnly == total` means aligning
+ * versions would buy exactly nothing.
+ */
+const OWNERSHIP_KEYS = ['package', 'source_path'] as const;
+
+function stripOwnershipKeys(buf: Buffer): string {
+    return buf
+        .toString('utf-8')
+        .split('\n')
+        .filter((line) => !OWNERSHIP_KEYS.some((k) => line.startsWith(`${k}:`)))
+        .join('\n');
+}
+
+interface ReachabilitySplit {
+    total: number;
+    identical: number;
+    provenanceOnly: number;
+    bodyDiff: number;
+    missing: number;
+}
+
+function classifyReachability(userDir: string, sourceDir: string): ReachabilitySplit {
+    const split: ReachabilitySplit = {
+        total: 0,
+        identical: 0,
+        provenanceOnly: 0,
+        bodyDiff: 0,
+        missing: 0,
+    };
+    for (const entry of fs.readdirSync(sourceDir)) {
+        if (!entry.endsWith('.md')) continue;
+        split.total += 1;
+        const twin = path.join(userDir, entry);
+        let a: Buffer;
+        try {
+            a = fs.readFileSync(twin);
+        } catch {
+            split.missing += 1;
+            continue;
+        }
+        const b = fs.readFileSync(path.join(sourceDir, entry));
+        if (a.equals(b)) split.identical += 1;
+        else if (stripOwnershipKeys(a) === stripOwnershipKeys(b)) split.provenanceOnly += 1;
+        else split.bodyDiff += 1;
+    }
+    return split;
+}
+
 function main(argv: readonly string[]): number {
     const medianArg = argv.find((a) => a.startsWith('--measured-median='));
     // The measured median cold-start payload, from the transcript census. Passed
@@ -99,6 +154,9 @@ function main(argv: readonly string[]): number {
     const fixture = dedupableCount(fixtureUserRules, RULES_SOURCE);
     const realUserRules = path.join(process.env['HOME'] ?? os.homedir(), '.claude', 'rules');
     const control = dedupableCount(realUserRules, RULES_SOURCE);
+    const reach = fs.existsSync(realUserRules)
+        ? classifyReachability(realUserRules, RULES_SOURCE)
+        : { total: 0, identical: 0, provenanceOnly: 0, bodyDiff: 0, missing: 0 };
 
     const before = fixtureUser.tokens + source.tokens; // both scopes load
     const after = fixtureUser.tokens + (source.tokens - tokens(fixture.chars));
@@ -122,13 +180,29 @@ function main(argv: readonly string[]): number {
     lines.push(`  of measured median cold-start (${measuredMedian} tok): ${pct(removed, measuredMedian)}`);
     lines.push(`  of the two-scope rules payload (${before} tok):       ${pct(removed, before)}`);
     lines.push('');
-    lines.push('CONTROL (this machine — versions drift, so the dedup must be inert)');
+    lines.push('CONTROL (this machine — the dedup must be inert unless both scopes match)');
     lines.push(`  byte-identical twins:  ${control.skipped}/${source.files}`);
     lines.push(`  removed:               ${tokens(control.chars)} tok`);
     lines.push('');
     lines.push(`threshold: >= 15% of the measured median  ->  ${
         removed / measuredMedian >= 0.15 ? 'MET' : 'NOT MET'
     }`);
+    lines.push('');
+    lines.push('REACHABILITY of the fixture condition (why the control is not the fixture)');
+    lines.push(`  identical:             ${reach.identical}/${reach.total}`);
+    lines.push(`  differ in body:        ${reach.bodyDiff}/${reach.total}  (closed by aligning versions)`);
+    lines.push(`  differ ONLY in the ownership stamp: ${reach.provenanceOnly}/${reach.total}`);
+    lines.push(`  absent at user scope:  ${reach.missing}/${reach.total}`);
+    if (reach.identical === 0 && reach.bodyDiff + reach.provenanceOnly === reach.total) {
+        lines.push('');
+        lines.push('  -> Aligning versions would close the body diffs and leave the ownership');
+        lines.push('     stamp, so the reachable twin count is 0, NOT the fixture\'s figure.');
+        lines.push('     install.ts:2723/2725 stamp package:/source_path: into every installed');
+        lines.push('     rule unconditionally; the in-repo projection stamps nothing. Two');
+        lines.push('     writers, deliberately different output — see road-to-dedup-reachability.');
+        lines.push('     Do NOT relax the byte predicate to make this number move: that');
+        lines.push('     predicate IS the content-neutrality argument.');
+    }
     lines.push('');
     lines.push('Content safety: only byte-identical twins are removed, so the host still');
     lines.push('loads the same rule text in full — once instead of twice. No rule becomes');
@@ -143,4 +217,5 @@ if (process.argv[1] !== undefined && import.meta.url === `file://${process.argv[
     process.exit(main(process.argv.slice(2)));
 }
 
-export { dedupableCount, main };
+export { classifyReachability, dedupableCount, main };
+export type { ReachabilitySplit };

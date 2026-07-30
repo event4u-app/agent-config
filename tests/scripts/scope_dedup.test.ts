@@ -12,7 +12,7 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { dedupableCount } from '../../src/scripts/measure_scope_dedup.js';
+import { classifyReachability, dedupableCount } from '../../src/scripts/measure_scope_dedup.js';
 
 const tmps: string[] = [];
 
@@ -149,5 +149,71 @@ describe('scope dedup — hostile or degenerate user scope (council review of #1
         fs.writeFileSync(notADir, 'not a directory\n', 'utf-8');
 
         expect(dedupableCount(notADir, source).skipped).toBe(0);
+    });
+});
+
+// Why the fixture condition is unreachable in production. The dedup itself is
+// correct; what these tests pin is the DIAGNOSIS, so a future reader is not sent
+// back to re-derive it — and so the "aligning versions would fix it" hypothesis
+// stays falsified rather than quietly returning.
+describe('reachability classification — provenance stamp vs body drift', () => {
+    it('calls a twin that differs only in the ownership stamp provenance-only, not a body diff', () => {
+        const root = tmpdir();
+        const source = writeRules(path.join(root, 'source'), {
+            'a.md': '---\nname: a\n---\n\nbody\n',
+        });
+        // Exactly what install.ts:2723/2725 add to every installed rule.
+        const user = writeRules(path.join(root, 'user'), {
+            'a.md': '---\nname: a\npackage: event4u/agent-config\nsource_path: dist/agent-src/rules/a.md\n---\n\nbody\n',
+        });
+
+        const split = classifyReachability(user, source);
+        expect(split).toMatchObject({
+            total: 1,
+            identical: 0,
+            provenanceOnly: 1,
+            bodyDiff: 0,
+            missing: 0,
+        });
+        // And the dedup still refuses it — the classifier explains the 0, it
+        // does not license skipping the rule.
+        expect(dedupableCount(user, source).skipped).toBe(0);
+    });
+
+    it('keeps a body difference separate from the stamp, so version drift stays visible as its own cause', () => {
+        const root = tmpdir();
+        const source = writeRules(path.join(root, 'source'), { 'a.md': 'v2 body\n' });
+        const user = writeRules(path.join(root, 'user'), {
+            'a.md': 'package: event4u/agent-config\nv1 body\n',
+        });
+
+        // Stripping the stamp still leaves different bodies -> bodyDiff, which is
+        // the only bucket a version alignment can close.
+        expect(classifyReachability(user, source)).toMatchObject({
+            provenanceOnly: 0,
+            bodyDiff: 1,
+        });
+    });
+
+    it('pins the honest null: with the stamp present everywhere, aligning versions leaves zero twins', () => {
+        const root = tmpdir();
+        const bodies = { 'a.md': 'one\n', 'b.md': 'two\n', 'c.md': 'three\n' };
+        const source = writeRules(path.join(root, 'source'), bodies);
+        // Same release at both scopes — the "aligned versions" condition — but
+        // every file carries the unconditional install stamp.
+        const user = writeRules(
+            path.join(root, 'user'),
+            Object.fromEntries(
+                Object.entries(bodies).map(([n, b]) => [
+                    n,
+                    `package: event4u/agent-config\nsource_path: dist/agent-src/rules/${n}\n${b}`,
+                ]),
+            ),
+        );
+
+        const split = classifyReachability(user, source);
+        expect(split.bodyDiff).toBe(0); // versions ARE aligned
+        expect(split.provenanceOnly).toBe(3); // and yet nothing matches
+        expect(dedupableCount(user, source).skipped).toBe(0);
     });
 });
