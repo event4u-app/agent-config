@@ -14,7 +14,7 @@ are excluded.
 > not yet. Coverage is reported per tier (`./scripts-run
 > src/scripts/skill_eval_coverage`) and CI-ratcheted so it can only rise.
 > Listing here never implies a skill is behaviourally tested — the
-> current coverage and its gap are published on [the proof page](proof.md).
+> current coverage and its gap are published on [the proof page](https://event4u-app.github.io/agent-config/proof/).
 
 > **Non-coding domain correctness is scoped, not proven.** The
 > `finance` / `founder` / `ops` / `content` skills are forged on TS/PHP
@@ -23,7 +23,7 @@ are excluded.
 > cited formulas, or rubric targets matching a named external practice);
 > the rest are labeled `unvalidated` until they pass one
 > (`./scripts-run src/scripts/domain_soundness_status`). A disclaimer
-> floor bounds liability, not correctness — see [the proof page](proof.md).
+> floor bounds liability, not correctness — see [the proof page](https://event4u-app.github.io/agent-config/proof/).
 
 | kind | name | source | description |
 |---|---|---|---|
