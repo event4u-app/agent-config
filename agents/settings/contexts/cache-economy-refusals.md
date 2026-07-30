@@ -39,9 +39,13 @@ cold-start share below 50%.
   the host already emits per-leg cache attribution locally in its own
   transcripts.
 - **A beta-flag OTel join** (`agent_id` spans carrying cache tokens) — richer,
-  but gated on two beta environment flags and an OTLP sink. The transcript
-  reader gets the same numbers with zero setup. Revisit only if the transcript
-  fields disappear.
+  but gated on two flags plus an OTLP sink, all three named and verified against
+  the host docs (code.claude.com/docs/en/monitoring-usage, read 2026-07-30):
+  `CLAUDE_CODE_ENABLE_TELEMETRY=1`, `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and
+  `OTEL_TRACES_EXPORTER=otlp`. The docs state tracing is off by default and put
+  the whole span set under a "Traces (beta)" heading. The transcript reader gets
+  the same numbers with zero setup. Revisit only if the transcript fields
+  disappear.
 - **Blanket 1-hour cache TTL** anywhere — measured **+8.6% worse** upstream. A
   1h write costs 2.0× against a 5m write's 1.25×, and ~98% of cache reuse
   happens within ~34 seconds, so paying the premium on every write to rescue the
