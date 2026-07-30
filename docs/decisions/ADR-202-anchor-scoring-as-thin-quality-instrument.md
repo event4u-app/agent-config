@@ -77,22 +77,85 @@ cancellation left open: *if the question is ever asked again, with what?*
    inherited.** 0.48 was calibrated for a pairwise *preference* statistic;
    anchor-scoring produces a different statistic over the same
    `thin_wins / decisive` denominator, so carrying it across would be a
-   continuity habit dressed as a floor. Two candidate decision rules are
-   evaluated against each other and one is pre-registered, with its rationale,
-   **before** answers are generated (§ Threshold pre-registration). A run
-   started without a pre-registered threshold is void by construction — the
-   number could then be chosen after seeing the data, which is the failure the
-   two closed judge runs were pre-registered to avoid.
+   continuity habit dressed as a floor. **Registered 2026-07-30: the hybrid** —
+   zero tolerance on `must_not`, non-inferiority within δ plus a per-rule floor
+   on `must_include`, with reproducibility carried by transcript freezing rather
+   than by pinned sampling (§ Threshold pre-registration). δ and the per-rule
+   floor are derived from the frozen corpus's observed spread and written down
+   **before** scoring. A run started without those numbers recorded is void by
+   construction — they could then be chosen after seeing the data, which is the
+   failure the two closed judge runs were pre-registered to avoid.
 6. **The scorer is falsified before it is trusted.** Determinism removes
    `inconsistency_rate`, the diagnostic that caught run 3's unreliability, so
    the instrument ships with a replacement: known-bad and known-good fixtures
    plus a mutation test over the anchor evaluation, in the **same PR** as the
    runner (§ Scorer falsification). No live run before that suite is green.
 
-## Threshold pre-registration (Decision 5)
+## Threshold pre-registration (Decision 5) — REGISTERED 2026-07-30
 
-Two candidate decision rules. Exactly one is pre-registered — with its rationale
-and its δ, if it has one — in this ADR before the first answer is generated.
+**The registered rule is the hybrid.** Operator decision, recorded before any
+answer is generated:
+
+- **`must_not` anchors — zero tolerance.** Thin may not violate a `must_not`
+  anchor that eager avoids, on any task. A census, not a rate. These anchors are
+  safety-shaped: a single introduced violation is a regression regardless of how
+  the rest of the corpus scores.
+- **`must_include` anchors — non-inferiority within δ.**
+  `rate_thin ≥ rate_eager − δ` over the pooled anchor-satisfaction rate, **plus a
+  per-rule floor** so no single rule's anchor set may collapse while the pooled
+  rate stays inside δ. Both parameters are set before scoring (below).
+
+Rationale for the split: the two anchor classes carry different failure costs.
+A missed `must_include` is a capability regression that a rate can fairly
+aggregate; a tripped `must_not` is a behaviour the projection introduced, and
+averaging that away would be the failure this instrument exists to catch.
+
+### Reproducibility — transcript freezing
+
+Determinism belongs to the scorer, not to answer generation: both arms are model
+calls. The run is made reproducible by **freezing the transcript**, not by
+pinning sampling:
+
+1. Generate both arms **once** over the completed golden set.
+2. **Freeze the artefacts** — the answer pairs are the experiment's data from
+   that point on.
+3. The scorer runs **only over the frozen corpus**. Re-scoring is repeatable by
+   construction, because the scorer is a pure function of (answer, anchors).
+4. **A re-generation is a new experiment**, not a re-run of this one. It gets its
+   own frozen corpus and its own pre-registered parameters; results are never
+   pooled across freezes.
+
+This is what makes the zero-tolerance leg admissible at all: under live sampling
+a single noisy generation would fail the census, which is why Candidate A was
+rejected as a standalone rule.
+
+### δ and the per-rule floor — set after freezing, before scoring
+
+Both parameters are derived from the **observed spread in the frozen corpus** and
+written into this ADR before the scorer runs. Deriving them from the data is
+legitimate only in that order: the spread is a property of the corpus, not of the
+verdict, and fixing the numbers before any anchor is evaluated keeps the decision
+rule out of reach of the result.
+
+**0.48 is not inherited.** It was calibrated for a pairwise preference statistic
+against a judge substrate with known unreliability. Neither leg above uses it.
+
+### Candidates considered and rejected as standalone rules
+
+- **A — anchor dominance as a pure census** across both anchor classes. Rejected
+  standalone: under live sampling one noisy generation fails the entire gate, and
+  it treats a cosmetic anchor as equal to a safety one. Survives as the `must_not`
+  leg, where transcript freezing removes the noise objection.
+- **B — non-inferiority across all anchors pooled.** Rejected standalone: a pooled
+  rate can hide a concentrated failure — thin could lose one rule's anchors
+  entirely and stay inside δ. Survives as the `must_include` leg, fenced by the
+  per-rule floor.
+
+Note a schema tension to resolve when the runner is built:
+`check_quality_regression` derives its verdict from per-pair `winner` fields, and
+neither leg above is a per-pair winner. The runner emits per-pair winners for
+schema compatibility while the gate reads the two-leg aggregate — that split must
+be explicit in the report, or it will look like it says something it does not.
 
 **Candidate A — anchor dominance (a census, not a threshold).** Per task, thin
 must satisfy every `must_include` anchor eager satisfies, and violate no
