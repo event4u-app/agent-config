@@ -6,10 +6,10 @@
 
 ## Overall
 
-**48 / 243 steps done · 20%**
+**50 / 240 steps done · 21%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   20%
+████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
 ```
 
 ## Open roadmaps
@@ -29,7 +29,7 @@
 | 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 14 | [road-to-thin-flip-under-anchor-scoring.md](roadmaps/road-to-thin-flip-under-anchor-scoring.md) | 4 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 14 | [road-to-thin-flip-under-anchor-scoring.md](roadmaps/road-to-thin-flip-under-anchor-scoring.md) | 4 | 17 | 12 | 2 | 0 | 3 | 0 | █░░░░░░░░░ 14% |
 | 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 16 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
 | 17 | [road-to-zero-ceremony-install.md](roadmaps/road-to-zero-ceremony-install.md) | 6 | 22 | 22 | 0 | 0 | 0 | [2](#blockers-road-to-zero-ceremony-install) | ░░░░░░░░░░ 0% |
@@ -277,11 +277,11 @@ _1 blocker resolved._
 
 ### [road-to-thin-flip-under-anchor-scoring.md](roadmaps/road-to-thin-flip-under-anchor-scoring.md)
 
-**Road to a Thin Flip Under Anchor-Scoring** — 0 / 17 done (0%)
+**Road to a Thin Flip Under Anchor-Scoring** — 2 / 14 done (14%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Scoring pass | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Scoring pass — ⛔ HONEST NULL 2026-07-31 | ✅ done | 0 | 2 | 0 | 3 | 100% |
 | 2 | Host canary | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | essential decoupling | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 4 | The decision | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
