@@ -65,17 +65,6 @@ tasks:
     desc: Check condensation quality between uncondensed and condensed pairs
     cmd: ./scripts-run src/scripts/skill_linter --all --pairs --condensation-quality
 
-  lint-pack:
-    silent: true
-    desc: |
-      Phase 4.4 (ADR-017) — lint a single package's uncondensed source
-      tree. Used by the per-pack CI matrix (.github/workflows/skill-lint.yml).
-      Pass the pack id via `-- PACK=<name>` (e.g. `task lint-pack -- PACK=pack-laravel`)
-      or set the env var directly. Resolves to `packages/<PACK>/.agent-src.uncondensed/`.
-    cmd: ./scripts-run src/scripts/skill_linter "packages/{{.PACK}}/.agent-src.uncondensed/" {{.QUIET_FLAG}}
-    requires:
-      vars: [PACK]
-
   skill-usage:collect:
     silent: true
     desc: |
