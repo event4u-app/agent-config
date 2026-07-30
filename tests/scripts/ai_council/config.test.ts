@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import * as cfg from '../../../src/scripts/ai_council/config';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const _REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
 const tmp_dirs: string[] = [];
 const saved_env: Array<[string, string | undefined]> = [];
@@ -453,7 +453,7 @@ describe('resolve_config_path — precedence', () => {
 });
 
 /** JSON-able view of the TS config that matches the Python `to_jsonable`. */
-function ts_jsonable(c: cfg.CouncilConfig): Record<string, unknown> {
+function _ts_jsonable(c: cfg.CouncilConfig): Record<string, unknown> {
     const map = <V>(m: ReadonlyMap<string, V>, fn?: (v: V) => unknown): Record<string, unknown> => {
         const o: Record<string, unknown> = {};
         for (const [k, v] of m) {
@@ -501,7 +501,7 @@ function ts_jsonable(c: cfg.CouncilConfig): Record<string, unknown> {
     };
 }
 
-const FULL_FIXTURE = `enabled: true
+const _FULL_FIXTURE = `enabled: true
 defaults:
   mode: cli
   member_mode: api

@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `9.9.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 287
+- **artefacts**: 288
 
-## Commands (148)
+## Commands (149)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -19,10 +19,11 @@ Artefacts that maintain this package (agent-config itself).
 - **`agents-init`** — Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers.
 - **`agents-optimize`** — Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply.
 - **`agents-user`** — User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed.
-- **`agents-user-accept`** — Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer.
+- **`agents-user-accept`** — Apply a buffered observation to .agent-user.md or the global profile.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer.
+- **`agents-user-delete`** — Delete one buffered global observation, purge every observation attributed to a project, or revoke a field from the global profile.md — each writes an append-only tombstone before deleting.
 - **`agents-user-init`** — Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample).
-- **`agents-user-review`** — List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
-- **`agents-user-show`** — Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
+- **`agents-user-review`** — List buffered observations from the project-local and global observation buffers with numbered options to inspect or accept individually.
+- **`agents-user-show`** — Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md — the persona summary the host agent loads at session start. --audit renders the global layer's raw holdings for delete/revoke decisions instead.
 - **`agents-user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
