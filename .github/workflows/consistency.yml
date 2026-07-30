@@ -2,6 +2,13 @@ name: Consistency
 
 on:
   pull_request:
+    # `labeled`/`unlabeled` are here for the kernel-rule bundle override.
+    # `check_kernel_rule_bundle` reads the override label from the event
+    # payload, and the default trigger set (opened/synchronize/reopened) never
+    # re-fires when a label is added — so the documented override could only
+    # take effect via an unrelated push, which is not an override, it is a
+    # workaround. Observed on PR #1063.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     paths:
       - ".agent-src.uncondensed/**"
       # `src/` is the source of truth and `dist/agent-src/` its projection; a PR
