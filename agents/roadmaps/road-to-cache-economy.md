@@ -419,13 +419,35 @@ number as the reason**, not quietly dropped. At or above 15%: both proceed, and
 the shipped default for the dedup remains a separate governance call — this
 claim measures the mechanism, it does not authorise flipping a consumer default.
 
+### C-3 measured result — 2026-07-30, after the pre-registration above
+
+Reproduce: `./scripts-run src/scripts/measure_scope_dedup`.
+
+| condition | byte-identical twins | rules payload before → after | removed |
+|---|---|---|---|
+| **Fixture** (consumer: same version at both scopes) | 110/110 | 175,354 → 87,677 tok | **87,677 tok** |
+| **Control** (this machine: releases drift) | 0/110 | unchanged | 0 tok |
+
+**Reduction: 38.0% of the measured median cold-start** (87,677 of 230,556 tok), or
+50.0% of the two-scope rules payload. Threshold was ≥ 15% → **MET**.
+
+The control matters as much as the result: on a maintainer machine the two scopes
+hold different releases, so the byte-identity gate makes the dedup **correctly
+inert** (0/110) instead of silently letting the older globally-installed copy win.
+
+End-to-end proof, not just arithmetic: with `projection.scope_dedup: true` and a
+byte-identical user scope, `condense --generate-tools` skipped all 110 project-scope
+rule links (`.claude/rules` → 0 files) while the host still loads the same 110 rules
+from user scope. Default is **off**; flipping a consumer default is a separate
+governance call, and this claim does not authorise it.
+
 ### Measured verdicts — 2026-07-30, host CC 2.1.220
 
 | claim | threshold | measured | verdict |
 |---|---|---|---|
 | C-1 cold-start dominance | ≥50% of subagent write volume | **69.7%** | **confirmed** |
 | C-2 duplicate-scope share | ≥25% of subagent write volume | **38.5%** | **confirmed** |
-| C-3 preamble reducibility | ≥15% median cold-start reduction | — | **pending** — no reduction intervention has landed yet (Phase 3) |
+| C-3 preamble reducibility | ≥15% median cold-start reduction | **38.0%** | **confirmed** 2026-07-30 |
 | C-4 council mispricing | ≥5% change in realized cost | **5.5%** | **confirmed** |
 | C-5 worktree fragmentation | first-call read share <10% of an established directory | **69.1%** | **FALSIFIED** |
 

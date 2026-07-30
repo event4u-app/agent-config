@@ -28,6 +28,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -393,6 +394,66 @@ function _read_augment_rules_use_symlinks(): boolean {
         return value === 1;
     }
     return false;
+}
+
+/**
+ * Per-tool user-scope rule directory, for the scope-dedup below. Only tools
+ * whose host reads a user-scope rules directory can have a redundant twin;
+ * everything else has nothing to de-duplicate against.
+ */
+const USER_SCOPE_RULE_DIRS: Readonly<Record<string, string>> = {
+    '.claude/rules': path.join('.claude', 'rules'),
+};
+
+function _read_projection_scope_dedup(): boolean {
+    const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
+    const projection = data['projection'];
+    if (typeof projection !== 'object' || projection === null || Array.isArray(projection)) {
+        return false;
+    }
+    const value = (projection as Record<string, unknown>)['scope_dedup'];
+    if (typeof value === 'boolean') {
+        return value;
+    }
+    if (typeof value === 'string') {
+        return ['true', 'yes', 'on', '1'].includes(value.trim().toLowerCase());
+    }
+    return false;
+}
+
+/**
+ * Rules whose user-scope twin is BYTE-IDENTICAL to the source, i.e. safe to
+ * skip at project scope: the host still loads the same text, once instead of
+ * twice, so nothing the model sees changes.
+ *
+ * Byte-identity is the whole safety argument and is not negotiable. Keying on
+ * the filename alone would silently let a stale globally-installed copy win
+ * whenever the two scopes hold different versions — which is the NORMAL state
+ * while developing the package (measured: 110/110 shared filenames differing in
+ * bytes). This is deliberately not the thin-projection mechanism: no rule
+ * becomes trigger-gated, so the quality floor that disabled thin projection
+ * does not apply here.
+ */
+function _dedupable_rules(tool_dir: string, rules: readonly string[], userHome: string): Set<string> {
+    const relative = USER_SCOPE_RULE_DIRS[tool_dir];
+    if (relative === undefined) {
+        return new Set();
+    }
+    const userDir = path.join(userHome, relative);
+    const skip = new Set<string>();
+    for (const rule of rules) {
+        const twin = path.join(userDir, rule);
+        const source = path.join(MODULE_STATE.RULES_SOURCE, rule);
+        try {
+            if (!_isFile(twin) || !_isFile(source)) continue;
+            if (fs.readFileSync(twin).equals(fs.readFileSync(source))) {
+                skip.add(rule);
+            }
+        } catch {
+            // An unreadable twin is simply not de-duplicable — emit the project copy.
+        }
+    }
+    return skip;
 }
 
 function _lean_projection_mode(): string {
@@ -992,18 +1053,28 @@ export function generate_rule_symlinks(): number {
         );
     }
 
+    const dedup_on = _read_projection_scope_dedup();
+    const user_home = process.env['HOME'] ?? os.homedir();
+    const skipped_per_tool: Record<string, Set<string>> = {};
+
     let total = 0;
     for (const [tool_dir, rel_prefix] of Object.entries(tool_dirs)) {
         const target_dir = path.join(MODULE_STATE.PROJECT_ROOT, tool_dir);
+        const skip = dedup_on ? _dedupable_rules(tool_dir, rules, user_home) : new Set<string>();
+        skipped_per_tool[tool_dir] = skip;
         _mkdirp(target_dir);
-        // Clean stale symlinks
+        // Clean stale symlinks — a rule that became de-duplicable this run is
+        // stale at project scope too, so it has to go with the rest.
         for (const item of _iterdirSorted(target_dir)) {
             const name = path.basename(item);
-            if (_isSymlink(item) && !rules.includes(name) && name !== 'README.md') {
+            if (_isSymlink(item) && (!rules.includes(name) || skip.has(name)) && name !== 'README.md') {
                 fs.unlinkSync(item);
             }
         }
         for (const rule of rules) {
+            if (skip.has(rule)) {
+                continue;
+            }
             const link = path.join(target_dir, rule);
             if (_existsOrSymlink(link)) {
                 fs.unlinkSync(link);
@@ -1021,8 +1092,18 @@ export function generate_rule_symlinks(): number {
     for (const tool_dir of Object.keys(tool_dirs)) {
         const target_dir = path.join(MODULE_STATE.PROJECT_ROOT, tool_dir);
         const tool_count = _iterdirSorted(target_dir).filter((f) => f.endsWith('.md')).length;
-        if (tool_count !== source_count) {
-            _print(`  ⚠️  ${tool_dir}: ${tool_count} rules (expected ${source_count})`);
+        // Expect the de-duplicated count, not the source count: a skipped rule is
+        // an intended absence, so warning on it would train the reader to ignore
+        // this line — which is how a real drift gets missed.
+        const skipped = (skipped_per_tool[tool_dir] ?? new Set()).size;
+        const expected = source_count - skipped;
+        if (tool_count !== expected) {
+            _print(`  ⚠️  ${tool_dir}: ${tool_count} rules (expected ${expected})`);
+        }
+        if (skipped > 0) {
+            _print(
+                `  ℹ️  ${tool_dir}: ${skipped} rule(s) skipped — byte-identical twin already installed at user scope`,
+            );
         }
     }
 

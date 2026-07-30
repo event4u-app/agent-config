@@ -76,7 +76,7 @@ export interface RuleDirCensus {
     chars: number;
 }
 
-function censusRuleDir(dir: string): RuleDirCensus {
+export function censusRuleDir(dir: string): RuleDirCensus {
     if (!fs.existsSync(dir)) return { files: 0, chars: 0 };
     let files = 0;
     let chars = 0;
