@@ -74,6 +74,50 @@ cold-start share below 50%.
   Q5h/Q7d quota, making flat-rate paths non-free, has **no primary source**. It
   was dropped rather than shipped as a hedge. Do not reintroduce it without one.
 
+## Honest null — scope de-duplication is measured but **not reachable in production** (2026-07-31)
+
+C-3 measured a 38.0% reduction and the mechanism works. It is nonetheless inert
+for every consumer, and the cause is structural rather than version drift:
+
+| measurement | value |
+|---|---|
+| installed rules carrying `package:` / `source_path:` frontmatter | **110 / 110** |
+| in-repo project-scope rules carrying the same frontmatter | **0 / 110** |
+| current difference classification | 61 provenance-only · 49 provenance **and** body |
+| byte-identical twins reachable by aligning versions | **0 / 110** |
+
+`_tag_installed_file` in [`install.ts`](../../../src/scripts/install.ts) stamps the
+ownership keys **unconditionally** — `_set_key(fm_lines, 'package', PACKAGE_TAG_ID)`
+at `install.ts:2723`, `source_path` at `install.ts:2725`, with no flag and no
+branch to skip it. The in-repo projection written by
+`condense.ts --generate-tools` does not stamp anything. So the two scopes are
+produced by **two writers with deliberately different output**, and no version
+alignment can make them byte-identical: aligning versions only collapses the 49
+body diffs into provenance diffs, leaving 0 twins rather than 110.
+
+This was established statically, without overwriting a real installation. The
+earlier hypothesis — "condensation / build differences between `dist` and the
+release artefact" — is **wrong** and should not be re-investigated.
+
+The stamp is load-bearing, so it is not free to delete: `reap_tagged_orphans`
+(`install.ts:3035` for the apply path, `install.ts:3120` for the dry-run preview)
+identifies which files this package owns, so a stale file from a previous install
+can be removed without touching a user-authored one. Removing the stamp without a
+replacement ownership signal would break safe orphan reaping.
+
+**What was refused here:** relaxing the byte-identity predicate to make the
+numbers move. The predicate is the entire content-neutrality argument — it is why
+"no regression on the trigger/outcome evals" holds by construction instead of by
+measurement (see the disabled thin projection for what the alternative costs).
+A predicate change is a design decision with its own safety argument and its own
+council pass, never a convenience fix applied to reach a target.
+
+Reachability is therefore an **open design question**, not a defect: see
+`road-to-dedup-reachability` for the two candidate mechanisms (predicate
+precision vs. writer convergence). Until one lands, `projection.scope_dedup`
+stays opt-in and inert, and the consumer-default question stays parked rather
+than carried as an open decision.
+
 ## What is genuinely ours to fix
 
 Only the payload the package authors: the always-loaded rule set, the CLAUDE.md
