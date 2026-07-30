@@ -9,15 +9,30 @@
  * messages, the same git plumbing and the same `origin/main` → `main`
  * fallback. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
- * Per Q3=A locked decision (council Round 3, 2026-05-03), the four
- * safety-floor always-rules are out of scope for Phase 2A slimming:
+ * The four safety-floor always-rules it guards:
  *   - non-destructive-by-default
  *   - commit-policy
  *   - scope-control
  *   - verify-before-complete
  *
- * Exit codes: 0 = clean (or skipped — see `--skip-if-no-baseline`),
- * 1 = safety-floor file modified, 3 = internal error.
+ * NARROWED 2026-07-31 (ADR-203). The Q3=A decision (council Round 3,
+ * 2026-05-03) put these rules out of scope for Phase-2A slimming, and the guard
+ * implemented that as "no edits at all". That over-shot: it also blocked
+ * preservation-conforming P4 migrations, which move lookup material into a
+ * declared `load_context:` target without losing anything — and since the two
+ * kernel rules over their budget caps are guarded files, the pairing had no
+ * legal state at all.
+ *
+ * The lock now blocks SUBSTANTIVE changes and exempts proven migrations. Proven
+ * is the load-bearing word: `_lib/preservation_migration.ts` CHECKS that every
+ * paragraph, list item and fenced block survives — in the rule (telegraph
+ * condensation allowed) or verbatim in a declared context — with Iron Law
+ * headings holding their level and Iron Law fences byte-exact. No label, no
+ * commit-message attestation, no honour system: unprovable ⇒ substantive ⇒
+ * blocked.
+ *
+ * Exit codes: 0 = clean, skipped, or verified migration,
+ * 1 = substantive safety-floor change, 3 = internal error.
  */
 import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
@@ -25,6 +40,11 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { assertWatchlistResolves } from './_lib/scan_scope.js';
+import {
+    load_context_targets,
+    verify_migration,
+    type Finding,
+} from './_lib/preservation_migration.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -70,6 +90,12 @@ function _run_git(args: string[]): [number, string] {
     });
     const code = proc.status === null ? 1 : proc.status;
     return [code, (proc.stdout ?? '') + (proc.stderr ?? '')];
+}
+
+/** File content at `ref`, or null when the path does not exist there. */
+function _git_show(ref: string, path: string): string | null {
+    const [code, out] = _run_git(["show", `${ref}:${path}`]);
+    return code === 0 ? out : null;
 }
 
 function _baseline_exists(ref: string): boolean {
@@ -192,19 +218,64 @@ function main(): number {
     const breaches = _breaches(changed);
 
     if (breaches.length) {
-        process.stderr.write(
-            '❌  Safety-floor rule(s) modified — Phase 2A is not allowed to ' +
-                'touch these (Q3=A locked decision):\n',
+        // ADR-203: the lock narrowed from "no edits" to "no SUBSTANTIVE edits".
+        // A preservation-conforming P4 migration is exempt — but only when the
+        // guard can PROVE it is one. Anything unprovable is substantive.
+        const blocked: Array<[string, Finding[]]> = [];
+        for (const p of breaches) {
+            const base = _git_show(args.baseline, p);
+            const head = _git_show(args.head, p);
+            if (base === null || head === null) {
+                blocked.push([p, [{ code: 'passage-lost', detail: 'file added or deleted — not a migration' }]]);
+                continue;
+            }
+            const headContexts = new Map<string, string>();
+            const baseContexts = new Map<string, string>();
+            for (const rel of load_context_targets(head)) {
+                const target = `src/agent-src/${rel}`;
+                const h = _git_show(args.head, target);
+                if (h !== null) headContexts.set(target, h);
+                const b = _git_show(args.baseline, target);
+                baseContexts.set(target, b ?? '');
+            }
+            const findings = verify_migration({
+                base_rule: base,
+                head_rule: head,
+                head_contexts: headContexts,
+                base_contexts: baseContexts,
+            });
+            if (findings.length) blocked.push([p, findings]);
+        }
+
+        if (blocked.length) {
+            process.stderr.write(
+                '❌  Substantive change to safety-floor rule(s) — blocked (ADR-203 ' +
+                    'narrowed the Q3=A lock; only PROVEN preservation-conforming P4 ' +
+                    'migrations are exempt):\n',
+            );
+            for (const [p, findings] of blocked) {
+                process.stderr.write(`\n    ${p}\n`);
+                for (const f of findings) {
+                    process.stderr.write(`      · [${f.code}] ${f.detail}\n`);
+                }
+            }
+            process.stderr.write(
+                '\n    A migration must leave every paragraph, list item and fenced block\n' +
+                    '    either in the rule (telegraph condensation is fine) or verbatim in a\n' +
+                    '    declared load_context: target. Iron Law headings keep their level and\n' +
+                    '    Iron Law fences stay byte-exact. Unprovable ⇒ substantive ⇒ blocked.\n',
+            );
+            return 1;
+        }
+
+        process.stdout.write(
+            `✅  Safety-floor edit(s) verified as preservation-conforming P4 migration ` +
+                `(${breaches.length} rule file(s); every passage accounted for):\n`,
         );
         for (const p of breaches) {
-            process.stderr.write(`    ${p}\n`);
+            process.stdout.write(`    ${p}\n`);
         }
-        process.stderr.write(
-            '\n    Lift via the two-gate rollback documented in ' +
-                'agents/roadmaps/road-to-structural-optimization.md ' +
-                '§ Phase 2A Abort/rollback.\n',
-        );
-        return 1;
+        return 0;
     }
 
     // Report the RESOLVED count, not the declared one — the old message printed
