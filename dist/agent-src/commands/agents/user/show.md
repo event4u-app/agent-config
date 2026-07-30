@@ -7,7 +7,7 @@ visibility: internal
 cluster: agents
 sub: user
 skills: [agents]
-description: Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md — the persona summary the host agent loads at session start. --audit renders the global layer's raw holdings for delete/revoke decisions instead.
+description: Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md. --audit renders the global layer raw for delete/revoke decisions.
 argument-hint: "[--audit]"
 suggestion:
   eligible: false
