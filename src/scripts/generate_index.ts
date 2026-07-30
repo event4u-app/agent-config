@@ -25,6 +25,7 @@ import {
     strip_source_prefix,
 } from './_lib/agent_src.js';
 import { computeStatus as domainSoundnessStatus } from './domain_soundness_status.js';
+import { skip_compile_disabled_rule } from './condense.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -253,6 +254,14 @@ export function _collect_rules(): Entry[] {
         for (const ruleMd of _globMdSorted(rulesRoot)) {
             const stem = _stem(ruleMd);
             if (seen.has(stem)) {
+                continue;
+            }
+            // A compile-disabled rule has no dist/agent-src/ counterpart, and the
+            // table links the SHIPPED path — so listing it emits a dead link. The
+            // toggle is a separate axis from the source file's existence; this is its
+            // fifth consumer after the router compiler, the dist writer, check_sync,
+            // and the per-tool symlink generator. Same predicate in all five.
+            if (skip_compile_disabled_rule(`rules/${stem}.md`)) {
                 continue;
             }
             const fm = _parse_frontmatter(fs.readFileSync(ruleMd, 'utf-8'));
