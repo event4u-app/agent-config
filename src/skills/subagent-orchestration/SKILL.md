@@ -107,6 +107,20 @@ Rules:
   size floor) — it never re-interprets the task text on vibes.
 - Ambiguous shape → `none` (in-session), never a speculative spawn — the
   delegation-policy default.
+- **Fork vs. named subagent — an ordering, never a default (road-to-cache-economy
+  Phase 4).** On a host that offers a fork primitive, decide fork-vs-named
+  ORTHOGONALLY to the form picked above: tool and scope fit is first-order,
+  cache inheritance is second-order. A fork is preferred only when the child
+  continues the parent's task under identical tools and constraints (it then
+  reads the parent's cache on its first request); a named subagent is
+  preferred the moment isolation, a different tool set, or nested dispatch is
+  needed — a fork cannot nest, and forking forces background mode, which
+  changes the tool set and invalidates the very prefix that motivated the
+  fork. `do-in-parallel`-shaped fan-out from one parent has this shape by
+  construction (a known, unfixable upstream cost — see
+  [`prompts/README.md`](prompts/README.md) § Prompt-cache discipline). NEVER
+  encode "always fork" — that was proposed and cut (council 2026-07-30):
+  the cache-sharing benefit cannot be predicted before the fork happens.
 - Record the outcome in the telemetry line (`dispatch_mode` field, mode id
   or `none`) so the gate's value is measurable inside the ADR-117
   prove-or-drop window.

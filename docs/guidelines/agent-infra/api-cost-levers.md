@@ -109,18 +109,69 @@ different model.
 
 ## Claude Code note
 
-In Claude Code, prompt caching is automatic — resending the same context prefix
-is cheap, so keeping a stable prefix pays off without any explicit
-`cache_control`. The session-level hygiene levers are `/clear` and `/compact` to
-shed accumulated context, plus subagent delegation for verbose output so it
-never lands in the main context window.
+In Claude Code, prompt caching is automatic for the **main loop** — resending
+the same context prefix is cheap, so keeping a stable prefix pays off without
+any explicit `cache_control`. The session-level hygiene levers are `/clear`
+and `/compact` to shed accumulated context, plus subagent delegation for
+verbose output so it never lands in the main context window.
+
+**Subagents and forks pay a different cache economy — verified against host
+version 2.1.220 (2026-07-30), re-check on drift:**
+
+- A **named subagent** starts its own conversation with its own system
+  prompt and tool set. It builds its own cache from scratch, so its **first
+  call has no cache hit** — the entire per-spawn preamble (rules, tools,
+  dispatch prompt) is a cold write. Subagents use the **five-minute TTL**
+  even on a subscription; there is no per-agent setting to change that (see
+  `## Known upstream costs` below).
+- A **fork** inherits the parent's system prompt, tools, and conversation
+  history exactly, so its first request **reads the parent's cache** instead
+  of writing a fresh one — the only documented mechanism that shares a cache
+  across a dispatch boundary. Forking forces background mode, which changes
+  the tool set and therefore invalidates the very prefix that motivated the
+  fork; weigh that cost before reaching for it — see the fork-vs-subagent
+  ordering rule in See also.
+- Either way, the **cold-start preamble is re-written on every spawn** — the
+  always-loaded rule set, the tool definitions, and the dispatch prompt are
+  not shared across separate subagent instances. Fan-out (many subagents
+  from one parent) multiplies this cost by cohort size; see
+  `## Known upstream costs` below for the fan-out re-prefill issue this
+  package cannot fix.
+
+## Known upstream costs
+
+Host-controlled behaviour this package has confirmed but cannot change at
+any layer. Each entry carries the host version observed and the command to
+re-verify it — a stale entry degrades into a dated observation, never a
+false promise, when Anthropic changes the behaviour underneath it.
+
+| Cost | Observed on | Re-verify |
+|---|---|---|
+| Fan-out (`do-in-parallel`-shaped dispatch) re-prefills the parent-accumulated context **per child** — the waste scales linearly with fan-out width, worst exactly where fan-out is most valuable (anthropics/claude-code#81389, open). No fix at any layer. | Claude Code 2.1.220, 2026-07-30 | `claude --version`; re-check the linked issue for a status change |
+| Host-dispatched subagents are pinned to the **five-minute** cache TTL regardless of subscription tier or any environment variable; `ENABLE_PROMPT_CACHING_1H` does not apply to them. | Claude Code 2.1.220, 2026-07-30 | `claude --version`; re-check the official caching docs for a subagent-TTL setting |
+
+Neither entry implies a package-side fix exists or is planned — both are
+request-construction facts inside the host binary, outside this package's
+reach. This package's own scope is measurement and payload size (what it
+authors), never subagent request construction (what the host authors).
 
 ## See also
+
+- [`cache-economy-refusals`](../../../agents/settings/contexts/cache-economy-refusals.md) —
+  the measured cache figures behind the Claude Code note above, plus the
+  refusals (no interception proxy, no blanket 1h TTL, no cache-hit auto-tuning)
+  recorded so they are not rebuilt.
 
 - [`model-recommendation.md`](model-recommendation.md) — tier routing (the
   capability band behind lever 3).
 - [`size-and-scope.md`](size-and-scope.md) — token discipline for the artifacts
   that become the cached prefix.
+- [`subagent-orchestration/prompts/README.md`](../../../src/skills/subagent-orchestration/prompts/README.md)
+  § Prompt-cache discipline — sibling-uniformity rules and the
+  fork-vs-subagent dispatch ordering that follow from this cache economy.
+- [`docs/contracts/ai-council-config.md`](../../contracts/ai-council-config.md)
+  § `prompt_cache.ttl` — the one surface where this package DOES control a
+  cache-control TTL (the council's own Anthropic calls, never host subagents).
 - The Claude Code `claude-api` plugin skill (external, not vendored here) — the
   authoritative, versioned API reference these figures derive from; re-check it
   when Anthropic pricing or the caching/batch surface changes.

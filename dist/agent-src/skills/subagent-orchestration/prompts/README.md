@@ -26,7 +26,10 @@ validates against that schema.
 ## Prompt-cache discipline
 
 When dispatching sibling subagents (e.g. `do-in-parallel` with N independent
-slices), **reuse a stable system-prompt prefix** across all siblings. Keep
+slices), **reuse a stable dispatch-prompt prefix** across all siblings. On
+this host the **system prompt comes from the agent definition**, not from
+anything the orchestrator writes — the dispatch prompt (the templated user
+message below) is the one prefix the orchestrator actually controls. Keep
 task-invariant text (role declaration, constraints, status enum, return-envelope
 instruction) in the prefix; put only the slice-specific `TASK:` and
 `CONTEXT FILES:` in the variable section. This maximises host-side prompt-cache
@@ -43,7 +46,30 @@ instead of a read, and the prefix must be re-hit within the **5-minute TTL**, so
 dispatch siblings promptly rather than trickling them. This is why the win is
 real for **fan-out** (many siblings, one prefix) and marginal for one-shot
 dispatch. Verify a cohort is actually reading, not re-writing, by checking
-`usage.cache_read_input_tokens > 0` on the 2nd+ sibling.
+`usage.cache_read_input_tokens > 0` on the 2nd+ sibling. Measured effect
+(anthropics/claude-code#74318): same-type sibling prefix hits reach **85%**
+within a 5-minute window vs **45%** for a mismatched or trickled cohort.
+
+**Sibling-uniformity rules** (follow from cache partitioning — the cache key
+includes model and tool set, and any mismatch fragments the cohort's shared
+prefix into separate caches): dispatch a cohort with the **same model**, the
+same `effort`, and the **same tool set** across every sibling, and fire them
+**promptly** rather than trickling dispatches one at a time — a sibling
+dispatched after the 5-minute window has already closed pays the full write
+premium alone, gaining nothing from the cohort.
+
+**Fork vs. named subagent — an ordering, not a default.** Tool and scope fit
+is first-order; cache inheritance is second-order. Prefer a **fork** when the
+child continues the parent's task under identical tools and constraints (a
+fork inherits the parent's system prompt, tools, and conversation history
+exactly, so its first request reads the parent's cache). Prefer a **named
+subagent** when the child needs isolation, a different tool set, or nested
+dispatch — a fork cannot nest, and forking forces background mode, which
+changes the tool set and therefore invalidates the very prefix that
+motivated the fork in the first place. Never default to "always fork": that
+option was considered and cut ([`../SKILL.md`](../SKILL.md) § Form gate)
+precisely because the cache-sharing benefit cannot be predicted before the
+fork happens, and background mode can erase it outright.
 
 ## Loading
 
