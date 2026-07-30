@@ -1111,7 +1111,13 @@ export function generate_rule_symlinks(): number {
     const source_count = rules.length;
     for (const tool_dir of Object.keys(tool_dirs)) {
         const target_dir = path.join(MODULE_STATE.PROJECT_ROOT, tool_dir);
-        const tool_count = _iterdirSorted(target_dir).filter((f) => f.endsWith('.md')).length;
+        // Count only the RULES this run emitted, not every `.md` in the tree.
+        // Some tool trees legitimately receive other artefact classes — the cline
+        // tree also carries `*.subagent.md` — and counting those produced a
+        // permanent "111 rules (expected 110)" warning that was pure noise. A
+        // warning that is always on is a warning nobody reads.
+        const emitted = new Set(rules);
+        const tool_count = _iterdirSorted(target_dir).filter((f) => emitted.has(path.basename(f))).length;
         // Expect the de-duplicated count, not the source count: a skipped rule is
         // an intended absence, so warning on it would train the reader to ignore
         // this line — which is how a real drift gets missed.
