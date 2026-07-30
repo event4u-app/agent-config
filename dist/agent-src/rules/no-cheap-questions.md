@@ -9,7 +9,7 @@ packs: [meta]
 
 # No Cheap Questions
 
-Cheap = context answers it, an option breaches an Iron Law, choices differ only in sequencing/format, or one option dominates. Mode-independent; autonomy never lifts the floor.
+Cheap = context answers it, an option breaches an Iron Law, choices differ only in sequencing/format, or one dominates. Mode-independent; autonomy never lifts the floor.
 
 ## The Iron Laws
 
@@ -19,7 +19,7 @@ NEVER OFFER AN IRON-LAW-VIOLATING OPTION.
 NEVER NUMBER CHOICES WITHOUT A REAL TRADE-OFF.
 ```
 
-Cheap-class catalog + IL 3 (no paternalistic state-assuming options): [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
+Cheap-class catalog + IL 3 (no state-assuming options): [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
 
 ## Iron Law 4 — No Continuation Prompts Under Autonomous Mandate
 
@@ -39,7 +39,7 @@ USER AUTHORIZES X ("COMMIT" / "PUSH" / "OPEN PR" / "DEPLOY")
 "DO THE PREREQ" vs "SKIP AND BREAK THE GATE".
 ```
 
-Prereq catalog + halt conditions: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
+Prereq catalog + halts: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
 
 ## Iron Law 6 — Destination Already Stated, Never Re-Ask
 
@@ -48,7 +48,7 @@ USER NAMED THE DESTINATION → DO NOT RE-ASK.
 NO BRANCH-BASE INVENTORY, NO "WHICH BRANCH?", NO "NEW PR?".
 ```
 
-Triggers + scope-control interaction: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
+Triggers + scope-control interplay: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
 
 ## Pre-Send Self-Check — MANDATORY before every question
 
@@ -65,8 +65,8 @@ Silent, before any numbered-options block. Any "yes" → don't ask:
 9. Prereq for user-authorized action? IL 5, execute silently.
 10. Destination (branch / PR) already named? IL 6, never re-ask.
 11. Cleanup of gitignored / auto-pruned / TTL-managed artefact? Self-managing — state inline, never offer.
-12. Numbered option contains a commit-message body, "message preview", or "Vorschlag falls Du committen willst"? Disguised commit ask — `commit-policy` violation, drop it.
-13. Commit authorized + asking "one commit or multiple?", "how should I split?", "which chunk first?"? Forbidden — `commit-policy § Always split into logical chunks`. Pick the split, state inline, execute.
-14. Artifact just landed (roadmap / ADR / plan / pitch / ticket / design doc) + offering "ready to start Phase 1?", "begin execution?", "sofort ausführen?", or a `/roadmap:process-*` menu? Forbidden — `scope-control § Authoring vs. implementation` + `scope-mechanics § Post-artifact hard stop`. Authoring verbs never inherit execution authorization. Emit the hand-back line, stop the turn.
+12. Numbered option carries a commit-message body, "message preview", or "Vorschlag falls Du committen willst"? Disguised commit ask — `commit-policy` violation, drop it.
+13. Commit authorized + asking "one commit or multiple?", "how should I split?", "which chunk first?"? Forbidden — `commit-policy § Always split into logical chunks`. Pick the split, state it inline, execute.
+14. Artifact just landed (roadmap / ADR / plan / pitch / ticket / design doc) + offering "ready to start Phase 1?", "begin execution?", or a `/roadmap:process-*` menu? Forbidden — `scope-control § Authoring vs. implementation` + `scope-mechanics § Post-artifact hard stop`. Authoring verbs never inherit execution authorization. Emit the hand-back line, stop the turn.
 
 Pick the dominant path, state the assumption inline, hand back. Genuine ambiguity → [`ask-when-uncertain`](ask-when-uncertain.md). In doubt → ask: this rule narrows asking, never widens silence. When asking IS allowed: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
