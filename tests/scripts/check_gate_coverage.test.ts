@@ -163,7 +163,10 @@ describe('classify — unavailable: prerequisite absent, not silence', () => {
     });
 
     it('a gate without unavailable_exit never gets the carve-out', () => {
-        const strict = { ...spec, unavailable_exit: undefined };
+        // Build the spec WITHOUT the key rather than setting it to undefined —
+        // exactOptionalPropertyTypes distinguishes the two, and the loader omits the
+        // key entirely when the manifest does not declare it.
+        const { unavailable_exit: _omitted, ...strict } = spec;
         expect(classify(strict, null, false, 2).verdict).toBe('silent');
     });
 });
