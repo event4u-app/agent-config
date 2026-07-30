@@ -132,6 +132,38 @@ export class CliClientError extends Error {
     }
 }
 
+/**
+ * Anthropic cache_control TTL tiers (road-to-cache-economy Phase 4).
+ * `'5m'` is the permanent default — see `prompt_cache.ttl` in
+ * `docs/contracts/ai-council-config.md` for the falsification condition
+ * that would be required before `'1h'` is ever enabled anywhere.
+ */
+export type PromptCacheTtl = '5m' | '1h';
+export const DEFAULT_PROMPT_CACHE_TTL: PromptCacheTtl = '5m';
+
+/**
+ * Anthropic's cache_control ordering rule: within one request, a 1-hour
+ * breakpoint must be positioned before any 5-minute breakpoint. This
+ * client always applies the SAME configured ttl to both of its
+ * breakpoints (see `_ask_impl`), so the two are never mixed in
+ * practice — this guard exists so a future per-breakpoint ttl never
+ * regresses that invariant silently.
+ */
+export function assertCacheBreakpointOrder(ttls: readonly PromptCacheTtl[]): void {
+    let sawFiveMinute = false;
+    for (const ttl of ttls) {
+        if (ttl === '5m') {
+            sawFiveMinute = true;
+        } else if (ttl === '1h' && sawFiveMinute) {
+            throw new TypeError(
+                `cache_control breakpoint order violation: a '1h' breakpoint ` +
+                    `followed a '5m' one (${JSON.stringify(ttls)}) — Anthropic ` +
+                    `requires every 1h breakpoint before any 5m breakpoint.`,
+            );
+        }
+    }
+}
+
 /** Normalised output from a single council member (dataclass `CouncilResponse`). */
 export class CouncilResponse {
     provider: string;
@@ -319,6 +351,10 @@ interface ApiClientOptions {
     // unless it asks — so a single call never pays the ~1.25× write premium by
     // surprise. Only AnthropicClient consumes this; other providers ignore it.
     enable_prompt_cache?: boolean | undefined;
+    // TTL tier for both cache_control breakpoints (road-to-cache-economy
+    // Phase 4). Default '5m' when omitted — see `DEFAULT_PROMPT_CACHE_TTL`.
+    // Only meaningful when `enable_prompt_cache` is true.
+    prompt_cache_ttl?: PromptCacheTtl | undefined;
 }
 
 /** Shared ctor-options shape for the CLI clients. */
@@ -380,11 +416,17 @@ export class AnthropicClient extends ExternalAIClient {
     // ApiClientOptions.enable_prompt_cache. Prevents silent activation (and the
     // write premium) for callers that don't benefit from a shared-prefix cache.
     private _enablePromptCache: boolean;
+    // TTL applied to BOTH cache_control breakpoints below. '5m' (the
+    // default) is never serialised on the wire — omitting `ttl` is the
+    // Anthropic API's own 5-minute default, so the default case stays
+    // byte-identical to the pre-Phase-4 request shape.
+    private _promptCacheTtl: PromptCacheTtl;
 
     constructor(opts: ApiClientOptions = {}) {
         super();
         this.model = opts.model ?? DEFAULT_ANTHROPIC_MODEL;
         this._enablePromptCache = opts.enable_prompt_cache ?? false;
+        this._promptCacheTtl = opts.prompt_cache_ttl ?? DEFAULT_PROMPT_CACHE_TTL;
         if (opts.client !== undefined && opts.client !== null) {
             this._client = opts.client;
             return;
@@ -455,6 +497,18 @@ export class AnthropicClient extends ExternalAIClient {
             // base_system_prompt alone is often below the model's min cacheable
             // prefix and would never cache solo — the artefact block is where
             // the real saving lands. Two breakpoints (≤ the 4 allowed).
+            //
+            // Both breakpoints share the SAME configured ttl (road-to-
+            // cache-economy Phase 4) — they never diverge, so the API's
+            // "1h before 5m" ordering rule can never be violated here; the
+            // assertion below is a regression guard, not a live branch.
+            // Default '5m' omits the `ttl` field entirely (Anthropic's own
+            // default), so an unconfigured member's wire shape is unchanged
+            // from before Phase 4.
+            const ttl = this._promptCacheTtl;
+            assertCacheBreakpointOrder([ttl, ttl]);
+            const cache_control: Record<string, unknown> =
+                ttl === '1h' ? { type: 'ephemeral', ttl: '1h' } : { type: 'ephemeral' };
             const kwargs: Record<string, unknown> = this._enablePromptCache
                 ? {
                       model: this.model,
@@ -463,7 +517,7 @@ export class AnthropicClient extends ExternalAIClient {
                           {
                               type: 'text',
                               text: system_prompt,
-                              cache_control: { type: 'ephemeral' },
+                              cache_control,
                           },
                       ],
                       messages: [
@@ -473,11 +527,13 @@ export class AnthropicClient extends ExternalAIClient {
                               // volatile suffix (round critiques) rides after
                               // it, so round N+1 reads the cached prefix
                               // instead of re-writing it (A3 read unlock).
+                              // The volatile suffix NEVER carries cache_control
+                              // — the ttl reaches only the stable prefix.
                               content: [
                                   {
                                       type: 'text',
                                       text: stable_prompt,
-                                      cache_control: { type: 'ephemeral' },
+                                      cache_control,
                                   },
                                   ...(volatile_suffix
                                       ? [{ type: 'text', text: volatile_suffix }]

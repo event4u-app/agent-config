@@ -444,6 +444,12 @@ function _synthesize_ai_council_block(cfg: CouncilConfig): Dict {
         if (m.model_ladder && m.model_ladder.length > 0) {
             entry['model_ladder'] = [...m.model_ladder];
         }
+        // road-to-cache-economy Phase 4: forward only an explicit override —
+        // the '5m' default needs no key, keeping the synthesized block
+        // byte-identical to pre-Phase-4 output when nobody opted in.
+        if (m.prompt_cache_ttl !== '5m') {
+            entry['prompt_cache_ttl'] = m.prompt_cache_ttl;
+        }
         members[name] = entry;
     }
     const advisors: Dict = {};
@@ -617,9 +623,16 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             // Council opts in explicitly (caching is client-default OFF): on
             // unless the operator sets `prompt_cache: false` on the member.
             const enable_prompt_cache = cfg['prompt_cache'] !== false;
+            // road-to-cache-economy Phase 4: absent → AnthropicClient's own
+            // '5m' default; only an explicit '1h' override reaches here.
+            const prompt_cache_ttl = (cfg['prompt_cache_ttl'] as '5m' | '1h' | undefined) ?? undefined;
             for (const sib_model of siblings[name] as string[]) {
                 members.push(
-                    _construct_api_member(name, sib_model, { api_key_ref, enable_prompt_cache }),
+                    _construct_api_member(name, sib_model, {
+                        api_key_ref,
+                        enable_prompt_cache,
+                        prompt_cache_ttl,
+                    }),
                 );
             }
             continue;
@@ -632,6 +645,8 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                     // Council opts in explicitly (client-default OFF); on unless
                     // the operator sets `prompt_cache: false`.
                     enable_prompt_cache: cfg['prompt_cache'] !== false,
+                    // road-to-cache-economy Phase 4 — see the siblings branch above.
+                    prompt_cache_ttl: (cfg['prompt_cache_ttl'] as '5m' | '1h' | undefined) ?? undefined,
                 }),
             );
         } else if (mode === 'cli' && _CLI_PROVIDERS.has(name)) {
@@ -766,7 +781,11 @@ function _format_advisor_summary(
 function _construct_api_member(
     name: string,
     model: string | null,
-    opts: { api_key_ref?: string | null; enable_prompt_cache?: boolean | undefined } = {},
+    opts: {
+        api_key_ref?: string | null;
+        enable_prompt_cache?: boolean | undefined;
+        prompt_cache_ttl?: '5m' | '1h' | undefined;
+    } = {},
 ): ExternalAIClient {
     const api_key_ref = opts.api_key_ref ?? null;
     if (name === 'anthropic') {
@@ -777,6 +796,7 @@ function _construct_api_member(
             model: model || 'claude-sonnet-4-5',
             api_key,
             enable_prompt_cache: opts.enable_prompt_cache,
+            prompt_cache_ttl: opts.prompt_cache_ttl,
         });
     }
     if (name === 'openai') {
@@ -2184,6 +2204,11 @@ function _write_debate_round(
         table: PriceTable;
         prompt_mode: string | null;
         prose_synthesis: boolean | null;
+        // road-to-cache-economy Phase 4: the observed wall-clock gap (ms)
+        // between the previous round finishing and this round starting —
+        // `null`/absent on round 1, since nothing was written to the
+        // prompt cache yet. See `run_debate`'s `on_round_complete`.
+        cache_gap_ms_since_previous_round?: number | null | undefined;
     },
 ): string {
     fs.mkdirSync(_resolveTarget(out_dir), { recursive: true });
@@ -2207,6 +2232,7 @@ function _write_debate_round(
         debate_total_rounds: opts.total_planned_rounds,
         rounds: 1,
         cost_usd_actual: _pyRound(actual_total, 6),
+        prompt_cache_round_gap_ms: opts.cache_gap_ms_since_previous_round ?? null,
         responses: _serialise_responses(responses),
     };
     const out_path = path.join(_resolveTarget(out_dir), _debate_round_filename(round_number));
@@ -2427,7 +2453,11 @@ function cmd_debate(
 
     const written: string[] = [];
 
-    const _on_round_complete = (round_number: number, results: CouncilResponse[]): void => {
+    const _on_round_complete = (
+        round_number: number,
+        results: CouncilResponse[],
+        cache_gap_ms_since_previous_round?: number | null,
+    ): void => {
         const p = _write_debate_round(out_dir, round_number, results, {
             question,
             members: members as ExternalAIClient[],
@@ -2437,6 +2467,7 @@ function cmd_debate(
             table: table as PriceTable,
             prompt_mode: 'debate',
             prose_synthesis: _getattr<boolean | null>(args, 'prose_synthesis', null),
+            cache_gap_ms_since_previous_round,
         });
         written.push(p);
         const errors = results.filter((r) => r.error);

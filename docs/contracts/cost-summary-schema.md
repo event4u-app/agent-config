@@ -43,6 +43,8 @@ fields and the telegraph-suspended-multiplier contract.
   "total_cost_usd": 1.2345,
   "input_tokens": 100000,
   "output_tokens": 50000,
+  "cache_read_input_tokens": 20000,
+  "cache_creation_input_tokens": 5000,
   "telegraph_delta_tokens": 0,
   "telegraph_multiplier_version": "v1",
   "telegraph_multiplier_active": false
@@ -53,6 +55,13 @@ fields and the telegraph-suspended-multiplier contract.
 `telegraph_multiplier_active == false` — see
 [`telegraph-telemetry.md`](telegraph-telemetry.md) for the suspension contract.
 
+`cache_read_input_tokens` / `cache_creation_input_tokens` sum the source
+rows' same-named fields (prompt-cache reads and writes, Anthropic-style
+accounting). They are a **v1 additive extension**: rows written before this
+extension shipped lack the fields and aggregate as `0` for them, exactly
+like a row missing `input_tokens` — no version bump, per the additive rule
+below.
+
 ## `by_session` / `by_conversation` row shape
 
 ```json
@@ -62,6 +71,8 @@ fields and the telegraph-suspended-multiplier contract.
   "total_cost_usd": 0.4567,
   "input_tokens": 8000,
   "output_tokens": 4500,
+  "cache_read_input_tokens": 1600,
+  "cache_creation_input_tokens": 400,
   "telegraph_delta_tokens": 0
 }
 ```
@@ -77,12 +88,16 @@ group by inspecting which array the row lives in.
   "sessions": 12,
   "total_cost_usd": 0.4567,
   "input_tokens": 8000,
-  "output_tokens": 4500
+  "output_tokens": 4500,
+  "cache_read_input_tokens": 1600,
+  "cache_creation_input_tokens": 400
 }
 ```
 
 `by_model` omits telegraph fields — the multiplier is dialect-scoped, not
-model-scoped.
+model-scoped — but DOES carry the cache fields: the prompt cache itself is
+model-scoped (a cache write under one model is never read back under
+another), so a per-model cache breakdown is meaningful here.
 
 ## Stability guarantees
 
