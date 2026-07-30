@@ -441,13 +441,27 @@ rule links (`.claude/rules` → 0 files) while the host still loads the same 110
 from user scope. Default is **off**; flipping a consumer default is a separate
 governance call, and this claim does not authorise it.
 
+> **Condition on the 38.0% — added 2026-07-31, after the number was published.**
+> The figure was measured on a **byte-identical two-scope fixture**, and that
+> condition is currently **unreachable in production for every consumer**, not
+> just on this machine. `_tag_installed_file` stamps `package:` / `source_path:`
+> into every installed rule unconditionally (`install.ts:2723`, `install.ts:2725`),
+> while the in-repo projection stamps nothing — two writers, deliberately
+> different output. Aligning versions yields **0/110** twins, not 110/110,
+> because it only collapses body diffs into provenance diffs. The number stands
+> as measured; what it measures is the mechanism's ceiling under a condition that
+> a follow-up strand (`road-to-dedup-reachability`) must first make real. Do not
+> cite it as a realised saving. Cause and line references:
+> [`cache-economy-refusals`](../../settings/contexts/cache-economy-refusals.md)
+> § Honest null.
+
 ### Measured verdicts — 2026-07-30, host CC 2.1.220
 
 | claim | threshold | measured | verdict |
 |---|---|---|---|
 | C-1 cold-start dominance | ≥50% of subagent write volume | **69.7%** | **confirmed** |
 | C-2 duplicate-scope share | ≥25% of subagent write volume | **38.5%** | **confirmed** |
-| C-3 preamble reducibility | ≥15% median cold-start reduction | **38.0%** | **confirmed** 2026-07-30 |
+| C-3 preamble reducibility | ≥15% median cold-start reduction | **38.0%** | **confirmed** 2026-07-30 · fixture-conditional, see the note above |
 | C-4 council mispricing | ≥5% change in realized cost | **5.5%** | **confirmed** |
 | C-5 worktree fragmentation | first-call read share <10% of an established directory | **69.1%** | **FALSIFIED** |
 
