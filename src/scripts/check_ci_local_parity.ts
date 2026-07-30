@@ -33,7 +33,6 @@ import { parse as parseYaml } from 'yaml';
 const _FILE = fileURLToPath(import.meta.url);
 export const REPO = path.resolve(path.dirname(_FILE), '..', '..');
 const MANIFEST = path.join(REPO, 'src', 'config', 'ci-local-parity.yml');
-const WORKFLOWS = path.join(REPO, '.github', 'workflows');
 const HOOK = path.join(REPO, 'src', 'scripts', 'install-hooks.sh');
 
 /** Roots of the local closure. `ci` is the local mirror; the hook is what a push runs. */
