@@ -7,6 +7,17 @@ supersedes: —
 superseded_by: —
 phase: token-saving H3 · condensation ROI decision
 type: structural
+review_trigger: >-
+  Reopen when (a) an output-side benchmark measures a real quality or cost win
+  from prose condensation — the evidence this decision was made in the absence
+  of, since the measured src↔dist word delta was 1.10% and the two paired-judge
+  runs resolved negative (κ=0.46, ρ=0.45 length leakage); (b) the projection's
+  size becomes the binding constraint on a host that charges by projected bytes
+  rather than by loaded context, which would make a lossy transform worth its
+  unverifiability again; or (c) a deterministic condenser exists whose output
+  can be reproduced and therefore gated — the property an LLM rewrite lacked and
+  the reason no gate could ever check it. Note (c) would NOT reopen the
+  byte-exactness invariant, only what `rewrite()` is allowed to do.
 ---
 
 # ADR-201 — Remove the LLM `.md` condensation step; keep the deterministic path rewriter

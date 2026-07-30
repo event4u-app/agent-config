@@ -58,8 +58,8 @@ Direct edits to `dist/agent-src/` break the byte-exactness invariant
 `dist == rewrite(src)` and fail CI (the "Verify dist == rewrite(src)
 byte-for-byte" step) — a hand-edited projection is detected, not tolerated.
 
-**The projection is written ONLY by `task sync`.** It copies every `.md`
-verbatim and applies the path rewriter; nothing has to be marked afterwards.
+**The projection is written ONLY by the `/condense` command.** It copies every
+`.md` verbatim and applies the path rewriter; nothing has to be marked afterwards.
 
 ## Pre-review consistency checkpoints
 
