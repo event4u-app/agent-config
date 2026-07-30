@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 import {
     delta_from_spread,
     eval_prompt,
+    eval_with_retry,
     key,
     parse_eval,
     per_rule_passes,
@@ -202,4 +203,62 @@ describe('mutation test — every mutant must die against the fixtures', () => {
             expect(survives()).toBe(false);
         });
     }
+});
+
+describe('attempt 2 — structured verdicts, completeness, single retry', () => {
+    it('asks for one JSON object per checklist item', () => {
+        const p = eval_prompt('do X', 'an answer', ['a1', 'a2'], ['n1']);
+        expect(p).toContain('"anchor_id"');
+        expect(p).toContain('Every one of the 3 items must appear');
+    });
+
+    it('parses the structured form', () => {
+        const r = parse_eval('[{"anchor_id":"I0","verdict":"yes"},{"anchor_id":"N0","verdict":"no"}]', 1, 1);
+        expect(r.include).toEqual([true]);
+        expect(r.not).toEqual([false]);
+        expect(r.complete).toBe(true);
+    });
+
+    it('survives a markdown fence and stray prose around the JSON', () => {
+        const r = parse_eval('Here:\n```json\n[{"anchor_id":"I0","verdict":"no"}]\n```\n', 1, 0);
+        expect(r.include).toEqual([false]);
+        expect(r.complete).toBe(true);
+    });
+
+    it('still reads the legacy flat form, so an off-format reply is not thrown away', () => {
+        const r = parse_eval('I0=yes\nN0=no', 1, 1);
+        expect(r.include).toEqual([true]);
+        expect(r.not).toEqual([false]);
+        expect(r.complete).toBe(true);
+    });
+
+    it('reports incomplete when an item is missing', () => {
+        expect(parse_eval('[{"anchor_id":"I0","verdict":"yes"}]', 2, 0).complete).toBe(false);
+    });
+
+    it('retries exactly once, and uses the retry when it is complete', () => {
+        const replies = ['garbage', '[{"anchor_id":"I0","verdict":"yes"}]'];
+        let calls = 0;
+        const r = eval_with_retry(() => replies[calls++]!, 'p', 1, 0);
+        expect(calls).toBe(2);
+        expect(r.retried).toBe(true);
+        expect(r.include).toEqual([true]);
+    });
+
+    it('does not retry when the first reply is already complete', () => {
+        let calls = 0;
+        const r = eval_with_retry(() => { calls += 1; return '[{"anchor_id":"I0","verdict":"no"}]'; }, 'p', 1, 0);
+        expect(calls).toBe(1);
+        expect(r.retried).toBe(false);
+    });
+
+    it('a persistently broken evaluator yields nulls, which resolve UNFAVOURABLY', () => {
+        // The failure must not be able to make a corpus look cleaner by being silent.
+        let calls = 0;
+        const r = eval_with_retry(() => { calls += 1; return 'still garbage'; }, 'p', 1, 1);
+        expect(calls).toBe(2);
+        expect(r.include).toEqual([null]);
+        expect(resolve('must_include', true, r.include[0]!)).toBe(false);
+        expect(resolve('must_not', false, r.not[0]!)).toBe(true);
+    });
 });
