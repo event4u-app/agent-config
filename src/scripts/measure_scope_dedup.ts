@@ -199,7 +199,10 @@ function main(argv: readonly string[]): number {
         lines.push('     stamp, so the reachable twin count is 0, NOT the fixture\'s figure.');
         lines.push('     install.ts:2723/2725 stamp package:/source_path: into every installed');
         lines.push('     rule unconditionally; the in-repo projection stamps nothing. Two');
-        lines.push('     writers, deliberately different output — see road-to-dedup-reachability.');
+        lines.push('     writers, deliberately different output. Making this reachable was');
+        lines.push('     DECIDED AGAINST on 2026-07-31 (real install-path risk, empty recipient');
+        lines.push('     set) — see contexts/dedup-reachability-refusal.md for the analysis and');
+        lines.push('     the five reopen conditions. This 0 is expected, not a defect.');
         lines.push('     Do NOT relax the byte predicate to make this number move: that');
         lines.push('     predicate IS the content-neutrality argument.');
     }

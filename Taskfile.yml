@@ -233,6 +233,7 @@ tasks:
       - task: lint-pack-dependencies
       - task: lint-flows
       - task: lint-originality
+      - task: check-originality-freshness
       - task: validate-flow-teams
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check
@@ -439,6 +440,7 @@ tasks:
       - task: lint-pack-dependencies
       - task: lint-flows
       - task: lint-originality
+      - task: check-originality-freshness
       - task: validate-flow-teams
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check

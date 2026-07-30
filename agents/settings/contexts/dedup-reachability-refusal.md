@@ -1,19 +1,79 @@
----
-complexity: structural
-status: draft
----
+# Dedup reachability — closed with a refusal (2026-07-31)
 
-# Roadmap: Dedup Reachability
+Durable record of a **decided** question: scope de-duplication of the rule
+projection is measured, understood, and **not being made reachable**. Both
+candidate mechanisms were worked out in full and both were declined.
 
-> **Draft, not scheduled.** Held at `status: draft` so the dashboard skips it.
-> It exists because a measured mechanism is currently unreachable, and the
-> reason is a design decision nobody has taken yet — not a bug to fix in
-> passing. Two candidate mechanisms are worked out below to the same depth on
-> purpose: the point of this file is to make the choice, not to advocate one.
+This lives in `contexts/`, not in `agents/roadmaps/archive/`, on purpose: an
+archived roadmap reads as "work that finished", while this is a **standing
+refusal** that later proposals have to argue against. It must stay citable.
+Its sibling is [`cache-economy-refusals`](cache-economy-refusals.md), which
+records the measurements and the honest null this decision rests on.
 
-Source: the honest null recorded in
-[`cache-economy-refusals`](../settings/contexts/cache-economy-refusals.md)
-§ Honest null, 2026-07-31.
+## Decision — reject both. Maintainer verdict, not a council verdict.
+
+**Why it is recorded as the maintainer's, not the council's.** The council pass
+of 2026-07-31 (one round, cap 0.10 USD, actual 0.0357) was **budget-truncated**:
+`claude-sonnet-4-5` answered, `openai/gpt-4o` returned `cost_budget_exceeded`
+with zero tokens — one member, not two. Its verdict was also reject-both, but
+its two headline premises are refuted against this repo's own measurements
+(§ Council pass below): it confused a transport saving with an execution saving,
+and read a quality win-rate as a payload reduction. A verdict resting on refuted
+premises cannot be cited as the reason, even when its conclusion survives. The
+conclusion is therefore carried as a maintainer decision, with the reasoning
+below — which is *not* the council's reasoning.
+
+**The load-bearing reason: real risk against an empty recipient set.**
+
+The risk side of both mechanisms is real and was not talked down:
+
+- **A** carries a cross-parser risk. Excluding the ownership keys schema-exactly
+  turns byte equality into "byte equality modulo a parse", and the parse that
+  matters is the **host's** reader, not ours. Agreement on BOM, CRLF inside
+  frontmatter, block scalars, duplicate keys and key-prefix collisions is not
+  something a property test over our own parser can establish.
+- **B** carries manifest drift (four sub-cases, each able to delete or preserve
+  the wrong file), the rename exhaustion below (path-keyed ownership cannot
+  distinguish "package renamed a rule" from "user authored a matching file"
+  without reintroducing the divergence B exists to remove), and a real migration
+  for every already-stamped installation, with two ownership paths supported for
+  at least one deprecation cycle.
+
+The benefit side currently has an **empty recipient set**. The ≈86.8k tokens per
+spawn are only paid by a **dual-scope** installation — the same rule set present
+at user scope *and* project scope. No external consumer with such an
+installation is known to exist. The one dual-scope machine that does exist is a
+development checkout, and there the dedup is **correctly inert** because the two
+scopes hold different releases.
+
+So the decision is **sequencing, not a judgement on the mechanisms**: neither is
+wrong, both are premature. Nobody is paying the cost the mechanism would remove,
+while both mechanisms would put a real safety risk into the install path today.
+If a consumer with a dual-scope installation appears, this reopens on its merits
+and the work below is waiting.
+
+**What is explicitly NOT done as a consequence:** no change to the byte-identity
+predicate, no change to `install.ts`, no implementation of A or B, no further
+council pass. `projection.scope_dedup` stays shipped-but-opt-in and inert.
+
+## Reopen conditions (all five recorded; any one is enough to reopen)
+
+1. A profile showing rule loading is IO-bound on the duplicate bytes **and**
+   that removing them measurably cuts cold-start time — not just payload size.
+2. Telemetry from a network-constrained consumer where the reduction changes
+   behaviour (adoption, spawn frequency).
+3. A measurement invalidating the quality floor that governs payload-shaping
+   experiments in this suite.
+4. **Perceptibility** — evidence that the saving is user-perceptibly faster,
+   not merely cheaper. A sub-100 ms improvement is not worth either risk.
+5. **≥ 1 external consumer with a demonstrated dual-scope installation** — the
+   condition that closes the empty-recipient-set argument above, and the most
+   likely of the five to fire first.
+
+Reopening means re-deciding A vs B vs reject with the analysis below as the
+starting point. It does **not** mean re-deriving the honest null: the cause is
+settled (see `cache-economy-refusals` § Honest null) and the
+"align the versions" hypothesis is refuted, not open.
 
 ## The problem, stated as measurements
 
@@ -156,9 +216,9 @@ where a stale package file survives silently. Any user-data loss kills B
 outright, no mitigation: a reaper that can eat a user's edited file is worse
 than a dedup that never ships.
 
-## The decision this file exists to make
+## The trade that was weighed
 
-Not "which is nicer" but which trade the maintainer wants:
+Not "which is nicer" but which trade to take — and the answer was neither:
 
 | | A — predicate precision | B — writer convergence |
 |---|---|---|
@@ -169,10 +229,11 @@ Not "which is nicer" but which trade the maintainer wants:
 | Blast radius if wrong | a rule silently missing | user data lost |
 | Effort | small | substantial |
 
-Rejecting both is a legitimate outcome: it means `projection.scope_dedup` stays
-a measured-but-dormant mechanism, the 38.0% stays recorded as a ceiling that was
-never realised, and the honest null above is the end of the strand. That is
-cheaper than either candidate and costs nothing but the saving.
+Both columns cost something real. Neither column has anyone in it yet. That
+asymmetry — not a defect in either design — is what decided it: rejecting both
+leaves `projection.scope_dedup` a measured-but-dormant mechanism and the 38.0% an
+unrealised ceiling, which costs nothing but a saving nobody is currently paying
+for.
 
 ## Council pass — 2026-07-31, one round, cap 0.10 USD (actual 0.0357)
 
@@ -226,7 +287,7 @@ verdict may still be right while its stated reasoning is not:
    written at all, so the preamble carries **one** rule set instead of two. The
    duplication is measured *in the billed write volume*, from transcripts:
    `110 shared filenames, ≈86.8k redundant tokens per spawn, ≈38% of subagent
-   write volume` ([`cache-economy-refusals`](../settings/contexts/cache-economy-refusals.md)).
+   write volume` ([`cache-economy-refusals`](cache-economy-refusals.md)).
    Tokens billed twice today would be billed once. That is not transport.
 2. **"A larger, simpler reduction (36.2%) was already disabled, so 38% is below
    the threshold for mattering."** Two errors in one sentence. 36.2% is a
@@ -252,26 +313,6 @@ consumers, and the store's persistence is fragile where `~/.claude/` is ephemera
 (CI runners, containers) — cases the in-file stamp survives because ownership
 travels with the file. Recorded so it is not re-proposed as new.
 
-## Phase 1 — decide (nothing is implemented before this closes)
-
-- [x] Council pass on this draft, one round, budget cap 0.10 USD, explicit
-      question: **A vs B vs reject both**. Done 2026-07-31 — one member (cap
-      bound the second), verdict reject-both, two headline premises refuted
-      above.
-- [x] Fold the council's objections into this file (not into a separate
-      review artefact), then hand it to the maintainer for the implementation
-      decision. Done — accepted objections tightened A's kill criterion and
-      B's rename cost; rejected premises recorded with their counter-evidence.
-- [ ] Record the decision. Reject-both → this file goes to `skipped/` with the
-      reason; A or B → the chosen candidate's phase below is written out and
-      the file leaves `draft`.
-
-## Phase 2 — implement the chosen candidate (blocked on Phase 1)
-
-- [ ] Written only after Phase 1 closes. Deliberately empty: writing an
-      implementation plan for both candidates before the choice is made is how a
-      draft turns into advocacy for whichever one got written first.
-
 ## Parked decisions
 
 - **Consumer default for `projection.scope_dedup`** — recommendation on record
@@ -279,16 +320,12 @@ travels with the file. Recorded so it is not re-proposed as new.
   `revisit-if`: reachability is established (A or B lands). Until then the
   setting is inert for consumers by construction, so a default-on flip would
   advertise a switch that does nothing and would read as "active" in the census.
-- **Reopen conditions for the strand as a whole** (from the council pass, kept
-  even if reject-both is chosen): a profile showing rule loading is IO-bound on
-  the duplicate bytes *and* that removing them measurably cuts cold-start time;
-  telemetry from a network-constrained consumer where the reduction changes
-  behaviour; or a measurement showing the saving is **user-perceptibly** faster
-  rather than only cheaper. Absent all three, the mechanism stays recorded and
-  dormant.
+- **Reopen conditions for the strand as a whole** — see § Reopen conditions at
+  the top of this file; all five live there so a reader hits them before the
+  analysis, not after.
 
 ## See also
 
-- [`cache-economy-refusals`](../settings/contexts/cache-economy-refusals.md) — the honest null, with line references.
-- [`archive/road-to-cache-economy.md`](archive/road-to-cache-economy.md) — where the 38.0% was measured and pre-registered, now carrying its condition.
+- [`cache-economy-refusals`](cache-economy-refusals.md) — the honest null this decision rests on, with `install.ts` line references.
+- The 38.0% was pre-registered before it was measured, and the archived roadmap that recorded it now carries the fixture condition inline. That roadmap is transient by design, so it is deliberately not linked from here — the durable version of everything it concluded lives in `cache-economy-refusals` above.
 - `src/scripts/measure_scope_dedup.ts` — the live reachability split; run it before trusting any number in this file.
