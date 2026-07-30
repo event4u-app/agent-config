@@ -2,6 +2,13 @@ name: Consistency
 
 on:
   pull_request:
+    # `labeled`/`unlabeled` are here for the kernel-rule bundle override.
+    # `check_kernel_rule_bundle` reads the override label from the event
+    # payload, and the default trigger set (opened/synchronize/reopened) never
+    # re-fires when a label is added — so the documented override could only
+    # take effect via an unrelated push, which is not an override, it is a
+    # workaround. Observed on PR #1063.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     paths:
       - ".agent-src.uncondensed/**"
       # `src/` is the source of truth and `dist/agent-src/` its projection; a PR
@@ -199,6 +206,42 @@ jobs:
         # stale (or absent) report. Until 2026-07-30 this gate ran only in local
         # `task ci`, which is why a +10.3% eager-rule drift went unseen for 23 days.
         run: task check-token-regression
+
+      - name: Lint workflow files (actionlint)
+        # PR #1059 shipped a step with two `run:` keys. GitHub rejects duplicate
+        # keys, so the whole REQUIRED Consistency check died on main — while the
+        # local `yaml.safe_load` validation reported OK, because safe_load keeps
+        # the last duplicate silently. actionlint catches that class before merge.
+        #
+        # PR-SCOPED ON PURPOSE. Run repo-wide, actionlint reports pre-existing
+        # findings in workflows this PR never touched (shellcheck style nits, and
+        # one real one: an unknown `administration` permission scope in
+        # sync-visibility.yml). Cleaning those is its own change with its own
+        # review; gating on them here would either block unrelated work or invite
+        # a blanket ignore-list. Linting what the PR changed is what catches the
+        # #1059 class, which is the reason this step exists.
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mapfile -t WF < <(gh pr diff "${{ github.event.pull_request.number }}" \
+            --name-only | grep -E '^\.github/workflows/.*\.ya?ml$' || true)
+          if [ "${#WF[@]}" -eq 0 ]; then
+            echo "No workflow files changed in this PR — nothing to lint."
+            exit 0
+          fi
+          printf 'linting %s changed workflow file(s):\n' "${#WF[@]}"
+          printf '  %s\n' "${WF[@]}"
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color "${WF[@]}"
+
+      - name: Kernel-rule budget (bucket + per-rule caps)
+        # Wired here as the condition ADR-203 attaches to narrowing the
+        # safety-floor lock: the gate that DECIDES whether kernel rules must be
+        # edited may not stay local-only while the gate that BLOCKS those edits
+        # runs on every PR. Both council members required this, from opposite
+        # verdicts. It merges with the narrowing, never before it.
+        run: task lint-rule-budget
 
       - name: Check kernel-rule bundle (one rule per PR; label override)
         # Phase 4.2 of road-to-always-budget-relief — slow-rollout guarantee.
