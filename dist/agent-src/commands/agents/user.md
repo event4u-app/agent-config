@@ -25,6 +25,18 @@ Sub-dispatcher for the user-persona file
 single, project-root, gitignored Markdown file that captures who the
 user is and how they want the agent to address them.
 
+Since ADR-138, a weaker global layer
+(`~/.event4u/agent-config/user/profile.md`) sits beneath the
+project-local file — see
+[`agent-user-schema.md § Global profile layer`](../../../docs/contracts/agent-user-schema.md#global-profile-layer-adr-138)
+for the merge rule. `init` and `update` operate on the **project-local**
+file only; `review` and `accept` cover BOTH layers' observation buffers
+(road-to-global-user-memory Phase 2/3); `show` renders the merged,
+effective profile by default, or the global layer's raw holdings with
+`--audit`; `delete` removes something the global learning channel wrote
+— an observation, a project's worth of observations, or a promoted
+profile field — with a tombstone in every case (Phase 4).
+
 **Why this is its own cluster:** `AGENTS.md` describes the *project*
 to the agent. `.agent-user.md` describes the *user* to the agent.
 Two distinct primitives — same `/agents` family for discoverability,
@@ -35,10 +47,11 @@ separate sub-commands for separation of concerns.
 | Sub-sub-command | Routes to | Purpose |
 |---|---|---|
 | `/agents user init` | `commands/agents/user/init.md` | Short interview → creates `.agent-user.md` |
-| `/agents user show` | `commands/agents/user/show.md` | Read-only render of the persona |
-| `/agents user review` | `commands/agents/user/review.md` | List buffered observations from `.agent-user.observations.jsonl` |
-| `/agents user accept` | `commands/agents/user/accept.md` | Apply a buffered observation with confirmation |
+| `/agents user show` | `commands/agents/user/show.md` | Read-only render of the persona; `--audit` renders the global layer's raw holdings |
+| `/agents user review` | `commands/agents/user/review.md` | List buffered observations from both the project-local and the global buffer |
+| `/agents user accept` | `commands/agents/user/accept.md` | Apply a buffered observation (either layer) with confirmation |
 | `/agents user update` | `commands/agents/user/update.md` | Open in IDE for manual edit; validate on save |
+| `/agents user delete` | `commands/agents/user/delete.md` | Delete an observation, purge a project's observations, or revoke a profile field — with a tombstone |
 
 Schema contract:
 [`docs/contracts/agent-user-schema.md`](../../../docs/contracts/agent-user-schema.md).

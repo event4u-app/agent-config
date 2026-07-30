@@ -37,6 +37,17 @@ THE SAME MINUS THE QUOTA WIN.
    "Sonnet-has-its-own-allowance" idea lives, and it lives as a runtime-detected
    flag, never as portable prose.
 
+**Cache trade-off (road-to-cache-economy Phase 4).** A tier downshift changes
+the sub-task's model, and the prompt cache is keyed by `(model, prefix)` — so
+a downshifted leg forfeits its model-scoped cache reads AND splits a cohort's
+shared prefix into two caches (downshifted legs vs. session-tier legs). The
+per-call model saving and the forfeited cache-read saving pull in opposite
+directions; which wins is a measured question, not a default this policy
+resolves — see
+[`docs/contracts/ai-council-config.md`](../../../../docs/contracts/ai-council-config.md)
+§ `model_downgrade` for the analogous downgrade/cache coupling this suite
+already ships on the council side.
+
 ## Why vendor-neutral
 
 A separate-quota-pool is a billing quirk of one host at one time. Encoding it

@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **688 artefacts** in this package.
+Maintainer-facing index of all **689 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -413,7 +413,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (191)
+## Commands (192)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -424,10 +424,11 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`agents-init`](../src/domains/meta/agents/init/command.md) | cluster: agents | Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers. |
 | command | [`agents-optimize`](../src/domains/meta/agents/optimize/command.md) | cluster: agents | Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply. |
 | command | [`agents-user`](../src/domains/meta/agents/user/command.md) | cluster: agents | User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed. |
-| command | [`agents-user-accept`](../src/domains/meta/agents/user/accept/command.md) | cluster: agents | Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer. |
+| command | [`agents-user-accept`](../src/domains/meta/agents/user/accept/command.md) | cluster: agents | Apply a buffered observation to .agent-user.md or the global profile.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer. |
+| command | [`agents-user-delete`](../src/domains/meta/agents/user/delete/command.md) | cluster: agents | Delete one buffered global observation, purge every observation attributed to a project, or revoke a field from the global profile.md — each writes an append-only tombstone before deleting. |
 | command | [`agents-user-init`](../src/domains/meta/agents/user/init/command.md) | cluster: agents | Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample). |
-| command | [`agents-user-review`](../src/domains/meta/agents/user/review/command.md) | cluster: agents | List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually. |
-| command | [`agents-user-show`](../src/domains/meta/agents/user/show/command.md) | cluster: agents | Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start. |
+| command | [`agents-user-review`](../src/domains/meta/agents/user/review/command.md) | cluster: agents | List buffered observations from the project-local and global observation buffers with numbered options to inspect or accept individually. |
+| command | [`agents-user-show`](../src/domains/meta/agents/user/show/command.md) | cluster: agents | Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md. --audit renders the global layer raw for delete/revoke decisions. |
 | command | [`agents-user-update`](../src/domains/meta/agents/user/update/command.md) | cluster: agents | Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save. |
 | command | [`analytics`](../src/domains/meta/analytics/command.md) | cluster: analytics | Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`. |
 | command | [`analytics-prune`](../src/domains/meta/analytics/prune/command.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |

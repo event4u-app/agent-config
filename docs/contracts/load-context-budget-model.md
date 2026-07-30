@@ -257,3 +257,25 @@ breach or depth violation, 3 = internal error.
 - **No claim about commands or skills.** Commands and skills load
   on user invocation. Their token cost is accounted by the
   command-cluster and skill-family contracts, not here.
+
+## Per-spawn write volume — a second, independent argument (not this contract's mechanism)
+
+A 2026-07-30 cache-economics measurement found that the concentration cap
+above and per-spawn write volume are two **different** arguments for the
+same discipline, not one restated: this contract's caps bound **context-window
+share** at activation time (the `EffectiveSize` model above), while per-spawn
+write volume is the same bytes **re-sent on every subagent spawn**, multiplied
+by spawn count — independent of whether the total sits inside the
+context-window cap. The parked context-token **projection** work is cited
+here rather than re-derived; it governs how many rule tokens *enter a context
+window*, which is this contract's mechanism, not the per-spawn multiplication
+this section measures.
+
+A candidate per-spawn payload ceiling — median ≤ **40,000** tokens, p95 ≤
+**50,000** tokens of cold-start payload (anchored to the ~37k upstream
+community baseline) — is **documented, not enforced**: it is gated on C-3
+(preamble reducibility, ≥15% measured median reduction with no eval
+regression), which is `pending` as of the Phase 3 measurement — no reduction
+intervention has landed yet. `./scripts-run src/scripts/preamble_byte_census`
+reports the current measured median and the buckets it attributes to; no CI
+gate reads this ceiling.

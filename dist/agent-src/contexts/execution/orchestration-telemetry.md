@@ -185,6 +185,30 @@ derivable from this data. A percentage would require an additive
 absolute-baseline field on this object (deferred follow-up). Reader:
 [`src/scripts/_lib/orchestration_savings.ts`](../../../../src/scripts/_lib/orchestration_savings.ts).
 
+## Payload-hash drift report (`payload_hash` × `cache_hit`)
+
+Join the two fields into a stable/unstable prefix-stability cohort split:
+
+```bash
+./scripts-run src/scripts/orchestration_payload_hash_drift [--dir <path>] [--format text|json]
+```
+
+Reader: [`src/scripts/_lib/payload_hash_drift.ts`](../../../../src/scripts/_lib/payload_hash_drift.ts).
+Zero recorded lines carrying both fields is the current expected state — both
+are lean-init extensions with no caller wiring a real value into them yet;
+the report says so rather than presenting empty input as a pass.
+
+**Refusal (report, never act).** `cache_hit` is a provider-reported proxy for
+HOST-controlled cache behaviour — this package causes the dispatch but does
+not control whether the host reports a hit. Per
+[`ADR-118`](../../../../docs/decisions/ADR-118-loop-engineering-boundaries.md)
+§1 (a measure→adjust loop is automated only when it is a *direct* measure of
+the failure mode, the false-positive rate is low, and human judgement adds no
+unique information), a host-controlled proxy fails the direct-measure
+condition outright. No consumer of `payload_hash` or `cache_hit` may wire a
+measure→adjust step off them — no default flip, no tier change, no dispatch
+throttle. They are read-only diagnostic fields.
+
 ## Related
 
 - [`audit-log-v1`](../../../../docs/contracts/audit-log-v1.md) — the frozen
