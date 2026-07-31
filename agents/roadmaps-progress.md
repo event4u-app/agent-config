@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**50 / 193 steps done · 26%**
+**48 / 179 steps done · 27%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
 ```
 
 ## Open roadmaps
@@ -29,8 +29,7 @@
 | 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 14 | [road-to-thin-flip-under-anchor-scoring.md](roadmaps/road-to-thin-flip-under-anchor-scoring.md) | 4 | 17 | 12 | 2 | 0 | 3 | 0 | █░░░░░░░░░ 14% |
-| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 
 ---
 
@@ -272,17 +271,6 @@ _1 blocker resolved._
 - **benchmark-spend** (owner: user) — blocks lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
   - **What to do:**
   - **Resolved when:** the maintainer authorizes the specific run with an estimate.
-
-### [road-to-thin-flip-under-anchor-scoring.md](roadmaps/road-to-thin-flip-under-anchor-scoring.md)
-
-**Road to a Thin Flip Under Anchor-Scoring** — 2 / 14 done (14%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Scoring pass — ⛔ HONEST NULL 2026-07-31 | ✅ done | 0 | 2 | 0 | 3 | 100% |
-| 2 | Host canary | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | essential decoupling | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 4 | The decision | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 

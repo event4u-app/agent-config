@@ -1,5 +1,5 @@
 ---
-status: active
+status: later
 complexity: moderate
 ---
 
@@ -31,21 +31,35 @@ stops the sequence; it does not downgrade to a partial flip.
 | 2 | **Host canary** | The demoted-rule canary fires on every supported host and surfaces the router pointer, not the body sentinel |
 | 3 | **essential decoupling** | The essential-baseline measurement is settled as an independent question, not as a condition on this flip |
 
-## Phase 1 — Scoring pass — ⛔ HONEST NULL 2026-07-31
+## Phase 1 — Scoring pass — ⛔ FINAL HONEST NULL 2026-07-31
 
-> The instrument failed its own falsification gate before any corpus run. The
-> golden set is complete (110 tasks, 106/106 rules) and the runner exists; what
-> does not exist is a pair of evaluators that agree well enough to be trusted.
-> Details in `ADR-202` § Addendum 2026-07-31.
+> **PARKED: instrument not achievable with available evaluators.** Two attempts,
+> both closed by measurement. `ADR-202` is closed with the same reason.
 >
-> · `anthropic/claude-sonnet-4-5` 18/18 on the fixtures · `openai/gpt-4o` 15/18
-> · replacement `openai/gpt-5` unusable (empty responses through the client)
-> · **inter-evaluator Cohen's κ = 0.700 against a registered floor of 0.800**
+> **Attempt 1** failed the fixture gate: `gpt-4o` 15/18, fixture κ = 0.700.
+> **Attempt 2** — structured JSON verdicts with a completeness check and one
+> retry, and `gpt-5` restored as an independent evaluator after a one-line fix
+> in our own client — cleared the fixtures (18/18 both, κ = 1.000, zero retries)
+> and ran the corpus:
 >
-> The failure is on the EASIEST input — the fixtures are unambiguous by
-> construction, corpus anchors are harder — and it is asymmetric rather than
-> noisy: one evaluator was perfect, the other was not. That is a discrimination
-> gap in one substrate, not a hard problem in the task.
+> · 30 tasks × 2 arms frozen · 130 verdicts per evaluator
+> · **inter-evaluator Cohen's κ = 0.472 against a registered floor of 0.800**
+> · 34/130 disagreements (26.2 %), **zero retries**
+>
+> The failure is **semantic, not mechanical** — no reply was malformed. It is
+> **systematically shaped**: 19 of 34 disagreements are the same case, where one
+> evaluator reads a `must_not` anchor as violated and the other does not. And it
+> is **symmetric across arms** (17 thin / 17 eager), so it is an instrument
+> defect rather than a signal about either projection.
+>
+> The fixture κ of 1.000 against the corpus κ of 0.472 is itself the finding:
+> validating an instrument only on unambiguous cases would have declared it sound
+> before it decided a question it cannot resolve.
+>
+> **This says nothing about thin.** The κ gate fails first by design; verdicts an
+> unreliable instrument produced are not evidence about the thing measured.
+>
+> Re-opening needs a different instrument, not a third attempt at this one.
 
 - [x] Build the anchor-scoring runner: both arms over the completed corpus,
   deterministic evaluation against `must_include` / `must_not`, output in the

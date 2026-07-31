@@ -24,9 +24,11 @@ review_trigger: >-
 
 ## Status
 
-**Accepted.** Attempt 1 of the instrument failed its own falsification gate
-(§ Addendum 2026-07-31). Attempt 2 — mechanical changes only, thresholds
-unchanged — cleared it and ran (§ Addendum 2026-07-31 · attempt 2).
+**CLOSED 2026-07-31 — instrument not achievable with available evaluators.**
+Two attempts. Attempt 1 failed the fixture gate; attempt 2 cleared it and ran
+the corpus, where inter-evaluator κ came in at **0.472** against a registered
+floor of 0.800. No third attempt is licensed. The reasoning that closed paired
+judging still stands — what is closed now is the replacement.
 
 Original framing: this record fixes *how* thin-vs-eager quality will be measured
 if it is measured again. It does not re-open Phase H1, does not license a flip,
@@ -389,3 +391,69 @@ because gpt-5 carries reasoning tokens that the repo price table does not cover.
 
 The trimming is a coverage cost and is recorded as such: 30 of 110 tasks, so the
 per-rule floor is evaluated only over the rules those tasks tag.
+
+
+### (5) Corpus run — the instrument fails
+
+30 tasks × 2 arms generated once and frozen; 130 anchor verdicts per evaluator.
+
+| | |
+|---|---|
+| **Inter-evaluator Cohen's κ (frozen corpus)** | **0.472** |
+| Registered floor | **0.800** |
+| Disagreements | **34 / 130 = 26.2 %** |
+| Retries needed | **0** |
+
+**κ = 0.472 → the instrument fails. This is the final honest null.**
+
+Three properties of the failure, because the number alone would mislead:
+
+1. **Zero retries.** The attempt-2 format work did exactly what it was for — no
+   reply was malformed or incomplete. The failure is **semantic, not
+   mechanical**, so no further format engineering addresses it.
+2. **Systematically shaped, not noisy.** 19 of 34 disagreements are the same
+   shape: on a `must_not` anchor, Sonnet says *violated* and gpt-5 says *not
+   violated*. The two models read the forbidding anchors differently — a
+   disagreement about what the anchor MEANS, which is the one thing a second
+   evaluator was supposed to make measurable and is exactly what it measured.
+3. **Symmetric across arms** — 17 thin, 17 eager. The unreliability does not
+   favour a projection, which is what makes it an instrument defect rather than
+   a signal.
+
+**The fixture κ of 1.000 versus the corpus κ of 0.472 is the finding.** It
+confirms empirically that the fixture gate is necessary but nowhere near
+sufficient, and it is why the registration put the deciding κ on the frozen
+corpus. An instrument validated only on unambiguous cases would have been
+declared sound and then used to decide a question it cannot resolve.
+
+### What the run does NOT say about thin
+
+The corpus scored thin at 38.2 % vs eager 61.8 % on `must_include`, with
+`must_not` violations 14 thin / 12 eager and four per-rule floor breaches
+(`architecture`, `downstream-changes`, `reviewer-awareness`, `scope-control`).
+
+**None of that is a finding about the thin projection.** The κ gate fails first
+and by design: verdicts an unreliable instrument produced cannot be read as
+evidence about the thing measured. Recording the numbers here is provenance, not
+result — quoting them as a thin verdict would be the exact error the κ floor
+exists to prevent.
+
+### Cost
+
+Roughly **$10.50–11.50** against the $15 authorisation: ~$9.50 answer generation
+(30 × [86,123 eager + 15,463 thin] input tokens), ~$0.40 for the Anthropic
+evaluator half, and an unpriced gpt-5 half (reasoning tokens are not in the repo
+price table) estimated under $1.50, plus ~$0.20 of fixture runs. No exact billing
+readout is available, so this is an estimate.
+
+## Closure
+
+**The instrument is not achievable with the available evaluators.** Two
+evaluator models were required to restore a measurable κ — the property whose
+absence made a single human judge inadmissible. With the only two credentialed
+providers in this environment, that κ is 0.472. The instrument therefore cannot
+license a thin decision, and this ADR closes.
+
+Untouched by this closure: the token-savings thesis, the registered thresholds
+(never exercised on admissible data), and Phase H1's cancellation. Nothing here
+licenses a flip.
