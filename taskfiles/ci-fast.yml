@@ -897,7 +897,11 @@ tasks:
       agents/reports/6.0.0-e-md-language-audit.md. Legitimately-required
       German (verbatim provenance quotes, quoted trigger/forbidden-pattern
       examples) is preserved via per-line `<!-- md-language-check: ignore -->`.
-    cmd: ./scripts-run src/scripts/check_md_language $(find docs -name '*.md' ! -name 'catalog.md' ! -name 'skills-catalog.md' | sort) {{.QUIET_FLAG}}
+      Era-split archives (docs/archive/CHANGELOG-pre-*.md) are excluded for
+      the same generated-and-verbatim reason: they quote commit subjects
+      word-for-word and are declared read-only, so an umlaut in a historical
+      subject fails the gate the moment a split moves it under docs/.
+    cmd: ./scripts-run src/scripts/check_md_language $(find docs -name '*.md' ! -name 'catalog.md' ! -name 'skills-catalog.md' ! -path 'docs/archive/CHANGELOG-pre-*.md' | sort) {{.QUIET_FLAG}}
 
   check-command-count:
     silent: true
