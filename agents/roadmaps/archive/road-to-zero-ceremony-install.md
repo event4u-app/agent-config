@@ -152,11 +152,28 @@ failure stops happening — not before.
       ours ever runs. There is no process in which to detect, retry, or print
       a remedy. What ships instead makes the failure unreachable:
       `src/scripts/check_dependency_floors` gates every runtime floor to a
-      settled minor (`^X.Y.0`), with exact ABI pins allowed only as named
-      exceptions. It found a live violation on its first run
-      (`@fastify/static@^10.1.2`), which is fixed to `^10.1.0` in the same
-      change. CONTRIBUTING already stated this rule in prose; this is its teeth.
-      Wired into `task ci` / `ci-strict` and the always-on Consistency workflow.
+      settled minor (`^X.Y.0`), with exact ABI pins and **security floors**
+      allowed only as named exceptions. CONTRIBUTING already stated the rule in
+      prose; this is its teeth. Wired into `task ci` / `ci-strict` and the
+      always-on Consistency workflow.
+
+      **The gate's first "finding" was a false positive, and a dangerous one.**
+      It flagged `@fastify/static@^10.1.2` as an unsettled floor and asked for
+      `^10.1.0`. That floor is a **CVE control**: everything `<= 10.1.1` carries
+      a high-severity route-guard bypass via path traversal (CVSS 7.5), fixed in
+      10.1.2 — confirmed by running `npm audit` against a clean 10.1.0 install,
+      not inferred from a changelog. Lowering it would have traded a rare
+      install failure for a live advisory. It was caught by
+      `install_friction_guard`'s committed dependency baseline, which refused
+      the change rather than letting it pass silently.
+
+      The rule now models the exception class it was missing:
+      `SECURITY_FLOOR_EXCEPTIONS` pins the required range together with its
+      advisory, and the gate **enforces** that floor instead of asking for it to
+      settle — including rejecting an attempt to raise it off the pinned range.
+      Five dedicated cases exist so the regression cannot recur. The lesson
+      generalizes past this package: a resolvability rule must never outrank a
+      security floor.
       <!-- verify: npx vitest run tests/scripts/check_dependency_floors.test.ts -->
 - [x] Only once that test is green: move the remaining `ETARGET` prose out of
       the quickstart into a troubleshooting page. (Also repaired there: the

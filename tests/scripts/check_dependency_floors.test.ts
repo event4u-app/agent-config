@@ -12,7 +12,11 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { evaluate, EXACT_PIN_EXCEPTIONS } from '../../src/scripts/check_dependency_floors.js';
+import {
+    evaluate,
+    EXACT_PIN_EXCEPTIONS,
+    SECURITY_FLOOR_EXCEPTIONS,
+} from '../../src/scripts/check_dependency_floors.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const MANIFEST = JSON.parse(
@@ -64,8 +68,47 @@ describe('check_dependency_floors', () => {
 
     it('committed manifest: no exception is stale (each one is still a dependency)', () => {
         const deps = MANIFEST.dependencies ?? {};
-        for (const name of Object.keys(EXACT_PIN_EXCEPTIONS)) {
+        for (const name of [...Object.keys(EXACT_PIN_EXCEPTIONS), ...Object.keys(SECURITY_FLOOR_EXCEPTIONS)]) {
             expect(deps, name).toHaveProperty(name);
+        }
+    });
+});
+
+// A security floor is a CVE control, not a stale pin. The first version of
+// this gate flagged `@fastify/static@^10.1.2` as "not a settled minor" and
+// asked for `^10.1.0` — which would have re-opened a high-severity path
+// traversal affecting <=10.1.1. These cases exist so that cannot recur.
+describe('security floors outrank the settled-minor rule', () => {
+    it('GREEN: a security floor at its required range passes untouched', () => {
+        expect(evaluate({ '@fastify/static': '^10.1.2' })).toEqual([]);
+    });
+
+    it('RED: lowering a security floor to a settled minor is rejected', () => {
+        const errors = evaluate({ '@fastify/static': '^10.1.0' });
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toContain('security floor must stay at ^10.1.2');
+    });
+
+    it('RED: raising it off the pinned range is rejected too — the range is the control', () => {
+        expect(evaluate({ '@fastify/static': '^11.0.0' })).toHaveLength(1);
+    });
+
+    it('the settled-minor rule never fires on a security-floored package', () => {
+        const errors = evaluate({ '@fastify/static': '^10.1.2' });
+        expect(errors.join()).not.toContain('settled minor');
+    });
+
+    it('every security exception names the advisory and the vulnerable range', () => {
+        for (const [name, entry] of Object.entries(SECURITY_FLOOR_EXCEPTIONS)) {
+            expect(entry.required, name).toMatch(/^\^?\d+\.\d+\.\d+$/);
+            expect(entry.reason.length, name).toBeGreaterThan(40);
+        }
+    });
+
+    it('committed manifest: every security floor is actually at its required range', () => {
+        const deps = MANIFEST.dependencies ?? {};
+        for (const [name, entry] of Object.entries(SECURITY_FLOOR_EXCEPTIONS)) {
+            expect(deps[name], name).toBe(entry.required);
         }
     });
 });

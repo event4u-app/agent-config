@@ -21,6 +21,12 @@
  * ABI lock — and are allowed only when listed in EXACT_PIN_EXCEPTIONS with a
  * reason, so a drive-by pin cannot hide among them.
  *
+ * SECURITY FLOORS OUTRANK THIS RULE. A floor whose patch component is non-zero
+ * *because everything below it carries an advisory* must never be lowered to
+ * satisfy resolvability — that trades a rare install failure for a live CVE.
+ * Those live in SECURITY_FLOOR_EXCEPTIONS with the advisory and the vulnerable
+ * range, and the gate then enforces the floor rather than fighting it.
+ *
  * Usage:
  *   ./scripts-run src/scripts/check_dependency_floors [--json]
  *
@@ -44,6 +50,21 @@ export const EXACT_PIN_EXCEPTIONS: Readonly<Record<string, string>> = {
     'tree-sitter-wasms': 'ABI-locked against web-tree-sitter; see code-graph engine pin',
 };
 
+/**
+ * Floors that are non-settled ON PURPOSE, because every version below them is
+ * vulnerable. The required range is pinned here so the gate ENFORCES the floor
+ * instead of asking for it to be lowered — lowering one trades a rare install
+ * failure for a live advisory, which is never the right trade.
+ */
+export const SECURITY_FLOOR_EXCEPTIONS: Readonly<Record<string, { required: string; reason: string }>> = {
+    '@fastify/static': {
+        required: '^10.1.2',
+        reason:
+            'high-severity route-guard bypass via path traversal (CVSS 7.5) affects <=10.1.1; ' +
+            '10.1.2 is the fix. Verified with npm audit on a clean 10.1.0 install, 2026-07-31.',
+    },
+};
+
 /** A settled caret floor: `^X.Y.0`. */
 const SETTLED_CARET = /^\^\d+\.\d+\.0$/;
 
@@ -57,6 +78,16 @@ const EXACT_VERSION = /^\d+\.\d+\.\d+$/;
 export function evaluate(dependencies: Readonly<Record<string, string>>): string[] {
     const errors: string[] = [];
     for (const [name, range] of Object.entries(dependencies)) {
+        const security = SECURITY_FLOOR_EXCEPTIONS[name];
+        if (security !== undefined) {
+            // The floor is the control. Enforce it; never ask for it to settle.
+            if (range !== security.required) {
+                errors.push(
+                    `${name}@${range}: security floor must stay at ${security.required} — ${security.reason}`,
+                );
+            }
+            continue;
+        }
         if (EXACT_VERSION.test(range)) {
             if (!(name in EXACT_PIN_EXCEPTIONS)) {
                 errors.push(

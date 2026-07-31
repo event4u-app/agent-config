@@ -103,7 +103,7 @@
         "vitest": "^2.1.9"
     },
     "dependencies": {
-        "@fastify/static": "^10.1.0",
+        "@fastify/static": "^10.1.2",
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@preact/signals": "^2.9.0",
         "commander": "^12.1.0",
