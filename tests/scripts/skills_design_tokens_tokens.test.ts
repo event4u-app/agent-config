@@ -168,7 +168,7 @@ describe.runIf(runnable)('tokens — validate', () => {
                 '.exc { color: #FFF; }', // hex exception
                 '.rgb { background: rgba(1, 2, 3, 0.5); }',
                 '.rgb2 { background: rgb(10,20,30); }',
-                '.host { color: #abcdef; background: url(fonts.googleapis.com/x); }', // allowed-host skip
+                '.host { color: #abcdef; background: url(fonts.googleapis.com/x); }', // hardcoded hex is reported even next to a URL
                 '.px1 { width: 5px; }', // single digit → no pixel finding
                 '.px2 { width: 100px; }',
                 '.rem { font-size: 1.5rem; }',
@@ -202,6 +202,30 @@ describe.runIf(runnable)('tokens — validate', () => {
         const root = path.join(tmp, 'tree');
         buildTree(root);
         expectParity(['validate', '--dir', root, '--json']);
+    });
+
+    it('a hardcoded value on a line containing an external URL is still reported', () => {
+        // Regression: a host allow-list used to `continue` the WHOLE line, so any
+        // hardcoded value co-located with a font/image URL was silently dropped.
+        // The allow-list suppressed no real finding (no pattern matches a bare
+        // font/image URL) and only produced that false negative.
+        const root = path.join(tmp, 'hosts');
+        fs.mkdirSync(root, { recursive: true });
+        fs.writeFileSync(
+            path.join(root, 'a.css'),
+            [
+                '.host { color: #abcdef; background: url(fonts.googleapis.com/x); }',
+                '.img { color: #123456; background: url(https://images.unsplash.com/p?w=800); padding: 24px; }',
+                '.pure { src: url(https://fonts.gstatic.com/s/inter/v13/a.woff2); }',
+            ].join('\n') + '\n',
+            'utf-8',
+        );
+        const r = runTs(['validate', '--dir', root, '--json']);
+        expect(r.status).toBe(1);
+        const findings = JSON.parse(r.stdout) as Array<{ line: number; value: string }>;
+        expect(findings.map((f) => f.value).sort()).toEqual(['#123456', '#abcdef', '24']);
+        // A line that is ONLY an external font URL carries no hardcoded value.
+        expect(findings.some((f) => f.line === 3)).toBe(false);
     });
 
     it('--ignore (repeatable) prunes the same subtrees', () => {
