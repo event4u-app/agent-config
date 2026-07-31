@@ -17,7 +17,8 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
-import { PLACEHOLDER_PATTERNS } from './design.js';
+import { placeholder_paths } from './design.js';
+import { bundle_line } from './stack_bundles.js';
 
 /** Map `state.stack.frontend` → agent-directive skill name. */
 export const STACK_DIRECTIVES: Record<string, string> = {
@@ -104,36 +105,17 @@ function _resolve_directive(state: DeliveryState): string {
     return DEFAULT_DIRECTIVE;
 }
 
-/** Return paths into `envelope['rendered']` whose text matches a pattern. */
+/**
+ * Return paths into `envelope['rendered']` whose text matches a pattern.
+ *
+ * Delegates to the walker shared with `design`, so the producer-side and
+ * consumer-side gates cannot drift apart. They previously held
+ * byte-identical copies of the same array-blind recursion, which meant the
+ * contract's "defense-in-depth" framing described two layers that failed on
+ * exactly the same inputs.
+ */
 function _placeholder_violations_in_output(envelope: Record<string, Any>): string[] {
-    const rendered = envelope['rendered'];
-    if (!_isDict(rendered)) {
-        return [];
-    }
-    const violations: string[] = [];
-    _walk_rendered(rendered, '', violations);
-    return violations;
-}
-
-function _walk_rendered(node: Record<string, Any>, prefix: string, violations: string[]): void {
-    for (const key of Object.keys(node)) {
-        const value = node[key];
-        const path = prefix ? `${prefix}.${key}` : String(key);
-        if (_isDict(value)) {
-            _walk_rendered(value, path, violations);
-            continue;
-        }
-        if (typeof value !== 'string') {
-            continue;
-        }
-        const lowered = value.toLowerCase();
-        for (const pattern of PLACEHOLDER_PATTERNS) {
-            if (lowered.includes(pattern)) {
-                violations.push(path);
-                break;
-            }
-        }
-    }
+    return placeholder_paths(envelope['rendered']);
 }
 
 /** First-pass halt — emit the stack-specific apply directive. */
@@ -145,6 +127,7 @@ function _delegate_to_stack_skill(state: DeliveryState): StepResult {
         questions: [
             agent_directive(directive),
             `> Stack: \`${stack_label}\`. Implementing the locked design brief.`,
+            bundle_line(stack_label, 'build'),
             '> Microcopy is locked — every button label, empty-state ' +
                 'message, and validation message must come verbatim from ' +
                 '`state.ui_design.microcopy`.',

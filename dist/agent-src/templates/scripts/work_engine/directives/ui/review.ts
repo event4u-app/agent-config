@@ -16,8 +16,9 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
+import { bundle_line } from './stack_bundles.js';
 
-/** Map `state.stack.frontend` → agent-directive skill name. */
+/** Map `state.stack.frontend` → agent-directive verb. */
 export const STACK_DIRECTIVES: Record<string, string> = {
     'blade-livewire-flux': 'ui-design-review-blade-livewire-flux',
     'react-shadcn': 'ui-design-review-react-shadcn',
@@ -187,6 +188,7 @@ function _delegate_to_review_skill(state: DeliveryState): StepResult {
             agent_directive(directive),
             `> Stack: \`${stack_label}\`. Reviewing rendered components ` +
                 'against the locked design brief.',
+            bundle_line(stack_label, 'review'),
             '> The review pass compares `state.ticket.ui_apply.rendered` ' +
                 'against `state.ui_design` (microcopy, states, a11y, layout) ' +
                 'and produces a structured `findings` list.',

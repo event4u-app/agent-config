@@ -146,7 +146,17 @@ function _missing_required_keys(design: Record<string, Any>): string[] {
             missing.push(key);
             continue;
         }
-        if (key === 'states' && _isDict(value)) {
+        if (key === 'states') {
+            // A non-object `states` (a string, a list) used to skip the
+            // per-state loop entirely, so `states: "n/a"` satisfied the gate
+            // without covering a single state. Report every required key
+            // instead — the author gets the same actionable list either way.
+            if (!_isDict(value)) {
+                for (const state_key of REQUIRED_STATE_KEYS) {
+                    missing.push(`states.${state_key}`);
+                }
+                continue;
+            }
             for (const state_key of REQUIRED_STATE_KEYS) {
                 if (!_pyTruthy(value[state_key])) {
                     missing.push(`states.${state_key}`);
@@ -159,34 +169,55 @@ function _missing_required_keys(design: Record<string, Any>): string[] {
 
 /** Return microcopy paths whose values match a placeholder pattern. */
 function _placeholder_violations(design: Record<string, Any>): string[] {
-    const microcopy = design['microcopy'];
-    if (!_isDict(microcopy)) return [];
+    return placeholder_paths(design['microcopy']);
+}
+
+/**
+ * Return every path under `node` whose leaf string carries a placeholder.
+ *
+ * Traverses objects **and arrays**. The array arm is load-bearing, not
+ * defensive: a list is the natural shape for the most common microcopy
+ * (`nav_items`, `menu`, `steps`) and for a rendered file split into lines,
+ * and a walker that recursed into objects only let
+ * `{ nav_items: ["Home", "TODO: Link"] }` through both the brief lock and
+ * the rendered-output gate.
+ *
+ * Array elements are addressed `key[i]` so the halt names the exact element
+ * the author has to fix, not just the list.
+ *
+ * Shared by `design` (producer side, on `microcopy`) and `apply` (consumer
+ * side, on the rendered envelope). One implementation on purpose: the two
+ * call sites previously carried byte-identical copies of the same bug, so
+ * duplicating them bought no independence — see
+ * `docs/contracts/ui-track-flow.md` § implement → apply.
+ */
+export function placeholder_paths(node: Any, prefix = ''): string[] {
     const violations: string[] = [];
-    _walk_microcopy(microcopy, '', violations);
+    _walk_placeholders(node, prefix, violations);
     return violations;
 }
 
-function _walk_microcopy(
-    node: Record<string, Any>,
-    prefix: string,
-    violations: string[],
-): void {
-    for (const key of Object.keys(node)) {
-        const value = node[key];
-        const path = prefix ? `${prefix}.${key}` : String(key);
-        if (_isDict(value)) {
-            _walk_microcopy(value, path, violations);
-            continue;
-        }
-        if (typeof value !== 'string') {
-            continue;
-        }
-        const lowered = value.toLowerCase();
+function _walk_placeholders(node: Any, prefix: string, violations: string[]): void {
+    if (typeof node === 'string') {
+        const lowered = node.toLowerCase();
         for (const pattern of PLACEHOLDER_PATTERNS) {
             if (lowered.includes(pattern)) {
-                violations.push(path);
-                break;
+                violations.push(prefix);
+                return;
             }
+        }
+        return;
+    }
+    if (Array.isArray(node)) {
+        node.forEach((value, index) => {
+            _walk_placeholders(value, `${prefix}[${index}]`, violations);
+        });
+        return;
+    }
+    if (_isDict(node)) {
+        for (const key of Object.keys(node)) {
+            const path = prefix ? `${prefix}.${key}` : String(key);
+            _walk_placeholders(node[key], path, violations);
         }
     }
 }
@@ -311,15 +342,23 @@ function _halt_unconfirmed(state: DeliveryState, design: Record<string, Any>): S
     });
 }
 
-/** Count leaf string entries in `microcopy` (recursive). */
-function _count_microcopy(microcopy: Record<string, Any>): number {
-    let total = 0;
-    for (const value of Object.values(microcopy)) {
-        if (_isDict(value)) {
-            total += _count_microcopy(value);
-        } else if (typeof value === 'string') {
-            total += 1;
-        }
+/**
+ * Count leaf string entries in `microcopy` (recursive, arrays included).
+ *
+ * The count is shown in the sign-off the user confirms, so it has to agree
+ * with what the placeholder walker inspects — an object-only count reported
+ * fewer locked strings than were actually locked.
+ */
+function _count_microcopy(microcopy: Any): number {
+    if (typeof microcopy === 'string') return 1;
+    if (Array.isArray(microcopy)) {
+        return microcopy.reduce((total: number, value) => total + _count_microcopy(value), 0);
     }
-    return total;
+    if (_isDict(microcopy)) {
+        return Object.values(microcopy).reduce(
+            (total: number, value) => total + _count_microcopy(value),
+            0,
+        );
+    }
+    return 0;
 }

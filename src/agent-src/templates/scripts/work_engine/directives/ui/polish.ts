@@ -15,6 +15,7 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
+import { bundle_line } from './stack_bundles.js';
 
 /** Maximum number of polish rounds per `/work` run. */
 export const POLISH_CEILING = 2;
@@ -203,6 +204,7 @@ function _delegate_to_polish_skill(
         questions: [
             agent_directive(directive),
             `> Stack: \`${stack_label}\`. Polish round ${next_round} of ${ceiling}.`,
+            bundle_line(stack_label, 'build'),
             findings_line,
             '> Fix chart-type / contrast findings against the adopted ' +
                 "corpus rows (design-intelligence § 'Grounding the " +
