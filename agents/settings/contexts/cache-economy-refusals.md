@@ -112,11 +112,14 @@ measurement (see the disabled thin projection for what the alternative costs).
 A predicate change is a design decision with its own safety argument and its own
 council pass, never a convenience fix applied to reach a target.
 
-Reachability is therefore an **open design question**, not a defect: see
-`road-to-dedup-reachability` for the two candidate mechanisms (predicate
-precision vs. writer convergence). Until one lands, `projection.scope_dedup`
-stays opt-in and inert, and the consumer-default question stays parked rather
-than carried as an open decision.
+Reachability was then **decided, not left open**: both candidate mechanisms
+(predicate precision, writer convergence) were worked out in full and both were
+declined — real safety risk in the install path against a benefit whose recipient
+set is currently empty. See
+[`dedup-reachability-refusal`](dedup-reachability-refusal.md) for the decision,
+the preserved A/B analysis, and the five reopen conditions.
+`projection.scope_dedup` stays opt-in and inert, and the consumer-default
+question stays parked rather than carried as an open decision.
 
 ## What is genuinely ours to fix
 
