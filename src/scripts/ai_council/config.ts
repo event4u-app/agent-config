@@ -14,12 +14,16 @@
  * Validation contract (8 rules, all enforced at load time):
  *
  * 1. `enabled` is a bool.
- * 2. `defaults.mode` ∈ {`api`, `manual`, `cli`}; per-member mode same
- *    set. Semantics: `api` = SDK call against a stored key (billable);
+ * 2. `defaults.mode` ∈ {`api`, `manual`, `cli`, `auto`}; per-member mode
+ *    same set. Semantics: `api` = SDK call against a stored key (billable);
  *    `manual` = copy & paste — human transports prompt + reply between
  *    the agent and an external chat surface (free); `cli` = shell out to
  *    a locally-installed CLI under subscription auth (free for
- *    first-party CLIs, billable for community wrappers).
+ *    first-party CLIs, billable for community wrappers); `auto` = pick
+ *    per provider per invocation (cli → api → unavailable), resolved by
+ *    `transport_resolver.ts`. `auto` is opt-in — it is never the shipped
+ *    default, because flipping it would move an existing user's spend
+ *    from per-token dollars onto subscription quota with no config edit.
  * 3. `members.<name>` keys are restricted to the known provider set.
  * 4. `cost_budget.*` numeric fields are >= 0.
  * 5. Enabled members carry a non-empty `model` and `api_key_ref` when
@@ -30,7 +34,8 @@
  *    even if syntactically plausible.
  * 7. Resolved `file:` key paths must have mode 0o600 (delegated to
  *    `resolve_api_key`; runs at use-time, not parse-time).
- * 8. `binary:` is only valid when the member's effective mode is `cli`;
+ * 8. `binary:` is only valid when the member's effective mode is `cli` or
+ *    `auto` (auto may resolve to the cli rung);
  *    `cli_call_budget.max_calls_per_day.<provider>` keys must be valid
  *    providers.
  *
@@ -60,7 +65,7 @@ const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
     'xai',
     'perplexity',
 ]);
-const _VALID_MODES: ReadonlySet<string> = new Set(['api', 'manual', 'cli']);
+const _VALID_MODES: ReadonlySet<string> = new Set(['api', 'manual', 'cli', 'auto']);
 
 /**
  * Prefixes that signal "this is a raw API key" so we refuse it loudly
@@ -1655,10 +1660,13 @@ function _build_member(
                 `members.${name}.binary must be a non-empty string when set.`,
             );
         }
-        if (effective_mode !== 'cli') {
+        // `auto` may resolve to the cli rung, so a binary override is
+        // legitimate there too — rejecting it would make `auto` unusable for
+        // anyone whose CLI is not on `$PATH` under its default name.
+        if (effective_mode !== 'cli' && effective_mode !== 'auto') {
             throw new CouncilConfigError(
                 `members.${name}.binary is only valid when the member's ` +
-                    `effective mode is 'cli' (got ${_pyRepr(effective_mode)}). Set ` +
+                    `effective mode is 'cli' or 'auto' (got ${_pyRepr(effective_mode)}). Set ` +
                     `\`mode: cli\` on the member or \`defaults.mode: cli\` to use ` +
                     `this field.`,
             );
