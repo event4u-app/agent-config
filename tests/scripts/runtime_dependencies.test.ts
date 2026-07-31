@@ -11,10 +11,22 @@
 // broke (hooks — every PreToolUse/PostToolUse dispatch — and the
 // roadmap-progress hook) are structurally tsx-free: they run the
 // precompiled node bundles (dist/hooks/dispatch.js, dist/mcp/server.mjs),
-// which this test asserts the dispatcher prefers. Remaining delegate `.ts`
-// commands fall back to `npx tsx` (require_tsx last resort) — a documented
-// one-time-fetch cost, no longer on any hook hot path. Reintroducing tsx
-// into `dependencies` OR dropping the bundle preference both fail here.
+// which this test asserts the dispatcher prefers. Reintroducing tsx into
+// `dependencies` OR dropping the bundle preference both fail here.
+//
+// FLIP COMPLETED (ADR-204, 2026-07-31): the flip originally left the `_cli`
+// delegate commands on the `npx tsx` last resort, justified as "maintainer
+// commands, one-time fetch". That justification was false — 18 commands
+// dispatch through `exec_ts`, and at least 9 of them (`sync`, `validate`,
+// `doctor`, `update`, `upgrade`, `export`, `prune`, `uninstall`, `versions`)
+// are Tier-0/1 consumer surface listed in the consumer `--help`. Every
+// consumer invocation therefore ran `npx tsx` in the CONSUMER's cwd — the
+// exact EBADDEVENGINES exposure the flip claimed to have removed, plus a
+// ~5.7x latency tax (p50 346-392 ms vs 56-71 ms bundled). They now resolve
+// `dist/cli-delegate/<name>.js`. The assertions below pin that structurally
+// so the class cannot regrow: a new `_cli` command is covered by the build
+// glob automatically, and removing either the glob or the dispatcher
+// preference fails.
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -28,6 +40,7 @@ const DISPATCH = path.join(REPO_ROOT, 'src', 'scripts', '_dispatch.bash');
 interface PackageJson {
     dependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
+    scripts?: Record<string, string>;
 }
 
 const pkg: PackageJson = JSON.parse(
@@ -132,6 +145,54 @@ describe('runtime dependencies — consumer dispatcher surface', () => {
         expect(dispatch).toContain('dist/hooks/dispatch.js');
         // cmd_mcp_run prefers the bundled server.
         expect(dispatch).toContain('dist/mcp/server.mjs');
+    });
+
+    it('every _cli delegate command is covered by the precompiled bundle', () => {
+        const dispatch = fs.readFileSync(DISPATCH, 'utf-8');
+        // exec_ts resolves dist/cli-delegate/<name>.js before touching tsx.
+        expect(dispatch).toContain('dist/cli-delegate');
+
+        const scripts = pkg.scripts ?? {};
+        const delegateBuild = scripts['build:cli-delegate'] ?? '';
+        expect(delegateBuild, 'package.json needs a build:cli-delegate script').not.toBe('');
+        expect(delegateBuild).toContain('--outdir=dist/cli-delegate');
+        // Wired into the build `prepack` runs, or the tarball ships no bundle.
+        expect(scripts.build ?? '').toContain('build:cli-delegate');
+
+        // Coverage is structural, not a hand-maintained list: the build globs
+        // the whole `_cli` command directory, so a NEW command is bundled
+        // without touching the build script. Assert the glob is still what the
+        // build uses, then that every dispatcher target is inside it.
+        const ENTRY_GLOB = 'src/scripts/_cli/cmd_*.ts';
+        expect(delegateBuild).toContain(ENTRY_GLOB);
+
+        const globbed = new Set(
+            fs
+                .readdirSync(path.join(REPO_ROOT, 'src', 'scripts', '_cli'))
+                .filter((f) => f.startsWith('cmd_') && f.endsWith('.ts'))
+                .map((f) => `src/scripts/_cli/${f}`),
+        );
+
+        const targets = [
+            ...dispatch.matchAll(
+                /exec_ts "\$PACKAGE_ROOT\/(src\/scripts\/_cli\/cmd_[A-Za-z0-9_]+\.ts)"/g,
+            ),
+        ].map((m) => m[1] as string);
+        // Sanity: the regex actually found the delegate surface (18 today).
+        expect(targets.length).toBeGreaterThan(10);
+
+        const uncovered = targets.filter((t) => !globbed.has(t));
+        expect(
+            uncovered,
+            `dispatcher _cli targets the build glob does not emit: ${uncovered.join(', ')}`,
+        ).toEqual([]);
+
+        // The dispatcher maps basename → bundle file, so basenames must be
+        // unique across the surface or one command would shadow another.
+        const names = targets.map((t) => path.basename(t, '.ts'));
+        expect(new Set(names).size, `duplicate _cli basenames: ${names.join(', ')}`).toBe(
+            names.length,
+        );
     });
 
     it('every dispatcher-referenced script resolves and imports only runtime deps', () => {
