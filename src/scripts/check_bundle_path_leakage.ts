@@ -62,10 +62,16 @@ const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 
 // Tracked directories that may hold a build-generated bundle. Only
 // `dist/install/` is force-included in `.gitignore` today (`!/dist/install/`);
-// `dist/hooks/` and `dist/mcp/` are listed defensively in case a future
-// change tracks them too — `git ls-files` on an untracked directory returns
-// nothing, so listing an as-yet-untracked root here is always safe.
-const BUNDLE_ROOTS: readonly string[] = ['dist/install', 'dist/hooks', 'dist/mcp'];
+// `dist/hooks/`, `dist/mcp/` and `dist/cli-delegate/` are listed defensively
+// in case a future change tracks them too — `git ls-files` on an untracked
+// directory returns nothing, so listing an as-yet-untracked root here is
+// always safe.
+const BUNDLE_ROOTS: readonly string[] = [
+    'dist/install',
+    'dist/hooks',
+    'dist/mcp',
+    'dist/cli-delegate',
+];
 
 interface LeakPattern {
     readonly name: string;
