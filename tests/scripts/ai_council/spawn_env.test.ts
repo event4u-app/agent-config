@@ -126,3 +126,79 @@ describe('CliClient._runSubprocess — end-to-end env-injection defence', () => 
         expect((result.stdout ?? '').trim()).toBe('present');
     });
 });
+
+// ---------------------------------------------------------------------------
+// CLAUDE_CONFIG_DIR inheritance — pinned, deliberately, as-is
+// (road-to-zero-ceremony-detection Phase 5)
+//
+// `hardenedSpawnEnv` is deny-by-FAMILY, not an allowlist (ADR-123): the
+// provider CLIs legitimately need arbitrary env, so an allowlist would break
+// them and rot. `CLAUDE_CONFIG_DIR` matches no deny family — note the near
+// miss, `GIT_CONFIG_` is a PREFIX test, and `CLAUDE_CONFIG_DIR` merely
+// *contains* `CONFIG_` — so it is inherited by every spawned child today.
+//
+// That variable points a provider CLI at the directory it loads configuration
+// from, and that directory carries instruction-bearing content. Nothing
+// asserted its behaviour either way before this test. These cases record the
+// CURRENT behaviour so a future change to it is a visible, deliberate diff
+// rather than a silent one — see `docs/threat-model.md` row i and the
+// `claude-config-dir-inheritance-decision` blocker for why the decision landed
+// on accepted-risk rather than a strip.
+//
+// If a later change denies the variable, THESE TESTS MUST FLIP, and flipping
+// them is the signal that a considered ADR-123 decision is being reversed.
+describe('hardenedSpawnEnv — CLAUDE_CONFIG_DIR is inherited (pinned)', () => {
+    it('passes an inherited CLAUDE_CONFIG_DIR through to the child env', () => {
+        withEnv({ CLAUDE_CONFIG_DIR: '/tmp/attacker-config' }, () => {
+            expect(hardenedSpawnEnv()['CLAUDE_CONFIG_DIR']).toBe('/tmp/attacker-config');
+        });
+    });
+
+    it('matches no deny family — the GIT_CONFIG_ check is a prefix, not a substring', () => {
+        withEnv(
+            {
+                CLAUDE_CONFIG_DIR: '/tmp/a',
+                // The genuinely-denied neighbour, for contrast in one assertion.
+                GIT_CONFIG_GLOBAL: '/tmp/evil.gitconfig',
+            },
+            () => {
+                const env = hardenedSpawnEnv();
+                expect(env['CLAUDE_CONFIG_DIR']).toBe('/tmp/a');
+                expect(env['GIT_CONFIG_GLOBAL']).toBeUndefined();
+            },
+        );
+    });
+
+    it('inherits CODEX_HOME the same way — the same class, the same verdict', () => {
+        // agent-switch drives per-account profiles through both variables
+        // (src/install/agentSwitchProfile.ts PROVIDER_ENV_VARS), so they stand
+        // or fall together.
+        withEnv({ CODEX_HOME: '/tmp/profile/codex' }, () => {
+            expect(hardenedSpawnEnv()['CODEX_HOME']).toBe('/tmp/profile/codex');
+        });
+    });
+
+    it('an explicit override still wins over the inherited value', () => {
+        // The assignment path already works and is how a caller would scope a
+        // child deliberately — option (c) in the blocker would build on this.
+        withEnv({ CLAUDE_CONFIG_DIR: '/tmp/inherited' }, () => {
+            const env = hardenedSpawnEnv({ CLAUDE_CONFIG_DIR: '/tmp/validated' });
+            expect(env['CLAUDE_CONFIG_DIR']).toBe('/tmp/validated');
+        });
+    });
+
+    it('reaches a real spawned child, not just the computed env map', () => {
+        const client = new AnthropicCliClient({
+            model: 'claude-sonnet-4-5',
+            binary: '/bin/sh',
+        });
+        withEnv({ CLAUDE_CONFIG_DIR: '/tmp/reaches-child' }, () => {
+            const res = (
+                client as unknown as {
+                    _runSubprocess(cmd: string[], stdin: string | null): SubprocessResult;
+                }
+            )._runSubprocess(['/bin/sh', '-c', 'printf %s "$CLAUDE_CONFIG_DIR"'], null);
+            expect(res.stdout).toBe('/tmp/reaches-child');
+        });
+    });
+});

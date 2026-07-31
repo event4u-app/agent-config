@@ -102,6 +102,20 @@ import {
 } from '../_lib/agent_settings.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
+import {
+    PROVIDER_CLI_META,
+    codexHome,
+    detectEnvironment,
+} from '../_lib/environment_detector.js';
+import {
+    absentCouncilFacts,
+    buildDetectionReport,
+    detectionJson,
+    renderDetectionLines,
+    type CouncilFacts,
+    type CouncilMemberFacts,
+    type DetectionReport,
+} from './detection_report.js';
 import { review_gate_doctor_signal } from '../ai_team/review_gate.js';
 import {
     LEGACY_ALL,
@@ -758,6 +772,7 @@ const CHECK_IDS = [
     'humanizer-runtime',
     'tier-usage-readiness',
     'council-cli',
+    'detection',
     'team',
     'unsupported-combos',
     'wizard-state',
@@ -784,6 +799,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'humanizer-runtime',
     'tier-usage-readiness',
     'council-cli',
+    'detection',
     'team',
     'wizard-state',
     'settings-review-pending',
@@ -2055,16 +2071,13 @@ function osErrorStr(exc: unknown): string {
 }
 
 /**
- * Provider → (default binary, billable flag). Mirrors the `CliClient`
- * subclass attributes without importing them at module load time.
+ * Provider → (default binary, community-wrapper flag). Canonical definition
+ * lives in `_lib/environment_detector.ts` so this check and the detection
+ * report cannot drift on the billing-relevant boolean; aliased here to keep
+ * the existing call sites unchanged.
  */
-const _CLI_PROVIDER_META: Record<string, [string, boolean]> = {
-    anthropic: ['claude', false],
-    openai: ['codex', false],
-    gemini: ['gemini', false],
-    xai: ['grok', true],
-    perplexity: ['perplexity', true],
-};
+const _CLI_PROVIDER_META: Readonly<Record<string, readonly [string, boolean]>> =
+    PROVIDER_CLI_META;
 
 function _check_council_cli(project_root: string): Dict {
     // Python wraps the council-module import in a try/except ImportError so a
@@ -2207,11 +2220,12 @@ function pyFloat(value: number): string {
 
 /**
  * Codex CLI home — `CODEX_HOME` env override (the codex CLI's own
- * convention), else `~/.codex`.
+ * convention), else `~/.codex`. Single definition in
+ * `_lib/environment_detector.ts` so the detection report and this check probe
+ * the same path; aliased here to keep the existing call sites unchanged.
  */
 function _codex_home(): string {
-    const env = (process.env['CODEX_HOME'] ?? '').trim();
-    return env !== '' ? env : path.join(os.homedir(), '.codex');
+    return codexHome();
 }
 
 /**
@@ -2368,6 +2382,162 @@ function _read_ai_team_block(project_root: string): Dict {
  * check reports ok ("team mode not configured (default-off)"); WARN fires
  * only on failing sub-signals or inconsistent half-configured states.
  */
+// ---------------------------------------------------------------------------
+// detection check (road-to-zero-ceremony-detection Phases 3 + 4)
+// ---------------------------------------------------------------------------
+
+/** Per-process memo so the check row and the rendered section agree exactly. */
+let _detection_memo: { root: string; report: DetectionReport } | null = null;
+
+/**
+ * Read the council-config facts the detection rows need. Never throws — an
+ * absent or unreadable config degrades to "no config", which the report renders
+ * as a fix rather than a failure.
+ */
+function _read_council_facts(project_root: string): CouncilFacts {
+    const { load_council_config, resolve_config_path } = ai_council_config;
+    const config_path = String(resolve_config_path(project_root));
+    if (!pathExists(config_path)) {
+        return absentCouncilFacts(config_path);
+    }
+    let cfg: ai_council_config.CouncilConfig;
+    try {
+        cfg = load_council_config(config_path);
+    } catch {
+        // An invalid config is reported by the `council-cli` check, which owns
+        // that problem; here it simply means no facts are derivable.
+        return absentCouncilFacts(config_path);
+    }
+    const members: Record<string, CouncilMemberFacts> = {};
+    for (const [name, m] of cfg.members) {
+        members[name] = {
+            enabled: m.enabled,
+            mode: m.mode,
+            binary: m.binary,
+            apiKeyRef: m.api_key_ref,
+        };
+    }
+    const cliCaps: Record<string, number> = {};
+    for (const [provider, cap] of cfg.cli_call_budget.max_calls_per_day) {
+        cliCaps[provider] = cap;
+    }
+    return {
+        configPath: config_path,
+        configPresent: true,
+        enabled: cfg.enabled,
+        defaultsMode: cfg.defaults.mode,
+        members,
+        cliCaps,
+        costBudgetMaxUsd: cfg.cost_budget.max_total_usd,
+    };
+}
+
+/** Build (once per process, per root) the detection report. */
+function _detection_report(project_root: string): DetectionReport {
+    if (_detection_memo !== null && _detection_memo.root === project_root) {
+        return _detection_memo.report;
+    }
+    const council = _read_council_facts(project_root);
+    let used: Record<string, number> = {};
+    try {
+        const counts = ai_council_clients.load_cli_call_counts();
+        for (const provider of Object.keys(council.cliCaps)) {
+            used[provider] = Number((counts as Dict)[provider] ?? 0);
+        }
+    } catch {
+        used = {};
+    }
+    const report = buildDetectionReport({
+        environment: detectEnvironment(),
+        council,
+        cliCallsUsed: used,
+    });
+    _detection_memo = { root: project_root, report };
+    return report;
+}
+
+/** Test seam — drop the memo so a fixture root is not served a stale report. */
+function _reset_detection_memo(): void {
+    _detection_memo = null;
+}
+
+/**
+ * `detection` health check — what this machine can do, and what it is allowed
+ * to do, as two separate facts.
+ *
+ * Reports per provider: detected · authenticated · auth source · billing class
+ * · enabled-in-config, plus the transport `auto` would pick and a one-line fix
+ * for every unusable capability. All rows come from the read-only, spend-free
+ * detector; nothing here makes a provider call.
+ *
+ * Status model — a recorded consent decision is NOT a defect:
+ *
+ * - no council config, or council disabled → `ok` ("not configured"), with the
+ *   fix. Absent feature ≠ broken feature (same stance as the `team` check).
+ * - detected but `enabled: false` → `ok`. That flag is a deliberate spend gate;
+ *   warning on it would train the user to silence their own consent record.
+ * - enabled to spend but no transport resolves → `warn`. That IS broken: the
+ *   member is permitted to run and cannot.
+ */
+function _check_detection(project_root: string): Dict {
+    const report = _detection_report(project_root);
+    const detected = report.providers.filter((r) => r.detected);
+    const hosts_installed = report.hosts.filter((h) => h.installed).length;
+
+    if (!report.council_config_present) {
+        return {
+            id: 'detection',
+            status: 'ok',
+            message:
+                `${hosts_installed} host(s) · ${detected.length} provider(s) detected · ` +
+                'council not configured (default-off)',
+            remedy: report.providers[0]?.fix ?? `create ${report.council_config_path}`,
+        };
+    }
+
+    if (!report.council_enabled) {
+        return {
+            id: 'detection',
+            status: 'ok',
+            message:
+                `${hosts_installed} host(s) · ${detected.length} provider(s) detected · ` +
+                'council disabled (default-off)',
+            remedy: `set \`enabled: true\` in ${report.council_config_path}`,
+        };
+    }
+
+    const broken = report.providers.filter((r) => r.enabledInConfig && !r.available);
+    const spending = report.providers.filter((r) => r.enabledInConfig && r.available);
+    const unpermitted = detected.filter((r) => !r.enabledInConfig);
+
+    const summary =
+        `${hosts_installed} host(s) · ${spending.length} member(s) ready ` +
+        `(${spending.map((r) => `${r.provider}→${r.transport}/${r.billing}`).join(', ') || 'none'})` +
+        (unpermitted.length === 0
+            ? ''
+            : ` · ${unpermitted.length} detected but not allowed to spend: ` +
+              unpermitted.map((r) => r.provider).join(', '));
+
+    if (broken.length > 0) {
+        return {
+            id: 'detection',
+            status: 'warn',
+            message: `${summary} · ${broken.length} enabled member(s) have no transport`,
+            remedy: broken.map((r) => `${r.provider}: ${r.fix}`).join(' · '),
+        };
+    }
+
+    return {
+        id: 'detection',
+        status: 'ok',
+        message: summary,
+        remedy:
+            unpermitted.length === 0
+                ? `run \`agent-config doctor --check detection\` for the full table`
+                : unpermitted.map((r) => r.fix).join(' · '),
+    };
+}
+
 function _check_team(project_root: string): Dict {
     const ai_team = _read_ai_team_block(project_root);
     const enabled = _settings_flag(ai_team['enabled']);
@@ -2819,6 +2989,7 @@ function _run_checks(
         'humanizer-runtime': () => _check_humanizer_runtime(),
         'tier-usage-readiness': () => _check_tier_usage_readiness(project_root),
         'council-cli': () => _check_council_cli(project_root),
+        'detection': () => _check_detection(project_root),
         team: () => _check_team(project_root),
         'unsupported-combos': () => _check_unsupported_combos(manifest),
         'wizard-state': _check_wizard_state,
@@ -2895,6 +3066,7 @@ function _run_checks_no_manifest(
         'humanizer-runtime': () => _check_humanizer_runtime(),
         'tier-usage-readiness': () => _check_tier_usage_readiness(project_root),
         'council-cli': () => _check_council_cli(project_root),
+        'detection': () => _check_detection(project_root),
         team: () => _check_team(project_root),
         'unsupported-combos': () => _skipped_manifest_check('unsupported-combos'),
         'wizard-state': _check_wizard_state,
@@ -2945,8 +3117,10 @@ function _run_no_manifest(
             );
         }
         _emit_checks_text(checks);
+        _emit_detection_text(project_root, checks);
     } else {
         _emit_checks_text(checks);
+        _emit_detection_text(project_root, checks);
     }
 
     if (opts.check !== null) {
@@ -2983,6 +3157,12 @@ function _emit_json(
     }
     if (checks !== null) {
         payload['checks'] = checks;
+        // The detection section rides along whenever checks ran, so the agent /
+        // GUI contract carries the full provider → transport → billing table
+        // and not just the one-line check row.
+        if (checks.some((c) => c['id'] === 'detection')) {
+            payload['detection'] = detectionJson(_detection_report(project_root));
+        }
     }
     print(_jsonDumpsIndentAscii(payload, 2));
 }
@@ -2998,6 +3178,21 @@ function _emit_checks_text(checks: Dict[]): void {
         if (c['status'] !== 'ok' && c['remedy']) {
             print(`      fix: ${c['remedy']}`);
         }
+    }
+    print('');
+}
+
+/**
+ * The detection section in text mode. Rendered from the same report the
+ * `detection` check row and the `--json` payload use, so the three cannot
+ * disagree about which members spend money.
+ */
+function _emit_detection_text(project_root: string, checks: Dict[]): void {
+    if (!checks.some((c) => c['id'] === 'detection')) {
+        return;
+    }
+    for (const line of renderDetectionLines(_detection_report(project_root))) {
+        print(line);
     }
     print('');
 }
@@ -3304,6 +3499,7 @@ function main(argv: string[] | null = null): number {
             print(`  📍  project_root: ${project_root} (origin: ${origin})`);
         }
         _emit_checks_text(checks);
+        _emit_detection_text(project_root, checks);
         if (opts.check === null) {
             _emit_text(project_root, missing, modified, foreign, tag_drift);
         }
@@ -3389,6 +3585,10 @@ export {
     _check_mcp_beta_readiness,
     _check_tier_usage_readiness,
     _check_council_cli,
+    _check_detection,
+    _detection_report,
+    _read_council_facts,
+    _reset_detection_memo,
     _check_team,
     _check_unsupported_combos,
     _check_wizard_state,

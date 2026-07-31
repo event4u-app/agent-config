@@ -51,6 +51,45 @@ export function knownToolIds() {
     return Object.keys(TOOL_SIGNALS);
 }
 /**
+ * Executable names declared for `id` on `$PATH`, in table order. Empty for
+ * tools detected only by a config dir / app bundle (and for the two
+ * signal-less ids). Exposed so callers that need the resolved *path* (not
+ * just a boolean) can reuse this table instead of restating the binary names.
+ */
+export function toolBinaries(id) {
+    return TOOL_SIGNALS[id]?.bins ?? [];
+}
+/**
+ * First declared binary for `id` that resolves on `$PATH`, or `null`. This is
+ * the path-returning twin of `detectInstalledTools`, which reports presence as
+ * a boolean across all three signal kinds — a tool can be "installed" (config
+ * dir present) while this returns `null` (no executable on `$PATH`).
+ */
+export function resolveToolBinary(id, pathEnv) {
+    const env = pathEnv ?? process.env['PATH'] ?? '';
+    for (const bin of toolBinaries(id)) {
+        const resolved = resolveBinaryPath(bin, env);
+        if (resolved !== null)
+            return resolved;
+    }
+    return null;
+}
+/** Absolute path of `name` on `pathEnv`, or `null`. Mirrors `binOnPath`'s probe order. */
+function resolveBinaryPath(name, pathEnv) {
+    if (pathEnv.length === 0)
+        return null;
+    for (const dir of pathEnv.split(delimiter)) {
+        if (dir.length === 0)
+            continue;
+        for (const candidate of [name, `${name}.exe`, `${name}.cmd`]) {
+            const full = join(dir, candidate);
+            if (existsSync(full))
+                return full;
+        }
+    }
+    return null;
+}
+/**
  * Is an executable named `name` resolvable on `$PATH`? Exported for one-off
  * presence checks (e.g. `rtk` on the Editor-and-tooling step). Defaults to
  * `process.env.PATH`.
@@ -59,18 +98,7 @@ export function isBinaryOnPath(name, pathEnv) {
     return binOnPath(name, pathEnv ?? process.env['PATH'] ?? '');
 }
 function binOnPath(name, pathEnv) {
-    if (pathEnv.length === 0)
-        return false;
-    for (const dir of pathEnv.split(delimiter)) {
-        if (dir.length === 0)
-            continue;
-        if (existsSync(join(dir, name)))
-            return true;
-        // Windows-style executables.
-        if (existsSync(join(dir, `${name}.exe`)) || existsSync(join(dir, `${name}.cmd`)))
-            return true;
-    }
-    return false;
+    return resolveBinaryPath(name, pathEnv) !== null;
 }
 function isToolInstalled(signal, home, pathEnv) {
     for (const rel of signal.homePaths ?? []) {

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 19 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **15** open blockers
+> 18 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**84 / 279 steps done · 30%**
+**84 / 254 steps done · 33%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -42,7 +42,6 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 17 | [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md) | 7 | 39 | 0 | 36 | 3 | 0 | 0 | ██████████ 100% |
 | 18 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 19 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -353,52 +352,6 @@ _1 blocker resolved._
 | 0 | Establish the ownership decision (blocking, no data edits) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 1 | Stop emitting the hotlink | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Make the corpus consistent with itself | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-
-### [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md)
-
-**Road to zero-ceremony detection — detection reports, consent still decides** — 0 / 25 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | The detector module | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Make the documented transport default actually load | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-| 3 | Detection informs consent; it does not replace it | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | Extend `doctor`, do not duplicate it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Pin the `CLAUDE_CONFIG_DIR` inheritance decision | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-zero-ceremony-detection"></a>
-**Blockers**
-
-- **council-availability-semantics** (owner: maintainer) — blocks any removal of `members.*.enabled` (Phase 3 ships reporting and a one-line enable command instead)
-  - **What to do:**
-    1. Read the shipped council template's rationale for the flag ("installing a
-    key is not the same as wanting the agent to spend money on it") and the
-    config contract's fail-closed rules (at least one enabled member; no
-    silent skips; low-impact fast-path as a two-knob opt-in).
-    2. Decide whether detection-derived availability is acceptable given that it
-    converts "a key exists on this machine" into "this provider may be
-    called". Per ADR-049 this class of scope expansion requires a threat
-    model, not a product rationale.
-    3. If yes, write the ADR that supersedes the contract's enabled-member rules
-    and states how the ask-gate alone preserves the no-silent-spend property.
-  - **Resolved when:** an ADR exists naming the superseded contract sections, or this roadmap records the flag as retained by decision.
-- **transport-auto-default-flip** (owner: maintainer) — blocks making `auto` the effective default (Phase 2 ships it opt-in)
-  - **What to do:**
-    1. Confirm the intent: a user with both a logged-in CLI and an installed key
-    moves from per-token dollars onto subscription quota with no config edit.
-    2. If yes, authorize the breaking-change entry and the migration note, and
-    confirm `cli_call_budget` ships populated in the same change.
-  - **Resolved when:** the breaking-change entry is authorized, or `auto` is recorded as permanently opt-in.
-- **claude-config-dir-inheritance-decision** (owner: maintainer) — blocks any behaviour change to the spawn hardening's handling of `CLAUDE_CONFIG_DIR` (Phase 5 ships only the test and the documented row)
-  - **What to do:**
-    1. Read the Phase-5 threat-model row and the ADR that chose deny-by-family
-    over an allowlist.
-    2. Pick one: (a) leave inheritance as-is, keeping the row as accepted risk;
-    (b) deny the variable, accepting that a legitimate setter loses it for
-    children; (c) strip inherited and permit only a validated assignment.
-    3. If (b) or (c), record an ADR amendment — this reverses a considered
-    decision and must not land as an unexplained diff.
-  - **Resolved when:** an ADR amendment names the chosen option, or the threat-model row is marked accepted-risk with a dated rationale.
 
 ---
 
