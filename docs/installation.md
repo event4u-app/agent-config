@@ -118,20 +118,21 @@ The rest of this page documents the underlying install mechanisms
 the per-IDE index above.
 
 
-> **Primary installer:** `scripts/install` — a small bash orchestrator that
+> **Primary installer:** `src/scripts/install` — a small bash orchestrator that
 > runs the two real installer stages in order:
 >
-> 1. `scripts/install.sh` — payload sync (copy rules, symlink skills and
+> 1. `src/scripts/install.sh` — payload sync (copy rules, symlink skills and
 >    commands, create tool-specific directories).
-> 2. `scripts/install.py` — bridge files (`.agent-settings.yml`, VSCode /
->    Augment / Copilot JSON descriptors).
+> 2. `src/scripts/install.ts` — bridge files (`.agent-settings.yml`, VSCode /
+>    Augment / Copilot JSON descriptors). Shipped pre-bundled as
+>    `dist/install/install.mjs` and run with plain `node`.
 >
 > `npx @event4u/agent-config init` and `setup.sh` (curl-based)
-> are thin wrappers that delegate to `scripts/install`. Both underlying
+> are thin wrappers that delegate to `src/scripts/install`. Both underlying
 > stages remain callable directly for advanced use; see their `--help`.
 >
-> Python 3.10+ is required for bridges. If it is missing, the orchestrator
-> prints a warning and continues with the payload sync only.
+> Python is **not** required — the bridge stage was TypeScript from ADR-200
+> onward, and `no-python-in-src.yml` keeps it that way.
 >
 > **Node.js 20.11+** is required for the `agent-config` binary itself.
 > Starting with the TypeScript CLI shell (ADR-012, road
@@ -169,7 +170,7 @@ the per-IDE index above.
 
 Try `@event4u/agent-config` in any directory in under 30 seconds, without
 adding it as a dev dependency or cloning the repo first. Both
-entrypoints are thin wrappers around `scripts/install` — same payload,
+entrypoints are thin wrappers around `src/scripts/install` — same payload,
 same flags, no extra state.
 
 ### `npx` (Node ≥ 18)
@@ -189,18 +190,18 @@ npx @event4u/agent-config init --ref=main --yes
 ```
 
 `npx @event4u/agent-config init` fetches the latest tarball, runs
-`bash scripts/install --target <cwd> …`, and the install script handles
+`bash src/scripts/install --target <cwd> …`, and the install script handles
 its own cleanup. The same package exposes every other `agent-config`
 subcommand (`sync`, `validate`, `mcp:render`, `roadmap:progress`, …) —
 see `npx @event4u/agent-config help`.
 
-### `curl | bash` (no Node required)
+### `curl | bash` (registry-independent)
 
 ```bash
 # Defaults (interactive picker if your terminal is a TTY, else --tools=all)
 curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash
 
-# Explicit tools, non-interactive (same flags as scripts/install)
+# Explicit tools, non-interactive (same flags as src/scripts/install)
 curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh \
   | bash -s -- --tools=claude-code,cursor --yes
 
@@ -209,12 +210,21 @@ curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.
   | bash -s -- --ref=v1.39.0 --tools=cursor --yes
 ```
 
-Requires `bash`, `tar`, `curl` (or `wget`), and Python ≥ 3.10 on the
-host. Mirrors a common install-script pattern.
+Requires `bash`, `tar`, `curl` (or `wget`), and **Node ≥ 20** on the host
+(`setup.sh` runs `need_cmd node`). Python is **not** required.
+
+This door used to be documented as "no Node required"; that stopped being true
+when the bridge stage moved to a pre-bundled `dist/install/install.mjs` run via
+plain `node`. What it still uniquely provides is different and real: it fetches
+a GitHub tarball and runs a **dependency-inlined** bundle, so it never performs
+npm dependency resolution — which is exactly the failure mode
+[`ETARGET` / `No matching version found`](troubleshooting.md#npm-error-etarget--no-matching-version-found)
+describes on the registry path. Use it when the registry path cannot resolve:
+restricted networks, mirrored or private registries, stale cached metadata.
 
 ### Interactive `--tools` picker
 
-When `scripts/install` runs without an explicit `--tools` flag in an
+When `src/scripts/install` runs without an explicit `--tools` flag in an
 interactive terminal (stdin + stdout both TTYs, `--yes` not passed), it
 prompts for a comma-separated tool selection. In CI / piped invocations
 the picker is skipped and the backward-compatible `all` default is
@@ -234,7 +244,7 @@ npx @event4u/agent-config init --tools=claude-code,cursor
 ```
 
 `npx` fetches the latest `@event4u/agent-config` tarball and runs
-`scripts/install` with the selected tools. Nothing is added to
+`src/scripts/install` with the selected tools. Nothing is added to
 `package.json`.
 
 ### Global CLI (one install per machine)
@@ -299,23 +309,23 @@ follows whichever version the global CLI was installed at. Pin
 explicitly by adding `agent_config_version: <semver>` to
 `.agent-settings.yml` when you want a reproducible runtime.
 
-### Installer orchestrator (`scripts/install`)
+### Installer orchestrator (`src/scripts/install`)
 
 The orchestrator chains payload sync and bridge generation:
 
 ```bash
-bash scripts/install                  # defaults to rule_loading_tier=balanced
-bash scripts/install --profile=minimal
-bash scripts/install --force          # overwrite existing bridges
-bash scripts/install --skip-bridges   # payload only
-bash scripts/install --skip-sync      # bridges only
-bash scripts/install --dry-run        # show payload sync plan, skip bridges
+bash src/scripts/install                  # defaults to rule_loading_tier=balanced
+bash src/scripts/install --profile=minimal
+bash src/scripts/install --force          # overwrite existing bridges
+bash src/scripts/install --skip-bridges   # payload only
+bash src/scripts/install --skip-sync      # bridges only
+bash src/scripts/install --dry-run        # show payload sync plan, skip bridges
 ```
 
 Under the hood:
 
-- `scripts/install.sh` — payload sync (callable directly for sync-only runs).
-- `scripts/install.py` — bridge files (callable directly for bridge-only runs).
+- `src/scripts/install.sh` — payload sync (callable directly for sync-only runs).
+- `src/scripts/install.ts` — bridge files (callable directly for bridge-only runs).
   Two install.py-specific flags worth knowing:
   - `--dry-run` prints a plan summary (profile · scope · tools · target ·
     wizard auto-launch decision) and exits 0 without writing files or
@@ -338,12 +348,12 @@ A full run creates:
 No Task, no Make, no build tools required. **Python 3** (standard library only)
 is required for bridges — it is pre-installed on macOS 12.3+ and virtually
 every Linux distribution. If Python 3 is missing, the orchestrator warns,
-runs the payload sync anyway, and asks you to re-run `scripts/install`
+runs the payload sync anyway, and asks you to re-run `src/scripts/install`
 after installing Python.
 
 ### What happens after install
 
-`scripts/install` creates project-local content for all supported tools:
+`src/scripts/install` creates project-local content for all supported tools:
 - `.augment/rules/`, `.augment/skills/`, `.augment/commands/` — for Augment
 - `.cursor/rules/` — for Cursor
 - `.clinerules/` — for Cline
@@ -554,7 +564,7 @@ the matching Linear field.
 ## Alternative install methods — `advanced`
 
 > `advanced` — supported fallbacks for users comfortable driving the
-> orchestrator directly. They share the same `scripts/install` entry
+> orchestrator directly. They share the same `src/scripts/install` entry
 > point as Composer and npm; the only difference is how the package
 > source ends up on disk. Pick these when you cannot use Composer or
 > npm (e.g. a polyglot repo without either, or a CI runner that
@@ -624,12 +634,12 @@ If the agent behaves differently than before — it's working.
 
 ### Two-stage pipeline
 
-`scripts/install` runs these stages in order:
+`src/scripts/install` runs these stages in order:
 
 | Stage | Script | Output |
 |---|---|---|
-| 1. Payload sync | `scripts/install.sh` | `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md` |
-| 2. Bridges     | `scripts/install.py` | `.agent-settings.yml`, `.vscode/settings.json`, `.augment/settings.json`, `.github/plugin/marketplace.json` |
+| 1. Payload sync | `src/scripts/install.sh` | `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md` |
+| 2. Bridges     | `src/scripts/install.ts` | `.agent-settings.yml`, `.vscode/settings.json`, `.augment/settings.json`, `.github/plugin/marketplace.json` |
 
 Either stage can be skipped (`--skip-sync`, `--skip-bridges`) or invoked
 directly. Stage 2 is gracefully skipped when Python 3 is unavailable.
@@ -665,7 +675,7 @@ your-project/
 ### CLI options
 
 ```
-bash scripts/install [OPTIONS]
+bash src/scripts/install [OPTIONS]
 
 Options:
   --source <dir>    Package source directory (default: auto-detect)
@@ -681,7 +691,7 @@ Options:
 ```
 
 The underlying stages keep their own CLI surfaces:
-`bash scripts/install.sh --help` and `npx @event4u/agent-config install --help`.
+`bash src/scripts/install.sh --help` and `npx @event4u/agent-config install --help`.
 
 ---
 

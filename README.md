@@ -113,7 +113,7 @@ shows the wired AIs; [`docs/featured-commands.md`](docs/featured-commands.md)
 lists the end-to-end workflows (`/implement-ticket`, `/work`,
 `/commit`, `/pr:create`). Deeper tour: [2-minute demo](#2-minute-demo--implement-ticket).
 
-**Install scope.** Pick **one** scope per machine — project-local (default, recommended for application repos) or user-global (recommended for tooling repos / dotfiles). The installer refuses a second, conflicting scope via the `scope_guard` pre-flight. Details: [`docs/contracts/install-scopes.md`](docs/contracts/install-scopes.md). Cleanup when needed: `bash scripts/cleanup_other_scope.sh --confirm`.
+**Install scope.** Pick **one** scope per machine — project-local (default, recommended for application repos) or user-global (recommended for tooling repos / dotfiles). The installer refuses a second, conflicting scope via the `scope_guard` pre-flight. Details: [`docs/contracts/install-scopes.md`](docs/contracts/install-scopes.md). Cleanup when needed: `bash src/scripts/cleanup_other_scope.sh --confirm`.
 
 ## Prove it
 
@@ -166,7 +166,15 @@ by hunting mocks/stubs on the shipped path and demanding real-system evidence
 ([what it does](docs/wedge/production-validator/README.md)). Like it? Install the
 full suite:
 
-**Three steps. Five minutes. Browser wizard, no YAML by hand.**
+**One command. Detection-driven — your installed AI tools are found and
+pre-selected. Nothing is written until you click Finish. No YAML by hand.**
+
+Those four are structural: they hold on every run, because they are properties
+of the code path rather than of your machine. How *long* it takes is not one of
+them — that is dominated by network and registry latency, which we do not
+control. The install → `doctor` wall-clock is measured by CI on every umbrella
+run and published with its conditions, as evidence; it is never a promised
+number.
 
 ```bash
 # 1. Install — on a terminal with a display, the browser wizard launches
@@ -180,26 +188,15 @@ npx -y @event4u/agent-config init
 /work "your first real task"
 ```
 
-**Headless / CI:** `init` skips the GUI automatically when `CI` is set, stdout is not a TTY, `--no-ui` is passed, **or** an explicit `--tools=` selection is given — it then runs the non-interactive installer directly. Pass flags (`--profile=developer --tools=claude-code,cursor`); add `--dry-run` to preview writes. The GUI and the CLI share one installer (`scripts/install.ts`), so both produce identical results. Reference: [`docs/wizard.md`](docs/wizard.md).
+**Headless / CI:** `init` skips the GUI automatically on CI, on a non-TTY, on a headless host, and whenever any CLI-mode flag is present — it then runs the non-interactive installer directly. The full opt-out set is listed once, against the code, in [`gui-wizard` § When the GUI is skipped](docs/contracts/gui-wizard.md#when-the-gui-is-skipped). Pass flags (`--profile=developer --tools=claude-code,cursor`); add `--dry-run` to preview writes. The GUI and the CLI share one installer (`src/scripts/install.ts`), so both produce identical results. Reference: [`docs/wizard.md`](docs/wizard.md).
 
-**Pick specific AIs:** `--tools=claude-code,cursor,augment,windsurf,cline,gemini-cli,copilot,roocode,aider,codex,claude-desktop,continue` (any subset). Visual picker: add `--gui` (loopback-bound, CSRF-gated; contract [`gui-wizard`](docs/contracts/gui-wizard.md)).
+**Pick specific AIs:** `--tools=claude-code,cursor,augment,windsurf,cline,gemini-cli,copilot,roocode,aider,codex,claude-desktop,continue` (any subset). Visual picker: add `--gui` (loopback-bound, CSRF-gated; contract [`gui-wizard`](docs/contracts/gui-wizard.md)). `--gui` is an opt-in that forces the wizard past the TTY and headless checks — it does **not** override `CI`, `AGENT_CONFIG_NO_UI`, or a CLI-mode flag; combining it with one of those exits non-zero rather than quietly running the CLI install. On a headless host add `--allow-headless` and connect a browser to the printed URL.
 
 **Verify hook coverage:** `npx @event4u/agent-config hooks:status` prints the per-platform matrix (`--strict` for CI, `--format json` for tooling).
 
 > **Scope (v2.5+):** `init` writes **global** only — `~/.event4u/agent-config/`, `~/.claude/`, `~/.cursor/`, …. The project tree gets `agents/overrides/` only (the bridge marker was retired — ADR-020 amendment 2026-07-13; the global root resolves from `~/.event4u/agent-config`). `--project` is maintainer-only behind `AGENT_CONFIG_DEV_MODE=1` ([ADR-020](docs/decisions/ADR-020-global-only-consumer-scope.md), [dev-mode](docs/maintainers/dev-mode.md)).
 
 Migrating from a v1.x install? `npx @event4u/agent-config migrate` — full notes in [`docs/migration/v1-to-v2.md`](docs/migration/v1-to-v2.md).
-
-> **`npm error ETARGET` / `No matching version found for <dep>`?** Re-run with a
-> forced fresh metadata fetch:
-> ```bash
-> npx -y --prefer-online @event4u/agent-config init
-> ```
-> This happens when the project's `.npmrc` sets `prefer-offline=true` (or points
-> at a private-registry mirror): npm resolves our dependencies against stale
-> cached metadata that predates a recently published version. `--prefer-online`
-> bypasses the cache for this run; `npm cache verify` fixes it permanently for
-> that machine.
 
 ---
 

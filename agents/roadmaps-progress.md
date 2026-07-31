@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
+> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **15** open blockers
 
 ## Overall
 
-**48 / 226 steps done · 21%**
+**48 / 209 steps done · 23%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   23%
 ```
 
 ## Open roadmaps
@@ -18,20 +18,20 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
-| 6 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-local-ci-trust.md](roadmaps/road-to-local-ci-trust.md) | 3 | 6 | 3 | 0 | 3 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 10 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 15 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
-| 16 | [road-to-zero-ceremony-install.md](roadmaps/road-to-zero-ceremony-install.md) | 6 | 22 | 22 | 0 | 0 | 0 | [2](#blockers-road-to-zero-ceremony-install) | ░░░░░░░░░░ 0% |
+| 3 | [road-to-consistent-rule-scoping.md](roadmaps/road-to-consistent-rule-scoping.md) | 2 | 5 | 5 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
+| 7 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-local-ci-trust.md](roadmaps/road-to-local-ci-trust.md) | 3 | 6 | 3 | 0 | 3 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 11 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 16 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -70,6 +70,15 @@ _2 blockers resolved._
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
+### [road-to-consistent-rule-scoping.md](roadmaps/road-to-consistent-rule-scoping.md)
+
+**Road to consistent rule scoping — the CLI global install ships rules the wizard filters out** — 0 / 5 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Filter the copy and the inventory together | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Pin it where nothing looks today | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 
@@ -344,50 +353,6 @@ _1 blocker resolved._
     3. If (b) or (c), record an ADR amendment — this reverses a considered
     decision and must not land as an unexplained diff.
   - **Resolved when:** an ADR amendment names the chosen option, or the threat-model row is marked accepted-risk with a dated rationale.
-
-### [road-to-zero-ceremony-install.md](roadmaps/road-to-zero-ceremony-install.md)
-
-**Road to zero-ceremony install — make the install claim true before making it shorter** — 0 / 22 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Make every install statement true | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Cover the npm failure mode the rescue door absorbs | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Door consolidation, gated on Phase 2 | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Payload budget with CI teeth | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 5 | Narrow emitter audit (what survives of the unification proposal) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | Cold-start evidence | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-zero-ceremony-install"></a>
-**Blockers**
-
-- **curl-door-disposition** (owner: maintainer) — blocks Phase 3
-  - **What to do:**
-    1. Read the Phase-2 result: does the npx path now handle the registry
-    resolution failure without prose?
-    2. Decide whether a registry-independent install path is still wanted for
-    restricted networks and mirrored registries.
-    3. Note the constraint either way: the raw URL is a declared public contract
-    with CI coverage across 3 OS × 2 Node versions — it must keep resolving
-    even if the script becomes a stub.
-  - **Resolved when:** the disposition is recorded in this roadmap with its reason, and the smoke workflow reflects it.
-- **browser-handoff-default** (owner: maintainer) — blocks any change making the non-browser path the default
-  - **What to do:**
-    1. Note what is already true: the terminal path is already prompt-free, the
-    Recommended path already asks zero questions (two confirmations), and
-    detection already pre-selects. The remaining delta is the browser handoff
-    itself, not choice overload.
-    2. Note what stands in the way: an accepted ADR makes the browser handoff the
-    interactive default, and the onboarding-gate rule — tier-1, hook-enforced
-    — names the browser wizard the sole onboarding surface. Inverting this is
-    a kernel-rule edit: own PR, ≥ 24 h between merges, per the slow-rollout
-    gate.
-    3. Note what is missing: there is no usage evidence either way, because zero
-    external onboarding sessions have completed. The instrument that would
-    produce it is the recruited session already open in the adoption roadmap.
-    4. Decide: supersede the ADR and edit the rule, or keep the handoff and let
-    `--no-ui` remain the documented escape.
-  - **Resolved when:** an ADR supersession plus a kernel-rule edit PR exists, or this roadmap records the handoff as retained by decision.
 
 ---
 

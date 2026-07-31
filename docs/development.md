@@ -178,28 +178,29 @@ fetches the published version from the registry. Either run `npm link
 .claude-plugin/                ← Plugin manifest (Claude Code)
 .github/plugin/                ← Plugin manifest (Copilot CLI)
 
-scripts/
-├── install                    ← Primary installer (orchestrator)
+setup.sh                       ← Curl-door entrypoint (repo root, public URL)
+
+src/scripts/
+├── install                    ← Primary installer (bash orchestrator)
 ├── install.sh                 ← Payload sync stage (hybrid copy + symlink)
-├── install.py                 ← Bridge files stage (.agent-settings.yml, JSONs)
-├── postinstall.sh             ← npm postinstall hook → scripts/install
-├── setup.sh                   ← One-time Composer hook setup
-├── check_condensation.py       ← Condensation quality checker
-├── skill_linter.py            ← Skill/rule/command linter
-├── lint_regression.py         ← Branch regression detection
-├── generate_tools.sh          ← Generate tool-specific directories
-├── check_references.py        ← Cross-reference validator
-├── ci_summary.py              ← GitHub Actions job summary (dispatcher runs)
+├── install.ts                 ← Bridge files stage (.agent-settings.yml, JSONs);
+│                                ships pre-bundled as dist/install/install.mjs
+├── install-hooks.sh           ← Git-hook installer (npm `prepare`)
+├── check_condensation.ts      ← dist == rewrite(src) byte-exactness gate
+├── skill_linter.ts            ← Skill/rule/command linter
+├── lint_regression.ts         ← Branch regression detection
+├── condense.ts                ← Projection; `--generate-tools` emits the tool trees
+├── check_references.ts        ← Cross-reference validator
+├── ci_summary.ts              ← GitHub Actions job summary (dispatcher runs)
 └── tools/
-    ├── base_adapter.py        ← Tool adapter contract
-    ├── github_adapter.py      ← GitHub API adapter
-    └── jira_adapter.py        ← Jira API adapter
+    ├── base_adapter.ts        ← Tool adapter contract
+    ├── github_adapter.ts      ← GitHub API adapter
+    └── jira_adapter.ts        ← Jira API adapter
 
 tests/
 ├── test_install.sh            ← install.sh payload-sync integration tests
-├── test_install_orchestrator.sh ← scripts/install end-to-end tests
-├── test_skill_linter.py       ← Linter unit tests
-└── test_ci_summary.py         ← CI summary tests
+├── test_install_orchestrator.sh ← src/scripts/install end-to-end tests
+└── scripts/                   ← vitest unit tests, 1:1 with src/scripts/*.ts
 
 .github/workflows/
 ├── skill-lint.yml             ← Lint + PR comment workflow

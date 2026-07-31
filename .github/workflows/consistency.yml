@@ -199,6 +199,19 @@ jobs:
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget
 
+      - name: Runtime dependency floors are settled minors (ETARGET unreachable)
+        # npm resolves `dependencies` on the CONSUMER's machine, before our bin
+        # is executed — a floor pinned to a just-published patch cannot be
+        # retried or explained at runtime, only prevented here.
+        run: task check-dependency-floors
+
+      - name: Payload budget — compressed tarball + per-skill share
+        # Buildless (`npm pack --ignore-scripts`), so it runs on EVERY PR in
+        # seconds and catches content accretion where it happens. The built
+        # artifact's unpacked size stays owned by the release-time
+        # evaluator-umbrella budget; this is not a second gate on that number.
+        run: task check-pack-size
+
       - name: Token-surface regression (>5% over the recorded baseline)
         # `internal/bench/reports/projection-cost.json` is gitignored, so it never
         # exists on a fresh checkout. The task target carries `deps: [audit-tokens]`

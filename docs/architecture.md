@@ -70,10 +70,17 @@ src/                      ──Pipeline A──▶  dist/agent-src/
 | **C.** Multi-tool projection | [`architecture/multi-tool-projection.md`](architecture/multi-tool-projection.md) | `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md` |
 | **D.** Claude.ai bundle | [`architecture/claude-bundle.md`](architecture/claude-bundle.md) | `dist/cloud/<skill>.zip` |
 
-The drift check
-[`tests/test_architecture_docs_pipelines.py`](../tests/test_architecture_docs_pipelines.py)
-fails if any of the four sub-pages exists without its cited script /
-Taskfile target — or vice versa.
+> **No drift check guards these names.** This page used to claim that
+> `tests/test_architecture_docs_pipelines.py` failed when a sub-page lost its
+> cited script or Taskfile target. That test went with the Python suite
+> (ADR-200) and was never replaced, so the claim was false — nothing asserts
+> pipeline-name ↔ sub-page ↔ script consistency today. Recorded rather than
+> quietly deleted: "a gate exists" is the most expensive kind of sentence to be
+> wrong about.
+>
+> Note also that **A–D do not name the consumer install path**. Install-time
+> code that used to call itself "Pipeline B" (colliding with the Augment
+> projection above) now says "the consumer install".
 
 ### Canonical distribution channel per AI tool
 

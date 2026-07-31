@@ -39,7 +39,7 @@ Entry-point map (road-to-setup-experience § Phase 1):
 - Atomic / 2PC writes: [`src/server/io/atomicWrite.ts`](../../src/server/io/atomicWrite.ts), [`atomicMultiWrite.ts`](../../src/server/io/atomicMultiWrite.ts)
 - SPA: [`src/ui/`](../../src/ui/) (entry `src/ui/pages/WizardPage.tsx`)
 - CLI boot + `WIZARD_READY` contract: [`src/cli/commands/uiServe.ts`](../../src/cli/commands/uiServe.ts)
-- The single installer (all real writes): [`scripts/install.py`](../../src/scripts/install.py)
+- The single installer (all real writes): [`src/scripts/install.ts`](../../src/scripts/install.ts)
 - Tests: [`tests/server/`](../../tests/server/) + [`tests/e2e/`](../../tests/e2e/)
 
 ## Local-only invariant
@@ -70,13 +70,41 @@ in that path; the wizard collects the tool/pack/settings selection and its
 Finish drives the **whole** install through `POST /api/v1/wizard/apply` →
 `scripts/install.py --apply-payload` (one installer).
 
-`init` falls back to the non-interactive bash CLI install (`scripts/install` →
-`install.py`) — and never boots the GUI — when any of these hold: `CI` set,
-`AGENT_CONFIG_NO_UI` set, stdin/stdout not a TTY, a headless host (SSH / Linux
-without `DISPLAY`), or a CLI-mode flag (`--no-ui` / `--tools` / `--ai` /
-`--yes` / `--quiet` / `--dry-run` / `--minimal` / `--settings-only` /
-`--list-tools` / `--project`). `install.py`'s own tail-launch (`_wizard_spawn`, matching the
+`init` falls back to the non-interactive bash CLI install (`src/scripts/install`
+→ `src/scripts/install.ts`) and never boots the GUI when any opt-out below
+holds. `install.ts`'s own tail-launch (`_wizard_spawn`, matching the
 `WIZARD_READY <url>` handshake) remains for direct CLI install runs.
+
+### When the GUI is skipped
+
+This section is the single place the opt-out set is written down. Every other
+surface links here instead of restating a partial list. There are **two**
+gates, and they do not agree — the divergence is real, documented rather than
+papered over, and is the reason a partial restatement elsewhere is always
+wrong for one path or the other.
+
+**Gate A — the `init` front door.** [`shouldInitLaunchGui`](../../src/cli/initRouting.ts)
+returns `false`, so no GUI, on the first match of:
+
+| # | Opt-out | Exact condition |
+|---|---|---|
+| 1 | `CI` | env set, non-empty, and not `"0"` |
+| 2 | `AGENT_CONFIG_NO_UI` | env set, non-empty, and not `"0"` |
+| 3 | Not a TTY | `stdin` **or** `stdout` is not a TTY |
+| 4 | Headless host | `SSH_CONNECTION` set, or Linux with no `DISPLAY` |
+| 5 | A CLI-mode flag | any of `--no-ui` `--tools` `--ai` `--yes` `-y` `--quiet` `-q` `--dry-run` `--minimal` `--settings-only` `--list-tools` `--validate-only` `--fleet` `--project` (both `--flag value` and `--flag=value` forms) |
+
+**Gate B — the installer's tail-launch.** [`_wizard_should_launch`](../../src/scripts/install.ts)
+fires on a direct `src/scripts/install` run, and its set is *narrower*:
+`--no-ui`, `AGENT_CONFIG_NO_UI`, `CI` (here with **no** `"0"` exemption),
+`stdout` not a TTY, and an explicit `--tools=` that is not `all`. Gate B does
+**not** check `stdin`, does **not** check headless/`SSH_CONNECTION`/`DISPLAY`,
+and does **not** honour `--yes` / `--quiet` / `--dry-run` / `--minimal` /
+`--ai` / `--fleet` / `--project`.
+
+Consequence to keep in mind when reasoning about a report: `CI=0` suppresses the
+GUI on a direct installer run but not through `init`; an SSH session suppresses
+it through `init` but not on a direct installer run.
 
 ### `WIZARD_READY` stdout contract
 
