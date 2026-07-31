@@ -15,6 +15,7 @@ tasks:
       - ./scripts-run src/scripts/check_bridge_derivation
       - ./scripts-run src/scripts/check_host_loadability --root .
       - ./scripts-run src/scripts/check_bundle_path_leakage
+      - ./scripts-run src/scripts/check_installer_import_purity
       - ./scripts-run src/scripts/check_backstop_debt
       - ./scripts-run src/scripts/lint_topics_yaml
       - ./scripts-run src/scripts/build_mcp_catalog --strict
