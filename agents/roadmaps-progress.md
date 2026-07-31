@@ -6,7 +6,7 @@
 
 ## Overall
 
-**48 / 204 steps done · 24%**
+**48 / 220 steps done · 22%**
 
 ```text
 ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
@@ -30,7 +30,8 @@
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 16 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -301,11 +302,11 @@ _1 blocker resolved._
 
 ### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
 
-**Road to UI-track integrity — follow-up: is the model-tier allocation backwards?** — 0 / 6 done (0%)
+**Road to UI-track integrity — follow-up: two measurements, one missing harness** — 0 / 10 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure the allocation | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Two measurements against the same harness | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
 
 ---
 

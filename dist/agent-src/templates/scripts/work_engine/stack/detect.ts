@@ -123,6 +123,49 @@ const _UNMODELLED_MARKERS: ReadonlyArray<string> = [
 type Manifest = { [key: string]: unknown };
 
 /**
+ * The independent axes a frontend stack actually varies along.
+ *
+ * A flat label forces all-or-nothing matches: `livewire ∧ flux` was never the
+ * bug, it was the symptom of collapsing three axes into one enum value. The
+ * measured proof is Nuxt — `nuxt` is on the unmodelled-marker list, but the
+ * project is labelled `vue` because Vue is a Nuxt dependency and matched first.
+ * No ordering of one list can express "Nuxt implies Vue but is not Vue".
+ *
+ * Axes are **additive**: the flat `frontend` label keeps its existing
+ * computation untouched, so the eight shipped labels are byte-stable by
+ * construction rather than by test. Dispatch composition reads the axes.
+ *
+ * `'none'` means "this axis is genuinely absent" (a Blade app has no JS
+ * component library); `'unknown'` means "not recognised", which is a different
+ * fact and must not be conflated with absence.
+ */
+export interface StackAxes {
+    /** Template / view layer — what markup is authored in. */
+    readonly view: string;
+    /** Reactivity layer — what drives updates. */
+    readonly reactivity: string;
+    /** Component library on top of the reactivity layer. */
+    readonly component_lib: string;
+    /** Styling system. */
+    readonly css: string;
+    /**
+     * Meta-framework wrapping the reactivity layer (Nuxt over Vue, Next over
+     * React, Astro over anything). Its own axis precisely because it does not
+     * replace the layer underneath — which is what the flat label got wrong.
+     */
+    readonly meta: string;
+}
+
+/** Every axis unresolved — the shape for a project with no signals at all. */
+const _EMPTY_AXES: StackAxes = {
+    view: 'none',
+    reactivity: 'none',
+    component_lib: 'none',
+    css: 'none',
+    meta: 'none',
+};
+
+/**
  * Outcome of one detection pass.
  *
  * `mtime` is the latest mtime among the manifests actually consulted
@@ -138,10 +181,28 @@ type Manifest = { [key: string]: unknown };
 export class StackResult {
     readonly frontend: string;
     readonly mtime: number;
+    /** Multi-axis view of the same detection. See {@link StackAxes}. */
+    readonly axes: StackAxes;
+    /**
+     * Conflicting signals on one axis, e.g. `['reactivity: react + vue']`.
+     *
+     * Non-empty means the project is genuinely two things and the detector
+     * refuses to pick. Guessing a priority order is the worse property for a
+     * global package: asking costs one turn, a wrong silent pick costs the
+     * whole run.
+     */
+    readonly ambiguity: ReadonlyArray<string>;
 
-    constructor(args: { frontend: string; mtime: number }) {
+    constructor(args: {
+        frontend: string;
+        mtime: number;
+        axes?: StackAxes;
+        ambiguity?: ReadonlyArray<string>;
+    }) {
         this.frontend = args.frontend;
         this.mtime = args.mtime;
+        this.axes = args.axes ?? _EMPTY_AXES;
+        this.ambiguity = args.ambiguity ?? [];
     }
 }
 
@@ -164,34 +225,50 @@ export function detect_stack(project_root: string): StackResult {
     const components_json = _is_file(path.join(project_root, 'components.json'));
     const mtime = latest_manifest_mtime(project_root);
 
+    // Axes are computed once and attached to every result below. The label
+    // chain that follows is UNCHANGED — that is deliberate, so the eight
+    // shipped labels stay byte-stable by construction rather than by test.
+    // Composition reads `axes`; only the ambiguity guard alters a label.
+    const axes = _detect_axes(composer, pkg, components_json, project_root);
+    const ambiguity = _detect_ambiguity(composer, pkg);
+    const _r = (frontend: string): StackResult =>
+        new StackResult({ frontend, mtime, axes, ambiguity });
+
+    // Conflicting signals on one axis: refuse rather than let the priority
+    // chain below silently pick a winner. Measured baseline: react + vue in
+    // one manifest resolved to `react` with no warning at all.
+    if (ambiguity.length > 0) {
+        return _r(UNSUPPORTED_STACK);
+    }
+
     if (_is_blade_livewire_flux(composer)) {
-        return new StackResult({ frontend: 'blade-livewire-flux', mtime });
+        return _r('blade-livewire-flux');
     }
 
     // Filament before bare Livewire: it pulls Livewire in transitively, so a
     // Filament project would otherwise be labelled by its dependency rather
     // than by the framework the developer actually works in.
     if (_has_package(composer, ['require', 'require-dev'], _FILAMENT_PACKAGE)) {
-        return new StackResult({ frontend: 'filament', mtime });
+        return _r('filament');
     }
 
     // Livewire WITHOUT Flux is the common Laravel frontend, not an unknown
     // one. It used to fail the `&&` above and land in `plain`.
     if (_has_package(composer, ['require', 'require-dev'], _LIVEWIRE_PACKAGE)) {
-        return new StackResult({ frontend: 'blade-livewire', mtime });
+        return _r('blade-livewire');
     }
 
     if (_is_react_shadcn(pkg, components_json)) {
-        return new StackResult({ frontend: 'react-shadcn', mtime });
+        return _r('react-shadcn');
     }
 
     // React without Radix/shadcn is a served stack, not an unknown one.
     if (_has_package(pkg, _PKG_DEP_KEYS, 'react')) {
-        return new StackResult({ frontend: 'react', mtime });
+        return _r('react');
     }
 
     if (_has_vue(pkg)) {
-        return new StackResult({ frontend: 'vue', mtime });
+        return _r('vue');
     }
 
     // A recognised-but-unmodelled framework is NOT `plain`. Refusing here is
@@ -199,7 +276,7 @@ export function detect_stack(project_root: string): StackResult {
     // is what let a Svelte or Inertia project receive Tailwind-only tooling
     // and no warning.
     if (_has_unmodelled_marker(composer, pkg)) {
-        return new StackResult({ frontend: UNSUPPORTED_STACK, mtime });
+        return _r(UNSUPPORTED_STACK);
     }
 
     // Monorepo: no manifest at the root, but one sits in a workspace directory.
@@ -209,11 +286,36 @@ export function detect_stack(project_root: string): StackResult {
     //
     // A repo with no manifest ANYWHERE stays `plain`: that is greenfield, and
     // the scaffold path depends on it.
-    if (mtime === 0.0 && _has_nested_manifest(project_root)) {
-        return new StackResult({ frontend: UNSUPPORTED_STACK, mtime });
+    if (mtime === 0.0) {
+        const roots = _nested_frontend_roots(project_root);
+        if (roots.length === 1) {
+            // Unambiguous scope: descend once and keep the workspace's own
+            // axes. Refusing here would punish the common monorepo shape for a
+            // scope decision the layout already makes.
+            const inner = detect_stack(roots[0] as string);
+            return new StackResult({
+                frontend: inner.frontend,
+                mtime: inner.mtime,
+                axes: inner.axes,
+                ambiguity: inner.ambiguity,
+            });
+        }
+        if (roots.length > 1) {
+            // Several frontend roots: the caller owns scope selection, so name
+            // them and let the step ask. Picking the first would be the silent
+            // guess this detector exists to avoid.
+            return new StackResult({
+                frontend: UNSUPPORTED_STACK,
+                mtime,
+                axes,
+                ambiguity: [
+                    `workspace roots: ${roots.map((r) => path.basename(r)).join(' + ')}`,
+                ],
+            });
+        }
     }
 
-    return new StackResult({ frontend: DEFAULT_STACK, mtime });
+    return _r(DEFAULT_STACK);
 }
 
 /**
@@ -226,9 +328,8 @@ export function detect_stack(project_root: string): StackResult {
  * sentinel rather than a missing-file error.
  */
 export function latest_manifest_mtime(project_root: string): number {
-    const candidates = ['composer.json', 'package.json'];
     const mtimes: number[] = [];
-    for (const name of candidates) {
+    for (const name of _CACHE_KEY_FILES) {
         const p = path.join(project_root, name);
         if (_is_file(p)) {
             mtimes.push(_stat_mtime(p));
@@ -236,6 +337,26 @@ export function latest_manifest_mtime(project_root: string): number {
     }
     return mtimes.length > 0 ? Math.max(...mtimes) : 0.0;
 }
+
+/**
+ * Files whose mtime invalidates a cached detection.
+ *
+ * The two manifests are not sufficient: the signal table also reads marker
+ * files, so adding `components.json` or a `nuxt.config.ts` changes the detected
+ * axes while leaving both manifests untouched — and the cache would have served
+ * the pre-marker answer indefinitely.
+ *
+ * `components.json` is listed first so a shadcn adoption, the most common of
+ * these, is picked up.
+ */
+const _CACHE_KEY_FILES: ReadonlyArray<string> = [
+    'composer.json',
+    'package.json',
+    'components.json',
+    'nuxt.config.ts',
+    'nuxt.config.js',
+    'astro.config.mjs',
+];
 
 /**
  * Read a JSON manifest, returning `{}` on any error.
@@ -298,18 +419,181 @@ function _has_package(
     return name in _all_dependencies(manifest, ...sections);
 }
 
+/**
+ * Signal table, one entry per axis value.
+ *
+ * `first match wins` applies **per axis only** — collapsing that across axes is
+ * the original defect. A Nuxt project matches `meta: nuxt` AND
+ * `reactivity: vue`; both are true, and the flat label could hold only one.
+ *
+ * Order within an axis is specificity-descending: a marker file beats a bare
+ * dependency, and a wrapper is listed before what it wraps.
+ */
+const _AXIS_SIGNALS: ReadonlyArray<{
+    readonly axis: keyof StackAxes;
+    readonly value: string;
+    readonly npm?: ReadonlyArray<string>;
+    readonly npm_prefix?: ReadonlyArray<string>;
+    readonly composer?: ReadonlyArray<string>;
+    readonly files?: ReadonlyArray<string>;
+}> = [
+    // meta — wrappers, checked before the layer they wrap
+    { axis: 'meta', value: 'nextjs', npm: ['next'] },
+    { axis: 'meta', value: 'nuxt', npm: ['nuxt'], files: ['nuxt.config.ts', 'nuxt.config.js'] },
+    { axis: 'meta', value: 'astro', npm: ['astro'], files: ['astro.config.mjs'] },
+    { axis: 'meta', value: 'remix', npm: ['@remix-run/react'] },
+    { axis: 'meta', value: 'sveltekit', npm: ['@sveltejs/kit'] },
+    { axis: 'meta', value: 'filament', composer: ['filament/filament'] },
+
+    // reactivity
+    { axis: 'reactivity', value: 'react', npm: ['react'] },
+    { axis: 'reactivity', value: 'vue', npm: ['vue'] },
+    { axis: 'reactivity', value: 'svelte', npm: ['svelte'] },
+    { axis: 'reactivity', value: 'angular', npm: ['@angular/core'] },
+    { axis: 'reactivity', value: 'solid', npm: ['solid-js'] },
+    { axis: 'reactivity', value: 'qwik', npm: ['@builder.io/qwik'] },
+    { axis: 'reactivity', value: 'livewire', composer: ['livewire/livewire'] },
+    { axis: 'reactivity', value: 'alpine', npm: ['alpinejs'] },
+    { axis: 'reactivity', value: 'htmx', npm: ['htmx.org'] },
+
+    // view
+    { axis: 'view', value: 'svelte-sfc', npm: ['svelte'] },
+    { axis: 'view', value: 'vue-sfc', npm: ['vue'] },
+    // Angular templates are HTML with its own directive syntax, not JSX.
+    // Listing it under `jsx` was wrong and would have handed a React idiom to
+    // an Angular project through the Phase-3 composition.
+    { axis: 'view', value: 'angular-html', npm: ['@angular/core'] },
+    { axis: 'view', value: 'astro', npm: ['astro'] },
+    { axis: 'view', value: 'jsx', npm: ['react'] },
+    { axis: 'view', value: 'blade', composer: ['laravel/framework'] },
+
+    // component_lib — marker file beats dependency
+    { axis: 'component_lib', value: 'shadcn', npm: ['shadcn-ui', 'shadcn'], files: ['components.json'] },
+    { axis: 'component_lib', value: 'radix', npm_prefix: ['@radix-ui/'] },
+    { axis: 'component_lib', value: 'flux', composer: ['livewire/flux'] },
+    { axis: 'component_lib', value: 'nuxt-ui', npm: ['@nuxt/ui'] },
+    { axis: 'component_lib', value: 'vuetify', npm: ['vuetify'] },
+    { axis: 'component_lib', value: 'mui', npm: ['@mui/material'] },
+
+    // css
+    { axis: 'css', value: 'tailwind', npm: ['tailwindcss'] },
+    { axis: 'css', value: 'bootstrap', npm: ['bootstrap'] },
+];
+
+/** Axes where two signals are a genuine conflict rather than a stack. */
+const _AMBIGUOUS_AXES: ReadonlyArray<keyof StackAxes> = ['reactivity'];
+
+/**
+ * Client-side SPA frameworks — two of these in one manifest is a real conflict.
+ *
+ * Everything else on the reactivity axis co-exists legitimately: Alpine and htmx
+ * are progressive-enhancement layers, and Livewire is server-driven, so
+ * Laravel+Livewire with a React widget is an ordinary stack, not an ambiguity.
+ * Treating any two reactivity signals as a conflict refused those projects —
+ * caught by the existing blade-wins-over-react precedence test.
+ */
+const _EXCLUSIVE_REACTIVITY: ReadonlySet<string> = new Set([
+    'react',
+    'vue',
+    'svelte',
+    'angular',
+    'solid',
+    'qwik',
+]);
+
+/** Resolve every axis independently from the manifests plus marker files. */
+function _detect_axes(
+    composer: Manifest,
+    pkg: Manifest,
+    components_json: boolean,
+    project_root: string,
+): StackAxes {
+    const npm = _all_dependencies(pkg, ..._PKG_DEP_KEYS);
+    const php = _all_dependencies(composer, 'require', 'require-dev');
+    const npm_names = Object.keys(npm);
+    const out: Record<string, string> = { ..._EMPTY_AXES };
+    const decided = new Set<string>();
+
+    for (const sig of _AXIS_SIGNALS) {
+        if (decided.has(sig.axis)) continue;
+        const hit =
+            (sig.npm ?? []).some((n) => n in npm) ||
+            (sig.npm_prefix ?? []).some((p) => npm_names.some((n) => n.startsWith(p))) ||
+            (sig.composer ?? []).some((n) => n in php) ||
+            (sig.files ?? []).some(
+                (f) =>
+                    (f === 'components.json' && components_json) ||
+                    _is_file(path.join(project_root, f)),
+            );
+        if (hit) {
+            out[sig.axis] = sig.value;
+            decided.add(sig.axis);
+        }
+    }
+
+    // An unresolved axis on a project that HAS manifests is "not recognised" —
+    // a different fact from "absent", and conflating them is what made a
+    // refusal indistinguishable from a genuinely plain project.
+    const has_manifest = npm_names.length > 0 || Object.keys(php).length > 0;
+    if (has_manifest) {
+        for (const axis of ['view', 'reactivity'] as const) {
+            if (!decided.has(axis)) out[axis] = 'unknown';
+        }
+    }
+    return out as unknown as StackAxes;
+}
+
+/** Report axes carrying two mutually exclusive signals. */
+function _detect_ambiguity(composer: Manifest, pkg: Manifest): string[] {
+    const npm = _all_dependencies(pkg, ..._PKG_DEP_KEYS);
+    const php = _all_dependencies(composer, 'require', 'require-dev');
+    const found: string[] = [];
+    for (const axis of _AMBIGUOUS_AXES) {
+        const hits = _AXIS_SIGNALS.filter(
+            (sig) =>
+                sig.axis === axis &&
+                ((sig.npm ?? []).some((n) => n in npm) ||
+                    (sig.composer ?? []).some((n) => n in php)),
+        )
+            .map((sig) => sig.value)
+            .filter((v) => _EXCLUSIVE_REACTIVITY.has(v));
+        if (hits.length > 1) {
+            found.push(`${axis}: ${hits.join(' + ')}`);
+        }
+    }
+    return found;
+}
+
 /** Workspace directories a monorepo conventionally puts its packages in. */
 const _WORKSPACE_DIRS: ReadonlyArray<string> = ['packages', 'apps', 'services', 'libs'];
 
 /**
- * True when no root manifest exists but a workspace directory holds one.
+ * Return the workspace roots that carry a manifest, sorted.
  *
- * Deliberately shallow — one `readdir` per conventional workspace directory,
- * one `stat` per child. It answers "was this called at the wrong scope?", not
- * "where is the real project", which stays the caller's job.
+ * Reads the declarative `workspaces` field when present and falls back to the
+ * conventional directories. Deliberately shallow — one `readdir` per candidate
+ * directory, one `stat` per child.
+ *
+ * Empty means "not a monorepo". Exactly one means the scope is unambiguous and
+ * detection can descend into it. More than one is a question for the caller,
+ * not a guess for the detector.
  */
-function _has_nested_manifest(project_root: string): boolean {
-    for (const dir of _WORKSPACE_DIRS) {
+function _nested_frontend_roots(project_root: string): string[] {
+    const roots: string[] = [];
+    const seen = new Set<string>();
+    // `workspaces` is the declarative answer when present; the conventional
+    // directories are the fallback for repos that do not declare them.
+    const root_pkg = _read_json(path.join(project_root, 'package.json'));
+    const declared = root_pkg['workspaces'];
+    const globs: string[] = Array.isArray(declared)
+        ? (declared as unknown[]).filter((g): g is string => typeof g === 'string')
+        : [];
+    const dirs = new Set<string>(_WORKSPACE_DIRS);
+    for (const g of globs) {
+        const head = g.split('/')[0];
+        if (head !== undefined && head !== '' && !head.includes('*')) dirs.add(head);
+    }
+    for (const dir of dirs) {
         const base = path.join(project_root, dir);
         let entries: string[];
         try {
@@ -318,15 +602,18 @@ function _has_nested_manifest(project_root: string): boolean {
             continue;
         }
         for (const entry of entries) {
+            const child = path.join(base, entry);
+            if (seen.has(child)) continue;
             if (
-                _is_file(path.join(base, entry, 'composer.json')) ||
-                _is_file(path.join(base, entry, 'package.json'))
+                _is_file(path.join(child, 'package.json')) ||
+                _is_file(path.join(child, 'composer.json'))
             ) {
-                return true;
+                seen.add(child);
+                roots.push(child);
             }
         }
     }
-    return false;
+    return roots.sort();
 }
 
 /** True when either manifest names a framework we recognise but do not model. */

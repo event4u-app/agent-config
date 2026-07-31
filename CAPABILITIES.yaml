@@ -11,7 +11,7 @@
 meta:
   generated_by: src/scripts/generate_capabilities_index.py
   purpose: "Machine-readable coverage index so external reviews stop re-proposing what already ships."
-  skills_total: 286
+  skills_total: 287
   commands_total: 192
   capability_areas: 30
   gaps: 0

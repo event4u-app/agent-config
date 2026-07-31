@@ -159,12 +159,28 @@ describe('stack/detect — detection logic', () => {
         expect(detectView(tmp)).toBe('{"frontend":"blade-livewire-flux","has_mtime":true}');
     });
 
-    it('precedence: react-shadcn wins over vue when both react+radix and vue present', () => {
+    it('two SPA frameworks are an ambiguity, not a precedence question', () => {
+        // Previously `react-shadcn` — the precedence chain silently resolved
+        // react-vs-vue. A project with both as direct dependencies is genuinely
+        // two things, and for a global package a silent pick is worse than a
+        // question: the wrong guess costs the whole run.
         write(
             'package.json',
             JSON.stringify({ dependencies: { react: '^18', '@radix-ui/x': '^1', vue: '^3' } }),
         );
-        expect(detectView(tmp)).toBe('{"frontend":"react-shadcn","has_mtime":true}');
+        expect(detectView(tmp)).toBe('{"frontend":"unknown","has_mtime":true}');
+    });
+
+    it('precedence still applies where there is no conflict', () => {
+        // Livewire is server-driven, so it co-exists with a JS framework the
+        // way Alpine does — Laravel+Livewire with a React widget is an ordinary
+        // stack. Only two SPA frameworks conflict.
+        write(
+            'composer.json',
+            JSON.stringify({ require: { 'livewire/livewire': '^3', 'livewire/flux': '^1' } }),
+        );
+        write('package.json', JSON.stringify({ dependencies: { react: '^18' } }));
+        expect(detectView(tmp)).toBe('{"frontend":"blade-livewire-flux","has_mtime":true}');
     });
 
     it('greenfield: no manifests → plain, mtime 0.0', () => {
@@ -186,10 +202,12 @@ describe('stack/detect — detection logic', () => {
         expect(detectView(tmp)).toBe('{"frontend":"plain","has_mtime":true}');
     });
 
-    it('latest_manifest_mtime: only composer/package count, not components.json', () => {
-        // components.json carries no mtime weight; with only it present mtime
-        // stays 0.0.
+    it('latest_manifest_mtime: marker files count too', () => {
+        // Changed deliberately. The signal table reads marker files, so adding
+        // `components.json` (a shadcn adoption) changes the detected axes while
+        // leaving both manifests untouched — and a manifest-only cache key
+        // would have served the pre-marker answer indefinitely.
         write('components.json', '{}');
-        expect(latest_manifest_mtime(tmp)).toBe(0.0);
+        expect(latest_manifest_mtime(tmp)).toBeGreaterThan(0.0);
     });
 });
