@@ -234,14 +234,51 @@ describe('CLI global deploy — upgrade reaps newly-excluded rules', () => {
 });
 
 describe('scope resolution fails safe', () => {
-    it('falls back to legacy-all on an unreadable settings doc', () => {
+    it('falls back to legacy-all on an unreadable settings doc — LOUDLY', () => {
         const dir = path.join(tmp, 'e4u', 'settings');
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(path.join(dir, '.agent-settings.yml'), ':\n  - [unclosed', 'utf-8');
-        // Over-shipping is the safe direction; the compat exclusion still holds.
-        const scope = _resolve_global_rule_scope(REPO);
+
+        const warnings: string[] = [];
+        const origErr = process.stderr.write.bind(process.stderr);
+        process.stderr.write = ((chunk: string | Uint8Array): boolean => {
+            warnings.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf-8'));
+            return true;
+        }) as typeof process.stderr.write;
+        let scope: ReturnType<typeof _resolve_global_rule_scope>;
+        try {
+            scope = _resolve_global_rule_scope(REPO);
+        } finally {
+            process.stderr.write = origErr;
+        }
+
+        // Over-shipping stays the safe direction; the compat exclusion holds.
         expect(scope.workspaces).toBeNull();
         expect(scope.packs).toBeNull();
+        // But it must NOT be silent: a YAML typo otherwise defeats a scoping
+        // decision the user made, and `_load_yaml_doc` reports that as an
+        // indistinguishable `{}` (PR #1076 review-gate finding).
+        const text = warnings.join('');
+        expect(text).toContain('.agent-settings.yml');
+        expect(text.toLowerCase()).toContain('legacy-all');
+    });
+
+    it('stays SILENT when no settings doc exists at all', () => {
+        removeGlobalSettings();
+        const warnings: string[] = [];
+        const origErr = process.stderr.write.bind(process.stderr);
+        process.stderr.write = ((chunk: string | Uint8Array): boolean => {
+            warnings.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf-8'));
+            return true;
+        }) as typeof process.stderr.write;
+        try {
+            _resolve_global_rule_scope(REPO);
+        } finally {
+            process.stderr.write = origErr;
+        }
+        // A fresh machine has no user decision to contradict — the packaged
+        // template is the documented path, and warning there would be noise.
+        expect(warnings.join('')).not.toContain('legacy-all');
     });
 
     it('treats a settings doc without a projection block as legacy-all', () => {
@@ -276,5 +313,50 @@ describe('the rules source key cannot drift between the two paths', () => {
         const ruleSource = sources.find((s) => s.srcDir === path.join(REPO, RULE_SOURCE_REL));
         expect(ruleSource, 'no plan source matched RULE_SOURCE_REL').toBeDefined();
         expect(ruleSource?.fileFilter).toBeTypeOf('function');
+    });
+});
+
+describe('one scope snapshot per run — the TOCTOU pin', () => {
+    const INSTALL_SRC = path.join(REPO, 'src', 'scripts', 'install.ts');
+
+    /** Body of a top-level `function <name>(` up to the next top-level `}`. */
+    function functionBody(src: string, name: string): string {
+        const start = src.indexOf(`function ${name}(`);
+        expect(start, `${name} not found`).toBeGreaterThan(-1);
+        const end = src.indexOf('\n}', start);
+        return src.slice(start, end);
+    }
+
+    it('resolves the rule scope exactly once per deploy, before the tool loop', () => {
+        // PR #1076 review-gate finding: the settings doc could in principle change
+        // between the copy and the reap. It cannot here, because ONE snapshot is
+        // taken before the loop and handed to both the copy filter and
+        // `expected_deploy_files` (whose output the reaper consumes). Resolving
+        // per-tool, or a second time for the reap, would reopen that window — so
+        // pin the shape rather than trusting a comment.
+        const body = functionBody(fs.readFileSync(INSTALL_SRC, 'utf-8'), '_deploy_global_content');
+        const resolveAt = body.indexOf('_resolve_global_rule_scope(');
+        const loopAt = body.indexOf('for (const tool_id');
+
+        expect(body.match(/_resolve_global_rule_scope\(/g)).toHaveLength(1);
+        expect(resolveAt).toBeGreaterThan(-1);
+        expect(loopAt).toBeGreaterThan(-1);
+        expect(resolveAt, 'scope must be resolved BEFORE the per-tool loop').toBeLessThan(loopAt);
+    });
+
+    it('derives the copy filter and the inventory filter from the same snapshot', () => {
+        const body = functionBody(fs.readFileSync(INSTALL_SRC, 'utf-8'), '_deploy_global_content');
+        // One filter variable, used twice — not two independent derivations.
+        expect(body.match(/_rule_filter_for_source\(/g)).toHaveLength(1);
+        expect(body).toContain('rule_filter,');
+    });
+
+    it('the dry-run preview takes its own snapshot — it is a separate invocation', () => {
+        const body = functionBody(fs.readFileSync(INSTALL_SRC, 'utf-8'), '_preview_global_reap');
+        expect(body.match(/_resolve_global_rule_scope\(/g)).toHaveLength(1);
+        // Deliberate: `--dry-run` and the real run are separate commands, so the
+        // real run MUST read current settings rather than reuse a stale preview.
+        // A prediction diverging after the user edits settings is correct
+        // behaviour, not a race.
     });
 });

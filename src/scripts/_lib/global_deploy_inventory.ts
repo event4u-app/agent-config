@@ -582,7 +582,15 @@ function prune_empty_dirs(prune_candidates: Set<string>, anchor_resolved: string
 }
 
 /** `anchor in node.parents` — is `anchor` a strict ancestor of `node`? */
-function is_ancestor(anchor: string, node: string): boolean {
+/**
+ * Is `node` strictly inside `anchor`? Pure path arithmetic, no I/O — callers
+ * pass already-resolved (realpath'd) paths when symlink escape matters.
+ *
+ * Exported for `install._copy_dir_dereferencing_symlinks`, which must reject a
+ * symlink whose target leaves the package root. One definition rather than a
+ * second copy of the `path.relative` idiom.
+ */
+export function is_ancestor(anchor: string, node: string): boolean {
   const rel = path.relative(anchor, node);
   return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
 }

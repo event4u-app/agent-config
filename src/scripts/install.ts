@@ -2738,6 +2738,37 @@ function _inject_package_tag(
 }
 
 /**
+ * Would dereferencing `entry` escape the package root?
+ *
+ * `_copy_dir_dereferencing_symlinks` copies the REALPATH of every entry, so a
+ * symlink in the shipped tree pointing outside the package would copy an
+ * arbitrary readable file into the deploy destination — and those destinations
+ * are agent-readable instruction dirs (`~/.claude/rules/`, `~/.codeium/…`). A
+ * tampered tarball carrying `rules/x.md -> ~/.ssh/id_rsa` would land that file
+ * where an agent reads rules.
+ *
+ * Defence-in-depth for `docs/threat-model.md` row b (supply-chain compromise):
+ * the package is the install-time trust anchor, so this is not the primary
+ * control — but the check is one comparison and `package_root` was already
+ * threaded through, so there is no reason to ship without it.
+ *
+ * Both sides are realpath'd before comparing, so a macOS `/var` → `/private/var`
+ * root does not read as an escape. A `null` package_root means the caller did
+ * not scope the copy (several do) — unchanged, permissive behaviour there.
+ */
+function _escapes_package_root(resolved: string, package_root: string | null): boolean {
+    if (package_root === null) return false;
+    let root: string;
+    try {
+        root = fs.realpathSync(package_root);
+    } catch {
+        // Unresolvable root — cannot judge containment, so do not block the copy.
+        return false;
+    }
+    return !global_deploy_inventory.is_ancestor(root, resolved);
+}
+
+/**
  * Copy `src` → `dest`, dereferencing symlinks, returning
  * `[written, skipped, written_paths]`.
  *
@@ -2761,6 +2792,16 @@ function _copy_dir_dereferencing_symlinks(
     if (!pathExists(src)) return [0, 0, written_paths];
     if (!isDir(src)) {
         if (file_filter !== null && !file_filter(src)) return [0, 0, written_paths];
+        let resolved_src = src;
+        try {
+            resolved_src = fs.realpathSync(src);
+        } catch {
+            resolved_src = src;
+        }
+        if (_escapes_package_root(resolved_src, package_root)) {
+            warn(`refused: ${src} dereferences outside the package root — not copied`);
+            return [0, 0, written_paths];
+        }
         mkdirp(path.dirname(dest));
         const decision = _resolve_file_conflict(dest, force);
         if (decision === 'skip') return [0, 1, written_paths];
@@ -2803,6 +2844,13 @@ function _copy_dir_dereferencing_symlinks(
             resolvedIsDir = fs.statSync(entry).isDirectory();
         } catch {
             resolvedIsDir = false;
+        }
+        // Containment is checked on the RESOLVED path, before either the
+        // recursion or the copy — a symlinked directory escaping the root would
+        // otherwise pull its whole subtree in.
+        if (_escapes_package_root(resolved, package_root)) {
+            warn(`refused: ${entry} dereferences outside the package root — not copied`);
+            continue;
         }
         if (resolvedIsDir) {
             mkdirp(target);
@@ -3390,11 +3438,25 @@ function _compute_active_pack_ids(
  * artefact of any kind.
  */
 function _resolve_global_settings_doc(): Record<string, unknown> | null {
+    const p = _resolve_global_settings_path();
+    return p === null ? null : _load_yaml_doc(p);
+}
+
+/**
+ * The path `_resolve_global_settings_doc` would read, or `null` when no global
+ * settings artefact exists at all.
+ *
+ * Split out because "absent" and "present but unparseable" are different facts
+ * and one caller must tell them apart: `_load_yaml_doc` maps BOTH to `{}`, which
+ * silently turns a YAML typo into legacy-all rule scoping — defeating a scoping
+ * decision the user made, with no signal. See `_resolve_global_rule_scope`.
+ */
+function _resolve_global_settings_path(): string | null {
     const root = user_global_paths.event4u_root();
     const canonical = path.join(root, 'settings', SETTINGS_FILE);
-    if (pathExists(canonical)) return _load_yaml_doc(canonical);
+    if (pathExists(canonical)) return canonical;
     const legacy = path.join(root, SETTINGS_FILE);
-    if (pathExists(legacy)) return _load_yaml_doc(legacy);
+    if (pathExists(legacy)) return legacy;
     return null;
 }
 
@@ -3437,10 +3499,52 @@ function _resolve_scoped_projection(
  * (`source-of-truth.md`) still applies even then.
  */
 function _resolve_global_rule_scope(package_root: string): RuleScope {
+    const settings_path = _resolve_global_settings_path();
+
+    // No global settings artefact at all — a genuinely fresh machine. Fall
+    // through to the packaged template silently: there is no user decision to
+    // contradict, and this is the documented upgrade-compat path.
+    if (settings_path === null) {
+        try {
+            return ruleScopeFromSettings(_load_default_settings(package_root));
+        } catch {
+            return LEGACY_ALL;
+        }
+    }
+
+    // A doc EXISTS, so the user has expressed a configuration. Failing to read
+    // it is not the same as not having one: falling back to legacy-all here
+    // ships the maintainer-only rules the user may have deliberately scoped out,
+    // and `_load_yaml_doc` would report that as an indistinguishable `{}`. So
+    // parse it explicitly and be LOUD when it does not parse — over-shipping
+    // stays the safe direction, but it must not be a silent one.
+    let text: string;
     try {
-        const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
-        return ruleScopeFromSettings(doc);
-    } catch {
+        text = readText(settings_path);
+    } catch (e) {
+        warn(
+            `could not read ${settings_path} (${String(e)}) — rule scoping falls back ` +
+                'to legacy-all, so ALL rules including maintainer-only ones will be ' +
+                'installed. Fix the file to restore scoping.',
+        );
+        return LEGACY_ALL;
+    }
+    const parsed = yamlSafeLoad(text);
+    if (!_isPlainObject(parsed)) {
+        warn(
+            `${settings_path} is not a YAML mapping — rule scoping falls back to ` +
+                'legacy-all, so ALL rules including maintainer-only ones will be ' +
+                'installed. Fix the file to restore scoping.',
+        );
+        return LEGACY_ALL;
+    }
+    try {
+        return ruleScopeFromSettings(parsed as Record<string, unknown>);
+    } catch (e) {
+        warn(
+            `could not derive rule scope from ${settings_path} (${String(e)}) — ` +
+                'falling back to legacy-all; ALL rules will be installed.',
+        );
         return LEGACY_ALL;
     }
 }
@@ -5131,6 +5235,9 @@ export {
     // no direct test — the existing rule-scoping suite covers the PLAN path
     // (`expandWizardSources`) only, which is why the two diverged unnoticed.
     _deploy_global_content,
+    // road-to-local-ci-trust: exported for the symlink-confinement tests
+    // (PR #1076 review-gate finding).
+    _copy_dir_dereferencing_symlinks,
     _preview_global_reap,
     _resolve_global_rule_scope,
 };
