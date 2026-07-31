@@ -629,10 +629,12 @@ function _validate_app_spec(app_spec: JsonValue): void {
  * agent-directive that populates it. An empty dict is the in-progress
  * shape after the skill returns but before the brief lands; the gate
  * treats it the same as `null`. Once populated, `design_confirmed`
- * (when present) must be a bool. Other keys (`layout`, `components`,
- * `states`, `microcopy`, `a11y`, `reused_from_audit`) are
- * validated by the design handler against the skill contract — the
- * schema only enforces shape, not content.
+ * (when present) must be a bool, and `states` (when present and not
+ * `null`) must be an object — the design gate's per-state loop is
+ * object-guarded, so a string or list would bypass all five checks.
+ * The remaining keys (`layout`, `components`, `microcopy`, `a11y`,
+ * `reused_from_audit`) are validated by the design handler against the
+ * skill contract — the schema only enforces shape, not content.
  */
 function _validate_ui_design(ui_design: JsonValue): void {
     if (ui_design === null) {
@@ -650,6 +652,21 @@ function _validate_ui_design(ui_design: JsonValue): void {
     ) {
         throw new SchemaError(
             'state.ui_design.design_confirmed must be a boolean when present',
+        );
+    }
+    // `states` is shape-checked here, not left to the handler. The design
+    // gate's per-state loop was guarded on "is this an object", so a string or
+    // list silently skipped all five required-state checks — the gate passed
+    // while covering no state at all. Rejecting the wrong shape at the schema
+    // boundary means the loop can no longer be bypassed by type.
+    if (
+        'states' in ui_design &&
+        ui_design['states'] !== null &&
+        !_isDict(ui_design['states'])
+    ) {
+        throw new SchemaError(
+            'state.ui_design.states must be a JSON object (one key per ' +
+                `required state) or null; got ${pyTypeName(ui_design['states'])}`,
         );
     }
 }

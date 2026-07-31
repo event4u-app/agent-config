@@ -31,7 +31,7 @@ Use this skill when:
 Do NOT use when:
 - `directive_set="ui-trivial"` — the trivial path bypasses audit by precondition (≤1 file, ≤5 lines, no new component, no new state, no new dep)
 - `directive_set="backend"` — no UI surface to inventory
-- The audit findings already exist in `state.ui_audit` for this state-file (cached) — re-run only if `package.json` or `composer.json` mtime changed
+- The audit findings already exist in `state.ui_audit` for this state-file — the gate round-trips through SUCCESS once `audit_path` is set, and does **not** re-run for the life of that state-file (see Gotchas for what that does and does not cover)
 
 ## Resource-first context gate (design fidelity)
 
@@ -243,7 +243,20 @@ tool produces, so the import path is uniform.
 - Don't assume a Radix-only `package.json` means shadcn — shadcn requires `components.json` at repo root.
 - `state.ui_audit.shadcn_inventory.version` is often missing; the shadcn CLI does not always pin itself in `package.json`. Record `null` rather than guessing.
 - Greenfield is detected, not assumed — a project with one Blade layout and no components is still greenfield only if tokens AND design system markers AND components are all empty.
-- Re-running the skill on a stale state-file: cache by `(composer.json mtime, package.json mtime)`; if either changed, re-audit and overwrite.
+- **There is no mtime cache.** An earlier revision told you to cache by
+  `(composer.json mtime, package.json mtime)` and re-audit when either changed.
+  No code implemented it, and the key was the wrong one anyway: `apply` adds
+  components without touching a manifest, so a manifest-keyed cache never
+  invalidates on the change that matters. What the engine does is simpler and
+  stricter — `audit.ts` returns SUCCESS unconditionally once `audit_path` is
+  `high_confidence` or `ambiguous`, so the inventory is computed **once per
+  state-file** and never refreshed.
+- **What that means in practice.** A single request is one pass, so the
+  inventory is fresh where it matters. The bounded gap is a run that reuses one
+  state-file across several component additions: components written earlier in
+  that run are absent from the inventory the later ones are checked against.
+  Adding a second component in the same run → re-read the component directories
+  directly rather than trusting `state.ui_audit.components_found`.
 
 ## Anti-slop cross-reference
 

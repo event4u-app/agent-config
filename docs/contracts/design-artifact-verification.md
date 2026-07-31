@@ -144,7 +144,7 @@ strand the user.
 
 ## Eval baseline
 
-The design-artifact eval fixtures (the nine cases this phase seeds) live in
+The design-artifact eval fixtures (the nine cases this phase seeded — the file has grown since; see its Notes for which surface gates which id) live in
 [`tests/design-artifacts/eval-fixtures.md`](../../tests/design-artifacts/eval-fixtures.md).
 Each fixture names the primitive it needs, so a fixture is scored on a host only
 when that primitive resolves present — and skipped-with-caveat otherwise. Phase 1

@@ -51,6 +51,7 @@
     "questions": [
       "@agent-directive: ui-apply-plain",
       "> Stack: `plain`. Implementing the locked design brief.",
+      "> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
       "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
       "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
       "> 2. Abort — drop this UI request"
@@ -64,6 +65,7 @@
     "questions": [
       "@agent-directive: ui-design-review-plain",
       "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+      "> Skills: `design-review` — stack-neutral, which is what `plain` means.",
       "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
       "> Ground chart-type and contrast findings in the adopted corpus (design-intelligence § 'Grounding the review/polish a11y gate') — cite the corpus row, don't eyeball.",
       "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
@@ -78,6 +80,7 @@
     "questions": [
       "@agent-directive: ui-polish-plain",
       "> Stack: `plain`. Polish round 1 of 2.",
+      "> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
       "> 2 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
       "> Fix chart-type / contrast findings against the adopted corpus rows (design-intelligence § 'Grounding the review/polish a11y gate'), not ad-hoc judgment.",
       "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
@@ -92,6 +95,7 @@
     "questions": [
       "@agent-directive: ui-polish-plain",
       "> Stack: `plain`. Polish round 2 of 2.",
+      "> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
       "> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
       "> Fix chart-type / contrast findings against the adopted corpus rows (design-intelligence § 'Grounding the review/polish a11y gate'), not ad-hoc judgment.",
       "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
