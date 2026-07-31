@@ -346,16 +346,20 @@ print_version() {
   fi
 }
 
-# Resolve the tsx runner (Python→TypeScript migration). tsx ships as a
-# RUNTIME dependency of the package, so the package-local install is the
-# canonical source — first via node_modules/.bin, then via the module's CLI
-# entry (covers installs where .bin shims are missing). `npx tsx` is a last
-# resort only: npx runs against the CONSUMER project's cwd, so its npm config
-# and devEngines/engines constraints apply — a consumer pinning e.g.
-# `node <24` hard-fails every hook and TS command with EBADDEVENGINES (the
-# 8.1.0 regression that silently broke hooks + roadmap:progress in consumer
-# projects). Exits 127 when nothing works — the runtime is Node/tsx, there is
-# no Python fallback.
+# Resolve the tsx runner (Python→TypeScript migration). tsx is a DEV-ONLY
+# dependency since the road-to-credible-install Phase 1 flip — the consumer
+# runtime tree ships no tsx, so every consumer-reachable surface must resolve
+# a precompiled bundle instead (hooks → dist/hooks/dispatch.js, mcp:run →
+# dist/mcp/server.mjs, the `_cli` delegate commands → dist/cli-delegate/,
+# see exec_ts below). This resolver therefore only ever fires in a DEV tree
+# (node_modules/.bin/tsx present) or as a genuine last-resort fallback.
+# `npx tsx` is that last resort: npx runs against the CONSUMER project's cwd,
+# so its npm config and devEngines/engines constraints apply — a consumer
+# pinning e.g. `node <24` hard-fails with EBADDEVENGINES (the 8.1.0
+# regression that silently broke hooks + roadmap:progress in consumer
+# projects). Reaching it from a consumer-tier command is a packaging bug, not
+# a supported path. Exits 127 when nothing works — the runtime is Node/tsx,
+# there is no Python fallback.
 require_tsx() {
   if [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
     TSX_BIN="$PACKAGE_ROOT/node_modules/.bin/tsx"
@@ -378,14 +382,48 @@ require_tsx() {
   exit 127
 }
 
-# Run an absolute script path via tsx. The argument is an absolute path that
-# may carry a `.py` (legacy) or `.ts` extension; we resolve the `.ts` twin and
-# exec it through tsx. Argv/stdin/stdout/stderr/exit-code pass through
-# unchanged — mirrors src/scripts/run.ts resolution.
+# Map a `src/scripts/_cli/<name>.ts` path to its precompiled bundle entry
+# under `dist/cli-delegate/<name>.js`, echoing the bundle path when it exists
+# and node is available. Empty output means "no bundle — use the tsx path".
+#
+# Scoped to `_cli/` on purpose: that directory is the consumer-tier delegate
+# command surface (`sync`, `doctor`, `validate`, `upgrade`, …) and its
+# basenames are unique, so the mapping is collision-free. Other exec_ts
+# callers (resolve_script results, the work engine, …) are unaffected.
+cli_delegate_bundle() {
+  local ts_abs="$1"
+  case "$ts_abs" in
+    "$PACKAGE_ROOT/src/scripts/_cli/"*) ;;
+    *) return 0 ;;
+  esac
+  local name
+  name="$(basename "${ts_abs%.ts}")"
+  local bundle="$PACKAGE_ROOT/dist/cli-delegate/$name.js"
+  if [[ -f "$bundle" ]] && command -v node >/dev/null 2>&1; then
+    printf '%s' "$bundle"
+  fi
+}
+
+# Run an absolute script path. The argument is an absolute path that may carry
+# a `.py` (legacy) or `.ts` extension; we resolve the `.ts` twin.
+#
+# A precompiled `dist/cli-delegate/` bundle wins when present — the consumer
+# tree ships no tsx (see require_tsx), and the bundle is also ~5.7x faster
+# than the npx path it replaces (p50 56-71 ms vs 346-392 ms, measured
+# 2026-07-31; see docs/decisions/ADR-204). The tsx path stays as the dev-tree
+# route and as the fallback for every non-`_cli` caller.
+#
+# Argv/stdin/stdout/stderr/exit-code pass through unchanged in both routes —
+# mirrors src/scripts/run.ts resolution.
 exec_ts() {
   local script="$1"; shift
   local ts_abs="${script%.py}"
   ts_abs="${ts_abs%.ts}.ts"
+  local bundle
+  bundle="$(cli_delegate_bundle "$ts_abs")"
+  if [[ -n "$bundle" ]]; then
+    exec node "$bundle" "$@"
+  fi
   if [[ ! -f "$ts_abs" ]]; then
     echo "❌  agent-config: script not found: $ts_abs" >&2
     exit 127
