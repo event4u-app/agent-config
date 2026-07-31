@@ -253,6 +253,119 @@ describe('changelog split machinery (tmpdir)', () => {
         expect(changelog).toContain('# Era: pre-3.2.0 — archived');
     });
 
+    // ─── resume ordering (9.10.0 regression) ──────────────────────────────────
+    // A fresh release run splits BEFORE prepending the new entry, so the era
+    // body never holds it. A `--resume` run finds the entry already committed
+    // and correctly skips the bump — so the split saw it and archived the very
+    // release the archive is named "pre-" of, leaving the current era empty and
+    // the `changelog-entry` CI gate red. Pre-fix these two cases fail.
+    function _era_3_2_body_with_incoming(): string {
+        return (
+            '# Changelog\n\n' +
+            '# Era: 3.2.x — current\n\n' +
+            '> Started at `3.2.0`. Full entries live inline below.\n' +
+            '> Cap 250 lines.\n\n' +
+            '## [3.3.0](https://example/compare/3.2.5...3.3.0) (2026-05-30)\n\n' +
+            '### Features\n\n* the incoming release\n\n' +
+            'Tests: 4242 (+42 since 3.2.5)\n\n' +
+            '## [3.2.5](https://example/compare/3.2.4...3.2.5) (2026-05-20)\n\n' +
+            '### Bug Fixes\n\n* fix something\n\n' +
+            '# Era: pre-3.2.0 — archived\n\n' +
+            '> All entries before `3.2.0` live in\n' +
+            '> [`docs/archive/CHANGELOG-pre-3.2.0.md`](docs/archive/CHANGELOG-pre-3.2.0.md).\n'
+        );
+    }
+
+    it('resume: split keeps the already-prepended release out of its own archive', () => {
+        _write_changelog(_era_3_2_body_with_incoming());
+        const plan = eras.plan_split('3.3.0');
+        expect(plan).not.toBeNull();
+
+        eras.perform_split(plan!);
+
+        // The archive is named pre-3.3.0 — it may only hold OLDER entries.
+        const archive_text = fs.readFileSync(plan!.archive_path, 'utf-8');
+        expect(archive_text).toContain('## [3.2.5]');
+        expect(archive_text).not.toContain('## [3.3.0]');
+        expect(archive_text).not.toContain('Tests: 4242');
+
+        // The incoming entry survives inline, under the new era, footer intact —
+        // this is what the changelog-entry gate reads.
+        const changelog = fs.readFileSync(eras.CHANGELOG, 'utf-8');
+        expect(changelog).toContain('# Era: 3.3.x — current');
+        expect(changelog).toContain('## [3.3.0]');
+        expect(changelog).toContain('Tests: 4242 (+42 since 3.2.5)');
+        expect(changelog).not.toContain('## [3.2.5]');
+        expect(changelog).toContain('# Era: pre-3.2.0 — archived');
+    });
+
+    it('resume: the release section stays INSIDE the new era block', () => {
+        _write_changelog(_era_3_2_body_with_incoming());
+        eras.perform_split(eras.plan_split('3.3.0')!);
+        const changelog = fs.readFileSync(eras.CHANGELOG, 'utf-8');
+        const newEra = changelog.indexOf('# Era: 3.3.x — current');
+        const entry = changelog.indexOf('## [3.3.0]');
+        const nextEra = changelog.indexOf('# Era: pre-3.2.0 — archived');
+        expect(newEra).toBeGreaterThan(-1);
+        expect(entry).toBeGreaterThan(newEra);
+        expect(entry).toBeLessThan(nextEra);
+    });
+
+    it('fresh run is unchanged — no carry-over when the entry is absent', () => {
+        _write_changelog(_era_3_2_body(5));
+        eras.perform_split(eras.plan_split('3.3.0')!);
+        const changelog = fs.readFileSync(eras.CHANGELOG, 'utf-8');
+        expect(changelog).not.toContain('## [3.2.5]');
+        const archive_text = fs.readFileSync(
+            path.join(tmp_path, 'docs', 'archive', 'CHANGELOG-pre-3.3.0.md'),
+            'utf-8',
+        );
+        expect(archive_text).toContain('## [3.2.5]');
+        expect(archive_text).toContain('entry line 0');
+    });
+
+    describe('_partition_era_body', () => {
+        const sec = (v: string) => [`## [${v}](x) (2026-01-01)`, '', `* ${v} body`, ''];
+
+        it('splits strictly below the boundary', () => {
+            const body = [...sec('3.3.0'), ...sec('3.2.5'), ...sec('3.2.4')];
+            const { carry, archived } = eras._partition_era_body(body, '3.3.0');
+            expect(carry.join('\n')).toContain('## [3.3.0]');
+            expect(carry.join('\n')).not.toContain('## [3.2.5]');
+            expect(archived.join('\n')).toContain('## [3.2.5]');
+            expect(archived.join('\n')).toContain('## [3.2.4]');
+        });
+
+        it('the boundary version itself carries over, not archives', () => {
+            const { carry, archived } = eras._partition_era_body(sec('4.0.0'), '4.0.0');
+            expect(carry.join('\n')).toContain('## [4.0.0]');
+            expect(archived).toEqual([]);
+        });
+
+        it('a patch above the boundary carries over', () => {
+            const { carry } = eras._partition_era_body(sec('3.3.1'), '3.3.0');
+            expect(carry.join('\n')).toContain('## [3.3.1]');
+        });
+
+        it('out-of-order body does not archive a newer entry', () => {
+            const body = [...sec('3.2.4'), ...sec('3.3.0')];
+            const { carry, archived } = eras._partition_era_body(body, '3.3.0');
+            expect(carry.join('\n')).toContain('## [3.3.0]');
+            expect(archived.join('\n')).toContain('## [3.2.4]');
+            expect(archived.join('\n')).not.toContain('## [3.3.0]');
+        });
+
+        it('a body with no version headings archives wholesale', () => {
+            const { carry, archived } = eras._partition_era_body(['loose', 'lines'], '3.3.0');
+            expect(carry).toEqual([]);
+            expect(archived).toEqual(['loose', 'lines']);
+        });
+
+        it('rejects a non-semver boundary', () => {
+            expect(() => eras._partition_era_body(sec('3.3.0'), '3.3')).toThrow(/not a bare semver/);
+        });
+    });
+
     it('test_perform_split_refuses_existing_archive', () => {
         _write_changelog(_era_3_2_body());
         const plan = eras.plan_split('3.3.0');
