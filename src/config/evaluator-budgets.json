@@ -8,7 +8,7 @@
         "unpacked_size_mb": {
             "max": 28,
             "last_measured": 26.05,
-            "method": "npm pack --json → dist.unpackedSize / 1e6 — includes the Phase-1 precompiled bundles (dist/hooks/dispatch.js + dist/mcp/server.mjs, ~2.1 MB) that bought the 23x hook-latency win and the tsx removal"
+            "method": "npm pack --json → dist.unpackedSize / 1e6 — includes the Phase-1 precompiled bundles (dist/hooks/dispatch.js + dist/mcp/server.mjs, ~2.1 MB) that bought the 23x hook-latency win and the tsx removal, plus dist/cli-delegate/ (~1.40 MB, ADR-204) which finished that removal for the consumer command surface. This gate is the ONLY size trip-wire on those bundles by design: a dedicated per-bundle budget key would need its own measurement wired into evaluator_umbrella.sh, and an unwired key fails check_evaluator_budgets with 'no measurement supplied' instead of guarding anything. ADR-204 projected 27.45 against max 28 without packing — the next real measurement here is the confirming one, and headroom is thin"
         },
         "node_modules_mb": {
             "max": 140,
