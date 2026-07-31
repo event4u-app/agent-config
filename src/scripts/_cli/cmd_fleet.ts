@@ -32,9 +32,10 @@ import * as YAML from 'yaml';
 
 import { runPreflight, hasBlockingFinding, type PreflightFinding } from '../../install/preflight.js';
 import type { ConflictPolicy } from '../../install/types.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 
 const _HERE = fileURLToPath(import.meta.url);
-const PACKAGE_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
+const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
 
 /** One fleet target, parsed from `fleet.yaml`. */
 export interface FleetRepo {

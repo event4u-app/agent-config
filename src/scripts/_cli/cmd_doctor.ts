@@ -117,6 +117,7 @@ import {
     type DetectionReport,
 } from './detection_report.js';
 import { review_gate_doctor_signal } from '../ai_team/review_gate.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import {
     LEGACY_ALL,
     excludedRuleBasenames,
@@ -1010,7 +1011,7 @@ function _check_manifest_integrity(manifest: Dict): Dict {
 /** Resolve the @event4u/agent-config package root (this repo). */
 function _package_root(): string {
     // cmd_doctor lives at src/scripts/_cli/cmd_doctor.{py,ts}; parents[3] = repo.
-    return path.resolve(path.dirname(_HERE), '..', '..', '..');
+    return resolvePackageRoot(import.meta.url);
 }
 
 /** Read `version` from this package's package.json; null on error. */

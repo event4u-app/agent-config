@@ -69,8 +69,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as cli_wrapper from '../_lib/cli_wrapper.js';
 import * as sync_gitignore from '../sync_gitignore.js';
 import * as sync_gitattributes from '../sync_gitattributes.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 
-const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
 
 // ---------------------------------------------------------------------------
 // Parity primitives (ADR-200).
