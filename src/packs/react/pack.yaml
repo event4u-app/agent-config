@@ -12,7 +12,8 @@ requires:
 - javascript
 - engineering-base
 size_class: medium
-suggests: []
+suggests:
+- frontend-design
 surface_tier: core
 trust_level_default: professional
 version: 9.9.0

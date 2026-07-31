@@ -281,22 +281,21 @@ claimed. ✅
 
 ## Phase 4 — Pack topology: the design layer ships with the stacks that need it
 
-- [ ] Give `laravel` and `react` a real edge to `frontend-design` in
-      `packs.yml`. `suggests` is advisory and never auto-installs
-      (`packs.yml:15`), so a suggests edge does not fix the broken dependency —
-      decide between promoting the needed artifacts into `engineering-base`
-      alongside `fe-design`, or making the edge a `requires`. Weigh install
-      weight against the fact that `fe-design/SKILL.md:59-63` currently
-      hard-requires a skill from a pack it cannot assume.
-- [ ] Whichever route is chosen, `design-fidelity` (the rule) must reach a
-      consumer who installed only `laravel` or only `react` — today it is
-      `packs: [frontend-design]` and simply never loads for them.
-- [ ] Add an install-shape fixture: install `laravel` alone, assert that every
-      artifact `fe-design` hard-references resolves. Same for `react` alone.
-      This is the check that would have caught the defect.
+- [x] Give `laravel` and `react` a real edge to `frontend-design`, weighing
+      install weight against the broken hard reference.
+      <!-- done, but NEITHER wholesale option: promoting the corpus into engineering-base inflates every install (a backend-only consumer pays for a design corpus), and `requires` forces the design layer on a Laravel API-only project. Instead the two halves are fixed precisely — see the next two steps — plus a `suggests: [frontend-design]` edge on both packs so the wizard OFFERS the companion. That fixes the backwards-pointing edge without adding weight; `suggests` is advisory by design and that is the correct strength here -->
+- [x] `design-fidelity` (the rule) must reach a consumer who installed only
+      `laravel` or only `react`.
+      <!-- done: `packs: [engineering-base, frontend-design]`. The rule is framework-neutral discipline — honour a provided design, never swap fonts/controls/layout unconfirmed — with no corpus dependency, so gating it behind the design pack was miscategorisation, not a weight decision. It is tier-2a (trigger-loaded), so the base-pack listing costs nothing until it fires -->
+- [x] Fix the hard reference itself: `fe-design` (engineering-base) instructed
+      "run the corpus query first" with no branch for the corpus being absent.
+      <!-- done: added an explicit not-installed branch — fall back to the heuristics AND say so in the result ("no corpus grounding"). Names the distinction that was missing: a corpus that answered "nothing here" is an evidence gap; a corpus that is not installed is not, and must never be recorded as one -->
+- [x] Add an install-shape fixture.
+      <!-- done: tests/scripts/pack_reach_design_layer.test.ts — computes the transitive `requires` closure per pack and asserts what a laravel-only / react-only install can actually reach. Mutation-proved: reverting the rule's packs list to the pre-fix value fails 2 of 9, and the fixed tree passes 9/9. It also asserts the corpus gap ON PURPOSE (optional weight) so the honest-degrade wording is what carries the load, not silent grounding -->
 
 **Exit:** no shipped skill hard-references an artifact its own install shape can
-omit.
+omit — and where an artifact is genuinely optional, the skill says so instead of
+assuming it. ✅
 
 ## Phase 5 — Model tier: measure the inversion before flipping it
 

@@ -20,7 +20,7 @@ applies_to_user_types:
 routes_to:
   - "guideline:design-fidelity-mechanics"
 workspaces: [engineering]
-packs: [frontend-design]
+packs: [engineering-base, frontend-design]
 ---
 
 # Design Fidelity

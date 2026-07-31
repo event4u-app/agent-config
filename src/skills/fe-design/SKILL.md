@@ -63,6 +63,16 @@ where the corpus reports an evidence gap or the audit already pins a
 project pattern. Stack-specific choices come from the dispatched
 implementation skill, not from here.
 
+> **When the corpus is not installed.** `design-intelligence` ships in the
+> `frontend-design` pack; this skill ships in `engineering-base`. A consumer
+> who installed only `laravel` or only `react` therefore has this skill and
+> **not** the corpus. Fall back to the heuristics here and say so in the
+> result — "selected from heuristics; `frontend-design` not installed, so no
+> corpus grounding". The evidence-gap fallback above is about a corpus that
+> answered "nothing here"; this is about a corpus that is absent. Never
+> present an ungrounded pick as grounded, and never record a missing pack as
+> an evidence gap.
+
 ## Component Architecture
 
 ### Page structure (universal shape)

@@ -62,6 +62,11 @@
   description: Laravel framework patterns; depends on PHP at the artefact level.
   workspaces: [engineering]
   requires: [php, engineering-base]
+  # The design layer is a companion, not a dependency: this pack ships UI
+  # executors (blade-ui, flux, livewire) whose grounded selection lives in
+  # frontend-design, but a Laravel API-only project needs none of it. Advisory
+  # so the wizard offers it; `requires` would force the weight on every install.
+  suggests: [frontend-design]
   cluster: php
   trust_level_default: professional
   domain: engineering
@@ -98,6 +103,8 @@
   description: React framework patterns.
   workspaces: [engineering]
   requires: [javascript, engineering-base]
+  # Companion, not dependency — see the note on `laravel`.
+  suggests: [frontend-design]
   cluster: typescript
   trust_level_default: professional
   domain: engineering
