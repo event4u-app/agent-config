@@ -1,0 +1,27 @@
+{
+    "_comment": "Payload budget for the published npm tarball (road-to-zero-ceremony-install Phase 4). MEASURED, NEVER INVENTED — the numbers below come from `npm pack --dry-run --json --ignore-scripts` on the tracked tree at 9.9.0 (2026-07-31). Two metrics, both genuinely ungated before this file: COMPRESSED tarball size, and PER-SKILL share of the skills subtree. The UNPACKED size is deliberately absent — it is already owned by src/config/evaluator-budgets.json (unpacked_size_mb), and a second number for one lever is how three conflicting figures start circulating.",
+    "schema_version": 1,
+    "owner": "maintainer",
+    "review_by": "2027-07-31",
+    "regression_pct": 10,
+    "measurement_conditions": "npm pack --dry-run --json --ignore-scripts, run at the repo root on a clean checkout. `--ignore-scripts` means NO build runs, so dist/cli, dist/ui, dist/mcp and dist/hooks are absent and the figure covers only the TRACKED payload (src/scripts/, dist/agent-src/, dist/install/, docs/guidelines/, templates). That is deliberate: this gate is always-on for every PR, and the tracked content tree is exactly the surface that grows by accretion. The built artifact is ~5.4 MB larger and is gated separately, at release time, by evaluator-budgets.unpacked_size_mb.",
+    "budgets": {
+        "packed_size_mb": {
+            "max": 6.4,
+            "last_measured": 5.903,
+            "method": "npm pack --dry-run --json --ignore-scripts → dist.size / 1e6 (the compressed tarball a consumer actually downloads)"
+        }
+    },
+    "per_skill_share": {
+        "max_pct": 5.0,
+        "basis": "a single skill's share of the total bytes under dist/agent-src/skills/ in the tarball",
+        "rationale": "Measured 2026-07-31: the largest non-excepted skill is corpus-grounding at 2.33%, so a 5% cap is green with better than 2x headroom and red for any skill that doubles. It is a falsifiable gate, not a ritual one.",
+        "exceptions": {
+            "design-intelligence": {
+                "max_pct": 23.0,
+                "measured_pct": 22.63,
+                "reason": "771 KB of BM25 corpus (27 CSVs + 16 design-language prose specs + manifest.json) consumed at runtime by corpus-grounding's retriever, and referenced by 6 further skills. Moving it behind a lazy fetch would add a network dependency to a skill that works offline today — the same trade-off ADR-061 §8 already REJECTED for a 745 KB font index. The exception is visible debt, not an endorsement: raising max_pct requires a reason in the same commit."
+            }
+        }
+    }
+}

@@ -14,7 +14,14 @@ vi.mock('../../src/cli/commands/uiServe.js', () => ({
     runUiServe: vi.fn(),
 }));
 
-import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation } from '../../src/cli/initRouting.js';
+import {
+    shouldInitLaunchGui,
+    buildInitGuiOptions,
+    buildProjectInitDelegation,
+    findInitGuiConflict,
+    hasGuiFlag,
+    withoutGuiFlag,
+} from '../../src/cli/initRouting.js';
 import { isHeadless } from '../../src/cli/commands/uiServe.js';
 
 const headlessMock = vi.mocked(isHeadless);
@@ -95,6 +102,123 @@ describe('shouldInitLaunchGui', () => {
 
     it('launches the GUI when only GUI-compatible flags are present', () => {
         expect(shouldInitLaunchGui(['--no-open', '--port', '5050', '--global'])).toBe(true);
+    });
+
+    // --gui: overrides the capability probes, never the intent guards
+    // (road-to-zero-ceremony-install § Phase 1; AI council 2026-07-31 Q1/B).
+
+    it('--gui launches the GUI even when stdout is not a TTY', () => {
+        Object.defineProperty(process.stdout, 'isTTY', { value: false, configurable: true });
+        expect(shouldInitLaunchGui(['--gui'])).toBe(true);
+    });
+
+    it('--gui launches the GUI even when stdin is not a TTY', () => {
+        Object.defineProperty(process.stdin, 'isTTY', { value: false, configurable: true });
+        expect(shouldInitLaunchGui(['--gui'])).toBe(true);
+    });
+
+    it('--gui launches the GUI even on a headless host', () => {
+        headlessMock.mockReturnValue(true);
+        expect(shouldInitLaunchGui(['--gui'])).toBe(true);
+    });
+
+    it('--gui does NOT defeat CI', () => {
+        process.env['CI'] = 'true';
+        expect(shouldInitLaunchGui(['--gui'])).toBe(false);
+    });
+
+    it('--gui does NOT defeat AGENT_CONFIG_NO_UI', () => {
+        process.env['AGENT_CONFIG_NO_UI'] = '1';
+        expect(shouldInitLaunchGui(['--gui'])).toBe(false);
+    });
+
+    it('--gui does NOT defeat a CLI-mode flag', () => {
+        expect(shouldInitLaunchGui(['--gui', '--no-ui'])).toBe(false);
+    });
+
+    it('a bare init on a non-TTY still falls back — --gui changes no default', () => {
+        Object.defineProperty(process.stdout, 'isTTY', { value: false, configurable: true });
+        expect(shouldInitLaunchGui([])).toBe(false);
+    });
+});
+
+describe('findInitGuiConflict', () => {
+    const savedEnv: Record<string, string | undefined> = {};
+
+    beforeEach(() => {
+        for (const key of ['CI', 'AGENT_CONFIG_NO_UI']) {
+            savedEnv[key] = process.env[key];
+            delete process.env[key];
+        }
+    });
+
+    afterEach(() => {
+        for (const key of ['CI', 'AGENT_CONFIG_NO_UI']) {
+            if (savedEnv[key] === undefined) delete process.env[key];
+            else process.env[key] = savedEnv[key];
+        }
+    });
+
+    it('GREEN: no --gui, no conflict', () => {
+        expect(findInitGuiConflict(['--no-ui'])).toBeNull();
+    });
+
+    it('GREEN: --gui alone is not a conflict', () => {
+        expect(findInitGuiConflict(['--gui'])).toBeNull();
+    });
+
+    it.each([
+        ['--no-ui'],
+        ['--tools=cursor'],
+        ['--yes'],
+        ['-q'],
+        ['--project'],
+        ['--fleet'],
+    ])('RED: --gui with the CLI-mode flag %s is a conflict', (flag) => {
+        const conflict = findInitGuiConflict(['--gui', flag]);
+        expect(conflict).toContain('--gui conflicts with');
+        expect(conflict).toContain(flag.split('=', 1)[0] as string);
+    });
+
+    it('RED: --gui under CI is a conflict', () => {
+        process.env['CI'] = 'true';
+        expect(findInitGuiConflict(['--gui'])).toContain('CI=true');
+    });
+
+    it('GREEN: CI=0 is not CI, so --gui is fine', () => {
+        process.env['CI'] = '0';
+        expect(findInitGuiConflict(['--gui'])).toBeNull();
+    });
+
+    it('RED: --gui under AGENT_CONFIG_NO_UI is a conflict', () => {
+        process.env['AGENT_CONFIG_NO_UI'] = '1';
+        expect(findInitGuiConflict(['--gui'])).toContain('AGENT_CONFIG_NO_UI=1');
+    });
+
+    it('a losing --gui is impossible: whenever the routing says no, a conflict was reported', () => {
+        process.env['CI'] = 'true';
+        expect(shouldInitLaunchGui(['--gui'])).toBe(false);
+        expect(findInitGuiConflict(['--gui'])).not.toBeNull();
+    });
+});
+
+describe('hasGuiFlag / withoutGuiFlag', () => {
+    it('detects --gui anywhere in the args', () => {
+        expect(hasGuiFlag([])).toBe(false);
+        expect(hasGuiFlag(['--global', '--gui'])).toBe(true);
+    });
+
+    it('strips every --gui token before bash delegation', () => {
+        expect(withoutGuiFlag(['init', '--gui', '--global'])).toEqual(['init', '--global']);
+        expect(withoutGuiFlag(['init', '--gui', '--gui'])).toEqual(['init']);
+    });
+
+    it('leaves args without --gui untouched', () => {
+        expect(withoutGuiFlag(['init', '--global'])).toEqual(['init', '--global']);
+    });
+
+    it('never leaves a --gui token that the bash installer would reject', () => {
+        expect(withoutGuiFlag(['init', '--gui', '--tools=cursor']).includes('--gui')).toBe(false);
     });
 });
 

@@ -13,20 +13,25 @@ On a terminal with a display this auto-launches a browser wizard; the same
 installer runs behind it. All install paths run the **same** installer and
 produce identical results.
 
-## Three install paths
+## Install paths
+
+Two you would choose, and one fallback for when the registry will not resolve.
 
 | Path | Command | Notes |
 |---|---|---|
 | **npx** (canonical) | `npx -y @event4u/agent-config init` | Recommended; opens the wizard on a TTY |
-| **curl one-liner** | `curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh \| bash` | Downloads the tarball, runs the installer, cleans up |
 | **npm dependency** | install as a dependency, then `agent-config …` | `bin.agent-config` → the bundled CLI |
+| **curl one-liner** *(fallback)* | `curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh \| bash` | Reach for this only when npm cannot resolve — a lagging or private mirror, a restricted network, a corrupted cache. It fetches a GitHub tarball and runs a dependency-inlined bundle, so it performs no npm dependency resolution. Needs Node ≥ 20 like the others: what it avoids is **resolution**, not Node |
 
 **npx flags:** `--profile=<minimal|balanced|full>`, `--tools=<list>`,
-`--dry-run` (preview writes), `--no-ui`, `--gui`.
+`--dry-run` (preview writes), `--no-ui`, `--gui` (force the wizard past the
+TTY/headless checks; it does not override `CI`, `AGENT_CONFIG_NO_UI`, or a
+CLI-mode flag — those combinations exit non-zero).
 
-**Headless / CI:** the wizard is skipped automatically when `CI` is set, stdout
-is not a TTY, `--no-ui` is passed, or an explicit `--tools=` is given — the
-non-interactive installer then runs directly.
+**Headless / CI:** the wizard is skipped automatically on CI, on a non-TTY, on
+a headless host, and whenever any CLI-mode flag is present — the non-interactive
+installer then runs directly. The complete opt-out set is listed once, against
+the code, in the [`gui-wizard` contract](https://github.com/event4u-app/agent-config/blob/main/docs/contracts/gui-wizard.md#when-the-gui-is-skipped).
 
 The **setup wizard** (`agent-config setup`) boots a small server on `127.0.0.1`
 (loopback-bound, CSRF-gated) and opens at `/#/wizard`; its first question is

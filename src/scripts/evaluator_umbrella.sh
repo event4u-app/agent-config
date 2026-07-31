@@ -65,10 +65,37 @@ UNPACKED_BYTES="$(npm pack --dry-run --json --ignore-scripts --silent 2>/dev/nul
 step "headless consumer install from the tarball"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
+COLD_START_T0="$(node -e 'console.log(Date.now())')"
 ( cd "$WORK" && npm init -y >/dev/null 2>&1 \
   && npm install --omit=dev --no-audit --no-fund --silent "$ROOT/$TARBALL" )
 PKG_DIR="$WORK/node_modules/@event4u/agent-config"
 [[ -d "$PKG_DIR" ]] || { echo "❌ install did not produce the package dir" >&2; exit 1; }
+
+# ------------------------------------------- 3b. cold start: install → doctor
+# The bare-machine wall-clock a first-time user lives through, measured end to
+# end from `npm install` to `doctor` having run. This is EVIDENCE, never a
+# promise, and deliberately NOT a budget entry: it is dominated by network and
+# registry latency, which are not ours to guarantee. A gate on it would flap on
+# runner weather and teach the reader to ignore the line
+# (road-to-zero-ceremony-install Phase 6).
+step "cold start: install → doctor (evidence, not a gate)"
+COLD_START_MS="$(node -e '
+const {execFileSync}=require("node:child_process");
+const [bin, t0] = process.argv.slice(1);
+try { execFileSync(bin, ["doctor"], {stdio:"ignore"}); }
+catch { /* doctor may report findings; the run still bounds the wall-clock */ }
+console.log(Date.now() - Number(t0));' "$WORK/node_modules/.bin/agent-config" "$COLD_START_T0")"
+COLD_START_CONDITIONS="$(uname -s)/$(uname -m) · node $(node --version) · npm $(npm --version) · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency)"
+printf 'cold_start_install_to_doctor_ms=%s\n' "$COLD_START_MS"
+printf 'cold_start_conditions=%s\n' "$COLD_START_CONDITIONS"
+if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+  {
+    printf '### Cold start — install → doctor\n\n'
+    printf '**%s ms**\n\n' "$COLD_START_MS"
+    printf 'Conditions: %s\n\n' "$COLD_START_CONDITIONS"
+    printf 'Evidence, not a promise — no shipped claim states this as a guarantee.\n'
+  } >> "$GITHUB_STEP_SUMMARY"
+fi
 
 # --------------------------------------------------------- 4. staleness lints
 step "staleness lints (pre-migration refs)"
@@ -128,10 +155,16 @@ const m={
   mcp_boot_to_initialize_ms: Number(process.argv[6]),
   cli_help_command_count: Number(process.argv[7]),
   mcp_public_tool_count: Number(process.argv[8]),
+  // Evidence-only: carried in the artifact with its conditions, never gated.
+  // check_evaluator_budgets iterates the BUDGET entries, so an extra
+  // measurement is recorded and ignored by the gate — by design.
+  cold_start_install_to_doctor_ms: Number(process.argv[9]),
+  cold_start_conditions: process.argv[10],
 };
 fs.writeFileSync(process.argv[1], JSON.stringify(m, null, 2));
 console.log(JSON.stringify(m, null, 1));' \
-  "$MEASURE_TMP" "$UNPACKED_BYTES" "$NM_MB" "$DEP_COUNT" "$CLI_MS" "$MCP_MS" "$CLI_COUNT" "$MCP_TOOLS"
+  "$MEASURE_TMP" "$UNPACKED_BYTES" "$NM_MB" "$DEP_COUNT" "$CLI_MS" "$MCP_MS" "$CLI_COUNT" "$MCP_TOOLS" \
+  "$COLD_START_MS" "$COLD_START_CONDITIONS"
 
 step "budget gate (absolute + >regression_pct creep)"
 ./scripts-run src/scripts/check_evaluator_budgets --measurements "$MEASURE_TMP"

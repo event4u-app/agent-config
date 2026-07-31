@@ -410,12 +410,96 @@ function _rstrip(text: string): string {
 }
 
 /**
+ * Split a current-era body into (carry-over, archived) at `boundary`.
+ *
+ * The archive is named `pre-<boundary>`, so by its own contract it may only
+ * hold entries STRICTLY OLDER than the boundary. Sections at or above it —
+ * i.e. the incoming release's own entry, when it is already prepended — stay
+ * in the new era.
+ *
+ * On a fresh release run the body never contains the incoming entry (the split
+ * runs before the prepend), so the carry-over is empty and this is a no-op.
+ * On a `--resume` run the entry IS already committed and the bump step is
+ * correctly skipped, so without this partition the split archived the release
+ * it was named after and nothing ever put it back: the current era ended up
+ * empty and the `changelog-entry` CI gate went red. That is the 9.10.0
+ * failure. The partition makes the two orderings converge.
+ *
+ * Changelog bodies are newest-first, so the carry-over is a prefix — but the
+ * scan is per-heading rather than "stop at the first older one" so a
+ * hand-edited out-of-order body cannot silently archive a newer entry.
+ */
+export function _partition_era_body(
+    body: readonly string[],
+    boundary: string,
+): { carry: string[]; archived: string[] } {
+    const b = _RELEASE_VERSION_RE.exec(boundary.trim());
+    if (!b) {
+        throw new Error(`not a bare semver (X.Y.Z): '${boundary}'`);
+    }
+    const bound: [number, number, number] = [
+        Number.parseInt(b[1]!, 10),
+        Number.parseInt(b[2]!, 10),
+        Number.parseInt(b[3]!, 10),
+    ];
+
+    // Section boundaries: every `## [X.Y.Z]` heading starts a new section.
+    // Content before the first heading (there should be none) rides along with
+    // the archive, matching the pre-fix behaviour for that shape.
+    const starts: number[] = [];
+    for (let i = 0; i < body.length; i++) {
+        if (VERSION_HEADING_RE.test(body[i]!)) {
+            starts.push(i);
+        }
+    }
+    if (starts.length === 0) {
+        return { carry: [], archived: [...body] };
+    }
+
+    const carry: string[] = [];
+    const archived: string[] = [...body.slice(0, starts[0]!)];
+    for (let s = 0; s < starts.length; s++) {
+        const from = starts[s]!;
+        const to = s + 1 < starts.length ? starts[s + 1]! : body.length;
+        const section = body.slice(from, to);
+        const m = VERSION_HEADING_RE.exec(body[from]!);
+        const v = m?.groups?.['version'];
+        const parsed = v ? _RELEASE_VERSION_RE.exec(v) : null;
+        if (parsed === null || parsed === undefined) {
+            archived.push(...section);
+            continue;
+        }
+        const cur: [number, number, number] = [
+            Number.parseInt(parsed[1]!, 10),
+            Number.parseInt(parsed[2]!, 10),
+            Number.parseInt(parsed[3]!, 10),
+        ];
+        const isOlder =
+            cur[0] < bound[0] ||
+            (cur[0] === bound[0] && cur[1] < bound[1]) ||
+            (cur[0] === bound[0] && cur[1] === bound[1] && cur[2] < bound[2]);
+        (isOlder ? archived : carry).push(...section);
+    }
+    return { carry, archived };
+}
+
+/** Drop trailing blank lines (in place semantics, returns the same array). */
+function _trim_trailing_blanks(xs: string[]): string[] {
+    while (xs.length > 0 && xs[xs.length - 1]!.trim() === '') {
+        xs.pop();
+    }
+    return xs;
+}
+
+/**
  * Execute `plan` against the on-disk CHANGELOG.md.
  *
  * - Refuses to overwrite an existing archive file.
- * - Moves every entry in the current era body into the new archive.
+ * - Moves every entry OLDER than the boundary into the new archive; an
+ *   already-prepended entry for the incoming release stays in the new era
+ *   (see `_partition_era_body`).
  * - Replaces the current era block with the collapsed pointer + the
- *   freshly-labelled new current era header (empty body).
+ *   freshly-labelled new current era header.
  */
 export function perform_split(plan: SplitPlan): void {
     if (fs.existsSync(plan.archive_path)) {
@@ -433,21 +517,31 @@ export function perform_split(plan: SplitPlan): void {
     }
 
     const [body_start, , next_era_line] = _era_body_bounds(lines, current_idx);
-    const entries = lines.slice(body_start, next_era_line);
-    // Trim trailing blank lines so the archive doesn't accumulate them.
-    while (entries.length > 0 && entries[entries.length - 1]!.trim() === '') {
-        entries.pop();
-    }
+    const body = lines.slice(body_start, next_era_line);
+    // Entries at/above the boundary (a resume run's already-prepended release
+    // entry) stay in the new era; only older ones are archived.
+    const { carry, archived } = _partition_era_body(body, plan.boundary);
+    // Trim trailing blank lines so neither side accumulates them.
+    _trim_trailing_blanks(archived);
+    _trim_trailing_blanks(carry);
 
     const collapsed = _splitlines(_rstrip_newlines(collapsed_era_block(plan.boundary)));
     const new_era = _splitlines(_rstrip_newlines(new_era_intro_block(plan.new_era_label, plan.boundary)));
 
     const head = lines.slice(0, current_idx);
     const tail = lines.slice(next_era_line);
-    const new_lines = [...head, ...collapsed, '', ...new_era, '', ...tail];
+    const new_lines = [
+        ...head,
+        ...collapsed,
+        '',
+        ...new_era,
+        '',
+        ...(carry.length > 0 ? [...carry, ''] : []),
+        ...tail,
+    ];
     const new_text = _rstrip(new_lines.join('\n')) + '\n';
 
-    const archive_body = entries.length > 0 ? _rstrip(entries.join('\n')) + '\n' : '';
+    const archive_body = archived.length > 0 ? _rstrip(archived.join('\n')) + '\n' : '';
     const archive_text = archive_file_header(plan.boundary) + archive_body;
 
     fs.mkdirSync(path.dirname(plan.archive_path), { recursive: true });
