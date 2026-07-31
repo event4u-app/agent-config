@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
+> 19 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
 
 ## Overall
 
-**48 / 226 steps done · 21%**
+**64 / 297 steps done · 22%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
 ```
 
 ## Open roadmaps
@@ -25,13 +25,16 @@
 | 7 | [road-to-local-ci-trust.md](roadmaps/road-to-local-ci-trust.md) | 3 | 6 | 3 | 0 | 3 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 10 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 15 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
-| 16 | [road-to-zero-ceremony-install.md](roadmaps/road-to-zero-ceremony-install.md) | 6 | 22 | 22 | 0 | 0 | 0 | [2](#blockers-road-to-zero-ceremony-install) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-provided-artifact-honesty.md](roadmaps/road-to-provided-artifact-honesty.md) | 4 | 22 | 22 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 16 | [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md) | 7 | 37 | 21 | 16 | 0 | 0 | 0 | ████░░░░░░ 43% |
+| 17 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 18 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
+| 19 | [road-to-zero-ceremony-install.md](roadmaps/road-to-zero-ceremony-install.md) | 6 | 22 | 22 | 0 | 0 | 0 | [2](#blockers-road-to-zero-ceremony-install) | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -197,6 +200,17 @@ _1 blocker resolved._
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
 
+### [road-to-provided-artifact-honesty.md](roadmaps/road-to-provided-artifact-honesty.md)
+
+**Road to provided-artifact honesty — a handed-over design is either honoured or refused, never silently regenerated** — 0 / 22 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Measure the failure before changing behaviour (blocking) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Routing: the rule fires for the prompts people actually write | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Refuse honestly, or honour a supplied contract | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 3 | Precedence: a provided spec is not an impulse | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 
 **Road to the scale-history bench run — fire the pre-registered Phase-4 bench** — 0 / 2 done (0%)
@@ -298,6 +312,30 @@ _1 blocker resolved._
     `build_discovery_manifest.ts`, publish it, and let that date pass. The council
     ruled the date itself is not an agent decision.
   - **Resolved when:** a concrete `sunset` date is published in the manifest's `tier` deprecation entry AND that date has passed with no external breakage reported — at which point Phase 3 records the confirmation and Phase 4's external half becomes executable.
+
+### [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md)
+
+**Road to UI-track integrity — the lanes the dispatcher names do not exist** — 16 / 37 done (43%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Baseline: what actually works today (blocking) | ✅ done | 0 | 9 | 0 | 0 | 100% |
+| 1 | Dispatch honesty (the 95 % fix) | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 2 | Detection: stop sending real stacks into the fallback | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | The validation gates that do not validate | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 4 | Pack topology: the design layer ships with the stacks that need it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Model tier: measure the inversion before flipping it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | Contract truth-up | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+
+### [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md)
+
+**Road to webfont delivery ownership — one skill prescribes the hotlink another skill's data forbids** — 0 / 12 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Establish the ownership decision (blocking, no data edits) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Stop emitting the hotlink | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Make the corpus consistent with itself | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
 ### [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md)
 
