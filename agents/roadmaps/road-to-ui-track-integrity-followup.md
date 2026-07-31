@@ -37,6 +37,25 @@ distinction that may well be deliberate.
 > **Blocked until a harness exists that scores generated UI** (or one run is
 > deliberately funded as a one-off). Execution starts when that condition
 > clears — see Prerequisites for why neither existing harness qualifies.
+>
+> **Candidate harness — `road-to-provided-artifact-honesty`, in two halves that
+> are NOT equally available.** Its Phase 0 fixture `daf-port-baseline` supplies
+> the half this roadmap lacks as *scheduled* work: a standalone `design.html`
+> plus a port prompt, i.e. a real UI-generation task with pass criteria. The
+> other half — rendering both outputs and diffing them — is a **gated
+> follow-up** there ("Playwright screenshot/DOM diff against the artifact as
+> ground truth"), behind the 2026-06-28 lock plus the no-new-binary-dependency
+> constraint. So this is a conditional chain, not a queue: Phase 0 landing is
+> not sufficient, and nothing here argues for reopening that lock.
+>
+> **If it ever does unblock, prefer diff-distance over a quality rubric.** Same
+> port prompt, builders once at `medium` and once at `high`, score = distance
+> from the provided artifact. That is objective and needs **no LLM judge**,
+> which is strictly better than the "visual/structural rubric" this roadmap's
+> Prerequisites describe — a ground truth already exists in the port case, so
+> the tier question can be answered by measuring against it rather than by
+> asking a model which output it prefers. Recorded here because the insight
+> changes what the harness has to be, and would otherwise be re-derived.
 
 ## Prerequisites
 
