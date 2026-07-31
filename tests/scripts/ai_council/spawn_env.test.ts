@@ -189,7 +189,6 @@ describe('hardenedSpawnEnv — CLAUDE_CONFIG_DIR is inherited (pinned)', () => {
 
     it('reaches a real spawned child, not just the computed env map', () => {
         const client = new AnthropicCliClient({
-            name: 'anthropic',
             model: 'claude-sonnet-4-5',
             binary: '/bin/sh',
         });
