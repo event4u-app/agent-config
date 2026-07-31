@@ -89,12 +89,24 @@ verbatim — that's the lock.
 Required brief keys (`REQUIRED_BRIEF_KEYS`): `layout`, `components`,
 `states`, `microcopy`, `a11y`. Required state coverage
 (`REQUIRED_STATE_KEYS`): `empty`, `loading`, `error`, `success`,
-`disabled`.
+`disabled`. A `states` value that is not an object reports all five keys
+as missing — a string or list used to skip the per-state loop entirely,
+so `states: "n/a"` satisfied a gate that covered no state at all.
 
 Microcopy is rejected when any string matches `PLACEHOLDER_PATTERNS`:
 `<placeholder>`, `lorem`, `todo:`, `tbd`, `xxx` (case-insensitive
-substring). The same tuple is re-imported by `apply` so the rejection
-fires at the producer first, at the consumer as defense-in-depth.
+substring). The walk descends objects **and arrays**, addressing array
+elements `key[i]`, so a placeholder inside `nav_items` is named
+precisely rather than missed.
+
+`apply` re-applies the same rule to a **different input** — the rendered
+output rather than the brief — which is what catches drift introduced
+between sign-off and render. Both call sites share one implementation
+(`placeholder_paths`, exported from `design`). That is deliberate: they
+previously held byte-identical copies of the same array-blind recursion,
+so the earlier "defense-in-depth" framing described two layers that
+failed on exactly the same inputs. Two inputs, one rule — not two
+independent implementations.
 
 Sentinel: `state.ui_design.design_confirmed`. Without it the brief
 halt fires every pass; with it the step round-trips through `SUCCESS`.
@@ -103,12 +115,30 @@ halt fires every pass; with it the step round-trips through `SUCCESS`.
 
 Stack-dispatched. Routes on `state.stack.frontend`:
 
+The directive is a **verb the agent interprets, not a skill path** — the
+same shape as `run-tests`, `create-plan`, and `apply-plan`, none of which
+name a skill either (only 2 of the engine's 11 literal verbs do). The
+verb→skill mapping is therefore a separate fact, and it lives in code:
+`directives/ui/stack_bundles.ts` (`STACK_BUNDLES`). The dispatch halt
+renders the bundle into its body, so the agent never has to guess which
+skills a verb means.
+
 | `state.stack.frontend` | Directive | Skill bundle |
 |---|---|---|
 | `blade-livewire-flux` | `ui-apply-blade-livewire-flux` | `flux` + `livewire` + `blade-ui` |
 | `react-shadcn` | `ui-apply-react-shadcn` | `react-shadcn-ui` |
-| `vue` | `ui-apply-vue` | `ui-apply-vue` |
-| `plain` (or unknown — `DEFAULT_DIRECTIVE`) | `ui-apply-plain` | `blade-ui` + Tailwind base |
+| `vue` | `ui-apply-vue` | `ui-component-architect` + `tailwind-engineer` (stack-neutral floor — no Vue executor exists, and the halt says so) |
+| `plain` (or unknown — `DEFAULT_DIRECTIVE`) | `ui-apply-plain` | `ui-component-architect` + `tailwind-engineer` |
+
+This table is documentation of `STACK_BUNDLES`, not a second source of
+truth. `task lint-ui-stack-bundles` enforces two properties: every bundle
+member resolves to a real skill, and a lane marked `pack_agnostic` — which
+includes `plain`, the fallback every unrecognised project lands on — names
+only stack-neutral skills. The second check is the load-bearing one: the
+`vue` row used to name the directive verb itself (no skill at all) and the
+`plain` row used to name `blade-ui`, whose frontmatter is
+`packs: [laravel]`, so a non-Laravel consumer was routed to a skill they
+had never installed.
 
 Apply does **not** re-validate the brief — it validates *output* against
 `PLACEHOLDER_PATTERNS`. A hallucinated `<placeholder>` string in the
