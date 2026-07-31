@@ -8,7 +8,7 @@ and include the output of:
 composer show event4u/agent-config            # or: npm ls @event4u/agent-config
 node --version
 
-bash scripts/install --verbose --dry-run
+bash src/scripts/install --verbose --dry-run
 ```
 
 ---
@@ -30,9 +30,9 @@ If any of these are missing or empty, the installer either didn't run or
 was interrupted. Re-run it:
 
 ```bash
-bash scripts/install --verbose
+bash src/scripts/install --verbose
 # or, to regenerate everything (overwrites existing bridge files):
-bash scripts/install --force
+bash src/scripts/install --force
 # or, for one-shot installs without a local node_modules tree:
 npx @event4u/agent-config init --tools=claude-code,cursor
 ```
@@ -117,12 +117,45 @@ The installer is Node.js-based and needs Node 20.11+ on PATH.
 
 \- **macOS**: install via [nodejs.org](https://nodejs.org/) or `brew install node`.
 \- **Linux**: `apt install nodejs` / `dnf install nodejs` / equivalent (ensure Node 20+).
-\- **Windows**: install from [nodejs.org](https://nodejs.org/); ensure "Add to PATH" is checked.
-  or from the Microsoft Store; ensure "Add python.exe to PATH" is
-  checked.
+\- **Windows**: install from [nodejs.org](https://nodejs.org/) or the Microsoft
+  Store; ensure "Add to PATH" is checked.
 
+Every install path needs Node — the curl one-liner included. Python is not
+required by any of them.
 
-on Python 3 — it is required for contributors, not just consumers.
+---
+
+## `npm error ETARGET` / `No matching version found`
+
+Re-run with a forced fresh metadata fetch:
+
+```bash
+npx -y --prefer-online @event4u/agent-config init
+```
+
+This happens when the project's `.npmrc` sets `prefer-offline=true`, or points
+at a private-registry mirror: npm resolves dependencies against cached registry
+metadata that predates a recently published version. `--prefer-online` bypasses
+the cache for this run; `npm cache verify` fixes it permanently for that machine.
+
+If the registry path stays unusable — a restricted network, an air-gapped
+mirror — take the registry-independent door instead. It fetches a GitHub
+tarball and runs a dependency-inlined bundle, so it performs no npm dependency
+resolution at all:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash
+```
+
+**Why this should no longer happen because of us.** The failure needs a
+dependency floor that names a version your mirror has not seen yet. Since
+`check_dependency_floors` runs in CI, every runtime floor we publish is a
+settled minor (`^X.Y.0`), which a mirror lagging by a patch can still satisfy.
+The gate exists because npm resolves dependencies *before* our CLI is executed —
+when resolution fails, no code of ours ever runs, so there is nothing that could
+detect the error and retry. If you hit `ETARGET` on a current version, the
+remaining causes are a mirror lagging by a whole minor, or a corrupted local
+cache — and the two commands above address exactly those.
 
 ---
 
@@ -152,4 +185,4 @@ Open an [issue](https://github.com/event4u-app/agent-config/issues) with:
 
 - your OS and shell,
 - Node / Python versions,
-- full output of `bash scripts/install --verbose --dry-run`.
+- full output of `bash src/scripts/install --verbose --dry-run`.

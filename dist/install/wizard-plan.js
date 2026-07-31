@@ -171,8 +171,8 @@ export function expandWizardSources(inputs) {
             const srcDir = join(packageRoot, srcRel);
             const destDir = destSub.length === 0 ? destRoot : join(destRoot, destSub);
             // Rule sources get the install-time scoping filter — the same
-            // predicate the projection path uses (Phase 1b: Pipeline B may
-            // never drift from Pipeline A).
+            // predicate the projection path uses (Phase 1b: the consumer
+            // install may never drift from Pipeline A, the source projection).
             const isRuleSource = srcRel === 'dist/agent-src/rules';
             out.push({
                 toolId,

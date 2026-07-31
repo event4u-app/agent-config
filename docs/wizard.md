@@ -100,10 +100,10 @@ for the full failure-mode matrix.
 
 ## Auto-launch from `npx … init`
 
-`scripts/install.py` acts as a supervisor at the tail of a successful
-install: it evaluates a gate (TTY, `CI`, `--no-ui`,
-`AGENT_CONFIG_NO_UI`), then spawns `node <pkg>/.../cli.js gui
---project-root <root>` and waits for the child's
+`src/scripts/install.ts` acts as a supervisor at the tail of a successful
+install: it evaluates the gate (`_wizard_should_launch` — gate B in
+[`gui-wizard § When the GUI is skipped`](contracts/gui-wizard.md#when-the-gui-is-skipped)),
+then spawns the wizard server and waits for the child's
 `WIZARD_READY url=<http://127.0.0.1:PORT/>` handshake on stdout
 (strict regex
 `^WIZARD_READY url=(http://(?:127\.0\.0\.1|localhost):\d+/)\r?$`).
@@ -116,11 +116,12 @@ extraction on slow disks. On timeout the parent kills the child,
 prints the last 20 stderr lines, and exits 0 — the install itself
 is unaffected.
 
-Suppress the auto-launch with `--no-ui`, `AGENT_CONFIG_NO_UI=1`, or
-by running in CI (`CI=1`). Preview the gate verdict without
-installing anything via `npx @event4u/agent-config install --dry-run`,
-which prints a plan summary and exits 0 with zero filesystem
-writes.
+Suppress the auto-launch with `--no-ui`, `AGENT_CONFIG_NO_UI=1`, or by running
+in CI (`CI=1`) — the complete set, for both gates, is in
+[`gui-wizard § When the GUI is skipped`](contracts/gui-wizard.md#when-the-gui-is-skipped).
+Preview the gate verdict without installing anything via
+`npx @event4u/agent-config install --dry-run`, which prints a plan summary and
+exits 0 with zero filesystem writes.
 
 Skill: [`agents/roadmaps/archive/wizard-install-py-wiring.md`](../agents/roadmaps/archive/wizard-install-py-wiring.md)
 (archived after ship).
@@ -140,9 +141,13 @@ Skill: [`agents/roadmaps/archive/wizard-install-py-wiring.md`](../agents/roadmap
 
 When the wizard cannot or should not open — CI runs, SSH sessions
 without X forwarding, headless servers, automated provisioning —
-take the flag path instead. Three equivalent ways to suppress the
-GUI: pass `--no-ui` to `npx … init`, export `AGENT_CONFIG_NO_UI=1`
-in the environment, or run inside a `CI=1` context (auto-detected).
+take the flag path instead. The three you will reach for are `--no-ui`,
+`AGENT_CONFIG_NO_UI=1`, and a `CI=1` context (auto-detected); they are not the
+whole set, and the whole set — both gates, exactly as coded — is in
+[`gui-wizard § When the GUI is skipped`](contracts/gui-wizard.md#when-the-gui-is-skipped).
+To go the other way and *force* the wizard past the TTY and headless checks,
+pass `--gui` (it does not override `CI`, `AGENT_CONFIG_NO_UI`, or a CLI-mode
+flag — those combinations exit non-zero instead of silently installing).
 With the GUI suppressed, pass profile + pack on the command line —
 `npx -y @event4u/agent-config init --no-ui --profile=developer
 --pack=engineering-base` — or hand-edit `.agent-settings.yml`

@@ -486,6 +486,16 @@ tasks:
     desc: "Artefact-count messaging gate — every count-shaped prose mention of skills/commands/governed rules/guidelines/personas on a flagship surface matches the source count; internal inconsistency (two different numbers for one kind) fails (road-to-truth-and-reference-hygiene Phase 1)"
     cmd: ./scripts-run src/scripts/check_artefact_count_messaging {{.QUIET_FLAG}}
 
+  check-pack-size:
+    silent: true
+    desc: "Published-tarball payload budget — compressed size (absolute + >10% creep) and per-skill share of the skills subtree, with named exceptions. The UNPACKED size stays owned by evaluator-budgets; this gate covers the two axes nothing measured before (road-to-zero-ceremony-install Phase 4)"
+    cmd: ./scripts-run src/scripts/check_pack_size
+
+  check-dependency-floors:
+    silent: true
+    desc: "Runtime dependency-floor gate — every caret floor is a settled minor (^X.Y.0), every exact pin is a named ABI exception, so a consumer on prefer-offline or a lagging registry mirror cannot hit ETARGET. npm resolves dependencies before our bin runs, so this failure cannot be retried at runtime — only made unreachable at publish time (road-to-zero-ceremony-install Phase 2)"
+    cmd: ./scripts-run src/scripts/check_dependency_floors
+
   check-preamble-payload:
     silent: true
     desc: "Per-spawn preamble payload ratchet — the deterministic in-repo payload (project-scope rules + skills catalog + project CLAUDE.md) may not grow past the pinned baseline + headroom. Every token here is re-written on EVERY subagent spawn, so growth is paid per spawn (road-to-cache-economy Phase 3, unblocked by C-3 at 38.0%)"
@@ -897,7 +907,11 @@ tasks:
       agents/reports/6.0.0-e-md-language-audit.md. Legitimately-required
       German (verbatim provenance quotes, quoted trigger/forbidden-pattern
       examples) is preserved via per-line `<!-- md-language-check: ignore -->`.
-    cmd: ./scripts-run src/scripts/check_md_language $(find docs -name '*.md' ! -name 'catalog.md' ! -name 'skills-catalog.md' | sort) {{.QUIET_FLAG}}
+      Era-split archives (docs/archive/CHANGELOG-pre-*.md) are excluded for
+      the same generated-and-verbatim reason: they quote commit subjects
+      word-for-word and are declared read-only, so an umlaut in a historical
+      subject fails the gate the moment a split moves it under docs/.
+    cmd: ./scripts-run src/scripts/check_md_language $(find docs -name '*.md' ! -name 'catalog.md' ! -name 'skills-catalog.md' ! -path 'docs/archive/CHANGELOG-pre-*.md' | sort) {{.QUIET_FLAG}}
 
   check-command-count:
     silent: true

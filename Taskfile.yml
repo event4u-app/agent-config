@@ -100,6 +100,8 @@ tasks:
       - task: lint-governed-writes
       - task: check-enforcement-coverage
       - task: check-artefact-counts
+      - task: check-dependency-floors
+      - task: check-pack-size
       - task: check-preamble-payload
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay
@@ -310,6 +312,8 @@ tasks:
       - task: lint-governed-writes
       - task: check-enforcement-coverage
       - task: check-artefact-counts
+      - task: check-dependency-floors
+      - task: check-pack-size
       - task: check-preamble-payload
       - task: lint-no-python-twin-rationale
       - task: check-memory-replay

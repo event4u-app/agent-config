@@ -12,7 +12,8 @@ Pick one entrypoint:
 # Recommended — one-shot, no local dependency
 npx @event4u/agent-config init --tools=claude-code,cursor
 
-# No-Node fallback — curl | bash entrypoint (downloads a tarball)
+# Registry-independent path — curl | bash entrypoint (downloads a tarball).
+# Also needs Node >= 20; what it skips is npm dependency resolution.
 curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash
 
 # Global CLI (one install per machine, all projects)
@@ -21,9 +22,10 @@ agent-config --help
 ```
 
 That's it. Your agent now follows your team's standards. The orchestrator
-runs a bash payload sync and a Python bridge generator (Python 3 is
-recommended; without it the payload sync still runs). No Task or Make
-required for end users — those are contributor-only.
+runs a bash payload sync and a TypeScript bridge generator (shipped
+pre-bundled as `dist/install/install.mjs`, run with plain `node`). Python is
+not involved. No Task or Make required for end users — those are
+contributor-only.
 
 > **PATH matters for hooks.** The Claude Code plugin resolves `agent-config`
 > from your `PATH`. If `npm install -g` did not put the npm global bin dir on
