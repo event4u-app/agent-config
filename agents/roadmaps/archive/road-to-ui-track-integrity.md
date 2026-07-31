@@ -364,7 +364,15 @@ elsewhere.
   rendered-output gate, and counted correctly in the sign-off summary.
 - Installing `laravel` alone, or `react` alone, leaves no hard reference from a
   shipped skill unresolved.
-- The tier question is answered by a published benchmark, including an
-  honest-null.
+- ~~The tier question is answered by a published benchmark, including an
+  honest-null.~~ — **carried to the follow-up**, unmet here. The measurement is
+  blocked on a harness that does not exist; the tiers are unchanged.
 - No contract in the design surface states a fixture count, halt budget, slot
   map, or cache mechanism that the tree contradicts.
+
+<!-- Deferred items migrated to agents/roadmaps/road-to-ui-track-integrity-followup.md on 2026-07-31 -->
+<!-- Resolution: option 2 (follow-up, ready + blocked). The three [~] lines in
+     Phase 5 stay visible above so the trail stays grep-able; the follow-up
+     carries the executable copy. Blocker recorded there: no harness scores
+     generated UI. -->
+
