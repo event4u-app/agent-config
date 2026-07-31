@@ -244,6 +244,65 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.11.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.11.0](https://github.com/event4u-app/agent-config/compare/9.10.0...9.11.0) (2026-07-31)
+
+### Features
+
+* **doctor:** report detected capability and spend permission as two facts ([9e49347](https://github.com/event4u-app/agent-config/commit/9e4934716bfea7d9c4dcf9c57c7d24c17c6bf980))
+* **detection:** add a read-only, spend-free environment detector ([dcf83cf](https://github.com/event4u-app/agent-config/commit/dcf83cfa589112f4c293ecd665fa9af57905b8d8))
+* **ci:** gate the UI verb→skill-bundle map ([6ed8e49](https://github.com/event4u-app/agent-config/commit/6ed8e4996307ebfb646f2eb1f2fcb3e533e84952))
+* **ci:** measure the install-to-doctor cold start as evidence ([67e258e](https://github.com/event4u-app/agent-config/commit/67e258ef3acb3ae53613a01df2adbba0946bde7e))
+* **ci:** gate the compressed payload and the per-skill share ([09754b2](https://github.com/event4u-app/agent-config/commit/09754b28adf8111ab751b8475a7461849663161b))
+* **cli:** implement the documented --gui opt-in flag ([0b28799](https://github.com/event4u-app/agent-config/commit/0b2879986ddfd6cee3ac8ab2ce367980ccddff12))
+
+### Bug Fixes
+
+* **test:** stop the council CLI test writing an events log into the worktree ([09618d0](https://github.com/event4u-app/agent-config/commit/09618d02cf909b2bca1742b9e40a69ae585baa2a))
+* **doctor:** report the configured mode, not only what `auto` could reach ([bc9c800](https://github.com/event4u-app/agent-config/commit/bc9c800a80a4a8699b216e5e8d4cfe82e39eed86))
+* **work-engine:** distinguish "stack-neutral by definition" from "no executor" ([623c03e](https://github.com/event4u-app/agent-config/commit/623c03ec9ee654dabec9a304836bccfab8706e5d))
+* **test:** drop the removed `name` option from the CliClient construction ([5096049](https://github.com/event4u-app/agent-config/commit/5096049380444c0d4dec091faa84a112257b524b))
+* **install:** ship the council example npm never delivered; align the template ([8e5fe45](https://github.com/event4u-app/agent-config/commit/8e5fe4549cad3ce5689b4a2db0899d44575c6f83))
+* **council:** read the configured transport default on every path, add `auto` ([2b975ce](https://github.com/event4u-app/agent-config/commit/2b975ce2ab44d81e2240c5370af93df91bf27c0a))
+* **packs:** make the design layer reachable from a framework-only install ([2eb3bd6](https://github.com/event4u-app/agent-config/commit/2eb3bd6cc8be55633a6af790ba92c8ae5a238006))
+* **work-engine:** make the design brief's own gates enforce what they claim ([8eb5c2e](https://github.com/event4u-app/agent-config/commit/8eb5c2e34fdbd4cb4d9d671443cbccbfdb45917d))
+* **work-engine:** stop sending real stacks into the fallback lane ([a4cb008](https://github.com/event4u-app/agent-config/commit/a4cb008f8fbf8485896638cb24d3c52e6d218938))
+* **work-engine:** close the UI gate holes and make the verb→bundle map explicit ([95a2577](https://github.com/event4u-app/agent-config/commit/95a25778cb30d03fbae5176957fa4d2fbc3647b8))
+* **cli:** precompile the _cli delegate commands so the consumer CLI needs no tsx ([fa51c5a](https://github.com/event4u-app/agent-config/commit/fa51c5a54f250cc08269326b12519d9fdf817cc3))
+* **deps:** restore the @fastify/static security floor and teach the gate about CVE floors ([b8fb7d6](https://github.com/event4u-app/agent-config/commit/b8fb7d601b37162e0995a521d709a53987527ab2))
+* **ci:** silence the SC2046 the archive exclusion exposed ([047391e](https://github.com/event4u-app/agent-config/commit/047391e63a520aa6e8b965ba58a0f5e5f791dd8a))
+* **ci:** keep era-split archives out of the .md-English gate ([cefb5e2](https://github.com/event4u-app/agent-config/commit/cefb5e2c49c96459807cece92e6aa98ce309341a))
+* **changelog:** never archive the release the archive is named after ([d449f5f](https://github.com/event4u-app/agent-config/commit/d449f5fdec0387421a72bfd185aedc233c4f4b68))
+* **install:** make the ETARGET failure unreachable instead of documented ([41f6bd5](https://github.com/event4u-app/agent-config/commit/41f6bd56b5d20d7675ee4fc86a6540d390785851))
+
+### Documentation
+
+* **roadmap:** close road-to-zero-ceremony-detection and its three blockers ([38fee07](https://github.com/event4u-app/agent-config/commit/38fee07b6121a97fe65f6c249a5c94f71923a8b8))
+* **security:** pin CLAUDE_CONFIG_DIR inheritance as accepted risk ([5a3b580](https://github.com/event4u-app/agent-config/commit/5a3b5804b0cdadb1ba3ccf36a3159bf42bddbd18))
+* **contracts:** make the design contracts describe the machine that exists ([11fe8d2](https://github.com/event4u-app/agent-config/commit/11fe8d237d72c98b9ff37fbc8022cea94efcb1bd))
+* **roadmap:** frontend-stack findings, the council cut, and three roadmaps ([73b8b83](https://github.com/event4u-app/agent-config/commit/73b8b83334289a1fe8dd2d57728ba31aa6c2d243))
+* **contracts:** resolve the UI dispatch contradiction between the two contracts ([a0ec1a3](https://github.com/event4u-app/agent-config/commit/a0ec1a3e29e9f3c4625b5a510ad32b4232373b2b))
+* **adr:** record ADR-204 and correct the falsified Phase 1 claim ([249a5d9](https://github.com/event4u-app/agent-config/commit/249a5d9e54e9d592491c5e922d95bea0b8efd7a2))
+* **roadmap:** close zero-ceremony-install, promote the one defect it found ([e35be42](https://github.com/event4u-app/agent-config/commit/e35be426afdeba04f4dbdeda968a12a78ba39681))
+* **architecture:** stop calling the consumer install "Pipeline B" ([d53ec83](https://github.com/event4u-app/agent-config/commit/d53ec8340468e5e5eb23a0f98d6d2a9ab6dffa90))
+* **install:** make every install statement true of the code that runs ([7ff4c76](https://github.com/event4u-app/agent-config/commit/7ff4c76858f093393e350a77561ab9798efc47a5))
+
+### Tests
+
+* **work-engine:** pin the UI lane matrix as the dispatch baseline ([c9f4f4d](https://github.com/event4u-app/agent-config/commit/c9f4f4d59bca7ab1c848be72bcace44aecdbb1be))
+* **cli:** pin the tsx-free consumer command surface structurally ([fa99997](https://github.com/event4u-app/agent-config/commit/fa99997b53f4afb657fa37e70f559bbc02491c18))
+
+### CI
+
+* register the dependency-floor and pack-size gates ([104b04f](https://github.com/event4u-app/agent-config/commit/104b04f9a80e13c9c37a24bfd1af73d21328ad92))
+
+### Chores
+
+* **test:** drop dead subprocess-era helpers from the doctor test ([5e1d569](https://github.com/event4u-app/agent-config/commit/5e1d56918c8afcc40839f4c20da128d12a5ea840))
+* **roadmaps:** archive the completed detection roadmap ([5c2ae87](https://github.com/event4u-app/agent-config/commit/5c2ae87eb624375a5dace26f6fae28251634ed42))
+* **dist:** rebuild dist/install after the pipeline-naming comment change ([993e511](https://github.com/event4u-app/agent-config/commit/993e5119660d1e91583407aeaa3ebde82f92f533))
+
+Tests: 9742 (+272 since 9.10.0)
+
 ## [9.10.0](https://github.com/event4u-app/agent-config/compare/9.9.0...9.10.0) (2026-07-31)
 
 ### Features
