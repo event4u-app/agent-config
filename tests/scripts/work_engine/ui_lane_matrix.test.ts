@@ -238,12 +238,12 @@ describe('UI lane matrix — detection', () => {
         });
     }
 
-    it('daf-lane-monorepo: manifests below the root are a wrong-scope call', () => {
-        // Was `plain`. The detector still reads root manifests only — that is
-        // documented and intentional — but a root with no manifest and a
-        // workspace that has one is a scope error, not a plain project, so it
-        // reports `unknown` and dispatch refuses instead of running generic
-        // tooling over the whole repo.
+    it('daf-lane-monorepo: a single workspace root is detected, not refused', () => {
+        // Twice-changed row, and the reason matters. It was `plain` (silent
+        // generic tooling over the whole repo), then `unknown` (refused as a
+        // wrong-scope call). Neither is right when the layout is unambiguous:
+        // one frontend workspace IS the scope, and refusing it punished the
+        // most common monorepo shape for a decision the repo already made.
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-lane-mono-'));
         _tmpdirs.push(root);
         const pkgDir = path.join(root, 'packages', 'web');
@@ -253,7 +253,24 @@ describe('UI lane matrix — detection', () => {
             JSON.stringify({ dependencies: { react: '^18', '@radix-ui/react-slot': '^1' } }),
             'utf-8',
         );
-        expect(detect_stack(root).frontend).toBe(UNSUPPORTED_STACK);
+        const r = detect_stack(root);
+        expect(r.frontend).toBe('react-shadcn');
+        expect(r.axes.component_lib).toBe('radix');
+        expect(r.ambiguity).toEqual([]);
+    });
+
+    it('several workspace roots are named, not picked', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-lane-multi-'));
+        _tmpdirs.push(root);
+        for (const [name, deps] of [['web', { react: '^18' }], ['admin', { vue: '^3' }]] as const) {
+            const d = path.join(root, 'apps', name);
+            fs.mkdirSync(d, { recursive: true });
+            fs.writeFileSync(path.join(d, 'package.json'), JSON.stringify({ dependencies: deps }));
+        }
+        const r = detect_stack(root);
+        expect(r.frontend).toBe(UNSUPPORTED_STACK);
+        expect(r.ambiguity.join(' ')).toContain('workspace roots');
+        expect(r.ambiguity.join(' ')).toContain('admin');
     });
 
     it('an empty repo stays the default — greenfield must not be refused', () => {
@@ -262,15 +279,80 @@ describe('UI lane matrix — detection', () => {
         expect(detect_stack(root).frontend).toBe(DEFAULT_STACK);
     });
 
-    it('daf-lane-mixed-repo: react AND vue in one manifest picks silently', () => {
-        // Baseline defect. Priority order resolves the ambiguity instead of
-        // surfacing it, so a project that is genuinely both gets one lane and
-        // no warning. For a global package, guessing is the worse property —
-        // road-to-universal-stack-coverage Phase 1 turns this into a halt.
+    it('daf-lane-mixed-repo: react AND vue is reported, not silently picked', () => {
+        // Was `react` with no warning — priority order resolved the ambiguity
+        // instead of surfacing it, so a project that is genuinely both got one
+        // lane and no signal. Guessing is the worse property for a global
+        // package: asking costs one turn, a wrong silent pick costs the run.
         const root = projectWith({
             'package.json': { dependencies: { react: '^18', vue: '^3' } },
         });
-        expect(detect_stack(root).frontend).toBe('react');
+        const r = detect_stack(root);
+        expect(r.frontend).toBe(UNSUPPORTED_STACK);
+        expect(r.ambiguity).toContain('reactivity: react + vue');
+    });
+
+    it('alpine and htmx do not count as an ambiguity next to a framework', () => {
+        // Progressive-enhancement layers legitimately co-exist with a
+        // framework; treating them as a conflict would refuse ordinary
+        // Laravel+Alpine and React+htmx projects.
+        const root = projectWith({
+            'composer.json': { require: { 'laravel/framework': '^11' } },
+            'package.json': { dependencies: { alpinejs: '^3', 'htmx.org': '^2' } },
+        });
+        expect(detect_stack(root).ambiguity).toEqual([]);
+    });
+
+    it('axes express what the flat label cannot', () => {
+        // The measured argument for axes over an enum. Nuxt is on the
+        // unmodelled-marker list yet resolves to `vue`, because Vue is a Nuxt
+        // dependency and matched first — no ordering of one list can express
+        // "Nuxt implies Vue but is not Vue". As axes both facts fit.
+        const nuxt = detect_stack(
+            projectWith({ 'package.json': { dependencies: { nuxt: '^3', vue: '^3' } } }),
+        );
+        expect(nuxt.frontend).toBe('vue');
+        expect(nuxt.axes.reactivity).toBe('vue');
+        expect(nuxt.axes.meta).toBe('nuxt');
+
+        // Same shape for Next over React — nextjs.csv becomes reachable
+        // without minting a `next` label.
+        const next = detect_stack(
+            projectWith({ 'package.json': { dependencies: { next: '^15', react: '^19' } } }),
+        );
+        expect(next.frontend).toBe('react');
+        expect(next.axes.reactivity).toBe('react');
+        expect(next.axes.meta).toBe('nextjs');
+    });
+
+    it('the flux distinction is structural, not a lane name', () => {
+        const base = { 'laravel/framework': '^11', 'livewire/livewire': '^3' };
+        const without = detect_stack(projectWith({ 'composer.json': { require: base } }));
+        const withFlux = detect_stack(
+            projectWith({ 'composer.json': { require: { ...base, 'livewire/flux': '^1' } } }),
+        );
+        // Same view + reactivity; the ONLY difference is the component library.
+        // Phase 3 composes on exactly that, so Flux-less Livewire gets Livewire
+        // guidance without Flux guidance.
+        expect(without.axes.view).toBe('blade');
+        expect(without.axes.reactivity).toBe('livewire');
+        expect(without.axes.component_lib).toBe('none');
+        expect(withFlux.axes.component_lib).toBe('flux');
+    });
+
+    it('an unresolved axis on a real project is `unknown`, not `none`', () => {
+        // "Absent" and "not recognised" are different facts; conflating them is
+        // what made a refusal indistinguishable from a plain project.
+        const htmx = detect_stack(
+            projectWith({ 'package.json': { dependencies: { 'htmx.org': '^2' } } }),
+        );
+        expect(htmx.axes.reactivity).toBe('htmx');
+        expect(htmx.axes.view).toBe('unknown');
+
+        const greenfield = detect_stack(
+            fs.mkdtempSync(path.join(os.tmpdir(), 'ui-lane-axes-')),
+        );
+        expect(greenfield.axes.view).toBe('none');
     });
 
     it('a corpus exists for stacks the detector refuses', () => {

@@ -146,27 +146,40 @@ reviewed contract. ✅
 
 ## Phase 1 — Detection v2: axes instead of one label
 
-- [ ] Extend `StackResult` with `{ view, reactivity, component_lib, css }`
-      alongside the existing fields. Keep the flat `frontend` label as a
-      **derived compatibility field** so the golden recipes,
-      `STACK_DIRECTIVES` readers and the `== KNOWN_STACKS` invariant keep
-      working. Removing it is a separate breaking change, explicitly not this
-      roadmap.
-- [ ] Signal table per axis from manifests plus marker files
-      (`components.json`, `svelte.config.*`, `@nuxt/*`, `alpinejs`,
-      `htmx.org`, a `<flux:` grep, …). First-match logic applies **per axis**,
-      never across the whole stack — that collapse is the original defect.
-- [ ] Monorepo: read `workspaces` plus scan `apps/*` / `packages/*`. One
-      frontend root → detect against it. Several → halt with numbered options
-      (`ask-when-uncertain`), cache the answer per root.
-- [ ] Ambiguity (react **and** vue in one manifest) halts instead of guessing a
-      priority order.
-- [ ] Extend the cache key to the marker files in the signal table, not just
-      `composer.json` / `package.json`. This closes the detection-scoped part of
-      the audit-staleness finding the predecessor documented but did not fix.
+- [x] Extend `StackResult` with `{ view, reactivity, component_lib, css }`
+      alongside the existing fields, keeping the flat label as a compatibility
+      field.
+      <!-- done, with one design change from the plan: the axes are ADDITIVE and the label chain is untouched, so the eight shipped labels are byte-stable BY CONSTRUCTION rather than by test. Deriving the label from the axes would have put every existing label at risk for no gain. Added a fifth axis the plan did not have — `meta` (nextjs/nuxt/astro/remix/sveltekit/filament) — because a meta-framework does not REPLACE the layer it wraps, which is precisely what the flat label got wrong -->
+- [x] Signal table per axis from manifests plus marker files; first-match logic
+      per axis, never across the stack.
+      <!-- done: 28 signals across 5 axes, specificity-descending within each. Caught a real error in my own first table — Angular was listed under `view: jsx`, which would have handed a React idiom to an Angular project through the Phase-3 composition; it is `angular-html` now -->
+- [x] Monorepo: read `workspaces` plus scan the conventional directories; one
+      frontend root → detect against it, several → halt with options.
+      <!-- done, and it CORRECTS the predecessor: a single workspace root is now detected (descend once, keep its axes) instead of refused. Refusing it punished the most common monorepo shape for a scope decision the layout already makes. Several roots return `unknown` + an ambiguity entry naming them -->
+- [x] Ambiguity halts instead of guessing a priority order.
+      <!-- done, and narrowed after a test caught me: my first rule treated ANY two reactivity signals as a conflict, which refused Laravel+Livewire-with-a-React-widget — an ordinary stack. Livewire is server-driven and co-exists like Alpine and htmx. Only two SPA frameworks (react/vue/svelte/angular/solid/qwik) conflict. The existing blade-wins-over-react precedence test is what surfaced it -->
+- [x] Extend the cache key to the marker files in the signal table.
+      <!-- done: components.json, nuxt.config.*, astro.config.mjs join the two manifests. Closes the detection-scoped part of the staleness finding — a shadcn adoption changes the axes while leaving both manifests untouched, so a manifest-only key served the pre-marker answer indefinitely -->
 
-**Exit:** detection-matrix fixtures green; the derived `frontend` label is
-byte-stable for all eight existing labels (golden replay proves it).
+### What the axes buy, measured
+
+| Shape | Label (unchanged) | reactivity | meta | component_lib |
+|---|---|---|---|---|
+| Livewire + Flux | `blade-livewire-flux` | livewire | none | flux |
+| Livewire, no Flux | `blade-livewire` | livewire | none | **none** |
+| Next + Tailwind | `react` | react | **nextjs** | none |
+| Nuxt + Vue | `vue` | vue | **nuxt** | none |
+| Svelte | `unknown` | svelte | none | none |
+| Astro | `unknown` | unknown | **astro** | none |
+| react **and** vue | `unknown` | — | — | — (ambiguity reported) |
+
+`nextjs.csv` and `nuxtjs.csv` are now reachable **without minting a label** —
+that is the enumeration this roadmap exists to avoid. And the Flux distinction
+is structural (`component_lib`), so Phase 3 can hand Livewire guidance without
+Flux guidance from the axes alone.
+
+**Exit:** detection-matrix fixtures green; the flat label byte-stable for all
+eight existing labels — by construction, since its chain is untouched. ✅
 
 ## Phase 2 — `ui-apply-generic`: the default lane becomes real
 

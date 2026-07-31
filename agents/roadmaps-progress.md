@@ -6,10 +6,10 @@
 
 ## Overall
 
-**53 / 250 steps done · 21%**
+**58 / 250 steps done · 23%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   23%
 ```
 
 ## Open roadmaps
@@ -33,7 +33,7 @@
 | 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 17 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 18 | [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md) | 4 | 26 | 21 | 5 | 0 | 0 | 0 | ██░░░░░░░░ 19% |
+| 18 | [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md) | 4 | 26 | 16 | 10 | 0 | 0 | 0 | ████░░░░░░ 38% |
 | 19 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -332,12 +332,12 @@ _1 blocker resolved._
 
 ### [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md)
 
-**Road to universal stack coverage — an honest refusal is not coverage** — 5 / 26 done (19%)
+**Road to universal stack coverage — an honest refusal is not coverage** — 10 / 26 done (38%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Fixtures and baseline (before any behaviour change) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Detection v2: axes instead of one label | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Detection v2: axes instead of one label | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | `ui-apply-generic`: the default lane becomes real | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Overlay dispatch: composition instead of lane choice | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
 
