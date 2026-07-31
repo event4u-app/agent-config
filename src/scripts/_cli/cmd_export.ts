@@ -44,6 +44,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 
 import {
     AIDER_MARKER,
@@ -57,7 +58,7 @@ import {
     ZED_MARKER,
 } from '../install.js';
 
-const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
 const TEMPLATES_DIR = path.join(PACKAGE_ROOT, 'dist/agent-src', 'templates');
 
 // ---------------------------------------------------------------------------

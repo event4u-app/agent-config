@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as YAML from 'yaml';
 
 import * as user_global_paths from '../_lib/user_global_paths.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 
 type Dict = Record<string, unknown>;
 
@@ -67,7 +68,7 @@ const _HERE = fileURLToPath(import.meta.url);
 
 /** Resolve the @event4u/agent-config package root (this repo). */
 function _package_root(): string {
-    return path.resolve(path.dirname(_HERE), '..', '..', '..');
+    return resolvePackageRoot(import.meta.url);
 }
 
 const SETTINGS_FILENAME = 'agent-settings.yml';

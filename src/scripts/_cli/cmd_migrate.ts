@@ -75,6 +75,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { resolve_project_root } from '../_lib/agent_settings.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 // NOTE: the v0→v1 migrator is NOT statically imported. It lives in the
 // consumer-shipped work_engine template, which ships as `.ts` (run via tsx),
 // while this CLI is compiled to `dist/cli/*.js` and run under plain `node` in
@@ -521,7 +522,7 @@ function _load_state_migrator(): StateMigrator | null {
     // Locate the shipped v0→v1 migration driver (`.ts`). Prefer the shipped
     // `dist/` tree; fall back to the dev `src/` tree. A stripped install with
     // no engine yields `null` (Python ImportError parity).
-    const pkg_root = path.resolve(_HERE_DIR, '..', '..', '..');
+    const pkg_root = resolvePackageRoot(import.meta.url);
     const rel = path.join(
         'agent-src', 'templates', 'scripts', 'work_engine', 'migration', 'v0_to_v1.ts',
     );
