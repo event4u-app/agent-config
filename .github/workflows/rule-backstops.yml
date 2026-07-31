@@ -112,7 +112,13 @@ jobs:
         # (outside this gate's `docs` scope) until an era split moves it into
         # `docs/` — which turned this gate red on 9.10.0 for text nobody wrote
         # or could edit. Authored prose under docs/ stays in scope.
-        run: ./scripts-run src/scripts/check_md_language $(find docs -name '*.md' ! -name 'catalog.md' ! -name 'skills-catalog.md' ! -path 'docs/archive/CHANGELOG-pre-*.md' | sort)
+        # actionlint shellchecks only CHANGED workflow files, so this line's
+        # pre-existing SC2046 first surfaced when the exclusion above touched it.
+        # The word-splitting is the mechanism — it turns the find output into the
+        # argument list — and every path here is repo-controlled and space-free.
+        run: |
+          # shellcheck disable=SC2046
+          ./scripts-run src/scripts/check_md_language $(find docs -name '*.md' ! -name 'catalog.md' ! -name 'skills-catalog.md' ! -path 'docs/archive/CHANGELOG-pre-*.md' | sort)
 
       # --- validators that were ALREADY RED when first wired ------------------
       # Five gates a rule names as its backstop were failing, and had been,
