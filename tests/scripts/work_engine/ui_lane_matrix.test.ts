@@ -17,6 +17,13 @@
  * Fixture ids map 1:1 onto the roadmap's Phase-0 steps
  * (`daf-lane-*`, `daf-placeholder-in-array`, `daf-states-type-bypass`).
  *
+ * Rubric-scored siblings live in `tests/design-artifacts/eval-fixtures.md`
+ * because no unit test can assert them — `daf-generic-apply-coverage` and
+ * `daf-generic-apply-degrade` judge whether the agent actually *cited* the
+ * stack corpus rather than emitting plausible framework code from memory, and
+ * whether it stated the gap when no corpus exists. Both are red until
+ * `road-to-universal-stack-coverage` Phase 2 lands the generic executor.
+ *
  * One sibling id is deliberately NOT here: `daf-lane-recovery` is rubric-scored,
  * not deterministic — it asks whether the agent, handed a directive verb whose
  * name resolves to nothing, states which skills it actually used instead of
@@ -166,6 +173,61 @@ const LANE_MATRIX: readonly Lane[] = [
         detects: 'unknown',
         dispatchResolves: false,
     },
+    // ── road-to-universal-stack-coverage Phase 0 ────────────────────────────
+    // Measured baseline for the shapes the flat label cannot express. Each row
+    // is a real project shape; the `corpus` note records whether the knowledge
+    // to serve it already exists in design-intelligence/data/stacks/.
+    {
+        // Laravel + Alpine + Tailwind — no Livewire, so no Blade guidance at
+        // all despite `view: blade` being unambiguous. corpus: laravel.csv.
+        id: 'daf-lane-blade-alpine',
+        manifests: {
+            'composer.json': { require: { 'laravel/framework': '^11' } },
+            'package.json': { dependencies: { alpinejs: '^3', tailwindcss: '^4' } },
+        },
+        detects: 'plain',
+        dispatchResolves: false,
+    },
+    {
+        // Next collapses into `react`, losing the Next idiom. corpus: nextjs.csv.
+        id: 'daf-lane-next-tailwind',
+        manifests: {
+            'package.json': { dependencies: { next: '^15', react: '^19', tailwindcss: '^4' } },
+        },
+        detects: 'react',
+        dispatchResolves: false,
+    },
+    {
+        // Nuxt collapses into `vue` — and never reaches the unmodelled check,
+        // because `vue` (a Nuxt dependency) matches first. A priority-order
+        // artefact of the flat label. corpus: nuxtjs.csv + nuxt-ui.csv.
+        id: 'daf-lane-nuxt',
+        manifests: { 'package.json': { dependencies: { nuxt: '^3', vue: '^3' } } },
+        detects: 'vue',
+        dispatchResolves: false,
+    },
+    {
+        // Refused, though astro.csv exists — the core claim of the successor
+        // roadmap: an honest refusal is not coverage.
+        id: 'daf-lane-astro',
+        manifests: { 'package.json': { dependencies: { astro: '^4' } } },
+        detects: 'unknown',
+        dispatchResolves: false,
+    },
+    {
+        // Refused, though angular.csv exists.
+        id: 'daf-lane-angular',
+        manifests: { 'package.json': { dependencies: { '@angular/core': '^18' } } },
+        detects: 'unknown',
+        dispatchResolves: false,
+    },
+    {
+        // No htmx signal anywhere in the detector. corpus: none.
+        id: 'daf-lane-htmx',
+        manifests: { 'package.json': { dependencies: { 'htmx.org': '^2' } } },
+        detects: 'plain',
+        dispatchResolves: false,
+    },
 ];
 
 describe('UI lane matrix — detection', () => {
@@ -198,6 +260,29 @@ describe('UI lane matrix — detection', () => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-lane-green-'));
         _tmpdirs.push(root);
         expect(detect_stack(root).frontend).toBe(DEFAULT_STACK);
+    });
+
+    it('daf-lane-mixed-repo: react AND vue in one manifest picks silently', () => {
+        // Baseline defect. Priority order resolves the ambiguity instead of
+        // surfacing it, so a project that is genuinely both gets one lane and
+        // no warning. For a global package, guessing is the worse property —
+        // road-to-universal-stack-coverage Phase 1 turns this into a halt.
+        const root = projectWith({
+            'package.json': { dependencies: { react: '^18', vue: '^3' } },
+        });
+        expect(detect_stack(root).frontend).toBe('react');
+    });
+
+    it('a corpus exists for stacks the detector refuses', () => {
+        // The successor roadmap's premise, asserted rather than assumed: the
+        // knowledge to serve svelte / astro / angular / nuxt is already in the
+        // tree, so refusing them is a wiring gap, not a knowledge gap.
+        const stacksDir = path.join(
+            REPO_ROOT, 'src', 'skills', 'design-intelligence', 'data', 'stacks',
+        );
+        for (const csv of ['svelte.csv', 'astro.csv', 'angular.csv', 'nuxtjs.csv']) {
+            expect(fs.existsSync(path.join(stacksDir, csv)), csv).toBe(true);
+        }
     });
 
     it('every detected label is a KNOWN_STACKS member', () => {

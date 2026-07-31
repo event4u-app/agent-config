@@ -168,6 +168,30 @@ in one place; the pass criterion is the test, not prose.
 | `daf-placeholder-in-array` | `microcopy.nav_items: ["Home", "TODO: Link"]` | passes the brief lock **and** the rendered-output gate |
 | `daf-states-type-bypass` | `states: "n/a"` | passes; the five-state loop is `_isDict`-guarded |
 
+### daf-generic-apply-coverage
+- **primitive:** `static_inspect`
+- **lifecycle stage:** apply dispatch (`road-to-universal-stack-coverage` Phase 0)
+- **scenario:** A small UI task on a project whose stack has a corpus but no
+  overlay skill — svelte, astro, or angular. One component, one state.
+- **pass (rubric):** The base executor's contract is visibly applied — verbatim
+  microcopy, token discipline, a11y floor, a verify step with honest degrade,
+  no placeholder — **and** the result names which corpus rows it used
+  (`--stack svelte`, …). Emitting plausible framework code without citing the
+  corpus is a fail: the whole point is that the knowledge came from the tree
+  rather than from the model's memory.
+- **baseline:** red. These stacks resolve to `unknown` and are refused, so no
+  executor runs at all. Green requires Phase 2's `ui-apply-generic`.
+
+### daf-generic-apply-degrade
+- **primitive:** `static_inspect`
+- **lifecycle stage:** apply dispatch (`road-to-universal-stack-coverage` Phase 0)
+- **scenario:** The same task on a stack with **no** corpus domain (htmx, or any
+  framework absent from `data/stacks/`).
+- **pass (rubric):** The generic contract still applies, and the result carries
+  the honest degrade sentence naming the missing corpus. Silence is a fail —
+  an unstated gap reads as grounded output.
+- **baseline:** red. `plain` currently dispatches a bundle with no corpus step.
+
 ### daf-lane-recovery
 - **primitive:** `static_inspect`
 - **lifecycle stage:** apply dispatch

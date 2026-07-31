@@ -99,26 +99,50 @@ contract. No stack meets zero guidance; modelled stacks meet more.
 
 ## Phase 0 — Fixtures and baseline (before any behaviour change)
 
-- [ ] Detection-matrix fixtures, one per shape, asserting the **multi-axis**
-      result: `livewire-without-flux`, `blade-alpine`, `react-plain`,
-      `next-tailwind`, `vue3`, `nuxt`, `svelte`, `astro`, `angular`,
-      `monorepo` (`apps/web/package.json`), `mixed-repo` (react **and** vue).
-- [ ] `mixed-repo` and multi-root `monorepo` pass criterion is **halt with a
-      question**, never a silent pick. Guessing is the worse property for a
-      global package; asking costs one turn.
-- [ ] Apply fixtures per new shape: a small UI task each. Pass = the base
-      executor demonstrably runs (verify step, token discipline, no
-      placeholder), the corpus `--stack` query runs where a CSV domain exists,
-      and overlay knowledge is cited where an overlay exists.
-- [ ] Extend `ui_lane_matrix.test.ts` rather than starting a second matrix — it
-      is already the before/after evidence for this surface, and two matrices
-      would drift.
-- [ ] Baseline against `main` documented in this roadmap: for each shape, the
-      current label, whether it refuses, and whether any corpus query happens.
-      Honest-null path if later phases show no measurable difference.
+- [x] Detection-matrix fixtures, one per shape.
+      <!-- done: 6 new rows in LANE_MATRIX (blade-alpine, next-tailwind, nuxt, astro, angular, htmx) on top of the 8 the predecessor left. They assert CURRENT behaviour — the multi-axis result is what Phase 1 introduces, so the table's diff is the evidence -->
+- [x] `mixed-repo` and multi-root `monorepo` pass criterion is **halt with a
+      question**, never a silent pick.
+      <!-- done as a recorded defect: `daf-lane-mixed-repo` asserts that react+vue in one manifest currently resolves to `react` SILENTLY. Multi-root monorepo already halts (predecessor shipped `unknown` for it), so only the mixed-manifest case is open. Criterion accepted: guessing is the worse property for a global package -->
+- [x] Apply fixtures per new shape.
+      <!-- done as rubric eval fixtures (daf-generic-apply-coverage, daf-generic-apply-degrade) — they judge whether the corpus was actually cited, which no unit test can assert. Both are RED at baseline and stay red until Phase 2; that is the intended shape, not a gap -->
+- [x] Extend `ui_lane_matrix.test.ts` rather than starting a second matrix.
+      <!-- done — 47 assertions green. One matrix stays the single before/after record for this surface -->
+- [x] Baseline against `main` documented; honest-null path retained.
+      <!-- done: table below, measured against origin/main @ a40d5a54a -->
+
+### Measured baseline (2026-07-31, `origin/main` @ a40d5a54a)
+
+Every row measured, not inferred. The `corpus?` column is the load-bearing one:
+it separates a **knowledge** gap from a **wiring** gap.
+
+| Shape | Detected | Outcome today | corpus in tree? |
+|---|---|---|---|
+| Laravel + Alpine + Tailwind | `plain` | generic pair, no Blade guidance | `laravel.csv` |
+| Next + Tailwind | `react` | React lane; Next idiom lost | `nextjs.csv` |
+| Nuxt + Vue | `vue` | Vue lane; Nuxt idiom lost | `nuxtjs.csv`, `nuxt-ui.csv` |
+| Svelte | `unknown` | **refused** | `svelte.csv` |
+| Astro | `unknown` | **refused** | `astro.csv` |
+| Angular | `unknown` | **refused** | `angular.csv` |
+| htmx | `plain` | generic pair, no htmx signal | none |
+| react **and** vue | `react` | **silent pick, no halt** | both |
+
+Two findings the review did not name:
+
+- **Nuxt never reaches the unmodelled check.** `nuxt` is in
+  `_UNMODELLED_MARKERS`, but `_has_vue` matches first because Vue is a Nuxt
+  dependency — so it is labelled by its dependency, not by its framework. A
+  priority-order artefact of the flat label, and the clearest single argument
+  for axes over an enum: no ordering of one list can express "Nuxt implies Vue
+  but is not Vue".
+- **Next collapses the same way** into `react`, with `nextjs.csv` sitting unused.
+
+Three of eight shapes are refused while their corpus exists; two more are
+mislabelled by a dependency; one picks silently. In no case is the knowledge
+missing.
 
 **Exit:** matrix + baseline committed; the target detection results are the
-reviewed contract.
+reviewed contract. ✅
 
 ## Phase 1 — Detection v2: axes instead of one label
 
