@@ -8,13 +8,13 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **version**: `9.10.0`
 - **owner**: engineering
 - **requires**: —
-- **artefacts**: 114
+- **artefacts**: 115
 
 ## Commands (1)
 
 - **`mission-upgrade`** — Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs.
 
-## Rules (27)
+## Rules (28)
 
 - **`active-remediation`** — Spotted an issue (security gap, missing test, bad code, duplication, stale idiom) — never ignore: small→fix inline, bigger→ask, many→follow-up PR
 - **`broken-access-control`** — Endpoint/query on user/tenant data — authenticated ≠ authorized: server-derived ownership/tenant/role + negative tests (401/non-owner/cross-tenant)
@@ -24,6 +24,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`commit-policy`** — Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked
 - **`cross-source-consistency`** — Two sources disagree (ticket text vs mockup, spec silent on a needed behavior, spec vs code) → surface + ask before proceeding, never silently guess
 - **`delegation-policy`** — Delegable multi-part work + auto-orchestration on — decompose, tier-size, dispatch to subagents instead of in-session
+- **`design-fidelity`** — A provided prototype/mockup/design system is the spec — build 1:1; never swap fonts, controls, or layout unconfirmed
 - **`docker-commands`** — Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool
 - **`downstream-changes`** — After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation
 - **`engineering-safety-floor`** — Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous

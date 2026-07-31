@@ -145,12 +145,61 @@ the criteria are the contract.
 - **scenario:** A submit button should disable and show a spinner on click.
 - **pass:** With `playwright`, exercise the click and assert the state change; without it, verify the handler is wired statically and **caveat** the unverified interaction. Never claim the interaction works unverified.
 
+## Lane fixtures (`road-to-ui-track-integrity`)
+
+The `daf-lane-*` family, plus `daf-placeholder-in-array` and
+`daf-states-type-bypass`, are **deterministic**, not rubric-scored: they live as
+executable assertions in
+[`ui_lane_matrix.test.ts`](../scripts/work_engine/ui_lane_matrix.test.ts). That
+file's `LANE_MATRIX` constant is the measurement — its diff across commits is
+the before/after evidence, so a phase that claims to fix a lane without
+changing the table did not fix it. The ids are listed here so the id space stays
+in one place; the pass criterion is the test, not prose.
+
+| id | scenario | measured baseline |
+|---|---|---|
+| `daf-lane-react-shadcn` | React + `@radix-ui/*` | detects `react-shadcn`; dispatch target has **no** `SKILL.md` |
+| `daf-lane-react-no-radix` | React alone | detects `plain`, not `react-shadcn` |
+| `daf-lane-livewire-no-flux` | Laravel + `livewire/livewire`, no Flux | detects `plain` |
+| `daf-lane-filament` | Laravel + `filament/filament` | detects `plain` |
+| `daf-lane-vue` | `vue` in `package.json` | detects `vue`; dispatch target has no `SKILL.md` |
+| `daf-lane-static-html` | Tailwind only | detects `plain` |
+| `daf-lane-monorepo` | manifests below the root | detects `plain` |
+| `daf-placeholder-in-array` | `microcopy.nav_items: ["Home", "TODO: Link"]` | passes the brief lock **and** the rendered-output gate |
+| `daf-states-type-bypass` | `states: "n/a"` | passes; the five-state loop is `_isDict`-guarded |
+
+### daf-lane-recovery
+- **primitive:** `static_inspect`
+- **lifecycle stage:** apply dispatch
+- **scenario:** The UI track emits `ui-apply-<stack>` for a stack whose directive
+  name has no backing skill file. The agent receives that directive.
+- **pass:** The agent does **not** silently proceed as if a stack skill had run.
+  Either it resolves the intended bundle from the contract's redirect table and
+  states which skills it used, or it reports that the named directive does not
+  resolve. Continuing with an unnamed, unstated fallback is a fail — that is the
+  silent degradation the lane matrix exists to expose.
+- **note:** Two lanes are recoverable this way by construction (the redirect
+  table names real skills for `blade-livewire-flux` and `react-shadcn`); `vue`
+  redirects to itself and `plain` redirects to a `laravel`-pack skill, so for
+  those two no honest recovery exists without guessing.
+
 ## Notes
 
 - These fixtures are the **baseline**, not a runtime gate — they ship as the
   eval substrate the staged rollout (`design-artifact-verification` § Staged
   rollout) measures against. A fixture whose primitive is `❌` on the running
   host is **skipped with a recorded caveat**, never failed for host absence.
-- Phase 1 (`design-artifact-lifecycle`) references these `id`s from its
-  lifecycle branches; do not renumber or rename an id without updating that
-  link.
+- The lifecycle contract's branch table cites a **subset** of these ids — the
+  nine that gate a branch. It does not cite all of them, and it is not meant to:
+  the asset-discipline and verify-honesty fixtures
+  (`daf-emoji-as-icon`, `daf-fake-svg-logo`, `daf-external-asset-url`,
+  `daf-invented-screenshot`, `daf-nonblank-canvas`, `daf-broken-interaction`)
+  are gated by `design-fidelity-mechanics`, `daf-redesign-trigger` by the
+  targeted-edit discipline in that same guideline, and the `daf-lane-*` family
+  by `ui_lane_matrix.test.ts`. An earlier revision of this note claimed the
+  lifecycle branches reference "these ids" without qualification, which read as
+  all of them and made the fixture↔contract binding look tighter than it is.
+- Every id must be cited by **something**. `task lint-eval-fixture-citations`
+  fails on an id no surface references — that is the drift this note used to
+  paper over.
+- Do not renumber or rename an id without updating its citing surface.

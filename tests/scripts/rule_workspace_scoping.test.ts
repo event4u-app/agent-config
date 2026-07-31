@@ -107,15 +107,26 @@ describe("pack scope — frontend-design deselection (Phase 3 e2e)", () => {
     "small-business",
   ];
 
-  it("drops ui-audit-gate + design-fidelity, keeps engineering-base rules", () => {
-    for (const id of ["ui-audit-gate", "design-fidelity"]) {
-      const p = path.join(RULES_SOURCE, `${id}.md`);
-      expect(rule_in_scope(p, null, NO_FRONTEND), id).toBe(false);
-    }
+  it("drops ui-audit-gate, keeps engineering-base rules", () => {
+    // `ui-audit-gate` is frontend-design-only: it gates component creation
+    // against an audit inventory that the design pack supplies.
+    const gate = path.join(RULES_SOURCE, "ui-audit-gate.md");
+    expect(rule_in_scope(gate, null, NO_FRONTEND), "ui-audit-gate").toBe(false);
+
     for (const id of ["commit-policy", "architecture", "downstream-changes"]) {
       const p = path.join(RULES_SOURCE, `${id}.md`);
       expect(rule_in_scope(p, null, NO_FRONTEND), id).toBe(true);
     }
+  });
+
+  it("KEEPS design-fidelity without the frontend-design pack", () => {
+    // Deliberate change: `design-fidelity` is framework-neutral discipline —
+    // honour a provided design, never swap fonts/controls/layout unconfirmed —
+    // with no dependency on the design corpus. Gating it behind
+    // `frontend-design` meant a consumer who installed only `laravel` or only
+    // `react` never loaded it, which was the defect, not the design.
+    const p = path.join(RULES_SOURCE, "design-fidelity.md");
+    expect(rule_in_scope(p, null, NO_FRONTEND), "design-fidelity").toBe(true);
   });
 
   it("selecting frontend-design keeps both", () => {

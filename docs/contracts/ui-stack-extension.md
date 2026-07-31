@@ -24,18 +24,25 @@ change.
 
 | Artefact | File | Change |
 |---|---|---|
-| Stack label | [`scripts/work_engine/stack/detect.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/stack/detect.py) | New entry in `KNOWN_STACKS` + a heuristic in `detect_stack` |
-| Apply skill | `.agent-src.uncondensed/skills/ui-apply-<stack>/SKILL.md` | New skill bundle |
-| Review skill | `.agent-src.uncondensed/skills/ui-design-review-<stack>/SKILL.md` | New skill bundle |
-| Polish skill | `.agent-src.uncondensed/skills/ui-polish-<stack>/SKILL.md` | New skill bundle |
-| Dispatch tables | `directives/ui/{apply,review,polish}.py` | New row in each `STACK_DIRECTIVES` map |
-| Golden fixture | `tests/golden/sandbox/recipes/gt_u<NN>_<stack>_*.py` | One happy-path baseline at minimum |
+| Stack label | `scripts/work_engine/stack/detect.ts` | New entry in `KNOWN_STACKS` + a heuristic in `detect_stack` |
+| Dispatch tables | `directives/ui/{apply,review,polish}.ts` | New row in each `STACK_DIRECTIVES` map |
+| Skill bundle | `directives/ui/stack_bundles.ts` | New row in `STACK_BUNDLES` naming the skills that implement the lane |
+| Golden fixture | `tests/golden/sandbox/recipes/gt_u<NN>_<stack>_*.ts` | One happy-path baseline at minimum |
 
-Skill names are not free — they are read by the dispatcher as
-`ui-apply-<stack>`, `ui-design-review-<stack>`, `ui-polish-<stack>`.
-A typo is silently handled by the `DEFAULT_DIRECTIVE` fallback
-(`ui-apply-plain` / `ui-design-review-plain` / `ui-polish-plain`),
-which is recoverable but probably not what the maintainer intended.
+**You do not author `ui-apply-<stack>` / `ui-design-review-<stack>` /
+`ui-polish-<stack>` skills.** Those strings are directive **verbs** the
+agent interprets, not skill paths — the same shape as `run-tests`,
+`create-plan`, and `apply-plan`, none of which resolve to a skill either
+(only 2 of the engine's 11 literal verbs do). An earlier revision of this
+recipe told maintainers to create three skill files per stack; none of the
+twelve was ever written, the four shipped lanes worked anyway, and the
+instruction was the reason two bundle rows silently pointed at nothing.
+Add a `STACK_BUNDLES` row instead, and reuse existing skills there.
+
+A verb whose bundle names a nonexistent skill, or a `pack_agnostic` lane
+whose bundle names a framework-pack-only skill, fails
+`task lint-ui-stack-bundles`. That check is the reason a typo no longer
+degrades silently through the `DEFAULT_DIRECTIVE` fallback.
 
 ## Step 1 — pick the label
 
@@ -84,10 +91,22 @@ stack (Astro lists `react` as a peer dep when used with React adapters)
 must be ordered carefully. Test against real fixtures, not hand-edited
 JSON.
 
-## Step 3 — three skills, one shape
+## Step 3 — the bundle row, and the envelopes it must satisfy
 
-Each skill is a SKILL.md bundle with frontmatter and prose. The
-contract for each:
+Add one row to `STACK_BUNDLES` in `directives/ui/stack_bundles.ts`:
+`build` (skills that write and fix UI — used by `apply` and `polish`),
+`review` (skills that grade it), and `pack_agnostic` (true only when every
+member ships in a stack-neutral pack, which is a precondition for using
+the lane as a fallback).
+
+Prefer existing skills. A new stack usually needs a framework executor
+(`react-shadcn-ui`, `flux`, …) plus the stack-neutral pair
+(`ui-component-architect` + `tailwind-engineer`); write a new skill only
+when no existing one covers the framework's idiom.
+
+The envelope contracts below are what the **agent** must satisfy when it
+acts on each verb. They are the state shapes the dispatcher validates —
+not headings for skill files you create:
 
 ### `ui-apply-<stack>`
 
@@ -130,43 +149,47 @@ the skill does **not** check the ceiling itself but must respect
 
 ## Step 4 — wire dispatch tables
 
-Three identical edits in
-[`directives/ui/apply.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/apply.py),
-[`directives/ui/review.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/review.py),
-and [`directives/ui/polish.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/polish.py):
+Three identical edits, in `directives/ui/apply.ts`,
+`directives/ui/review.ts`, and `directives/ui/polish.ts`:
 
-```python
-STACK_DIRECTIVES: dict[str, str] = {
-    "blade-livewire-flux": "ui-apply-blade-livewire-flux",
-    "react-shadcn": "ui-apply-react-shadcn",
-    "vue": "ui-apply-vue",
-    "plain": "ui-apply-plain",
-    "svelte": "ui-apply-svelte",          # ← new row
-}
+```ts
+export const STACK_DIRECTIVES: Record<string, string> = {
+    'blade-livewire-flux': 'ui-apply-blade-livewire-flux',
+    'react-shadcn': 'ui-apply-react-shadcn',
+    vue: 'ui-apply-vue',
+    plain: 'ui-apply-plain',
+    svelte: 'ui-apply-svelte',          // ← new row
+};
 ```
 
-Same shape in `review.py` (`ui-design-review-svelte`) and `polish.py`
-(`ui-polish-svelte`). The dispatcher does not validate that the skill
-actually exists — it emits the `@agent-directive` and trusts the agent
-loader. A typo or missing skill manifests as a halt loop the maintainer
-notices on first replay.
+Same shape in `review.ts` (`ui-design-review-svelte`) and `polish.ts`
+(`ui-polish-svelte`). Then add the matching `STACK_BUNDLES` row (Step 3) —
+that is the part `task lint-ui-stack-bundles` verifies. A directive whose
+lane has no bundle row, or whose bundle names a skill that does not exist,
+fails the check rather than degrading through the `DEFAULT_DIRECTIVE`
+fallback.
 
-## Step 5 — version anchor in skill frontmatter
+The `Object.keys(STACK_DIRECTIVES) == KNOWN_STACKS` invariant is asserted
+in `directives_ui_review_dispatch.test.ts` and
+`directives_ui_polish_dispatch.test.ts` — a label added to one and not the
+other fails there.
 
-Every stack-specific skill declares the upstream library version it
-was tested against, in frontmatter:
+## Step 5 — version drift
 
-```yaml
-tested_against:
-  svelte: "5.x"
-  svelte_kit: "2.x"      # if applicable
-```
+The audit step compares installed versions from `package.json` against the
+version a stack skill declares it was tested with, warns on a mismatch, and
+lets the user proceed or pin. Today exactly one skill carries such an
+anchor in prose — `react-shadcn-ui`, mirrored by
+`TESTED_AGAINST_SHADCN_MAJOR` in `directives/ui/audit.ts`.
 
-The audit step reads installed versions from `package.json` and
-compares against the anchor. A mismatch warns but does not block;
-the user picks whether to proceed or pin. Forgetting the anchor
-fails CI (`task lint-skills` enforces presence on `ui-apply-*`,
-`ui-design-review-*`, `ui-polish-*`).
+> **There is no `tested_against` frontmatter key and no CI check for one.**
+> An earlier revision of this recipe stated that `task lint-skills`
+> enforces the key on `ui-apply-*` / `ui-design-review-*` / `ui-polish-*`.
+> It does not: `tested_against` appears in zero scripts and zero skills, and
+> the glob it named matches nothing, so the check would have passed
+> vacuously even if it existed. If a new stack needs a version anchor, wire
+> it the way the shadcn major is wired — a constant in `audit.ts` the step
+> actually reads — not as unenforced frontmatter.
 
 ## Step 6 — Golden fixture
 

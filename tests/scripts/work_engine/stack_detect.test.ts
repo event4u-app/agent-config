@@ -52,9 +52,23 @@ describe('stack/detect — module constants parity', () => {
         expect(DEFAULT_STACK).toBe('plain');
     });
 
-    it('KNOWN_STACKS carries exactly the four Python labels', () => {
+    it('KNOWN_STACKS carries every dispatchable label plus `unknown`', () => {
+        // Grew from four to eight: `blade-livewire`, `filament` and `react`
+        // were shapes that previously fell into `plain` because the heuristics
+        // above them required a second marker, and `unknown` splits
+        // "framework we do not model" out of `plain` so dispatch can refuse
+        // instead of handing over generic tooling silently.
         expect([...KNOWN_STACKS].sort()).toEqual(
-            ['blade-livewire-flux', 'plain', 'react-shadcn', 'vue'].sort(),
+            [
+                'blade-livewire',
+                'blade-livewire-flux',
+                'filament',
+                'plain',
+                'react',
+                'react-shadcn',
+                'unknown',
+                'vue',
+            ].sort(),
         );
     });
 
@@ -79,10 +93,19 @@ describe('stack/detect — detection logic', () => {
         expect(detectView(tmp)).toBe('{"frontend":"blade-livewire-flux","has_mtime":true}');
     });
 
-    it('NOT blade-livewire-flux: livewire without flux falls through', () => {
+    it('livewire without flux is its own lane, not the fallback', () => {
         write('composer.json', JSON.stringify({ require: { 'livewire/livewire': '^3' } }));
-        // No package.json → next branch fails too → plain.
-        expect(detectView(tmp)).toBe('{"frontend":"plain","has_mtime":true}');
+        // Previously `plain`: the flux heuristic required Livewire AND Flux, so
+        // the most common Laravel frontend landed in the fallback lane.
+        expect(detectView(tmp)).toBe('{"frontend":"blade-livewire","has_mtime":true}');
+    });
+
+    it('filament wins over bare livewire (it pulls livewire in transitively)', () => {
+        write(
+            'composer.json',
+            JSON.stringify({ require: { 'filament/filament': '^3', 'livewire/livewire': '^3' } }),
+        );
+        expect(detectView(tmp)).toBe('{"frontend":"filament","has_mtime":true}');
     });
 
     it('react-shadcn: react + @radix-ui/* dependency', () => {
@@ -107,9 +130,17 @@ describe('stack/detect — detection logic', () => {
         expect(detectView(tmp)).toBe('{"frontend":"plain","has_mtime":true}');
     });
 
-    it('NOT react-shadcn: react alone (no radix/shadcn/components) → plain', () => {
+    it('react alone is its own lane, not the fallback', () => {
         write('package.json', JSON.stringify({ dependencies: { react: '^18' } }));
-        expect(detectView(tmp)).toBe('{"frontend":"plain","has_mtime":true}');
+        // Previously `plain`: React is a served stack even without shadcn.
+        expect(detectView(tmp)).toBe('{"frontend":"react","has_mtime":true}');
+    });
+
+    it('an unmodelled framework is `unknown`, not `plain`', () => {
+        write('package.json', JSON.stringify({ dependencies: { svelte: '^5' } }));
+        // `plain` must mean "no frontend markers". Conflating the two is what
+        // let a Svelte project receive Tailwind-only tooling and no warning.
+        expect(detectView(tmp)).toBe('{"frontend":"unknown","has_mtime":true}');
     });
 
     it('vue: package lists vue, no react', () => {
