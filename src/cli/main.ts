@@ -23,7 +23,7 @@ import { runRecordTriggerEval } from './commands/recordTriggerEval.js';
 import { runDoctorShell } from './commands/doctorShell.js';
 import { runRtkDetect } from './commands/rtkDetect.js';
 import { runUiServe } from './commands/uiServe.js';
-import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation } from './initRouting.js';
+import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation, findInitGuiConflict, withoutGuiFlag } from './initRouting.js';
 import { maybePrintFirstRunNotice } from './firstRunNotice.js';
 import { runSettings } from './commands/settings.js';
 import { runConfig } from './commands/config.js';
@@ -414,6 +414,15 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     // --project` writer — never the GUI, never the global install
     // (road-to-setup-experience § Phase 1.3).
     if (head === 'init') {
+        // `--gui` is the explicit opt-in. It overrides the capability probes
+        // (TTY, headless) but never `CI` / `AGENT_CONFIG_NO_UI` / a CLI-mode
+        // flag — and an explicit request is never discarded silently, so a
+        // losing `--gui` is a hard error rather than a quiet CLI install.
+        const conflict = findInitGuiConflict(argv.slice(1));
+        if (conflict !== null) {
+            logger.error(`init: ${conflict}`);
+            return 2;
+        }
         const projectDelegation = buildProjectInitDelegation(argv.slice(1));
         if (projectDelegation !== null) {
             return delegateToBash({ args: projectDelegation });
@@ -426,8 +435,10 @@ async function main(rawArgv: readonly string[]): Promise<number> {
         return runUiServe(buildInitGuiOptions(argv.slice(1)));
     }
 
-    // Everything else forwards to the Bash dispatcher verbatim.
-    return delegateToBash({ args: argv });
+    // Everything else forwards to the Bash dispatcher. `--gui` is stripped:
+    // it has no installer counterpart and the bash argument loop ends in
+    // `err "Unknown argument"`.
+    return delegateToBash({ args: withoutGuiFlag(argv) });
 }
 
 main(process.argv.slice(2))
