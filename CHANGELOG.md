@@ -396,6 +396,8 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 * **reports:** refresh the derived outputs the consistency gate regenerates ([2e49aa3](https://github.com/event4u-app/agent-config/commit/2e49aa397270b3812d1e92cd594c8af3b8ad6c6f))
 * **lint:** clear the ESLint errors the pre-push gate surfaced ([19ba531](https://github.com/event4u-app/agent-config/commit/19ba5311e3689d9db34d8bbb024a730e02ea6898))
 
+Tests: 9470 (+390 since 9.9.0)
+
 ## [9.9.0](https://github.com/event4u-app/agent-config/compare/9.8.0...9.9.0) (2026-07-29)
 
 ### Features
