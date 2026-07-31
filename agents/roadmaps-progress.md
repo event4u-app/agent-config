@@ -6,11 +6,19 @@
 
 ## Overall
 
-**48 / 184 steps done · 26%**
+**53 / 184 steps done · 29%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
 ```
+
+## ✅ Completed — pending archival
+
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
+
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-consistent-rule-scoping.md](roadmaps/road-to-consistent-rule-scoping.md) | 5 | 5 |
 
 ## Open roadmaps
 
@@ -18,7 +26,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-consistent-rule-scoping.md](roadmaps/road-to-consistent-rule-scoping.md) | 2 | 5 | 5 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-consistent-rule-scoping.md](roadmaps/road-to-consistent-rule-scoping.md) | 2 | 5 | 0 | 5 | 0 | 0 | 0 | ██████████ 100% |
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
@@ -72,12 +80,12 @@ _2 blockers resolved._
 
 ### [road-to-consistent-rule-scoping.md](roadmaps/road-to-consistent-rule-scoping.md)
 
-**Road to consistent rule scoping — the CLI global install ships rules the wizard filters out** — 0 / 5 done (0%)
+**Road to consistent rule scoping — the CLI global install ships rules the wizard filters out** — 5 / 5 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Filter the copy and the inventory together | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Pin it where nothing looks today | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Filter the copy and the inventory together | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Pin it where nothing looks today | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 
