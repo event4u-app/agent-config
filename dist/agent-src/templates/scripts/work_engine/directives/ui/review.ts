@@ -17,7 +17,7 @@ import {
     agent_directive,
 } from '../../delivery_state.js';
 import {
-    UNSUPPORTED_LANE,
+    is_ambiguous_stack,
     bundle_line,
     unsupported_stack_questions,
 } from './stack_bundles.js';
@@ -192,11 +192,15 @@ function _stack_label(state: DeliveryState): string {
 function _delegate_to_review_skill(state: DeliveryState): StepResult {
     const directive = _resolve_directive(state);
     const stack_label = _stack_label(state);
-    if (stack_label === UNSUPPORTED_LANE) {
+    if (is_ambiguous_stack(state.stack)) {
+        const conflicts = ((state.stack as Record<string, Any>)['ambiguity'] ??
+            []) as ReadonlyArray<string>;
         return new StepResult({
             outcome: Outcome.BLOCKED,
-            questions: unsupported_stack_questions('review'),
-            message: 'UI review refused: frontend framework not modelled by any lane.',
+            questions: unsupported_stack_questions('review', conflicts),
+            message:
+                `UI review halted: detection is ambiguous (${conflicts.join('; ')}) — ` +
+                'the open question is which project to build for.',
         });
     }
     return new StepResult({
@@ -205,7 +209,7 @@ function _delegate_to_review_skill(state: DeliveryState): StepResult {
             agent_directive(directive),
             `> Stack: \`${stack_label}\`. Reviewing rendered components ` +
                 'against the locked design brief.',
-            bundle_line(stack_label, 'review'),
+            bundle_line(state.stack, 'review', stack_label),
             '> The review pass compares `state.ticket.ui_apply.rendered` ' +
                 'against `state.ui_design` (microcopy, states, a11y, layout) ' +
                 'and produces a structured `findings` list.',

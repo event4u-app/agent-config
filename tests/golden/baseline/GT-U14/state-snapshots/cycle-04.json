@@ -102,7 +102,7 @@
   "questions": [
     "@agent-directive: ui-apply-plain",
     "> Stack: `plain`. Implementing the locked design brief.",
-    "> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
+    "> Skills: `ui-apply-generic` + `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
     "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
     "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
     "> 2. Abort — drop this UI request"

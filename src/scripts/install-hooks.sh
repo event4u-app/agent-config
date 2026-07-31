@@ -148,11 +148,22 @@ if git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)';
     ./scripts-run .augment/scripts/update_roadmap_progress --check
     rstatus=$?
     if [ $rstatus -ne 0 ]; then
+        # The check fails for THREE distinct reasons and prints the real one
+        # above: a stale dashboard, an unresolved `[~]` deferred item (Iron
+        # Law 3), or a completed-but-unarchived roadmap. Naming only the first
+        # sent a maintainer chasing a regeneration that was already correct —
+        # and a safety gate whose text points at the wrong cause trains people
+        # to distrust the gate, which costs more than the wrong message.
         echo ""
-        echo "❌  Commit blocked — agents/roadmaps-progress.md is stale."
-        echo "   Run './agent-config roadmap:progress' (or"
-        echo "   './scripts-run .augment/scripts/update_roadmap_progress'),"
-        echo "   stage agents/roadmaps-progress.md, then re-commit."
+        echo "❌  Commit blocked — the roadmap dashboard gate failed."
+        echo "   The cause is printed above. The three it reports:"
+        echo "     · dashboard stale      → './agent-config roadmap:progress',"
+        echo "                               then stage agents/roadmaps-progress.md"
+        echo "     · Iron Law 3           → unresolved '[~]' deferred items. Surface"
+        echo "                               them and ask the user; NOT the agent's"
+        echo "                               to clear (roadmap-management § 4b)"
+        echo "     · completed roadmap    → 'git mv' it into agents/roadmaps/archive/,"
+        echo "                               then regenerate"
         echo "   To bypass for an unrelated WIP commit: git commit --no-verify"
         exit 1
     fi
