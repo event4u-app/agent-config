@@ -238,6 +238,13 @@ function _stripChars(s: string, chars: string): string {
 // the repo root.
 // =============================================================================
 
+// road-to-consistent-rule-scoping: the predicate moved to a side-effect-free
+// module so the consumer installer can import it WITHOUT pulling this file's
+// module-level CLI self-invoke into its bundle. Re-exported here because four
+// in-repo consumers import it from `condense.js`.
+export { rule_in_scope } from '../install/ruleInScope.js';
+import { rule_in_scope } from '../install/ruleInScope.js';
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url)); // <repo>/src/scripts
 const _DEFAULT_PROJECT_ROOT = path.resolve(_HERE, '..', '..');
 
@@ -1014,34 +1021,6 @@ function _read_rule_packs(): string[] | null {
  * `null` (no role filtering), so every existing 2- and 3-arg call site
  * compiles and behaves unchanged.
  */
-export function rule_in_scope(
-    source_path: string,
-    scope: readonly string[] | null,
-    pack_scope: readonly string[] | null = null,
-    role_scope: readonly string[] | null = null,
-): boolean {
-    if (scope === null && pack_scope === null && role_scope === null) {
-        return true;
-    }
-    const [meta] = _parse_frontmatter(_readText(source_path));
-    if (meta['type'] === 'always' || meta['alwaysApply'] === true) {
-        return true; // kernel always projects
-    }
-    const axis = (key: string, configured: readonly string[] | null): boolean => {
-        if (configured === null) {
-            return true;
-        }
-        const values = Array.isArray(meta[key])
-            ? (meta[key] as unknown[]).map((w) => String(w))
-            : [];
-        if (values.length === 0) {
-            return true; // untagged → fail safe: ship it
-        }
-        return values.some((v) => configured.includes(v));
-    };
-    return axis('workspaces', scope) && axis('packs', pack_scope) && axis('roles', role_scope);
-}
-
 /** List rule basenames under RULES_SOURCE, workspace/pack scope applied. */
 function _scoped_rule_basenames(): string[] {
     const scope = _read_rule_workspaces();

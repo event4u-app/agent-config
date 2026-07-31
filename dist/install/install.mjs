@@ -117,17 +117,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path16) {
-      const ctrl = callVisitor(key, node, visitor, path16);
+    function visit_(key, node, visitor, path14) {
+      const ctrl = callVisitor(key, node, visitor, path14);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path16, ctrl);
-        return visit_(key, ctrl, visitor, path16);
+        replaceNode(key, path14, ctrl);
+        return visit_(key, ctrl, visitor, path14);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path16 = Object.freeze(path16.concat(node));
+          path14 = Object.freeze(path14.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path16);
+            const ci = visit_(i, node.items[i], visitor, path14);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -138,13 +138,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path16 = Object.freeze(path16.concat(node));
-          const ck = visit_("key", node.key, visitor, path16);
+          path14 = Object.freeze(path14.concat(node));
+          const ck = visit_("key", node.key, visitor, path14);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path16);
+          const cv = visit_("value", node.value, visitor, path14);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -165,17 +165,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path16) {
-      const ctrl = await callVisitor(key, node, visitor, path16);
+    async function visitAsync_(key, node, visitor, path14) {
+      const ctrl = await callVisitor(key, node, visitor, path14);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path16, ctrl);
-        return visitAsync_(key, ctrl, visitor, path16);
+        replaceNode(key, path14, ctrl);
+        return visitAsync_(key, ctrl, visitor, path14);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path16 = Object.freeze(path16.concat(node));
+          path14 = Object.freeze(path14.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path16);
+            const ci = await visitAsync_(i, node.items[i], visitor, path14);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -186,13 +186,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path16 = Object.freeze(path16.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path16);
+          path14 = Object.freeze(path14.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path14);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path16);
+          const cv = await visitAsync_("value", node.value, visitor, path14);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -219,23 +219,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path16) {
+    function callVisitor(key, node, visitor, path14) {
       if (typeof visitor === "function")
-        return visitor(key, node, path16);
+        return visitor(key, node, path14);
       if (identity.isMap(node))
-        return visitor.Map?.(key, node, path16);
+        return visitor.Map?.(key, node, path14);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key, node, path16);
+        return visitor.Seq?.(key, node, path14);
       if (identity.isPair(node))
-        return visitor.Pair?.(key, node, path16);
+        return visitor.Pair?.(key, node, path14);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key, node, path16);
+        return visitor.Scalar?.(key, node, path14);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key, node, path16);
+        return visitor.Alias?.(key, node, path14);
       return void 0;
     }
-    function replaceNode(key, path16, node) {
-      const parent = path16[path16.length - 1];
+    function replaceNode(key, path14, node) {
+      const parent = path14[path14.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity.isPair(parent)) {
@@ -845,10 +845,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path16, value) {
+    function collectionFromPath(schema, path14, value) {
       let v = value;
-      for (let i = path16.length - 1; i >= 0; --i) {
-        const k = path16[i];
+      for (let i = path14.length - 1; i >= 0; --i) {
+        const k = path14[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -867,7 +867,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path16) => path16 == null || typeof path16 === "object" && !!path16[Symbol.iterator]().next().done;
+    var isEmptyPath = (path14) => path14 == null || typeof path14 === "object" && !!path14[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -897,11 +897,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path16, value) {
-        if (isEmptyPath(path16))
+      addIn(path14, value) {
+        if (isEmptyPath(path14))
           this.add(value);
         else {
-          const [key, ...rest] = path16;
+          const [key, ...rest] = path14;
           const node = this.get(key, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -915,8 +915,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path16) {
-        const [key, ...rest] = path16;
+      deleteIn(path14) {
+        const [key, ...rest] = path14;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -930,8 +930,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path16, keepScalar) {
-        const [key, ...rest] = path16;
+      getIn(path14, keepScalar) {
+        const [key, ...rest] = path14;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -949,8 +949,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path16) {
-        const [key, ...rest] = path16;
+      hasIn(path14) {
+        const [key, ...rest] = path14;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -960,8 +960,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path16, value) {
-        const [key, ...rest] = path16;
+      setIn(path14, value) {
+        const [key, ...rest] = path14;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -3476,9 +3476,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path16, value) {
+      addIn(path14, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path16, value);
+          this.contents.addIn(path14, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3553,14 +3553,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path16) {
-        if (Collection.isEmptyPath(path16)) {
+      deleteIn(path14) {
+        if (Collection.isEmptyPath(path14)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path16) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path14) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3575,10 +3575,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path16, keepScalar) {
-        if (Collection.isEmptyPath(path16))
+      getIn(path14, keepScalar) {
+        if (Collection.isEmptyPath(path14))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path16, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path14, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3589,10 +3589,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path16) {
-        if (Collection.isEmptyPath(path16))
+      hasIn(path14) {
+        if (Collection.isEmptyPath(path14))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path16) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path14) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3609,13 +3609,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path16, value) {
-        if (Collection.isEmptyPath(path16)) {
+      setIn(path14, value) {
+        if (Collection.isEmptyPath(path14)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path16), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path14), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path16, value);
+          this.contents.setIn(path14, value);
         }
       }
       /**
@@ -4001,10 +4001,10 @@ var require_resolve_block_map = __commonJS({
       let offset = bm.offset;
       let commentEnd = null;
       for (const collItem of bm.items) {
-        const { start, key, sep: sep7, value } = collItem;
+        const { start, key, sep: sep5, value } = collItem;
         const keyProps = resolveProps.resolveProps(start, {
           indicator: "explicit-key-ind",
-          next: key ?? sep7?.[0],
+          next: key ?? sep5?.[0],
           offset,
           onError,
           parentIndent: bm.indent,
@@ -4018,7 +4018,7 @@ var require_resolve_block_map = __commonJS({
             else if ("indent" in key && key.indent !== bm.indent)
               onError(offset, "BAD_INDENT", startColMsg);
           }
-          if (!keyProps.anchor && !keyProps.tag && !sep7) {
+          if (!keyProps.anchor && !keyProps.tag && !sep5) {
             commentEnd = keyProps.end;
             if (keyProps.comment) {
               if (map.comment)
@@ -4042,7 +4042,7 @@ var require_resolve_block_map = __commonJS({
         ctx.atKey = false;
         if (utilMapIncludes.mapIncludes(ctx, map.items, keyNode))
           onError(keyStart, "DUPLICATE_KEY", "Map keys must be unique");
-        const valueProps = resolveProps.resolveProps(sep7 ?? [], {
+        const valueProps = resolveProps.resolveProps(sep5 ?? [], {
           indicator: "map-value-ind",
           next: value,
           offset: keyNode.range[2],
@@ -4058,7 +4058,7 @@ var require_resolve_block_map = __commonJS({
             if (ctx.options.strict && keyProps.start < valueProps.found.offset - 1024)
               onError(keyNode.range, "KEY_OVER_1024_CHARS", "The : indicator must be at most 1024 chars after the start of an implicit block mapping key");
           }
-          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : composeEmptyNode(ctx, offset, sep7, null, valueProps, onError);
+          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : composeEmptyNode(ctx, offset, sep5, null, valueProps, onError);
           if (ctx.schema.compat)
             utilFlowIndentCheck.flowIndentCheck(bm.indent, value, onError);
           offset = valueNode.range[2];
@@ -4149,7 +4149,7 @@ var require_resolve_end = __commonJS({
       let comment = "";
       if (end) {
         let hasSpace = false;
-        let sep7 = "";
+        let sep5 = "";
         for (const token of end) {
           const { source, type } = token;
           switch (type) {
@@ -4163,13 +4163,13 @@ var require_resolve_end = __commonJS({
               if (!comment)
                 comment = cb;
               else
-                comment += sep7 + cb;
-              sep7 = "";
+                comment += sep5 + cb;
+              sep5 = "";
               break;
             }
             case "newline":
               if (comment)
-                sep7 += source;
+                sep5 += source;
               hasSpace = true;
               break;
             default:
@@ -4212,18 +4212,18 @@ var require_resolve_flow_collection = __commonJS({
       let offset = fc.offset + fc.start.source.length;
       for (let i = 0; i < fc.items.length; ++i) {
         const collItem = fc.items[i];
-        const { start, key, sep: sep7, value } = collItem;
+        const { start, key, sep: sep5, value } = collItem;
         const props = resolveProps.resolveProps(start, {
           flow: fcName,
           indicator: "explicit-key-ind",
-          next: key ?? sep7?.[0],
+          next: key ?? sep5?.[0],
           offset,
           onError,
           parentIndent: fc.indent,
           startOnNewline: false
         });
         if (!props.found) {
-          if (!props.anchor && !props.tag && !sep7 && !value) {
+          if (!props.anchor && !props.tag && !sep5 && !value) {
             if (i === 0 && props.comma)
               onError(props.comma, "UNEXPECTED_TOKEN", `Unexpected , in ${fcName}`);
             else if (i < fc.items.length - 1)
@@ -4277,8 +4277,8 @@ var require_resolve_flow_collection = __commonJS({
             }
           }
         }
-        if (!isMap && !sep7 && !props.found) {
-          const valueNode = value ? composeNode(ctx, value, props, onError) : composeEmptyNode(ctx, props.end, sep7, null, props, onError);
+        if (!isMap && !sep5 && !props.found) {
+          const valueNode = value ? composeNode(ctx, value, props, onError) : composeEmptyNode(ctx, props.end, sep5, null, props, onError);
           coll.items.push(valueNode);
           offset = valueNode.range[2];
           if (isBlock(value))
@@ -4290,7 +4290,7 @@ var require_resolve_flow_collection = __commonJS({
           if (isBlock(key))
             onError(keyNode.range, "BLOCK_IN_FLOW", blockMsg);
           ctx.atKey = false;
-          const valueProps = resolveProps.resolveProps(sep7 ?? [], {
+          const valueProps = resolveProps.resolveProps(sep5 ?? [], {
             flow: fcName,
             indicator: "map-value-ind",
             next: value,
@@ -4301,8 +4301,8 @@ var require_resolve_flow_collection = __commonJS({
           });
           if (valueProps.found) {
             if (!isMap && !props.found && ctx.options.strict) {
-              if (sep7)
-                for (const st of sep7) {
+              if (sep5)
+                for (const st of sep5) {
                   if (st === valueProps.found)
                     break;
                   if (st.type === "newline") {
@@ -4319,7 +4319,7 @@ var require_resolve_flow_collection = __commonJS({
             else
               onError(valueProps.start, "MISSING_CHAR", `Missing , or : between ${fcName} items`);
           }
-          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : valueProps.found ? composeEmptyNode(ctx, valueProps.end, sep7, null, valueProps, onError) : null;
+          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : valueProps.found ? composeEmptyNode(ctx, valueProps.end, sep5, null, valueProps, onError) : null;
           if (valueNode) {
             if (isBlock(value))
               onError(valueNode.range, "BLOCK_IN_FLOW", blockMsg);
@@ -4499,7 +4499,7 @@ var require_resolve_block_scalar = __commonJS({
           chompStart = i + 1;
       }
       let value = "";
-      let sep7 = "";
+      let sep5 = "";
       let prevMoreIndented = false;
       for (let i = 0; i < contentStart; ++i)
         value += lines[i][0].slice(trimIndent) + "\n";
@@ -4516,24 +4516,24 @@ var require_resolve_block_scalar = __commonJS({
           indent = "";
         }
         if (type === Scalar.Scalar.BLOCK_LITERAL) {
-          value += sep7 + indent.slice(trimIndent) + content;
-          sep7 = "\n";
+          value += sep5 + indent.slice(trimIndent) + content;
+          sep5 = "\n";
         } else if (indent.length > trimIndent || content[0] === "	") {
-          if (sep7 === " ")
-            sep7 = "\n";
-          else if (!prevMoreIndented && sep7 === "\n")
-            sep7 = "\n\n";
-          value += sep7 + indent.slice(trimIndent) + content;
-          sep7 = "\n";
+          if (sep5 === " ")
+            sep5 = "\n";
+          else if (!prevMoreIndented && sep5 === "\n")
+            sep5 = "\n\n";
+          value += sep5 + indent.slice(trimIndent) + content;
+          sep5 = "\n";
           prevMoreIndented = true;
         } else if (content === "") {
-          if (sep7 === "\n")
+          if (sep5 === "\n")
             value += "\n";
           else
-            sep7 = "\n";
+            sep5 = "\n";
         } else {
-          value += sep7 + content;
-          sep7 = " ";
+          value += sep5 + content;
+          sep5 = " ";
           prevMoreIndented = false;
         }
       }
@@ -4715,25 +4715,25 @@ var require_resolve_flow_scalar = __commonJS({
       if (!match)
         return source;
       let res = match[1];
-      let sep7 = " ";
+      let sep5 = " ";
       let pos = first.lastIndex;
       line.lastIndex = pos;
       while (match = line.exec(source)) {
         if (match[1] === "") {
-          if (sep7 === "\n")
-            res += sep7;
+          if (sep5 === "\n")
+            res += sep5;
           else
-            sep7 = "\n";
+            sep5 = "\n";
         } else {
-          res += sep7 + match[1];
-          sep7 = " ";
+          res += sep5 + match[1];
+          sep5 = " ";
         }
         pos = line.lastIndex;
       }
       const last = /[ \t]*(.*)/sy;
       last.lastIndex = pos;
       match = last.exec(source);
-      return res + sep7 + (match?.[1] ?? "");
+      return res + sep5 + (match?.[1] ?? "");
     }
     function doubleQuotedValue(source, onError) {
       let res = "";
@@ -5543,14 +5543,14 @@ var require_cst_stringify = __commonJS({
         }
       }
     }
-    function stringifyItem({ start, key, sep: sep7, value }) {
+    function stringifyItem({ start, key, sep: sep5, value }) {
       let res = "";
       for (const st of start)
         res += st.source;
       if (key)
         res += stringifyToken(key);
-      if (sep7)
-        for (const st of sep7)
+      if (sep5)
+        for (const st of sep5)
           res += st.source;
       if (value)
         res += stringifyToken(value);
@@ -5575,9 +5575,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path16) => {
+    visit.itemAtPath = (cst, path14) => {
       let item = cst;
-      for (const [field, index] of path16) {
+      for (const [field, index] of path14) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5586,23 +5586,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path16) => {
-      const parent = visit.itemAtPath(cst, path16.slice(0, -1));
-      const field = path16[path16.length - 1][0];
+    visit.parentCollection = (cst, path14) => {
+      const parent = visit.itemAtPath(cst, path14.slice(0, -1));
+      const field = path14[path14.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path16, item, visitor) {
-      let ctrl = visitor(item, path16);
+    function _visit(path14, item, visitor) {
+      let ctrl = visitor(item, path14);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path16.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path14.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5613,10 +5613,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path16);
+            ctrl = ctrl(item, path14);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path16) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path14) : ctrl;
     }
     exports.visit = visit;
   }
@@ -6717,18 +6717,18 @@ var require_parser = __commonJS({
         if (this.type === "map-value-ind") {
           const prev = getPrevProps(this.peek(2));
           const start = getFirstKeyStartProps(prev);
-          let sep7;
+          let sep5;
           if (scalar.end) {
-            sep7 = scalar.end;
-            sep7.push(this.sourceToken);
+            sep5 = scalar.end;
+            sep5.push(this.sourceToken);
             delete scalar.end;
           } else
-            sep7 = [this.sourceToken];
+            sep5 = [this.sourceToken];
           const map = {
             type: "block-map",
             offset: scalar.offset,
             indent: scalar.indent,
-            items: [{ start, key: scalar, sep: sep7 }]
+            items: [{ start, key: scalar, sep: sep5 }]
           };
           this.onKeyLine = true;
           this.stack[this.stack.length - 1] = map;
@@ -6881,15 +6881,15 @@ var require_parser = __commonJS({
                 } else if (isFlowToken(it.key) && !includesToken(it.sep, "newline")) {
                   const start2 = getFirstKeyStartProps(it.start);
                   const key = it.key;
-                  const sep7 = it.sep;
-                  sep7.push(this.sourceToken);
+                  const sep5 = it.sep;
+                  sep5.push(this.sourceToken);
                   delete it.key;
                   delete it.sep;
                   this.stack.push({
                     type: "block-map",
                     offset: this.offset,
                     indent: this.indent,
-                    items: [{ start: start2, key, sep: sep7 }]
+                    items: [{ start: start2, key, sep: sep5 }]
                   });
                 } else if (start.length > 0) {
                   it.sep = it.sep.concat(start, this.sourceToken);
@@ -6918,14 +6918,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs17 = this.flowScalar(this.type);
+              const fs16 = this.flowScalar(this.type);
               if (atNextItem || it.value) {
-                map.items.push({ start, key: fs17, sep: [] });
+                map.items.push({ start, key: fs16, sep: [] });
                 this.onKeyLine = true;
               } else if (it.sep) {
-                this.stack.push(fs17);
+                this.stack.push(fs16);
               } else {
-                Object.assign(it, { key: fs17, sep: [] });
+                Object.assign(it, { key: fs16, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7053,13 +7053,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs17 = this.flowScalar(this.type);
+              const fs16 = this.flowScalar(this.type);
               if (!it || it.value)
-                fc.items.push({ start: [], key: fs17, sep: [] });
+                fc.items.push({ start: [], key: fs16, sep: [] });
               else if (it.sep)
-                this.stack.push(fs17);
+                this.stack.push(fs16);
               else
-                Object.assign(it, { key: fs17, sep: [] });
+                Object.assign(it, { key: fs16, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -7083,13 +7083,13 @@ var require_parser = __commonJS({
             const prev = getPrevProps(parent);
             const start = getFirstKeyStartProps(prev);
             fixFlowSeqItems(fc);
-            const sep7 = fc.end.splice(1, fc.end.length);
-            sep7.push(this.sourceToken);
+            const sep5 = fc.end.splice(1, fc.end.length);
+            sep5.push(this.sourceToken);
             const map = {
               type: "block-map",
               offset: fc.offset,
               indent: fc.indent,
-              items: [{ start, key: fc, sep: sep7 }]
+              items: [{ start, key: fc, sep: sep5 }]
             };
             this.onKeyLine = true;
             this.stack[this.stack.length - 1] = map;
@@ -7370,11 +7370,11 @@ var require_dist = __commonJS({
 // src/scripts/install.ts
 import { spawn, spawnSync as spawnSync2 } from "node:child_process";
 import * as crypto3 from "node:crypto";
-import * as fs16 from "node:fs";
-import * as os8 from "node:os";
-import * as path15 from "node:path";
+import * as fs15 from "node:fs";
+import * as os7 from "node:os";
+import * as path13 from "node:path";
 import process3 from "node:process";
-import { fileURLToPath as fileURLToPath5, pathToFileURL as pathToFileURL3 } from "node:url";
+import { fileURLToPath as fileURLToPath3, pathToFileURL as pathToFileURL2 } from "node:url";
 
 // src/scripts/_lib/json_pointers.ts
 import { createHash } from "node:crypto";
@@ -7872,8 +7872,8 @@ function lockfile_write_path(env) {
   }
   return write_target("installed.lock", { env: env ?? null });
 }
-function read_lockfile(path16) {
-  const target = path16 ?? lockfile_path();
+function read_lockfile(path14) {
+  const target = path14 ?? lockfile_path();
   let text;
   try {
     text = fs2.readFileSync(target, { encoding: "utf-8" });
@@ -8747,18 +8747,18 @@ function manifest_path(project_root, env) {
 var _TOP_KEY_RE = /^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*"?([^"\n]*?)"?\s*$/;
 var _LIST_DASH_RE = /^\s*-\s*(.+?)\s*$/;
 var _INDENT_KEY_RE = /^\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*"?([^"\n]*?)"?\s*$/;
-function read_manifest(path16) {
+function read_manifest(path14) {
   let text;
   try {
-    text = require_read_text(path16);
+    text = require_read_text(path14);
   } catch {
     return null;
   }
   const data = _parse_manual(text);
   return _normalise_v2_shape(data);
 }
-function require_read_text(path16) {
-  return fs6.readFileSync(path16, { encoding: "utf-8" });
+function require_read_text(path14) {
+  return fs6.readFileSync(path14, { encoding: "utf-8" });
 }
 function _normalise_v2_shape(data) {
   if (data["tools"] === void 0 || data["tools"] === null) {
@@ -8939,9 +8939,9 @@ function stable_sort(items, key) {
     return a.index - b.index;
   }).map((entry) => entry.item);
 }
-function write_manifest(path16, version, tools, options = {}) {
+function write_manifest(path14, version, tools, options = {}) {
   const rendered = _render2(version, tools, { deploy_roots: options.deploy_roots ?? null });
-  return write_atomic(path16, rendered);
+  return write_atomic(path14, rendered);
 }
 var ScopeMismatchError = class extends Error {
   name_;
@@ -9635,17 +9635,6 @@ function _local_settings_path(project_root) {
 function _canonical_settings_path(project_root) {
   return path9.join(project_root, ...LOCAL_PROJECT_SUBDIR, DEFAULT_PROJECT_FILE);
 }
-function project_settings_path(project_root) {
-  const canonical = _canonical_settings_path(project_root);
-  if (_exists(canonical)) {
-    return canonical;
-  }
-  const legacy = path9.join(project_root, DEFAULT_PROJECT_FILE);
-  if (_exists(legacy)) {
-    return legacy;
-  }
-  return canonical;
-}
 var USER_GLOBAL_FILENAME = "agent-settings.yml";
 function DEFAULT_USER_GLOBAL_FILE() {
   return write_target(USER_GLOBAL_FILENAME);
@@ -9999,393 +9988,12 @@ function _is_plain_dict(value) {
 }
 
 // src/install/rule_scope.ts
-import * as path12 from "node:path";
-
-// src/scripts/condense.ts
-var YAML2 = __toESM(require_dist(), 1);
-import * as fs13 from "node:fs";
-import * as os7 from "node:os";
-import * as path11 from "node:path";
-import { fileURLToPath as fileURLToPath3, pathToFileURL } from "node:url";
-
-// src/scripts/_lib/agent_src.ts
-import * as fs11 from "node:fs";
 import * as path10 from "node:path";
-import { fileURLToPath as fileURLToPath2 } from "node:url";
-var _HERE = path10.dirname(fileURLToPath2(import.meta.url));
-var _DEFAULT_ROOT = path10.resolve(_HERE, "..", "..", "..");
-function _deriveRoots(root) {
-  const packages = path10.join(root, "packages");
-  const src = path10.join(root, "src");
-  return {
-    ROOT: root,
-    LEGACY_SRC: path10.join(root, ".agent-src.uncondensed"),
-    PACKAGES: packages,
-    PACKAGE_CORE: path10.join(packages, "core"),
-    SRC: src,
-    SRC_SKILLS: path10.join(src, "skills"),
-    SRC_RULES: path10.join(src, "rules"),
-    SRC_AGENT: path10.join(src, "agent-src"),
-    SRC_DOMAINS: path10.join(src, "domains")
-  };
-}
-var _roots = _deriveRoots(_DEFAULT_ROOT);
-var _SRC_DOMAINS_PREFIX = "src/domains/";
-function _isDir(p) {
-  try {
-    return fs11.statSync(p).isDirectory();
-  } catch {
-    return false;
-  }
-}
-function _isFile(p) {
-  try {
-    return fs11.statSync(p).isFile();
-  } catch {
-    return false;
-  }
-}
-function _exists2(p) {
-  try {
-    fs11.statSync(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-function _iterdirSorted(p) {
-  let names;
-  try {
-    names = fs11.readdirSync(p);
-  } catch {
-    return [];
-  }
-  names.sort();
-  return names.map((name) => path10.join(p, name));
-}
-function _rglobSorted(root, pattern) {
-  const out = [];
-  const suffix = pattern === "*" ? null : pattern.slice(1);
-  const walk = (dir) => {
-    let entries;
-    try {
-      entries = fs11.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const ent of entries) {
-      const full = path10.join(dir, ent.name);
-      const matches = suffix === null ? true : ent.name.endsWith(suffix);
-      if (matches) {
-        out.push(full);
-      }
-      if (ent.isDirectory() || ent.isSymbolicLink() && _isDir(full)) {
-        walk(full);
-      }
-    }
-  };
-  walk(root);
-  out.sort();
-  return out;
-}
-function _relativeToPosix(child, root) {
-  const rel = path10.relative(root, child);
-  return rel.split(path10.sep).join("/");
-}
-function _isUnder(child, root) {
-  const rel = path10.relative(root, child);
-  return rel !== "" && !rel.startsWith("..") && !path10.isAbsolute(rel);
-}
-function _domains_command_logical(p) {
-  const dom = _roots.SRC_DOMAINS;
-  if (p !== dom && !_isUnder(p, dom)) {
-    return null;
-  }
-  const rel = _relativeToPosix(p, dom);
-  const parts = rel.split("/");
-  if (parts.length < 3 || parts[parts.length - 1] !== "command.md") {
-    return null;
-  }
-  const subpath = parts.slice(1, -1).join("/");
-  return `commands/${subpath}.md`;
-}
-function* _iter_domains_commands() {
-  const dom = _roots.SRC_DOMAINS;
-  if (!_isDir(dom)) {
-    return;
-  }
-  for (const p of _rglobSorted(dom, "command.md")) {
-    if (!_isFile(p)) {
-      continue;
-    }
-    const logical = _domains_command_logical(p);
-    if (logical !== null) {
-      yield [p, logical];
-    }
-  }
-}
-var _LEGACY_PREFIX = ".agent-src.uncondensed/";
-var _PACKAGE_SUFFIX = "/.agent-src.uncondensed/";
-var _SRC_SKILLS_PREFIX = "src/skills/";
-var _SRC_RULES_PREFIX = "src/rules/";
-function _root_specs() {
-  const specs = [];
-  if (_exists2(_roots.LEGACY_SRC)) {
-    specs.push([_roots.LEGACY_SRC, ""]);
-  }
-  if (_exists2(_roots.PACKAGES)) {
-    for (const pkg of _iterdirSorted(_roots.PACKAGES)) {
-      const sub = path10.join(pkg, ".agent-src.uncondensed");
-      if (_isDir(sub)) {
-        specs.push([sub, ""]);
-      }
-    }
-  }
-  if (_isDir(_roots.SRC_AGENT)) {
-    specs.push([_roots.SRC_AGENT, ""]);
-  }
-  if (_isDir(_roots.SRC_SKILLS)) {
-    specs.push([_roots.SRC_SKILLS, "skills/"]);
-  }
-  if (_isDir(_roots.SRC_RULES)) {
-    specs.push([_roots.SRC_RULES, "rules/"]);
-  }
-  const seen = /* @__PURE__ */ new Map();
-  for (const [physical, prefix] of specs) {
-    if (!prefix) {
-      continue;
-    }
-    const claimedBy = seen.get(prefix);
-    if (claimedBy !== void 0) {
-      throw new Error(
-        `source-root logical-prefix collision: ${JSON.stringify(prefix)} claimed by both ${claimedBy} and ${physical}`
-      );
-    }
-    seen.set(prefix, physical);
-  }
-  return specs;
-}
-function artefact_roots() {
-  const roots = [];
-  if (_exists2(_roots.LEGACY_SRC)) {
-    roots.push(_roots.LEGACY_SRC);
-  }
-  if (_exists2(_roots.PACKAGES)) {
-    for (const pkg of _iterdirSorted(_roots.PACKAGES)) {
-      const sub = path10.join(pkg, ".agent-src.uncondensed");
-      if (_isDir(sub)) {
-        roots.push(sub);
-      }
-    }
-  }
-  if (_isDir(_roots.SRC_AGENT)) {
-    roots.push(_roots.SRC_AGENT);
-  }
-  if (_isDir(_roots.SRC_SKILLS) || _isDir(_roots.SRC_RULES)) {
-    roots.push(_roots.SRC);
-  }
-  return roots;
-}
-function* iter_all_sources() {
-  const seen = /* @__PURE__ */ new Set();
-  for (const [root, prefix] of _root_specs()) {
-    for (const p of _rglobSorted(root, "*")) {
-      if (!_isFile(p)) {
-        continue;
-      }
-      if (p !== root && !_isUnder(p, root)) {
-        continue;
-      }
-      const rel = prefix + _relativeToPosix(p, root);
-      if (seen.has(rel)) {
-        continue;
-      }
-      seen.add(rel);
-      yield [p, rel];
-    }
-  }
-  for (const [p, rel] of _iter_domains_commands()) {
-    if (seen.has(rel)) {
-      continue;
-    }
-    seen.add(rel);
-    yield [p, rel];
-  }
-}
-function resolve_logical(logical_rel) {
-  const rel = logical_rel.replaceAll("\\", "/").replace(/^\/+/, "");
-  for (const [root, prefix] of _root_specs()) {
-    let p;
-    if (prefix) {
-      if (!rel.startsWith(prefix)) {
-        continue;
-      }
-      p = path10.join(root, rel.slice(prefix.length));
-    } else {
-      p = path10.join(root, rel);
-    }
-    if (_exists2(p)) {
-      return p;
-    }
-  }
-  if (rel.startsWith("commands/") && rel.endsWith(".md") && _isDir(_roots.SRC_DOMAINS)) {
-    const subpath = rel.slice("commands/".length, rel.length - ".md".length);
-    for (const packDir of _iterdirSorted(_roots.SRC_DOMAINS)) {
-      const cand = path10.join(packDir, subpath, "command.md");
-      if (_isFile(cand)) {
-        return cand;
-      }
-    }
-  }
-  return null;
-}
-function strip_source_prefix(rel) {
-  const posix = rel.replaceAll("\\", "/");
-  if (posix.startsWith(_LEGACY_PREFIX)) {
-    return posix.slice(_LEGACY_PREFIX.length);
-  }
-  if (posix.startsWith("packages/")) {
-    const idx = posix.indexOf(_PACKAGE_SUFFIX);
-    if (idx !== -1) {
-      return posix.slice(idx + _PACKAGE_SUFFIX.length);
-    }
-  }
-  if (posix.startsWith(_SRC_SKILLS_PREFIX)) {
-    return `skills/${posix.slice(_SRC_SKILLS_PREFIX.length)}`;
-  }
-  if (posix.startsWith(_SRC_RULES_PREFIX)) {
-    return `rules/${posix.slice(_SRC_RULES_PREFIX.length)}`;
-  }
-  if (posix.startsWith(_SRC_DOMAINS_PREFIX) && posix.endsWith("/command.md")) {
-    const rest = posix.slice(_SRC_DOMAINS_PREFIX.length);
-    const parts = rest.split("/");
-    if (parts.length >= 3) {
-      return `commands/${parts.slice(1, -1).join("/")}.md`;
-    }
-  }
-  return null;
-}
 
-// src/scripts/_lib/compile_time_toggles.ts
-var COMPILE_TIME_TOGGLES = {
-  // `speak` defaults FALSE (dormant) per docs/adrs/telegraph/0002 — the absent-key
-  // fallback used to be `true`, which silently contradicted ADR 0001 (accepted,
-  // "default off until bench"). Measured basis: median vs_terse −9.27% (API) /
-  // −5.47% (exact cl100k_base) — telegraph emits MORE than a plain "be terse".
-  // Opt back in with an explicit `telegraph.speak: true` once an output-side bench
-  // clears the kill-criterion bar. `enabled` keeps its true default: it is the
-  // family master switch, and flipping it would silence sibling telegraph settings
-  // that were never measured negative.
-  //
-  // This predicate deliberately does NOT read `speak_scope`. That key disables the
-  // rule's *behaviour* and never removed its token cost — the trap the measurement
-  // exposed.
-  "telegraph-speak": (s) => {
-    const tg = s["telegraph"] ?? {};
-    const enabled = tg["enabled"] === void 0 ? true : tg["enabled"];
-    const speak = tg["speak"] === void 0 ? false : tg["speak"];
-    return Boolean(enabled) && Boolean(speak);
-  }
-};
-function rule_is_compile_enabled(rule_id, settings) {
-  const predicate = COMPILE_TIME_TOGGLES[rule_id];
-  return predicate === void 0 ? true : predicate(settings);
-}
-
-// src/scripts/_lib/script_output.ts
-var VALID_LEVELS = ["silent", "minimal", "verbose"];
-var DEFAULT_LEVEL = "minimal";
-var ENV_VAR = "AGENT_SCRIPT_VERBOSITY";
-var ENV_ALIAS = "SCRIPT_OUTPUT_VERBOSE";
-var SETTINGS_FILE = ".agent-settings.yml";
-var _resolved_level = null;
-var _pending_summary = [];
-function _read_settings_level(settings_path) {
-  const data = load_agent_settings({ project_path: settings_path });
-  const section = data["verbosity"];
-  if (typeof section !== "object" || section === null || Array.isArray(section)) {
-    return null;
-  }
-  const value = section["script_output"];
-  if (typeof value === "string" && VALID_LEVELS.includes(value)) {
-    return value;
-  }
-  return null;
-}
-function resolve_level(settings_path = null) {
-  if (_resolved_level !== null) {
-    return _resolved_level;
-  }
-  const env_value = (process.env[ENV_VAR] ?? "").trim().toLowerCase();
-  if (VALID_LEVELS.includes(env_value)) {
-    _resolved_level = env_value;
-  } else if ((process.env[ENV_ALIAS] ?? "").trim() === "1") {
-    _resolved_level = "verbose";
-  } else {
-    const p = settings_path ?? SETTINGS_FILE;
-    _resolved_level = _read_settings_level(p) ?? DEFAULT_LEVEL;
-  }
-  process.env[ENV_VAR] = _resolved_level;
-  return _resolved_level;
-}
-function info(message) {
-  if (resolve_level() === "verbose") {
-    process.stdout.write(`${message}
-`);
-  }
-}
-function success(message) {
-  const level = resolve_level();
-  if (level === "verbose") {
-    process.stdout.write(`${message}
-`);
-  } else if (level === "minimal") {
-    _pending_summary.push(message);
-  }
-}
-function flush_summary(headline = null) {
-  const level = resolve_level();
-  if (level !== "minimal" || _pending_summary.length === 0) {
-    return;
-  }
-  if (headline) {
-    process.stdout.write(`${headline}
-`);
-  } else {
-    process.stdout.write(`${_pending_summary[_pending_summary.length - 1]}
-`);
-  }
-  _pending_summary.length = 0;
-}
-
-// src/scripts/_lib/model_tier.ts
-import fs12 from "node:fs";
-var TIER_TO_CLAUDE_MODEL = {
-  high: "opus",
-  medium: "sonnet",
-  lite: "haiku"
-};
-var MODEL_TIER_RE = /^model_tier:\s*"?([a-z]+)"?\s*$/m;
-function read_model_tier(skill_md) {
-  if (!fs12.existsSync(skill_md)) return null;
-  const text = fs12.readFileSync(skill_md).toString("utf-8");
-  if (!text.startsWith("---\n")) return null;
-  const end = text.indexOf("\n---\n", 4);
-  if (end === -1) return null;
-  const m = MODEL_TIER_RE.exec(text.slice(4, end));
-  return m ? m[1] : null;
-}
-function render_native_model_md(text, tier) {
-  const model = TIER_TO_CLAUDE_MODEL[tier];
-  if (model === void 0) {
-    throw new Error(`'${tier}'`);
-  }
-  return text.replace(MODEL_TIER_RE, `model: ${model}`);
-}
-
-// src/scripts/condense.ts
-var _SLUG_PREFIX_RE = /^slug_prefix:\s*"?([a-z][a-z0-9-]*)"?\s*$/m;
-function _yamlParse(text) {
+// src/install/ruleInScope.ts
+var YAML2 = __toESM(require_dist(), 1);
+import * as fs11 from "node:fs";
+function parseYaml2(text) {
   try {
     const data = YAML2.parse(text, { version: "1.1" });
     return data === void 0 ? null : data;
@@ -10393,643 +10001,36 @@ function _yamlParse(text) {
     return null;
   }
 }
-function _exists3(p) {
-  try {
-    fs13.lstatSync(p);
-    fs13.statSync(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-function _existsOrSymlink(p) {
-  try {
-    fs13.lstatSync(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-function _isDir2(p) {
-  try {
-    return fs13.statSync(p).isDirectory();
-  } catch {
-    return false;
-  }
-}
-function _isFile2(p) {
-  try {
-    return fs13.statSync(p).isFile();
-  } catch {
-    return false;
-  }
-}
-function _isSymlink(p) {
-  try {
-    return fs13.lstatSync(p).isSymbolicLink();
-  } catch {
-    return false;
-  }
-}
-function _isDirNoFollow(p) {
-  try {
-    return fs13.lstatSync(p).isDirectory();
-  } catch {
-    return false;
-  }
-}
-function _readText(p) {
-  return fs13.readFileSync(p, "utf-8");
-}
-function _writeText(p, text) {
-  fs13.writeFileSync(p, text, "utf-8");
-}
-function _mkdirp(p) {
-  fs13.mkdirSync(p, { recursive: true });
-}
-function _iterdirSorted2(p) {
-  let names;
-  try {
-    names = fs13.readdirSync(p);
-  } catch {
-    return [];
-  }
-  names.sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-  return names.map((n) => path11.join(p, n));
-}
-function _rglobSorted2(root, pattern) {
-  const out = [];
-  const suffix = pattern === "*" ? null : pattern.slice(1);
-  const walk = (dir) => {
-    let entries;
-    try {
-      entries = fs13.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const ent of entries) {
-      const full = path11.join(dir, ent.name);
-      const matches = suffix === null ? true : ent.name.endsWith(suffix);
-      if (matches) {
-        out.push(full);
-      }
-      if (ent.isDirectory() || ent.isSymbolicLink() && _isDir2(full)) {
-        walk(full);
-      }
-    }
-  };
-  walk(root);
-  out.sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-  return out;
-}
-function _relativeToPosix2(child, root) {
-  const rel = path11.relative(root, child);
-  return rel.split(path11.sep).join("/");
-}
-function _isUnder2(child, root) {
-  const rel = path11.relative(root, child);
-  return rel !== "" && !rel.startsWith("..") && !path11.isAbsolute(rel);
-}
-function _posixParts(p) {
-  return p.split("/").filter((s) => s.length > 0);
-}
-function _lstrip(s) {
-  return s.replace(/^\s+/u, "");
-}
-function _strip(s) {
+function strip(s) {
   return s.replace(/^\s+/u, "").replace(/\s+$/u, "");
 }
-function _lstripNewlines(s) {
+function lstripNewlines(s) {
   return s.replace(/^\n+/, "");
 }
-function _stripChars(s, chars) {
-  let start = 0;
-  let end = s.length;
-  while (start < end && chars.includes(s[start])) start += 1;
-  while (end > start && chars.includes(s[end - 1])) end -= 1;
-  return s.slice(start, end);
-}
-var _HERE2 = path11.dirname(fileURLToPath3(import.meta.url));
-var _DEFAULT_PROJECT_ROOT = path11.resolve(_HERE2, "..", "..");
-function _deriveState(root) {
-  return {
-    PROJECT_ROOT: root,
-    SOURCE_DIR: path11.join(root, ".agent-src.uncondensed"),
-    TARGET_DIR: path11.join(root, "dist/agent-src"),
-    AUGMENT_DIR: path11.join(root, ".augment"),
-    SETTINGS_FILE: project_settings_path(root),
-    RULES_SOURCE: path11.join(root, "dist/agent-src", "rules"),
-    SKILLS_SOURCE: path11.join(root, "dist/agent-src", "skills"),
-    COMMANDS_SOURCE: path11.join(root, "dist/agent-src", "commands"),
-    PERSONAS_SOURCE: path11.join(root, "dist/agent-src", "personas"),
-    USER_TYPES_SOURCE: path11.join(root, "dist/agent-src", "user-types"),
-    CLAUDE_SKILLS_DIR: path11.join(root, ".claude", "skills"),
-    // ADR-109: subagents project from src/ directly (NOT dist/) — a subagent
-    // is an executable system prompt Claude Code runs verbatim; telegraph
-    // condensation would alter its behaviour, and it is not routed through the
-    // pack/discovery condensation flow.
-    CLAUDE_AGENTS_DIR: path11.join(root, ".claude", "agents"),
-    SUBAGENTS_SOURCE: path11.join(root, "src", "subagents"),
-    PLUGIN_SKILLS_DIR: path11.join(root, ".claude-plugin", "skills"),
-    iter_all_sources,
-    resolve_logical,
-    artefact_roots
-  };
-}
-var MODULE_STATE = _deriveState(_DEFAULT_PROJECT_ROOT);
-function _iter_sources() {
-  return MODULE_STATE.iter_all_sources();
-}
-function _resolve_source(relative8) {
-  return MODULE_STATE.resolve_logical(relative8);
-}
-function _any_source_root_exists() {
-  return [...MODULE_STATE.artefact_roots()].length > 0;
-}
-function _active_tools() {
-  const tools_file = path11.join(MODULE_STATE.PROJECT_ROOT, "agents", ".agent-tools.yml");
-  if (!_exists3(tools_file)) {
-    return null;
+function parseFrontmatter(content) {
+  if (!content.startsWith("---")) {
+    return [{}, content];
   }
-  let data = _yamlParse(_readText(tools_file));
-  if (data === null || data === void 0) {
-    data = {};
-  }
-  const tools = typeof data === "object" && data !== null && !Array.isArray(data) ? data["tools"] : null;
-  if (!Array.isArray(tools)) {
-    return null;
-  }
-  return new Set(tools.filter((t) => typeof t === "string"));
-}
-function _tool_active(tool_id) {
-  const active = _active_tools();
-  return active === null ? true : active.has(tool_id);
-}
-var COPY_AS_IS = /* @__PURE__ */ new Set(["README.md"]);
-var COPY_AS_IS_DIRS = /* @__PURE__ */ new Set(["ghostwriter"]);
-function _read_augment_rules_use_symlinks() {
-  const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-  const augment = data["augment"];
-  if (typeof augment !== "object" || augment === null || Array.isArray(augment)) {
-    return false;
-  }
-  const value = augment["rules_use_symlinks"];
-  if (typeof value === "boolean") {
-    return value;
-  }
-  if (typeof value === "string") {
-    return ["true", "yes", "on", "1"].includes(value.trim().toLowerCase());
-  }
-  if (typeof value === "number") {
-    return value === 1;
-  }
-  return false;
-}
-var USER_SCOPE_RULE_DIRS = {
-  ".claude/rules": path11.join(".claude", "rules")
-};
-function _read_projection_scope_dedup() {
-  const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-  const projection = data["projection"];
-  if (typeof projection !== "object" || projection === null || Array.isArray(projection)) {
-    return false;
-  }
-  const value = projection["scope_dedup"];
-  if (typeof value === "boolean") {
-    return value;
-  }
-  if (typeof value === "string") {
-    return ["true", "yes", "on", "1"].includes(value.trim().toLowerCase());
-  }
-  return false;
-}
-function _dedupable_rules(tool_dir, rules, userHome) {
-  const relative8 = USER_SCOPE_RULE_DIRS[tool_dir];
-  if (relative8 === void 0) {
-    return /* @__PURE__ */ new Set();
-  }
-  let userDirStat;
-  const userDir = path11.join(userHome, relative8);
-  try {
-    userDirStat = fs13.statSync(userDir);
-  } catch {
-    return /* @__PURE__ */ new Set();
-  }
-  if (!userDirStat.isDirectory()) {
-    return /* @__PURE__ */ new Set();
-  }
-  if ((userDirStat.mode & 2) !== 0) {
-    _print(`  \u26A0\uFE0F  ${tool_dir}: user-scope rules dir is world-writable \u2014 scope-dedup skipped`);
-    return /* @__PURE__ */ new Set();
-  }
-  const skip2 = /* @__PURE__ */ new Set();
-  for (const rule of rules) {
-    const twin = path11.join(userDir, rule);
-    const source = path11.join(MODULE_STATE.RULES_SOURCE, rule);
-    try {
-      if (!_isFile2(twin) || !_isFile2(source)) continue;
-      if (fs13.readFileSync(twin).equals(fs13.readFileSync(source))) {
-        skip2.add(rule);
-      }
-    } catch {
-    }
-  }
-  return skip2;
-}
-function _lean_projection_mode() {
-  const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-  const lean = data["lean_projection"];
-  if (typeof lean === "object" && lean !== null && !Array.isArray(lean) && String(lean["mode"] ?? "").trim().toLowerCase() === "thin") {
-    return "thin";
-  }
-  return "eager-all";
-}
-function apply_path_rewriter(relative_path) {
-  const target = path11.join(MODULE_STATE.TARGET_DIR, relative_path);
-  if (!_exists3(target) || !relative_path.endsWith(".md")) {
-    return false;
-  }
-  const original = _readText(target);
-  const rewritten = _rewrite_paths(original, relative_path);
-  if (rewritten === original) {
-    return false;
-  }
-  _writeText(target, rewritten);
-  return true;
-}
-function is_projection_stale(relative8) {
-  const source = _resolve_source(relative8);
-  if (source === null) {
-    return false;
-  }
-  if (skip_compile_disabled_rule(relative8)) {
-    return false;
-  }
-  const target = path11.join(MODULE_STATE.TARGET_DIR, relative8);
-  if (!_exists3(target)) {
-    return true;
-  }
-  return _readText(target) !== _rewrite_paths(_readText(source), relative8);
-}
-function list_changed_md(_source_dir) {
-  const changed = [];
-  const seen = /* @__PURE__ */ new Set();
-  for (const [, relative8] of _iter_sources()) {
-    if (seen.has(relative8)) {
-      continue;
-    }
-    seen.add(relative8);
-    const source = _resolve_source(relative8);
-    if (source === null || !should_condense(source)) {
-      continue;
-    }
-    if (is_projection_stale(relative8)) {
-      changed.push(relative8);
-    }
-  }
-  return changed;
-}
-function should_condense(filepath) {
-  if (path11.extname(filepath) !== ".md") {
-    return false;
-  }
-  if (COPY_AS_IS.has(path11.basename(filepath))) {
-    return false;
-  }
-  let rel_parts = filepath.split(path11.sep).filter((s) => s.length > 0);
-  for (const root of MODULE_STATE.artefact_roots()) {
-    if (filepath !== root && !_isUnder2(filepath, root)) {
-      continue;
-    }
-    rel_parts = _relativeToPosix2(filepath, root).split("/");
-    break;
-  }
-  if (rel_parts.length > 0 && COPY_AS_IS_DIRS.has(rel_parts[0])) {
-    return false;
-  }
-  return true;
-}
-function copy_file(source, target) {
-  _mkdirp(path11.dirname(target));
-  fs13.copyFileSync(source, target);
-  try {
-    const st = fs13.statSync(source);
-    fs13.utimesSync(target, st.atime, st.mtime);
-    fs13.chmodSync(target, st.mode);
-  } catch {
-  }
-}
-function cleanup_stale(_source_dir, target_dir) {
-  let deleted = 0;
-  if (!_exists3(target_dir)) {
-    return 0;
-  }
-  for (const target_file of _rglobSorted2(target_dir, "*")) {
-    if (_isDir2(target_file)) {
-      continue;
-    }
-    const relative8 = _relativeToPosix2(target_file, target_dir);
-    if (_resolve_source(relative8) === null) {
-      _print(`  Deleting stale: ${relative8}`);
-      fs13.unlinkSync(target_file);
-      deleted += 1;
-    }
-  }
-  const dirs = _rglobSorted2(target_dir, "*").filter((p) => _isDir2(p)).sort((a, b) => a < b ? 1 : a > b ? -1 : 0);
-  for (const dirpath of dirs) {
-    try {
-      if (fs13.readdirSync(dirpath).length === 0) {
-        fs13.rmdirSync(dirpath);
-        _print(`  Removing empty dir: ${_relativeToPosix2(dirpath, target_dir)}`);
-      }
-    } catch {
-    }
-  }
-  return deleted;
-}
-var COPY_MD_VERBATIM = true;
-function skip_compile_disabled_rule(relative8) {
-  const posix = relative8.split(path11.sep).join("/");
-  if (!posix.startsWith("rules/") || !posix.endsWith(".md")) {
-    return false;
-  }
-  const rule_id = path11.basename(posix, ".md");
-  const settings = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-  return !rule_is_compile_enabled(rule_id, settings);
-}
-function sync_non_md(_source_dir, target_dir) {
-  let copied = 0;
-  const seen = /* @__PURE__ */ new Set();
-  for (const [source_file, relative8] of _iter_sources()) {
-    if (!COPY_MD_VERBATIM && should_condense(source_file)) {
-      continue;
-    }
-    if (seen.has(relative8)) {
-      continue;
-    }
-    if (skip_compile_disabled_rule(relative8)) {
-      continue;
-    }
-    seen.add(relative8);
-    const target_file = path11.join(target_dir, relative8);
-    copy_file(source_file, target_file);
-    if (COPY_MD_VERBATIM && relative8.endsWith(".md")) {
-      apply_path_rewriter(relative8);
-    }
-    _print(`  Copied: ${relative8}`);
-    copied += 1;
-  }
-  return copied;
-}
-function list_md_files(_source_dir) {
-  const files = [];
-  const seen = /* @__PURE__ */ new Set();
-  for (const [source_file, relative8] of _iter_sources()) {
-    if (!should_condense(source_file)) {
-      continue;
-    }
-    if (seen.has(relative8)) {
-      continue;
-    }
-    seen.add(relative8);
-    files.push(relative8);
-  }
-  return files.sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-}
-function check_sync(_source_dir, target_dir) {
-  const missing = [];
-  const stale = [];
-  const seen = /* @__PURE__ */ new Set();
-  for (const [, relative8] of _iter_sources()) {
-    if (seen.has(relative8)) {
-      continue;
-    }
-    seen.add(relative8);
-    if (skip_compile_disabled_rule(relative8)) {
-      continue;
-    }
-    if (!_exists3(path11.join(target_dir, relative8))) {
-      missing.push(relative8);
-    }
-  }
-  if (_exists3(target_dir)) {
-    for (const target_file of _rglobSorted2(target_dir, "*")) {
-      if (_isDir2(target_file)) {
-        continue;
-      }
-      const relative8 = _relativeToPosix2(target_file, target_dir);
-      if (_resolve_source(relative8) === null || skip_compile_disabled_rule(relative8)) {
-        stale.push(relative8);
-      }
-    }
-  }
-  return [missing, stale];
-}
-var TOOL_DIRS = {
-  ".claude/rules": "../../dist/agent-src/rules",
-  ".cursor/rules": "../../dist/agent-src/rules",
-  ".clinerules": "../dist/agent-src/rules"
-};
-var PERSONA_TOOL_DIRS = {
-  ".claude/personas": "../../dist/agent-src/personas",
-  ".cursor/personas": "../../dist/agent-src/personas"
-};
-var USER_TYPE_TOOL_DIRS = {
-  ".claude/user-types": "../../dist/agent-src/user-types",
-  ".cursor/user-types": "../../dist/agent-src/user-types"
-};
-var _DIR_TOOL_ID = {
-  ".claude/rules": "claude-code",
-  ".cursor/rules": "cursor",
-  ".clinerules": "cline",
-  ".claude/personas": "claude-code",
-  ".cursor/personas": "cursor",
-  ".claude/user-types": "claude-code",
-  ".cursor/user-types": "cursor"
-};
-function _filter_tool_dirs(mapping) {
-  const out = {};
-  for (const [d, p] of Object.entries(mapping)) {
-    if (_tool_active(_DIR_TOOL_ID[d] ?? "claude-code")) {
-      out[d] = p;
-    }
-  }
-  return out;
-}
-function strip_frontmatter(content) {
-  if (content.startsWith("---")) {
-    const end = content.indexOf("---", 3);
-    if (end !== -1) {
-      content = _lstripNewlines(content.slice(end + 3));
-    }
-  }
-  return content;
-}
-var _LEGACY_SRC_PREFIX = ".agent-src.uncondensed/";
-var _PROJECTED_SRC_PREFIX = "dist/agent-src/";
-var _LEGACY_PROJECTED_SRC_PREFIX = ".agent-src/";
-var _FM_LIST_ITEM_RE = /^(\s*-\s*)(["']?)([^"'\n]+?\.md)(["']?)\s*$/;
-var _FM_PATH_PREFIX_RE = /^(\s*(?:-\s+)?path_prefix:\s*)(["']?)([^"'\n]+?)(["']?)\s*$/;
-var _BODY_DOCS_RE = /\.\.\/\.\.\/(docs\/(?:guidelines|contracts)\/[^)\s]+\.md)/g;
-var _FM_PLAIN_LIST_RE = /^\s*-\s*(["']?)([^"'\n]+?)\1\s*$/;
-var _HRR_BANNER_MARKER = "<!-- agent-config:human-review-banner -->";
-function _depth_prefix(source_relative_path) {
-  const parts = _posixParts(source_relative_path);
-  const depth = Math.max(parts.length - 1, 1);
-  return "../".repeat(depth);
-}
-function _split_frontmatter(content) {
-  if (!content.startsWith("---\n")) {
-    return [null, content];
-  }
-  const end = content.indexOf("\n---\n", 4);
+  const end = content.indexOf("\n---", 3);
   if (end === -1) {
-    return [null, content];
+    return [{}, content];
   }
-  const fm_text = content.slice(4, end);
-  const body = content.slice(end + "\n---\n".length);
-  return [fm_text.split("\n"), body];
-}
-function _rewrite_load_context_value(value, prefix) {
-  if (value.startsWith("../") || value.startsWith("./") || value.startsWith("/")) {
-    return value;
+  const raw = strip(content.slice(3, end));
+  const body = lstripNewlines(content.slice(end + 4));
+  let meta = parseYaml2(raw);
+  if (meta === null || meta === void 0) {
+    meta = {};
   }
-  if (value.startsWith(_LEGACY_SRC_PREFIX)) {
-    return prefix + value.slice(_LEGACY_SRC_PREFIX.length);
+  if (typeof meta === "object" && meta !== null && !Array.isArray(meta)) {
+    return [meta, body];
   }
-  if (value.startsWith(_PROJECTED_SRC_PREFIX)) {
-    return prefix + value.slice(_PROJECTED_SRC_PREFIX.length);
-  }
-  if (value.startsWith(_LEGACY_PROJECTED_SRC_PREFIX)) {
-    return prefix + value.slice(_LEGACY_PROJECTED_SRC_PREFIX.length);
-  }
-  return prefix + value;
-}
-function _rewrite_path_prefix_value(value) {
-  return value;
-}
-function _rewrite_frontmatter_lines(lines, prefix) {
-  let in_load_context = false;
-  const out = [];
-  for (const line of lines) {
-    const bare = _lstrip(line);
-    if (bare.startsWith("load_context:") || bare.startsWith("load_context_eager:")) {
-      in_load_context = true;
-      out.push(line);
-      continue;
-    }
-    if (in_load_context) {
-      const m = _FM_LIST_ITEM_RE.exec(line);
-      if (m) {
-        const indent = m[1] ?? "";
-        const q1 = m[2] ?? "";
-        const value = m[3] ?? "";
-        const q2 = m[4] ?? "";
-        out.push(`${indent}${q1}${_rewrite_load_context_value(value, prefix)}${q2}`);
-        continue;
-      }
-      in_load_context = false;
-    }
-    const pm = _FM_PATH_PREFIX_RE.exec(line);
-    if (pm) {
-      const head = pm[1] ?? "";
-      const q1 = pm[2] ?? "";
-      const value = pm[3] ?? "";
-      const q2 = pm[4] ?? "";
-      out.push(`${head}${q1}${_rewrite_path_prefix_value(value)}${q2}`);
-      continue;
-    }
-    out.push(line);
-  }
-  return out;
-}
-function _rewrite_body_links(body, prefix) {
-  return body.replace(_BODY_DOCS_RE, (_m, tail) => prefix + tail);
-}
-function _parse_trust_and_owner(fm_lines) {
-  let level = "core";
-  let hrr = false;
-  const packs = [];
-  const workspaces = [];
-  let in_trust = false;
-  let in_packs = false;
-  let in_workspaces = false;
-  for (const line of fm_lines) {
-    const stripped = _lstrip(line);
-    const indent = line.length - stripped.length;
-    if (indent === 0 && stripped.endsWith(":")) {
-      const key = stripped.slice(0, -1);
-      in_trust = key === "trust";
-      in_packs = key === "packs";
-      in_workspaces = key === "workspaces";
-      continue;
-    }
-    if (in_trust && stripped.startsWith("level:")) {
-      const after = stripped.slice(stripped.indexOf(":") + 1);
-      level = _stripChars(_stripChars(_strip(after), '"'), "'");
-    } else if (in_trust && stripped.startsWith("human_review_required:")) {
-      const after = stripped.slice(stripped.indexOf(":") + 1);
-      hrr = _strip(after).toLowerCase() === "true";
-    } else if (in_packs || in_workspaces) {
-      const m = _FM_PLAIN_LIST_RE.exec(line);
-      if (m) {
-        const value = _strip(m[2] ?? "");
-        (in_packs ? packs : workspaces).push(value);
-      }
-    }
-  }
-  let owner = "unknown";
-  if (packs.length > 0) {
-    owner = packs[0].split("-")[0];
-  } else if (workspaces.length > 0) {
-    owner = workspaces[0];
-  }
-  return [level, hrr, owner];
-}
-function _inject_hrr_banner(body, level, owner) {
-  if (body.includes(_HRR_BANNER_MARKER)) {
-    return body;
-  }
-  const banner = `${_HRR_BANNER_MARKER}
-> HUMAN REVIEW REQUIRED \xB7 trust: ${level} \xB7 owner: ${owner}
-
-`;
-  return banner + _lstripNewlines(body);
-}
-function _rewrite_paths(content, source_relative_path) {
-  const prefix = _depth_prefix(source_relative_path);
-  const [fm_lines, bodyInitial] = _split_frontmatter(content);
-  let body = _rewrite_body_links(bodyInitial, prefix);
-  if (fm_lines === null) {
-    return body;
-  }
-  const new_fm = _rewrite_frontmatter_lines(fm_lines, prefix);
-  const [level, hrr, owner] = _parse_trust_and_owner(fm_lines);
-  if (hrr && level) {
-    body = _inject_hrr_banner(body, level, owner);
-  }
-  return "---\n" + new_fm.join("\n") + "\n---\n" + body;
-}
-function _read_projection_list(key) {
-  const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-  const proj = data["projection"];
-  const value = typeof proj === "object" && proj !== null && !Array.isArray(proj) ? proj[key] : null;
-  if (Array.isArray(value) && value.length > 0) {
-    return value.map((v) => String(v));
-  }
-  return null;
-}
-function _read_rule_workspaces() {
-  return _read_projection_list("rule_workspaces");
-}
-function _read_rule_packs() {
-  return _read_projection_list("rule_packs");
+  return [{}, body];
 }
 function rule_in_scope(source_path, scope, pack_scope = null, role_scope = null) {
   if (scope === null && pack_scope === null && role_scope === null) {
     return true;
   }
-  const [meta] = _parse_frontmatter(_readText(source_path));
+  const [meta] = parseFrontmatter(fs11.readFileSync(source_path, "utf-8"));
   if (meta["type"] === "always" || meta["alwaysApply"] === true) {
     return true;
   }
@@ -11044,1121 +10045,6 @@ function rule_in_scope(source_path, scope, pack_scope = null, role_scope = null)
     return values.some((v) => configured.includes(v));
   };
   return axis("workspaces", scope) && axis("packs", pack_scope) && axis("roles", role_scope);
-}
-function _scoped_rule_basenames() {
-  const scope = _read_rule_workspaces();
-  const pack_scope = _read_rule_packs();
-  return _iterdirSorted2(MODULE_STATE.RULES_SOURCE).filter((p) => p.endsWith(".md") && _isFile2(p)).filter((p) => rule_in_scope(p, scope, pack_scope)).filter((p) => !skip_compile_disabled_rule(`rules/${path11.basename(p)}`)).map((p) => path11.basename(p)).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-}
-function generate_rule_symlinks() {
-  const rules = _scoped_rule_basenames();
-  const tool_dirs = _filter_tool_dirs(TOOL_DIRS);
-  let thin_files = null;
-  if (_lean_projection_mode() === "thin") {
-    throw new Error(
-      "lean_projection.mode=thin requires project_thin_rules (not ported in condense.ts)"
-    );
-  }
-  const dedup_on = _read_projection_scope_dedup();
-  const user_home = process.env["HOME"] ?? os7.homedir();
-  const skipped_per_tool = {};
-  let total = 0;
-  for (const [tool_dir, rel_prefix] of Object.entries(tool_dirs)) {
-    const target_dir = path11.join(MODULE_STATE.PROJECT_ROOT, tool_dir);
-    const skip2 = dedup_on ? _dedupable_rules(tool_dir, rules, user_home) : /* @__PURE__ */ new Set();
-    skipped_per_tool[tool_dir] = skip2;
-    _mkdirp(target_dir);
-    for (const item of _iterdirSorted2(target_dir)) {
-      const name = path11.basename(item);
-      if (_isSymlink(item) && (!rules.includes(name) || skip2.has(name)) && name !== "README.md") {
-        fs13.unlinkSync(item);
-      }
-    }
-    for (const rule of rules) {
-      if (skip2.has(rule)) {
-        continue;
-      }
-      const link = path11.join(target_dir, rule);
-      if (_existsOrSymlink(link)) {
-        fs13.unlinkSync(link);
-      }
-      if (thin_files !== null) {
-        _writeText(link, thin_files[rule]);
-      } else {
-        fs13.symlinkSync(path11.join(rel_prefix, rule), link);
-      }
-      total += 1;
-    }
-  }
-  const source_count = rules.length;
-  for (const tool_dir of Object.keys(tool_dirs)) {
-    const target_dir = path11.join(MODULE_STATE.PROJECT_ROOT, tool_dir);
-    const emitted = new Set(rules);
-    const tool_count = _iterdirSorted2(target_dir).filter((f) => emitted.has(path11.basename(f))).length;
-    const skipped = (skipped_per_tool[tool_dir] ?? /* @__PURE__ */ new Set()).size;
-    const expected = source_count - skipped;
-    if (tool_count !== expected) {
-      _print(`  \u26A0\uFE0F  ${tool_dir}: ${tool_count} rules (expected ${expected})`);
-    }
-    if (skipped > 0) {
-      _print(
-        `  \u2139\uFE0F  ${tool_dir}: ${skipped} rule(s) skipped \u2014 byte-identical twin already installed at user scope`
-      );
-    }
-  }
-  info(
-    `  \u2705  Created ${total} rule symlinks across ${Object.keys(tool_dirs).length} tool directories (${source_count} rules each)`
-  );
-  return total;
-}
-function generate_windsurfrules() {
-  const rules = _scoped_rule_basenames();
-  const parts = ["# Auto-generated from dist/agent-src/rules/ \u2014 do not edit directly\n"];
-  for (const rule of rules) {
-    const p = path11.join(MODULE_STATE.RULES_SOURCE, rule);
-    const content = strip_frontmatter(_readText(p));
-    parts.push(`---
-
-${_strip(content)}
-`);
-  }
-  const output = path11.join(MODULE_STATE.PROJECT_ROOT, ".windsurfrules");
-  _writeText(output, parts.join("\n") + "\n");
-  info(`  \u2705  Generated .windsurfrules (${rules.length} rules)`);
-  return rules.length;
-}
-function _CURSOR_RULES_MDC_DIR() {
-  return path11.join(MODULE_STATE.PROJECT_ROOT, ".cursor", "rules");
-}
-function _WINDSURF_RULES_DIR() {
-  return path11.join(MODULE_STATE.PROJECT_ROOT, ".windsurf", "rules");
-}
-function _WINDSURF_WORKFLOWS_DIR() {
-  return path11.join(MODULE_STATE.PROJECT_ROOT, ".windsurf", "workflows");
-}
-function _CURSOR_COMMANDS_DIR() {
-  return path11.join(MODULE_STATE.PROJECT_ROOT, ".cursor", "commands");
-}
-function _parse_frontmatter(content) {
-  if (!content.startsWith("---")) {
-    return [{}, content];
-  }
-  const end = content.indexOf("\n---", 3);
-  if (end === -1) {
-    return [{}, content];
-  }
-  const raw = _strip(content.slice(3, end));
-  const body = _lstripNewlines(content.slice(end + 4));
-  let meta = _yamlParse(raw);
-  if (meta === null || meta === void 0) {
-    meta = {};
-  }
-  if (typeof meta === "object" && meta !== null && !Array.isArray(meta)) {
-    return [meta, body];
-  }
-  return [{}, body];
-}
-function _yaml_scalar(value) {
-  return JSON.stringify(value);
-}
-function derive_trigger_globs(meta) {
-  const triggers = meta["triggers"];
-  if (!Array.isArray(triggers)) {
-    return [];
-  }
-  const globs = [];
-  for (const t of triggers) {
-    if (t === null || typeof t !== "object" || Array.isArray(t)) continue;
-    const obj = t;
-    if (typeof obj["file_pattern"] === "string" && obj["file_pattern"]) {
-      globs.push(obj["file_pattern"]);
-    } else if (typeof obj["path_prefix"] === "string" && obj["path_prefix"]) {
-      const prefix = obj["path_prefix"];
-      globs.push(prefix.endsWith("/") ? `${prefix}**` : `${prefix}**`);
-    }
-  }
-  return [...new Set(globs)];
-}
-function _emit_cursor_mdc(source, target) {
-  const [meta, body] = _parse_frontmatter(_readText(source));
-  const description = _strip(String(meta["description"] ?? "").replace(/\n/g, " "));
-  const always_apply = Boolean(meta["alwaysApply"] || meta["type"] === "always");
-  const globs = always_apply ? [] : derive_trigger_globs(meta);
-  const lines = [
-    "---",
-    `description: ${_yaml_scalar(description)}`,
-    `globs: ${globs.join(",")}`,
-    `alwaysApply: ${always_apply ? "true" : "false"}`,
-    "---",
-    "",
-    _pyRstrip(body) + "\n"
-  ];
-  _mkdirp(path11.dirname(target));
-  _writeText(target, lines.join("\n"));
-}
-function _emit_windsurf_rule(source, target) {
-  const [meta, body] = _parse_frontmatter(_readText(source));
-  const description = _strip(String(meta["description"] ?? "").replace(/\n/g, " "));
-  const always_apply = Boolean(meta["alwaysApply"] || meta["type"] === "always");
-  const globs = always_apply ? [] : derive_trigger_globs(meta);
-  const trigger = always_apply ? "always_on" : globs.length > 0 ? "glob" : "model_decision";
-  const lines = [
-    "---",
-    `trigger: ${trigger}`,
-    `description: ${_yaml_scalar(description)}`,
-    `globs: ${globs.join(",")}`,
-    "---",
-    "",
-    _pyRstrip(body) + "\n"
-  ];
-  _mkdirp(path11.dirname(target));
-  _writeText(target, lines.join("\n"));
-}
-function _pyRstrip(s) {
-  return s.replace(/\s+$/u, "");
-}
-function _clean_modern_dir(target_dir, valid_names) {
-  if (!_exists3(target_dir)) {
-    return;
-  }
-  for (const item of _iterdirSorted2(target_dir)) {
-    const name = path11.basename(item);
-    if (name === "README.md") {
-      continue;
-    }
-    if (!valid_names.has(name)) {
-      if (_isDir2(item) && !_isSymlink(item)) {
-        fs13.rmSync(item, { recursive: true, force: true });
-      } else {
-        fs13.unlinkSync(item);
-      }
-    }
-  }
-}
-function generate_cursor_mdc_rules() {
-  const scope = _read_rule_workspaces();
-  const pack_scope = _read_rule_packs();
-  const rules = _rglobSorted2(MODULE_STATE.RULES_SOURCE, "*.md").filter((p) => _isFile2(p)).filter((p) => rule_in_scope(p, scope, pack_scope));
-  const stems = rules.map((r) => path11.basename(r, ".md"));
-  const valid = /* @__PURE__ */ new Set([
-    ...stems.map((s) => `${s}.mdc`),
-    ...rules.map((r) => path11.basename(r))
-  ]);
-  _clean_modern_dir(_CURSOR_RULES_MDC_DIR(), valid);
-  for (const rule of rules) {
-    _emit_cursor_mdc(rule, path11.join(_CURSOR_RULES_MDC_DIR(), `${path11.basename(rule, ".md")}.mdc`));
-  }
-  info(`  \u2705  Wrote ${rules.length} \`.cursor/rules/*.mdc\` files`);
-  return rules.length;
-}
-function generate_windsurf_modern_rules() {
-  const scope = _read_rule_workspaces();
-  const pack_scope = _read_rule_packs();
-  const rules = _rglobSorted2(MODULE_STATE.RULES_SOURCE, "*.md").filter((p) => _isFile2(p)).filter((p) => rule_in_scope(p, scope, pack_scope));
-  const valid = new Set(rules.map((r) => path11.basename(r)));
-  _clean_modern_dir(_WINDSURF_RULES_DIR(), valid);
-  for (const rule of rules) {
-    _emit_windsurf_rule(rule, path11.join(_WINDSURF_RULES_DIR(), path11.basename(rule)));
-  }
-  info(`  \u2705  Wrote ${rules.length} \`.windsurf/rules/*.md\` files`);
-  return rules.length;
-}
-function generate_cursor_commands(active_command_slugs = null) {
-  if (!_isDir2(path11.join(MODULE_STATE.PROJECT_ROOT, "src", "domains"))) {
-    return 0;
-  }
-  const cmds = [...iterCommands()].filter(
-    ([, slug]) => active_command_slugs === null || active_command_slugs.has(slug)
-  );
-  const valid = new Set(cmds.map(([, slug]) => `${slug}.md`));
-  _clean_modern_dir(_CURSOR_COMMANDS_DIR(), valid);
-  _mkdirp(_CURSOR_COMMANDS_DIR());
-  let count = 0;
-  for (const [source_file, slug] of cmds) {
-    const link = path11.join(_CURSOR_COMMANDS_DIR(), `${slug}.md`);
-    if (_existsOrSymlink(link)) {
-      fs13.unlinkSync(link);
-    }
-    const rel = path11.join("../..", _relativeToPosix2(source_file, MODULE_STATE.PROJECT_ROOT));
-    fs13.symlinkSync(rel, link);
-    count += 1;
-  }
-  info(`  \u2705  Linked ${count} \`.cursor/commands/*.md\` files`);
-  return count;
-}
-function generate_windsurf_workflows(active_command_slugs = null) {
-  if (!_isDir2(path11.join(MODULE_STATE.PROJECT_ROOT, "src", "domains"))) {
-    return 0;
-  }
-  const cmds = [...iterCommands()].filter(
-    ([, slug]) => active_command_slugs === null || active_command_slugs.has(slug)
-  );
-  const valid = new Set(cmds.map(([, slug]) => `${slug}.md`));
-  _clean_modern_dir(_WINDSURF_WORKFLOWS_DIR(), valid);
-  _mkdirp(_WINDSURF_WORKFLOWS_DIR());
-  let count = 0;
-  for (const [source_file, slug] of cmds) {
-    const link = path11.join(_WINDSURF_WORKFLOWS_DIR(), `${slug}.md`);
-    if (_existsOrSymlink(link)) {
-      fs13.unlinkSync(link);
-    }
-    const rel = path11.join("../..", _relativeToPosix2(source_file, MODULE_STATE.PROJECT_ROOT));
-    fs13.symlinkSync(rel, link);
-    count += 1;
-  }
-  info(`  \u2705  Linked ${count} \`.windsurf/workflows/*.md\` files`);
-  return count;
-}
-function generate_gemini_md() {
-  const link = path11.join(MODULE_STATE.PROJECT_ROOT, "GEMINI.md");
-  if (_existsOrSymlink(link)) {
-    fs13.unlinkSync(link);
-  }
-  fs13.symlinkSync("AGENTS.md", link);
-  info("  \u2705  Created GEMINI.md \u2192 AGENTS.md symlink");
-}
-function* iterCommands() {
-  const src_domains = path11.join(MODULE_STATE.PROJECT_ROOT, "src", "domains");
-  if (!_isDir2(src_domains)) {
-    return;
-  }
-  for (const source_file of _rglobSorted2(src_domains, "command.md")) {
-    if (!_isFile2(source_file)) {
-      continue;
-    }
-    const rel = _relativeToPosix2(source_file, MODULE_STATE.PROJECT_ROOT);
-    let slug = _command_path_to_slug(rel);
-    if (!slug) {
-      continue;
-    }
-    const pack_id = _relativeToPosix2(source_file, src_domains).split("/")[0];
-    const prefix = _domains_slug_prefix(pack_id);
-    if (prefix && slug !== prefix && !slug.startsWith(prefix + "-")) {
-      slug = `${prefix}-${slug}`;
-    }
-    yield [source_file, slug];
-  }
-}
-function _read_model_auto_switch() {
-  const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-  const model = data["model"];
-  const value = typeof model === "object" && model !== null && !Array.isArray(model) ? model["auto_switch"] : null;
-  if (typeof value === "string" && ["auto", "suggest", "off"].includes(value.trim().toLowerCase())) {
-    return value.trim().toLowerCase();
-  }
-  return "suggest";
-}
-function _read_projection_mode() {
-  const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-  const proj = data["projection"];
-  const value = typeof proj === "object" && proj !== null && !Array.isArray(proj) ? proj["mode"] : null;
-  if (typeof value === "string" && ["legacy-all", "scoped"].includes(value.trim().toLowerCase())) {
-    return value.trim().toLowerCase();
-  }
-  return "legacy-all";
-}
-function _domains_slug_prefix(pack_id) {
-  const manifest = path11.join(MODULE_STATE.PROJECT_ROOT, "src", "domains", pack_id, "pack.yaml");
-  if (!_isFile2(manifest)) {
-    return "";
-  }
-  const m = _SLUG_PREFIX_RE.exec(_readText(manifest));
-  return m ? m[1] : "";
-}
-function _command_path_to_slug(manifest_path2) {
-  const logical = strip_source_prefix(manifest_path2);
-  if (logical && logical.startsWith("commands/")) {
-    return _posixParts(logical.slice("commands/".length).replace(/\.md$/, "")).join("-");
-  }
-  const parts = manifest_path2.split(path11.sep).filter((s) => s.length > 0);
-  const i = parts.indexOf("commands");
-  return parts.slice(i + 1).join("/").replace(/\.md$/, "").split("/").join("-");
-}
-function _resolve_active_predicates() {
-  if (_read_projection_mode() !== "scoped") {
-    return [null, null];
-  }
-  throw new Error("projection.mode=scoped requires the config package (not ported in condense.ts)");
-}
-function _model_tier(skill_md) {
-  if (!_exists3(skill_md)) {
-    return null;
-  }
-  const text = fs13.readFileSync(skill_md).toString("utf-8");
-  if (!text.startsWith("---\n")) {
-    return null;
-  }
-  const end = text.indexOf("\n---\n", 4);
-  if (end === -1) {
-    return null;
-  }
-  const m = MODEL_TIER_RE.exec(text.slice(4, end));
-  return m ? m[1] : null;
-}
-function _render_native_model_md(src_md, tier) {
-  const text = _readText(src_md);
-  const model = TIER_TO_CLAUDE_MODEL[tier];
-  return text.replace(MODEL_TIER_RE, `model: ${model}`);
-}
-function generate_claude_skills(active_skill_names = null) {
-  if (!_exists3(MODULE_STATE.SKILLS_SOURCE)) {
-    process.stderr.write("  \u26A0\uFE0F  dist/agent-src/skills/ not found \u2014 skipping skills\n");
-    return 0;
-  }
-  let skills = _iterdirSorted2(MODULE_STATE.SKILLS_SOURCE).filter((p) => _isDir2(p)).map((p) => path11.basename(p)).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-  if (active_skill_names !== null) {
-    skills = skills.filter((s) => active_skill_names.has(s));
-  }
-  const skill_set = new Set(skills);
-  const command_slugs = new Set([...iterCommands()].map(([, slug]) => slug));
-  _mkdirp(MODULE_STATE.CLAUDE_SKILLS_DIR);
-  const auto = _read_model_auto_switch() === "auto";
-  for (const item of _iterdirSorted2(MODULE_STATE.CLAUDE_SKILLS_DIR)) {
-    const name = path11.basename(item);
-    if (skill_set.has(name) || command_slugs.has(name) || name === "README.md") {
-      continue;
-    }
-    if (_isSymlink(item)) {
-      fs13.unlinkSync(item);
-    } else if (_isDirNoFollow(item)) {
-      const skill_md = path11.join(item, "SKILL.md");
-      if (_isFile2(skill_md) && !_isSymlink(skill_md)) {
-        fs13.rmSync(item, { recursive: true, force: true });
-      }
-    }
-  }
-  let count = 0;
-  let rendered = 0;
-  for (const skill of skills) {
-    const link = path11.join(MODULE_STATE.CLAUDE_SKILLS_DIR, skill);
-    const src_dir = path11.join(MODULE_STATE.SKILLS_SOURCE, skill);
-    const value = auto ? _model_tier(path11.join(src_dir, "SKILL.md")) : null;
-    if (_isSymlink(link)) {
-      fs13.unlinkSync(link);
-    } else if (_isDirNoFollow(link)) {
-      fs13.rmSync(link, { recursive: true, force: true });
-    } else if (_existsOrSymlink(link)) {
-      fs13.unlinkSync(link);
-    }
-    if (value !== null && value in TIER_TO_CLAUDE_MODEL) {
-      _mkdirp(link);
-      for (const entry of _iterdirSorted2(src_dir)) {
-        const entryName = path11.basename(entry);
-        if (entryName === "SKILL.md") {
-          _writeText(
-            path11.join(link, "SKILL.md"),
-            _render_native_model_md(entry, value)
-          );
-        } else {
-          fs13.symlinkSync(
-            path11.join("../../../dist/agent-src/skills", skill, entryName),
-            path11.join(link, entryName)
-          );
-        }
-      }
-      rendered += 1;
-    } else {
-      fs13.symlinkSync(path11.join("../../dist/agent-src/skills", skill), link);
-    }
-    count += 1;
-  }
-  const suffix = rendered ? ` (${rendered} rendered with native model:)` : "";
-  info(`  \u2705  Created ${count} skill entries in .claude/skills/${suffix}`);
-  return count;
-}
-function generate_claude_commands(active_command_slugs = null) {
-  if (!_isDir2(path11.join(MODULE_STATE.PROJECT_ROOT, "src", "domains"))) {
-    process.stderr.write("  \u26A0\uFE0F  src/domains/ not found \u2014 skipping commands\n");
-    return 0;
-  }
-  _mkdirp(MODULE_STATE.CLAUDE_SKILLS_DIR);
-  let skill_names = /* @__PURE__ */ new Set();
-  if (_exists3(MODULE_STATE.SKILLS_SOURCE)) {
-    skill_names = new Set(
-      _iterdirSorted2(MODULE_STATE.SKILLS_SOURCE).filter((p) => _isDir2(p)).map((p) => path11.basename(p))
-    );
-  }
-  const current_slugs = /* @__PURE__ */ new Set();
-  let count = 0;
-  let skipped = 0;
-  let reserved = 0;
-  let rendered = 0;
-  const auto = _read_model_auto_switch() === "auto";
-  for (const [source_file, slug] of iterCommands()) {
-    if (active_command_slugs !== null && !active_command_slugs.has(slug)) {
-      continue;
-    }
-    if (skill_names.has(slug)) {
-      skipped += 1;
-      continue;
-    }
-    if (is_claude_builtin_name(slug)) {
-      reserved += 1;
-      continue;
-    }
-    current_slugs.add(slug);
-    const skill_dir = path11.join(MODULE_STATE.CLAUDE_SKILLS_DIR, slug);
-    _mkdirp(skill_dir);
-    const skill_file = path11.join(skill_dir, "SKILL.md");
-    if (_existsOrSymlink(skill_file)) {
-      fs13.unlinkSync(skill_file);
-    }
-    const rel_path = _relativeToPosix2(source_file, MODULE_STATE.PROJECT_ROOT);
-    const value = auto ? _model_tier(source_file) : null;
-    if (value !== null && value in TIER_TO_CLAUDE_MODEL) {
-      _writeText(skill_file, _render_native_model_md(source_file, value));
-      rendered += 1;
-    } else {
-      const rel_target = path11.join("../../..", rel_path);
-      fs13.symlinkSync(rel_target, skill_file);
-    }
-    count += 1;
-  }
-  let removed_dirs = 0;
-  for (const item of _iterdirSorted2(MODULE_STATE.CLAUDE_SKILLS_DIR)) {
-    if (!_isDirNoFollow(item) || _isSymlink(item)) {
-      continue;
-    }
-    const name = path11.basename(item);
-    if (skill_names.has(name) || current_slugs.has(name)) {
-      continue;
-    }
-    const skill_md = path11.join(item, "SKILL.md");
-    if (_isSymlink(skill_md) || _isFile2(skill_md)) {
-      const entries = _iterdirSorted2(item);
-      if (entries.length === 1 && path11.basename(entries[0]) === "SKILL.md") {
-        fs13.unlinkSync(skill_md);
-        fs13.rmdirSync(item);
-        removed_dirs += 1;
-      }
-    }
-  }
-  let msg = `  \u2705  Created ${count} command entries in .claude/skills/`;
-  if (rendered) {
-    msg += ` (${rendered} rendered with native model:)`;
-  }
-  if (skipped) {
-    msg += ` (${skipped} skipped \u2014 same-name skill exists)`;
-  }
-  if (reserved) {
-    msg += ` (${reserved} withheld \u2014 Claude Code built-in name)`;
-  }
-  if (removed_dirs) {
-    msg += ` (${removed_dirs} stale dirs removed)`;
-  }
-  info(msg);
-  return count;
-}
-function generate_claude_subagents() {
-  if (!_isDir2(MODULE_STATE.SUBAGENTS_SOURCE)) {
-    return 0;
-  }
-  _mkdirp(MODULE_STATE.CLAUDE_AGENTS_DIR);
-  const sources = _rglobSorted2(MODULE_STATE.SUBAGENTS_SOURCE, "*.md").filter(
-    (p) => _isFile2(p) && !path11.basename(p).startsWith("_")
-  );
-  const current = /* @__PURE__ */ new Set();
-  let count = 0;
-  const defensePath = path11.join(MODULE_STATE.SUBAGENTS_SOURCE, "_prompt-defense.md");
-  const defense = _isFile2(defensePath) ? _readText(defensePath).trim() : "";
-  for (const src of sources) {
-    const stem = path11.basename(src, ".md");
-    const text = _readText(src);
-    if (!text.startsWith("---\n")) {
-      continue;
-    }
-    const end = text.indexOf("\n---\n", 4);
-    if (end === -1) {
-      continue;
-    }
-    const fmBlock = text.slice(4, end);
-    const body = text.slice(end + 5);
-    const fm = _yamlParse(fmBlock);
-    if (fm === null) {
-      continue;
-    }
-    const name = typeof fm["name"] === "string" ? fm["name"] : stem;
-    const description = typeof fm["description"] === "string" ? fm["description"] : "";
-    const toolsRaw = fm["tools"];
-    const tools = Array.isArray(toolsRaw) ? toolsRaw.map((t) => String(t)).join(", ") : String(toolsRaw ?? "");
-    const tier = typeof fm["model_tier"] === "string" ? fm["model_tier"] : "inherit";
-    const model = tier === "inherit" ? "inherit" : TIER_TO_CLAUDE_MODEL[tier] ?? "inherit";
-    const effort = typeof fm["effort"] === "string" ? fm["effort"] : null;
-    const guardedBody = defense !== "" && !body.includes("prompt-defense-preamble") ? `
-${defense}
-${body}` : body;
-    const out = `---
-name: ${name}
-description: ${description}
-tools: ${tools}
-model: ${model}
-` + (effort !== null ? `effort: ${effort}
-` : "") + "---\n" + guardedBody;
-    const target = path11.join(MODULE_STATE.CLAUDE_AGENTS_DIR, `${name}.md`);
-    _writeText(target, out);
-    current.add(`${name}.md`);
-    count += 1;
-  }
-  for (const item of _iterdirSorted2(MODULE_STATE.CLAUDE_AGENTS_DIR)) {
-    const base = path11.basename(item);
-    if (base === "README.md" || current.has(base)) {
-      continue;
-    }
-    if (_isFile2(item) && base.endsWith(".md") && !_isSymlink(item)) {
-      fs13.unlinkSync(item);
-    }
-  }
-  info(`  \u2705  Created ${count} subagent entries in .claude/agents/`);
-  return count;
-}
-function generate_subagent_host_contexts() {
-  if (!_isDir2(MODULE_STATE.SUBAGENTS_SOURCE)) {
-    return 0;
-  }
-  const sources = _rglobSorted2(MODULE_STATE.SUBAGENTS_SOURCE, "*.md").filter((p) => _isFile2(p));
-  const rendered = [];
-  for (const src of sources) {
-    const stem = path11.basename(src, ".md");
-    const text = _readText(src);
-    if (!text.startsWith("---\n")) {
-      continue;
-    }
-    const end = text.indexOf("\n---\n", 4);
-    if (end === -1) {
-      continue;
-    }
-    const fm = _yamlParse(text.slice(4, end));
-    if (fm === null) {
-      continue;
-    }
-    const body = text.slice(end + 5);
-    const name = typeof fm["name"] === "string" ? fm["name"] : stem;
-    const description = typeof fm["description"] === "string" ? fm["description"] : "";
-    const trustRaw = fm["trust"];
-    const trust = typeof trustRaw === "string" ? trustRaw : typeof trustRaw === "object" && trustRaw !== null && typeof trustRaw["level"] === "string" ? trustRaw["level"] : "unknown";
-    const lifecycle = typeof fm["lifecycle"] === "string" ? fm["lifecycle"] : "unknown";
-    const tier = typeof fm["model_tier"] === "string" ? fm["model_tier"] : "inherit";
-    const toolsRaw = fm["tools"];
-    const tools = Array.isArray(toolsRaw) ? toolsRaw.map((t) => String(t)).join(", ") : String(toolsRaw ?? "");
-    const out = `---
-description: ${description}
----
-
-# Subagent (passive reference): ${name}
-
-> Passive subagent reference. This host has **no native subagent dispatch** \u2014
-> there is no \`@${name}\` here. Load this discipline manually and apply it.
-> Governance parity (trust / lifecycle / model tier) is preserved below;
-> feature parity is not (ADR-109 \xA74).
-
-- trust: ${trust}
-- lifecycle: ${lifecycle}
-- model tier: ${tier}
-` + (tools ? `- tools: ${tools}
-` : "") + "\n" + _pyRstrip(body) + "\n";
-    rendered.push({ name, text: out });
-  }
-  const targets = [
-    {
-      active: _tool_active("cursor"),
-      dir: path11.join(MODULE_STATE.PROJECT_ROOT, ".cursor", "subagents"),
-      file: (n) => `${n}.md`,
-      owns: (b) => b.endsWith(".md")
-    },
-    {
-      active: _tool_active("windsurf"),
-      dir: path11.join(MODULE_STATE.PROJECT_ROOT, ".windsurf", "subagents"),
-      file: (n) => `${n}.md`,
-      owns: (b) => b.endsWith(".md")
-    },
-    {
-      active: _tool_active("cline"),
-      dir: path11.join(MODULE_STATE.PROJECT_ROOT, ".clinerules"),
-      file: (n) => `${n}.subagent.md`,
-      owns: (b) => b.endsWith(".subagent.md")
-    }
-  ];
-  let count = 0;
-  for (const t of targets) {
-    if (!t.active) {
-      continue;
-    }
-    const current = new Set(rendered.map((r) => t.file(r.name)));
-    _mkdirp(t.dir);
-    for (const r of rendered) {
-      _writeText(path11.join(t.dir, t.file(r.name)), r.text);
-      count += 1;
-    }
-    if (_exists3(t.dir)) {
-      for (const item of _iterdirSorted2(t.dir)) {
-        const base = path11.basename(item);
-        if (base === "README.md" || current.has(base)) {
-          continue;
-        }
-        if (_isFile2(item) && !_isSymlink(item) && t.owns(base)) {
-          fs13.unlinkSync(item);
-        }
-      }
-    }
-  }
-  info(`  \u2705  Projected ${count} passive subagent context file(s) to non-Claude-Code hosts`);
-  return count;
-}
-var PLUGIN_POINTER_SLUG = "install-agent-config";
-var PLUGIN_POINTER_SKILL_BODY = `---
-name: install-agent-config
-description: >-
-  Install or upgrade the event4u agent-config suite. This marketplace plugin
-  is a bootstrap shim \u2014 it ships hooks plus this pointer only; ALL skills,
-  rules, and commands are installed via \`npx -y @event4u/agent-config init\`.
-  Use when the user asks to install, set up, or upgrade agent-config, or
-  wonders why this plugin contains no other skills.
----
-
-# Install agent-config
-
-This plugin is a **bootstrap shim**. It exists so the marketplace listing
-stays discoverable and existing plugin installs keep working hooks \u2014 the
-content surface (skills, rules, commands, personas) is distributed as a
-file projection, not through this plugin.
-
-## Install (canonical, one command)
-
-\`\`\`bash
-npx -y @event4u/agent-config init
-\`\`\`
-
-The installer writes the full content projection, registers the dispatcher
-hooks as a managed block in \`~/.claude/settings.json\` (byte-identical to
-this plugin's hooks, so nothing double-fires), and keeps everything
-upgradeable via \`agent-config upgrade\`.
-
-## Already installed both?
-
-Run \`agent-config doctor\` to check for duplicate surfaces, and
-\`agent-config converge\` to clean up consented duplicates.
-`;
-function generate_plugin_command_skills() {
-  if (!_isDir2(path11.join(MODULE_STATE.PROJECT_ROOT, "src", "domains"))) {
-    return 0;
-  }
-  _mkdirp(MODULE_STATE.PLUGIN_SKILLS_DIR);
-  const pointer_dir = path11.join(MODULE_STATE.PLUGIN_SKILLS_DIR, PLUGIN_POINTER_SLUG);
-  _mkdirp(pointer_dir);
-  const pointer_file = path11.join(pointer_dir, "SKILL.md");
-  if (_isSymlink(pointer_file)) {
-    fs13.unlinkSync(pointer_file);
-  }
-  if (!_isFile2(pointer_file) || fs13.readFileSync(pointer_file, "utf-8") !== PLUGIN_POINTER_SKILL_BODY) {
-    fs13.writeFileSync(pointer_file, PLUGIN_POINTER_SKILL_BODY);
-  }
-  let removed_dirs = 0;
-  for (const item of _iterdirSorted2(MODULE_STATE.PLUGIN_SKILLS_DIR)) {
-    if (!_isDirNoFollow(item) || _isSymlink(item)) {
-      continue;
-    }
-    if (path11.basename(item) === PLUGIN_POINTER_SLUG) {
-      continue;
-    }
-    const entries = _iterdirSorted2(item);
-    const all_symlinks = entries.length > 0 && entries.every((e) => _isSymlink(e));
-    const single_skill_md = entries.length === 1 && path11.basename(entries[0]) === "SKILL.md" && _isFile2(entries[0]);
-    if (all_symlinks || single_skill_md) {
-      for (const e of entries) {
-        fs13.unlinkSync(e);
-      }
-      fs13.rmdirSync(item);
-      removed_dirs += 1;
-    }
-  }
-  let msg = "  \u2705  Plugin skills: bootstrap shim (1 pointer skill) in .claude-plugin/skills/";
-  if (removed_dirs) {
-    msg += ` (${removed_dirs} content entries pruned)`;
-  }
-  info(msg);
-  return 1;
-}
-function generate_persona_symlinks() {
-  if (!_exists3(MODULE_STATE.PERSONAS_SOURCE)) {
-    _print("  \u26A0\uFE0F  dist/agent-src/personas/ not found \u2014 skipping personas");
-    return 0;
-  }
-  const personas = _rglobSorted2(MODULE_STATE.PERSONAS_SOURCE, "*.md").filter((p) => _isFile2(p) && path11.basename(p, ".md") !== "README").map((p) => path11.basename(p)).filter((name) => _isFile2(path11.join(MODULE_STATE.PERSONAS_SOURCE, name)));
-  const direct = _iterdirSorted2(MODULE_STATE.PERSONAS_SOURCE).filter((p) => p.endsWith(".md") && _isFile2(p) && path11.basename(p, ".md") !== "README").map((p) => path11.basename(p)).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-  void personas;
-  const list = direct;
-  const tool_dirs = _filter_tool_dirs(PERSONA_TOOL_DIRS);
-  let total = 0;
-  for (const [tool_dir, rel_prefix] of Object.entries(tool_dirs)) {
-    const target_dir = path11.join(MODULE_STATE.PROJECT_ROOT, tool_dir);
-    _mkdirp(target_dir);
-    for (const item of _iterdirSorted2(target_dir)) {
-      const name = path11.basename(item);
-      if (_isSymlink(item) && !list.includes(name) && name !== "README.md") {
-        fs13.unlinkSync(item);
-      }
-    }
-    for (const persona of list) {
-      const link = path11.join(target_dir, persona);
-      const target = path11.join(rel_prefix, persona);
-      if (_existsOrSymlink(link)) {
-        fs13.unlinkSync(link);
-      }
-      fs13.symlinkSync(target, link);
-      total += 1;
-    }
-  }
-  info(
-    `  \u2705  Created ${total} persona symlinks across ${Object.keys(tool_dirs).length} tool directories (${list.length} personas each)`
-  );
-  return total;
-}
-function generate_user_type_symlinks() {
-  if (!_exists3(MODULE_STATE.USER_TYPES_SOURCE)) {
-    _print("  \u26A0\uFE0F  dist/agent-src/user-types/ not found \u2014 skipping user-types");
-    return 0;
-  }
-  const user_types = _iterdirSorted2(MODULE_STATE.USER_TYPES_SOURCE).filter((p) => p.endsWith(".md") && _isFile2(p) && path11.basename(p, ".md") !== "README").map((p) => path11.basename(p)).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-  const tool_dirs = _filter_tool_dirs(USER_TYPE_TOOL_DIRS);
-  let total = 0;
-  for (const [tool_dir, rel_prefix] of Object.entries(tool_dirs)) {
-    const target_dir = path11.join(MODULE_STATE.PROJECT_ROOT, tool_dir);
-    _mkdirp(target_dir);
-    for (const item of _iterdirSorted2(target_dir)) {
-      const name = path11.basename(item);
-      if (_isSymlink(item) && !user_types.includes(name) && name !== "README.md") {
-        fs13.unlinkSync(item);
-      }
-    }
-    for (const user_type of user_types) {
-      const link = path11.join(target_dir, user_type);
-      const target = path11.join(rel_prefix, user_type);
-      if (_existsOrSymlink(link)) {
-        fs13.unlinkSync(link);
-      }
-      fs13.symlinkSync(target, link);
-      total += 1;
-    }
-  }
-  info(
-    `  \u2705  Created ${total} user-type symlinks across ${Object.keys(tool_dirs).length} tool directories (${user_types.length} user-types each)`
-  );
-  return total;
-}
-function generate_plugin_hooks() {
-  const manifest_path2 = path11.join(
-    MODULE_STATE.PROJECT_ROOT,
-    "src",
-    "scripts",
-    "hook_manifest.yaml"
-  );
-  if (!_exists3(manifest_path2)) {
-    process.stderr.write("  \u26A0\uFE0F  scripts/hook_manifest.yaml not found \u2014 skipping plugin hooks\n");
-    return 0;
-  }
-  const matrix = build_claude_hook_matrix(manifest_path2);
-  const hooks = {};
-  for (const [native, command] of Object.entries(matrix)) {
-    hooks[native] = [{ hooks: [{ type: "command", command }] }];
-  }
-  const hooks_dir = path11.join(MODULE_STATE.PROJECT_ROOT, "hooks");
-  _mkdirp(hooks_dir);
-  const out = path11.join(hooks_dir, "hooks.json");
-  _writeText(out, _jsonDumpsHooks({ hooks }) + "\n");
-  info(`  \u2705  Generated hooks/hooks.json (${Object.keys(hooks).length} Claude plugin hooks)`);
-  return Object.keys(hooks).length;
-}
-function _jsonDumpsHooks(obj) {
-  return _pyJson(obj, 0);
-}
-function _pyJson(value, indent) {
-  const pad = "  ".repeat(indent);
-  const padInner = "  ".repeat(indent + 1);
-  if (Array.isArray(value)) {
-    if (value.length === 0) {
-      return "[]";
-    }
-    const items = value.map((v) => padInner + _pyJson(v, indent + 1));
-    return `[
-${items.join(",\n")}
-${pad}]`;
-  }
-  if (value !== null && typeof value === "object") {
-    const entries = Object.entries(value);
-    if (entries.length === 0) {
-      return "{}";
-    }
-    const items = entries.map(([k, v]) => `${padInner}${JSON.stringify(k)}: ${_pyJson(v, indent + 1)}`);
-    return `{
-${items.join(",\n")}
-${pad}}`;
-  }
-  return JSON.stringify(value);
-}
-function _generate_tools_inner(cmd_slugs, skill_names) {
-  info("\u{1F527}  Generating multi-agent tool directories...\n");
-  const rules = generate_rule_symlinks();
-  const windsurfrules = _tool_active("windsurf") ? generate_windsurfrules() : 0;
-  if (_tool_active("gemini")) {
-    generate_gemini_md();
-  }
-  const skills = _tool_active("claude-code") ? generate_claude_skills(skill_names) : 0;
-  const commands = _tool_active("claude-code") ? generate_claude_commands(cmd_slugs) : 0;
-  const subagents = _tool_active("claude-code") ? generate_claude_subagents() : 0;
-  const subagent_contexts = generate_subagent_host_contexts();
-  const plugin_cmd_skills = _tool_active("claude-code") ? generate_plugin_command_skills() : 0;
-  const plugin_hooks = _tool_active("claude-code") ? generate_plugin_hooks() : 0;
-  const personas = generate_persona_symlinks();
-  const user_types = generate_user_type_symlinks();
-  const cursor_mdc = _tool_active("cursor") ? generate_cursor_mdc_rules() : 0;
-  const windsurf_modern = _tool_active("windsurf") ? generate_windsurf_modern_rules() : 0;
-  const cursor_cmds = _tool_active("cursor") ? generate_cursor_commands(cmd_slugs) : 0;
-  const windsurf_wf = _tool_active("windsurf") ? generate_windsurf_workflows(cmd_slugs) : 0;
-  const summary = `\u2705  generate-tools \u2014 rules=${rules} skills=${skills} commands=${commands} subagents=${subagents} subagent_contexts=${subagent_contexts} plugin_cmd_skills=${plugin_cmd_skills} plugin_hooks=${plugin_hooks} personas=${personas} user_types=${user_types} cursor_mdc=${cursor_mdc} windsurf_rules=${windsurf_modern} cursor_commands=${cursor_cmds} windsurf_workflows=${windsurf_wf} windsurfrules=${windsurfrules}`;
-  if (resolve_level() === "verbose") {
-    _print(`
-${summary}`);
-  } else {
-    success(summary);
-    flush_summary();
-  }
-}
-function generate_tools() {
-  const [cmd_slugs, skill_names] = _resolve_active_predicates();
-  const scoped = cmd_slugs !== null;
-  try {
-    _generate_tools_inner(cmd_slugs, skill_names);
-  } catch (e) {
-    if (scoped) {
-      info("  \u26A0\uFE0F  scoped projection failed \u2014 restoring full (legacy-all) projection");
-      _generate_tools_inner(null, null);
-    }
-    throw e;
-  }
-  if (!scoped) {
-    info(
-      "  \u2139\uFE0F  Profile mode available \u2014 focused surface. Run `agent-config use --profile=developer`."
-    );
-  }
-}
-var AUGMENT_SYMLINK_DIRS = [
-  "skills",
-  "commands",
-  "guidelines",
-  "personas",
-  "user-types",
-  "templates",
-  "contexts",
-  "scripts"
-];
-var AUGMENT_SYMLINK_FILES = ["README.md"];
-function project_to_augment() {
-  if (!_exists3(MODULE_STATE.TARGET_DIR)) {
-    _print(`  \u26A0\uFE0F  ${path11.basename(MODULE_STATE.TARGET_DIR)}/ not found \u2014 nothing to project`);
-    return;
-  }
-  _mkdirp(MODULE_STATE.AUGMENT_DIR);
-  const use_symlinks = _read_augment_rules_use_symlinks();
-  const src_rules = path11.join(MODULE_STATE.TARGET_DIR, "rules");
-  const dst_rules = path11.join(MODULE_STATE.AUGMENT_DIR, "rules");
-  _mkdirp(dst_rules);
-  const existing = new Set(
-    _iterdirSorted2(dst_rules).filter((f) => _isFile2(f) || _isSymlink(f)).map((f) => path11.basename(f))
-  );
-  const current = /* @__PURE__ */ new Set();
-  let written = 0;
-  if (_exists3(src_rules)) {
-    const rules = _iterdirSorted2(src_rules).filter((p) => p.endsWith(".md") && _isFile2(p)).map((p) => path11.basename(p)).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-    for (const rule of rules) {
-      const target = path11.join(dst_rules, rule);
-      if (_isSymlink(target) || _existsOrSymlink(target)) {
-        fs13.unlinkSync(target);
-      }
-      if (use_symlinks) {
-        fs13.symlinkSync(path11.join("..", "..", "dist/agent-src", "rules", rule), target);
-      } else {
-        copy_file(path11.join(src_rules, rule), target);
-      }
-      current.add(rule);
-      written += 1;
-    }
-  }
-  let removed_rules = 0;
-  for (const name of existing) {
-    if (!current.has(name)) {
-      fs13.unlinkSync(path11.join(dst_rules, name));
-      removed_rules += 1;
-    }
-  }
-  const mode_label = use_symlinks ? "Symlinked" : "Copied";
-  _print(
-    `  \u2705  ${mode_label} ${written} rules to .augment/rules/` + (removed_rules ? ` (${removed_rules} stale removed)` : "")
-  );
-  for (const sub of AUGMENT_SYMLINK_DIRS) {
-    const dst = path11.join(MODULE_STATE.AUGMENT_DIR, sub);
-    if (_isSymlink(dst) || _existsOrSymlink(dst)) {
-      if (_isDir2(dst) && !_isSymlink(dst)) {
-        fs13.rmSync(dst, { recursive: true, force: true });
-      } else {
-        fs13.unlinkSync(dst);
-      }
-    }
-    const src = path11.join(MODULE_STATE.TARGET_DIR, sub);
-    if (_exists3(src)) {
-      fs13.symlinkSync(path11.join("..", "dist/agent-src", sub), dst);
-      _print(`  \u2705  Symlinked .augment/${sub} \u2192 ../dist/agent-src/${sub}`);
-    }
-  }
-  for (const name of AUGMENT_SYMLINK_FILES) {
-    const dst = path11.join(MODULE_STATE.AUGMENT_DIR, name);
-    const src = path11.join(MODULE_STATE.TARGET_DIR, name);
-    if (_isSymlink(dst) || _existsOrSymlink(dst)) {
-      fs13.unlinkSync(dst);
-    }
-    if (_exists3(src)) {
-      fs13.symlinkSync(path11.join("..", "dist/agent-src", name), dst);
-      _print(`  \u2705  Symlinked .augment/${name} \u2192 ../dist/agent-src/${name}`);
-    }
-  }
-  const known = /* @__PURE__ */ new Set([...AUGMENT_SYMLINK_DIRS, ...AUGMENT_SYMLINK_FILES, "rules", "state"]);
-  for (const item of _iterdirSorted2(MODULE_STATE.AUGMENT_DIR)) {
-    const name = path11.basename(item);
-    if (known.has(name)) {
-      continue;
-    }
-    if (_isSymlink(item) || _isFile2(item)) {
-      fs13.unlinkSync(item);
-      _print(`  \u{1F5D1}\uFE0F  Removed stale .augment/${name}`);
-    } else if (_isDir2(item)) {
-      fs13.rmSync(item, { recursive: true, force: true });
-      _print(`  \u{1F5D1}\uFE0F  Removed stale .augment/${name}/`);
-    }
-  }
-}
-function clean_tools() {
-  const targets = [
-    path11.join(MODULE_STATE.PROJECT_ROOT, ".claude"),
-    path11.join(MODULE_STATE.PROJECT_ROOT, ".cursor"),
-    path11.join(MODULE_STATE.PROJECT_ROOT, ".clinerules"),
-    path11.join(MODULE_STATE.PROJECT_ROOT, ".windsurf"),
-    path11.join(MODULE_STATE.PROJECT_ROOT, ".windsurfrules"),
-    path11.join(MODULE_STATE.PROJECT_ROOT, "GEMINI.md")
-  ];
-  for (const t of targets) {
-    if (_isDirNoFollow(t) && !_isSymlink(t)) {
-      fs13.rmSync(t, { recursive: true, force: true });
-      _print(`  \u{1F5D1}\uFE0F  Removed ${_relativeToPosix2(t, MODULE_STATE.PROJECT_ROOT)}`);
-    } else if (_existsOrSymlink(t)) {
-      fs13.unlinkSync(t);
-      _print(`  \u{1F5D1}\uFE0F  Removed ${_relativeToPosix2(t, MODULE_STATE.PROJECT_ROOT)}`);
-    }
-  }
-  _print("\u2705  All generated tool files cleaned");
-}
-function _print(line) {
-  process.stdout.write(`${line}
-`);
-}
-function main(argv = process.argv.slice(2)) {
-  if (!_exists3(MODULE_STATE.SOURCE_DIR) && !_any_source_root_exists()) {
-    _print(
-      `\u274C  No source directory found (looked at the artefact roots under src/ and ${MODULE_STATE.SOURCE_DIR})`
-    );
-    return 1;
-  }
-  const arg = argv.length > 0 ? argv[0] : "--sync";
-  if (arg === "--list") {
-    const files = list_md_files(MODULE_STATE.SOURCE_DIR);
-    _print(`\u{1F4C4}  ${files.length} .md files total:
-`);
-    for (const f of files) {
-      _print(`  ${f}`);
-    }
-  } else if (arg === "--changed") {
-    const changed = list_changed_md(MODULE_STATE.SOURCE_DIR);
-    if (changed.length === 0) {
-      _print("\u2705  Every .md projection matches its source");
-      return 0;
-    }
-    _print(`\u{1F4DD}  ${changed.length} .md projection(s) out of date \u2014 run 'task sync':
-`);
-    for (const f of changed) {
-      _print(`  ${f}`);
-    }
-  } else if (arg === "--check") {
-    const [missing, stale] = check_sync(MODULE_STATE.SOURCE_DIR, MODULE_STATE.TARGET_DIR);
-    if (missing.length === 0 && stale.length === 0) {
-      _print("\u2705  dist/agent-src/ is in sync with the artefact roots under src/");
-      return 0;
-    }
-    if (missing.length > 0) {
-      _print(`\u274C  Missing in dist/agent-src/ (${missing.length}):`);
-      for (const f of missing) {
-        _print(`  ${f}`);
-      }
-    }
-    if (stale.length > 0) {
-      _print(`\u274C  Stale in dist/agent-src/ (${stale.length}):`);
-      for (const f of stale) {
-        _print(`  ${f}`);
-      }
-    }
-    _print(`
-Run 'task sync' \u2014 the projection is a deterministic copy, so it needs no agent step.`);
-    return 1;
-  } else if (arg === "--sync") {
-    _print(`Source: the artefact roots under src/`);
-    _print(`Target: ${MODULE_STATE.TARGET_DIR}
-`);
-    _print("--- Syncing non-.md files ---");
-    const copied = sync_non_md(MODULE_STATE.SOURCE_DIR, MODULE_STATE.TARGET_DIR);
-    _print(`
---- Cleanup stale files ---`);
-    const deleted = cleanup_stale(MODULE_STATE.SOURCE_DIR, MODULE_STATE.TARGET_DIR);
-    const changed = list_changed_md(MODULE_STATE.SOURCE_DIR);
-    _print(`
-\u2705  Done: ${copied} copied, ${deleted} stale deleted`);
-    if (changed.length > 0) {
-      _print(`\u274C  ${changed.length} .md projection(s) still out of date after sync (run --changed)`);
-    } else {
-      _print(`\u2705  Every .md projection matches its source`);
-    }
-    _print(`
---- Projecting dist/agent-src/ \u2192 .augment/ ---`);
-    project_to_augment();
-  } else if (arg === "--generate-tools") {
-    generate_tools();
-  } else if (arg === "--clean-tools") {
-    clean_tools();
-  } else if (arg === "--project-augment") {
-    project_to_augment();
-  } else {
-    _print(
-      "Usage: condense [--sync|--list|--changed|--check|--generate-tools|--clean-tools|--project-augment]"
-    );
-    return 1;
-  }
-  return 0;
-}
-function _isCliEntry() {
-  if (process.argv[1] === void 0) {
-    return false;
-  }
-  const argvUrl = pathToFileURL(path11.resolve(process.argv[1])).href;
-  if (import.meta.url === argvUrl) {
-    return true;
-  }
-  try {
-    const here = fs13.realpathSync(fileURLToPath3(import.meta.url));
-    const argv = fs13.realpathSync(path11.resolve(process.argv[1]));
-    return here === argv;
-  } catch {
-    return false;
-  }
-}
-var isMain = _isCliEntry();
-if (isMain) {
-  process.exit(main());
 }
 
 // src/install/rule_scope.ts
@@ -12186,8 +10072,8 @@ function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
     return true;
   }
-  const basename6 = path12.basename(sourcePath);
-  if (COMPAT_ALWAYS_EXCLUDED.includes(basename6)) {
+  const basename5 = path10.basename(sourcePath);
+  if (COMPAT_ALWAYS_EXCLUDED.includes(basename5)) {
     return false;
   }
   return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
@@ -12744,8 +10630,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path16, errorMaps, issueData } = params;
-  const fullPath = [...path16, ...issueData.path || []];
+  const { data, path: path14, errorMaps, issueData } = params;
+  const fullPath = [...path14, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -12861,11 +10747,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path16, key) {
+  constructor(parent, value, path14, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path16;
+    this._path = path14;
     this._key = key;
   }
   get path() {
@@ -18043,13 +15929,13 @@ var zodToJsonSchema = (schema, options) => {
     }, true) ?? parseAnyDef(refs)
   }), {}) : void 0;
   const name = typeof options === "string" ? options : options?.nameStrategy === "title" ? void 0 : options?.name;
-  const main4 = parseDef(schema._def, name === void 0 ? refs : {
+  const main3 = parseDef(schema._def, name === void 0 ? refs : {
     ...refs,
     currentPath: [...refs.basePath, refs.definitionPath, name]
   }, false) ?? parseAnyDef(refs);
   const title = typeof options === "object" && options.name !== void 0 && options.nameStrategy === "title" ? options.name : void 0;
   if (title !== void 0) {
-    main4.title = title;
+    main3.title = title;
   }
   if (refs.flags.hasReferencedOpenAiAnyType) {
     if (!definitions) {
@@ -18070,9 +15956,9 @@ var zodToJsonSchema = (schema, options) => {
     }
   }
   const combined = name === void 0 ? definitions ? {
-    ...main4,
+    ...main3,
     [refs.definitionPath]: definitions
-  } : main4 : {
+  } : main3 : {
     $ref: [
       ...refs.$refStrategy === "relative" ? [] : refs.basePath,
       refs.definitionPath,
@@ -18080,7 +15966,7 @@ var zodToJsonSchema = (schema, options) => {
     ].join("/"),
     [refs.definitionPath]: {
       ...definitions,
-      [name]: main4
+      [name]: main3
     }
   };
   if (refs.target === "jsonSchema7") {
@@ -18095,8 +15981,8 @@ var zodToJsonSchema = (schema, options) => {
 };
 
 // src/scripts/_lib/module_detection.ts
-import * as fs14 from "node:fs";
-import * as path13 from "node:path";
+import * as fs12 from "node:fs";
+import * as path11 from "node:path";
 var _SKIP_DIRS = /* @__PURE__ */ new Set([".module-template", ".example"]);
 var _RULES = [
   ["app/Modules", "laravel-hmvc", "App\\Modules\\{ModuleName}"],
@@ -18108,16 +15994,16 @@ var _RULES = [
   ["internal", "go-internal", ""],
   ["cmd", "go-internal", ""]
 ];
-function _isDir3(p) {
+function _isDir(p) {
   try {
-    return fs14.statSync(p).isDirectory();
+    return fs12.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
-function _isFile3(p) {
+function _isFile(p) {
   try {
-    return fs14.statSync(p).isFile();
+    return fs12.statSync(p).isFile();
   } catch {
     return false;
   }
@@ -18131,13 +16017,13 @@ function _isUpperChar(ch) {
 function _list_module_subdirs(root) {
   let entries;
   try {
-    entries = fs14.readdirSync(root).sort();
+    entries = fs12.readdirSync(root).sort();
   } catch {
     return [];
   }
   const out = [];
   for (const name of entries) {
-    if (!_isDir3(path13.join(root, name))) {
+    if (!_isDir(path11.join(root, name))) {
       continue;
     }
     if (name.startsWith(".")) {
@@ -18159,11 +16045,11 @@ function _score_confidence(stack, root, subdirs) {
     return capitalized.length > 0 ? "high" : "medium";
   }
   if (stack === "node-monorepo") {
-    const withPkgJson = subdirs.filter((name) => _isFile3(path13.join(root, name, "package.json")));
+    const withPkgJson = subdirs.filter((name) => _isFile(path11.join(root, name, "package.json")));
     return withPkgJson.length > 0 ? "high" : "medium";
   }
   if (stack === "python-src") {
-    const withInit = subdirs.filter((name) => _isFile3(path13.join(root, name, "__init__.py")));
+    const withInit = subdirs.filter((name) => _isFile(path11.join(root, name, "__init__.py")));
     return withInit.length > 0 ? "high" : "medium";
   }
   if (stack === "go-internal") {
@@ -18175,8 +16061,8 @@ function detect_module_roots(project_root) {
   const high = [];
   const medium = [];
   for (const [rel_path, stack, namespace_template] of _RULES) {
-    const abs_path = path13.join(project_root, rel_path);
-    if (!_isDir3(abs_path)) {
+    const abs_path = path11.join(project_root, rel_path);
+    if (!_isDir(abs_path)) {
       continue;
     }
     const subdirs = _list_module_subdirs(abs_path);
@@ -18196,12 +16082,37 @@ function detect_module_roots(project_root) {
   return [...high, ...medium];
 }
 
+// src/scripts/_lib/model_tier.ts
+import fs13 from "node:fs";
+var TIER_TO_CLAUDE_MODEL = {
+  high: "opus",
+  medium: "sonnet",
+  lite: "haiku"
+};
+var MODEL_TIER_RE = /^model_tier:\s*"?([a-z]+)"?\s*$/m;
+function read_model_tier(skill_md) {
+  if (!fs13.existsSync(skill_md)) return null;
+  const text = fs13.readFileSync(skill_md).toString("utf-8");
+  if (!text.startsWith("---\n")) return null;
+  const end = text.indexOf("\n---\n", 4);
+  if (end === -1) return null;
+  const m = MODEL_TIER_RE.exec(text.slice(4, end));
+  return m ? m[1] : null;
+}
+function render_native_model_md(text, tier) {
+  const model = TIER_TO_CLAUDE_MODEL[tier];
+  if (model === void 0) {
+    throw new Error(`'${tier}'`);
+  }
+  return text.replace(MODEL_TIER_RE, `model: ${model}`);
+}
+
 // src/scripts/_cli/cmd_migrate.ts
 import { spawnSync } from "node:child_process";
-import * as fs15 from "node:fs";
-import * as path14 from "node:path";
+import * as fs14 from "node:fs";
+import * as path12 from "node:path";
 import process2 from "node:process";
-import { fileURLToPath as fileURLToPath4, pathToFileURL as pathToFileURL2 } from "node:url";
+import { fileURLToPath as fileURLToPath2, pathToFileURL } from "node:url";
 var PACKAGE_NAME_NPM = "@event4u/agent-config";
 var PACKAGE_NAME_COMPOSER = "event4u/agent-config";
 var LEGACY_DIRS = ["vendor", "node_modules"];
@@ -18219,7 +16130,7 @@ var LEGACY_SETTINGS_FILES = [".agent-settings.yml", ".agent-user.yml"];
 var LEGACY_STATE_FILENAME = ".implement-ticket-state.json";
 var LEGACY_STATE_V1_FILENAME = ".work-state.json";
 var LEGACY_AGENT_CONFIG_SHELL = "agent-config";
-var _HERE_DIR = path14.dirname(fileURLToPath4(import.meta.url));
+var _HERE_DIR = path12.dirname(fileURLToPath2(import.meta.url));
 var ArgparseExit = class extends Error {
   code;
   constructor(code) {
@@ -18234,7 +16145,7 @@ function _stdoutSink() {
 function _stderrSink() {
   return { write: (t) => process2.stderr.write(t) };
 }
-function _print2(out, line = "") {
+function _print(out, line = "") {
   out.write(line + "\n");
 }
 function _jsonStrAscii(s) {
@@ -18316,49 +16227,49 @@ ${closePad}}`;
 function _jsonDumpsIndentAscii(value, indent) {
   return _dumpIndentAscii(value, indent, 0);
 }
-function _isFile4(p) {
+function _isFile2(p) {
   try {
-    return fs15.statSync(p).isFile();
+    return fs14.statSync(p).isFile();
   } catch {
     return false;
   }
 }
-function _isDir4(p) {
+function _isDir2(p) {
   try {
-    return fs15.statSync(p).isDirectory();
+    return fs14.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
-function _isSymlink2(p) {
+function _isSymlink(p) {
   try {
-    return fs15.lstatSync(p).isSymbolicLink();
+    return fs14.lstatSync(p).isSymbolicLink();
   } catch {
     return false;
   }
 }
-function _exists4(p) {
+function _exists2(p) {
   try {
-    fs15.lstatSync(p);
+    fs14.lstatSync(p);
     return true;
   } catch {
     return false;
   }
 }
-function _readText2(p) {
-  return fs15.readFileSync(p, { encoding: "utf-8" });
+function _readText(p) {
+  return fs14.readFileSync(p, { encoding: "utf-8" });
 }
-function _writeText2(p, text) {
-  fs15.writeFileSync(p, text, { encoding: "utf-8" });
+function _writeText(p, text) {
+  fs14.writeFileSync(p, text, { encoding: "utf-8" });
 }
 function _jsonLoadFile(p) {
-  return JSON.parse(_readText2(p));
+  return JSON.parse(_readText(p));
 }
 function _isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function _detect_npm(pkg_json) {
-  if (!_isFile4(pkg_json)) {
+  if (!_isFile2(pkg_json)) {
     return false;
   }
   let data;
@@ -18379,7 +16290,7 @@ function _detect_npm(pkg_json) {
   return false;
 }
 function _detect_composer(composer_json) {
-  if (!_isFile4(composer_json)) {
+  if (!_isFile2(composer_json)) {
     return false;
   }
   let data;
@@ -18400,12 +16311,12 @@ function _detect_composer(composer_json) {
   return false;
 }
 function _classify_symlink(link) {
-  if (!_isSymlink2(link)) {
+  if (!_isSymlink(link)) {
     return null;
   }
   let target;
   try {
-    target = fs15.readlinkSync(link);
+    target = fs14.readlinkSync(link);
   } catch {
     return null;
   }
@@ -18416,42 +16327,42 @@ function _classify_symlink(link) {
   return "user";
 }
 function _detect_legacy_state(project) {
-  return _isFile4(path14.join(project, LEGACY_STATE_FILENAME));
+  return _isFile2(path12.join(project, LEGACY_STATE_FILENAME));
 }
 function _detect_legacy_settings(project) {
   const found = [];
   for (const name of LEGACY_SETTINGS_FILES) {
-    const flat = path14.join(project, name);
-    if (_isFile4(flat)) {
+    const flat = path12.join(project, name);
+    if (_isFile2(flat)) {
       found.push(flat);
     }
-    const typed = path14.join(project, "settings", name);
-    if (_isFile4(typed)) {
+    const typed = path12.join(project, "settings", name);
+    if (_isFile2(typed)) {
       found.push(typed);
     }
   }
   return found;
 }
 function _detect_empty_shell(project) {
-  const shell = path14.join(project, LEGACY_AGENT_CONFIG_SHELL);
-  if (!_isDir4(shell) || _isSymlink2(shell)) {
+  const shell = path12.join(project, LEGACY_AGENT_CONFIG_SHELL);
+  if (!_isDir2(shell) || _isSymlink(shell)) {
     return false;
   }
   try {
-    return fs15.readdirSync(shell).length === 0;
+    return fs14.readdirSync(shell).length === 0;
   } catch {
     return false;
   }
 }
 function _detect_already_migrated(project) {
-  if (_detect_npm(path14.join(project, "package.json"))) {
+  if (_detect_npm(path12.join(project, "package.json"))) {
     return false;
   }
-  if (_detect_composer(path14.join(project, "composer.json"))) {
+  if (_detect_composer(path12.join(project, "composer.json"))) {
     return false;
   }
   for (const name of MANAGED_SYMLINKS) {
-    if (_classify_symlink(path14.join(project, name)) === "legacy") {
+    if (_classify_symlink(path12.join(project, name)) === "legacy") {
       return false;
     }
   }
@@ -18488,7 +16399,7 @@ function _strip_npm_entry(pkg_json) {
     }
   }
   if (changed) {
-    _writeText2(pkg_json, _jsonDumpsIndentAscii(data, 2) + "\n");
+    _writeText(pkg_json, _jsonDumpsIndentAscii(data, 2) + "\n");
   }
   return changed;
 }
@@ -18514,7 +16425,7 @@ function _strip_composer_entry(composer_json) {
     }
   }
   if (changed) {
-    _writeText2(composer_json, _jsonDumpsIndentAscii(data, 2) + "\n");
+    _writeText(composer_json, _jsonDumpsIndentAscii(data, 2) + "\n");
   }
   return changed;
 }
@@ -18522,11 +16433,11 @@ function _purge_legacy_symlinks(project) {
   const removed = [];
   const preserved = [];
   for (const name of MANAGED_SYMLINKS) {
-    const link = path14.join(project, name);
+    const link = path12.join(project, name);
     const kind = _classify_symlink(link);
     if (kind === "legacy") {
       try {
-        fs15.unlinkSync(link);
+        fs14.unlinkSync(link);
         removed.push(name);
       } catch {
         preserved.push(name);
@@ -18538,14 +16449,14 @@ function _purge_legacy_symlinks(project) {
   return [removed, preserved];
 }
 function _migrate_state_file(project) {
-  const source = path14.join(project, LEGACY_STATE_FILENAME);
-  if (!_isFile4(source)) {
+  const source = path12.join(project, LEGACY_STATE_FILENAME);
+  if (!_isFile2(source)) {
     return null;
   }
-  const target = path14.join(project, LEGACY_STATE_V1_FILENAME);
-  if (_exists4(target)) {
+  const target = path12.join(project, LEGACY_STATE_V1_FILENAME);
+  if (_exists2(target)) {
     try {
-      fs15.unlinkSync(source);
+      fs14.unlinkSync(source);
       return `removed stale ${LEGACY_STATE_FILENAME} (v1 already present)`;
     } catch {
       return null;
@@ -18559,8 +16470,8 @@ function _migrate_state_file(project) {
   return `migrated ${LEGACY_STATE_FILENAME} \u2192 ${LEGACY_STATE_V1_FILENAME}`;
 }
 function _load_state_migrator() {
-  const pkg_root = path14.resolve(_HERE_DIR, "..", "..", "..");
-  const rel = path14.join(
+  const pkg_root = path12.resolve(_HERE_DIR, "..", "..", "..");
+  const rel = path12.join(
     "agent-src",
     "templates",
     "scripts",
@@ -18568,8 +16479,8 @@ function _load_state_migrator() {
     "migration",
     "v0_to_v1.ts"
   );
-  const driver = [path14.join(pkg_root, "dist", rel), path14.join(pkg_root, "src", rel)].find(
-    (p) => fs15.existsSync(p)
+  const driver = [path12.join(pkg_root, "dist", rel), path12.join(pkg_root, "src", rel)].find(
+    (p) => fs14.existsSync(p)
   ) ?? null;
   if (driver === null) {
     return null;
@@ -18577,12 +16488,12 @@ function _load_state_migrator() {
   const binName = process2.platform === "win32" ? "tsx.cmd" : "tsx";
   let tsxBin = null;
   for (let dir = pkg_root; ; ) {
-    const cand = path14.join(dir, "node_modules", ".bin", binName);
-    if (fs15.existsSync(cand)) {
+    const cand = path12.join(dir, "node_modules", ".bin", binName);
+    if (fs14.existsSync(cand)) {
       tsxBin = cand;
       break;
     }
-    const parent = path14.dirname(dir);
+    const parent = path12.dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
@@ -18609,17 +16520,17 @@ function _delete_legacy_settings(project) {
   const removed = [];
   for (const p of _detect_legacy_settings(project)) {
     try {
-      fs15.unlinkSync(p);
-      removed.push(path14.relative(project, p));
+      fs14.unlinkSync(p);
+      removed.push(path12.relative(project, p));
     } catch {
       continue;
     }
   }
-  const settings_dir = path14.join(project, "settings");
-  if (_isDir4(settings_dir) && !_isSymlink2(settings_dir)) {
+  const settings_dir = path12.join(project, "settings");
+  if (_isDir2(settings_dir) && !_isSymlink(settings_dir)) {
     try {
-      if (fs15.readdirSync(settings_dir).length === 0) {
-        fs15.rmdirSync(settings_dir);
+      if (fs14.readdirSync(settings_dir).length === 0) {
+        fs14.rmdirSync(settings_dir);
         removed.push("settings/");
       }
     } catch {
@@ -18628,12 +16539,12 @@ function _delete_legacy_settings(project) {
   return removed;
 }
 function _remove_empty_shell(project) {
-  const shell = path14.join(project, LEGACY_AGENT_CONFIG_SHELL);
+  const shell = path12.join(project, LEGACY_AGENT_CONFIG_SHELL);
   if (!_detect_empty_shell(project)) {
     return false;
   }
   try {
-    fs15.rmdirSync(shell);
+    fs14.rmdirSync(shell);
   } catch {
     return false;
   }
@@ -18643,15 +16554,15 @@ function _reEscape(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function _update_gitignore(project) {
-  const gitignore = path14.join(project, ".gitignore");
+  const gitignore = path12.join(project, ".gitignore");
   const block = `${GITIGNORE_BLOCK_START}
 ${GITIGNORE_NEW_BODY}${GITIGNORE_BLOCK_END}
 `;
-  if (!_exists4(gitignore)) {
-    _writeText2(gitignore, block);
+  if (!_exists2(gitignore)) {
+    _writeText(gitignore, block);
     return true;
   }
-  const text = _readText2(gitignore);
+  const text = _readText(gitignore);
   const pattern = new RegExp(
     _reEscape(GITIGNORE_BLOCK_START) + ".*?" + _reEscape(GITIGNORE_BLOCK_END) + "\\n?",
     "s"
@@ -18669,21 +16580,21 @@ ${GITIGNORE_NEW_BODY}${GITIGNORE_BLOCK_END}
   if (new_text === text) {
     return false;
   }
-  _writeText2(gitignore, new_text);
+  _writeText(gitignore, new_text);
   return true;
 }
 function _build_plan(project) {
   return {
-    npm: _detect_npm(path14.join(project, "package.json")),
-    composer: _detect_composer(path14.join(project, "composer.json")),
+    npm: _detect_npm(path12.join(project, "package.json")),
+    composer: _detect_composer(path12.join(project, "composer.json")),
     symlinks_legacy: MANAGED_SYMLINKS.filter(
-      (name) => _classify_symlink(path14.join(project, name)) === "legacy"
+      (name) => _classify_symlink(path12.join(project, name)) === "legacy"
     ),
     symlinks_user: MANAGED_SYMLINKS.filter(
-      (name) => _classify_symlink(path14.join(project, name)) === "user"
+      (name) => _classify_symlink(path12.join(project, name)) === "user"
     ),
-    state_file: _isFile4(path14.join(project, LEGACY_STATE_FILENAME)),
-    settings_files: _detect_legacy_settings(project).map((p) => path14.relative(project, p)),
+    state_file: _isFile2(path12.join(project, LEGACY_STATE_FILENAME)),
+    settings_files: _detect_legacy_settings(project).map((p) => path12.relative(project, p)),
     empty_shell: _detect_empty_shell(project)
   };
 }
@@ -18714,9 +16625,9 @@ function _plan_lines(plan) {
   return lines;
 }
 function _format_dry_run(plan, out) {
-  _print2(out, "\u2139\uFE0F  legacy install detected \u2014 re-run without --dry-run to migrate:");
+  _print(out, "\u2139\uFE0F  legacy install detected \u2014 re-run without --dry-run to migrate:");
   for (const line of _plan_lines(plan)) {
-    _print2(out, `    - ${line}`);
+    _print(out, `    - ${line}`);
   }
 }
 function _pending_actions(plan) {
@@ -18724,22 +16635,22 @@ function _pending_actions(plan) {
 }
 function _format_check(plan, out) {
   const n = _pending_actions(plan);
-  _print2(
+  _print(
     out,
     `\u26A0\uFE0F  legacy install detected \u2014 ${n} pending action(s) (run \`agent-config migrate\` to apply, \`--dry-run\` to preview):`
   );
   for (const line of _plan_lines(plan)) {
-    _print2(out, `    - ${line}`);
+    _print(out, `    - ${line}`);
   }
 }
 function _warn_on_major_mismatch(from_major, plan, out) {
   if (from_major === "4" && !plan.composer) {
-    _print2(
+    _print(
       out,
       "\u2139\uFE0F  --from 4 declared but no composer.json agent-config entry found; proceeding from the detected signals."
     );
   } else if (from_major === "5" && !plan.npm) {
-    _print2(
+    _print(
       out,
       "\u2139\uFE0F  --from 5 declared but no package.json agent-config entry found; proceeding from the detected signals."
     );
@@ -18747,10 +16658,10 @@ function _warn_on_major_mismatch(from_major, plan, out) {
 }
 function _apply(project, out, err) {
   const summary = [];
-  if (_strip_npm_entry(path14.join(project, "package.json"))) {
+  if (_strip_npm_entry(path12.join(project, "package.json"))) {
     summary.push(`removed ${PACKAGE_NAME_NPM} from package.json`);
   }
-  if (_strip_composer_entry(path14.join(project, "composer.json"))) {
+  if (_strip_composer_entry(path12.join(project, "composer.json"))) {
     summary.push(`removed ${PACKAGE_NAME_COMPOSER} from composer.json`);
   }
   const [removed_links, preserved_links] = _purge_legacy_symlinks(project);
@@ -18764,7 +16675,7 @@ function _apply(project, out, err) {
   try {
     state_summary = _migrate_state_file(project);
   } catch (exc) {
-    _print2(err, `\u274C  state migration failed: ${exc.message}`);
+    _print(err, `\u274C  state migration failed: ${exc.message}`);
     return 1;
   }
   if (state_summary) {
@@ -18779,11 +16690,11 @@ function _apply(project, out, err) {
   if (_update_gitignore(project)) {
     summary.push(".gitignore agent-config block refreshed");
   }
-  _print2(out, "\u2705  migration complete:");
+  _print(out, "\u2705  migration complete:");
   for (const line of summary) {
-    _print2(out, `    - ${line}`);
+    _print(out, `    - ${line}`);
   }
-  _print2(out, "\n    Next: review the diff and commit.");
+  _print(out, "\n    Next: review the diff and commit.");
   return 0;
 }
 function _parse(argv, out, err) {
@@ -18842,19 +16753,19 @@ function _parse(argv, out, err) {
   }
   return { dry_run, check, from_major };
 }
-function main2(argv = null, options = {}) {
+function main(argv = null, options = {}) {
   const out = options.out ?? _stdoutSink();
   const err = options.err ?? _stderrSink();
   const args = _parse(argv ?? process2.argv.slice(2), out, err);
   const [project] = resolve_project_root(null, { cwd: options.cwd ?? null });
   if (args.from_major) {
-    _print2(out, `\u2139\uFE0F  declared source major: ${args.from_major}.x`);
+    _print(out, `\u2139\uFE0F  declared source major: ${args.from_major}.x`);
   }
   if (_detect_already_migrated(project)) {
     if (args.check) {
-      _print2(out, "\u2705  on the 6.0 layout \u2014 no migration needed.");
+      _print(out, "\u2705  on the 6.0 layout \u2014 no migration needed.");
     } else {
-      _print2(out, "\u2705  already migrated \u2014 nothing to do.");
+      _print(out, "\u2705  already migrated \u2014 nothing to do.");
     }
     return 0;
   }
@@ -18871,26 +16782,26 @@ function main2(argv = null, options = {}) {
   return _apply(project, out, err);
 }
 var _bundled = true;
-var _HERE3 = fileURLToPath4(import.meta.url);
-function _isCliEntry2() {
+var _HERE = fileURLToPath2(import.meta.url);
+function _isCliEntry() {
   if (process2.argv[1] === void 0) {
     return false;
   }
-  const argvUrl = pathToFileURL2(path14.resolve(process2.argv[1])).href;
+  const argvUrl = pathToFileURL(path12.resolve(process2.argv[1])).href;
   if (import.meta.url === argvUrl) {
     return true;
   }
   try {
-    const here = fs15.realpathSync(fileURLToPath4(import.meta.url));
-    const argv = fs15.realpathSync(path14.resolve(process2.argv[1]));
+    const here = fs14.realpathSync(fileURLToPath2(import.meta.url));
+    const argv = fs14.realpathSync(path12.resolve(process2.argv[1]));
     return here === argv;
   } catch {
     return false;
   }
 }
-if (!_bundled && (_isCliEntry2() || process2.argv[1] === _HERE3)) {
+if (!_bundled && (_isCliEntry() || process2.argv[1] === _HERE)) {
   try {
-    process2.exitCode = main2(process2.argv.slice(2));
+    process2.exitCode = main(process2.argv.slice(2));
   } catch (exc) {
     if (exc instanceof ArgparseExit) {
       process2.exitCode = exc.code;
@@ -18901,7 +16812,7 @@ if (!_bundled && (_isCliEntry2() || process2.argv[1] === _HERE3)) {
 }
 
 // src/scripts/install.ts
-var _HERE4 = fileURLToPath5(import.meta.url);
+var _HERE2 = fileURLToPath3(import.meta.url);
 var SystemExitError = class extends Error {
   constructor(code) {
     super(`system-exit-${code}`);
@@ -18917,36 +16828,36 @@ var ArgparseExit2 = class extends Error {
   code;
 };
 function expanduser6(p) {
-  if (p === "~") return os8.homedir();
+  if (p === "~") return os7.homedir();
   if (p.startsWith("~/") || p.startsWith("~\\")) {
-    return path15.join(os8.homedir(), p.slice(2));
+    return path13.join(os7.homedir(), p.slice(2));
   }
   return p;
 }
 function resolvePath(p) {
   try {
-    return fs16.realpathSync(path15.resolve(p));
+    return fs15.realpathSync(path13.resolve(p));
   } catch {
-    return path15.resolve(p);
+    return path13.resolve(p);
   }
 }
 function isFile(p) {
   try {
-    return fs16.statSync(p).isFile();
+    return fs15.statSync(p).isFile();
   } catch {
     return false;
   }
 }
 function isDir(p) {
   try {
-    return fs16.statSync(p).isDirectory();
+    return fs15.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
 function pathExists(p) {
   try {
-    fs16.statSync(p);
+    fs15.statSync(p);
     return true;
   } catch {
     return false;
@@ -18954,24 +16865,24 @@ function pathExists(p) {
 }
 function isSymlink(p) {
   try {
-    return fs16.lstatSync(p).isSymbolicLink();
+    return fs15.lstatSync(p).isSymbolicLink();
   } catch {
     return false;
   }
 }
 function readText(p) {
-  return fs16.readFileSync(p, "utf-8");
+  return fs15.readFileSync(p, "utf-8");
 }
 function writeText(p, content) {
-  fs16.writeFileSync(p, content, "utf-8");
+  fs15.writeFileSync(p, content, "utf-8");
 }
 function mkdirp(p) {
-  fs16.mkdirSync(p, { recursive: true });
+  fs15.mkdirSync(p, { recursive: true });
 }
 function sortedGlobStems(directory, suffix) {
   let entries;
   try {
-    entries = fs16.readdirSync(directory);
+    entries = fs15.readdirSync(directory);
   } catch {
     return [];
   }
@@ -18991,7 +16902,7 @@ function sortedGlobStems(directory, suffix) {
 function countZips(directory) {
   if (!isDir(directory)) return 0;
   let n = 0;
-  for (const name of fs16.readdirSync(directory)) {
+  for (const name of fs15.readdirSync(directory)) {
     if (name.endsWith(".zip")) n += 1;
   }
   return n;
@@ -18999,35 +16910,35 @@ function countZips(directory) {
 function sha256OfFile(p) {
   let data;
   try {
-    data = fs16.readFileSync(p);
+    data = fs15.readFileSync(p);
   } catch {
     return null;
   }
   return crypto3.createHash("sha256").update(data).digest("hex");
 }
 function atomicWrite0644(target, body, prefix) {
-  const dir = path15.dirname(target);
-  const tmpName = path15.join(
+  const dir = path13.dirname(target);
+  const tmpName = path13.join(
     dir,
     `${prefix}${process3.pid}.${crypto3.randomBytes(6).toString("hex")}.yml.tmp`
   );
   let fd = null;
   try {
-    fd = fs16.openSync(tmpName, "wx", 420);
-    fs16.writeFileSync(fd, body, "utf-8");
-    fs16.closeSync(fd);
+    fd = fs15.openSync(tmpName, "wx", 420);
+    fs15.writeFileSync(fd, body, "utf-8");
+    fs15.closeSync(fd);
     fd = null;
-    fs16.chmodSync(tmpName, 420);
-    fs16.renameSync(tmpName, target);
+    fs15.chmodSync(tmpName, 420);
+    fs15.renameSync(tmpName, target);
   } catch (err) {
     if (fd !== null) {
       try {
-        fs16.closeSync(fd);
+        fs15.closeSync(fd);
       } catch {
       }
     }
     try {
-      fs16.unlinkSync(tmpName);
+      fs15.unlinkSync(tmpName);
     } catch {
     }
     throw err;
@@ -19146,17 +17057,17 @@ var SUPPORTED_PROFILES = ["minimal", "balanced", "full"];
 var RULE_LOADING_TIER_PLACEHOLDER = "__RULE_LOADING_TIER__";
 var USER_TYPE_PLACEHOLDER = "__USER_TYPE__";
 var USER_TYPES_DIR = "user-types";
-var SETTINGS_FILE2 = ".agent-settings.yml";
+var SETTINGS_FILE = ".agent-settings.yml";
 var LEGACY_SETTINGS_FILE = ".agent-settings";
 var LEGACY_BACKUP_FILE = ".agent-settings.backup.key-value";
 var SETTINGS_SUBDIR = ["agents", "settings"];
 function _canonical_settings_target(project_root) {
-  return path15.join(project_root, ...SETTINGS_SUBDIR, SETTINGS_FILE2);
+  return path13.join(project_root, ...SETTINGS_SUBDIR, SETTINGS_FILE);
 }
 function _resolve_settings_read(project_root) {
   const canonical = _canonical_settings_target(project_root);
   if (pathExists(canonical)) return canonical;
-  const legacy = path15.join(project_root, SETTINGS_FILE2);
+  const legacy = path13.join(project_root, SETTINGS_FILE);
   if (pathExists(legacy)) return legacy;
   return canonical;
 }
@@ -19195,11 +17106,11 @@ function _emit_progress_terminal(rc) {
     _emit_progress({ type: "error", code: "E_INSTALL", exitCode: rc });
   }
 }
-function info2(msg) {
+function info(msg) {
   if (!state.QUIET) process3.stdout.write(`  ${msg}
 `);
 }
-function success2(msg) {
+function success(msg) {
   if (!state.QUIET) process3.stdout.write(`  \u2705  ${msg}
 `);
 }
@@ -19220,9 +17131,9 @@ function fail(msg) {
   throw new SystemExitError(1);
 }
 function detect_package_root(project_root) {
-  const npm_path = path15.join(project_root, "node_modules", "@event4u", "agent-config");
+  const npm_path = path13.join(project_root, "node_modules", "@event4u", "agent-config");
   if (isDir(npm_path)) return resolvePath(npm_path);
-  if (pathExists(path15.join(project_root, "src", "config", "profiles", "minimal.ini"))) {
+  if (pathExists(path13.join(project_root, "src", "config", "profiles", "minimal.ini"))) {
     return project_root;
   }
   fail(
@@ -19230,12 +17141,12 @@ function detect_package_root(project_root) {
   );
 }
 function detect_package_type(package_root) {
-  if (package_root.split(path15.sep).includes("node_modules")) return "npm";
+  if (package_root.split(path13.sep).includes("node_modules")) return "npm";
   return "local";
 }
 function detect_package_type_for_project(project_root, package_root) {
   const npm_path = resolvePath(
-    path15.join(project_root, "node_modules", "@event4u", "agent-config")
+    path13.join(project_root, "node_modules", "@event4u", "agent-config")
   );
   const package_resolved = resolvePath(package_root);
   if (package_resolved === npm_path) return "npm";
@@ -19255,7 +17166,7 @@ function ensure_directory(p) {
   mkdirp(p);
 }
 function write_file(p, content) {
-  ensure_directory(path15.dirname(p));
+  ensure_directory(path13.dirname(p));
   writeText(p, content);
 }
 function read_json_file(p) {
@@ -19324,7 +17235,7 @@ function merge_json_file(p, new_data, _force, label) {
   const new_entries = build_merge_entries(label, new_data);
   if (!pathExists(p)) {
     write_json_file(p, new_data);
-    success2(`${label} created`);
+    success(`${label} created`);
     return new_entries;
   }
   const existing = read_json_file(p);
@@ -19334,7 +17245,7 @@ function merge_json_file(p, new_data, _force, label) {
     return new_entries;
   }
   write_json_file(p, merged);
-  success2(`${label} updated`);
+  success(`${label} updated`);
   return new_entries;
 }
 function _parse_legacy_settings(text) {
@@ -19354,7 +17265,7 @@ function _parse_legacy_settings(text) {
   return [values, unknown];
 }
 var _BARE_ID_RE = /^[a-z][a-z0-9_]*$/;
-function _yaml_scalar2(value) {
+function _yaml_scalar(value) {
   if (value === "") return '""';
   if (value === "true" || value === "false") return value;
   if (value.length > 0 && /^[0-9]+$/.test(value)) return value;
@@ -19363,7 +17274,7 @@ function _yaml_scalar2(value) {
   return `"${escaped}"`;
 }
 function _replace_template_value(template, dotted_path, value) {
-  return _replace_template_value_raw(template, dotted_path, _yaml_scalar2(value));
+  return _replace_template_value_raw(template, dotted_path, _yaml_scalar(value));
 }
 function _replace_template_value_raw(template, dotted_path, raw_yaml) {
   const parts = dotted_path.split(".");
@@ -19419,14 +17330,14 @@ function _append_unknown_legacy(rendered, legacy_values, unknown_keys) {
     "_legacy:"
   ];
   for (const key of [...unknown_keys].sort()) {
-    block.push(`  ${key}: ${_yaml_scalar2(legacy_values[key])}`);
+    block.push(`  ${key}: ${_yaml_scalar(legacy_values[key])}`);
   }
   const suffix = block.join("\n") + "\n";
   if (rendered.endsWith("\n")) return rendered + suffix;
   return rendered + "\n" + suffix;
 }
 function _migrate_legacy_if_present(project_root, template_body) {
-  const legacy_target = path15.join(project_root, LEGACY_SETTINGS_FILE);
+  const legacy_target = path13.join(project_root, LEGACY_SETTINGS_FILE);
   if (!isFile(legacy_target)) return null;
   const legacy_text = readText(legacy_target);
   const [values, unknown] = _parse_legacy_settings(legacy_text);
@@ -19441,11 +17352,11 @@ function _migrate_legacy_if_present(project_root, template_body) {
     }
   }
   rendered = _append_unknown_legacy(rendered, values, unknown);
-  const backup_target = path15.join(project_root, LEGACY_BACKUP_FILE);
+  const backup_target = path13.join(project_root, LEGACY_BACKUP_FILE);
   writeText(backup_target, legacy_text);
-  fs16.unlinkSync(legacy_target);
-  info2(`Migrated legacy ${LEGACY_SETTINGS_FILE} \u2192 ${SETTINGS_FILE2}`);
-  info2(`Backup saved to ${LEGACY_BACKUP_FILE}`);
+  fs15.unlinkSync(legacy_target);
+  info(`Migrated legacy ${LEGACY_SETTINGS_FILE} \u2192 ${SETTINGS_FILE}`);
+  info(`Backup saved to ${LEGACY_BACKUP_FILE}`);
   if (unknown.length > 0) {
     warn(`Legacy keys not in rename map preserved under _legacy: ${[...unknown].sort().join(", ")}`);
   }
@@ -19478,7 +17389,7 @@ function _render_template(template, profile_values) {
   return body;
 }
 function _load_valid_user_types(package_root) {
-  const directory = path15.join(package_root, USER_TYPES_DIR);
+  const directory = path13.join(package_root, USER_TYPES_DIR);
   if (!isDir(directory)) return [];
   return sortedGlobStems(directory, ".yml");
 }
@@ -19535,8 +17446,8 @@ function splitlinesKeepends(text) {
 }
 function ensure_agent_settings(project_root, package_root, profile, force, user_type = "", packs = null) {
   const target = _canonical_settings_target(project_root);
-  const profile_source = path15.join(package_root, "src", "config", "profiles", `${profile}.ini`);
-  const template_source = path15.join(package_root, "src", "config", "agent-settings.template.yml");
+  const profile_source = path13.join(package_root, "src", "config", "profiles", `${profile}.ini`);
+  const template_source = path13.join(package_root, "src", "config", "agent-settings.template.yml");
   if (!pathExists(profile_source)) fail(`Missing profile preset: ${profile_source}`);
   if (!pathExists(template_source)) fail(`Missing settings template: ${template_source}`);
   const template = readText(template_source);
@@ -19550,42 +17461,42 @@ function ensure_agent_settings(project_root, package_root, profile, force, user_
   if (profile_values["rule_loading_tier"] !== profile) {
     const got = "rule_loading_tier" in profile_values ? `'${profile_values["rule_loading_tier"]}'` : "None";
     fail(
-      `Profile preset ${path15.basename(profile_source)} has rule_loading_tier=${got} but --profile=${profile}`
+      `Profile preset ${path13.basename(profile_source)} has rule_loading_tier=${got} but --profile=${profile}`
     );
   }
   profile_values["user_type"] = _validate_user_type(package_root, user_type);
   let template_body = _render_template(template, profile_values);
   template_body = _inject_packs(template_body, packs ?? []);
-  const legacy_root = path15.join(project_root, SETTINGS_FILE2);
+  const legacy_root = path13.join(project_root, SETTINGS_FILE);
   if (isFile(legacy_root) && !pathExists(target)) {
-    mkdirp(path15.dirname(target));
+    mkdirp(path13.dirname(target));
     writeText(target, readText(legacy_root));
-    fs16.unlinkSync(legacy_root);
-    success2(`Migrated ${SETTINGS_FILE2} \u2192 agents/settings/${SETTINGS_FILE2} (ADR-038)`);
+    fs15.unlinkSync(legacy_root);
+    success(`Migrated ${SETTINGS_FILE} \u2192 agents/settings/${SETTINGS_FILE} (ADR-038)`);
     return;
   }
-  const legacy_target = path15.join(project_root, LEGACY_SETTINGS_FILE);
+  const legacy_target = path13.join(project_root, LEGACY_SETTINGS_FILE);
   if (isFile(legacy_target) && pathExists(target)) {
     warn(
-      `Both ${SETTINGS_FILE2} and legacy ${LEGACY_SETTINGS_FILE} exist. Skipping migration to avoid overwriting ${SETTINGS_FILE2}. Delete one of them manually and re-run.`
+      `Both ${SETTINGS_FILE} and legacy ${LEGACY_SETTINGS_FILE} exist. Skipping migration to avoid overwriting ${SETTINGS_FILE}. Delete one of them manually and re-run.`
     );
     return;
   }
   const migrated = _migrate_legacy_if_present(project_root, template_body);
   if (migrated !== null) {
     write_file(target, migrated);
-    success2(`${SETTINGS_FILE2} migrated from legacy key=value`);
+    success(`${SETTINGS_FILE} migrated from legacy key=value`);
     return;
   }
   if (pathExists(target) && !force) {
-    skip(`${SETTINGS_FILE2} already exists`);
+    skip(`${SETTINGS_FILE} already exists`);
     return;
   }
-  mkdirp(path15.dirname(target));
+  mkdirp(path13.dirname(target));
   write_file(target, template_body);
   const user_type_value = profile_values["user_type"] ?? "";
   const suffix = user_type_value ? `, user_type=${user_type_value}` : "";
-  success2(`${SETTINGS_FILE2} created (rule_loading_tier=${profile}${suffix})`);
+  success(`${SETTINGS_FILE} created (rule_loading_tier=${profile}${suffix})`);
 }
 function ensure_vscode_bridge(project_root, package_type, force) {
   const plugin_paths = {
@@ -19594,7 +17505,7 @@ function ensure_vscode_bridge(project_root, package_type, force) {
   const plugin_path = plugin_paths[package_type] ?? "./plugin/agent-config";
   const bridge = { "chat.pluginLocations": { [plugin_path]: true } };
   merge_json_file(
-    path15.join(project_root, ".vscode", "settings.json"),
+    path13.join(project_root, ".vscode", "settings.json"),
     bridge,
     force,
     ".vscode/settings.json"
@@ -19603,14 +17514,14 @@ function ensure_vscode_bridge(project_root, package_type, force) {
 function ensure_augment_bridge(project_root, force) {
   const bridge = { enabledPlugins: { "agent-config@event4u": true } };
   return merge_json_file(
-    path15.join(project_root, ".augment", "settings.json"),
+    path13.join(project_root, ".augment", "settings.json"),
     bridge,
     force,
     ".augment/settings.json"
   );
 }
-var AUGMENT_USER_DIR = path15.join(os8.homedir(), ".augment");
-var AUGMENT_USER_HOOKS_DIR = path15.join(AUGMENT_USER_DIR, "hooks");
+var AUGMENT_USER_DIR = path13.join(os7.homedir(), ".augment");
+var AUGMENT_USER_HOOKS_DIR = path13.join(AUGMENT_USER_DIR, "hooks");
 var AUGMENT_DISPATCHER_TRAMPOLINE = "augment-dispatcher.sh";
 var AUGMENT_LEGACY_TRAMPOLINES = [
   "augment-chat-history.sh",
@@ -19626,29 +17537,29 @@ var AUGMENT_DISPATCHER_BINDINGS = [
   ["post_tool_use", "PostToolUse"]
 ];
 function _deploy_augment_trampoline(package_root, name, force) {
-  const src = path15.join(package_root, "scripts", "hooks", name);
+  const src = path13.join(package_root, "scripts", "hooks", name);
   if (!pathExists(src)) {
     skip(`augment trampoline missing in package: ${src}`);
     return null;
   }
   mkdirp(AUGMENT_USER_HOOKS_DIR);
-  const dst = path15.join(AUGMENT_USER_HOOKS_DIR, name);
+  const dst = path13.join(AUGMENT_USER_HOOKS_DIR, name);
   const src_text = readText(src);
   if (pathExists(dst) && readText(dst) === src_text && !force) {
     skip(`~/.augment/hooks/${name} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs16.chmodSync(dst, 493);
-    success2(`~/.augment/hooks/${name} installed`);
+    fs15.chmodSync(dst, 493);
+    success(`~/.augment/hooks/${name} installed`);
   }
   return dst;
 }
 function _remove_legacy_augment_trampolines() {
   for (const name of AUGMENT_LEGACY_TRAMPOLINES) {
-    const legacy = path15.join(AUGMENT_USER_HOOKS_DIR, name);
+    const legacy = path13.join(AUGMENT_USER_HOOKS_DIR, name);
     try {
       if (isFile(legacy)) {
-        fs16.unlinkSync(legacy);
+        fs15.unlinkSync(legacy);
         skip(`removed legacy ~/.augment/hooks/${name}`);
       }
     } catch {
@@ -19667,7 +17578,7 @@ function ensure_augment_user_hooks(package_root, force) {
   }
   const settings_patch = { hooks: per_event };
   return merge_json_file(
-    path15.join(AUGMENT_USER_DIR, "settings.json"),
+    path13.join(AUGMENT_USER_DIR, "settings.json"),
     settings_patch,
     force,
     "~/.augment/settings.json"
@@ -19692,10 +17603,10 @@ function _heal_legacy_claude_plugin_ids(p) {
   return removed;
 }
 function ensure_claude_bridge(project_root, force) {
-  const target = path15.join(project_root, ".claude", "settings.json");
+  const target = path13.join(project_root, ".claude", "settings.json");
   const healed = _heal_legacy_claude_plugin_ids(target);
   for (const pid of healed) {
-    success2(`.claude/settings.json: removed stale plugin id \`${pid}\``);
+    success(`.claude/settings.json: removed stale plugin id \`${pid}\``);
   }
   const bridge = { enabledPlugins: { [CLAUDE_PLUGIN_ID]: true } };
   return merge_json_file(target, bridge, force || healed.length > 0, ".claude/settings.json");
@@ -19717,30 +17628,30 @@ function ensure_cursor_bridge(project_root, force) {
   }
   const bridge = { version: 1, hooks };
   return merge_json_file(
-    path15.join(project_root, ".cursor", "hooks.json"),
+    path13.join(project_root, ".cursor", "hooks.json"),
     bridge,
     force,
     ".cursor/hooks.json"
   );
 }
-var CURSOR_USER_DIR = path15.join(os8.homedir(), ".cursor");
-var CURSOR_USER_HOOKS_DIR = path15.join(CURSOR_USER_DIR, "hooks");
+var CURSOR_USER_DIR = path13.join(os7.homedir(), ".cursor");
+var CURSOR_USER_HOOKS_DIR = path13.join(CURSOR_USER_DIR, "hooks");
 var CURSOR_DISPATCHER_TRAMPOLINE = "cursor-dispatcher.sh";
 function ensure_cursor_user_hooks(package_root, force) {
-  const src = path15.join(package_root, "scripts", "hooks", CURSOR_DISPATCHER_TRAMPOLINE);
+  const src = path13.join(package_root, "scripts", "hooks", CURSOR_DISPATCHER_TRAMPOLINE);
   if (!pathExists(src)) {
     skip(`cursor trampoline missing in package: ${src}`);
     return [];
   }
   mkdirp(CURSOR_USER_HOOKS_DIR);
-  const dst = path15.join(CURSOR_USER_HOOKS_DIR, CURSOR_DISPATCHER_TRAMPOLINE);
+  const dst = path13.join(CURSOR_USER_HOOKS_DIR, CURSOR_DISPATCHER_TRAMPOLINE);
   const src_text = readText(src);
   if (pathExists(dst) && readText(dst) === src_text && !force) {
     skip(`~/.cursor/hooks/${CURSOR_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs16.chmodSync(dst, 493);
-    success2(`~/.cursor/hooks/${CURSOR_DISPATCHER_TRAMPOLINE} installed`);
+    fs15.chmodSync(dst, 493);
+    success(`~/.cursor/hooks/${CURSOR_DISPATCHER_TRAMPOLINE} installed`);
   }
   const hooks = {};
   for (const [ac_event, native] of CURSOR_DISPATCHER_BINDINGS) {
@@ -19748,7 +17659,7 @@ function ensure_cursor_user_hooks(package_root, force) {
   }
   const settings_patch = { version: 1, hooks };
   return merge_json_file(
-    path15.join(CURSOR_USER_DIR, "hooks.json"),
+    path13.join(CURSOR_USER_DIR, "hooks.json"),
     settings_patch,
     force,
     "~/.cursor/hooks.json"
@@ -19791,12 +17702,12 @@ exit 0
 `;
 }
 function ensure_cline_bridge(project_root, force) {
-  const hooks_dir = path15.join(project_root, ".clinerules", "hooks");
+  const hooks_dir = path13.join(project_root, ".clinerules", "hooks");
   mkdirp(hooks_dir);
   const workspace_quoted = shlexQuote(resolvePath(project_root));
   let written = 0;
   for (const [ac_event, native_event] of CLINE_DISPATCHER_BINDINGS) {
-    const target = path15.join(hooks_dir, native_event);
+    const target = path13.join(hooks_dir, native_event);
     const body = clineProjectHookBody(native_event, ac_event, workspace_quoted);
     if (pathExists(target) && readText(target) === body && !force) {
       continue;
@@ -19806,36 +17717,36 @@ function ensure_cline_bridge(project_root, force) {
       continue;
     }
     writeText(target, body);
-    fs16.chmodSync(target, 493);
+    fs15.chmodSync(target, 493);
     written += 1;
   }
   if (written) {
-    success2(`.clinerules/hooks/ \u2014 ${written} script(s) installed`);
+    success(`.clinerules/hooks/ \u2014 ${written} script(s) installed`);
   } else {
     skip(".clinerules/hooks/ already up to date");
   }
 }
-var CLINE_USER_DIR = path15.join(os8.homedir(), "Documents", "Cline", "Hooks");
+var CLINE_USER_DIR = path13.join(os7.homedir(), "Documents", "Cline", "Hooks");
 var CLINE_DISPATCHER_TRAMPOLINE = "cline-dispatcher.sh";
 function ensure_cline_user_hooks(package_root, force) {
-  const src = path15.join(package_root, "scripts", "hooks", CLINE_DISPATCHER_TRAMPOLINE);
+  const src = path13.join(package_root, "scripts", "hooks", CLINE_DISPATCHER_TRAMPOLINE);
   if (!pathExists(src)) {
     skip(`cline trampoline missing in package: ${src}`);
     return;
   }
   mkdirp(CLINE_USER_DIR);
-  const trampoline = path15.join(CLINE_USER_DIR, CLINE_DISPATCHER_TRAMPOLINE);
+  const trampoline = path13.join(CLINE_USER_DIR, CLINE_DISPATCHER_TRAMPOLINE);
   const src_text = readText(src);
   if (pathExists(trampoline) && readText(trampoline) === src_text && !force) {
     skip(`~/Documents/Cline/Hooks/${CLINE_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(trampoline, src_text);
-    fs16.chmodSync(trampoline, 493);
-    success2(`~/Documents/Cline/Hooks/${CLINE_DISPATCHER_TRAMPOLINE} installed`);
+    fs15.chmodSync(trampoline, 493);
+    success(`~/Documents/Cline/Hooks/${CLINE_DISPATCHER_TRAMPOLINE} installed`);
   }
   const trampoline_quoted = shlexQuote(trampoline);
   for (const [ac_event, native_event] of CLINE_DISPATCHER_BINDINGS) {
-    const wrapper = path15.join(CLINE_USER_DIR, native_event);
+    const wrapper = path13.join(CLINE_USER_DIR, native_event);
     const body = `#!/usr/bin/env bash
 # Generated by event4u/agent-config install.py \u2014 DO NOT EDIT.
 # User-scope Cline hook for ${native_event} \u2192 agent-config ${ac_event}.
@@ -19845,7 +17756,7 @@ exec ${trampoline_quoted} ${ac_event} ${native_event}
       continue;
     }
     writeText(wrapper, body);
-    fs16.chmodSync(wrapper, 493);
+    fs15.chmodSync(wrapper, 493);
   }
 }
 var WINDSURF_DISPATCHER_BINDINGS = [
@@ -19866,30 +17777,30 @@ function ensure_windsurf_bridge(project_root, force) {
   }
   const bridge = { hooks };
   return merge_json_file(
-    path15.join(project_root, ".windsurf", "hooks.json"),
+    path13.join(project_root, ".windsurf", "hooks.json"),
     bridge,
     force,
     ".windsurf/hooks.json"
   );
 }
-var WINDSURF_USER_DIR = path15.join(os8.homedir(), ".codeium", "windsurf");
-var WINDSURF_USER_HOOKS_DIR = path15.join(WINDSURF_USER_DIR, "hooks");
+var WINDSURF_USER_DIR = path13.join(os7.homedir(), ".codeium", "windsurf");
+var WINDSURF_USER_HOOKS_DIR = path13.join(WINDSURF_USER_DIR, "hooks");
 var WINDSURF_DISPATCHER_TRAMPOLINE = "windsurf-dispatcher.sh";
 function ensure_windsurf_user_hooks(package_root, force) {
-  const src = path15.join(package_root, "scripts", "hooks", WINDSURF_DISPATCHER_TRAMPOLINE);
+  const src = path13.join(package_root, "scripts", "hooks", WINDSURF_DISPATCHER_TRAMPOLINE);
   if (!pathExists(src)) {
     skip(`windsurf trampoline missing in package: ${src}`);
     return [];
   }
   mkdirp(WINDSURF_USER_HOOKS_DIR);
-  const dst = path15.join(WINDSURF_USER_HOOKS_DIR, WINDSURF_DISPATCHER_TRAMPOLINE);
+  const dst = path13.join(WINDSURF_USER_HOOKS_DIR, WINDSURF_DISPATCHER_TRAMPOLINE);
   const src_text = readText(src);
   if (pathExists(dst) && readText(dst) === src_text && !force) {
     skip(`~/.codeium/windsurf/hooks/${WINDSURF_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs16.chmodSync(dst, 493);
-    success2(`~/.codeium/windsurf/hooks/${WINDSURF_DISPATCHER_TRAMPOLINE} installed`);
+    fs15.chmodSync(dst, 493);
+    success(`~/.codeium/windsurf/hooks/${WINDSURF_DISPATCHER_TRAMPOLINE} installed`);
   }
   const hooks = {};
   for (const [ac_event, native] of WINDSURF_DISPATCHER_BINDINGS) {
@@ -19900,7 +17811,7 @@ function ensure_windsurf_user_hooks(package_root, force) {
   }
   const settings_patch = { hooks };
   return merge_json_file(
-    path15.join(WINDSURF_USER_DIR, "hooks.json"),
+    path13.join(WINDSURF_USER_DIR, "hooks.json"),
     settings_patch,
     force,
     "~/.codeium/windsurf/hooks.json"
@@ -19929,43 +17840,43 @@ function _gemini_hooks_dict(command_factory) {
 function ensure_gemini_bridge(project_root, force) {
   const bridge = { hooks: _gemini_hooks_dict(_gemini_dispatch_command) };
   return merge_json_file(
-    path15.join(project_root, ".gemini", "settings.json"),
+    path13.join(project_root, ".gemini", "settings.json"),
     bridge,
     force,
     ".gemini/settings.json"
   );
 }
-var GEMINI_USER_DIR = path15.join(os8.homedir(), ".gemini");
-var GEMINI_USER_HOOKS_DIR = path15.join(GEMINI_USER_DIR, "hooks");
+var GEMINI_USER_DIR = path13.join(os7.homedir(), ".gemini");
+var GEMINI_USER_HOOKS_DIR = path13.join(GEMINI_USER_DIR, "hooks");
 var GEMINI_DISPATCHER_TRAMPOLINE = "gemini-dispatcher.sh";
 function ensure_gemini_user_hooks(package_root, force) {
-  const src = path15.join(package_root, "scripts", "hooks", GEMINI_DISPATCHER_TRAMPOLINE);
+  const src = path13.join(package_root, "scripts", "hooks", GEMINI_DISPATCHER_TRAMPOLINE);
   if (!pathExists(src)) {
     skip(`gemini trampoline missing in package: ${src}`);
     return [];
   }
   mkdirp(GEMINI_USER_HOOKS_DIR);
-  const dst = path15.join(GEMINI_USER_HOOKS_DIR, GEMINI_DISPATCHER_TRAMPOLINE);
+  const dst = path13.join(GEMINI_USER_HOOKS_DIR, GEMINI_DISPATCHER_TRAMPOLINE);
   const src_text = readText(src);
   if (pathExists(dst) && readText(dst) === src_text && !force) {
     skip(`~/.gemini/hooks/${GEMINI_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs16.chmodSync(dst, 493);
-    success2(`~/.gemini/hooks/${GEMINI_DISPATCHER_TRAMPOLINE} installed`);
+    fs15.chmodSync(dst, 493);
+    success(`~/.gemini/hooks/${GEMINI_DISPATCHER_TRAMPOLINE} installed`);
   }
   const settings_patch = {
     hooks: _gemini_hooks_dict((ac_event, native) => `${dst} ${ac_event} ${native}`)
   };
   return merge_json_file(
-    path15.join(GEMINI_USER_DIR, "settings.json"),
+    path13.join(GEMINI_USER_DIR, "settings.json"),
     settings_patch,
     force,
     "~/.gemini/settings.json"
   );
 }
 function ensure_copilot_bridge(project_root, force) {
-  const target = path15.join(project_root, ".github", "plugin", "marketplace.json");
+  const target = path13.join(project_root, ".github", "plugin", "marketplace.json");
   const bridge = {
     marketplace: {
       name: "event4u-agent-marketplace",
@@ -19982,7 +17893,7 @@ function ensure_copilot_bridge(project_root, force) {
     return;
   }
   write_json_file(target, bridge);
-  success2(".github/plugin/marketplace.json created");
+  success(".github/plugin/marketplace.json created");
 }
 var ROOCODE_MARKER = `# Agent Config bridge
 
@@ -20008,13 +17919,13 @@ See \`docs/setup/per-ide/roocode.md\` for the full activation guide.
 Run \`./agent-config --help\` for available commands.
 `;
 function ensure_roocode_bridge(project_root, force) {
-  const target = path15.join(project_root, ".roo", "rules", "agent-config.md");
+  const target = path13.join(project_root, ".roo", "rules", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".roo/rules/agent-config.md already exists");
     return;
   }
   write_file(target, ROOCODE_MARKER);
-  success2(".roo/rules/agent-config.md created");
+  success(".roo/rules/agent-config.md created");
 }
 var CLAUDE_DESKTOP_MARKER = `# Agent Config bridge \u2014 Claude Desktop
 
@@ -20030,13 +17941,13 @@ To wire Claude Desktop to this project's rules, run:
 Canonical rule and skill source: \`.augment/\` (see \`AGENTS.md\`).
 `;
 function ensure_claude_desktop_bridge(project_root, force) {
-  const target = path15.join(project_root, ".claude-desktop", "agent-config.md");
+  const target = path13.join(project_root, ".claude-desktop", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".claude-desktop/agent-config.md already exists");
     return;
   }
   write_file(target, CLAUDE_DESKTOP_MARKER);
-  success2(".claude-desktop/agent-config.md created");
+  success(".claude-desktop/agent-config.md created");
 }
 var AIDER_MARKER = `# Agent Config bridge \u2014 Aider
 
@@ -20055,13 +17966,13 @@ Or pass \`--read .aider/agent-config.md\` on the command line.
 Canonical rule and skill source: \`.augment/\` (see \`AGENTS.md\`).
 `;
 function ensure_aider_bridge(project_root, force) {
-  const target = path15.join(project_root, ".aider", "agent-config.md");
+  const target = path13.join(project_root, ".aider", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".aider/agent-config.md already exists");
     return;
   }
   write_file(target, AIDER_MARKER);
-  success2(".aider/agent-config.md created");
+  success(".aider/agent-config.md created");
 }
 var CODEX_MARKER = `# Agent Config bridge \u2014 Codex CLI
 
@@ -20074,13 +17985,13 @@ developers where the rules and skills live.
 Canonical rule and skill source: \`.augment/\` (see project \`AGENTS.md\`).
 `;
 function ensure_codex_bridge(project_root, force) {
-  const target = path15.join(project_root, ".codex", "agent-config.md");
+  const target = path13.join(project_root, ".codex", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".codex/agent-config.md already exists");
     return;
   }
   write_file(target, CODEX_MARKER);
-  success2(".codex/agent-config.md created");
+  success(".codex/agent-config.md created");
 }
 var CONTINUE_MARKER = `# Agent Config bridge \u2014 Continue.dev
 
@@ -20092,13 +18003,13 @@ rules per session. The canonical rule and skill source lives under
 orientation).
 `;
 function ensure_continue_bridge(project_root, force) {
-  const target = path15.join(project_root, ".continue", "rules", "agent-config.md");
+  const target = path13.join(project_root, ".continue", "rules", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".continue/rules/agent-config.md already exists");
     return;
   }
   write_file(target, CONTINUE_MARKER);
-  success2(".continue/rules/agent-config.md created");
+  success(".continue/rules/agent-config.md created");
 }
 var KILOCODE_MARKER = `# Agent Config bridge \u2014 Kilo Code
 
@@ -20123,13 +18034,13 @@ orientation).
 See \`docs/setup/per-ide/kilocode.md\` for the full activation guide.
 `;
 function ensure_kilocode_bridge(project_root, force) {
-  const target = path15.join(project_root, ".kilocode", "rules", "agent-config.md");
+  const target = path13.join(project_root, ".kilocode", "rules", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".kilocode/rules/agent-config.md already exists");
     return;
   }
   write_file(target, KILOCODE_MARKER);
-  success2(".kilocode/rules/agent-config.md created");
+  success(".kilocode/rules/agent-config.md created");
 }
 var ZED_MARKER = `# Agent Config bridge \u2014 Zed
 
@@ -20150,13 +18061,13 @@ canonical source (or symlink it):
 Canonical rule and skill source: \`.augment/\` (see \`AGENTS.md\`).
 `;
 function ensure_zed_bridge(project_root, force) {
-  const target = path15.join(project_root, ".zed", "agent-config.md");
+  const target = path13.join(project_root, ".zed", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".zed/agent-config.md already exists");
     return;
   }
   write_file(target, ZED_MARKER);
-  success2(".zed/agent-config.md created");
+  success(".zed/agent-config.md created");
 }
 var JETBRAINS_MARKER = `# Agent Config bridge \u2014 JetBrains AI Assistant
 
@@ -20171,13 +18082,13 @@ rules into your JetBrains profile.
 Canonical rule and skill source: \`.augment/\` (see \`AGENTS.md\`).
 `;
 function ensure_jetbrains_bridge(project_root, force) {
-  const target = path15.join(project_root, ".jetbrains", "agent-config.md");
+  const target = path13.join(project_root, ".jetbrains", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".jetbrains/agent-config.md already exists");
     return;
   }
   write_file(target, JETBRAINS_MARKER);
-  success2(".jetbrains/agent-config.md created");
+  success(".jetbrains/agent-config.md created");
 }
 var KIRO_MARKER = `# Agent Config bridge \u2014 Kiro
 
@@ -20202,13 +18113,13 @@ session. The canonical rule and skill source lives under \`.augment/\`
 See \`docs/setup/per-ide/kiro.md\` for the full activation guide.
 `;
 function ensure_kiro_bridge(project_root, force) {
-  const target = path15.join(project_root, ".kiro", "steering", "agent-config.md");
+  const target = path13.join(project_root, ".kiro", "steering", "agent-config.md");
   if (pathExists(target) && !force) {
     skip(".kiro/steering/agent-config.md already exists");
     return;
   }
   write_file(target, KIRO_MARKER);
-  success2(".kiro/steering/agent-config.md created");
+  success(".kiro/steering/agent-config.md created");
 }
 var SMOKE_PROBE_EVENTS = [
   ["augment", "session_start"],
@@ -20228,35 +18139,35 @@ var SMOKE_BRIDGE_PATHS = {
 };
 function dirHasEntries(p) {
   try {
-    return fs16.readdirSync(p).length > 0;
+    return fs15.readdirSync(p).length > 0;
   } catch {
     return false;
   }
 }
 function _resolve_tsx_invocation(scriptPath, scriptArgs) {
   const binName = process3.platform === "win32" ? "tsx.cmd" : "tsx";
-  let dir = path15.dirname(scriptPath);
+  let dir = path13.dirname(scriptPath);
   for (; ; ) {
-    const candidate = path15.join(dir, "node_modules", ".bin", binName);
+    const candidate = path13.join(dir, "node_modules", ".bin", binName);
     if (isFile(candidate)) {
       return { command: candidate, args: [scriptPath, ...scriptArgs] };
     }
-    const parent = path15.dirname(dir);
+    const parent = path13.dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
   return { command: "npx", args: ["tsx", scriptPath, ...scriptArgs] };
 }
 function _smoke_test_hooks(project_root, package_root) {
-  const dispatcher = path15.join(package_root, "scripts", "hooks", "dispatch_hook.ts");
-  const manifest = path15.join(package_root, "scripts", "hook_manifest.yaml");
+  const dispatcher = path13.join(package_root, "scripts", "hooks", "dispatch_hook.ts");
+  const manifest = path13.join(package_root, "scripts", "hook_manifest.yaml");
   if (!isFile(dispatcher) || !isFile(manifest)) return 0;
   const failed = [];
   const skipped = [];
   const passed = [];
   for (const [platform, native] of SMOKE_PROBE_EVENTS) {
     const rel_bridge = SMOKE_BRIDGE_PATHS[platform] ?? "";
-    const bridge_path = rel_bridge ? path15.join(project_root, rel_bridge) : null;
+    const bridge_path = rel_bridge ? path13.join(project_root, rel_bridge) : null;
     const bridge_present = Boolean(
       bridge_path && (isFile(bridge_path) || isDir(bridge_path) && dirHasEntries(bridge_path))
     );
@@ -20313,7 +18224,7 @@ function _smoke_test_hooks(project_root, package_root) {
     passed.push(platform);
   }
   if (!state.QUIET) {
-    if (passed.length) success2(`hook smoke passed: ${passed.join(", ")}`);
+    if (passed.length) success(`hook smoke passed: ${passed.join(", ")}`);
     if (skipped.length) skip(`hook smoke skipped (bridge not installed): ${skipped.join(", ")}`);
     for (const line of failed) warn(`hook smoke failed \u2014 ${line}`);
   }
@@ -20456,9 +18367,9 @@ To remove this marker, delete this file.
 `;
 }
 var _CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles";
-var GLOBAL_ROOT = path15.join(os8.homedir(), ".event4u", "agent-config");
-var GLOBAL_USER_SETTINGS_PATH = path15.join(GLOBAL_ROOT, ".agent-user.yml");
-var GLOBAL_AGENT_SETTINGS_PATH = path15.join(GLOBAL_ROOT, ".agent-settings.yml");
+var GLOBAL_ROOT = path13.join(os7.homedir(), ".event4u", "agent-config");
+var GLOBAL_USER_SETTINGS_PATH = path13.join(GLOBAL_ROOT, ".agent-user.yml");
+var GLOBAL_AGENT_SETTINGS_PATH = path13.join(GLOBAL_ROOT, ".agent-settings.yml");
 function _bridge_marker(tool_id, scope) {
   if (scope === "global") return USER_SCOPE_PATHS[tool_id] ?? "";
   return PROJECT_BRIDGE_MARKERS[tool_id] ?? "";
@@ -20507,7 +18418,7 @@ function _load_yaml_doc(p) {
   return _isPlainObject2(data) ? data : {};
 }
 function _load_default_settings(package_root) {
-  const template_source = path15.join(package_root, "src", "config", "agent-settings.template.yml");
+  const template_source = path13.join(package_root, "src", "config", "agent-settings.template.yml");
   if (!pathExists(template_source)) return {};
   let text;
   try {
@@ -20527,13 +18438,13 @@ function _resolve_scope(opts, detected, detect_reason, custom_path) {
   }
   if (opts.scope === "auto") {
     if (detected === "prompt") return _run_scope_prompt(opts, detect_reason, custom_path);
-    if (!state.QUIET) info2(`Scope: ${detected} (auto-detected; ${detect_reason})`);
+    if (!state.QUIET) info(`Scope: ${detected} (auto-detected; ${detect_reason})`);
     return detected;
   }
   if (opts.global_install) return "global";
   if (detected === "prompt") return _run_scope_prompt(opts, detect_reason, custom_path);
   if (!state.QUIET) {
-    info2(
+    info(
       `Scope detection: ${detected} (${detect_reason}). Using project default for backward compatibility; pass --scope=auto to honor detection.`
     );
   }
@@ -20559,7 +18470,7 @@ function _run_scope_prompt(opts, reason, custom_path) {
     cp = resolvePath(expanduser6(raw));
     opts.custom_path = cp;
   }
-  if (!state.QUIET) info2(`Custom destination: ${cp}`);
+  if (!state.QUIET) info(`Custom destination: ${cp}`);
   return "project";
 }
 var SCOPE_DETECT_MANIFESTS = [
@@ -20593,11 +18504,11 @@ var SCOPE_DETECT_AI_FILES = [
 ];
 function detect_scope(cwd) {
   if (pathExists(_resolve_settings_read(cwd))) {
-    return ["project", `existing ${SETTINGS_FILE2}`];
+    return ["project", `existing ${SETTINGS_FILE}`];
   }
-  const has_manifest = SCOPE_DETECT_MANIFESTS.find((m) => pathExists(path15.join(cwd, m))) ?? null;
-  const has_ai_dir = SCOPE_DETECT_AI_DIRS.find((d) => isDir(path15.join(cwd, d))) ?? null;
-  const has_ai_file = SCOPE_DETECT_AI_FILES.find((f) => pathExists(path15.join(cwd, f))) ?? null;
+  const has_manifest = SCOPE_DETECT_MANIFESTS.find((m) => pathExists(path13.join(cwd, m))) ?? null;
+  const has_ai_dir = SCOPE_DETECT_AI_DIRS.find((d) => isDir(path13.join(cwd, d))) ?? null;
+  const has_ai_file = SCOPE_DETECT_AI_FILES.find((f) => pathExists(path13.join(cwd, f))) ?? null;
   if (has_manifest && (has_ai_dir || has_ai_file)) {
     const marker = has_ai_dir || has_ai_file;
     return ["prompt", `manifest (${has_manifest}) + AI-tool config (${marker})`];
@@ -20618,7 +18529,7 @@ function readLineSyncRaw(promptText) {
   for (; ; ) {
     let n;
     try {
-      n = fs16.readSync(0, buf, 0, 1, null);
+      n = fs15.readSync(0, buf, 0, 1, null);
     } catch (err) {
       const code = err.code;
       if (code === "EAGAIN") {
@@ -20643,8 +18554,8 @@ function readLineSyncRaw(promptText) {
 }
 function prompt_scope_choice(reason) {
   process3.stdout.write("\n");
-  info2(`Ambiguous install scope: ${reason}.`);
-  info2("Choose where to install:");
+  info(`Ambiguous install scope: ${reason}.`);
+  info("Choose where to install:");
   process3.stdout.write("  1) Project \u2014 install into the current directory\n");
   process3.stdout.write("  2) User    \u2014 install into ~/ (recommended; one install per machine)\n");
   process3.stdout.write("  3) Custom  \u2014 specify an explicit destination path\n");
@@ -20693,8 +18604,8 @@ function _files_by_tool_from_bridges(tools, project_root, scope) {
     const marker = _bridge_marker(tool_id, scope);
     if (!marker) continue;
     let marker_path = marker;
-    if (!path15.isAbsolute(marker_path)) {
-      marker_path = path15.join(project_root, marker_path);
+    if (!path13.isAbsolute(marker_path)) {
+      marker_path = path13.join(project_root, marker_path);
     }
     out[tool_id] = [_file_entry(marker_path, "bridge", false)];
   }
@@ -20723,8 +18634,8 @@ function _update_installed_tools_manifest(project_root, tools, scope, force, fil
       if (exc instanceof ScopeMismatchError) {
         if (!state.QUIET) {
           warn(String(exc.message));
-          info2(`  Manifest: ${target}`);
-          info2("  Override: re-run with `--force` to rewrite the entry");
+          info(`  Manifest: ${target}`);
+          info("  Override: re-run with `--force` to rewrite the entry");
         }
         return 1;
       }
@@ -20733,26 +18644,26 @@ function _update_installed_tools_manifest(project_root, tools, scope, force, fil
   }
   write_manifest(target, version, entries);
   if (!state.QUIET) {
-    const rel = isRelativeTo(target, project_root) ? path15.relative(project_root, target) : target;
-    info2(`Manifest updated: ${rel}`);
+    const rel = isRelativeTo(target, project_root) ? path13.relative(project_root, target) : target;
+    info(`Manifest updated: ${rel}`);
   }
   return 0;
 }
 function isRelativeTo(child, parent) {
-  const rel = path15.relative(parent, child);
-  return rel === "" || !rel.startsWith("..") && !path15.isAbsolute(rel);
+  const rel = path13.relative(parent, child);
+  return rel === "" || !rel.startsWith("..") && !path13.isAbsolute(rel);
 }
 function _resolve_package_root_for_global() {
-  const here = resolvePath(_HERE4);
-  const candidate = path15.dirname(path15.dirname(path15.dirname(here)));
-  if (!pathExists(path15.join(candidate, "src", "config", "profiles", "minimal.ini"))) {
+  const here = resolvePath(_HERE2);
+  const candidate = path13.dirname(path13.dirname(path13.dirname(here)));
+  if (!pathExists(path13.join(candidate, "src", "config", "profiles", "minimal.ini"))) {
     fail(
       `Could not locate agent-config package root from ${here}. Expected src/config/profiles/minimal.ini at the parent directory.`
     );
   }
   return candidate;
 }
-var CONSUMER_BRIDGE_MARKER_RELPATH = path15.join("agents", ".event4u-bridge.yml");
+var CONSUMER_BRIDGE_MARKER_RELPATH = path13.join("agents", ".event4u-bridge.yml");
 var MIGRATE_LEGACY_YAML_FILES = [".agent-settings.yml", ".agent-user.yml"];
 var MIGRATE_LEGACY_TOOL_DIRS = [".augment", ".claude", ".cursor"];
 var AGENT_CONFIG_PACKAGE_NAME = "@event4u/agent-config";
@@ -20760,7 +18671,7 @@ function _is_agent_config_source_repo(project_root) {
   if (process3.env["AGENT_CONFIG_CONSUMER_MODE"] === "1") {
     return [false, "consumer-mode-override"];
   }
-  const pkg_json = path15.join(project_root, "package.json");
+  const pkg_json = path13.join(project_root, "package.json");
   if (isFile(pkg_json)) {
     let data = {};
     try {
@@ -20772,20 +18683,20 @@ function _is_agent_config_source_repo(project_root) {
       return [true, "package.json:name"];
     }
   }
-  if (isDir(path15.join(project_root, ".agent-src.uncondensed"))) {
+  if (isDir(path13.join(project_root, ".agent-src.uncondensed"))) {
     return [true, ".agent-src.uncondensed/"];
   }
-  const packages_dir = path15.join(project_root, "packages");
+  const packages_dir = path13.join(project_root, "packages");
   if (isDir(packages_dir)) {
-    for (const child of fs16.readdirSync(packages_dir)) {
-      if (isDir(path15.join(packages_dir, child, ".agent-src.uncondensed"))) {
+    for (const child of fs15.readdirSync(packages_dir)) {
+      if (isDir(path13.join(packages_dir, child, ".agent-src.uncondensed"))) {
         return [true, `packages/${child}/.agent-src.uncondensed/`];
       }
     }
   }
-  const installer_self = path15.join(project_root, "scripts", "install.py");
+  const installer_self = path13.join(project_root, "scripts", "install.py");
   try {
-    if (isFile(installer_self) && resolvePath(installer_self) === resolvePath(_HERE4)) {
+    if (isFile(installer_self) && resolvePath(installer_self) === resolvePath(_HERE2)) {
       return [true, "src/scripts/install.py (self)"];
     }
   } catch {
@@ -20803,17 +18714,17 @@ function _detect_legacy_for_migration(project_root) {
     }
     return [];
   }
-  if (isFile(path15.join(project_root, INSTALL_MODE_MARKER_REL))) return [];
+  if (isFile(path13.join(project_root, INSTALL_MODE_MARKER_REL))) return [];
   const found = [];
   for (const name of MIGRATE_LEGACY_YAML_FILES) {
-    if (isFile(path15.join(project_root, name))) {
+    if (isFile(path13.join(project_root, name))) {
       found.push(name);
-    } else if (isFile(path15.join(project_root, "settings", name))) {
+    } else if (isFile(path13.join(project_root, "settings", name))) {
       found.push(`settings/${name}`);
     }
   }
   for (const name of MIGRATE_LEGACY_TOOL_DIRS) {
-    const p = path15.join(project_root, name);
+    const p = path13.join(project_root, name);
     if (isDir(p) && !isSymlink(p)) {
       found.push(`${name}/`);
     }
@@ -20825,13 +18736,13 @@ function _prompt_migrate_to_global(project_root, artefacts) {
     process3.stdout.write("\n");
     warn("Legacy project-local artefacts detected \u2014 pre-ADR-020 layout:");
     for (const rel of artefacts) {
-      info2(`  ${path15.join(project_root, rel)}`);
+      info(`  ${path13.join(project_root, rel)}`);
     }
-    info2("The unified `agent-config migrate` sweeps these in one pass.");
-    info2("The wizard recreates fresh config afterwards.");
+    info("The unified `agent-config migrate` sweeps these in one pass.");
+    info("The wizard recreates fresh config afterwards.");
   }
   if (!_is_interactive()) {
-    if (!state.QUIET) info2("Non-interactive mode \u2192 defaulting to YES (run migration).");
+    if (!state.QUIET) info("Non-interactive mode \u2192 defaulting to YES (run migration).");
     return true;
   }
   let attempts = 0;
@@ -20847,29 +18758,29 @@ function _prompt_migrate_to_global(project_root, artefacts) {
 }
 function _run_migrate_to_global(project_root) {
   try {
-    return main2([], { cwd: project_root });
+    return main([], { cwd: project_root });
   } catch (exc) {
     warn(`migrate unavailable: ${String(exc)}`);
     return 1;
   }
 }
 function _format_global_root_for_marker(global_root) {
-  const home = resolvePath(os8.homedir());
+  const home = resolvePath(os7.homedir());
   const resolved = resolvePath(global_root);
-  const rel = path15.relative(home, resolved);
-  if (rel === "" || rel.startsWith("..") || path15.isAbsolute(rel)) {
+  const rel = path13.relative(home, resolved);
+  if (rel === "" || rel.startsWith("..") || path13.isAbsolute(rel)) {
     return global_root;
   }
-  return `~/${rel.split(path15.sep).join("/")}`;
+  return `~/${rel.split(path13.sep).join("/")}`;
 }
 function _remove_legacy_consumer_bridge_marker(project_root, env = null) {
   const env_map = env ?? process3.env;
   if (env_map["AGENT_CONFIG_DEV_MODE"] === "1") return null;
-  if (isDir(path15.join(project_root, ".agent-src.uncondensed"))) return null;
-  const target = path15.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
+  if (isDir(path13.join(project_root, ".agent-src.uncondensed"))) return null;
+  const target = path13.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
   if (!isFile(target)) return null;
   try {
-    fs16.rmSync(target);
+    fs15.rmSync(target);
   } catch {
     return null;
   }
@@ -20883,7 +18794,7 @@ var PROJECT_ANCHOR_TOOLS = {
 function _write_per_tool_project_anchors(project_root, tools, env = null, now = null) {
   const env_map = env ?? process3.env;
   if (env_map["AGENT_CONFIG_DEV_MODE"] === "1") return [];
-  if (isDir(path15.join(project_root, ".agent-src.uncondensed"))) return [];
+  if (isDir(path13.join(project_root, ".agent-src.uncondensed"))) return [];
   const global_root_str = _format_global_root_for_marker(
     event4u_root(env_map)
   );
@@ -20892,8 +18803,8 @@ function _write_per_tool_project_anchors(project_root, tools, env = null, now = 
   for (const tool_id of Object.keys(PROJECT_ANCHOR_TOOLS).sort()) {
     const rel_path = PROJECT_ANCHOR_TOOLS[tool_id];
     if (!tools.has(tool_id)) continue;
-    const target = path15.join(project_root, rel_path);
-    mkdirp(path15.dirname(target));
+    const target = path13.join(project_root, rel_path);
+    mkdirp(path13.dirname(target));
     const body = `# event4u/agent-config \u2014 per-tool project anchor (auto-written).
 # Spec: docs/contracts/consumer-bridge.md \xA7 Per-tool anchor strategy.
 # Tool: ${tool_id}. Resolves the global install directly \u2014 no
@@ -20911,7 +18822,7 @@ installed_at: ${stamp}
 }
 var PACKAGE_TAG_ID = "event4u/agent-config";
 function _inject_package_tag(target, source, package_root) {
-  if (path15.extname(target) !== ".md") return;
+  if (path13.extname(target) !== ".md") return;
   let text;
   try {
     text = readText(target);
@@ -20939,8 +18850,8 @@ function _inject_package_tag(target, source, package_root) {
       resolved_src = source;
     }
     if (package_root !== null) {
-      const rel = path15.relative(resolvePath(package_root), resolved_src);
-      if (rel !== "" && !rel.startsWith("..") && !path15.isAbsolute(rel)) {
+      const rel = path13.relative(resolvePath(package_root), resolved_src);
+      if (rel !== "" && !rel.startsWith("..") && !path13.isAbsolute(rel)) {
         source_value = rel;
       } else {
         source_value = resolved_src;
@@ -20978,10 +18889,10 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
   if (!pathExists(src)) return [0, 0, written_paths];
   if (!isDir(src)) {
     if (file_filter !== null && !file_filter(src)) return [0, 0, written_paths];
-    mkdirp(path15.dirname(dest));
+    mkdirp(path13.dirname(dest));
     const decision = _resolve_file_conflict(dest, force);
     if (decision === "skip") return [0, 1, written_paths];
-    fs16.copyFileSync(src, dest);
+    fs15.copyFileSync(src, dest);
     _inject_package_tag(dest, src, package_root);
     written_paths.push(dest);
     return [1, 0, written_paths];
@@ -20989,11 +18900,11 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
   mkdirp(dest);
   const walk = (node) => {
     const acc = [];
-    const names = fs16.readdirSync(node).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const names = fs15.readdirSync(node).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
     for (const name of names) {
-      const entry = path15.join(node, name);
+      const entry = path13.join(node, name);
       acc.push(entry);
-      const lst = fs16.lstatSync(entry);
+      const lst = fs15.lstatSync(entry);
       if (lst.isDirectory() && !lst.isSymbolicLink()) {
         acc.push(...walk(entry));
       }
@@ -21001,9 +18912,9 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
     return acc;
   };
   for (const entry of walk(src)) {
-    const rel = path15.relative(src, entry);
-    const target = path15.join(dest, rel);
-    const lst = fs16.lstatSync(entry);
+    const rel = path13.relative(src, entry);
+    const target = path13.join(dest, rel);
+    const lst = fs15.lstatSync(entry);
     if (lst.isDirectory() && !lst.isSymbolicLink()) {
       mkdirp(target);
       continue;
@@ -21011,8 +18922,8 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
     let resolvedIsDir = false;
     let resolved = entry;
     try {
-      resolved = fs16.realpathSync(entry);
-      resolvedIsDir = fs16.statSync(entry).isDirectory();
+      resolved = fs15.realpathSync(entry);
+      resolvedIsDir = fs15.statSync(entry).isDirectory();
     } catch {
       resolvedIsDir = false;
     }
@@ -21038,8 +18949,8 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
       skipped += 1;
       continue;
     }
-    mkdirp(path15.dirname(target));
-    fs16.copyFileSync(resolved, target);
+    mkdirp(path13.dirname(target));
+    fs15.copyFileSync(resolved, target);
     _inject_package_tag(target, resolved, package_root);
     written += 1;
     written_paths.push(target);
@@ -21051,7 +18962,7 @@ function _claude_desktop_bundles_dir() {
 }
 function _write_claude_desktop_marker(_force, lockfile_path2, bundles_dir, bundle_count) {
   const anchor = expanduser6(USER_SCOPE_PATHS["claude-desktop"]);
-  const target = path15.join(anchor, "agent-config.md");
+  const target = path13.join(anchor, "agent-config.md");
   mkdirp(anchor);
   const body = claudeDesktopMarkerBody(lockfile_path2, anchor, bundles_dir, bundle_count);
   writeText(target, body);
@@ -21075,23 +18986,23 @@ function _apply_claude_flat_command_wrappers(anchor, package_root, current_files
   const wrapped = [];
   const collisions = [];
   const reserved = [];
-  const commands_dir = path15.join(anchor, "commands");
+  const commands_dir = path13.join(anchor, "commands");
   let flat_entries = [];
   try {
-    flat_entries = fs16.readdirSync(commands_dir).filter((f) => f.endsWith(".md"));
+    flat_entries = fs15.readdirSync(commands_dir).filter((f) => f.endsWith(".md"));
   } catch {
   }
   for (const fname of flat_entries.sort()) {
     const slug = fname.slice(0, -".md".length);
     if (!is_claude_builtin_name(slug)) continue;
-    fs16.rmSync(path15.join(commands_dir, fname), { force: true });
+    fs15.rmSync(path13.join(commands_dir, fname), { force: true });
     current_files.delete(`commands/${fname}`);
     reserved.push(slug);
   }
   const eligible = new Set(_CLAUDE_FLAT_WRAPPER_EXTRA);
   try {
     const manifest = JSON.parse(
-      fs16.readFileSync(path15.join(package_root, "dist", "discovery", "discovery-manifest.json"), "utf8")
+      fs15.readFileSync(path13.join(package_root, "dist", "discovery", "discovery-manifest.json"), "utf8")
     );
     for (const a of manifest.artefacts ?? []) {
       if (a.category !== "command" || typeof a.slug !== "string") continue;
@@ -21102,22 +19013,22 @@ function _apply_claude_flat_command_wrappers(anchor, package_root, current_files
   }
   for (const slug of [...eligible].sort()) {
     const flat_rel = `commands/${slug}.md`;
-    const flat_abs = path15.join(anchor, "commands", `${slug}.md`);
-    if (!fs16.existsSync(flat_abs)) continue;
-    const skill_dir = path15.join(anchor, "skills", slug);
-    if (fs16.existsSync(skill_dir)) {
+    const flat_abs = path13.join(anchor, "commands", `${slug}.md`);
+    if (!fs15.existsSync(flat_abs)) continue;
+    const skill_dir = path13.join(anchor, "skills", slug);
+    if (fs15.existsSync(skill_dir)) {
       collisions.push(slug);
       continue;
     }
-    let body = fs16.readFileSync(flat_abs, "utf8");
+    let body = fs15.readFileSync(flat_abs, "utf8");
     if (body.startsWith("---\n") && !/^name:/m.test(body.split("\n---")[0] ?? "")) {
       body = body.replace("---\n", `---
 name: ${slug}
 `);
     }
-    fs16.mkdirSync(skill_dir, { recursive: true });
-    fs16.writeFileSync(path15.join(skill_dir, "SKILL.md"), body, "utf8");
-    fs16.rmSync(flat_abs, { force: true });
+    fs15.mkdirSync(skill_dir, { recursive: true });
+    fs15.writeFileSync(path13.join(skill_dir, "SKILL.md"), body, "utf8");
+    fs15.rmSync(flat_abs, { force: true });
     current_files.delete(flat_rel);
     current_files.add(`skills/${slug}/SKILL.md`);
     wrapped.push(slug);
@@ -21149,8 +19060,8 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     const written_paths = [];
     let current_files = /* @__PURE__ */ new Set();
     for (const [src_rel, dest_sub] of plan) {
-      const src = path15.join(package_root, src_rel);
-      const dest = dest_sub ? path15.join(anchor, dest_sub) : anchor;
+      const src = path13.join(package_root, src_rel);
+      const dest = dest_sub ? path13.join(anchor, dest_sub) : anchor;
       const rule_filter = _rule_filter_for_source(src_rel, rule_scope);
       const [w, s, paths] = _copy_dir_dereferencing_symlinks(
         src,
@@ -21174,12 +19085,12 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     if (tool_id === "claude-code") {
       const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files);
       if (res.wrapped.length > 0 && !state.QUIET) {
-        info2(
+        info(
           `  claude-code: ${res.wrapped.length} visible flat command(s) projected as skill wrappers (Claude Code flat-command discovery workaround)`
         );
       }
       if (res.reserved.length > 0 && !state.QUIET) {
-        info2(
+        info(
           `  claude-code: ${res.reserved.length} flat command(s) withheld \u2014 name is a Claude Code built-in (${res.reserved.join(", ")}); nested /cluster:sub commands remain available`
         );
       }
@@ -21216,7 +19127,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     record_deploy(tool_id, anchor_raw, current_files, inventory);
     save_inventory(inventory);
     if (reaped.length > 0 && !state.QUIET) {
-      info2(
+      info(
         `  ${tool_id}: reaped ${reaped.length} stale deployed file(s) from a previous install`
       );
     }
@@ -21224,15 +19135,15 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     results[tool_id] = [written_total, skipped_total, "deployed", written_paths];
     if (tool_id === "claude-code") {
       try {
-        const manifest = path15.join(package_root, "src", "scripts", "hook_manifest.yaml");
+        const manifest = path13.join(package_root, "src", "scripts", "hook_manifest.yaml");
         const matrix = build_claude_hook_matrix(manifest);
         const res = ensure_managed_hooks(
-          path15.join(anchor, "settings.json"),
+          path13.join(anchor, "settings.json"),
           matrix
         );
         if (!state.QUIET) {
           if (res.changed) {
-            success2(
+            success(
               `claude-code: managed hooks registered in ~/.claude/settings.json (${res.events.length} event(s))`
             );
           } else {
@@ -21264,7 +19175,7 @@ function _preview_global_reap(tools, package_root) {
     const anchor = expanduser6(anchor_raw);
     let current_files = /* @__PURE__ */ new Set();
     for (const [src_rel, dest_sub] of plan) {
-      const src = path15.join(package_root, src_rel);
+      const src = path13.join(package_root, src_rel);
       current_files = setUnion(
         current_files,
         expected_deploy_files(
@@ -21298,14 +19209,14 @@ function _preview_global_reap(tools, package_root) {
 function _verify_deploy_targets(anchor, plan) {
   const missing = [];
   for (const [, dest_sub] of plan) {
-    const target = dest_sub ? path15.join(anchor, dest_sub) : anchor;
+    const target = dest_sub ? path13.join(anchor, dest_sub) : anchor;
     const label = dest_sub || ".";
     if (!isDir(target)) {
       missing.push(label);
       continue;
     }
     try {
-      const entries = fs16.readdirSync(target);
+      const entries = fs15.readdirSync(target);
       if (entries.length === 0) missing.push(label);
     } catch {
       missing.push(label);
@@ -21320,13 +19231,13 @@ function _prune_modules_by(deploy_results, is_pruned) {
     const [written, skipped, status, paths] = deploy_results[tool_id];
     const pruned_skill_dirs = /* @__PURE__ */ new Set();
     for (const p of paths) {
-      const parts = p.split(path15.sep);
+      const parts = p.split(path13.sep);
       if (parts.includes("skills")) {
         const i = parts.indexOf("skills");
         if (i + 1 < parts.length) {
-          const skill_root = parts.slice(0, i + 2).join(path15.sep);
+          const skill_root = parts.slice(0, i + 2).join(path13.sep);
           if (!pruned_skill_dirs.has(skill_root)) {
-            const skillmd = path15.join(skill_root, "SKILL.md");
+            const skillmd = path13.join(skill_root, "SKILL.md");
             if (pathExists(skillmd) && is_pruned(skillmd)) {
               pruned_skill_dirs.add(skill_root);
             }
@@ -21337,25 +19248,25 @@ function _prune_modules_by(deploy_results, is_pruned) {
     const keep = [];
     const delete_files = [];
     for (const p of paths) {
-      const parts = p.split(path15.sep);
+      const parts = p.split(path13.sep);
       let is_target = false;
       if (parts.includes("skills")) {
         const i = parts.indexOf("skills");
-        if (i + 1 < parts.length && pruned_skill_dirs.has(parts.slice(0, i + 2).join(path15.sep))) {
+        if (i + 1 < parts.length && pruned_skill_dirs.has(parts.slice(0, i + 2).join(path13.sep))) {
           is_target = true;
         }
-      } else if (parts.includes("commands") && path15.extname(p) === ".md" && is_pruned(p)) {
+      } else if (parts.includes("commands") && path13.extname(p) === ".md" && is_pruned(p)) {
         is_target = true;
       }
       (is_target ? delete_files : keep).push(p);
     }
     for (const d of pruned_skill_dirs) {
-      fs16.rmSync(d, { recursive: true, force: true });
+      fs15.rmSync(d, { recursive: true, force: true });
     }
     for (const p of delete_files) {
-      if (p.split(path15.sep).includes("commands") && pathExists(p)) {
+      if (p.split(path13.sep).includes("commands") && pathExists(p)) {
         try {
-          fs16.unlinkSync(p);
+          fs15.unlinkSync(p);
         } catch {
         }
       }
@@ -21370,7 +19281,7 @@ function _prune_lab_modules(deploy_results, lab_ids) {
 }
 var SCOPED_ACTIVE_WORKSPACES = /* @__PURE__ */ new Set(["engineering", "agent-config-maintainer"]);
 function _load_packs_registry(package_root) {
-  const vocab_path = path15.join(package_root, "src", "config", "discovery", "packs.yml");
+  const vocab_path = path13.join(package_root, "src", "config", "discovery", "packs.yml");
   const data = yamlSafeLoad(readText(vocab_path));
   if (!Array.isArray(data)) {
     throw new Error(`packs.yml did not parse to a list: ${vocab_path}`);
@@ -21419,9 +19330,9 @@ function _compute_active_pack_ids(packs, runtime_active_packs) {
 }
 function _resolve_global_settings_doc() {
   const root = event4u_root();
-  const canonical = path15.join(root, "settings", SETTINGS_FILE2);
+  const canonical = path13.join(root, "settings", SETTINGS_FILE);
   if (pathExists(canonical)) return _load_yaml_doc(canonical);
-  const legacy = path15.join(root, SETTINGS_FILE2);
+  const legacy = path13.join(root, SETTINGS_FILE);
   if (pathExists(legacy)) return _load_yaml_doc(legacy);
   return null;
 }
@@ -21459,7 +19370,7 @@ function _prune_scoped_modules(deploy_results, active_ids) {
 function install_global(tools, force, project_root = null, core_only = false) {
   const migrated = migrate_legacy_namespace();
   if (migrated && !state.QUIET) {
-    info2(
+    info(
       `\u{1F501} Migrated user-global config to ${event4u_root()} (legacy ${legacy_xdg_root()} preserved as fallback)`
     );
   }
@@ -21472,27 +19383,27 @@ function install_global(tools, force, project_root = null, core_only = false) {
     if (!state.QUIET) {
       process3.stdout.write("\n");
       warn("Refusing global install: lockfile records a newer version.");
-      info2(`  Lockfile:           ${read_path}`);
-      info2(`  Recorded version:   ${recorded}`);
-      info2(`  Current package:    ${installed_version}`);
-      info2("  Fix:                upgrade the package, or re-run with `--force`");
+      info(`  Lockfile:           ${read_path}`);
+      info(`  Recorded version:   ${recorded}`);
+      info(`  Current package:    ${installed_version}`);
+      info("  Fix:                upgrade the package, or re-run with `--force`");
       process3.stdout.write("\n");
     }
     return 1;
   }
   if (["upgrade", "unparseable"].includes(classification) && !state.QUIET) {
-    info2(`\u{1F504} Upgrading lockfile from ${recorded} to ${installed_version}, redeploying tools`);
+    info(`\u{1F504} Upgrading lockfile from ${recorded} to ${installed_version}, redeploying tools`);
   }
   const migration = migrate_layout({ path: write_path });
   if (migration && migration.changed.length > 0 && !state.QUIET) {
-    info2(
+    info(
       `\u{1F527} Migrated install layout v${migration.from} \u2192 v${migration.to}: ` + migration.changed.join("; ")
     );
   }
   if (!state.QUIET) {
     process3.stdout.write("\n");
-    info2("Agent Config \u2014 Global (user-scope) install [ADR-007]");
-    info2("Per-tool anchor paths:");
+    info("Agent Config \u2014 Global (user-scope) install [ADR-007]");
+    info("Per-tool anchor paths:");
     for (const tool_id of [...tools].sort()) {
       const anchor = USER_SCOPE_PATHS[tool_id];
       if (anchor === void 0) continue;
@@ -21506,16 +19417,16 @@ function install_global(tools, force, project_root = null, core_only = false) {
   const written = write_lockfile(installed_version, merged_tools, { path: write_path });
   if (!state.QUIET) {
     process3.stdout.write("\n");
-    info2(`Lockfile written: ${written}`);
-    info2(`  schema_version=1, agent_config_version=${installed_version}`);
-    info2(`  tools=${merged_tools.join(",")}`);
+    info(`Lockfile written: ${written}`);
+    info(`  schema_version=1, agent_config_version=${installed_version}`);
+    info(`  tools=${merged_tools.join(",")}`);
   }
-  if (project_root !== null && pathExists(_resolve_settings_read(project_root)) && !isDir(path15.join(project_root, ".agent-src.uncondensed"))) {
+  if (project_root !== null && pathExists(_resolve_settings_read(project_root)) && !isDir(path13.join(project_root, ".agent-src.uncondensed"))) {
     const drift = collect_drift(project_root);
     if (!state.QUIET) {
       process3.stdout.write("\n");
       for (const line of format_drift_report(drift).replace(/\n$/, "").split("\n")) {
-        info2(line);
+        info(line);
       }
     }
   }
@@ -21526,7 +19437,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
     let pruned;
     [pruned, deploy_results] = _prune_lab_modules(deploy_results, lab_ids);
     if (!state.QUIET) {
-      info2(
+      info(
         `\u{1F9F9} Core-only install: pruned ${pruned} lab-tier artefact(s) (packs: ${[...lab_ids].sort().join(", ")}).`
       );
     }
@@ -21539,7 +19450,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
       let scoped_pruned;
       [scoped_pruned, deploy_results] = _prune_scoped_modules(deploy_results, active_ids);
       if (!state.QUIET) {
-        info2(
+        info(
           `\u{1F9F9} Scoped install: pruned ${scoped_pruned} non-active-pack artefact(s) (active packs: ${[...active_ids].sort().join(", ") || "(none)"}). Set projection.mode: legacy-all in .agent-settings.yml to restore the full surface.`
         );
       }
@@ -21581,7 +19492,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
   }
   if (!state.QUIET) {
     process3.stdout.write("\n");
-    info2("Deployed per-tool content:");
+    info("Deployed per-tool content:");
     for (const tool_id of Object.keys(deploy_results).sort()) {
       const [w, s, status] = deploy_results[tool_id];
       const anchor = USER_SCOPE_PATHS[tool_id] ?? "";
@@ -21610,20 +19521,20 @@ function install_global(tools, force, project_root = null, core_only = false) {
       }
     }
   }
-  if (project_root !== null && pathExists(_resolve_settings_read(project_root)) && !isDir(path15.join(project_root, ".agent-src.uncondensed"))) {
+  if (project_root !== null && pathExists(_resolve_settings_read(project_root)) && !isDir(path13.join(project_root, ".agent-src.uncondensed"))) {
     const files_by_tool = _files_by_tool_from_deploy(deploy_results);
     const rc = _update_installed_tools_manifest(project_root, tools, "global", force, files_by_tool);
     if (rc !== 0) return rc;
     const removed_marker = _remove_legacy_consumer_bridge_marker(project_root);
     if (removed_marker !== null && !state.QUIET) {
-      const rel = isRelativeTo(removed_marker, project_root) ? path15.relative(project_root, removed_marker) : removed_marker;
-      info2(`Removed legacy bridge marker: ${rel}`);
+      const rel = isRelativeTo(removed_marker, project_root) ? path13.relative(project_root, removed_marker) : removed_marker;
+      info(`Removed legacy bridge marker: ${rel}`);
     }
     const anchor_paths = _write_per_tool_project_anchors(project_root, tools);
     if (anchor_paths.length > 0 && !state.QUIET) {
       for (const p of anchor_paths) {
-        const rel = isRelativeTo(p, project_root) ? path15.relative(project_root, p) : p;
-        info2(`Project anchor written: ${rel}`);
+        const rel = isRelativeTo(p, project_root) ? path13.relative(project_root, p) : p;
+        info(`Project anchor written: ${rel}`);
       }
     }
   }
@@ -21634,13 +19545,13 @@ function install_global(tools, force, project_root = null, core_only = false) {
   }
   if (!state.QUIET) {
     process3.stdout.write("\n");
-    success2(`Global install completed (v${installed_version}).`);
+    success(`Global install completed (v${installed_version}).`);
     process3.stdout.write("\n");
   }
   return 0;
 }
-var SETTINGS_SURFACE_REL = path15.join("state", "settings-surface.json");
-var SETTINGS_DELTA_REL = path15.join("state", "settings-delta.json");
+var SETTINGS_SURFACE_REL = path13.join("state", "settings-surface.json");
+var SETTINGS_DELTA_REL = path13.join("state", "settings-delta.json");
 function _current_settings_surface(version) {
   const jsonSchema = zodToJsonSchema(settingsSchema, {
     name: "AgentSettings",
@@ -21651,33 +19562,33 @@ function _current_settings_surface(version) {
 }
 function _write_settings_surface_snapshot(installed_version) {
   const root = event4u_root();
-  const surface_path = path15.join(root, SETTINGS_SURFACE_REL);
-  const delta_path = path15.join(root, SETTINGS_DELTA_REL);
+  const surface_path = path13.join(root, SETTINGS_SURFACE_REL);
+  const delta_path = path13.join(root, SETTINGS_DELTA_REL);
   const next = _current_settings_surface(installed_version);
   let previous = null;
   try {
-    const parsed = JSON.parse(fs16.readFileSync(surface_path, "utf8"));
+    const parsed = JSON.parse(fs15.readFileSync(surface_path, "utf8"));
     if (parsed !== null && typeof parsed === "object" && parsed.entries !== void 0) previous = parsed;
   } catch {
   }
   if (previous !== null && previous.version !== next.version) {
     const delta = computeSurfaceDelta(previous, next);
     if (delta.changes.length > 0) {
-      fs16.mkdirSync(path15.dirname(delta_path), { recursive: true, mode: 448 });
-      fs16.writeFileSync(delta_path, `${JSON.stringify(delta, null, 2)}
+      fs15.mkdirSync(path13.dirname(delta_path), { recursive: true, mode: 448 });
+      fs15.writeFileSync(delta_path, `${JSON.stringify(delta, null, 2)}
 `, { mode: 384 });
       if (!state.QUIET) {
         const counts = {};
         for (const c of delta.changes) counts[c.kind] = (counts[c.kind] ?? 0) + 1;
         const parts = Object.entries(counts).map(([k, v]) => `${v} ${k.replace("_", " ")}`);
-        info2(
+        info(
           `Settings surface changed ${delta.oldVersion} \u2192 ${delta.newVersion}: ${parts.join(", ")}. Review with \`agent-config config\` (Settings \u2192 banner) \u2014 nothing was changed automatically.`
         );
       }
     }
   }
-  fs16.mkdirSync(path15.dirname(surface_path), { recursive: true, mode: 448 });
-  fs16.writeFileSync(surface_path, `${JSON.stringify(next, null, 2)}
+  fs15.mkdirSync(path13.dirname(surface_path), { recursive: true, mode: 448 });
+  fs15.writeFileSync(surface_path, `${JSON.stringify(next, null, 2)}
 `, { mode: 384 });
 }
 function arrayStrEqual(a, b) {
@@ -21885,17 +19796,17 @@ function _is_tool_enabled(tools, tool_id) {
   return tools.has(tool_id);
 }
 function _minimal_templates_root() {
-  const start = resolvePath(_HERE4);
+  const start = resolvePath(_HERE2);
   const chain = [start];
   let cur = start;
   for (; ; ) {
-    const parent = path15.dirname(cur);
+    const parent = path13.dirname(cur);
     if (parent === cur) break;
     chain.push(parent);
     cur = parent;
   }
   for (const ancestor of chain) {
-    const candidate = path15.join(ancestor, "src", "templates", "minimal");
+    const candidate = path13.join(ancestor, "src", "templates", "minimal");
     if (isDir(candidate)) return candidate;
   }
   fail("Could not locate src/templates/minimal/ \u2014 package install is corrupt.");
@@ -21903,9 +19814,9 @@ function _minimal_templates_root() {
 var INSTALL_MODE_MARKER_REL = "agents/.agent-state/install-mode.txt";
 function _write_install_mode_marker(project_root, mode) {
   if (mode !== "minimal" && mode !== "full") return;
-  const marker = path15.join(project_root, INSTALL_MODE_MARKER_REL);
+  const marker = path13.join(project_root, INSTALL_MODE_MARKER_REL);
   try {
-    mkdirp(path15.dirname(marker));
+    mkdirp(path13.dirname(marker));
     writeText(marker, `${mode}
 `);
   } catch {
@@ -21914,7 +19825,7 @@ function _write_install_mode_marker(project_root, mode) {
 function install_minimal(target_root_in, force, user_type = "") {
   let target_root = resolvePath(target_root_in);
   mkdirp(target_root);
-  const parent = path15.dirname(target_root);
+  const parent = path13.dirname(target_root);
   if (parent !== target_root) {
     const existing = find_project_root_with_anchor(parent);
     if (existing !== null && existing[0] !== target_root) {
@@ -21925,39 +19836,39 @@ function install_minimal(target_root_in, force, user_type = "") {
     }
   }
   const templates = _minimal_templates_root();
-  const settings_src = path15.join(templates, SETTINGS_FILE2);
-  const overrides_gitkeep_src = path15.join(templates, "overrides-gitkeep");
-  const overrides_readme_src = path15.join(templates, "agents-overrides-readme.md");
+  const settings_src = path13.join(templates, SETTINGS_FILE);
+  const overrides_gitkeep_src = path13.join(templates, "overrides-gitkeep");
+  const overrides_readme_src = path13.join(templates, "agents-overrides-readme.md");
   if (!isFile(settings_src)) fail(`Bundled minimal settings template missing under ${templates}`);
   if (!isFile(overrides_gitkeep_src) || !isFile(overrides_readme_src)) {
     fail(`Bundled overrides scaffold templates missing under ${templates}`);
   }
-  info2(`Minimal init \u2192 ${target_root}`);
-  const overrides_root = path15.join(target_root, "agents", "overrides");
+  info(`Minimal init \u2192 ${target_root}`);
+  const overrides_root = path13.join(target_root, "agents", "overrides");
   mkdirp(overrides_root);
   const gitkeep_body = readText(overrides_gitkeep_src);
   for (const sub of ["rules", "skills", "commands"]) {
-    const sub_dir = path15.join(overrides_root, sub);
+    const sub_dir = path13.join(overrides_root, sub);
     mkdirp(sub_dir);
-    const gitkeep_dst = path15.join(sub_dir, ".gitkeep");
+    const gitkeep_dst = path13.join(sub_dir, ".gitkeep");
     if (pathExists(gitkeep_dst) && !force) {
       skip(`agents/overrides/${sub}/.gitkeep already exists (use --force to overwrite)`);
     } else {
       writeText(gitkeep_dst, gitkeep_body);
-      success2(`Wrote agents/overrides/${sub}/.gitkeep`);
+      success(`Wrote agents/overrides/${sub}/.gitkeep`);
     }
   }
-  const readme_dst = path15.join(overrides_root, "README.md");
+  const readme_dst = path13.join(overrides_root, "README.md");
   if (pathExists(readme_dst) && !force) {
     skip("agents/overrides/README.md already exists (use --force to overwrite)");
   } else {
     writeText(readme_dst, readText(overrides_readme_src));
-    success2("Wrote agents/overrides/README.md");
+    success("Wrote agents/overrides/README.md");
   }
   if (user_type) {
     const settings_dst = _canonical_settings_target(target_root);
     if (pathExists(settings_dst) && !force) {
-      skip(`${SETTINGS_FILE2} already exists (use --force to overwrite)`);
+      skip(`${SETTINGS_FILE} already exists (use --force to overwrite)`);
     } else {
       const body = readText(settings_src).replace(/\s+$/, "") + `
 
@@ -21965,15 +19876,15 @@ function install_minimal(target_root_in, force, user_type = "") {
 personal:
   user_type: ${user_type}
 `;
-      mkdirp(path15.dirname(settings_dst));
+      mkdirp(path13.dirname(settings_dst));
       writeText(settings_dst, body);
-      success2(`Wrote ${SETTINGS_FILE2} (user_type=${user_type})`);
+      success(`Wrote ${SETTINGS_FILE} (user_type=${user_type})`);
     }
   }
   const removed_marker = _remove_legacy_consumer_bridge_marker(target_root);
   if (removed_marker !== null) {
-    const rel = isRelativeTo(removed_marker, target_root) ? path15.relative(target_root, removed_marker) : removed_marker;
-    success2(`Removed legacy bridge marker: ${rel}`);
+    const rel = isRelativeTo(removed_marker, target_root) ? path13.relative(target_root, removed_marker) : removed_marker;
+    success(`Removed legacy bridge marker: ${rel}`);
   }
   _write_install_mode_marker(target_root, "minimal");
   if (!state.QUIET) {
@@ -21983,10 +19894,10 @@ personal:
   }
   if (!state.QUIET) {
     process3.stdout.write("\n");
-    info2("Next steps:");
-    info2("  \u2022 Ensure `agent-config` is on $PATH: npm install -g @event4u/agent-config");
-    info2("  \u2022 Drop project-scoped overrides under `agents/overrides/{rules,skills,commands}/`.");
-    info2("  \u2022 Run `agent-config doctor` to verify the layer is picked up.");
+    info("Next steps:");
+    info("  \u2022 Ensure `agent-config` is on $PATH: npm install -g @event4u/agent-config");
+    info("  \u2022 Drop project-scoped overrides under `agents/overrides/{rules,skills,commands}/`.");
+    info("  \u2022 Run `agent-config doctor` to verify the layer is picked up.");
   }
   return 0;
 }
@@ -22046,7 +19957,7 @@ function run_interactive_init(project_root, force) {
     );
     return 0;
   }
-  const target = path15.join(project_root, _LOCAL_CONFIG_FILE);
+  const target = path13.join(project_root, _LOCAL_CONFIG_FILE);
   if (pathExists(target) && !force) {
     warn(
       `${_LOCAL_CONFIG_FILE} already exists; re-run with --force to overwrite. Skipping interactive init.`
@@ -22054,8 +19965,8 @@ function run_interactive_init(project_root, force) {
     return 0;
   }
   process3.stdout.write("\n");
-  info2("Interactive init \u2014 captures user-type / stack / verbosity");
-  info2("(forward-compatible stub; runtime filtering activates with step-9)");
+  info("Interactive init \u2014 captures user-type / stack / verbosity");
+  info("(forward-compatible stub; runtime filtering activates with step-9)");
   const user_type = _interactive_prompt_choice("Primary user type:", _INTERACTIVE_USER_TYPES);
   const stack = _interactive_prompt_choice("Project stack:", _INTERACTIVE_STACKS);
   const verbosity = _interactive_prompt_choice("Verbosity profile:", _INTERACTIVE_VERBOSITIES);
@@ -22073,7 +19984,7 @@ function run_interactive_init(project_root, force) {
     warn(`Could not write ${target}: ${String(exc)}`);
     return 1;
   }
-  success2(`Wrote ${path15.relative(project_root, target)} (${user_type} / ${stack} / ${verbosity})`);
+  success(`Wrote ${path13.relative(project_root, target)} (${user_type} / ${stack} / ${verbosity})`);
   return 0;
 }
 var _WIZARD_READY_RE = /^WIZARD_READY (http:\/\/(?:127\.0\.0\.1|localhost):\d+\/\S*)\r?$/;
@@ -22091,12 +20002,12 @@ function _wizard_should_launch(opts) {
   return [true, ""];
 }
 function _wizard_cli_dist(_project_root) {
-  const package_root = path15.dirname(path15.dirname(path15.dirname(resolvePath(_HERE4))));
-  const cli = path15.join(package_root, "dist", "cli", "agent-config.js");
+  const package_root = path13.dirname(path13.dirname(path13.dirname(resolvePath(_HERE2))));
+  const cli = path13.join(package_root, "dist", "cli", "agent-config.js");
   return pathExists(cli) ? cli : null;
 }
 function _server_info_path() {
-  return path15.join(os8.homedir(), ".event4u", "agent-config", "local-server.json");
+  return path13.join(os7.homedir(), ".event4u", "agent-config", "local-server.json");
 }
 function _pid_is_agent_config(pid) {
   let res;
@@ -22113,7 +20024,7 @@ function _pid_is_agent_config(pid) {
 }
 function unlinkMissingOk(p) {
   try {
-    fs16.unlinkSync(p);
+    fs15.unlinkSync(p);
   } catch {
   }
 }
@@ -22191,14 +20102,14 @@ function _wizard_spawn(project_root, pass_project_root = true) {
 }
 function _wizard_run_sync(cmd, env, cli) {
   const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
-  const log_path = path15.join(
-    os8.tmpdir(),
+  const log_path = path13.join(
+    os7.tmpdir(),
     `agent-config-wizard-${process3.pid}-${Date.now()}.log`
   );
   let child;
   let log_fd = null;
   try {
-    log_fd = fs16.openSync(log_path, "w");
+    log_fd = fs15.openSync(log_path, "w");
     child = spawn(cmd[0], cmd.slice(1), {
       env,
       detached: true,
@@ -22216,7 +20127,7 @@ function _wizard_run_sync(cmd, env, cli) {
   } finally {
     if (log_fd !== null) {
       try {
-        fs16.closeSync(log_fd);
+        fs15.closeSync(log_fd);
       } catch {
       }
     }
@@ -22381,7 +20292,7 @@ function pyRepr(v) {
   if (typeof v === "boolean") return v ? "True" : "False";
   return String(v);
 }
-function main3(argv) {
+function main2(argv) {
   const opts = parse_options(argv);
   state.QUIET = opts.quiet;
   if (opts.apply_payload) {
@@ -22457,17 +20368,17 @@ function main3(argv) {
   {
     const [will_launch, why_not] = _wizard_should_launch(opts);
     if (will_launch) {
-      if (!state.QUIET) info2("Setup wizard will launch automatically after install.");
+      if (!state.QUIET) info("Setup wizard will launch automatically after install.");
     } else if (!state.QUIET) {
-      info2(`Setup wizard auto-launch disabled (${why_not}).`);
+      info(`Setup wizard auto-launch disabled (${why_not}).`);
     }
   }
   if (opts.minimal) {
     const target_root = resolvePath(
       opts.custom_path || opts.project || process3.env["PROJECT_ROOT"] || process3.cwd()
     );
-    const minimal_package_root = path15.dirname(
-      path15.dirname(path15.dirname(_minimal_templates_root()))
+    const minimal_package_root = path13.dirname(
+      path13.dirname(path13.dirname(_minimal_templates_root()))
     );
     const validated_user_type = _validate_user_type(minimal_package_root, opts.user_type);
     return install_minimal(target_root, opts.force, validated_user_type);
@@ -22496,7 +20407,7 @@ function main3(argv) {
     return rc2;
   }
   const project_root = custom_path || resolvePath(opts.project || process3.env["PROJECT_ROOT"] || process3.cwd());
-  const is_first_run = !pathExists(path15.join(project_root, SETTINGS_FILE2));
+  const is_first_run = !pathExists(path13.join(project_root, SETTINGS_FILE));
   const rc = _main_project_install(opts, project_root, parsed_tools, is_first_run);
   if (rc === 0 && opts.interactive) {
     run_interactive_init(project_root, opts.force);
@@ -22514,8 +20425,8 @@ function _propose_modules_config(project_root, is_first_run) {
   }
   if (!candidates || candidates.length === 0) return;
   process3.stdout.write("\n");
-  info2("Module-root candidates detected \u2014 propose `modules:` block");
-  info2("Paste into .agent-project-settings.yml to enable module-aware skills (or skip; the block stays opt-in).");
+  info("Module-root candidates detected \u2014 propose `modules:` block");
+  info("Paste into .agent-project-settings.yml to enable module-aware skills (or skip; the block stays opt-in).");
   process3.stdout.write("\n");
   process3.stdout.write("  modules:\n");
   process3.stdout.write("    enabled: true\n");
@@ -22528,7 +20439,7 @@ function _propose_modules_config(project_root, is_first_run) {
   process3.stdout.write("    agent_folder: agents\n");
   process3.stdout.write("    skip_dirs: [.module-template, .example]\n");
   process3.stdout.write("\n");
-  info2(
+  info(
     "Re-run anytime via `./scripts-run src/scripts/propose_modules_config` (installed under <package>/src/scripts/)."
   );
 }
@@ -22560,16 +20471,16 @@ function _team_setup_hint_line(project_root) {
   return "  \u2022 Claude Code team mode (optional cross-model review via the official codex plugin): run `agent-config doctor --check team` for setup status.";
 }
 function finalize_claude_model_tiers(project_root) {
-  const claude_skills = path15.join(project_root, ".claude", "skills");
-  const augment_skills = path15.join(project_root, ".augment", "skills");
+  const claude_skills = path13.join(project_root, ".claude", "skills");
+  const augment_skills = path13.join(project_root, ".augment", "skills");
   if (!isDir(claude_skills) || !isDir(augment_skills)) return 0;
   if (_read_consumer_auto_switch(project_root) !== "auto") return 0;
   let rendered = 0;
-  const entries = fs16.readdirSync(claude_skills).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+  const entries = fs15.readdirSync(claude_skills).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   for (const name of entries) {
-    const entry = path15.join(claude_skills, name);
-    const src_dir = path15.join(augment_skills, name);
-    const src_md = path15.join(src_dir, "SKILL.md");
+    const entry = path13.join(claude_skills, name);
+    const src_dir = path13.join(augment_skills, name);
+    const src_md = path13.join(src_dir, "SKILL.md");
     let tier;
     try {
       tier = read_model_tier(src_md);
@@ -22578,29 +20489,29 @@ function finalize_claude_model_tiers(project_root) {
     }
     if (tier === null || !(tier in TIER_TO_CLAUDE_MODEL) || !isDir(src_dir)) continue;
     if (isSymlink(entry) || isFile(entry)) {
-      fs16.unlinkSync(entry);
+      fs15.unlinkSync(entry);
     } else if (isDir(entry)) {
-      fs16.rmSync(entry, { recursive: true, force: true });
+      fs15.rmSync(entry, { recursive: true, force: true });
     }
     mkdirp(entry);
-    const srcFiles = fs16.readdirSync(src_dir).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const srcFiles = fs15.readdirSync(src_dir).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
     for (const fname of srcFiles) {
       if (fname === "SKILL.md") {
         writeText(
-          path15.join(entry, "SKILL.md"),
+          path13.join(entry, "SKILL.md"),
           render_native_model_md(readText(src_md), tier)
         );
       } else {
-        fs16.symlinkSync(
-          path15.join("../../../.augment/skills", name, fname),
-          path15.join(entry, fname)
+        fs15.symlinkSync(
+          path13.join("../../../.augment/skills", name, fname),
+          path13.join(entry, fname)
         );
       }
     }
     rendered += 1;
   }
   if (rendered && !state.QUIET) {
-    info2(
+    info(
       `Applied native model: to ${rendered} model-tier skill(s) in .claude/skills/ (model.auto_switch=auto)`
     );
   }
@@ -22611,7 +20522,7 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
   let package_type;
   if (opts.package) {
     package_root = resolvePath(opts.package);
-    if (!pathExists(path15.join(package_root, "src", "config", "profiles", "minimal.ini"))) {
+    if (!pathExists(path13.join(package_root, "src", "config", "profiles", "minimal.ini"))) {
       fail(`Invalid --package path (missing src/config/profiles/minimal.ini): ${package_root}`);
     }
     package_type = detect_package_type_for_project(project_root, package_root);
@@ -22621,12 +20532,12 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
   }
   if (!state.QUIET) {
     process3.stdout.write("\n");
-    info2("Agent Config \u2014 Project Bridge Installer");
-    info2(`Project:  ${project_root}`);
-    info2(`Package:  ${package_root}`);
-    info2(`Type:     ${package_type}`);
-    info2(`Profile:  ${opts.profile}`);
-    if (opts.user_type) info2(`UserType: ${opts.user_type}`);
+    info("Agent Config \u2014 Project Bridge Installer");
+    info(`Project:  ${project_root}`);
+    info(`Package:  ${package_root}`);
+    info(`Type:     ${package_type}`);
+    info(`Profile:  ${opts.profile}`);
+    if (opts.user_type) info(`UserType: ${opts.user_type}`);
     process3.stdout.write("\n");
   }
   ensure_agent_settings(project_root, package_root, opts.profile, opts.force, opts.user_type, opts.packs ?? null);
@@ -22685,7 +20596,7 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
   if (!opts.skip_bridges && !opts.no_smoke) {
     if (!state.QUIET) {
       process3.stdout.write("\n");
-      info2("Smoke-testing installed hook bridges (dry-run)");
+      info("Smoke-testing installed hook bridges (dry-run)");
     }
     _smoke_test_hooks(project_root, package_root);
   }
@@ -22706,7 +20617,7 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
   }
   if (!state.QUIET) {
     process3.stdout.write("\n");
-    success2("Done.");
+    success("Done.");
     if (is_first_run) {
       process3.stdout.write("\n");
       process3.stdout.write("  Try these 3 prompts with your agent:\n");
@@ -22746,16 +20657,16 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
 function _resolvedArgv1() {
   if (process3.argv[1] === void 0) return void 0;
   try {
-    return fs16.realpathSync(path15.resolve(process3.argv[1]));
+    return fs15.realpathSync(path13.resolve(process3.argv[1]));
   } catch {
-    return path15.resolve(process3.argv[1]);
+    return path13.resolve(process3.argv[1]);
   }
 }
 var _argv1 = _resolvedArgv1();
-var _isCliEntry3 = _argv1 !== void 0 && import.meta.url === pathToFileURL3(_argv1).href;
-if (_isCliEntry3 || _argv1 === _HERE4) {
+var _isCliEntry2 = _argv1 !== void 0 && import.meta.url === pathToFileURL2(_argv1).href;
+if (_isCliEntry2 || _argv1 === _HERE2) {
   try {
-    process3.exitCode = main3(process3.argv.slice(2));
+    process3.exitCode = main2(process3.argv.slice(2));
   } catch (e) {
     if (e instanceof SystemExitError || e instanceof ArgparseExit2) {
       process3.exitCode = e.code;
@@ -22781,7 +20692,7 @@ export {
   KIRO_MARKER,
   PROJECT_BRIDGE_MARKERS,
   ROOCODE_MARKER,
-  SETTINGS_FILE2 as SETTINGS_FILE,
+  SETTINGS_FILE,
   SUPPORTED_PROFILES,
   SystemExitError,
   USER_SCOPE_PATHS,
@@ -22827,7 +20738,7 @@ export {
   _verify_deploy_targets,
   _wizard_should_launch,
   _write_settings_surface_snapshot,
-  _yaml_scalar2 as _yaml_scalar,
+  _yaml_scalar,
   deep_merge,
   detect_package_type,
   detect_package_type_for_project,
@@ -22839,7 +20750,7 @@ export {
   finalize_claude_model_tiers,
   jsonDumpsCompact,
   jsonDumpsIndent,
-  main3 as main,
+  main2 as main,
   parse_options,
   state
 };

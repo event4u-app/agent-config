@@ -6,7 +6,7 @@
  * Pipeline B (which is the `.augment/` projection). Earlier drafts called it
  * "Pipeline B" and collided with that name; use "the consumer install" here.
  *
- * The projection filter (`rule_in_scope`, condense.ts) covered only the
+ * The projection filter (`rule_in_scope`, now `shared/ruleInScope.ts`) covered only the
  * maintainer projection; the consumer install pipeline shipped rules
  * unfiltered (dead `EXCLUDE_RULES` in install.sh; no exclude at all on the
  * global payload). This module is the ONE scoping surface both install
@@ -32,7 +32,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { rule_in_scope } from '../scripts/condense.js';
+import { rule_in_scope } from './ruleInScope.js';
 
 /**
  * Rules excluded from EVERY consumer install path regardless of scope —
