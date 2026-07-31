@@ -37,6 +37,8 @@ import {
     set_package_version,
     set_marketplace_version,
     _previous_test_count_from_changelog,
+    _count_from_list_result,
+    _TEST_LIST_MAX_BUFFER,
     _detect_in_flight_target,
     Commit,
     SystemExitError,
@@ -239,6 +241,73 @@ describe('render_changelog_entry', () => {
             test_trend_line: null,
         });
         expect(body).not.toContain('Tests:');
+    });
+});
+
+// Regression cover for the 9.10.0 release failure: `_count_tests_current`
+// buffers `npx vitest list` through spawnSync, whose default maxBuffer is
+// 1 MiB. The listing crossed that (~1.25 MB at 9470 cases), the spawn failed
+// with ENOBUFS, the probe degraded to null, and the release notes shipped
+// without the `Tests:` footer — which the `changelog-entry` CI gate treats as
+// fatal. These pin the ceiling AND the now-loud degradation.
+describe('test-count probe buffering', () => {
+    it('counts a listing larger than the 1 MiB spawnSync default', () => {
+        // 40k lines × ~33 B ≈ 1.3 MB — comparable to the real listing (1.25 MB
+        // at 9470 cases, whose paths are longer) and past the 1 MiB default.
+        // With the pre-fix options this spawn fails ENOBUFS and the assertions
+        // below see an error plus a null count. The byte assertion is kept so
+        // the case cannot silently stop exercising the overflow.
+        const lines = 40_000;
+        const res = spawnSync(
+            process.execPath,
+            [
+                '-e',
+                `const o=[];for(let i=0;i<${lines};i++)o.push("tests/lib/x.test.ts > case "+i);` +
+                    'process.stdout.write(o.join("\\n")+"\\n");',
+            ],
+            {
+                encoding: 'utf-8',
+                stdio: ['ignore', 'pipe', 'pipe'],
+                maxBuffer: _TEST_LIST_MAX_BUFFER,
+            },
+        );
+        expect(res.error).toBeUndefined();
+        expect((res.stdout ?? '').length).toBeGreaterThan(1024 * 1024);
+        expect(_count_from_list_result(res)).toBe(lines);
+    });
+
+    it('ceiling clears the 1 MiB default that broke 9.10.0', () => {
+        expect(_TEST_LIST_MAX_BUFFER).toBeGreaterThan(1024 * 1024);
+    });
+
+    it('ENOBUFS degrades to null AND warns', () => {
+        const warnings: string[] = [];
+        const err = Object.assign(new Error('spawnSync ENOBUFS'), { code: 'ENOBUFS' });
+        const got = _count_from_list_result({ error: err, status: null, stdout: null }, (m) =>
+            warnings.push(m),
+        );
+        expect(got).toBeNull();
+        expect(warnings.join('')).toContain('ENOBUFS');
+    });
+
+    it('non-zero exit degrades to null AND warns', () => {
+        const warnings: string[] = [];
+        expect(
+            _count_from_list_result({ status: 1, stdout: 'partial\n' }, (m) => warnings.push(m)),
+        ).toBeNull();
+        expect(warnings.join('')).toContain('Tests:');
+    });
+
+    it('empty listing degrades to null AND warns', () => {
+        const warnings: string[] = [];
+        expect(
+            _count_from_list_result({ status: 0, stdout: '  \n\n' }, (m) => warnings.push(m)),
+        ).toBeNull();
+        expect(warnings.join('')).toContain('0 cases');
+    });
+
+    it('blank lines are not counted as cases', () => {
+        expect(_count_from_list_result({ status: 0, stdout: 'a\n\n  \nb\n' })).toBe(2);
     });
 });
 
@@ -518,21 +587,6 @@ describe('release --ci — flag parses, --dry-run short-circuits before any CI-s
         expect(r.stderr).toContain('--ci');
     });
 });
-
-/**
- * Normalise --dry-run preview output for cross-runtime comparison:
- *  - the `({today})` date in the changelog heading (a day rollover between the
- *    two spawns could differ);
- *  - 40-hex full SHAs and 7-hex short SHAs in commit-link bullets;
- *  These come from live git and are identical between back-to-back runs, but
- *  normalised defensively. Both runtimes read the same repo at the same instant.
- */
-function normalizeDryRun(s: string): string {
-    return s
-        .replace(/\(\d{4}-\d{2}-\d{2}\)/g, '(DATE)') // normalize: date heading / day-rollover
-        .replace(/[0-9a-f]{40}/g, 'SHA40') // normalize: full commit SHA
-        .replace(/[0-9a-f]{7}\b/g, 'SHA7'); // normalize: short SHA
-}
 
 // ─── era-split gate — newest-release exemption (regression) ───────────────────
 // A PATCH release must never hard-die just because the era's newest section
