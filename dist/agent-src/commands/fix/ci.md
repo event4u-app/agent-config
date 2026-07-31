@@ -20,12 +20,41 @@ packs:
 # /fix ci
 ## Instructions
 
+### 0. Wait for the run to settle first
+
+A run still in progress has no verdict to fix. Do NOT read a partial run and
+start guessing — and do NOT end the turn reporting "CI is running".
+
+```bash
+until [ "$(gh pr checks <n> --json state \
+    --jq '[.[] | select(.state=="IN_PROGRESS" or .state=="QUEUED" or .state=="PENDING")] | length')" = "0" ]
+do sleep 45; done
+```
+
+Run that in the BACKGROUND so the turn resumes when the verdict lands; a
+foreground sleep-poll chain is blocked and per-minute re-polling is the tool
+loop `token-efficiency` forbids. If the waiter exits because `gh` itself failed
+(network down), it has observed nothing — say so rather than treating it as a
+pass.
+
+Note `gh run view --log-failed` returns *"run is still in progress; logs will be
+available when it is complete"* until the WHOLE run finishes, which is the other
+reason to settle first.
+
 ### 1. Identify the failing CI run
 
 - Get the current branch name from `git branch --show-current`.
 - Fetch the latest CI run for this branch via GitHub API:
   - `GET /repos/{owner}/{repo}/actions/runs?branch={branch}&per_page=5`
 - Find the most recent failed run.
+- **Before fixing, establish whose failure it is.** Re-run the same gate against
+  `origin/main`, and check whether any of your changed files appear in its
+  inputs (`git diff origin/main --stat -- <path>`). A pre-existing trunk failure
+  is reported, not adopted — and not ignored.
+- **A local repro can differ from CI.** A developer checkout carries settings and
+  generated trees a clean runner never has, so a gate can fail locally for an
+  unrelated reason (or pass locally while CI fails). When they disagree, CI is
+  authoritative; name the difference instead of assuming one cause.
 
 ### 2. Get the failure details
 

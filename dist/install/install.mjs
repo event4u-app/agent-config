@@ -18914,6 +18914,16 @@ function _inject_package_tag(target, source, package_root) {
     writeText(target, new_text);
   }
 }
+function _escapes_package_root(resolved, package_root) {
+  if (package_root === null) return false;
+  let root;
+  try {
+    root = fs16.realpathSync(package_root);
+  } catch {
+    return false;
+  }
+  return !is_ancestor(root, resolved);
+}
 function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null, file_filter = null) {
   let written = 0;
   let skipped = 0;
@@ -18921,6 +18931,16 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
   if (!pathExists(src)) return [0, 0, written_paths];
   if (!isDir(src)) {
     if (file_filter !== null && !file_filter(src)) return [0, 0, written_paths];
+    let resolved_src = src;
+    try {
+      resolved_src = fs16.realpathSync(src);
+    } catch {
+      resolved_src = src;
+    }
+    if (_escapes_package_root(resolved_src, package_root)) {
+      warn(`refused: ${src} dereferences outside the package root \u2014 not copied`);
+      return [0, 0, written_paths];
+    }
     mkdirp(path14.dirname(dest));
     const decision = _resolve_file_conflict(dest, force);
     if (decision === "skip") return [0, 1, written_paths];
@@ -18958,6 +18978,10 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
       resolvedIsDir = fs16.statSync(entry).isDirectory();
     } catch {
       resolvedIsDir = false;
+    }
+    if (_escapes_package_root(resolved, package_root)) {
+      warn(`refused: ${entry} dereferences outside the package root \u2014 not copied`);
+      continue;
     }
     if (resolvedIsDir) {
       mkdirp(target);
@@ -19361,11 +19385,15 @@ function _compute_active_pack_ids(packs, runtime_active_packs) {
   return active;
 }
 function _resolve_global_settings_doc() {
+  const p = _resolve_global_settings_path();
+  return p === null ? null : _load_yaml_doc(p);
+}
+function _resolve_global_settings_path() {
   const root = event4u_root();
   const canonical = path14.join(root, "settings", SETTINGS_FILE);
-  if (pathExists(canonical)) return _load_yaml_doc(canonical);
+  if (pathExists(canonical)) return canonical;
   const legacy = path14.join(root, SETTINGS_FILE);
-  if (pathExists(legacy)) return _load_yaml_doc(legacy);
+  if (pathExists(legacy)) return legacy;
   return null;
 }
 function _resolve_scoped_projection(package_root) {
@@ -19378,10 +19406,36 @@ function _resolve_scoped_projection(package_root) {
   return { mode, active_packs };
 }
 function _resolve_global_rule_scope(package_root) {
+  const settings_path = _resolve_global_settings_path();
+  if (settings_path === null) {
+    try {
+      return ruleScopeFromSettings(_load_default_settings(package_root));
+    } catch {
+      return LEGACY_ALL;
+    }
+  }
+  let text;
   try {
-    const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
-    return ruleScopeFromSettings(doc);
-  } catch {
+    text = readText(settings_path);
+  } catch (e) {
+    warn(
+      `could not read ${settings_path} (${String(e)}) \u2014 rule scoping falls back to legacy-all, so ALL rules including maintainer-only ones will be installed. Fix the file to restore scoping.`
+    );
+    return LEGACY_ALL;
+  }
+  const parsed = yamlSafeLoad(text);
+  if (!_isPlainObject2(parsed)) {
+    warn(
+      `${settings_path} is not a YAML mapping \u2014 rule scoping falls back to legacy-all, so ALL rules including maintainer-only ones will be installed. Fix the file to restore scoping.`
+    );
+    return LEGACY_ALL;
+  }
+  try {
+    return ruleScopeFromSettings(parsed);
+  } catch (e) {
+    warn(
+      `could not derive rule scope from ${settings_path} (${String(e)}) \u2014 falling back to legacy-all; ALL rules will be installed.`
+    );
     return LEGACY_ALL;
   }
 }
@@ -20737,6 +20791,7 @@ export {
   _bridge_marker,
   _canonical_settings_target,
   _compute_active_pack_ids,
+  _copy_dir_dereferencing_symlinks,
   _current_settings_surface,
   _deploy_global_content,
   _detect_legacy_for_migration,
