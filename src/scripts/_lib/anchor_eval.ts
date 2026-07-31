@@ -64,12 +64,18 @@ export function eval_prompt(
     must_not.forEach((a, i) => lines.push(`N${i}. MUST BE ABSENT: ${a}`));
     lines.push(
         '',
-        '## Output',
+        '## Output format — structured, one object per checklist item',
         '',
-        'Reply with ONE line per item and nothing else, in this exact form:',
-        '  I0=yes   (the answer satisfies it)  |  I0=no   (it does not)',
-        '  N0=yes   (the answer DOES the forbidden thing)  |  N0=no  (it does not)',
-        'No prose, no explanation, no blank lines.',
+        'Output a JSON array and NOTHING else. Exactly one object per checklist',
+        'item, in the order listed, using the item id as `anchor_id`:',
+        '',
+        '  [{"anchor_id":"I0","verdict":"yes"},{"anchor_id":"N0","verdict":"no"}]',
+        '',
+        '`verdict` is "yes" or "no".',
+        '  For I items: "yes" = the answer satisfies it.',
+        '  For N items: "yes" = the answer DOES the forbidden thing.',
+        '',
+        `Every one of the ${must_include.length + must_not.length} items must appear. No prose, no markdown fence.`,
     );
     return lines.join('\n');
 }
@@ -83,19 +89,56 @@ export function parse_eval(
     reply: string,
     must_include_len: number,
     must_not_len: number,
-): { include: Array<boolean | null>; not: Array<boolean | null> } {
+): { include: Array<boolean | null>; not: Array<boolean | null>; complete: boolean } {
     const include: Array<boolean | null> = new Array(must_include_len).fill(null);
     const not: Array<boolean | null> = new Array(must_not_len).fill(null);
-    const re = /\b([IN])(\d+)\s*=\s*(yes|no)\b/gi;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(reply)) !== null) {
-        const idx = Number(m[2]);
-        const val = m[3]!.toLowerCase() === 'yes';
-        if (m[1]!.toUpperCase() === 'I') {
+
+    const put = (tag: string, idx: number, val: boolean): void => {
+        if (tag === 'I') {
             if (idx < include.length) include[idx] = val;
         } else if (idx < not.length) not[idx] = val;
+    };
+
+    // Primary: structured objects. Tolerates a surrounding array, a fence, or
+    // one object per line — the shape matters, the packaging does not.
+    const obj = /\{\s*"anchor_id"\s*:\s*"([IN])(\d+)"\s*,\s*"verdict"\s*:\s*"(yes|no)"\s*\}/gi;
+    let m: RegExpExecArray | null;
+    let structured = 0;
+    while ((m = obj.exec(reply)) !== null) {
+        put(m[1]!.toUpperCase(), Number(m[2]), m[3]!.toLowerCase() === 'yes');
+        structured += 1;
     }
-    return { include, not };
+
+    // Fallback: the flat `I0=yes` form, so a model that ignores the JSON
+    // instruction is still read rather than silently scored as unfavourable.
+    if (structured === 0) {
+        const flat = /\b([IN])(\d+)\s*=\s*(yes|no)\b/gi;
+        while ((m = flat.exec(reply)) !== null) {
+            put(m[1]!.toUpperCase(), Number(m[2]), m[3]!.toLowerCase() === 'yes');
+        }
+    }
+
+    const complete = include.every((v) => v !== null) && not.every((v) => v !== null);
+    return { include, not, complete };
+}
+
+/**
+ * One evaluator call, with exactly one retry when the reply is incomplete or
+ * unparseable (attempt-2 mechanical change). A persistent failure is NOT retried
+ * further and NOT excluded — its `null`s flow into `resolve`, which reads them
+ * as the unfavourable verdict. A model that cannot answer must not be able to
+ * make a corpus look cleaner by staying silent.
+ */
+export function eval_with_retry(
+    ask: (user: string) => string,
+    prompt: string,
+    must_include_len: number,
+    must_not_len: number,
+): { include: Array<boolean | null>; not: Array<boolean | null>; complete: boolean; retried: boolean } {
+    const first = parse_eval(ask(prompt), must_include_len, must_not_len);
+    if (first.complete) return { ...first, retried: false };
+    const second = parse_eval(ask(prompt), must_include_len, must_not_len);
+    return { ...second, retried: true };
 }
 
 /**

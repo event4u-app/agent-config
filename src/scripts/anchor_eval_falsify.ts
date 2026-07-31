@@ -21,7 +21,7 @@ import { createRequire } from 'node:module';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { eval_prompt, parse_eval } from './_lib/anchor_eval.js';
+import { eval_prompt, eval_with_retry } from './_lib/anchor_eval.js';
 
 export interface Fixture {
     name: string;
@@ -117,10 +117,12 @@ export function make_evaluators(): Evaluator[] {
         load_anthropic_key: () => string;
         load_openai_key: () => string;
     };
-    // gpt-4o failed the fixtures (15/18: one misclassification, two items it never
-    // emitted a verdict line for). ADR-202's run contract allows ONE replacement;
-    // only Anthropic and OpenAI credentials resolve here, so the swap keeps
-    // provider independence by moving to a stronger OpenAI model.
+    // Attempt 2. gpt-4o failed attempt 1 (15/18). gpt-5 returned empty then, which
+    // was NOT the model's fault: `_is_reasoning_model` listed only o1/o3/o4, so
+    // gpt-5 was sent `max_tokens` plus a system role instead of
+    // `max_completion_tokens` with a merged user turn. Fixed in clients.ts; gpt-5
+    // answers normally now, so the second evaluator stays on a different provider
+    // and the Anthropic-pair fallback is not needed.
     const openai_model = process.env['ANCHOR_EVAL_OPENAI_MODEL'] ?? 'gpt-5';
     const anth = new c.AnthropicClient({ model: 'claude-sonnet-4-5', api_key: c.load_anthropic_key() });
     const oai = new c.OpenAIClient({ model: openai_model, api_key: c.load_openai_key() });
@@ -144,8 +146,8 @@ export function run_fixtures(evaluators: readonly Evaluator[]): FixtureResult[] 
         let total = 0;
         const misses: string[] = [];
         for (const f of FIXTURES) {
-            const reply = ev.ask(SYSTEM, eval_prompt(f.prompt, f.answer, f.must_include, f.must_not));
-            const got = parse_eval(reply, f.must_include.length, f.must_not.length);
+            const p = eval_prompt(f.prompt, f.answer, f.must_include, f.must_not);
+            const got = eval_with_retry((u) => ev.ask(SYSTEM, u), p, f.must_include.length, f.must_not.length);
             got.include.forEach((v, i) => {
                 total += 1;
                 if (v === f.expect_include[i]) correct += 1;

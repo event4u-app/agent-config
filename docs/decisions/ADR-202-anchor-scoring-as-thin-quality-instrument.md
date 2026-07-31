@@ -24,10 +24,11 @@ review_trigger: >-
 
 ## Status
 
-**Accepted, then CLOSED BY MEASUREMENT on 2026-07-31.** The instrument this ADR
-selected was built, falsified against its own fixtures, and **failed**. No corpus
-run took place. See § Addendum. The record is kept accepted because the reasoning
-that closed paired judging still stands; what closed is the replacement.
+**CLOSED 2026-07-31 — instrument not achievable with available evaluators.**
+Two attempts. Attempt 1 failed the fixture gate; attempt 2 cleared it and ran
+the corpus, where inter-evaluator κ came in at **0.472** against a registered
+floor of 0.800. No third attempt is licensed. The reasoning that closed paired
+judging still stands — what is closed now is the replacement.
 
 Original framing: this record fixes *how* thin-vs-eager quality will be measured
 if it is measured again. It does not re-open Phase H1, does not license a flip,
@@ -269,7 +270,7 @@ in the same PR, and must be green before any live run:
 - ADR-201 — the sibling measurement-gated removal decided in the same programme.
 
 
-## Addendum 2026-07-31 — the instrument is a null
+## Addendum 2026-07-31 — attempt 1: the instrument is a null
 
 ### Renamed: "constrained anchor evaluation with frozen verdicts"
 
@@ -313,7 +314,7 @@ plainly does the opposite, over three rule surfaces.
 Only Anthropic and OpenAI credentials resolve in this environment, so the one
 permitted replacement had nowhere else to go.
 
-### Verdict: honest null on the instrument
+### Attempt 1 verdict: honest null on the instrument
 
 κ = 0.700 < 0.800 → **the instrument failed**, per the registered rule. Two
 things make this a stronger null than the bare number suggests:
@@ -335,3 +336,124 @@ The token-savings thesis is untouched — only this second instrument died. The
 registered thresholds (zero tolerance on `must_not`, δ ≤ 3 pp, per-rule floor)
 were never exercised and remain available to any future instrument. Nothing here
 re-opens Phase H1, and nothing here licenses a flip.
+
+
+## Addendum 2026-07-31 · attempt 2 — mechanical changes only
+
+Thresholds are **unchanged**: κ ≥ 0.800, zero tolerance on `must_not`, δ ≤ 3 pp
+derived from the observed spread, per-rule floor. Only the mechanics moved.
+
+### (1) Verdict format is now structured, with one retry
+
+The evaluator is asked for one JSON object per checklist item
+(`{"anchor_id":"I0","verdict":"yes"}`); the parser validates **completeness** and
+retries the same call exactly once when an item is missing or unparseable. A
+persistent failure is not retried further and **not excluded** — its `null`s flow
+into the conservative resolution, so a model that cannot answer can never make a
+corpus look cleaner by staying silent. The legacy flat form is still parsed, so
+an off-format reply is read rather than discarded.
+
+### (2) The second evaluator: gpt-5 was never the problem
+
+Attempt 1 recorded gpt-5 as "unusable — empty responses". That diagnosis was
+incomplete, and the correction matters more than the fix: `_is_reasoning_model`
+in `ai_council/clients.ts` listed only `o1`/`o3`/`o4`, so **gpt-5 was sent
+`max_tokens` and a `system` role** instead of `max_completion_tokens` with a
+merged user turn. The API accepted the call and returned no content. It was a
+one-line gap in our own client, not a model incapability — and attempt 1 blamed
+the model for it.
+
+Fixed by adding `gpt-5` to the prefix list. gpt-5 now answers normally, so the
+second evaluator stays on a **different provider** and the permitted
+Anthropic-pair fallback (which would have cost real independence) was not needed.
+
+### (3) Fixture gate — passed
+
+| | attempt 1 | attempt 2 |
+|---|---|---|
+| `anthropic/claude-sonnet-4-5` | 18/18 | **18/18** |
+| second evaluator | gpt-4o 15/18 · gpt-5 unusable | **gpt-5 18/18** |
+| retries needed | n/a | **0** |
+| inter-evaluator κ (fixtures) | **0.700** | **1.000** |
+
+κ = 1.000 on the fixtures is a **ceiling artefact, not a quality claim**: 18
+deliberately unambiguous items on which both evaluators are perfect can only
+agree. It clears the gate to proceed; the κ that carries the instrument verdict
+is the one measured over the frozen corpus, reported below.
+
+### (4) Self-limited run — $15 cap
+
+The full corpus was priced at **~$39** (110 tasks × [86,123 eager + 15,463 thin]
+input tokens at $3/M, plus output and 440 evaluator calls), against a $15
+authorisation. Per the run contract the run was **self-limited to `--limit 30`**
+— the first 30 tasks of the corpus — for an estimated ~$11.50, leaving headroom
+because gpt-5 carries reasoning tokens that the repo price table does not cover.
+
+The trimming is a coverage cost and is recorded as such: 30 of 110 tasks, so the
+per-rule floor is evaluated only over the rules those tasks tag.
+
+
+### (5) Corpus run — the instrument fails
+
+30 tasks × 2 arms generated once and frozen; 130 anchor verdicts per evaluator.
+
+| | |
+|---|---|
+| **Inter-evaluator Cohen's κ (frozen corpus)** | **0.472** |
+| Registered floor | **0.800** |
+| Disagreements | **34 / 130 = 26.2 %** |
+| Retries needed | **0** |
+
+**κ = 0.472 → the instrument fails. This is the final honest null.**
+
+Three properties of the failure, because the number alone would mislead:
+
+1. **Zero retries.** The attempt-2 format work did exactly what it was for — no
+   reply was malformed or incomplete. The failure is **semantic, not
+   mechanical**, so no further format engineering addresses it.
+2. **Systematically shaped, not noisy.** 19 of 34 disagreements are the same
+   shape: on a `must_not` anchor, Sonnet says *violated* and gpt-5 says *not
+   violated*. The two models read the forbidding anchors differently — a
+   disagreement about what the anchor MEANS, which is the one thing a second
+   evaluator was supposed to make measurable and is exactly what it measured.
+3. **Symmetric across arms** — 17 thin, 17 eager. The unreliability does not
+   favour a projection, which is what makes it an instrument defect rather than
+   a signal.
+
+**The fixture κ of 1.000 versus the corpus κ of 0.472 is the finding.** It
+confirms empirically that the fixture gate is necessary but nowhere near
+sufficient, and it is why the registration put the deciding κ on the frozen
+corpus. An instrument validated only on unambiguous cases would have been
+declared sound and then used to decide a question it cannot resolve.
+
+### What the run does NOT say about thin
+
+The corpus scored thin at 38.2 % vs eager 61.8 % on `must_include`, with
+`must_not` violations 14 thin / 12 eager and four per-rule floor breaches
+(`architecture`, `downstream-changes`, `reviewer-awareness`, `scope-control`).
+
+**None of that is a finding about the thin projection.** The κ gate fails first
+and by design: verdicts an unreliable instrument produced cannot be read as
+evidence about the thing measured. Recording the numbers here is provenance, not
+result — quoting them as a thin verdict would be the exact error the κ floor
+exists to prevent.
+
+### Cost
+
+Roughly **$10.50–11.50** against the $15 authorisation: ~$9.50 answer generation
+(30 × [86,123 eager + 15,463 thin] input tokens), ~$0.40 for the Anthropic
+evaluator half, and an unpriced gpt-5 half (reasoning tokens are not in the repo
+price table) estimated under $1.50, plus ~$0.20 of fixture runs. No exact billing
+readout is available, so this is an estimate.
+
+## Closure
+
+**The instrument is not achievable with the available evaluators.** Two
+evaluator models were required to restore a measurable κ — the property whose
+absence made a single human judge inadmissible. With the only two credentialed
+providers in this environment, that κ is 0.472. The instrument therefore cannot
+license a thin decision, and this ADR closes.
+
+Untouched by this closure: the token-savings thesis, the registered thresholds
+(never exercised on admissible data), and Phase H1's cancellation. Nothing here
+licenses a flip.
