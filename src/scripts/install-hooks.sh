@@ -51,6 +51,27 @@ else
     fi
 fi
 
+# road-to-local-ci-trust Phase 2: the CI-only repo-content gates, as one task.
+# Deliberately placed AFTER the consistency block above — `task consistency`
+# runs `task sync`, which generates the `.augment/` projection. Several
+# preflight gates read that tree, so on a FRESH worktree (this repo's standard
+# workflow) running preflight first would fail with "produced by regeneration
+# but absent before" — red for a reason the contributor did not cause, which is
+# exactly the anti-pattern this gate set exists to avoid. Measured 15s against
+# the 25s `pre_push_budget_seconds` ceiling in src/config/ci-local-parity.yml.
+# `check_enforcement_coverage` (30.7s) stays out of preflight by design.
+echo "🔍 Preflight — the CI-only repo-content gates..."
+if [ "${AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT:-}" = "1" ]; then
+    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT=1"
+elif ! command -v task >/dev/null 2>&1; then
+    echo "⚠️  'task' not found — skipping preflight for this push."
+elif ! task preflight; then
+    echo "❌  Preflight failed. These gates run in CI too, so pushing now buys a"
+    echo "    red run and a fixup re-push. Fix the failures above, or"
+    echo "    AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT=1 for a genuine WIP push."
+    exit 1
+fi
+
 echo "🔍 Checking for leftover conflict markers / unmerged paths..."
 if ! ./scripts-run src/scripts/check_no_conflict_markers --quiet; then
     echo "❌  Conflict markers or unmerged paths present. Resolve them (e.g. 'git checkout HEAD -- <file>' or finish the merge), then re-push."

@@ -82,6 +82,13 @@ import * as user_global_paths from './_lib/user_global_paths.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
+import {
+    LEGACY_ALL,
+    ruleFileArrives,
+    ruleScopeFromSettings,
+    type RuleScope,
+} from '../install/rule_scope.js';
+import { RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -2730,17 +2737,71 @@ function _inject_package_tag(
     }
 }
 
+/**
+ * Would dereferencing `entry` escape the package root?
+ *
+ * `_copy_dir_dereferencing_symlinks` copies the REALPATH of every entry, so a
+ * symlink in the shipped tree pointing outside the package would copy an
+ * arbitrary readable file into the deploy destination — and those destinations
+ * are agent-readable instruction dirs (`~/.claude/rules/`, `~/.codeium/…`). A
+ * tampered tarball carrying `rules/x.md -> ~/.ssh/id_rsa` would land that file
+ * where an agent reads rules.
+ *
+ * Defence-in-depth for `docs/threat-model.md` row b (supply-chain compromise):
+ * the package is the install-time trust anchor, so this is not the primary
+ * control — but the check is one comparison and `package_root` was already
+ * threaded through, so there is no reason to ship without it.
+ *
+ * Both sides are realpath'd before comparing, so a macOS `/var` → `/private/var`
+ * root does not read as an escape. A `null` package_root means the caller did
+ * not scope the copy (several do) — unchanged, permissive behaviour there.
+ */
+function _escapes_package_root(resolved: string, package_root: string | null): boolean {
+    if (package_root === null) return false;
+    let root: string;
+    try {
+        root = fs.realpathSync(package_root);
+    } catch {
+        // Unresolvable root — cannot judge containment, so do not block the copy.
+        return false;
+    }
+    return !global_deploy_inventory.is_ancestor(root, resolved);
+}
+
+/**
+ * Copy `src` → `dest`, dereferencing symlinks, returning
+ * `[written, skipped, written_paths]`.
+ *
+ * `file_filter` is an optional predicate over the SOURCE path; `false` means the
+ * file is not part of this install and is neither copied nor counted. It MUST be
+ * the same predicate handed to `global_deploy_inventory.expected_deploy_files`
+ * for the same source — that function computes what the reaper considers
+ * "should exist", so filtering one side only either leaves excluded files behind
+ * forever or deletes files the copy just wrote.
+ */
 function _copy_dir_dereferencing_symlinks(
     src: string,
     dest: string,
     force: boolean,
     package_root: string | null = null,
+    file_filter: global_deploy_inventory.FileFilter | null = null,
 ): [number, number, string[]] {
     let written = 0;
     let skipped = 0;
     const written_paths: string[] = [];
     if (!pathExists(src)) return [0, 0, written_paths];
     if (!isDir(src)) {
+        if (file_filter !== null && !file_filter(src)) return [0, 0, written_paths];
+        let resolved_src = src;
+        try {
+            resolved_src = fs.realpathSync(src);
+        } catch {
+            resolved_src = src;
+        }
+        if (_escapes_package_root(resolved_src, package_root)) {
+            warn(`refused: ${src} dereferences outside the package root — not copied`);
+            return [0, 0, written_paths];
+        }
         mkdirp(path.dirname(dest));
         const decision = _resolve_file_conflict(dest, force);
         if (decision === 'skip') return [0, 1, written_paths];
@@ -2784,6 +2845,13 @@ function _copy_dir_dereferencing_symlinks(
         } catch {
             resolvedIsDir = false;
         }
+        // Containment is checked on the RESOLVED path, before either the
+        // recursion or the copy — a symlinked directory escaping the root would
+        // otherwise pull its whole subtree in.
+        if (_escapes_package_root(resolved, package_root)) {
+            warn(`refused: ${entry} dereferences outside the package root — not copied`);
+            continue;
+        }
         if (resolvedIsDir) {
             mkdirp(target);
             const [sub_w, sub_s, sub_p] = _copy_dir_dereferencing_symlinks(
@@ -2791,10 +2859,18 @@ function _copy_dir_dereferencing_symlinks(
                 target,
                 force,
                 package_root,
+                file_filter,
             );
             written += sub_w;
             skipped += sub_s;
             written_paths.push(...sub_p);
+            continue;
+        }
+        // The predicate sees the SOURCE path (the rule-scope predicate reads the
+        // file's own frontmatter tags). Skipped files are counted as neither
+        // written nor skipped-as-identical: they are not part of this install,
+        // so the inventory twin must omit them too or the reaper drifts.
+        if (file_filter !== null && !file_filter(entry)) {
             continue;
         }
         const decision = _resolve_file_conflict(target, force);
@@ -2949,6 +3025,10 @@ function _deploy_global_content(
     lockfile_path: string,
 ): Record<string, DeployResult> {
     const results: Record<string, DeployResult> = {};
+    // Resolved ONCE per deploy, not per tool: every tool installs the same rule
+    // tree, and re-reading settings per tool could yield different answers
+    // mid-run if the file changed underneath.
+    const rule_scope = _resolve_global_rule_scope(package_root);
     for (const tool_id of [...tools].sort()) {
         if (tool_id === 'claude-desktop') {
             results[tool_id] = _deploy_claude_desktop(force, package_root, lockfile_path);
@@ -2975,13 +3055,30 @@ function _deploy_global_content(
         for (const [src_rel, dest_sub] of plan) {
             const src = path.join(package_root, src_rel);
             const dest = dest_sub ? path.join(anchor, dest_sub) : anchor;
-            const [w, s, paths] = _copy_dir_dereferencing_symlinks(src, dest, force, package_root);
+            // ONE filter instance, handed to BOTH the copy and the inventory.
+            // `expected_deploy_files` is what the reaper treats as "should
+            // exist": filtering only the copy would leave previously-installed
+            // maintainer rules on disk forever, and filtering only the
+            // inventory would delete rules the copy just wrote. Both, or
+            // neither — never one.
+            const rule_filter = _rule_filter_for_source(src_rel, rule_scope);
+            const [w, s, paths] = _copy_dir_dereferencing_symlinks(
+                src,
+                dest,
+                force,
+                package_root,
+                rule_filter,
+            );
             written_total += w;
             skipped_total += s;
             written_paths.push(...paths);
             current_files = setUnion(
                 current_files,
-                global_deploy_inventory.expected_deploy_files(src, dest_sub ? dest_sub : ''),
+                global_deploy_inventory.expected_deploy_files(
+                    src,
+                    dest_sub ? dest_sub : '',
+                    rule_filter,
+                ),
             );
         }
         // Flat-command → skill-wrapper re-projection for Claude Code
@@ -3091,6 +3188,9 @@ function _preview_global_reap(
 ): Record<string, string[]> {
     const inventory = global_deploy_inventory.load_inventory();
     const preview: Record<string, string[]> = {};
+    // The preview must compute the SAME expected set the real deploy will, or
+    // `--dry-run` under-reports the rules a scoped upgrade is about to reap.
+    const rule_scope = _resolve_global_rule_scope(package_root);
     for (const tool_id of [...tools].sort()) {
         const plan = GLOBAL_DEPLOY_SOURCES[tool_id];
         if (plan === undefined) continue;
@@ -3102,7 +3202,11 @@ function _preview_global_reap(
             const src = path.join(package_root, src_rel);
             current_files = setUnion(
                 current_files,
-                global_deploy_inventory.expected_deploy_files(src, dest_sub ? dest_sub : ''),
+                global_deploy_inventory.expected_deploy_files(
+                    src,
+                    dest_sub ? dest_sub : '',
+                    _rule_filter_for_source(src_rel, rule_scope),
+                ),
             );
         }
         let would_reap: string[] = [];
@@ -3334,11 +3438,25 @@ function _compute_active_pack_ids(
  * artefact of any kind.
  */
 function _resolve_global_settings_doc(): Record<string, unknown> | null {
+    const p = _resolve_global_settings_path();
+    return p === null ? null : _load_yaml_doc(p);
+}
+
+/**
+ * The path `_resolve_global_settings_doc` would read, or `null` when no global
+ * settings artefact exists at all.
+ *
+ * Split out because "absent" and "present but unparseable" are different facts
+ * and one caller must tell them apart: `_load_yaml_doc` maps BOTH to `{}`, which
+ * silently turns a YAML typo into legacy-all rule scoping — defeating a scoping
+ * decision the user made, with no signal. See `_resolve_global_rule_scope`.
+ */
+function _resolve_global_settings_path(): string | null {
     const root = user_global_paths.event4u_root();
     const canonical = path.join(root, 'settings', SETTINGS_FILE);
-    if (pathExists(canonical)) return _load_yaml_doc(canonical);
+    if (pathExists(canonical)) return canonical;
     const legacy = path.join(root, SETTINGS_FILE);
-    if (pathExists(legacy)) return _load_yaml_doc(legacy);
+    if (pathExists(legacy)) return legacy;
     return null;
 }
 
@@ -3367,6 +3485,84 @@ function _resolve_scoped_projection(
         ? active_packs_raw.filter((v): v is string => typeof v === 'string')
         : [];
     return { mode, active_packs };
+}
+
+/**
+ * Resolve the rule scope governing THIS global deploy — the same way the wizard
+ * does (`src/server/routes/install.ts::_resolveRuleScope`), so the two global
+ * paths cannot ship different rule sets for the same settings.
+ *
+ * Settings resolution mirrors `_resolve_scoped_projection` above: an existing
+ * global settings doc is authoritative, and only a genuinely fresh machine falls
+ * through to the packaged template. Any read or parse failure resolves to
+ * `LEGACY_ALL` — over-shipping is the safe direction, and the compat exclusion
+ * (`source-of-truth.md`) still applies even then.
+ */
+function _resolve_global_rule_scope(package_root: string): RuleScope {
+    const settings_path = _resolve_global_settings_path();
+
+    // No global settings artefact at all — a genuinely fresh machine. Fall
+    // through to the packaged template silently: there is no user decision to
+    // contradict, and this is the documented upgrade-compat path.
+    if (settings_path === null) {
+        try {
+            return ruleScopeFromSettings(_load_default_settings(package_root));
+        } catch {
+            return LEGACY_ALL;
+        }
+    }
+
+    // A doc EXISTS, so the user has expressed a configuration. Failing to read
+    // it is not the same as not having one: falling back to legacy-all here
+    // ships the maintainer-only rules the user may have deliberately scoped out,
+    // and `_load_yaml_doc` would report that as an indistinguishable `{}`. So
+    // parse it explicitly and be LOUD when it does not parse — over-shipping
+    // stays the safe direction, but it must not be a silent one.
+    let text: string;
+    try {
+        text = readText(settings_path);
+    } catch (e) {
+        warn(
+            `could not read ${settings_path} (${String(e)}) — rule scoping falls back ` +
+                'to legacy-all, so ALL rules including maintainer-only ones will be ' +
+                'installed. Fix the file to restore scoping.',
+        );
+        return LEGACY_ALL;
+    }
+    const parsed = yamlSafeLoad(text);
+    if (!_isPlainObject(parsed)) {
+        warn(
+            `${settings_path} is not a YAML mapping — rule scoping falls back to ` +
+                'legacy-all, so ALL rules including maintainer-only ones will be ' +
+                'installed. Fix the file to restore scoping.',
+        );
+        return LEGACY_ALL;
+    }
+    try {
+        return ruleScopeFromSettings(parsed as Record<string, unknown>);
+    } catch (e) {
+        warn(
+            `could not derive rule scope from ${settings_path} (${String(e)}) — ` +
+                'falling back to legacy-all; ALL rules will be installed.',
+        );
+        return LEGACY_ALL;
+    }
+}
+
+/**
+ * The rule-scope filter for one `GLOBAL_DEPLOY_SOURCES` row, or `null` when the
+ * row is not the rules tree.
+ *
+ * Keyed on `src_rel === RULE_SOURCE_REL` exactly as `expandWizardSources` keys
+ * it — the two must agree on WHICH source gets filtered, not only on the
+ * predicate.
+ */
+function _rule_filter_for_source(
+    src_rel: string,
+    scope: RuleScope,
+): global_deploy_inventory.FileFilter | null {
+    if (src_rel !== RULE_SOURCE_REL) return null;
+    return (srcFile: string): boolean => ruleFileArrives(srcFile, scope);
 }
 
 /**
@@ -5035,5 +5231,14 @@ export {
     _compute_active_pack_ids,
     _resolve_global_settings_doc,
     _resolve_scoped_projection,
+    // road-to-consistent-rule-scoping Phase 2: the CLI global deploy path had
+    // no direct test — the existing rule-scoping suite covers the PLAN path
+    // (`expandWizardSources`) only, which is why the two diverged unnoticed.
+    _deploy_global_content,
+    // road-to-local-ci-trust: exported for the symlink-confinement tests
+    // (PR #1076 review-gate finding).
+    _copy_dir_dereferencing_symlinks,
+    _preview_global_reap,
+    _resolve_global_rule_scope,
 };
 export type { Options, PackRecord, DeployResult };

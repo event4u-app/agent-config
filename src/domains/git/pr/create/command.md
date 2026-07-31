@@ -318,6 +318,66 @@ This is the [`direct-answers` Iron Law 2](../rules/direct-answers.md)
 live-state clause applied to the PR surface: git/PR/CI state decays
 silently and is NEVER reported from memory or inference.
 
+#### 4d. Settle CI before the turn ends (MANDATORY)
+
+```
+A PUSH TO AN OPEN PR IS NOT DONE UNTIL CI IS SETTLED.
+NEVER END THE TURN ON "CI IS RUNNING" — WAIT FOR THE VERDICT.
+RED → DIAGNOSE AND FIX IN THE WORKING TREE. NEVER LEAVE A KNOWN FAILURE UNREAD.
+```
+
+§4c makes the REPORT honest. This makes the turn honest: a truthful
+"checks are pending" is still an unfinished job, and reporting it as the
+closing line hands the user a PR whose outcome nobody has looked at.
+Pending is a reason to wait, never a reason to stop.
+
+**Settled** means every check has reached a terminal state:
+
+```bash
+until [ "$(gh pr checks <n> --json state \
+    --jq '[.[] | select(.state=="IN_PROGRESS" or .state=="QUEUED" or .state=="PENDING")] | length')" = "0" ]
+do sleep 45; done
+gh pr checks <n> --json name,state,link \
+  --jq '.[] | select(.state!="SUCCESS" and .state!="SKIPPED") | "\(.state)  \(.name)  \(.link)"'
+```
+
+Run the wait as a BACKGROUND command so the turn resumes on its own when
+the verdict lands. A foreground sleep-poll chain is blocked, and burning
+turns on `gh pr checks` every minute is the tool-loop
+[`token-efficiency`](../rules/token-efficiency.md) forbids.
+
+**On red:**
+
+1. **Verify it is yours before fixing it.** Check `origin/main` for the same
+   failure and whether any of your files appear in the failing gate's inputs
+   (`git diff origin/main --stat -- <path>`). A pre-existing trunk failure is
+   reported, not silently adopted — and not silently ignored either.
+2. **Get the real log, do not infer.** `gh run view --job <id> --log-failed`.
+   Logs are unavailable until the whole run completes; a local repro is often
+   faster but can differ from CI (a developer checkout carries settings and
+   generated trees a clean runner does not — see the `SCOPE_GUARD_BYPASS` and
+   untracked-`dist/` cases). When local and CI disagree, CI is authoritative.
+3. **Fix, then re-verify locally** with the narrowest command that proves the
+   target green.
+4. **Bounded at N=3 per failing target** ([`autonomous-execution`](../rules/autonomous-execution.md)).
+   Same failure signature twice → the hypothesis is wrong; change approach
+   rather than spending the third attempt on a near-identical retry.
+5. **The push stays gated.** `git push` is a Hard Floor
+   ([`non-destructive-by-default`](../rules/non-destructive-by-default.md)) and a
+   one-off authorization is spent on the push it was given for
+   ([`commit-policy`](../rules/commit-policy.md)). Fix in the working tree and
+   push only under a fresh or still-standing instruction. A CI-fix loop that
+   re-pushes on its own authority is not on the table.
+
+**When the verdict cannot be reached** — network down, `gh` failing, the run
+never registering — say so plainly and name what is unverified. A background
+waiter that exits because `gh` errored has NOT observed a green run; treat its
+output as absent, not as a pass.
+
+**Not gated by this:** posting the status anywhere. Progress narration belongs
+in the chat reply, never as a PR comment
+([`no-pr-progress-comments`](../rules/no-pr-progress-comments.md)).
+
 #### 4d. Jira transition (only when transitioned)
 
 Linked ticket + `routine_confirmations: true` → ask `1. Yes / 2. No`.

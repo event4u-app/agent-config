@@ -142,6 +142,14 @@ jobs:
       - name: Install bundle has no build-machine path leakage
         run: ./scripts-run src/scripts/check_bundle_path_leakage
 
+      # road-to-consistent-rule-scoping: importing a maintainer CLI into the
+      # installer bundles its module-level `process.exit()`, and a CLI entry
+      # guard comparing import.meta.url to argv[1] evaluates TRUE inside a
+      # bundle — killing a consumer install after the payload is written. The
+      # behavioural smoke caught it only post-push, on all four legs.
+      - name: Installer imports no module-level process.exit()
+        run: ./scripts-run src/scripts/check_installer_import_purity
+
       - name: Run install orchestrator integration tests
         # Default nproc on macOS-arm64 runners returns 3, bottlenecking
         # the ~40-test orchestrator suite. Explicit -P 8 keeps wall-clock

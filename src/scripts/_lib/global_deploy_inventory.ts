@@ -255,6 +255,13 @@ function json_string_ascii(s: string): string {
 }
 
 /**
+ * Predicate over a SOURCE file path — `true` = the file arrives in the install.
+ * Identical shape to `PlanSource.fileFilter` (`src/install/plan.ts`), so the
+ * plan path and the deploy path can share one predicate instance.
+ */
+export type FileFilter = (srcFile: string) => boolean;
+
+/**
  * Anchor-relative paths the deploy of `src` → `<anchor>/<dest_rel>` maintains
  * — written OR skipped-as-identical.
  *
@@ -262,8 +269,20 @@ function json_string_ascii(s: string): string {
  * symlinked files resolve to file entries, symlinked subdirectories are walked
  * through their resolved targets. `dest_rel` may be empty (`""`) for plan
  * entries that deploy into the anchor root.
+ *
+ * `file_filter` MUST be the same predicate the copy was given. This set is what
+ * the reaper treats as "should exist"; a file the copy skipped but this set
+ * still lists is never reaped, and a file this set omits while the copy wrote it
+ * is deleted on the next deploy. Passing the filter to one and not the other is
+ * the failure mode the rule-scoping work exists to avoid — see
+ * `install._deploy_global_content`, which derives one filter and hands it to
+ * both.
  */
-export function expected_deploy_files(src: string, dest_rel: string): Set<string> {
+export function expected_deploy_files(
+  src: string,
+  dest_rel: string,
+  file_filter: FileFilter | null = null,
+): Set<string> {
   const out = new Set<string>();
   let src_stat: fs.Stats;
   try {
@@ -273,6 +292,9 @@ export function expected_deploy_files(src: string, dest_rel: string): Set<string
     return out;
   }
   if (!src_stat.isDirectory()) {
+    if (file_filter !== null && !file_filter(src)) {
+      return out;
+    }
     out.add(as_posix(dest_rel));
     return out;
   }
@@ -296,6 +318,12 @@ export function expected_deploy_files(src: string, dest_rel: string): Set<string
       }
       if (resolved_is_dir) {
         _walk(fs.realpathSync(entry), rel);
+        continue;
+      }
+      // The predicate sees the SOURCE path, never `rel`: the rule-scope
+      // predicate reads the file's own frontmatter tags, so a dest-relative
+      // path would not resolve. Same contract as the copy twin.
+      if (file_filter !== null && !file_filter(entry)) {
         continue;
       }
       out.add(as_posix(rel));
@@ -554,7 +582,15 @@ function prune_empty_dirs(prune_candidates: Set<string>, anchor_resolved: string
 }
 
 /** `anchor in node.parents` — is `anchor` a strict ancestor of `node`? */
-function is_ancestor(anchor: string, node: string): boolean {
+/**
+ * Is `node` strictly inside `anchor`? Pure path arithmetic, no I/O — callers
+ * pass already-resolved (realpath'd) paths when symlink escape matters.
+ *
+ * Exported for `install._copy_dir_dereferencing_symlinks`, which must reject a
+ * symlink whose target leaves the package root. One definition rather than a
+ * second copy of the `path.relative` idiom.
+ */
+export function is_ancestor(anchor: string, node: string): boolean {
   const rel = path.relative(anchor, node);
   return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
 }
