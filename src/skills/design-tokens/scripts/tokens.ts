@@ -309,9 +309,6 @@ const SKIP_FILE_PATTERNS: RegExp[] = [
 ];
 const HEX_EXCEPTIONS = new Set(['#000', '#FFF', '#000000', '#FFFFFF']);
 const DEFAULT_IGNORE = new Set(['node_modules', '.git', 'dist', 'build', '.next', 'vendor']);
-const ALLOWED_HOST_HINTS = [
-    'fonts.googleapis.com', 'fonts.gstatic.com', 'unsplash.com', 'pexels.com',
-];
 
 interface Violation {
     file: string;
@@ -434,9 +431,6 @@ export function scanFile(p: string): Violation[] {
             stripped.startsWith('*') ||
             line.includes('var(--')
         ) {
-            continue;
-        }
-        if (ALLOWED_HOST_HINTS.some((host) => line.includes(host))) {
             continue;
         }
         for (const kind of Object.keys(PATTERNS)) {
@@ -902,7 +896,6 @@ export {
     SKIP_FILE_PATTERNS,
     HEX_EXCEPTIONS,
     DEFAULT_IGNORE,
-    ALLOWED_HOST_HINTS,
     MINIMAL_TOKEN_PREFIXES,
     _pyDumpsIndent2,
     _pyLen,
