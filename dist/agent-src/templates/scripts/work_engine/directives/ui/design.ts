@@ -167,9 +167,25 @@ function _missing_required_keys(design: Record<string, Any>): string[] {
     return missing;
 }
 
-/** Return microcopy paths whose values match a placeholder pattern. */
+/**
+ * Return brief paths whose values match a placeholder pattern.
+ *
+ * Covers `microcopy` **and** `states`. The five required states were checked
+ * for truthiness only, so `states.error: "TBD"` satisfied the gate — the brief
+ * looked complete while covering nothing. Both slots carry strings the user
+ * signs off on, so both are held to the same bar.
+ *
+ * An explicit `"n/a"` stays legitimate: a static landing page genuinely has no
+ * error or disabled state, and *declaring* that is the opposite of inventing
+ * filler. That is why the gate demands all five keys rather than branching on
+ * page type — the author states the answer instead of the engine guessing which
+ * states a surface ought to have.
+ */
 function _placeholder_violations(design: Record<string, Any>): string[] {
-    return placeholder_paths(design['microcopy']);
+    return [
+        ...placeholder_paths(design['microcopy'], 'microcopy'),
+        ...placeholder_paths(design['states'], 'states'),
+    ];
 }
 
 /**

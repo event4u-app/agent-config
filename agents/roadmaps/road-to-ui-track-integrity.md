@@ -260,34 +260,24 @@ cannot depend on a pack the consumer may not have. ✅
 
 ## Phase 3 — The validation gates that do not validate
 
-- [ ] Fix the array hole in all three walkers — `_walk_microcopy`
-      (`design.ts:169-192`), `_walk_rendered` (`apply.ts:118-137`), and
-      `_count_microcopy` (`design.ts:315-325`). Arrays are traversed; strings
+- [x] Fix the array hole in all three walkers. Arrays are traversed; strings
       inside them are scanned against `PLACEHOLDER_PATTERNS`.
-- [ ] Because the two gates share one implementation shape, extract it once
-      rather than patching the same bug in three places — the "defense-in-depth"
-      claim in `ui-track-flow.md:96-97` is only true if the two layers can fail
-      independently. Either make them genuinely independent or drop the claim
-      from the contract; do not leave a doc asserting a property the code lacks.
-- [ ] Type `states` in the state schema (`state.ts:637-655`) so the five-state
-      loop cannot be skipped by passing a string or a list.
-- [ ] Decide the five-state gate's scope: it currently fires for every UI flow
-      including a static landing page, and only checks truthiness — so it is
-      simultaneously rigid and unenforcing. Either gate it on page type (the
-      `app_spec`/`scaffold` steps already gate on `greenfield_decision`) or
-      accept the five keys and check them for placeholder content the way
-      microcopy is checked. State the reason for the choice in the contract.
-- [ ] Replace the phantom audit cache: `existing-ui-audit/SKILL.md:34,246`
-      documents an mtime cache that no code implements, while `audit.ts:122-125`
-      never re-invalidates at all. Either implement invalidation keyed on
-      something that actually changes when components are added (the audit's own
-      inventory, or `state.changes`), or delete the cache prose and document the
-      once-per-state-file behaviour honestly. A skill Gotcha asserting a
-      mechanism the engine lacks is the defect.
-- [ ] `daf-placeholder-in-array` and `daf-states-type-bypass` flip to green.
+      <!-- done: array elements addressed `key[i]` so the halt names the element, not just the list -->
+- [x] Extract the shared walker once rather than patching the same bug in three
+      places, and settle the "defense-in-depth" claim honestly.
+      <!-- done: one `placeholder_paths` exported from design; apply imports it. Claim dropped from the contract and replaced with what is actually true — the same rule applied to two different INPUTS (brief vs rendered output), which is what catches drift between sign-off and render. Two byte-identical copies were never two layers that could fail independently -->
+- [x] Type `states` in the state schema so the five-state loop cannot be skipped
+      by passing a string or a list.
+      <!-- done: state.ts `_validate_ui_design` rejects a non-object, non-null `states` at the schema boundary; the design gate's own guard now reports all five keys instead of skipping when the shape is wrong. Two layers, and this pair genuinely is independent (schema vs gate) -->
+- [x] Decide the five-state gate's scope and state the reason.
+      <!-- done: keep all five keys required, and extend the placeholder check to cover `states` (it previously covered `microcopy` only, so `states.error: "TBD"` passed a truthiness-only check). NOT gated on page type: an explicit `n/a` is a legitimate declaration that a surface has no such state — the opposite of inventing filler — so the author states the answer rather than the engine guessing which states a surface ought to have. Both branches are pinned by tests -->
+- [x] Replace the phantom audit cache.
+      <!-- done: prose deleted, real behaviour documented. The documented mtime key was also the WRONG key — apply adds components without touching a manifest, so it would never have invalidated on the change that matters. What the engine does: audit runs once per state-file and never refreshes. The bounded gap (a run reusing one state-file across several component additions) is now stated, with the instruction to re-read the component directories rather than trust a stale inventory -->
+- [x] `daf-placeholder-in-array` and `daf-states-type-bypass` flip to green.
+      <!-- done, plus two new assertions for the Step-4 decision: a placeholder inside a required state is rejected, and an explicit `n/a` state still passes. 642 tests green across 82 files -->
 
 **Exit:** every gate the contract claims exists either exists or is no longer
-claimed.
+claimed. ✅
 
 ## Phase 4 — Pack topology: the design layer ships with the stacks that need it
 

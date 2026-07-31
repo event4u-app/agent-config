@@ -339,6 +339,55 @@ describe('UI validation gates — placeholder + state shape', () => {
         expect(applyRun(st).outcome).toBe('blocked');
     });
 
+    it('a placeholder inside a required state is rejected, not just counted', () => {
+        const st = new DeliveryState({
+            ticket: {},
+            ui_design: {
+                layout: 'x',
+                components: ['nav'],
+                states: {
+                    empty: 'No items yet',
+                    loading: 'Loading…',
+                    error: 'TBD',
+                    success: 'Saved',
+                    disabled: 'n/a',
+                },
+                microcopy: { cta: 'Save' },
+                a11y: 'x',
+                design_confirmed: true,
+            },
+        } as never);
+        const r = designRun(st);
+        // The five states were truthiness-checked only, so `TBD` passed and the
+        // brief looked complete while covering nothing.
+        expect(r.outcome).toBe('blocked');
+        expect(r.questions.join('\n')).toContain('states.error');
+    });
+
+    it('an explicit `n/a` state is legitimate, not filler', () => {
+        // A static landing page has no error state. Declaring that is the
+        // opposite of inventing filler, so the gate must not reject it — this is
+        // why it demands five keys instead of branching on page type.
+        const st = new DeliveryState({
+            ticket: {},
+            ui_design: {
+                layout: 'x',
+                components: ['hero'],
+                states: {
+                    empty: 'n/a',
+                    loading: 'n/a',
+                    error: 'n/a',
+                    success: 'n/a',
+                    disabled: 'n/a',
+                },
+                microcopy: { cta: 'Get started' },
+                a11y: 'x',
+                design_confirmed: true,
+            },
+        } as never);
+        expect(designRun(st).outcome).toBe('success');
+    });
+
     it('daf-states-type-bypass: a non-dict `states` skips all five state checks', () => {
         const st = new DeliveryState({
             ticket: {},
