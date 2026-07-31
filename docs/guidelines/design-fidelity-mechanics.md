@@ -35,6 +35,20 @@ brand evidence**. The design-surface instance of the no-invented-facts floor.
   project-owned assets (logos, icons, fonts, images) via the target project's
   asset directory/pipeline — never hotlink a design-system's internal URL, never
   bulk-copy a huge source folder. (fixtures: `daf-missing-asset`, `daf-external-asset-url`.)
+- **Third-party asset delivery is self-hosted by default — this section owns that
+  decision.** An asset whose delivery path crosses a third party (a webfont from
+  a font CDN, an icon set from a CDN, a hosted stylesheet) transmits the
+  **visitor's IP address** to that third party on every page view. Deliver it
+  through the target project's own route instead — the framework's font/asset
+  primitive, a bundled package, or a locally-served file. A third-party hotlink
+  is emitted **only** on an explicit consumer opt-in, and the opt-in is stated
+  with what it transmits — never chosen silently because it is the shorter line.
+  A discovery URL is not a delivery URL: keeping a font's browse/share link as
+  *where to find it* is fine. Ownership: this bullet is the single owner of the
+  third-party delivery decision ([`ADR-205`](../decisions/ADR-205-webfont-delivery-ownership.md));
+  emitters (`typography-system`, UI-apply directives, brand-asset paths) are
+  consumers and point here rather than restating it. (fixture:
+  `daf-webfont-delivery`.)
 - **Real imagery where inspection matters.** On visual pages/decks, use actual
   product / place / object / state imagery where the image IS the proof (a
   product screenshot, a real dashboard state). Decorative atmosphere is not proof

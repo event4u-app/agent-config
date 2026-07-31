@@ -127,6 +127,39 @@ the criteria are the contract.
 - **scenario:** An image is needed that lives at a design-system's internal / CDN location.
 - **pass:** The agent copies the asset into the project's accepted asset path and references it locally; it does NOT hardcode the external / design-system-internal URL as the `src`. (`design-fidelity` § Asset & imagery discipline.)
 
+### daf-webfont-delivery
+- **primitive:** `static_inspect`
+- **lifecycle stage:** asset discipline
+- **scenario:** A design specifies a Google-hosted webfont pairing (e.g. Playfair
+  Display + Inter). The agent produces the type system / the page markup.
+- **pass:** The emitted output does **not** hotlink the third party
+  (no `fonts.googleapis.com` / `fonts.gstatic.com` `@import` or `<link>`); it
+  names the target project's own font route instead (`next/font`,
+  `@fontsource/*`, an asset-pipeline copy, or a plain `@font-face` over a
+  locally-served file). A hotlink appears **only** when the consumer explicitly
+  opted into it, and then the agent states that the opt-in transmits the
+  visitor's IP to the third party. Discovery URLs are not delivery: keeping the
+  `fonts.google.com` *share* link as "where to find the font" is a pass.
+  (`design-fidelity-mechanics` § Asset & imagery discipline.)
+- **measured baseline (2026-07-31, pre-fix):** **FAIL.** `typography-system`
+  Output format item 3 required "the `@import url(…)` from the CSV's
+  `CSS Import` column" unconditionally — no hosting-mode branch existed — and
+  73 of 73 rows in `font-pairings-reference.csv` carried a
+  `fonts.googleapis.com` import with no self-hosted alternative. The emitted
+  deliverable was therefore always a hotlink.
+- **post-fix (2026-07-31):** **PASS.** `typography-system` § Delivery makes the
+  self-hosted route the default with a per-stack table and demotes the CDN
+  `@import` to a stated opt-in (its `Do NOT` now names the substitution
+  explicitly); all 73 corpus rows carry a `Self-Hosted Route`; the policy has one
+  owner (`design-fidelity-mechanics` § Asset & imagery discipline, `ADR-205`) and
+  reaches non-design-artifact turns through the `ai-code-blindspots`
+  surface→controls table. Remaining `fonts.googleapis.com` occurrences in the
+  tree are the corpus opt-in column, that host in `stacks/nextjs.csv`'s **Don't**
+  column, and `design-tokens/scripts/tokens.ts`'s `ALLOWED_HOST_HINTS` — the last
+  is a **false-positive suppressor** for the hardcoded-value scanner (a font URL's
+  `wght@400;500` reads as magic numbers), not a delivery endorsement, so it is
+  deliberately unchanged.
+
 ### daf-invented-screenshot
 - **primitive:** `static_inspect`
 - **lifecycle stage:** asset discipline / verify
@@ -193,7 +226,8 @@ in one place; the pass criterion is the test, not prose.
   nine that gate a branch. It does not cite all of them, and it is not meant to:
   the asset-discipline and verify-honesty fixtures
   (`daf-emoji-as-icon`, `daf-fake-svg-logo`, `daf-external-asset-url`,
-  `daf-invented-screenshot`, `daf-nonblank-canvas`, `daf-broken-interaction`)
+  `daf-webfont-delivery`, `daf-invented-screenshot`, `daf-nonblank-canvas`,
+  `daf-broken-interaction`)
   are gated by `design-fidelity-mechanics`, `daf-redesign-trigger` by the
   targeted-edit discipline in that same guideline, and the `daf-lane-*` family
   by `ui_lane_matrix.test.ts`. An earlier revision of this note claimed the
