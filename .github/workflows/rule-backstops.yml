@@ -30,6 +30,12 @@ on:
       - "docs/**"
       - "agents/**"
       - "tests/**"
+      # The kernel-prefix gate reads the PROJECTION, so a dist-only or
+      # snapshot-only change must trigger this workflow too — otherwise the
+      # gate is path-filtered into the same silence it just came out of.
+      - "dist/agent-src/rules/**"
+      - "dist/router.json"
+      - "internal/bench/reports/kernel-prefix.json"
       - ".github/workflows/rule-backstops.yml"
   push:
     branches:
@@ -42,6 +48,12 @@ on:
       - "docs/**"
       - "agents/**"
       - "tests/**"
+      # The kernel-prefix gate reads the PROJECTION, so a dist-only or
+      # snapshot-only change must trigger this workflow too — otherwise the
+      # gate is path-filtered into the same silence it just came out of.
+      - "dist/agent-src/rules/**"
+      - "dist/router.json"
+      - "internal/bench/reports/kernel-prefix.json"
       - ".github/workflows/rule-backstops.yml"
 
 permissions:
@@ -99,6 +111,16 @@ jobs:
 
       - name: persona-governance
         run: ./scripts-run src/scripts/lint_persona_governance
+
+      # The kernel bodies are the KV-cache prefix of every request, so a byte
+      # change there is a 10× cost event for every consumer. This gate existed
+      # since the token-saving work and its own header claimed "CI fails if the
+      # live prefix drifts" — but no workflow ran it, so between 2026-07-08 and
+      # 2026-07-31 all nine kernel bodies drifted across ten merged commits and
+      # nothing said a word. A gate that cannot fail is not a gate.
+      # Re-anchor procedure: contexts/authority/kernel-rule-edits.md.
+      - name: kernel-prefix byte-stability (KV-cache prefix)
+        run: ./scripts-run src/scripts/check_kernel_prefix_stability
 
       - name: secret-vcs-guard
         run: ./scripts-run src/scripts/check_secret_leak
