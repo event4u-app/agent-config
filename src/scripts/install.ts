@@ -82,6 +82,13 @@ import * as user_global_paths from './_lib/user_global_paths.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
+import {
+    LEGACY_ALL,
+    ruleFileArrives,
+    ruleScopeFromSettings,
+    type RuleScope,
+} from '../install/rule_scope.js';
+import { RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -2730,17 +2737,30 @@ function _inject_package_tag(
     }
 }
 
+/**
+ * Copy `src` → `dest`, dereferencing symlinks, returning
+ * `[written, skipped, written_paths]`.
+ *
+ * `file_filter` is an optional predicate over the SOURCE path; `false` means the
+ * file is not part of this install and is neither copied nor counted. It MUST be
+ * the same predicate handed to `global_deploy_inventory.expected_deploy_files`
+ * for the same source — that function computes what the reaper considers
+ * "should exist", so filtering one side only either leaves excluded files behind
+ * forever or deletes files the copy just wrote.
+ */
 function _copy_dir_dereferencing_symlinks(
     src: string,
     dest: string,
     force: boolean,
     package_root: string | null = null,
+    file_filter: global_deploy_inventory.FileFilter | null = null,
 ): [number, number, string[]] {
     let written = 0;
     let skipped = 0;
     const written_paths: string[] = [];
     if (!pathExists(src)) return [0, 0, written_paths];
     if (!isDir(src)) {
+        if (file_filter !== null && !file_filter(src)) return [0, 0, written_paths];
         mkdirp(path.dirname(dest));
         const decision = _resolve_file_conflict(dest, force);
         if (decision === 'skip') return [0, 1, written_paths];
@@ -2791,10 +2811,18 @@ function _copy_dir_dereferencing_symlinks(
                 target,
                 force,
                 package_root,
+                file_filter,
             );
             written += sub_w;
             skipped += sub_s;
             written_paths.push(...sub_p);
+            continue;
+        }
+        // The predicate sees the SOURCE path (the rule-scope predicate reads the
+        // file's own frontmatter tags). Skipped files are counted as neither
+        // written nor skipped-as-identical: they are not part of this install,
+        // so the inventory twin must omit them too or the reaper drifts.
+        if (file_filter !== null && !file_filter(entry)) {
             continue;
         }
         const decision = _resolve_file_conflict(target, force);
@@ -2949,6 +2977,10 @@ function _deploy_global_content(
     lockfile_path: string,
 ): Record<string, DeployResult> {
     const results: Record<string, DeployResult> = {};
+    // Resolved ONCE per deploy, not per tool: every tool installs the same rule
+    // tree, and re-reading settings per tool could yield different answers
+    // mid-run if the file changed underneath.
+    const rule_scope = _resolve_global_rule_scope(package_root);
     for (const tool_id of [...tools].sort()) {
         if (tool_id === 'claude-desktop') {
             results[tool_id] = _deploy_claude_desktop(force, package_root, lockfile_path);
@@ -2975,13 +3007,30 @@ function _deploy_global_content(
         for (const [src_rel, dest_sub] of plan) {
             const src = path.join(package_root, src_rel);
             const dest = dest_sub ? path.join(anchor, dest_sub) : anchor;
-            const [w, s, paths] = _copy_dir_dereferencing_symlinks(src, dest, force, package_root);
+            // ONE filter instance, handed to BOTH the copy and the inventory.
+            // `expected_deploy_files` is what the reaper treats as "should
+            // exist": filtering only the copy would leave previously-installed
+            // maintainer rules on disk forever, and filtering only the
+            // inventory would delete rules the copy just wrote. Both, or
+            // neither — never one.
+            const rule_filter = _rule_filter_for_source(src_rel, rule_scope);
+            const [w, s, paths] = _copy_dir_dereferencing_symlinks(
+                src,
+                dest,
+                force,
+                package_root,
+                rule_filter,
+            );
             written_total += w;
             skipped_total += s;
             written_paths.push(...paths);
             current_files = setUnion(
                 current_files,
-                global_deploy_inventory.expected_deploy_files(src, dest_sub ? dest_sub : ''),
+                global_deploy_inventory.expected_deploy_files(
+                    src,
+                    dest_sub ? dest_sub : '',
+                    rule_filter,
+                ),
             );
         }
         // Flat-command → skill-wrapper re-projection for Claude Code
@@ -3091,6 +3140,9 @@ function _preview_global_reap(
 ): Record<string, string[]> {
     const inventory = global_deploy_inventory.load_inventory();
     const preview: Record<string, string[]> = {};
+    // The preview must compute the SAME expected set the real deploy will, or
+    // `--dry-run` under-reports the rules a scoped upgrade is about to reap.
+    const rule_scope = _resolve_global_rule_scope(package_root);
     for (const tool_id of [...tools].sort()) {
         const plan = GLOBAL_DEPLOY_SOURCES[tool_id];
         if (plan === undefined) continue;
@@ -3102,7 +3154,11 @@ function _preview_global_reap(
             const src = path.join(package_root, src_rel);
             current_files = setUnion(
                 current_files,
-                global_deploy_inventory.expected_deploy_files(src, dest_sub ? dest_sub : ''),
+                global_deploy_inventory.expected_deploy_files(
+                    src,
+                    dest_sub ? dest_sub : '',
+                    _rule_filter_for_source(src_rel, rule_scope),
+                ),
             );
         }
         let would_reap: string[] = [];
@@ -3367,6 +3423,42 @@ function _resolve_scoped_projection(
         ? active_packs_raw.filter((v): v is string => typeof v === 'string')
         : [];
     return { mode, active_packs };
+}
+
+/**
+ * Resolve the rule scope governing THIS global deploy — the same way the wizard
+ * does (`src/server/routes/install.ts::_resolveRuleScope`), so the two global
+ * paths cannot ship different rule sets for the same settings.
+ *
+ * Settings resolution mirrors `_resolve_scoped_projection` above: an existing
+ * global settings doc is authoritative, and only a genuinely fresh machine falls
+ * through to the packaged template. Any read or parse failure resolves to
+ * `LEGACY_ALL` — over-shipping is the safe direction, and the compat exclusion
+ * (`source-of-truth.md`) still applies even then.
+ */
+function _resolve_global_rule_scope(package_root: string): RuleScope {
+    try {
+        const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
+        return ruleScopeFromSettings(doc);
+    } catch {
+        return LEGACY_ALL;
+    }
+}
+
+/**
+ * The rule-scope filter for one `GLOBAL_DEPLOY_SOURCES` row, or `null` when the
+ * row is not the rules tree.
+ *
+ * Keyed on `src_rel === RULE_SOURCE_REL` exactly as `expandWizardSources` keys
+ * it — the two must agree on WHICH source gets filtered, not only on the
+ * predicate.
+ */
+function _rule_filter_for_source(
+    src_rel: string,
+    scope: RuleScope,
+): global_deploy_inventory.FileFilter | null {
+    if (src_rel !== RULE_SOURCE_REL) return null;
+    return (srcFile: string): boolean => ruleFileArrives(srcFile, scope);
 }
 
 /**
@@ -5035,5 +5127,11 @@ export {
     _compute_active_pack_ids,
     _resolve_global_settings_doc,
     _resolve_scoped_projection,
+    // road-to-consistent-rule-scoping Phase 2: the CLI global deploy path had
+    // no direct test — the existing rule-scoping suite covers the PLAN path
+    // (`expandWizardSources`) only, which is why the two diverged unnoticed.
+    _deploy_global_content,
+    _preview_global_reap,
+    _resolve_global_rule_scope,
 };
 export type { Options, PackRecord, DeployResult };
