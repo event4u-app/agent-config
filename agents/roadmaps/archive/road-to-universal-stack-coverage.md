@@ -262,5 +262,11 @@ byte-identical to `main`. ✅
       a correction to the predecessor, not a miss.
 - [x] Dispatch for the eight existing labels is byte-identical to `main` — all 29
       golden baselines unchanged.
-- [~] Benchmark or published honest-null from Phase 0.
-      <!-- deferred, same blocker as the tier follow-up: nothing in the tree scores generated UI, so the apply fixtures are rubric-judged rather than benchmarked. The DETECTION half is fully measured (the Phase-0 and Phase-1 tables); what is unmeasured is whether the generic lane's output is good, which needs the harness `road-to-ui-track-integrity-followup` is blocked on. Same condition unblocks both -->
+- [-] Benchmark or published honest-null from Phase 0.
+      <!-- migrated, not dropped: the blocker is word-for-word the tier follow-up's, so this became Measurement B in road-to-ui-track-integrity-followup rather than a second blocked roadmap for the same missing harness. Kept visible as [-] so the trail is grep-able. The DETECTION half IS measured here (the Phase-0 and Phase-1 tables); what moved is only the question of whether the generic lane's OUTPUT is good. One funded harness session now answers both questions -->
+
+<!-- Deferred item migrated to agents/roadmaps/road-to-ui-track-integrity-followup.md
+     (Measurement B) on 2026-07-31. Resolution: option 1 — merge into the existing
+     follow-up rather than spawn a second one, because the blocker is identical.
+     The two questions stay separate sub-sections there: A varies the model tier at
+     a fixed lane, B varies the lane at a fixed tier. -->

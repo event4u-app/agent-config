@@ -2,23 +2,15 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**73 / 241 steps done · 30%**
+**48 / 220 steps done · 22%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
 ```
-
-## ⚠️ Iron Law 3 — unresolved deferred items
-
-These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
-
-| Roadmap | Done | Deferred | Cancelled |
-|---|---:|---:|---:|
-| [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md) | 25 | 1 | 0 |
 
 ## Open roadmaps
 
@@ -38,9 +30,8 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 16 | [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md) | 4 | 26 | 0 | 25 | 1 | 0 | 0 | ██████████ 100% |
-| 17 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 16 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -311,22 +302,11 @@ _1 blocker resolved._
 
 ### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
 
-**Road to UI-track integrity — follow-up: is the model-tier allocation backwards?** — 0 / 6 done (0%)
+**Road to UI-track integrity — follow-up: two measurements, one missing harness** — 0 / 10 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure the allocation | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-
-### [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md)
-
-**Road to universal stack coverage — an honest refusal is not coverage** — 25 / 25 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Fixtures and baseline (before any behaviour change) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Detection v2: axes instead of one label | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | `ui-apply-generic`: the default lane becomes real | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | Overlay dispatch: composition instead of lane choice | ✅ done | 0 | 10 | 1 | 0 | 100% |
+| 1 | Two measurements against the same harness | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
 
 ### [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md)
 
