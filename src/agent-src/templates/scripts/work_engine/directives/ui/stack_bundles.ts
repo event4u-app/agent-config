@@ -104,8 +104,19 @@ export const STACK_BUNDLES: Readonly<Record<string, StackBundle>> = {
     },
 };
 
-/** Lanes with no framework-specific executor — the halt body says so. */
+/**
+ * Lanes served by the stack-neutral pair rather than a framework executor.
+ *
+ * `plain` and `vue` share the bundle but not the meaning, and the halt body has
+ * to say which it is. For `plain` the pair IS the right answer — there is no
+ * framework to be idiomatic about. For `vue` it is a gap: a Vue project has a
+ * definite idiom and the package has no executor for it, so the result must not
+ * read as Vue support.
+ */
 export const GENERIC_LANES: ReadonlySet<string> = new Set(['vue', 'plain']);
+
+/** Lanes where the stack-neutral pair is the correct answer, not a shortfall. */
+const NATIVELY_GENERIC_LANES: ReadonlySet<string> = new Set(['plain']);
 
 /**
  * The label detection returns for a framework it recognises but does not
@@ -154,11 +165,14 @@ export function bundle_line(stack: string, role: 'build' | 'review'): string {
     const bundle = bundle_for(stack);
     const skills = role === 'review' ? bundle.review : bundle.build;
     const rendered = skills.map((name) => `\`${name}\``).join(' + ');
+    if (NATIVELY_GENERIC_LANES.has(stack)) {
+        return `> Skills: ${rendered} — stack-neutral, which is what \`${stack}\` means.`;
+    }
     if (GENERIC_LANES.has(stack)) {
         return (
-            `> Skills: ${rendered} — no \`${stack}\`-specific executor exists, ` +
-            'so this is the stack-neutral floor. Say so in the result rather ' +
-            'than implying idiomatic support.'
+            `> Skills: ${rendered} — there is no \`${stack}\`-specific executor, ` +
+            'so this is the stack-neutral floor, not idiomatic ' +
+            `\`${stack}\`. Say so in the result.`
         );
     }
     return `> Skills: ${rendered}.`;
