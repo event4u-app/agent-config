@@ -140,3 +140,46 @@ complexity-budget lock (PR #983) forbids — the lock text explicitly lists
 (no such review gate exists to retire). `docs/spawn-site-policy.md` is the
 self-enforcing substitute: its completeness claim is checked by git-diff
 visibility at review time, not a build gate.
+
+## Follow-up (2026-07-31) — the config-pointer class is scoped OUT, on evidence
+
+`road-to-zero-ceremony-detection` Phase 5 examined a second class the
+deny-by-family scrub does not cover: **instruction-bearing config pointers**.
+`CLAUDE_CONFIG_DIR` and `CODEX_HOME` tell a provider CLI which directory to load
+its configuration from — rules, settings, floors — and neither matches a deny
+family. (Near miss worth naming: the `GIT_CONFIG_` check is a *prefix* test;
+`CLAUDE_CONFIG_DIR` merely *contains* `CONFIG_`.) So both are inherited by every
+spawned child, and nothing asserted that either way.
+
+**Decision: accepted risk. Deny-by-family stands unchanged; no variable is
+added to the deny set.** This is NOT a reversal of this ADR — it is a scope
+statement for it, plus a pinned test so the behaviour can no longer change
+silently.
+
+Two things drove it:
+
+1. **A strip has a measured cost.** `src/install/agentSwitchProfile.ts` declares
+   `PROVIDER_ENV_VARS = ['CLAUDE_CONFIG_DIR', 'CODEX_HOME']` — a shipped
+   integration with `@event4u/agent-switch`, which isolates multiple accounts
+   into per-account profiles through exactly these variables *"so switching
+   accounts never requires a re-login"*. Stripping them sends a spawned CLI to
+   the DEFAULT profile: the wrong account, or an unauthenticated one, silently.
+   That is the concrete legitimate workflow an external review of this question
+   asked for and did not have.
+2. **The precondition already grants more.** An actor who can set the
+   orchestrator's environment can also set `PATH` (binary substitution) or
+   `ANTHROPIC_API_KEY` (transport switch). Residual risk after a strip is not
+   materially lower.
+
+The third option — strip inherited, permit only an assignment validated against
+the agent-switch root — remains the only one that closes the gap without
+breaking (1), and its validation predicate already exists in
+`agentSwitchProfile.ts`. It is deferred, not rejected: revisit if a second
+instruction-bearing pointer variable appears, or if the behavioural-steering
+path becomes concrete in a real incident.
+
+Pinned in `tests/scripts/ai_council/spawn_env.test.ts`
+(`hardenedSpawnEnv — CLAUDE_CONFIG_DIR is inherited (pinned)`) and recorded as
+`docs/threat-model.md` row i. **If a later change denies these variables, those
+tests must flip — and flipping them is the signal that this decision is being
+reversed deliberately rather than by accident.**
