@@ -189,6 +189,17 @@ in one place; the pass criterion is the test, not prose.
   eval substrate the staged rollout (`design-artifact-verification` § Staged
   rollout) measures against. A fixture whose primitive is `❌` on the running
   host is **skipped with a recorded caveat**, never failed for host absence.
-- Phase 1 (`design-artifact-lifecycle`) references these `id`s from its
-  lifecycle branches; do not renumber or rename an id without updating that
-  link.
+- The lifecycle contract's branch table cites a **subset** of these ids — the
+  nine that gate a branch. It does not cite all of them, and it is not meant to:
+  the asset-discipline and verify-honesty fixtures
+  (`daf-emoji-as-icon`, `daf-fake-svg-logo`, `daf-external-asset-url`,
+  `daf-invented-screenshot`, `daf-nonblank-canvas`, `daf-broken-interaction`)
+  are gated by `design-fidelity-mechanics`, `daf-redesign-trigger` by the
+  targeted-edit discipline in that same guideline, and the `daf-lane-*` family
+  by `ui_lane_matrix.test.ts`. An earlier revision of this note claimed the
+  lifecycle branches reference "these ids" without qualification, which read as
+  all of them and made the fixture↔contract binding look tighter than it is.
+- Every id must be cited by **something**. `task lint-eval-fixture-citations`
+  fails on an id no surface references — that is the drift this note used to
+  paper over.
+- Do not renumber or rename an id without updating its citing surface.

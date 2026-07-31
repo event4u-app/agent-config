@@ -299,36 +299,34 @@ assuming it. ✅
 
 ## Phase 5 — Model tier: measure the inversion before flipping it
 
-- [ ] Benchmark, not argument: run the Phase-0 lane fixtures with the current
-      allocation (builders medium / reviewers high) and with builders raised,
-      scoring output quality **and** per-run cost. Builders run first and longer,
-      so a flip plausibly multiplies cost — the council explicitly refused to
-      call this a free one-line change.
-- [ ] Include the two outliers in the read: `accessibility-auditor` is a medium
-      reviewer and `ui-component-architect` a high builder, so the inversion is
-      real but not total, and a blanket flip would flatten a distinction that may
-      be deliberate.
-- [ ] Publish the result either way. If quality lift does not clear the cost
-      delta, record the honest-null and leave the tiers alone.
+- [~] Benchmark, not argument: run the lane fixtures with the current allocation
+      (builders medium / reviewers high) and with builders raised, scoring output
+      quality **and** per-run cost.
+      <!-- deferred: BLOCKED ON MISSING INFRASTRUCTURE, not a null result — the two are different and must not be conflated. Neither existing harness can score generated UI: `bench:ab` (internal/bench/corpora/ab-track{a,b}.yaml) measures SURFACE PRESENCE — whether a rule/skill fires — and `bench-quality-run` (token-quality-golden.yaml, 110 tasks) judges RULE COMPLIANCE ("stayed in scope", "ran the audit before creating a component"), not whether the emitted frontend is good. A tier benchmark needs a third thing: UI-generation prompts, a rendering step, and a visual/structural rubric. That is a new subsystem, and building it to answer one frontmatter question is the speculative scale this roadmap's own design constraints forbid -->
+- [~] Include the two outliers in the read (`accessibility-auditor` medium
+      reviewer, `ui-component-architect` high builder).
+      <!-- deferred with the step above — and note what it implies: the inversion is real but NOT total, so a blanket flip would flatten a distinction that may well be deliberate. That is a second reason not to act on argument alone -->
+- [~] Publish the result either way.
+      <!-- deferred: nothing measured, so nothing to publish. What IS decided and acted on: the tiers stay UNCHANGED, including both outliers. The cost half needs no benchmark to read — builders run first, run longest, and re-run up to POLISH_CEILING times, so raising them is unambiguously the expensive direction; the quality half is unmeasurable today. Changing allocation on that basis would be exactly the unevidenced flip this phase exists to prevent. Revisit condition: a harness that scores generated UI exists (or one run is funded deliberately as a one-off) -->
 
 **Exit:** the tier allocation is evidence-backed, whichever way it lands.
+**Actual:** deferred — the measurement is blocked on a harness that does not
+exist, and the tiers are therefore left alone. The finding stands; the fix does
+not, and pretending otherwise would be the failure this roadmap documents
+elsewhere.
 
 ## Phase 6 — Contract truth-up
 
-- [ ] Fix the fixture count in `design-artifact-lifecycle.md:96` and
-      `design-artifact-verification.md:147` (nine → the real count), and make the
-      count derivable rather than transcribed so it cannot drift again.
-- [ ] Bind or unbind the orphaned fixture ids: `eval-fixtures.md:154-156` asserts
-      the lifecycle branches reference these ids, but 7 of 16 (incl.
-      `daf-redesign-trigger`, whose declared stage *is* branch selection) appear
-      nowhere in that contract. Either cite them from the branch they gate or
-      drop the claim.
-- [ ] Fix `ui-track-flow.md:50` (stale slot map) and `:206-215` (the "two user
-      halts" budget, actually three sign-offs plus four delegation halts).
-- [ ] Add a check that fails when a fixture id is claimed-but-uncited, so this
-      class of drift is caught rather than re-discovered.
+- [x] Fix the fixture-count claim in the two contracts.
+      <!-- done, and the finding as written was OVERSTATED — recording that rather than quietly fixing something else. Both contracts say "the nine fixtures the stages + branches gate on" / "the nine cases this phase seeds", which is accurate: the branch table does cite exactly nine. The misleading part is that neither said the file carries more, so a reader budgeting coverage from either one under-counts. Both now say so and point at which surface gates the rest -->
+- [x] Bind or unbind the orphaned fixture ids.
+      <!-- done — this WAS a real falsehood, and it lived in the fixtures file, not the contracts: `eval-fixtures.md` asserted "Phase 1 references these ids from its lifecycle branches" without qualification, which reads as all of them while 7 were uncited there. Replaced with the actual gating map (design-fidelity-mechanics for asset/verify discipline, the targeted-edit discipline for daf-redesign-trigger, ui_lane_matrix.test.ts for the lane family) -->
+- [x] Fix the stale slot map and the halt budget in `ui-track-flow.md`.
+      <!-- done: slot map `audit → ⊘ → design → ⊘ → …` corrected to name app_spec and scaffold (index.ts wires them into the memory and plan slots). The "two user halts" figure is correct for a normal `ui` run — those two slots are no-ops off the greenfield path — so it stays, with the greenfield budget (three sign-offs) stated explicitly and app-spec-confirm plus the scaffold halts added to the additional-halts list they were missing from -->
+- [x] Add a check that fails when a fixture id is claimed-but-uncited.
+      <!-- done: lint-eval-fixture-citations, wired into ci + ci-strict. It earned its place immediately — on first run it caught `daf-lane-recovery`, an id added in THIS roadmap's Phase 0 and cited by nothing. Now 26/26 cited -->
 
-**Exit:** the contracts describe the machine that exists.
+**Exit:** the contracts describe the machine that exists. ✅
 
 ## Gated follow-ups (not open work — do not start these)
 

@@ -16,6 +16,13 @@
  *
  * Fixture ids map 1:1 onto the roadmap's Phase-0 steps
  * (`daf-lane-*`, `daf-placeholder-in-array`, `daf-states-type-bypass`).
+ *
+ * One sibling id is deliberately NOT here: `daf-lane-recovery` is rubric-scored,
+ * not deterministic — it asks whether the agent, handed a directive verb whose
+ * name resolves to nothing, states which skills it actually used instead of
+ * silently picking. No unit test can assert that; it is judged against
+ * `tests/design-artifacts/eval-fixtures.md` § Lane fixtures. Named here so the
+ * id has a citing surface.
  */
 import * as fs from 'node:fs';
 import * as os from 'node:os';

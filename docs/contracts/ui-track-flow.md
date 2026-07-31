@@ -47,7 +47,7 @@ sentinels that release each gate.
 | Set | When picked | Slot 1–8 |
 |---|---|---|
 | `backend` | Default — no UI keywords, no UI envelope | `refine → memory → analyze → plan → implement → test → verify → report` (see sibling doc) |
-| `ui` | UI keywords, `improve` envelope, or refine routing to UI | `audit → ⊘ → design → ⊘ → apply → review → polish → report` |
+| `ui` | UI keywords, `improve` envelope, or refine routing to UI | `audit → app_spec → design → scaffold → apply → review → polish → report` |
 | `ui-trivial` | Phase-1 classifier hits "single-line tweak" pattern | `refine → ⊘ → ⊘ → ⊘ → apply → test → ⊘ → report` |
 | `mixed` | Backend + UI in one input | `refine → memory → analyze → contract → ui → stitch → verify → report` |
 
@@ -244,8 +244,17 @@ Two user halts. Apply / review / polish all run silently when their
 producers write clean envelopes on the first attempt. GT-U1..U4 pin
 this budget.
 
+The `app_spec` and `scaffold` slots are no-ops outside the
+greenfield-scaffold path, which is why this budget holds on a normal `ui`
+run even though the slot map lists eight steps. **On the greenfield path the
+happy-path budget is three, not two** — greenfield direction, app-spec
+confirm, design sign-off — plus a delegation halt per step whose envelope
+has not been written yet.
+
 Additional halts surface only on real ambiguity:
-greenfield-undecided (+1), shadcn-version-mismatch (+1), audit-ambiguous
+greenfield-undecided (+1), app-spec confirm (+1, greenfield-scaffold only),
+scaffold plan / build pending (+1 each, greenfield-scaffold only),
+shadcn-version-mismatch (+1), audit-ambiguous
 (+1), placeholder rejection (+N until microcopy is fixed),
 polish round (+1 per dirty review, capped at the effective ceiling),
 polish ceiling — subjective (+1 when both rounds fail and remaining

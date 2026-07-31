@@ -214,6 +214,7 @@ tasks:
       - task: lint-ghostwriter-source
       - task: lint-media-policy-linkage
       - task: lint-ui-stack-bundles
+      - task: lint-eval-fixture-citations
       - task: lint-glama-drift
       - task: lint-persona-governance
       - task: lint-subagent-determinism
@@ -426,6 +427,7 @@ tasks:
       - task: lint-ghostwriter-source
       - task: lint-media-policy-linkage
       - task: lint-ui-stack-bundles
+      - task: lint-eval-fixture-citations
       - task: lint-glama-drift
       - task: lint-persona-governance
       - task: lint-subagent-determinism

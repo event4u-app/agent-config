@@ -6,11 +6,19 @@
 
 ## Overall
 
-**80 / 299 steps done · 27%**
+**84 / 296 steps done · 28%**
 
 ```text
-███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md) | 36 | 3 | 0 |
 
 ## Open roadmaps
 
@@ -31,7 +39,7 @@
 | 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 16 | [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md) | 7 | 39 | 7 | 32 | 0 | 0 | 0 | ████████░░ 82% |
+| 16 | [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md) | 7 | 39 | 0 | 36 | 3 | 0 | 0 | ██████████ 100% |
 | 17 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
 | 19 | [road-to-zero-ceremony-install.md](roadmaps/road-to-zero-ceremony-install.md) | 6 | 22 | 22 | 0 | 0 | 0 | [2](#blockers-road-to-zero-ceremony-install) | ░░░░░░░░░░ 0% |
@@ -315,7 +323,7 @@ _1 blocker resolved._
 
 ### [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md)
 
-**Road to UI-track integrity — the lanes the dispatcher names do not exist** — 32 / 39 done (82%)
+**Road to UI-track integrity — the lanes the dispatcher names do not exist** — 36 / 36 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -324,8 +332,8 @@ _1 blocker resolved._
 | 2 | Detection: stop sending real stacks into the fallback | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | The validation gates that do not validate | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 4 | Pack topology: the design layer ships with the stacks that need it | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Model tier: measure the inversion before flipping it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | Contract truth-up | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | Model tier: measure the inversion before flipping it | ⏭️ skipped | 0 | 0 | 3 | 0 | 0% |
+| 6 | Contract truth-up | ✅ done | 0 | 4 | 0 | 0 | 100% |
 
 ### [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md)
 

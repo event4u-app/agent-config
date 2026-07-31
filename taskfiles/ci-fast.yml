@@ -255,6 +255,11 @@ tasks:
     desc: "Enforce structural reachability of media governance policies — every agents/settings/policies/media/*.md (except README) must be linked from a skill, rule, or sibling policy (see agents/settings/policies/media/README.md § Enforcement model)"
     cmd: ./scripts-run src/scripts/lint_media_policy_linkage {{.QUIET_FLAG}}
 
+  lint-eval-fixture-citations:
+    silent: true
+    desc: "Every design-artifact eval fixture id must be cited by a contract, guideline, skill, rule, or test — an uncited fixture is an eval nobody runs (see tests/design-artifacts/eval-fixtures.md § Notes)"
+    cmd: ./scripts-run src/scripts/lint_eval_fixture_citations {{.QUIET_FLAG}}
+
   lint-ui-stack-bundles:
     silent: true
     desc: "Enforce the UI-track verb→skill-bundle map — every bundle member must resolve to a real skill, and a pack-agnostic lane (incl. the `plain` fallback) must name only stack-neutral skills (see docs/contracts/ui-track-flow.md § implement → apply)"

@@ -93,6 +93,6 @@ no-placeholder-slop rule ([`output-discipline`](../../src/rules/output-disciplin
 ## Related
 
 - [`design-artifact-verification`](design-artifact-verification.md) — the Phase-0 host-capability & degrade contract this lifecycle's Verify stage runs against.
-- [`tests/design-artifacts/eval-fixtures.md`](../../tests/design-artifacts/eval-fixtures.md) — the nine fixtures the stages + branches gate on.
+- [`tests/design-artifacts/eval-fixtures.md`](../../tests/design-artifacts/eval-fixtures.md) — the nine fixtures the stages + branches below gate on. The file carries more than nine; the others are gated by their own surfaces (`design-fidelity-mechanics`, `ui_lane_matrix.test.ts`), and `lint-eval-fixture-citations` fails on any id no surface cites.
 - [`design-fidelity`](../../src/rules/design-fidelity.md) — the provided-design-is-the-spec rule the Inspect stage enforces.
 - [`fe-design`](../../src/skills/fe-design/SKILL.md), [`existing-ui-audit`](../../src/skills/existing-ui-audit/SKILL.md), [`design-review`](../../src/skills/design-review/SKILL.md), [`ui-component-architect`](../../src/skills/ui-component-architect/SKILL.md) — the design skills that cite these stages.
