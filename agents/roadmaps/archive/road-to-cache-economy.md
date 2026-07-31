@@ -450,10 +450,12 @@ governance call, and this claim does not authorise it.
 > different output. Aligning versions yields **0/110** twins, not 110/110,
 > because it only collapses body diffs into provenance diffs. The number stands
 > as measured; what it measures is the mechanism's ceiling under a condition that
-> a follow-up strand (`road-to-dedup-reachability`) must first make real. Do not
-> cite it as a realised saving. Cause and line references:
+> nothing currently makes real — and making it real was **decided against**
+> (2026-07-31), so this is a permanent condition until a reopen fires, not a
+> pending step. Do not cite it as a realised saving. Cause and line references:
 > [`cache-economy-refusals`](../../settings/contexts/cache-economy-refusals.md)
-> § Honest null.
+> § Honest null; the decision and the preserved candidate analysis:
+> [`dedup-reachability-refusal`](../../settings/contexts/dedup-reachability-refusal.md).
 
 ### Measured verdicts — 2026-07-30, host CC 2.1.220
 
