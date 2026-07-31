@@ -6,10 +6,10 @@
 
 ## Overall
 
-**64 / 297 steps done · 22%**
+**70 / 298 steps done · 23%**
 
 ```text
-█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   23%
 ```
 
 ## Open roadmaps
@@ -31,7 +31,7 @@
 | 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 16 | [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md) | 7 | 37 | 21 | 16 | 0 | 0 | 0 | ████░░░░░░ 43% |
+| 16 | [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md) | 7 | 38 | 16 | 22 | 0 | 0 | 0 | ██████░░░░ 58% |
 | 17 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
 | 19 | [road-to-zero-ceremony-install.md](roadmaps/road-to-zero-ceremony-install.md) | 6 | 22 | 22 | 0 | 0 | 0 | [2](#blockers-road-to-zero-ceremony-install) | ░░░░░░░░░░ 0% |
@@ -315,13 +315,13 @@ _1 blocker resolved._
 
 ### [road-to-ui-track-integrity.md](roadmaps/road-to-ui-track-integrity.md)
 
-**Road to UI-track integrity — the lanes the dispatcher names do not exist** — 16 / 37 done (43%)
+**Road to UI-track integrity — the lanes the dispatcher names do not exist** — 22 / 38 done (58%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Baseline: what actually works today (blocking) | ✅ done | 0 | 9 | 0 | 0 | 100% |
 | 1 | Dispatch honesty (the 95 % fix) | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 2 | Detection: stop sending real stacks into the fallback | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Detection: stop sending real stacks into the fallback | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | The validation gates that do not validate | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 4 | Pack topology: the design layer ships with the stacks that need it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Model tier: measure the inversion before flipping it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |

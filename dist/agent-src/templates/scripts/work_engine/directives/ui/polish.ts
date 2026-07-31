@@ -15,7 +15,11 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
-import { bundle_line } from './stack_bundles.js';
+import {
+    UNSUPPORTED_LANE,
+    bundle_line,
+    unsupported_stack_questions,
+} from './stack_bundles.js';
 
 /** Maximum number of polish rounds per `/work` run. */
 export const POLISH_CEILING = 2;
@@ -32,9 +36,15 @@ export const TOKEN_REPEAT_THRESHOLD = 2;
 /** Map `state.stack.frontend` → agent-directive skill name. */
 export const STACK_DIRECTIVES: Record<string, string> = {
     'blade-livewire-flux': 'ui-polish-blade-livewire-flux',
+    'blade-livewire': 'ui-polish-blade-livewire',
+    filament: 'ui-polish-filament',
     'react-shadcn': 'ui-polish-react-shadcn',
+    react: 'ui-polish-react',
     vue: 'ui-polish-vue',
     plain: 'ui-polish-plain',
+    // Present so the `keys == KNOWN_STACKS` invariant holds. Never emitted —
+    // the step intercepts this lane and refuses instead of dispatching.
+    unknown: 'ui-polish-unsupported',
 };
 
 /** Fallback directive when `state.stack` is missing or malformed. */
@@ -185,6 +195,14 @@ function _delegate_to_polish_skill(
     ceiling: number,
 ): StepResult {
     const directive = _resolve_directive(state);
+    const unsupported_label = _stack_label(state);
+    if (unsupported_label === UNSUPPORTED_LANE) {
+        return new StepResult({
+            outcome: Outcome.BLOCKED,
+            questions: unsupported_stack_questions('polish'),
+            message: 'UI polish refused: frontend framework not modelled by any lane.',
+        });
+    }
     const stack_label = _stack_label(state);
     const next_round = rounds + 1;
     let findings_line =

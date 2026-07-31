@@ -27,6 +27,7 @@ import { DeliveryState } from '../../../src/agent-src/templates/scripts/work_eng
 import {
     DEFAULT_STACK,
     KNOWN_STACKS,
+    UNSUPPORTED_STACK,
     detect_stack,
 } from '../../../src/agent-src/templates/scripts/work_engine/stack/detect.js';
 import {
@@ -77,18 +78,18 @@ interface Lane {
     readonly detects: string;
     /**
      * Whether the dispatched apply directive resolves to a real skill file.
-     * `false` here is the defect the roadmap's Phase 1 closes — the value is
-     * the measurement, not an aspiration.
+     * Always `false`, and correctly so: directive names are agent-interpreted
+     * verbs, not skill paths. What must resolve is the lane's BUNDLE — see the
+     * bundle-resolution block below.
      */
     readonly dispatchResolves: boolean;
 }
 
 /**
- * The baseline. Every row was measured, not assumed.
+ * The baseline, and the record of what each phase changed.
  *
- * `dispatchResolves: false` on a row means: the UI track will emit a
- * directive naming a skill that does not exist, and `agent_directive()`
- * performs no registry lookup, so nothing reports it.
+ * Every row was measured, not assumed. A `// Was X` comment marks a row a
+ * phase moved; a row without one has held since the first measurement.
  */
 const LANE_MATRIX: readonly Lane[] = [
     {
@@ -108,7 +109,8 @@ const LANE_MATRIX: readonly Lane[] = [
                 require: { 'laravel/framework': '^11', 'livewire/livewire': '^3' },
             },
         },
-        detects: 'plain',
+        // Was `plain` — detection required Livewire AND Flux.
+        detects: 'blade-livewire',
         dispatchResolves: false,
     },
     {
@@ -118,7 +120,8 @@ const LANE_MATRIX: readonly Lane[] = [
                 require: { 'laravel/framework': '^11', 'filament/filament': '^3' },
             },
         },
-        detects: 'plain',
+        // Was `plain` — Filament was unmodelled (0 files under src/).
+        detects: 'filament',
         dispatchResolves: false,
     },
     {
@@ -136,7 +139,24 @@ const LANE_MATRIX: readonly Lane[] = [
     {
         id: 'daf-lane-react-no-radix',
         manifests: { 'package.json': { dependencies: { react: '^18' } } },
-        detects: 'plain',
+        // Was `plain` — React alone failed the shadcn/Radix marker check.
+        detects: 'react',
+        dispatchResolves: false,
+    },
+    {
+        // New in Phase 2: a framework we recognise but do not model is no
+        // longer indistinguishable from a genuinely plain project.
+        id: 'daf-lane-unmodelled-svelte',
+        manifests: { 'package.json': { dependencies: { svelte: '^5' } } },
+        detects: 'unknown',
+        dispatchResolves: false,
+    },
+    {
+        id: 'daf-lane-unmodelled-inertia',
+        manifests: {
+            'composer.json': { require: { 'inertiajs/inertia-laravel': '^1' } },
+        },
+        detects: 'unknown',
         dispatchResolves: false,
     },
 ];
@@ -149,10 +169,12 @@ describe('UI lane matrix — detection', () => {
         });
     }
 
-    it('daf-lane-monorepo: manifests below the root detect as the default', () => {
-        // The detector reads root manifests only and documents that as
-        // intentional — but the UI dispatcher passes the project root
-        // unconditionally, so a monorepo silently becomes `plain`.
+    it('daf-lane-monorepo: manifests below the root are a wrong-scope call', () => {
+        // Was `plain`. The detector still reads root manifests only — that is
+        // documented and intentional — but a root with no manifest and a
+        // workspace that has one is a scope error, not a plain project, so it
+        // reports `unknown` and dispatch refuses instead of running generic
+        // tooling over the whole repo.
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-lane-mono-'));
         _tmpdirs.push(root);
         const pkgDir = path.join(root, 'packages', 'web');
@@ -162,6 +184,12 @@ describe('UI lane matrix — detection', () => {
             JSON.stringify({ dependencies: { react: '^18', '@radix-ui/react-slot': '^1' } }),
             'utf-8',
         );
+        expect(detect_stack(root).frontend).toBe(UNSUPPORTED_STACK);
+    });
+
+    it('an empty repo stays the default — greenfield must not be refused', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-lane-green-'));
+        _tmpdirs.push(root);
         expect(detect_stack(root).frontend).toBe(DEFAULT_STACK);
     });
 
@@ -213,10 +241,27 @@ describe('UI lane matrix — dispatch resolution', () => {
 });
 
 describe('UI lane matrix — bundle resolution (what must actually exist)', () => {
-    it('every lane has a bundle', () => {
+    it('every dispatchable lane has a bundle', () => {
         for (const stack of Object.keys(STACK_DIRECTIVES)) {
-            expect(STACK_BUNDLES[stack]).toBeDefined();
+            // `unknown` deliberately has none — there is nothing honest to
+            // dispatch to, so the step refuses instead.
+            if (stack === 'unknown') continue;
+            expect(STACK_BUNDLES[stack], stack).toBeDefined();
         }
+    });
+
+    it('the unmodelled lane refuses instead of dispatching', () => {
+        const st = new DeliveryState({
+            ticket: {},
+            stack: { frontend: 'unknown', mtime: 0 },
+        } as never);
+        const r = applyRun(st);
+        expect(r.outcome).toBe('blocked');
+        const body = r.questions.join('\n');
+        // No directive verb — a refusal, not a delegation.
+        expect(body).not.toContain('@agent-directive');
+        expect(body).toContain('does not model');
+        expect(body).toContain('Abort');
     });
 
     it('every bundle member resolves to a real skill', () => {

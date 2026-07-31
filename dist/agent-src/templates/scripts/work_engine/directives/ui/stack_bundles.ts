@@ -62,7 +62,29 @@ export const STACK_BUNDLES: Readonly<Record<string, StackBundle>> = {
         review: GENERIC_REVIEW,
         pack_agnostic: false,
     },
+    // Livewire without Flux — the common Laravel frontend. Previously fell
+    // into `plain` because detection required Livewire AND Flux.
+    'blade-livewire': {
+        build: ['livewire', 'blade-ui'],
+        review: GENERIC_REVIEW,
+        pack_agnostic: false,
+    },
+    // Filament is Livewire + Blade + Tailwind under the hood; the same
+    // executors apply. A Filament-specific skill is gated on evidence that
+    // these produce unusable output for it, not assumed.
+    filament: {
+        build: ['livewire', 'blade-ui'],
+        review: GENERIC_REVIEW,
+        pack_agnostic: false,
+    },
     'react-shadcn': {
+        build: ['react-shadcn-ui'],
+        review: GENERIC_REVIEW,
+        pack_agnostic: false,
+    },
+    // React without Radix/shadcn. `react-shadcn-ui` still carries the React
+    // component idiom; the shadcn-specific parts simply do not apply.
+    react: {
         build: ['react-shadcn-ui'],
         review: GENERIC_REVIEW,
         pack_agnostic: false,
@@ -85,9 +107,39 @@ export const STACK_BUNDLES: Readonly<Record<string, StackBundle>> = {
 /** Lanes with no framework-specific executor — the halt body says so. */
 export const GENERIC_LANES: ReadonlySet<string> = new Set(['vue', 'plain']);
 
+/**
+ * The label detection returns for a framework it recognises but does not
+ * model. Mirrors `stack/detect.ts::UNSUPPORTED_STACK`; duplicated as a literal
+ * because this module is import-free by design (the detector is a leaf module
+ * the directives must not depend on).
+ */
+export const UNSUPPORTED_LANE = 'unknown';
+
 /** Return the bundle for `stack`, or the `plain` bundle when unmapped. */
 export function bundle_for(stack: string): StackBundle {
     return STACK_BUNDLES[stack] ?? (STACK_BUNDLES['plain'] as StackBundle);
+}
+
+/**
+ * Questions for the refusal halt on an unmodelled framework.
+ *
+ * Not a directive — there is nothing honest to dispatch to. The agent names
+ * the actual markers from the manifest (it has filesystem access; the engine
+ * deliberately does not carry them on `StackResult`), and the user chooses
+ * between the stack-neutral floor and stopping.
+ */
+export function unsupported_stack_questions(step: string): string[] {
+    return [
+        '> Detection found a frontend framework this package does not model, ' +
+            `so there is no \`${step}\` lane for it.`,
+        '> Name the markers you see in `composer.json` / `package.json` so the ' +
+            'choice below is made on the real stack, not on a guess.',
+        '> 1. Continue on the stack-neutral floor — `ui-component-architect` + ' +
+            '`tailwind-engineer`. Output will not be idiomatic for this ' +
+            'framework; say so in the result.',
+        '> 2. Abort — drop this UI request and add a lane first ' +
+            '(`docs/contracts/ui-stack-extension.md`).',
+    ];
 }
 
 /**

@@ -238,25 +238,25 @@ cannot depend on a pack the consumer may not have. ✅
 
 ## Phase 2 — Detection: stop sending real stacks into the fallback
 
-- [ ] Split the blade lane's `&&` (`detect.ts:188-190`): Livewire-with-Flux and
-      Livewire-without-Flux are different capability sets and must not collapse
-      into `plain`. Route the Flux-less case to the Livewire/Blade builders.
-- [ ] Same for React without Radix/shadcn (`detect.ts:193-206`) — React alone is
-      a served stack, not an unknown one.
-- [ ] Add Filament detection (`filament/filament`). Route per the Phase-0
-      `daf-lane-filament` result: to the Blade builders if that fixture showed
-      usable output, otherwise to the loud refusal with Filament named. Do **not**
-      author a Filament skill in this roadmap — that needs its own evidence.
-- [ ] Monorepo: `detect.ts:87-91` documents root-only as intentional and pushes
-      scope selection to the caller, but the UI dispatcher passes the project
-      root unconditionally. Either the dispatcher learns to pass a workspace
-      root, or detection reports `unknown` (→ loud refusal) instead of `plain`
-      when no root manifest is found. Pick one; do not leave the silent default.
-- [ ] `daf-lane-*` fixtures from Phase 0 flip from "records the defect" to
-      "asserts the fix".
+- [x] Split the blade lane's `&&`: Livewire-with-Flux and Livewire-without-Flux
+      are different capability sets and must not collapse into `plain`. Route the
+      Flux-less case to the Livewire/Blade builders.
+      <!-- done: new `blade-livewire` lane → build: [livewire, blade-ui] -->
+- [x] Same for React without Radix/shadcn — React alone is a served stack, not an
+      unknown one.
+      <!-- done: new `react` lane → build: [react-shadcn-ui] (the React component idiom applies; the shadcn-specific parts simply do not) -->
+- [x] Add Filament detection (`filament/filament`).
+      <!-- done: new `filament` lane, ordered BEFORE bare Livewire because Filament pulls Livewire in transitively — otherwise the project would be labelled by its dependency, not by the framework the developer works in. Bundle: [livewire, blade-ui]; a Filament-specific skill stays gated on evidence that those produce unusable output -->
+- [x] Monorepo: pick a side; do not leave the silent default.
+      <!-- done: detection keeps root-manifests-only (documented, intentional) but now distinguishes wrong-scope from plain — no root manifest AND a manifest under packages|apps|services|libs/* → `unknown` → refusal. A repo with no manifest ANYWHERE stays `plain`, because that is greenfield and the scaffold path depends on it (asserted) -->
+- [x] Split `plain` into `plain` vs `unknown` — the council's precondition for
+      failing loudly without punishing real plain projects.
+      <!-- done: `plain` now means "no frontend markers"; `unknown` means "a framework we recognise but do not model" (svelte, @angular/core, nuxt, astro, solid-js, qwik, inertia). Dispatch intercepts `unknown` in apply/review/polish and returns a refusal with no directive verb — there is nothing honest to delegate to -->
+- [x] `daf-lane-*` fixtures flip from "records the defect" to "asserts the fix".
+      <!-- done: 3 rows moved (livewire-no-flux plain→blade-livewire, filament plain→filament, react-no-radix plain→react), 3 rows added (unmodelled-svelte, unmodelled-inertia, greenfield-stays-plain), monorepo plain→unknown. Also corrected 3 pre-existing detection tests that pinned the old fall-through as correct -->
 
-**Exit:** no project in the Phase-0 matrix reaches `plain` by accident; `plain`
-means "genuinely plain", not "we failed to recognise you".
+**Exit:** no project in the matrix reaches `plain` by accident; `plain` means
+"genuinely plain", not "we failed to recognise you". ✅
 
 ## Phase 3 — The validation gates that do not validate
 

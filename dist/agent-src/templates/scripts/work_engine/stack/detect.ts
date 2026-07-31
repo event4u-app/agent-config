@@ -17,17 +17,35 @@
  *
  * 1. `composer.json` lists `livewire/livewire` AND `livewire/flux` →
  *    `blade-livewire-flux`
- * 2. `package.json` lists `react` AND any of `@radix-ui/*`,
+ * 2. `composer.json` lists `filament/filament` → `filament` (before bare
+ *    Livewire: Filament pulls Livewire in transitively)
+ * 3. `composer.json` lists `livewire/livewire` → `blade-livewire`
+ * 4. `package.json` lists `react` AND any of `@radix-ui/*`,
  *    `shadcn-ui` or has a `components.json` (the shadcn marker file)
  *    → `react-shadcn`
- * 3. `package.json` lists `vue` (any major) → `vue`
- * 4. Otherwise → `plain`
+ * 5. `package.json` lists `react` → `react`
+ * 6. `package.json` lists `vue` (any major) → `vue`
+ * 7. Either manifest names a recognised-but-unmodelled framework
+ *    (Svelte, Angular, Nuxt, Astro, Solid, Qwik, Inertia) → `unknown`
+ * 8. Otherwise → `plain`
+ *
+ * Rules 3, 5 and 7 exist because the earlier table sent three common
+ * shapes into `plain`: Laravel+Livewire without Flux failed rule 1's `&&`,
+ * React without Radix failed rule 4, and every unmodelled framework was
+ * indistinguishable from a genuinely plain project. `plain` now means "no
+ * frontend markers"; `unknown` means "a framework we do not model", and
+ * dispatch refuses on it rather than handing over generic tooling silently.
  *
  * Detection is filesystem-cheap: at most three small JSON reads per
  * project root. Errors (missing file, malformed JSON, missing `require`
  * section) downgrade to `plain` rather than raising — a wrong stack
  * label is recoverable (audit catches it, user can override), but a
  * crash mid-dispatch is not.
+ *
+ * Root manifests only, by design: a monorepo caller passes the workspace
+ * root that carries the manifest it cares about. Note the consequence —
+ * a caller that always passes the repository root gets `plain` for a
+ * monorepo, so the caller owns scope selection, not the detector.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -43,18 +61,59 @@ import * as path from 'node:path';
  */
 export const KNOWN_STACKS: ReadonlySet<string> = new Set([
     'blade-livewire-flux',
+    'blade-livewire',
+    'filament',
     'react-shadcn',
+    'react',
     'vue',
     'plain',
+    'unknown',
 ]);
 
-/** Fallback when no manifest signal matches. */
+/**
+ * Label for a project with no frontend markers at all.
+ *
+ * `plain` used to carry two meanings — "genuinely a plain HTML/Tailwind
+ * project" and "detection failed, here is generic tooling anyway" — which made
+ * a loud failure impossible without punishing real plain projects. The second
+ * meaning is now {@link UNSUPPORTED_STACK}.
+ */
 export const DEFAULT_STACK = 'plain';
+
+/**
+ * Label for a project whose frontend IS recognisable but is not modelled.
+ *
+ * Dispatch refuses on this label instead of degrading to generic tooling: a
+ * Filament or Svelte project silently routed to a Tailwind-only bundle is
+ * user-hostile precisely because the output looks like it worked.
+ */
+export const UNSUPPORTED_STACK = 'unknown';
 
 const _SHADCN_RADIX_PREFIX = '@radix-ui/';
 const _SHADCN_PACKAGE_NAMES: ReadonlySet<string> = new Set(['shadcn-ui', 'shadcn']);
 const _FLUX_PACKAGE = 'livewire/flux';
 const _LIVEWIRE_PACKAGE = 'livewire/livewire';
+const _FILAMENT_PACKAGE = 'filament/filament';
+
+/**
+ * Frontend markers this package recognises but does not model.
+ *
+ * One of these present means detection **succeeded** at recognising a
+ * framework and the package simply has no lane for it — the `unknown` case,
+ * not the `plain` case. Keep the list short and factual; a marker leaves it
+ * only when a real lane exists.
+ */
+const _UNMODELLED_MARKERS: ReadonlyArray<string> = [
+    'svelte',
+    '@angular/core',
+    'nuxt',
+    'astro',
+    'solid-js',
+    '@builder.io/qwik',
+    '@inertiajs/vue3',
+    '@inertiajs/react',
+    'inertiajs/inertia-laravel',
+];
 
 /**
  * A heterogeneous JSON object, mirroring a Python `dict[str, object]`.
@@ -109,12 +168,49 @@ export function detect_stack(project_root: string): StackResult {
         return new StackResult({ frontend: 'blade-livewire-flux', mtime });
     }
 
+    // Filament before bare Livewire: it pulls Livewire in transitively, so a
+    // Filament project would otherwise be labelled by its dependency rather
+    // than by the framework the developer actually works in.
+    if (_has_package(composer, ['require', 'require-dev'], _FILAMENT_PACKAGE)) {
+        return new StackResult({ frontend: 'filament', mtime });
+    }
+
+    // Livewire WITHOUT Flux is the common Laravel frontend, not an unknown
+    // one. It used to fail the `&&` above and land in `plain`.
+    if (_has_package(composer, ['require', 'require-dev'], _LIVEWIRE_PACKAGE)) {
+        return new StackResult({ frontend: 'blade-livewire', mtime });
+    }
+
     if (_is_react_shadcn(pkg, components_json)) {
         return new StackResult({ frontend: 'react-shadcn', mtime });
     }
 
+    // React without Radix/shadcn is a served stack, not an unknown one.
+    if (_has_package(pkg, _PKG_DEP_KEYS, 'react')) {
+        return new StackResult({ frontend: 'react', mtime });
+    }
+
     if (_has_vue(pkg)) {
         return new StackResult({ frontend: 'vue', mtime });
+    }
+
+    // A recognised-but-unmodelled framework is NOT `plain`. Refusing here is
+    // the point: `plain` means "no frontend markers", and conflating the two
+    // is what let a Svelte or Inertia project receive Tailwind-only tooling
+    // and no warning.
+    if (_has_unmodelled_marker(composer, pkg)) {
+        return new StackResult({ frontend: UNSUPPORTED_STACK, mtime });
+    }
+
+    // Monorepo: no manifest at the root, but one sits in a workspace directory.
+    // That is a wrong-scope call, not a plain project — the caller owns scope
+    // selection, so say so instead of labelling the whole repo `plain` and
+    // dispatching generic tooling at it.
+    //
+    // A repo with no manifest ANYWHERE stays `plain`: that is greenfield, and
+    // the scaffold path depends on it.
+    if (mtime === 0.0 && _has_nested_manifest(project_root)) {
+        return new StackResult({ frontend: UNSUPPORTED_STACK, mtime });
     }
 
     return new StackResult({ frontend: DEFAULT_STACK, mtime });
@@ -183,6 +279,61 @@ function _all_dependencies(manifest: Manifest, ...keys: string[]): Manifest {
         }
     }
     return merged;
+}
+
+/** Dependency sections a `package.json` can carry. */
+const _PKG_DEP_KEYS: ReadonlyArray<string> = [
+    'dependencies',
+    'devDependencies',
+    'peerDependencies',
+    'optionalDependencies',
+];
+
+/** True when `name` appears in any of `manifest`'s named dependency sections. */
+function _has_package(
+    manifest: Manifest,
+    sections: ReadonlyArray<string>,
+    name: string,
+): boolean {
+    return name in _all_dependencies(manifest, ...sections);
+}
+
+/** Workspace directories a monorepo conventionally puts its packages in. */
+const _WORKSPACE_DIRS: ReadonlyArray<string> = ['packages', 'apps', 'services', 'libs'];
+
+/**
+ * True when no root manifest exists but a workspace directory holds one.
+ *
+ * Deliberately shallow — one `readdir` per conventional workspace directory,
+ * one `stat` per child. It answers "was this called at the wrong scope?", not
+ * "where is the real project", which stays the caller's job.
+ */
+function _has_nested_manifest(project_root: string): boolean {
+    for (const dir of _WORKSPACE_DIRS) {
+        const base = path.join(project_root, dir);
+        let entries: string[];
+        try {
+            entries = fs.readdirSync(base);
+        } catch {
+            continue;
+        }
+        for (const entry of entries) {
+            if (
+                _is_file(path.join(base, entry, 'composer.json')) ||
+                _is_file(path.join(base, entry, 'package.json'))
+            ) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/** True when either manifest names a framework we recognise but do not model. */
+function _has_unmodelled_marker(composer: Manifest, pkg: Manifest): boolean {
+    const composer_deps = _all_dependencies(composer, 'require', 'require-dev');
+    const pkg_deps = _all_dependencies(pkg, ..._PKG_DEP_KEYS);
+    return _UNMODELLED_MARKERS.some((marker) => marker in composer_deps || marker in pkg_deps);
 }
 
 function _is_blade_livewire_flux(composer: Manifest): boolean {

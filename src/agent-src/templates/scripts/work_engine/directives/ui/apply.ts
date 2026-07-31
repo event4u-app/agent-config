@@ -18,14 +18,24 @@ import {
     agent_directive,
 } from '../../delivery_state.js';
 import { placeholder_paths } from './design.js';
-import { bundle_line } from './stack_bundles.js';
+import {
+    UNSUPPORTED_LANE,
+    bundle_line,
+    unsupported_stack_questions,
+} from './stack_bundles.js';
 
 /** Map `state.stack.frontend` → agent-directive skill name. */
 export const STACK_DIRECTIVES: Record<string, string> = {
     'blade-livewire-flux': 'ui-apply-blade-livewire-flux',
+    'blade-livewire': 'ui-apply-blade-livewire',
+    filament: 'ui-apply-filament',
     'react-shadcn': 'ui-apply-react-shadcn',
+    react: 'ui-apply-react',
     vue: 'ui-apply-vue',
     plain: 'ui-apply-plain',
+    // Present so the `keys == KNOWN_STACKS` invariant holds. Never emitted —
+    // the step intercepts this lane and refuses instead of dispatching.
+    unknown: 'ui-apply-unsupported',
 };
 
 /** Fallback directive when `state.stack` is missing or malformed. */
@@ -122,6 +132,13 @@ function _placeholder_violations_in_output(envelope: Record<string, Any>): strin
 function _delegate_to_stack_skill(state: DeliveryState): StepResult {
     const directive = _resolve_directive(state);
     const stack_label = _stack_label(state);
+    if (stack_label === UNSUPPORTED_LANE) {
+        return new StepResult({
+            outcome: Outcome.BLOCKED,
+            questions: unsupported_stack_questions('apply'),
+            message: 'UI apply refused: frontend framework not modelled by any lane.',
+        });
+    }
     return new StepResult({
         outcome: Outcome.BLOCKED,
         questions: [
