@@ -1,5 +1,5 @@
 ---
-status: ready
+status: active
 complexity: moderate
 ---
 
@@ -31,25 +31,47 @@ stops the sequence; it does not downgrade to a partial flip.
 | 2 | **Host canary** | The demoted-rule canary fires on every supported host and surfaces the router pointer, not the body sentinel |
 | 3 | **essential decoupling** | The essential-baseline measurement is settled as an independent question, not as a condition on this flip |
 
-## Phase 1 — Scoring pass
+## Phase 1 — Scoring pass — ⛔ HONEST NULL 2026-07-31
 
-Blocked on the golden set landing (PR #1057) and on the runner existing.
+> The instrument failed its own falsification gate before any corpus run. The
+> golden set is complete (110 tasks, 106/106 rules) and the runner exists; what
+> does not exist is a pair of evaluators that agree well enough to be trusted.
+> Details in `ADR-202` § Addendum 2026-07-31.
+>
+> · `anthropic/claude-sonnet-4-5` 18/18 on the fixtures · `openai/gpt-4o` 15/18
+> · replacement `openai/gpt-5` unusable (empty responses through the client)
+> · **inter-evaluator Cohen's κ = 0.700 against a registered floor of 0.800**
+>
+> The failure is on the EASIEST input — the fixtures are unambiguous by
+> construction, corpus anchors are harder — and it is asymmetric rather than
+> noisy: one evaluator was perfect, the other was not. That is a discrimination
+> gap in one substrate, not a hard problem in the task.
 
-- [ ] Build the anchor-scoring runner: both arms over the completed corpus,
+- [x] Build the anchor-scoring runner: both arms over the completed corpus,
   deterministic evaluation against `must_include` / `must_not`, output in the
   `quality-run.json` schema with `judge_model: "anchor-scoring"`.
-- [ ] Ship the falsification suite in the same PR (ADR-202 § Scorer
+  <!-- BUILT 2026-07-31: `_lib/anchor_eval.ts`. Renamed in ADR-202 to
+  "constrained anchor evaluation with frozen verdicts" — measured, 0 of 255
+  must_include anchors carry a literal token, so the "pure function of (answer,
+  anchors)" premise was false and the verdict layer needs models. -->
+- [x] Ship the falsification suite in the same PR (ADR-202 § Scorer
   falsification): known-bad and known-good fixtures, a mutation test over the
   anchor evaluation where every mutant must be killed, and a null-scorer guard.
-- [ ] Generate both arms once and **freeze the transcript**. State the cost
+  <!-- SHIPPED 2026-07-31: 23 deterministic tests (fixtures, 7 killed mutants,
+  null-scorer guard) + `anchor_eval_falsify.ts` running the same fixtures
+  against the live evaluators. It did its job: it failed the instrument. -->
+- [-] Generate both arms once and **freeze the transcript**. State the cost
   before the run.
-- [ ] Derive δ and the per-rule floor from the frozen corpus's observed spread
+  <!-- cancelled 2026-07-31: not run — the gate before it failed; generating 110x2 transcripts would have spent money on verdicts from an instrument already known unreliable. -->
+- [-] Derive δ and the per-rule floor from the frozen corpus's observed spread
   and write both into ADR-202 — before any anchor is scored.
-- [ ] Score the frozen corpus. Record the result either way.
+  <!-- cancelled 2026-07-31: not reached — no frozen corpus exists. -->
+- [-] Score the frozen corpus. Record the result either way.
+  <!-- cancelled 2026-07-31: not reached — no frozen corpus exists. -->
 
 ## Phase 2 — Host canary
 
-Blocked on Phase 1 passing. The scaffold already exists and is green mechanically
+Blocked on Phase 1 passing — which it did not. Not started. The scaffold already exists and is green mechanically
 (`probe_host_compliance`: pointer, body-removed, hint, link all true); what is
 missing is the live leg, which is operator-run by design.
 

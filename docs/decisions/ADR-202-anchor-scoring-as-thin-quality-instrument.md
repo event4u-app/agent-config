@@ -20,13 +20,18 @@ review_trigger: >-
   justification to return.
 ---
 
-# ADR-202 — Deterministic anchor-scoring is the thin-projection quality instrument; paired judging stays closed
+# ADR-202 — Constrained anchor evaluation with frozen verdicts; paired judging stays closed
 
 ## Status
 
-**Accepted — instrument selected, no measurement performed.** This record fixes
-*how* thin-vs-eager quality will be measured if it is measured again. It does
-not re-open Phase H1, does not license a flip, and produces no verdict.
+**Accepted, then CLOSED BY MEASUREMENT on 2026-07-31.** The instrument this ADR
+selected was built, falsified against its own fixtures, and **failed**. No corpus
+run took place. See § Addendum. The record is kept accepted because the reasoning
+that closed paired judging still stands; what closed is the replacement.
+
+Original framing: this record fixes *how* thin-vs-eager quality will be measured
+if it is measured again. It does not re-open Phase H1, does not license a flip,
+and produces no verdict.
 
 ## Context
 
@@ -262,3 +267,71 @@ in the same PR, and must be green before any live run:
 - `src/scripts/check_token_quality_golden.ts` — the coverage gate that defines
   "golden set complete".
 - ADR-201 — the sibling measurement-gated removal decided in the same programme.
+
+
+## Addendum 2026-07-31 — the instrument is a null
+
+### Renamed: "constrained anchor evaluation with frozen verdicts"
+
+"Deterministic anchor-scoring" was the wrong name, and Decision 1's claim that
+**"the scorer is a pure function of (answer, anchors)" is FALSIFIED** — left
+standing above rather than edited away, because it is the reason this addendum
+exists. Measured against the completed corpus:
+
+- **0 of 255 `must_include` anchors** carry a literal token or code span.
+- 17 % of `must_include` and 2 % of `must_not` are behavioural predicates
+  ("mentions that UI redesign is outside scope").
+
+A substring match over those measures nothing. Everything *below* the verdict —
+aggregation, per-rule floor, non-inferiority arithmetic, κ, conservative
+disagreement resolution — is genuinely deterministic and is unit-tested without
+an API. The verdict itself needed two evaluator models, which is what the
+rename records.
+
+### Why two evaluators, and why it mattered
+
+A single human judge was ruled inadmissible (council 2026-07-29) because such a
+judge has **no measurable κ** — the exact floor the second paired run failed
+becomes unmeasurable. Two independent evaluators restore that measurement. That
+restoration was the whole argument for admitting a model into the loop again, so
+the κ floor is not a nice-to-have here; it is the licence.
+
+### What was measured
+
+The falsification suite ran before any corpus generation, as sequenced. Fixtures
+are deliberately unambiguous — an answer that plainly does the thing and one that
+plainly does the opposite, over three rule surfaces.
+
+| | |
+|---|---|
+| `anthropic/claude-sonnet-4-5` | **18/18** verdicts correct |
+| `openai/gpt-4o` | **15/18** — one misclassification, two items it emitted no verdict line for |
+| Replacement attempt: `openai/gpt-5` | **unusable** — returns an empty string through the council client; the fixtures were never graded |
+| **Inter-evaluator Cohen's κ** | **0.700** |
+| Registered floor | **0.800** |
+
+Only Anthropic and OpenAI credentials resolve in this environment, so the one
+permitted replacement had nowhere else to go.
+
+### Verdict: honest null on the instrument
+
+κ = 0.700 < 0.800 → **the instrument failed**, per the registered rule. Two
+things make this a stronger null than the bare number suggests:
+
+1. It failed on the **easiest possible input**. The fixtures are unambiguous by
+   construction; corpus anchors are harder. A pair that cannot agree here will
+   not agree there.
+2. The failure is **asymmetric, not noisy**. One evaluator was perfect and the
+   other was not; κ is low because they disagree, not because both are random.
+   That is a discrimination gap in one substrate, not a hard problem in the task.
+
+**No corpus run was performed.** The gate that precedes generation failed, so
+generating and freezing 110×2 transcripts would have spent money to produce
+verdicts from an instrument already known to be unreliable.
+
+### What this does NOT close
+
+The token-savings thesis is untouched — only this second instrument died. The
+registered thresholds (zero tolerance on `must_not`, δ ≤ 3 pp, per-rule floor)
+were never exercised and remain available to any future instrument. Nothing here
+re-opens Phase H1, and nothing here licenses a flip.
