@@ -204,6 +204,23 @@ corpus. Canon is a gap-filler, never an override of a registered brand value.
 4. On `design_confirmed: true` the directive engine advances; revisions
    loop back here.
 
+### Font delivery columns — which one is the answer
+
+`font-pairings-reference.csv` carries three delivery-adjacent columns and they
+are **not** interchangeable. This is the arbitration between them, so the file
+and its sibling `data/stacks/nextjs.csv` (row 22: a font-CDN `<link>` sits in
+that row's **Don't** column) no longer read as opposite instructions:
+
+| Column | What it answers | Status |
+|---|---|---|
+| `Google Fonts URL` | *where do I find / verify this font?* | discovery + availability check |
+| `Self-Hosted Route` | *how does it get onto the page?* | **the default answer** — `@fontsource/*` package ids derived from the row's own Google-Fonts families; two rows name a foundry file instead (Fontshare pairs with a Google alternative) |
+| `CSS Import` | the third-party CDN `@import` | **opt-in only** — emitting it transmits the visitor's IP to the third party; policy owner is [`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md) § Asset & imagery discipline ([`ADR-205`](../../../docs/decisions/ADR-205-webfont-delivery-ownership.md)) |
+
+Per-stack route resolution (Next / bundler / asset-pipeline / plain) lives in
+[`typography-system`](../typography-system/SKILL.md) § Delivery — one table, not
+two.
+
 ### Font fallback (no google-fonts index — by design)
 
 The 745 KB Google-Fonts index was rejected (ADR-061 §8): it duplicates a
@@ -332,7 +349,16 @@ Before finalizing any design brief, cross-check against
 [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
 — especially the Color (C1–C5), Typography (T7–T8), and Layout (L1–L2) sections.
 If the grounded corpus selection lands on a pattern in the catalog, either invoke
-the override condition or adjust the selection. Run the AI-slop originality
+the override condition or adjust the selection.
+For typography this is **a field, not a memory test**: a
+`font-pairings-reference.csv` row whose heading or body font is a T7 overused-AI
+default carries it in its `AI-Default Flag` column (`T7:<font>`; 15 of 73 rows) —
+read the field. An empty flag means the row carries no T7 font, so a pairing is
+never "flagged by association" (Poppins + Open Sans, the example most often
+cited as flagged, carries none). T8 (single typeface for everything) needs no
+column: it is `Heading Font == Body Font` on the row. A flag is a visible
+conflict to resolve, never a ban — the catalog's override condition still
+applies. Run the AI-slop originality
 self-test (catalog § "The AI-slop originality self-test") on the chosen aesthetic
 direction before emitting `design_confirmed`.
 
