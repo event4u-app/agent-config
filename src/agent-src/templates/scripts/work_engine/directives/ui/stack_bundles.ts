@@ -146,9 +146,29 @@ const NATIVELY_GENERIC_LANES: ReadonlySet<string> = new Set(['plain']);
  */
 export const UNSUPPORTED_LANE = 'unknown';
 
-/** Return the bundle for `stack`, or the `plain` bundle when unmapped. */
-export function bundle_for(stack: string): StackBundle {
-    return STACK_BUNDLES[stack] ?? (STACK_BUNDLES['plain'] as StackBundle);
+/**
+ * Return the bundle for a stack state.
+ *
+ * Composition wins when the state carries axes; the hand-written map is the
+ * fallback for a legacy `state.stack` persisted before Detection v2. Keeping
+ * both is not indecision — a state file written by an older run must still
+ * dispatch, and the map is exactly what it expects.
+ */
+export function bundle_for(stack_state: unknown): StackBundle {
+    if (typeof stack_state === 'object' && stack_state !== null) {
+        const raw = (stack_state as Record<string, unknown>)['axes'];
+        if (typeof raw === 'object' && raw !== null) {
+            return compose_bundle(raw as Record<string, string>);
+        }
+        const label = (stack_state as Record<string, unknown>)['frontend'];
+        if (typeof label === 'string' && label in STACK_BUNDLES) {
+            return STACK_BUNDLES[label] as StackBundle;
+        }
+    }
+    if (typeof stack_state === 'string' && stack_state in STACK_BUNDLES) {
+        return STACK_BUNDLES[stack_state] as StackBundle;
+    }
+    return STACK_BUNDLES['plain'] as StackBundle;
 }
 
 /**
@@ -211,8 +231,19 @@ export function unsupported_stack_questions(
  * framework-specific executor says that outright rather than presenting the
  * generic pair as if it were stack support.
  */
-export function bundle_line(stack: string, role: 'build' | 'review'): string {
-    const bundle = bundle_for(stack);
+export function bundle_line(
+    stack_state: unknown,
+    role: 'build' | 'review',
+    stack_label?: string,
+): string {
+    const bundle = bundle_for(stack_state);
+    const stack =
+        stack_label ??
+        (typeof stack_state === 'string'
+            ? stack_state
+            : String(
+                  (stack_state as Record<string, unknown> | null)?.['frontend'] ?? 'plain',
+              ));
     const skills = role === 'review' ? bundle.review : bundle.build;
     const rendered = skills.map((name) => `\`${name}\``).join(' + ');
     if (NATIVELY_GENERIC_LANES.has(stack)) {
@@ -226,4 +257,76 @@ export function bundle_line(stack: string, role: 'build' | 'review'): string {
         );
     }
     return `> Skills: ${rendered}.`;
+}
+
+// ── Axis-driven composition ─────────────────────────────────────────────────
+
+/**
+ * Overlay table: one axis value → the skills that add its idiom.
+ *
+ * This is what replaces lane enumeration. A lane is no longer a hand-written
+ * bundle but the base plus whatever the axes turn on, so a stack the package has
+ * never named still composes: `reactivity: livewire` pulls Livewire **with or
+ * without** Flux, and `component_lib: flux` layers Flux on top. The two
+ * full-match lanes fall out as a special case — that identity is the regression
+ * witness, asserted in `ui_lane_matrix.test.ts`.
+ *
+ * Only axis values with a real overlay skill appear. Everything else is served
+ * by the base plus its corpus query, which is the point: coverage without a
+ * skill per framework.
+ */
+const _AXIS_OVERLAYS: Readonly<Record<string, ReadonlyArray<string>>> = {
+    'reactivity:livewire': ['livewire'],
+    'reactivity:react': ['react-shadcn-ui'],
+    'component_lib:flux': ['flux'],
+    'component_lib:shadcn': ['react-shadcn-ui'],
+    'component_lib:radix': ['react-shadcn-ui'],
+    'view:blade': ['blade-ui'],
+    'meta:filament': ['livewire', 'blade-ui'],
+};
+
+/** Axes consulted for overlays, most-specific first. */
+const _OVERLAY_AXES: ReadonlyArray<string> = [
+    'component_lib',
+    'meta',
+    'reactivity',
+    'view',
+];
+
+/** Skill → the pack it ships in, for the pack-agnostic determination. */
+const _FRAMEWORK_PACK_SKILLS: ReadonlySet<string> = new Set([
+    'livewire',
+    'flux',
+    'blade-ui',
+    'react-shadcn-ui',
+]);
+
+/**
+ * Derive a bundle from detected axes.
+ *
+ * Order is deliberate and matches the hand-written lanes: overlays first
+ * (most-specific axis first), base last. An overlay carries framework idiom the
+ * base cannot, so it must be read before the generic contract's fallbacks.
+ *
+ * `pack_agnostic` is computed, not declared: a composition that pulled in any
+ * framework-pack skill is not safe as a fallback, and computing it removes the
+ * chance of a hand-written `true` outliving the bundle it described.
+ */
+export function compose_bundle(axes: Readonly<Record<string, string>>): StackBundle {
+    const build: string[] = [];
+    for (const axis of _OVERLAY_AXES) {
+        const value = axes[axis];
+        if (value === undefined || value === 'none' || value === 'unknown') continue;
+        for (const skill of _AXIS_OVERLAYS[`${axis}:${value}`] ?? []) {
+            if (!build.includes(skill)) build.push(skill);
+        }
+    }
+    for (const skill of GENERIC_BUILD) {
+        if (!build.includes(skill)) build.push(skill);
+    }
+    return {
+        build,
+        review: GENERIC_REVIEW,
+        pack_agnostic: !build.some((s) => _FRAMEWORK_PACK_SKILLS.has(s)),
+    };
 }

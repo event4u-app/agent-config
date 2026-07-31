@@ -148,7 +148,7 @@ function _delegate_to_stack_skill(state: DeliveryState): StepResult {
         questions: [
             agent_directive(directive),
             `> Stack: \`${stack_label}\`. Implementing the locked design brief.`,
-            bundle_line(stack_label, 'build'),
+            bundle_line(state.stack, 'build', stack_label),
             '> Microcopy is locked — every button label, empty-state ' +
                 'message, and validation message must come verbatim from ' +
                 '`state.ui_design.microcopy`.',

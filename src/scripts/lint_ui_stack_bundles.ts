@@ -31,6 +31,7 @@ import { fileURLToPath } from 'node:url';
 import {
     STACK_BUNDLES,
     type StackBundle,
+    compose_bundle,
 } from '../agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.js';
 
 const QUIET = process.argv.includes('--quiet');
@@ -46,6 +47,29 @@ const SKILLS_DIR = path.join(REPO, 'src', 'skills');
 const STACK_NEUTRAL_PACKS: ReadonlySet<string> = new Set(['engineering-base', 'core', 'meta']);
 
 const findings: string[] = [];
+
+/**
+ * Axis combinations the composition must satisfy.
+ *
+ * Not exhaustive over the cross-product — that would be thousands of
+ * meaningless tuples. These are the shapes a real project produces, including
+ * the ones no hand-written lane ever covered (Nuxt over Vue, Astro, Angular,
+ * Livewire without Flux).
+ */
+const _AXIS_COMBOS: ReadonlyArray<Record<string, string>> = [
+    { view: 'blade', reactivity: 'livewire', component_lib: 'flux', css: 'tailwind', meta: 'none' },
+    { view: 'blade', reactivity: 'livewire', component_lib: 'none', css: 'tailwind', meta: 'none' },
+    { view: 'blade', reactivity: 'alpine', component_lib: 'none', css: 'tailwind', meta: 'none' },
+    { view: 'blade', reactivity: 'unknown', component_lib: 'none', css: 'none', meta: 'filament' },
+    { view: 'jsx', reactivity: 'react', component_lib: 'radix', css: 'tailwind', meta: 'none' },
+    { view: 'jsx', reactivity: 'react', component_lib: 'none', css: 'tailwind', meta: 'nextjs' },
+    { view: 'vue-sfc', reactivity: 'vue', component_lib: 'none', css: 'none', meta: 'nuxt' },
+    { view: 'svelte-sfc', reactivity: 'svelte', component_lib: 'none', css: 'none', meta: 'none' },
+    { view: 'astro', reactivity: 'unknown', component_lib: 'none', css: 'none', meta: 'astro' },
+    { view: 'angular-html', reactivity: 'angular', component_lib: 'none', css: 'none', meta: 'none' },
+    { view: 'unknown', reactivity: 'htmx', component_lib: 'none', css: 'none', meta: 'none' },
+    { view: 'none', reactivity: 'none', component_lib: 'none', css: 'tailwind', meta: 'none' },
+];
 
 function skill_path(name: string): string {
     return path.join(SKILLS_DIR, name, 'SKILL.md');
@@ -135,6 +159,13 @@ function main(): number {
     }
     for (const lane of lanes) {
         check_lane(lane, STACK_BUNDLES[lane] as StackBundle);
+    }
+
+    // The composed shape, not just the hand-written lanes. Dispatch derives a
+    // bundle from axes now, so a combination nobody wrote down by hand can
+    // still be produced — and it has to satisfy the same two properties.
+    for (const combo of _AXIS_COMBOS) {
+        check_lane(`composed(${JSON.stringify(combo)})`, compose_bundle(combo));
     }
 
     // A lane usable as a fallback must be pack-agnostic, else the fallback

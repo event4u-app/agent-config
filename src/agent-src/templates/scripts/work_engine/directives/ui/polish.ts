@@ -225,7 +225,7 @@ function _delegate_to_polish_skill(
         questions: [
             agent_directive(directive),
             `> Stack: \`${stack_label}\`. Polish round ${next_round} of ${ceiling}.`,
-            bundle_line(stack_label, 'build'),
+            bundle_line(state.stack, 'build', stack_label),
             findings_line,
             '> Fix chart-type / contrast findings against the adopted ' +
                 "corpus rows (design-intelligence § 'Grounding the " +

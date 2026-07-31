@@ -209,7 +209,7 @@ function _delegate_to_review_skill(state: DeliveryState): StepResult {
             agent_directive(directive),
             `> Stack: \`${stack_label}\`. Reviewing rendered components ` +
                 'against the locked design brief.',
-            bundle_line(stack_label, 'review'),
+            bundle_line(state.stack, 'review', stack_label),
             '> The review pass compares `state.ticket.ui_apply.rendered` ' +
                 'against `state.ui_design` (microcopy, states, a11y, layout) ' +
                 'and produces a structured `findings` list.',

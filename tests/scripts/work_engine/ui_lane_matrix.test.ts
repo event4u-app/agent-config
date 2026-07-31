@@ -51,7 +51,7 @@ import {
 import { STACK_DIRECTIVES as REVIEW_DIRECTIVES } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/review.js';
 import { STACK_DIRECTIVES as POLISH_DIRECTIVES } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/polish.js';
 import { run as designRun } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/design.js';
-import { STACK_BUNDLES } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.js';
+import { STACK_BUNDLES, compose_bundle } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'src', 'skills');
@@ -490,6 +490,86 @@ describe('UI lane matrix — bundle resolution (what must actually exist)', () =
             stack: { frontend: 'vue', mtime: 0 },
         } as never);
         expect(applyRun(st).questions.join('\n')).toContain('no `vue`-specific executor');
+    });
+});
+
+describe('UI lane matrix — axis composition', () => {
+    // The regression witness for Phase 3: the hand-written lanes must fall out
+    // of composition. If a framework overlay stops appearing, or stops leading,
+    // the composition is wrong regardless of what the lint says.
+    const CASES: ReadonlyArray<[string, Record<string, unknown>]> = [
+        ['blade-livewire-flux', { 'composer.json': { require: { 'laravel/framework': '^11', 'livewire/livewire': '^3', 'livewire/flux': '^1' } } }],
+        ['blade-livewire', { 'composer.json': { require: { 'laravel/framework': '^11', 'livewire/livewire': '^3' } } }],
+        ['filament', { 'composer.json': { require: { 'laravel/framework': '^11', 'filament/filament': '^3' } } }],
+        ['react-shadcn', { 'package.json': { dependencies: { react: '^18', '@radix-ui/x': '^1' } } }],
+        ['react', { 'package.json': { dependencies: { react: '^18' } } }],
+        ['vue', { 'package.json': { dependencies: { vue: '^3' } } }],
+        ['plain', { 'package.json': { devDependencies: { tailwindcss: '^4' } } }],
+    ];
+
+    for (const [label, manifests] of CASES) {
+        it(`${label}: composition reproduces the hand-written overlays, in order`, () => {
+            const detected = detect_stack(projectWith(manifests));
+            const composed = compose_bundle(
+                detected.axes as unknown as Record<string, string>,
+            );
+            const hand = STACK_BUNDLES[label] as { build: readonly string[] };
+            // The overlays lead, in the same order the hand-written lane had.
+            expect(composed.build.slice(0, hand.build.length)).toEqual(
+                hand.build.filter((s) => composed.build.includes(s)).length ===
+                    hand.build.length
+                    ? [...hand.build]
+                    : composed.build.slice(0, hand.build.length),
+            );
+            for (const skill of hand.build) {
+                expect(composed.build, `${label} lost ${skill}`).toContain(skill);
+            }
+        });
+    }
+
+    it('the generic contract is appended everywhere, not only to plain lanes', () => {
+        // Deliberate divergence from the hand-written map, which omitted the
+        // base because it did not exist. The generic contract is a FLOOR —
+        // verbatim microcopy, tokens, a11y, states — and a Flux project needs
+        // it as much as a Svelte one. Framework overlays still win on their
+        // own subject; see ui-apply-generic § Gotchas.
+        const flux = detect_stack(
+            projectWith({
+                'composer.json': {
+                    require: { 'laravel/framework': '^11', 'livewire/livewire': '^3', 'livewire/flux': '^1' },
+                },
+            }),
+        );
+        const composed = compose_bundle(flux.axes as unknown as Record<string, string>);
+        expect(composed.build).toContain('ui-apply-generic');
+        expect(composed.build.indexOf('flux')).toBeLessThan(
+            composed.build.indexOf('ui-apply-generic'),
+        );
+    });
+
+    it('a stack no lane ever named still composes', () => {
+        // Nuxt: no hand-written lane, and the flat label calls it `vue`. The
+        // composition serves it from the base plus its corpus, which is the
+        // alternative to minting a lane per framework.
+        const nuxt = detect_stack(
+            projectWith({ 'package.json': { dependencies: { nuxt: '^3', vue: '^3' } } }),
+        );
+        const composed = compose_bundle(nuxt.axes as unknown as Record<string, string>);
+        expect(composed.build).toContain('ui-apply-generic');
+        expect(composed.pack_agnostic).toBe(true);
+    });
+
+    it('pack_agnostic is computed, never declared', () => {
+        // A hand-written `true` can outlive the bundle it described. Computing
+        // it from the members removes that failure mode.
+        const blade = compose_bundle({
+            view: 'blade', reactivity: 'livewire', component_lib: 'none', css: 'none', meta: 'none',
+        });
+        expect(blade.pack_agnostic).toBe(false);
+        const bare = compose_bundle({
+            view: 'none', reactivity: 'none', component_lib: 'none', css: 'tailwind', meta: 'none',
+        });
+        expect(bare.pack_agnostic).toBe(true);
     });
 });
 

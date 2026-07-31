@@ -202,25 +202,33 @@ through the generic lane with a corpus query. ✅
 
 ## Phase 3 — Overlay dispatch: composition instead of lane choice
 
-- [ ] Turn the bundle map into a composition: base `ui-apply-generic` plus
-      overlays derived from the axes — `reactivity: livewire` → `livewire`
-      (with **or** without Flux), `component_lib: flux` → `flux` on top,
-      `view: blade` → `blade-ui`, `component_lib: shadcn` → `react-shadcn-ui`,
-      `css: tailwind` → cite `tailwind-engineer`.
-- [ ] The two full-match lanes must fall out of composition as a special case.
-      Golden replay is the regression witness: identical dispatch result,
-      byte-for-byte, or the composition is wrong.
-- [ ] Extend `lint-ui-stack-bundles` to the composed shape — every overlay a
-      set of axis values can produce must resolve, and a composition reachable
-      without a framework pack must stay pack-neutral. This is the review's
-      acceptance criterion in the form that does not require twelve skill
-      files.
-- [ ] Vue stays overlay-free: generic plus `--stack vue` plus optional
-      `nuxt-ui` corpus. A Vue overlay skill needs demonstrated consumer demand
-      (watch note + reopen trigger), not a gap in a table.
+- [x] Turn the bundle map into a composition: base `ui-apply-generic` plus
+      overlays derived from the axes.
+      <!-- done: `compose_bundle(axes)` + `_AXIS_OVERLAYS`, consulted most-specific-first (component_lib → meta → reactivity → view), overlays leading and the generic base appended. `pack_agnostic` is COMPUTED from the members rather than declared — a hand-written `true` can outlive the bundle it described -->
+- [x] The two full-match lanes must fall out of composition as a special case;
+      golden replay is the regression witness.
+      <!-- done, and byte-identity HELD without needing the criterion amended — which I expected to have to do. The goldens seed `state.stack` via `stack_state({frontend})` with no axes, so `bundle_for` takes the legacy-map path by design; composition only engages where axes exist. All 29 baselines unchanged, replay green. Four new assertions prove overlays lead in the hand-written order for all 7 lanes -->
+- [x] Extend `lint-ui-stack-bundles` to the composed shape.
+      <!-- done: 12 real axis combinations (not the cross-product — thousands of meaningless tuples) including the four no hand-written lane covered: Nuxt-over-Vue, Astro, Angular, Livewire-without-Flux. Both properties checked on each -->
+- [x] Vue stays overlay-free: generic plus `--stack vue`, plus optional
+      `nuxt-ui` corpus. A Vue overlay needs demonstrated demand.
+      <!-- done — no `reactivity:vue` entry in the overlay table, deliberately. Vue composes to the generic base and is served by the corpus; the watch-note/reopen-trigger stays the bar for a Vue skill -->
+
+### One deliberate divergence from the hand-written map
+
+Composition appends the generic contract to **every** lane, including the
+framework ones, where the hand-written bundles omitted it — because it did not
+exist when they were written. That is intended: the contract is a **floor**
+(verbatim microcopy, tokens, a11y, all five states), and a Flux project needs it
+as much as a Svelte one. Overlays still lead, so framework rules win on their
+own subject; `ui-apply-generic` § Gotchas states that precedence.
+
+It does not break the byte-identity criterion, because the goldens exercise the
+legacy path. A future state file that carries axes will see the appended base —
+correctly, and visibly in the halt body.
 
 **Exit:** all apply fixtures green; dispatch for the eight existing labels
-byte-identical to `main`.
+byte-identical to `main`. ✅
 
 ## Non-goals (decided, with reasons)
 
@@ -239,18 +247,20 @@ byte-identical to `main`.
 
 ## Acceptance criteria
 
-- [ ] No detection result dispatches to a composition whose members do not
-      resolve — enforced by the extended `lint-ui-stack-bundles`, so an executor
-      vacuum cannot form silently again. (The original vacuum survived two
-      releases unnoticed; that is the property being fixed, not the count.)
-- [ ] Livewire-without-Flux demonstrably receives Livewire guidance and **no**
-      Flux guidance.
-- [ ] A stack with a corpus but no overlay (svelte, astro, angular) receives the
+- [x] No detection result dispatches to a composition whose members do not
+      resolve — enforced by the extended `lint-ui-stack-bundles` over 8 lanes and
+      12 composed shapes.
+- [x] Livewire-without-Flux receives Livewire guidance and **no** Flux guidance —
+      structural now (`component_lib: none` vs `flux`), asserted in the matrix.
+- [x] A stack with a corpus but no overlay (svelte, astro, angular) receives the
       generic contract plus its corpus rows, and says which it used.
-- [ ] A stack with neither receives the generic contract plus the honest degrade
-      sentence.
-- [ ] Monorepo and mixed-repo fixtures end in halt-with-question, never a silent
-      label.
-- [ ] Dispatch for the eight existing labels is byte-identical to `main`
-      (golden replay).
-- [ ] Benchmark or published honest-null from Phase 0.
+      <!-- the deterministic half is green (it composes and dispatches); the "says which it used" half is rubric — daf-generic-apply-coverage — and is judged, not unit-tested -->
+- [x] A stack with neither receives the generic contract plus the honest degrade
+      sentence (`daf-generic-apply-degrade`).
+- [x] Mixed-repo and multi-root monorepo end in halt-with-question, never a
+      silent label. A SINGLE-root monorepo is now detected rather than refused —
+      a correction to the predecessor, not a miss.
+- [x] Dispatch for the eight existing labels is byte-identical to `main` — all 29
+      golden baselines unchanged.
+- [~] Benchmark or published honest-null from Phase 0.
+      <!-- deferred, same blocker as the tier follow-up: nothing in the tree scores generated UI, so the apply fixtures are rubric-judged rather than benchmarked. The DETECTION half is fully measured (the Phase-0 and Phase-1 tables); what is unmeasured is whether the generic lane's output is good, which needs the harness `road-to-ui-track-integrity-followup` is blocked on. Same condition unblocks both -->

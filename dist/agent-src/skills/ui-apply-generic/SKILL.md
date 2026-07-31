@@ -148,6 +148,14 @@ ui_apply:
   are the whole reason Nuxt exists.
 - **The generic contract is a floor, not a ceiling.** Where an overlay skill is
   dispatched with this one, its framework rules win on their subject.
+- **The floor now lives in exactly one place, and that is the point.** Overlay
+  composition applies this contract to every lane, so a future change to any of
+  its seven items is a one-point edit here rather than four lane patches that
+  drift apart. Concretely: the five-states requirement reaches every lane
+  through this skill. That requirement is deliberately unconditional — an
+  explicit `n/a` is the escape for a surface that genuinely has no such state
+  (asserted in `ui_lane_matrix.test.ts`), so this is not a defect being
+  broadened. But if the decision is ever revisited, revisit it here.
 
 ## Do NOT
 

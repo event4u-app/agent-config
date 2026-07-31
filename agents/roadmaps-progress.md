@@ -6,11 +6,19 @@
 
 ## Overall
 
-**63 / 242 steps done · 26%**
+**73 / 241 steps done · 30%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md) | 25 | 1 | 0 |
 
 ## Open roadmaps
 
@@ -31,7 +39,7 @@
 | 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 16 | [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md) | 4 | 26 | 11 | 15 | 0 | 0 | 0 | ██████░░░░ 58% |
+| 16 | [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md) | 4 | 26 | 0 | 25 | 1 | 0 | 0 | ██████████ 100% |
 | 17 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -311,14 +319,14 @@ _1 blocker resolved._
 
 ### [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md)
 
-**Road to universal stack coverage — an honest refusal is not coverage** — 15 / 26 done (58%)
+**Road to universal stack coverage — an honest refusal is not coverage** — 25 / 25 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Fixtures and baseline (before any behaviour change) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1 | Detection v2: axes instead of one label | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | `ui-apply-generic`: the default lane becomes real | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | Overlay dispatch: composition instead of lane choice | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+| 3 | Overlay dispatch: composition instead of lane choice | ✅ done | 0 | 10 | 1 | 0 | 100% |
 
 ### [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md)
 
