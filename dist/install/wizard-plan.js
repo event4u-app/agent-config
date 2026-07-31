@@ -85,6 +85,15 @@ const CLAUDE_SKILL_BUNDLE = [
  * — they either follow a marker-only convention (handled by bridges in
  * Phase A6) or have no markdown convention at all.
  */
+/**
+ * The one deploy-source row that carries install-time rule scoping.
+ *
+ * Exported so the CLI global path (`scripts/install.ts::_deploy_global_content`)
+ * keys its filter off the SAME string this expander does. Two paths agreeing on
+ * the predicate but disagreeing on which source it applies to would reproduce
+ * exactly the divergence rule scoping exists to prevent.
+ */
+export const RULE_SOURCE_REL = 'dist/agent-src/rules';
 export const GLOBAL_DEPLOY_SOURCES = {
     'claude-code': CLAUDE_SKILL_BUNDLE,
     augment: [
@@ -173,7 +182,7 @@ export function expandWizardSources(inputs) {
             // Rule sources get the install-time scoping filter — the same
             // predicate the projection path uses (Phase 1b: the consumer
             // install may never drift from Pipeline A, the source projection).
-            const isRuleSource = srcRel === 'dist/agent-src/rules';
+            const isRuleSource = srcRel === RULE_SOURCE_REL;
             out.push({
                 toolId,
                 srcDir,
