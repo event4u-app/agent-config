@@ -67,6 +67,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as update_check from '../_lib/update_check.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import {
     DEFAULT_PROJECT_FILE,
     LOCAL_PROJECT_FILE,
@@ -550,7 +551,7 @@ function _refresh_global_lockfile(version: string, out: OutSink): void {
 
 /** Read `version` from the package's own `package.json`. */
 function _detect_installed_version(): string {
-    const pkg_json = path.join(path.resolve(_HERE_DIR, '..', '..', '..'), 'package.json');
+    const pkg_json = path.join(resolvePackageRoot(import.meta.url), 'package.json');
     try {
         const data = JSON.parse(fs.readFileSync(pkg_json, { encoding: 'utf-8' })) as Record<
             string,

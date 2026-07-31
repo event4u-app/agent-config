@@ -93,9 +93,10 @@ import * as claude_plugin from '../_lib/claude_plugin.js';
 import { event4u_root, write_target } from '../_lib/user_global_paths.js';
 import { project_settings_path } from '../_lib/agent_settings.js';
 import { _is_source_repo } from './cmd_refresh.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 
 const PACKAGE_NAME = '@event4u/agent-config';
-const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
 
 // ---------------------------------------------------------------------------
 // Parity primitives (ADR-200).

@@ -28,11 +28,12 @@ import {
 } from '../../install/preflight.js';
 import { GLOBAL_DEPLOY_SOURCES, expandWizardSources } from '../../install/wizard-plan.js';
 import type { ConflictPolicy } from '../../install/types.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
 /** Package root — three levels above `src/scripts/_cli/`. */
-const PACKAGE_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
+const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
 
 const USAGE =
     'usage: cmd_preflight [-h] [--tools a,b,...] [--target DIR] [--json]\n';
