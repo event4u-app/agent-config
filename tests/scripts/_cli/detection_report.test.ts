@@ -106,6 +106,7 @@ describe('report shape', () => {
             'auth_source',
             'billing',
             'transport',
+            'configured_mode',
             'available',
             'enabled_in_config',
             'reason',
@@ -350,14 +351,40 @@ describe('spend disclosure renders from the same rows as the table', () => {
         expect(renderSpendDisclosure(none)).toContain('no call will be made');
     });
 
-    it('reports a manual member as making no provider call', () => {
+    it('buckets an explicitly manual member as making no provider call', () => {
         const manual = buildDetectionReport({
             environment: env({ auth: [auth('anthropic', 'key-file')] }),
             council: council({ members: { anthropic: member(true, { mode: 'manual' }) } }),
         });
-        // `auto` never selects manual, so the row reports the api rung; the
-        // disclosure's manual bucket exists for an explicitly manual resolution.
-        expect(rowFor(manual, 'anthropic').transport).toBe('api');
+        const row = rowFor(manual, 'anthropic');
+        // `auto` never selects manual, so `transport` still reports the rung
+        // that COULD work — but `configuredMode` is what will actually run, and
+        // the disclosure must bucket by that or it claims an API call that never
+        // happens.
+        expect(row.transport).toBe('api');
+        expect(row.configuredMode).toBe('manual');
+        const disclosure = renderSpendDisclosure(manual);
+        expect(disclosure).toContain('1 manual (no provider call): anthropic');
+        expect(disclosure).not.toContain('metered');
+    });
+
+    it('reports a manual member even when no transport could resolve', () => {
+        // Nothing installed, no key: `auto` is unavailable, but a manual member
+        // is still perfectly usable — the human is the transport.
+        const manual = buildDetectionReport({
+            environment: env(),
+            council: council({ members: { anthropic: member(true, { mode: 'manual' }) } }),
+        });
+        expect(rowFor(manual, 'anthropic').available).toBe(false);
+        expect(renderSpendDisclosure(manual)).toContain('1 manual (no provider call)');
+    });
+
+    it('inherits defaults.mode as the configured mode when the member is silent', () => {
+        const report = buildDetectionReport({
+            environment: env({ auth: [auth('anthropic', 'key-file')] }),
+            council: council({ defaultsMode: 'api', members: { anthropic: member(true) } }),
+        });
+        expect(rowFor(report, 'anthropic').configuredMode).toBe('api');
     });
 });
 
@@ -410,6 +437,29 @@ describe('rendered section', () => {
         });
         expect(renderProviderLine(rowFor(exhausted, 'anthropic'), CONFIG_PATH)).toContain(
             'cli-quota 4/4 ⚠️',
+        );
+    });
+});
+
+describe('a manual member is not told to install a CLI', () => {
+    it('needs no binary and no key — the human is the transport', () => {
+        const report = buildDetectionReport({
+            environment: env(),
+            council: council({ members: { anthropic: member(true, { mode: 'manual' }) } }),
+        });
+        const row = rowFor(report, 'anthropic');
+        expect(row.detected).toBe(false);
+        // Advice for a transport they explicitly opted out of would be wrong.
+        expect(row.fix).toBeNull();
+    });
+
+    it('still asks for the enable edit when a manual member is not permitted', () => {
+        const report = buildDetectionReport({
+            environment: env(),
+            council: council({ members: { anthropic: member(false, { mode: 'manual' }) } }),
+        });
+        expect(rowFor(report, 'anthropic').fix).toBe(
+            enableInstruction('anthropic', CONFIG_PATH),
         );
     });
 });

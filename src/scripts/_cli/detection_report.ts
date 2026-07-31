@@ -81,6 +81,13 @@ export interface ProviderRow {
     readonly billing: BillingClass;
     /** The transport `auto` would select right now, or `null` when none can be. */
     readonly transport: Transport | null;
+    /**
+     * The mode this member is actually CONFIGURED with — per-member override,
+     * else `defaults.mode`. Distinct from `transport`: that answers "what could
+     * work", this answers "what will run". A member pinned to `manual` makes no
+     * provider call no matter what `auto` could have reached.
+     */
+    readonly configuredMode: string | null;
     readonly available: boolean;
     readonly enabledInConfig: boolean;
     /** Non-null exactly when `available` is false. */
@@ -188,6 +195,7 @@ export function buildDetectionReport(opts: BuildDetectionReportOptions): Detecti
             authSource,
             billing: classifyBilling(provider, authSource),
             transport: resolved.transport,
+            configuredMode: member?.mode ?? council.defaultsMode,
             available: resolved.available,
             enabledInConfig,
             reason: resolved.reason,
@@ -195,6 +203,7 @@ export function buildDetectionReport(opts: BuildDetectionReportOptions): Detecti
                 provider,
                 detected,
                 available: resolved.available,
+                configuredMode: member?.mode ?? council.defaultsMode,
                 enabledInConfig,
                 councilEnabled: council.enabled,
                 configPresent: council.configPresent,
@@ -249,6 +258,7 @@ function fixFor(o: {
     provider: string;
     detected: boolean;
     available: boolean;
+    configuredMode: string | null;
     enabledInConfig: boolean;
     councilEnabled: boolean;
     configPresent: boolean;
@@ -263,6 +273,12 @@ function fixFor(o: {
     }
     if (!o.councilEnabled) {
         return `set \`enabled: true\` in ${o.configPath}`;
+    }
+    // A manual member needs neither a binary nor a key — the human is the
+    // transport. Telling them to install a CLI would be advice for a transport
+    // they explicitly opted out of.
+    if (o.configuredMode === 'manual') {
+        return o.enabledInConfig ? null : enableInstruction(o.provider, o.configPath);
     }
     if (!o.detected) {
         const bin = PROVIDER_CLI_META[o.provider]?.[0] ?? o.provider;
@@ -296,6 +312,7 @@ export function renderProviderLine(row: ProviderRow, configPath: string): string
         `billing ${row.billing}`,
         `enabled-in-config ${row.enabledInConfig ? GLYPH_OK : GLYPH_NO}`,
     ];
+    parts.push(`mode ${row.configuredMode ?? '—'}`);
     if (row.transport !== null) {
         parts.push(`auto→${row.transport}`);
     }
@@ -357,7 +374,13 @@ export function renderDetectionLines(report: DetectionReport): string[] {
  * "why is my provider not being consulted" is the question this answers.
  */
 export function renderSpendDisclosure(report: DetectionReport): string {
-    const spending = report.providers.filter((r) => r.enabledInConfig && r.available);
+    // Bucket by the CONFIGURED mode, not by what `auto` could reach: a member
+    // pinned to `manual` makes no provider call regardless of what is installed,
+    // and telling the user it will hit an API would be exactly the drift this
+    // single-renderer design exists to prevent.
+    const spending = report.providers.filter(
+        (r) => r.enabledInConfig && (r.available || r.configuredMode === 'manual'),
+    );
     const excludedTail = renderExcludedTail(report);
     if (spending.length === 0) {
         // The excluded list matters MOST here: "no call will be made" without it
@@ -368,9 +391,10 @@ export function renderSpendDisclosure(report: DetectionReport): string {
             `no call will be made.${excludedTail}`
         );
     }
-    const metered = spending.filter((r) => r.billing === 'per-token' && r.transport !== 'manual');
-    const subscription = spending.filter((r) => r.billing === 'subscription');
-    const free = spending.filter((r) => r.transport === 'manual');
+    const free = spending.filter((r) => r.configuredMode === 'manual');
+    const billed = spending.filter((r) => r.configuredMode !== 'manual');
+    const metered = billed.filter((r) => r.billing === 'per-token');
+    const subscription = billed.filter((r) => r.billing === 'subscription');
 
     const segments: string[] = [];
     if (metered.length > 0) {
@@ -426,6 +450,7 @@ export function detectionJson(report: DetectionReport): Record<string, unknown> 
             auth_source: r.authSource,
             billing: r.billing,
             transport: r.transport,
+            configured_mode: r.configuredMode,
             available: r.available,
             enabled_in_config: r.enabledInConfig,
             reason: r.reason,
