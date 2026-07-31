@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**48 / 216 steps done · 22%**
+**48 / 204 steps done · 24%**
 
 ```text
-█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
 ```
 
 ## Open roadmaps
@@ -31,7 +31,6 @@
 | 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 16 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -307,16 +306,6 @@ _1 blocker resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Measure the allocation | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-
-### [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md)
-
-**Road to webfont delivery ownership — one skill prescribes the hotlink another skill's data forbids** — 0 / 12 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Establish the ownership decision (blocking, no data edits) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | Stop emitting the hotlink | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Make the corpus consistent with itself | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
 ---
 
