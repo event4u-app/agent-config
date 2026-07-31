@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 18 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 19 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**48 / 224 steps done · 21%**
+**48 / 250 steps done · 19%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
+████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   19%
 ```
 
 ## Open roadmaps
@@ -33,7 +33,8 @@
 | 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 17 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 6 | 6 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 18 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 18 | [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md) | 4 | 26 | 26 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 19 | [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md) | 3 | 12 | 12 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -328,6 +329,17 @@ _1 blocker resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Measure the allocation | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+
+### [road-to-universal-stack-coverage.md](roadmaps/road-to-universal-stack-coverage.md)
+
+**Road to universal stack coverage — an honest refusal is not coverage** — 0 / 26 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Fixtures and baseline (before any behaviour change) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Detection v2: axes instead of one label | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | `ui-apply-generic`: the default lane becomes real | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Overlay dispatch: composition instead of lane choice | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
 
 ### [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md)
 
