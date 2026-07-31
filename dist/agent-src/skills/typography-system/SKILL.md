@@ -53,7 +53,10 @@ degrades gracefully: with no brand layer, only stage 1 runs.
    `$type: "typography"` and `$value` objects carrying `fontFamily`,
    `fontSize`, `fontWeight`, `lineHeight`.
 5. **Verify** — confirm both chosen fonts exist on Google Fonts (check the
-   `Google Fonts URL` column in the CSV); run
+   `Google Fonts URL` column in the CSV — this is an **availability** check,
+   "does this font exist?", and is deliberately separate from the **delivery**
+   decision, "how does it get onto the page?" — see § Delivery below; conflating
+   the two is what produced a single hard-wired hotlink); run
    `./scripts-run <skills-root>/design-tokens/scripts/tokens validate --dir src/`
    to confirm no hardcoded font-size or font-family values remain outside the
    token file; exit code 0 is the evidence.
@@ -92,6 +95,31 @@ Consumer brand tokens outrank the corpus filter
 ([`brand-source-of-truth`](../../rules/brand-source-of-truth.md)) — if the
 brand already registers fonts, use them and skip the filter.
 
+## Delivery — hosting mode (self-hosted by default)
+
+The delivery policy is **owned** by
+[`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md)
+§ Asset & imagery discipline ([`ADR-205`](../../../docs/decisions/ADR-205-webfont-delivery-ownership.md));
+this skill is a consumer and emits the route, never a competing policy. A font
+CDN link transmits the **visitor's IP** to that third party on every page view —
+a German court (LG München I) ruled on exactly that for hotlinked Google Fonts. <!-- md-language-check: ignore -->
+
+**Default: self-hosted.** Take the row's `Self-Hosted Route` column and resolve
+it against the detected target stack:
+
+| Detected target | Route to emit | Where that answer comes from |
+|---|---|---|
+| Next.js | `next/font/google` (self-hosts at build) or `next/font/local` | `data/stacks/nextjs.csv` rows 22–24 — already prescribes this and lists the CDN `<link>` in its **Don't** column |
+| Any bundler stack (Vite / webpack — React, Vue, Svelte, Nuxt, Astro) | the font's `@fontsource/*` package + a CSS import of the package | the package registry; verify it exists before suggesting it (`supply-chain-intake`) |
+| Server-rendered asset pipeline (Laravel/Vite, Rails, Django) | copy the `woff2` into the project's asset directory, serve it, declare `@font-face` | the project's own pipeline (`design-fidelity-mechanics` § owned-asset path) |
+| No build step / plain HTML | `@font-face` over a locally-served `woff2`, plus `<link rel="preload" as="font">` | `data/stacks/astro.csv` row 23 (preload of a local `woff2`) |
+| Stack unknown | the plain `@font-face` floor, and **say** the route is unresolved — never fall back to the hotlink to avoid the question | — |
+
+**Hotlink: opt-in only.** Emit the row's `CSS Import` value **only** when the
+consumer explicitly asked for the CDN route, and state in the same breath that
+it transmits the visitor's IP to the third party. Never pick it because it is
+the shorter line.
+
 ## Output format
 
 1. **Chosen pairing + rationale** — heading font, body font, the CSV row's
@@ -99,19 +127,31 @@ brand already registers fonts, use them and skip the filter.
 2. **DTCG type-token block** — the `typography` section ready to paste into
    `tokens.json` (DTCG `$type: "typography"`, `$value` with `fontFamily`,
    `fontSize`, `fontWeight`, `lineHeight` per level).
-3. **CSS/Tailwind import line** — the `@import url(…)` from the CSV's
-   `CSS Import` column, and the Tailwind `fontFamily` config snippet from
-   `Tailwind Config`.
+3. **Font delivery block** — the self-hosted route for the detected stack per
+   § Delivery (from the row's `Self-Hosted Route` column), and the Tailwind
+   `fontFamily` config snippet from `Tailwind Config`. The row's
+   `CSS Import` hotlink appears here **only** under an explicit consumer opt-in,
+   with its IP-transmission note.
 
 ## Gotcha
 
-- **Stale CSV URL → silent system-font fallback.** `font-pairings-reference.csv`
-  is Reference data on a freshness contract — never substitute a live Google
-  Fonts API call. If a font was retired or renamed, the `@import` URL 404s at
-  build time and the browser silently falls back to the system font, shipping
-  broken visual design with no obvious error. Always verify the URL resolves
-  (Step 5) before emitting the import line; if it 404s, surface the error and
-  ask the user to pick an alternative pairing from the CSV.
+- **Stale CSV URL → silent system-font fallback (opt-in hotlink path only).**
+  `font-pairings-reference.csv` is Reference data on a freshness contract — never
+  substitute a live Google Fonts API call. If a font was retired or renamed, the
+  `@import` URL 404s at build time and the browser silently falls back to the
+  system font, shipping broken visual design with no obvious error. This caveat
+  **still applies verbatim to the opt-in hotlink route**: verify the URL resolves
+  (Step 5) before emitting the import line; if it 404s, surface the error and ask
+  the user to pick an alternative pairing from the CSV.
+- **The self-hosted default replaces that failure mode, it does not delete it.**
+  For a package route (`next/font`, `@fontsource/*`) resolution moves to
+  **install** time, where a wrong name fails loudly instead of 404-ing at build.
+  What remains is a **family-name mismatch**: the emitted CSS asks for
+  `font-family: 'Inter'` while the installed package provides a differently-named
+  family (`Inter Tight`), which renders the system font at runtime with no error
+  at all — the same silence, one layer later. Assert the family name in the
+  emitted CSS matches the one the installed package declares; the row's
+  `Google Fonts URL` stays useful as the reference spelling to compare against.
 
 ## Do NOT
 
@@ -119,6 +159,10 @@ brand already registers fonts, use them and skip the filter.
   inline) — every size belongs in `tokens.json` under the `typography` layer.
 - Do NOT bypass `design-tokens` and write raw CSS custom properties for fonts
   — `tokens.json` is the single source; hand-crafted `--font-*` vars drift.
+- Do NOT emit a font-CDN `@import` / `<link>` as the default deliverable — the
+  self-hosted route is the default and the hotlink is an explicit opt-in
+  (§ Delivery). Reaching for the CDN line because the stack was not detected is
+  the exact substitution this skill used to hard-wire.
 - Do NOT treat `font-pairings-reference.csv` as decision logic — it is
   Reference data; the agent picks based on the style constraint, not by
   iterating the CSV as a rules engine.
