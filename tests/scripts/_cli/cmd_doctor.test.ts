@@ -40,11 +40,9 @@
 // `unsupported-combos` reporting on a real lockfile, plus the full report and
 // `--json` over a manifest-present root, all byte-identical py-vs-ts.
 import * as crypto from 'node:crypto';
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     _parse,
@@ -58,17 +56,6 @@ import {
 import { resetEnvironmentCache } from '../../../src/scripts/_lib/environment_detector.js';
 import { runInProc } from '../../_lib/run_in_process.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_doctor.ts');
-// Resolve TSX_BIN to an ABSOLUTE path: the runs spawn with cwd set to a temp
-// dir, and a relative binary path would resolve against that cwd (→ ENOENT →
-// status:null). The env override is honored but absolutized.
-const TSX_BIN = path.resolve(
-    REPO_ROOT,
-    process.env['TSX_BIN'] ??
-        path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
-);
-
 interface RunResult {
     status: number | null;
     stdout: string;
@@ -77,27 +64,6 @@ interface RunResult {
 
 function runTs(args: string[], cwd: string, extraEnv: Record<string, string> = {}): RunResult {
     return runInProc(main, args, { cwd, env: extraEnv });
-}
-
-/**
- * Normalize machine-specific tmp paths so the output stays stable across runs.
- * macOS resolves `/tmp` → `/private/var/...` for the cwd-stamped paths the
- * doctor prints, so we strip both the raw and realpath forms of every
- * dynamic root.
- */
-function norm(text: string, roots: string[]): string {
-    let out = text;
-    for (const root of roots) {
-        out = out.split(root).join('<TMP>');
-        let real = root;
-        try {
-            real = fs.realpathSync(root);
-        } catch {
-            /* root may already be removed */
-        }
-        out = out.split(real).join('<TMP>');
-    }
-    return out;
 }
 
 /**
