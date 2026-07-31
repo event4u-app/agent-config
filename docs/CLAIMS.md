@@ -176,7 +176,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-25
 
 ### claim: skill-count
-- claim: 286 skills.
+- claim: 287 skills.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed

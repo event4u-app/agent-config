@@ -39,14 +39,24 @@ export interface StackBundle {
 }
 
 /**
- * The pack-agnostic pair. Both live in `engineering-base`, so they are present
- * in every install; both self-describe as stack-neutral
- * (`ui-component-architect`: "the same lens applies to Blade, Livewire, React,
- * or Vue trees"; `tailwind-engineer`: "the **how** for any Tailwind-stack
- * screen"). This is the honest floor for a lane with no framework-specific
- * executor — not a claim that the lane is fully served.
+ * The stack-neutral build bundle. All three live in `engineering-base`, so they
+ * are present in every install.
+ *
+ * `ui-apply-generic` leads: it carries the implementation contract that used to
+ * exist only inside the framework executors, and it pulls framework idiom from
+ * the 16-stack corpus rather than from prose. That is what turns this lane from
+ * an honest refusal into actual coverage for Svelte, Astro, Angular and
+ * anything future — without minting a skill per framework.
+ *
+ * The other two are the companions it composes with: `ui-component-architect`
+ * ("the same lens applies to Blade, Livewire, React, or Vue trees") and
+ * `tailwind-engineer` ("the **how** for any Tailwind-stack screen").
  */
-const GENERIC_BUILD: ReadonlyArray<string> = ['ui-component-architect', 'tailwind-engineer'];
+const GENERIC_BUILD: ReadonlyArray<string> = [
+    'ui-apply-generic',
+    'ui-component-architect',
+    'tailwind-engineer',
+];
 
 /** `design-review` is stack-neutral and ships in `engineering-base`. */
 const GENERIC_REVIEW: ReadonlyArray<string> = ['design-review'];
@@ -57,6 +67,16 @@ const GENERIC_REVIEW: ReadonlyArray<string> = ['design-review'];
  * contract) and consume this map only to name the skills in the halt body.
  */
 export const STACK_BUNDLES: Readonly<Record<string, StackBundle>> = {
+    // An unmodelled framework routes to the generic lane rather than refusing:
+    // `ui-apply-generic` queries the stack corpus, which covers svelte, astro,
+    // angular, nuxt and eleven more. Refusing while holding that corpus is the
+    // "an honest refusal is not coverage" defect. A genuine ambiguity still
+    // refuses — see `is_ambiguous_stack`.
+    unknown: {
+        build: GENERIC_BUILD,
+        review: GENERIC_REVIEW,
+        pack_agnostic: true,
+    },
     'blade-livewire-flux': {
         build: ['flux', 'livewire', 'blade-ui'],
         review: GENERIC_REVIEW,
@@ -113,7 +133,7 @@ export const STACK_BUNDLES: Readonly<Record<string, StackBundle>> = {
  * definite idiom and the package has no executor for it, so the result must not
  * read as Vue support.
  */
-export const GENERIC_LANES: ReadonlySet<string> = new Set(['vue', 'plain']);
+export const GENERIC_LANES: ReadonlySet<string> = new Set(['vue', 'plain', 'unknown']);
 
 /** Lanes where the stack-neutral pair is the correct answer, not a shortfall. */
 const NATIVELY_GENERIC_LANES: ReadonlySet<string> = new Set(['plain']);
@@ -132,25 +152,55 @@ export function bundle_for(stack: string): StackBundle {
 }
 
 /**
- * Questions for the refusal halt on an unmodelled framework.
+ * True when the `unknown` label came from a question, not from a coverage gap.
  *
- * Not a directive — there is nothing honest to dispatch to. The agent names
- * the actual markers from the manifest (it has filesystem access; the engine
- * deliberately does not carry them on `StackResult`), and the user chooses
- * between the stack-neutral floor and stopping.
+ * `unknown` carries two different situations and they need opposite handling:
+ *
+ * - **An unmodelled framework** (svelte, astro, angular …). Since
+ *   `ui-apply-generic` exists and queries the stack corpus, refusing here would
+ *   be the "an honest refusal is not coverage" defect — the corpus almost
+ *   certainly HAS the stack. Route to the generic lane, naming the framework.
+ * - **A genuine ambiguity** — two SPA frameworks in one manifest, or several
+ *   workspace roots. No executor can fix that: the open question is *which
+ *   project is this*, and only the caller can answer. Refuse.
+ *
+ * `StackResult.ambiguity` is what distinguishes them, so the check is on the
+ * ambiguity list rather than on the label.
  */
-export function unsupported_stack_questions(step: string): string[] {
-    return [
-        '> Detection found a frontend framework this package does not model, ' +
-            `so there is no \`${step}\` lane for it.`,
-        '> Name the markers you see in `composer.json` / `package.json` so the ' +
-            'choice below is made on the real stack, not on a guess.',
-        '> 1. Continue on the stack-neutral floor — `ui-component-architect` + ' +
-            '`tailwind-engineer`. Output will not be idiomatic for this ' +
-            'framework; say so in the result.',
-        '> 2. Abort — drop this UI request and add a lane first ' +
-            '(`docs/contracts/ui-stack-extension.md`).',
+export function is_ambiguous_stack(stack_state: unknown): boolean {
+    if (typeof stack_state !== 'object' || stack_state === null) return false;
+    const raw = (stack_state as Record<string, unknown>)['ambiguity'];
+    return Array.isArray(raw) && raw.length > 0;
+}
+
+/**
+ * Questions for the refusal halt when detection cannot say what the project is.
+ *
+ * Not a directive — there is nothing honest to dispatch to, because the missing
+ * input is a decision rather than a skill. `conflicts` are echoed verbatim from
+ * `StackResult.ambiguity` so the user sees the actual collision.
+ */
+export function unsupported_stack_questions(
+    step: string,
+    conflicts: ReadonlyArray<string> = [],
+): string[] {
+    const lines = [
+        '> Detection found conflicting signals, so it will not pick a stack for ' +
+            `you at \`${step}\`. Guessing here is the failure this halt exists ` +
+            'to prevent.',
     ];
+    for (const c of conflicts) {
+        lines.push(`> - \`${c}\``);
+    }
+    lines.push(
+        '> 1. Name the project to build for — the workspace path, or which ' +
+            'framework owns this surface. Detection re-runs against that scope.',
+        '> 2. Continue on the stack-neutral floor anyway — `ui-apply-generic` ' +
+            'plus its companions. Output will not be idiomatic for either ' +
+            'framework; say so in the result.',
+        '> 3. Abort — drop this UI request.',
+    );
+    return lines;
 }
 
 /**

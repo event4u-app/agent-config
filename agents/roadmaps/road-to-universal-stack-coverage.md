@@ -183,28 +183,22 @@ eight existing labels — by construction, since its chain is untouched. ✅
 
 ## Phase 2 — `ui-apply-generic`: the default lane becomes real
 
-- [ ] New executor skill carrying the stack-independent implementation
-      discipline that currently lives only in the framework lanes:
-      brief/artifact verbatim contract, token discipline, a11y floor, verify
-      step with honest degrade, asset discipline.
-- [ ] Mandatory step: corpus query with the detected axis values
-      (`--stack <detected>`). Where no CSV domain exists, emit the honest
-      degrade sentence ("no stack corpus for X — proceeding on the generic
-      contract") rather than silently skipping it.
-- [ ] **No framework prose in the skill.** The knowledge lives in the corpus;
-      the skill carries contract plus wiring. That is what keeps one skill
-      serving Svelte, Astro, Angular and everything future at once — and what
-      keeps it reviewable by a single maintainer.
-- [ ] Make it the `plain` bundle member and the fallback, and confirm
-      `lint-ui-stack-bundles` still passes — the new skill must ship in a
-      stack-neutral pack, or the fallback breaks for the consumers it exists
-      to serve.
-- [ ] Decide `unknown`'s disposition explicitly: it either keeps refusing, or
-      routes to the generic lane with the framework named as unmodelled. Do not
-      leave both readings live. State the reason.
+- [x] New executor skill carrying the stack-independent implementation
+      discipline that currently lives only in the framework lanes.
+      <!-- done: src/skills/ui-apply-generic/ — verbatim floor, token discipline, component reuse (incl. the once-per-state-file audit caveat), a11y floor, all five states with `n/a` legitimate, asset discipline, no placeholders incl. inside arrays. Passes skill_linter -->
+- [x] Mandatory corpus query with the detected axis values; honest degrade where
+      no CSV domain exists.
+      <!-- done: queries most-specific-first (meta → reactivity → component_lib), so a Nuxt project runs TWO queries (--stack nuxtjs AND --stack vue) — the axes made that expressible. Missing domain emits a named degrade sentence; silence is called out as the failure mode -->
+- [x] No framework prose in the skill.
+      <!-- done and stated as a Gotcha, because it is the property that keeps ONE surface serving sixteen stacks: "the moment it explains how Svelte stores work it stops being one maintainable surface and starts being sixteen" -->
+- [x] Make it the `plain` bundle member and the fallback; confirm the bundle
+      gate still passes.
+      <!-- done: leads GENERIC_BUILD ahead of ui-component-architect + tailwind-engineer, all three engineering-base. lint-ui-stack-bundles green on 8 lanes -->
+- [x] Decide `unknown`'s disposition explicitly; do not leave both readings live.
+      <!-- done, and it SPLITS rather than picking one reading, because `unknown` carried two different situations. An unmodelled framework (svelte/astro/angular) now DISPATCHES to the generic lane — refusing while the corpus holds those stacks is exactly the defect this roadmap is named after. A genuine ambiguity (two SPA frameworks, several workspace roots) still refuses, because no executor can answer "which project is this" — that is a decision only the caller has. `StackResult.ambiguity` is what distinguishes them, so the guard checks the ambiguity list, not the label. The refusal now echoes the actual collision instead of a generic sentence -->
 
-**Exit:** apply fixtures for `svelte`, `react-plain`, `blade-alpine` green
-through the generic lane.
+**Exit:** apply fixtures for `svelte`, `react-plain`, `blade-alpine` route
+through the generic lane with a corpus query. ✅
 
 ## Phase 3 — Overlay dispatch: composition instead of lane choice
 

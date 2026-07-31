@@ -318,7 +318,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
-      "stdout": "[halt] outcome=blocked step=implement\n@agent-directive: ui-apply-plain\n> Stack: `plain`. Implementing the locked design brief.\n> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.\n> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.\n> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])\n> 2. Abort — drop this UI request\n",
+      "stdout": "[halt] outcome=blocked step=implement\n@agent-directive: ui-apply-plain\n> Stack: `plain`. Implementing the locked design brief.\n> Skills: `ui-apply-generic` + `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.\n> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.\n> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])\n> 2. Abort — drop this UI request\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -419,7 +419,7 @@
         "questions": [
           "@agent-directive: ui-apply-plain",
           "> Stack: `plain`. Implementing the locked design brief.",
-          "> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
+          "> Skills: `ui-apply-generic` + `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
           "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
           "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
           "> 2. Abort — drop this UI request"
@@ -583,7 +583,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
-      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: ui-polish-plain\n> Stack: `plain`. Polish round 1 of 2.\n> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.\n> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.\n> Fix chart-type / contrast findings against the adopted corpus rows (design-intelligence § 'Grounding the review/polish a11y gate'), not ad-hoc judgment.\n> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`\n> 2. Abort — drop this UI request\n",
+      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: ui-polish-plain\n> Stack: `plain`. Polish round 1 of 2.\n> Skills: `ui-apply-generic` + `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.\n> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.\n> Fix chart-type / contrast findings against the adopted corpus rows (design-intelligence § 'Grounding the review/polish a11y gate'), not ad-hoc judgment.\n> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`\n> 2. Abort — drop this UI request\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -708,7 +708,7 @@
         "questions": [
           "@agent-directive: ui-polish-plain",
           "> Stack: `plain`. Polish round 1 of 2.",
-          "> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
+          "> Skills: `ui-apply-generic` + `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
           "> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
           "> Fix chart-type / contrast findings against the adopted corpus rows (design-intelligence § 'Grounding the review/polish a11y gate'), not ad-hoc judgment.",
           "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
@@ -731,7 +731,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
-      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: ui-polish-plain\n> Stack: `plain`. Polish round 2 of 2.\n> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.\n> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.\n> Fix chart-type / contrast findings against the adopted corpus rows (design-intelligence § 'Grounding the review/polish a11y gate'), not ad-hoc judgment.\n> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`\n> 2. Abort — drop this UI request\n",
+      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: ui-polish-plain\n> Stack: `plain`. Polish round 2 of 2.\n> Skills: `ui-apply-generic` + `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.\n> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.\n> Fix chart-type / contrast findings against the adopted corpus rows (design-intelligence § 'Grounding the review/polish a11y gate'), not ad-hoc judgment.\n> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`\n> 2. Abort — drop this UI request\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -857,7 +857,7 @@
         "questions": [
           "@agent-directive: ui-polish-plain",
           "> Stack: `plain`. Polish round 2 of 2.",
-          "> Skills: `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
+          "> Skills: `ui-apply-generic` + `ui-component-architect` + `tailwind-engineer` — stack-neutral, which is what `plain` means.",
           "> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
           "> Fix chart-type / contrast findings against the adopted corpus rows (design-intelligence § 'Grounding the review/polish a11y gate'), not ad-hoc judgment.",
           "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",

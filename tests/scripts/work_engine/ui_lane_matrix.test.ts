@@ -424,17 +424,38 @@ describe('UI lane matrix — bundle resolution (what must actually exist)', () =
         }
     });
 
-    it('the unmodelled lane refuses instead of dispatching', () => {
+    it('an unmodelled framework now DISPATCHES to the generic lane', () => {
+        // Reversed deliberately. Refusing while the stack corpus holds svelte,
+        // astro, angular and eleven more IS the "honest refusal is not
+        // coverage" defect. `ui-apply-generic` queries that corpus, so an
+        // unmodelled framework gets served — and told it is not idiomatic.
         const st = new DeliveryState({
             ticket: {},
             stack: { frontend: 'unknown', mtime: 0 },
         } as never);
         const r = applyRun(st);
+        expect(r.outcome).toBe('blocked'); // delegation halt, not a refusal
+        const body = r.questions.join('\n');
+        expect(body).toContain('@agent-directive');
+        expect(body).toContain('ui-apply-generic');
+    });
+
+    it('a genuine ambiguity still refuses, and names the collision', () => {
+        // The other half of `unknown`. No executor can resolve "which project
+        // is this" — that is a decision, and only the caller has it.
+        const st = new DeliveryState({
+            ticket: {},
+            stack: {
+                frontend: 'unknown',
+                mtime: 0,
+                ambiguity: ['reactivity: react + vue'],
+            },
+        } as never);
+        const r = applyRun(st);
         expect(r.outcome).toBe('blocked');
         const body = r.questions.join('\n');
-        // No directive verb — a refusal, not a delegation.
         expect(body).not.toContain('@agent-directive');
-        expect(body).toContain('does not model');
+        expect(body).toContain('react + vue');
         expect(body).toContain('Abort');
     });
 

@@ -16,7 +16,7 @@ import {
     agent_directive,
 } from '../../delivery_state.js';
 import {
-    UNSUPPORTED_LANE,
+    is_ambiguous_stack,
     bundle_line,
     unsupported_stack_questions,
 } from './stack_bundles.js';
@@ -195,12 +195,15 @@ function _delegate_to_polish_skill(
     ceiling: number,
 ): StepResult {
     const directive = _resolve_directive(state);
-    const unsupported_label = _stack_label(state);
-    if (unsupported_label === UNSUPPORTED_LANE) {
+    if (is_ambiguous_stack(state.stack)) {
+        const conflicts = ((state.stack as Record<string, Any>)['ambiguity'] ??
+            []) as ReadonlyArray<string>;
         return new StepResult({
             outcome: Outcome.BLOCKED,
-            questions: unsupported_stack_questions('polish'),
-            message: 'UI polish refused: frontend framework not modelled by any lane.',
+            questions: unsupported_stack_questions('polish', conflicts),
+            message:
+                `UI polish halted: detection is ambiguous (${conflicts.join('; ')}) — ` +
+                'the open question is which project to build for.',
         });
     }
     const stack_label = _stack_label(state);

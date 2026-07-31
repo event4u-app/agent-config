@@ -19,7 +19,7 @@ import {
 } from '../../delivery_state.js';
 import { placeholder_paths } from './design.js';
 import {
-    UNSUPPORTED_LANE,
+    is_ambiguous_stack,
     bundle_line,
     unsupported_stack_questions,
 } from './stack_bundles.js';
@@ -132,11 +132,15 @@ function _placeholder_violations_in_output(envelope: Record<string, Any>): strin
 function _delegate_to_stack_skill(state: DeliveryState): StepResult {
     const directive = _resolve_directive(state);
     const stack_label = _stack_label(state);
-    if (stack_label === UNSUPPORTED_LANE) {
+    if (is_ambiguous_stack(state.stack)) {
+        const conflicts = ((state.stack as Record<string, Any>)['ambiguity'] ??
+            []) as ReadonlyArray<string>;
         return new StepResult({
             outcome: Outcome.BLOCKED,
-            questions: unsupported_stack_questions('apply'),
-            message: 'UI apply refused: frontend framework not modelled by any lane.',
+            questions: unsupported_stack_questions('apply', conflicts),
+            message:
+                `UI apply halted: detection is ambiguous (${conflicts.join('; ')}) — ` +
+                'the open question is which project to build for.',
         });
     }
     return new StepResult({
