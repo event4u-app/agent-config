@@ -84,60 +84,64 @@ that is legally exposed for German consumers.
 
 ## Phase 0 — Establish the ownership decision (blocking, no data edits)
 
-- [ ] Decide and record which artifact owns third-party webfont delivery. The
+- [x] Decide and record which artifact owns third-party webfont delivery. The
       candidates are `typography-system` (it emits the import),
       `design-fidelity-mechanics` (it already forbids hotlinking, but scopes
       itself to owned assets), or a new line in the asset-discipline guideline.
       One owner, named in writing — the current three-way assumption is the
       defect.
-- [ ] Fixture `daf-webfont-delivery`: a design specifies a Google-hosted font;
+- [x] Fixture `daf-webfont-delivery`: a design specifies a Google-hosted font;
       assert the emitted output does not hotlink and instead names the target
       project's own font route. Run it against the current tree and record the
       baseline (expected: fails — the hotlink is emitted).
-- [ ] Confirm the legal framing with the maintainer's own consumer profile in
+- [x] Confirm the legal framing with the maintainer's own consumer profile in
       view (German SaaS), and record it in the ownership note so the constraint
       is not re-litigated as a style preference.
 
 **Exit:** one named owner; a failing fixture that defines "fixed".
+**Landed:** owner = `design-fidelity-mechanics` § Asset & imagery discipline
+([`ADR-205`](../../docs/decisions/ADR-205-webfont-delivery-ownership.md)); the
+legal framing and the "treat as style → rejected" arbitration are recorded
+there; `daf-webfont-delivery` exists with a measured FAIL baseline.
 
 ## Phase 1 — Stop emitting the hotlink
 
-- [ ] `typography-system/SKILL.md:103-105`: replace the unconditional
+- [x] `typography-system/SKILL.md:103-105`: replace the unconditional
       `@import` deliverable with a hosting-mode branch — self-hosted route by
       default, hotlink only on an explicit consumer opt-in. Keep `:55-56`'s
       availability check (does this font exist?) separate from the delivery
       decision (how does it get to the page?); conflating them is what produced
       the single hard-wired route.
-- [ ] Give each supported stack a self-hosting answer, framework-neutrally:
+- [x] Give each supported stack a self-hosting answer, framework-neutrally:
       `next/font` where Next is detected, `@fontsource/*` for bundler stacks, an
       asset-pipeline copy for Laravel/Vite, plain `@font-face` as the floor.
       Cite the per-stack corpus rows that already say this rather than inventing
       a second source of truth.
-- [ ] Extend the asset-discipline rule so a **third-party** webfont is covered,
+- [x] Extend the asset-discipline rule so a **third-party** webfont is covered,
       not only project-owned assets — this is the gap
       `design-fidelity-mechanics.md:34-37` leaves open by scoping to owned assets.
-- [ ] `daf-webfont-delivery` flips to green.
+- [x] `daf-webfont-delivery` flips to green.
 
 **Exit:** no path in the package emits a third-party font hotlink by default.
 
 ## Phase 2 — Make the corpus consistent with itself
 
-- [ ] Add a delivery column to `font-pairings-reference.csv` so the self-hosted
+- [x] Add a delivery column to `font-pairings-reference.csv` so the self-hosted
       route travels with the row instead of being reconstructed downstream. The
       Google-Fonts URL stays — it is how you find the font — but it stops being
       the only shipped answer for how you deliver it.
-- [ ] Resolve the direct contradiction with `stacks/nextjs.csv:23`, which lists
+- [x] Resolve the direct contradiction with `stacks/nextjs.csv:23`, which lists
       the hotlink in its avoid column. Two files in one data directory must not
       give opposite instructions on the same decision.
-- [ ] Encode the T7 conflict as data: rows whose heading or body font appears in
+- [x] Encode the T7 conflict as data: rows whose heading or body font appears in
       `design-antipatterns.md:109` carry a flag, so the cross-check at
       `design-intelligence/SKILL.md:330-337` reads a field instead of relying on
       the model remembering a catalog. Do **not** reorder or delete rows — the
       corpus is reference data, and the fix is making the conflict visible, not
       hiding it.
-- [ ] Correct the record while editing: Poppins + Open Sans is **not** a flagged
+- [x] Correct the record while editing: Poppins + Open Sans is **not** a flagged
       pairing; only rows carrying an actual T7 font get the flag.
-- [ ] Address the stale-URL fragility the skill already documents
+- [x] Address the stale-URL fragility the skill already documents
       (`typography-system/SKILL.md:108-113`) — a self-hosted default removes the
       404-at-build-time failure mode for the default path, so state whether the
       remaining opt-in hotlink path keeps the caveat.

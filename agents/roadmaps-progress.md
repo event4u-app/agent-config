@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
 **48 / 220 steps done · 22%**
 
 ```text
-█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
 ```
 
 ## Open roadmaps
@@ -307,16 +307,6 @@ _1 blocker resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Two measurements against the same harness | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-
-### [road-to-webfont-delivery-ownership.md](roadmaps/road-to-webfont-delivery-ownership.md)
-
-**Road to webfont delivery ownership — one skill prescribes the hotlink another skill's data forbids** — 0 / 12 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Establish the ownership decision (blocking, no data edits) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | Stop emitting the hotlink | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Make the corpus consistent with itself | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
 ---
 
