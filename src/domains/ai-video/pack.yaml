@@ -17,4 +17,4 @@ size_class: large
 suggests: []
 surface_tier: lab
 trust_level_default: experimental
-version: 9.10.0
+version: 9.11.0
