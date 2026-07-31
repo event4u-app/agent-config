@@ -5,7 +5,7 @@
 AI image generation — multi-provider, governed (image as a sibling of video).
 
 - **id**: `ai-image`
-- **version**: `9.9.0`
+- **version**: `9.10.0`
 - **owner**: small-business
 - **requires**: —
 - **artefacts**: 9
