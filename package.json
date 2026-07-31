@@ -34,6 +34,7 @@
         ".augment-plugin/",
         ".claude-plugin/",
         "src/config/",
+        "agents/templates/",
         "dist/",
         "docs/guidelines/",
         "docs/contracts/persona-schema.md",
