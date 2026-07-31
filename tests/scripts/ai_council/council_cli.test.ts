@@ -27,7 +27,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import {
     CouncilResponse,
@@ -41,6 +41,29 @@ import {
     cmd_run,
     _parse_siblings_overrides,
 } from '../../../src/scripts/council_cli.js';
+
+
+// The council's necessity-classifier emits to the events log, whose default
+// path is `<repo_root>/agents/runtime/council/events.log` — INSIDE the worktree.
+// `cmd_debate` reaches that emit, so running this file wrote a real log into the
+// repo. Harmless alone, but vitest runs files in PARALLEL: the read-only witness
+// in `tests/scripts/witness/reach_doctor_readonly.test.ts` asserts that NO path
+// in the worktree (tracked or gitignored) appears while it runs, so whenever
+// sharding put the two in the same shard the witness failed on
+// `porcelain-new: !! agents/runtime/`. Nothing here asserts the log, so switch
+// it off for this file.
+const _NO_EVENTS_LOG = 'AGENT_CONFIG_NO_EVENTS_LOG';
+let _savedNoEventsLog: string | undefined;
+
+beforeAll(() => {
+    _savedNoEventsLog = process.env[_NO_EVENTS_LOG];
+    process.env[_NO_EVENTS_LOG] = '1';
+});
+
+afterAll(() => {
+    if (_savedNoEventsLog === undefined) delete process.env[_NO_EVENTS_LOG];
+    else process.env[_NO_EVENTS_LOG] = _savedNoEventsLog;
+});
 
 // ── stubs (mirror the Python _StubMember / _ManualStub / _fake_table) ──
 
