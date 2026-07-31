@@ -1,6 +1,10 @@
 /**
- * Install-time rule scoping — Pipeline B of consumer-scoped rule projection
+ * Install-time rule scoping for the consumer install
  * (road-to-request-scoped-rule-load Phase 1b).
+ *
+ * Naming: this is the CONSUMER INSTALL path, not `docs/architecture.md`'s
+ * Pipeline B (which is the `.augment/` projection). Earlier drafts called it
+ * "Pipeline B" and collided with that name; use "the consumer install" here.
  *
  * The projection filter (`rule_in_scope`, condense.ts) covered only the
  * maintainer projection; the consumer install pipeline shipped rules

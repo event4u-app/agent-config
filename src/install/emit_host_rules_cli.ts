@@ -21,7 +21,8 @@
  *     the Phase-1b rule filter, so scoped installs get scoped host files
  *     for free;
  *   - re-using the exported emitters keeps consumer output byte-identical
- *     to the maintainer projection (Pipeline B never drifts from A).
+ *     to the maintainer projection (the consumer install never drifts from
+ *     Pipeline A, the source projection into `dist/agent-src/`).
  * The trade-off (node required at install time) matches the rule-scope
  * resolver: no node → install.sh keeps its legacy fallback surfaces.
  *
