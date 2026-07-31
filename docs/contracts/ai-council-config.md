@@ -73,7 +73,7 @@ breadcrumb there points at this contract.
 ```yaml
 enabled: <bool>                 # master switch, required
 defaults:                       # per-invocation defaults, required
-  mode: <"api" | "manual" | "cli">
+  mode: <"api" | "manual" | "cli" | "auto">   # "auto" is opt-in; see Transport modes
   min_rounds: <int >= 1>
   deep_min_rounds: <int >= min_rounds>
   max_output_tokens: <int >= 0>           # 0 widens to provider ceiling
@@ -93,8 +93,8 @@ members:                        # per-provider blocks, at least one enabled
     enabled: <bool>
     model: <string>
     api_key_ref: <string>                 # required for mode: api; optional for cli/manual
-    mode: <"api" | "manual" | "cli">      # optional override of defaults.mode
-    binary: <string>                      # optional; only valid when effective mode == "cli"
+    mode: <"api" | "manual" | "cli" | "auto">  # optional override of defaults.mode
+    binary: <string>                      # optional; only valid when effective mode == "cli" or "auto"
 advisors:                       # Thinking-style replace-mode advisors
   <advisor-key>:
     enabled: <bool>
@@ -123,14 +123,66 @@ Supported `<provider>` keys: `anthropic`, `openai`, `gemini`, `xai`,
 
 ### Transport modes
 
-Three first-class transports on the `mode:` axis. Resolution per member:
-`per-member mode > defaults.mode > "api"`.
+Three first-class transports on the `mode:` axis, plus `auto`, which selects
+one of them per provider per invocation. Resolution per member:
+`invocation flag > per-member mode > defaults.mode > built-in fallback` — and
+see [Two defaults, not one](#two-defaults-not-one) for what sits at the bottom.
 
 | Mode | Semantics | Billable | Auth | Cost gate |
 |---|---|---|---|---|
 | `manual` | Copy & paste — the human transports prompt + reply between the agent and an external chat surface. | No | None — human-in-the-loop | n/a |
 | `api` | SDK call against a stored key, per-token billing on the provider's API. | Yes | `api_key_ref` (env or 0600 file) | `cost_budget` (full) |
 | `cli` | Shell out to a locally-installed provider CLI. For `anthropic` / `openai` / `gemini` this runs under the user's subscription auth and is `billable=False`. For `xai` / `perplexity` (community wrappers) the CLI consumes the same API key as `mode: api` and remains `billable=True`. | Mixed — see below | CLI-managed OAuth (vendor) or API key in CLI env (community) | Vendor: `cli_call_budget.max_calls_per_day` only · Community: full `cost_budget` |
+| `auto` | Not a transport — a selection rule. Per provider per invocation: the CLI binary resolves AND a credential is present → `cli`; else a key resolves → `api`; else the member is unavailable with a one-line reason. `manual` is never in the chain. **Opt-in, never the shipped default.** | Inherited from the selected rung's provider + credential — never from the fact that `auto` chose it | Whatever the selected rung needs | The selected rung's gate |
+
+#### `auto` — the selection rule
+
+Resolved by `src/scripts/ai_council/transport_resolver.ts` over the single
+read-only environment report from `src/scripts/_lib/environment_detector.ts`.
+
+- **`manual` is deliberately excluded.** It is always "available" (the human is
+  the transport), so an availability-ranked chain would always terminate there
+  and `auto` would silently mean "ask the human to copy-paste". Manual stays an
+  explicit opt-in.
+- **A per-member `mode:` still overrides it.** `auto` is a value of the same
+  key, not a new precedence layer.
+- **`binary:` is valid on an `auto` member** (the chain may pick the cli rung).
+- **Billing is classified from (provider, detected auth source), never from the
+  transport `auto` picked.** A vendor-official CLI under a subscription login is
+  unmetered; a community wrapper is metered even though its transport is also
+  spelled `cli`; an unrecognised or absent credential is metered — deliberately
+  over-gated. This is what keeps the per-provider rules below intact under
+  `auto`.
+- **Mid-flight fallback is failure-class-gated.** Within one invocation an
+  `auto` (or `cli`) member may fall through to the `api` rung **at most once**,
+  and only for `binary_missing`, `auth_rejected`, or `cli_unsupported` — the
+  three classes where the CLI provably never reached the provider. A `timeout`,
+  a 5xx, or an exhausted `cli_call_budget` does **not** fall through: a
+  half-completed call must never be paid for twice, and a quota cap the user set
+  is not a fault to route around.
+- **`cli_call_budget` ships populated**, because `auto` prefers the rung it
+  guards.
+
+#### Two defaults, not one
+
+Earlier revisions of this contract described a single built-in fallback
+(`"api"`) while the resolver implemented `manual`. Both were right about
+different layers. They are now named separately:
+
+| Layer | When it applies | Value |
+|---|---|---|
+| **Loader default** for `defaults.mode` | The config file omits the key. `config.ts::_build_defaults` fills it, so every real config observes this. | `api` |
+| **Built-in fallback** in the resolver | No layer supplies a mode at all — a settings dict handed straight to `resolve_mode`, no config file involved. | `manual` |
+
+The built-in fallback is the free transport by design: a caller who named no
+transport has not asked to spend money (`modes.ts::DEFAULT_MODE`, pinned in
+`tests/scripts/ai_council/modes.test.ts`).
+
+Both shapes of the global key resolve. `council_cli.ts` synthesizes the loaded
+config into a block whose global mode sits at the top level (`mode`), while a
+caller handing `build_members` a raw `.ai-council.yml`-shaped dict presents it
+nested (`defaults.mode`). `modes.ts::resolve_global_mode` accepts either, flat
+winning when both are present.
 
 Implications:
 
@@ -150,9 +202,11 @@ Implications:
   vendor-official CLIs (`anthropic`, `openai`, `gemini`) authenticate
   via their own login flow and need no `api_key_ref` in `mode: cli`;
   manual members have no key at all.
-- **`binary:` is only valid when the effective mode is `cli`.** Setting it
-  on an `api` or `manual` member is a hard validation error — no silent
-  ignore, no clutter.
+- **`binary:` is only valid when the effective mode is `cli` or `auto`.**
+  Setting it on an `api` or `manual` member is a hard validation error — no
+  silent ignore, no clutter. `auto` is admitted because its chain may resolve to
+  the cli rung, and rejecting the override would make `auto` unusable for anyone
+  whose CLI is not on `$PATH` under its default name.
 - **Subscription quotas:** Claude Pro 5h usage windows, ChatGPT Plus
   message caps, Gemini free-tier per-day limits all live outside this
   loader's view. `cli_call_budget.max_calls_per_day.<provider>` lets the
@@ -837,8 +891,15 @@ as comments and the loader enforces them.
     subscription, not per-token. `billable=False` so the `cost_budget`
     USD ceiling does not apply; subscription quotas are guarded by
     `cli_call_budget.max_calls_per_day` instead.
+  - `auto` = pick one of the above per provider per invocation (cli → api →
+    unavailable); `manual` is never in the chain. Opt-in, never the shipped
+    default — flipping it would move an existing user's spend from per-token
+    dollars onto subscription quota with no config edit on their part.
 
-  Precedence: per-invocation flag > per-member override > defaults > `api`.
+  Precedence: per-invocation flag > per-member override > defaults > built-in
+  fallback. The loader fills `defaults.mode` with `api` when the key is absent;
+  the resolver's built-in fallback, reached only when no layer supplies a mode
+  at all, is `manual`. See [Two defaults, not one](#two-defaults-not-one).
 - **Tokens never stored in this yml.** Keys live in 0600 files
   (`~/.event4u/agent-config/<provider>.key`, installed via
   `bash scripts/install_<provider>_key.sh` for providers that ship an
@@ -879,7 +940,7 @@ error) when any of these hold:
    `sk-`, `pk-`, `xai-`, or matches a provider's key prefix).
 6. `defaults.deep_min_rounds < defaults.min_rounds` is allowed (clamped
    by the monotonic rule at runtime) but logged as a warning.
-7. `defaults.mode` not in `{"api", "manual", "cli"}`; per-member `mode`
+7. `defaults.mode` not in `{"api", "manual", "cli", "auto"}`; per-member `mode`
    override same constraint.
 8. `members.<provider>.binary` set when the member's effective mode is
    not `cli` — explicit error to keep config clutter-free.

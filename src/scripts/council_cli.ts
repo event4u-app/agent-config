@@ -69,7 +69,7 @@ import {
     resolve_config_path,
 } from './ai_council/config.js';
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
-import { InvalidModeError, resolve_mode } from './ai_council/modes.js';
+import { InvalidModeError, resolve_global_mode, resolve_mode } from './ai_council/modes.js';
 import { appendEvent } from './ai_council/events_log.js';
 import {
     type ClassificationResult,
@@ -564,7 +564,11 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
         );
     }
     const members_cfg = (ai['members'] as Dict) || {};
-    const global_mode = ai['mode'] as string | null | undefined;
+    // Accepts BOTH the synthesized flat `mode` and the raw `defaults.mode`
+    // shape — see modes.ts::resolve_global_mode. Reading only the flat key
+    // dropped the configured default for every caller that hands this
+    // exported function a raw `.ai-council.yml` dict.
+    const global_mode = resolve_global_mode(ai);
     const cli_budget_cfg = _isDict(ai) ? ((ai['cli_call_budget'] as Dict) || {}) : {};
     const cli_caps = _isDict(cli_budget_cfg)
         ? ((cli_budget_cfg['max_calls_per_day'] as Dict) || {})

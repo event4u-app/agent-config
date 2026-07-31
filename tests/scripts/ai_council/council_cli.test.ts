@@ -27,7 +27,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import {
     CouncilResponse,
@@ -41,6 +41,29 @@ import {
     cmd_run,
     _parse_siblings_overrides,
 } from '../../../src/scripts/council_cli.js';
+
+
+// The council's necessity-classifier emits to the events log, whose default
+// path is `<repo_root>/agents/runtime/council/events.log` — INSIDE the worktree.
+// `cmd_debate` reaches that emit, so running this file wrote a real log into the
+// repo. Harmless alone, but vitest runs files in PARALLEL: the read-only witness
+// in `tests/scripts/witness/reach_doctor_readonly.test.ts` asserts that NO path
+// in the worktree (tracked or gitignored) appears while it runs, so whenever
+// sharding put the two in the same shard the witness failed on
+// `porcelain-new: !! agents/runtime/`. Nothing here asserts the log, so switch
+// it off for this file.
+const _NO_EVENTS_LOG = 'AGENT_CONFIG_NO_EVENTS_LOG';
+let _savedNoEventsLog: string | undefined;
+
+beforeAll(() => {
+    _savedNoEventsLog = process.env[_NO_EVENTS_LOG];
+    process.env[_NO_EVENTS_LOG] = '1';
+});
+
+afterAll(() => {
+    if (_savedNoEventsLog === undefined) delete process.env[_NO_EVENTS_LOG];
+    else process.env[_NO_EVENTS_LOG] = _savedNoEventsLog;
+});
 
 // ── stubs (mirror the Python _StubMember / _ManualStub / _fake_table) ──
 
@@ -148,6 +171,74 @@ describe('build_members guards', () => {
         };
         expect(() => build_members(settings)).toThrow(CouncilDisabledError);
         expect(() => build_members(settings)).toThrow(/no council member/);
+    });
+});
+
+// ── the global-mode key, both shapes ──────────────────────────────────
+//
+// `load_settings` hands `build_members` a SYNTHESIZED block whose global mode
+// sits at the top level (`_synthesize_ai_council_block` flattens
+// `defaults.mode` → `mode`). But `build_members` is on the exported surface,
+// so a caller — the MCP tool path, a test, any embedder — can legitimately
+// hand it the RAW `.ai-council.yml` shape, where the same value lives under
+// `defaults.mode`. Reading only the flat key silently drops the documented
+// default on that path and falls through to the built-in.
+//
+// road-to-zero-ceremony-detection Phase 2: both shapes must resolve.
+
+describe('build_members — global transport mode key shapes', () => {
+    /** A single cli-mode member whose binary override avoids a PATH lookup. */
+    function settingsWith(aiExtra: Record<string, unknown>): Record<string, unknown> {
+        return {
+            ai_council: {
+                enabled: true,
+                members: {
+                    anthropic: {
+                        enabled: true,
+                        model: 'claude-sonnet-4-5',
+                        binary: process.execPath,
+                    },
+                },
+                ...aiExtra,
+            },
+        };
+    }
+
+    it('honours the flattened top-level `mode` (the synthesized shape)', () => {
+        const members = build_members(settingsWith({ mode: 'cli' }));
+        expect(members).toHaveLength(1);
+        expect((members[0] as { transport?: string }).transport).toBe('cli');
+    });
+
+    it('honours the nested `defaults.mode` (the raw .ai-council.yml shape)', () => {
+        const members = build_members(settingsWith({ defaults: { mode: 'cli' } }));
+        expect(members).toHaveLength(1);
+        expect((members[0] as { transport?: string }).transport).toBe('cli');
+    });
+
+    it('prefers the flattened key when both shapes are present', () => {
+        const members = build_members(
+            settingsWith({ mode: 'cli', defaults: { mode: 'manual' } }),
+        );
+        expect((members[0] as { transport?: string }).transport).toBe('cli');
+    });
+
+    it('still lets a per-member mode override either shape', () => {
+        const settings = {
+            ai_council: {
+                enabled: true,
+                defaults: { mode: 'cli' },
+                members: {
+                    anthropic: {
+                        enabled: true,
+                        model: 'claude-sonnet-4-5',
+                        mode: 'manual',
+                    },
+                },
+            },
+        };
+        const members = build_members(settings);
+        expect((members[0] as { transport?: string }).transport).toBe('manual');
     });
 });
 

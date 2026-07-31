@@ -29,8 +29,19 @@
 # autonomy directive does NOT silently spend tokens — the /council
 # command always asks before invoking, even under autonomy: on.
 
-# Master switch (true, false). Default false in the template — installing
-# a key is not the same as wanting the agent to spend money on it.
+# Master switch (true, false). REQUIRED — the loader has no default for it,
+# so this file's value is the only value.
+#
+# This example ships `true`, and two members below ship `enabled: true`.
+# That is deliberate: the file's job is to be a WORKING starter, and a
+# starter that consults nobody teaches nothing. But be clear about what
+# copying it means — installing a key is not the same as wanting the agent
+# to spend money on it, so review the `members:` block before you copy,
+# and set `enabled: false` on anything you do not want called.
+#
+# `agent-config doctor --check detection` shows, per provider, what this
+# machine detected AND whether it is allowed to spend — so the gap between
+# "could work" and "may spend" is visible rather than mysterious.
 enabled: true
 
 # Per-invocation defaults. Each member may override `mode:` below.
@@ -48,8 +59,26 @@ defaults:
   #            flat-rate subscription, not per-token. `cost_budget.
   #            max_total_usd` does NOT apply; use `cli_call_budget`
   #            below to guard subscription quotas.
+  #   auto   = resolve per provider per invocation: the provider's CLI
+  #            binary resolves AND a credential is present -> cli; else a
+  #            key resolves -> api; else unavailable with a one-line
+  #            reason. `manual` is NEVER part of the auto chain (it would
+  #            always "succeed" and silently turn every call into a
+  #            copy-paste request) — it stays an explicit opt-in.
+  #            OPT-IN: `auto` is not the shipped default. Switching to it
+  #            moves spend from per-token dollars onto your subscription
+  #            quota, so it is a decision you take, not one you inherit.
+  #            Set `cli_call_budget` below before you flip it.
   #
-  # Precedence: invocation flag > per-member mode > defaults.mode > "api".
+  # Precedence: invocation flag > per-member mode > defaults.mode >
+  # built-in. Two DIFFERENT defaults sit at the bottom, and they are not
+  # the same thing:
+  #   · omit `defaults.mode` entirely and the loader fills "api" — that is
+  #     what every real config file observes.
+  #   · the resolver's built-in fallback, reached only when no layer at all
+  #     supplies a mode (a settings dict handed straight to the resolver,
+  #     no config file involved), is "manual" — free, no key. A caller who
+  #     named no transport has not asked to spend money.
   mode: api
 
   # Default number of debate rounds per /council invocation.
@@ -105,9 +134,14 @@ defaults:
 # the user to continue. Each `0` disables that single cap; other caps
 # still apply.
 #
-# Applies to BILLABLE transports only (mode: api). mode: cli and
-# mode: manual are billable=False — `max_total_usd` does NOT gate
-# them. CLI subscription quotas are guarded by `cli_call_budget` below.
+# Applies to BILLABLE members only. Billing follows the PROVIDER and its
+# credential, never the transport name: `mode: manual` never bills, and
+# `mode: cli` is billable=False for the VENDOR-OFFICIAL CLIs (anthropic,
+# openai, gemini — subscription auth), but stays billable=True for the
+# COMMUNITY wrappers (xai, perplexity), whose CLIs consume the same paid
+# API key as `mode: api`. So `max_total_usd` does NOT gate a vendor CLI
+# member and DOES still gate an xai / perplexity member on any transport.
+# Vendor-CLI subscription quotas are guarded by `cli_call_budget` below.
 #
 # Prices come from agents/.agent-prices.md (gitignored, refreshed weekly
 # by `python3 scripts/update_prices.py`; bootstrapped from
@@ -154,29 +188,57 @@ debate:
 #
 # Counter state persists at ~/.event4u/agent-config/cli-calls.json
 # with daily UTC reset. Wired by Phase 1 of the CLI-transport roadmap.
-# cli_call_budget:
-#   max_calls_per_day:
-#     anthropic: 50
-#     openai: 100
-#     gemini: 20
+#
+# SHIPPED POPULATED, deliberately: `mode: auto` prefers the cli rung, so
+# shipping that path with no quota guard would miss the point. The caps
+# below are sized from the worst case one invocation can cost — a deep
+# debate is at most `debate_max_rounds` (4) calls per member — so 24
+# permits roughly six full deep debates per provider per day before the
+# guard fires. That is well inside a Pro-tier window while still bounding
+# a runaway loop, and failures count too (a wedged CLI cannot burn the
+# whole budget retrying). Gemini's free tier is the tightest, hence the
+# lower cap. Raise them if you consult heavily; `council:quota` reports
+# usage and `council:quota --reset` clears the day.
+cli_call_budget:
+  max_calls_per_day:
+    anthropic: 24
+    openai: 24
+    gemini: 16
+  # Warn once usage crosses this fraction of a cap (0..1).
+  warn_at: 0.8
 
-# Per-member configuration. Set enabled=true on the providers you want
-# to consult. The `model:` field selects which model receives the query.
+# Per-member configuration — you decide what may spend; detection tells
+# you what is already here.
 #
-# `api_key_ref:` points at a 0600 key file (`file:<path>` — relative
-# paths resolve under ~/.event4u/agent-config/ with the legacy
-# ~/.config/agent-config/ tree as a read fallback) or an environment
-# variable (`env:<VAR>`). Raw keys in this file are a hard validation
-# error. Required for mode: api; OPTIONAL for mode: cli and mode:
-# manual (those transports don't authenticate through a stored key).
+# DON'T hand-audit this block. Run:
 #
-# Optional `mode:` overrides defaults.mode for that member only.
+#   agent-config doctor --check detection
 #
-# Optional `binary:` is the absolute path to the provider's CLI
-# executable — only valid when the member's effective mode is `cli`.
-# When omitted, the CliClient resolves the provider's default binary
-# name (`claude`, `codex`, `gemini`) via `shutil.which`. Setting it on
-# an api/manual member is a hard validation error.
+# It reports, per provider: detected · authenticated · auth source ·
+# billing class · enabled-in-config, the transport `mode: auto` would
+# pick, and a one-line fix for anything unusable. Everything a comment
+# here used to have to explain — which binary, whether a key resolves,
+# whether the CLI is logged in, whether spend is metered or on your
+# subscription — that command answers against YOUR machine.
+#
+# What stays your call is the last column: `enabled`. Detection reports
+# capability; it never grants permission. A provider can be fully
+# detected and still sit at `enabled: false`, and that is a recorded
+# decision, not a misconfiguration — `doctor` prints the exact one-line
+# edit when you want to change it.
+#
+# The three fields:
+#   model:        which model receives the query.
+#   api_key_ref:  a 0600 key file (`file:<name>` — relative paths resolve
+#                 under ~/.event4u/agent-config/, legacy
+#                 ~/.config/agent-config/ read as a fallback) or an env
+#                 var (`env:<VAR>`). Raw keys here are a hard validation
+#                 error. Required for mode: api; optional for cli /
+#                 manual / auto (those may authenticate via the CLI).
+#   mode:         overrides defaults.mode for this member only.
+#   binary:       absolute path to the provider's CLI — only valid when
+#                 the effective mode is `cli` or `auto`. Omit it and the
+#                 default binary name is resolved on $PATH.
 #
 # --- Low-impact fast-path opt-in (Phase 11, default OFF) ---
 # `decision_resolution.classes.low_impact.mode` (see below) defaults
@@ -220,9 +282,13 @@ members:
     #   ttl: 5m
     # Phase 11 — opt this member in to the lightweight-QA fast-path.
     # Only opted-in members run when a `low_impact` question routes
-    # to `council`. Defaults to false; flipping requires explicit
-    # consent because the fast-path bypasses the standard fan-out.
-    participate_low_impact: true
+    # to `council`. Loader default is false, and this example ships
+    # false to match: the fast-path bypasses the standard fan-out, so
+    # pre-flipping a consent knob on the user's behalf is exactly the
+    # thing the master-switch note above warns against. The OTHER knob
+    # (`decision_resolution.classes.low_impact.mode`) also defaults to
+    # `agent`, so the fast-path stays unavailable until you flip both.
+    participate_low_impact: false
 
   openai:
     enabled: true
@@ -236,7 +302,8 @@ members:
       - gpt-4o-mini
       - gpt-4o
       - gpt-4.1
-    participate_low_impact: true
+    # See the anthropic member above — ships false, loader default false.
+    participate_low_impact: false
 
   gemini:
     enabled: false

@@ -40,25 +40,21 @@
 // `unsupported-combos` reporting on a real lockfile, plus the full report and
 // `--json` over a manifest-present root, all byte-identical py-vs-ts.
 import * as crypto from 'node:crypto';
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { _parse, main, _check_settings_review_pending, _check_team } from '../../../src/scripts/_cli/cmd_doctor.js';
+import {
+    _parse,
+    main,
+    _check_settings_review_pending,
+    _check_team,
+    _check_detection,
+    _detection_report,
+    _reset_detection_memo,
+} from '../../../src/scripts/_cli/cmd_doctor.js';
+import { resetEnvironmentCache } from '../../../src/scripts/_lib/environment_detector.js';
 import { runInProc } from '../../_lib/run_in_process.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_doctor.ts');
-// Resolve TSX_BIN to an ABSOLUTE path: the runs spawn with cwd set to a temp
-// dir, and a relative binary path would resolve against that cwd (→ ENOENT →
-// status:null). The env override is honored but absolutized.
-const TSX_BIN = path.resolve(
-    REPO_ROOT,
-    process.env['TSX_BIN'] ??
-        path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
-);
 
 interface RunResult {
     status: number | null;
@@ -68,27 +64,6 @@ interface RunResult {
 
 function runTs(args: string[], cwd: string, extraEnv: Record<string, string> = {}): RunResult {
     return runInProc(main, args, { cwd, env: extraEnv });
-}
-
-/**
- * Normalize machine-specific tmp paths so the output stays stable across runs.
- * macOS resolves `/tmp` → `/private/var/...` for the cwd-stamped paths the
- * doctor prints, so we strip both the raw and realpath forms of every
- * dynamic root.
- */
-function norm(text: string, roots: string[]): string {
-    let out = text;
-    for (const root of roots) {
-        out = out.split(root).join('<TMP>');
-        let real = root;
-        try {
-            real = fs.realpathSync(root);
-        } catch {
-            /* root may already be removed */
-        }
-        out = out.split(real).join('<TMP>');
-    }
-    return out;
 }
 
 /**
@@ -305,6 +280,7 @@ describe('doctor — individual checks', () => {
         'humanizer-runtime',
         'tier-usage-readiness',
         'council-cli',
+        'detection',
         'team',
         'unsupported-combos',
         'wizard-state',
@@ -1171,5 +1147,206 @@ describe('--check git-identity (placeholder-identity guard)', () => {
             fs.rmSync(main, { recursive: true, force: true });
             fs.rmSync(wt, { recursive: true, force: true });
         }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// detection check (road-to-zero-ceremony-detection Phases 3 + 4)
+//
+// Pins the status model — a recorded consent decision is NOT a defect — and the
+// `--json` contract. Every case injects PATH / CODEX_HOME / CLAUDE_CONFIG_DIR /
+// EVENT4U_CONFIG_HOME so provider rows are fully controlled.
+// ---------------------------------------------------------------------------
+
+describe('doctor — detection check', () => {
+    interface DetEnv {
+        root: string;
+        bin: string;
+        claudeDir: string;
+        home: string;
+        councilPath: string;
+    }
+    const DET_ENV_KEYS = [
+        'PATH',
+        'CODEX_HOME',
+        'CLAUDE_CONFIG_DIR',
+        'EVENT4U_CONFIG_HOME',
+        'AI_COUNCIL_CONFIG',
+        'ANTHROPIC_API_KEY',
+        'OPENAI_API_KEY',
+        'GEMINI_API_KEY',
+        'XAI_API_KEY',
+        'PERPLEXITY_API_KEY',
+    ];
+
+    function withDetEnv(fn: (t: DetEnv) => void): void {
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-det-'));
+        const t: DetEnv = {
+            root: path.join(base, 'proj'),
+            bin: path.join(base, 'bin'),
+            claudeDir: path.join(base, 'claude'),
+            home: path.join(base, 'e4u-home'),
+            councilPath: path.join(base, 'e4u-home', 'settings', '.ai-council.yml'),
+        };
+        fs.mkdirSync(t.root, { recursive: true });
+        fs.mkdirSync(t.bin, { recursive: true });
+        const prev: Record<string, string | undefined> = {};
+        for (const k of DET_ENV_KEYS) prev[k] = process.env[k];
+        process.env['PATH'] = t.bin;
+        process.env['CODEX_HOME'] = path.join(base, 'codex-home');
+        process.env['CLAUDE_CONFIG_DIR'] = t.claudeDir;
+        process.env['EVENT4U_CONFIG_HOME'] = t.home;
+        for (const k of DET_ENV_KEYS.slice(4)) delete process.env[k];
+        resetEnvironmentCache();
+        _reset_detection_memo();
+        try {
+            fn(t);
+        } finally {
+            for (const k of DET_ENV_KEYS) {
+                if (prev[k] === undefined) delete process.env[k];
+                else process.env[k] = prev[k] as string;
+            }
+            resetEnvironmentCache();
+            _reset_detection_memo();
+            fs.rmSync(base, { recursive: true, force: true });
+        }
+    }
+
+    /** Write a minimal valid council config at the resolved user-global path. */
+    function writeCouncil(t: DetEnv, body: string): void {
+        fs.mkdirSync(path.dirname(t.councilPath), { recursive: true });
+        fs.writeFileSync(t.councilPath, body);
+        _reset_detection_memo();
+    }
+
+    function claudeLogin(t: DetEnv): void {
+        fs.mkdirSync(t.claudeDir, { recursive: true });
+        fs.writeFileSync(path.join(t.claudeDir, '.credentials.json'), '{"x":1}');
+        const bin = path.join(t.bin, 'claude');
+        fs.writeFileSync(bin, '#!/bin/sh\necho 1.2.3\n');
+        fs.chmodSync(bin, 0o755);
+        resetEnvironmentCache();
+        _reset_detection_memo();
+    }
+
+    const COUNCIL_ENABLED_ANTHROPIC = [
+        'enabled: true',
+        'defaults:',
+        '  mode: api',
+        'cost_budget:',
+        '  max_total_usd: 20',
+        'members:',
+        '  anthropic:',
+        '    enabled: true',
+        '    model: claude-sonnet-4-5',
+        '    api_key_ref: file:anthropic.key',
+        '',
+    ].join('\n');
+
+    const COUNCIL_DISABLED_MEMBER = COUNCIL_ENABLED_ANTHROPIC.replace(
+        '    enabled: true\n    model',
+        '    enabled: false\n    model',
+    );
+
+    it('reports ok with a fix when no council config exists', () => {
+        withDetEnv((t) => {
+            const c = _check_detection(t.root);
+            expect(c['id']).toBe('detection');
+            expect(c['status']).toBe('ok');
+            expect(String(c['message'])).toContain('council not configured');
+            expect(String(c['remedy']).length).toBeGreaterThan(0);
+        });
+    });
+
+    it('treats a detected-but-not-enabled provider as ok, not a warning', () => {
+        withDetEnv((t) => {
+            claudeLogin(t);
+            writeCouncil(t, COUNCIL_DISABLED_MEMBER);
+            const c = _check_detection(t.root);
+            // `enabled: false` is a deliberate spend gate. Warning on it would
+            // train the user to silence their own consent record.
+            expect(c['status']).toBe('ok');
+            expect(String(c['message'])).toContain('not allowed to spend: anthropic');
+            expect(String(c['remedy'])).toContain('members.anthropic.enabled: true');
+        });
+    });
+
+    it('warns when a member IS permitted to spend but has no transport', () => {
+        withDetEnv((t) => {
+            // Council enabled, member enabled, nothing installed and no key.
+            writeCouncil(t, COUNCIL_ENABLED_ANTHROPIC);
+            const c = _check_detection(t.root);
+            expect(c['status']).toBe('warn');
+            expect(String(c['message'])).toContain('no transport');
+            expect(String(c['remedy'])).toContain('anthropic');
+        });
+    });
+
+    it('reports ok once the permitted member resolves a transport', () => {
+        withDetEnv((t) => {
+            claudeLogin(t);
+            writeCouncil(t, COUNCIL_ENABLED_ANTHROPIC);
+            const c = _check_detection(t.root);
+            expect(c['status']).toBe('ok');
+            expect(String(c['message'])).toContain('anthropic→cli/subscription');
+        });
+    });
+
+    it('degrades an unreadable council config to "not configured" without throwing', () => {
+        withDetEnv((t) => {
+            writeCouncil(t, 'this: is: not: valid: yaml: [[[');
+            expect(() => _check_detection(t.root)).not.toThrow();
+            expect(_check_detection(t.root)['status']).toBe('ok');
+        });
+    });
+
+    it('memoizes the report so the check row and the section cannot disagree', () => {
+        withDetEnv((t) => {
+            claudeLogin(t);
+            writeCouncil(t, COUNCIL_ENABLED_ANTHROPIC);
+            expect(_detection_report(t.root)).toBe(_detection_report(t.root));
+        });
+    });
+
+    it('--json carries the detection payload with the pinned shape', () => {
+        withDetEnv((t) => {
+            claudeLogin(t);
+            writeCouncil(t, COUNCIL_ENABLED_ANTHROPIC);
+            const res = runInProc(() => main(['--project', t.root, '--check', 'detection', '--json']));
+            const payload = JSON.parse(res.stdout) as Record<string, unknown>;
+            expect(Object.keys(payload)).toContain('detection');
+            const det = payload['detection'] as Record<string, unknown>;
+            expect(det['schema_version']).toBe(1);
+            expect(Object.keys(det)).toEqual([
+                'schema_version',
+                'council_config_path',
+                'council_config_present',
+                'council_enabled',
+                'defaults_mode',
+                'hosts',
+                'providers',
+                'budgets',
+                'spend_disclosure',
+            ]);
+            expect(String(det['spend_disclosure'])).toContain('council spend disclosure');
+        });
+    });
+
+    it('omits the detection payload when the detection check did not run', () => {
+        withDetEnv((t) => {
+            const res = runInProc(() => main(['--project', t.root, '--check', 'scope', '--json']));
+            const payload = JSON.parse(res.stdout) as Record<string, unknown>;
+            expect(Object.keys(payload)).not.toContain('detection');
+        });
+    });
+
+    it('renders the section in text mode with a fix per unusable capability', () => {
+        withDetEnv((t) => {
+            writeCouncil(t, COUNCIL_ENABLED_ANTHROPIC);
+            const res = runInProc(() => main(['--project', t.root, '--check', 'detection']));
+            expect(res.stdout).toContain('detection:');
+            expect(res.stdout).toContain('  providers:');
+            expect(res.stdout).toContain('      fix: ');
+        });
     });
 });
