@@ -336,7 +336,7 @@ tasks:
 
   check-originality-freshness:
     silent: true
-    desc: "Advisory — regenerates the originality report, diffs it against the committed bytes, restores them, and WARNS on drift. Never fails: the report blocks nothing on its own, so staleness is a visible warning, not a red build."
+    desc: "Advisory, LOCAL ONLY — regenerates the originality report, diffs it against the committed bytes, restores them, and WARNS on drift. Never fails, and skips when CI is set: the sweep is not byte-reproducible across environments, so a CI warning would fire regardless of staleness."
     cmd: ./scripts-run src/scripts/check_originality_freshness {{.QUIET_FLAG}}
 
   validate-flow-teams:

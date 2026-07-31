@@ -233,9 +233,10 @@ tasks:
       - task: lint-pack-dependencies
       - task: lint-flows
       - task: lint-originality
-      # Advisory, never fails — it warns when the committed originality report
-      # describes an older corpus. Listed here so the warning is seen, not to
-      # gate on it: that report blocks nothing on its own by design.
+      # Advisory, never fails, and self-skips on CI — it warns LOCALLY when the
+      # committed originality report describes an older corpus. Listed here so
+      # the warning is seen, not to gate on it: that report blocks nothing on
+      # its own by design, and its bytes are not reproducible across runners.
       - task: check-originality-freshness
       - task: validate-flow-teams
       - task: lint-command-flow-coverage
@@ -443,9 +444,10 @@ tasks:
       - task: lint-pack-dependencies
       - task: lint-flows
       - task: lint-originality
-      # Advisory, never fails — it warns when the committed originality report
-      # describes an older corpus. Listed here so the warning is seen, not to
-      # gate on it: that report blocks nothing on its own by design.
+      # Advisory, never fails, and self-skips on CI — it warns LOCALLY when the
+      # committed originality report describes an older corpus. Listed here so
+      # the warning is seen, not to gate on it: that report blocks nothing on
+      # its own by design, and its bytes are not reproducible across runners.
       - task: check-originality-freshness
       - task: validate-flow-teams
       - task: lint-command-flow-coverage

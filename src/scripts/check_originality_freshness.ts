@@ -115,7 +115,27 @@ export function checkFreshness(
     return { drifted, missing };
 }
 
+/**
+ * LOCAL-ONLY, established empirically. On a CI runner the sweep produced
+ * different bytes than the committed report even with a byte-identical corpus
+ * (verified: 508 members on both this branch and `main`, report fresh locally,
+ * both files reported stale in `Node Tests`). Something in the CI environment
+ * moves the output, and chasing it would mean designing a reproducibility gate
+ * for a report that "blocks nothing on its own" — a bad trade for a warning.
+ *
+ * So this stays a developer-side surface. A freshness warning that fires on
+ * every PR regardless of staleness is exactly the never-turns-off warning this
+ * check was written to remove.
+ */
 export function main(): number {
+    if (process.env['CI'] !== undefined && process.env['CI'] !== '') {
+        process.stdout.write(
+            'ℹ️  originality freshness: skipped on CI — the sweep is not byte-reproducible\n' +
+                '    across environments, so a CI warning here would fire regardless of\n' +
+                '    staleness. Run it locally before quoting the report numbers.\n',
+        );
+        return 0;
+    }
     const { drifted, missing } = checkFreshness();
     const rel = (f: string): string => path.relative(REPO_ROOT, f);
 
