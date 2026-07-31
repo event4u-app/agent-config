@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **689 artefacts** in this package.
+Maintainer-facing index of all **690 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (286)
+## Skills (287)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -283,6 +283,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`token-optimizer`](../src/skills/token-optimizer/SKILL.md) | official | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
 | skill | [`traefik`](../src/skills/traefik/SKILL.md) | official | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
 | skill | [`typography-system`](../src/skills/typography-system/SKILL.md) | official | Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale. |
+| skill | [`ui-apply-generic`](../src/skills/ui-apply-generic/SKILL.md) | official | Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Carries the stack-independent contract; idiom comes from the stack corpus. |
 | skill | [`ui-component-architect`](../src/skills/ui-component-architect/SKILL.md) | official | Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'. |
 | skill | [`unit-economics-modeling`](../src/skills/unit-economics-modeling/SKILL.md) | official | Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, or transactional. Triggers on 'are we unit-economic', 'what is our LTV/CAC'. |
 | skill | [`universal-project-analysis`](../src/skills/universal-project-analysis/SKILL.md) | official | ONLY when user asks for deep multi-pass codebase audit — orchestrator routing to `project-analysis-core` + framework-specific `project-analysis-*`. Single-pass scan → `project-analyzer`. |

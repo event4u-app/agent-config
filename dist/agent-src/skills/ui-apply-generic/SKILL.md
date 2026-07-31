@@ -44,7 +44,7 @@ Read `state.stack.axes` and query per resolved axis value, most specific first:
 `meta` → `reactivity` → `component_lib`.
 
 ```bash
-./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
+<skills-root>/corpus-grounding/scripts/ground search \
   --manifest <skills-root>/design-intelligence/data/manifest.json \
   --stack <axis-value> "<the concrete question>"
 ```
