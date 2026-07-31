@@ -6,11 +6,19 @@
 
 ## Overall
 
-**48 / 209 steps done · 23%**
+**73 / 209 steps done · 35%**
 
 ```text
-█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   23%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
 ```
+
+## ✅ Completed — pending archival
+
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
+
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 25 | 25 |
 
 ## Open roadmaps
 
@@ -31,7 +39,7 @@
 | 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 16 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 25 | 0 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ░░░░░░░░░░ 0% |
+| 16 | [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md) | 5 | 25 | 0 | 25 | 0 | 0 | [3](#blockers-road-to-zero-ceremony-detection) | ██████████ 100% |
 
 ---
 
@@ -310,49 +318,28 @@ _1 blocker resolved._
 
 ### [road-to-zero-ceremony-detection.md](roadmaps/road-to-zero-ceremony-detection.md)
 
-**Road to zero-ceremony detection — detection reports, consent still decides** — 0 / 25 done (0%)
+**Road to zero-ceremony detection — detection reports, consent still decides** — 25 / 25 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | The detector module | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Make the documented transport default actually load | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-| 3 | Detection informs consent; it does not replace it | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | Extend `doctor`, do not duplicate it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Pin the `CLAUDE_CONFIG_DIR` inheritance decision | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | The detector module | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Make the documented transport default actually load | ✅ done | 0 | 8 | 0 | 0 | 100% |
+| 3 | Detection informs consent; it does not replace it | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 4 | Extend `doctor`, do not duplicate it | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 5 | Pin the `CLAUDE_CONFIG_DIR` inheritance decision | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-zero-ceremony-detection"></a>
 **Blockers**
 
-- **council-availability-semantics** (owner: maintainer) — blocks any removal of `members.*.enabled` (Phase 3 ships reporting and a one-line enable command instead)
+- **council-availability-semantics** (owner: maintainer) — blocks nothing further. Phase 3 ships reporting plus a one-line enable edit; the flag stays. - **Decision:** detection reports capability. It does not confer permission. `doctor` surfaces `detected · authenticated · auth source · billing class · enabled-in-config` so the gap between "could work" and "may spend" is visible, and prints the one-line edit that closes it. A detected provider sitting at `enabled: false` is reported as `ok`, not as a warning — warning on a recorded consent decision would train the user to silence their own gate. - **What the council said (2026-07-31, 2 members / 2 rounds, $0.08):** both members independently chose **1a (retain)** in round 1. In round 2 — the rebuttal round, where each was asked to attack the other's D1 position — both argued for 1b (remove). That reversal is a **debate-structure artefact**, not independent convergence: the round-2 prompt assigns the opposing side, so "both said 1b" and "both said 1a" are the same two members under different instructions. Weighting the independent round is the honest read. - **Why 1b is refused even on its own terms:** the round-2 construction does not eliminate the consent record — it **relocates the writer**. Its mechanism is an ask-gate that *learns*: "user choices write to the SAME config file, but as a consequence of runtime decision, not a precondition for availability", plus a `--skip-confirmation-for=<provider>` persisted flag. That is `members.*.enabled` with a different author. So 1b as argued trades an explicit, reviewable, version-controllable declaration for an implicitly accumulated one, AND requires building a learning ask-gate — a materially larger surface than this roadmap, and precisely the scope expansion ADR-049 says needs a threat model rather than a product rationale. - **What the council got right, and what shipped because of it:** the friction critique is valid — "install a key, then find and flip a flag in a 481-line file" is real ceremony, and one member correctly noted that a fix of the form "print a command they can paste" concedes the flag adds no *security* on its own. Phase 3 ships exactly that mitigation (the one-line edit, printed with the resolved path), which is why the remaining cost of retaining the flag is one paste rather than a file hunt. - **Falsifier for reopening:** an ask-gate exists that can express "never offer me this provider again" as a **durable, inspectable** record, and a threat model covers converting credential-presence into call-permission. Telemetry alone does not qualify — one member proposed "how many users install a credential and never enable it", and with zero documented external adopters that number cannot be gathered honestly today.
   - **What to do:**
-    1. Read the shipped council template's rationale for the flag ("installing a
-    key is not the same as wanting the agent to spend money on it") and the
-    config contract's fail-closed rules (at least one enabled member; no
-    silent skips; low-impact fast-path as a two-knob opt-in).
-    2. Decide whether detection-derived availability is acceptable given that it
-    converts "a key exists on this machine" into "this provider may be
-    called". Per ADR-049 this class of scope expansion requires a threat
-    model, not a product rationale.
-    3. If yes, write the ADR that supersedes the contract's enabled-member rules
-    and states how the ask-gate alone preserves the no-silent-spend property.
-  - **Resolved when:** an ADR exists naming the superseded contract sections, or this roadmap records the flag as retained by decision.
-- **transport-auto-default-flip** (owner: maintainer) — blocks making `auto` the effective default (Phase 2 ships it opt-in)
+  - **Resolved when:** ~~an ADR, or recorded as retained~~ — recorded as retained by decision, above.
+- **transport-auto-default-flip** (owner: maintainer) — blocks ~~making `auto` the effective default~~ — nothing; Phase 2 ships `auto` as an opt-in VALUE and the default is untouched - **Decision:** `auto` is an accepted value of the existing `mode` key. The shipped `defaults.mode` stays `api`. The flip is **not** taken now. - **Why (council 2026-07-31, 2 members / 2 rounds, $0.08):** neither member argued for flipping now. One took permanent opt-in (2a); the other took opt-in-now-revisit-later (2b) with a concrete falsifier, and named the asymmetry that decides it: the surprise is not the price, it is the **pool**. A user with a modest plan has budgeted their own interactive quota; council usage silently drawing from the same pool can exhaust it for unrelated work, and quota exhaustion is a hard cutoff rather than a graduated expense. The ask-before-spend gate says "invoke council?" — it does not say "spend 40 of your 100 daily messages". - **The falsifier, checked in-tree:** 2b's stated change-my-mind condition was *"proof the shipped config template's CLI call guard is applied automatically to existing user configs on upgrade, not just new installs"*. It does **not** hold. The council config is user-global and copied once from `agents/templates/.ai-council.yml.example`; nothing merges template updates into an existing `~/.event4u/agent-config/settings/.ai-council.yml`. So an existing user who upgraded would get `auto` **without** the populated `cli_call_budget` that makes it safe. That is decisive, and it is why 2b collapses onto the same shipped behaviour as 2a for this change. - **Revisit-if:** an upgrade path exists that merges new `cli_call_budget` keys into an already-installed council config (or the wizard re-seeds it), AND the dollars→quota trade-off is documented with a worked example. Until then this is not reopened.
   - **What to do:**
-    1. Confirm the intent: a user with both a logged-in CLI and an installed key
-    moves from per-token dollars onto subscription quota with no config edit.
-    2. If yes, authorize the breaking-change entry and the migration note, and
-    confirm `cli_call_budget` ships populated in the same change.
-  - **Resolved when:** the breaking-change entry is authorized, or `auto` is recorded as permanently opt-in.
-- **claude-config-dir-inheritance-decision** (owner: maintainer) — blocks any behaviour change to the spawn hardening's handling of `CLAUDE_CONFIG_DIR` (Phase 5 ships only the test and the documented row)
+  - **Resolved when:** ~~authorized or recorded permanently opt-in~~ — recorded opt-in with the revisit condition above. `cli_call_budget` ships populated in this change regardless, because it also guards an explicit `mode: cli`.
+- **claude-config-dir-inheritance-decision** (owner: maintainer) — blocks nothing. Phase 5 shipped the pinning test, `docs/threat-model.md` row i, and an ADR-123 follow-up recording the scope. - **Decision:** (a). `hardenedSpawnEnv` stays deny-by-family with no new entry. `docs/threat-model.md` row i carries the precondition, the counter-argument, and all three options; `tests/scripts/ai_council/spawn_env.test.ts` pins the inheritance both ways so a future change cannot land silently. - **The council said (3b) — deny the variable — 2/2 members, and it is refused on evidence the council did not have.** One member made its own change-my-mind condition explicit: *"a concrete user workflow where the orchestrator spawns a provider CLI that legitimately needs to load its own separate config, distinct from the orchestrator's"*. That workflow exists and is shipped: `src/install/agentSwitchProfile.ts` declares `PROVIDER_ENV_VARS = ['CLAUDE_CONFIG_DIR', 'CODEX_HOME']`, the integration with `@event4u/agent-switch`, which isolates multiple accounts into per-account profiles through exactly this variable "so switching accounts never requires a re-login". Stripping it sends a spawned council CLI to the DEFAULT profile — the wrong account, or an unauthenticated one, silently, on the transport whose whole point is using the right subscription. So the council's decisive premise ("the cost to the legitimate user is **zero in the actual use case**") is false in this repo, and its own falsifier fires. - **Why not (c) either, yet:** strip-inherited-plus-validated-assignment is the only option that closes the gap without breaking agent-switch users, and its validation predicate already exists in `agentSwitchProfile.ts`. It is deferred rather than rejected: it is still a new restriction that breaks anyone setting the variable for a reason agent-switch does not model, and adding one in a detection roadmap would be exactly the unexplained security diff this blocker was written to prevent. - **Revisit-if:** a second instruction-bearing config-pointer variable appears, or the behavioural-steering path becomes concrete in a real incident. Then (c), with an ADR-123 amendment. - **Also corrected this phase:** row `g`'s Gap cell asserted the consumer-runtime surface was "fully hardened". Row i makes that too strong as written, so `g` is now scoped to the code-execution families it actually covers.
   - **What to do:**
-    1. Read the Phase-5 threat-model row and the ADR that chose deny-by-family
-    over an allowlist.
-    2. Pick one: (a) leave inheritance as-is, keeping the row as accepted risk;
-    (b) deny the variable, accepting that a legitimate setter loses it for
-    children; (c) strip inherited and permit only a validated assignment.
-    3. If (b) or (c), record an ADR amendment — this reverses a considered
-    decision and must not land as an unexplained diff.
-  - **Resolved when:** an ADR amendment names the chosen option, or the threat-model row is marked accepted-risk with a dated rationale.
+  - **Resolved when:** ~~ADR amendment or accepted-risk row~~ — both landed (row i + the ADR-123 2026-07-31 follow-up).
 
 ---
 

@@ -54,6 +54,24 @@ Verified starting position:
   that path the documented `api` default is never consulted and resolution
   falls through to the built-in `manual`. The contract and the pure resolver
   also disagree on the built-in fallback (`api` vs `manual`).
+
+  > **Premise corrected during execution (2026-07-31).** The bug is real but
+  > NARROWER than stated above, and the correction matters because it changes
+  > what the fix has to cover. `council_cli.ts:481`
+  > (`_synthesize_ai_council_block`) **flattens** the loader's `defaults.mode`
+  > onto a top-level `mode` key, and `build_members` reads that flat key — so on
+  > the normal path (a `.ai-council.yml` exists) the documented default IS
+  > consulted. The key is never read only when a **raw**, nested-shape dict
+  > reaches `build_members` — which is reachable, because `build_members` is on
+  > the exported surface (the MCP tool path, embedders, tests). The failing test
+  > this phase ships exercises exactly that path and resolved `manual` instead of
+  > the configured `cli` before the fix.
+  >
+  > The fallback disagreement is also two facts, not one: `config.ts:1425`
+  > defaults `defaults.mode` to `api` (what every real config observes) while
+  > `modes.ts:26` defaults the resolver to `manual` (reached only when no layer
+  > supplies a mode at all). Both were right about different layers; the docs
+  > conflated them. Resolution: keep both, name them separately, pin each.
 - **Auth probing already exists in two shapes** (a council lazy-probe with
   cache and timeout; doctor's read-only `auth.json` probe). A third shape must
   not appear.
@@ -79,22 +97,22 @@ Verified starting position:
 
 ## Phase 1 — The detector module
 
-- [ ] Add `src/scripts/_lib/environment_detector.ts`: pure, read-only, cached
+- [x] Add `src/scripts/_lib/environment_detector.ts`: pure, read-only, cached
       per process, zero network, zero spend. Records: `hosts` (id, binary path,
       version), `auth` (provider, source ∈ `cli-subscription | cli-api-key |
       key-file | env-key`, evidence path — presence only, never a validity
       claim), `keys` (provider, ref).
       <!-- verify: npx vitest run tests/scripts/_lib/environment_detector.test.ts -->
-- [ ] Compose existing signals instead of re-implementing them; record in the
+- [x] Compose existing signals instead of re-implementing them; record in the
       module header which existing probe each field absorbs, so the "no third
       probe shape" property is auditable.
-- [ ] Fixture suite over synthetic machines: bare · cli-only · keys-only ·
+- [x] Fixture suite over synthetic machines: bare · cli-only · keys-only ·
       mixed · unreadable-credential-file.
       <!-- verify: npx vitest run tests/scripts/_lib/environment_detector.test.ts -->
-- [ ] Static property check: the module imports nothing that performs network
+- [x] Static property check: the module imports nothing that performs network
       I/O or spawns a billable call.
       <!-- verify: npx vitest run tests/scripts/_lib/environment_detector.test.ts -->
-- [ ] Per-host `--version` extraction with output shapes fixture-pinned; an
+- [x] Per-host `--version` extraction with output shapes fixture-pinned; an
       unparseable version degrades to `unknown`, never throws.
 
 **Exit criteria:** the fixture suite is green on all five synthetic machines;
@@ -106,36 +124,36 @@ the static check fails when a network import is added.
 This phase is a bugfix plus one additive value. It does not remove a key, a
 transport, or a precedence layer.
 
-- [ ] Pin the precedence chain in a test that FAILS against today's code:
+- [x] Pin the precedence chain in a test that FAILS against today's code:
       invocation flag > per-member `mode` > `defaults.mode` > built-in.
       <!-- verify: npx vitest run tests/scripts/ai_council/modes.test.ts -->
-- [ ] Fix the key read so the council path consults `ai_council.defaults.mode`.
+- [x] Fix the key read so the council path consults `ai_council.defaults.mode`.
       <!-- verify: npx vitest run tests/scripts/ai_council/modes.test.ts -->
-- [ ] Reconcile the built-in fallback: the config contract says `api`, the pure
+- [x] Reconcile the built-in fallback: the config contract says `api`, the pure
       resolver says `manual`. Pick one, state it in the contract, pin it.
       <!-- verify: npx vitest run tests/scripts/ai_council/modes.test.ts -->
-- [ ] Add `auto` as a fourth accepted VALUE of the existing `mode` key
+- [x] Add `auto` as a fourth accepted VALUE of the existing `mode` key
       (`api | manual | cli | auto`). `auto` resolves per provider per
       invocation: binary resolves AND authenticated → cli; else a key resolves
       → api; else unavailable with a one-line reason. `manual` is never part of
       the `auto` chain — explicit opt-in only. Per-member `mode` keeps
       overriding it.
       <!-- verify: npx vitest run tests/scripts/ai_council/transport_resolver.test.ts -->
-- [ ] Classify **billing** from (provider, detected auth source), never from
+- [x] Classify **billing** from (provider, detected auth source), never from
       transport; unknown source ⇒ per-token ⇒ over-gated. Pin as a static check
       that the resolver's inputs carry no transport-derived billing term — this
       is what keeps the existing per-provider rules (vendor-official CLI
       unbilled, community CLI billed) intact under `auto`.
       <!-- verify: npx vitest run tests/scripts/ai_council/transport_resolver.test.ts -->
-- [ ] Failure-class-gated mid-flight fallback: binary-missing, auth-rejected,
+- [x] Failure-class-gated mid-flight fallback: binary-missing, auth-rejected,
       and cli-unsupported fall through to the api rung once within the same
       invocation; timeouts and 5xx do **not**. Pin both directions — a
       half-completed CLI call must never be double-spent.
       <!-- verify: npx vitest run tests/scripts/ai_council/transport_resolver.test.ts -->
-- [ ] Populate `cli_call_budget` in the template with a conservative default:
+- [x] Populate `cli_call_budget` in the template with a conservative default:
       it is the quota guard for the path `auto` prefers, and shipping that path
       unguarded would be the whole point missed.
-- [ ] Decide `auto`'s status as a *default* separately from its existence as a
+- [x] Decide `auto`'s status as a *default* separately from its existence as a
       value, and record the decision: flipping the effective default moves
       existing users' spend from per-token dollars onto subscription quota
       without them editing anything. Until that decision lands, `auto` ships
@@ -155,26 +173,57 @@ The draft's deletion of `members.*.enabled` is refused (see the gap audit).
 What ships instead removes the *work* of enabling without removing the *record*
 of consent.
 
-- [ ] `doctor` reports, per provider: detected · authenticated · auth source ·
+- [x] `doctor` reports, per provider: detected · authenticated · auth source ·
       billing class · enabled-in-config — so the gap between "could work" and
       "allowed to spend" is visible rather than mysterious.
       <!-- verify: npx vitest run tests/scripts/_cli/cmd_doctor.test.ts -->
-- [ ] When a provider is detected but not enabled, `doctor` prints the exact
+- [x] When a provider is detected but not enabled, `doctor` prints the exact
       one-line command that enables it. Discovery becomes zero-effort; consent
       stays explicit.
-- [ ] Resolve the template's self-contradiction: the shipped values
+
+      > **Shipped as a one-line EDIT, not a command.** No settings-mutation CLI
+      > exists — `settings` is a GUI alias and a `settings set` verb is recorded
+      > as greenfield in the inbox cut. Printing
+      > `agent-config settings set …` would print a command that does not run,
+      > which is worse than printing none. What ships is the exact file plus the
+      > exact key path:
+      > `set \`members.gemini.enabled: true\` in <resolved user-global path>`
+      > — which removes the actual work (finding the file and the key in a
+      > 481-line config) without inventing a surface. Building a mutation verb
+      > is a separate command surface, not a step in a detection roadmap.
+- [x] Resolve the template's self-contradiction: the shipped values
       (`enabled: true`, `participate_low_impact: true`) and the comments
       claiming both default to false cannot both be right. Make them agree and
       pin the shipped default.
       <!-- verify: npx vitest run tests/scripts/ai_council/config.test.ts -->
-- [ ] Fix the dangling pointer: the settings template references a council
+- [x] Fix the dangling pointer: the settings template references a council
       example file that npm does not ship. Either add it to the allowlist or
       stop pointing at it.
       <!-- verify: npx vitest run tests/scripts/install/files_allowlist.test.ts -->
-- [ ] Rewrite the council template's framing from "enable and configure each
+- [x] Rewrite the council template's framing from "enable and configure each
       member" to "detection fills this in; you decide what may spend". Record
       the before/after line count as the shipped metric.
-- [ ] Open the availability-semantics question as a blocker rather than
+
+      > **The metric, reported as measured: 414 → 481 lines (+67). It grew.**
+      > The reframing itself landed — the `members:` block now opens with
+      > "you decide what may spend; detection tells you what is already here"
+      > and routes the reader to `doctor --check detection` instead of
+      > hand-auditing binaries, key resolution and billing in prose. But the
+      > same phase also had to ADD: the `auto` transport semantics, the
+      > two-defaults reconciliation, a populated `cli_call_budget` with its
+      > sizing rationale, a corrected billing comment (the old one claimed
+      > `mode: cli` is never billable, which is false for the two community
+      > wrappers), and the consent framing on the master switch. Each of those
+      > is a correction or a documented new value, not ceremony.
+      >
+      > So the roadmap's implied win — detection shrinks the template — is
+      > **not demonstrated by this change**, and no reduction is claimed. The
+      > honest shipped metrics for this phase are the mechanical ones: a
+      > fixture-pinned report shape, a template that now loads with its budget
+      > active (verified through the real loader), and a repaired pointer.
+      > Shrinking the file is a separate pass that would delete prose rather
+      > than correct it.
+- [x] Open the availability-semantics question as a blocker rather than
       answering it in a roadmap step.
 
 **Exit criteria:** on a machine with a logged-in provider CLI and no config
@@ -185,14 +234,14 @@ text-only revert.
 
 ## Phase 4 — Extend `doctor`, do not duplicate it
 
-- [ ] Add the detection section to the existing `doctor`: hosts + versions, the
+- [x] Add the detection section to the existing `doctor`: hosts + versions, the
       provider → transport → billing-class table, budgets active, and a
       one-line reason plus one-line fix for every unavailable capability.
-- [ ] Render the first-invocation spend disclosure from the SAME code path as
+- [x] Render the first-invocation spend disclosure from the SAME code path as
       that table — one renderer, not two, so the disclosure cannot drift from
       the report.
       <!-- verify: npx vitest run tests/scripts/_cli/cmd_doctor.test.ts -->
-- [ ] Fixture-pin the `doctor --json` shape for the new section (the agent and
+- [x] Fixture-pin the `doctor --json` shape for the new section (the agent and
       GUI contract).
       <!-- verify: npx vitest run tests/scripts/_cli/cmd_doctor.test.ts -->
 
@@ -206,16 +255,16 @@ Co-located here because the detector produces the validated path set any future
 assignment rule would draw from. This phase ships **no behaviour change**: it
 makes current behaviour explicit and routes the trade-off to the threat model.
 
-- [ ] Add a test pinning today's behaviour: the spawn hardening is
+- [x] Add a test pinning today's behaviour: the spawn hardening is
       deny-by-family, so an inherited `CLAUDE_CONFIG_DIR` reaches children
       unchanged. Nothing asserts this either way today.
       <!-- verify: npx vitest run tests/scripts/ai_council/spawn_env.test.ts -->
-- [ ] Add the candidate row to the threat model with its precondition stated
+- [x] Add the candidate row to the threat model with its precondition stated
       honestly: an actor who can set the orchestrator's environment
       (compromised CI runner, poisoned shell profile) but cannot write the real
       config dir can redirect a child to a config directory of their choosing,
       and that directory carries instruction-bearing content.
-- [ ] Record the counter-argument in the same row: deny-by-family is
+- [x] Record the counter-argument in the same row: deny-by-family is
       deliberate because provider CLIs legitimately need arbitrary env, and
       denying this variable breaks any user who legitimately sets it. Name the
       third option — strip inherited, permit only an assignment drawn from a
@@ -228,51 +277,123 @@ precondition, counter-argument, and three options; the blocker below is open.
 ## Blockers
 
 ### blocker: council-availability-semantics
-- **Status:** open
+- **Status:** RESOLVED 2026-07-31 — `members.*.enabled` is **retained by
+  decision** (option 1a). No ADR is needed because nothing is superseded.
 - **Owner:** maintainer
-- **Blocks:** any removal of `members.*.enabled` (Phase 3 ships reporting and
-  a one-line enable command instead)
-- **What to do:**
-  1. Read the shipped council template's rationale for the flag ("installing a
-     key is not the same as wanting the agent to spend money on it") and the
-     config contract's fail-closed rules (at least one enabled member; no
-     silent skips; low-impact fast-path as a two-knob opt-in).
-  2. Decide whether detection-derived availability is acceptable given that it
-     converts "a key exists on this machine" into "this provider may be
-     called". Per ADR-049 this class of scope expansion requires a threat
-     model, not a product rationale.
-  3. If yes, write the ADR that supersedes the contract's enabled-member rules
-     and states how the ask-gate alone preserves the no-silent-spend property.
-- **Resolved when:** an ADR exists naming the superseded contract sections, or
-  this roadmap records the flag as retained by decision.
+- **Blocks:** nothing further. Phase 3 ships reporting plus a one-line enable
+  edit; the flag stays.
+- **Decision:** detection reports capability. It does not confer permission.
+  `doctor` surfaces `detected · authenticated · auth source · billing class ·
+  enabled-in-config` so the gap between "could work" and "may spend" is
+  visible, and prints the one-line edit that closes it. A detected provider
+  sitting at `enabled: false` is reported as `ok`, not as a warning — warning on
+  a recorded consent decision would train the user to silence their own gate.
+- **What the council said (2026-07-31, 2 members / 2 rounds, $0.08):** both
+  members independently chose **1a (retain)** in round 1. In round 2 — the
+  rebuttal round, where each was asked to attack the other's D1 position — both
+  argued for 1b (remove). That reversal is a **debate-structure artefact**, not
+  independent convergence: the round-2 prompt assigns the opposing side, so
+  "both said 1b" and "both said 1a" are the same two members under different
+  instructions. Weighting the independent round is the honest read.
+- **Why 1b is refused even on its own terms:** the round-2 construction does not
+  eliminate the consent record — it **relocates the writer**. Its mechanism is an
+  ask-gate that *learns*: "user choices write to the SAME config file, but as a
+  consequence of runtime decision, not a precondition for availability", plus a
+  `--skip-confirmation-for=<provider>` persisted flag. That is
+  `members.*.enabled` with a different author. So 1b as argued trades an
+  explicit, reviewable, version-controllable declaration for an implicitly
+  accumulated one, AND requires building a learning ask-gate — a materially
+  larger surface than this roadmap, and precisely the scope expansion ADR-049
+  says needs a threat model rather than a product rationale.
+- **What the council got right, and what shipped because of it:** the friction
+  critique is valid — "install a key, then find and flip a flag in a 481-line
+  file" is real ceremony, and one member correctly noted that a fix of the form
+  "print a command they can paste" concedes the flag adds no *security* on its
+  own. Phase 3 ships exactly that mitigation (the one-line edit, printed with
+  the resolved path), which is why the remaining cost of retaining the flag is
+  one paste rather than a file hunt.
+- **Falsifier for reopening:** an ask-gate exists that can express "never offer
+  me this provider again" as a **durable, inspectable** record, and a threat
+  model covers converting credential-presence into call-permission. Telemetry
+  alone does not qualify — one member proposed "how many users install a
+  credential and never enable it", and with zero documented external adopters
+  that number cannot be gathered honestly today.
+- **Resolved when:** ~~an ADR, or recorded as retained~~ — recorded as retained
+  by decision, above.
 
 ### blocker: transport-auto-default-flip
-- **Status:** open
+- **Status:** RESOLVED 2026-07-31 — `auto` ships opt-in; the flip stays closed
+  behind a named falsifier (option 2b)
 - **Owner:** maintainer
-- **Blocks:** making `auto` the effective default (Phase 2 ships it opt-in)
-- **What to do:**
-  1. Confirm the intent: a user with both a logged-in CLI and an installed key
-     moves from per-token dollars onto subscription quota with no config edit.
-  2. If yes, authorize the breaking-change entry and the migration note, and
-     confirm `cli_call_budget` ships populated in the same change.
-- **Resolved when:** the breaking-change entry is authorized, or `auto` is
-  recorded as permanently opt-in.
+- **Blocks:** ~~making `auto` the effective default~~ — nothing; Phase 2 ships
+  `auto` as an opt-in VALUE and the default is untouched
+- **Decision:** `auto` is an accepted value of the existing `mode` key. The
+  shipped `defaults.mode` stays `api`. The flip is **not** taken now.
+- **Why (council 2026-07-31, 2 members / 2 rounds, $0.08):** neither member
+  argued for flipping now. One took permanent opt-in (2a); the other took
+  opt-in-now-revisit-later (2b) with a concrete falsifier, and named the
+  asymmetry that decides it: the surprise is not the price, it is the **pool**.
+  A user with a modest plan has budgeted their own interactive quota; council
+  usage silently drawing from the same pool can exhaust it for unrelated work,
+  and quota exhaustion is a hard cutoff rather than a graduated expense. The
+  ask-before-spend gate says "invoke council?" — it does not say "spend 40 of
+  your 100 daily messages".
+- **The falsifier, checked in-tree:** 2b's stated
+  change-my-mind condition was *"proof the shipped config template's CLI call
+  guard is applied automatically to existing user configs on upgrade, not just
+  new installs"*. It does **not** hold. The council config is user-global and
+  copied once from `agents/templates/.ai-council.yml.example`; nothing merges
+  template updates into an existing `~/.event4u/agent-config/settings/.ai-council.yml`.
+  So an existing user who upgraded would get `auto` **without** the populated
+  `cli_call_budget` that makes it safe. That is decisive, and it is why 2b
+  collapses onto the same shipped behaviour as 2a for this change.
+- **Revisit-if:** an upgrade path exists that merges new `cli_call_budget` keys
+  into an already-installed council config (or the wizard re-seeds it), AND the
+  dollars→quota trade-off is documented with a worked example. Until then this
+  is not reopened.
+- **Resolved when:** ~~authorized or recorded permanently opt-in~~ — recorded
+  opt-in with the revisit condition above. `cli_call_budget` ships populated in
+  this change regardless, because it also guards an explicit `mode: cli`.
 
 ### blocker: claude-config-dir-inheritance-decision
-- **Status:** open
+- **Status:** RESOLVED 2026-07-31 — **(a) leave inheritance as-is**, recorded as
+  accepted risk with a dated rationale. Behaviour unchanged; test-pinned.
 - **Owner:** maintainer
-- **Blocks:** any behaviour change to the spawn hardening's handling of
-  `CLAUDE_CONFIG_DIR` (Phase 5 ships only the test and the documented row)
-- **What to do:**
-  1. Read the Phase-5 threat-model row and the ADR that chose deny-by-family
-     over an allowlist.
-  2. Pick one: (a) leave inheritance as-is, keeping the row as accepted risk;
-     (b) deny the variable, accepting that a legitimate setter loses it for
-     children; (c) strip inherited and permit only a validated assignment.
-  3. If (b) or (c), record an ADR amendment — this reverses a considered
-     decision and must not land as an unexplained diff.
-- **Resolved when:** an ADR amendment names the chosen option, or the
-  threat-model row is marked accepted-risk with a dated rationale.
+- **Blocks:** nothing. Phase 5 shipped the pinning test, `docs/threat-model.md`
+  row i, and an ADR-123 follow-up recording the scope.
+- **Decision:** (a). `hardenedSpawnEnv` stays deny-by-family with no new entry.
+  `docs/threat-model.md` row i carries the precondition, the counter-argument,
+  and all three options; `tests/scripts/ai_council/spawn_env.test.ts` pins the
+  inheritance both ways so a future change cannot land silently.
+- **The council said (3b) — deny the variable — 2/2 members, and it is refused
+  on evidence the council did not have.** One member made its own
+  change-my-mind condition explicit: *"a concrete user workflow where the
+  orchestrator spawns a provider CLI that legitimately needs to load its own
+  separate config, distinct from the orchestrator's"*. That workflow exists and
+  is shipped: `src/install/agentSwitchProfile.ts` declares
+  `PROVIDER_ENV_VARS = ['CLAUDE_CONFIG_DIR', 'CODEX_HOME']`, the integration
+  with `@event4u/agent-switch`, which isolates multiple accounts into
+  per-account profiles through exactly this variable "so switching accounts
+  never requires a re-login". Stripping it sends a spawned council CLI to the
+  DEFAULT profile — the wrong account, or an unauthenticated one, silently, on
+  the transport whose whole point is using the right subscription. So the
+  council's decisive premise ("the cost to the legitimate user is **zero in the
+  actual use case**") is false in this repo, and its own falsifier fires.
+- **Why not (c) either, yet:** strip-inherited-plus-validated-assignment is the
+  only option that closes the gap without breaking agent-switch users, and its
+  validation predicate already exists in `agentSwitchProfile.ts`. It is deferred
+  rather than rejected: it is still a new restriction that breaks anyone setting
+  the variable for a reason agent-switch does not model, and adding one in a
+  detection roadmap would be exactly the unexplained security diff this blocker
+  was written to prevent.
+- **Revisit-if:** a second instruction-bearing config-pointer variable appears,
+  or the behavioural-steering path becomes concrete in a real incident. Then (c),
+  with an ADR-123 amendment.
+- **Also corrected this phase:** row `g`'s Gap cell asserted the consumer-runtime
+  surface was "fully hardened". Row i makes that too strong as written, so `g` is
+  now scoped to the code-execution families it actually covers.
+- **Resolved when:** ~~ADR amendment or accepted-risk row~~ — both landed (row i
+  + the ADR-123 2026-07-31 follow-up).
 
 ## Acceptance criteria
 
