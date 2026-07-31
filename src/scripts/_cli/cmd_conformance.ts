@@ -37,6 +37,7 @@ import * as installed_tools from '../_lib/installed_tools.js';
 import { atomicAppendLine } from '../../install/atomic.js';
 import { readRecentEntries } from '../../install/txlog.js';
 import { detectToolPresence } from '../../install/detect.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import {
     _classify,
     _collect_manifest_entries,
@@ -56,7 +57,7 @@ type Dict = Record<string, unknown>;
 const _HERE = fileURLToPath(import.meta.url);
 
 /** Package root — two levels above `src/scripts/_cli/`. */
-export const PACKAGE_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
+export const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
 
 /** Ordered registry of conformance check identifiers. */
 export const CONFORMANCE_CHECK_IDS = [

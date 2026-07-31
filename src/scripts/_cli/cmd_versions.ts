@@ -47,6 +47,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { project_settings_path, resolve_project_root } from '../_lib/agent_settings.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 
 const PACKAGE_NAME = '@event4u/agent-config';
 
@@ -171,7 +172,7 @@ function _project_root(): string {
 /** Return `version` from the local `package.json`, or `""` if absent. */
 function _local_package_version(): string {
     const candidates = [
-        path.join(path.resolve(_HERE_DIR, '..', '..', '..'), 'package.json'),
+        path.join(resolvePackageRoot(import.meta.url), 'package.json'),
         path.join(_project_root(), 'package.json'),
     ];
     for (const p of candidates) {
