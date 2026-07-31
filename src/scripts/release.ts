@@ -772,10 +772,70 @@ function _changelog_line(c: Commit): string {
 const _TEST_COUNT_LINE_RE = /^Tests:\s+(\d+)/m;
 
 /**
+ * Buffer ceiling for the `vitest list` probe, in bytes.
+ *
+ * `spawnSync` buffers the child's whole stdout in memory and fails with
+ * ENOBUFS past `maxBuffer`, whose default is 1 MiB. The probe emits one line
+ * per test case, so its output grows with the suite: at 9470 cases the listing
+ * is ~1.25 MB, i.e. already past the default. That is what silently dropped
+ * the footer from the 9.10.0 notes and turned the `changelog-entry` gate red.
+ * 64 MiB is ~50× the current listing — headroom for a suite many times this
+ * size, at no cost when the output is small.
+ */
+const _TEST_LIST_MAX_BUFFER = 64 * 1024 * 1024;
+
+/**
+ * Count test cases from a finished `vitest list` spawn result, or return null
+ * when the probe did not produce a usable listing.
+ *
+ * Split out from `_count_tests_current` so the failure modes are testable
+ * without spawning the real (~14s, >1 MB) collection. `warn` is injected for
+ * the same reason; it defaults to stderr.
+ */
+function _count_from_list_result(
+    res: {
+        error?: (Error & { code?: string }) | undefined;
+        status: number | null;
+        stdout: string | null;
+    },
+    warn: (msg: string) => void = (msg) => void process.stderr.write(msg),
+): number | null {
+    // The trend line is informational and never blocks a release — but a
+    // SILENT drop is what shipped 9.8.0 and 9.10.0 without a footer, so every
+    // degradation says why. The `changelog-entry` CI gate treats a missing
+    // footer as fatal, so this warning is the difference between fixing the
+    // probe now and finding out from a red release PR.
+    if (res.error) {
+        // ENOENT (no npx) · ETIMEDOUT · ENOBUFS (listing past maxBuffer).
+        const code = res.error.code ?? res.error.message;
+        warn(
+            `⚠️  test-count probe failed (${code}) — the \`Tests:\` footer will ` +
+                `be omitted from the release notes, which fails the ` +
+                `\`CHANGELOG entry exists for head version\` gate.\n`,
+        );
+        return null;
+    }
+    if ((res.status ?? 1) !== 0) {
+        warn(
+            `⚠️  test-count probe exited ${res.status ?? '(null)'} — the ` +
+                `\`Tests:\` footer will be omitted from the release notes.\n`,
+        );
+        return null;
+    }
+    const lines = (res.stdout ?? '').split('\n').filter((l) => l.trim().length > 0);
+    if (lines.length === 0) {
+        warn('⚠️  test-count probe listed 0 cases — the `Tests:` footer will be omitted.\n');
+        return null;
+    }
+    return lines.length;
+}
+
+/**
  * Return the collected vitest test-case count on the current tree
  * (`npx vitest list`, one line per case; ~14s wall). Returns null when
  * collection fails — the trend line is informational, never a release
- * blocker. (Replaced the dead `pytest --collect-only` probe on 2026-07-08,
+ * blocker, but every failure warns (see `_count_from_list_result`).
+ * (Replaced the dead `pytest --collect-only` probe on 2026-07-08,
  * road-to-truth-and-reference-hygiene Phase 3: the Python suite was retired
  * with ADR-200, so the old probe always degraded to null and the `Tests:`
  * footer silently vanished from release notes.)
@@ -794,16 +854,9 @@ function _count_tests_current(): number | null {
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
         timeout: 180_000,
+        maxBuffer: _TEST_LIST_MAX_BUFFER,
     });
-    if (res.error) {
-        // ENOENT or ETIMEDOUT → null (informational line dropped).
-        return null;
-    }
-    if ((res.status ?? 1) !== 0) {
-        return null;
-    }
-    const lines = (res.stdout ?? '').split('\n').filter((l) => l.trim().length > 0);
-    return lines.length > 0 ? lines.length : null;
+    return _count_from_list_result(res);
 }
 
 /**
@@ -1986,6 +2039,8 @@ export {
     latest_tag,
     _render_test_trend_line,
     _previous_test_count_from_changelog,
+    _count_from_list_result,
+    _TEST_LIST_MAX_BUFFER,
     Commit,
     Plan,
     SystemExitError,
