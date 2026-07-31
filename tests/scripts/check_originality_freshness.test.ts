@@ -4,93 +4,119 @@
 // a pipeline: it must DETECT drift, and it must leave the working tree exactly
 // as it found it (otherwise a later CI step sees a spurious diff and the check
 // becomes the thing that breaks the build it was supposed to warn about).
+//
+// NOT-NEGOTIABLE for this file: nothing here writes to a TRACKED path. An
+// earlier version wrote a stale report into `agents/reports/originality.json` to
+// exercise the drift path, and because vitest runs suites in parallel, a sibling
+// test asserting a clean worktree (`backfill_model_tier`'s dry-run purity check)
+// observed the transient write and failed. Shared tracked state is not a fixture.
+// Drift and restore are therefore proven on temp files via the injectable
+// `regenerate` hook; only the fresh path touches the real reports, and that is
+// safe because rewriting identical bytes is invisible to git.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { checkFreshness } from '../../src/scripts/check_originality_freshness.js';
+import { REPORTS, checkFreshness } from '../../src/scripts/check_originality_freshness.js';
 
-const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
-const REPORT = path.join(REPO, 'agents', 'reports', 'originality.json');
+const tmps: string[] = [];
 
-let saved: Buffer | null = null;
+function tmpdir(): string {
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'originality-freshness-'));
+    tmps.push(d);
+    return d;
+}
 
 afterEach(() => {
-    if (saved !== null) {
-        fs.writeFileSync(REPORT, saved);
-        saved = null;
-    }
+    while (tmps.length) fs.rmSync(tmps.pop() as string, { recursive: true, force: true });
 });
 
+/** A report fixture plus a regenerate hook that rewrites it with `next`. */
+function fixture(current: string, next: string): { file: string; regenerate: () => void } {
+    const file = path.join(tmpdir(), 'originality.json');
+    fs.writeFileSync(file, current, 'utf-8');
+    return { file, regenerate: () => fs.writeFileSync(file, next, 'utf-8') };
+}
+
 describe('originality freshness — detection', () => {
-    it('reports no drift when the committed report matches the corpus', () => {
-        const { drifted, missing } = checkFreshness([REPORT]);
-        expect(missing).toEqual([]);
-        expect(drifted).toEqual([]);
+    it('reports no drift when regeneration reproduces the committed bytes', () => {
+        const same = '{ "artifacts_scanned": 508 }\n';
+        const { file, regenerate } = fixture(same, same);
+
+        expect(checkFreshness([file], regenerate)).toEqual({ drifted: [], missing: [] });
     });
 
     it('reports drift when the committed report describes an older corpus', () => {
-        saved = fs.readFileSync(REPORT);
-        const doc = JSON.parse(saved.toString('utf-8')) as Record<string, unknown>;
         // The exact shape of the real 2026-07-31 staleness: a count from before
         // an artefact landed.
-        doc['artifacts_scanned'] = (doc['artifacts_scanned'] as number) - 1;
-        fs.writeFileSync(REPORT, `${JSON.stringify(doc, null, 2)}\n`);
+        const { file, regenerate } = fixture(
+            '{ "artifacts_scanned": 507 }\n',
+            '{ "artifacts_scanned": 508 }\n',
+        );
 
-        expect(checkFreshness([REPORT]).drifted).toEqual([REPORT]);
+        expect(checkFreshness([file], regenerate).drifted).toEqual([file]);
     });
 
     it('treats an absent report as missing rather than as drift', () => {
-        // A path the sweep never writes — absence must not be reported as staleness.
-        const absent = path.join(os.tmpdir(), 'originality-absent-fixture.json');
-        fs.rmSync(absent, { force: true });
+        const absent = path.join(tmpdir(), 'never-written.json');
+        const wrote = (): void => fs.writeFileSync(absent, 'fresh\n', 'utf-8');
 
-        const { drifted, missing } = checkFreshness([absent]);
+        const { drifted, missing } = checkFreshness([absent], wrote);
         expect(drifted).toEqual([]);
-        expect(missing).toEqual([]);
+        expect(missing).toEqual([absent]);
+        // Restoring "absent" means removing it again, so the tree is as found.
+        expect(fs.existsSync(absent)).toBe(false);
+    });
+
+    it('does not report drift when regeneration throws — a broken sweep is not a stale report', () => {
+        const { file } = fixture('{ "artifacts_scanned": 507 }\n', '');
+        const boom = (): void => {
+            throw new Error('sweep unavailable');
+        };
+
+        expect(checkFreshness([file], boom)).toEqual({ drifted: [], missing: [] });
+        expect(fs.readFileSync(file, 'utf-8')).toBe('{ "artifacts_scanned": 507 }\n');
     });
 });
 
-describe('originality freshness — the DEFAULT report set, not just one path', () => {
-    // Every test above passes an explicit single-file list, which would leave the
-    // shipped default (both the .json and the .md) unexercised — so a future edit
-    // could drop the .md from REPORTS and no test would notice.
-    it('checks both committed reports when called with no argument', () => {
-        const md = path.join(REPO, 'agents', 'reports', 'originality.md');
-        const savedMd = fs.readFileSync(md);
-        try {
-            fs.writeFileSync(md, `${savedMd.toString('utf-8')}\nstale trailer\n`);
-            // Only the .md was touched, so only the .md may be reported — which
-            // also proves the default set includes it.
-            expect(checkFreshness().drifted).toEqual([md]);
-        } finally {
-            fs.writeFileSync(md, savedMd);
-        }
-    });
-
-    it('reports a fresh default set as clean', () => {
-        expect(checkFreshness()).toEqual({ drifted: [], missing: [] });
-    });
-});
-
-describe('originality freshness — the tree is restored either way', () => {
+describe('originality freshness — the file is restored either way', () => {
     it('leaves a FRESH report byte-identical', () => {
-        const before = fs.readFileSync(REPORT);
-        checkFreshness([REPORT]);
-        expect(fs.readFileSync(REPORT).equals(before)).toBe(true);
+        const same = '{ "artifacts_scanned": 508 }\n';
+        const { file, regenerate } = fixture(same, same);
+
+        checkFreshness([file], regenerate);
+        expect(fs.readFileSync(file, 'utf-8')).toBe(same);
     });
 
     it('leaves a STALE report byte-identical — it warns, it does not silently fix', () => {
-        saved = fs.readFileSync(REPORT);
-        const stale = Buffer.from('{ "artifacts_scanned": 1 }\n', 'utf-8');
-        fs.writeFileSync(REPORT, stale);
+        const stale = '{ "artifacts_scanned": 1 }\n';
+        const { file, regenerate } = fixture(stale, '{ "artifacts_scanned": 508 }\n');
 
-        expect(checkFreshness([REPORT]).drifted).toEqual([REPORT]);
+        expect(checkFreshness([file], regenerate).drifted).toEqual([file]);
         // Restoring, not overwriting: a check that quietly repaired the file
         // would hide the drift it exists to surface — and would turn a
         // read-only advisory into a writer.
-        expect(fs.readFileSync(REPORT).equals(stale)).toBe(true);
+        expect(fs.readFileSync(file, 'utf-8')).toBe(stale);
+    });
+});
+
+describe('originality freshness — the real wiring', () => {
+    it('covers BOTH committed reports, not just the json', () => {
+        // Asserted rather than exercised by mutation: dropping the .md from
+        // REPORTS is the regression worth catching, and it is catchable without
+        // writing to a tracked path.
+        expect(REPORTS.map((f) => path.basename(f)).sort()).toEqual([
+            'originality.json',
+            'originality.md',
+        ]);
+    });
+
+    it('runs the real sweep against the committed reports and finds them fresh', () => {
+        // The one test that touches tracked files. Safe by construction: the
+        // sweep rewrites identical bytes when the report is current, which git
+        // cannot see — and if it were NOT current, this failing is the point.
+        expect(checkFreshness()).toEqual({ drifted: [], missing: [] });
     });
 });

@@ -22,7 +22,7 @@ import * as path from 'node:path';
 import { main as runOriginality } from './lint_originality.js';
 
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
-const REPORTS = [
+export const REPORTS = [
     path.join(REPO_ROOT, 'agents', 'reports', 'originality.json'),
     path.join(REPO_ROOT, 'agents', 'reports', 'originality.md'),
 ];
@@ -66,13 +66,31 @@ function restore(before: Map<string, Buffer | null>): void {
     }
 }
 
-export function checkFreshness(files: readonly string[] = REPORTS): {
+/** Default regeneration: the real sweep, which writes into `REPORTS`. */
+function regenerateReports(): void {
+    runOriginality(['--quiet']);
+}
+
+/**
+ * `regenerate` is injectable for one reason: a test that exercised the drift
+ * path against the real reports would have to write a stale version into a
+ * TRACKED file, and vitest runs suites in parallel — any sibling test asserting
+ * "the working tree is clean" would see that transient write and fail. (It did:
+ * `backfill_model_tier`'s dry-run purity check caught exactly that.) With the
+ * hook, drift and restore behaviour is provable entirely in temp space, and the
+ * real wiring stays covered by the fresh-path test, which is tree-neutral
+ * because rewriting identical bytes is invisible to git.
+ */
+export function checkFreshness(
+    files: readonly string[] = REPORTS,
+    regenerate: () => void = regenerateReports,
+): {
     drifted: string[];
     missing: string[];
 } {
     const before = snapshot(files);
     try {
-        runOriginality(['--quiet']);
+        regenerate();
     } catch {
         // A sweep that cannot run is not a drift signal; leave the tree as found.
         restore(before);
