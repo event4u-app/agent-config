@@ -1,5 +1,4 @@
 ---
-status: active
 complexity: lightweight
 ---
 
