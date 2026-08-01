@@ -1,5 +1,5 @@
 ---
-complexity: contained
+complexity: lightweight
 status: ready
 parent_roadmap: road-to-ui-track-integrity
 ---
