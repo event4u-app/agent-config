@@ -135,79 +135,130 @@ inside the lock:
 
 ## Phase 0 — Measure the failure before changing behaviour (blocking)
 
-- [ ] Fixture `daf-port-baseline`: a standalone `design.html` (Claude-Design-style
+- [x] Fixture `daf-port-baseline`: a standalone `design.html` (Claude-Design-style
       cream/terracotta palette, two screens, three interactions, one keyframe) is
       handed over with an explicit "build this 1:1" instruction. Record what the
       pipeline actually does — which branch it classifies as, whether
       `design-fidelity` fired, what survived, what was regenerated.
-- [ ] Fixture `daf-port-trigger-de`: the same artifact with a German prompt
+      <!-- tests/design-artifacts/fixtures/design.html + fixture entry in eval-fixtures.md. -->
+- [x] Fixture `daf-port-trigger-de`: the same artifact with a German prompt
       ("setz das 1:1 um", "übernimm das Design") and, separately, with **no**
       keyword at all — just the attached HTML. Expected today: the rule does not
       fire. This measures the routing half independently of the port half.
-- [ ] Fixture `daf-slop-vs-provided`: run the anti-slop scan over a faithful port
+      <!-- Deterministic, not rubric: tests/scripts/design_fidelity_routing.test.ts, ROUTING_MATRIX (14 rows) over the shipped matcher `router_telemetry.trigger_matches`. -->
+- [x] Fixture `daf-slop-vs-provided`: run the anti-slop scan over a faithful port
       of that artifact. Expected today: `slop-c5-cream-palette` fires and the
       polish loop is free to act on it. This is the regression witness for
       Phase 3.
-- [ ] Fixture `daf-port-interactions`: assert whether the three handlers and the
+- [x] Fixture `daf-port-interactions`: assert whether the three handlers and the
       keyframe survive, and whether anything reports the ones that did not.
       Expected today: no inventory exists, so losses are silent.
-- [ ] Run all four against the current tree and write the baseline into this
+- [x] Run all four against the current tree and write the baseline into this
       roadmap. If any shows the pipeline already behaves acceptably, that lane's
       later phase is cut rather than built.
+
+### Measured baseline — 2026-08-01, `origin/main` @ `4840318af`
+
+Full per-fixture evidence with file:line citations lives with the fixtures
+([`eval-fixtures.md` § Provided-artifact port fixtures](../../tests/design-artifacts/eval-fixtures.md));
+the four headline before-values:
+
+| lane | before-value | measured how |
+|---|---|---|
+| **branch** | No port branch exists. A handed-over artifact is classified as a **new design** by elimination (only that branch contains Build, and it mandates variation planning) and the engine independently takes the greenfield path. | `design-artifact-lifecycle.md:57-63`, `audit.ts:104`, `index.ts:59-69` |
+| **carrier** | Zero channels. The brief is five fixed keys; no state field carries a source artifact, token map, interaction inventory, or asset manifest. `apply.ts` never reads `state.ui_design` at all. | `design.ts:21-27`, `:141-168`, `apply.ts:81-94` |
+| **routing** | 8 of 14 matrix rows red. `"build this 1:1"` misses because the phrase `build this design` needs the literal token `design`; no German surface exists; no `file_pattern` trigger was declared. | `ROUTING_MATRIX`, `router_telemetry.ts:186-199` |
+| **slop** | Two artifact-covered findings, neither marked as such: `slop-c5-cream-palette` (P3) and `slop-cp1-em-dash` (P2, the artifact's own copy). The polish loop cannot see either — it knows only `a11y_violation` and `token_violation`. | `lint_design_slop --json`, `polish.ts:28`, `:31` |
+
+**No lane came back acceptable, so no phase is cut.** Two roadmap premises were
+falsified by the measurement and are corrected in place rather than worked
+around:
+
+1. **The rule schema does support a path trigger.** Phase 1's third step
+   assumed "only `keyword`/`phrase`". `rule.schema.json` also accepts
+   `file_pattern`, `path_prefix`, `intent`, and `command`, and the matcher
+   implements `file_pattern` as fnmatch over `open_files`
+   (`router_telemetry.ts:218-229`). The keyword-free class is therefore
+   reachable for the conventional handover filename; what stays unreachable
+   **by design** is a generic "any attached HTML" trigger.
+2. **The damage path is not the linter.** The anti-slop scanner has no call
+   site in the work engine, so Phase 3's target is the *prose* that authorises
+   a corrective direction change (`existing-ui-audit/SKILL.md:263-273`,
+   `fe-design/SKILL.md:337-339`), not a suppression flag. This is the evidence
+   the "`--fidelity-source` flag" gated follow-up asked for, and it points the
+   other way: keep the flag gated.
 
 **Exit:** the port failure is a measured before-value, not an anecdote.
 
 ## Phase 1 — Routing: the rule fires for the prompts people actually write
 
-- [ ] Extend `design-fidelity` triggers: keywords `handoff`, `artifact`,
+- [x] Extend `design-fidelity` triggers: keywords `handoff`, `artifact`,
       `Claude Design`; phrase `design.html`. Keep the set tight — a trigger that
       fires on every mention of "artifact" is worse than the gap.
-- [ ] Add German trigger phrases ("setz … um", "baue … nach", "übernimm das
+      <!-- `handoff` + `Claude Design` land as keywords. `artifact` deliberately does NOT: the near-miss row `near-artifacts-plural-unrelated` ("the CI build artifact is 40 MB") is exactly the failure the step warns about, so it ships as the phrases `attached artifact` / `provided artifact` instead. -->
+- [x] Add German trigger phrases ("setz … um", "baue … nach", "übernimm das
       Design", "1:1"). Note the general gap while you are here: the package's
       trigger vocabulary is English-only across the board, and the maintainer
       prompts in German. Do **not** solve that globally in this roadmap — record
       it as the gated follow-up below.
-- [ ] Decide whether an attached standalone HTML file can itself be a trigger.
+      <!-- Shipped: `1:1 um`, `1:1 nach`, `übernimm das design`, `baue das nach`, `bau das nach`. Bare `1:1` was rejected — it collides with one-on-one meetings, which this package has a skill for (`one-on-one-cadence`). Global gap measured and left to the gated follow-up, with the roadmap's "English-only across the board" framing corrected: of 102 rules carrying a `triggers:` block, 3 already ship German surfaces (`question-not-instruction`, `user-interrupt-priority`, `artifact-drafting-protocol`) — this rule makes 4. The gap is real but partial, and the three precedents are the shape a global pass would generalise. -->
+- [x] Decide whether an attached standalone HTML file can itself be a trigger.
       The rule schema currently supports only `keyword`/`phrase`; if a path or
       attachment trigger does not exist, say so plainly rather than pretending
       the keyword list covers the no-keyword case.
-- [ ] `daf-port-trigger-de` flips to green for all three prompt classes
+      <!-- The premise is false and is corrected in Phase 0's baseline: the schema also accepts `file_pattern` (fnmatch over `open_files`, `router_telemetry.ts:218-229`). Shipped `file_pattern: "*design.html"` — anchored `^(?:…)$`, so it matches any path ending in the conventional handover filename. `*.html` was rejected: it fires on every HTML edit in every project. A handover under another filename still needs one word in the prompt, and that limit is stated in the rule body rather than papered over. -->
+- [x] `daf-port-trigger-de` flips to green for all three prompt classes
       (English, German, keyword-free-with-attachment) — or the keyword-free class
       is documented as unreachable with the current trigger schema.
+      <!-- 17/17 green (was 9/17). All three classes route; the two near-miss rows and `none-attached-arbitrary-html` stay deliberately red-by-design. -->
 
 **Exit:** the three prompt classes route measurably, or the unreachable one is
 named.
 
 ## Phase 2 — Refuse honestly, or honour a supplied contract
 
-- [ ] Add the missing lifecycle branch to
+- [x] Add the missing lifecycle branch to
       `docs/contracts/design-artifact-lifecycle.md:57-63` — trigger "finished
       artifact provided as spec" — and state plainly what the package does and
       does not do on it. Variation planning is excluded by definition on this
       branch.
-- [ ] Ship the honest refusal: when an artifact is provided and no
+      <!-- Branch **Port a provided artifact**: 1 (delta) → 2 (deep, on the artifact) → 4 → 5 → 6, stage 3 excluded by definition. The absence was not neutral — with no branch naming it, a handover fell to New design by elimination, the only other branch containing Build, which mandates the variation planning a port must not do. -->
+- [x] Ship the honest refusal: when an artifact is provided and no
       `design-system.json` accompanies it, the pipeline surfaces **what it will
       lose** (exact spacing, easing, hover behaviour, handlers, asset manifest)
       and asks before regenerating, instead of regenerating silently. This is the
       minimum viable fix and it is entirely inside the lock.
-- [ ] Consume the contract the package already owns: when a
+      <!-- `UNCARRIED_BY_THE_BRIEF` (design.ts) + the `design_provided_without_contract` halt. Fires BEFORE the sign-off gate, not after — pinned by a test, because stating the loss after the user confirms the brief would be the same silence one step later. Recommendation is "supply the contract", not "abort". -->
+- [x] Consume the contract the package already owns: when a
       `design-system.json` **is** supplied (any external extractor produced it),
       read it — including the `motion` block at
       `design-system-json.md:25-26` that nothing currently consumes — and honour
       its token values instead of re-deriving them. Accepting is on the allowed
       side of the lock; producing is not.
-- [ ] Extend the audit's token-detection table
+      <!-- Carried on `provided_artifact.design_system`; presence closes the refusal branch. `motion` gains its first consumer since the schema shipped — recorded in the reference doc's field rules so the next reader is not told again that nothing reads it. -->
+- [x] Extend the audit's token-detection table
       (`existing-ui-audit/SKILL.md:101-106`) with a supplied-artifact source, and
       keep artifact-sourced tokens distinguishable from project tokens in the
       audit output so the mapping between them stays visible.
-- [ ] Remove the bottleneck rather than routing around it: `apply.ts` does not
+      <!-- Two rows added (a supplied design-system.json; the artifact's own :root/inline style as the fallback), plus a per-group `source: project|artifact` requirement and a conflict-surfacing clause that defers to brand-source-of-truth. -->
+- [x] Remove the bottleneck rather than routing around it: `apply.ts` does not
       read `state.ui_design` at all. Where a supplied contract exists, apply must
       read it. No parallel track — the same step, one more input.
-- [ ] Report coverage: the apply envelope states how much of the supplied
+      <!-- apply.ts imports `provided_artifact` / `has_design_system` from design.ts rather than re-deciding "is this a port?" — the same shared-walker discipline the placeholder gate already uses, for the same reason (two copies of one predicate drifted before). -->
+- [x] Report coverage: the apply envelope states how much of the supplied
       contract was honoured verbatim, translated, or flagged. Without this the
       user cannot tell a faithful port from a lucky one.
-- [ ] `daf-port-baseline` and `daf-port-interactions` flip to green, or produce a
+      <!-- `coverage_gaps()`: every declared interaction / keyframe / asset must appear in exactly one bucket, else BLOCKED naming each unaccounted item. Dropping a handler stays allowed; hiding one does not. -->
+- [x] `daf-port-baseline` and `daf-port-interactions` flip to green, or produce a
       documented honest-null for the lanes that cannot.
+      <!-- Both green, with post-fix notes on the fixtures. 19/19 in provided_artifact_port.test.ts, including the non-port regressions: the slot is optional and a brief without it behaves exactly as before. -->
+
+**Correction to this phase's premise.** The step above says apply must read the
+brief "where a supplied contract exists". Implemented one notch stricter: apply
+reads it wherever a **provided artifact** exists, contract or not. A port whose
+losses were merely acknowledged still owes the coverage report — otherwise
+picking "proceed" at the refusal gate would buy silence for the rest of the run,
+which is the failure this roadmap is named after.
 
 **Exit:** no provided artifact is silently regenerated; either it is honoured or
 the loss is stated before the work happens.

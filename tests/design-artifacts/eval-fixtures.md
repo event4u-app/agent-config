@@ -233,6 +233,17 @@ other three are rubric-scored: no unit test can assert whether an agent
     (`audit.ts:242-245`) to force the confidence band to `high` — i.e. to *skip*
     the ambiguity halt. An attached artifact makes a clarifying question **less**
     likely, not more.
+- **post-fix (2026-08-01): PASS.** The lifecycle contract gains a **Port a
+  provided artifact** branch with stage 3 excluded by definition
+  (`design-artifact-lifecycle.md` § Branch rules), and the engine gains the
+  carrier the branch needs: `state.ui_design.provided_artifact`
+  (`design.ts`, `PROVIDED_ARTIFACT_KEY`), shape-validated at the schema
+  boundary (`state.ts`, `_validate_provided_artifact`) so a stringly-typed
+  inventory cannot reduce the ledger to zero declared items. Without an
+  accompanying `design-system.json` the `design` gate halts and names all five
+  uncarried value classes before any regeneration; with one, its token values —
+  `motion` included — are honoured rather than re-derived. Pinned by
+  [`provided_artifact_port.test.ts`](../scripts/work_engine/provided_artifact_port.test.ts).
 
 ### daf-port-trigger-de
 - **primitive:** `static_inspect` (asserted deterministically — see above)
@@ -314,6 +325,15 @@ other three are rubric-scored: no unit test can assert whether an agent
   - `apply.ts` never reads `state.ui_design` — `design.ts:110` is the only code
     read of it in the entire UI directive set. The brief is a producer-side lock
     whose consumer-side enforcement is an instruction to the agent, not a gate.
+- **post-fix (2026-08-01): PASS.** `apply` now reads `state.ui_design` on the
+  port branch and requires `ui_apply.coverage = {honoured, translated, flagged}`
+  to account for every declared interaction, keyframe, and asset **exactly
+  once** (`apply.ts`, `coverage_gaps`). Dropping a handler stays allowed;
+  hiding one does not — an unaccounted item is a BLOCKED halt naming it. The
+  test asserts exactly that asymmetry: the same envelope passes with the loss in
+  `flagged` and fails without it
+  ([`provided_artifact_port.test.ts`](../scripts/work_engine/provided_artifact_port.test.ts)
+  § "a flagged loss is what keeps a dropped handler out of silence").
 
 ## Lane fixtures (`road-to-ui-track-integrity`)
 

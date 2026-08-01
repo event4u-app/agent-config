@@ -32,7 +32,10 @@ describe('directives/ui/apply — TS-side unit checks', () => {
     it('directives map + fallback + ambiguities', () => {
         expect(DEFAULT_DIRECTIVE).toBe('ui-apply-plain');
         expect(STACK_DIRECTIVES['react-shadcn']).toBe('ui-apply-react-shadcn');
-        expect(AMBIGUITIES).toHaveLength(2);
+        // 3 since the port branch: `apply_coverage_missing` joins the envelope
+        // and placeholder codes (road-to-provided-artifact-honesty Phase 2).
+        expect(AMBIGUITIES).toHaveLength(3);
+        expect(AMBIGUITIES.map((a) => a['code'])).toContain('apply_coverage_missing');
     });
     it('imports PLACEHOLDER_PATTERNS from the design twin (not the .py)', () => {
         const st = new DeliveryState({

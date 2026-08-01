@@ -61,6 +61,33 @@ which stages run and which fixtures gate it (each branch has ≥1 fixture).
 | **Iteration** | Refine an existing artifact across a version bump | 1 (delta) → 3 → 4 → 5; **preserve the prior version** on a major revision | `daf-requested-variations` |
 | **Design-system extraction** | Derive tokens/components from existing artifacts | 2 (deep) → 6 | `daf-inaccessible-design-system` |
 | **Handoff to production code** | Turn a design into implementation intent | 5 → 6 | `daf-overlapping-text`, `daf-mobile-fit`, `daf-export-readback-failure` |
+| **Port a provided artifact** | A finished artifact (HTML export, prototype, design system) is handed over **as the spec**, to be reproduced | 1 (delta) → 2 (deep, on the artifact) → 4 → 5 → 6. **Stage 3 is excluded by definition** — a port has no variation axis; producing options for a spec the user already approved is the failure this branch exists to prevent | `daf-port-baseline`, `daf-port-trigger-de`, `daf-port-interactions`, `daf-slop-vs-provided` |
+
+**A port is honoured or refused, never silently regenerated.** This branch was
+missing, and its absence was not neutral: with no branch naming it, a handover
+fell to **New design** by elimination — the only other branch containing Build —
+which mandates the variation planning a port must not do. What the package
+actually does on this branch:
+
+- **A supplied `design-system.json` is honoured, not re-derived.** Its token
+  values — including the `motion` block (`durations`, `easings`), which nothing
+  consumed before — are read as the answer. Accepting such a contract is on the
+  allowed side of the 2026-06-28 lock; *producing* one is not, so the package
+  reads the file and never extracts it.
+- **Without that contract, the loss is stated before any work happens.** The
+  design brief carries five keys and cannot hold exact spacing, easing curves,
+  hover behaviour, event handlers, or an asset manifest. The `design` gate names
+  that list and asks; it does not quietly rebuild them from taste
+  (`directives/ui/design.ts`, `UNCARRIED_BY_THE_BRIEF`).
+- **The port reports its own coverage.** `apply` requires
+  `ui_apply.coverage = {honoured, translated, flagged}` accounting for every
+  declared interaction, keyframe, and asset exactly once. A handler the port
+  could not carry belongs in `flagged` with its reason. This is the difference
+  between a faithful port and a lucky one, and it is a gate rather than a
+  convention (`directives/ui/apply.ts`, `coverage_gaps`).
+- **Anti-slop findings the artifact covers are informational.** See
+  [`design-fidelity-mechanics`](../guidelines/design-fidelity-mechanics.md)
+  § Provided-artifact precedence.
 
 **Targeted edit stays surgical** — no redesign of neighbours, no reformatting of
 untouched regions, comment anchors preserved (the `daf-edit-preservation`

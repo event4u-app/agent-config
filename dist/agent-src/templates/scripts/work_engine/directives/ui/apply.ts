@@ -17,7 +17,7 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
-import { placeholder_paths } from './design.js';
+import { has_design_system, placeholder_paths, provided_artifact } from './design.js';
 import {
     is_ambiguous_stack,
     bundle_line,
@@ -50,6 +50,17 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
         resolution:
             'agent directive `ui-apply-<stack>` → skill ' +
             'bundle implements the brief and writes the envelope back',
+    },
+    {
+        code: 'apply_coverage_missing',
+        trigger:
+            'a provided artifact is in state.ui_design but the ui_apply ' +
+            'envelope carries no coverage report, or the report leaves a ' +
+            'declared interaction / keyframe / asset unaccounted for',
+        resolution:
+            'agent writes ui_apply.coverage = {honoured: [], translated: [], ' +
+            'flagged: []} naming every declared item exactly once — a dropped ' +
+            'handler belongs in `flagged`, never in silence',
     },
     {
         code: 'apply_placeholders_in_output',
@@ -89,8 +100,120 @@ export function run(state: DeliveryState): StepResult {
         return _halt_placeholders(state, violations);
     }
 
+    const provided = provided_artifact(state.ui_design as Record<string, Any> | null);
+    if (provided !== null) {
+        const gaps = coverage_gaps(provided, envelope['coverage']);
+        if (gaps.length > 0) {
+            return _halt_coverage(state, provided, gaps);
+        }
+    }
+
     _record_changes(state, envelope);
     return new StepResult({ outcome: Outcome.SUCCESS });
+}
+
+/** Buckets the coverage report must sort every declared item into. */
+export const COVERAGE_BUCKETS: ReadonlyArray<string> = ['honoured', 'translated', 'flagged'];
+
+/** Declared-item lists a port has to account for, in report order. */
+export const COVERED_INVENTORIES: ReadonlyArray<string> = [
+    'interactions',
+    'keyframes',
+    'assets',
+];
+
+/**
+ * Return every reason the coverage report fails to account for the artifact.
+ *
+ * The fidelity ledger the port case never had. `apply` used to validate its
+ * output with a single placeholder substring scan and nothing else, so a
+ * dropped handler or a lost keyframe left no trace anywhere — the loss was
+ * structurally silent, not merely unreported. Requiring each declared item to
+ * appear in exactly one bucket turns that silence into a halt: a handler the
+ * port could not carry has to be written down in `flagged`.
+ *
+ * Matching is substring containment against the bucket entries, so an entry
+ * may carry its own explanation ("submit handler — translated to a form
+ * action") and still count as accounting for `submit handler`.
+ */
+export function coverage_gaps(
+    provided: Record<string, Any>,
+    coverage: Any,
+): string[] {
+    const gaps: string[] = [];
+    if (!_isDict(coverage)) {
+        return [
+            'no `coverage` report in the apply envelope — a provided artifact ' +
+                'requires one',
+        ];
+    }
+    const entries: string[] = [];
+    for (const bucket of COVERAGE_BUCKETS) {
+        const value = coverage[bucket];
+        if (value === undefined) {
+            gaps.push(`\`coverage.${bucket}\` is missing (use an empty list if nothing qualifies)`);
+            continue;
+        }
+        if (!Array.isArray(value)) {
+            gaps.push(`\`coverage.${bucket}\` must be a list of strings`);
+            continue;
+        }
+        for (const item of value) {
+            if (typeof item === 'string' && item !== '') {
+                entries.push(item.toLowerCase());
+            }
+        }
+    }
+    for (const inventory of COVERED_INVENTORIES) {
+        const declared = provided[inventory];
+        if (!Array.isArray(declared)) continue;
+        for (const item of declared) {
+            if (typeof item !== 'string' || item === '') continue;
+            const needle = item.toLowerCase();
+            if (!entries.some((entry) => entry.includes(needle))) {
+                gaps.push(
+                    `\`${inventory}\`: \`${item}\` appears in no coverage bucket`,
+                );
+            }
+        }
+    }
+    return gaps;
+}
+
+/** BLOCKED halt — the port did not account for what the artifact declared. */
+function _halt_coverage(
+    state: DeliveryState,
+    provided: Record<string, Any>,
+    gaps: string[],
+): StepResult {
+    const directive = _resolve_directive(state);
+    const contract = has_design_system(provided)
+        ? 'A `design-system.json` came with this artifact, so its token values ' +
+          'are honoured verbatim — say which, and which you had to translate.'
+        : 'No `design-system.json` came with this artifact, so every token ' +
+          'value you did not read from it belongs in `translated` or `flagged`.';
+    const lines: string[] = [
+        agent_directive(directive),
+        '> Apply rejected: this is a port of a provided artifact, and the ' +
+            'coverage report does not account for it.',
+        `> ${contract}`,
+        '> Unaccounted:',
+    ];
+    for (const gap of gaps) {
+        lines.push(`> - ${gap}`);
+    }
+    lines.push(
+        '> Write `ui_apply.coverage = {honoured: [...], translated: [...], ' +
+            'flagged: [...]}` naming every declared interaction, keyframe, and ' +
+            'asset exactly once. A handler the port could not carry goes in ' +
+            '`flagged` with the reason — never in silence.',
+    );
+    return new StepResult({
+        outcome: Outcome.BLOCKED,
+        questions: lines,
+        message:
+            `UI apply rejected: ${gaps.length} coverage gap(s) against the provided artifact.`,
+    });
 }
 
 /** Return the agent-written `ui_apply` envelope, or `null`. */
@@ -143,20 +266,38 @@ function _delegate_to_stack_skill(state: DeliveryState): StepResult {
                 'the open question is which project to build for.',
         });
     }
+    const provided = provided_artifact(state.ui_design as Record<string, Any> | null);
+    const lines: string[] = [
+        agent_directive(directive),
+        `> Stack: \`${stack_label}\`. Implementing the locked design brief.`,
+        bundle_line(state.stack, 'build', stack_label),
+        '> Microcopy is locked — every button label, empty-state ' +
+            'message, and validation message must come verbatim from ' +
+            '`state.ui_design.microcopy`.',
+    ];
+    if (provided !== null) {
+        lines.push(
+            '> This is a **port**: `state.ui_design.provided_artifact` is the ' +
+                'spec. Build it 1:1' +
+                (has_design_system(provided)
+                    ? ', and read token values from its `design_system` rather ' +
+                      'than re-deriving them.'
+                    : '; no `design_system` came with it, so anything you cannot ' +
+                      'read from the artifact is a translation you have to name.'),
+            '> The envelope must carry `coverage: {honoured, translated, ' +
+                'flagged}` accounting for every declared interaction, keyframe, ' +
+                'and asset exactly once — apply rejects the envelope otherwise.',
+        );
+    }
+    lines.push(
+        '> 1. Continue — implement the brief and write a ' +
+            '`ui_apply` envelope back into state.ticket ' +
+            '(rendered: {path: text}, files: [...])',
+        '> 2. Abort — drop this UI request',
+    );
     return new StepResult({
         outcome: Outcome.BLOCKED,
-        questions: [
-            agent_directive(directive),
-            `> Stack: \`${stack_label}\`. Implementing the locked design brief.`,
-            bundle_line(state.stack, 'build', stack_label),
-            '> Microcopy is locked — every button label, empty-state ' +
-                'message, and validation message must come verbatim from ' +
-                '`state.ui_design.microcopy`.',
-            '> 1. Continue — implement the brief and write a ' +
-                '`ui_apply` envelope back into state.ticket ' +
-                '(rendered: {path: text}, files: [...])',
-            '> 2. Abort — drop this UI request',
-        ],
+        questions: lines,
         message: `UI apply pending; delegating to \`${directive}\` for stack \`${stack_label}\`.`,
     });
 }
