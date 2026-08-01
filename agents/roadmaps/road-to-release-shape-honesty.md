@@ -74,15 +74,22 @@ into an existing checklist rather than built.
 
 ## Phase 2 — Release notes state impact, not commit count
 
-- [ ] Give the release notes a fixed curated head above the generated log, in this
+- [x] Give the release notes a fixed curated head above the generated log, in this
       order: **behaviour changes · default changes + migration · security and
       correctness · honest nulls · known limitations**, capped at roughly ten
       operator-relevant lines. The full generated log stays below it, unchanged.
       *Verify:* the next release's head section fits the cap and every default
       change appears in it; the generator emits the section skeleton so it cannot
       be forgotten.
-- [ ] Deduplicate repeated commit lines in the generated section.
+      <!-- `render_release_head()` in release.ts; `RELEASE_HEAD_CAP_LINES = 10`, the HTML authoring comment excluded from the count because it is invisible to a reader. -->
+      <!-- Default value is `_none_`, deliberately not a placeholder token: for most releases it is the TRUE answer, and a release that changed no defaults should say so. That also keeps the skeleton clear of the placeholder prose `output-discipline` bans — nothing here is wrong-if-shipped, only terse-if-unedited. -->
+      <!-- **Verification substituted, and the substitution stated.** The literal verify ("the next release's head") cannot close inside this PR — no release is cut here. In-PR evidence instead: `./scripts-run src/scripts/release --dry-run` regenerates the notes for 9.12.0 → 9.13.0 through the new generator against the real repository, and the head renders above `### Features` at 6 operator-facing lines. -->
+      <!-- Wording taken from `docs/RELEASE_STORY_TEMPLATE.md` rather than invented, and that file now points at the head as the shipped artifact — otherwise the package would carry two competing definitions of a curated head. -->
+- [x] Deduplicate repeated commit lines in the generated section.
       *Verify:* no line appears twice in the last release's regenerated notes.
+      <!-- `dedupe_commit_lines()`, applied once over `commits` so both emit sites (graded sections and `Other`) are covered by one change. Keyed on `type + scope + subject` — the parts that reach the rendered line — keeping the first occurrence so the earliest SHA stays the citation. -->
+      <!-- A breaking commit is never folded into a non-breaking twin: `!` changes what the line MEANS, and collapsing them would hide a breaking change behind a routine one. Pinned by test. -->
+      <!-- Verified on the real regenerated notes: 13 bullets, `sort | uniq -d` empty. -->
 
 ## Phase 3 — Correct the standing claims
 
