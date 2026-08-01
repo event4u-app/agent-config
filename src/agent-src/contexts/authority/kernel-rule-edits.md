@@ -21,14 +21,30 @@ diagnosis.
 
 ## Trigger
 
-A PR is a "kernel-rule edit" iff it modifies any file in
-`.agent-src.uncondensed/rules/` that is in the locked kernel set
+A PR is a "kernel-rule edit" iff it modifies any file in `src/rules/`
+that is in the locked kernel set
 (see [`docs/contracts/kernel-membership.md`](../../../docs/contracts/kernel-membership.md)).
+(Until 2026-07-31 this named the pre-ADR-051 authoring tree, which no
+longer exists — so the trigger could not match a live file.)
 
 The CI guard (Phase 4.2 of the always-budget-relief roadmap) fails
 any PR that touches **> 1** kernel rule in the same diff. Override is
 a single PR label: `bundled-always-rules-acknowledged` — the maintainer
 records why the bundle is necessary in the PR body.
+
+## Re-anchor the cache prefix in the same PR
+
+The kernel bodies are the KV-cache prefix of every request, so editing
+one invalidates that cache for every consumer. `check_kernel_prefix_stability`
+(Rule Backstops workflow) fails until the edit is recorded:
+
+```bash
+./scripts-run src/scripts/check_kernel_prefix_stability --update-baseline
+```
+
+Commit the resulting `internal/bench/reports/kernel-prefix.json` **in the
+same PR** — that is what makes a cache-invalidating change explicit in the
+diff instead of a silent 10× cost event.
 
 ## Out of scope
 
