@@ -177,3 +177,33 @@ a third customer after the session: a standing regression watch for every future
 change to the UI skills, which becomes diff-measurable instead of arguable. The
 non-goal was aimed at a single-purpose benchmark subsystem and still holds
 against one.
+
+## Amendment 3 — pre-registration covers the inputs, not only the scoring (2026-08-01)
+
+Two clauses added after the harness decision, both closing the same leak: a
+pre-registration that fixes the *scoring* while leaving the *inputs* editable is
+not a pre-registration.
+
+**The fixture set is frozen.** Committed and SHA-pinned before Measurement A
+starts, pin recorded beside the weights. A fixture set nudged after a first bad
+run contaminates both measurements exactly the way a threshold chosen after
+seeing the distribution does. Extensions are permitted and form a **new set,
+scored separately** — never a revision of the pinned one.
+
+**The render environment is pinned.** A screenshot diff is only reproducible if
+the renderer is: browser version from the existing `@playwright/test`
+devDependency, recorded with the run (a browser bump is a new scoring epoch);
+animations disabled at capture; fixed viewport per breakpoint; no time- or
+random-dependent content in fixture markup.
+
+**Fonts are embedded in the fixtures, never hotlinked.** A
+`fonts.googleapis.com` `@import` inside a `design.html` makes the SSIM score a
+function of the CI runner's network and font fallback — the harness would be
+measuring the runner rather than the port. This is the same concern as the
+webfont-delivery finding, arriving from the measurement side.
+
+**That dependency is already satisfied**, checked rather than assumed: the
+webfont-delivery roadmap completed (12/12, archived), and
+`font-pairings-reference.csv` now carries `Self-Hosted Route` and
+`AI-Default Flag` columns. The fixtures consume that route instead of waiting on
+it — the precondition is met, not pending.
