@@ -187,6 +187,134 @@ the criteria are the contract.
 - **scenario:** A submit button should disable and show a spinner on click.
 - **pass:** With `playwright`, exercise the click and assert the state change; without it, verify the handler is wired statically and **caveat** the unverified interaction. Never claim the interaction works unverified.
 
+## Provided-artifact port fixtures (`road-to-provided-artifact-honesty`)
+
+All four share one ground-truth artifact:
+[`fixtures/design.html`](fixtures/design.html) — a standalone page in the
+cream/terracotta register, two screens, three interactions, one keyframe, with
+no network reference of any kind. It is also the scored input of `bench:ui`
+(`internal/bench/ui/README.md`); there is deliberately no second fixture set.
+
+`daf-port-trigger-de` is **deterministic** — it lives as
+[`design_fidelity_routing.test.ts`](../scripts/design_fidelity_routing.test.ts),
+whose `ROUTING_MATRIX` is the measurement, same contract as `LANE_MATRIX`. The
+other three are rubric-scored: no unit test can assert whether an agent
+*silently regenerated* a design.
+
+### daf-port-baseline
+- **primitive:** `static_inspect`
+- **lifecycle stage:** branch selection → build (the missing "provided artifact" branch)
+- **scenario:** `fixtures/design.html` is handed over with an explicit
+  "build this 1:1" instruction.
+- **pass:** The pipeline classifies the request as a **port**, not as a new
+  design; the artifact reaches the build step as a spec; nothing is regenerated
+  from taste without the user being told first.
+- **measured baseline (2026-08-01, pre-fix): FAIL — no port branch exists.**
+  - `docs/contracts/design-artifact-lifecycle.md:57-63` has five branches and
+    none names "a finished artifact is handed over to be reproduced". Only
+    **New design** contains the Build stage, and it mandates stage 3 variation
+    planning (`:27`). *Handoff to production code* runs 5→6 and skips Build, so
+    it cannot be the port branch. By elimination a port is classified as a new
+    design.
+  - The engine agrees independently: nothing in the repo matches the artifact,
+    so `audit.ts:104` takes the greenfield path and the run proceeds
+    audit → app_spec → design → scaffold → apply → review → polish
+    (`directives/ui/index.ts:59-69`).
+  - **There is no carrier channel.** `design.ts:21-27` fixes
+    `REQUIRED_BRIEF_KEYS` at five (`layout, components, states, microcopy,
+    a11y`) and `_missing_required_keys` (`:141-168`) iterates only that list.
+    No state field carries a source artifact, token map, interaction inventory,
+    keyframe list, or asset manifest. The nearest thing is the greenfield
+    option string *"3. External reference — point me at a design-system URL or
+    file"* (`audit.ts:192`) whose answer has no field to be written into and no
+    consumer.
+  - The one structural signal that a file is attached,
+    `state.ticket.input_kind ∈ {diff, file}`, is consumed at exactly one place
+    (`audit.ts:242-245`) to force the confidence band to `high` — i.e. to *skip*
+    the ambiguity halt. An attached artifact makes a clarifying question **less**
+    likely, not more.
+
+### daf-port-trigger-de
+- **primitive:** `static_inspect` (asserted deterministically — see above)
+- **lifecycle stage:** routing
+- **scenario:** The same artifact with (a) an English handover phrasing, (b) a
+  German one ("setz das 1:1 um", "übernimm das Design", "baue das nach"), and
+  (c) **no** keyword at all, just the attached file.
+- **pass:** All three classes route to `design-fidelity`, or the unreachable
+  class is documented with its reason. Near-miss prompts must stay silent — an
+  over-broad trigger is worse than the gap it closes.
+- **measured baseline (2026-08-01, pre-fix): FAIL, 8 of 14 matrix rows red.**
+  Matching is plain lower-cased substring containment
+  (`router_telemetry.ts:186-199` — no stemming, no translation). The rule
+  shipped ten triggers, all English (`design-fidelity.md:5-15`).
+  - (a) `"build this 1:1"` does **not** fire: the phrase `build this design`
+    requires the literal token `design`.
+  - (b) no German surface exists in the trigger list at all.
+  - (c) no `file_pattern` trigger was declared.
+- **correction to this roadmap's premise, recorded rather than worked around:**
+  the roadmap's Phase-1 step states *"the rule schema currently supports only
+  `keyword`/`phrase`"*. That is false. `rule.schema.json` accepts `keyword`,
+  `phrase`, `intent`, `file_pattern`, `path_prefix`, and `command`, and the
+  matcher implements `file_pattern` as fnmatch over `open_files`
+  (`router_telemetry.ts:218-229`). The keyword-free case is therefore reachable
+  for the conventional handover filename. What stays unreachable **by design**
+  is a generic "any attached HTML is a handover" trigger: `*.html` would fire on
+  every HTML edit in every project, which is strictly worse than the gap. The
+  matrix pins both halves — `none-attached-designhtml` green,
+  `none-attached-arbitrary-html` deliberately red.
+
+### daf-slop-vs-provided
+- **primitive:** `static_inspect`
+- **lifecycle stage:** review + polish (precedence)
+- **scenario:** The anti-slop scan runs over a faithful port of the artifact.
+- **pass:** Findings that the provided artifact **covers** are cited as
+  informational ("matches provided spec") and the polish loop does not act on
+  them; the palette and copy are unchanged after review and polish.
+- **measured baseline (2026-08-01, pre-fix): FAIL — two findings, both
+  artifact-covered, neither marked as such.**
+  `./scripts-run src/scripts/lint_design_slop --dir tests/design-artifacts/fixtures --json`
+  returns exactly:
+  - `slop-c5-cream-palette` (C5, P3, `design.html:32`) — cream ground plus warm
+    accent co-occur (`design_slop_rules.ts:247-262`). Its suppression gate reads
+    a consumer `DESIGN.md` (`lint_design_slop.ts:94-112`); a user who hands over
+    an artifact has not written one, so the gate is open and the rule fires.
+  - `slop-cp1-em-dash` (CP1, P2) — the *artifact's own copy* carries 8 em-dashes
+    in ~449 words. A faithful port reproduces the source's prose verbatim, so
+    the port inherits the tell. Kept deliberately: it is the second witness, and
+    the one that proves the carve-out has to cover copy, not only colour.
+  - **The sharper finding is that the polish loop cannot see either.**
+    `polish.ts` recognises exactly two finding kinds, `a11y_violation` (`:28`)
+    and `token_violation` (`:31`); grep for `slop` across `directives/ui/*.ts`
+    is zero. The scanner has no call site in the work engine. The damage path is
+    prose instead: `existing-ui-audit/SKILL.md:263-273` licenses the design step
+    to *"introduce a corrective direction change"* against an inventoried
+    anti-pattern, and `fe-design/SKILL.md:337-339` says *"If a tell was the first
+    impulse, choose a different approach."* Neither carves out "the tell is the
+    user's spec", and `fe-design/SKILL.md:345`'s protective clause is anchored on
+    `state.ui_audit`, which a provided artifact never populates.
+
+### daf-port-interactions
+- **primitive:** `static_inspect`
+- **lifecycle stage:** build → verify (loss reporting)
+- **scenario:** The artifact's three handlers (screen switch, disclosure toggle,
+  submit → disable + receipt) and its one keyframe are ported.
+- **pass:** Each surviving interaction is named, and each one that did **not**
+  survive is reported. Silence about a dropped handler is the failure.
+- **measured baseline (2026-08-01, pre-fix): FAIL — losses are structurally
+  silent.**
+  - Grep across `directives/ui/*.ts` for `keyframe`, `animation`, `onclick`,
+    `listener` returns zero. The brief cannot carry an interaction inventory.
+  - `apply.ts` performs exactly one output check: a placeholder substring scan
+    over `envelope.rendered` (`:87-90` → `:127-129`). Nothing compares the
+    rendered result to any source. `_record_changes` (`:190-208`) logs
+    `{kind, stack, file, summary}` — a file list, not a fidelity ledger.
+  - `review.ts` validates envelope **shape** only (`:140-157`).
+  - Grep for `loss report|fidelity report|what was dropped` across `src docs`
+    returns one unrelated hit.
+  - `apply.ts` never reads `state.ui_design` — `design.ts:110` is the only code
+    read of it in the entire UI directive set. The brief is a producer-side lock
+    whose consumer-side enforcement is an instruction to the agent, not a gate.
+
 ## Lane fixtures (`road-to-ui-track-integrity`)
 
 The `daf-lane-*` family, plus `daf-placeholder-in-array` and

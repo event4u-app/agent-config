@@ -1,0 +1,253 @@
+/**
+ * Design-fidelity routing matrix — the deterministic baseline for
+ * `road-to-provided-artifact-honesty` Phase 0/1.
+ *
+ * The roadmap's routing half asks one question: when a user hands over a
+ * finished design artifact, does `design-fidelity` actually fire? That is
+ * answerable without a model — the rule's `triggers:` frontmatter and the
+ * shipped matcher (`router_telemetry.trigger_matches`) fully determine it.
+ *
+ * `ROUTING_MATRIX` below IS the measurement. Its diff across commits is the
+ * before/after evidence: a phase that claims to fix routing without changing
+ * this table did not fix it. Same contract as `LANE_MATRIX` in
+ * `ui_lane_matrix.test.ts`.
+ *
+ * The matcher is imported, never reimplemented — a hand-rolled `includes()`
+ * here would measure the test's idea of routing rather than the router's.
+ *
+ * Fixture id: `daf-port-trigger-de` (tests/design-artifacts/eval-fixtures.md).
+ */
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import yaml from 'js-yaml';
+import { describe, expect, it } from 'vitest';
+
+import { trigger_matches } from '../../src/scripts/router_telemetry.js';
+
+const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+const RULE = path.join(REPO_ROOT, 'src', 'rules', 'design-fidelity.md');
+
+/** The artifact filename the port fixtures hand over. */
+const HANDOVER = 'tests/design-artifacts/fixtures/design.html';
+
+interface Trigger {
+    keyword?: string;
+    phrase?: string;
+    file_pattern?: string;
+    path_prefix?: string;
+    command?: string;
+    intent?: string;
+}
+
+/** Read the rule's `triggers:` frontmatter — the shipped activation set. */
+function ruleTriggers(): Trigger[] {
+    const text = fs.readFileSync(RULE, { encoding: 'utf-8' });
+    const m = /^---\n([\s\S]*?)\n---\n/.exec(text);
+    if (!m) throw new Error(`design-fidelity.md carries no frontmatter block`);
+    const fm = yaml.load(m[1] as string) as Record<string, unknown>;
+    const triggers = fm['triggers'];
+    if (!Array.isArray(triggers)) {
+        throw new Error(`design-fidelity.md declares no triggers: array`);
+    }
+    return triggers as Trigger[];
+}
+
+/** True when any of the rule's triggers matches this prompt + open-file set. */
+function routes(prompt: string, open_files: readonly string[] = []): boolean {
+    return ruleTriggers().some((t) =>
+        trigger_matches(t as never, prompt, open_files, null),
+    );
+}
+
+interface Row {
+    /** Prompt class this row measures. */
+    readonly id: string;
+    /** `en` · `de` · `none` — the language / keyword class. */
+    readonly klass: 'en' | 'de' | 'none';
+    readonly prompt: string;
+    readonly open_files: readonly string[];
+    /** Expected routing outcome after Phase 1. */
+    readonly routes: boolean;
+    /**
+     * Measured on `origin/main` before Phase 1 (2026-08-01). A row whose
+     * `routes` and `baseline` differ is a behaviour change this roadmap made.
+     */
+    readonly baseline: boolean;
+}
+
+/**
+ * The measurement. Three prompt classes the roadmap names, plus the
+ * already-covered English phrasings that must not regress, plus the
+ * near-misses that must NOT start firing (an over-broad trigger is worse
+ * than the gap it closes).
+ */
+export const ROUTING_MATRIX: readonly Row[] = [
+    // --- Class 1: English, explicit handover ------------------------------
+    {
+        id: 'en-build-1-1',
+        klass: 'en',
+        prompt: 'Here is design.html — build this 1:1, do not redesign it.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+    {
+        id: 'en-handoff',
+        klass: 'en',
+        prompt: 'This is the handoff from our designer. Port it faithfully.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+    {
+        id: 'en-artifact',
+        klass: 'en',
+        prompt: 'Take the attached artifact and implement it as a component.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+    {
+        id: 'en-claude-design',
+        klass: 'en',
+        prompt: 'I exported this from Claude Design — rebuild it in our app.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+    // Already covered before Phase 1 — regression witnesses.
+    {
+        id: 'en-match-the-design',
+        klass: 'en',
+        prompt: 'Match the design in the screenshot.',
+        open_files: [],
+        routes: true,
+        baseline: true,
+    },
+    {
+        id: 'en-figma',
+        klass: 'en',
+        prompt: 'Here is the Figma export.',
+        open_files: [],
+        routes: true,
+        baseline: true,
+    },
+
+    // --- Class 2: German ---------------------------------------------------
+    {
+        id: 'de-1-zu-1',
+        klass: 'de',
+        prompt: 'Setz das 1:1 um, bitte nichts umbauen.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+    {
+        id: 'de-uebernimm',
+        klass: 'de',
+        prompt: 'Übernimm das Design aus dem Anhang.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+    {
+        id: 'de-nachbauen',
+        klass: 'de',
+        prompt: 'Baue das nach, so wie es da steht.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+
+    // --- Class 3: no keyword at all, artifact attached ---------------------
+    {
+        id: 'none-attached-designhtml',
+        klass: 'none',
+        prompt: 'Can you do this?',
+        open_files: [HANDOVER],
+        routes: true,
+        baseline: false,
+    },
+    {
+        id: 'none-attached-arbitrary-html',
+        klass: 'none',
+        // The honest limit: an arbitrary attached HTML file is NOT a handover
+        // signal. `*.html` as a trigger would fire on every HTML edit in every
+        // project — strictly worse than the gap. Documented, not papered over.
+        prompt: 'Can you do this?',
+        open_files: ['resources/views/welcome.blade.html'],
+        routes: false,
+        baseline: false,
+    },
+
+    // --- Near-misses: must stay silent ------------------------------------
+    {
+        id: 'near-artifacts-plural-unrelated',
+        klass: 'en',
+        // "artifact" appears, but as CI vocabulary. A keyword trigger cannot
+        // tell these apart; the phrase forms are chosen so this stays quiet.
+        prompt: 'The CI build artifact is 40 MB — can we shrink it?',
+        open_files: [],
+        routes: false,
+        baseline: false,
+    },
+    {
+        id: 'near-greenfield',
+        klass: 'en',
+        prompt: 'Design a pricing page for us from scratch.',
+        open_files: [],
+        routes: false,
+        baseline: false,
+    },
+    {
+        id: 'near-de-generic',
+        klass: 'de',
+        prompt: 'Kannst Du die Tests grün machen?',
+        open_files: [],
+        routes: false,
+        baseline: false,
+    },
+];
+
+describe('design-fidelity routing matrix', () => {
+    it('the rule declares a parseable trigger set', () => {
+        const triggers = ruleTriggers();
+        expect(triggers.length).toBeGreaterThan(0);
+        for (const t of triggers) {
+            const keys = Object.keys(t);
+            expect(keys.length).toBe(1);
+            expect([
+                'keyword',
+                'phrase',
+                'file_pattern',
+                'path_prefix',
+                'command',
+                'intent',
+            ]).toContain(keys[0]);
+        }
+    });
+
+    for (const row of ROUTING_MATRIX) {
+        it(`${row.id} (${row.klass}) routes=${row.routes}`, () => {
+            expect(routes(row.prompt, row.open_files)).toBe(row.routes);
+        });
+    }
+
+    it('every prompt class the roadmap names has at least one row', () => {
+        const classes = new Set(ROUTING_MATRIX.map((r) => r.klass));
+        expect(classes).toEqual(new Set(['en', 'de', 'none']));
+    });
+
+    it('the matrix records at least one closed baseline gap per class', () => {
+        // A class whose every row already routed on main proves nothing about
+        // this roadmap; a class with no closed gap means Phase 1 skipped it.
+        for (const klass of ['en', 'de', 'none'] as const) {
+            const closed = ROUTING_MATRIX.filter(
+                (r) => r.klass === klass && r.routes && !r.baseline,
+            );
+            expect(closed.length, `class ${klass} closed no baseline gap`).toBeGreaterThan(0);
+        }
+    });
+});

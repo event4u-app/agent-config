@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger — provided-artifact port fixture</title>
+<!--
+  Ground-truth artifact for `daf-port-baseline`, `daf-port-trigger-de`,
+  `daf-slop-vs-provided`, and `daf-port-interactions`
+  (tests/design-artifacts/eval-fixtures.md), and the scored input of
+  `bench:ui` (internal/bench/ui/README.md).
+
+  Determinism contract. Do not "improve" any of this:
+  · No network reference of any kind. No @import, no <link>, no remote font,
+    no remote image. A hotlinked face would make an SSIM score a function of
+    the runner's network and font fallback.
+  · Generic font families only (serif / sans-serif). Named families are a
+    per-machine lottery; generics are resolved by the pinned browser, and the
+    platform epoch is recorded with every run.
+  · No Date, no Math.random, no animation still running at capture. The one
+    keyframe animation is opt-in via a class the harness never sets at
+    capture time. `prefers-reduced-motion` also disables it.
+  · Two screens, three interactions, one keyframe: the counts this fixture
+    exists to measure. Changing them makes a NEW fixture set, scored
+    separately, never a revision of this one (see the bench freeze clause).
+  · The palette is deliberately the one `slop-c5-cream-palette` flags. That
+    finding is the point: `daf-slop-vs-provided` asserts a faithful port keeps
+    it, so the C5 hexes are load-bearing and must not be "fixed".
+-->
+<style>
+  :root {
+    --cream:        #f5f1ea;
+    --cream-deep:   #ece4d8;
+    --ink:          #2b2622;
+    --ink-soft:     #6d6055;
+    --terracotta:   #c96442;
+    --terracotta-d: #a44d30;
+    --rule:         #e3d7c6;
+
+    --step-0: 1rem;
+    --step-1: 1.25rem;
+    --step-2: 1.5625rem;
+    --step-3: 1.953rem;
+
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 40px;
+
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: sans-serif;
+    font-size: var(--step-0);
+    line-height: 1.55;
+  }
+
+  .shell {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-3);
+  }
+
+  header.masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: var(--space-2);
+  }
+
+  .wordmark {
+    font-family: serif;
+    font-size: var(--step-3);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .wordmark em {
+    color: var(--terracotta);
+    font-style: normal;
+  }
+
+  nav.screens {
+    display: flex;
+    gap: var(--space-1);
+  }
+
+  .tab {
+    appearance: none;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink-soft);
+    font: inherit;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .tab[aria-selected="true"] {
+    background: var(--terracotta);
+    border-color: var(--terracotta);
+    color: var(--cream);
+  }
+
+  .screen[hidden] { display: none; }
+
+  .screen > h2 {
+    font-family: serif;
+    font-size: var(--step-2);
+    font-weight: 400;
+    margin: var(--space-4) 0 var(--space-2);
+  }
+
+  .lede {
+    color: var(--ink-soft);
+    max-width: 58ch;
+    margin: 0 0 var(--space-3);
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-2);
+  }
+
+  .card {
+    background: var(--cream-deep);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+  }
+
+  .card h3 {
+    margin: 0 0 var(--space-1);
+    font-size: var(--step-1);
+    font-weight: 600;
+  }
+
+  .card p {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .disclosure {
+    margin-top: var(--space-3);
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-3);
+  }
+
+  .disclosure-toggle {
+    appearance: none;
+    border: 0;
+    background: none;
+    color: var(--terracotta-d);
+    font: inherit;
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .disclosure-body[hidden] { display: none; }
+
+  .disclosure-body {
+    margin-top: var(--space-2);
+    color: var(--ink-soft);
+  }
+
+  form.subscribe {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-top: var(--space-3);
+  }
+
+  form.subscribe input {
+    flex: 1 1 240px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .btn {
+    appearance: none;
+    border: 1px solid var(--terracotta);
+    background: var(--terracotta);
+    color: var(--cream);
+    font: inherit;
+    font-weight: 600;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .btn:hover { background: var(--terracotta-d); border-color: var(--terracotta-d); }
+  .btn[disabled] { opacity: 0.55; cursor: default; }
+
+  .receipt {
+    margin-top: var(--space-2);
+    color: var(--terracotta-d);
+    font-weight: 600;
+  }
+  .receipt[hidden] { display: none; }
+
+  footer.colophon {
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-2);
+    color: var(--ink-soft);
+  }
+
+  /* The one keyframe. Opt-in via `.is-animating`; never set at capture. */
+  @keyframes rule-draw {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  .accent-rule {
+    height: 3px;
+    background: var(--terracotta);
+    transform-origin: left center;
+    transform: scaleX(1);
+  }
+
+  .accent-rule.is-animating {
+    animation: rule-draw 600ms ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .accent-rule.is-animating { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="masthead">
+    <h1 class="wordmark">Led<em>ger</em></h1>
+    <nav class="screens" aria-label="Screens">
+      <button class="tab" id="tab-overview"  type="button" aria-selected="true"  aria-controls="screen-overview">Overview</button>
+      <button class="tab" id="tab-archive"   type="button" aria-selected="false" aria-controls="screen-archive">Archive</button>
+    </nav>
+  </header>
+
+  <div class="accent-rule" id="accent-rule"></div>
+
+  <!-- Screen 1 -->
+  <main class="screen" id="screen-overview" aria-labelledby="tab-overview">
+    <h2>Everything you signed, in one place</h2>
+    <p class="lede">Ledger keeps a plain record of what was agreed, when, and by
+      whom. No dashboards you have to learn — a list you can read.</p>
+
+    <div class="cards">
+      <article class="card">
+        <h3>Signed</h3>
+        <p>Twelve agreements closed this quarter, each with its countersignature attached.</p>
+      </article>
+      <article class="card">
+        <h3>Awaiting</h3>
+        <p>Three documents are out for signature. Ledger nudges on day four, not day one.</p>
+      </article>
+      <article class="card">
+        <h3>Expiring</h3>
+        <p>Two renewals fall due before March. Both are flagged in the archive.</p>
+      </article>
+    </div>
+
+    <section class="disclosure">
+      <button class="disclosure-toggle" id="disclosure-toggle" type="button" aria-expanded="false" aria-controls="disclosure-body">
+        How Ledger stores your documents
+      </button>
+      <div class="disclosure-body" id="disclosure-body" hidden>
+        <p>Documents stay in your own storage. Ledger keeps the index, the
+          signature trail, and the dates — never a second copy of the file.</p>
+      </div>
+    </section>
+
+    <form class="subscribe" id="subscribe-form" novalidate>
+      <label class="visually-hidden" for="subscribe-email" hidden>Email address</label>
+      <input id="subscribe-email" name="email" type="email" placeholder="you@example.com" required>
+      <button class="btn" id="subscribe-submit" type="submit">Send me the summary</button>
+    </form>
+    <p class="receipt" id="subscribe-receipt" hidden role="status">Filed. The Monday summary is on its way.</p>
+  </main>
+
+  <!-- Screen 2 -->
+  <main class="screen" id="screen-archive" aria-labelledby="tab-archive" hidden>
+    <h2>Archive</h2>
+    <p class="lede">Closed agreements, newest first. Nothing here is editable —
+      the archive is the record, not the workspace.</p>
+
+    <div class="cards">
+      <article class="card">
+        <h3>Q4 supplier terms</h3>
+        <p>Countersigned 14 November. Renews automatically unless cancelled in February.</p>
+      </article>
+      <article class="card">
+        <h3>Studio lease</h3>
+        <p>Countersigned 2 October. Three years, with a break clause at eighteen months.</p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="colophon">
+    Ledger — a record, not a workflow.
+  </footer>
+
+</div>
+
+<script>
+  // Interaction 1 — screen switch (two screens, mutually exclusive).
+  var tabs = [
+    { tab: document.getElementById('tab-overview'), screen: document.getElementById('screen-overview') },
+    { tab: document.getElementById('tab-archive'),  screen: document.getElementById('screen-archive') }
+  ];
+  tabs.forEach(function (entry) {
+    entry.tab.addEventListener('click', function () {
+      tabs.forEach(function (other) {
+        var selected = other === entry;
+        other.tab.setAttribute('aria-selected', String(selected));
+        other.screen.hidden = !selected;
+      });
+    });
+  });
+
+  // Interaction 2 — disclosure toggle.
+  var toggle = document.getElementById('disclosure-toggle');
+  var body = document.getElementById('disclosure-body');
+  toggle.addEventListener('click', function () {
+    var open = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!open));
+    body.hidden = open;
+  });
+
+  // Interaction 3 — subscribe submit: disable, then show the receipt.
+  var form = document.getElementById('subscribe-form');
+  var submit = document.getElementById('subscribe-submit');
+  var receipt = document.getElementById('subscribe-receipt');
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    submit.disabled = true;
+    receipt.hidden = false;
+  });
+</script>
+</body>
+</html>
