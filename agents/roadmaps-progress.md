@@ -6,10 +6,10 @@
 
 ## Overall
 
-**48 / 223 steps done · 22%**
+**51 / 223 steps done · 23%**
 
 ```text
-█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   23%
 ```
 
 ## Open roadmaps
@@ -27,7 +27,7 @@
 | 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 11 | [road-to-overlap-truth-and-skill-cut.md](roadmaps/road-to-overlap-truth-and-skill-cut.md) | 6 | 14 | 14 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 12 | [road-to-release-shape-honesty.md](roadmaps/road-to-release-shape-honesty.md) | 3 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 12 | [road-to-release-shape-honesty.md](roadmaps/road-to-release-shape-honesty.md) | 3 | 8 | 5 | 3 | 0 | 0 | 0 | ████░░░░░░ 38% |
 | 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 14 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -223,11 +223,11 @@ _1 blocker resolved._
 
 ### [road-to-release-shape-honesty.md](roadmaps/road-to-release-shape-honesty.md)
 
-**Road to release-shape honesty — lint the release that shipped, and describe it truthfully** — 0 / 8 done (0%)
+**Road to release-shape honesty — lint the release that shipped, and describe it truthfully** — 3 / 8 done (38%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Release checks must see the release diff | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Release checks must see the release diff | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Release notes state impact, not commit count | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Correct the standing claims | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 

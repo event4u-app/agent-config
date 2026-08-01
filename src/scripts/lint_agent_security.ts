@@ -27,6 +27,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { runCountedProbe } from "./_lib/counted_probe.js";
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,9 +55,10 @@ function _run(script: string): [number, Finding[]] {
   // (capture_output=True, text=True equivalent). Mirrors the retired Python implementation's
   // `subprocess.run([sys.executable, HERE/<child>.py, "--json"])`, now that the
   // children are TypeScript and the `.py` originals are deleted.
-  const proc = spawnSync(tsxBin, [path.join(_HERE, script), "--json"], {
-    encoding: "utf-8",
-  });
+  // Bounded read: a truncated `--json` payload would fail to parse and be
+  // swallowed as zero findings — a security aggregate reporting clean because
+  // it lost the answer. `runCountedProbe` throws on overflow instead.
+  const proc = runCountedProbe(tsxBin, [path.join(_HERE, script), "--json"]);
   let findings: Finding[];
   try {
     const parsed: unknown = JSON.parse((proc.stdout ?? "") || "[]");

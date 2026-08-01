@@ -38,6 +38,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import yaml from 'js-yaml';
+import { runCountedProbe } from './_lib/counted_probe.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -184,11 +185,11 @@ export function classify(
 
 function run_gate(spec: GateSpec): { scanned: number | null; crashed: boolean; exit_code: number | null } {
   const runner = path.join(REPO_ROOT, 'scripts-run');
-  const r = spawnSync(runner, [`src/scripts/${spec.id}`, ...spec.argv], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-  });
-  if (r.error !== undefined || r.status === null) return { scanned: null, crashed: true, exit_code: null };
+  // Bounded read: a gate whose output overflowed would lose its `scanned:`
+  // line and be classified `silent` — the scan-scope guard reporting a dead
+  // scope that is merely truncated. `runCountedProbe` throws instead.
+  const r = runCountedProbe(runner, [`src/scripts/${spec.id}`, ...spec.argv], { cwd: REPO_ROOT });
+  if (r.failure !== null && r.status === null) return { scanned: null, crashed: true, exit_code: null };
   // A gate may legitimately exit non-zero (it found real violations) and still
   // have scanned plenty — coverage and verdict are different questions.
   return { scanned: parse_scanned(`${r.stdout}\n${r.stderr}`), crashed: false, exit_code: r.status };

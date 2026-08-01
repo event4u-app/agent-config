@@ -48,21 +48,29 @@ into an existing checklist rather than built.
 
 ## Phase 1 — Release checks must see the release diff
 
-- [ ] Make the release-PR check scope resolve to `previous_release_tag...release_head`
+- [x] Make the release-PR check scope resolve to `previous_release_tag...release_head`
       rather than the PR's own file list, for the content checks that are
       diff-scoped (skill lint, rule lint, portability, claim impact).
       *Verify:* re-running the check on the last release reports a non-zero
       checked count; a synthetic skill defect introduced anywhere in the tag span
       turns it red.
-- [ ] `INCONCLUSIVE` on a release PR is a failure, not an outcome — a release
+      <!-- `_lib/release_scope.ts::resolveContentLintScope` — reuses the release detector `self_review_gate` already had (moved to the lib, re-exported, its 27 tests still green) rather than adding a fourteenth changed-file resolver. Wired into `skill_linter --changed` (+ `--since`) and, via the `resolve_lint_scope` resolver, into the originality gate's shell. Measured: 0 → 10 linted files. -->
+      <!-- **Correction to this step's premise.** Of the four checks named, only the skill lint is diff-scoped. `check_portability` and `check_claims` walk the whole tree, `lint-rule-tiers` globs all rules — all three already see the release and need no scope machinery. There is no "claim impact" gate at all; the nearest thing is `self_review_gate`'s advisory claim-surface classifier. The step's real fifth target, unnamed in the roadmap, is the **originality gate**, and it is the one whose INCONCLUSIVE was a literal `exit 0`. -->
+      <!-- Landmine found and pinned by test: this repo carries 152 semver tags alongside names like `rebase-backup-pre-squash`, which sort ABOVE every version under `git tag --sort=-v:refname`. A naive "newest tag" resolves the scope to a backup ref. `pickPreviousTag` filters to semver by construction. -->
+      <!-- Second landmine: neither `skill-lint.yml` checkout set `fetch-tags: true`, so tag resolution in CI would have returned nothing and reintroduced the blindness through a different door. Both checkouts now fetch tags. -->
+- [x] `INCONCLUSIVE` on a release PR is a failure, not an outcome — a release
       check that examined nothing must block the release, matching the scan-scope
       regime already adopted for the other gates.
       *Verify:* a fixture release PR with an empty resolved scope exits non-zero.
-- [ ] Fix the silent-probe class the footer incident exposed: any probe that
+      <!-- Mirrors the existing regime rather than inventing a second shape: `_lib/scan_scope.ts::assertScanned` + `DeadScopeError` → exit 2, as `check_iron_law_prominence` does. (The precedent disagrees with itself — `check_safety_floor_untouched` returns 3 — so 2 is chosen as the more common one and stated here.) The originality gate's `exit 0` becomes `exit 1` on a widened scope. -->
+      <!-- Deliberately narrow: only a release PR whose scope ACTUALLY widened to a resolved tag span fails on empty. An ordinary PR that touches no skill keeps exit 0 (a legitimately empty scope is not a dead one), and a release whose previous tag cannot be resolved is excluded too — failing that would punish a shallow clone for the wrong reason. -->
+- [x] Fix the silent-probe class the footer incident exposed: any probe that
       shells out for a count must fail loudly on buffer overflow rather than
       degrading to zero.
       *Verify:* a fixture whose output exceeds the buffer produces an error, not a
       zero; the footer gate stays green for the right reason.
+      <!-- **Premise partly stale, corrected rather than re-done.** The footer probe itself was already hardened: `release.ts` pins a 64 MiB buffer and `_count_from_list_result` warns on every degradation. What was missing is the CLASS the step actually names. `_lib/counted_probe.ts` supplies it: ENOBUFS THROWS (the command succeeded and we lost its output — there is no honest count), while ENOENT / non-zero stay degradable outcomes (a dev box without `npx` is a real, reportable condition). -->
+      <!-- Converted the four Tier-1 sites where truncation manufactures a GREEN gate: `skill_linter`'s changed-file diff (its swallow-all `catch { return []; }` no longer eats an overflow), `check_gate_coverage` (a truncated read loses the `scanned:` line and the scan-scope guard reports a dead scope that is merely truncated), `lint_agent_security` (a truncated `--json` payload parses to zero findings on the security aggregate), and `check_kernel_rule_bundle` (a short diff lets the guard pass on files it never saw). ~30 Tier-2 sites remain and are a follow-on sweep, not this phase. -->
 
 ## Phase 2 — Release notes state impact, not commit count
 
