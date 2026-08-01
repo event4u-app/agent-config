@@ -126,3 +126,84 @@ projects. It lands with the detection work, not the dispatch work.
 - Removal over addition (the C1 verdict is an instance).
 - No new binary/runtime dependency in the package (E1).
 - The three roadmaps plan work, not releases — no version pins, no commit steps.
+
+## Amendment 2 — the harness question, resolved (maintainer, 2026-08-01)
+
+The council's refusal to build a UI-quality harness for one frontmatter question
+stands. What changed is that the harness stopped being for one question.
+
+**Decision.** Build the diff machinery as `bench:ui`, maintainer-side, as Phase 4
+of `road-to-provided-artifact-honesty`, fed by that roadmap's port fixtures. The
+two parked measurements ride on it. Rationale: the port defect is the original
+reported fault of this whole analysis series, that roadmap needs the machinery
+for its own acceptance criteria, and its non-goal already carried the clause
+"if such a harness lands for another reason, this roadmap unblocks for free".
+
+**The 2026-06-28 lock was never engaged, and that is worth recording precisely.**
+The maintainer offered to lift it. Checking first showed the lift was
+unnecessary: the lock forbids the package *shipping* a crawler / Playwright
+runtime / font-bundler, `@playwright/test` is already a devDependency, and
+`package.json` `files[]` ships neither `tests/` nor `internal/`. A bench beside
+`bench:ab` distributes nothing to a consumer. The **consumer-side** verify stage —
+the agent rendering a port inside a consumer's project — does need a browser
+there, and stays gated with the honest-degrade pattern unchanged. A lock that
+did not need reopening must not be logged as reopened.
+
+**Scoring is judge-free, and that is the load-bearing design choice.** Four
+deterministic components with weights pre-registered before the first run:
+perceptual screenshot diff per breakpoint (SSIM/pixelmatch with a threshold —
+raw pixel equality would measure font antialiasing), DOM-structure comparison,
+token-mapping score, Playwright interaction checklist. No model in the scoring
+path. An LLM judge would import variance and **circularity** — Opus grading Opus —
+into the one measurement that has to decide Opus vs Sonnet. The port case is the
+single place a ground truth already exists, so the question is measured rather
+than adjudicated.
+
+**Both measurements are fidelity tasks, so one session answers both.**
+A: same fixtures, builders `medium` vs `high`, lane fixed — diff-distance delta
+against cost delta. B: same fixtures on the two stacks where both lanes exist,
+tier fixed, legacy bundle vs forced generic lane — a switch, not a rebuild, since
+the composition landed. The two tier outliers run as their own arms.
+
+**Two null paths are pre-registered.** A null: the `high` lift does not clear the
+cost delta → tiers unchanged, null published. B null: the generic lane lands
+within a pre-fixed tolerance of the framework lane → **a strong positive**, not a
+shortfall — the floor carries, and overlays justify themselves only on their
+specialist subject. Naming that in advance is what stops it being read as the
+generic lane losing.
+
+**The one-question-harness non-goal is discharged, not bypassed.** `bench:ui` has
+a third customer after the session: a standing regression watch for every future
+change to the UI skills, which becomes diff-measurable instead of arguable. The
+non-goal was aimed at a single-purpose benchmark subsystem and still holds
+against one.
+
+## Amendment 3 — pre-registration covers the inputs, not only the scoring (2026-08-01)
+
+Two clauses added after the harness decision, both closing the same leak: a
+pre-registration that fixes the *scoring* while leaving the *inputs* editable is
+not a pre-registration.
+
+**The fixture set is frozen.** Committed and SHA-pinned before Measurement A
+starts, pin recorded beside the weights. A fixture set nudged after a first bad
+run contaminates both measurements exactly the way a threshold chosen after
+seeing the distribution does. Extensions are permitted and form a **new set,
+scored separately** — never a revision of the pinned one.
+
+**The render environment is pinned.** A screenshot diff is only reproducible if
+the renderer is: browser version from the existing `@playwright/test`
+devDependency, recorded with the run (a browser bump is a new scoring epoch);
+animations disabled at capture; fixed viewport per breakpoint; no time- or
+random-dependent content in fixture markup.
+
+**Fonts are embedded in the fixtures, never hotlinked.** A
+`fonts.googleapis.com` `@import` inside a `design.html` makes the SSIM score a
+function of the CI runner's network and font fallback — the harness would be
+measuring the runner rather than the port. This is the same concern as the
+webfont-delivery finding, arriving from the measurement side.
+
+**That dependency is already satisfied**, checked rather than assumed: the
+webfont-delivery roadmap completed (12/12, archived), and
+`font-pairings-reference.csv` now carries `Self-Hosted Route` and
+`AI-Default Flag` columns. The fixtures consume that route instead of waiting on
+it — the precondition is met, not pending.

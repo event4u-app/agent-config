@@ -236,6 +236,70 @@ the loss is stated before the work happens.
 **Exit:** a port carrying the Claude-Design house aesthetic survives review and
 polish unchanged.
 
+## Phase 4 — `bench:ui`: the diff machinery, maintainer-side
+
+> Authorised 2026-08-01. The measurements in
+> `road-to-ui-track-integrity-followup` are blocked on a harness that scores
+> generated UI; this roadmap needs the same diff machinery for its own port
+> fixtures. Building it once, here, serves both — which is precisely the
+> "if such a harness lands for another reason, this roadmap unblocks for free"
+> clause, taken up rather than worked around.
+
+**The lock is not engaged, and that is a finding, not a permission.** The
+2026-06-28 lock forbids the package *shipping* a crawler, a Playwright runtime,
+or a font-bundler. `@playwright/test ^1.60.0` is already a **devDependency**, and
+`package.json` `files[]` ships neither `tests/` nor `internal/` — so a bench that
+lives beside `bench:ab` and `bench-quality-run` distributes nothing to a
+consumer. No reopening was required; the maintainer offered to lift the lock and
+the lift turned out to be unnecessary. The consumer-side verify stage stays
+gated, unchanged (see below).
+
+- [ ] `bench:ui` under `internal/bench/`, alongside the two existing benches.
+      Scores a produced UI against a provided `design.html` as ground truth.
+- [ ] **No model in the scoring path.** Four deterministic components, weights
+      **pre-registered before the first run**:
+      1. perceptual screenshot diff per breakpoint (375 / 768 / 1280) — SSIM or
+         pixelmatch **with a threshold**, never raw pixel equality, which would
+         measure font antialiasing rather than fidelity;
+      2. DOM-structure comparison of the component inventory;
+      3. token-mapping score (parseable — hex/spacing/radius resolved to tokens
+         or flagged);
+      4. interaction checklist driven by Playwright.
+- [ ] Rationale recorded with the harness, because it is the reason it exists in
+      this shape: an LLM judge for "is this frontend better" imports judge
+      variance and **circularity** — Opus grading Opus — into the one measurement
+      that has to decide Opus vs Sonnet. The port case is the single place a
+      ground truth already exists, so the question can be measured instead of
+      adjudicated.
+- [ ] Feed it from this roadmap's Phase-0 port fixtures; no second fixture set.
+- [ ] **Freeze the fixtures before the first scored run.** Commit them and
+      SHA-pin the set; record the pin next to the weights. A fixture set nudged
+      after a first bad run contaminates both measurements exactly the way a
+      threshold chosen after seeing the distribution does — the pre-registration
+      is worthless if the *inputs* stay editable while the outputs are watched.
+      Extensions are allowed and are a **new set, scored separately**, never a
+      revision of the pinned one.
+- [ ] **Make the fixtures render deterministically.** A screenshot diff is only
+      reproducible if the render environment is:
+      - **Browser pinned** — use the version the existing `@playwright/test`
+        devDependency resolves, and record it with the run. A browser bump is a
+        new scoring epoch, not a free upgrade.
+      - **Fonts embedded in the fixture, never hotlinked.** A
+        `fonts.googleapis.com` `@import` inside a `design.html` makes the SSIM
+        score a function of the CI runner's network and font fallback — the
+        harness would be measuring the runner, not the port. Self-host or
+        base64-embed the faces in the fixture itself.
+      - Animations and transitions disabled at capture; fixed viewport per
+        breakpoint; no `Date`/random content in the fixture markup.
+      The self-hosted route this needs already exists: the corpus carries a
+      `Self-Hosted Route` column (`font-pairings-reference.csv`) from the
+      completed webfont-delivery work, so the fixtures consume it rather than
+      waiting on it.
+- [ ] Wire as `bench:ui` so it is invocable the way the sibling benches are.
+
+**Exit:** a port produces a diff-distance score from four deterministic
+components, reproducibly, with no model in the scoring path.
+
 ## Gated follow-ups (not open work — do not start these)
 
 - **`--fidelity-source` suppression flag for `lint_design_slop`.**
@@ -247,11 +311,12 @@ polish unchanged.
   the 2026-06-28 lock, which requires evidence this roadmap does not have — more
   than one consumer, and a demonstration that the accept-side fix (Phase 2) left
   material value unclaimed.
-- **Playwright screenshot/DOM diff against the artifact as ground truth.**
-  **Gate:** same lock, plus the no-new-binary-dependency constraint. Note the
-  package already has an honest-degrade pattern for browser-dependent
-  verification; the missing piece is the runtime, and the runtime is the thing
-  the lock excludes.
+- **Consumer-side Playwright verify stage** — the agent rendering and diffing a
+  port inside the *consumer's* project. **Gate: unchanged.** This is what the
+  2026-06-28 lock excludes: it needs a browser runtime at the consumer, and the
+  package's honest-degrade pattern for browser-dependent verification stays the
+  answer. Not to be confused with the maintainer-side bench below, which the
+  lock does not touch.
 - **Tailwind v4→v3 translation, inline-CSS → scoped component CSS, standalone-JS
   → framework idiom.** Verified thin: total v4 knowledge is three CSV rows plus
   one parenthetical in `tailwind-engineer/SKILL.md:47`. **Gate:** Phase 2 ships
@@ -262,6 +327,15 @@ polish unchanged.
   generalises beyond this one rule.
 
 ## Non-goals (decided, with reasons)
+
+> **Amended 2026-08-01 — the one-question-harness objection is discharged, not
+> bypassed.** The predecessor's non-goal was "do not build a UI-quality harness
+> to answer one frontmatter question". `bench:ui` has three customers: this
+> roadmap's own acceptance criteria, the two parked measurements, and — after the
+> session — a standing regression watch for every future change to the UI skills,
+> which becomes diff-measurable instead of arguable. That is the verify stage of
+> a shipped feature, reused as a bench; the non-goal was aimed at a
+> single-purpose benchmark subsystem and still holds against one.
 
 - **No design runtime, no reimplementation of any external design tool.**
 - **No parallel generative pipeline** for the port case — the council rejected
