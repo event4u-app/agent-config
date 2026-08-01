@@ -1,5 +1,5 @@
 ---
-complexity: contained
+complexity: lightweight
 status: draft
 ---
 
