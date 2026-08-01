@@ -53,6 +53,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+
+      # `./scripts-run` execs node_modules/.bin/tsx. Without this step the job
+      # died at exit 127 ("No such file or directory") on EVERY scheduled run —
+      # so the only backstop for "release merged but never tagged/published"
+      # reported red for its own missing dependency, and a real drift would have
+      # been indistinguishable from the daily noise.
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
 
       - name: Detect release-published drift (read-only)
         run: ./scripts-run src/scripts/check_release_published --strict --check-npm --require-main
