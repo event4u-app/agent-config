@@ -26,8 +26,10 @@ review claims were already stale.
   exists to kill.**
 - `web-tree-sitter` + `tree-sitter-wasms` still ship as **core dependencies**
   for a permanently `enabled: false` engine.
-- 12 `src/domains/*/pack.yaml` still carry a `version:` line (the release-time
-  lockstep bump was fixed; the duplication was not).
+- 28 pack manifests still carry a `version:` line — 12 under `src/domains/` and
+  16 under `src/packs/`. The release-time lockstep bump was fixed for the release
+  PR's own diff; the duplicated field was not removed and still bumps upstream of
+  the cut (the 9.11.x fan-out touched all 16 `src/packs` manifests).
 - 287 skills.
 - `road-to-gates-that-can-fail`: 22 open / 3 done.
 

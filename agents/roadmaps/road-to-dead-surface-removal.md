@@ -28,9 +28,13 @@ is smaller afterwards.
   auto-matches."* It does nothing at runtime and no planned mechanism would change
   that. Its only effect is giving rule authors false confidence that an activation
   path exists.
-- **Per-pack `version:`:** 12 `src/domains/*/pack.yaml` files still carry a
-  `version:` line. The release-time lockstep bump (56 files per release) was fixed
-  — the duplicated field it bumped was not. Half a fix.
+- **Per-pack `version:`:** **28** pack manifests still carry a `version:` line —
+  12 under `src/domains/*/pack.yaml` and 16 under `src/packs/*/pack.yaml`. The
+  release-time lockstep bump was reported as fixed for the *release PR's own
+  diff*, but the duplicated field it bumped was never removed, and the bump still
+  happens upstream of the release cut: the 9.11.x fan-out merged into this branch
+  on 2026-08-01 touched all 16 `src/packs` manifests plus their READMEs in
+  lockstep. Half a fix, and the half that remains is still firing.
 
 > **Scope boundary.** This roadmap removes; it does not redesign. The engine's
 > re-open condition stays exactly as recorded (a consumer case the graph answers
@@ -73,8 +77,10 @@ is smaller afterwards.
 
 ## Phase 3 — Per-pack `version:` removal
 
-- [ ] Remove the `version:` field from all 12 `src/domains/*/pack.yaml` files;
-      the package version is the single version.
+- [ ] Remove the `version:` field from all 28 pack manifests — both
+      `src/domains/*/pack.yaml` (12) and `src/packs/*/pack.yaml` (16); the package
+      version is the single version. Check the pack READMEs that are bumped in the
+      same lockstep for a rendered version string with the same problem.
       *Verify:* pack schema validation passes without the field, any consumer of
       it reads the package version instead, and a release cut touches zero
       `pack.yaml` files.
@@ -93,7 +99,7 @@ is smaller afterwards.
 
 ## Surface delta
 
-**−2 core dependencies, −1 schema trigger type, −12 duplicated version fields,
+**−2 core dependencies, −1 schema trigger type, −28 duplicated version fields,
 −1 dead fallback path.** Zero additions. This is the only roadmap in this batch
 whose delta is unconditionally negative.
 
