@@ -1,0 +1,34 @@
+version: '3'
+
+# Port-fidelity benchmark — task entries.
+#
+# Phase 4 of `agents/roadmaps/archive/road-to-provided-artifact-honesty.md`.
+# Pre-registration, weights, thresholds, and the determinism contract live in
+# `internal/bench/ui/README.md`.
+#
+# Surfaces:
+#   task bench:ui                 — score every configured candidate
+#   task bench:ui -- --json       — same run, machine-readable
+#   task bench:ui:repin           — start a NEW scoring epoch (deliberate)
+#
+# The runner lives under internal/ rather than src/scripts/ because it imports
+# the @playwright/test devDependency and package.json files[] ships
+# src/scripts/ to consumers. See the README's "Why it lives in internal/".
+
+tasks:
+  bench:ui:
+    silent: true
+    desc: |
+      Score the port candidates against the provided design artifact held as
+      ground truth. Four deterministic components (SSIM per breakpoint, DOM
+      inventory, token recall, Playwright interaction checklist); no model in
+      the scoring path. Refuses to run on a fixture-lock mismatch.
+    cmd: npx tsx internal/bench/ui/run.ts {{.CLI_ARGS}}
+
+  bench:ui:repin:
+    silent: true
+    desc: |
+      Re-pin the fixture SHAs and score. This starts a NEW scoring epoch —
+      previous numbers are not comparable to the ones it produces. Use when
+      the fixture set genuinely changed, never to make a bad run go away.
+    cmd: npx tsx internal/bench/ui/run.ts --update-lock {{.CLI_ARGS}}

@@ -9,6 +9,7 @@
     "src/skills/**/scripts/**/*.ts",
     "src/agent-src/templates/scripts/**/*.ts",
     "tests/scripts/**/*.ts",
+    "internal/bench/ui/**/*.ts",
     "tests/parity/**/*.ts",
     "tests/spikes/**/*.ts",
     "tests/lib/**/*.ts",

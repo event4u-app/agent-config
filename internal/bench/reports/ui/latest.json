@@ -1,0 +1,141 @@
+{
+  "epoch": {
+    "browser": "chromium 148.0.7778.96",
+    "platform": "darwin-arm64",
+    "node": "v25.9.0"
+  },
+  "truth": "tests/design-artifacts/fixtures/design.html",
+  "weights": {
+    "pixel": 0.4,
+    "dom": 0.2,
+    "tokens": 0.2,
+    "interactions": 0.2
+  },
+  "reports": [
+    {
+      "candidate": "tests/design-artifacts/fixtures/port-faithful.html",
+      "components": {
+        "pixel": {
+          "score": 1,
+          "detail": {
+            "perBreakpoint": {
+              "375": 1,
+              "768": 1,
+              "1280": 1
+            }
+          }
+        },
+        "dom": {
+          "score": 0.9383,
+          "detail": {
+            "truthElements": 41,
+            "candidateElements": 40
+          }
+        },
+        "tokens": {
+          "score": 1,
+          "detail": {
+            "truthTokens": 22,
+            "missing": []
+          }
+        },
+        "interactions": {
+          "score": 1,
+          "detail": {
+            "results": [
+              {
+                "name": "screen switch",
+                "ok": true
+              },
+              {
+                "name": "disclosure toggle",
+                "ok": true
+              },
+              {
+                "name": "subscribe submit",
+                "ok": true
+              },
+              {
+                "name": "rule-draw keyframe",
+                "ok": true
+              }
+            ]
+          }
+        }
+      },
+      "weighted": 0.9877
+    },
+    {
+      "candidate": "tests/design-artifacts/fixtures/port-regenerated.html",
+      "components": {
+        "pixel": {
+          "score": 0.71,
+          "detail": {
+            "perBreakpoint": {
+              "375": 0.5455,
+              "768": 0.7467,
+              "1280": 0.8378
+            }
+          }
+        },
+        "dom": {
+          "score": 0.6333,
+          "detail": {
+            "truthElements": 41,
+            "candidateElements": 19
+          }
+        },
+        "tokens": {
+          "score": 0.3182,
+          "detail": {
+            "truthTokens": 22,
+            "missing": [
+              "#2b2622",
+              "#6d6055",
+              "#a44d30",
+              "#c96442",
+              "#e3d7c6",
+              "#ece4d8",
+              "#f5f1ea",
+              "1.25rem",
+              "1.5625rem",
+              "1.953rem",
+              "1rem",
+              "220px",
+              "240px",
+              "3px",
+              "880px"
+            ]
+          }
+        },
+        "interactions": {
+          "score": 0.25,
+          "detail": {
+            "results": [
+              {
+                "name": "screen switch",
+                "ok": false,
+                "error": "locator.click: Timeout 2000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[aria-controls=\\'screen-archive\\']').first()\u001b[22m\n"
+              },
+              {
+                "name": "disclosure toggle",
+                "ok": false,
+                "error": "locator.click: Timeout 2000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#disclosure-toggle').first()\u001b[22m\n"
+              },
+              {
+                "name": "subscribe submit",
+                "ok": true
+              },
+              {
+                "name": "rule-draw keyframe",
+                "ok": false,
+                "error": "no CSS rule matching @keyframes rule-draw"
+              }
+            ]
+          }
+        }
+      },
+      "weighted": 0.5243
+    }
+  ]
+}

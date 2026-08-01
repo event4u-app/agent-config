@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger</title>
+<!--
+  Candidate B for `bench:ui` — the REGENERATED build: what the pipeline
+  produced from the five-key brief before this roadmap, reconstructed from
+  the Phase-0 measurement rather than imagined.
+
+  Every difference here traces to a measured cause, not to a strawman:
+  · neutral slate palette instead of cream/terracotta — the anti-slop
+    corrective-direction licence (existing-ui-audit, pre-fix) acting on
+    slop-c5-cream-palette;
+  · serif display face dropped — `layout` is prose, so the type story never
+    reached the brief;
+  · one screen instead of two, disclosure gone — the brief has no slot for a
+    screen inventory;
+  · fixed three-column grid instead of the source's auto-fit — a layout
+    default, not a read value;
+  · no keyframe, no hover transition — easing is outside the five keys;
+  · microcopy IS carried verbatim, because that is the one thing the brief
+    does lock.
+
+  This file exists so the harness has to discriminate. A scorer that ranks
+  this the same as port-faithful.html is broken, and the bench asserts that
+  separation rather than trusting it.
+
+  Same determinism contract: no network reference, generic families, no
+  Date, no Math.random.
+-->
+<style>
+  :root {
+    --bg:        #ffffff;
+    --surface:   #f8fafc;
+    --border:    #e2e8f0;
+    --text:      #0f172a;
+    --muted:     #64748b;
+    --accent:    #2563eb;
+    --accent-d:  #1d4ed8;
+    --radius:    8px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 64px 24px;
+  }
+
+  .hero { text-align: center; margin-bottom: 48px; }
+
+  .hero h1 {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
+  }
+
+  .hero p {
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto 24px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+  }
+
+  .card h3 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+  .card p  { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .cta {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 48px;
+  }
+
+  .cta input {
+    width: 320px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font: inherit;
+  }
+
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .btn[disabled] { opacity: 0.5; cursor: default; }
+
+  .receipt { text-align: center; margin-top: 16px; color: var(--accent-d); font-weight: 600; }
+  .receipt[hidden] { display: none; }
+
+  footer {
+    margin-top: 64px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <section class="hero">
+    <h1>Everything you signed, in one place</h1>
+    <p>Ledger keeps a plain record of what was agreed, when, and by whom. No
+      dashboards you have to learn — a list you can read.</p>
+  </section>
+
+  <div class="grid">
+    <article class="card">
+      <h3>Signed</h3>
+      <p>Twelve agreements closed this quarter, each with its countersignature attached.</p>
+    </article>
+    <article class="card">
+      <h3>Awaiting</h3>
+      <p>Three documents are out for signature. Ledger nudges on day four, not day one.</p>
+    </article>
+    <article class="card">
+      <h3>Expiring</h3>
+      <p>Two renewals fall due before March. Both are flagged in the archive.</p>
+    </article>
+  </div>
+
+  <form class="cta" id="subscribe-form" novalidate>
+    <input id="subscribe-email" name="email" type="email" placeholder="you@example.com" required aria-label="Email address">
+    <button class="btn" id="subscribe-submit" type="submit">Send me the summary</button>
+  </form>
+  <p class="receipt" id="subscribe-receipt" hidden role="status">Filed. The Monday summary is on its way.</p>
+
+  <footer>Ledger — a record, not a workflow.</footer>
+
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById('subscribe-form');
+    var submit = document.getElementById('subscribe-submit');
+    var receipt = document.getElementById('subscribe-receipt');
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      submit.disabled = true;
+      receipt.hidden = false;
+    });
+  })();
+</script>
+</body>
+</html>

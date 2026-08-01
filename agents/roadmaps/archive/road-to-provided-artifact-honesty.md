@@ -315,9 +315,24 @@ consumer. No reopening was required; the maintainer offered to lift the lock and
 the lift turned out to be unnecessary. The consumer-side verify stage stays
 gated, unchanged (see below).
 
-- [ ] `bench:ui` under `internal/bench/`, alongside the two existing benches.
+- [x] `bench:ui` under `internal/bench/`, alongside the two existing benches.
       Scores a produced UI against a provided `design.html` as ground truth.
-- [ ] **No model in the scoring path.** Four deterministic components, weights
+      <!-- internal/bench/ui/{README.md,bench.config.json,run.ts,fixtures.lock.json}. The runner stays under internal/ rather than src/scripts/ on purpose: files[] ships src/scripts/ to consumers, and this imports the @playwright/test devDependency — shipping it would put a broken import in a consumer install AND be the browser runtime the lock excludes. -->
+      <!-- Zero new dependencies: PNG decoding and SSIM run inside Chromium via canvas, so no image-decoding package was added. -->
+      <!-- Correction to this step's premise: the sibling runners live in src/scripts/, but none of them imports Playwright, so "alongside" holds for the bench directory and not for the runner path. -->
+
+**First scored run (chromium 148.0.7778.96, darwin-arm64):**
+
+| candidate | weighted | pixel | dom | tokens | interactions |
+|---|---:|---:|---:|---:|---:|
+| `port-faithful.html` | **0.9877** | 1.0000 | 0.9383 | 1.0000 | 1.0000 |
+| `port-regenerated.html` | **0.5243** | 0.7100 | 0.6333 | 0.3182 | 0.2500 |
+
+Separation **0.4634** against the pre-registered floor of 0.25. The regenerated
+build — reconstructed from the Phase-0 measurement, not imagined — fails three
+of four interactions and carries 7 of 22 of the source's token values. That is
+the measured shape of "rebuilt from a five-key brief".
+- [x] **No model in the scoring path.** Four deterministic components, weights
       **pre-registered before the first run**:
       1. perceptual screenshot diff per breakpoint (375 / 768 / 1280) — SSIM or
          pixelmatch **with a threshold**, never raw pixel equality, which would
@@ -326,21 +341,22 @@ gated, unchanged (see below).
       3. token-mapping score (parseable — hex/spacing/radius resolved to tokens
          or flagged);
       4. interaction checklist driven by Playwright.
-- [ ] Rationale recorded with the harness, because it is the reason it exists in
+- [x] Rationale recorded with the harness, because it is the reason it exists in
       this shape: an LLM judge for "is this frontend better" imports judge
       variance and **circularity** — Opus grading Opus — into the one measurement
       that has to decide Opus vs Sonnet. The port case is the single place a
       ground truth already exists, so the question can be measured instead of
       adjudicated.
-- [ ] Feed it from this roadmap's Phase-0 port fixtures; no second fixture set.
-- [ ] **Freeze the fixtures before the first scored run.** Commit them and
+- [x] Feed it from this roadmap's Phase-0 port fixtures; no second fixture set.
+      <!-- Ground truth is the Phase-0 design.html itself; the two candidates are ports OF it, so the set stayed one set. port-faithful.html is deliberately NOT a byte-copy — it is the control that keeps the DOM component honest about restructuring, which is why class names are excluded from the signature. -->
+- [x] **Freeze the fixtures before the first scored run.** Commit them and
       SHA-pin the set; record the pin next to the weights. A fixture set nudged
       after a first bad run contaminates both measurements exactly the way a
       threshold chosen after seeing the distribution does — the pre-registration
       is worthless if the *inputs* stay editable while the outputs are watched.
       Extensions are allowed and are a **new set, scored separately**, never a
       revision of the pinned one.
-- [ ] **Make the fixtures render deterministically.** A screenshot diff is only
+- [x] **Make the fixtures render deterministically.** A screenshot diff is only
       reproducible if the render environment is:
       - **Browser pinned** — use the version the existing `@playwright/test`
         devDependency resolves, and record it with the run. A browser bump is a
@@ -356,7 +372,8 @@ gated, unchanged (see below).
       `Self-Hosted Route` column (`font-pairings-reference.csv`) from the
       completed webfont-delivery work, so the fixtures consume it rather than
       waiting on it.
-- [ ] Wire as `bench:ui` so it is invocable the way the sibling benches are.
+- [x] Wire as `bench:ui` so it is invocable the way the sibling benches are.
+      <!-- taskfiles/bench-ui.yml, included flattened from Taskfile.yml like bench-ab: `task bench:ui`, plus `task bench:ui:repin` for the deliberate new-epoch path. -->
 
 **Exit:** a port produces a diff-distance score from four deterministic
 components, reproducibly, with no model in the scoring path.

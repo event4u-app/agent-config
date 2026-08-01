@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger</title>
+<!--
+  Candidate A for `bench:ui` — a FAITHFUL port of design.html.
+
+  Deliberately not a copy: the markup is restructured the way a real port
+  would be (semantic sections, class names in the target project's idiom,
+  the inline script rewritten), while every design decision is carried over
+  verbatim. If the harness scores a byte-copy and a real port the same way it
+  is measuring the wrong thing, so this file is the control that keeps the
+  four components honest about restructuring.
+
+  Same determinism contract as design.html: no network reference, generic
+  font families, no Date, no Math.random, keyframe opt-in.
+-->
+<style>
+  :root {
+    --cream:        #f5f1ea;
+    --cream-deep:   #ece4d8;
+    --ink:          #2b2622;
+    --ink-soft:     #6d6055;
+    --terracotta:   #c96442;
+    --terracotta-d: #a44d30;
+    --rule:         #e3d7c6;
+
+    --step-0: 1rem;
+    --step-1: 1.25rem;
+    --step-2: 1.5625rem;
+    --step-3: 1.953rem;
+
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 40px;
+
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: sans-serif;
+    font-size: var(--step-0);
+    line-height: 1.55;
+  }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .page__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: var(--space-2);
+  }
+
+  .brand {
+    font-family: serif;
+    font-size: var(--step-3);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .brand em { color: var(--terracotta); font-style: normal; }
+
+  .switcher { display: flex; gap: var(--space-1); }
+
+  .switcher__btn {
+    appearance: none;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink-soft);
+    font: inherit;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .switcher__btn[aria-selected="true"] {
+    background: var(--terracotta);
+    border-color: var(--terracotta);
+    color: var(--cream);
+  }
+
+  .view[hidden] { display: none; }
+
+  .view > h2 {
+    font-family: serif;
+    font-size: var(--step-2);
+    font-weight: 400;
+    margin: var(--space-4) 0 var(--space-2);
+  }
+
+  .intro {
+    color: var(--ink-soft);
+    max-width: 58ch;
+    margin: 0 0 var(--space-3);
+  }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-2);
+  }
+
+  .tile {
+    background: var(--cream-deep);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+  }
+
+  .tile h3 { margin: 0 0 var(--space-1); font-size: var(--step-1); font-weight: 600; }
+  .tile p  { margin: 0; color: var(--ink-soft); }
+
+  .more {
+    margin-top: var(--space-3);
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-3);
+  }
+
+  .more__btn {
+    appearance: none;
+    border: 0;
+    background: none;
+    color: var(--terracotta-d);
+    font: inherit;
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .more__panel[hidden] { display: none; }
+  .more__panel { margin-top: var(--space-2); color: var(--ink-soft); }
+
+  .signup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-top: var(--space-3);
+  }
+
+  .signup input {
+    flex: 1 1 240px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .btn {
+    appearance: none;
+    border: 1px solid var(--terracotta);
+    background: var(--terracotta);
+    color: var(--cream);
+    font: inherit;
+    font-weight: 600;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .btn:hover { background: var(--terracotta-d); border-color: var(--terracotta-d); }
+  .btn[disabled] { opacity: 0.55; cursor: default; }
+
+  .signup__done {
+    margin-top: var(--space-2);
+    color: var(--terracotta-d);
+    font-weight: 600;
+  }
+  .signup__done[hidden] { display: none; }
+
+  .page__foot {
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-2);
+    color: var(--ink-soft);
+  }
+
+  @keyframes rule-draw {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  .accent-rule {
+    height: 3px;
+    background: var(--terracotta);
+    transform-origin: left center;
+    transform: scaleX(1);
+  }
+
+  .accent-rule.is-animating { animation: rule-draw 600ms ease-out both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .accent-rule.is-animating { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="page__head">
+    <h1 class="brand">Led<em>ger</em></h1>
+    <nav class="switcher" aria-label="Screens">
+      <button class="switcher__btn" id="tab-overview" type="button" aria-selected="true"  aria-controls="screen-overview">Overview</button>
+      <button class="switcher__btn" id="tab-archive"  type="button" aria-selected="false" aria-controls="screen-archive">Archive</button>
+    </nav>
+  </header>
+
+  <div class="accent-rule" id="accent-rule"></div>
+
+  <section class="view" id="screen-overview" aria-labelledby="tab-overview">
+    <h2>Everything you signed, in one place</h2>
+    <p class="intro">Ledger keeps a plain record of what was agreed, when, and by
+      whom. No dashboards you have to learn — a list you can read.</p>
+
+    <div class="tiles">
+      <article class="tile">
+        <h3>Signed</h3>
+        <p>Twelve agreements closed this quarter, each with its countersignature attached.</p>
+      </article>
+      <article class="tile">
+        <h3>Awaiting</h3>
+        <p>Three documents are out for signature. Ledger nudges on day four, not day one.</p>
+      </article>
+      <article class="tile">
+        <h3>Expiring</h3>
+        <p>Two renewals fall due before March. Both are flagged in the archive.</p>
+      </article>
+    </div>
+
+    <div class="more">
+      <button class="more__btn" id="disclosure-toggle" type="button" aria-expanded="false" aria-controls="disclosure-body">
+        How Ledger stores your documents
+      </button>
+      <div class="more__panel" id="disclosure-body" hidden>
+        <p>Documents stay in your own storage. Ledger keeps the index, the
+          signature trail, and the dates — never a second copy of the file.</p>
+      </div>
+    </div>
+
+    <form class="signup" id="subscribe-form" novalidate>
+      <input id="subscribe-email" name="email" type="email" placeholder="you@example.com" required aria-label="Email address">
+      <button class="btn" id="subscribe-submit" type="submit">Send me the summary</button>
+    </form>
+    <p class="signup__done" id="subscribe-receipt" hidden role="status">Filed. The Monday summary is on its way.</p>
+  </section>
+
+  <section class="view" id="screen-archive" aria-labelledby="tab-archive" hidden>
+    <h2>Archive</h2>
+    <p class="intro">Closed agreements, newest first. Nothing here is editable —
+      the archive is the record, not the workspace.</p>
+
+    <div class="tiles">
+      <article class="tile">
+        <h3>Q4 supplier terms</h3>
+        <p>Countersigned 14 November. Renews automatically unless cancelled in February.</p>
+      </article>
+      <article class="tile">
+        <h3>Studio lease</h3>
+        <p>Countersigned 2 October. Three years, with a break clause at eighteen months.</p>
+      </article>
+    </div>
+  </section>
+
+  <footer class="page__foot">
+    Ledger — a record, not a workflow.
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var views = [
+      ['tab-overview', 'screen-overview'],
+      ['tab-archive', 'screen-archive']
+    ].map(function (pair) {
+      return { tab: document.getElementById(pair[0]), view: document.getElementById(pair[1]) };
+    });
+
+    views.forEach(function (current) {
+      current.tab.addEventListener('click', function () {
+        views.forEach(function (other) {
+          var on = other === current;
+          other.tab.setAttribute('aria-selected', String(on));
+          other.view.hidden = !on;
+        });
+      });
+    });
+
+    var moreBtn = document.getElementById('disclosure-toggle');
+    var morePanel = document.getElementById('disclosure-body');
+    moreBtn.addEventListener('click', function () {
+      var open = moreBtn.getAttribute('aria-expanded') === 'true';
+      moreBtn.setAttribute('aria-expanded', String(!open));
+      morePanel.hidden = open;
+    });
+
+    var form = document.getElementById('subscribe-form');
+    var submit = document.getElementById('subscribe-submit');
+    var done = document.getElementById('subscribe-receipt');
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      submit.disabled = true;
+      done.hidden = false;
+    });
+  })();
+</script>
+</body>
+</html>
