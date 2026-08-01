@@ -65,6 +65,19 @@ distinction that may well be deliberate.
       needs a fixture set or a scorer of its own.
 - [ ] The four component weights and the Measurement-B tolerance are fixed and
       written down **before** the first scored run.
+- [ ] **The fixture set is committed and SHA-pinned** before Measurement A
+      starts, with the pin recorded beside the weights. Pre-registering the
+      scoring while leaving the *inputs* editable would contaminate both
+      measurements exactly as a post-hoc threshold does. Any fixture added later
+      forms a new set, scored separately — never a revision of the pinned one.
+- [ ] **The render environment is pinned and the fixtures render
+      deterministically** — browser version from the `@playwright/test`
+      devDependency recorded with the run, fonts embedded in the fixtures rather
+      than hotlinked, animations disabled at capture. A `fonts.googleapis.com`
+      import inside a fixture would make the SSIM score a function of the CI
+      runner's network and font fallback, i.e. the harness would measure the
+      runner. The self-hosted route needed for this already shipped with the
+      webfont-delivery work.
 - [ ] Confirm the cost asymmetry still holds of the pipeline: builders run first,
       run longest, and re-run up to `POLISH_CEILING` times, so raising them is the
       expensive direction. If the pipeline shape changed, re-derive it before

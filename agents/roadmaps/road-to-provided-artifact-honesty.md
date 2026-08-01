@@ -272,6 +272,29 @@ gated, unchanged (see below).
       ground truth already exists, so the question can be measured instead of
       adjudicated.
 - [ ] Feed it from this roadmap's Phase-0 port fixtures; no second fixture set.
+- [ ] **Freeze the fixtures before the first scored run.** Commit them and
+      SHA-pin the set; record the pin next to the weights. A fixture set nudged
+      after a first bad run contaminates both measurements exactly the way a
+      threshold chosen after seeing the distribution does — the pre-registration
+      is worthless if the *inputs* stay editable while the outputs are watched.
+      Extensions are allowed and are a **new set, scored separately**, never a
+      revision of the pinned one.
+- [ ] **Make the fixtures render deterministically.** A screenshot diff is only
+      reproducible if the render environment is:
+      - **Browser pinned** — use the version the existing `@playwright/test`
+        devDependency resolves, and record it with the run. A browser bump is a
+        new scoring epoch, not a free upgrade.
+      - **Fonts embedded in the fixture, never hotlinked.** A
+        `fonts.googleapis.com` `@import` inside a `design.html` makes the SSIM
+        score a function of the CI runner's network and font fallback — the
+        harness would be measuring the runner, not the port. Self-host or
+        base64-embed the faces in the fixture itself.
+      - Animations and transitions disabled at capture; fixed viewport per
+        breakpoint; no `Date`/random content in the fixture markup.
+      The self-hosted route this needs already exists: the corpus carries a
+      `Self-Hosted Route` column (`font-pairings-reference.csv`) from the
+      completed webfont-delivery work, so the fixtures consume it rather than
+      waiting on it.
 - [ ] Wire as `bench:ui` so it is invocable the way the sibling benches are.
 
 **Exit:** a port produces a diff-distance score from four deterministic

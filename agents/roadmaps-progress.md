@@ -6,10 +6,10 @@
 
 ## Overall
 
-**48 / 213 steps done · 23%**
+**48 / 215 steps done · 22%**
 
 ```text
-█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   23%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
 ```
 
 ## Open roadmaps
@@ -24,7 +24,7 @@
 | 6 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 8 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 9 | [road-to-provided-artifact-honesty.md](roadmaps/road-to-provided-artifact-honesty.md) | 5 | 27 | 27 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-provided-artifact-honesty.md](roadmaps/road-to-provided-artifact-honesty.md) | 5 | 29 | 29 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -188,7 +188,7 @@ _1 blocker resolved._
 
 ### [road-to-provided-artifact-honesty.md](roadmaps/road-to-provided-artifact-honesty.md)
 
-**Road to provided-artifact honesty — a handed-over design is either honoured or refused, never silently regenerated** — 0 / 27 done (0%)
+**Road to provided-artifact honesty — a handed-over design is either honoured or refused, never silently regenerated** — 0 / 29 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -196,7 +196,7 @@ _1 blocker resolved._
 | 1 | Routing: the rule fires for the prompts people actually write | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Refuse honestly, or honour a supplied contract | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 3 | Precedence: a provided spec is not an impulse | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | `bench:ui`: the diff machinery, maintainer-side | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | `bench:ui`: the diff machinery, maintainer-side | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 
