@@ -48,8 +48,8 @@
   taste on every port. On the **Port a provided artifact** branch
   ([`design-artifact-lifecycle`](../../../../docs/contracts/design-artifact-lifecycle.md))
   the audit reads `motion.durations` and `motion.easings` as the answer. The
-  `_meta` rule above still holds — `motion._meta.detected_libs` informs the
-  human and never becomes a token.
+  extraction-only marking above still holds: `motion._meta.detected_libs`
+  informs the human and never becomes a token.
 
 ## Trust posture (mandatory)
 
