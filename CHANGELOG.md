@@ -244,6 +244,58 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.11.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.12.0](https://github.com/event4u-app/agent-config/compare/9.11.0...9.12.0) (2026-08-01)
+
+### Features
+
+* **corpus:** ship the delivery route and the T7 conflict as data ([3f84502](https://github.com/event4u-app/agent-config/commit/3f8450281ded70ada9283ebaf2e72680a37aa21d))
+* **typography:** branch on hosting mode instead of hard-wiring the import ([47385a1](https://github.com/event4u-app/agent-config/commit/47385a1acee8c9876c187b7ead27cdd23d77f025))
+* **design:** make third-party asset delivery self-hosted by default ([dff1a4c](https://github.com/event4u-app/agent-config/commit/dff1a4c9a51f94fd01e186f98c0e9691378e109d))
+* **work-engine:** overlay composition replaces lane choice ([aef95a6](https://github.com/event4u-app/agent-config/commit/aef95a6a397cb064876379d5cdee0895f981726c))
+* **ci:** settle CI after a push, run preflight before one, confine the copy ([aec0115](https://github.com/event4u-app/agent-config/commit/aec011585ab89e7de2a1789cb3fbdfbb47430902))
+* **skills:** ui-apply-generic — the default lane becomes a real executor ([0930705](https://github.com/event4u-app/agent-config/commit/0930705745fda7eae14dc32a271cb41b8177e381))
+* **work-engine:** multi-axis stack detection ([36b33da](https://github.com/event4u-app/agent-config/commit/36b33dac8a67c627b8e6b863889202768fb23e3e))
+* **ci:** fail the build when the installer can reach a module-level process.exit ([a52c2ad](https://github.com/event4u-app/agent-config/commit/a52c2ad087b0ad7b4dc0eed28a91f70174afc04f))
+
+### Bug Fixes
+
+* **roadmap:** drop an illegal status value from the archived local-ci-trust plan ([c60745e](https://github.com/event4u-app/agent-config/commit/c60745e9cc6e0012437e27849f9e64e5b6368556))
+* **ci:** give release-drift its dependencies so the gate can run at all ([4262f34](https://github.com/event4u-app/agent-config/commit/4262f34df52a9fd092103bdb455b748efa2e5e00))
+* **ci:** make the kernel-prefix gate able to fail, then re-anchor it ([154d366](https://github.com/event4u-app/agent-config/commit/154d36619cac7441c21001fa4c3c1387a54129ce))
+* **design-tokens:** drop the host allow-list that silenced real findings ([4128875](https://github.com/event4u-app/agent-config/commit/4128875432da79e61cc00f7487af09a152c283aa))
+* **skills:** ui-apply-generic ships a consumer-reachable invocation ([98ca19a](https://github.com/event4u-app/agent-config/commit/98ca19aa622582e4c4c85b2d9945030ce038d665))
+* **hooks:** the roadmap gate names its real cause ([1a49867](https://github.com/event4u-app/agent-config/commit/1a49867b41b6eeaa70b45c3d8479a9d9b1ea2399))
+* **install:** keep the projection CLI out of the consumer installer bundle ([802b8fd](https://github.com/event4u-app/agent-config/commit/802b8fd88f1b1fffddbb0e0040359be50d7f5fd2))
+* **install:** scope rules on the CLI global path, not only in the wizard ([9535c57](https://github.com/event4u-app/agent-config/commit/9535c574be9b07801b0721e2625e1bff2cdb2bc2))
+
+### Documentation
+
+* **roadmap:** pre-registration covers the inputs, not only the scoring ([ca90448](https://github.com/event4u-app/agent-config/commit/ca904481823ceed9590f71b685e1621447edacec))
+* **roadmap:** unblock the UI measurements — bench:ui as the port verify stage ([cf9fbf4](https://github.com/event4u-app/agent-config/commit/cf9fbf4ce708d19f679b427aa3856d738cb76bff))
+* **adr:** record one owner for third-party webfont delivery ([dd20e14](https://github.com/event4u-app/agent-config/commit/dd20e148290ecbcad5ba5ac9915c1b5c927dfdce))
+* **roadmap:** merge the coverage benchmark into the tier follow-up ([d08f464](https://github.com/event4u-app/agent-config/commit/d08f46499eeb26af423cd7ae8f34a07cf8a7e9f0))
+* **roadmap:** artefact-count reproducibility as a draft candidate ([850e2c6](https://github.com/event4u-app/agent-config/commit/850e2c689579187b64a481feb2988c2a927d4130))
+* **roadmap:** universal stack coverage — refusal is not coverage ([0bdc726](https://github.com/event4u-app/agent-config/commit/0bdc726ee1ba3a30ff9196e659c14ecce87e12b8))
+* **roadmap:** close road-to-consistent-rule-scoping with its execution notes ([4ca0640](https://github.com/event4u-app/agent-config/commit/4ca0640b30dff0f3a4059083c577622fbb4bbc23))
+
+### Tests
+
+* **work-engine:** baseline the shapes the flat stack label cannot express ([337e4ff](https://github.com/event4u-app/agent-config/commit/337e4ff5eff91439b72a01095329770f6e85eb69))
+* **install:** pin the CLI global deploy against the wizard plan ([5fa64a3](https://github.com/event4u-app/agent-config/commit/5fa64a363cd1d38976cd4ba6583ea1ce90b81238))
+
+### Build
+
+* **install:** refresh the tracked dist/install output for the wizard-plan change ([a2690f3](https://github.com/event4u-app/agent-config/commit/a2690f3f1b9b123f00f505c12f9c9a68d16d2d14))
+
+### Chores
+
+* **funding:** add the sponsor button and say plainly what it is ([a219af6](https://github.com/event4u-app/agent-config/commit/a219af6f68d0fa82291272a726ed81dd2331a7e5))
+* **roadmaps:** archive road-to-webfont-delivery-ownership ([ebfa91d](https://github.com/event4u-app/agent-config/commit/ebfa91dffd260db55d187a71b7c8144eb574596c))
+* **roadmaps:** regenerate the dashboard after the merge ([82c8a45](https://github.com/event4u-app/agent-config/commit/82c8a45b2b2a3f05da1feaf516b6a448ee73fcfe))
+* **roadmaps:** archive the completed rule-scoping roadmap ([5bedc17](https://github.com/event4u-app/agent-config/commit/5bedc17826d26612d1b7db52ded5d5bd2dd694d5))
+
+Tests: 9819 (+77 since 9.11.0)
+
 ## [9.11.0](https://github.com/event4u-app/agent-config/compare/9.10.0...9.11.0) (2026-07-31)
 
 ### Features
