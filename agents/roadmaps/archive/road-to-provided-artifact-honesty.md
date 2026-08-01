@@ -135,103 +135,164 @@ inside the lock:
 
 ## Phase 0 — Measure the failure before changing behaviour (blocking)
 
-- [ ] Fixture `daf-port-baseline`: a standalone `design.html` (Claude-Design-style
+- [x] Fixture `daf-port-baseline`: a standalone `design.html` (Claude-Design-style
       cream/terracotta palette, two screens, three interactions, one keyframe) is
       handed over with an explicit "build this 1:1" instruction. Record what the
       pipeline actually does — which branch it classifies as, whether
       `design-fidelity` fired, what survived, what was regenerated.
-- [ ] Fixture `daf-port-trigger-de`: the same artifact with a German prompt
+      <!-- tests/design-artifacts/fixtures/design.html + fixture entry in eval-fixtures.md. -->
+- [x] Fixture `daf-port-trigger-de`: the same artifact with a German prompt
       ("setz das 1:1 um", "übernimm das Design") and, separately, with **no**
       keyword at all — just the attached HTML. Expected today: the rule does not
       fire. This measures the routing half independently of the port half.
-- [ ] Fixture `daf-slop-vs-provided`: run the anti-slop scan over a faithful port
+      <!-- Deterministic, not rubric: tests/scripts/design_fidelity_routing.test.ts, ROUTING_MATRIX (14 rows) over the shipped matcher `router_telemetry.trigger_matches`. -->
+- [x] Fixture `daf-slop-vs-provided`: run the anti-slop scan over a faithful port
       of that artifact. Expected today: `slop-c5-cream-palette` fires and the
       polish loop is free to act on it. This is the regression witness for
       Phase 3.
-- [ ] Fixture `daf-port-interactions`: assert whether the three handlers and the
+- [x] Fixture `daf-port-interactions`: assert whether the three handlers and the
       keyframe survive, and whether anything reports the ones that did not.
       Expected today: no inventory exists, so losses are silent.
-- [ ] Run all four against the current tree and write the baseline into this
+- [x] Run all four against the current tree and write the baseline into this
       roadmap. If any shows the pipeline already behaves acceptably, that lane's
       later phase is cut rather than built.
+
+### Measured baseline — 2026-08-01, `origin/main` @ `4840318af`
+
+Full per-fixture evidence with file:line citations lives with the fixtures
+([`eval-fixtures.md` § Provided-artifact port fixtures](../../tests/design-artifacts/eval-fixtures.md));
+the four headline before-values:
+
+| lane | before-value | measured how |
+|---|---|---|
+| **branch** | No port branch exists. A handed-over artifact is classified as a **new design** by elimination (only that branch contains Build, and it mandates variation planning) and the engine independently takes the greenfield path. | `design-artifact-lifecycle.md:57-63`, `audit.ts:104`, `index.ts:59-69` |
+| **carrier** | Zero channels. The brief is five fixed keys; no state field carries a source artifact, token map, interaction inventory, or asset manifest. `apply.ts` never reads `state.ui_design` at all. | `design.ts:21-27`, `:141-168`, `apply.ts:81-94` |
+| **routing** | 8 of 14 matrix rows red. `"build this 1:1"` misses because the phrase `build this design` needs the literal token `design`; no German surface exists; no `file_pattern` trigger was declared. | `ROUTING_MATRIX`, `router_telemetry.ts:186-199` |
+| **slop** | Two artifact-covered findings, neither marked as such: `slop-c5-cream-palette` (P3) and `slop-cp1-em-dash` (P2, the artifact's own copy). The polish loop cannot see either — it knows only `a11y_violation` and `token_violation`. | `lint_design_slop --json`, `polish.ts:28`, `:31` |
+
+**No lane came back acceptable, so no phase is cut.** Two roadmap premises were
+falsified by the measurement and are corrected in place rather than worked
+around:
+
+1. **The rule schema does support a path trigger.** Phase 1's third step
+   assumed "only `keyword`/`phrase`". `rule.schema.json` also accepts
+   `file_pattern`, `path_prefix`, `intent`, and `command`, and the matcher
+   implements `file_pattern` as fnmatch over `open_files`
+   (`router_telemetry.ts:218-229`). The keyword-free class is therefore
+   reachable for the conventional handover filename; what stays unreachable
+   **by design** is a generic "any attached HTML" trigger.
+2. **The damage path is not the linter.** The anti-slop scanner has no call
+   site in the work engine, so Phase 3's target is the *prose* that authorises
+   a corrective direction change (`existing-ui-audit/SKILL.md:263-273`,
+   `fe-design/SKILL.md:337-339`), not a suppression flag. This is the evidence
+   the "`--fidelity-source` flag" gated follow-up asked for, and it points the
+   other way: keep the flag gated.
 
 **Exit:** the port failure is a measured before-value, not an anecdote.
 
 ## Phase 1 — Routing: the rule fires for the prompts people actually write
 
-- [ ] Extend `design-fidelity` triggers: keywords `handoff`, `artifact`,
+- [x] Extend `design-fidelity` triggers: keywords `handoff`, `artifact`,
       `Claude Design`; phrase `design.html`. Keep the set tight — a trigger that
       fires on every mention of "artifact" is worse than the gap.
-- [ ] Add German trigger phrases ("setz … um", "baue … nach", "übernimm das
+      <!-- `handoff` + `Claude Design` land as keywords. `artifact` deliberately does NOT: the near-miss row `near-artifacts-plural-unrelated` ("the CI build artifact is 40 MB") is exactly the failure the step warns about, so it ships as the phrases `attached artifact` / `provided artifact` instead. -->
+- [x] Add German trigger phrases ("setz … um", "baue … nach", "übernimm das
       Design", "1:1"). Note the general gap while you are here: the package's
       trigger vocabulary is English-only across the board, and the maintainer
       prompts in German. Do **not** solve that globally in this roadmap — record
       it as the gated follow-up below.
-- [ ] Decide whether an attached standalone HTML file can itself be a trigger.
+      <!-- Shipped: `1:1 um`, `1:1 nach`, `übernimm das design`, `baue das nach`, `bau das nach`. Bare `1:1` was rejected — it collides with one-on-one meetings, which this package has a skill for (`one-on-one-cadence`). Global gap measured and left to the gated follow-up, with the roadmap's "English-only across the board" framing corrected: of 102 rules carrying a `triggers:` block, 3 already ship German surfaces (`question-not-instruction`, `user-interrupt-priority`, `artifact-drafting-protocol`) — this rule makes 4. The gap is real but partial, and the three precedents are the shape a global pass would generalise. -->
+- [x] Decide whether an attached standalone HTML file can itself be a trigger.
       The rule schema currently supports only `keyword`/`phrase`; if a path or
       attachment trigger does not exist, say so plainly rather than pretending
       the keyword list covers the no-keyword case.
-- [ ] `daf-port-trigger-de` flips to green for all three prompt classes
+      <!-- The premise is false and is corrected in Phase 0's baseline: the schema also accepts `file_pattern` (fnmatch over `open_files`, `router_telemetry.ts:218-229`). Shipped `file_pattern: "*design.html"` — anchored `^(?:…)$`, so it matches any path ending in the conventional handover filename. `*.html` was rejected: it fires on every HTML edit in every project. A handover under another filename still needs one word in the prompt, and that limit is stated in the rule body rather than papered over. -->
+- [x] `daf-port-trigger-de` flips to green for all three prompt classes
       (English, German, keyword-free-with-attachment) — or the keyword-free class
       is documented as unreachable with the current trigger schema.
+      <!-- 17/17 green (was 9/17). All three classes route; the two near-miss rows and `none-attached-arbitrary-html` stay deliberately red-by-design. -->
 
 **Exit:** the three prompt classes route measurably, or the unreachable one is
 named.
 
 ## Phase 2 — Refuse honestly, or honour a supplied contract
 
-- [ ] Add the missing lifecycle branch to
+- [x] Add the missing lifecycle branch to
       `docs/contracts/design-artifact-lifecycle.md:57-63` — trigger "finished
       artifact provided as spec" — and state plainly what the package does and
       does not do on it. Variation planning is excluded by definition on this
       branch.
-- [ ] Ship the honest refusal: when an artifact is provided and no
+      <!-- Branch **Port a provided artifact**: 1 (delta) → 2 (deep, on the artifact) → 4 → 5 → 6, stage 3 excluded by definition. The absence was not neutral — with no branch naming it, a handover fell to New design by elimination, the only other branch containing Build, which mandates the variation planning a port must not do. -->
+- [x] Ship the honest refusal: when an artifact is provided and no
       `design-system.json` accompanies it, the pipeline surfaces **what it will
       lose** (exact spacing, easing, hover behaviour, handlers, asset manifest)
       and asks before regenerating, instead of regenerating silently. This is the
       minimum viable fix and it is entirely inside the lock.
-- [ ] Consume the contract the package already owns: when a
+      <!-- `UNCARRIED_BY_THE_BRIEF` (design.ts) + the `design_provided_without_contract` halt. Fires BEFORE the sign-off gate, not after — pinned by a test, because stating the loss after the user confirms the brief would be the same silence one step later. Recommendation is "supply the contract", not "abort". -->
+- [x] Consume the contract the package already owns: when a
       `design-system.json` **is** supplied (any external extractor produced it),
       read it — including the `motion` block at
       `design-system-json.md:25-26` that nothing currently consumes — and honour
       its token values instead of re-deriving them. Accepting is on the allowed
       side of the lock; producing is not.
-- [ ] Extend the audit's token-detection table
+      <!-- Carried on `provided_artifact.design_system`; presence closes the refusal branch. `motion` gains its first consumer since the schema shipped — recorded in the reference doc's field rules so the next reader is not told again that nothing reads it. -->
+- [x] Extend the audit's token-detection table
       (`existing-ui-audit/SKILL.md:101-106`) with a supplied-artifact source, and
       keep artifact-sourced tokens distinguishable from project tokens in the
       audit output so the mapping between them stays visible.
-- [ ] Remove the bottleneck rather than routing around it: `apply.ts` does not
+      <!-- Two rows added (a supplied design-system.json; the artifact's own :root/inline style as the fallback), plus a per-group `source: project|artifact` requirement and a conflict-surfacing clause that defers to brand-source-of-truth. -->
+- [x] Remove the bottleneck rather than routing around it: `apply.ts` does not
       read `state.ui_design` at all. Where a supplied contract exists, apply must
       read it. No parallel track — the same step, one more input.
-- [ ] Report coverage: the apply envelope states how much of the supplied
+      <!-- apply.ts imports `provided_artifact` / `has_design_system` from design.ts rather than re-deciding "is this a port?" — the same shared-walker discipline the placeholder gate already uses, for the same reason (two copies of one predicate drifted before). -->
+- [x] Report coverage: the apply envelope states how much of the supplied
       contract was honoured verbatim, translated, or flagged. Without this the
       user cannot tell a faithful port from a lucky one.
-- [ ] `daf-port-baseline` and `daf-port-interactions` flip to green, or produce a
+      <!-- `coverage_gaps()`: every declared interaction / keyframe / asset must appear in exactly one bucket, else BLOCKED naming each unaccounted item. Dropping a handler stays allowed; hiding one does not. -->
+- [x] `daf-port-baseline` and `daf-port-interactions` flip to green, or produce a
       documented honest-null for the lanes that cannot.
+      <!-- Both green, with post-fix notes on the fixtures. 19/19 in provided_artifact_port.test.ts, including the non-port regressions: the slot is optional and a brief without it behaves exactly as before. -->
+
+**Correction to this phase's premise.** The step above says apply must read the
+brief "where a supplied contract exists". Implemented one notch stricter: apply
+reads it wherever a **provided artifact** exists, contract or not. A port whose
+losses were merely acknowledged still owes the coverage report — otherwise
+picking "proceed" at the refusal gate would buy silence for the rest of the run,
+which is the failure this roadmap is named after.
 
 **Exit:** no provided artifact is silently regenerated; either it is honoured or
 the loss is stated before the work happens.
 
 ## Phase 3 — Precedence: a provided spec is not an impulse
 
-- [ ] Write the precedence chain down where the agent reads it — provided
+- [x] Write the precedence chain down where the agent reads it — provided
       artifact > anti-slop > house taste — and scope it strictly: the exemption
       covers only decisions the artifact actually covers, never generative work.
-- [ ] Give `fe-design § Anti-Default Discipline` (`SKILL.md:329-331`) the missing
+      <!-- `design-fidelity-mechanics` § Provided-artifact precedence, with the three things it explicitly does NOT license: decisions the artifact leaves open (states it never showed), silence (the finding stays visible, marked), and registered brand tokens (brand-source-of-truth still outranks). -->
+- [x] Give `fe-design § Anti-Default Discipline` (`SKILL.md:329-331`) the missing
       carve-out sentence: a supplied artifact is the spec, not a first impulse,
       so the justify-or-change burden does not apply to artifact-covered choices.
-- [ ] Resolve the contradiction in `existing-ui-audit/SKILL.md:248-257`, which
+- [x] Resolve the contradiction in `existing-ui-audit/SKILL.md:248-257`, which
       currently invites the agent to treat an inspected anti-pattern as a
       candidate for corrective direction change. Distinguish the consumer's own
       legacy UI (correctable) from a supplied spec (not correctable).
-- [ ] `design-review § Anti-slop scan` and `polish.ts`: findings covered by the
+      <!-- Replaced the both-cases sentence with a two-row table: legacy UI → continue or correct, both legitimate; supplied spec → neither. A corrective direction change against a supplied spec is design-fidelity's failure arriving through the audit's side door. -->
+- [x] `design-review § Anti-slop scan` and `polish.ts`: findings covered by the
       supplied artifact are informational and never fix-worthy; polish rounds do
       not touch them.
-- [ ] `daf-slop-vs-provided` flips to green — the finding is cited as
+      <!-- `artifact_covered: true` on a finding; `partition_artifact_covered()` drops those from the round-driving set BEFORE the ceiling check, so a port cannot burn its two rounds on findings it may not act on. Only the literal `true` counts — a truthy lookalike is still actionable. -->
+- [x] `daf-slop-vs-provided` flips to green — the finding is cited as
       "matches provided spec" and the palette is unchanged after review + polish.
-- [ ] Re-measure after the prose change. If the polish loop still edits the port
+- [x] Re-measure after the prose change. If the polish loop still edits the port
       away from its source, that is the evidence that promotes the machine-readable
       suppression channel from gated follow-up to open work — and only then.
+      <!-- Re-measured end to end (design_slop_vs_provided.test.ts): the real scanner over the real fixture, its real output into the real polish gate. Marked → success, ceiling included. Unmarked → still blocked, asserted deliberately. The `--fidelity-source` follow-up STAYS GATED, with a stronger reason than it was written with: a linter-side suppression flag would suppress nothing the pipeline reads, because Phase 0 measured that lint_design_slop has no call site in the work engine at all. -->
+
+**Honest enforcement boundary.** The polish gate is mechanical; the *marking* is
+not. Nothing in the tree can decide whether a finding is genuinely covered by
+the artifact — that is the review step's judgment, carried by prose. What is
+mechanical is the failure direction: an unmarked finding keeps full authority to
+drive a round, so the default is "we asked", never "we silently kept the tell".
 
 **Exit:** a port carrying the Claude-Design house aesthetic survives review and
 polish unchanged.
@@ -254,9 +315,24 @@ consumer. No reopening was required; the maintainer offered to lift the lock and
 the lift turned out to be unnecessary. The consumer-side verify stage stays
 gated, unchanged (see below).
 
-- [ ] `bench:ui` under `internal/bench/`, alongside the two existing benches.
+- [x] `bench:ui` under `internal/bench/`, alongside the two existing benches.
       Scores a produced UI against a provided `design.html` as ground truth.
-- [ ] **No model in the scoring path.** Four deterministic components, weights
+      <!-- internal/bench/ui/{README.md,bench.config.json,run.ts,fixtures.lock.json}. The runner stays under internal/ rather than src/scripts/ on purpose: files[] ships src/scripts/ to consumers, and this imports the @playwright/test devDependency — shipping it would put a broken import in a consumer install AND be the browser runtime the lock excludes. -->
+      <!-- Zero new dependencies: PNG decoding and SSIM run inside Chromium via canvas, so no image-decoding package was added. -->
+      <!-- Correction to this step's premise: the sibling runners live in src/scripts/, but none of them imports Playwright, so "alongside" holds for the bench directory and not for the runner path. -->
+
+**First scored run (chromium 148.0.7778.96, darwin-arm64):**
+
+| candidate | weighted | pixel | dom | tokens | interactions |
+|---|---:|---:|---:|---:|---:|
+| `port-faithful.html` | **0.9877** | 1.0000 | 0.9383 | 1.0000 | 1.0000 |
+| `port-regenerated.html` | **0.5243** | 0.7100 | 0.6333 | 0.3182 | 0.2500 |
+
+Separation **0.4634** against the pre-registered floor of 0.25. The regenerated
+build — reconstructed from the Phase-0 measurement, not imagined — fails three
+of four interactions and carries 7 of 22 of the source's token values. That is
+the measured shape of "rebuilt from a five-key brief".
+- [x] **No model in the scoring path.** Four deterministic components, weights
       **pre-registered before the first run**:
       1. perceptual screenshot diff per breakpoint (375 / 768 / 1280) — SSIM or
          pixelmatch **with a threshold**, never raw pixel equality, which would
@@ -265,21 +341,22 @@ gated, unchanged (see below).
       3. token-mapping score (parseable — hex/spacing/radius resolved to tokens
          or flagged);
       4. interaction checklist driven by Playwright.
-- [ ] Rationale recorded with the harness, because it is the reason it exists in
+- [x] Rationale recorded with the harness, because it is the reason it exists in
       this shape: an LLM judge for "is this frontend better" imports judge
       variance and **circularity** — Opus grading Opus — into the one measurement
       that has to decide Opus vs Sonnet. The port case is the single place a
       ground truth already exists, so the question can be measured instead of
       adjudicated.
-- [ ] Feed it from this roadmap's Phase-0 port fixtures; no second fixture set.
-- [ ] **Freeze the fixtures before the first scored run.** Commit them and
+- [x] Feed it from this roadmap's Phase-0 port fixtures; no second fixture set.
+      <!-- Ground truth is the Phase-0 design.html itself; the two candidates are ports OF it, so the set stayed one set. port-faithful.html is deliberately NOT a byte-copy — it is the control that keeps the DOM component honest about restructuring, which is why class names are excluded from the signature. -->
+- [x] **Freeze the fixtures before the first scored run.** Commit them and
       SHA-pin the set; record the pin next to the weights. A fixture set nudged
       after a first bad run contaminates both measurements exactly the way a
       threshold chosen after seeing the distribution does — the pre-registration
       is worthless if the *inputs* stay editable while the outputs are watched.
       Extensions are allowed and are a **new set, scored separately**, never a
       revision of the pinned one.
-- [ ] **Make the fixtures render deterministically.** A screenshot diff is only
+- [x] **Make the fixtures render deterministically.** A screenshot diff is only
       reproducible if the render environment is:
       - **Browser pinned** — use the version the existing `@playwright/test`
         devDependency resolves, and record it with the run. A browser bump is a
@@ -295,7 +372,8 @@ gated, unchanged (see below).
       `Self-Hosted Route` column (`font-pairings-reference.csv`) from the
       completed webfont-delivery work, so the fixtures consume it rather than
       waiting on it.
-- [ ] Wire as `bench:ui` so it is invocable the way the sibling benches are.
+- [x] Wire as `bench:ui` so it is invocable the way the sibling benches are.
+      <!-- taskfiles/bench-ui.yml, included flattened from Taskfile.yml like bench-ab: `task bench:ui`, plus `task bench:ui:repin` for the deliberate new-epoch path. -->
 
 **Exit:** a port produces a diff-distance score from four deterministic
 components, reproducibly, with no model in the scoring path.

@@ -669,6 +669,61 @@ function _validate_ui_design(ui_design: JsonValue): void {
                 `required state) or null; got ${pyTypeName(ui_design['states'])}`,
         );
     }
+    _validate_provided_artifact(ui_design['provided_artifact']);
+}
+
+/**
+ * Reject a malformed `ui_design.provided_artifact` envelope; tolerate absence.
+ *
+ * The slot is the port case's only carrier, and both gates that consume it
+ * (`design`'s honest-refusal halt, `apply`'s coverage ledger) branch on its
+ * shape. Shape-checking here rather than in the handlers means a `interactions:
+ * "three"` cannot quietly reduce the coverage ledger to zero declared items —
+ * the same bypass-by-type that `states: "n/a"` used to achieve against the
+ * five-state loop.
+ */
+function _validate_provided_artifact(provided: JsonValue | undefined): void {
+    if (provided === undefined || provided === null) {
+        return;
+    }
+    if (!_isDict(provided)) {
+        throw new SchemaError(
+            'state.ui_design.provided_artifact must be a JSON object or null; ' +
+                `got ${pyTypeName(provided)}`,
+        );
+    }
+    if ('path' in provided && typeof provided['path'] !== 'string') {
+        throw new SchemaError(
+            'state.ui_design.provided_artifact.path must be a string when present',
+        );
+    }
+    if (
+        'design_system' in provided &&
+        provided['design_system'] !== null &&
+        !_isDict(provided['design_system'])
+    ) {
+        throw new SchemaError(
+            'state.ui_design.provided_artifact.design_system must be a JSON ' +
+                `object or null; got ${pyTypeName(provided['design_system'])}`,
+        );
+    }
+    if (
+        'loss_acknowledged' in provided &&
+        typeof provided['loss_acknowledged'] !== 'boolean'
+    ) {
+        throw new SchemaError(
+            'state.ui_design.provided_artifact.loss_acknowledged must be a ' +
+                'boolean when present',
+        );
+    }
+    for (const key of ['interactions', 'keyframes', 'assets']) {
+        if (key in provided && !Array.isArray(provided[key])) {
+            throw new SchemaError(
+                `state.ui_design.provided_artifact.${key} must be a list of ` +
+                    `strings when present; got ${pyTypeName(provided[key])}`,
+            );
+        }
+    }
 }
 
 /**

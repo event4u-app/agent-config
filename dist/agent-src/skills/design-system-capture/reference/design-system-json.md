@@ -42,6 +42,14 @@
 - **`bundled_local`** on a font family is a flag, not an instruction: the
   package never downloads or bundles fonts (out of scope) — it records that the
   source did.
+- **`motion` has a consumer.** It sits outside the DTCG mapping above, and for
+  a long time that meant nothing read it at all: the block was written by
+  capture and consumed by nobody, so easing and duration were re-derived from
+  taste on every port. On the **Port a provided artifact** branch
+  ([`design-artifact-lifecycle`](../../../../../docs/contracts/design-artifact-lifecycle.md))
+  the audit reads `motion.durations` and `motion.easings` as the answer. The
+  extraction-only marking above still holds: `motion._meta.detected_libs`
+  informs the human and never becomes a token.
 
 ## Trust posture (mandatory)
 

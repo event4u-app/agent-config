@@ -61,6 +61,50 @@ brand evidence**. The design-surface instance of the no-invented-facts floor.
   a design. Brief silent on a region → surface the gap (`ask-when-uncertain`)
   or leave an honest placeholder; never invent filler to fill space.
 
+## Provided-artifact precedence
+
+```
+PROVIDED ARTIFACT  >  ANTI-SLOP  >  HOUSE TASTE.
+THE EXEMPTION COVERS ONLY DECISIONS THE ARTIFACT ACTUALLY COVERS.
+IT NEVER COVERS GENERATIVE WORK IN THE SAME RUN.
+```
+
+The anti-slop catalog exists to stop an agent's *first impulse* from becoming
+the design. A handed-over artifact is not a first impulse — it is a decision
+the user already made. Applied to a port, the catalog inverts: it argues the
+agent out of the spec it was told to reproduce.
+
+Concretely, a faithful port of a cream/terracotta artifact trips
+`slop-c5-cream-palette`, and the artifact's own copy trips
+`slop-cp1-em-dash`. Both findings are **correct about the pattern and wrong
+about the action**. On a port they are cited as *"matches provided spec"* and
+nothing acts on them.
+
+**Scope — three things this does NOT license:**
+
+1. **Decisions the artifact does not cover.** A port usually needs states the
+   source never showed (loading, error, empty). Those are generative, and the
+   full anti-slop scan applies to them. "The artifact was cream" does not
+   exempt an invented empty state from L1 or V1.
+2. **Silence.** An artifact-covered finding stays in the review output with its
+   rule id, marked informational. Suppressing it outright would hide from the
+   user that their spec carries a known tell — which they may want to know
+   before shipping it.
+3. **Registered brand tokens.** A supplied artifact outranks house taste, not
+   the consumer's own brand (`brand-source-of-truth`). Artifact-vs-brand
+   conflicts are surfaced, never merged.
+
+**The mechanical half.** A review finding carries `artifact_covered: true`, and
+the polish gate drops those from the round-driving set *before* the ceiling
+check, so a port cannot burn its two rounds on findings it was never allowed to
+act on (`directives/ui/polish.ts`, `partition_artifact_covered`). Marking rather
+than deleting is deliberate: the finding stays visible, only its authority to
+force a round is removed. The burden sits with whoever sets the flag — an
+unmarked finding is treated as actionable, so the default failure direction is
+"we asked" rather than "we silently kept it".
+
+Regression witness: `daf-slop-vs-provided`.
+
 ## Failure modes
 
 - Swapping the prototype's font / typeface because another "reads better".

@@ -1,0 +1,8 @@
+{
+  "_note": "SHA-256 of every scored fixture, pinned before the first scored run. A mismatch refuses the run: see run.ts § Fixture freeze.",
+  "files": {
+    "tests/design-artifacts/fixtures/design.html": "4b76d96843b857ba69e424a092ef264756127871e5b8d70980b12c59079f9484",
+    "tests/design-artifacts/fixtures/port-faithful.html": "77b0164aba577515ba0fdc726123ce1ce483b7c874ec80410d691e15ea9a072a",
+    "tests/design-artifacts/fixtures/port-regenerated.html": "e4483fa93e809ce388b7f37d0b9c4a563ee594f8ecca06c7b1e65a94ca088ed3"
+  }
+}

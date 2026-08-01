@@ -352,6 +352,17 @@ structured review phases, add an explicit **Anti-Slop Check** section:
 3. Run the AI-slop originality self-test on the overall aesthetic direction.
    Report the result (pass / flag / fail) with one sentence of evidence — this
    is the human judgment the detector deliberately does not make.
+4. **Mark the findings a provided artifact already answers.** When the run is a
+   port (`state.ui_design.provided_artifact` is set), a finding about a
+   decision the artifact makes is correct about the pattern and wrong about the
+   action. Keep it in the output, cite it as **"matches provided spec"**, and
+   set `artifact_covered: true` on it — the polish gate drops those from the
+   round-driving set, so an unmarked finding will send a round at the user's
+   own design. The flag is scoped to decisions the artifact actually covers;
+   anything it leaves open (a state it never showed) is generative work and
+   keeps the full scan. Precedence + scope:
+   [`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md)
+   § Provided-artifact precedence. Regression witness: `daf-slop-vs-provided`.
 
 For the **objective quality floors** (WCAG contrast, font-size, line-length,
 reduced-motion, heading hierarchy, focus indicator), do NOT eyeball them —

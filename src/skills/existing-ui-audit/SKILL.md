@@ -104,8 +104,24 @@ Write into `state.ui_audit.design_tokens` (object, never null — empty object i
 | `:root { --... }` blocks in `resources/css/`, `app/globals.css`, `src/app/globals.css` | every `--token-name: value` pair |
 | `theme.json` / `tokens.json` (any depth) | flat or nested token tree |
 | `app/css/variables.css`, `assets/scss/_tokens.scss` | SCSS `$var: value` and CSS custom properties |
+| **A supplied `design-system.json`** (handed over with a provided artifact) | `colors`, `typography`, `spacing`, `radius`, `shadow`, **and `motion`** (`durations`, `easings`) — read as the answer, never re-derived |
+| **A supplied artifact's own `:root { --… }` / inline `<style>`** (the handover file itself, e.g. `design.html`) | every `--token-name: value` pair, when no `design-system.json` accompanies it |
 
 Group output by category: `colors`, `spacing`, `radius`, `font`, `shadow`, `breakpoint`, `other`.
+
+**Artifact-sourced tokens stay distinguishable from project tokens.** Every
+group carries a `source` — `project` for the first four rows, `artifact` for the
+last two — because the mapping between them is the thing a port has to keep
+visible. Collapsing them loses the answer to "did this value come from what the
+user handed me, or from what the repo already had?", and that is exactly the
+question the apply coverage report has to answer per item. The two sets may
+disagree; when they do, surface the conflict rather than merging it (a supplied
+spec outranks house taste, but not a registered brand token — see
+[`brand-source-of-truth`](../../rules/brand-source-of-truth.md)).
+
+`motion` is new here: the block has existed in the `design-system.json` schema
+since capture shipped and **nothing consumed it**. On the port branch it is
+read, so easing and duration stop being values the brief silently regenerates.
 
 ### 4. Detect shadcn inventory (only when `state.stack.frontend == "react-shadcn"`)
 
@@ -265,9 +281,24 @@ scheme, border-radius convention, motion patterns), cross-check the findings
 against
 [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md).
 If the existing UI already uses a listed anti-pattern, surface it as a design-debt
-finding (separate from the reuse inventory) — flag by entry ID and severity. The
-next design step can then decide whether to continue the existing pattern (for
-consistency) or introduce a corrective direction change.
+finding (separate from the reuse inventory) — flag by entry ID and severity.
+
+**What the design step may then do depends on whose aesthetic it is.** These
+are two different situations and the sentence that used to cover both was
+wrong about one of them:
+
+| The anti-pattern lives in… | The design step may… |
+|---|---|
+| **The consumer's own legacy UI** (inventoried from the repo) | continue it for consistency, **or** propose a corrective direction change. Both are legitimate; it is their codebase and their debt. |
+| **A supplied spec** (a handed-over artifact, a `design-system.json`, a registered brand token) | **neither.** Build it as given. The finding is recorded as informational, marked `artifact_covered`, and no polish round acts on it. |
+
+A corrective direction change against a supplied spec is not a design
+improvement, it is overriding a decision the user already made — the failure
+[`design-fidelity`](../../rules/design-fidelity.md) exists to prevent, arriving
+through the audit's side door. Precedence and its exact scope:
+[`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md)
+§ Provided-artifact precedence. Where the two sources disagree, surface the
+conflict rather than picking (fixture `daf-slop-vs-provided`).
 
 ## Do NOT
 

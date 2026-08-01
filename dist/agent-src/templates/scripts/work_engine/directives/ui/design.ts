@@ -44,6 +44,33 @@ export const PLACEHOLDER_PATTERNS: ReadonlyArray<string> = [
     'xxx',
 ];
 
+/**
+ * Optional brief key carrying a user-supplied design artifact.
+ *
+ * The brief's five required keys are a lossy projection of a finished
+ * artifact: `layout` is prose, not a spacing scale, and there is no slot at
+ * all for easing, hover behaviour, handlers, or assets. Before this key the
+ * pipeline had no channel for a handed-over design, so it rebuilt one from
+ * the five-key abstraction and said nothing about the difference. This slot
+ * is that channel — one more input to the same step, never a parallel track.
+ */
+export const PROVIDED_ARTIFACT_KEY = 'provided_artifact';
+
+/**
+ * What the five-key brief cannot carry from a provided artifact.
+ *
+ * Stated to the user **before** any regeneration, not discovered afterwards.
+ * A supplied `design-system.json` closes the first two; the rest are closed
+ * only by the coverage report `apply` demands.
+ */
+export const UNCARRIED_BY_THE_BRIEF: ReadonlyArray<string> = [
+    'exact spacing values — `layout` is prose, not a scale',
+    'easing curves and animation timing',
+    'hover / focus / active behaviour',
+    'event handlers and the interactions they drive',
+    'the asset manifest (images, icons, fonts the artifact references)',
+];
+
 export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
     {
         code: 'design_missing',
@@ -60,6 +87,17 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
         resolution:
             'agent re-runs the brief with final strings; ' +
             'halt lists the offending microcopy keys',
+    },
+    {
+        code: 'design_provided_without_contract',
+        trigger:
+            'state.ui_design.provided_artifact is set but carries no ' +
+            'design_system, and the loss has not been acknowledged — the ' +
+            'brief would silently regenerate what it cannot carry',
+        resolution:
+            'user supplies a design-system.json (honoured verbatim), or ' +
+            'acknowledges the named losses so the port proceeds with them ' +
+            'stated up front',
     },
     {
         code: 'design_unconfirmed',
@@ -121,6 +159,11 @@ export function run(state: DeliveryState): StepResult {
     const placeholders = _placeholder_violations(designDict);
     if (placeholders.length > 0) {
         return _halt_placeholders(state, placeholders);
+    }
+
+    const provided = provided_artifact(designDict);
+    if (provided !== null && !_contract_or_loss_acknowledged(provided)) {
+        return _halt_provided_without_contract(state, provided);
     }
 
     if (designDict['design_confirmed'] === true) {
@@ -236,6 +279,81 @@ function _walk_placeholders(node: Any, prefix: string, violations: string[]): vo
             _walk_placeholders(node[key], path, violations);
         }
     }
+}
+
+/**
+ * Return the supplied-artifact envelope, or `null` when none was handed over.
+ *
+ * Exported because `apply` needs the same answer — the coverage report it
+ * demands exists only for a port, and a second copy of "is this a port?"
+ * would be the drift this package has paid for before (see the shared
+ * `placeholder_paths` walker above).
+ */
+export function provided_artifact(
+    design: Record<string, Any> | null | undefined,
+): Record<string, Any> | null {
+    if (!_isDict(design)) return null;
+    const provided = design[PROVIDED_ARTIFACT_KEY];
+    if (!_isDict(provided) || Object.keys(provided).length === 0) return null;
+    return provided;
+}
+
+/** True when a machine-readable contract came with the artifact. */
+export function has_design_system(provided: Record<string, Any>): boolean {
+    return _isDict(provided['design_system']) && _pyTruthy(provided['design_system']);
+}
+
+/** The port may proceed: either a contract exists, or the losses were stated and accepted. */
+function _contract_or_loss_acknowledged(provided: Record<string, Any>): boolean {
+    return has_design_system(provided) || provided['loss_acknowledged'] === true;
+}
+
+/**
+ * BLOCKED halt — an artifact was handed over with no contract behind it.
+ *
+ * This is the honest-refusal branch. The pipeline *can* rebuild the artifact
+ * from the five-key brief; what it must not do is rebuild it silently. The
+ * halt names every value the brief cannot carry, then asks. Answering
+ * option 1 sets `loss_acknowledged` and the same losses are on the record.
+ */
+function _halt_provided_without_contract(
+    state: DeliveryState,
+    provided: Record<string, Any>,
+): StepResult {
+    const preview = _preview_input(state);
+    const ref = typeof provided['path'] === 'string' && provided['path'] !== ''
+        ? String(provided['path'])
+        : 'the provided artifact';
+    const lines: string[] = [
+        `> Input: ${preview}`,
+        `> \`${ref}\` is a finished design handed over as the spec, and no ` +
+            '`design-system.json` came with it. The design brief carries five ' +
+            'keys (layout, components, states, microcopy, a11y) — everything ' +
+            'below is outside them and would be rebuilt from taste rather than ' +
+            'read from your artifact:',
+    ];
+    for (const loss of UNCARRIED_BY_THE_BRIEF) {
+        lines.push(`> - ${loss}`);
+    }
+    lines.push(
+        '> 1. Proceed — port it with those five losses on the record; `apply` ' +
+            'still has to report what it honoured, translated, and flagged',
+        '> 2. Supply a `design-system.json` — its token values are then ' +
+            'honoured verbatim instead of re-derived',
+        '> 3. Abort — drop this UI request',
+        '',
+        '**Recommendation: 2 — Supply the contract** — it is the only option ' +
+            'that closes the spacing and easing losses at the source. Caveat: ' +
+            'pick 1 when no extractor is available; the port then proceeds with ' +
+            'the gap stated rather than hidden.',
+    );
+    return new StepResult({
+        outcome: Outcome.BLOCKED,
+        questions: lines,
+        message:
+            'UI design halted: a provided artifact carries no design-system.json; ' +
+            `${UNCARRIED_BY_THE_BRIEF.length} value class(es) cannot be carried by the brief.`,
+    });
 }
 
 /** Render a one-line preview of the input being designed. */

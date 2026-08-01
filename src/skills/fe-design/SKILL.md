@@ -340,6 +340,16 @@ If a tell was the first impulse, choose a different approach or explicitly
 justify why this brief calls for it. (The full pre-proposal scan is under
 *Anti-slop discipline* below.)
 
+**Carve-out — a supplied artifact is the spec, not a first impulse.** This
+discipline governs what *you* reach for. When the user hands over a finished
+artifact, the choices it makes are not your impulses and the justify-or-change
+burden does not apply to them: build them as given. The carve-out is scoped to
+decisions the artifact actually covers — anything it leaves open (a state it
+never shows, a surface it never had) is your first impulse again and gets the
+full scan. See
+[`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md)
+§ Provided-artifact precedence.
+
 ## Aesthetic direction
 
 Audit-pinned tokens and components always take precedence (see `existing-ui-audit`). When the audit pins an aesthetic, honor it without deviation. When the audit shows **no pinned aesthetic** — greenfield surface, marketing landing page, brand-new feature without design-system precedent — the design brief is allowed (and expected) to commit to a deliberate direction instead of defaulting to safe centered hero + 3-column features + CTA.

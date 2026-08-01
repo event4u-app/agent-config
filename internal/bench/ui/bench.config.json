@@ -1,0 +1,64 @@
+{
+  "_note": "Pre-registered BEFORE the first scored run. Weights, thresholds, and breakpoints are frozen with the fixture lock; changing any of them opens a NEW scoring epoch, never a revision of an existing score. See README.md § Pre-registration.",
+  "truth": "tests/design-artifacts/fixtures/design.html",
+  "candidates": [
+    "tests/design-artifacts/fixtures/port-faithful.html",
+    "tests/design-artifacts/fixtures/port-regenerated.html"
+  ],
+  "breakpoints": [375, 768, 1280],
+  "weights": {
+    "pixel": 0.4,
+    "dom": 0.2,
+    "tokens": 0.2,
+    "interactions": 0.2
+  },
+  "thresholds": {
+    "_note": "A component score at or above its threshold is reported as met. Thresholds are reporting bands, not pass/fail gates — the bench measures a distance, it does not adjudicate.",
+    "pixel": 0.9,
+    "dom": 0.8,
+    "tokens": 0.8,
+    "interactions": 1.0,
+    "_separation": "A faithful port must out-score a regenerated one by at least this much on the weighted total; the bench asserts its own discriminating power rather than assuming it.",
+    "separation": 0.25
+  },
+  "ssim": {
+    "_note": "8x8 windowed SSIM on the luma channel. Raw pixel equality would measure font antialiasing rather than fidelity, which is why no equality check exists here.",
+    "window": 8,
+    "k1": 0.01,
+    "k2": 0.03
+  },
+  "interactions": [
+    {
+      "name": "screen switch",
+      "steps": [
+        { "action": "click", "selector": "[aria-controls='screen-archive']" },
+        { "action": "expectVisible", "selector": "#screen-archive" },
+        { "action": "expectHidden", "selector": "#screen-overview" }
+      ]
+    },
+    {
+      "name": "disclosure toggle",
+      "steps": [
+        { "action": "expectHidden", "selector": "#disclosure-body" },
+        { "action": "click", "selector": "#disclosure-toggle" },
+        { "action": "expectVisible", "selector": "#disclosure-body" },
+        { "action": "expectAttribute", "selector": "#disclosure-toggle", "attribute": "aria-expanded", "value": "true" }
+      ]
+    },
+    {
+      "name": "subscribe submit",
+      "steps": [
+        { "action": "fill", "selector": "#subscribe-email", "value": "you@example.com" },
+        { "action": "click", "selector": "#subscribe-submit" },
+        { "action": "expectDisabled", "selector": "#subscribe-submit" },
+        { "action": "expectVisible", "selector": "#subscribe-receipt" }
+      ]
+    },
+    {
+      "name": "rule-draw keyframe",
+      "steps": [
+        { "action": "expectCssRule", "value": "@keyframes rule-draw" }
+      ]
+    }
+  ]
+}
