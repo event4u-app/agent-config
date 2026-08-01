@@ -154,11 +154,20 @@ the criteria are the contract.
   owner (`design-fidelity-mechanics` § Asset & imagery discipline, `ADR-205`) and
   reaches non-design-artifact turns through the `ai-code-blindspots`
   surface→controls table. Remaining `fonts.googleapis.com` occurrences in the
-  tree are the corpus opt-in column, that host in `stacks/nextjs.csv`'s **Don't**
-  column, and `design-tokens/scripts/tokens.ts`'s `ALLOWED_HOST_HINTS` — the last
-  is a **false-positive suppressor** for the hardcoded-value scanner (a font URL's
-  `wght@400;500` reads as magic numbers), not a delivery endorsement, so it is
-  deliberately unchanged.
+  tree are the corpus opt-in column and that host inside `stacks/nextjs.csv`'s
+  **Don't** column — both intended.
+- **correction (same change):** an earlier revision of this note called
+  `design-tokens/scripts/tokens.ts`'s `ALLOWED_HOST_HINTS` a *false-positive
+  suppressor* (claiming a font URL's `wght@400;500` read as magic numbers) and
+  left it in place. **That claim was wrong and is refuted by measurement:** none
+  of the four token patterns matches a bare font or image URL — `pixelValue` is
+  `:\s*(\d{2,})px`, so `wght@400` never matched. The list suppressed no real
+  finding; its only measurable effect was a **false negative**, because it
+  `continue`d the whole line: a hardcoded `#abcdef` or `padding: 24px` co-located
+  with such a URL was silently dropped (measured 0 findings on 3 offending
+  lines). The list is removed and the behaviour is pinned by a regression test
+  (3 findings on the same input, and still none on a line that is only a font
+  URL).
 
 ### daf-invented-screenshot
 - **primitive:** `static_inspect`
