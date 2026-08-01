@@ -34,45 +34,50 @@ measured rather than argued: `accessibility-auditor` is a `medium` reviewer and
 `ui-component-architect` a `high` builder, so a blanket flip would flatten a
 distinction that may well be deliberate.
 
-> **Blocked until a harness exists that scores generated UI** (or one run is
-> deliberately funded as a one-off). Execution starts when that condition
-> clears — see Prerequisites for why neither existing harness qualifies.
+> **UNBLOCKED 2026-08-01.** The harness is being built — as `bench:ui`, the
+> maintainer-side diff machinery in `road-to-provided-artifact-honesty` Phase 4,
+> fed by that roadmap's own port fixtures. Both measurements below ride on it.
+> This is the "if such a harness lands for another reason, this roadmap unblocks
+> for free" clause being taken up, not worked around.
 >
-> **Candidate harness — `road-to-provided-artifact-honesty`, in two halves that
-> are NOT equally available.** Its Phase 0 fixture `daf-port-baseline` supplies
-> the half this roadmap lacks as *scheduled* work: a standalone `design.html`
-> plus a port prompt, i.e. a real UI-generation task with pass criteria. The
-> other half — rendering both outputs and diffing them — is a **gated
-> follow-up** there ("Playwright screenshot/DOM diff against the artifact as
-> ground truth"), behind the 2026-06-28 lock plus the no-new-binary-dependency
-> constraint. A conditional chain, not a queue: Phase 0 landing is not
-> sufficient, and nothing here argues for reopening that lock.
+> **The 2026-06-28 lock was never engaged by this path.** The maintainer offered
+> to lift it; the lift turned out to be unnecessary. The lock forbids the package
+> *shipping* a Playwright runtime — `@playwright/test` is already a
+> **devDependency**, and `files[]` ships neither `tests/` nor `internal/`, so a
+> bench beside `bench:ab` distributes nothing. The consumer-side verify stage,
+> which would need a browser at the consumer, stays gated and unchanged. Recorded
+> because a lock that did not need reopening must not be logged as reopened.
 >
-> That cross-reference now counts **twice over**: if the port roadmap unblocks,
-> it unblocks *both* measurements below at once.
->
-> **If it ever does unblock, prefer diff-distance over a quality rubric.** Same
-> port prompt, score = distance from the provided artifact. Objective, and needs
-> **no LLM judge** — the port case is the one place a ground truth already
-> exists, so both questions can be answered by measuring against it rather than
-> asking a model which output it prefers.
+> **Judge-free by construction.** Scoring is a diff-distance against
+> `design.html` as ground truth, from four deterministic components with
+> pre-registered weights — perceptual screenshot diff per breakpoint (SSIM /
+> pixelmatch **with a threshold**, never raw pixels, which would measure font
+> antialiasing), DOM-structure comparison, token-mapping score, Playwright
+> interaction checklist. No model in the scoring path. An LLM judge would import
+> variance and **circularity** — Opus grading Opus — into the very measurement
+> that decides Opus vs Sonnet.
 
 ## Prerequisites
 
 - [ ] Read `AGENTS.md` and the parent's archive entry.
-- [ ] Confirm the blocker still holds. Neither existing harness answers "is this
-      frontend better":
-      - `bench:ab` (`internal/bench/corpora/ab-track{a,b}.yaml`) measures
-        **surface presence** — whether a rule or skill fires at all.
-      - `bench-quality-run` (`token-quality-golden.yaml`, 110 tasks) judges
-        **rule compliance** — "stayed in scope", "ran the audit before creating
-        a component" — not the quality of what was emitted.
-      A tier benchmark needs a third thing: UI-generation prompts, a rendering
-      step, and a visual/structural rubric.
-- [ ] Confirm the cost asymmetry is still true of the pipeline: builders run
-      first, run longest, and re-run up to `POLISH_CEILING` times, so raising
-      them is the expensive direction. If the pipeline shape changed, re-derive
-      this before spending anything.
+- [ ] `road-to-provided-artifact-honesty` Phase 0 (port fixtures) and Phase 4
+      (`bench:ui`) have landed. Both measurements below consume them; neither
+      needs a fixture set or a scorer of its own.
+- [ ] The four component weights and the Measurement-B tolerance are fixed and
+      written down **before** the first scored run.
+- [ ] Confirm the cost asymmetry still holds of the pipeline: builders run first,
+      run longest, and re-run up to `POLISH_CEILING` times, so raising them is the
+      expensive direction. If the pipeline shape changed, re-derive it before
+      spending anything.
+
+**Historical note — why this was blocked, and what closed it.** Neither existing
+harness answers "is this frontend better": `bench:ab` measures surface presence
+(whether a rule or skill fires), and `bench-quality-run` judges rule compliance
+("stayed in scope", "ran the audit first"). The missing third thing was named as
+"UI-generation prompts, a rendering step, and a visual/structural rubric" — and
+the rubric half was the trap. The port case dissolves it: `design.html` **is** the
+expected output modulo stack translation, so the third thing is a diff, not a
+judgement.
 
 ## Phase 1: Two measurements against the same harness
 
@@ -84,14 +89,14 @@ a release later.
 
 Holds the lane constant, varies the model tier.
 
-- [ ] Run the lane fixtures with the current allocation (builders `medium` /
-      reviewers `high`) and with builders raised, scoring output quality **and**
-      per-run cost.
-      <!-- carried from road-to-ui-track-integrity Phase 5 -->
-- [ ] Include the two outliers in the read — `accessibility-auditor` (medium
+- [ ] Run the **port fixtures** with builders at `medium` and at `high`, lane
+      held constant. Score = diff-distance to ground truth. Put the delta in
+      diff-distance against the delta in cost.
+      <!-- carried from road-to-ui-track-integrity Phase 5; reformulated 2026-08-01 as a fidelity task so it needs no rubric -->
+- [ ] Run the two outliers as their own arms — `accessibility-auditor` (medium
       reviewer) and `ui-component-architect` (high builder) — so a flip cannot
-      silently erase a deliberate distinction.
-      <!-- carried from road-to-ui-track-integrity Phase 5 -->
+      silently erase a distinction that may be deliberate.
+      <!-- carried from road-to-ui-track-integrity Phase 5; separate arms rather than a note, since the harness makes that nearly free -->
 
 **The verified finding.** Every skill that writes UI is `model_tier: medium` —
 `fe-design`, `blade-ui`, `react-shadcn-ui`, `flux`, `livewire`,
@@ -107,16 +112,34 @@ Holds the model tier constant, varies the lane. Introduced by
 `road-to-universal-stack-coverage` Phase 0, whose benchmark criterion could not
 be met for exactly the same reason.
 
-- [ ] Run the apply fixtures through the generic lane (`ui-apply-generic` plus
-      its corpus query) and through a framework lane, at one fixed tier, scoring
-      output quality.
+- [ ] Run the same fixtures on the two stacks where **both** lanes exist, tier
+      held constant: once with the legacy full-match bundle, once with the
+      generic lane forced. Thanks to the composition landed in
+      `road-to-universal-stack-coverage`, that is a switch rather than a rebuild.
+      Score = the same diff-distance.
       <!-- carried from road-to-universal-stack-coverage acceptance criteria -->
 - [ ] Report per stack whether the corpus query actually changed the output, not
       only that it ran. A query whose rows never alter a decision is grounding
       theatre and should be measurable as such.
-- [ ] Publish both results either way. If neither lift clears its cost, record
-      the honest-null and change nothing.
+- [ ] Publish both results either way.
       <!-- covers A and B; a null on one is not a null on the other -->
+
+### Pre-registered null paths (written before the run, on purpose)
+
+Both are stated in advance so a null cannot be reinterpreted as a
+disappointment after the numbers land.
+
+- **A null:** the `high` lift does not clear the cost difference → the tiers stay
+  as they are and the null is published. Builders run first, longest, and up to
+  `POLISH_CEILING` times, so the cost side is the expensive one by construction.
+- **B null — and it is not a failure.** If the generic lane lands within a
+  **tolerance fixed before the run** of the framework lane, that is a strong
+  positive result, not a shortfall: it would mean the floor carries, and overlays
+  then justify themselves only on their specialist subject rather than by
+  default. Naming this in advance is what keeps it from being read as the generic
+  lane "losing".
+- Fix the B tolerance and the four component weights **before the first scored
+  run**. A threshold chosen after seeing the distribution is not a threshold.
 
 **The verified finding.** The detection half of universal stack coverage is fully
 measured — the Phase-0 and Phase-1 tables in that roadmap. What is unmeasured is
