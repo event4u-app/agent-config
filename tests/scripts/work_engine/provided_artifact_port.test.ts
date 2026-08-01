@@ -34,6 +34,11 @@ import {
     coverage_gaps,
     run as applyRun,
 } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/apply.js';
+import {
+    POLISH_CEILING,
+    partition_artifact_covered,
+    run as polishRun,
+} from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/polish.js';
 
 /** A complete, confirmed brief — the shape every gate below starts from. */
 function brief(extra: Record<string, unknown> = {}): Record<string, unknown> {
@@ -238,6 +243,61 @@ describe('apply — the coverage ledger', () => {
         const body = applyRun(stateWith(design)).questions.join('\n');
         expect(body).toContain('This is a **port**');
         expect(body).toContain('coverage');
+    });
+});
+
+describe('polish — artifact-covered findings never drive a round', () => {
+    function polishState(
+        findings: Array<Record<string, unknown>>,
+        rounds = 0,
+    ): DeliveryState {
+        return new DeliveryState({
+            ticket: { id: 'T-1' } as never,
+            stack: { frontend: 'plain' } as never,
+            ui_review: { findings, review_clean: false } as never,
+            ui_polish: { rounds } as never,
+        });
+    }
+
+    const covered = {
+        rule: 'slop-c5-cream-palette',
+        note: 'matches provided spec',
+        artifact_covered: true,
+    };
+    const real = { kind: 'a11y_violation', severity: 'serious', note: 'contrast 3.1:1' };
+
+    it('a review whose only findings are artifact-covered is done', () => {
+        expect(polishRun(polishState([covered])).outcome).toBe('success');
+    });
+
+    it('a real finding alongside a covered one still drives a round', () => {
+        expect(polishRun(polishState([covered, real])).outcome).toBe('blocked');
+    });
+
+    it('covered findings are dropped before the ceiling check, not after', () => {
+        // At the ceiling with nothing actionable left, the port is finished —
+        // it must not be halted for "unresolved findings" it was never allowed
+        // to act on.
+        expect(polishRun(polishState([covered, covered], POLISH_CEILING)).outcome).toBe(
+            'success',
+        );
+        // Same round count, one real finding → the ceiling halt is intact.
+        expect(polishRun(polishState([covered, real], POLISH_CEILING)).outcome).toBe(
+            'blocked',
+        );
+    });
+
+    it('only the literal flag counts — a truthy lookalike does not', () => {
+        for (const value of ['true', 1, {}, null]) {
+            const r = polishRun(polishState([{ ...covered, artifact_covered: value }]));
+            expect(r.outcome, `artifact_covered: ${JSON.stringify(value)}`).toBe('blocked');
+        }
+    });
+
+    it('partition keeps both halves — marking is not deleting', () => {
+        const { actionable, informational } = partition_artifact_covered([covered, real]);
+        expect(informational).toEqual([covered]);
+        expect(actionable).toEqual([real]);
     });
 });
 

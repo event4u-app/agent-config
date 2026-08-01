@@ -303,6 +303,31 @@ other three are rubric-scored: no unit test can assert whether an agent
     impulse, choose a different approach."* Neither carves out "the tell is the
     user's spec", and `fe-design/SKILL.md:345`'s protective clause is anchored on
     `state.ui_audit`, which a provided artifact never populates.
+- **post-fix (2026-08-01): PASS, with the enforcement boundary stated.**
+  Re-measured end to end — the real scanner over the real fixture, its real
+  output into the real polish gate
+  ([`design_slop_vs_provided.test.ts`](../scripts/design_slop_vs_provided.test.ts)),
+  because a hand-written finding could not have caught a carve-out that only
+  works on the shape a test author imagined.
+  - Both findings still fire; a port marked `artifact_covered` reaches
+    `success` with nothing to fix, **including at the polish ceiling** — a port
+    can no longer burn its two rounds on findings it was never allowed to act
+    on (`polish.ts`, `partition_artifact_covered`).
+  - The carve-out does not leak: a real a11y defect discovered in the same run
+    still drives a round.
+  - **Unmarked, the findings still send a round at the user's own design.** The
+    gate is mechanical; the *marking* is the review step's judgment, carried by
+    prose (`design-review` § Anti-slop scan, step 4). Asserted deliberately as a
+    test rather than left implicit — the default failure direction is "we
+    asked", never "we silently kept the tell".
+  - **Consequence for the gated `--fidelity-source` follow-up: it stays gated,
+    and the reason is now stronger than when it was written.** Its gate reads
+    "Phase 3's re-measurement shows the prose precedence is insufficient". The
+    prose is sufficient at the only place that acts on a finding (the polish
+    gate, now mechanical), and a linter-side suppression flag would not have
+    helped anyway: Phase 0 measured that `lint_design_slop` has **no call site
+    in the work engine at all**, so suppressing a finding there would suppress
+    nothing the pipeline reads.
 
 ### daf-port-interactions
 - **primitive:** `static_inspect`

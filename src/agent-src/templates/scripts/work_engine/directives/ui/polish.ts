@@ -116,6 +116,41 @@ function _pyTruthy(value: Any): boolean {
     return true;
 }
 
+/**
+ * Findings the provided artifact already answers — informational, never
+ * fix-worthy.
+ *
+ * A port carries its source's aesthetic on purpose. Left unfiltered, a
+ * finding like "cream palette reads as scaffold-default" is indistinguishable
+ * from a real defect, so the polish loop spends a round editing the port away
+ * from the spec the user approved — the exact regression `daf-slop-vs-provided`
+ * witnesses. Marking the finding rather than deleting it keeps it visible in
+ * the review output; what changes is that it no longer drives a round.
+ *
+ * Scope is strict, and the burden sits with the marker: only a decision the
+ * artifact **actually covers** may carry the flag. Generative work in the same
+ * run is not artifact-covered and stays fully subject to the anti-slop scan.
+ */
+export const ARTIFACT_COVERED_KEY = 'artifact_covered';
+
+/** True when this finding is answered by the provided artifact. */
+function _is_artifact_covered(finding: Any): boolean {
+    return _isDict(finding) && finding[ARTIFACT_COVERED_KEY] === true;
+}
+
+/** Split findings into the ones that drive rounds and the informational rest. */
+export function partition_artifact_covered(findings: ReadonlyArray<Any>): {
+    actionable: Any[];
+    informational: Any[];
+} {
+    const actionable: Any[] = [];
+    const informational: Any[] = [];
+    for (const finding of findings) {
+        (_is_artifact_covered(finding) ? informational : actionable).push(finding);
+    }
+    return { actionable, informational };
+}
+
 /** Apply the polish-loop gate. */
 export function run(state: DeliveryState): StepResult {
     const review = _pyTruthy(state.ui_review) ? (state.ui_review as Record<string, Any>) : {};
@@ -124,6 +159,11 @@ export function run(state: DeliveryState): StepResult {
         findings = [];
     }
     const review_clean = _pyTruthy(review['review_clean']);
+
+    // Artifact-covered findings are dropped from the round-driving set before
+    // anything else reads it — including the ceiling check, so a port cannot
+    // burn its two rounds on findings it was never allowed to act on.
+    findings = partition_artifact_covered(findings as Any[]).actionable;
 
     if (review_clean || (findings as Any[]).length === 0) {
         return new StepResult({ outcome: Outcome.SUCCESS });

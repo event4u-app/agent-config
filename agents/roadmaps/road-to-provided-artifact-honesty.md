@@ -265,24 +265,34 @@ the loss is stated before the work happens.
 
 ## Phase 3 — Precedence: a provided spec is not an impulse
 
-- [ ] Write the precedence chain down where the agent reads it — provided
+- [x] Write the precedence chain down where the agent reads it — provided
       artifact > anti-slop > house taste — and scope it strictly: the exemption
       covers only decisions the artifact actually covers, never generative work.
-- [ ] Give `fe-design § Anti-Default Discipline` (`SKILL.md:329-331`) the missing
+      <!-- `design-fidelity-mechanics` § Provided-artifact precedence, with the three things it explicitly does NOT license: decisions the artifact leaves open (states it never showed), silence (the finding stays visible, marked), and registered brand tokens (brand-source-of-truth still outranks). -->
+- [x] Give `fe-design § Anti-Default Discipline` (`SKILL.md:329-331`) the missing
       carve-out sentence: a supplied artifact is the spec, not a first impulse,
       so the justify-or-change burden does not apply to artifact-covered choices.
-- [ ] Resolve the contradiction in `existing-ui-audit/SKILL.md:248-257`, which
+- [x] Resolve the contradiction in `existing-ui-audit/SKILL.md:248-257`, which
       currently invites the agent to treat an inspected anti-pattern as a
       candidate for corrective direction change. Distinguish the consumer's own
       legacy UI (correctable) from a supplied spec (not correctable).
-- [ ] `design-review § Anti-slop scan` and `polish.ts`: findings covered by the
+      <!-- Replaced the both-cases sentence with a two-row table: legacy UI → continue or correct, both legitimate; supplied spec → neither. A corrective direction change against a supplied spec is design-fidelity's failure arriving through the audit's side door. -->
+- [x] `design-review § Anti-slop scan` and `polish.ts`: findings covered by the
       supplied artifact are informational and never fix-worthy; polish rounds do
       not touch them.
-- [ ] `daf-slop-vs-provided` flips to green — the finding is cited as
+      <!-- `artifact_covered: true` on a finding; `partition_artifact_covered()` drops those from the round-driving set BEFORE the ceiling check, so a port cannot burn its two rounds on findings it may not act on. Only the literal `true` counts — a truthy lookalike is still actionable. -->
+- [x] `daf-slop-vs-provided` flips to green — the finding is cited as
       "matches provided spec" and the palette is unchanged after review + polish.
-- [ ] Re-measure after the prose change. If the polish loop still edits the port
+- [x] Re-measure after the prose change. If the polish loop still edits the port
       away from its source, that is the evidence that promotes the machine-readable
       suppression channel from gated follow-up to open work — and only then.
+      <!-- Re-measured end to end (design_slop_vs_provided.test.ts): the real scanner over the real fixture, its real output into the real polish gate. Marked → success, ceiling included. Unmarked → still blocked, asserted deliberately. The `--fidelity-source` follow-up STAYS GATED, with a stronger reason than it was written with: a linter-side suppression flag would suppress nothing the pipeline reads, because Phase 0 measured that lint_design_slop has no call site in the work engine at all. -->
+
+**Honest enforcement boundary.** The polish gate is mechanical; the *marking* is
+not. Nothing in the tree can decide whether a finding is genuinely covered by
+the artifact — that is the review step's judgment, carried by prose. What is
+mechanical is the failure direction: an unmarked finding keeps full authority to
+drive a round, so the default is "we asked", never "we silently kept the tell".
 
 **Exit:** a port carrying the Claude-Design house aesthetic survives review and
 polish unchanged.
