@@ -9,10 +9,21 @@ triggers:
   - keyword: "design system"
   - keyword: "design spec"
   - keyword: "Figma"
+  - keyword: "handoff"
+  - keyword: "Claude Design"
   - phrase: "match the design"
   - phrase: "build this design"
   - phrase: "design fidelity"
   - phrase: "stick to the design"
+  - phrase: "design.html"
+  - phrase: "attached artifact"
+  - phrase: "provided artifact"
+  - phrase: "übernimm das design"
+  - phrase: "baue das nach"
+  - phrase: "bau das nach"
+  - phrase: "1:1 um"
+  - phrase: "1:1 nach"
+  - file_pattern: "*design.html"
 applies_to_user_types:
   - "creator"
   - "developer"
@@ -72,6 +83,24 @@ porting, or modifying UI to match it.
 - No provided design (greenfield from a text brief) — [`design-intelligence`](../skills/design-intelligence/SKILL.md) / [`fe-design`](../skills/fe-design/SKILL.md) define it; fidelity has nothing to bind to.
 - The user explicitly invites exploration ("show me options", "redesign this", "improve the layout") — that authorises deviation for that turn.
 - Non-UI surfaces (scripts, CLI, backend).
+
+## Routing — an attached artifact is a trigger, an attached HTML file is not
+
+Matching is plain lower-cased substring containment on the prompt, plus fnmatch
+over the open files. Three handover classes must reach this rule: an English
+phrasing, a German one, and a prompt carrying **no** keyword at all because the
+artifact is simply attached. The last is covered by `file_pattern: *design.html`
+— the conventional handover filename, not `*.html`, which would fire on every
+HTML edit in every project and be strictly worse than the gap it closes. A
+handover under some other filename needs one word in the prompt.
+
+The trigger set is deliberately phrase-heavy on the German side and on
+`artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
+`ROUTING_MATRIX` in
+[`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)
+pins both halves — every class that must route, and the near-misses that must
+stay silent (fixture `daf-port-trigger-de`). Extending the set without adding a
+near-miss row there is how an over-broad trigger lands.
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
