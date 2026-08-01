@@ -612,6 +612,13 @@ the file install. Porting the bash dispatcher to native Windows is
 **demand-gated**: a named Windows adopter who cannot use WSL2 or the MCP
 path reopens it (see `agents/roadmaps/` — road-to-credible-install Phase 3).
 
+## Funding
+
+The package is free, MIT, and stays that way — no paid tier, no dual
+licensing. If it saves you time and you want to chip in, the GitHub Sponsor
+button at the top of the repo is the whole mechanism. If you would rather not,
+use it anyway; nothing here is gated on it.
+
 ## License
 
 [MIT](LICENSE).
