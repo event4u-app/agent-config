@@ -222,7 +222,7 @@ parent: road-to-package-renewal.md
       **85,880 GPT tok** always-on across 110 files (`.claude` / `.augment` /
       `.cursor`), 69,582 for the `.windsurfrules` single blob, 4,839 for the
       31 MCP tool schemas. Target on the primary surface: ≤ 75,880
-- [ ] Pack-gate the domain safety floors: finance/legal/strategy/media +
+- [x] Pack-gate the domain safety floors: finance/legal/strategy/media +
       history-discipline + scale-discipline floors (~8-9k GPT tokens combined)
       state "auto-activates when pack-X is installed" but ship in every
       projection unconditionally — make the projection honor the pack
@@ -231,15 +231,131 @@ parent: road-to-package-renewal.md
       "runtime-governance rules ship to consumers; unsure → ship it")
       deliberately kept these floors shipping — cite it and confirm the
       pack-condition mechanism differs from what that record rejected before
-      editing
-- [ ] Trim the MCP server below the 25-tool soft cap (currently 31 tools,
+      editing.
+      **The audit check, run first (as the step demands).** That record's
+      classification principle is a WORKSPACE-axis ruling: it decides
+      maintainer-vs-consumer ("a rule stays exclusively-maintainer iff it is a
+      specification rule"), and its "unsure → ship it" tie-breaker answers
+      *does this rule belong to consumers at all*. The pack axis answers a
+      different question — *is the surface this floor guards even installed* —
+      and the rule declares that condition in its own body. It is also
+      pre-existing: under `projection.mode: scoped` a consumer without
+      `finance-basic` ALREADY loses the finance skills, so shipping the finance
+      floor to them guards nothing. So the mechanism differs from what the
+      audit rejected. **The audit's caution still binds the DEFAULT**, which is
+      why the flip is a recorded blocker below, not part of this commit.
+      **The mechanism was already wired end-to-end and merely inactive** —
+      `rule_in_scope()` (`src/install/ruleInScope.ts:107`) is a three-axis
+      predicate whose `packs` axis both pipelines already pass
+      (`condense.ts:1036`, `src/install/rule_scope.ts:99`); the setting shipped
+      as `rule_packs: []`. Nothing needed inventing, so this step is a
+      dead-switch repair, the same shape as Phase 1's `condense.ts` thin-mode
+      wiring.
+      **What landed:** `projection.rule_packs: auto` — a sentinel resolved by
+      `resolve_rule_pack_scope()` (`_lib/scoped_projection.ts`) to the
+      ACTIVE-PACK set via the existing `compute_active_pack_ids`, i.e. the same
+      set the skill/command prune uses, so the rule axis cannot drift from the
+      artefact axis. A hand-typed id list was rejected: it would need re-typing
+      on every added pack, which is the two-counting-paths failure that module
+      exists to prevent. Fail-safe preserved — a derivation failure returns
+      "axis inactive", never an empty set (an empty set would prune every
+      pack-tagged rule, inverting the contract). Explicit lists still win.
+      21 new assertions in `tests/install/rule_packs_auto.test.ts` run against
+      the real `packs.yml` + `dist/agent-src/rules` tree, not fixtures.
+      **Measured on this repo:** `auto` drops 8 rules / **8,110 GPT tok**
+      (85,880 → 77,770): `legal-safety-floor`, `media-governance-routing`,
+      `strategy-safety-floor`, `finance-safety-floor`, `media-sync-ground-truth`,
+      `provider-lifecycle-discipline`, `image-likeness-and-rights`,
+      `spreadsheet-source-quality`. `history-discipline` and `scale-discipline`
+      — both named in this step — correctly SURVIVE: their packs carry
+      `workspaces: [engineering]` in `packs.yml`, so they are active. That is
+      the mechanism working, and the test pins it so a later `packs.yml` edit
+      cannot silently drop an engineering floor.
+      **Council (2026-08-02, 2 members, $0.07)** ruled Q1→"port
+      `_resolve_active_predicates` and attach the gate to `scoped` mode".
+      Departed, with the reason recorded: the port's stated benefit was making
+      the number measurable, and checking that premise against the tree
+      falsifies it — `condense.ts:1462` throws on `scoped`, AND `mode: scoped`
+      can only be set via `.agent-settings.yml`, which is gitignored
+      (`.gitignore:275`), so the port does not make anything reproducible on
+      its own. Porting a different subsystem's prune is its own change under
+      `minimal-safe-diff`; the throw stays. Council Q2 (human gate for the
+      consumer default) and Q4 are honored as ruled.
+- [x] Trim the MCP server below the 25-tool soft cap (currently 31 tools,
       flagged over-subscribed by `audit_initial_context`); demotion candidates
       = the tools that audit report flags, candidate list named in the PR
-      description; verify: tool count ≤ 25 in the audit re-run
-- [ ] De-duplicate the host projection's double command listing (hyphen skill +
+      description; ~~verify: tool count ≤ 25 in the audit re-run~~
+      **verify RESTATED — the original conflated two clients that cannot be
+      the same client** (council 2026-08-02, unanimous Option 4):
+      `verify: stdio 19 ≤ 25 (cap satisfied) · worker 31 = full catalog by
+      contract · stub input_schema emptied`.
+      **Why restated, not chased.** There is no single tool count. stdio
+      (`mcp_server/tools.ts:1857`) registers 19 — the 12 discovery stubs are
+      deliberately unregistered (ADR-132). The Worker
+      (`internal/workers/mcp/src/stubs.ts:33`) maps EVERY catalog entry into
+      `tools/list`, tagging stubs `_meta.stub` and answering calls with the
+      `not_implemented` envelope carrying `install_hint` + `alternative:
+      stdio` — that IS the Phase-1 discovery contract
+      (`docs/contracts/mcp-tool-stub-envelope.md`). The audit priced the
+      catalog once and labelled it `agent-config`, i.e. it reported a hybrid
+      client that does not exist and fired the over-subscription flag on a
+      count no local install pays. Deleting the 12 stubs would have satisfied
+      the original wording (31 → 19) by deleting a shipped contract — a
+      passing number bought with a capability loss, which this package's
+      evidence discipline rejects.
+      **What landed:** (a) `audit_initial_context` prices per TRANSPORT,
+      keyed `agent-config (stdio)` / `agent-config (worker)`, deriving the
+      served set from each entry's `implemented_on`; (b) `build_mcp_catalog`
+      emits `input_schema: {}` for stub entries — a schema tells a client how
+      to CALL a tool and no transport permits that for a stub, so it was
+      always-loaded context that could never be acted on. `STUB_TOOLS` keeps
+      the schema as the design record for the day the tool is wired.
+      (c) Both aggregators that fold the MCP surface into a gate —
+      `audit_initial_context`'s `mcp_schemas.gpt` budget and
+      `check_token_regression`'s gated metric — switched from Σ to **max**
+      across entries: a client connects over ONE transport, so summing would
+      bill the 19 shared tools twice and read the split itself as a
+      regression.
+      **Measured:** stdio **19 tools / 3,074 GPT tok — under the cap, flag
+      off**; worker **31 tools / 4,174 GPT tok** (was 4,839 as one conflated
+      row), still flagged and correctly so — the excess IS the discovery
+      contract. Net −665 GPT tok on the worst-case client.
+      `check_token_regression`: `mcp_schemas 4174 vs baseline 4839 (-13.7%)`,
+      whole gate green.
+- [x] De-duplicate the host projection's double command listing (hyphen skill +
       colon command for every command) to one naming scheme — respect the
       single-surface and install-path-convergence council locks when choosing
-      which one survives
+      which one survives.
+      **The double was maintainer-repo-only, which changes the risk.**
+      `generate_claude_commands` short-circuits when `src/domains/` is absent
+      (`condense.ts`), so the hyphen wrappers have never existed in a consumer
+      project — the colon form there comes from the user-global tree
+      `install.ts` writes. So this touches no consumer surface and the
+      single-surface / install-path-convergence locks are not in tension.
+      **Council 2026-08-02 chose Option 1 (both members): drop the twinned
+      wrappers AND add a project-scope colon projection**, rather than drop
+      the wrappers and lean on a global deploy having run — reachability
+      inside a fresh clone must not depend on machine state.
+      **What landed:** `generate_claude_project_commands()` writes
+      `.claude/commands/<cluster>/<sub>.md` symlinks (134 of them, the nested
+      commands); `generate_claude_commands` now skips any command with a
+      nested path, so it emits **47** wrappers instead of 178 — exactly the
+      flat commands, whose wrapper is their ONLY access path (Claude Code
+      does not register flat command FILES, probed ≤ 2.1.204 — the
+      flat-command mitigation in `install.ts`). Claude Code dedupes project
+      and user scope by name, so the two `/cluster:sub` copies collapse.
+      ADR-003 (colon canonical for clusters) and ADR-044 (flat commands stay
+      hyphenated) both continue to hold — neither had to be superseded.
+      `.claude/commands/` registered in the `GENERATOR_OUTPUT_ROOTS` registry
+      and in `.gitignore` in the same commit (the coverage gate demands both;
+      the consumer gitignore block already listed it).
+      **Measured:** `skills_projected` **466 → 335 entries, 17,992 → 13,779
+      GPT tok (−4,213)** — the largest single lever in this phase.
+      7 assertions in `tests/scripts/claude_command_dedup.test.ts` via the
+      condense test-state seam, including a dangling-symlink guard: the first
+      implementation hand-counted the `../` run and produced links that
+      resolve nowhere while looking correct in `ls -l`; `path.relative`
+      replaced the arithmetic and the test pins it.
 - [x] Finish the `condense.ts` thin-mode port so `lean_projection.mode: thin`
       stops THROWING (dead-switch repair only — the default stays `eager-all`
       per the thin-projection honest null; flipping remains parked).
@@ -256,9 +372,26 @@ parent: road-to-package-renewal.md
       62,999 chars. `--measure` reads eager 85,880 → thin 15,106 GPT tok
       (82.4% of the rule layer) — the number the parked flip decision would
       act on, which could not even be re-measured while the mode crashed
-- [ ] Re-run `audit_initial_context` — including the `.windsurfrules`
+- [x] Re-run `audit_initial_context` — including the `.windsurfrules`
       single-blob projection in the before/after — and record the new
-      footprint in the central roadmap's Success criteria section
+      footprint in the central roadmap's Success criteria section.
+      Recorded in `road-to-package-renewal.md` § Success criteria as an
+      AFTER block with BOTH figures: the shipped default (**−4,878**) and the
+      one-gated-flip figure (**−12,988**), so neither is presented as the
+      other. `.windsurfrules` included as the step demands: 69,582 → 63,251
+      under the flip, unchanged on the default.
+      The flip figure is measured END-TO-END — settings written, `task
+      generate-tools` run, audit re-read (`.claude` 110 → 102 files, 85,880 →
+      77,770) — not summed from the predicate, then the temporary settings
+      file removed and the projection regenerated so the tree is back on the
+      shipped default. `.agent-settings.yml` is gitignored, so a measurement
+      that depended on it silently would not be reproducible; the procedure
+      is written down instead.
+      Two misses recorded rather than engineered away: the ≥10k floor is
+      cleared only WITH the flip, and the `≤ 75,880` single-surface
+      sub-target is missed either way (77,770). The sub-target was
+      unreachable by the levers the criterion itself names — the MCP lever
+      does not touch the rule row and `.augment` is unfilterable by design.
 
 ## Phase 3 — runtime activation spike (phase-gated; go/no-go recorded first)
 
@@ -329,6 +462,37 @@ parent: road-to-package-renewal.md
   resulting `ruleset-after.json` as the verification artifact, and
   `docs/contracts/branch-protection-policy.md` § "What is actually enforced"
   is updated from that JSON.
+
+### blocker: rule-packs-auto-consumer-default
+
+- **Status:** gated
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap — the mechanism shipped in Phase 2 and
+  the measurement is recorded; this is only the default flip.
+- **What to do:** change `projection.rule_packs` in
+  `src/config/agent-settings.template.yml` from `[]` to `auto`, then re-run
+  `./scripts-run src/scripts/check_consumer_scope_flip` and record the new
+  consumer figure next to the existing workspace-axis one.
+- **Why not the agent:** flipping it changes what a consumer install
+  RECEIVES, which is the same class of change as the workspace-axis flip of
+  2026-07-13 — recorded there as "the default flip stays a human gate"
+  (`agents/settings/contexts/consumer-scoping-audit-2026-07-07.md:70-73`).
+  The AI council (2026-08-02, both members) ruled the gate applies to the
+  pack axis too, even though the axis itself answers a different question.
+- **Evidence for the decision, already measured:** on this repo `auto` drops
+  8 rules / 8,110 GPT tok, none of them kernel, none of them an
+  engineering-workspace floor. On the consumer surface the workspace axis
+  alone already yields 95 rules / 75,737 tok (`check_consumer_scope_flip`,
+  2026-08-02); `auto` composes with it as a second AND-constraint.
+- **Counter-case to weigh:** the audit's "unsure → ship it" tie-breaker. A
+  consumer who later works on a finance question WITHOUT the finance pack
+  installed would no longer receive `finance-safety-floor`. The pack-axis
+  answer is that such a consumer also has no finance skills, so the floor
+  guards nothing — but that reasoning is exactly what the gate exists to have
+  a human confirm.
+- **Resolved when:** the maintainer records accept-or-reject here with the
+  reason; on accept, the template default and the `check_consumer_scope_flip`
+  report land in the same commit.
 
 ## Verification
 
