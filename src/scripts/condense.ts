@@ -40,6 +40,12 @@ import {
     resolve_logical as _agent_src_resolve_logical,
     strip_source_prefix,
 } from './_lib/agent_src.js';
+// Import-safety note: `project_thin_rules` guards its CLI entry
+// (`_isCliEntry()` before `process.exit(main())`), so importing it here is
+// side-effect-free. condense.ts is bundled into the installer, where a bare
+// top-level `process.exit` would fire at consumer runtime — the documented
+// bundled-CLI-entry-guard landmine. Verified before wiring, not assumed.
+import { build_thin } from './project_thin_rules.js';
 import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
@@ -1044,11 +1050,19 @@ export function generate_rule_symlinks(): number {
 
     let thin_files: Record<string, string> | null = null;
     if (_lean_projection_mode() === 'thin') {
-        // The `project_thin_rules` twin is not ported (out of scope — thin mode
-        // is opt-in and not exercised by golden parity). Throw a clear error if
-        // a consumer actually enables it, mirroring an unmet import.
-        throw new Error(
-            'lean_projection.mode=thin requires project_thin_rules (not ported in condense.ts)',
+        // DEAD-SWITCH REPAIR (road-to-renewal-foundation Phase 2). This branch
+        // used to THROW: the port was skipped as "out of scope, not exercised by
+        // golden parity", which left a documented, settings-selectable mode that
+        // could only ever crash. `build_thin` was ported and has been present the
+        // whole time — the wiring was the only thing missing.
+        //
+        // Scope note: this repairs the SWITCH only. The default stays
+        // `eager-all`. Flipping it is parked behind the thin-projection honest
+        // null (thin win-rate 36.2% < the 48% pre-registered threshold), and
+        // nothing here disturbs that verdict — but a mode that throws cannot
+        // even be re-measured, which is why the repair earns its place alone.
+        thin_files = Object.fromEntries(
+            build_thin(MODULE_STATE.RULES_SOURCE, _read_rule_workspaces()),
         );
     }
 

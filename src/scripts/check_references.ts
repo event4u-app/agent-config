@@ -452,9 +452,12 @@ function _extract_personas_frontmatter(text: string): Array<[number, string]> {
 
 function _find_suggestion(p: string, root: string): string {
     const name = path.basename(p);
+    // DEAD-ROOT REPAIR (road-to-renewal-foundation Phase 1): the middle entry
+    // was `.agent-src.uncondensed`, deleted by ADR-051. `src/` is the source of
+    // truth, so a file that exists only there produced no suggestion at all.
     for (const d of [
         path.join(root, 'dist/agent-src'),
-        path.join(root, '.agent-src.uncondensed'),
+        path.join(root, 'src'),
         path.join(root, 'agents'),
     ]) {
         if (_exists(d)) {
@@ -586,10 +589,15 @@ function check_file(filepath: string, artifacts: Artifacts, root: string): Broke
             } else {
                 // Strip leading ./ and try with prefixes
                 const ref = rawRef.replace(/^[./]+/, '');
+                // DEAD-ROOT REPAIR: `.agent-src.uncondensed` (ADR-051) never
+                // resolved, so a reference that only exists under the source of
+                // truth was reported BROKEN. `src/` and its category roots
+                // replace it.
                 for (const prefix of [
                     root,
                     path.join(root, 'dist/agent-src'),
-                    path.join(root, '.agent-src.uncondensed'),
+                    path.join(root, 'src'),
+                    path.join(root, 'src/agent-src'),
                 ]) {
                     if (_exists(path.join(prefix, ref))) {
                         resolved = true;
@@ -605,7 +613,7 @@ function check_file(filepath: string, artifacts: Artifacts, root: string): Broke
                     const rel = rawRef.slice('.augment/'.length);
                     for (const prefix of [
                         path.join(root, 'dist/agent-src'),
-                        path.join(root, '.agent-src.uncondensed'),
+                        path.join(root, 'src/agent-src'),
                     ]) {
                         if (_exists(path.join(prefix, rel))) {
                             resolved = true;
@@ -774,6 +782,10 @@ function check_memory_yaml(filepath: string, artifacts: Artifacts, root: string)
 function scan_all(root: string): BrokenRef[] {
     const artifacts = collect_artifacts(root);
     const broken: BrokenRef[] = [];
+    // gate-coverage contract (src/config/gate-coverage.yml): a machine-readable
+    // count of files actually read, so `check_gate_coverage` can assert this
+    // gate saw a real corpus rather than a moved root.
+    let scannedFiles = 0;
     for (const scanDir of SCAN_DIRS) {
         const d = path.join(root, scanDir);
         if (!_exists(d)) {
@@ -785,18 +797,22 @@ function scan_all(root: string): BrokenRef[] {
             if (SKIP_DIRS.some((skip) => f.startsWith(path.join(root, skip)))) {
                 continue;
             }
+            scannedFiles += 1;
             broken.push(...check_file(f, artifacts, root));
         }
     }
     const memoryDir = path.join(root, MEMORY_YAML_ROOT);
     if (_isDir(memoryDir)) {
         for (const f of _rglob(memoryDir, '.yml').sort()) {
+            scannedFiles += 1;
             broken.push(...check_memory_yaml(f, artifacts, root));
         }
         for (const f of _rglob(memoryDir, '.yaml').sort()) {
+            scannedFiles += 1;
             broken.push(...check_memory_yaml(f, artifacts, root));
         }
     }
+    process.stderr.write(`scanned: ${String(scannedFiles)}\n`);
     return broken;
 }
 

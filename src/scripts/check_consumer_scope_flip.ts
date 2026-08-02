@@ -149,8 +149,26 @@ async function main(): Promise<number> {
         },
         pass: v.pass,
     };
-    fs.mkdirSync(path.dirname(REPORT), { recursive: true });
-    fs.writeFileSync(REPORT, `${JSON.stringify(report, null, 1)}\n`);
+    // WRITE IS OPT-IN (road-to-renewal-foundation Phase 1). This used to write
+    // unconditionally, which made a `check_*` script mutate a TRACKED, DATED
+    // artifact as a side effect of merely being executed. Two concrete costs,
+    // both hit in one session:
+    //
+    //   * Any sweep that runs "every gate" — a coverage census, a timing pass,
+    //     or the pooled umbrella runner this roadmap proposes — silently dirties
+    //     the tree, and the next `task consistency` then reports derived-output
+    //     drift that has nothing to do with the diff under test.
+    //   * A dated report is a RECORD of a past measurement. Rewriting it in
+    //     place with today's numbers destroys the thing its filename claims.
+    //
+    // Verification is unchanged and still runs on every invocation; only the
+    // persistence is gated. `--write` reproduces the old behaviour for a
+    // deliberate re-measure.
+    const wrote = process.argv.includes('--write');
+    if (wrote) {
+        fs.mkdirSync(path.dirname(REPORT), { recursive: true });
+        fs.writeFileSync(REPORT, `${JSON.stringify(report, null, 1)}\n`);
+    }
     process.stdout.write(`excluded ${v.excluded.length} rules under scope [${v.scope.join(', ')}]\n`);
     if (v.violations.length > 0) {
         process.stdout.write(`❌  NON-MAINTAINER rules would drop: ${v.violations.join(' · ')}\n`);
@@ -162,7 +180,11 @@ async function main(): Promise<number> {
         `legacy-all ${legacyRules} rules / ${legacyTok} tok → scoped ${scopedRules} rules / ${scopedTok} tok `
         + `(−${legacyTok - scopedTok} tok, −${report.delta.tokens_pct}%)\n`,
     );
-    process.stdout.write(v.pass ? `✅  flip verified — wrote ${REPORT}\n` : '❌  flip NOT verified\n');
+    process.stdout.write(
+        v.pass
+            ? `✅  flip verified${wrote ? ` — wrote ${REPORT}` : ' (read-only; pass --write to persist the report)'}\n`
+            : '❌  flip NOT verified\n',
+    );
     return v.pass ? 0 : 1;
 }
 

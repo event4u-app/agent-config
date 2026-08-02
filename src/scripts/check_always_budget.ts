@@ -36,7 +36,42 @@ const RULES_DIR = path.join(REPO_ROOT, 'dist/agent-src', 'rules');
 const SRC_PREFIX = '.agent-src.uncondensed/';
 const COMP_PREFIX = 'dist/agent-src/';
 
+/**
+ * TWO BUDGETS, TWO DIMENSIONS (road-to-renewal-foundation Phase 1; council
+ * 2026-08-02 option B, 2/2).
+ *
+ * `TOTAL_CAP` governs the **raw** dimension — the always-loaded kernel rule
+ * bodies themselves. That is the dimension this cap was calibrated for and the
+ * only one it ever actually enforced: until the dead-root repair in this same
+ * change, `srcToCondensed()` resolved every `load_context` entry to a path that
+ * could not exist, so the walker counted ZERO context files and `ext` always
+ * equalled `raw`. The gate printed a confident `60.1%` of a dimension it was
+ * not measuring.
+ *
+ * `EXT_TOTAL_CAP` governs the **extended** dimension — raw plus the transitive
+ * closure of `load_context` / `load_context_eager` (depth ≤ 2). It is seeded at
+ * the FIRST REAL MEASUREMENT, taken 2026-08-02 after the repair, and is a hard
+ * gate (the council rejected an advisory cycle: an advisory number creates no
+ * pressure and just defers the collision).
+ *
+ * The seed is a baseline of revealed debt, NOT a target and NOT an approval.
+ * It exists so the number is visible and ratcheted; it may only move DOWN. The
+ * Phase 2 token work of this roadmap is what pays it down.
+ *
+ * Deliberately NOT done: raising `TOTAL_CAP` to swallow the ext number. That
+ * would silently redefine the kernel budget to ~2× what the maintainer approved
+ * and remove exactly the pressure Phase 2 exists to apply.
+ *
+ * Deliberately DEFERRED: splitting lazy `load_context` from eager
+ * `load_context_eager` (only the latter is unconditionally always-loaded). The
+ * distinction is real and encoded in the schema, but narrowing an aggregate on
+ * a semantic argument is a separate decision from repairing its measurement —
+ * and it cannot claim the "live and green" protection the house discriminator
+ * grants an enforced contract, because this dimension was never enforced.
+ */
 const TOTAL_CAP = 49_000;
+const EXT_TOTAL_CAP = 60_254;
+const EXT_MEASURED_AT = '2026-08-02';
 const WARN_THRESHOLD = 0.8;
 const FAIL_THRESHOLD = 0.9;
 
@@ -63,16 +98,36 @@ const TREND_LOG = path.join(REPO_ROOT, '.github', 'budget-trend.jsonl');
 const TREND_LOG_MAX_RECORDS = 500;
 const TOLERANCE_BAND = 0.02;
 const PER_RULE_CAP = 6_000;
-const TOP3_CAP = Math.trunc(TOTAL_CAP / 2);
+// Top-3 is an EXT measure, so it is capped against the ext budget, not the raw
+// one. Seeded 2026-08-02 at the measured 37,855 rather than the derived
+// EXT_TOTAL_CAP/2 (30,127): the derived value was never met and would fail on
+// day one, which is a baseline the gate cannot hold. Ratchet — moves DOWN only.
+const TOP3_CAP = 37_855;
 const MAX_DEPTH = 2;
 const MAX_CONTEXTS_PER_RULE = 3;
 
 const RECOVERY_BAND_ENABLED = true;
 const BASELINE_FILE = path.join(REPO_ROOT, '.github', 'budget-baseline.txt');
 
+/**
+ * Per-rule EXT ceilings, reseeded 2026-08-02 at the first real measurement.
+ *
+ * The previous values (`non-destructive-by-default` 7,908 · `scope-control`
+ * 8,550) were ~2× those rules' raw sizes, which is why they are evidence the
+ * ext dimension once counted contexts — but they have been unenforceable for as
+ * long as the resolver was broken, so they describe a tree that no longer
+ * exists. Reseeding them to the measured values is a baseline of revealed debt,
+ * not an approval: these are ratchets and may only move DOWN.
+ *
+ * `commit-policy` and `verify-before-complete` are new entries for the same
+ * reason — they breach the 6,000 per-rule cap only now that their context
+ * closures are actually counted.
+ */
 const KNOWN_PER_RULE_BREACHES: Record<string, number> = {
-    'non-destructive-by-default.md': 7_908,
-    'scope-control.md': 8_550,
+    'scope-control.md': 19_332,
+    'non-destructive-by-default.md': 9_657,
+    'commit-policy.md': 8_866,
+    'verify-before-complete.md': 7_140,
 };
 
 const PROG = 'check_always_budget.py';
@@ -198,11 +253,51 @@ function loadContextPaths(filePath: string): string[] {
     return out;
 }
 
-function srcToCondensed(entry: string): string {
-    if (entry.startsWith(SRC_PREFIX)) {
-        return path.join(REPO_ROOT, COMP_PREFIX + entry.slice(SRC_PREFIX.length));
+/**
+ * Resolve one `load_context` entry to the projected file it names.
+ *
+ * DEAD-ROOT REPAIR (road-to-renewal-foundation Phase 1). This used to be:
+ *
+ *     if (entry.startsWith(<retired authoring root>)) → dist/agent-src/<rest>
+ *     else                                             → REPO_ROOT/<entry>
+ *
+ * The retired authoring root was deleted by ADR-051, so the first branch was
+ * unreachable. The second branch was wrong for every real entry: `load_context`
+ * values are relative to the file that declares them
+ * (`../contexts/execution/autonomy-mechanics.md` from a rule in
+ * `dist/agent-src/rules/`), never repo-root-relative. Joining them to the repo
+ * root produced `<repo>/contexts/…`, which never exists — and `walkContexts`
+ * silently `continue`s on a missing path.
+ *
+ * Net effect: the transitive-context dimension of this budget counted ZERO
+ * files while the gate printed a confident percentage. It reported ~60% of a
+ * cap it was not measuring, and would have reported the same had every rule
+ * pulled in a megabyte of context.
+ *
+ * `skill:` / `guideline:` entries are scheme references, not paths — they have
+ * no file to size and are skipped explicitly rather than by accidental
+ * existsSync failure.
+ *
+ * @param entry the raw frontmatter value
+ * @param fromFile absolute path of the file that declared it
+ * @returns absolute path, or `null` when the entry names no file
+ */
+function resolveContextEntry(entry: string, fromFile: string): string | null {
+    const trimmed = entry.trim();
+    if (trimmed === '' || /^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+        // `skill:foo`, `guideline:bar/baz`, or any other scheme reference.
+        return null;
     }
-    return path.join(REPO_ROOT, entry);
+    if (trimmed.startsWith(SRC_PREFIX)) {
+        // Legacy authoring-root form, kept so a stale entry still resolves to
+        // its projected twin instead of silently counting zero.
+        return path.join(REPO_ROOT, COMP_PREFIX + trimmed.slice(SRC_PREFIX.length));
+    }
+    if (trimmed.startsWith(COMP_PREFIX) || path.isAbsolute(trimmed)) {
+        return path.resolve(REPO_ROOT, trimmed);
+    }
+    // The real shape: relative to the declaring file's directory.
+    return path.resolve(path.dirname(fromFile), trimmed);
 }
 
 /** Return [set of context files counted, list of depth-violation chains]. */
@@ -214,8 +309,9 @@ function walkContexts(rule: string): [Set<string>, Array<[string, string]>] {
     while (stack.length > 0) {
         const [node, depth, chain] = stack.pop() as [string, number, string];
         for (const entry of loadContextPaths(node)) {
-            const comp = srcToCondensed(entry);
+            const comp = resolveContextEntry(entry, node);
             const newChain = `${chain} → ${entry}`;
+            if (comp === null) continue;
             if (depth + 1 > MAX_DEPTH) {
                 violations.push([ruleName, newChain]);
                 continue;
@@ -473,8 +569,16 @@ function main(): number {
     // sizes.sort(key=lambda x: -x[2]) — stable descending by ext.
     sizes.sort((a, b) => b[2] - a[2]);
     let totalExt = 0;
-    for (const s of sizes) totalExt += s[2];
-    const pct = totalExt / TOTAL_CAP;
+    let totalRaw = 0;
+    for (const s of sizes) {
+        totalRaw += s[1];
+        totalExt += s[2];
+    }
+    // TOTAL_CAP is the RAW budget (see the two-budgets note at the top); the
+    // extended dimension has its own seeded cap.
+    const pct = totalRaw / TOTAL_CAP;
+    const extPct = totalExt / EXT_TOTAL_CAP;
+    const extBreach = totalExt > EXT_TOTAL_CAP;
     let top3 = 0;
     for (const s of sizes.slice(0, 3)) top3 += s[2];
     const top3Breach = top3 > TOP3_CAP;
@@ -503,6 +607,7 @@ function main(): number {
     const failing =
         (pct >= FAIL_THRESHOLD && !inTolerance && !inRecoveryBand && pct < 1.0) ||
         pct > 1.0 + TOLERANCE_BAND ||
+        extBreach ||
         overPerRule.length > 0 ||
         grewOverCeiling.length > 0 ||
         top3Breach ||
@@ -532,8 +637,14 @@ function main(): number {
 
     const out: string[] = [];
     out.push(
-        `${status}  always-rule extended budget: ${comma(totalExt)} / ` +
+        `${status}  always-rule raw budget: ${comma(totalRaw)} / ` +
             `${comma(TOTAL_CAP)} chars (${fixed(pct * 100, 1)}%) across ${rules.length} rule(s)`,
+    );
+    out.push(
+        `      extended (raw + load_context closure): ${comma(totalExt)} / ` +
+            `${comma(EXT_TOTAL_CAP)} chars (${fixed(extPct * 100, 1)}%)` +
+            `${extBreach ? '  ❌ over the seeded ext cap' : ''}` +
+            `  — ratchet seeded at the first real measurement ${EXT_MEASURED_AT}; may only move DOWN`,
     );
     out.push(
         `      thresholds: warn ${fixed(WARN_THRESHOLD * 100, 0)}% · ` +

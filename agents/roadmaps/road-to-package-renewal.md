@@ -145,11 +145,29 @@ Foundation Phase 1 is green. ADR hygiene chips alongside any PR.
 - `ci-strict` ⊇ `ci` provably (single shared gate list, strict adds — never
   subtracts).
 - Non-kernel always-context on this repo reduced by ≥10k GPT tokens vs the
-  recorded `audit_initial_context` baseline (baseline value written into this
-  section before Foundation Phase 2 starts; levers: pack-gated floors ~8-9k +
+  recorded `audit_initial_context` baseline (levers: pack-gated floors ~8-9k +
   MCP trim), content unchanged; the runtime-activation spike produces its
   pre-registered measurement (token delta + injection precision + non-kernel
   recall/quality arm) before any default changes.
+
+  **BASELINE — recorded 2026-08-02T15:12:25Z, before any Foundation Phase 2
+  change landed** (`./scripts-run src/scripts/audit_initial_context`):
+
+  | surface | files | chars | GPT tok | Claude tok |
+  |---|--:|--:|--:|--:|
+  | `.claude` / `.augment` / `.cursor` always-on rules | 110 | 344,765 | **85,880** | 95,768 |
+  | `.windsurfrules` (single-blob projection) | 1 | 286,225 | **69,582** | 79,507 |
+  | MCP `agent-config` tool schemas | 31 tools | 22,501 | **4,839** | 6,250 |
+
+  Target on the primary surface: **85,880 → ≤ 75,880 GPT tokens.**
+
+  Adjacent finding from the same session (Foundation Phase 1), load-bearing for
+  this criterion: the KERNEL's own extended footprint had never been measured —
+  `check_always_budget` resolved every `load_context` path to a nonexistent file
+  and counted ZERO, printing a confident 60.1% of a dimension it was not
+  measuring. Repaired, it reads 60,254 chars against a 49,000 cap. That figure
+  is now a hard-gated ratchet seeded at first measurement, and this phase's work
+  is what pays it down.
 - Every command appears exactly once in the host projection.
 - Zero `src/` references to `.agent-src.uncondensed/` + CI ban on new ones.
 

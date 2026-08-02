@@ -228,3 +228,47 @@ gates:
       shards — is NOT listed here because it was deleted rather than repaired
       (skill_linter --all already covers all 429 artefacts in 0.5s).
 
+
+  # ── Registered 2026-08-02 (road-to-renewal-foundation Phase 1) ───────────
+  # All three were repaired in the same change from scanning a root ADR-051
+  # deleted. Each exited 0 the whole time it was blind, which is why the
+  # registration matters more than the repair: the repair fixes today, the
+  # floor is what makes the next path migration LOUD instead of silent.
+  # The roadmap step asked for `assertScanned` to be made mandatory across all
+  # corpus gates; this manifest is the stronger form of the same guarantee —
+  # `assertScanned` can only distinguish 0 from 1, while a floor also catches
+  # the 1566 → 3 collapse that a `> 0` check reports as healthy.
+
+  - id: check_portability
+    argv: []
+    min_scanned: 1200
+    corpus: "all .md under src/ + dist/agent-src/ plus the shipped root files (1,566 at baseline)"
+    status: enforced
+    note: >
+      SCAN_DIRS named the retired authoring root, so the entire src/ tree —
+      more than half the corpus — was skipped and an identifier authored there
+      was caught only once a condense run projected it into dist/agent-src/.
+
+  - id: check_references
+    argv: []
+    min_scanned: 800
+    corpus: ".md under the scanned roots plus memory YAML (1,043 at baseline)"
+    status: enforced
+    note: >
+      src/ was absent from every reference-resolution candidate list, so a link
+      resolvable only under the source of truth was reported BROKEN. The
+      failure direction was false-positive rather than false-green, but the
+      cause was the same dead root.
+
+  - id: lint_framework_leakage
+    argv: []
+    min_scanned: 350
+    corpus: "skills / rules / commands .md (431 at baseline)"
+    status: enforced
+    note: >
+      Its human summary prints "N hits across M files", where M is files WITH
+      HITS — 0 on a clean run. Reading that as coverage is precisely how a
+      blind gate looks healthy, so this gate now emits a separate `scanned:`
+      count. Its inventory-file exemption was also dead: it compared against
+      the retired root AND against 'dist/agent-src' as a single path segment,
+      which a '/'-split can never yield.

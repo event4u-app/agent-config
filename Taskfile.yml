@@ -64,12 +64,20 @@ tasks:
 
   # CI tiers — Phase 1.4 of step-1-v2-feedback-followup roadmap (council U2).
   #
-  #   ci-fast   — minimal fast loop for local edits (see taskfiles/ci-fast.yml)
   #   ci        — full local CI, WARN-permissive (lint-skills + lint-readme)
-  #   ci-strict — full local CI, WARN-fatal (lint-skills-strict + lint-readme-strict).
-  #               Intended release-tag gate. Currently surfaces the WARN backlog —
-  #               not yet wired into the release workflow; gating decision lives
-  #               with Phase 3.1 of the same roadmap.
+  #   ci-strict — `ci` PLUS the WARN-fatal twins and reuse-lint. Superset by
+  #               construction (it delegates to `ci`); guarded by
+  #               check-ci-strict-superset. Intended release-tag gate;
+  #               surfaces the WARN backlog and is not yet wired into the
+  #               release workflow.
+  #
+  # NOTE (2026-08-02): there is no `ci-fast` TASK. `taskfiles/ci-fast.yml` is
+  # included with `flatten: true`, which creates no namespace and no aggregate —
+  # it is a file of individual gate tasks, not a tier. This comment used to list
+  # `ci-fast` as a third tier, and `src/scripts/check_enforcement_coverage.ts`
+  # still names it as an aggregate; `task ci-fast` fails with "task not found".
+  # Left as a named finding rather than silently inventing the tier — creating
+  # one is a scoped decision, not a comment fix.
   ci:
     desc: Run ALL CI checks locally (must pass before push) — emits duration line (P2.4)
     cmds:
@@ -78,6 +86,7 @@ tasks:
       - task: consistency
       - task: preflight
       - task: check-ci-local-parity
+      - task: check-ci-strict-superset
       - task: counts-check
       - task: check-index
       - task: check-router
@@ -293,213 +302,36 @@ tasks:
 
   ci-strict:
     desc: Run ALL CI checks with WARN promoted to ERROR (release-tag gate — Phase 1.4 / U2)
+    # SUPERSET BY CONSTRUCTION (road-to-renewal-foundation Phase 1; council
+    # 2026-08-02 decision A1, 2/2).
+    #
+    # `ci-strict` used to be an independently maintained 197-entry copy of
+    # `ci`'s 202-entry list. The two drifted, and nothing detected it: SIX
+    # gates ran in `ci` with no counterpart here at all — `preflight` (which
+    # alone fans out to 11 scripts, among them check_no_new_legacy_path and
+    # check_kernel_rule_bundle), check-ci-local-parity,
+    # check-gitignore-freshness, check-generator-output-coverage,
+    # check-tracked-but-ignored, check-generated-artefact-headers. The
+    # "release-tag gate" was therefore strictly WEAKER than the everyday gate
+    # on ~16 concrete script runs.
+    #
+    # Delegating to `ci` makes the superset property tautological — it cannot
+    # drift, because there is only one list. Entries below are additive only.
+    # Three are WARN-fatal twins whose permissive versions also run via `ci`
+    # (lint-skills / lint-readme / lint-agents-layout); that duplication is
+    # deliberate and cheap, and it is the price of by-construction
+    # correctness. `reuse-lint` is genuinely strict-only — it needs the
+    # external `reuse` tool and self-skips when absent.
+    #
+    # `_ci-start` / `_ci-end` are NOT repeated here: `ci` already brackets the
+    # run, so the duration line still prints once.
+    #
+    # Guarded by `check-ci-strict-superset` (src/scripts/check_ci_strict_superset.ts),
+    # which asserts the single invariant that makes this work: the first gate
+    # entry below is `- task: ci`.
     cmds:
-      - task: _ci-start
-      - defer: { task: _ci-end }
-      - task: consistency
-      - task: counts-check
-      - task: check-index
-      - task: check-router
-      - task: check-condensation
-      - task: check-condensed-paths
-      - task: check-overlay-cascade-subdirs
-      - task: check-template-pin-drift
-      - task: check-reach-channels
-      - task: check-reach-prescriptions
-      - task: check-reach-staleness
-      - task: check-refs
-      - task: check-no-conflict-markers
-      - task: check-secret-leak
-      - task: check-claims
-      - task: check-adr-frontmatter
-      - task: check-subagent-floor
-      - task: lint-override-kernel-guard
-      - task: lint-output-slop
-      - task: lint-spawn-payload
-      - task: lint-pre-migration-refs
-      - task: lint-consumer-internal-refs
-      - task: lint-budget-ownership
-      - task: lint-governed-writes
-      - task: check-enforcement-coverage
-      - task: check-artefact-counts
-      - task: check-dependency-floors
-      - task: check-pack-size
-      - task: check-preamble-payload
-      - task: lint-no-python-twin-rationale
-      - task: check-memory-replay
-      - task: check-second-brain-scorer
-      - task: check-second-brain-retrieval
-      - task: check-eval-coverage
-      - task: check-domain-soundness
-      - task: lint-behavioural-eval-freshness
-      - task: check-skill-gaps
-      - task: check-comparison
-      - task: check-structural-breaking
-      - task: check-trigger-evals
-      - task: check-trigger-eval-presence
-      - task: lint-eval-freshness
-      - task: lint-workflow-security
-      - task: lint-missions
-      - task: check-token-optimizer-freshness
-      - task: check-portability
-      - task: check-no-external-sources
-      - task: check-source-pointer-freshness
-      - task: check-module-management-neutral
-      - task: check-release-trunk-sync
-      - task: check-release-published
-      - task: validate-decision-engine
-      - task: validate-agent-settings
-      - task: smoke-quickstart
-      - task: check-examples-shape
-      - task: lint-roadmap-complexity
-      - task: lint-roadmap-ci-steps
-      - task: lint-empty-roadmaps
-      - task: lint-roadmap-blockers
-      - task: lint-roadmap-later-disposition
-      - task: lint-tickets
-      - task: lint-commit-subjects
-      - task: lint-discovery-vocab
-      - task: lint-pack-risk-class
-      - task: lint-profile-overlay-set-only
-      - task: lint-discovery-manifest
-      - task: lint-artefact-frontmatter
-      - task: check-skill-requires
-      - task: check-gate-paths
-      - task: check-test-coverage-diff
-      - task: lint-frontmatter-boilerplate
-      - task: lint-model-tier-coverage
-      - task: lint-trust-coherence
-      - task: lint-legal-pack
+      - task: ci
       - task: reuse-lint
-      - task: lint-provenance
-      - task: lint-provenance-vocabulary
-      - task: validate-discovery-manifest
-      - task: check-discovery-determinism
-      - task: check-artefact-checksums
-      - task: lint-framework-leakage
-      - task: lint-context-spine-usage
-      - task: check-surface-tiers
-      - task: check-public-links
-      - task: check-beta-review-markers
-      - task: check-public-catalog-links
-      - task: check-md-language
-      - task: check-command-count
-      - task: lint-no-new-atomic-commands
-      - task: lint-command-budget
-      - task: lint-command-verbs
-      - task: lint-command-routing
-      - task: lint-skill-names
-      - task: lint-new-skill-gate
-      - task: lint-skill-originality
-      # BLOCKING at 0.70 for same-pack pairs (road-to-overlap-truth-and-skill-cut
-      # P6). Exit 1 on an unjustified pair, exit 3 on a dead scan scope. The
-      # corpus is at zero pairs today, so this gate's job is future growth, not
-      # this sweep — which is what a blocking gate should look like.
-      - task: audit-skill-overlap
-      - task: lint-skill-descriptions
-      - task: lint-skill-scripts-readonly
-      - task: check-cluster-patterns
-      - task: lint-orchestrator-auto-detect
-      - task: lint-rule-interactions
-      - task: lint-load-context
-      - task: check-context-paths
-      - task: check-no-roadmap-refs
-      - task: lint-documented-commands
-      - task: lint-store-boundary
-      - task: check-knowledge-cards
-      - task: check-knowledge-pages
-      - task: lint-knowledge-scale
-      - task: lint-versioned-cache
-      - task: check-no-local-settings
-      - task: check-council-references
-      - task: lint-one-off-age
-      - task: check-ownership-matrix
-      - task: check-reply-consistency
-      - task: check-iron-law-prominence
-      - task: check-rule-invariants
-      - task: lint-changelog-rollback
-      - task: lint-breaking-changes-index
-      - task: check-always-budget
-      - task: check-augment-description-cap
-      - task: check-augment-budget-strict
-      - task: check-one-off-location
-      - task: validate-schema
-      - task: lint-supported-tools-matrix
-      - task: lint-rule-budget
-      - task: audit-tokens-budget
-      - task: check-token-regression
-      - task: check-token-quality-golden
-      - task: check-quality-regression
-      - task: check-kernel-prefix-stability
       - task: lint-skills-strict
-      - task: lint-role-experiences
-      - task: lint-namespace
-      - task: lint-mcp-inventory
-      - task: lint-agent-security
-      - task: lint-adr-coverage
-      - task: lint-archived-skills
-      - task: lint-bench
-      - task: lint-rule-tiers
-      - task: lint-command-tiers
-      - task: lint-ghostwriter-source
-      - task: lint-media-policy-linkage
-      - task: lint-ui-stack-bundles
-      - task: lint-eval-fixture-citations
-      - task: lint-glama-drift
-      - task: lint-persona-governance
-      - task: lint-subagent-determinism
-      - task: lint-handoffs
-      - task: lint-hook-manifest
-      - task: lint-marketplace-install
-      - task: lint-surface-matrix
-      - task: lint-hook-concern-budget
-      - task: lint-showcase-sessions
-      - task: lint-marketplace
-      - task: lint-user-type-axis
-      - task: lint-skill-tools
-      - task: lint-agents-md
-      - task: lint-projection-fidelity
-      - task: generate-pack-manifests-check
-      - task: lint-pack-boundaries
-      - task: validate-pack-yaml
-      - task: lint-pack-dependencies
-      - task: lint-flows
-      - task: lint-originality
-      # Advisory, never fails, and self-skips on CI — it warns LOCALLY when the
-      # committed originality report describes an older corpus. Listed here so
-      # the warning is seen, not to gate on it: that report blocks nothing on
-      # its own by design, and its bytes are not reproducible across runners.
-      - task: check-originality-freshness
-      - task: validate-flow-teams
-      - task: lint-command-flow-coverage
-      - task: generate-command-flows-check
-      - task: generate-capability-matrix-check
-      - task: generate-capabilities-index-check
-      - task: complexity-report
-      - task: build-proof-check
-      - task: generate-cookbook-check
-      - task: generate-role-experiences-catalog-check
-      - task: lint-namespace-collisions
-      - task: ci-cloud-bundle
-      - task: ci-linear-digest
-      - task: check-memory
-      - task: test
-      - task: runtime-e2e
-      - task: lint-ts
-      - task: typecheck-ts
-      # test-ts now runs inside `task: test` above (unified entrypoint,
-      # council 2026-07-08) — not repeated here to avoid a double vitest run.
-      - task: build-ts
-      - task: check-roadmap-trackable
-      - task: check-council-layout
-      - task: check-council-config-location
       - task: lint-agents-layout-strict
-      - task: check-role-doc-links
-      - task: roadmap-progress-check
       - task: lint-readme-strict
-      - task: lint-readme-size
-      - task: lint-readme-jargon
-      - task: lint-readme-serial-comma
-      - task: lint-workspace-boundary
-      - task: lint-featured-skills
-      - task: lint-pack-first-win

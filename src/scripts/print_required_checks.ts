@@ -61,28 +61,75 @@ const DOCS_ONLY_ALLOWED_TOP: ReadonlySet<string> = new Set([
     'llms.txt',
 ]);
 
+// Check names below are the strings GitHub actually REPORTS, verified against
+// `gh pr checks 1108` on 2026-08-02 (road-to-renewal-foundation Phase 1).
+//
+// They previously named a matrix that had drifted into fiction — `Consistency`,
+// `Skill Lint`, `Tests / install-tests`, `Tests / node-tests`,
+// `Public Install Smoke / smoke`, `Migration Dry-Run`,
+// `Release Validation / release-shape`, `Release Guard (post-tag)` and, most
+// clearly, `Tests / python-tests`, which cannot exist at all: the Python→TS
+// migration completed and `no-python-in-src.yml` now enforces its absence. A
+// preview tool that prints names no check will ever report is worse than no
+// preview — it reads as a verified list.
+//
+// Matrix families are printed as ONE line with the axis spelled out rather than
+// as N pinned contexts. Shard counts and runner labels are part of the reported
+// name, so pinning them here would re-create the same drift on the next matrix
+// change — the exact failure this reconciliation removed.
 const FEATURE_CHECKS = [
-    'Consistency',
-    'Smoke Contracts',
-    'Skill Lint',
-    'Tests / install-tests',
-    'Tests / install-aux-tests',
-    'Tests / python-tests',
-    'Tests / node-tests',
-    'Public Install Smoke / smoke',
+    'Sync + Generate Tools Consistency',
+    'Smoke — kernel',
+    'Smoke — router',
+    'Smoke — schema',
+    'Smoke — skills',
+    'skill-lint',
+    'Static Checks (ESLint · typecheck · prepack)',
+    'Install Script Tests (matrix: {ubuntu,macos}-latest × shard 1-4/4)',
+    'Install Aux Tests (matrix: {ubuntu,macos}-latest)',
+    'Node Tests (matrix: {ubuntu,macos}-latest × shard 1-4/4)',
+    'Golden Tests (matrix: {ubuntu,macos}-latest)',
+    'Workspace Tests (matrix: {ubuntu,macos}-latest)',
+    'Public Install Smoke (matrix: {ubuntu,macos,windows}-latest × node {20,22})',
+    'Rule backstops',
+    'no-python-in-src',
+    'lint commit subjects',
 ] as const;
 
 const RELEASE_CHECKS = [
-    'Consistency',
-    'Smoke Contracts',
-    'Migration Dry-Run',
-    'Release Validation / release-shape',
-    'Release Validation / changelog-entry',
-    'Release Validation / version-consistency',
-    'Release Guard (post-tag)',
+    'Sync + Generate Tools Consistency',
+    'Smoke — kernel',
+    'Smoke — router',
+    'Smoke — schema',
+    'Smoke — skills',
+    'Release-PR shape detector',
+    'CHANGELOG entry exists for head version',
+    'package.json / marketplace.json / pack manifests agree',
+    'Release install E2E (pack → install → upgrade → boot)',
+    'npm audit (runtime deps, high+)',
+    'skill-lint-strict',
 ] as const;
 
-const DOCS_ONLY_CHECKS = ['Consistency', 'Smoke Contracts'] as const;
+const DOCS_ONLY_CHECKS = [
+    'Sync + Generate Tools Consistency',
+    'Smoke — kernel',
+    'Smoke — router',
+    'Smoke — schema',
+    'Smoke — skills',
+] as const;
+
+/**
+ * The checks that mechanically BLOCK a merge, per the repository ruleset
+ * `main protection` (id 17749383). Everything else above runs and is visible
+ * on the PR but does not gate the merge button.
+ *
+ * Deliberately a constant, not an API read: this script is contractually
+ * offline ("never invokes `gh`, never touches the network"). Re-verify with
+ * `gh api repos/event4u-app/agent-config/rulesets/17749383` when the ruleset
+ * changes — `docs/contracts/branch-protection-policy.md` § Change discipline
+ * owns that procedure.
+ */
+const ENFORCED_CHECKS = ['Sync + Generate Tools Consistency'] as const;
 
 /** `git rev-parse --abbrev-ref HEAD`, mirroring `_git(check=True)`. */
 function current_branch(): string {
@@ -161,12 +208,19 @@ function print_set(shape_label: Shape, files: string[]): void {
         'docs-only': DOCS_ONLY_CHECKS,
     };
     const checks = table[shape_label];
+    const enforced: ReadonlySet<string> = new Set(ENFORCED_CHECKS);
     process.stdout.write(`PR shape: ${shape_label}  (${files.length} file(s) in diff)\n`);
-    process.stdout.write(`Required checks (${checks.length}):\n`);
+    process.stdout.write(`Checks this PR will face (${checks.length}):\n`);
     for (const name of checks) {
-        process.stdout.write(`  - ${name}\n`);
+        // `!` marks the checks that actually block the merge button; the rest
+        // run and are visible but are advisory at the branch-protection layer.
+        process.stdout.write(`  ${enforced.has(name) ? '!' : '-'} ${name}\n`);
     }
     process.stdout.write('\n');
+    process.stdout.write(
+        `! = blocks merge (${ENFORCED_CHECKS.length} of ${checks.length}); ` +
+            '- = runs, visible, advisory\n',
+    );
     process.stdout.write(
         'Contract: docs/contracts/branch-protection-policy.md ' +
             '(per-PR-shape matrix)\n',

@@ -32,6 +32,17 @@ tasks:
       Both directions cost real defects; see the manifest header.
     cmd: ./scripts-run src/scripts/check_ci_local_parity {{.QUIET_FLAG}}
 
+  check-ci-strict-superset:
+    silent: true
+    desc: |
+      Assert `ci-strict` still delegates to `ci` (`- task: ci` as its first gate
+      entry), which is what makes the strict tier a superset BY CONSTRUCTION.
+      The two lists were once maintained independently and drifted to six gates
+      that ran in `ci` and nowhere in `ci-strict` — a release gate proving less
+      than the everyday gate, invisible because check-ci-local-parity scopes
+      itself to the 'ci' and 'consistency' roots only.
+    cmd: ./scripts-run src/scripts/check_ci_strict_superset {{.QUIET_FLAG}}
+
   lint-originality-shingles:
     desc: "Re-skin detector — entity-masked 8-word shingle overlap across skills/personas/subagents. Report-only (calibration); arm with --threshold <pct> once the allowlist is seeded."
     cmd: ./scripts-run src/scripts/lint_originality_shingles --top 10

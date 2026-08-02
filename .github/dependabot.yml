@@ -1,0 +1,116 @@
+# Dependency update automation.
+#
+# WHY (road-to-renewal-foundation, Phase 1 — dependency-audit gap):
+# `npm audit --omit=dev --audit-level=high` already runs on every PR (a step
+# in the `Static Checks` job of tests.yml) and again as a standalone job on
+# release PRs. That covers "is the runtime tree clean *at the moment someone
+# opens a PR*". It does NOT cover the quiet week: a high-severity advisory
+# published against an already-installed version is invisible until the next
+# PR happens to run. Dependabot closes exactly that gap — it re-evaluates the
+# lockfile on a schedule and raises security updates out of band.
+#
+# Scope choices:
+#   * `npm` at the repo root — the only lockfile that ships runtime deps.
+#     `site/` and `deploy/telemetry-worker/` carry their own package.json but
+#     are not part of the published package (`files[]` excludes them); they
+#     are listed below at a lower cadence so their toolchains do not rot
+#     silently either.
+#   * `github-actions` — pinned action SHAs/tags rot and are a real supply-
+#     chain surface; the repo pins actions, so updates need a PR to land.
+#
+# Grouping is deliberate: one PR per ecosystem per week, not one per package.
+# An ungrouped dependabot on ~30 direct deps produces more review load than
+# the maintainer has, which is how dependabot ends up disabled everywhere.
+# Security updates are intentionally NOT grouped — they should arrive alone
+# and be mergeable without reading an unrelated bump.
+
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+    commit-message:
+      # Conventional Commits — `lint commit subjects` (commit-subjects.yml)
+      # rejects anything else, including on dependabot's own PRs.
+      prefix: fix
+      prefix-development: chore
+      include: scope
+    groups:
+      npm-production:
+        applies-to: version-updates
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      npm-development:
+        applies-to: version-updates
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 2
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      github-actions:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+
+  # Non-shipped auxiliary manifests. Monthly: they carry no runtime risk for
+  # consumers, but a rotted toolchain still breaks the docs site / worker
+  # deploy at the worst possible moment.
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      site:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /deploy/telemetry-worker
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      telemetry-worker:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch

@@ -258,11 +258,12 @@ export function is_inventory_file(p: string): boolean {
     if (parts.includes('contexts')) {
         return true;
     }
-    if (
-        path.basename(rel) === 'README.md' &&
-        parts.length === 2 &&
-        (parts[0] === '.agent-src.uncondensed' || parts[0] === 'dist/agent-src')
-    ) {
+    // DEAD-ROOT REPAIR (road-to-renewal-foundation Phase 1). Both comparisons
+    // were unreachable: `.agent-src.uncondensed` was deleted by ADR-051, and
+    // `'dist/agent-src'` can never equal a single `/`-split segment. So the
+    // inventory-README exemption never fired for any file, and the real
+    // inventory file (`src/agent-src/README.md`) got no exemption at all.
+    if (path.basename(rel) === 'README.md' && parts.length === 3 && parts[0] === 'src') {
         return true;
     }
     return false;
@@ -516,8 +517,13 @@ export function main(argv?: readonly string[]): number {
     const file_hits: Array<[string, Hit[]]> = [];
     let total_hits = 0;
     let allowlisted_total = 0;
+    // gate-coverage contract (src/config/gate-coverage.yml): files actually
+    // inspected. NOTE the "N files" in the human summary is files WITH HITS —
+    // reading that as coverage is exactly how a blind gate looks healthy.
+    let scannedFiles = 0;
 
     for (const f of iter_md_files(args.paths)) {
+        scannedFiles += 1;
         if (is_carve_out(f)) {
             continue;
         }
@@ -592,6 +598,7 @@ export function main(argv?: readonly string[]): number {
         `\n${total_hits} hits across ${file_hits.length} files ` +
             `(${allowlisted_total} allowlisted)\n`,
     );
+    process.stderr.write(`scanned: ${String(scannedFiles)}\n`);
     return total_hits ? 1 : 0;
 }
 

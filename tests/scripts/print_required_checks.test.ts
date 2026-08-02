@@ -50,60 +50,92 @@ describe('print_required_checks — CLI contract', () => {
             "docs-only": "Branch: docs/x
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
-          Required checks (8):
-            - Consistency
-            - Smoke Contracts
-            - Skill Lint
-            - Tests / install-tests
-            - Tests / install-aux-tests
-            - Tests / python-tests
-            - Tests / node-tests
-            - Public Install Smoke / smoke
+          Checks this PR will face (16):
+            ! Sync + Generate Tools Consistency
+            - Smoke — kernel
+            - Smoke — router
+            - Smoke — schema
+            - Smoke — skills
+            - skill-lint
+            - Static Checks (ESLint · typecheck · prepack)
+            - Install Script Tests (matrix: {ubuntu,macos}-latest × shard 1-4/4)
+            - Install Aux Tests (matrix: {ubuntu,macos}-latest)
+            - Node Tests (matrix: {ubuntu,macos}-latest × shard 1-4/4)
+            - Golden Tests (matrix: {ubuntu,macos}-latest)
+            - Workspace Tests (matrix: {ubuntu,macos}-latest)
+            - Public Install Smoke (matrix: {ubuntu,macos,windows}-latest × node {20,22})
+            - Rule backstops
+            - no-python-in-src
+            - lint commit subjects
 
+          ! = blocks merge (1 of 16); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "eq-joined": "Branch: feat/y
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
-          Required checks (8):
-            - Consistency
-            - Smoke Contracts
-            - Skill Lint
-            - Tests / install-tests
-            - Tests / install-aux-tests
-            - Tests / python-tests
-            - Tests / node-tests
-            - Public Install Smoke / smoke
+          Checks this PR will face (16):
+            ! Sync + Generate Tools Consistency
+            - Smoke — kernel
+            - Smoke — router
+            - Smoke — schema
+            - Smoke — skills
+            - skill-lint
+            - Static Checks (ESLint · typecheck · prepack)
+            - Install Script Tests (matrix: {ubuntu,macos}-latest × shard 1-4/4)
+            - Install Aux Tests (matrix: {ubuntu,macos}-latest)
+            - Node Tests (matrix: {ubuntu,macos}-latest × shard 1-4/4)
+            - Golden Tests (matrix: {ubuntu,macos}-latest)
+            - Workspace Tests (matrix: {ubuntu,macos}-latest)
+            - Public Install Smoke (matrix: {ubuntu,macos,windows}-latest × node {20,22})
+            - Rule backstops
+            - no-python-in-src
+            - lint commit subjects
 
+          ! = blocks merge (1 of 16); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "feature": "Branch: feat/x
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
-          Required checks (8):
-            - Consistency
-            - Smoke Contracts
-            - Skill Lint
-            - Tests / install-tests
-            - Tests / install-aux-tests
-            - Tests / python-tests
-            - Tests / node-tests
-            - Public Install Smoke / smoke
+          Checks this PR will face (16):
+            ! Sync + Generate Tools Consistency
+            - Smoke — kernel
+            - Smoke — router
+            - Smoke — schema
+            - Smoke — skills
+            - skill-lint
+            - Static Checks (ESLint · typecheck · prepack)
+            - Install Script Tests (matrix: {ubuntu,macos}-latest × shard 1-4/4)
+            - Install Aux Tests (matrix: {ubuntu,macos}-latest)
+            - Node Tests (matrix: {ubuntu,macos}-latest × shard 1-4/4)
+            - Golden Tests (matrix: {ubuntu,macos}-latest)
+            - Workspace Tests (matrix: {ubuntu,macos}-latest)
+            - Public Install Smoke (matrix: {ubuntu,macos,windows}-latest × node {20,22})
+            - Rule backstops
+            - no-python-in-src
+            - lint commit subjects
 
+          ! = blocks merge (1 of 16); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "release": "Branch: release/1.2.3
           Base:   HEAD
           PR shape: release  (0 file(s) in diff)
-          Required checks (7):
-            - Consistency
-            - Smoke Contracts
-            - Migration Dry-Run
-            - Release Validation / release-shape
-            - Release Validation / changelog-entry
-            - Release Validation / version-consistency
-            - Release Guard (post-tag)
+          Checks this PR will face (11):
+            ! Sync + Generate Tools Consistency
+            - Smoke — kernel
+            - Smoke — router
+            - Smoke — schema
+            - Smoke — skills
+            - Release-PR shape detector
+            - CHANGELOG entry exists for head version
+            - package.json / marketplace.json / pack manifests agree
+            - Release install E2E (pack → install → upgrade → boot)
+            - npm audit (runtime deps, high+)
+            - skill-lint-strict
 
+          ! = blocks merge (1 of 11); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
           }

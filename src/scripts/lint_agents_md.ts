@@ -87,12 +87,18 @@ function _resolve(target_str: string, template: boolean): boolean {
         return true;
     }
     const candidates = [path.join(ROOT, raw)];
+    // DEAD-ROOT REPAIR (road-to-renewal-foundation Phase 1): the
+    // retired-authoring-root fallbacks were unreachable (ADR-051 deleted that
+    // tree). They were harmless only while `dist/agent-src/` happened to
+    // be materialised; the moment it is not, a valid pointer is reported
+    // unresolved. `src/agent-src/` is the source of truth those paths project
+    // from.
     if (template && raw.startsWith('.augment/')) {
-        candidates.push(path.join(ROOT, raw.replace('.augment/', '.agent-src.uncondensed/')));
         candidates.push(path.join(ROOT, raw.replace('.augment/', 'dist/agent-src/')));
+        candidates.push(path.join(ROOT, raw.replace('.augment/', 'src/agent-src/')));
     }
     if (raw.startsWith('dist/agent-src/')) {
-        candidates.push(path.join(ROOT, raw.replace('dist/agent-src/', '.agent-src.uncondensed/')));
+        candidates.push(path.join(ROOT, raw.replace('dist/agent-src/', 'src/agent-src/')));
     }
     return candidates.some((c) => _exists(c));
 }
