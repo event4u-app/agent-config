@@ -38,10 +38,12 @@ parent: road-to-package-renewal.md
       `road-to-surface-consolidation.md` Phase 3, which OWNS the
       utilization-window disposition sweep (window elapses ~2026-08-26;
       pre-window deletions forbidden by its verify). No parking action here
+- [ ] Precondition gate for hub generation: name the measured cost the
+      generator would remove (projection token footprint of hub bodies, or a
+      concrete hub↔contract drift bug); no cost nameable → close the next
+      step as `[-]` with that finding
 - [ ] Generate cluster hub bodies from frontmatter (41 cluster-hub command
-      files, ~87 lines avg of repeated dispatch ceremony) — precondition:
-      name the measured cost the generator removes (projection token footprint
-      of hub bodies, or a concrete hub↔contract drift bug); verify: generated
+      files, ~87 lines avg of repeated dispatch ceremony); verify: generated
       output equals the current hand-written bodies or the intended diff is
       reviewed, with a regen assertion in CI
 - [ ] Trim `post_tool_use` hook fan-out: 7 concerns run on every tool call on

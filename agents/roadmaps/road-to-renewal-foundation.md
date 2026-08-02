@@ -32,6 +32,9 @@ parent: road-to-package-renewal.md
       an admin API write (`gh api -X PUT .../branches/main/protection`)
       executed by the maintainer with explicit this-turn confirmation, with
       the resulting protection JSON recorded as the verification artifact
+- [ ] Record the current local `task ci` wall-clock on the reference machine
+      into this file BEFORE the umbrella spike starts — the <5 min target is
+      unfalsifiable without the recorded baseline
 - [ ] Umbrella gate runner spike: run N gates in-process (worker pool) instead
       of ~200 sequential tsx cold-starts; pre-register the target (local
       `task ci` under 5 min) and measure before/after on the same machine.
@@ -110,7 +113,10 @@ parent: road-to-package-renewal.md
       matched non-kernel rule bodies (kernel always full); never-block shim
       (resolver failure → eager fallback, never a blocked turn)
 - [ ] Run the pre-registered measurement; record win/loss in the central
-      roadmap; a loss parks this permanently next to ADR-054 with the numbers
+      roadmap; a loss parks this permanently next to ADR-054 with the numbers.
+      A WIN flips nothing by itself: it produces its own decision record
+      (council pass + explicit maintainer sign-off) in a SEPARATE PR from the
+      measurement — no default changes ride with the numbers
 - [ ] Reconcile `rule-router.md` with reality either way: today it documents a
       runtime loader that does not exist — after the spike it documents either
       the resolver or the explicit absence

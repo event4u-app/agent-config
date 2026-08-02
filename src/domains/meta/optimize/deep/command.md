@@ -122,8 +122,10 @@ shape; do not restate them here.
 
 Each loop: (a) re-read the roadmap set with fresh subagent reviewers
 (adversarial: hunt over-building, missing evidence, lock violations,
-sequencing errors); (b) resolve contested deltas in the council; (c) apply
-the surviving deltas to the roadmaps; (d) push to the same PR; (e) evaluate
+sequencing errors); (b) resolve contested deltas in the council; (c) any
+delta resting on a NEW factual claim re-enters the Step-2 verification gate
+before application — reviewer assertions are findings, not facts; (d) apply
+the surviving deltas to the roadmaps; (e) push to the same PR; (f) evaluate
 the tripwire. Loop output is a delta summary in the PR description's
 changelog section, not a comment (`no-pr-progress-comments`).
 

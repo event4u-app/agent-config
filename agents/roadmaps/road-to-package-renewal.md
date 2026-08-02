@@ -109,6 +109,14 @@ this central roadmap steering three sub-roadmaps.
 - **Semantic-retrieval ceiling** — out of scope for the Phase 3 spike
   (keyword/phrase matching only); reopen if the trigger-precision pass caps
   below the pre-registered injection-precision threshold.
+- **PR-creation flow** — analyzed, not dropped: the actionable findings
+  (required-check matrix, ci/ci-strict superset, CI build-artifact sharing)
+  live in Foundation Phase 1. Two analysis ideas NOT carried: a GitHub merge
+  queue (depends on the required-check matrix actually being enforced —
+  reopen after Foundation Phase 1 lands the enforce branch) and a CI auto-fix
+  bot for regenerable artifacts (collides with the commit-policy /
+  non-destructive floors; reopen only with a design that keeps the human on
+  the commit).
 - **Frozen borrows (harvest-freeze)** — session cost telemetry, USD budget
   circuit-breaker, fact-forcing edit gate, MCP health gating, forward-routing
   footers, in-description deflection, new `awaiting-evidence` tracker status
