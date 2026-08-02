@@ -1,0 +1,10 @@
+verdict: lean
+must_tags: []
+forbidden_tags: [delete, stdlib, native, yagni, shrink, flatten]
+must_be_null: true
+net_sign: zero
+note: >-
+  Irreducible. The tenant scope and the 404 are required controls, and the two
+  tests are the minimum runnable check — the fence explicitly protects both. A
+  lens that finds something here is inventing, and that is the failure this
+  fixture gates.

@@ -1,0 +1,10 @@
+verdict: trim
+must_tags: [flatten]
+forbidden_tags: [shrink]
+must_be_null: false
+net_sign: positive
+note: >-
+  The correct rewrite — an early return plus a flat if/else chain — is LONGER
+  than the nested ternary. A size-only lens stays silent here or, worse, defends
+  the ternary. This fixture is the anti-golfing gate: it fails a lens that only
+  argues downward, and forbids `shrink:` because shrinking is the wrong axis.

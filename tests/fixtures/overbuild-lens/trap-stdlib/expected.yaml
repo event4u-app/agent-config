@@ -1,0 +1,9 @@
+verdict: overbuilt
+must_tags: [stdlib]
+forbidden_tags: []
+must_be_null: false
+net_sign: negative
+note: >-
+  crypto.randomUUID() is available on every runtime this repo targets and is
+  cryptographically seeded; the hand-rolled generator uses Math.random, which is
+  a correctness concern the lens does NOT own — it reports the stdlib rung only.
