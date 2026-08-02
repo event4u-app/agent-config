@@ -1,6 +1,6 @@
 ---
 adr: 054
-status: proposed
+status: rejected
 date: 2026-06-05
 decision: rule-adherence-decay-triggered-restate
 supersedes: —
@@ -12,6 +12,38 @@ type: structural
 # ADR-054 — Counter "the model ignores ALL rules" with decay-triggered re-state, not per-turn injection
 
 ## Status
+
+**Rejected** · 2026-08-02, never implemented. The mechanism below was always
+conditional on a demonstrated adherence gap. The gap was searched for under a
+bar registered before the data was read, and was not found: 1,158 sessions
+swept, 67 cleared the length gate, 547 candidate hits cleared the distance and
+in-context gates in 12 sessions, and independent adjudication of 67 of them
+confirmed **zero** violations — 0 of a required 5 qualifying sessions, at
+distances from 9,464 to 727,537 tokens against a 3,000-token bar. Evidence:
+[`activation-red-baseline`](../../agents/evidence/analysis/activation-red-baseline.md),
+bar: [`activation-red-baseline-preregistration`](../../agents/evidence/analysis/activation-red-baseline-preregistration.md).
+
+The decay trigger this ADR proposed reads `dist/router.json` at prompt time.
+That is the runtime resolver the reminder-injection null already tore down once,
+in a smaller shape. Building it now would mean overriding an honest null with an
+unmeasured claim — the precise precedent the pre-committed teardown exists to
+prevent. The design below is kept, unedited, as the record of what was proposed
+and why it was not built.
+
+**Scope of the rejection.** What is rejected is *this design* — a prompt-time
+resolver justified by an adherence gap — because the gap was searched for under
+a pre-committed bar and not produced. That is not epistemic closure on the
+problem space: two of the three detectors were blunt, and a sharper instrument
+on a wider corpus could still find something. What the rejection does close is
+the path from a **restated complaint** to a built resolver.
+
+**What would re-open it:** a materially weaker host tier entering the
+projection-consumer set (this corpus contains no weak-host session at all, so
+that path is untouched by this rejection); an explicitly funded n ≈ 50/arm run
+of the full pre-registered design; or a produced red baseline under any
+instrument. A restated complaint is not evidence; a produced corpus is.
+
+The original proposal follows.
 
 **Proposed** · 2026-06-05. Drafted for maintainer review (design-first). Routed
 through the AI council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, design

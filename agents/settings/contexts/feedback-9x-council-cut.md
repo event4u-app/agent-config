@@ -61,6 +61,52 @@ offline matcher's fate is decided in the same pass. Building the resolver on an
 assertion would set the precedent that an honest null can be overridden by
 claim — the one thing the pre-committed teardown exists to prevent.
 
+### Executed 2026-08-02 — the corpus was not produced, D1 is refused
+
+The bar above was registered verbatim in its own commit before any data was
+read, then run against 1,158 recorded sessions. 67 cleared the ≥ 8-turn gate;
+547 detector hits in 12 sessions cleared both the ≥ 3K-token distance gate and
+the in-context gate; independent adjudication of 67 of them — reviewers given
+the verbatim rule text and the surrounding turns, not told which verdict was
+wanted — confirmed **0**. **0 of a required 5 qualifying sessions.** Distances
+ran from 9,464 to 727,537 tokens, so the bar's own binding condition was cleared
+by a factor of three at the narrowest.
+
+Consequently, and per the pre-commitment above:
+
+- **D1 (the runtime resolver) is refused as designed.** No resolver code exists
+  anywhere in the tree; no hook reads `dist/router.json`. The refusal is
+  design-scoped, not epistemic closure — two of the three detectors were blunt,
+  and the council (2026-08-02) was unanimous that "permanent" would overstate
+  what a 0/67 null earns. What it *does* close is the path from a **restated
+  complaint** to a built resolver. Re-opening needs a materially weaker host
+  tier in the consumer set (this corpus has **no** weak-host session, so that
+  path is untouched), an explicitly funded n ≈ 50/arm run, or a produced red
+  baseline under any instrument.
+- **ADR-054 is `rejected`**, unedited below its new Status block.
+- **The two contested items gated on this same corpus fall with it.** The
+  stop-event consumer for the recorded verification state was gated on a found
+  gap — no gap, no consumer. The generated file→skill table was kept as the
+  cheapest non-runtime answer *if* a gap appeared — no gap, not shipped. Neither
+  is refused on its merits; both simply lost the evidence that would have
+  justified them.
+- **The offline matcher stays**, on a criterion that is not "it was nearby":
+  `trigger_coverage` asserts a MUST-LOAD floor at 100% against `dist/router.json`
+  and is gated in CI via `task test`; `router_telemetry` feeds the value
+  dashboard. Both serve the **projection-time** router this package actually
+  ships. Neither was resolver scaffolding, so rejecting the resolver does not
+  reach them.
+
+Report: [`activation-red-baseline`](../../evidence/analysis/activation-red-baseline.md).
+Bar: [`activation-red-baseline-preregistration`](../../evidence/analysis/activation-red-baseline-preregistration.md).
+
+One finding worth carrying forward beyond this decision: the out-of-scope-edit
+detector, which tried to make *"every modified file must be directly required by
+the task"* mechanically checkable, scored a **100% false-positive rate**. Its
+proxy could not represent the task, and no string-matching test that cannot
+represent the task will do better. Any future gate built on "detect the
+out-of-scope edit" should expect the same result.
+
 ## Adopted
 
 | Item | Disposition | Note |
