@@ -149,11 +149,8 @@ Every roadmap follows this structure:
 
 ### Awaiting evidence — a blocker entry, never a new glyph
 
-- A step that cannot close because the **evidence has not arrived yet** (soak window still running, benchmark not funded, external adopter absent) is neither `[~]` deferred nor `[-]` skipped.
-- The canonical signal is a structured `## Blockers` entry — the five-field shape in [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md) (`Status` / `Owner` / `Blocks` / `What to do` / `Resolved when`). The step stays `- [ ]` and cross-references it inline: `- [ ] … <!-- blocked-by: <blocker-id> -->`.
-- `Resolved when:` carries the awaiting-evidence semantics — it names the decidable signal that ends the wait. When the agent can probe that signal itself (CI run, published version, reachable URL) the blocker is agent-checkable and is not assigned to a human (rule 20's external-dependency clause).
-- **No new status glyph.** The vocabulary stays `[ ]` `[x]` `[~]` `[-]`; an `awaiting-evidence` glyph would add a state the dashboard, the progress script, and every reader must learn, for a need the blocker convention already carries.
-- Reading the three: `[ ]` + `blocked-by:` = real open work waiting on named evidence (counts open, roadmap stays active) · `[~]` = deferred by decision (blocks archival until resolved, Iron Law 3) · `[-]` = skipped/cancelled with a stated reason (does not block archival).
+- Waiting on **evidence that has not arrived** (soak still running, benchmark unfunded, adopter absent) is neither `[~]` nor `[-]`. Signal it with a structured `## Blockers` entry — five-field shape in [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md) — whose `Resolved when:` names the decidable signal ending the wait. The item stays `- [ ]` and points at it: `<!-- blocked-by: <id> -->`.
+- **No new glyph.** `[ ]` + `blocked-by:` = open, awaiting named evidence (stays active) · `[~]` = deferred by decision (bars archival, Iron Law 3) · `[-]` = cancelled with a reason (does not bar it). A fifth state buys nothing the entry above does not already carry.
 
 ### Phases
 
