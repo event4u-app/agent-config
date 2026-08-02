@@ -7,7 +7,7 @@ visibility: internal
 sub: deep
 cluster: optimize
 skills: [ai-council, roadmap-writing, subagent-orchestration, decision-review]
-description: "Autonomous deep-refactoring loop — analyze the repo with parallel subagents, verify findings, council the cut, emit central + sub-roadmaps, open a PR, then N council-assisted refinement loops (default 3). E.g. 'run a deep optimization pass'."
+description: "Autonomous deep-refactoring loop — subagent analysis, verified findings, council, central + sub-roadmaps, PR, then N refinement loops (default 3). E.g. 'run a deep optimization pass'."
 argument-hint: "[--loops=N] [--scope=<path>] [--no-external]"
 suggestion:
   eligible: false
