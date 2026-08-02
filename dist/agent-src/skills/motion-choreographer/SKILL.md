@@ -186,12 +186,15 @@ stdin shape. The orchestrator pipes this into the video adapter's
 
 ## Policies
 
+Paths, enforcement model, and the full set: the
+[media policy preamble](../../../agents/settings/policies/media/README.md).
+
 Motion prompts inherit every constraint the upstream blueprint carries. Before emitting provider-tuned prose:
 
-- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — every distributed clip carries the non-removable AI-generation disclosure; refuse adapter flags that would suppress it.
-- [`agents/settings/policies/media/transparency.md`](../../../agents/settings/policies/media/transparency.md) — provider provenance (C2PA / SynthID) is preserved; refuse re-encode flags whose effect is to strip provenance.
-- [`agents/settings/policies/media/voice-cloning.md`](../../../agents/settings/policies/media/voice-cloning.md) — when the motion prompt requests `audio: native` narration in a named voice.
-- [`agents/settings/policies/media/brand-impersonation.md`](../../../agents/settings/policies/media/brand-impersonation.md) — when the motion prompt copies a recognised brand's chyron / mascot / signature transition.
+- **`disclosure`** — every distributed clip carries the non-removable AI-generation disclosure; refuse adapter flags that would suppress it.
+- **`transparency`** — provider provenance (C2PA / SynthID) is preserved; refuse re-encode flags whose effect is to strip provenance.
+- **`voice-cloning`** — when the motion prompt requests `audio: native` narration in a named voice.
+- **`brand-impersonation`** — when the motion prompt copies a recognised brand's chyron / mascot / signature transition.
 
 Refuse-and-surface; the motion prompt cannot launder a policy gap upstream skills should have caught.
 

@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: scene-expander
-description: "Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'."
+description: "Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. 11-block refine → video-director."
 personas:
   - hollywood-director
 domain: product
@@ -146,13 +146,16 @@ Any "no" → revise that block.
 
 ## Policies
 
+Paths, enforcement model, and the full set: the
+[media policy preamble](../../../agents/settings/policies/media/README.md).
+
 The 12-block Cinematic Scene Blueprint is the policy choke point — every downstream skill (`motion-choreographer`, `video-director`) inherits whatever the blueprint encodes. Before emitting:
 
-- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — when the SUBJECT block names or visually identifies a real person.
-- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — when the SUBJECT block is a recognised public figure.
-- [`agents/settings/policies/media/brand-impersonation.md`](../../../agents/settings/policies/media/brand-impersonation.md) — when STYLE / ENVIRONMENT references a recognised brand's visual identity.
-- [`agents/settings/policies/media/style.md`](../../../agents/settings/policies/media/style.md) — when STYLE anchors to a named living artist or studio as the primary signature.
-- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — every distributed blueprint output carries the AI-generation disclosure downstream.
+- **`likeness`** — when the SUBJECT block names or visually identifies a real person.
+- **`public-figures`** — when the SUBJECT block is a recognised public figure.
+- **`brand-impersonation`** — when STYLE / ENVIRONMENT references a recognised brand's visual identity.
+- **`style`** — when STYLE anchors to a named living artist or studio as the primary signature.
+- **`disclosure`** — every distributed blueprint output carries the AI-generation disclosure downstream.
 
 Refuse-and-surface at the blueprint layer; do not push policy questions down to the adapter.
 

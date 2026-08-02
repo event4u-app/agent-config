@@ -237,6 +237,14 @@ numbered options; do NOT auto-rewrite prose without the user's knowledge:
 - Do NOT duplicate content that's already in `AGENTS.md` or `.github/copilot-instructions.md`.
 - Do NOT write docs just to document what you did — only document things others need to know.
 - If unsure whether a doc needs updating, **ask the user**.
+- **Sibling-routing sentences are edited as a set, never alone.** When a skill's
+  `description:` carries a routing clause naming an overlapping sibling
+  (`Animated → pixar-storyteller`), editing it obliges re-reading every sibling
+  it names and every sibling that names it, so no user phrase ends up routed to
+  two skills and none ends up routed to neither. One-sided edits are how a
+  cluster's descriptions drift back into ambiguity between sweeps;
+  `lint_skill_descriptions` catches a *missing* clause, not an *inconsistent*
+  one.
 
 ## Output format
 
