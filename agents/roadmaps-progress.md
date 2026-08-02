@@ -6,7 +6,7 @@
 
 ## Overall
 
-**76 / 214 steps done · 36%**
+**77 / 214 steps done · 36%**
 
 ```text
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
@@ -23,7 +23,7 @@
 | 5 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
 | 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 8 | [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md) | 2 | 9 | 4 | 5 | 0 | 0 | 0 | ██████░░░░ 56% |
+| 8 | [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md) | 2 | 9 | 3 | 6 | 0 | 0 | 0 | ███████░░░ 67% |
 | 9 | [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md) | 3 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-adr-hygiene) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md) | 3 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 11 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-leverage) | ░░░░░░░░░░ 0% |
@@ -178,11 +178,11 @@ _1 blocker resolved._
 
 ### [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md)
 
-**Road to package renewal — central roadmap (2026-08)** — 5 / 9 done (56%)
+**Road to package renewal — central roadmap (2026-08)** — 6 / 9 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | this PR | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 1 | this PR | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | steering (after this PR merges) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md)

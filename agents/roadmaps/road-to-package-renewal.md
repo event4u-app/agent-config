@@ -154,8 +154,10 @@ Foundation Phase 1 is green. ADR hygiene chips alongside any PR.
 - [x] Central roadmap + three sub-roadmaps authored
 - [x] `/optimize:deep` command authored (analysis → council → roadmaps → PR →
       N autonomous refinement loops, default N=3, halt-on-spin tripwire)
-- [ ] Refinement loops over this roadmap set (autonomous, council-assisted,
-      N=3 per council default; update roadmaps + PR in place)
+- [x] Refinement loops over this roadmap set (autonomous, council-assisted,
+      N=3 per council default; update roadmaps + PR in place) — loop 1: 4-lens
+      review + split-by-pain council; loop 2: lock re-audit removed two
+      smuggles; loop 3: convergence audit, wording-only deltas → converged
 
 ## Phase 2 — steering (after this PR merges)
 
