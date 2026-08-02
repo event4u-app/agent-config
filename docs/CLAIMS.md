@@ -332,11 +332,11 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-27
 
 ### claim: default-install-context-cost
-- claim: The scoped-projection default for new installs ships 217 of 288 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here), with the counting method pinned in the benchmark doc.
+- claim: The scoped-projection default for new installs ships 217 of 288 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
 - kind: quant
-- evidence: docs/benchmark.md#Default-install context cost
+- evidence: exec:update_counts --check -> 0
 - status: backed
-- last_verified: 2026-07-27
+- last_verified: 2026-08-02
 
 ### claim: scope-dedup-cold-start-reduction
 - claim: Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556 tokens) against a pre-registered 15% bar. CONDITION, inseparable from the number: that figure is FIXTURE-MEASURED on byte-identical global and project projections, and it is **currently unreachable for production installs** — the installer stamps ownership metadata (`package:` / `source_path:`) onto every installed rule unconditionally, so the two scopes are produced by two writers with deliberately different output, the byte-identity gate correctly refuses to dedup, and the recipient set is empty. The mechanism works; the saving is not realised by any consumer today.

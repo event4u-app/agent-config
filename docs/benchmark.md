@@ -239,7 +239,12 @@ still means legacy-all). Scoped keeps every untagged core skill plus every
 pack whose `workspaces` intersects {engineering, agent-config-maintainer}
 (requires-closure applied), matching the default `developer` profile.
 
-| Surface | legacy-all (before) | scoped (after) | Δ |
+Every row below is **as measured on 2026-07-27, at the then-286-skill
+catalog**. It is a frozen measurement record, not a live figure: the catalog
+grows, these numbers do not. For the current count run
+`./scripts-run src/scripts/count_scoped_projection`.
+
+| Surface (2026-07-27 snapshot) | legacy-all (before) | scoped (after) | Δ |
 |---|--:|--:|--:|
 | Skills projected | 286 | 215 | −71 (−25%) |
 | Skill-surface size (chars) | 2,309,968 | 1,710,353 | −599,615 |
@@ -252,6 +257,16 @@ intersects the active set from `src/config/discovery/packs.yml` workspaces
 {engineering, agent-config-maintainer} + requires closure). Token estimate is
 chars/4 — an approximation, honest-labeled as such; skills load on-demand per
 trigger, so this is the *catalog* surface, not an always-loaded cost.
+
+**Why this section no longer defines the published count.** The
+default-install claim in [`CLAIMS.md`](CLAIMS.md) used to name this doc as its
+counting method while carrying its own numbers. Both were hand-typed, only the
+claim's tracked the catalog, and no gate could compare them — so the gap grew
+by one on every skill added (215/286 here vs 217/288 there by 2026-08-02). The
+claim now cites `count_scoped_projection`, which applies the predicate
+described above in code rather than in prose, and `update_counts --check`
+re-derives its numbers in CI. This table keeps the byte/token measurements,
+which are a genuine point-in-time run and are not regenerated.
 
 ## Two-host matrix (flow-learnings Phase 3, `claude-haiku-4-5`) — Gate verdict: **HONEST-NULL**
 
