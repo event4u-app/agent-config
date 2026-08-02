@@ -2440,6 +2440,16 @@ export function gather_candidate_files_under(srcRoot: string): string[] {
 export let last_changed_scope_reason = '';
 
 /**
+ * Whether the base-span diff (`base...HEAD`) itself ran cleanly.
+ *
+ * The verified-empty release outcome (see `main`) may only rest on an empty
+ * change set that was actually COMPUTED — a base diff that errored (missing
+ * tag object, corrupt ref) degrades to the worktree fallbacks and would
+ * otherwise be indistinguishable from a genuinely empty span.
+ */
+export let last_changed_base_diff_ok = false;
+
+/**
  * Candidate files changed against the resolved base.
  *
  * The base is release-aware (`_lib/release_scope.ts`): on a release PR it
@@ -2454,6 +2464,7 @@ export let last_changed_scope_reason = '';
 export function gather_changed_candidate_files(root: string, since?: string | null): string[] {
     const scope = resolveContentLintScope({ cwd: root, since: since ?? null });
     last_changed_scope_reason = scope.reason;
+    last_changed_base_diff_ok = false;
     const diffCommands = [
         ['git', 'diff', '--name-only', `${scope.base}...HEAD`],
         ['git', 'diff', '--name-only', '--cached', 'HEAD'],
@@ -2461,10 +2472,15 @@ export function gather_changed_candidate_files(root: string, since?: string | nu
     ];
     try {
         let rawLines: string[] = [];
+        let first = true;
         for (const cmd of diffCommands) {
             // A truncated diff would silently shrink the change set — the same
             // degrade-to-zero shape this roadmap closes elsewhere.
             const result = runCountedProbe(cmd[0] as string, cmd.slice(1), { cwd: root });
+            if (first) {
+                last_changed_base_diff_ok = result.ok;
+                first = false;
+            }
             if (result.ok && result.stdout.trim()) {
                 rawLines = splitlines(result.stdout);
                 break;
@@ -4202,6 +4218,43 @@ function _release_scope_requires_findings(root: string, since?: string | null): 
     return scope.isRelease && scope.previousTag !== null;
 }
 
+/**
+ * True when the `--changed` corpus filter still matches tracked files at HEAD.
+ *
+ * The discriminator between a DEAD scope and a VERIFIED-EMPTY release span.
+ * A release that touches no skill/rule file is a legitimate outcome — but only
+ * provably so when the exact predicate `gather_changed_candidate_files`
+ * applies to diff lines demonstrably still sees the corpus. Probing
+ * `git ls-files` with that same predicate means a moved projection root
+ * (the ADR-051 blindness class) fails this probe exactly as it would blind
+ * the diff — so "empty because the root moved" cannot masquerade as
+ * "empty because nothing changed".
+ */
+function _changed_filter_matches_head(root: string): boolean {
+    // Probes the canonical projection root only (ADR-051): a corpus that
+    // exists solely under a legacy path counts as dead, not alive.
+    const result = runCountedProbe('git', ['ls-files', '--', 'dist/agent-src'], { cwd: root });
+    if (!result.ok) {
+        return false;
+    }
+    for (const raw of splitlines(result.stdout)) {
+        const norm = raw.trim().replace(/\\/g, '/');
+        if (!norm || norm.includes('/evals/')) {
+            continue;
+        }
+        if (!norm.startsWith('dist/agent-src/') && !norm.includes('/dist/agent-src/')) {
+            continue;
+        }
+        if (
+            norm.endsWith('/SKILL.md') ||
+            (norm.endsWith('.md') && (norm.includes('/rules/') || norm.includes('/commands/')))
+        ) {
+            return true;
+        }
+    }
+    return false;
+}
+
 export function main(argv: string[]): number {
     let args: Args;
     try {
@@ -4244,25 +4297,39 @@ export function main(argv: string[]): number {
                 process.stdout.write(`${format_json([])}\n`);
             }
             // A release PR that resolved a real tag span and still matched
-            // nothing has not passed — it examined nothing. Mirrors the
-            // scan-scope regime the other gates already adopted
+            // nothing needs a discriminator: DEAD scope (the diff errored, or
+            // the corpus filter no longer matches anything at HEAD — the
+            // ADR-051 moved-root blindness) fails; VERIFIED-EMPTY (the base
+            // diff ran cleanly AND the filter provably still sees tracked
+            // corpus files) is a legitimate release that simply changed no
+            // skill/rule — failing it would red every scripts-/docs-only
+            // release forever. Mirrors the scan-scope regime
             // (`_lib/scan_scope.ts`; exit 2, as `check_iron_law_prominence`).
             // Ordinary PRs keep the historical exit 0: a change set with no
             // skill or rule in it is a legitimate empty scope, not a dead one.
             if (args.changed && _release_scope_requires_findings(root, args.since)) {
-                try {
-                    assertScanned({
-                        gate: 'skill_linter --changed (release PR)',
-                        scanned: 0,
-                        units: 'skill/rule files',
-                        roots: [last_changed_scope_reason],
-                    });
-                } catch (exc) {
-                    if (exc instanceof DeadScopeError) {
-                        process.stderr.write(`❌  ${exc.message}\n`);
-                        return 2;
+                if (last_changed_base_diff_ok && _changed_filter_matches_head(root)) {
+                    process.stderr.write(
+                        '✅  verified-empty release scope: the base-span diff ran cleanly and ' +
+                            'the corpus filter still matches tracked files at HEAD — this ' +
+                            'release genuinely changes no skill/rule file. The gate is alive, ' +
+                            'not blind.\n',
+                    );
+                } else {
+                    try {
+                        assertScanned({
+                            gate: 'skill_linter --changed (release PR)',
+                            scanned: 0,
+                            units: 'skill/rule files',
+                            roots: [last_changed_scope_reason],
+                        });
+                    } catch (exc) {
+                        if (exc instanceof DeadScopeError) {
+                            process.stderr.write(`❌  ${exc.message}\n`);
+                            return 2;
+                        }
+                        throw exc;
                     }
-                    throw exc;
                 }
             }
             process.stderr.write('No matching skill/rule files found.\n');

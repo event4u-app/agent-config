@@ -256,20 +256,41 @@ jobs:
           # Release-aware: on a release PR the base widens to the previous
           # release tag, because the PR's own diff is the version bump.
           BASE="$(./scripts-run src/scripts/resolve_lint_scope --base-ref "origin/${{ github.base_ref }}")"
-          CHANGED=$(git diff --name-only --diff-filter=ACMR "${BASE}...HEAD" -- \
+          # The diff must run cleanly — a missing tag object or bad ref would
+          # otherwise be swallowed into an empty change set and be
+          # indistinguishable from a genuinely empty span.
+          if ! DIFF_OUT=$(git diff --name-only --diff-filter=ACMR "${BASE}...HEAD" -- \
             'src/skills/*/SKILL.md' \
             'src/agent-src/personas/*.md' \
-            'src/domains/**/command.md' \
-            | grep -v '^src/agent-src/personas/_' || true)
+            'src/domains/**/command.md'); then
+            echo "::error::git diff for ${BASE}...HEAD failed — the scope is unresolvable, not empty."
+            exit 1
+          fi
+          CHANGED=$(printf '%s\n' "$DIFF_OUT" | grep -v '^src/agent-src/personas/_' || true)
           if [ -z "$CHANGED" ]; then
             # Same guard shape as the skill-lint PR summary: an empty changed
             # set means the gate checked nothing — report it, never claim a pass.
             echo "⚠️ INCONCLUSIVE — 0 changed corpus files (skills / personas / domain commands); the originality gate checked nothing. This is not a pass."
-            # On a release PR it is also not an outcome. The scope resolved to a
-            # whole tag span; matching nothing there means the gate is blind,
-            # which is precisely what shipped a 179-commit release unchecked.
+            # On a release PR the scope resolved to a whole tag span. Matching
+            # nothing there is EITHER a blind gate (the shape that shipped a
+            # 179-commit release unchecked — dead pathspec, empty span) OR a
+            # release that genuinely changes no corpus file (scripts-/docs-only
+            # release). Discriminate instead of failing both: the pathspecs
+            # must still resolve to tracked files at HEAD (a moved corpus root
+            # fails this probe exactly as it would blind the diff), and the
+            # span must contain real commits.
             if [ "${BASE}" != "origin/${{ github.base_ref }}" ]; then
-              echo "::error::Release PR resolved scope ${BASE}...HEAD and still matched 0 corpus files — a release check that examined nothing must not pass."
+              LIVE=$(git ls-files -- \
+                'src/skills/*/SKILL.md' \
+                'src/agent-src/personas/*.md' \
+                'src/domains/**/command.md' \
+                | grep -cv '^src/agent-src/personas/_' || true)
+              SPAN=$(git rev-list --count "${BASE}..HEAD")
+              if [ "${LIVE}" -gt 0 ] && [ "${SPAN}" -gt 0 ]; then
+                echo "✅ Verified-empty release scope: ${SPAN} commit(s) in ${BASE}...HEAD touch none of the ${LIVE} tracked corpus files — the pathspecs are alive at HEAD, so the gate is not blind; this release genuinely contains no corpus changes."
+                exit 0
+              fi
+              echo "::error::Release PR resolved scope ${BASE}...HEAD and matched 0 corpus files while the corpus pathspecs resolve to ${LIVE} tracked file(s) and the span holds ${SPAN} commit(s) — the scope is dead, not empty."
               exit 1
             fi
             exit 0

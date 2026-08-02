@@ -7,10 +7,11 @@
 // The golden-parity tests against the Python original were removed with the
 // depythonization; their `spawnSync` + `TSX_BIN` helpers were left behind as
 // orphans and are removed here.
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     type Issue,
@@ -21,6 +22,7 @@ import {
     format_json,
     lint_file,
     lint_output_schema,
+    main,
     parse_output_schema,
     validate_evals_json,
     _resetRoleContractCacheForTest,
@@ -2281,3 +2283,88 @@ describe('skill_linter — structural malice', () => {
 });
 
 
+
+describe('skill_linter --changed — release-PR empty-scope discriminator', () => {
+    function gitq(cwd: string, ...args: string[]): void {
+        execFileSync('git', args, { cwd, encoding: 'utf-8' });
+    }
+
+    /**
+     * A release-PR repo (prior tag + version bump) whose release span contains
+     * NO skill/rule change. With `corpus: true` a tracked SKILL.md exists at
+     * HEAD (unchanged since the prior tag) — the filter is provably alive and
+     * the empty span is VERIFIED-EMPTY. With `corpus: false` the filter
+     * matches nothing at HEAD — the DEAD-scope shape (ADR-051 moved root).
+     */
+    function releaseRepoWithoutCorpusChange(opts: { corpus: boolean }): string {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'linter-release-'));
+        gitq(root, 'init', '-q', '-b', 'main');
+        gitq(root, 'config', 'user.email', 't@example.com');
+        gitq(root, 'config', 'user.name', 'T');
+
+        fs.writeFileSync(path.join(root, 'package.json'), '{\n  "version": "9.11.0"\n}\n');
+        fs.writeFileSync(
+            path.join(root, 'CHANGELOG.md'),
+            '# Changelog\n\n## [9.11.0](x) (2026-01-01)\n',
+        );
+        if (opts.corpus) {
+            const skillDir = path.join(root, 'dist', 'agent-src', 'skills', 'sample');
+            fs.mkdirSync(skillDir, { recursive: true });
+            fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '# sample\n');
+        }
+        fs.mkdirSync(path.join(root, 'src'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'src', 'a.txt'), 'one\n');
+        gitq(root, 'add', '-A');
+        gitq(root, 'commit', '-qm', 'base');
+        gitq(root, 'tag', '9.11.0');
+
+        // Substantive release work — deliberately NOT a corpus file.
+        fs.writeFileSync(path.join(root, 'src', 'a.txt'), 'one\ntwo\n');
+        gitq(root, 'commit', '-aqm', 'feat: scripts-only work');
+
+        // `main` invokes the resolver with its default base `origin/main`;
+        // give the fixture that ref so release detection has a base to diff.
+        gitq(root, 'update-ref', 'refs/remotes/origin/main', 'refs/heads/main');
+
+        gitq(root, 'checkout', '-qb', 'release/9.12.0');
+        fs.writeFileSync(path.join(root, 'package.json'), '{\n  "version": "9.12.0"\n}\n');
+        fs.writeFileSync(
+            path.join(root, 'CHANGELOG.md'),
+            '# Changelog\n\n## [9.12.0](x) (2026-02-01)\n\n## [9.11.0](x) (2026-01-01)\n',
+        );
+        gitq(root, 'commit', '-aqm', 'release: 9.12.0');
+        return root;
+    }
+
+    it('a release that changes no skill/rule passes as VERIFIED-EMPTY when the corpus filter is alive at HEAD', () => {
+        const root = releaseRepoWithoutCorpusChange({ corpus: true });
+        const stderrSpy = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+        const stdoutSpy = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+        try {
+            const code = main(['--changed', '--repo-root', root]);
+            const stderr = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+            expect(code).toBe(0);
+            expect(stderr).toContain('verified-empty release scope');
+        } finally {
+            stderrSpy.mockRestore();
+            stdoutSpy.mockRestore();
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('a release span matching nothing while the corpus filter matches nothing at HEAD stays a DEAD-scope failure (exit 2)', () => {
+        const root = releaseRepoWithoutCorpusChange({ corpus: false });
+        const stderrSpy = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+        const stdoutSpy = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+        try {
+            const code = main(['--changed', '--repo-root', root]);
+            const stderr = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+            expect(code).toBe(2);
+            expect(stderr).toContain('scanned 0 skill/rule files');
+        } finally {
+            stderrSpy.mockRestore();
+            stdoutSpy.mockRestore();
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+});
