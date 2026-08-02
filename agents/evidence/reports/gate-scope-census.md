@@ -18,10 +18,10 @@ as a green checkmark over an empty directory.
 | Metric | Value |
 |---|---|
 | Gate scripts in population | 213 |
-| Gates with at least one resolvable root | 117 |
+| Gates with at least one resolvable root | 118 |
 | Gates with no literal root the extractor can see | 89 |
-| Roots resolved and counted | 229 |
-| Roots that do not exist on this tree | 15 |
+| Roots resolved and counted | 235 |
+| Roots that do not exist on this tree | 19 |
 
 ## Scope — what this census does NOT cover
 
@@ -53,7 +53,11 @@ as a green checkmark over an empty directory.
 | `lint_load_context` | `agents/contexts` | `(inline)` |
 | `lint_one_off_age` | `src/scripts/_one_off` | `ONE_OFF_DIR` |
 | `lint_orchestration_dsl` | `.agent-config/orchestrations` | `DEFAULT_DIR` |
-| `lint_pack_boundaries` | `packages` | `PACKAGES` |
+| `lint_pack_boundaries` | `commands` | `(inline)` |
+| `lint_pack_boundaries` | `packs` | `(inline)` |
+| `lint_pack_boundaries` | `packs.yml` | `(inline)` |
+| `lint_pack_boundaries` | `rules` | `(inline)` |
+| `lint_pack_boundaries` | `skills` | `(inline)` |
 | `lint_pack_first_win` | `packages` | `PACKAGES` |
 | `lint_showcase_sessions` | `docs/showcase/sessions` | `SESSIONS_DIR` |
 | `verify_physical_move` | `dist/migration/pre-move-snapshot.json` | `DEFAULT_SNAPSHOT` |
@@ -66,17 +70,17 @@ as a green checkmark over an empty directory.
 | `audit_adr_coverage` | `docs/contracts` | dir | 161 | `CONTRACT_ROOT` |
 | `audit_auto_rules` | `agents/reports` | dir | 16 | `REPORT_DIR` |
 | `audit_cloud_compatibility` | `docs/guidelines` | dir | 102 | `(inline)` |
-| `audit_cloud_compatibility` | `src/domains` | dir | 226 | `(inline)` |
+| `audit_cloud_compatibility` | `src/domains` | dir | 228 | `(inline)` |
 | `audit_cloud_compatibility` | `src/rules` | dir | 111 | `(inline)` |
 | `audit_cloud_compatibility` | `src/scripts` | dir | 872 | `scriptsDir` |
 | `audit_cloud_compatibility` | `src/skills` | dir | 528 | `(inline)` |
 | `audit_command_surface` | `agents/reports` | dir | 16 | `REPORT_DIR` |
 | `audit_command_surface` | `docs` | dir | 633 | `DOCS_DIR` |
 | `audit_command_surface` | `src/config/discovery/packs.yml` | file | 1 | `PACKS_YML` |
-| `audit_command_surface` | `src/domains` | dir | 226 | `SRC_DOMAINS()` |
+| `audit_command_surface` | `src/domains` | dir | 228 | `SRC_DOMAINS()` |
 | `audit_initial_context` | `internal/bench/reports` | dir | 86 | `REPORT_DIR` |
 | `audit_initial_context` | `src/agent-src` | dir | 277 | `SRC_AGENT()` |
-| `audit_initial_context` | `src/domains` | dir | 226 | `SRC_DOMAINS()` |
+| `audit_initial_context` | `src/domains` | dir | 228 | `SRC_DOMAINS()` |
 | `audit_initial_context` | `src/scripts/mcp_server/consumer_tool_catalog.json` | file | 1 | `MCP_CATALOG` |
 | `audit_likelihood` | `agents/reports` | dir | 16 | `REPORT_DIR` |
 | `audit_mcp_tools` | `docs/contracts/mcp-tool-inventory.md` | file | 1 | `OUT` |
@@ -108,7 +112,7 @@ as a green checkmark over an empty directory.
 | `check_claims` | `docs/CLAIMS.md` | file | 1 | `(census-only)` |
 | `check_claims` | `internal/reports/exec-evidence-feasibility.json` | file | 1 | `(census-only)` |
 | `check_cluster_patterns` | `docs/contracts/command-clusters.md` | file | 1 | `CONTRACT` |
-| `check_cluster_patterns` | `src/domains` | dir | 226 | `SRC_DOMAINS()` |
+| `check_cluster_patterns` | `src/domains` | dir | 228 | `SRC_DOMAINS()` |
 | `check_cluster_patterns` | `src/skills` | dir | 528 | `(census-only)` |
 | `check_command_count_messaging` | `AGENTS.md` | file | 1 | `AGENTS` |
 | `check_command_count_messaging` | `docs/getting-started.md` | file | 1 | `GETTING_STARTED` |
@@ -136,7 +140,7 @@ as a green checkmark over an empty directory.
 | `check_gate_coverage` | `src/config/gate-coverage.yml` | file | 1 | `MANIFEST` |
 | `check_gate_coverage` | `src/scripts` | dir | 872 | `(inline)` |
 | `check_gate_paths` | `packages` | absent | **0** | `(inline)` |
-| `check_gate_paths` | `src` | dir | 2248 | `(inline)` |
+| `check_gate_paths` | `src` | dir | 2250 | `(inline)` |
 | `check_gate_paths` | `src/scripts` | dir | 872 | `(inline)` |
 | `check_generated_artefact_headers` | _(none extracted)_ | absent | **0** | `—` |
 | `check_generator_output_coverage` | `.gitignore` | file | 1 | `PACKAGE_GITIGNORE` |
@@ -189,8 +193,8 @@ as a green checkmark over an empty directory.
 | `check_release_trunk_sync` | _(none extracted)_ | absent | **0** | `—` |
 | `check_reply_consistency` | `.agent-src.uncondensed` | absent | **0** | `legacy` |
 | `check_roadmap_trackable` | _(none extracted)_ | absent | **0** | `—` |
-| `check_role_doc_links` | `agents` | dir | 848 | `(inline)` |
-| `check_role_doc_links` | `dist/agent-src/commands` | dir | 214 | `(inline)` |
+| `check_role_doc_links` | `agents` | dir | 853 | `(inline)` |
+| `check_role_doc_links` | `dist/agent-src/commands` | dir | 215 | `(inline)` |
 | `check_role_doc_links` | `dist/agent-src/rules` | dir | 110 | `(inline)` |
 | `check_role_doc_links` | `dist/agent-src/skills` | dir | 528 | `(inline)` |
 | `check_role_doc_links` | `docs` | dir | 633 | `DOCS_DIR` |
@@ -219,7 +223,7 @@ as a green checkmark over an empty directory.
 | `check_trunk_drift` | _(none extracted)_ | absent | **0** | `—` |
 | `check_update_banner` | _(none extracted)_ | absent | **0** | `—` |
 | `lint_agent_security` | _(none extracted)_ | absent | **0** | `—` |
-| `lint_agent_skill_names` | `src/domains` | dir | 226 | `SRC_DOMAINS` |
+| `lint_agent_skill_names` | `src/domains` | dir | 228 | `SRC_DOMAINS` |
 | `lint_agent_skill_names` | `src/skills` | dir | 528 | `SRC_SKILLS` |
 | `lint_agents_layout` | _(none extracted)_ | absent | **0** | `—` |
 | `lint_agents_md` | `AGENTS.md` | file | 1 | `(inline)` |
@@ -240,7 +244,7 @@ as a green checkmark over an empty directory.
 | `lint_changelog_rollback` | `package.json` | file | 1 | `pkg_path` |
 | `lint_command_flow_coverage` | `src/flows/surface-map.yaml` | file | 1 | `SURFACE_MAP` |
 | `lint_command_routing` | `src/agent-src/commands/evals` | dir | 22 | `EVALS_DIR` |
-| `lint_command_routing` | `src/domains` | dir | 226 | `domains` |
+| `lint_command_routing` | `src/domains` | dir | 228 | `domains` |
 | `lint_command_tiers` | _(none extracted)_ | absent | **0** | `—` |
 | `lint_command_verbs` | `src/config/discovery/command-verbs.yml` | file | 1 | `VERBS_YML` |
 | `lint_commit_subjects` | _(none extracted)_ | absent | **0** | `—` |
@@ -266,7 +270,7 @@ as a green checkmark over an empty directory.
 | `lint_examples` | _(none extracted)_ | absent | **0** | `—` |
 | `lint_explain_trace` | _(none extracted)_ | absent | **0** | `—` |
 | `lint_featured_skills` | _(none extracted)_ | absent | **0** | `—` |
-| `lint_flows` | `dist/agent-src/commands` | dir | 214 | `base` |
+| `lint_flows` | `dist/agent-src/commands` | dir | 215 | `base` |
 | `lint_flows` | `src/flows` | dir | 7 | `(inline)` |
 | `lint_flows` | `src/scripts/schemas/flow.schema.json` | file | 1 | `SCHEMA_PATH` |
 | `lint_flows` | `src/skills` | dir | 528 | `base` |
@@ -305,7 +309,7 @@ as a green checkmark over an empty directory.
 | `lint_mcp_registry_manifest` | `docs/contracts/mcp-registry-manifest.schema.json` | file | 1 | `SCHEMA` |
 | `lint_mcp_registry_manifest` | `package.json` | file | 1 | `PKG_FILE` |
 | `lint_media_policy_linkage` | `agents/settings/policies/media` | dir | 8 | `POLICY_DIR` |
-| `lint_media_policy_linkage` | `src/domains` | dir | 226 | `(inline)` |
+| `lint_media_policy_linkage` | `src/domains` | dir | 228 | `(inline)` |
 | `lint_media_policy_linkage` | `src/rules` | dir | 111 | `(inline)` |
 | `lint_media_policy_linkage` | `src/skills` | dir | 528 | `(inline)` |
 | `lint_memory_tripwire` | _(none extracted)_ | absent | **0** | `—` |
@@ -317,16 +321,16 @@ as a green checkmark over an empty directory.
 | `lint_namespace_collisions` | _(none extracted)_ | absent | **0** | `—` |
 | `lint_new_skill_gate` | `src/skills` | dir | 528 | `SRC_SKILLS()` |
 | `lint_no_new_atomic_commands` | `docs/contracts/command-clusters.md` | file | 1 | `(census-only)` |
-| `lint_no_new_atomic_commands` | `src/domains` | dir | 226 | `(census-only)` |
+| `lint_no_new_atomic_commands` | `src/domains` | dir | 228 | `(census-only)` |
 | `lint_no_python_twin_rationale` | `src/scripts` | dir | 872 | `SCOPE` |
 | `lint_one_off_age` | `src/scripts/_one_off` | absent | **0** | `ONE_OFF_DIR` |
 | `lint_orchestration_dsl` | `.agent-config/orchestrations` | absent | **0** | `DEFAULT_DIR` |
-| `lint_orchestrator_auto_detect` | `src/domains` | dir | 226 | `DOMAINS` |
+| `lint_orchestrator_auto_detect` | `src/domains` | dir | 228 | `DOMAINS` |
 | `lint_originality` | `agents/reports` | dir | 16 | `REPORT_DIR` |
 | `lint_originality` | `src/agent-src/personas` | dir | 36 | `PERSONAS_DIR` |
 | `lint_originality` | `src/agent-src/templates/command.md` | file | 1 | `(inline)` |
 | `lint_originality` | `src/agent-src/templates/skill.md` | file | 1 | `(inline)` |
-| `lint_originality` | `src/domains` | dir | 226 | `DOMAINS_DIR` |
+| `lint_originality` | `src/domains` | dir | 228 | `DOMAINS_DIR` |
 | `lint_originality` | `src/skills` | dir | 528 | `SKILLS_DIR` |
 | `lint_originality_shingles` | `src/agent-src/personas` | dir | 36 | `personasDir` |
 | `lint_originality_shingles` | `src/skills` | dir | 528 | `skillsDir` |
@@ -335,10 +339,20 @@ as a green checkmark over an empty directory.
 | `lint_override_kernel_guard` | `agents/overrides/kernel-exceptions.yml` | file | 1 | `REGISTRY` |
 | `lint_override_kernel_guard` | `agents/overrides/rules` | dir | 2 | `OVERRIDES_RULES` |
 | `lint_override_kernel_guard` | `src/rules` | dir | 111 | `RULES_DIR` |
-| `lint_pack_boundaries` | `packages` | absent | **0** | `PACKAGES` |
+| `lint_pack_boundaries` | `commands` | absent | **0** | `(inline)` |
+| `lint_pack_boundaries` | `packs` | absent | **0** | `(inline)` |
+| `lint_pack_boundaries` | `packs.yml` | absent | **0** | `(inline)` |
+| `lint_pack_boundaries` | `rules` | absent | **0** | `(inline)` |
+| `lint_pack_boundaries` | `skills` | absent | **0** | `(inline)` |
+| `lint_pack_boundaries` | `src/agent-src` | dir | 277 | `SRC_AGENT()` |
+| `lint_pack_boundaries` | `src/config/discovery/packs.yml` | file | 1 | `VOCAB` |
+| `lint_pack_boundaries` | `src/domains` | dir | 228 | `(inline)` |
+| `lint_pack_boundaries` | `src/packs` | dir | 36 | `(inline)` |
+| `lint_pack_boundaries` | `src/rules` | dir | 111 | `SRC_RULES()` |
+| `lint_pack_boundaries` | `src/skills` | dir | 528 | `SRC_SKILLS()` |
 | `lint_pack_dependencies` | `src/agent-src` | dir | 277 | `SRC_AGENT()` |
 | `lint_pack_first_win` | `packages` | absent | **0** | `PACKAGES` |
-| `lint_pack_first_win` | `src/domains` | dir | 226 | `SRC_DOMAINS` |
+| `lint_pack_first_win` | `src/domains` | dir | 228 | `SRC_DOMAINS` |
 | `lint_pack_first_win` | `src/packs` | dir | 36 | `SRC_PACKS` |
 | `lint_pack_risk_class` | `src/config/discovery/packs.yml` | file | 1 | `PACKS_YML` |
 | `lint_persistence` | _(none extracted)_ | absent | **0** | `—` |
@@ -361,10 +375,10 @@ as a green checkmark over an empty directory.
 | `lint_readme_serial_comma` | _(none extracted)_ | absent | **0** | `—` |
 | `lint_readme_size` | _(none extracted)_ | absent | **0** | `—` |
 | `lint_regression` | _(none extracted)_ | absent | **0** | `—` |
-| `lint_roadmap_blockers` | `agents/roadmaps` | dir | 498 | `dir` |
-| `lint_roadmap_ci_steps` | `agents/roadmaps` | dir | 498 | `dir` |
-| `lint_roadmap_complexity` | `agents/roadmaps` | dir | 498 | `dir` |
-| `lint_roadmap_later_disposition` | `agents/roadmaps` | dir | 498 | `ROADMAP_ROOT` |
+| `lint_roadmap_blockers` | `agents/roadmaps` | dir | 502 | `dir` |
+| `lint_roadmap_ci_steps` | `agents/roadmaps` | dir | 502 | `dir` |
+| `lint_roadmap_complexity` | `agents/roadmaps` | dir | 502 | `dir` |
+| `lint_roadmap_later_disposition` | `agents/roadmaps` | dir | 502 | `ROADMAP_ROOT` |
 | `lint_role_experiences` | `agents/roles` | dir | 45 | `ROLES_DIR` |
 | `lint_role_experiences` | `dist/agent-src/skills` | dir | 528 | `(inline)` |
 | `lint_role_experiences` | `src/skills` | dir | 528 | `SRC_SKILLS()` |
@@ -382,7 +396,7 @@ as a green checkmark over an empty directory.
 | `lint_subagent_determinism` | `src/subagents` | dir | 2 | `SUBAGENT_DIR` |
 | `lint_supported_tools_matrix` | `README.md` | file | 1 | `(inline)` |
 | `lint_surface_matrix` | `src/config/surface-matrix.yml` | file | 1 | `MATRIX_PATH` |
-| `lint_ticket_buildable` | `agents/roadmaps` | dir | 498 | `ROADMAPS` |
+| `lint_ticket_buildable` | `agents/roadmaps` | dir | 502 | `ROADMAPS` |
 | `lint_ticket_buildable` | `agents/tickets` | dir | 8 | `TICKETS_ROOT` |
 | `lint_ticket_buildable` | `src/scripts/schemas` | dir | 21 | `SCHEMA_DIR` |
 | `lint_topics_yaml` | `.github/topics.yml` | file | 1 | `TOPICS_FILE` |

@@ -223,6 +223,34 @@ function benignTree(): string {
     return root;
 }
 
+/**
+ * A tree with one genuine class-A finding — a gate reading a root under a
+ * retired container that does not exist.
+ *
+ * The exit-contract cases below used to assert code 1 against the SHIPPED
+ * corpus, which worked only while the repo still HAD class-A findings. That
+ * made a passing suite depend on the defect being present: repairing the last
+ * dead root (2026-08-02) turned two of them red, which is a close signal, not a
+ * regression — but it also means the contract was never really pinned. A
+ * fixture pins it for good, and the shipped corpus gets its own assertion below
+ * that it is CLEAN.
+ */
+function classATree(): string {
+    const root = mkTmp('sweep-fx-a-');
+    fs.mkdirSync(path.join(root, 'src', 'scripts'), { recursive: true });
+    fs.writeFileSync(
+        path.join(root, 'src', 'scripts', 'lint_fixture_dead_root.ts'),
+        [
+            "import * as fs from 'node:fs';",
+            "import * as path from 'node:path';",
+            "const ROOT = '/x';",
+            "const SKILLS = path.join(ROOT, '.agent-src.uncondensed', 'skills');",
+            'fs.readdirSync(SKILLS);',
+        ].join('\n'),
+    );
+    return root;
+}
+
 function ledgerFile(entries: unknown[]): string {
     const f = path.join(mkTmp('sweep-led-'), 'ledger.json');
     fs.writeFileSync(f, JSON.stringify(entries));
@@ -245,12 +273,23 @@ describe('sweep_dead_scan_roots — exit contract (one meaning per code)', () =>
         expect(main(['--quiet', '--root', path.join(root, 'src', 'scripts'), '--ledger', ledgerFile([])])).toBe(0);
     });
 
-    it('1 — real class-A findings on the shipped corpus', () => {
-        expect(main(['--quiet', '--ledger', ledgerFile(REAL_LEDGER)])).toBe(1);
+    it('1 — a real class-A finding', () => {
+        const root = classATree();
+        expect(main(['--quiet', '--root', path.join(root, 'src', 'scripts'), '--ledger', ledgerFile([])])).toBe(1);
     });
 
     it('1 — real findings OUTRANK a stale ledger entry (hygiene must never mask a dead gate)', () => {
-        expect(main(['--quiet', '--ledger', ledgerFile([...REAL_LEDGER, GHOST])])).toBe(1);
+        const root = classATree();
+        expect(
+            main(['--quiet', '--root', path.join(root, 'src', 'scripts'), '--ledger', ledgerFile([GHOST])]),
+        ).toBe(1);
+    });
+
+    it('the SHIPPED corpus has no class-A finding and no stale disposition', () => {
+        // The state the repairs reached, asserted directly instead of inferred
+        // from an exit code that used to mean the opposite. If a future change
+        // re-introduces a dead root, this is the line that says so.
+        expect(main(['--quiet', '--ledger', ledgerFile(REAL_LEDGER)])).toBe(0);
     });
 
     it('3 — stale entry with no real findings', () => {
