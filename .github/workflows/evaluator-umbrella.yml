@@ -5,19 +5,38 @@ name: Evaluator Umbrella
 # tarball integrity + publint, headless install from the tarball, staleness
 # lints, hook-latency bench, cold-start / size / surface budgets
 # (src/config/evaluator-budgets.json — owner-dated, lint-enforced), npx
-# smoke. Runs on release PRs and nightly — never against the checkout's
-# working tree.
+# smoke. Runs on any PR that touches a measured input (see `paths` below),
+# on release PRs, and nightly — never against the checkout's working tree.
 
 on:
   pull_request:
     branches: [main, master]
-    # Release PRs (head `release/X.Y.Z`) are the primary gate surface; the
-    # inline `if` below filters, matching release-validation.yml's pattern.
+    # PR selection is owned by this `paths` filter, NOT by a head-branch
+    # `if` guard any more (road-to-gates-that-can-fail Phase 4). Every path
+    # below is an INPUT this umbrella measures, so a PR that changes one is
+    # the PR that can break a budget — and it must fail there rather than at
+    # release time (9.9.0 hit four release-gated checks at once).
+    #
+    # Release PRs still trigger by construction: `release.ts` step 4 bumps
+    # `package.json` (and the lockfile) on every release branch, so the
+    # first two entries always match a `release/X.Y.Z` diff.
+    paths:
+      - 'package.json'           # the `files[]` whitelist + version bump
+      - 'package-lock.json'      # runtime_dep_count derives from the lock
+      - 'src/cli/registry.ts'    # cli_help_command_count
+      - 'src/config/evaluator-budgets.json'
+      - 'src/scripts/install.ts' # headless-install leg
+      - 'src/scripts/evaluator_umbrella.sh'
+      - 'src/scripts/check_evaluator_budgets.ts'
+      - '.github/workflows/evaluator-umbrella.yml'
   schedule:
     # Nightly, 03:17 UTC — off-peak, deliberately not on the hour.
     - cron: '17 3 * * *'
   workflow_dispatch:
 
+# Workflow default stays read-only; the umbrella job below raises its own
+# `contents` scope to `write` because the NIGHTLY commits the measurement
+# record back to the default branch (see the record steps in that job).
 permissions:
   contents: read
 
@@ -27,9 +46,17 @@ concurrency:
 
 jobs:
   umbrella:
-    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    # No head-branch `if` guard any more. The `paths` filter above already
+    # decided that this PR touches a measured input; re-adding a `release/`
+    # guard here would make the path trigger cosmetic — the workflow would
+    # start and its only job would skip.
     name: Packed-artifact evaluation (clean container)
     runs-on: ubuntu-latest
+    permissions:
+      # `write` only so the scheduled run can commit the measurement record
+      # back to the default branch. Every other trigger leaves the record
+      # untouched — the record step is gated on `event_name == 'schedule'`.
+      contents: write
     container:
       # Clean Node container — the point is the PACKED artifact evaluated
       # outside the checkout's toolchain assumptions.
@@ -52,5 +79,40 @@ jobs:
           npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
             || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
 
+      # UMBRELLA_RECORD=1 only on the nightly: it is the one trigger that runs
+      # against an unchanged default branch, so its numbers are the reference
+      # a later PR's fresh measurement is compared against. A PR run measures
+      # and compares but never rewrites the record.
       - name: Run the evaluator umbrella
+        env:
+          UMBRELLA_RECORD: ${{ github.event_name == 'schedule' && '1' || '0' }}
         run: bash src/scripts/evaluator_umbrella.sh
+
+      # Always upload — a red run's numbers are the interesting ones.
+      - name: Upload the measurement record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluator-measurements
+          path: agents/evidence/metrics/evaluator-measurements.json
+          if-no-files-found: ignore
+
+      # Commit the refreshed record so drift shows up in a diff on the next PR
+      # that touches a measured input, instead of only at release time
+      # (road-to-gates-that-can-fail Phase 5; council route 2026-08-02 —
+      # committed artifact over an auto-managed issue or a notification channel
+      # a single maintainer would mute).
+      - name: Commit the measurement record (nightly only)
+        if: github.event_name == 'schedule'
+        run: |
+          set -euo pipefail
+          record=agents/evidence/metrics/evaluator-measurements.json
+          if git diff --quiet -- "$record"; then
+            echo "measurement record unchanged — nothing to commit"
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$record"
+          git commit -m 'chore(evaluator): refresh the nightly measurement record'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
