@@ -1,0 +1,17 @@
+{
+  "skill": "optimize-deep",
+  "should_trigger": [
+    "Run a deep optimization pass over this package and open a PR with the roadmap",
+    "Analysiere das Repo in der Tiefe, hinterfrage alle ADRs und erstelle eine Refactoring-Roadmap mit PR",
+    "Do an autonomous deep refactoring analysis: subagents, council, central roadmap plus sub-roadmaps, then refine it in loops",
+    "Question all our standing decisions — times have changed — and build the improvement roadmap autonomously",
+    "/optimize:deep --loops=4"
+  ],
+  "should_not_trigger": [
+    "Optimize this project — interview me about what to improve",
+    "Fix the failing lint gate in check_references.ts",
+    "Optimize my skills directory and trim unused skills",
+    "Optimize this prompt for Claude",
+    "Refactor the UserService class to use dependency injection"
+  ]
+}

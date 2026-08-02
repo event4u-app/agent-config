@@ -49,6 +49,7 @@ commands:
     - feature/plan
     - feature/refactor
     - feature/roadmap
+    - optimize/deep
     - optimize/project
     - project
     - project/analyze
@@ -145,6 +146,7 @@ commands:
     - agents/optimize
     - agents/user
     - agents/user/accept
+    - agents/user/delete
     - agents/user/init
     - agents/user/review
     - agents/user/show
