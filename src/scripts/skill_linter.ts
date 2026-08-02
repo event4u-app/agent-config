@@ -4231,11 +4231,9 @@ function _release_scope_requires_findings(root: string, since?: string | null): 
  * "empty because nothing changed".
  */
 function _changed_filter_matches_head(root: string): boolean {
-    const result = runCountedProbe(
-        'git',
-        ['ls-files', '--', 'dist/agent-src', '.agent-src.uncondensed'],
-        { cwd: root },
-    );
+    // Probes the canonical projection root only (ADR-051): a corpus that
+    // exists solely under a legacy path counts as dead, not alive.
+    const result = runCountedProbe('git', ['ls-files', '--', 'dist/agent-src'], { cwd: root });
     if (!result.ok) {
         return false;
     }
@@ -4244,12 +4242,7 @@ function _changed_filter_matches_head(root: string): boolean {
         if (!norm || norm.includes('/evals/')) {
             continue;
         }
-        const inSource =
-            norm.startsWith('.agent-src.uncondensed/') ||
-            norm.startsWith('dist/agent-src/') ||
-            norm.includes('/.agent-src.uncondensed/') ||
-            norm.includes('/dist/agent-src/');
-        if (!inSource) {
+        if (!norm.startsWith('dist/agent-src/') && !norm.includes('/dist/agent-src/')) {
             continue;
         }
         if (
