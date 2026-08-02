@@ -59,10 +59,12 @@ parent: road-to-package-renewal.md
       history-discipline + scale-discipline floors (~8-9k GPT tokens combined)
       state "auto-activates when pack-X is installed" but ship in every
       projection unconditionally — make the projection honor the pack
-      condition. Surface first: the 2026-07-13 consumer-scope-flip decision
-      deliberately kept the finance/legal/strategy floors shipping — cite it
-      and confirm the pack-condition mechanism differs from what that decision
-      rejected before editing
+      condition. Surface first: the consumer-scoping audit
+      (`agents/settings/contexts/consumer-scoping-audit-2026-07-07.md`,
+      "runtime-governance rules ship to consumers; unsure → ship it")
+      deliberately kept these floors shipping — cite it and confirm the
+      pack-condition mechanism differs from what that record rejected before
+      editing
 - [ ] Trim the MCP server below the 25-tool soft cap (currently 31 tools,
       flagged over-subscribed by `audit_initial_context`); demotion candidates
       = the tools that audit report flags, candidate list named in the PR
@@ -93,11 +95,13 @@ parent: road-to-package-renewal.md
 
 - [ ] Pre-register the spike: thresholds written BEFORE any code — token
       delta, injection precision on the 678-trigger set, AND a non-kernel
-      quality arm: zero `must_not` regressions and `must_include` rate within
-      δ of eager on the ADR-202 anchor-scoring corpus (the thin-flip
-      instrument in `later/road-to-thin-flip-under-anchor-scoring.md`), plus a
-      non-kernel missed-load (recall) threshold on a labelled prompt corpus;
-      corpus and abort criteria named in the same record
+      quality arm using a NEW instrument: a non-kernel missed-load (recall)
+      threshold on a labelled prompt corpus, with the verdict mechanism named
+      in the pre-registration. The ADR-202 anchor-scoring instrument is a
+      FINAL HONEST NULL (κ=0.472 < 0.800 floor; its reopen term is "a
+      different instrument, not a third attempt") — its anchors may serve as
+      raw material only, never as the verdict mechanism; corpus and abort
+      criteria named in the same record
 - [ ] Trigger-precision pass: 459/678 triggers are bare keywords — promote the
       noisiest to phrases or add a precision budget, else the resolver injects
       everything and measures nothing (precondition for the spike)

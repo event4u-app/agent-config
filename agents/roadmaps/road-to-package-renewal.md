@@ -67,14 +67,16 @@ this central roadmap steering three sub-roadmaps.
   condition). Finishing the `condense.ts` port so the mode stops THROWING is
   allowed (dead-switch repair), flipping the default is not.
 - **ADR-054 runtime activation — refused AS DESIGNED, not permanently**
-  (activation red-baseline null, 0/67 adjudicated). The Foundation Phase 3
-  spike shares ADR-054's transport family (a prompt-time reader of
-  `dist/router.json` — the ADR names that shape) but differs in objective and
-  baseline: it replaces always-loaded non-kernel bodies to cut tokens, where
-  ADR-054 added decay-triggered restatements against an adherence gap the
-  red baseline never produced. It enters via ADR-054's own recorded reopen
-  path (a funded, fully pre-registered run) — as a phase-gated spike with
-  pre-registered thresholds, never a default flip.
+  (activation red-baseline null, 0/67 adjudicated). Mechanism-match: the
+  Foundation Phase 3 spike shares ADR-054's transport family (a prompt-time
+  reader of `dist/router.json` — the ADR names that shape) but is a DIFFERENT
+  measurement with a different objective and baseline — it replaces
+  always-loaded non-kernel bodies to cut tokens, where ADR-054 added
+  decay-triggered restatements against an adherence gap the red baseline
+  never produced. The lock therefore does not bind the spike; the
+  shape-similarity is acknowledged, the spike runs phase-gated with
+  pre-registered thresholds, never a default flip, and a loss parks it
+  permanently next to ADR-054 with the numbers.
 - **A3 production-validator / enforcement-projection / orchestration-flip
   honest nulls** — TERMINAL, not re-run here.
 - **Harvest freeze until the first external adopter (restraint decision,
@@ -110,15 +112,18 @@ this central roadmap steering three sub-roadmaps.
 - **Frozen borrows (harvest-freeze)** — session cost telemetry, USD budget
   circuit-breaker, fact-forcing edit gate, MCP health gating, forward-routing
   footers, in-description deflection, new `awaiting-evidence` tracker status
-  (existing `## Blockers` convention covers the need). Reopen: the freeze's
-  own condition (first documented external adopter).
+  (existing `## Blockers` convention covers the need), and PreCompact context
+  re-injection (moved here in loop 2: its incident citation did not verify
+  and the shipped `hot_context_hook.ts` already restores on SessionStart
+  source=compact). Reopen: the freeze's own condition (first documented
+  external adopter).
 
 ## Sub-roadmaps (managed by this file)
 
 | Sub-roadmap | Scope | Status |
 |---|---|---|
 | [`road-to-renewal-foundation.md`](road-to-renewal-foundation.md) | CI oracle repair, dead-tree sweep, token quick wins (pack-gated floors, MCP trim), runtime-activation spike (phase-gated) | active |
-| [`road-to-renewal-leverage.md`](road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, command dedup/tail-cut) + external borrows (hook layer, worktree manifest, roadmap statuses) | blocked on Foundation Phase 1 |
+| [`road-to-renewal-leverage.md`](road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, cadence flip, hub generation, hook-fan-out trim) + four documented-failure fixes with borrowed shape + tracker-convention docs | blocked on Foundation Phase 1 |
 | [`road-to-renewal-adr-hygiene.md`](road-to-renewal-adr-hygiene.md) | Drive-loop era batch disposition, ADR-085 amendment, perma-proposed sweep, ADR-201 resolution | chip-mode (attach to other PRs) |
 
 Ordering (council-locked): Foundation Phase 1 (CI oracle) gates everything —

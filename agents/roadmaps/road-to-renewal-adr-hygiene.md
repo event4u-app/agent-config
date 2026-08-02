@@ -26,7 +26,7 @@ parent: road-to-package-renewal.md
       old: ADR-008/010/055/057/067/101): accept, reject, or supersede each —
       no third state
 - [ ] Fix INDEX.md staleness/self-misdescription and regenerate via
-      `scripts/adr/regenerate_index.ts`
+      `src/scripts/adr/regenerate_index.ts`
 
 ## Phase 2 — structural decisions with new evidence
 
@@ -55,12 +55,17 @@ parent: road-to-package-renewal.md
 
 ## Blockers
 
-- **Kernel/router value re-baseline** — Status: gated · Owner: maintainer ·
-  Blocks: nothing (optional input to Foundation Phase 3's go/no-go if landed;
-  that gate does not wait on it) · Resolved-when: maintainer authorizes bench
-  spend for a `bench_ab_v2_run` comparison on current frontier hosts, with the
-  pre-registered comparison + recorded artifact named up front. The locked
-  numbers are stale or unbacked (docs/CLAIMS.md vocabulary). Mechanism-match
-  note: this is a DIFFERENT measurement from the TERMINAL activation
-  red-baseline null (value-of-loading bench, not adherence adjudication) —
-  it does not re-run that null.
+### blocker: kernel-router-value-rebaseline
+
+- **Status:** gated
+- **Owner:** maintainer
+- **Blocks:** nothing (optional input to Foundation Phase 3's go/no-go if
+  landed; that gate does not wait on it)
+- **What to do:** run a `bench_ab_v2_run` comparison on current frontier
+  hosts with the pre-registered comparison + recorded artifact named up
+  front. The locked numbers are stale or unbacked (docs/CLAIMS.md
+  vocabulary). Mechanism-match note: this is a DIFFERENT measurement from
+  the TERMINAL activation red-baseline null (value-of-loading bench, not
+  adherence adjudication) — it does not re-run that null.
+- **Resolved when:** the maintainer authorizes the bench spend and the
+  recorded artifact lands.

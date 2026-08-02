@@ -7,8 +7,9 @@ parent: road-to-package-renewal.md
 # Road to renewal — Leverage (execution flows + documented-failure fixes)
 
 > Sub-roadmap of [`road-to-package-renewal.md`](road-to-package-renewal.md).
-> Blocked until Foundation Phase 1 is green (council-locked: fix the oracle
-> before shipping behavior changes it must validate).
+> Blocked until Foundation Phase 1 is green.
+> (Council-locked ordering: fix the oracle before shipping behavior changes
+> it must validate.)
 >
 > **Harvest-freeze lock note (council 2026-08-02, loop 1, unanimous):** the
 > restraint decision of 2026-07-20 freezes capability-adoption until the first
@@ -52,6 +53,10 @@ parent: road-to-package-renewal.md
 
 > Discriminator (council loop 1): "would this borrow's absence cause a RETURN
 > to a previously-documented failure state?" Every item cites its incident.
+> Loop-2 audit note: the PreCompact re-injection borrow was moved to the
+> frozen list — its incident citation did not verify (the hot-context cache
+> was a capability ADOPT, not an incident fix) and the shipped
+> `hot_context_hook.ts` already restores on SessionStart source=compact.
 
 - [ ] Worktree seeding allow/deny list (adapted from Source W's committed
       manifest, re-scoped to the cheaper rung): encode the documented trap
@@ -61,11 +66,6 @@ parent: road-to-package-renewal.md
       Incidents: the recorded worktree-trap family (partial node_modules
       fakes failures; pre-push projection trap; stale dist fakes generator
       drift)
-- [ ] PreCompact context re-injection (adapted from Source R): before host
-      compaction, re-inject the load-bearing session state (active roadmap,
-      current step, locks) so compaction cannot orphan the task. Incident
-      class: recorded context-decay/session-loss failures that motivated the
-      hot-context cache + `/agent-handoff`
 - [ ] Config-protection hook (adapted from Source E): PreToolUse guard that
       blocks edits weakening gates/thresholds/allowlists in config while a
       fix-loop is active — "fix the code, not the config". Incident: the
@@ -88,6 +88,6 @@ parent: road-to-package-renewal.md
 
 - Every behavior change re-runs the gates it touches; flow changes get a
   before/after on one real roadmap run (steps/hour, tokens/step). Measurement
-  precondition: the run enables `subagents.enabled` + the
-  orchestration/artifact-engagement telemetry for that session — both are
-  default-off, so an unconfigured run has no data source.
+  precondition: the run enables the orchestration/artifact-engagement
+  telemetry for that session — it is default-off, so an unconfigured run has
+  no data source (subagents themselves ship enabled per ADR-117).
