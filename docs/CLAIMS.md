@@ -372,3 +372,31 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: tests/scripts/encoding_corpus.test.ts#FAILS when a deliberately out-of-scope fixture is added
 - status: backed
 - last_verified: 2026-07-29
+
+### claim: governance-aggregation-refusal-invariance
+- claim: The council aggregation cannot be steered against a refusal. Pre-registered spike S0.1 measured that it WAS classification-steerable — `w_total` counted only members whose stance line parsed, so a refusal phrased as prose left the quorum and made consensus easier: steering margin 0.6667 (margin -0.25 parsed vs +0.4167 unparsed) with the outcome flipping from no-consensus to Adopt. High severity because the direction was the dangerous one. Fixed in the same change: a member who responded counts toward the quorum whether or not its stance parsed, and the post-fix steering margin is exactly 0. The divergence signal is an observation and is asserted never to reach the scoring path. No observed attack prompted this; the expected outcome was a null and it was pre-registered as such before the run.
+- kind: quant
+- evidence: internal/bench/reports/governance-invariants.json#s0_1_aggregation_steerability
+- status: backed
+- last_verified: 2026-08-02
+
+### claim: governance-decomposition-effect-boundary
+- claim: Pre-registered spike S0.2 measured that both of this package's fail-closed gates judged the shape of ONE action rather than the effect, so a sequence whose every step they allowed composed into the outcome they exist to prevent — leak count 2 of 2 gated outcomes, with all 4 single-step controls blocking correctly. Both were moved to the effect they govern. The positive control is `check_secret_leak`, which scopes to the cumulative diff against a base ref and therefore returned null before any fix — decomposition gains nothing against an effect-scoped gate. Scope bound, published rather than swept: `mv` / `chmod` / `rm` against `.git/hooks/*` still reach the first outcome and are asserted as an open gap, because recognising them would make a fail-closed guard a shell sandbox. Decomposition in this package is model-carried — there is no executable subagent dispatcher — so the measured layer is the PreToolUse hook layer; the 2026-08-02 council dissent on whether that is a faithful discharge is recorded in the spike header.
+- kind: quant
+- evidence: internal/bench/reports/governance-invariants.json#s0_2_decomposition_laundering
+- status: backed
+- last_verified: 2026-08-02
+
+### claim: governance-marker-preservation-null
+- claim: Pre-registered spike S0.3 measured that a stated uncertainty, hedge, or provenance marker survives this package's telegraph condenser into the audited text — 3 marker classes, 10 fixture cases, marker-loss count 0, negation count preserved. Honest null, published with the spike wired as the regression test. The first run's two "failures" were fixture defects (carriers written as phrases containing an article the condenser is documented to drop) and are recorded as an unmet premise rather than edited away. Scope bound: this protects a marker the agent DID emit; it cannot make an agent state an uncertainty it never stated.
+- kind: quant
+- evidence: internal/bench/reports/governance-invariants.json#s0_3_marker_survival
+- status: backed
+- last_verified: 2026-08-02
+
+### claim: governance-adjacent-properties
+- claim: Four adjacent governance properties were closed as regression tests rather than phases, on the expectation that each was already true. One of the four was. (a) enforcement never branches on a base-model refusal string — holds; the single module compiling refusal regexes only ever escalates, and no refusal branch reaches an allow decision. (b) a capability gate resolves only from trusted config — VIOLATED: the runtime dispatcher returned ready for a skill whose own frontmatter declared `safety_mode: strict` and granted itself 2 tools absent from the 2-entry registry, while the validator implementing that allowlist had zero production callers; now wired. (c) caller-agnosticism — holds: 0 caller-identity inputs reach a gate verdict, and the 3 platforms that carry the blocking slot are pinned so none silently loses a concern. (d) constraint monotonicity — holds: 0 blocking gates read persisted state, with 1 advisory anti-nag exception named in the test. All 7 inverted properties produced a failing test.
+- kind: quant
+- evidence: internal/bench/reports/governance-invariants.json#adjacent_properties
+- status: backed
+- last_verified: 2026-08-02
