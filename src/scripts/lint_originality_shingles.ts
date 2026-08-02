@@ -104,7 +104,13 @@ function _collect(): Doc[] {
             push(`skill:${d.name}`, path.join(skillsDir, d.name, 'SKILL.md'));
         }
     }
-    const personasDir = path.join(REPO, 'src', 'personas');
+    // `src/agent-src/personas`, not `src/personas` — the latter has never existed
+    // since ADR-051 moved the container, so the `existsSync` guard below silently
+    // dropped all 30 personas from a comparison whose own header promises to cover
+    // them. Same dead-root class the rest of this roadmap repairs; it escaped the
+    // class-A sweep only because the literal does not carry a retired-container
+    // prefix (road-to-gates-that-can-fail Phase 1).
+    const personasDir = path.join(REPO, 'src', 'agent-src', 'personas');
     if (fs.existsSync(personasDir)) {
         const walk = (dir: string, prefix: string): void => {
             for (const d of fs.readdirSync(dir, { withFileTypes: true })) {

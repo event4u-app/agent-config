@@ -15,6 +15,40 @@ import {
 } from '../../src/scripts/lint_override_kernel_guard.js';
 import { KERNEL_RULE_IDS, is_kernel_rule } from '../../src/scripts/_lib/kernel_rules.js';
 
+describe('parse_mode — first-match-wins bypass (Phase 6.2 finding 5)', () => {
+    // The override contract doc carries two example `**Mode:**` lines, so an
+    // example above the real declaration used to decide the verdict. On a
+    // safety-floor rule that is the difference between a blocked override and a
+    // permitted one — so disagreement must fail closed, never pick the earliest.
+    it('does not let an earlier example shadow the real declaration', () => {
+        const text = [
+            '# Override: Rule — commit-policy',
+            '',
+            'For example, a light override declares:',
+            '',
+            '**Mode:** `extend`',
+            '',
+            'This file, however, declares:',
+            '',
+            '**Mode:** `replace`',
+            '',
+        ].join('\n');
+        // Before the repair this returned 'extend' — the permitted mode — from
+        // the example, while the file actually declares the blocked one.
+        expect(parse_mode(text)).toBe('unknown');
+    });
+
+    it('CONTROL — repeated agreeing declarations still resolve, so the fix is not blanket refusal', () => {
+        expect(parse_mode('**Mode:** `replace`\n\nprose\n\n**Mode:** `replace`\n')).toBe('replace');
+    });
+
+    it('resolves to a violation-bearing verdict, not a silent pass', () => {
+        // `unknown` is what the caller turns into a violation; assert the contract
+        // the repair depends on rather than assuming it.
+        expect(['unknown', 'replace']).toContain(parse_mode('**Mode:** `extend`\n**Mode:** `replace`\n'));
+    });
+});
+
 describe('parse_mode', () => {
     it('reads a backticked extend header', () => {
         expect(parse_mode('---\n**Mode:** `extend`\n---\n')).toBe('extend');
