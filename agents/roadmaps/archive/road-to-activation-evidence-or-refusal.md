@@ -84,7 +84,7 @@ already exists.
 
 ## Phase 1 — The verdict, both branches pre-written
 
-- [ ] **Branch A — no red baseline found** (the expected outcome): record it in the
+- [x] **Branch A — no red baseline found** (the expected outcome): record it in the
       report as a fourth null-adjacent finding, move ADR-054 to `rejected` citing
       this attempt, and decide the offline matcher's fate in the same pass — either
       it keeps earning its place as a CI coverage floor (`trigger_coverage`) or it
@@ -94,7 +94,7 @@ already exists.
       *Verify:* ADR-054 status changed, the refusal recorded in
       [`feedback-9x-council-cut`](../settings/contexts/feedback-9x-council-cut.md),
       and no resolver code exists anywhere in the tree.
-- [ ] **Branch B — red baseline found**: the question re-opens, and the *cheapest*
+- [-] **Branch B — red baseline found**: the question re-opens, and the *cheapest*
       candidates are tried first, in this order — the runtime resolver is last,
       not first.
       1. **Written-down state.** The obligation is written into a project-visible
@@ -116,7 +116,11 @@ already exists.
          per-turn.
       *Verify:* each candidate is measured against the Phase-0 corpus before the
       next one is built; the first that closes the gap ends the branch.
-- [ ] Either branch: publish the outcome where the other nulls live, so the family
+      <!-- cancelled 2026-08-02: Phase 0 produced 0 of a required 5 qualifying
+      sessions, so this branch never opened. The two mechanisms it would have
+      tried first (written-down state; generated file->skill table) are recorded
+      as evidence-gated, not refused on their merits. -->
+- [x] Either branch: publish the outcome where the other nulls live, so the family
       count stays honest.
       *Verify:* the entry names the shape tested and the shape not tested.
 

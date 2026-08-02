@@ -93,6 +93,47 @@ of this shape. Revisit-if:
 - The full pre-registered n≈50/arm run is explicitly funded despite this pilot
   (the pilot is directional, not the full design).
 
+## Revisit condition tested and not met (2026-08-02) — the fourth finding in the family
+
+The revisit condition above ("someone produces a scenario corpus where the
+kernel-only baseline demonstrably FAILS — genuine > 3K-token distance in a live
+multi-turn session") was **searched for against real recorded sessions and not
+met.** ADR-054, the standing design that would have implemented the mechanism,
+is now `rejected`.
+
+**Shape tested.** 1,158 recorded sessions of this repository (host transcripts +
+the cross-host chat-history log); 67 cleared an ≥ 8-turn gate; three
+machine-checkable obligations (unverified completion claim · out-of-scope file
+touch · forbidden commit shape) produced 4,130 raw hits, of which 547 in 12
+sessions cleared both the ≥ 3K-token distance gate and the in-context gate.
+Independent adjudicators — given the verbatim rule text and the surrounding
+turns, and not told which verdict was wanted — confirmed **0 of 67**.
+Qualifying sessions: **0 of a required 5**. The bar was registered in its own
+commit before the data was read.
+
+Distance was never the binding constraint: the qualifying rows span **9,464 to
+727,537 tokens**, all from real token accounting. Where the pilot's probes sat
+~600 words back, these sit up to 240× the pre-registered bar — and the baseline
+is still at ceiling.
+
+**Shape NOT tested — the honest limits.** Only frontier hosts (`claude-opus-5`,
+`claude-opus-4-8`, `claude-fable-5`, `claude-sonnet-5`); **no weak-host session
+exists in this corpus at all**, so revisit path 2 (a materially weaker tier
+entering the consumer set) is untouched and remains open on its own terms. One
+operator, one repository, one working style. Three obligations chosen for having
+mechanical negative signals — obligations that need a reader ("ask when
+uncertain", "surface the trade-off") were never in scope. And two of the three
+instruments were blunt: the completion detector under-counted the verification
+commands this repo actually uses, and the scope detector could not represent the
+task at all (100% false-positive rate on its sample). Both were blunt toward
+**more** candidates, not fewer.
+
+**Consequence.** The prompt-time resolver (D1) is refused permanently on this
+evidence. Re-opening requires a materially weaker host tier entering the
+consumer set, or an explicitly funded n ≈ 50/arm run of the full pre-registered
+design. Full report:
+[`activation-red-baseline`](../../evidence/analysis/activation-red-baseline.md).
+
 ## Reminder drift-audit disposition (2026-07-10, road-to-orchestration-and-memory-harvest Phase 5)
 
 The **reminder drift-audit** reflection (a long-session self-audit: fresh-instance
