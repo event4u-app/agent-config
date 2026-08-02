@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: pixar-storyteller
-description: "Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored in emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'."
+description: "Use when an idea becomes a Pixar-style animation prompt — character sheet, scene, image, video; emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'. Live-action → video-director."
 domain: product
 workspaces:
   - small-business
@@ -119,12 +119,15 @@ Any "no" → revise that block.
 
 ## Policies
 
+Paths, enforcement model, and the full set: the
+[media policy preamble](../../../agents/settings/policies/media/README.md).
+
 The Pixar-storyteller skill anchors prompts to named films and studios by design — the policy surface is the largest in the video cluster:
 
-- [`agents/settings/policies/media/style.md`](../../../agents/settings/policies/media/style.md) — naming a film + year as the *primary* anchor crosses the "in the style of [STUDIO]" trigger; surface and refuse without a transformative-intent rationale.
-- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — when a beat references a named animator's signature character (real-person extension of style).
-- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — when the storyteller's character is a recognised public figure rendered in Pixar shape.
-- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — every Pixar-style output ships with the AI-generation disclosure; parody / commentary cases are flagged for human review.
+- **`style`** — naming a film + year as the *primary* anchor crosses the "in the style of [STUDIO]" trigger; surface and refuse without a transformative-intent rationale.
+- **`likeness`** — when a beat references a named animator's signature character (real-person extension of style).
+- **`public-figures`** — when the storyteller's character is a recognised public figure rendered in Pixar shape.
+- **`disclosure`** — every Pixar-style output ships with the AI-generation disclosure; parody / commentary cases are flagged for human review.
 
 Refuse-and-surface when style ⇒ primary signature, not one influence among several.
 

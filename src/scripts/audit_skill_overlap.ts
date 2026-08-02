@@ -3,35 +3,51 @@
  * Skill-family content-overlap analysis (6.0.0-C Phase 4 Step 8).
  *
  * Ported from the retired Python `src/scripts/audit_skill_overlap.py` (ADR-200 —
- * Python→TS migration, Phase 8 / Wave 8c). Mirrors the Python CLI
- * contract EXACTLY — the `--threshold` / `--quiet` flags, exit codes
- * (0 ok / 3 no skills), the stdout/stderr split, byte-identical stdout
- * messages, and byte-identical written artefacts (`json.dumps(...,
- * indent=2)` for the JSON + the exact Markdown renderer).
+ * Python→TS migration, Phase 8 / Wave 8c). The numeric contract — keyword
+ * vector, cosine, banker's rounding, pair ordering, `json.dumps(..., indent=2)`
+ * byte shape, and the Markdown renderer — is preserved so historical reports
+ * stay comparable. The CLI grew a `--root` flag; the exit codes are unchanged
+ * (0 ok / 3 dead scan scope).
  *
- * No `_lib` imports — the retired Python implementation has none; it carries its own
- * `_skill_roots()` (which references the `.agent-src.uncondensed/skills`
- * layout literally — this twin reproduces that literal faithfully, since
- * the .py original carries it).
+ * SCAN ROOT (repaired 2026-08-02, road-to-overlap-truth-and-skill-cut Phase 1):
+ * the ported `_skill_roots()` resolved the pre-ADR-051 source containers, both
+ * of which were deleted when `src/skills` became the source of truth. The tool
+ * therefore walked a directory that does not exist and could never report an
+ * overlap for the 287-skill corpus. That resolution is GONE, not kept as a
+ * fallback branch: the default root is the shared `SRC_SKILLS()` resolver, and
+ * an empty scan is a hard failure via {@link assertScanned} rather than an
+ * empty result.
  *
  * Walks every `SKILL.md`, builds a keyword vector from the body
  * (frontmatter stripped), and flags pairs whose content cosine-similarity
  * is >= OVERLAP_THRESHOLD. Same-domain (shared `packs:`) >= threshold pairs
  * are the merge candidates. THIS SCRIPT MERGES NOTHING.
  *
- * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
+ * `--strict` makes a same-pack pair at or above threshold a BUILD FAILURE
+ * (exit 1) unless the pair carries a reviewed justification in
+ * `audit_skill_overlap_allowlist.json`, capped at 20 entries. The cap is the
+ * point: it forces periodic re-litigation instead of an allowlist that grows
+ * quietly until the gate means nothing. Cross-pack pairs never block — a
+ * cross-pack merge changes install shape and is a different decision.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { SRC_SKILLS } from './_lib/agent_src.js';
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/audit_skill_overlap.py → parent.parent.parent == repo root.
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const REPORT_DIR = path.join(ROOT, 'agents', 'reports');
-export const OUT_JSON = path.join(REPORT_DIR, 'skill-overlap.json');
-export const OUT_MD = path.join(REPORT_DIR, 'skill-overlap.md');
+export const OUT_JSON_NAME = 'skill-overlap.json';
+export const OUT_MD_NAME = 'skill-overlap.md';
+export const OUT_JSON = path.join(REPORT_DIR, OUT_JSON_NAME);
+export const OUT_MD = path.join(REPORT_DIR, OUT_MD_NAME);
+export const ALLOWLIST = path.join(ROOT, 'src', 'scripts', 'audit_skill_overlap_allowlist.json');
+export const ALLOWLIST_CAP = 20;
 // re.compile(r"^---\n(.*?)\n---", re.DOTALL) — used with .search (anywhere).
 const FM_RE = /^---\n([\s\S]*?)\n---/m;
 export const OVERLAP_THRESHOLD = 0.7;
@@ -70,49 +86,16 @@ function _isFile(p: string): boolean {
         return false;
     }
 }
-
-/** Sorted immediate child entries (mirrors `sorted(p.iterdir())` / `p.glob`). */
-function _iterdirSorted(p: string): string[] {
-    let names: string[];
-    try {
-        names = fs.readdirSync(p);
-    } catch {
-        return [];
-    }
-    names.sort();
-    return names.map((n) => path.join(p, n));
-}
-
 /**
- * Mirror `_skill_roots`:
- *   roots = [d for d in (ROOT/"packages").glob("*\/.agent-src.uncondensed/skills")
- *            if d.is_dir()] if (ROOT/"packages").is_dir() else []
- *   legacy = ROOT/".agent-src.uncondensed"/"skills"
- *   if not roots and legacy.is_dir(): roots = [legacy]
+ * The one scan root: `src/skills`, via the shared ADR-051 resolver.
  *
- * `packages.glob("*\/.agent-src.uncondensed/skills")` iterates packages
- * children sorted (pathlib glob over a single level is unsorted, and the
- * retired Python implementation did NOT sort here — it relied on `collect()`'s `seen`
- * dedup keyed on dir name. To stay deterministic we sort the package
- * children; the resulting root order only affects first-win dedup, and no
- * skill dir name collides across packages in practice.)
+ * There is deliberately no fallback. A second, silently-tried root is how the
+ * previous resolution stayed green while reading nothing — the caller passes an
+ * explicit `--root` when it wants a different tree (fixtures, tests), and any
+ * root that yields zero skills fails loudly in {@link main}.
  */
-export function _skill_roots(): string[] {
-    const pkgs = path.join(ROOT, 'packages');
-    let roots: string[] = [];
-    if (_isDir(pkgs)) {
-        for (const child of _iterdirSorted(pkgs)) {
-            const cand = path.join(child, '.agent-src.uncondensed', 'skills');
-            if (_isDir(cand)) {
-                roots.push(cand);
-            }
-        }
-    }
-    const legacy = path.join(ROOT, '.agent-src.uncondensed', 'skills');
-    if (roots.length === 0 && _isDir(legacy)) {
-        roots = [legacy];
-    }
-    return roots;
+export function _default_skill_root(): string {
+    return SRC_SKILLS();
 }
 
 /**
@@ -162,8 +145,19 @@ export function _cosine(a: Map<string, number>, b: Map<string, number>): number 
     return da && db ? num / (da * db) : 0.0;
 }
 
+/**
+ * Which text the similarity vector is built from.
+ *
+ * `body` is the CANONICAL metric — the one every historical report, the 0.70
+ * threshold, and the merge decisions are calibrated against. `description` is
+ * an explicitly non-canonical second view: routing happens on descriptions, and
+ * body similarity does not measure it, so the two answer different questions
+ * and their scores are never mixed or compared against the same threshold.
+ */
+export type Field = 'body' | 'description';
+
 /** Mirror `_parse`: yaml.safe_load frontmatter, body after the FM match. */
-export function _parse(md: string): Skill {
+export function _parse(md: string, field: Field = 'body'): Skill {
     const text = fs.readFileSync(md, 'utf-8');
     let fm: Json = {};
     let body = text;
@@ -179,11 +173,13 @@ export function _parse(md: string): Skill {
     const isObj = fm !== null && typeof fm === 'object' && !Array.isArray(fm);
     const name = isObj ? (fm as Record<string, Json>)['name'] : null;
     const packsVal = isObj ? (fm as Record<string, Json>)['packs'] : null;
+    const descVal = isObj ? (fm as Record<string, Json>)['description'] : null;
+    const source = field === 'description' ? (descVal ? String(descVal) : '') : body;
     return {
         name: name ? String(name) : path.basename(path.dirname(md)),
         relpath: _relPosix(md, ROOT),
         packs: Array.isArray(packsVal) ? new Set(packsVal.map((x) => String(x))) : new Set(),
-        vector: _keyword_vector(body),
+        vector: _keyword_vector(source),
     };
 }
 
@@ -247,22 +243,20 @@ function _pathlibCompare(a: string, b: string): number {
     return pa.length - pb.length;
 }
 
-export function collect(): Skill[] {
+export function collect(root: string = _default_skill_root(), field: Field = 'body'): Skill[] {
     const skills: Skill[] = [];
     const seen = new Set<string>();
-    for (const root of _skill_roots()) {
-        for (const md of _rglobSkillMd(root)) {
-            // if "_archive" in md.parts: continue
-            if (md.split(path.sep).includes('_archive')) {
-                continue;
-            }
-            const key = path.basename(path.dirname(md));
-            if (seen.has(key)) {
-                continue;
-            }
-            seen.add(key);
-            skills.push(_parse(md));
+    for (const md of _rglobSkillMd(root)) {
+        // if "_archive" in md.parts: continue
+        if (md.split(path.sep).includes('_archive')) {
+            continue;
         }
+        const key = path.basename(path.dirname(md));
+        if (seen.has(key)) {
+            continue;
+        }
+        seen.add(key);
+        skills.push(_parse(md, field));
     }
     return skills;
 }
@@ -354,17 +348,30 @@ function _pct(x: number): string {
     return `${pct}%`;
 }
 
-export function render_md(skills: Skill[], pairs: Pair[], threshold: number): string {
+export function render_md(
+    skills: Skill[],
+    pairs: Pair[],
+    threshold: number,
+    field: Field = 'body',
+): string {
     const merge = pairs.filter((p) => p.same_domain);
     const cross = pairs.filter((p) => !p.same_domain);
     const L: string[] = [
         '# Skill-family overlap report (6.0.0-C Phase 4 Step 8)\n',
-        `> Content cosine-similarity over ${skills.length} skills; pairs at ` +
-            `≥ ${_pct(threshold)}. **Same-domain pairs (shared \`packs:\`) are the ` +
-            `merge candidates** consumed by ` +
-            `[\`evidence-based-pruning.md\`](../../docs/contracts/evidence-based-pruning.md). ` +
-            `This report merges NOTHING — it is input to a future, human-driven ` +
-            `consolidation roadmap.\n`,
+        field === 'description'
+            ? `> **NON-CANONICAL measurement.** Cosine over the \`description:\` ` +
+              `frontmatter only, across ${skills.length} skills, at ≥ ${_pct(threshold)}. ` +
+              `Routing happens on descriptions, so this answers a question the ` +
+              `canonical body metric does not — but its scores are NOT comparable ` +
+              `to the canonical 0.70 merge threshold and must never be mixed into ` +
+              `a merge decision. The canonical run is the one without ` +
+              `\`--descriptions\`.\n`
+            : `> Content cosine-similarity over ${skills.length} skills; pairs at ` +
+              `≥ ${_pct(threshold)}. **Same-domain pairs (shared \`packs:\`) are the ` +
+              `merge candidates** consumed by ` +
+              `[\`evidence-based-pruning.md\`](../../docs/contracts/evidence-based-pruning.md). ` +
+              `This report merges NOTHING — it is input to a future, human-driven ` +
+              `consolidation roadmap.\n`,
         `\n- Skills scanned: **${skills.length}**`,
         `\n- Overlap pairs ≥ ${_pct(threshold)}: **${pairs.length}** ` +
             `(${merge.length} same-domain merge candidates, ${cross.length} cross-domain)\n`,
@@ -476,30 +483,126 @@ class FloatTag {
 
 export function main(argv: string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
-    const skills = collect();
-    if (skills.length === 0) {
-        process.stderr.write('❌  No skills found under the package skill roots.\n');
+    const root = args.root ?? _default_skill_root();
+    const skills = collect(root, args.field);
+    try {
+        assertScanned({
+            gate: 'audit_skill_overlap',
+            scanned: skills.length,
+            units: 'skill(s)',
+            roots: [_relPosix(root, ROOT)],
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
         return 3;
     }
     const pairs = find_pairs(skills, args.threshold);
-    fs.mkdirSync(REPORT_DIR, { recursive: true });
+    const outDir = args.outDir ?? REPORT_DIR;
+    const outJson = path.join(outDir, OUT_JSON_NAME);
+    const outMd = path.join(outDir, OUT_MD_NAME);
+    fs.mkdirSync(outDir, { recursive: true });
     const jsonObj = {
         threshold: new FloatTag(args.threshold),
         skills_scanned: skills.length,
         pairs: pairs.map(_pairToJson),
     };
-    fs.writeFileSync(OUT_JSON, _dumpsWithFloats(jsonObj), 'utf-8');
-    fs.writeFileSync(OUT_MD, render_md(skills, pairs, args.threshold), 'utf-8');
+    fs.writeFileSync(outJson, _dumpsWithFloats(jsonObj), 'utf-8');
+    fs.writeFileSync(outMd, render_md(skills, pairs, args.threshold, args.field), 'utf-8');
+    const merge = pairs.filter((p) => p.same_domain);
     if (!args.quiet) {
-        const merge = pairs.filter((p) => p.same_domain).length;
         process.stdout.write(
             `✅  Skill overlap: ${skills.length} skills, ${pairs.length} pair(s) ` +
-                `≥ ${_pct(args.threshold)} (${merge} same-domain merge candidate(s)).\n`,
+                `≥ ${_pct(args.threshold)} (${merge.length} same-domain merge candidate(s)).\n`,
         );
-        process.stdout.write(`   JSON: ${_relPosix(OUT_JSON, ROOT)}\n`);
-        process.stdout.write(`   MD:   ${_relPosix(OUT_MD, ROOT)}\n`);
+        process.stdout.write(`   JSON: ${_relPosix(outJson, ROOT)}\n`);
+        process.stdout.write(`   MD:   ${_relPosix(outMd, ROOT)}\n`);
     }
-    return 0;
+    // Deliberately NOT gated on --quiet: an advisory CI step whose only output
+    // is suppressed by the pipeline's default --quiet is a report nobody reads,
+    // which is one step away from the silent-green defect this tool just came
+    // back from. The counts line always ships when the table is requested.
+    if (args.printTable) {
+        process.stdout.write(
+            `ℹ️  skill overlap${args.strict ? '' : ' (advisory)'}: ${skills.length} skills scanned, ` +
+                `${merge.length} same-domain pair(s) ≥ ${_pct(args.threshold)}\n`,
+        );
+        for (const p of merge) {
+            process.stdout.write(
+                `   ${p.similarity.toFixed(3)}  ${p.a} ↔ ${p.b}  [${p.shared_packs.join(', ')}]\n`,
+            );
+        }
+    }
+
+    if (!args.strict) {
+        return 0;
+    }
+    let allow: Set<string>;
+    try {
+        allow = _loadAllowlist(args.allowlist ?? ALLOWLIST);
+    } catch (exc) {
+        process.stderr.write(`❌  ${exc instanceof Error ? exc.message : String(exc)}\n`);
+        return 2;
+    }
+    const blocking = merge.filter((p) => !allow.has(_pairKey(p.a, p.b)));
+    if (blocking.length === 0) {
+        return 0;
+    }
+    process.stderr.write(
+        `❌  audit_skill_overlap: ${blocking.length} same-pack pair(s) at or above ` +
+            `${_pct(args.threshold)} with no reviewed justification:\n`,
+    );
+    for (const p of blocking) {
+        process.stderr.write(
+            `   ${p.similarity.toFixed(3)}  ${p.a} ↔ ${p.b}  [${p.shared_packs.join(', ')}]\n`,
+        );
+    }
+    process.stderr.write(
+        `   Merge the pair, or add {"pair": "${_pairKey(blocking[0]!.a, blocking[0]!.b)}", "reason": "…"} ` +
+            `to ${_relPosix(args.allowlist ?? ALLOWLIST, ROOT)} (cap ${ALLOWLIST_CAP}).\n`,
+    );
+    return 1;
+}
+
+/** Order-independent key for an unordered pair. */
+export function _pairKey(a: string, b: string): string {
+    return a < b ? `${a}::${b}` : `${b}::${a}`;
+}
+
+/**
+ * Reviewed same-pack overlaps, capped. Over-cap throws rather than warning:
+ * per the autonomous-execution allowlist-growth antipattern, an allowlist that
+ * outgrows its cap means the threshold is wrong, not that the corpus needs
+ * twenty-one exceptions.
+ */
+export function _loadAllowlist(file: string): Set<string> {
+    if (!_isFile(file)) {
+        return new Set();
+    }
+    const data = JSON.parse(fs.readFileSync(file, 'utf-8')) as {
+        entries?: Array<{ pair: string; reason: string }>;
+    };
+    const entries = Array.isArray(data.entries) ? data.entries : [];
+    if (entries.length > ALLOWLIST_CAP) {
+        throw new Error(
+            `audit_skill_overlap: allowlist has ${entries.length} entries (> ${ALLOWLIST_CAP}). ` +
+                'Per the autonomous-execution allowlist-growth antipattern, the threshold is wrong, ' +
+                'not the corpus — re-litigate the bar, do not grow the list.',
+        );
+    }
+    const out = new Set<string>();
+    for (const e of entries) {
+        const [a, b] = String(e.pair).split('::');
+        if (a === undefined || b === undefined || (e.reason ?? '').trim() === '') {
+            throw new Error(
+                `audit_skill_overlap: allowlist entry ${JSON.stringify(e)} needs "pair": "a::b" and a non-empty "reason".`,
+            );
+        }
+        out.add(_pairKey(a, b));
+    }
+    return out;
 }
 
 /** json.dumps(indent=2) with FloatTag → Python-float repr. */
@@ -545,23 +648,58 @@ function _dumpsWithFloats(obj: Json, level = 0): string {
 interface Args {
     threshold: number;
     quiet: boolean;
+    /** Absolute scan root; `undefined` = the `src/skills` default. */
+    root?: string;
+    /** Absolute report directory; `undefined` = `agents/reports`. */
+    outDir?: string;
+    /** Print the same-domain pair table to stdout even under `--quiet`. */
+    printTable: boolean;
+    /** Fail the build on an unjustified same-pack pair at or above threshold. */
+    strict: boolean;
+    /** Allowlist path override (tests); `undefined` = the shipped file. */
+    allowlist?: string;
+    /** Which text the vector is built from. `description` is NON-canonical. */
+    field: Field;
 }
 
 export function parse_args(argv: string[]): Args {
-    const args: Args = { threshold: OVERLAP_THRESHOLD, quiet: false };
+    const args: Args = {
+        threshold: OVERLAP_THRESHOLD,
+        quiet: false,
+        printTable: false,
+        strict: false,
+        field: 'body',
+    };
+    const takeValue = (flag: string, inline: string | undefined, next: () => string | undefined): string => {
+        const v = inline ?? next();
+        if (v === undefined) {
+            process.stderr.write(`argument ${flag}: expected one argument\n`);
+            process.exit(2);
+        }
+        return v;
+    };
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i] as string;
         if (a === '--quiet') {
             args.quiet = true;
-        } else if (a === '--threshold') {
-            const v = argv[++i];
-            if (v === undefined) {
-                process.stderr.write('argument --threshold: expected one argument\n');
-                process.exit(2);
-            }
-            args.threshold = Number(v);
-        } else if (a.startsWith('--threshold=')) {
-            args.threshold = Number(a.slice('--threshold='.length));
+        } else if (a === '--strict') {
+            args.strict = true;
+        } else if (a === '--allowlist' || a.startsWith('--allowlist=')) {
+            const inline = a.startsWith('--allowlist=') ? a.slice('--allowlist='.length) : undefined;
+            args.allowlist = path.resolve(ROOT, takeValue('--allowlist', inline, () => argv[++i]));
+        } else if (a === '--descriptions') {
+            args.field = 'description';
+        } else if (a === '--print-table') {
+            args.printTable = true;
+        } else if (a === '--threshold' || a.startsWith('--threshold=')) {
+            const inline = a.startsWith('--threshold=') ? a.slice('--threshold='.length) : undefined;
+            args.threshold = Number(takeValue('--threshold', inline, () => argv[++i]));
+        } else if (a === '--root' || a.startsWith('--root=')) {
+            const inline = a.startsWith('--root=') ? a.slice('--root='.length) : undefined;
+            args.root = path.resolve(ROOT, takeValue('--root', inline, () => argv[++i]));
+        } else if (a === '--out-dir' || a.startsWith('--out-dir=')) {
+            const inline = a.startsWith('--out-dir=') ? a.slice('--out-dir='.length) : undefined;
+            args.outDir = path.resolve(ROOT, takeValue('--out-dir', inline, () => argv[++i]));
         } else {
             process.stderr.write(`unrecognized arguments: ${a}\n`);
             process.exit(2);

@@ -31,15 +31,11 @@ Do NOT use when:
 
 ## Mission
 
-Act as the top-level router for deep project investigation.
-
-This skill must:
-
-* confirm whether full-project analysis is justified
-* identify the stack and framework
-* choose the correct analysis mode
-* route to the right specialist analysis skills
-* define the required output for broad project investigations
+Run the deep multi-pass audit itself, and hand each pass to the right
+specialist. Picking *which* skill a request needs in the first place belongs to
+[`analysis-skill-router`](../analysis-skill-router/SKILL.md) — that chooser and
+this orchestrator are deliberately separate files, and the scope test, the
+detection step, and the decision table live there, not here.
 
 This skill must NOT become:
 
@@ -88,9 +84,9 @@ Goal: identify hot paths, find expensive boundaries, route into architecture or 
 
 ### 1. Confirm scope
 
-Check whether full-project analysis is really needed.
-Use this skill only if the user wants: broad system understanding, architecture reconstruction, deep multi-layer debugging, broad audit across modules or runtime boundaries.
-If not: route to the narrower specialist skill directly.
+Invoked through the router, this is already settled — proceed. Invoked
+directly, apply the router's scope test before spending a multi-pass audit on
+something a specialist covers.
 
 ### 2. Discover the project
 
@@ -128,35 +124,16 @@ Check:
 * uncertainties are marked
 * conclusions are evidence-based
 
-## Routing map
-
-### Universal analysis skills
-
-* `project-analysis-core`
-* `project-analysis-hypothesis-driven`
-
-### Framework-specific deep dives
-
-* `project-analysis-laravel`
-* `project-analysis-symfony`
-* `project-analysis-zend-laminas`
-* `project-analysis-node-express`
-* `project-analysis-react`
-* `project-analysis-nextjs`
-
-### Optional downstream specialists
-
-* `bug-analyzer`
-* `performance-analysis`
-* `security-audit`
-
-### Ingestion preprocessor
+## Ingestion preprocessor
 
 * `markitdown` — when the project ships PDFs, DOCX, XLSX, PPTX, EPUB,
-  images, or audio that need to feed into any of the analysis skills
-  above. Convert first via the upstream `markitdown-mcp` server, then
+  images, or audio that need to feed into any of the routes in steps 3–4.
+  Convert first via the upstream `markitdown-mcp` server, then
   route the resulting Markdown into the relevant deep-dive skill.
   Never read a binary office format raw.
+
+> The route lists in steps 3 and 4 are the routing map. A second copy of them
+> lived here until 2026-08-02 and was removed — one list, one place.
 
 ## When to add a new framework analysis skill
 

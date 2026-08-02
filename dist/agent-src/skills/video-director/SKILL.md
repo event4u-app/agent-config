@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: video-director
-description: "Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives. Triggers 'cinematic prompt', 'film-grade scene'."
+description: "Use when a live-action beat becomes the 11-block cinematic prompt — lens, lighting, negatives. Triggers 'cinematic prompt', 'film-grade scene'. Animated → pixar-storyteller; 12-block → scene-expander."
 personas:
   - hollywood-director
 domain: product
@@ -124,13 +124,16 @@ Any "no" → revise that block before handing off.
 
 ## Policies
 
+Paths, enforcement model, and the full set: the
+[media policy preamble](../../../agents/settings/policies/media/README.md).
+
 The 11-block cinematic prompt is live-action shape — real-person and brand-impersonation risks are the highest in the cluster. Before emitting:
 
-- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — when the prompt names or visually identifies a real person on camera.
-- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — when the subject is a recognised public figure.
-- [`agents/settings/policies/media/brand-impersonation.md`](../../../agents/settings/policies/media/brand-impersonation.md) — when the prompt copies a journalism / broadcaster / regulated-industry visual identity.
-- [`agents/settings/policies/media/style.md`](../../../agents/settings/policies/media/style.md) — when LIGHT / LENS choices are anchored to a named living cinematographer's signature.
-- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — every distributed live-action AI clip carries the non-removable AI-generation disclosure.
+- **`likeness`** — when the prompt names or visually identifies a real person on camera.
+- **`public-figures`** — when the subject is a recognised public figure.
+- **`brand-impersonation`** — when the prompt copies a journalism / broadcaster / regulated-industry visual identity.
+- **`style`** — when LIGHT / LENS choices are anchored to a named living cinematographer's signature.
+- **`disclosure`** — every distributed live-action AI clip carries the non-removable AI-generation disclosure.
 
 Refuse-and-surface at the directorial layer; live-action realism amplifies every policy gap downstream.
 

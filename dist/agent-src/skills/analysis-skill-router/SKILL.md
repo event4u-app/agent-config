@@ -11,6 +11,11 @@ packs:
 
 # analysis-skill-router
 
+A chooser, not a worker. It answers exactly one question — *which skill* — and
+then gets out of the way. How to actually carry out the work belongs to
+whichever skill this picks; a chooser that also explains the work reads like
+its own fallback target, which is the defect this file was cut back from.
+
 ## When to use
 
 Use this skill when:
@@ -29,111 +34,75 @@ Do NOT use when:
 
 ## Procedure
 
-### 1. Identify request scope
+### 1. Classify the scope
 
-Classify the request as one of:
+Pick one: full project · architecture review · broad multi-layer debugging ·
+framework-specific deep dive · narrow root cause · performance/security
+specialist · simple local issue.
 
-* full project analysis
-* architecture review
-* broad multi-layer debugging
-* framework-specific deep analysis
-* narrow root-cause analysis
-* performance/security specialist analysis
-* simple local code issue
+**Broad scope requires a reason.** At least one must hold, or the answer is a
+narrow specialist: the user asked for breadth · the system is unknown · the
+issue spans layers · architecture must be reconstructed · the cause is
+non-local.
 
-### 2. Check whether deep analysis is justified
+### 2. Detect the framework
 
-Use deep analysis only if at least one is true:
+Laravel · Symfony · Zend/Laminas · Node/Express · React · Next.js · unknown or
+mixed.
 
-* the user explicitly asks for broad analysis
-* the system is unclear or unknown
-* the issue spans multiple layers
-* architecture reconstruction is required
-* the cause is not local and not obvious
+### 3. Read the decision table
 
-If none apply → do NOT route to a broad analysis skill.
+| Signal | Route to |
+|---|---|
+| Full audit, or unclear stack | `universal-project-analysis` |
+| Unknown system, discovery-focused | `project-analysis-core` |
+| Concrete problem, several plausible causes | `project-analysis-hypothesis-driven` |
+| Bug-focused, not full-project | `bug-analyzer` |
+| Laravel | `project-analysis-laravel` |
+| Symfony | `project-analysis-symfony` |
+| Zend/Laminas | `project-analysis-zend-laminas` |
+| Node/Express | `project-analysis-node-express` |
+| React state / render / hooks | `project-analysis-react` |
+| Next.js SSR / cache / hydration | `project-analysis-nextjs` |
+| Bottleneck | `performance-analysis` |
+| Security concern | `security-audit` |
 
-### 3. Detect framework or system type
-
-Check whether the request clearly targets:
-
-* Laravel, Symfony, Zend/Laminas, Node/Express, React, Next.js
-* unknown / mixed stack
-
-### 4. Route to the correct skill
-
-#### Broad / unknown system
-
-* full project analysis or unclear stack → `universal-project-analysis`
-* unknown system, discovery-focused → `project-analysis-core`
-
-#### Root-cause analysis
-
-* concrete multi-cause problem → `project-analysis-hypothesis-driven`
-* bug-focused but not full-project → `bug-analyzer`
-
-#### Backend framework analysis
-
-* Laravel → `project-analysis-laravel`
-* Symfony → `project-analysis-symfony`
-* Zend/Laminas → `project-analysis-zend-laminas`
-* Node/Express → `project-analysis-node-express`
-
-#### Frontend / rendering analysis
-
-* React state/render/hooks issues → `project-analysis-react`
-* Next.js SSR/client/cache/hydration issues → `project-analysis-nextjs`
-
-#### Specialist follow-up routing
-
-* performance bottleneck → `performance-analysis`
-* security concern → `security-audit`
-
-### 5. Validate routing quality
-
-Check:
-
-* the chosen skill is narrower than the broadest possible option
-* full-project analysis is actually justified if selected
-* framework-specific skill matches the explicit framework
-* no simpler specialist skill was skipped
+Tie-break: **the narrowest row that still covers the request wins.**
 
 ## Output format
 
-1. Selected skill
-2. Reason for selection
-3. Why broader alternatives were not chosen
-4. Optional chained specialist skills
+1. The selected skill.
+2. The signal from step 1–2 that selected it.
+3. Why the next-broader row lost, when one was plausible.
+4. Any skill to chain afterwards — or "none".
 
-## Routing heuristics
-
-**Choose `universal-project-analysis` only if:** user explicitly wants full audit, architecture must be reconstructed, stack is unclear, multiple subsystems involved.
-
-**Choose `project-analysis-core` if:** broad discovery needed, framework deep-dive not yet justified.
-
-**Choose `project-analysis-hypothesis-driven` if:** problem is concrete, multiple causes plausible, main job is explanation not discovery.
-
-**Choose framework-specific analysis if:** framework is explicit, failure pattern is framework-shaped.
-
-**Do NOT route broadly if:** one component or file is enough, fix is obvious and local, task is implementation not investigation.
+One or two lines total. A routing verdict longer than the request it routes is
+itself a routing failure.
 
 ## Examples
 
-**"Analyze this whole Laravel project"** → `universal-project-analysis` → chain `project-analysis-laravel`
-**"Hydration mismatch in Next.js"** → `project-analysis-nextjs` (no full-project needed)
-**"Bug could be cache, queue, or version mismatch"** → `project-analysis-hypothesis-driven`
-**"Change one React component"** → no analysis skill, use implementation skill
+| Request | Route |
+|---|---|
+| "Analyze this whole Laravel project" | `universal-project-analysis`, chain `project-analysis-laravel` |
+| "Hydration mismatch in Next.js" | `project-analysis-nextjs` — no full-project step |
+| "Could be cache, queue, or a version mismatch" | `project-analysis-hypothesis-driven` |
+| "Change one React component" | none — implementation skill |
 
 ## Gotcha
 
-* The most expensive skill is often not the best skill.
-* Broad analysis feels safe but reduces sharpness when the problem is already localized.
-* Framework-specific routing should happen as early as possible once the framework is explicit.
+* **Size adjectives read as scope.** "Our *whole* Laravel app is slow" picks the
+  broad row on the word "whole", and the audit then spends its passes
+  rediscovering a stack the request already named. The step-2 framework signal
+  outranks size words — those are how frustration sounds, not scope.
+* **Breadth feels safe and costs sharpness.** The most expensive choice is
+  rarely the best one once the problem is already localised.
+* **Steps 1 and 2 disagreeing is a question, not a tie-break.** Ask which the
+  user meant instead of picking the broader row to be safe.
 
 ## Do NOT
 
 * Do NOT default to `universal-project-analysis`
-* Do NOT use full-project analysis for normal feature work
-* Do NOT choose a generic skill when a framework-specific one clearly fits
-* Do NOT route to deep analysis when a simple specialist skill is enough
+* Do NOT choose a generic skill when a framework-specific row fits
 * Do NOT confuse discovery with root-cause investigation
+* Do NOT re-import procedure, validation checklists, or output contracts from
+  the skills in the table — that is what this file was cut back from

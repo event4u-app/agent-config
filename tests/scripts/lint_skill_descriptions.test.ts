@@ -23,6 +23,8 @@ const TSX = path.join(REPO, 'node_modules', '.bin', process.platform === 'win32'
 const SCRIPT = path.join(REPO, 'src', 'scripts', 'lint_skill_descriptions.ts');
 
 const codes = (slug: string, fm: Record<string, string>) => analyseSkill(slug, fm).map((v) => v.code);
+const codesFor = (slug: string, fm: Record<string, string>, siblings: string[]) =>
+    analyseSkill(slug, fm, siblings).map((v) => v.code);
 
 describe('lint_skill_descriptions — must-fail specimens', () => {
     it('flags the farm-generator name-echo description (desc ≡ name + no signal)', () => {
@@ -63,9 +65,86 @@ describe('lint_skill_descriptions — must-pass specimens', () => {
     }
 });
 
+describe('lint_skill_descriptions — clustered-only positive checks', () => {
+    // A skill with NO sibling is never subject to (e) or (f) — that scoping is
+    // the whole reason a quoted-phrase mandate is not corpus-wide noise.
+    const bare = { name: 'roadmap-writing', description: 'Use when authoring a roadmap in agents/roadmaps.' };
+
+    it('unclustered: no quoted phrase and no sibling named — still clean', () => {
+        expect(analyseSkill('roadmap-writing', bare)).toEqual([]);
+    });
+
+    it('clustered + missing BOTH → both codes fire, and name the sibling', () => {
+        const v = analyseSkill('roadmap-writing', bare, ['roadmap-management']);
+        const c = v.map((x) => x.code);
+        expect(c).toContain('clustered-no-sibling-routing');
+        expect(c).toContain('clustered-no-quoted-phrase');
+        expect(v.find((x) => x.code === 'clustered-no-sibling-routing')?.detail).toContain('roadmap-management');
+    });
+
+    it('clustered + sibling named but no quoted phrase → only the quote code', () => {
+        const c = codesFor('roadmap-writing', {
+            name: 'roadmap-writing',
+            description: 'Use when authoring a roadmap — lifecycle management is roadmap-management.',
+        }, ['roadmap-management']);
+        expect(c).not.toContain('clustered-no-sibling-routing');
+        expect(c).toContain('clustered-no-quoted-phrase');
+    });
+
+    it('clustered + both present → clean', () => {
+        expect(
+            analyseSkill('roadmap-writing', {
+                name: 'roadmap-writing',
+                description: "Use when authoring a roadmap — triggers 'write a plan for X'. Lifecycle → roadmap-management.",
+            }, ['roadmap-management']),
+        ).toEqual([]);
+    });
+
+    it('every sibling must be named, not just the first', () => {
+        const v = analyseSkill('video-director', {
+            name: 'video-director',
+            description: "Use when a beat becomes the 11-block prompt — 'cinematic prompt'. Animated → pixar-storyteller.",
+        }, ['pixar-storyteller', 'scene-expander']);
+        const routing = v.find((x) => x.code === 'clustered-no-sibling-routing');
+        expect(routing?.detail).toContain('scene-expander');
+        expect(routing?.detail).not.toContain('pixar-storyteller');
+    });
+
+    it('the shipped video trio descriptions satisfy both checks under a synthetic cluster', () => {
+        // The real corpus has no cluster (0 pairs >= threshold), so pin the
+        // retrofitted descriptions against the cluster they WOULD form.
+        const trio: Array<[string, string, string[]]> = [
+            [
+                'video-director',
+                "Use when a live-action beat becomes the 11-block cinematic prompt — lens, lighting, negatives. Triggers 'cinematic prompt', 'film-grade scene'. Animated → pixar-storyteller; 12-block → scene-expander.",
+                ['pixar-storyteller', 'scene-expander'],
+            ],
+            [
+                'scene-expander',
+                "Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. 11-block refine → video-director.",
+                ['video-director'],
+            ],
+            [
+                'pixar-storyteller',
+                "Use when an idea becomes a Pixar-style animation prompt — character sheet, scene, image, video; emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'. Live-action → video-director.",
+                ['video-director'],
+            ],
+        ];
+        for (const [slug, description, siblings] of trio) {
+            expect(analyseSkill(slug, { name: slug, description }, siblings), slug).toEqual([]);
+        }
+    });
+});
+
 describe('lint_skill_descriptions — CLI contract', () => {
     it('runs clean on the real repo (exit 0)', () => {
         const r = spawnSync(TSX, [SCRIPT, '--quiet'], { cwd: REPO, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
         expect(r.status).toBe(0);
+    });
+
+    it('reports the clustered count, and it is currently zero', () => {
+        const r = spawnSync(TSX, [SCRIPT], { cwd: REPO, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/\(0 clustered\)/);
     });
 });

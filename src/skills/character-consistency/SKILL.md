@@ -181,12 +181,15 @@ Worked example — `creature`:
 
 ## Policies
 
+Paths, enforcement model, and the full set: the
+[media policy preamble](../../../agents/settings/policies/media/README.md).
+
 When a character lock would identify or render a real person, consult before emitting the JSON:
 
-- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — real-person identity tokens require a cited likeness release.
-- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — recognised public figures carry the harder gate (publicity rights + transformative-intent).
-- [`agents/settings/policies/media/voice-cloning.md`](../../../agents/settings/policies/media/voice-cloning.md) — when `voice_note` references a real person's voice.
-- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — outputs carrying a real-person lock require the non-removable AI-generation disclosure downstream.
+- **`likeness`** — real-person identity tokens require a cited likeness release.
+- **`public-figures`** — recognised public figures carry the harder gate (publicity rights + transformative-intent).
+- **`voice-cloning`** — when `voice_note` references a real person's voice.
+- **`disclosure`** — outputs carrying a real-person lock require the non-removable AI-generation disclosure downstream.
 
 Refuse-and-surface the file path; do not silently sanitise the prompt.
 
