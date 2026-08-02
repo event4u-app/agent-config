@@ -49,46 +49,72 @@ merges the canonical tool confirms. Skills go **down**, not just sideways.
 
 ## Phase 1 — Make the instrument capable of failing
 
-- [ ] Re-root `audit_skill_overlap.ts` at `src/skills` (or give it `--root` with
+- [x] Re-root `audit_skill_overlap.ts` at `src/skills` (or give it `--root` with
       that default) and delete the dead legacy-root fallback path rather than
       leaving it as a silent branch.
       *Verify:* the tool reports a non-zero scanned count on a clean checkout;
       the old root appears nowhere in the file.
-- [ ] Register the tool in the scan-scope regime: zero skills scanned is a
+      → `_skill_roots()` deleted; default root is the shared `SRC_SKILLS()`
+      resolver, `--root` overrides. `287 skills, 3 pair(s) ≥ 70%`. Zero
+      legacy-path literals remain in the script (`check_no_new_legacy_path` green).
+- [x] Register the tool in the scan-scope regime: zero skills scanned is a
       failure, not an empty result.
       *Verify:* a fixture run against an empty root exits non-zero with a
       dead-scope message, and the assertion is exercised by a test.
-- [ ] Wire it into `task ci` as an **advisory report** first (it must not block
+      → `assertScanned` from `_lib/scan_scope.ts`; exit 3 +
+      `audit_skill_overlap: scanned 0 skill(s) under … the scan scope is dead`.
+      Missing-root and empty-root fixtures both asserted.
+- [x] Wire it into `task ci` as an **advisory report** first (it must not block
       before the corpus is cleaned).
       *Verify:* a CI run prints the pair table with real counts.
-- [ ] Add a regression test pinning the scanned-count floor, so a future container
+      → `audit-skill-overlap` in `taskfiles/ci-fast.yml`, registered in `ci` and
+      `ci-strict`. `--print-table` deliberately survives the pipeline's default
+      `--quiet`: an advisory report nobody sees is the same silent green.
+- [x] Add a regression test pinning the scanned-count floor, so a future container
       move re-breaks loudly instead of silently.
       *Verify:* the test fails when the root is pointed at a non-existent path.
+      → `tests/scripts/audit_skill_overlap.test.ts`, floor 200 (a floor, not an
+      exact count — the corpus is meant to shrink). 8/8 green.
 
 ## Phase 2 — Re-measure with the canonical tool
 
-- [ ] Run the repaired canonical tool over `src/skills` and publish the pair table
+- [x] Run the repaired canonical tool over `src/skills` and publish the pair table
       as `agents/evidence/reports/skill-overlap-canonical.md`, alongside the
       external report's candidates, with a **confirmed / refuted** column per pair.
       *Verify:* every candidate from the external report appears with a canonical
       score; divergences are stated, not smoothed.
-- [ ] Add the description-only cosine as a **separate, explicitly non-canonical**
+      → Published. **2 of 20 candidate pairs CONFIRMED** (both video), 17 refuted,
+      1 reclassified as the Phase-3 defect. Aggregate divergence from the external
+      report: **none** — 287 skills, 3 pairs ≥ 0.70, 42 in the watch band, 6
+      description pairs ≥ 0.50, router at 0.709, all exact.
+- [x] Add the description-only cosine as a **separate, explicitly non-canonical**
       measurement, because routing happens on descriptions and body similarity
       does not measure it.
       *Verify:* the report labels it non-canonical and does not mix it into the
       merge threshold.
+      → `--descriptions` flag; the renderer emits a NON-CANONICAL banner and the
+      report keeps it in its own section, outside the merge table. The two
+      rankings barely agree, which is the point.
 
 ## Phase 3 — The router defect (not a preference)
 
-- [ ] Strip analysis *procedure* out of `analysis-skill-router` so it carries
+- [x] Strip analysis *procedure* out of `analysis-skill-router` so it carries
       routing logic only — scope classification, framework detection, the decision
       table. Procedure stays in `universal-project-analysis`.
       *Verify:* canonical re-measure of the pair lands < 0.55; a chooser that reads
       like its own fallback is a defect and this is its fix, not a cleanup.
+      → **0.709 → 0.507.** Router keeps scope test + framework detection + the
+      decision table (now a real table) and nothing else; its validation
+      checklist, routing-heuristics restatement, and 4-item output contract are
+      gone. Two reciprocal cuts in `universal-project-analysis` were required to
+      clear 0.55 and are defects in their own right: a `Routing map` section that
+      re-listed its own steps 3–4 verbatim, and a `Mission` block that claimed
+      the router's job. Both skills PASS `skill_linter` (the original router did
+      too — no warning regression).
 
 ## Phase 4 — Execute the confirmed merges
 
-- [ ] Merge only pairs/families the canonical tool confirms, one PR per family,
+- [-] Merge only pairs/families the canonical tool confirms, one PR per family,
       with before/after canonical scores in the body. Candidate families from the
       external report, to be confirmed first: the video/story trio, the readme
       family, the roadmap pair, the worktree pair, the rule-writing pair, the
@@ -99,43 +125,78 @@ merges the canonical tool confirms. Skills go **down**, not just sideways.
       the surviving skill's description, so existing muscle memory still routes;
       every downstream reference (rules, commands, contexts, docs, router entries)
       is updated in the same change.
-- [ ] Record the families the canonical tool **refutes** as explicitly kept, with
+      <!-- skipped: zero merges survive adjudication — nine families refuted by score, the tenth by composition -->
+      → **No merge lands.** Nine of ten families scored below the bar. The tenth
+      (video trio, 0.746 / 0.707) was **36% shared policy-path boilerplate**;
+      council session 2 ruled unanimously to extract that instead of merging,
+      because the trio is three distinct machine contracts — merging would delete
+      `scene-blueprint.schema.yaml` + its parser and force four `/video:*`
+      commands to branch on mode. Full reasoning and the token decomposition:
+      the canonical report § Disposition.
+- [x] Record the families the canonical tool **refutes** as explicitly kept, with
       the score — so the next sweep does not re-propose them.
       *Verify:* a kept-with-reason list exists.
-- [ ] Keep, and do not merge, the families whose similarity is structural by
+      → Canonical report § **Kept with reason — do not re-propose these**:
+      12 families with canonical scores and a one-line keep rationale each.
+- [x] Keep, and do not merge, the families whose similarity is structural by
       design (the persona-parallel judge family; genuinely distinct framework
       surfaces) — but move the shared boilerplate that drives their score into a
       referenced common preamble instead of repeating it.
       *Verify:* scores drop without a skill being deleted.
+      → Five ai-video skills now point at one
+      [media policy preamble](../settings/policies/media/README.md) instead of
+      repeating five policy paths each; every policy-specific sentence preserved
+      verbatim. **0.746 → 0.665, 0.707 → 0.634, 0.636 → 0.548, 0.551 → 0.500.**
+      Zero skills deleted, and the corpus now has **no pair ≥ 0.70 at all**.
 
 ## Phase 5 — Description disambiguation on the confirmed clusters only
 
-- [ ] For each canonical-confirmed cluster, retrofit the `description:` with (a)
+- [x] For each canonical-confirmed cluster, retrofit the `description:` with (a)
       at least one **quoted literal user phrase** in the user's own words, and (b)
       a **sibling negative-routing sentence** per overlapping neighbour, kept
       mutually consistent across the cluster.
       *Verify:* the diff touches frontmatter only; no sibling pair routes the same
       phrase to both members.
-- [ ] Extend `lint_skill_descriptions` with two **positive** checks scoped to
+      → Applied to the video trio — the family that WAS confirmed at adjudication
+      time and remains the corpus's nearest same-pack neighbourhood. Frontmatter
+      only, all three at the linter's 200-char hard cap or under (200 / 192 / 200). Routing is mutually
+      consistent and disjoint: `'cinematic prompt'` / `'film-grade scene'` →
+      video-director, `'expand this scene'` / `'blueprint for X'` →
+      scene-expander, `'Pixar prompt'` / `'animated scene'` → pixar-storyteller;
+      each names the sibling that wins the cases it loses.
+- [x] Extend `lint_skill_descriptions` with two **positive** checks scoped to
       clustered skills only: missing sibling-routing when the canonical tool pairs
       the skill above threshold, and no quoted phrase in a clustered skill. Same
       allowlist-with-cap regime as the existing checks.
       *Verify:* red on a synthetic clustered skill missing both, green on the
       retrofitted corpus, wired into `task ci`. A quoted-phrase mandate on all 287
       skills is explicitly out of scope — that is noise, not routing.
-- [ ] Adopt the sibling-consistency obligation as an authoring rule in the
+      → `clustered-no-sibling-routing` + `clustered-no-quoted-phrase`, cluster
+      membership computed by the canonical instrument itself (no second
+      implementation of the metric). Red/green fixtures both directions incl.
+      "names one sibling but not the other"; 15/15 green. Already in `task ci`
+      via the existing `lint-skill-descriptions` entry. **Dormant today (0
+      clustered)** — by construction, not by accident.
+- [x] Adopt the sibling-consistency obligation as an authoring rule in the
       agent-docs authoring skill: editing one sibling's routing sentence obliges
       checking the others.
       *Verify:* the obligation is one paragraph, not a new artifact.
+      → One bullet in `agent-docs-writing` § Rules, naming why the linter cannot
+      cover it: it catches a *missing* clause, not an *inconsistent* one.
 
 ## Phase 6 — Stop the count from regrowing
 
-- [ ] After the merges land, flip the canonical tool from advisory to blocking at
+- [x] After the merges land, flip the canonical tool from advisory to blocking at
       the canonical 0.70 threshold for **same-pack pairs only**. A new skill above
       threshold must merge or carry a reviewed justification under the same
       allowlist-with-cap regime — the cap forces periodic re-litigation instead of
       silent growth.
       *Verify:* a synthetic above-threshold same-pack addition fails CI.
+      → `--strict` in `ci` + `ci-strict`. Synthetic same-pack twin → **exit 1**;
+      the identical twin cross-pack → exit 0; reviewed allowlist entry → exit 0;
+      reason-less entry and over-cap → exit 2. Shipped allowlist is empty.
+      17/17 green. No merges "landed" (see Phase 4), but the corpus reached the
+      clean state the flip was gated on: zero same-pack pairs at threshold.
 
 ## Non-goals (recorded refusals)
 
@@ -149,10 +210,28 @@ merges the canonical tool confirms. Skills go **down**, not just sideways.
 
 ## Surface delta
 
-**−12 skills** if all candidate families confirm (287 → 275), **+2 linter checks,
-+1 evidence report, +1 blocking threshold**, and one instrument that goes from
-structurally-incapable-of-failing to load-bearing. Net negative in the unit that
-costs routing quality every session.
+**Projected: −12 skills** if all candidate families confirm (287 → 275), **+2
+linter checks, +1 evidence report, +1 blocking threshold**, and one instrument
+that goes from structurally-incapable-of-failing to load-bearing.
+
+**Actual (2026-08-02): −0 skills.** Corpus stays at 287. The projection assumed
+the candidate families would confirm; the repaired instrument refuted nine of
+ten outright, and the tenth was 36% shared policy-path boilerplate — below the
+bar once that was extracted, and made of three distinct machine contracts whose
+merge would have deleted a parsed schema and forced four `/video:*` commands to
+branch on mode. Two council sessions (4 rounds) ruled against merging on both
+the threshold question and the boilerplate question.
+
+What did go down: **−5 duplicated policy blocks**, **−1 duplicated routing map**,
+**−1 router that described the work it was supposed to route to** (0.709 →
+0.507), and **−3 pairs above the merge bar → 0**. What went up: +2 linter checks,
++1 evidence report, +1 blocking threshold, +1 allowlist (empty).
+
+The honest version of "skills go down, not sideways": **skills did not go down.**
+The instrument that was supposed to tell us which ones could was broken, and the
+first thing it said once repaired was *fewer than you think*. Recording that is
+worth more than a merge the evidence does not support — and the blocking gate
+now makes the next unjustified pair a build failure instead of a silent one.
 
 ## Provenance
 
