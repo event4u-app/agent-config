@@ -51,7 +51,14 @@ export interface StanceTallyResult {
     consensus: OptionTally | null; // the option clearing the threshold, or null
     split: boolean; // true when no option clears the threshold
     abstain_count: number;
-    needs_repair: string[]; // members whose stance line was missing/unparseable
+    /**
+     * Members whose stance line was missing or unparseable. They COUNT toward
+     * `w_total` (they responded) and back no option — see the
+     * refusal-preservation invariant in `tally_stances`. Surfaced by
+     * `render_vote_tally` so a shrunken-signal quorum is visible rather than
+     * merely computed.
+     */
+    needs_repair: string[];
 }
 
 // Tolerant of whitespace and case; requires the three explicit fields in order.
@@ -150,7 +157,23 @@ export function tally_stances(
         parsed.push({ member, ...p });
     }
 
-    const w_total = parsed.length; // base weight 1.0 each, abstain included
+    // ── Refusal-preservation invariant (road-to-governance-invariants P2) ──
+    //
+    // Selection may never rank an option higher *because* a member refused
+    // less. A safety refusal is not a scored-down property, and — measured by
+    // spike S0.1 — the way this engine could be steered was not a weight but a
+    // DENOMINATOR: `w_total` once counted only members whose stance line
+    // parsed, so a refusal phrased as prose ("I will not answer this") vanished
+    // from the quorum and made consensus EASIER. Same two backers, margin
+    // −0.25 and no consensus when the refusal parsed as an abstention;
+    // +0.4167 and consensus when it did not parse. Δ 0.6667, outcome flipped.
+    //
+    // The fix is structural rather than a new gate: a member who RESPONDED
+    // counts toward the quorum whether or not its stance line parsed. It backs
+    // no option either way, so an unparseable response now behaves exactly like
+    // an abstention — the fail-safe direction. Members who never responded are
+    // dropped upstream (`!r.error`) and are correctly absent from `members`.
+    const w_total = parsed.length + needs_repair.length; // responded, abstain + unparseable included
     const threshold = CONSENSUS_FRACTION * w_total;
     let abstain_count = 0;
 
@@ -207,6 +230,18 @@ export function render_vote_tally(result: StanceTallyResult): string {
     }
     if (result.abstain_count > 0) {
         lines.push(`- abstain — ${result.abstain_count} member(s) (raises the bar)`);
+    }
+    // Refusal divergence, as an OBSERVATION and never a selection input
+    // (road-to-governance-invariants P2). A member whose stance did not parse
+    // still counts toward the quorum; saying so here is what makes a shrunken
+    // signal visible to a reader instead of merely present in a struct field
+    // no caller reads. Nothing in the tally consumes this string.
+    if (result.needs_repair.length > 0) {
+        lines.push(
+            `- unparsed — ${result.needs_repair.length} member(s) responded without a ` +
+                `readable stance (${result.needs_repair.join(', ')}); counted in the ` +
+                'quorum, backing nothing',
+        );
     }
     lines.push(`Threshold: ⅔ × ${result.w_total} = ${result.threshold.toFixed(2)}`);
     lines.push(

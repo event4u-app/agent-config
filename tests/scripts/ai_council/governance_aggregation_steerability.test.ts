@@ -22,18 +22,26 @@
  *   INCONCLUSIVE — the fixture never reaches a decision (e.g. every arm splits
  *                  for an unrelated reason). Repair the fixture.
  *
- * MEASURED VERDICT: **FINDING.** See `steering margin` below. The aggregation
- * is not weight-steerable — `CONFIDENCE_FACTOR` and `CONSENSUS_FRACTION` are
- * hardcoded with no caller parameter — but it is *classification*-steerable:
- * the denominator `w_total` counts only members whose stance line PARSES, so a
- * refusal that does not parse is silently removed from the quorum and makes
- * consensus EASIER. The direction is the dangerous one.
+ * MEASURED VERDICT: **FINDING**, and then FIXED in the same change (Phase 2,
+ * which this finding opened). The aggregation is not weight-steerable —
+ * `CONFIDENCE_FACTOR` and `CONSENSUS_FRACTION` are module constants and
+ * `tally_stances` takes one parameter — but it WAS *classification*-steerable:
+ * `w_total` counted only members whose stance line parsed, so a refusal phrased
+ * as prose was silently removed from the quorum and made consensus EASIER. The
+ * direction was the dangerous one.
+ *
+ * This file therefore does double duty, deliberately: the pre-fix numbers are
+ * kept as arithmetic in `RECORDED FINDING` so they cannot rot into an anecdote,
+ * and the invariant that closed them is asserted alongside. A spike whose
+ * finding is repaired should not be deleted — then nothing stops the
+ * regression.
  */
 import { describe, expect, it } from 'vitest';
 
 import {
     CONFIDENCE_FACTOR,
     CONSENSUS_FRACTION,
+    render_vote_tally,
     tally_stances,
 } from '../../../src/scripts/ai_council/stance_tally.js';
 
@@ -77,42 +85,71 @@ describe('S0.1 — refusal-preservation in the council aggregation', () => {
         expect(tally_stances.length).toBe(1);
     });
 
-    it('FINDING — dropping a refusal from the quorum flips the outcome', () => {
-        // Arm 1: the refusal is encoded as an explicit abstention. It backs
-        // nothing but is counted in w_total, so it RAISES the bar.
+    it('INVARIANT — how a refusal is phrased no longer moves the selection (margin = 0)', () => {
+        // This is the Phase-2 verify clause, and it is the same two arms the
+        // spike measured. The numbers it USED to produce are recorded in the
+        // finding below; what this asserts is that they are now equal.
+        //
+        // Arm 1: the refusal parses as an explicit abstention.
         const abstained = [...BACKERS, { member: 'x:c', text: stance('abstain', 'high') }];
-        // Arm 2: the same refusal expressed as prose with no STANCE line. It
-        // lands in `needs_repair` and is excluded from w_total entirely.
+        // Arm 2: the same refusal as prose with no STANCE line.
         const unparseable = [
             ...BACKERS,
             { member: 'x:c', text: 'I will not answer this; it asks me to bypass a safety floor.' },
         ];
 
-        const mAbstain = margin(abstained);
-        const mDropped = margin(unparseable);
-
-        // The number the roadmap asks for.
-        expect(mAbstain).toBeCloseTo(-0.25, 10);
-        expect(mDropped).toBeCloseTo(0.4166666666, 8);
-        expect(mDropped - mAbstain).toBeCloseTo(0.6666666666, 8);
-
-        // And the outcome label actually moves — this is "can steer".
-        expect(outcome(abstained)).toBeNull();
-        expect(outcome(unparseable)).toBe('Adopt');
+        expect(margin(unparseable) - margin(abstained)).toBe(0);
+        expect(outcome(unparseable)).toBe(outcome(abstained));
+        expect(outcome(unparseable)).toBeNull();
     });
 
-    it('the refusal is not lost quietly — it is reported, but only to a caller who looks', () => {
+    it('RECORDED FINDING — the pre-fix numbers, reconstructed from the old denominator', () => {
+        // The measurement that opened Phase 2, kept as arithmetic rather than
+        // prose so it cannot rot into an anecdote. Before the invariant,
+        // `w_total` counted only members whose stance PARSED, so the
+        // unparseable arm's denominator was 2 instead of 3.
+        const abstained = [...BACKERS, { member: 'x:c', text: stance('abstain', 'high') }];
+        const topWeight = tally_stances(abstained).options[0]?.weight ?? 0;
+        expect(topWeight).toBeCloseTo(1.75, 10);
+
+        const preFixMarginAbstained = topWeight - CONSENSUS_FRACTION * 3;
+        const preFixMarginDropped = topWeight - CONSENSUS_FRACTION * 2;
+        expect(preFixMarginAbstained).toBeCloseTo(-0.25, 10);
+        expect(preFixMarginDropped).toBeCloseTo(0.4166666666, 8);
+        expect(preFixMarginDropped - preFixMarginAbstained).toBeCloseTo(0.6666666666, 8);
+        // …and 1.75 cleared ⅔×2 = 1.333, i.e. the outcome flipped to a
+        // consensus the third member had refused to give.
+        expect(topWeight).toBeGreaterThan(CONSENSUS_FRACTION * 2);
+    });
+
+    it('the unparsed voice is reported to the reader, not just held in a field', () => {
         const unparseable = [
             ...BACKERS,
             { member: 'x:c', text: 'I will not answer this.' },
         ];
         const r = tally_stances(unparseable);
-        // The signal EXISTS…
         expect(r.needs_repair).toEqual(['x:c']);
-        expect(r.w_total).toBe(2);
-        // …and it is the only thing standing between this and a silent quorum
-        // shrink. The severity of the finding is that nothing consumes it; see
-        // the invariant test in `governance_aggregation_invariant.test.ts`.
+        // Counted in the quorum — the invariant.
+        expect(r.w_total).toBe(3);
+        // And surfaced. Before Phase 2 `needs_repair` had zero consumers
+        // anywhere in the tree, so a shrunken signal was computed and dropped.
+        const rendered = render_vote_tally(r);
+        expect(rendered).toContain('unparsed');
+        expect(rendered).toContain('x:c');
+        expect(rendered).toContain('backing nothing');
+    });
+
+    it('the divergence signal is an observation, never a selection input', () => {
+        // Phase 2's second verify: the signal must not reach the scoring path.
+        // Two tallies whose ONLY difference is the unparsed member's text must
+        // select identically — the string never enters the weight.
+        const a = [...BACKERS, { member: 'x:c', text: 'I will not answer this.' }];
+        const b = [...BACKERS, { member: 'x:c', text: 'Refusing: this bypasses a safety floor.' }];
+        const ra = tally_stances(a);
+        const rb = tally_stances(b);
+        expect(ra.consensus).toEqual(rb.consensus);
+        expect(ra.threshold).toBe(rb.threshold);
+        expect(ra.options).toEqual(rb.options);
     });
 
     it('the direction is the dangerous one — removing a voice never raises the bar', () => {
