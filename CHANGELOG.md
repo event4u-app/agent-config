@@ -253,6 +253,54 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.14.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.14.0](https://github.com/event4u-app/agent-config/compare/9.13.0...9.14.0) (2026-08-02)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **gates:** fail on any count position the generator cannot rewrite ([71c8761](https://github.com/event4u-app/agent-config/commit/71c8761e1a7ba5a7d89e234c30b22daa41f2ee3f))
+* **counts:** generate the scoped-projection and active-command figures ([0a69bad](https://github.com/event4u-app/agent-config/commit/0a69bad08a166295fbe0cf5be018742600f02450))
+* **commands:** /optimize:deep — autonomous deep-refactoring loop ([a34efa9](https://github.com/event4u-app/agent-config/commit/a34efa9a78ecd45fbf1a3549c58bdd4b685b9ad8))
+* **roadmaps:** package-renewal central roadmap + three sub-roadmaps ([1802712](https://github.com/event4u-app/agent-config/commit/1802712bc0e9dc161830ee8f714c9a81e1feab33))
+
+### Bug Fixes
+
+* **ci:** discriminate dead scope from verified-empty release in corpus gates ([caa35e7](https://github.com/event4u-app/agent-config/commit/caa35e7b6f46900c987c3d12010f5db73fbec843))
+* **ci:** probe only the canonical projection root in the liveness check ([11cbaa7](https://github.com/event4u-app/agent-config/commit/11cbaa7cda5b104f1b0aa5b6d4beb174659586bf))
+* **commands:** shorten optimize-deep description below the 200-char cap ([2501034](https://github.com/event4u-app/agent-config/commit/250103476f6b362946475240f1087179fa38a236))
+
+### Documentation
+
+* **roadmap:** close and archive road-to-reproducible-artefact-counts ([2599fc4](https://github.com/event4u-app/agent-config/commit/2599fc470e8390bc7f03dbc3787f74933e5cd5a7))
+* **claims:** bind the default-install claim to the emitter, date the snapshot ([222c83c](https://github.com/event4u-app/agent-config/commit/222c83c0fb64105ff4819add5220c27182020cb6))
+* **roadmaps:** close the refinement-loop step — set converged at N=3 ([9b50deb](https://github.com/event4u-app/agent-config/commit/9b50deb8a2f6cf7e048fc605170b04f05c170e2b))
+
+### Refactoring
+
+* **install:** extract the scoped-projection predicate into _lib ([59be75f](https://github.com/event4u-app/agent-config/commit/59be75f3d7d9105a29e110424acce4bfeae1950e))
+* **roadmaps:** apply maintainer-review fixes (win path, ci baseline, loop verification gate) ([62a0c72](https://github.com/event4u-app/agent-config/commit/62a0c72e7e7850197df1f0b4c2ed7ac9f331d93c))
+* **roadmaps:** apply loop-3 convergence deltas ([d2dfd7d](https://github.com/event4u-app/agent-config/commit/d2dfd7df824d1a0f1b31ed975673bbe8c71e5119))
+* **roadmaps:** apply loop-2 review deltas ([19f5bc2](https://github.com/event4u-app/agent-config/commit/19f5bc279dea4407d844199550a04cf46954709f))
+* **roadmaps:** apply loop-1 adversarial-review deltas ([ba8e641](https://github.com/event4u-app/agent-config/commit/ba8e6414cf10eeab218e9aecf18d571946a6501f))
+
+### Tests
+
+* **counts:** witness that the two gates now move together ([14ac65b](https://github.com/event4u-app/agent-config/commit/14ac65b73355363204784585d76640a23b98e3c9))
+
+### Build
+
+* **install:** rebuild the install bundle for the extracted predicate ([00cc359](https://github.com/event4u-app/agent-config/commit/00cc359ce6a0582857b62f662b19e4cfd809b0b9))
+
+Tests: 10056 (+14 since 9.13.0)
+
 ## [9.13.0](https://github.com/event4u-app/agent-config/compare/9.12.0...9.13.0) (2026-08-02)
 
 ### Release highlights
