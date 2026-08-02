@@ -25,12 +25,24 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { iter_commands } from './_lib/agent_src.js';
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/lint_command_verbs.ts → three dirs up is the repo root.
 // Mirrors Python `Path(__file__).resolve().parent.parent.parent`.
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const VERBS_YML = path.join(ROOT, 'src', 'config', 'discovery', 'command-verbs.yml');
-const _CMD_PATH_RE = /\.agent-src\.uncondensed\/commands\/.+\.md$/;
+/**
+ * Diff-path filter for "is this changed file a command?".
+ *
+ * ADR-051 replaced the flat `commands/` directory with one `command.md` leaf
+ * per verb under `src/domains/<pack>/<subpath>/`. Until 2026-08-02 this regex
+ * still matched the retired layout, so `changed_command_files()` matched
+ * nothing on any diff and the gate printed "No new/changed commands" no matter
+ * what landed — leaving the ADR-041 verb contract unenforced.
+ */
+const _CMD_PATH_RE = /^src\/domains\/.+\/command\.md$/;
 const NAME_RE = /^name:\s*(.*)$/m;
 const TIER_RE = /^tier:\s*(\d+)/m;
 const VISIBILITY_RE = /^visibility:\s*['"]?([A-Za-z-]+)/m;
@@ -196,34 +208,21 @@ function _rglobMd(dir: string): string[] {
     return out;
 }
 
+/**
+ * Every command in the tree, as `--all` sees it.
+ *
+ * Was an enumeration of per-package `commands/` directories, a layout ADR-051
+ * retired; it returned {} on every checkout after that. Now the shared
+ * resolver's command iterator, which knows the `src/domains` leaf shape.
+ */
 function all_visible_command_files(): Record<string, string> {
     const out: Record<string, string> = {};
-    const pkgs = path.join(ROOT, 'packages');
-    let roots: string[] = [];
-    if (_exists(pkgs) && fs.statSync(pkgs).isDirectory()) {
-        // packages/*/.agent-src.uncondensed/commands directories.
-        let pkgDirs: fs.Dirent[];
-        try {
-            pkgDirs = fs.readdirSync(pkgs, { withFileTypes: true });
-        } catch {
-            pkgDirs = [];
+    for (const md of iter_commands()) {
+        const rel = _relTo(md, ROOT);
+        if (path.basename(md) === 'AGENTS.md' || rel.split('/').includes('_archive')) {
+            continue;
         }
-        for (const d of pkgDirs) {
-            const cand = path.join(pkgs, d.name, '.agent-src.uncondensed', 'commands');
-            if (_exists(cand) && fs.statSync(cand).isDirectory()) {
-                roots.push(cand);
-            }
-        }
-        roots = roots.sort();
-    }
-    for (const root of roots) {
-        for (const md of _rglobMd(root)) {
-            const parts = _relTo(md, ROOT).split('/');
-            if (path.basename(md) === 'AGENTS.md' || parts.includes('_archive')) {
-                continue;
-            }
-            out[_relTo(md, ROOT)] = 'A';
-        }
+        out[rel] = 'A';
     }
     return out;
 }
@@ -357,11 +356,31 @@ function main(): number {
     const args = parse_args(process.argv.slice(2));
 
     const { approved, banned, grandfathered } = load_config();
-    const targets = args.all ? all_visible_command_files() : changed_command_files(args.baseline);
+    // Scope assertion: this is a diff gate, so an empty TARGET set is normal
+    // (nothing changed). What is never normal is an empty COMMAND CORPUS — that
+    // means the path filter and the walk root no longer describe the tree, and
+    // the diff can never match. Assert on the corpus, not on the diff.
+    const corpus = all_visible_command_files();
+    try {
+        assertScanned({
+            gate: 'lint_command_verbs',
+            scanned: Object.keys(corpus).length,
+            units: 'command file(s)',
+            roots: ['src/domains/**/command.md'],
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
+    }
+    const targets = args.all ? corpus : changed_command_files(args.baseline);
     if (Object.keys(targets).length === 0) {
         if (!args.quiet) {
             process.stdout.write(
-                `✅  No new/changed commands under commands/ (baseline: ${args.baseline}).\n`,
+                `✅  No new/changed commands under src/domains/ (baseline: ${args.baseline}; ` +
+                    `${Object.keys(corpus).length} command(s) in scope).\n`,
             );
         }
         return 0;

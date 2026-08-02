@@ -16,9 +16,20 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { SRC_SKILLS } from './_lib/agent_src.js';
+import { checkRatchet } from './_lib/gate_baseline.js';
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
-const SKILLS_DIR = path.join(REPO, '.agent-src.uncondensed', 'skills');
+/**
+ * ADR-051 moved skill authoring to `src/skills`. Until 2026-08-02 this default
+ * still named the retired pre-ADR-051 source container, so the CLI walked a
+ * missing directory and printed "no violations under <that root>" while
+ * reading zero files. Resolved through the shared resolver so the next root
+ * move updates every consumer at once.
+ */
+const SKILLS_DIR = SRC_SKILLS();
 
 /** Mirror `QUIET = "--quiet" in sys.argv` (computed at import). */
 const QUIET = process.argv.slice(2).includes('--quiet');
@@ -369,17 +380,53 @@ export function main(argv?: readonly string[]): number {
     if (args.length > 0) {
         skills_dir = _resolve(args[0] as string);
     }
+    const isDefaultRoot = skills_dir === SKILLS_DIR;
+
+    // Scope assertion: zero skill files means the root moved, not that the
+    // corpus is clean. This is the state the gate shipped in until 2026-08-02.
+    const scanned = _rglobSkillMd(skills_dir).length;
+    try {
+        assertScanned({
+            gate: 'lint_handoffs',
+            scanned,
+            units: 'skill file(s)',
+            roots: [_relTo(skills_dir, REPO)],
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
+    }
+
     const violations = lint(skills_dir);
     if (violations.length === 0) {
         if (!QUIET) {
             process.stdout.write(
-                `✅  lint_handoffs: no violations under ${_relTo(skills_dir, REPO)}\n`,
+                `✅  lint_handoffs: no violations under ${_relTo(skills_dir, REPO)} ` +
+                    `(${scanned} skill file(s) scanned)\n`,
             );
         }
         return 0;
     }
     for (const v of violations) {
         process.stdout.write(_render(v, REPO) + '\n');
+    }
+    // Ratchet applies to the repo corpus only — an explicit fixture root is
+    // judged on its own findings, never against the repo's recorded debt.
+    if (isDefaultRoot) {
+        const verdict = checkRatchet({
+            gate: 'lint_handoffs',
+            actual: violations.length,
+            repoRoot: REPO,
+        });
+        if (verdict.ok) {
+            process.stdout.write(`\n⚠️   ${verdict.message}\n`);
+            return 0;
+        }
+        process.stderr.write(`\n❌  ${verdict.message}\n`);
+        return 1;
     }
     process.stderr.write(`\n❌  lint_handoffs: ${violations.length} violation(s)\n`);
     return 1;

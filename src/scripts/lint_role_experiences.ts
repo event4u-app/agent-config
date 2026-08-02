@@ -18,14 +18,24 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { SRC_SKILLS } from './_lib/agent_src.js';
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROLES_DIR = path.join(ROOT, 'agents', 'roles');
-const SKILL_SOURCES = [
-    path.join(ROOT, '.agent-src.uncondensed', 'skills'),
-    path.join(ROOT, 'dist/agent-src', 'skills'),
-];
+/**
+ * Where a referenced skill slug may be resolved, in precedence order.
+ *
+ * The first entry used to be the pre-ADR-051 source container, which has not
+ * existed since the move — so on a checkout with no built `dist/`,
+ * `all_skills()` returned an EMPTY set and every `skills.yml` reference
+ * resolved against nothing. `src/skills` is the source of truth; the `dist/`
+ * projection stays as a second source so the gate also works from an
+ * installed tree.
+ */
+const SKILL_SOURCES = [SRC_SKILLS(), path.join(ROOT, 'dist/agent-src', 'skills')];
 
 const REQUIRED_INDEX_KEYS = new Set([
     'role',
@@ -260,6 +270,23 @@ function main(argv?: readonly string[]): number {
     }
 
     const knownSkills = all_skills();
+    // Scope assertion: an empty skill index is not "no unknown skills" — it
+    // means both sources moved, and every `skills.yml` reference is then
+    // checked against nothing.
+    try {
+        assertScanned({
+            gate: 'lint_role_experiences',
+            scanned: knownSkills.size,
+            units: 'known skill(s)',
+            roots: SKILL_SOURCES.map((s) => path.relative(ROOT, s).split(path.sep).join('/')),
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
+    }
     const failures: string[] = [];
     for (const name of _iterdir(ROLES_DIR).sort()) {
         const roleDir = path.join(ROLES_DIR, name);
@@ -279,7 +306,9 @@ function main(argv?: readonly string[]): number {
         process.stdout.write(`\nlint_role_experiences: ${failures.length} failure(s)\n`);
         return 1;
     }
-    process.stdout.write('✅ lint_role_experiences: all role experiences pass\n');
+    process.stdout.write(
+        `✅ lint_role_experiences: all role experiences pass (${knownSkills.size} known skill(s) indexed)\n`,
+    );
     return 0;
 }
 

@@ -25,6 +25,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 // src/scripts/lint_command_routing.ts → repo root is two dirs up. Mirrors the
 // Python `Path(__file__).resolve().parent.parent.parent`.
 const _HERE = fileURLToPath(import.meta.url);
@@ -109,61 +111,18 @@ function _rglobNameSorted(dir: string, name: string): string[] {
     return out.sort();
 }
 
-/** Recursively list `*.md` files under `dir`, sorted. */
-function _rglobMdSorted(dir: string): string[] {
-    const out: string[] = [];
-    const walk = (current: string): void => {
-        let entries: fs.Dirent[];
-        try {
-            entries = fs.readdirSync(current, { withFileTypes: true });
-        } catch {
-            return;
-        }
-        for (const entry of entries) {
-            const full = path.join(current, entry.name);
-            if (entry.isDirectory()) {
-                walk(full);
-            } else if (entry.isFile() && entry.name.endsWith('.md')) {
-                out.push(full);
-            }
-        }
-    };
-    walk(dir);
-    return out.sort();
-}
-
 /**
  * Discover command sources in the post-ADR-051 layout.
  *
- * Authoring lives at src/domains/<domain>/**\/command.md; the legacy
- * packages/*\/.agent-src.uncondensed/commands tree is kept as a fallback for
- * older checkouts.
+ * Authoring lives at `src/domains/<domain>/**\/command.md`. A per-package
+ * `commands/` fallback used to sit behind this for "older checkouts"; that
+ * layout no longer exists in any supported checkout, so the branch was
+ * unreachable — and an unreachable fallback that takes over the moment its
+ * directory reappears is the trap this roadmap is closing, not a safety net.
  */
 function _command_files(): string[] {
     const domains = path.join(ROOT, 'src', 'domains');
-    if (_isDir(domains)) {
-        return _rglobNameSorted(domains, 'command.md');
-    }
-    const packagesDir = path.join(ROOT, 'packages');
-    const legacyRoots: string[] = [];
-    let entries: fs.Dirent[];
-    try {
-        entries = fs.readdirSync(packagesDir, { withFileTypes: true });
-    } catch {
-        entries = [];
-    }
-    // glob("*/.agent-src.uncondensed/commands") — sorted, dirs only.
-    for (const entry of entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
-        const d = path.join(packagesDir, entry.name, '.agent-src.uncondensed', 'commands');
-        if (_isDir(d)) {
-            legacyRoots.push(d);
-        }
-    }
-    const out: string[] = [];
-    for (const root of legacyRoots) {
-        out.push(..._rglobMdSorted(root));
-    }
-    return out;
+    return _isDir(domains) ? _rglobNameSorted(domains, 'command.md') : [];
 }
 
 // Central eval store in the post-ADR-051 layout. Eval stems use the
@@ -324,8 +283,18 @@ function main(): number {
     const quiet = _quiet;
 
     const files = _command_files();
-    if (files.length === 0) {
-        process.stderr.write('❌  No command roots found.\n');
+    try {
+        assertScanned({
+            gate: 'lint_command_routing',
+            scanned: files.length,
+            units: 'command file(s)',
+            roots: ['src/domains/**/command.md'],
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
         return 3;
     }
 
@@ -364,7 +333,7 @@ function main(): number {
     if (!quiet) {
         process.stdout.write(
             `✅  ${visible} visible command(s) carry intent/routes_to/replaces ` +
-                '+ a routing eval.\n',
+                `+ a routing eval (${files.length} command file(s) scanned).\n`,
         );
     }
     return 0;

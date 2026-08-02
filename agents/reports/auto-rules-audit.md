@@ -132,38 +132,23 @@ _None._
 
 | Rule | Distinct hits | Total hit volume |
 |------|---------------|------------------|
-| `laravel-translations` | 6 | 68 |
-| `upstream-proposal` | 6 | 120 |
-| `devcontainer-routing` | 6 | 131 |
-| `no-attribution-footers` | 7 | 101 |
-| `low-impact-corpus-privacy-floor` | 8 | 105 |
-| `commit-conventions` | 8 | 157 |
-| `copilot-routing` | 8 | 164 |
-| `no-pr-progress-comments` | 8 | 167 |
-| `markdown-safe-codeblocks` | 9 | 100 |
-| `symfony-routing` | 9 | 120 |
-| `slash-command-routing-policy` | 9 | 195 |
-| `onboarding-gate` | 9 | 265 |
-| `source-confidentiality` | 9 | 350 |
-| `token-budget-discipline` | 10 | 116 |
-| `preservation-guard` | 10 | 153 |
-| `telegraph-speak` | 10 | 164 |
-| `skill-improvement-trigger` | 10 | 196 |
-| `domain-adoption-policy` | 10 | 200 |
-| `skill-quality` | 10 | 227 |
-| `rule-type-governance` | 10 | 241 |
-
-## Phase 5.2 — Trigger overlap (Jaccard + keyword)
-
-Pairs flagged: **8** (thresholds: path-Jaccard ≥ 0.5, keyword-overlap ≥ 0.4).
-
-| # | Rule A | Rule B | Path-J | Keyword-O | Shared keywords |
-|---|--------|--------|--------|-----------|-----------------|
-| 1 | `domain-adoption-policy` | `skill-quality` | 1.00 | 0.00 | — |
-| 2 | `framework-neutrality-in-generic-skills` | `lethal-trifecta-guard` | 0.67 | 0.08 | `command`, `skill` |
-| 3 | `lethal-trifecta-guard` | `skill-quality` | 0.50 | 0.08 | `skill` |
-| 4 | `roadmap-ci-steps-policy` | `roadmap-progress-sync` | 0.50 | 0.07 | `roadmap` |
-| 5 | `domain-adoption-policy` | `lethal-trifecta-guard` | 0.50 | 0.00 | — |
-| 6 | `cli-output-handling` | `docker-commands` | 0.00 | 0.47 | `cli`, `composer`, `docker`, `phpstan`, `phpunit`, `rector` |
-| 7 | `framework-neutrality-in-generic-skills` | `laravel-routing` | 0.00 | 0.42 | `artisan`, `controllers`, `eloquent`, `formrequest`, `skill` |
-| 8 | `artifact-drafting-protocol` | `upstream-proposal` | 0.00 | 0.40 | `command`, `guideline`, `rule`, `skill` |
+| `laravel-translations` | 7 | 314 |
+| `upstream-proposal` | 7 | 439 |
+| `markdown-safe-codeblocks` | 9 | 422 |
+| `no-attribution-footers` | 9 | 489 |
+| `devcontainer-routing` | 9 | 742 |
+| `no-pr-progress-comments` | 9 | 839 |
+| `commit-conventions` | 9 | 963 |
+| `onboarding-gate` | 9 | 1281 |
+| `telegraph-speak` | 10 | 500 |
+| `preservation-guard` | 10 | 562 |
+| `domain-adoption-policy` | 10 | 735 |
+| `slash-command-routing-policy` | 10 | 901 |
+| `skill-quality` | 10 | 938 |
+| `copilot-routing` | 10 | 952 |
+| `rule-type-governance` | 10 | 1121 |
+| `token-budget-discipline` | 11 | 357 |
+| `low-impact-corpus-privacy-floor` | 11 | 469 |
+| `php-coding` | 11 | 679 |
+| `runtime-safety` | 11 | 700 |
+| `symfony-routing` | 11 | 711 |

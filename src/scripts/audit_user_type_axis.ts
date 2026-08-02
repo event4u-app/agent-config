@@ -8,19 +8,22 @@
  * split, byte-identical stdout summary, AND byte-identical generated
  * Markdown report. Stdlib-only — no YAML dependency.
  *
- * Two checks across `.agent-src.uncondensed/skills/`:
+ * Two checks across `src/skills/`:
  *
  *   1. Orphan values — every `recommended_for_user_types` value must have a
- *      `user-types/<value>.yml` config. Orphans are FATAL (exit 1).
+ *      `user-types/<value>.yml` config. Orphans are FATAL (exit 1), subject to
+ *      the recorded violation ratchet.
  *   2. Unused configs — every `user-types/*.yml` should be consumed by at
  *      least one skill. Unused configs are WARN-only (exit 0).
  *
- * NOTE: the retired Python implementation scans only the LEGACY `.agent-src.uncondensed/
- * skills/` root (not the 6.0.0-D `src/skills/` library). This twin replicates
- * that exact root for byte-identical parity. The report path is
- * `agents/reports/user-type-axis-audit.md` (matching the Python constant,
- * which differs from the docstring's `agents/runtime/reports/` mention —
- * latent bug replicated).
+ * NOTE: the retired Python implementation scanned only the pre-ADR-051 source
+ * container, and this twin inherited that root verbatim for byte parity — which
+ * meant it scanned nothing at all once the container was emptied. Repaired
+ * 2026-08-02 to `src/skills`; byte-parity with the .py is deliberately given up
+ * here, because parity with a scan of zero files is not a property worth
+ * keeping. The report path is `agents/reports/user-type-axis-audit.md`
+ * (matching the Python constant, which differs from the docstring's
+ * `agents/runtime/reports/` mention — latent bug replicated).
  *
  * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  */
@@ -29,11 +32,21 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { SRC_SKILLS } from './_lib/agent_src.js';
+import { checkRatchet } from './_lib/gate_baseline.js';
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/audit_user_type_axis.ts → parents[2] of the .py file is repo root.
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-export const SKILLS_ROOT = path.join(REPO_ROOT, '.agent-src.uncondensed', 'skills');
+/**
+ * ADR-051 moved skill authoring to `src/skills`. This still named the retired
+ * container, so `_scan_skill_values()` took its `!_isDir` early return and the
+ * audit reported `used=0 orphans=0` — a clean verdict derived from reading
+ * nothing, with all 7 declared user types written off as "unused".
+ */
+export const SKILLS_ROOT = SRC_SKILLS();
 export const USER_TYPES_ROOT = path.join(REPO_ROOT, 'user-types');
 export const REPORT_PATH = path.join(REPO_ROOT, 'agents', 'reports', 'user-type-axis-audit.md');
 
@@ -228,6 +241,24 @@ export function _render_report(
 
 export function main(argv: string[]): number {
     const quiet = argv.includes('--quiet');
+    // Scope assertion: the orphan/unused verdict is a set difference against
+    // the skills corpus, so an unreadable corpus does not yield "no orphans",
+    // it yields a vacuous answer that looks identical to a clean one.
+    const scannedSkills = _isDir(SKILLS_ROOT) ? _rglobSkillMd(SKILLS_ROOT).length : 0;
+    try {
+        assertScanned({
+            gate: 'audit_user_type_axis',
+            scanned: scannedSkills,
+            units: 'skill file(s)',
+            roots: [_relativeToPosix(SKILLS_ROOT, REPO_ROOT)],
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
+    }
     const declared = _declared_user_types();
     const byValue = _scan_skill_values();
     const used = new Set<string>(byValue.keys());
@@ -242,7 +273,8 @@ export function main(argv: string[]): number {
     if (!quiet) {
         process.stdout.write(
             `user-type-axis audit — declared=${declared.size} ` +
-                `used=${used.size} orphans=${orphans.size} unused=${unused.size}\n`,
+                `used=${used.size} orphans=${orphans.size} unused=${unused.size} ` +
+                `(${scannedSkills} skill file(s) scanned)\n`,
         );
         if (orphans.size > 0) {
             process.stdout.write('  FAIL orphans: ' + _sorted(orphans).join(', ') + '\n');
@@ -253,7 +285,22 @@ export function main(argv: string[]): number {
         process.stdout.write(`  report: ${_relativeToPosix(REPORT_PATH, REPO_ROOT)}\n`);
     }
 
-    return orphans.size > 0 ? 1 : 0;
+    if (orphans.size === 0) {
+        return 0;
+    }
+    const verdict = checkRatchet({
+        gate: 'audit_user_type_axis',
+        actual: orphans.size,
+        repoRoot: REPO_ROOT,
+    });
+    if (verdict.ok) {
+        if (!quiet) {
+            process.stdout.write(`⚠️   ${verdict.message}\n`);
+        }
+        return 0;
+    }
+    process.stderr.write(`❌  ${verdict.message}\n`);
+    return 1;
 }
 
 function _isCliEntry(): boolean {

@@ -6,35 +6,57 @@
  * Phase 4 / Wave 4b). The CLI contract is pinned — `--quiet`
  * flag read from argv at module load, scan roots + policy ordering (policies
  * sorted; scan files via rglob), finding messages, output channel (all on
- * stdout except the final orphan summary on stderr), exit codes. No
- * behaviour changes — historical quirks preserved (consumers pin the exact behaviour). (note: `POLICY_DIR` /
- * `SCAN_ROOTS` point at `agents/policies/media`, matching the .py).
+ * stdout except the final orphan summary on stderr), exit codes.
  *
- * Every policy file under `agents/policies/media/` (except README) must be
- * linked from at least one of a skill SKILL.md, a routing rule, or a sibling
- * policy file. A policy that no surface references is a silent — failed — policy.
+ * Every policy file under `agents/settings/policies/media/` (except README)
+ * must be linked from at least one of a skill SKILL.md, a routing rule, or a
+ * sibling policy file. A policy that no surface references is a silent —
+ * failed — policy.
  *
- * Exit codes: 0 all policies linked, 1 one or more orphan policies.
+ * The inherited `POLICY_DIR` and `SCAN_ROOTS` were faithful ports of the .py's
+ * paths, and every one of them was stale: the policy root was a level too
+ * shallow and the referrer roots named the pre-ADR-051 container. Repaired
+ * 2026-08-02; see the constants below.
+ *
+ * Exit codes: 0 all policies linked, 1 one or more orphan policies, 2 dead scope.
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.includes('--quiet');
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
-const POLICY_DIR = path.join(REPO, 'agents', 'policies', 'media');
+/**
+ * The policies whose reachability is being checked.
+ *
+ * This named `agents/policies/media` while the policies have always lived one
+ * level deeper, under `agents/settings/policies/media` — the gate's own
+ * "…/settings/policies/media/ missing" message named the right path while the
+ * constant named the wrong one. Result: `main()` took the missing-dir early
+ * return and exited 0 without checking a single policy.
+ */
+const POLICY_DIR = path.join(REPO, 'agents', 'settings', 'policies', 'media');
 const EXEMPT_STEMS: ReadonlySet<string> = new Set(['README']);
 
-// Surfaces scanned for inbound references to policy files.
+/**
+ * Surfaces scanned for inbound references to policy files.
+ *
+ * Three of these named the pre-ADR-051 source container and a fourth named
+ * `.claude/skills`, a generated projection absent from this repo — so the
+ * reference scan read nothing either. Now the real authoring roots (a command
+ * is `src/domains/<pack>/<subpath>/command.md`, hence the domains root) plus
+ * the policy directory itself, since a sibling policy is a valid referrer.
+ */
 const SCAN_ROOTS: readonly string[] = [
-    path.join(REPO, '.agent-src.uncondensed', 'skills'),
-    path.join(REPO, '.agent-src.uncondensed', 'rules'),
-    path.join(REPO, '.agent-src.uncondensed', 'commands'),
-    path.join(REPO, '.claude', 'skills'),
-    path.join(REPO, 'agents', 'policies', 'media'),
+    path.join(REPO, 'src', 'skills'),
+    path.join(REPO, 'src', 'rules'),
+    path.join(REPO, 'src', 'domains'),
+    POLICY_DIR,
 ];
 
 function _exists(p: string): boolean {
@@ -165,24 +187,34 @@ function referrers_for(policy: string, scanFiles: readonly string[]): string[] {
 }
 
 function main(): number {
-    if (!_exists(POLICY_DIR)) {
-        emit(
-            'media-policy-linkage: agents/settings/policies/media/ missing — ' +
-                'nothing to lint.',
-        );
-        return 0;
-    }
-
+    // Scope assertions replace the two silent early returns this gate used to
+    // take. Both are deliberately WITHOUT `allowEmpty`: "the policy directory
+    // is missing" was not a benign optional-surface case here, it was the bug —
+    // the constant pointed one level too shallow and the gate green-lit an
+    // unchecked policy set for as long as it has existed.
     const policies = collect_policies();
-    if (policies.length === 0) {
-        emit(
-            'media-policy-linkage: agents/settings/policies/media/ has no policy ' +
-                'files — nothing to lint.',
-        );
-        return 0;
+    const scanFiles = collect_scan_files();
+    try {
+        assertScanned({
+            gate: 'lint_media_policy_linkage',
+            scanned: policies.length,
+            units: 'policy file(s)',
+            roots: [_relToPosix(POLICY_DIR, REPO)],
+        });
+        assertScanned({
+            gate: 'lint_media_policy_linkage',
+            scanned: scanFiles.length,
+            units: 'referrer-candidate file(s)',
+            roots: SCAN_ROOTS.map((r) => _relToPosix(r, REPO)),
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
     }
 
-    const scanFiles = collect_scan_files();
     const orphans: string[] = [];
     for (const policy of policies) {
         const referrers = referrers_for(policy, scanFiles);
@@ -209,7 +241,7 @@ function main(): number {
 
     emit(
         `media-policy-linkage: ${policies.length} policy file(s) — all ` +
-            `linked.`,
+            `linked (${scanFiles.length} file(s) scanned for referrers).`,
     );
     return 0;
 }
