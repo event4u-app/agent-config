@@ -1,5 +1,5 @@
 ---
-complexity: simple
+complexity: lightweight
 status: ready
 parent: road-to-package-renewal.md
 ---
@@ -22,24 +22,23 @@ parent: road-to-package-renewal.md
       alternatives, and pre-approved Phase-2 flip path are framed around the
       retired Python kernel (`src/scripts/mcp_server/`, pipx/uvx) and are
       impossible as written
-- [ ] Disposition the 6 perma-proposed ADRs (status `proposed` for 2.5+
-      months): accept, reject, or supersede each — no third state
+- [ ] Disposition the 6 perma-proposed ADRs (status `proposed`, 1.6–2.7 months
+      old: ADR-008/010/055/057/067/101): accept, reject, or supersede each —
+      no third state
 - [ ] Fix INDEX.md staleness/self-misdescription and regenerate via
       `scripts/adr/regenerate_index.ts`
 
 ## Phase 2 — structural decisions with new evidence
 
-- [ ] Decide the ADR-201 open question: `dist/agent-src/` is now a
-      byte-identical path-rewritten copy of `src/` — either collapse the
-      duplicated tree (installer + symlinks retarget to src/) or record a
-      keep-forever ADR with the reason; today's state is an undecided
-      duplication every consumer ships
+- [ ] Decide the ADR-201 open question and record it: `dist/agent-src/` is now
+      a byte-identical path-rewritten copy of `src/` — write the deciding ADR
+      (collapse vs keep-forever, with reason). Chip-sized: the decision only
+- [ ] If collapse is decided: execute the tree collapse (installer + symlink
+      retarget to `src/`, consumer-facing) as its OWN full-size PR —
+      explicitly EXCLUDED from chip-mode
 - [ ] Reconcile the router linter contract: 41 of 97 non-kernel router entries
       have empty `routes_to` — enforce ≥1 or amend `rule-router.md` to name
       the body-carrying rule class explicitly
-- [ ] Re-baseline the kernel/router value claim on current frontier hosts
-      (locked numbers are stale or were later shown fabricated); outcome feeds
-      Foundation Phase 3's go/no-go context, not a new mechanism
 - [ ] Retrofit `review_trigger` on the ~10 most load-bearing pre-2026-07-25
       ADRs with demonstrably time-bound premises (narrow retrofit; the blanket
       retrofit stays rejected per ADR-127 § Alternatives)
@@ -53,3 +52,15 @@ parent: road-to-package-renewal.md
 - [ ] Retire the ADR-030 "temporary" dual projection once the Foundation
       command-dedup lands (146 command-as-skill symlinks still ship through
       the plugin per ADR-089)
+
+## Blockers
+
+- **Kernel/router value re-baseline** — Status: gated · Owner: maintainer ·
+  Blocks: nothing (optional input to Foundation Phase 3's go/no-go if landed;
+  that gate does not wait on it) · Resolved-when: maintainer authorizes bench
+  spend for a `bench_ab_v2_run` comparison on current frontier hosts, with the
+  pre-registered comparison + recorded artifact named up front. The locked
+  numbers are stale or unbacked (docs/CLAIMS.md vocabulary). Mechanism-match
+  note: this is a DIFFERENT measurement from the TERMINAL activation
+  red-baseline null (value-of-loading bench, not adherence adjudication) —
+  it does not re-run that null.

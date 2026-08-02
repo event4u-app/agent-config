@@ -69,8 +69,8 @@ Hard ceiling: 5 — above that, re-invoke deliberately with fresh context.
 2. Create or enter an isolated worktree on a fresh branch off the trunk
    (branch/worktree creation is authorized by invoking this command; every
    Hard-Floor action below stays gated).
-3. If a `.worktreeinclude` manifest exists, honor it when seeding the
-   worktree; never copy `.agent-settings.yml` into a worktree.
+3. Honor any repo worktree-seeding convention when seeding the worktree;
+   never copy `.agent-settings.yml` into a worktree.
 4. Read the lock inventory: honest nulls, DR memories, `later/` resume
    conditions, standing ADRs. These are constraints for Step 4, surfaced —
    never silently relitigated (`decision-revisit-gate`).
@@ -107,16 +107,16 @@ user per `ai-council-config` — autonomy never rewires that floor.
 Author ONE central roadmap (goal, verified findings, locks honored,
 sub-roadmap management table, pre-registered success criteria, provenance —
 external sources anonymized + `ENC1:`-encrypted per `source-confidentiality`)
-plus 2-4 sub-roadmaps cut along the council's topology. Foundation-class
+plus sub-roadmaps cut along the council's topology. Foundation-class
 work (whatever must be true for the rest to be verifiable — typically the
 CI oracle) gates the leverage-class work explicitly. Regenerate the
 dashboard (`roadmap:progress`) in the same response as any roadmap write.
 
 ### Step 5 — Pull request
 
-Push the branch and open the PR per [`/create-pr`](../pr/create.md)
-mechanics (archival sweep, no attribution footer, no decorative emojis,
-raw PR URL as the reply's literal last line).
+Push the branch and open the PR per [`/create-pr`](../pr/create.md) — its
+mechanics and the always-active PR-surface rules govern the body and reply
+shape; do not restate them here.
 
 ### Step 6 — Refinement loops (×N, autonomous)
 
@@ -136,12 +136,10 @@ changelog section, not a comment (`no-pr-progress-comments`).
 
 ## Gotchas
 
-- Hard Floor is untouched by autonomy: merge, deploy, prod data, bulk
-  deletion outside the task, and any irreversible external action still
-  require this-turn confirmation — the PR is where autonomy ends.
+- Merge/deploy is where autonomy ends — Step 6 loop pushes go to the
+  already-open PR under the invocation's authorization; merging it,
+  deploying, or any irreversible external action stays this-turn gated.
 - Council spend: estimate first; abort and surface if the configured budget
   guard trips mid-run.
 - Subagent cwd pins to the launch dir, not the worktree — pass absolute
   paths into every subagent prompt.
-- Roadmaps must not schedule full-pipeline CI steps when
-  `quality.local_auto_run` is false (`roadmap-ci-steps-policy`).

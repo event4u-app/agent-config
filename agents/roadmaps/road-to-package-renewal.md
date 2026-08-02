@@ -44,7 +44,8 @@ this central roadmap steering three sub-roadmaps.
 4. **Work engine burns a CLI round-trip per step**; no flagship flow dispatches
    parallel subagents; the host projection lists every command twice (hyphen
    skill + colon command); ~1,900 lines of commands have no plausible
-   invocation path.
+   invocation path (analysis ESTIMATE, not hand-reproduced — the enumeration
+   with file list + method is the first action of any step consuming it).
 5. **Decision debt.** ADR-068/070–084 encode the pre-native drive-loop era;
    ADR-085 is framed around the retired Python kernel; ADR-201's open question
    (dist/agent-src/ is now a byte-identical copy of src/) is unresolved; 6 ADRs
@@ -53,21 +54,64 @@ this central roadmap steering three sub-roadmaps.
 ## Locks honored (do not relitigate inside the sub-roadmaps)
 
 - **Scope-dedup reachability — REFUSED (DR, 2026-07-31, PR #1066).** Both fix
-  mechanisms refused as a maintainer decision; reopen only on a demonstrated
-  external dual-scope consumer. The "flip scope_dedup" quick win from the
-  analysis is therefore OUT of scope; the refusal record and reopen conditions
-  live in `agents/settings/contexts/dedup-reachability-refusal.md`.
+  mechanisms refused as a maintainer decision; reopen when any of the FIVE
+  recorded conditions fires (IO-bound-profile evidence, constrained-consumer
+  telemetry, quality-floor invalidation, perceptibility evidence, or — most
+  likely first — a demonstrated dual-scope consumer). The "flip scope_dedup"
+  quick win from the analysis is therefore OUT of scope; the refusal record
+  and reopen conditions live in
+  `agents/settings/contexts/dedup-reachability-refusal.md`.
 - **Thin-projection quality — honest null (TERMINAL).** Thin win-rate 36.2% <
   48% pre-registered threshold. The thin FLIP stays parked
   (`later/road-to-thin-flip-under-anchor-scoring.md` carries the resume
   condition). Finishing the `condense.ts` port so the mode stops THROWING is
   allowed (dead-switch repair), flipping the default is not.
 - **ADR-054 runtime activation — refused AS DESIGNED, not permanently**
-  (activation red-baseline null, 0/67 adjudicated). A prompt-time hook resolver
-  is a DIFFERENT mechanism and passes the mechanism-match test; it enters as a
-  phase-gated spike with pre-registered thresholds, not as a default flip.
+  (activation red-baseline null, 0/67 adjudicated). The Foundation Phase 3
+  spike shares ADR-054's transport family (a prompt-time reader of
+  `dist/router.json` — the ADR names that shape) but differs in objective and
+  baseline: it replaces always-loaded non-kernel bodies to cut tokens, where
+  ADR-054 added decay-triggered restatements against an adherence gap the
+  red baseline never produced. It enters via ADR-054's own recorded reopen
+  path (a funded, fully pre-registered run) — as a phase-gated spike with
+  pre-registered thresholds, never a default flip.
 - **A3 production-validator / enforcement-projection / orchestration-flip
   honest nulls** — TERMINAL, not re-run here.
+- **Harvest freeze until the first external adopter (restraint decision,
+  2026-07-20,** `agents/settings/contexts/surface-consolidation-restraint.md`**).**
+  Council 2026-08-02 (loop 1, unanimous): split by pain — borrows that close a
+  RECORDED internal failure (return-prevention) proceed with an inline lock
+  note; purely additive capability stays frozen behind the freeze's own reopen
+  condition. Effect on Leverage: Phase 2 carries only the four
+  documented-failure fixes; the additive borrows are listed under "Findings
+  not carried forward" below.
+
+## Findings not carried forward (disposition + reopen condition)
+
+- **Supply-chain dependency audit** — partially mitigated today
+  (`check_secret_leak` gate, npm OIDC Trusted Publishing + provenance in the
+  release workflow); the remaining gap (no lockfile/dependency scanner,
+  `npm ci --no-audit` everywhere) moves INTO Foundation Phase 1 as a new item
+  rather than being dropped.
+- **Windsurf single-blob projection** (~5,400 lines always-loaded) — measured
+  as part of Foundation Phase 2's before/after; no dedicated work this cycle.
+- **Settings template (1,241 lines)** — mitigated by the browser setup wizard
+  as the primary settings surface; reopen if wizard coverage of template keys
+  is incomplete (then chip a template-sectioning item into ADR-hygiene).
+- **Self-learning open loop** — deliberately dropped per the Evidence-v2
+  accumulation KILL and agent-memory sunset locks; reopen only through those
+  records.
+- **Monolith scripts (~15.5k LOC / 4 files)** — no refactor-for-its-own-sake;
+  re-enters exactly where it bites: the umbrella-runner spike's import-safety
+  audit (Foundation Phase 1).
+- **Semantic-retrieval ceiling** — out of scope for the Phase 3 spike
+  (keyword/phrase matching only); reopen if the trigger-precision pass caps
+  below the pre-registered injection-precision threshold.
+- **Frozen borrows (harvest-freeze)** — session cost telemetry, USD budget
+  circuit-breaker, fact-forcing edit gate, MCP health gating, forward-routing
+  footers, in-description deflection, new `awaiting-evidence` tracker status
+  (existing `## Blockers` convention covers the need). Reopen: the freeze's
+  own condition (first documented external adopter).
 
 ## Sub-roadmaps (managed by this file)
 
@@ -87,10 +131,12 @@ Foundation Phase 1 is green. ADR hygiene chips alongside any PR.
   nonexistent root (structural guard, not a one-time sweep).
 - `ci-strict` ⊇ `ci` provably (single shared gate list, strict adds — never
   subtracts).
-- Session rule-layer footprint on this repo measurably reduced with content
-  unchanged per `audit_initial_context` (pack-gating + MCP trim), and the
-  runtime-activation spike produces a pre-registered measurement (win-rate +
-  token delta) before any default changes.
+- Non-kernel always-context on this repo reduced by ≥10k GPT tokens vs the
+  recorded `audit_initial_context` baseline (baseline value written into this
+  section before Foundation Phase 2 starts; levers: pack-gated floors ~8-9k +
+  MCP trim), content unchanged; the runtime-activation spike produces its
+  pre-registered measurement (token delta + injection precision + non-kernel
+  recall/quality arm) before any default changes.
 - Every command appears exactly once in the host projection.
 - Zero `src/` references to `.agent-src.uncondensed/` + CI ban on new ones.
 
@@ -111,8 +157,15 @@ Foundation Phase 1 is green. ADR hygiene chips alongside any PR.
 - [ ] Foundation Phase 1 (CI oracle) executed and verified → unblock Leverage
 - [ ] Re-measure token footprint after Foundation Phase 2; decide
       runtime-activation spike go/no-go on the recorded thresholds
-- [ ] Quarterly: re-run `/optimize:deep` against this central roadmap and
-      retire/refresh sub-roadmap items that reality has overtaken
+- [ ] Record the renewal-cadence decision (when/whether to re-invoke
+      `/optimize:deep` against this roadmap set) as a one-line decision note
+      here — the recurring re-run itself is cadence, not a checkbox
+
+## Cadence
+
+Re-running `/optimize:deep` against this central roadmap is a standing
+practice, not a step: on invocation it retires/refreshes sub-roadmap items
+that reality has overtaken. It never blocks archival of this file.
 
 ## Provenance (encrypted per source-confidentiality; maintainer-recoverable)
 

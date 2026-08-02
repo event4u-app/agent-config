@@ -6,7 +6,7 @@
 
 ## Overall
 
-**76 / 219 steps done · 35%**
+**76 / 215 steps done · 35%**
 
 ```text
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
@@ -25,8 +25,8 @@
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 8 | [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md) | 2 | 9 | 4 | 5 | 0 | 0 | 0 | ██████░░░░ 56% |
 | 9 | [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md) | 3 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 11 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 17 | 17 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-leverage) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md) | 3 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-leverage) | ░░░░░░░░░░ 0% |
 | 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
 | 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -197,23 +197,23 @@ _1 blocker resolved._
 
 ### [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md)
 
-**Road to renewal — Foundation (CI oracle, dead tree, token quick wins)** — 0 / 17 done (0%)
+**Road to renewal — Foundation (CI oracle, dead tree, token quick wins)** — 0 / 19 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | CI becomes a trustworthy oracle | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 2 | token quick wins (no lock touched) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | CI becomes a trustworthy oracle | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 2 | token quick wins (no lock touched) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 3 | runtime activation spike (phase-gated; go/no-go recorded first) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
 ### [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md)
 
-**Road to renewal — Leverage (execution flows + external borrows)** — 0 / 17 done (0%)
+**Road to renewal — Leverage (execution flows + documented-failure fixes)** — 0 / 11 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | execution flows | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | external borrows, hook layer (adopt/adapt verdicts recorded) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 3 | roadmap/tracker upgrades (adapt, Source W) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | documented-failure fixes with borrowed shape | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | tracker clarification (docs-only) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-renewal-leverage"></a>
 **Blockers**

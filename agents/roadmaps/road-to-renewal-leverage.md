@@ -4,21 +4,27 @@ status: ready
 parent: road-to-package-renewal.md
 ---
 
-# Road to renewal — Leverage (execution flows + external borrows)
+# Road to renewal — Leverage (execution flows + documented-failure fixes)
 
 > Sub-roadmap of [`road-to-package-renewal.md`](road-to-package-renewal.md).
 > Blocked until Foundation Phase 1 is green (council-locked: fix the oracle
-> before shipping behavior changes it must validate). External mechanisms come
-> from the four tree-level deep-dives (Sources R/E/S/W, provenance in the
-> central roadmap); each borrow lands re-derived against house standards per
-> code-provenance, never as a copy.
+> before shipping behavior changes it must validate).
+>
+> **Harvest-freeze lock note (council 2026-08-02, loop 1, unanimous):** the
+> restraint decision of 2026-07-20 freezes capability-adoption until the first
+> documented external adopter. Phase 2 below carries ONLY borrows that pass
+> the return-prevention discriminator — each closes a RECORDED internal
+> failure and cites its incident. The purely additive borrows are frozen and
+> listed in the central roadmap under "Findings not carried forward". Each
+> borrow lands re-derived against house standards per code-provenance.
 
 ## Phase 1 — execution flows
 
 - [ ] Work-engine batching: collapse the one-CLI-round-trip-per-step loop by
       batching directives per invocation (most steps are no-op precondition
       gates); respect the ADR-124 embedded-engine doctrine — this changes call
-      granularity, not the engine's shape
+      granularity, not the engine's shape; verify: one real roadmap run
+      before/after (invocations per phase recorded in the PR description)
 - [ ] Opt-in parallel step dispatch in `/roadmap:process-full` for independent
       steps (subagent fan-out with verified returns; subagent locks from the
       A1 contract stay: verify every return, N=3 budget, no Hard-Floor
@@ -26,58 +32,62 @@ parent: road-to-package-renewal.md
 - [ ] Flip `roadmap.dashboard_regen_cadence` default from `per_step` to
       `every_5_steps` (file-shape touches still regen immediately per
       roadmap-progress-sync Iron Law 1)
-- [ ] Park the dead-weight command tail (~1,900 lines with no plausible
-      invocation path) behind default-off packs and out of the default
-      projection; keep discovery metadata so they remain findable
-- [ ] Generate cluster hub bodies from frontmatter (35 hub files ×
-      ~80 lines of repeated dispatch ceremony)
+- [ ] Feed the ~1,900-line no-invocation-path finding (analysis estimate —
+      enumerate first: file list + method) as input evidence into
+      `road-to-surface-consolidation.md` Phase 3, which OWNS the
+      utilization-window disposition sweep (window elapses ~2026-08-26;
+      pre-window deletions forbidden by its verify). No parking action here
+- [ ] Generate cluster hub bodies from frontmatter (41 cluster-hub command
+      files, ~87 lines avg of repeated dispatch ceremony) — precondition:
+      name the measured cost the generator removes (projection token footprint
+      of hub bodies, or a concrete hub↔contract drift bug); verify: generated
+      output equals the current hand-written bodies or the intended diff is
+      reviewed, with a regen assertion in CI
 - [ ] Trim `post_tool_use` hook fan-out: 7 concerns run on every tool call on
-      5 platforms — gate concerns by event relevance
+      6 platforms — gate concerns by event relevance; verify: hook manifest
+      shows per-event registration + a unit test asserting a non-matching
+      event skips the gated concerns
 
-## Phase 2 — external borrows, hook layer (adopt/adapt verdicts recorded)
+## Phase 2 — documented-failure fixes with borrowed shape
 
-- [ ] `.worktreeinclude` manifest (adopt, Source W): committed
-      gitignore-syntax manifest of gitignored-but-needed local state to copy
-      into new worktrees; encode our documented worktree traps as explicit
-      allow/deny entries (node_modules symlink, `.augment/` copy, NEVER
-      `.agent-settings.yml`); consume it in worktree-creating flows
-- [ ] PreCompact hook context re-injection (adopt, Source R): before host
+> Discriminator (council loop 1): "would this borrow's absence cause a RETURN
+> to a previously-documented failure state?" Every item cites its incident.
+
+- [ ] Worktree seeding allow/deny list (adapted from Source W's committed
+      manifest, re-scoped to the cheaper rung): encode the documented trap
+      list — symlink `node_modules`, copy `.augment/`, NEVER copy
+      `.agent-settings.yml` — directly in the existing worktree-creating
+      flows; a committed manifest file only if flow-external tools need it.
+      Incidents: the recorded worktree-trap family (partial node_modules
+      fakes failures; pre-push projection trap; stale dist fakes generator
+      drift)
+- [ ] PreCompact context re-injection (adapted from Source R): before host
       compaction, re-inject the load-bearing session state (active roadmap,
-      current step, locks) so compaction cannot orphan the task
-- [ ] Config-protection hook (adopt, Source E): PreToolUse guard that blocks
-      edits weakening gates/thresholds/allowlists in config while a fix-loop
-      is active — "fix the code, not the config"
-- [ ] MCP server health gating (adopt, Source E): probe configured MCP servers
-      at session start; surface dead servers instead of failing mid-task
-- [ ] Session cost/token telemetry hooks (adapt, Source E): per-session token
-      + spend readout via existing telemetry schema (ids + counters only, no
-      free-form fields per PII-exclusion-by-construction)
-- [ ] Fact-forcing edit gate spike (adapt, Source E): deterministic
-      PreToolUse enforcement of source-discovery on structural edits —
-      phase-gated behind a false-positive budget measured on a week of real
-      sessions
-- [ ] USD budget circuit-breaker for subagent fleets (adapt, Source S):
-      hard cap per orchestrated run, cancel-pending on breach; integrates with
-      the existing orchestration telemetry
+      current step, locks) so compaction cannot orphan the task. Incident
+      class: recorded context-decay/session-loss failures that motivated the
+      hot-context cache + `/agent-handoff`
+- [ ] Config-protection hook (adapted from Source E): PreToolUse guard that
+      blocks edits weakening gates/thresholds/allowlists in config while a
+      fix-loop is active — "fix the code, not the config". Incident: the
+      documented allowlist-growth antipattern (>20 entries in one session =
+      the linter is wrong; recorded as a silent budget bypass)
+- [ ] Inline-Brief fallback in orchestrating commands (adapted from Source W):
+      2-3-line essence of each dispatched skill so a missing skill degrades
+      gracefully instead of breaking the flow. Incident: the recorded UI-track
+      failure dispatching to nonexistent skills
 
-## Phase 3 — roadmap/tracker upgrades (adapt, Source W)
+## Phase 3 — tracker clarification (docs-only)
 
-- [ ] `awaiting-evidence` roadmap status: distinct glyph/state for "blocked on
-      evidence only the human can produce" (today approximated by `[~]` or
-      `later/`); wire into dashboard + `/roadmap:process-*` skip logic
-- [ ] Inline-Brief fallback in orchestrating commands: 2-3-line essence of
-      each dispatched skill so a missing skill degrades gracefully instead of
-      breaking the flow (known failure: UI track dispatched to nonexistent
-      skills)
-- [ ] Forward-routing footers on the big orchestrators (`/work`,
-      `/roadmap:process-*`): "when done, if X → route to Y" exit-condition
-      table
-- [ ] In-description cross-skill deflection on measured coin-flip clusters
-      ("for X see sibling-skill" one-liners) — cheaper than dedicated routing
-      rules for low-stakes clusters
+- [ ] Document the existing `## Blockers` section convention
+      (Status/Owner/Blocks/Resolved-when) as the canonical
+      "awaiting-evidence" signal in the roadmap-management skill — no new
+      status glyph (the proposed `awaiting-evidence` state is frozen per the
+      harvest-freeze split; the convention already carries the need)
 
 ## Verification
 
 - Every behavior change re-runs the gates it touches; flow changes get a
-  before/after on one real roadmap run (steps/hour, tokens/step from the
-  orchestration telemetry).
+  before/after on one real roadmap run (steps/hour, tokens/step). Measurement
+  precondition: the run enables `subagents.enabled` + the
+  orchestration/artifact-engagement telemetry for that session — both are
+  default-off, so an unconfigured run has no data source.

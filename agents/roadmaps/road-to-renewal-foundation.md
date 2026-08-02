@@ -26,25 +26,47 @@ parent: road-to-package-renewal.md
 - [ ] Deduplicate `ci` / `ci-strict` into ONE shared gate list with a strict
       flag — strict must be a superset by construction (today it misses 6 gates
       plain `ci` runs); verify with a list-diff assertion in CI
-- [ ] Reconcile the required-check matrix: read live branch protection via
-      `gh api repos/:owner/:repo/branches/main/protection`, then either enforce
-      the documented matrix or shrink the doc to reality (one commit, both
-      surfaces)
+- [ ] Reconcile the required-check matrix, split by surface: (a) doc-shrink —
+      align `branch-protection-policy.md` with what is actually enforced, a
+      normal PR commit; (b) enforce — the branch-protection settings change is
+      an admin API write (`gh api -X PUT .../branches/main/protection`)
+      executed by the maintainer with explicit this-turn confirmation, with
+      the resulting protection JSON recorded as the verification artifact
 - [ ] Umbrella gate runner spike: run N gates in-process (worker pool) instead
       of ~200 sequential tsx cold-starts; pre-register the target (local
-      `task ci` under 5 min) and measure before/after on the same machine
+      `task ci` under 5 min) and measure before/after on the same machine.
+      Constraint: in-process execution requires every pooled gate script to be
+      importable without top-level CLI-guard side effects (`process.exit` at
+      import — the documented bundled-CLI-entry-guard/esbuild landmine class);
+      the spike scope INCLUDES an import-safety audit of the gate scripts —
+      this is where the monolith-script finding re-enters if decomposition
+      proves necessary <!-- carve-out: new-gate-verification -->
 - [ ] Share the build artifact across CI jobs (upload-artifact or composite
-      setup action) instead of repeating `npm ci` + full build per job
+      setup action) instead of repeating `npm ci` + full build per job;
+      verify: PR CI shows one build job + artifact download in dependents,
+      total pipeline wall-clock before/after recorded in the PR description
+- [ ] Dependency-audit gap: enable dependabot (or a scheduled `npm audit` /
+      osv-scanner gate) OR record the explicit decline with reason. Existing
+      supply-chain mitigations stay (`check_secret_leak` gate, npm OIDC
+      Trusted Publishing + provenance in the release workflow); today every
+      workflow runs `npm ci --no-audit` and no lockfile scanner exists
 
 ## Phase 2 — token quick wins (no lock touched)
 
-- [ ] Pack-gate the domain safety floors: finance/legal/strategy/media floors
-      (~8-9k tokens) state "auto-activates when pack-X is installed" but ship
-      in every projection unconditionally — make the projection honor the pack
-      condition; measure with `audit_initial_context` before/after
+- [ ] Record the `audit_initial_context` baseline figure into the central
+      roadmap's Success criteria section BEFORE any Phase 2 change lands
+- [ ] Pack-gate the domain safety floors: finance/legal/strategy/media +
+      history-discipline + scale-discipline floors (~8-9k GPT tokens combined)
+      state "auto-activates when pack-X is installed" but ship in every
+      projection unconditionally — make the projection honor the pack
+      condition. Surface first: the 2026-07-13 consumer-scope-flip decision
+      deliberately kept the finance/legal/strategy floors shipping — cite it
+      and confirm the pack-condition mechanism differs from what that decision
+      rejected before editing
 - [ ] Trim the MCP server below the 25-tool soft cap (currently 31 tools,
-      flagged over-subscribed by `audit_initial_context`); demote the least-used
-      tools to ToolSearch-deferred or drop them
+      flagged over-subscribed by `audit_initial_context`); demotion candidates
+      = the tools that audit report flags, candidate list named in the PR
+      description; verify: tool count ≤ 25 in the audit re-run
 - [ ] De-duplicate the host projection's double command listing (hyphen skill +
       colon command for every command) to one naming scheme — respect the
       single-surface and install-path-convergence council locks when choosing
@@ -53,24 +75,36 @@ parent: road-to-package-renewal.md
       stops THROWING (dead-switch repair only — the default stays `eager-all`
       per the thin-projection honest null; flipping remains parked in
       `later/road-to-thin-flip-under-anchor-scoring.md`)
-- [ ] Re-run `audit_initial_context` and record the new footprint in the
-      central roadmap's success-criteria table
+- [ ] Re-run `audit_initial_context` — including the `.windsurfrules`
+      single-blob projection in the before/after — and record the new
+      footprint in the central roadmap's Success criteria section
 
 ## Phase 3 — runtime activation spike (phase-gated; go/no-go recorded first)
 
 > Gate: run only after Phase 2's re-measure. If the footprint is already at
 > target, record no-go and close this phase as `[-]` with the measurement.
+> Optional input: the kernel/router value re-baseline (ADR-hygiene Phase 2)
+> feeds this go/no-go if it has landed; the gate does NOT wait on it.
+> Scope line: semantic retrieval (embedding-based trigger matching) is OUT of
+> scope — the resolver uses keyword/phrase matching only. Reopen condition:
+> the trigger-precision pass caps below the pre-registered injection-precision
+> threshold, indicating the keyword-mechanism ceiling rather than an
+> implementation gap.
 
-- [ ] Pre-register the spike: thresholds (token delta, injection precision on
-      the 678-trigger set, zero missed kernel loads), corpus, and abort
-      criteria — written BEFORE any code
+- [ ] Pre-register the spike: thresholds written BEFORE any code — token
+      delta, injection precision on the 678-trigger set, AND a non-kernel
+      quality arm: zero `must_not` regressions and `must_include` rate within
+      δ of eager on the ADR-202 anchor-scoring corpus (the thin-flip
+      instrument in `later/road-to-thin-flip-under-anchor-scoring.md`), plus a
+      non-kernel missed-load (recall) threshold on a labelled prompt corpus;
+      corpus and abort criteria named in the same record
+- [ ] Trigger-precision pass: 459/678 triggers are bare keywords — promote the
+      noisiest to phrases or add a precision budget, else the resolver injects
+      everything and measures nothing (precondition for the spike)
 - [ ] Layer-1 resolver spike: SessionStart/UserPromptSubmit hook matches prompt
       + touched paths against `dist/router.json` triggers and injects only
       matched non-kernel rule bodies (kernel always full); never-block shim
       (resolver failure → eager fallback, never a blocked turn)
-- [ ] Trigger-precision pass first: 459/678 triggers are bare keywords —
-      promote the noisiest to phrases or add a precision budget, else the
-      resolver injects everything and measures nothing
 - [ ] Run the pre-registered measurement; record win/loss in the central
       roadmap; a loss parks this permanently next to ADR-054 with the numbers
 - [ ] Reconcile `rule-router.md` with reality either way: today it documents a
