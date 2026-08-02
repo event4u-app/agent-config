@@ -15,6 +15,13 @@ finding generator:
 | `lean-crud` | **the null** | The gate. A correct lens says "nothing to cut" |
 | `flatten-longer` | `flatten:` | The simpler form is one line **longer** — a size-only lens stays silent here |
 
+**Naming note.** `lean-crud` ships its companion test as `submitted_test.ts`, not
+`submitted.test.ts`. Vitest's include glob is `tests/**/*.test.{ts,tsx}`, so a
+fixture named the natural way is collected as a real suite and fails on its
+deliberately unresolvable imports — it did, on one CI shard. No other fixture
+under `tests/fixtures/` uses the `*.test.ts` form; matching that convention is
+cheaper than widening the global exclude.
+
 `expected.yaml` fields:
 
 - `verdict` — `lean` / `trim` / `overbuilt`
