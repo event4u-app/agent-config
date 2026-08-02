@@ -76,7 +76,19 @@ governance layer.
       root, measured unit count and disposition. It does NOT yet cover the full
       ~190 population; the report states that limit in its own scope section
       rather than implying broader coverage. Deferred rather than closed so the
-      remaining coverage stays visible. -->
+      remaining coverage stays visible.
+      ADVANCED 2026-08-02 — `src/scripts/sweep_dead_scan_roots.ts` +
+      `agents/evidence/reports/gate-scope-sweep.md` measure the FULL population
+      deterministically and re-runnably: 213 gate scripts (the ~190 estimate was
+      low), 26 confirmed missing roots with positive read evidence, 13 of them
+      class A, 15 unproven. Four of the class-A gates are OUTSIDE the censused
+      14 — `audit_user_type_axis`, `lint_command_routing`,
+      `lint_media_policy_linkage`, `lint_role_experiences` — which answers the
+      base-rate question the census could not: the 14 were an undercount, not
+      the population. STILL `[~]`: the sweep reports roots that are DEAD, not
+      "root + unit count for every gate", so the census's own acceptance
+      criterion is not met. Repairs are held under `dead-gate-finding-triage`
+      for the same reason the census landed 3 of 14. -->
 - [~] Fix the 14 confirmed-dead scan roots to the real ones
       (`src/rules`, `src/skills`, `src/domains/**/command.md`,
       `src/agent-src/personas`, …), preferring the shared resolver over new
