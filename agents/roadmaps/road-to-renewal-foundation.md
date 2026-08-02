@@ -129,10 +129,32 @@ parent: road-to-package-renewal.md
       the spike scope INCLUDES an import-safety audit of the gate scripts —
       this is where the monolith-script finding re-enters if decomposition
       proves necessary <!-- carve-out: new-gate-verification -->
-- [ ] Share the build artifact across CI jobs (upload-artifact or composite
-      setup action) instead of repeating `npm ci` + full build per job;
-      verify: PR CI shows one build job + artifact download in dependents,
-      total pipeline wall-clock before/after recorded in the PR description
+- [-] Share the build artifact across CI jobs <!-- declined 2026-08-02: premise falsified by measurement, not skipped for cost -->
+      **Declined — the step's premise does not survive measurement.** Numbers
+      taken this session, both local and from the last `tests.yml` run on `main`
+      (run 30751418089):
+      * `npm run build` locally: **3 seconds**. `dist/` is **16 MB / 1,144
+        tracked files**.
+      * CI jobs run **in parallel**, so pipeline wall-clock ≈ the slowest job
+        (Node Tests ubuntu shard 3/4 at **286s**), not the sum. Observed job
+        spread: 47s–286s.
+      * A `needs: build` barrier therefore ADDS one job's checkout +
+        setup-node + `npm ci` + build (~40–60s) to the FRONT of every
+        dependent's critical path, in order to remove **3s** of build from
+        each. Plus 16 MB upload once and 16 MB download per dependent job
+        (there are 20+, incl. 2×4 sharded matrices).
+      * The step assumes artifact sharing also removes the repeated `npm ci`.
+        It cannot: the dependents need `node_modules` to run at all, and
+        `actions/setup-node@v4` already has `cache: 'npm'` configured in every
+        job, so the download half is cached today.
+      Net: strictly worse wall-clock for a maintenance gain. Recorded rather
+      than implemented, per the same evidence discipline applied to the
+      dependency-audit premise and the `task ci` baseline in this phase.
+      **Surviving follow-up (not done here — no measured win, real CI risk):**
+      the six near-identical setup blocks in `tests.yml` could collapse into a
+      composite action for readability. That is a maintenance change, not a
+      wall-clock one, and editing a workflow newly subjects it to `actionlint`
+      (which lints only CHANGED workflow files), so it belongs in its own PR
 - [x] Dependency-audit gap: `.github/dependabot.yml` added — weekly grouped
       `npm` + `github-actions` version updates (plus GitHub's ungrouped
       security updates), monthly for the two non-shipped manifests
@@ -147,8 +169,12 @@ parent: road-to-package-renewal.md
 
 ## Phase 2 — token quick wins (no lock touched)
 
-- [ ] Record the `audit_initial_context` baseline figure into the central
-      roadmap's Success criteria section BEFORE any Phase 2 change lands
+- [x] Record the `audit_initial_context` baseline figure into the central
+      roadmap's Success criteria section BEFORE any Phase 2 change lands —
+      recorded 2026-08-02T15:12:25Z, no Phase 2 change had landed:
+      **85,880 GPT tok** always-on across 110 files (`.claude` / `.augment` /
+      `.cursor`), 69,582 for the `.windsurfrules` single blob, 4,839 for the
+      31 MCP tool schemas. Target on the primary surface: ≤ 75,880
 - [ ] Pack-gate the domain safety floors: finance/legal/strategy/media +
       history-discipline + scale-discipline floors (~8-9k GPT tokens combined)
       state "auto-activates when pack-X is installed" but ship in every
