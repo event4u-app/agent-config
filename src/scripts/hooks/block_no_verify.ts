@@ -33,6 +33,34 @@ const _SHELL_SEPARATORS: ReadonlySet<string> = new Set(['&&', '||', ';', '|']);
 const _NO_VERIFY_FLAGS: ReadonlySet<string> = new Set(['--no-verify']);
 const _NO_VERIFY_SHORT: ReadonlySet<string> = new Set(['-n']);
 const _HOOKS_PATH_RE = /^core\.hooksPath\s*=/i;
+/** Bare key form, as `git config core.hooksPath <value>` spells it. */
+const _HOOKS_PATH_KEY_RE = /^core\.hooksPath$/i;
+/**
+ * `git config` flags that make the invocation a READ or a RESTORE rather than
+ * a write. `--unset` removes the override — the opposite of disabling hooks —
+ * so it stays allowed, or the gate would block its own remediation.
+ */
+/** Global `git` options that consume the following token as their value. */
+const _GIT_GLOBAL_OPTS_WITH_VALUE: ReadonlySet<string> = new Set([
+    '-C',
+    '-c',
+    '--config',
+    '--git-dir',
+    '--work-tree',
+    '--namespace',
+    '--exec-path',
+    '--super-prefix',
+]);
+const _CONFIG_READ_OR_RESTORE: ReadonlySet<string> = new Set([
+    '--get',
+    '--get-all',
+    '--get-regexp',
+    '--get-urlmatch',
+    '--list',
+    '-l',
+    '--unset',
+    '--unset-all',
+]);
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
@@ -178,7 +206,80 @@ function _git_base(tokens: string[]): string[] | null {
     return null;
 }
 
+/**
+ * `git config … core.hooksPath <value>` — the subcommand form of the hooksPath
+ * override, distinct from the `-c` / `--config` global-option form handled in
+ * `_is_blocked`.
+ *
+ * Closed by road-to-governance-invariants Phase 1 after the S0.2 spike measured
+ * it: `git-history-discipline` already claimed `core.hooksPath` overrides were
+ * "deterministically blocked", and only the inline `-c` form was. That made
+ * `git config core.hooksPath /dev/null` → `git commit` a two-step sequence
+ * whose every step this gate allowed and whose composition is exactly the
+ * outcome the gate exists to prevent.
+ *
+ * Deliberately narrow, per the 2026-08-02 council cut (option ii — widen only
+ * the exact shapes with no plausible legitimate use):
+ *   - a READ (`--get`, `--list`, or the key with no value) is allowed;
+ *   - `--unset` is allowed — it restores hooks, it does not disable them;
+ *   - non-git ways of disabling a hook (`mv`/`chmod`/`rm` on `.git/hooks/*`)
+ *     are NOT matched here. Recognising them would turn this guard into a
+ *     shell sandbox and those verbs have ordinary legitimate uses. That gap
+ *     is published rather than papered over — see the S0.2 spike.
+ */
+function _is_config_hookspath_write(git_tokens: string[]): [boolean, string] {
+    const rest = git_tokens.slice(1);
+    // The subcommand is the first token that is neither a global option nor
+    // the VALUE of one — `git -C /repo config …` must still resolve to
+    // `config`, not to `/repo`.
+    let subIdx = -1;
+    for (let k = 0; k < rest.length; k += 1) {
+        const tok = rest[k] as string;
+        if (!tok.startsWith('-')) {
+            subIdx = k;
+            break;
+        }
+        if (_GIT_GLOBAL_OPTS_WITH_VALUE.has(tok)) {
+            k += 1; // consume its value
+        }
+    }
+    if (subIdx === -1 || rest[subIdx] !== 'config') {
+        return [false, ''];
+    }
+    const args = rest.slice(subIdx + 1);
+    if (args.some((t) => _CONFIG_READ_OR_RESTORE.has(t))) {
+        return [false, ''];
+    }
+    for (let k = 0; k < args.length; k += 1) {
+        const tok = args[k] as string;
+        // `core.hooksPath=<value>` — one token, always a write.
+        if (_HOOKS_PATH_RE.test(tok)) {
+            return [
+                true,
+                `'git config ${tok}' disables git hooks via hooksPath (git-history-discipline)`,
+            ];
+        }
+        if (!_HOOKS_PATH_KEY_RE.test(tok)) {
+            continue;
+        }
+        // Bare key: a write only when a value follows.
+        const next = args.slice(k + 1).find((t) => !t.startsWith('-'));
+        if (next !== undefined) {
+            return [
+                true,
+                `'git config ${tok} ${next}' disables git hooks via hooksPath (git-history-discipline)`,
+            ];
+        }
+        return [false, ''];
+    }
+    return [false, ''];
+}
+
 function _is_blocked(git_tokens: string[]): [boolean, string] {
+    const [cfgBlocked, cfgReason] = _is_config_hookspath_write(git_tokens);
+    if (cfgBlocked) {
+        return [cfgBlocked, cfgReason];
+    }
     let i = 1; // skip 'git'
     while (i < git_tokens.length) {
         const tok = git_tokens[i] as string;
