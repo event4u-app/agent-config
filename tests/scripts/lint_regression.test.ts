@@ -129,3 +129,77 @@ describe('lint_regression — formatters + status map', () => {
 
 // --- Golden parity on the REAL REPO ----------------------------------------
 
+
+// --- Baseline-collection integrity -----------------------------------------
+//
+// The gate reported a "new file with issues" on an UNMODIFIED tree for as long
+// as two defects stacked: the baseline linter died in the detached worktree
+// (no node_modules) and a failed run silently became an empty baseline, which
+// the disjoint guard exempts; and once the baseline did collect, its keys were
+// absolute paths under the temp dir while the working-tree run emitted
+// repo-relative ones, so the two maps shared no key. Either defect alone makes
+// every real regression unreportable — a regression needs the file present in
+// both maps.
+
+describe('lint_regression baseline key normalisation', () => {
+    it('strips the temp-worktree prefix so baseline keys match working-tree keys', () => {
+        const out = reg._relativise(
+            {
+                results: [
+                    { file: '/tmp/lint-baseline-abc/src/rules/a.md', status: 'pass_with_warnings' },
+                    { file: '/tmp/lint-baseline-abc/src/rules/b.md', status: 'pass' },
+                ],
+            },
+            '/tmp/lint-baseline-abc',
+        );
+        expect((out.results ?? []).map((r) => r.file)).toEqual(['src/rules/a.md', 'src/rules/b.md']);
+    });
+
+    it('leaves already-relative keys untouched', () => {
+        const out = reg._relativise(
+            { results: [{ file: 'src/rules/a.md', status: 'pass' }] },
+            '/tmp/lint-baseline-abc',
+        );
+        expect((out.results ?? [])[0]?.file).toBe('src/rules/a.md');
+    });
+
+    it('does not strip a path that merely shares a prefix segment', () => {
+        const out = reg._relativise(
+            { results: [{ file: '/tmp/lint-baseline-abcdef/src/a.md', status: 'pass' }] },
+            '/tmp/lint-baseline-abc',
+        );
+        expect((out.results ?? [])[0]?.file).toBe('/tmp/lint-baseline-abcdef/src/a.md');
+    });
+
+    it('preserves status and issues while re-rooting', () => {
+        const out = reg._relativise(
+            {
+                results: [
+                    {
+                        file: '/tmp/wt/src/rules/a.md',
+                        status: 'fail',
+                        issues: [{ code: 'missing_frontmatter' }],
+                    },
+                ],
+            },
+            '/tmp/wt',
+        );
+        const map = reg.build_status_map(out);
+        expect(map['src/rules/a.md']?.status).toBe('fail');
+        expect([...(map['src/rules/a.md']?.codes ?? [])]).toEqual(['missing_frontmatter']);
+    });
+});
+
+describe('lint_regression empty-baseline guard', () => {
+    it('an empty baseline against a populated tree is not comparable', () => {
+        // The pre-fix behaviour: compare() reports every current finding as a
+        // "new file", which is what made the gate fire on an unmodified tree.
+        // main() now refuses the run instead; this pins the shape the guard
+        // exists to reject.
+        const delta = reg.compare({}, {
+            'src/rules/a.md': { status: 'pass_with_warnings', codes: new Set(['long_rule']) },
+        });
+        expect(delta.new_files.map((nf) => nf.file)).toEqual(['src/rules/a.md']);
+        expect(delta.regressions).toEqual([]);
+    });
+});
