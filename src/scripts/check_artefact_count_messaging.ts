@@ -33,7 +33,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { canonical_counts } from './check_command_count_messaging.js';
-import { count } from './update_counts.js';
+import { count, TARGETS } from './update_counts.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -164,6 +164,93 @@ export function scan_structured(
     return { findings, seen };
 }
 
+// --- Anchor-coverage pass (road-to-reproducible-artefact-counts) ----------
+//
+// The two gates used to overlap only by accident. This scanner flags any
+// count-shaped prose; `update_counts` rewrites a hand-written list of
+// anchors. Nothing asserted the second list covered the first, so positions
+// existed that the scanner could turn red and the generator could not fix —
+// the README Commands badge and the getting-started browse line drifted to
+// 191 against a canonical 192 exactly there, each explicitly left unanchored
+// to "avoid double-ownership". The reconciliation was a human's job, and the
+// gate's own advice said so ("run update_counts … OR correct the prose").
+//
+// This pass removes the human: every position this scanner can flag must be
+// rewritable by the generator, or be a generated file whose source is. A new
+// count-shaped sentence with no anchor now fails CI as a coverage gap.
+
+/**
+ * Scanner kind → the generator kinds that legitimately write it.
+ *
+ * One prose kind can have several canonical numbers and they are NOT
+ * interchangeable: "N commands" in prose means ACTIVE commands (total minus
+ * deprecation shims), and a scoped-projection sentence carries the projected
+ * skill count beside the catalog total. Anchoring an active-count position
+ * to the raw `commands` total would silently write the wrong number the day
+ * a command is superseded — which is why this is a mapping and not equality.
+ */
+const ANCHOR_KINDS: Readonly<Record<string, readonly string[]>> = {
+    skills: ['skills', 'skills_scoped'],
+    commands: ['commands', 'commands_active'],
+    rules: ['rules'],
+    guidelines: ['guidelines'],
+    personas: ['personas'],
+};
+
+/**
+ * Surfaces regenerated from an anchored source — exempt because fixing the
+ * source fixes them. Each entry names the generator, so the exemption stays
+ * falsifiable rather than becoming a place to hide drift.
+ */
+export const GENERATED_DOWNSTREAM: Readonly<Record<string, string>> = {
+    'docs/proof.md': 'generated from docs/CLAIMS.md by src/scripts/build_proof.ts',
+};
+
+export interface CoverageGap {
+    file: string;
+    line: number;
+    kind: string;
+    text: string;
+}
+
+/**
+ * Positions this scanner can flag that `update_counts` cannot rewrite.
+ *
+ * A position counts as anchored when some `TARGETS` pattern for the same
+ * file, bound to a compatible kind, matches the same line.
+ */
+export function anchor_coverage_gaps(root: string = ROOT): CoverageGap[] {
+    const anchorsByFile = new Map<string, ReadonlyArray<[string, string]>>();
+    for (const [rel, patterns] of TARGETS) {
+        anchorsByFile.set(rel, patterns);
+    }
+
+    const gaps: CoverageGap[] = [];
+    for (const rel of SURFACES) {
+        if (rel in GENERATED_DOWNSTREAM) continue;
+        const p = path.join(root, rel);
+        if (!fs.existsSync(p)) continue;
+        const lines = fs.readFileSync(p, 'utf-8').split('\n');
+        const anchors = anchorsByFile.get(rel) ?? [];
+        for (const [kind, pattern] of KIND_PATTERNS) {
+            const allowed = ANCHOR_KINDS[kind] ?? [kind];
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i]!;
+                const re = new RegExp(pattern.source, pattern.flags);
+                if (!re.test(line)) continue;
+                const anchored = anchors.some(
+                    ([raw, anchorKind]) =>
+                        allowed.includes(anchorKind) && new RegExp(raw).test(line),
+                );
+                if (!anchored) {
+                    gaps.push({ file: rel, line: i + 1, kind, text: line.trim().slice(0, 100) });
+                }
+            }
+        }
+    }
+    return gaps;
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const QUIET = argv.includes('--quiet');
     const expected: Record<string, number> = {};
@@ -213,29 +300,55 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
     }
 
-    if (allFindings.length === 0 && inconsistent.length === 0) {
+    // Anchor coverage — every position this gate can flag must be a position
+    // `update_counts` can rewrite, so the two never need a human to reconcile.
+    const gaps = anchor_coverage_gaps();
+
+    if (allFindings.length === 0 && inconsistent.length === 0 && gaps.length === 0) {
         if (!QUIET) {
-            process.stdout.write('✅  All artefact-count prose in sync with source.\n');
+            process.stdout.write(
+                '✅  All artefact-count prose in sync with source, every position anchored.\n',
+            );
         }
         return 0;
     }
 
-    process.stdout.write(
-        `❌  Artefact-count messaging drift — ${allFindings.length} mismatch(es):\n`,
-    );
-    for (const f of allFindings) {
-        const tag = f.approx ? ' (approximation "~" not allowed on flagship surfaces)' : '';
+    if (allFindings.length > 0 || inconsistent.length > 0) {
         process.stdout.write(
-            `    ${f.file}:${f.line}: ${f.kind} says ${f.found}, expected ${f.expected}${tag}\n`,
+            `❌  Artefact-count messaging drift — ${allFindings.length} mismatch(es):\n`,
+        );
+        for (const f of allFindings) {
+            const tag = f.approx ? ' (approximation "~" not allowed on flagship surfaces)' : '';
+            process.stdout.write(
+                `    ${f.file}:${f.line}: ${f.kind} says ${f.found}, expected ${f.expected}${tag}\n`,
+            );
+        }
+        for (const line of inconsistent) {
+            process.stdout.write(`    internal inconsistency — ${line}\n`);
+        }
+        process.stdout.write(
+            '\nFix: run `./scripts-run src/scripts/update_counts` — every checked position\n' +
+                'is anchored, so the generator can write it. Never hand-type a count.\n',
         );
     }
-    for (const line of inconsistent) {
-        process.stdout.write(`    internal inconsistency — ${line}\n`);
+
+    if (gaps.length > 0) {
+        process.stdout.write(
+            `❌  Anchor-coverage gap — ${gaps.length} position(s) this gate checks but\n` +
+                '    `update_counts` cannot rewrite:\n',
+        );
+        for (const g of gaps) {
+            process.stdout.write(`    ${g.file}:${g.line}: ${g.kind} — ${g.text}\n`);
+        }
+        process.stdout.write(
+            '\nFix: add an anchor for each position to `TARGETS` in\n' +
+                '`src/scripts/update_counts.ts`, bound to the kind that position\n' +
+                'actually carries (`commands_active` for active-command mentions,\n' +
+                '`skills_scoped` for the projected-skill figure). If the file is\n' +
+                'generated from an anchored source, register it in\n' +
+                '`GENERATED_DOWNSTREAM` with the generator that produces it.\n',
+        );
     }
-    process.stdout.write(
-        '\nFix: run `./scripts-run src/scripts/update_counts` for anchored positions,\n' +
-            'or correct the prose to the canonical number (never hand-type a new one).\n',
-    );
     return 1;
 }
 
