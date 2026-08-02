@@ -53,9 +53,9 @@ describe('check_portability — behavioural spec', () => {
     });
 
     // --- Layer 1: project-name + project-domain violations in scanned dirs. ---
-    it('flags a project-name word-boundary match in .agent-src.uncondensed', () => {
+    it('flags a project-name word-boundary match in src/', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/skills/x/SKILL.md'),
+            path.join(tmp, 'src/skills/x/SKILL.md'),
             'This belongs to the widget project.\n',
         );
         const { violations, detected } = cp.scan_all(tmp);
@@ -68,7 +68,7 @@ describe('check_portability — behavioural spec', () => {
     });
 
     it('flags a project-domain pattern (name.tld)', () => {
-        write(path.join(tmp, '.agent-src.uncondensed/rules/r.md'), 'visit widget.com today\n');
+        write(path.join(tmp, 'src/rules/r.md'), 'visit widget.com today\n');
         const { violations } = cp.scan_all(tmp);
         const domain = violations.filter((v) => v.pattern_name === 'project-domain');
         expect(domain).toHaveLength(1);
@@ -76,7 +76,7 @@ describe('check_portability — behavioural spec', () => {
     });
 
     it('flags a project-derivative as a warning', () => {
-        write(path.join(tmp, '.agent-src.uncondensed/rules/r.md'), 'db is acme_main here\n');
+        write(path.join(tmp, 'src/rules/r.md'), 'db is acme_main here\n');
         const { violations } = cp.scan_all(tmp);
         const deriv = violations.filter((v) => v.pattern_name === 'project-derivative');
         expect(deriv).toHaveLength(1);
@@ -87,7 +87,7 @@ describe('check_portability — behavioural spec', () => {
     // --- Allowlist + code-fence + frontmatter skipping. ---
     it('skips lines matched by the allowlist', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/rules/r.md'),
+            path.join(tmp, 'src/rules/r.md'),
             'agent-config is the package; widget agent-config\n',
         );
         // The allowlist `agent-config` matches the line → whole line skipped,
@@ -97,7 +97,7 @@ describe('check_portability — behavioural spec', () => {
 
     it('skips matches inside fenced code blocks', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/rules/r.md'),
+            path.join(tmp, 'src/rules/r.md'),
             '```\nwidget inside fence\n```\nwidget outside\n',
         );
         const v = cp.scan_all(tmp).violations;
@@ -107,7 +107,7 @@ describe('check_portability — behavioural spec', () => {
 
     it('skips a top-of-file YAML frontmatter delimiter line', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/rules/r.md'),
+            path.join(tmp, 'src/rules/r.md'),
             '---\ntitle: widget\n---\nbody widget\n',
         );
         // Line 1 `---` is skipped as frontmatter; the `widget` on lines 2 and 4
@@ -119,7 +119,7 @@ describe('check_portability — behavioural spec', () => {
     // --- Layer 3: task-invocation detector (artefact subdirs only). ---
     it('flags an inline `task <cmd>` invocation in a skill', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/skills/s/SKILL.md'),
+            path.join(tmp, 'src/skills/s/SKILL.md'),
             'Run `task ci-fast` to lint.\n',
         );
         const v = cp.scan_all(tmp).violations.filter((x) => x.pattern_name === 'task-invocation');
@@ -129,7 +129,7 @@ describe('check_portability — behavioural spec', () => {
 
     it('flags a `task <cmd>` line inside a fenced code block', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/commands/c.md'),
+            path.join(tmp, 'src/commands/c.md'),
             '```bash\ntask sync\n```\n',
         );
         const v = cp.scan_all(tmp).violations.filter((x) => x.pattern_name === 'task-invocation');
@@ -139,7 +139,7 @@ describe('check_portability — behavioural spec', () => {
 
     it('exempts the self-documenting augment-portability rule from the task detector', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/rules/augment-portability.md'),
+            path.join(tmp, 'src/rules/augment-portability.md'),
             'Never write `task ci` in an artefact.\n',
         );
         const v = cp.scan_all(tmp).violations.filter((x) => x.pattern_name === 'task-invocation');
@@ -149,7 +149,7 @@ describe('check_portability — behavioural spec', () => {
     // --- Layer 4: CLI-bypass detector. ---
     it('flags a direct python3 script invocation and names the CLI replacement', () => {
         write(
-            path.join(tmp, '.agent-src.uncondensed/skills/s/SKILL.md'),
+            path.join(tmp, 'src/skills/s/SKILL.md'),
             'Run `python3 scripts/memory_lookup.py` to query.\n',
         );
         const v = cp.scan_all(tmp).violations.filter((x) => x.pattern_name.startsWith('cli-bypass'));
