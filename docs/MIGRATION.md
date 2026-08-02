@@ -16,7 +16,7 @@ releaser here on every `release:major`.
 
 | Surface | Committed | Deprecation notice due | Removal due | Reversal condition |
 |---|---|---|---|---|
-| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`) | 2026-07-28 | next major after 9.x | the major after that | A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`). Until then `enabled: false` is permanent. |
+| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`) | 2026-07-28 | next major after 9.x | the major after that | A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`). Until then `enabled: false` is permanent. **Its parser pair (`web-tree-sitter@0.24.7` / `tree-sitter-wasms@0.1.13`, ~51 MB unpacked) left `dependencies` ahead of the schedule — the runtime paths (CLI leaf, nudge hook, skill, rule) stay registered until the removal date above, but re-enabling now also means installing that ABI-locked pair yourself.** |
 
 **Adding a row:** any change that ships a capability as default-off-pending-removal,
 or that promises a future breaking removal, gets a row here in the same commit

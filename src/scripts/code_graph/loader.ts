@@ -2,10 +2,11 @@
  * WASM tree-sitter loader for the code-graph engine.
  *
  * Pinned pair (ABI-verified 2026-07-23): `web-tree-sitter@0.24.7` +
- * `tree-sitter-wasms@0.1.13` → grammar ABI 14. The ABI smoke test
- * (`tests/scripts/code_graph_abi.test.ts`) asserts this pairing loads and
- * parses before merge; a bump to either dependency re-runs it. No network,
- * no node-gyp — grammars load from `node_modules` via the resolved path.
+ * `tree-sitter-wasms@0.1.13` → grammar ABI 14. The ABI smoke test lives in
+ * `tests/scripts/code_graph.test.ts` and skips when the pair is absent, which
+ * is the default — the pair is no longer a package dependency (see
+ * `INSTALL_HINT` below). No network, no node-gyp — grammars load from
+ * `node_modules` via the resolved path.
  *
  * web-tree-sitter 0.24.x is CJS with a single default export (the Parser
  * class) and the classic `Parser.Language.load()` API; we reach it through
@@ -51,10 +52,31 @@ interface ParserStatic {
     Language: { load(wasmPath: string): Promise<TsLanguage> };
 }
 
+/**
+ * The parser pair is NOT a package dependency. The engine is permanently
+ * `enabled: false` (measured recall 0.365 vs grep 0.797), so shipping ~51 MB of
+ * WASM to every consumer for a path none of them can reach was pure install
+ * cost. Whoever re-enables the engine installs the ABI-locked pair themselves —
+ * and this message is where that pin now lives, since `check_dependency_floors`
+ * only sees the `dependencies` block.
+ */
+const INSTALL_HINT =
+    'the code-graph engine needs its parser pair, which this package no longer ships ' +
+    '(the engine is disabled by a recorded null result). Install the ABI-locked pair:\n' +
+    '  npm i web-tree-sitter@0.24.7 tree-sitter-wasms@0.1.13\n' +
+    'Both versions are exact on purpose — the pair is ABI-coupled (grammar ABI 14) ' +
+    'and must move together.';
+
 let _wasmDir: string | null = null;
 function wasmDir(): string {
     if (_wasmDir === null) {
-        _wasmDir = path.join(path.dirname(require.resolve('tree-sitter-wasms/package.json')), 'out');
+        let pkgJson: string;
+        try {
+            pkgJson = require.resolve('tree-sitter-wasms/package.json');
+        } catch {
+            throw new Error(`tree-sitter-wasms is not installed — ${INSTALL_HINT}`);
+        }
+        _wasmDir = path.join(path.dirname(pkgJson), 'out');
     }
     return _wasmDir;
 }
@@ -72,7 +94,13 @@ function _Parser(): ParserStatic {
     // Require exactly once and cache the class reference — repeated
     // createRequire calls under tsx can hand back a module view whose static
     // `Language` is not yet populated, which breaks the second grammar load.
-    if (_mod === null) _mod = require('web-tree-sitter') as ParserStatic;
+    if (_mod === null) {
+        try {
+            _mod = require('web-tree-sitter') as ParserStatic;
+        } catch {
+            throw new Error(`web-tree-sitter is not installed — ${INSTALL_HINT}`);
+        }
+    }
     return _mod;
 }
 

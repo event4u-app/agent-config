@@ -39,7 +39,17 @@ describe('check_dependency_floors', () => {
     });
 
     it('GREEN: an exact pin listed in EXACT_PIN_EXCEPTIONS passes', () => {
-        expect(evaluate({ 'web-tree-sitter': '0.24.7' })).toEqual([]);
+        // Injected list: the shipped one is empty since the code-graph parser
+        // pair left `dependencies`, but the branch must still work for the next
+        // exception — a fake production entry would be the dishonest alternative.
+        expect(
+            evaluate({ 'some-abi-locked-pkg': '0.24.7' }, { 'some-abi-locked-pkg': 'ABI-locked' }),
+        ).toEqual([]);
+    });
+
+    it('RED: the shipped exception list is empty — no exact pin is grandfathered', () => {
+        expect(Object.keys(EXACT_PIN_EXCEPTIONS)).toEqual([]);
+        expect(evaluate({ 'web-tree-sitter': '0.24.7' })).toHaveLength(1);
     });
 
     it('RED: an exact pin NOT listed is rejected', () => {

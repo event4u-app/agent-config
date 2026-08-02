@@ -124,8 +124,7 @@ tasks:
       Release gate, runnable locally before cutting a release: packs the
       current checkout into a tarball (or uses RELEASE_TARBALL), installs
       it into an isolated global npm prefix, upgrades from a 9.7.0
-      baseline (fetched once, or BASELINE_TARBALL), exercises the
-      code-graph WASM load on a fixture repo, boots the GUI server
+      baseline (fetched once, or BASELINE_TARBALL), boots the GUI server
       headless and pings it, runs reach:doctor, smokes the repo-side
       secret gate, then uninstalls cleanly. Needs network (npm install -g
       resolves real dependencies) — expect several minutes. Usage:
