@@ -108,6 +108,10 @@ jobs:
           echo "Matched CHANGELOG headings:"
           cat /tmp/cl-match.txt
           # Assert the section under the first matching heading is non-empty.
+          # The single quotes below fence a JS program — `$&` and friends are
+          # JavaScript, and shell expansion would corrupt them. Directive must
+          # stay on the line directly above the command it covers.
+          # shellcheck disable=SC2016
           node -e '
           const fs = require("node:fs");
           const version = process.argv[1];

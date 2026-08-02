@@ -99,10 +99,12 @@
         "happy-dom": "^20.9.0",
         "js-tiktoken": "^1.0.21",
         "publint": "^0.3.22",
+        "tree-sitter-wasms": "0.1.13",
         "tsx": "^4.22.3",
         "typescript": "^5.9.3",
         "vite": "^5.4.21",
-        "vitest": "^2.1.9"
+        "vitest": "^2.1.9",
+        "web-tree-sitter": "0.24.7"
     },
     "dependencies": {
         "@fastify/static": "^10.1.2",

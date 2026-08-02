@@ -52,10 +52,14 @@ is smaller afterwards.
       install-payload delta is measured and stated in the PR body. **Pin the ABI
       pair (`web-tree-sitter@0.24.7` / `tree-sitter-wasms@0.1.13`) in the optional
       package** — this pair is version-coupled and has a known teardown trap.
-      <!-- council 2026-08-02 (sonnet-4-5 + gpt-4o, 2 rounds): mechanism D — no
-      dependency entry at all, NOT optionalDependencies (npm installs those by
-      default, so the criterion would fail) and NOT a second published package
-      (prohibitive for one maintainer). Scope narrowed in R2 to the deps only:
+      <!-- council 2026-08-02 (sonnet-4-5 + gpt-4o, 2 rounds): NOT
+      optionalDependencies (npm installs those by default, so the criterion
+      would fail) and NOT a second published package (prohibitive for one
+      maintainer). Landed as `devDependencies` — npm does not install those for
+      consumers, so the criterion holds while the engine's own 49 tests keep
+      running in CI. The council's mechanism D (no entry at all) would have
+      silently deleted that coverage; CI caught it and this is the amendment.
+      Scope narrowed in R2 to the deps only:
       removing the CLI leaf / nudge hook / skill / rule now would ship a
       breaking change in a minor and retroactively void the MIGRATION.md
       deprecation window, which promises removal "the major after next". The

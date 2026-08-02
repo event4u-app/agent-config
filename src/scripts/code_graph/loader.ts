@@ -3,10 +3,10 @@
  *
  * Pinned pair (ABI-verified 2026-07-23): `web-tree-sitter@0.24.7` +
  * `tree-sitter-wasms@0.1.13` → grammar ABI 14. The ABI smoke test lives in
- * `tests/scripts/code_graph.test.ts` and skips when the pair is absent, which
- * is the default — the pair is no longer a package dependency (see
- * `INSTALL_HINT` below). No network, no node-gyp — grammars load from
- * `node_modules` via the resolved path.
+ * `tests/scripts/code_graph.test.ts`; it runs in this repo because the pair is
+ * a devDependency. Consumers install neither (see `INSTALL_HINT` below). No
+ * network, no node-gyp — grammars load from `node_modules` via the resolved
+ * path.
  *
  * web-tree-sitter 0.24.x is CJS with a single default export (the Parser
  * class) and the classic `Parser.Language.load()` API; we reach it through
@@ -53,15 +53,16 @@ interface ParserStatic {
 }
 
 /**
- * The parser pair is NOT a package dependency. The engine is permanently
- * `enabled: false` (measured recall 0.365 vs grep 0.797), so shipping ~51 MB of
- * WASM to every consumer for a path none of them can reach was pure install
- * cost. Whoever re-enables the engine installs the ABI-locked pair themselves —
- * and this message is where that pin now lives, since `check_dependency_floors`
- * only sees the `dependencies` block.
+ * The parser pair is a devDependency, not a runtime one: this repo's tests still
+ * exercise the loader, while a consumer install resolves neither. The engine is
+ * permanently `enabled: false` (measured recall 0.365 vs grep 0.797), so
+ * shipping ~51 MB of WASM to every consumer for a path none of them can reach
+ * was pure install cost. A consumer re-enabling the engine installs the
+ * ABI-locked pair themselves — this message carries the pin, because
+ * `check_dependency_floors` only scans the `dependencies` block.
  */
 const INSTALL_HINT =
-    'the code-graph engine needs its parser pair, which this package no longer ships ' +
+    'the code-graph engine needs its parser pair, which this package no longer ships to consumers ' +
     '(the engine is disabled by a recorded null result). Install the ABI-locked pair:\n' +
     '  npm i web-tree-sitter@0.24.7 tree-sitter-wasms@0.1.13\n' +
     'Both versions are exact on purpose — the pair is ABI-coupled (grammar ABI 14) ' +
