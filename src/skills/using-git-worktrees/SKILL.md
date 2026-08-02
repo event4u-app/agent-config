@@ -125,6 +125,27 @@ cd .worktrees/<branch-name>
 Branch names must match the project convention — see
 `commit-conventions` rule.
 
+### 4b. Seed the worktree — allow / deny list
+
+`git worktree add` checks out **tracked files only**. Everything
+gitignored — dependencies, generated projections, build output, local
+config — is absent. Seeding the wrong subset is the recurring
+worktree-trap family: a gate then fails (or falsely passes) for a
+reason the change did not cause.
+
+| Artefact | Action | Why |
+|---|---|---|
+| `node_modules/` (or the ecosystem equivalent) | **symlink** from the primary checkout, or run the § 5 install | Absent ⇒ every gate that shells to a local binary dies on its first import. A **partial** tree (only `.bin/`) is worse than none — it produces a scatter of spurious failures. Symlink or install fully; never half. |
+| Generated agent projections (`.augment/`, other tool trees) | **copy** from the primary checkout, or regenerate before running gates | Several gates read the projection tree. Absent ⇒ the gate reports "produced by regeneration but absent before" — red for a reason the contributor did not cause. |
+| Build output (`dist/`, compiled artefacts) | **regenerate**, never copy a stale tree | A stale copy makes a byte-identity check report generator drift that does not exist. |
+| Local settings (`.agent-settings.yml`, `.agent-settings.local.yml`) | **NEVER copy** | Gitignored, machine-local, and deliberately absent in CI. **Absent IS the CI shape** — copying it makes local gate results diverge from the gate that actually decides. A worktree that carries it is testing a configuration no pipeline runs. |
+| Secrets, `.env`, credential files | **NEVER copy** | Same reasoning, plus leak surface. |
+
+The list is encoded here, in the flow, on purpose: a separate committed
+manifest is warranted only when a **flow-external** tool needs to read
+it. Tools that seed their own throwaway worktrees already handle their
+own dependency link inline and need no manifest.
+
 ### 5. Install dependencies + verify baseline
 
 Auto-detect from manifest files:
@@ -167,6 +188,10 @@ starting a new worktree on the same branch.
   from manifest files.
 * **Skipping baseline** — failing tests pre-existed; later blamed on
   your own changes.
+* **Copying local settings in** — the worktree then passes gates the
+  pipeline fails (§ 4b deny list). Absent is correct.
+* **Partial dependency tree** — a `.bin`-only symlink yields a scatter
+  of spurious failures; bisect in a clean scratch worktree instead.
 
 ## Output format
 
