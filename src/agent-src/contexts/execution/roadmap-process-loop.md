@@ -157,8 +157,8 @@ subprocess between steps:
 
 | Value | `./agent-config roadmap:progress` runs |
 |---|---|
-| `per_step` (default) | After every checkbox flip |
-| `every_5_steps` | Every 5th closed step + at phase boundary + at reply end |
+| `per_step` | After every checkbox flip |
+| `every_5_steps` (default) | Every 5th closed step + at phase boundary + at reply end |
 | `phase_boundary` | Only at phase boundaries + run end |
 
 `process-step` ignores this — single-step runs always regen at step
@@ -264,7 +264,8 @@ For each open step in the working set (scope-bound — see wrapper):
 
 6. **Dashboard regen — cadence-gated.** Run
    `./agent-config roadmap:progress` when due per
-   `roadmap.dashboard_regen_cadence` (resolved in § 4):
+   `roadmap.dashboard_regen_cadence` (resolved in § 4; default
+   `every_5_steps`):
    - `per_step` → always after the flip.
    - `every_5_steps` → after the 5th, 10th, … closed step **of this
      run**, or when the reply ends with closed steps pending regen.
