@@ -159,6 +159,80 @@ locked-decision notes recorded. Rollback: each is an isolated reversible edit.
       *Verify:* post-window decision log exists; command count and the per-item
       decisions recorded; no pre-window deletions.
 
+### Input evidence — the no-invocation-path enumeration (2026-08-02, NULL)
+
+Fed in from `road-to-renewal-leverage.md` Phase 1, whose step reads: *"Feed
+the ~1,900-line no-invocation-path finding (analysis estimate — enumerate
+first: file list + method) as input evidence into
+`road-to-surface-consolidation.md` Phase 3."* The enumeration was run; the
+estimate **does not reproduce**. Recorded here so the post-window sweep does
+not budget for a 1,900-line deletion that has no target.
+
+**Method** (reproducible; three reference forms, checked in order):
+
+```bash
+# for each src/domains/**/command.md, resolve slug = <cluster>:<sub> (else <name>)
+# a command has a DISCOVERY path if any of:
+#   1. suggestion.eligible: true                    -> proactively suggested
+#   2. its `name` appears in some hub's routes_to:  -> reached via the cluster head
+#   3. any of these strings occurs in src/, docs/, README.md, CONTRIBUTING.md
+#      OUTSIDE its own file:
+#         /<cluster>:<sub>        (canonical invocation slug)
+#         /<cluster> <sub>        (space form used by most hub bodies)
+#         commands/<cluster>/<sub>.md   (relative link form)
+#         /<name>                 (flat form)
+# a command with none of the three, and visibility: internal, has no discovery path.
+```
+
+**Result** over 193 command files:
+
+| Class | Count |
+|---|---|
+| `suggestion.eligible: true` | 53 |
+| Reached via a hub `routes_to:` | 65 |
+| Named in a stable surface (one of the three forms) | 73 |
+| **No discovery path** | **2** (449 lines) |
+
+The two residuals are `src/domains/git/commit/in-chunks/command.md` and
+`src/domains/git/pr/create/description-only/command.md`. Both are **reachable
+under their `replaces:` aliases** (`commit:in-chunks`,
+`create-pr:description-only`), which are the forms actually cited across
+`src/` — so the true no-invocation-path count is **0 commands / 0 lines**, not
+~1,900. The residual defect is an *alias*, not an orphan: the canonical
+`<cluster>:<sub>` slug of those two appears nowhere.
+
+**By-product finding — sub-command drift the cluster checker cannot see.**
+While enumerating, a second and load-bearing defect surfaced: hubs and the
+locked cluster contract disagree with what is actually on disk.
+
+- `/roadmap` has 6 sub-commands on disk; its `## Sub-commands` table lists 5
+  (`materialize` is in neither the table nor the contract).
+- `/memory` has 6 on disk; its table lists 5 (`learn-low-impact` is missing
+  from the hub although the contract registers it).
+- `routes_to:` is systematically incomplete — 12 of 25 contract-listed
+  dispatch clusters omit at least one existing sub-command, and several
+  orchestrators carry no `routes_to` at all.
+- Contract-side, the inverse also exists: rows for sub-commands that have no
+  file, and orchestrators with no contract row.
+
+`check_cluster_patterns` cannot catch this class: it iterates the **contract**,
+never the filesystem, checks `routes_to` for *resolvability* but never
+*completeness*, and matches only the `## Sub-commands` table **header**, never
+its rows. Its contract row regex additionally requires a numeric phase column,
+so clusters whose row carries `—` fall outside the gate entirely. The
+filesystem-enumeration half is closed in `road-to-renewal-leverage.md`; the
+**contract-side** half (rows with no file, orchestrators with no row, and the
+numeric-phase-column narrowing) is left here as input for the sweep, because
+resolving it means deciding per cluster whether an unlisted hub is dead or
+intentional — a disposition call, which is what this phase owns.
+
+Not drift, checked and dismissed: hubs mixing `` `/worktree create` `` with
+`` `/analyze:decision` `` is **style, not defect** — `docs/contracts/command-clusters.md:157`
+makes `/<cluster> <sub>` a first-class equivalent of the colon form.
+
+No parking action is taken here and no command is deleted — per this phase's
+own verify, pre-window deletions are forbidden.
+
 ## Acceptance criteria (anti-dump — the review's own rule)
 
 - [x] **Net-negative surface:** the diff removes/retires more surface than it
