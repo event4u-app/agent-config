@@ -807,3 +807,100 @@ none would have been caught by review: a single HTML-entity decode pass leaves
 the oEmbed endpoint answer 301 with an empty body, which looks like a dead service.
 All three are fixed and documented as load-bearing in
 [`docs/guides/gated-platform-reads.md`](guides/gated-platform-reads.md).
+
+## Governance invariants under indirection (2026-08-02) — TWO FINDINGS, ONE NULL {#governance-invariants}
+
+Three falsification spikes asking one meta-question: **do this package's
+governance mechanisms degrade when the violation becomes indirect?** Numbers
+render from [`internal/bench/reports/governance-invariants.json`](../internal/bench/reports/governance-invariants.json);
+`tests/scripts/governance_invariants_report.test.ts` re-derives every one of
+them from the shipped source, so the report cannot drift from the code.
+
+**Read the framing first.** There is **no observed instance** of any of these
+attacks against this package — no issue, no transcript, no measured bypass.
+Every spike ran as a falsification whose *expected* outcome was a publishable
+null, and that expectation was pre-registered in each spike's own source before
+it ran, so a null could not later be spun as a save. Two of the three did not
+come back null. Total spend: **$0** — every spike is a pure function, offline
+and deterministic.
+
+| spike | question | verdict |
+|---|---|---|
+| **S0.1** aggregation steerability | can the council selection be moved by how a refusal is encoded? | **FINDING**, fixed |
+| **S0.2** decomposition laundering | can a sequence of allowed steps compose into a forbidden outcome? | **FINDING**, fixed |
+| **S0.3** marker survival | does a stated uncertainty survive the prose condenser into the audit trail? | **NULL** |
+
+**S0.1 — the aggregation was classification-steerable, and in the dangerous
+direction.** It is *not* weight-steerable: the coefficients are module constants
+and `tally_stances` takes one parameter, so no caller can dial a weight. But
+`w_total` counted only members whose stance line parsed, so a refusal phrased as
+prose — the natural shape of a real refusal — was dropped from the quorum and
+made consensus **easier**. Same two backers, margin −0.25 with the refusal
+parsed as an abstention; +0.4167 without. Steering margin **0.6667**, outcome
+flipped from no-consensus to `Adopt`. Fixed: a member who responded counts
+toward the quorum whether or not its stance parsed. Aggravating factor found
+while measuring — `needs_repair`, the field that records exactly this, had zero
+consumers anywhere in the tree.
+
+**S0.2 — both fail-closed gates judged the shape of one action, not the
+effect.** `git config core.hooksPath /dev/null` → `git commit` reached "commit
+with hooks not run"; `Write docs/staging/<kernel>.md` → `Bash mv …
+src/rules/<kernel>.md` reached "kernel rule mutated". Every step in both
+sequences was individually allowed, while all four single-step controls blocked
+correctly — the gates were awake, they just had the wrong unit of judgement.
+Leak count **2 of 2** gated outcomes. Both closed.
+
+**The positive control is the load-bearing part of S0.2.** `check_secret_leak`
+scopes its scan to the cumulative diff against a base ref, so step count is
+irrelevant to it by construction — decomposition gains nothing against it, and
+it returned null before any fix. That is the existence proof that
+effect-boundary gating already works here, and it is the shape the two leaking
+gates were moved toward. A spike where everything fails proves only that the
+fixtures were chosen to fail.
+
+**Published, unclosed gap.** `mv`, `chmod` and `rm` against `.git/hooks/*` still
+reach S0.2's first outcome with every step allowed. Recognising them would turn
+a fail-closed guard into a shell sandbox and all three verbs have ordinary
+legitimate uses. The spike asserts the gap explicitly, so it fails the day
+someone believes it was swept.
+
+**S0.3 — null, and the fixture false start is on the record.** All 3 marker
+classes across 10 fixture cases survive the telegraph condenser; negation count
+preserved; marker-loss count **0**. The first run reported two failures, both
+fixture defects: carriers written as phrases containing an article, which the
+condenser drops exactly as its documented grammar says. Per the pre-registered
+rules that is an unmet premise — INCONCLUSIVE, repair the fixture — not a
+finding. Scoring a phrase that embeds a drop-token measures the condenser's
+grammar, not marker survival, and would have manufactured a finding out of
+correct behaviour.
+
+**Four adjacent properties, expected already-true. One was.** `(a)` enforcement
+never branches on a base-model refusal string — **holds**; the single module in
+the tree that compiles refusal regexes only ever escalates to a fuller council,
+never grants an allowance. `(b)` a capability gate resolves only from trusted
+config — **violated**: `runtime_dispatcher.dispatch()` returned `ready` for a
+skill whose own frontmatter declared `safety_mode: strict` and granted itself
+two tools absent from the registry; the validator that implements the allowlist
+`tool-safety` promises existed with zero callers. Fixed on the automated path,
+warned on the human-confirmed one. `(c)` caller-agnosticism — **holds** at the
+gate: no caller-identity input reaches a verdict. `(d)` constraint monotonicity
+— **holds**: no blocking gate reads persisted state, which converts the
+`source-discovery-gate` claim from CLAIMED to TESTED; the one persisted-state
+circuit breaker in the tree is an advisory anti-nag device on a default-off
+surface and is named in the test as an exception rather than left to be
+re-discovered as a hole.
+
+**Every property above was proven by inversion, not by assertion** — 7 of 7
+inverted properties produced at least one failing test, each inversion reverted
+immediately.
+
+**Honest bounds.** There is no executable subagent dispatcher in this package;
+decomposition is model-carried, and the layer these spikes measured is the
+PreToolUse hook layer — the one surface that sees every step a model emits. The
+2026-08-02 council split on whether that is a faithful discharge of S0.2, with
+the dissent holding that testing hand-composed sequences against stateless gates
+is retroactive threat modelling. That dissent is recorded in the spike's own
+header and in the roadmap rather than resolved away. Separately, `TOOL_REGISTRY`
+holds two entries and does not model the scoped-grant syntax `tool-safety`
+itself prefers, so the `(b)` fix closes self-certification where no human is in
+the loop and does not claim the registry is complete.
