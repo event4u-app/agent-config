@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 13 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **13** open blockers
 
 ## Overall
 
-**48 / 167 steps done · 29%**
+**76 / 219 steps done · 35%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
 ```
 
 ## Open roadmaps
@@ -23,12 +23,16 @@
 | 5 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
 | 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 11 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 12 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 13 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md) | 2 | 9 | 4 | 5 | 0 | 0 | 0 | ██████░░░░ 56% |
+| 9 | [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md) | 3 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 10 | [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 17 | 17 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-leverage) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 13 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
+| 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 17 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -171,6 +175,53 @@ _1 blocker resolved._
     the post-ADR-117 default (`subagents.auto: on`), then check
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
+
+### [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md)
+
+**Road to package renewal — central roadmap (2026-08)** — 5 / 9 done (56%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | this PR | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 2 | steering (after this PR merges) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
+### [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md)
+
+**Road to renewal — ADR hygiene (chip-mode)** — 0 / 10 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | dated-era dispositions | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | structural decisions with new evidence | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | dead-tree endgame (after Foundation Phase 1 drains the gates) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+### [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md)
+
+**Road to renewal — Foundation (CI oracle, dead tree, token quick wins)** — 0 / 17 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | CI becomes a trustworthy oracle | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 2 | token quick wins (no lock touched) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | runtime activation spike (phase-gated; go/no-go recorded first) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+
+### [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md)
+
+**Road to renewal — Leverage (execution flows + external borrows)** — 0 / 17 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | execution flows | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 2 | external borrows, hook layer (adopt/adapt verdicts recorded) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 3 | roadmap/tracker upgrades (adapt, Source W) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-renewal-leverage"></a>
+**Blockers**
+
+- **legacy** (owner: user) — blocks entire roadmap
+  - **What to do:**
+    Foundation Phase 1 is green (council-locked: fix the oracle
+  - **Resolved when:** condition described above clears
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 
