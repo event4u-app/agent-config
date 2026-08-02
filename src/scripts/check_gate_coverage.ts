@@ -31,7 +31,6 @@
  * Exit codes: 0 all enforced gates cleared their floor · 1 a gate is blind,
  * collapsed, or silent · 2 the manifest itself is missing/empty/malformed.
  */
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';

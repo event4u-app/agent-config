@@ -23,7 +23,6 @@
  * Usage:
  *   ./scripts-run src/scripts/lint_agent_security [--sarif artifacts/agent-security.sarif]
  */
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
