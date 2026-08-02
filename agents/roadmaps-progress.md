@@ -6,10 +6,10 @@
 
 ## Overall
 
-**48 / 193 steps done · 25%**
+**53 / 190 steps done · 28%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   25%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
 ```
 
 ## Open roadmaps
@@ -22,7 +22,7 @@
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
-| 7 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 7 | [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md) | 5 | 19 | 11 | 5 | 0 | 3 | 0 | ███░░░░░░░ 31% |
 | 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 10 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
@@ -141,14 +141,14 @@ _2 blockers resolved._
 
 ### [road-to-governance-invariants.md](roadmaps/road-to-governance-invariants.md)
 
-**Road to governance invariants — prove the governance layer does not degrade under indirection** — 0 / 19 done (0%)
+**Road to governance invariants — prove the governance layer does not degrade under indirection** — 5 / 16 done (31%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | The three spikes (read-only, throwaway, no production code) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | The three spikes (read-only, throwaway, no production code) | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 1 | Effect-boundary gating (gated on S0.2 = FINDING) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Refusal-preservation invariant (gated on S0.1 = FINDING) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Marker preservation (gated on S0.3 = FINDING) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Refusal-preservation invariant (gated on S0.1 = FINDING) | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 3 | Marker preservation (gated on S0.3 = FINDING) | ⏭️ skipped | 0 | 0 | 0 | 3 | 0% |
 | 4 | Regression tests and the exhibit | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
