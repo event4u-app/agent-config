@@ -131,6 +131,16 @@ function check(files: readonly string[]): number {
         for (const f of bad) {
             process.stdout.write(`OUT-OF-SHAPE: ${f}\n`);
         }
+        process.stdout.write(
+            '\n' +
+                'A release PR may only contain the version-bump allowlist — the heavy\n' +
+                'test matrix skips on release/* heads, so code must not ride a release PR\n' +
+                '(docs/contracts/release-pr-gating.md § Mid-release fixes).\n' +
+                'Fix: land the files above on main via their own PR, then\n' +
+                '  git checkout release/X.Y.Z && git merge origin/main && git push\n' +
+                '— their release-PR diff becomes empty and this check goes green.\n' +
+                'Then resume with: task release -- --resume --yes\n',
+        );
         return 1;
     }
     process.stdout.write(
