@@ -22,10 +22,10 @@ base-rate question. A hand-written census cannot answer it repeatably; this can.
 | | |
 |---|--:|
 | Gate scripts in population | **213** |
-| Confirmed findings (missing root **+ read evidence**) | **26** |
+| Confirmed findings (missing root **+ read evidence**) | **25** |
 | — of those class A (retired containers) | **13** |
 | — class B (build artifacts) | 7 |
-| — class C (optional / other) | 6 |
+| — class C (optional / other) | 5 |
 | Unproven (missing, evidence not statically provable) | **15** |
 | Stale ledger entries | 0 |
 | Exit | **1** |
@@ -72,12 +72,18 @@ Missing in a fresh clone is only a defect **if CI runs the gate before its
 producer**, or if the producer is retired. Disposition is one Taskfile/workflow
 ordering check per script — not a repoint.
 
-## Class C — optional surfaces and one likely typo (6)
+## Class C — optional surfaces and one likely typo (5)
 
 `lint_ghostwriter_source` (`agents/ghostwriter`), `lint_load_context`
-(`agents/contexts`), `lint_media_policy_linkage` (`agents/policies/media`,
-`.claude/skills`), `lint_showcase_sessions` (`docs/showcase/sessions`),
+(`agents/contexts`), `lint_media_policy_linkage` (`agents/policies/media`),
+`lint_showcase_sessions` (`docs/showcase/sessions`),
 `lint_originality_shingles` (`src/personas`).
+
+An earlier run of this sweep also reported `lint_media_policy_linkage`
+(`.claude/skills`) here. That root exists in the current tree, so the finding is
+gone — recorded because it shows the sweep tracks the tree rather than a frozen
+snapshot: a generated root that is absent in one checkout and present in another
+moves in and out of the confirmed set on its own.
 
 **`lint_originality_shingles` deserves separate attention.** It joins
 `src/personas`; the tree has `src/agent-src/personas`. The path is guarded by
