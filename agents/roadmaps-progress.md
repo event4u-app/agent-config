@@ -6,7 +6,7 @@
 
 ## Overall
 
-**107 / 216 steps done · 50%**
+**108 / 216 steps done · 50%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   50%
@@ -25,7 +25,7 @@
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 8 | [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md) | 2 | 9 | 3 | 6 | 0 | 0 | 0 | ███████░░░ 67% |
 | 9 | [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md) | 3 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-adr-hygiene) | ░░░░░░░░░░ 0% |
-| 10 | [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md) | 3 | 21 | 10 | 9 | 0 | 2 | [1](#blockers-road-to-renewal-foundation) | █████░░░░░ 47% |
+| 10 | [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md) | 3 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-renewal-foundation) | █████░░░░░ 53% |
 | 11 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-leverage) | ░░░░░░░░░░ 0% |
 | 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
@@ -189,11 +189,11 @@ _1 blocker resolved._
 
 ### [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md)
 
-**Road to renewal — Foundation (CI oracle, dead tree, token quick wins)** — 9 / 19 done (47%)
+**Road to renewal — Foundation (CI oracle, dead tree, token quick wins)** — 10 / 19 done (53%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | CI becomes a trustworthy oracle | 🟡 in progress | 1 | 7 | 0 | 2 | 88% |
+| 1 | CI becomes a trustworthy oracle | ✅ done | 0 | 8 | 0 | 2 | 100% |
 | 2 | token quick wins (no lock touched) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
 | 3 | runtime activation spike (phase-gated; go/no-go recorded first) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 

@@ -107,12 +107,19 @@ parent: road-to-package-renewal.md
       404, so this step's original `gh api -X PUT .../branches/main/protection`
       command was aimed at the wrong endpoint. Live: **one** required check
       (`Sync + Generate Tools Consistency`) vs 19 documented. The doc's
-      `python2ts` addendum named three workflows that are all deleted, and its
-      docs-only shape cited `task ci:required-checks`, which does not exist.
+      `python2ts` addendum named three workflows that are all deleted.
+      `task ci:required-checks` DOES exist (`taskfiles/ci-fast.yml:204` — an
+      earlier root-only grep of `Taskfile.yml` missed it, corrected on
+      verification), but it is a pure offline preview, never a gate, and its
+      own check-name lists had drifted to the same fiction — including a
+      `Tests / python-tests` entry that cannot exist post-migration, pinned
+      byte-for-byte by its snapshot test. Doc, script and test were reconciled
+      together against `gh pr checks 1108`; the preview now marks with `!` the
+      single check that actually blocks a merge.
       Disposition per council 2026-08-02 (C1, 2/2)
 - [-] Record the current local `task ci` wall-clock on the reference machine
       into this file BEFORE the umbrella spike starts <!-- skipped: quality.local_auto_run=false → remote CI is the gate; council 2026-08-02 decision B3 (2/2) additionally rejects a local full-pipeline number AS a baseline — the same environment whose false-red history motivated the policy cannot produce a trustworthy reference, and remote CI runs different hardware/parallelism so it can never validate one. The dependent target is retargeted in the next step instead of being left unfalsifiable. -->
-- [ ] Umbrella gate runner spike: run N gates in-process (worker pool) instead
+- [x] Umbrella gate runner spike: run N gates in-process (worker pool) instead
       of ~200 sequential tsx cold-starts.
       **Pre-registered target (revised 2026-08-02 per council B3, BEFORE any
       measurement — replaces the unfalsifiable "local `task ci` under 5 min"):**
@@ -129,6 +136,46 @@ parent: road-to-package-renewal.md
       the spike scope INCLUDES an import-safety audit of the gate scripts —
       this is where the monolith-script finding re-enters if decomposition
       proves necessary <!-- carve-out: new-gate-verification -->
+      ---
+      **RESULT — import-safety GO, timing arm LOSS. Measured 2026-08-02.**
+      *Import-safety audit (the abort gate): PASS.* 200 gate scripts
+      (`src/scripts/{lint_,check_}*.ts`); **194 safe to import**, **6 unsafe**
+      (unconditional top-level `main()`/`process.exit`) = **3.0%**, far under
+      the >25% abort criterion. The six: `check_release_adjacent_health`,
+      `lint_design_quality`, `lint_eval_fixture_citations`, `lint_glama_drift`,
+      `lint_output_slop`, `lint_ui_stack_bundles`. 175/200 export `main`.
+      *Timing arm: LOSS against the pre-registered ≥30%.* Sample = 10 fastest +
+      10 slowest of the 188 gates that run without args (12 need args and were
+      excluded, named in the spike log). Sequential subprocess baseline: 85,570 /
+      81,086 / 77,316 ms → **median 81,086 ms**. In-process: 110,947 / 102,581 ms
+      → **−26.5% (slower)** on the best run. All 20/20 gates really executed in
+      both arms; nothing was dropped to flatter the number.
+      **Why it lost, and the part that is worth more than the verdict:** the
+      target was *structurally unreachable on this sample* and the
+      pre-registration is what exposed that. Empirical cold-start floor is
+      ~342 ms/gate, so 20 gates × 342 ms = ~6.8 s = **8.4%** of an 81 s baseline —
+      no amount of cold-start elimination could reach 30% here, because the
+      sample deliberately includes the 10 SLOWEST gates. The hypothesis "most of
+      `task ci` is tsx cold-start" is **false for the slow half and true for the
+      fast half**: the 18-gate subset excluding the two regressions ran
+      30,360 → 22,559 ms = **−25.7%**.
+      Two gates regressed hard, and the harness is a confound on both:
+      `check_backstop_debt` 5,789 → 10,599 ms (it *spawns* other gates as
+      subprocesses, so in-process nesting is pathological for it) and
+      `check_enforcement_coverage` 33,794 → 69,423 ms. Diagnostic: that gate is
+      36.4 s as a direct tsx entry, 69.8–72.8 s via `import()` from a tsx
+      harness, but **35.3 s inside a `worker_threads` Worker** — so a real
+      worker-pool runner would not carry the penalty. The measured number is a
+      FLOOR on the in-process arm, not its ceiling; a pooled arm was not measured.
+      Also: 2 of 20 exit codes diverged in-process, so the arm is not yet
+      semantically equivalent — a correctness blocker before any adoption.
+      **The actionable finding is elsewhere:** one gate,
+      `check_enforcement_coverage`, is **33.8 s of the 151.1 s** it takes to run
+      all 200 gates once — **22% of the entire suite in a single script**. That
+      is where `task ci` wall-clock actually lives, and it is a targeted fix, not
+      an architecture change. Recorded here as the successor lead; NOT pursued in
+      this PR (out of this step's scope, and the pre-registered target must not
+      be retro-fitted to whatever the data happened to support)
 - [-] Share the build artifact across CI jobs <!-- declined 2026-08-02: premise falsified by measurement, not skipped for cost -->
       **Declined — the step's premise does not survive measurement.** Numbers
       taken this session, both local and from the last `tests.yml` run on `main`
