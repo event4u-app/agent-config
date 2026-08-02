@@ -130,8 +130,8 @@ this central roadmap steering three sub-roadmaps.
 
 | Sub-roadmap | Scope | Status |
 |---|---|---|
-| [`road-to-renewal-foundation.md`](road-to-renewal-foundation.md) | CI oracle repair, dead-tree sweep, token quick wins (pack-gated floors, MCP trim), runtime-activation spike (phase-gated) | active |
-| [`road-to-renewal-leverage.md`](road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, cadence flip, hub generation, hook-fan-out trim) + three documented-failure fixes with borrowed shape + tracker-convention docs | blocked on Foundation Phase 1 |
+| [`road-to-renewal-foundation.md`](archive/road-to-renewal-foundation.md) | CI oracle repair, dead-tree sweep, token quick wins (pack-gated floors, MCP trim), runtime-activation spike (phase-gated) | **complete 2026-08-02** — archived. Phase 3's spike steps closed `[-]` as infeasible-as-specified (no per-prompt injection transport; corpus covers 10 of 97 rules); reopen terms in `internal/bench/layer1-resolver-PREREG.md` |
+| [`road-to-renewal-leverage.md`](road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, cadence flip, hub generation, hook-fan-out trim) + three documented-failure fixes with borrowed shape + tracker-convention docs | **unblocked 2026-08-02** — Foundation is complete (Phase 1 green since PR #1109), so the council-locked ordering is satisfied |
 | [`road-to-renewal-adr-hygiene.md`](road-to-renewal-adr-hygiene.md) | Drive-loop era batch disposition, ADR-085 amendment, perma-proposed sweep, ADR-201 resolution | chip-mode (attach to other PRs) |
 
 Ordering (council-locked): Foundation Phase 1 (CI oracle) gates everything —

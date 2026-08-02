@@ -405,7 +405,7 @@ parent: road-to-package-renewal.md
 > threshold, indicating the keyword-mechanism ceiling rather than an
 > implementation gap.
 
-- [ ] Pre-register the spike: thresholds written BEFORE any code — token
+- [x] Pre-register the spike: thresholds written BEFORE any code — token
       delta, injection precision on the 678-trigger set, AND a non-kernel
       quality arm using a NEW instrument: a non-kernel missed-load (recall)
       threshold on a labelled prompt corpus, with the verdict mechanism named
@@ -413,22 +413,100 @@ parent: road-to-package-renewal.md
       FINAL HONEST NULL (κ=0.472 < 0.800 floor; its reopen term is "a
       different instrument, not a third attempt") — its anchors may serve as
       raw material only, never as the verdict mechanism; corpus and abort
-      criteria named in the same record
-- [ ] Trigger-precision pass: 459/678 triggers are bare keywords — promote the
+      criteria named in the same record.
+      **Landed: `internal/bench/layer1-resolver-PREREG.md`**, in the house
+      shape (`internal/bench/code-graph/PREREGISTRATION.md`,
+      `corpora/honesty-PREREG.md`). Four binding thresholds fixed before any
+      resolver code — T1 token delta **≥ 25,000 GPT tok** (below that the pack
+      axis and catalog dedup already deliver a comparable share without a
+      runtime mechanism), T2 injection precision **≥ 0.70**, T3 non-kernel
+      recall **≥ 0.95** (deliberately asymmetric to T2: over-injecting costs
+      tokens, under-injecting costs behaviour), T4 the SHIPPED hook-latency
+      budget `any_hook_event.p95_ci = 250 ms` rather than a second invented
+      one. Verdict instrument for T3 named as required and it is NOT anchor
+      scoring: **router-telemetry replay** (`aggregate_replay` already emits
+      `intended_vs_observed_match` + `unintended_activation_histogram`,
+      deterministic, no model in the loop). Corpus named
+      (`internal/bench/corpora/router-coverage/`) with its three
+      zero-trigger rules excluded by construction — they are
+      description-activated, so counting them would measure the schema, not
+      the resolver.
+- [x] Trigger-precision pass: 459/678 triggers are bare keywords — promote the
       noisiest to phrases or add a precision budget, else the resolver injects
-      everything and measures nothing (precondition for the spike)
-- [ ] Layer-1 resolver spike: SessionStart/UserPromptSubmit hook matches prompt
+      everything and measures nothing (precondition for the spike).
+      Count independently re-derived and the 459/678 claim CONFIRMED exactly;
+      refinement the step did not have: only **316** of the 459 are single
+      tokens, the rest are multi-word.
+      **"Promote to phrases" turned out to be a no-op** — both branches of
+      `trigger_matches` run the identical case-insensitive `includes()`, so
+      `keyword` and `phrase` differ in documentation only. Recorded in
+      `rule-router.md` so the suggestion is not made a third time.
+      **Took the other option — a precision budget.** The real defect is
+      unanchored substring matching: `AC` activated `cross-source-consistency`
+      on "black"/"contact", `CAC` activated the finance floor on "cache".
+      Removed those two as provably redundant (`acceptance criteria` already
+      on the same rule; `LTV` + `payback` already carry the unit-economics
+      signal), then added `src/scripts/lint_trigger_precision.ts` — counts
+      ASCII `keyword` triggers ≤ 3 chars, **ratchet seeded at 22**, wired into
+      `task ci` + `ci-fast`. Emoji excluded by construction (one code point,
+      cannot collide with prose). 8 assertions; `trigger_coverage` still
+      26/26; `check_ci_local_parity` green.
+      **The durable repair is named and deliberately NOT taken here:**
+      word-boundary anchoring for `keyword` would fix all 316 at once, but it
+      changes shipped activation semantics for every rule — its reopen terms
+      are in the pre-registration.
+- [-] Layer-1 resolver spike: SessionStart/UserPromptSubmit hook matches prompt
       + touched paths against `dist/router.json` triggers and injects only
       matched non-kernel rule bodies (kernel always full); never-block shim
       (resolver failure → eager fallback, never a blocked turn)
-- [ ] Run the pre-registered measurement; record win/loss in the central
+      <!-- skipped: INFEASIBLE AS SPECIFIED — no per-prompt injection transport
+      exists. dispatch_hook.ts forwards a concern's `context` to stdout ONLY on
+      session_start; every other event swallows stdout. So session_start has a
+      channel but no prompt yet, and user_prompt_submit has a prompt but no
+      channel. Building it is a change to hook-architecture-v1 § Stdout reply —
+      a host contract, not a spike. Second blocker: ADR-040 binds on mechanism
+      (council 2026-08-02, both members) and its remedy is a superseding ADR.
+      Reopen terms P1/P3 in internal/bench/layer1-resolver-PREREG.md. -->
+- [-] Run the pre-registered measurement; record win/loss in the central
       roadmap; a loss parks this permanently next to ADR-054 with the numbers.
       A WIN flips nothing by itself: it produces its own decision record
       (council pass + explicit maintainer sign-off) in a SEPARATE PR from the
       measurement — no default changes ride with the numbers
-- [ ] Reconcile `rule-router.md` with reality either way: today it documents a
+      <!-- skipped: no arm to measure while the step above is blocked, AND the
+      labelled corpus covers 10 of 97 non-kernel rules, so a recall threshold
+      over it would have no power — the "shallow version yields a false null"
+      this phase's own gate warns about. Reopen term P2 in the
+      pre-registration: >= 50 labelled rule ids, or a power analysis. -->
+
+> **Phase-3 gate outcome, recorded 2026-08-02.** The gate says no-go only *"if
+> the footprint is already at target"* — it is not (77,770 vs 75,880), so the
+> gate OPENED. The phase is nonetheless closed with steps 3-4 `[-]`, for a
+> different and stronger reason than the gate anticipated: the spike's
+> transport does not exist and its corpus has no power. That is an
+> infeasibility, not a capacity deferral, which is why these are `[-]`
+> (skipped, with the reason inline) and not `[~]` (deferred). The AI council
+> (2026-08-02, both members, Q4 → option 1) ruled this the honest disposition
+> and ruled steps 2 and 5 land regardless.
+- [x] Reconcile `rule-router.md` with reality either way: today it documents a
       runtime loader that does not exist — after the spike it documents either
-      the resolver or the explicit absence
+      the resolver or the explicit absence.
+      Documents the **explicit absence**, since the spike is parked. The
+      contract contradicted itself: § Activation semantics told the host to
+      read `dist/router.json` once per session and walk triggers per turn,
+      while § Schema v2 thirty lines above said "there is no runtime
+      resolver". § Activation semantics rewritten in favour of the tree — the
+      three real stages (projection time fixes the file set · session time
+      loads those files · turn time activates by MODEL judgment over
+      descriptions already in context), and the consequence stated plainly for
+      rule authors: **`triggers:` is declarative metadata, not an execution
+      path.** Adding one does not make a rule load; removing one does not stop
+      it loading. Only the projection scope does that. Its real consumers are
+      named (`trigger_coverage`, `router_telemetry`, the new precision
+      ratchet, and host-native glob attach — the one place a trigger-shaped
+      field drives behaviour, and the host does that, not this package).
+      Framed as the same honesty the `intent:` removal applied one level
+      down: there a field never matched at runtime; here the entire per-turn
+      walk was fictional.
 
 ## Blockers
 
