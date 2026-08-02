@@ -1,0 +1,9 @@
+Lens:    overbuild-review-lens
+Target:  tests/fixtures/overbuild-lens/flatten-longer
+
+Verdict: trim
+
+Findings:
+1. flatten:  submitted.ts:2  Three nested ternaries; an early return plus a flat if/else reads in one pass (+4 lines).
+
+Net: +4 lines

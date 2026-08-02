@@ -1,0 +1,8 @@
+Lens:    overbuild-review-lens
+Target:  tests/fixtures/overbuild-lens/lean-crud
+
+Verdict: lean
+
+Findings: none — nothing in this diff exceeds the stated requirement.
+
+Net: 0 lines

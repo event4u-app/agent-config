@@ -44,7 +44,9 @@ expense without the benchmark seeing it.
   public-repo run and no per-trial injection audit.
 - **`hooks/hooks.json` dispatches six events** (SessionStart, SessionEnd, Stop,
   UserPromptSubmit, PreToolUse, PostToolUse). No SubagentStart/SubagentStop
-  anywhere in `src/`; whether the host exposes such an event is unverified.
+  anywhere in `src/`; ~~whether the host exposes such an event is unverified~~ —
+  **superseded by S0.2 (2026-08-02): the host does expose `SubagentStart` and
+  `SubagentStop`**, and rules already reach subagents without either.
 - The license here and at the source are both MIT.
 
 ## Findings that constrain the design (from the independent benchmark and the critic thread)
@@ -118,7 +120,7 @@ Each one is a measured fact about how this borrow fails when copied naively.
 
 ## Phase 0 — Verification spikes (read-only, no authoring)
 
-- [ ] **S0.1 Overlap sweep — decides new-rule-vs-extension.** Rung-by-rung grep
+- [x] **S0.1 Overlap sweep — decides new-rule-vs-extension.** Rung-by-rung grep
       evidence against `minimal-safe-diff` (+ its mechanics guideline),
       `senior-engineering-discipline`, `architecture`, `improve-before-implement`,
       `supply-chain-intake`, `active-remediation`.
@@ -136,7 +138,15 @@ Each one is a measured fact about how this borrow fails when copied naively.
       **routing-collision check** — no two rules/skills colliding on their
       trigger sets — so disjointness is enforced by a gate rather than asserted
       in prose. Natural home: the existing skill linter.
-- [ ] **S0.2 Subagent rule-propagation probe.** Two questions, in order: does the
+      **Done 2026-08-02 — 12 EXTEND / 2 NEW (86 % extend).** The re-scope rule
+      fires: Phase 1 becomes edits to the colliding artefacts. Only R4
+      (native-platform rung) and R13 (second-system rewrite context) are
+      disjoint. Three latent contradictions surfaced (two-vs-three repetitions ·
+      fewest-lines-vs-least-load · profiler-gate vs the `scale-discipline` R-A2
+      floor). The routing-collision gate **did not exist** and ships with this
+      change as `lint_rule_trigger_collisions`. Table + citations:
+      [`solution-minimalism-phase0-spikes § S0.1`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
+- [x] **S0.2 Subagent rule-propagation probe.** Two questions, in order: does the
       host expose a subagent-start event at all, and do this package's rules
       reach a subagent's context today? One live probe with transcript evidence.
       *Verify:* yes/no on both, with the transcript committed.
@@ -144,13 +154,28 @@ Each one is a measured fact about how this borrow fails when copied naively.
       subagents, this is not a step in this roadmap — it affects **every** rule's
       propagation and leaves as its own change. Record and hand back; do not fix
       it here.
-- [ ] **S0.3 Harness feasibility + cost sheet.** Can `internal/bench/ab` run
+      **Answered 2026-08-02 — YES / YES.** The host does expose `SubagentStart`
+      (Claude Code 2.1.220, carrying an `additionalContext` injection payload),
+      superseding finding 4 of `elder-ponytail-harvest-cut`; and a live
+      zero-tool-call probe had a subagent reproduce two Iron Laws verbatim from
+      its own context. The escape clause therefore does **not** fire — there is
+      no propagation gap to hand back, and F1 needs no new hook. Evidence:
+      [`solution-minimalism-phase0-spikes`](../evidence/investigations/solution-minimalism-phase0-spikes.md)
+      + [committed transcript](../evidence/investigations/solution-minimalism-s02-subagent-probe.md).
+- [x] **S0.3 Harness feasibility + cost sheet.** Can `internal/bench/ab` run
       arm-isolated headless sessions against a pinned public repo with a
       per-trial injection audit in **both** directions (treatment trials prove
       the ruleset reached the model; control trials prove it did not)? Estimate
       cost per (task × arm × k). **No paid full runs in this phase.**
       *Verify:* go/no-go plus a cost sheet that the Phase 3 spend authorization
       can be granted against.
+      **Done 2026-08-02 — GO WITH CHANGES.** Arm isolation and headless
+      execution are met; the per-trial injection audit, external-repo support
+      and the cost sheet are all absent, with eleven named deltas (five small,
+      four medium, two large). Working estimate for 30 tasks x 4 arms x 3 seeds
+      on sonnet: 360 runs, ~180M tokens, **$150-250 as a floor**. Cost sheet +
+      delta table:
+      [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
 
 **Exit:** the authoring decision is evidence-backed and the benchmark cost is
 known. **Rollback:** nothing shipped.
@@ -161,13 +186,52 @@ Shape decided by S0.1. If new: same projection class as `minimal-safe-diff`, so
 it is always-on where it matters (F1). If extension: the colliding artefacts are
 edited in place and no new file appears.
 
-- [ ] The ordering, in house voice: need-to-exist → reuse-in-repo → stdlib /
+**S0.1 decided: EXTENSION.** 12 of 14 clauses collide with an existing statement
+at the same decision point, so **no new rule file appears**. The colliding
+artefacts are edited in place; nine clauses need no edit at all because the
+statement already exists and the sweep found no weakness in it. Recording that
+outcome honestly *is* the deliverable for those rungs — re-stating them in a new
+file is the inflation the repo's own complexity budget forbids.
+
+**Council convergence (2026-08-02 · anthropic + openai · 2 rounds · $0.09):**
+
+- **Bulk-extend confirmed, no new rule file.** Both members landed here in round
+  2. The disjointness test is necessity-framed ("only if"), and a thin two-clause
+  file would still fail the complexity budget's questions 1 (Replaces?) and 2
+  (Overlaps?) — R4 overlaps `improve-before-implement` on intake timing and R13
+  overlaps the existing rewrite-trigger string on location.
+- **Two vs three repetitions: the repo's *two* wins, the borrowed *three* is
+  discarded.** Changing shipped text to match an external standard with zero
+  local evidence is the anti-borrow shape. Recorded as a **split** — the openai
+  member argued for three in round 1 on stability grounds and did not re-argue it
+  in round 2.
+- **Fewest lines vs least cognitive load: load wins**, and the loser is edited
+  for precision rather than reversed — the existing "smaller diffs" payoff means
+  *removing indirection*, not compressing.
+- **Profiler gate vs the `scale-discipline` floor: the floor is untouchable**;
+  the clause ships with an explicit carve-out. Unanimous.
+- **The over-build lens is a new skill, not an extension of the quality judge.**
+  Also a round-2 reversal. The disjoint axis: the existing judge asks *is this
+  code malformed*; the lens asks *should this code exist at all*. The tag grammar
+  encodes **why** something is over-built, which determines what evidence proves
+  removal is safe — usage analytics for `yagni:`, API-equivalence for `stdlib:`.
+- **No attribution entry ships** (see the cancelled credits step below).
+
+- [x] The ordering, in house voice: need-to-exist → reuse-in-repo → stdlib /
       framework → native platform → installed dependency → smallest working
       form. Explicitly ordered **after** comprehension — the ladder shortens the
       solution, never the reading.
       *Verify:* the text contains no rung that S0.1 marked as an existing
       statement.
-- [ ] **The shape axis, distinct from the scope axis (F9).** The ladder above is
+      **Landed** as `agent-interaction-and-decision-quality` § 8b-ladder (the
+      ordered table + the after-comprehension clause) with a one-paragraph
+      summary in `improve-before-implement`. Rungs 1/2/3/5/6 are labelled in the
+      text as existing obligations the ladder **orders**, with a citation each —
+      the ladder adds no rung S0.1 marked as already stated. **Rung 4
+      (native platform) is the only new content**, with worked examples
+      (`crypto.randomUUID`, `Intl`, `AbortSignal.timeout`, DB-native full-text /
+      JSON, a filesystem watcher).
+- [x] **The shape axis, distinct from the scope axis (F9).** The ladder above is
       *scope*: must this exist, and can something cheaper serve? The shape axis
       is: of what must exist, which form carries the least cognitive load —
       explicitly **not** the fewest keystrokes. Simple is not the same as short:
@@ -175,20 +239,42 @@ edited in place and no new file appears.
       what keeps the smallest-working-form rung honest — a one-liner qualifies
       only if it is also the *simplest* form, not merely the shortest.
       *Verify:* the rung text cannot be satisfied by compression alone.
-- [ ] **Principle-precedence table** — the thing every principle collection
+      **Landed** as § 8b-shape, plus the reconciliation the sweep demanded in
+      `code-clarity` § Why this matters — its "smaller diffs" payoff now reads
+      "by removing indirection, never by compression", and names the nested
+      ternary / long optional-call chain as a regression. Compression alone
+      cannot satisfy either text.
+- [x] **Principle-precedence table** — the thing every principle collection
       omits, and the reason they produce contradictory simultaneous instructions:
       floors win → then explicit user-fenced scope → then shape (simplicity) →
       then scope (don't build it) → then de-duplication, with the Rule of Three
       as the de-duplication gate. One table, stated once.
       *Verify:* every principle named anywhere in the rule appears in the
       precedence order; a reviewer can resolve any pair from the table alone.
-- [ ] **Rule of Three as the abstraction trigger, and known-constraints-only as
+      **Landed** as § 8b-precedence — one ranked list, stated once: floors →
+      user-fenced scope → shape → scope → de-duplication (gated on the existing
+      repetition trigger). It is deliberately **not** an entry in
+      `rule-interactions.yml`: that contract is pairwise and scoped to the
+      always-on kernel rules, and forking it with a second prose ordering over a
+      different kind of object is the drift the table exists to prevent. Council
+      split on this — one member wanted both surfaces; the contract's own scope
+      settled it.
+- [x] **Rule of Three as the abstraction trigger, and known-constraints-only as
       the architecture trigger** — no extraction before the third occurrence
       confirms the pattern; architect for measured constraints (load, latency,
       team size), never for speculative scale. These give the first and last rung
       a checkable form instead of a vibe.
       *Verify:* both triggers are stated as conditions a reviewer can apply.
-- [ ] **Reversibility clause (two-way doors).** The lazy rung is *preferred*
+      **Landed as a correction, not an import.** The repo's operative abstraction
+      trigger is the **second** real repetition (`architecture`,
+      `component-oriented-and-oop-development`); the borrowed third-occurrence
+      rule is explicitly **not adopted** — importing it would fork a threshold
+      this repo already decided. `minimal-safe-diff-mechanics`
+      § Anti-over-engineering now says so, resolving the in-tree confusion
+      between its "three similar lines" phrasing and the second-caller action.
+      The architecture trigger (known constraints only, never speculative scale)
+      was already stated there as "no speculative features" — no edit.
+- [x] **Reversibility clause (two-way doors).** The lazy rung is *preferred*
       where the choice is reversible; a one-way door — public API, DB schema,
       migration, wire format — always gets the full treatment. Corollary that
       keeps a later follow-up honest: a deferred-simplification marker is valid
@@ -196,36 +282,96 @@ edited in place and no new file appears.
       is a decision, and it routes to the decision-record surface.
       *Verify:* the clause names the one-way-door categories explicitly rather
       than leaving "important" to judgement.
-- [ ] **Interface-surface rationale (Hyrum's Law), one paragraph.** Every
+      **Landed** as the corollary on `decision-record` mental model 10, which
+      already carried the two-way/one-way split. The new half is the one this
+      roadmap needs: a shortcut through a one-way door is a **decision, not a
+      defer** — public API shape, DB schema, migration, wire format, published
+      identifier are enumerated, so the call is not a judgement about what feels
+      important.
+- [x] **Interface-surface rationale (Hyrum's Law), one paragraph.** Every
       observable behaviour eventually becomes a contract somebody depends on, so
       a smaller surface is fewer accidental contracts. Dual use: it justifies
       interface minimalism *and* warns the deleter — removing observable
       behaviour breaks someone.
       *Verify:* it reads as rationale, not as a new obligation.
-- [ ] **Rewrite-context trigger (second-system effect).** Rewrites, v2s and
+      **Landed** in `downstream-changes` § Breaking changes as one paragraph of
+      rationale above the existing ask-first list — no new obligation, and
+      explicitly dual-use: a smaller exported surface is fewer accidental
+      contracts, and the ask-first list is a floor rather than a ceiling because
+      an undocumented observable behaviour can still break someone.
+- [x] **Rewrite-context trigger (second-system effect).** Rewrites, v2s and
       large refactors are the peak over-build context; add those trigger keywords
       and one sentence naming the effect.
       *Verify:* the trigger set includes the rewrite vocabulary.
-- [ ] **Profiler-gated optimization clause.** Performance complexity is a
+      **Landed** as `minimal-safe-diff-mechanics` § "The sanctioned-rewrite trap
+      (second-system effect)" — deliberately a separate heading, because the
+      existing "rewrite trigger" string fires mid-diff on your own bloated
+      change while this one fires at **intake**. `minimal-safe-diff` already
+      carried `keyword: rewrite`; `phrase: "from scratch"` and
+      `phrase: "second system"` were added and clear the new trigger-collision
+      gate.
+- [x] **Profiler-gated optimization clause.** Performance complexity is a
       *claim* and needs measurement evidence: no cache, no index, no
       denormalisation until a profiler says so. This matches the house claims
       culture exactly rather than importing a new one.
       *Verify:* the clause demands evidence, not restraint.
-- [ ] Iron-Law block ending in **routing, not restatement**: floors win,
+      **Landed** in the `performance` skill at Step 0 — no cache, denormalised
+      column, materialised view or read replica without a profile, a query log
+      or a timing that names the bottleneck. It demands evidence, not restraint.
+      Ships with the carve-out the sweep forced: the `scale-discipline` floor's
+      mandated index parity (R-A2) and waivered denormalisation (R-A4) are
+      structural defaults that ship **with** the query, not optimisations
+      awaiting a profiler. Zero floor files changed.
+- [x] Iron-Law block ending in **routing, not restatement**: floors win,
       invisible cross-cutting controls win, user-fenced scope wins.
       *Verify:* zero safety-floor files change in the same commit.
-- [ ] A "relationship to existing rules" section written from the S0.1 table.
+      **Re-scoped by S0.1 — no new rule file, therefore no new Iron-Law block.**
+      The routing it would have carried is rows 1-2 of § 8b-precedence: floors
+      win (naming `engineering-safety-floor`, `security-sensitive-stop`, and
+      `senior-engineering-discipline`'s invisible cross-cutting controls), then
+      user-fenced scope. Both route; neither restates. Zero safety-floor files
+      are touched by this change.
+- [x] A "relationship to existing rules" section written from the S0.1 table.
       *Verify:* every collision from S0.1 appears with its resolution.
-- [ ] Examples in this repo's own stacks rather than the source's.
+      **Re-scoped: there is no new rule to write the section *in*.** Its content
+      is the S0.1 table plus a resolution column, and it lives in
+      [`solution-minimalism-phase0-spikes § S0.1`](../evidence/investigations/solution-minimalism-phase0-spikes.md)
+      — all 14 clauses, each with its colliding artefact, and each with the
+      outcome recorded on the Phase-1 step above (landed where / already stated /
+      not adopted).
+- [x] Examples in this repo's own stacks rather than the source's.
       *Verify:* framework-neutrality lint passes.
-- [ ] Credits entry lands in the same change.
+      Rung-4 examples are multi-stack peers (JS/TS runtime, `Intl`, a database's
+      own full-text/JSON support, a filesystem watcher) rather than a single
+      mandated framework; the ladder text names no framework as the procedure.
+- [-] Credits entry lands in the same change.
       *Verify:* the borrow-check / credits gate passes.
-- [ ] **No effect claim anywhere in this phase.**
+      **Cancelled — the roadmap's own instruction is overridden by
+      `source-confidentiality`, and the override is recorded rather than
+      silently applied.** Three independent reasons, in order of force:
+      (1) nothing is vendored — mechanisms and structure were re-derived and
+      every line of text here is original — so MIT creates **no** attribution
+      obligation and the confidentiality rule's single carve-out
+      ("license-required attribution for genuinely vendored code") does not
+      open; (2) `provenance/borrows.jsonl` is a **code**-borrow ledger whose
+      closed 7-field schema requires `files:` paths that a prose borrow does not
+      have, and `CREDITS.md`'s table is scoped to vendored/derived material;
+      (3) the source name is already anonymised across this tree by the
+      2026-06-13 confidentiality sweep and is recoverable only from an encrypted
+      link, so a named entry cannot be written without reversing that decision.
+      Council split: one member argued in round 2 for defaulting to transparency
+      in an MIT repo. Recorded here per `decision-revisit-gate` — the lock is
+      surfaced, not silently obeyed.
+- [x] **No effect claim anywhere in this phase.**
       *Verify:* grep the diff for a percentage; there must be none.
+      Verified mechanically —
+      `git diff -U0 -- src/rules src/skills docs/guidelines | grep -c "^+.*%"`
+      returns **0**. The shipped discipline carries no number; the measured
+      claim waits on Phase 3, exactly as design constraint 2 requires.
 
 ## Phase 2 — Over-build review lens
 
-- [ ] A deletion-hunting review lens with a terse tag grammar — delete · stdlib ·
+- [x] A deletion-hunting review lens with a terse tag grammar — delete · stdlib ·
       native · yagni · shrink · **flatten** — one line per finding, a
       net-lines-removable summary, and a **mandatory honest-null output** when
       there is nothing to cut. `flatten:` is the shape-axis inverse of `shrink:`
@@ -236,7 +382,14 @@ edited in place and no new file appears.
       review pass; the minimum runnable check is never flagged for deletion. A
       fixture where the simpler form is *longer* must produce `flatten:`, not
       silence.
-- [ ] **Every `delete:` finding carries a mandatory fence line** (Chesterton's
+      **Landed** as `src/skills/overbuild-review-lens/SKILL.md` — a new skill,
+      per the council's round-2 convergence. Disjoint axis, stated in the skill:
+      the existing quality judge asks *is this code malformed*; this lens asks
+      *should it exist*. All six tags ship, the scope fence is its own fenced
+      Iron-Law block naming the measured guard-drop failure, and the
+      `flatten-longer` fixture is the anti-golfing case (the correct rewrite is
+      **+4 lines** and `shrink:` is a forbidden tag there).
+- [x] **Every `delete:` finding carries a mandatory fence line** (Chesterton's
       Fence). Agents are documented as especially fence-blind: they see complex
       code and want to simplify it, when the complexity may exist for a reason
       they have no context for. The line states **why the code existed** —
@@ -247,24 +400,77 @@ edited in place and no new file appears.
       *Verify:* a `delete:` finding without a fence line is rejected by the
       lens's own output contract, and a fixture whose complexity has a
       non-obvious reason must survive the lens.
-- [ ] **Test coverage of the deleted path is the deterministic fence signal**
+      **Landed and machine-enforced.** `src/scripts/_lib/overbuild_lens_contract.ts`
+      parses the verdict block and returns a contract violation for any
+      `delete:` without a valid `Fence: why= safe= covered=` line; the negative
+      case is asserted in the gate, not asserted in prose. The `lean-crud`
+      fixture is the survives-the-lens case — required controls (tenant scope,
+      404) plus the minimum runnable check, all of which must come back
+      untouched.
+- [x] **Test coverage of the deleted path is the deterministic fence signal**
       (Beyoncé rule: if you liked it, put a test on it). Deleting *tested*
       behaviour trips a test and is visible; deleting *untested* behaviour breaks
       silently. So the fence line records whether the removed path was covered —
       the one machine-checkable input to an otherwise archaeological judgement.
       *Verify:* the fence line has a coverage field, and an uncovered deletion is
       surfaced as higher-risk rather than treated as equivalent.
-- [ ] Golden-set gate: ≥3 seeded over-built fixtures where the lens must find
+      **Landed** — `covered=yes|no|partial` is a required, enum-validated field
+      of the fence, and the skill states plainly that `covered=no` raises the
+      risk of a deletion rather than leaving it equivalent (deleting tested
+      behaviour trips a test; deleting untested behaviour breaks silently). The
+      `trap-native` reference exercises the `covered=no` path.
+- [x] Golden-set gate: ≥3 seeded over-built fixtures where the lens must find
       the plant, **plus ≥1 deliberately lean fixture where it must emit the null
       instead of inventing a finding.** The lean fixture is the gate — a lens
       that cannot say "nothing to cut" is a finding generator.
       *Verify:* the lean-fixture case fails the build if the lens invents a
       finding.
+      **Landed** as `tests/scripts/overbuild_lens_contract.test.ts` (17 assertions,
+      green) over five fixtures: three seeded traps (`trap-stdlib`,
+      `trap-yagni`, `trap-native`), the lean gate (`lean-crud`), and the
+      longer-is-simpler case (`flatten-longer`). The gate scores the reference
+      reviews **and** feeds the scorer four deliberately wrong outputs that must
+      be rejected — invented finding on the lean fixture, unfenced deletion,
+      `shrink:` where `flatten:` was required, and a silent miss. A scorer that
+      passes everything is worse than none, so it is proven to discriminate
+      rather than assumed to.
+      **Honest boundary:** this gates the **output contract** deterministically
+      with no model call. Whether a live model finds the plant needs a scored
+      eval run, which is human-invoked here; the fixtures and labels are that
+      run's input. Recorded in the fixtures' README, not papered over.
 
 ## Phase 3 — Pinned public-repo benchmark (the proof exhibit)
 
 Blocked on `benchmark-spend-authorization` (needs the S0.3 cost sheet) and on
 the standing model-id verification blocker.
+
+> **Halted 2026-08-02 — the whole phase, with the cost sheet now in hand.** Two
+> independent gates, either of which alone stops it:
+>
+> 1. **Spend, owner: user.** S0.3 priced it: 30 tasks × 4 arms × 3 seeds on
+>    sonnet ≈ 360 runs ≈ 180M tokens ≈ **$150–250 as a floor**, higher on a real
+>    repo. `benchmark-spend-authorization` is the grant this cost sheet exists to
+>    be granted against, and it is the user's to give. Firing a paid external
+>    run autonomously is a Hard-Floor action
+>    ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md));
+>    no autonomy setting or roadmap step lifts it.
+> 2. **The harness does not support the phase yet, at any price.** S0.3's
+>    deltas #9 (pinned external repo), #10 (~30 hand-written capability /
+>    discipline oracles, sized **large**) and #11 (a cognitive-complexity
+>    endpoint, which **does not exist anywhere in the repo** — sized **large**)
+>    are prerequisites this roadmap never specified. #11 is not optional
+>    decoration: the pre-registered acceptance below is a *metric pair*, so
+>    without it the phase cannot report a pass at all.
+>
+> Deltas #1–#5 (all sized small, ~one sitting) are the difference between a
+> publishable run and an unpublishable one — the per-trial injection audit above
+> all, because the harness has **already produced a full set of invalid nulls**
+> from an undetected activation leak and today's code would not catch a
+> recurrence. Whatever else happens, they land before the first paid trial.
+>
+> Nothing from this phase is cancelled or reinterpreted; the steps stand as
+> written. Full evidence, delta table, and price inputs:
+> [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
 
 - [ ] **Repo:** one public OSS repo pinned at a SHA. A second repo on this
       package's home stack is optional and cost-gated.
@@ -434,22 +640,46 @@ it. None is a step in this roadmap.
 
 ## Acceptance criteria
 
-- [ ] S0.1 produced a rung-by-rung table and the new-vs-extend decision follows
+- [x] S0.1 produced a rung-by-rung table and the new-vs-extend decision follows
       the stated disjointness test, not preference.
-- [ ] S0.2 answered both questions with committed transcript evidence, and any
+      14 rows, one collision citation each, 12 EXTEND / 2 NEW. The re-scope
+      followed the tally, and the repo's own complexity budget corroborated it
+      independently.
+- [x] S0.2 answered both questions with committed transcript evidence, and any
       real subagent-propagation gap left as its own change rather than being
       fixed here.
-- [ ] The ladder ships as projected rule text (never a description-triggered
+      YES / YES. No gap exists, so nothing was handed back and nothing was fixed
+      here. The `SubagentStart` finding supersedes a prior "unverified" record.
+- [x] The ladder ships as projected rule text (never a description-triggered
       skill), carrying **both axes** and the precedence table, with floors
       routed, zero safety-floor files touched, credits landed, and no effect
       claim anywhere.
-- [ ] The review lens passes its golden set **including** the lean fixture where
+      Ships as edits to `improve-before-implement` (a projected rule) and its
+      routed guideline — never as a description-triggered skill, per F1. Both
+      axes and the precedence ladder are in. Floors are **routed and untouched**:
+      `engineering-safety-floor`, `security-sensitive-stop`,
+      `senior-engineering-discipline` and `scale-discipline` have zero changed
+      lines in this diff. No percentage appears anywhere in it. **Credits:
+      cancelled, not forgotten** — see the cancelled Phase-1 step for the three
+      reasons and the recorded council split.
+- [x] The review lens passes its golden set **including** the lean fixture where
       it must emit the null and the fixture where the simpler form is longer, and
       no `delete:` finding can be emitted without its fence line.
+      17 assertions green over five fixtures, with four negative cases proving
+      the scorer discriminates. Contract-level, deterministic, no model call —
+      the find-the-plant half is stated as needing a scored eval run rather than
+      claimed.
 - [ ] Phase 3 either reports from the full tier with every pre-registered
       endpoint — added lines **paired** with cognitive complexity, plus
       search-adherence and the safety tier — or publishes the null; no number
       appears anywhere except rendered from the pinned report.
+      **Open — blocked, see the Phase 3 halt note.** Spend is the user's grant;
+      the metric pair additionally needs a complexity endpoint that does not
+      exist yet.
 - [ ] The scorer demonstrably refuses a size win that came with a complexity
       regression (proven on a golfed fixture, not asserted).
+      **Open — blocked with Phase 3.** The *lens* scorer already demonstrably
+      refuses a golfed finding (`shrink:` where `flatten:` was required, proven
+      on the `flatten-longer` fixture); the *benchmark* scorer this criterion
+      names cannot exist before delta #11.
 - [ ] All quality gates pass — see `quality-tools`.

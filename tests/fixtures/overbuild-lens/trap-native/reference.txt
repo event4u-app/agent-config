@@ -1,0 +1,11 @@
+Lens:    overbuild-review-lens
+Target:  tests/fixtures/overbuild-lens/trap-native
+
+Verdict: overbuilt
+
+Findings:
+1. native:  submitted.ts:6   Postgres tsvector/to_tsquery covers this; the in-memory index duplicates the datastore.
+2. delete:  submitted.ts:25  dumpIndexStats has no caller.
+   Fence: why=prototype instrumentation  safe=grep across src and tests returns only the definition  covered=no
+
+Net: -28 lines

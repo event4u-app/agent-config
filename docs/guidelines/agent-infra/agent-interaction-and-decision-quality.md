@@ -148,6 +148,77 @@ source's remote lookup is dropped — a lethal-trifecta egress concern).
 **If misfit** → show evidence (file references), propose alternative.
 **If multiple valid options** → list them, ask which to use. See [§ 2 — No blind implementation](#2-no-blind-implementation).
 
+#### 8b-ladder. The solution-size ladder — stop at the first rung that works
+
+"Does similar functionality already exist?" is one question with an **ordered**
+answer set. Walk it top-down and stop at the first rung that carries the
+requirement; each rung down costs more code to write, own, and eventually
+delete. Ordered **after** comprehension, never instead of it — the ladder
+shortens the solution, never the reading.
+
+| # | Rung | The question |
+|---|---|---|
+| 1 | **Need to exist** | Does this have to be built at all? (§ 8-pre decides) |
+| 2 | **Reuse in repo** | Does a unit already in this codebase do it? |
+| 3 | **Stdlib / framework** | Does the language stdlib or the framework already do it? |
+| 4 | **Native platform** | Does the OS, runtime, browser, or database already do it? |
+| 5 | **Installed dependency** | Is it already in the dependency tree? |
+| 6 | **Smallest working form** | Of what genuinely must be written, what is the least of it? |
+
+Rungs 1, 2, 3, 5 and 6 are obligations this suite already states elsewhere
+(§ 8-pre; § 8b above and [`component-oriented-and-oop-development`](../component-oriented-and-oop-development.md)
+"Reuse before you build"; `architecture`'s "use the framework's primitive";
+[`supply-chain-intake`](../../../src/skills/supply-chain-intake/SKILL.md) step 0;
+`minimal-safe-diff`'s smallest-change Iron Law) — the ladder **orders** them, it
+does not add them.
+
+**Rung 4 is the one that was missing.** Between "the framework does it" and "add
+a dependency" sits the platform the code already runs on: `crypto.randomUUID`
+before a uuid package, a database's own JSON / full-text / generated-column
+support before an application-side index, `AbortSignal.timeout` before a timeout
+helper, `Intl` before a formatting library, a filesystem watcher before a polling
+loop. A dependency added for something the platform already ships is permanent
+cost bought against a capability you already had.
+
+#### 8b-shape. The shape axis — simple is not the same as short
+
+The ladder above is the **scope** axis: must this exist, and can something
+cheaper serve? The **shape** axis is the other half: of what must exist, which
+form carries the **least cognitive load** — explicitly *not* the fewest
+keystrokes.
+
+A flat version one line longer beats a dense clever one. A one-liner qualifies
+as the "smallest working form" only when it is also the *simplest* form, not
+merely the shortest — nested ternaries, long optional-call chains, and clever
+one-expression reductions all shrink the diff while raising the cost of every
+future read. The failure mode is measured, not theoretical: generated code
+trends shorter but denser, carrying more cognitive load per line. A size metric
+on its own rewards exactly that.
+
+Read with [`code-clarity`](../code-clarity.md), which owns the line-level form
+decisions and states the same distinction from the other direction.
+
+#### 8b-precedence. Resolution order when these pull against each other
+
+Stated once, here, so the clauses above never issue contradictory simultaneous
+instructions. Higher wins:
+
+1. **Safety floors** — `engineering-safety-floor`, `security-sensitive-stop`,
+   and `senior-engineering-discipline`'s invisible cross-cutting controls. A
+   rung that saves a line by dropping a guard has lost, not won.
+2. **Explicit user-fenced scope** — "just this one line" ends the ladder.
+3. **Shape** (simplicity) — a simpler form beats a smaller one.
+4. **Scope** (don't build it) — a cheaper rung beats a lower rung.
+5. **De-duplication** — last, and gated: extract only when the repetition
+   trigger in [`minimal-safe-diff-mechanics`](minimal-safe-diff-mechanics.md)
+   § Anti-over-engineering fires, never as a reflex.
+
+Any pair is resolvable from this list alone. This is a **principle** ordering
+and deliberately *not* an entry in `docs/contracts/rule-interactions.yml`, which
+is a pairwise contract scoped to the always-on kernel rules — forking that
+linted contract with a second prose ordering over a different kind of object is
+the drift this ladder exists to avoid.
+
 ### 8c. Is the approach sound?
 
 - Is there a simpler way to achieve the same result?
