@@ -26,7 +26,13 @@ The smallest change is also the least *abstract* and least *speculative* one:
 - **Three similar lines beat a premature abstraction.** Do not extract a helper
   / generic / config layer to dedupe two or three call sites — inline
   repetition is cheaper to read and change than the wrong abstraction. Per new
-  abstraction: **cite the second caller — or inline it.**
+  abstraction: **cite the second caller — or inline it.** The operative
+  threshold in this suite is the **second real repetition** (or a genuine second
+  axis of change), matching `architecture` and
+  [`component-oriented-and-oop-development`](../component-oriented-and-oop-development.md);
+  the "three lines" phrasing is about *line* count inside one call site, not a
+  third-occurrence gate. A borrowed "wait for the third occurrence" rule is
+  **not** adopted — it would fork a threshold this repo already decided.
 - **No speculative features.** Nothing beyond what was asked: no
   configurability or "flexibility" nobody requested, no parameters with one
   call site, no error handling for scenarios that cannot occur in this
@@ -39,6 +45,23 @@ The smallest change is also the least *abstract* and least *speculative* one:
   "for safety". Git history is the tombstone.
 - **No docstrings/comments on untouched code.** Do not annotate code the diff
   does not change.
+
+### The sanctioned-rewrite trap (second-system effect)
+
+Distinct from *the rewrite trigger* above, which fires **mid-diff** on your own
+bloated change. This one fires at **intake**, when the user has already
+sanctioned a rewrite, a v2, a from-scratch replacement, or a large refactor —
+and it is the single highest over-build context there is. The second system a
+person builds is the most over-built one they will ever build: every constraint
+the first system taught them arrives as a feature, and none of it is demanded
+by the ticket in front of them.
+
+Permission to rewrite is permission to **replace the behaviour that exists** —
+not a licence to add the capability the old system lacked. The v2 ships the
+v1 surface, minus what is provably dead, plus only what was explicitly asked
+for. Everything the rewrite "makes easy to add now" is a separate change with
+its own demand gate (guideline § 8-pre) and its own place on the
+solution-size ladder (§ 8b-ladder).
 
 Wrong/right pairs for each ban:
 [`simplicity-and-goal-demos`](simplicity-and-goal-demos.md)

@@ -80,6 +80,16 @@ Next.js / Python / Go) live in [`agent-docs-writing`](../skills/agent-docs-writi
 Before making a change that affects a **public API** (endpoint response, service method signature,
 event payload, job constructor), assess the impact:
 
+**Why the surface, not just the contract, is the thing to keep small** (Hyrum's
+Law): with enough consumers, every *observable* behaviour of a system becomes
+something somebody depends on, regardless of what the documented contract
+promises — iteration order, an error message's wording, a timing side effect, a
+field that happens to be present. Two consequences, and they point in opposite
+directions. Adding: a smaller exported surface is fewer accidental contracts to
+honour later, so do not export what the caller does not need. Removing: the
+list above is a floor, not a ceiling — an observable behaviour nobody documented
+can still break someone when it disappears.
+
 ### Always ask the user first when:
 
 - Removing or renaming a public method/class
