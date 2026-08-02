@@ -23,21 +23,51 @@ parent: road-to-package-renewal.md
       adoption ~3/215)
 - [ ] Add CI ban on new `.agent-src.uncondensed` references (denylist check,
       ratchet on current count while the sweep drains it to zero)
-- [ ] Deduplicate `ci` / `ci-strict` into ONE shared gate list with a strict
-      flag — strict must be a superset by construction (today it misses 6 gates
-      plain `ci` runs); verify with a list-diff assertion in CI
-- [ ] Reconcile the required-check matrix, split by surface: (a) doc-shrink —
-      align `branch-protection-policy.md` with what is actually enforced, a
-      normal PR commit; (b) enforce — the branch-protection settings change is
-      an admin API write (`gh api -X PUT .../branches/main/protection`)
-      executed by the maintainer with explicit this-turn confirmation, with
-      the resulting protection JSON recorded as the verification artifact
-- [ ] Record the current local `task ci` wall-clock on the reference machine
-      into this file BEFORE the umbrella spike starts — the <5 min target is
-      unfalsifiable without the recorded baseline
+- [x] Deduplicate `ci` / `ci-strict` into ONE shared gate list with a strict
+      flag — done via **delegation** (council 2026-08-02 decision A1, 2/2):
+      `ci-strict` is now `- task: ci` + 4 strict-only entries, so the superset
+      property is tautological rather than asserted. 205 duplicated lines
+      deleted. Confirmed the 6 missing gates exactly: `preflight` (fans out to
+      11 scripts incl. `check_no_new_legacy_path`, `check_kernel_rule_bundle`),
+      `check-ci-local-parity`, `check-gitignore-freshness`,
+      `check-generator-output-coverage`, `check-tracked-but-ignored`,
+      `check-generated-artefact-headers` — ~16 concrete script runs the
+      "release-tag gate" did not prove. New gate
+      `check_ci_strict_superset` (wired into `ci`, therefore into `ci-strict`)
+      asserts the single invariant; verified red (exit 1) on a mutated
+      delegation and green (exit 0) restored.
+      Two adjacent findings fixed in the same change: (1)
+      `check_ci_local_parity` was RED on trunk — `check_evaluator_budgets` and
+      `resolve_lint_scope` ran in CI reachable from no local chain; both now
+      declared under `ci_only:` with reasons (gate now green: 233 CI / 212
+      local / 22 declared CI-only). (2) `task ci-fast` does not exist —
+      `taskfiles/ci-fast.yml` is `flatten: true`, so no aggregate is created,
+      yet the tier comment and `check_enforcement_coverage.ts:52` both name it;
+      recorded as a named finding in the Taskfile, not silently invented
+- [x] Reconcile the required-check matrix, split by surface: ✅ (a) doc-shrink —
+      `branch-protection-policy.md` rewritten against live state; ⏸️ (b) enforce
+      — maintainer-gated, tracked in `### blocker: required-check-enforcement`.
+      Findings: enforcement is a **ruleset** (`main protection`, id `17749383`),
+      NOT classic branch protection — `GET /branches/main/protection` returns
+      404, so this step's original `gh api -X PUT .../branches/main/protection`
+      command was aimed at the wrong endpoint. Live: **one** required check
+      (`Sync + Generate Tools Consistency`) vs 19 documented. The doc's
+      `python2ts` addendum named three workflows that are all deleted, and its
+      docs-only shape cited `task ci:required-checks`, which does not exist.
+      Disposition per council 2026-08-02 (C1, 2/2)
+- [-] Record the current local `task ci` wall-clock on the reference machine
+      into this file BEFORE the umbrella spike starts <!-- skipped: quality.local_auto_run=false → remote CI is the gate; council 2026-08-02 decision B3 (2/2) additionally rejects a local full-pipeline number AS a baseline — the same environment whose false-red history motivated the policy cannot produce a trustworthy reference, and remote CI runs different hardware/parallelism so it can never validate one. The dependent target is retargeted in the next step instead of being left unfalsifiable. -->
 - [ ] Umbrella gate runner spike: run N gates in-process (worker pool) instead
-      of ~200 sequential tsx cold-starts; pre-register the target (local
-      `task ci` under 5 min) and measure before/after on the same machine.
+      of ~200 sequential tsx cold-starts.
+      **Pre-registered target (revised 2026-08-02 per council B3, BEFORE any
+      measurement — replaces the unfalsifiable "local `task ci` under 5 min"):**
+      on a fixed sample of N=20 gate scripts (10 fastest, 10 slowest by
+      single-run wall-clock), the in-process runner cuts total wall-clock by
+      **≥30%** versus the same 20 gates run as sequential `tsx` subprocesses,
+      measured on the same machine in the same session, both numbers recorded
+      inline here. Abort criterion: if the import-safety audit finds >25% of
+      the sample cannot be imported without side effects, record NO-GO with
+      the count instead of forcing decomposition inside this PR.
       Constraint: in-process execution requires every pooled gate script to be
       importable without top-level CLI-guard side effects (`process.exit` at
       import — the documented bundled-CLI-entry-guard/esbuild landmine class);
@@ -48,11 +78,17 @@ parent: road-to-package-renewal.md
       setup action) instead of repeating `npm ci` + full build per job;
       verify: PR CI shows one build job + artifact download in dependents,
       total pipeline wall-clock before/after recorded in the PR description
-- [ ] Dependency-audit gap: enable dependabot (or a scheduled `npm audit` /
-      osv-scanner gate) OR record the explicit decline with reason. Existing
-      supply-chain mitigations stay (`check_secret_leak` gate, npm OIDC
-      Trusted Publishing + provenance in the release workflow); today every
-      workflow runs `npm ci --no-audit` and no lockfile scanner exists
+- [x] Dependency-audit gap: `.github/dependabot.yml` added — weekly grouped
+      `npm` + `github-actions` version updates (plus GitHub's ungrouped
+      security updates), monthly for the two non-shipped manifests
+      (`site/`, `deploy/telemetry-worker/`); Conventional-Commit prefixes so
+      `lint commit subjects` passes on dependabot's own PRs.
+      **Correction to this step's premise:** "no lockfile scanner exists" was
+      wrong — `npm audit --omit=dev --audit-level=high` already runs on every
+      PR as a step inside the `Static Checks` job (`tests.yml:330`) and again
+      as a release-PR job (`release-validation.yml:242`). The real gap was the
+      quiet week: an advisory published against an already-installed version
+      is invisible until someone opens a PR. That is what the schedule closes
 
 ## Phase 2 — token quick wins (no lock touched)
 
@@ -120,6 +156,39 @@ parent: road-to-package-renewal.md
 - [ ] Reconcile `rule-router.md` with reality either way: today it documents a
       runtime loader that does not exist — after the spike it documents either
       the resolver or the explicit absence
+
+## Blockers
+
+### blocker: required-check-enforcement
+
+- **Status:** gated
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap (the doc-shrink half shipped; this is
+  the enforcement half of the required-check-matrix step)
+- **What to do:** extend the required-status-check list on the repository
+  **ruleset** — NOT classic branch protection, which returns 404 for this
+  repo:
+
+  ```bash
+  gh api repos/event4u-app/agent-config/rulesets/17749383 > ruleset-before.json
+  # edit required_status_checks, then:
+  gh api -X PUT repos/event4u-app/agent-config/rulesets/17749383 \
+    --input ruleset-after.json
+  ```
+
+  Recommended minimum additions (all already run and pass on every feature
+  PR): `Smoke — kernel`, `Smoke — router`, `Smoke — schema`, `Smoke — skills`,
+  `Static Checks (ESLint · typecheck · prepack)`, `skill-lint`,
+  `Rule backstops`. Sharded / OS-matrixed check names are deliberately
+  excluded — their names encode shard counts and runner labels, so a matrix
+  change silently breaks a pinned required-check name.
+- **Why not the agent:** an admin API write on the production trunk is a
+  Hard Floor action under `non-destructive-by-default` — explicit this-turn
+  maintainer confirmation, never an autonomous roadmap step.
+- **Resolved when:** the maintainer executes the PUT and records the
+  resulting `ruleset-after.json` as the verification artifact, and
+  `docs/contracts/branch-protection-policy.md` § "What is actually enforced"
+  is updated from that JSON.
 
 ## Verification
 
