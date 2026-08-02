@@ -26,6 +26,8 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots, iter_commands } from './_lib/agent_src.js';
+import { scoped_projection_stats } from './_lib/scoped_projection.js';
+import { canonical_counts } from './check_command_count_messaging.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // _HERE === <repo>/src/scripts/update_counts.ts ; the retired Python implementation derives
@@ -77,7 +79,48 @@ function _exists(p: string): boolean {
     }
 }
 
+/**
+ * Every `SKILL.md` the canonical `count('skills')` counts, as absolute paths.
+ *
+ * Exported so `count_scoped_projection.ts` partitions the SAME file set the
+ * ledger's total is derived from. That is what makes the published pair
+ * ("N of M skills") coherent by construction: `projected + pruned === M`
+ * cannot drift, because there is one walk, not two.
+ */
+export function* iter_skills(): Generator<string> {
+    const seen = new Set<string>();
+    for (const root of artefact_roots()) {
+        const subdir = path.join(root, 'skills');
+        if (!_exists(subdir)) {
+            continue;
+        }
+        for (const f of _rglob(subdir, (n) => n === 'SKILL.md')) {
+            const rel = path.relative(root, f).split(path.sep).join('/');
+            if (seen.has(rel)) continue;
+            seen.add(rel);
+            yield f;
+        }
+    }
+}
+
 export function count(kind: string): number {
+    if (kind === 'commands_active') {
+        // Commands MINUS deprecation shims — the number the hero badge and the
+        // "Browse all N active commands" line carry, and the one prose
+        // mentions resolve to. Distinct from `commands` (raw file count):
+        // they are equal only while the shim set is empty, so anchoring an
+        // active-count position to `commands` would rewrite it to the wrong
+        // number the moment a command is superseded.
+        const [, , active] = canonical_counts();
+        return active;
+    }
+    if (kind === 'skills_scoped') {
+        // Skills a DEFAULT `projection.mode: scoped` install deploys. Derived
+        // by the installer's own prune predicate over the same walk the
+        // canonical `skills` total uses, so the published pair
+        // ("N of M skills") cannot drift apart. See count_scoped_projection.ts.
+        return scoped_projection_stats(REPO_ROOT, iter_skills()).projected;
+    }
     if (kind === 'router_rules') {
         // Routed rule entries in the compiled router (kernel + tier_1 +
         // tier_2). Read from dist/router.json — the artifact hosts consume —
@@ -119,19 +162,19 @@ export function count(kind: string): number {
         }
         return total;
     }
+    if (kind === 'skills') {
+        // Single walk, shared with count_scoped_projection.ts — see iter_skills.
+        for (const _ of iter_skills()) {
+            total += 1;
+        }
+        return total;
+    }
     for (const root of artefact_roots()) {
         const subdir = path.join(root, kind);
         if (!_exists(subdir)) {
             continue;
         }
-        if (kind === 'skills') {
-            for (const f of _rglob(subdir, (n) => n === 'SKILL.md')) {
-                const rel = path.relative(root, f).split(path.sep).join('/');
-                if (seen.has(rel)) continue;
-                seen.add(rel);
-                total += 1;
-            }
-        } else if (kind === 'personas') {
+        if (kind === 'personas') {
             // personas live as flat .md files, README excluded
             for (const f of _glob(subdir, (n) => n.endsWith('.md'))) {
                 if (path.basename(f) === 'README.md') continue;
@@ -164,6 +207,12 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
             // badge is owned by check_command_count_messaging.
             ['(/badge/Skills-)(\\d+)(-)', 'skills'],
             ['(/badge/Rules-)(\\d+)(-)', 'rules'],
+            // The Commands badge WAS left to check_command_count_messaging
+            // alone ("avoids double-ownership"). Nothing generated it, so it
+            // drifted to 191 against a canonical 192 and only the checker
+            // noticed — the exact gap this roadmap closes. Generator writes,
+            // checker verifies: that IS the ownership split, not a conflict.
+            ['(/badge/Commands-)(\\d+)(-)', 'commands_active'],
             ['(/badge/Guidelines-)(\\d+)(-)', 'guidelines'],
             ['(/badge/Personas-)(\\d+)(-)', 'personas'],
         ],
@@ -177,7 +226,21 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
             ['(- claim: )(\\d+)( skills\\.)', 'skills'],
             ['(- claim: )(\\d+)( commands\\.)', 'commands'],
             ['(- claim: )(\\d+)( governed rules\\.)', 'rules'],
+            // The scoped-projection claim: BOTH halves of "N of M skills".
+            // `M` was scanner-checked but generator-blind (a maintainer
+            // hand-edited it on every skill addition); `N` was guarded by
+            // nothing at all and had drifted 2 from the benchmark doc the
+            // claim names as its own method.
+            ['(installs ships )(\\d+)( of )', 'skills_scoped'],
+            ['( of )(\\d+)( skills \\(untagged core)', 'skills'],
+            // "14 of 111 governed rules" — the total was scanner-checked and
+            // generator-blind for the same reason.
+            ['( of )(\\d+)( governed rules \\()', 'rules'],
         ],
+    ],
+    [
+        'docs/command-flows.md',
+        [['(\\*\\*)(\\d+)( commands\\*\\*)', 'commands_active']],
     ],
     [
         'docs/getting-started-by-role.md',
@@ -206,6 +269,11 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
         'docs/getting-started.md',
         [
             ['(automatically by )(\\d+)( rules)', 'rules'],
+            // Was deliberately unsynced to avoid double-ownership with
+            // check_command_count_messaging; it drifted to 191 as a result.
+            // Now generated from `commands_active` — the SAME canonical the
+            // checker compares against, so the two cannot disagree.
+            ['(Browse all )(\\d+)( active commands)', 'commands_active'],
             // NOTE: the "Browse all N active commands" line here carries the
             // *active* command count and is owned by
             // check_command_count_messaging.py — intentionally not synced
@@ -254,7 +322,16 @@ export function apply_to_text(
     return [new_text, drifts];
 }
 
-const KINDS = ['skills', 'rules', 'commands', 'guidelines', 'personas', 'router_rules'] as const;
+const KINDS = [
+    'skills',
+    'skills_scoped',
+    'rules',
+    'commands',
+    'commands_active',
+    'guidelines',
+    'personas',
+    'router_rules',
+] as const;
 
 function parse_args(argv: readonly string[]): { check: boolean } {
     const args = { check: false };
@@ -282,8 +359,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         counts[k] = count(k);
     }
     process.stdout.write(
-        `📊  Truth: skills=${counts['skills']} rules=${counts['rules']} ` +
-            `commands=${counts['commands']} guidelines=${counts['guidelines']} ` +
+        `📊  Truth: skills=${counts['skills']} skills_scoped=${counts['skills_scoped']} ` +
+            `rules=${counts['rules']} commands=${counts['commands']} ` +
+            `commands_active=${counts['commands_active']} ` +
+            `guidelines=${counts['guidelines']} ` +
             `personas=${counts['personas']} router_rules=${counts['router_rules']}\n`,
     );
 

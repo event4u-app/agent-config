@@ -47,6 +47,11 @@ export const ALLOWLIST_PREFIXES: readonly (readonly string[])[] = [
     ['skill_eval_coverage'],
     ['domain_soundness_status'],
     ['check_artefact_count_messaging'],
+    // `update_counts --check` re-derives every anchored number in the docs and
+    // exits non-zero on any disagreement — so its exit code IS the verdict for
+    // a published count, not merely evidence that some report exists. Read-only
+    // under `--check`; same deterministic, model-free class as its neighbours.
+    ['update_counts'],
     ['check_enforcement_coverage'],
     ['check_token_regression'],
     ['lint_agent_security'],
