@@ -623,11 +623,20 @@ function check_cli_invocations(filepath: string): Violation[] {
     return violations;
 }
 
-function scan_all(root: string): { violations: Violation[]; detected: string[] } {
+function scan_all(root: string): {
+    violations: Violation[];
+    detected: string[];
+    scanned: number;
+} {
     const { patterns, detected } = _compile_patterns(root);
     const forbidden = _compile_forbidden_patterns();
     const allowlist = _compile_allowlist();
     const violations: Violation[] = [];
+    // Distinct files actually read, for the gate-coverage contract
+    // (src/config/gate-coverage.yml): a gate that inspected nothing has not
+    // passed. Counted as a set because the layer-3/4 passes revisit files the
+    // layer-1 pass already read.
+    const scannedFiles = new Set<string>();
 
     // Layer 1 + 2: full package content
     for (const scanDir of SCAN_DIRS) {
@@ -636,6 +645,7 @@ function scan_all(root: string): { violations: Violation[]; detected: string[] }
             continue;
         }
         for (const f of _rglobMdSorted(d)) {
+            scannedFiles.add(f);
             violations.push(...check_file(f, [...patterns, ...forbidden], allowlist));
         }
     }
@@ -644,6 +654,7 @@ function scan_all(root: string): { violations: Violation[]; detected: string[] }
     for (const rel of SCAN_ROOT_FILES) {
         const f = path.join(root, rel);
         if (_isFile(f)) {
+            scannedFiles.add(f);
             violations.push(...check_file(f, forbidden, allowlist));
         }
     }
@@ -679,7 +690,7 @@ function scan_all(root: string): { violations: Violation[]; detected: string[] }
         }
     }
 
-    return { violations, detected };
+    return { violations, detected, scanned: scannedFiles.size };
 }
 
 function format_text(violations: Violation[], detected: string[]): string {
@@ -831,7 +842,7 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
 function main(): number {
     const args = parseArgs(process.argv.slice(2));
 
-    let result: { violations: Violation[]; detected: string[] };
+    let result: { violations: Violation[]; detected: string[]; scanned: number };
     try {
         result = scan_all(args.root);
     } catch (e) {
@@ -840,7 +851,11 @@ function main(): number {
         return 3;
     }
 
-    const { violations, detected } = result;
+    const { violations, detected, scanned } = result;
+    // gate-coverage contract (src/config/gate-coverage.yml): one machine-readable
+    // count on stderr so `check_gate_coverage` can assert this gate read a real
+    // corpus. It scanned a deleted root for months and still exited 0.
+    process.stderr.write(`scanned: ${String(scanned)}\n`);
     if (args.format === 'json') {
         const payload = { detected, violations };
         process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);

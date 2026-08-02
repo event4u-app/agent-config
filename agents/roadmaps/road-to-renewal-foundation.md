@@ -13,16 +13,71 @@ parent: road-to-package-renewal.md
 
 ## Phase 1 — CI becomes a trustworthy oracle
 
-- [ ] Dead-root gate sweep: enumerate every `src/scripts/lint_*` / `check_*`
-      referencing `.agent-src.uncondensed/` (20+ confirmed), rewire each to the
-      shared scan-root resolver, and delete the dead branches; separate
-      executable references from comments/docs first
-      (`rg "agent-src\.uncondensed" src/ --type ts` minus comment-only hits)
-- [ ] Make `assertScanned` mandatory for corpus gates: a gate whose resolved
-      scan set is empty exits RED, not green (structural guard; current
-      adoption ~3/215)
-- [ ] Add CI ban on new `.agent-src.uncondensed` references (denylist check,
-      ratchet on current count while the sweep drains it to zero)
+- [x] Dead-root gate sweep: enumerated all 24 gate scripts carrying the literal
+      and classified each — **5 were DEAD-EXECUTABLE**, the rest are intentional
+      denylists (`check_no_new_legacy_path`, `check_public_catalog_links`,
+      `check_condensed_paths`, `check_source_pointer_freshness`,
+      `lint_load_context`), defensive fallbacks that already guard existence, or
+      comment-only. All 5 repaired and each verified green afterwards:
+      1. **`check_always_budget`** — the worst. `load_context` entries are
+         relative to the declaring file (`../contexts/...`); the resolver joined
+         them to the REPO ROOT, so every context failed `existsSync` and the
+         walker silently skipped it. The whole transitive-context dimension
+         counted ZERO while the gate printed a confident `60.1%`. Repaired →
+         the real number is **60,254 chars, 123% of the 49,000 cap**. See the
+         two-budget split below.
+      2. **`check_portability`** — `SCAN_DIRS` still named the retired root, so
+         the entire `src/` authoring tree was skipped; an identifier was caught
+         only after a condense run projected it. Revealed 8 violations, all in
+         `src/templates/` (never projected into `dist/`, so never scanned).
+         All 8 are the package's OWN published identifiers — the marketplace
+         install command and a real shipped anchor filename — allowlisted with
+         that reason, not "fixed"
+      3. **`check_references`** — `src/` was absent from every candidate list,
+         so a reference resolvable only under the source of truth was reported
+         BROKEN
+      4. **`lint_framework_leakage`** — the inventory-README exemption compared
+         against a retired root AND against `'dist/agent-src'` as a single
+         path segment, which a `/`-split can never yield; it fired for no file
+      5. **`lint_agents_md`** — dead fallback candidates; harmless only while
+         `dist/agent-src/` happens to be materialised
+      Ratchet: `check_no_new_legacy_path:hardcoded-scan-roots` lowered 56 → 51
+- [x] **Two-budget split for `check_always_budget`** (council 2026-08-02,
+      option B, 2/2 — added as scope by the repair above): `TOTAL_CAP` now
+      governs the **raw** dimension it was actually calibrated for
+      (29,466/49,000 = 60.1%, green); the **extended** dimension gets its own
+      hard-gated cap seeded at the first real measurement (60,254) plus reseeded
+      per-rule and top-3 ratchets. The seed is a baseline of revealed debt, not
+      an approval, and moves DOWN only — Phase 2's token work pays it down.
+      Rejected: raising `TOTAL_CAP` to swallow it (silently doubles the kernel
+      budget and removes exactly the pressure Phase 2 applies). Deferred: the
+      lazy-vs-eager `load_context` split — real, but narrowing an aggregate on a
+      semantic argument is a separate decision from repairing its measurement.
+      Verified the ratchet bites: +107 chars into a lazily-loaded context flips
+      it red, growth that was previously invisible
+- [x] Make an empty scan set exit RED — delivered via the **stronger existing
+      mechanism** rather than by retrofitting `assertScanned` into ~200 gates.
+      PR #1108 already shipped `check_gate_coverage` + `src/config/gate-coverage.yml`:
+      each listed gate emits a machine-readable `scanned: <N>`, is invoked
+      CI-identically, and is asserted against a **floor** — which strictly
+      dominates `assertScanned`, since that can only tell 0 from 1 while a floor
+      also catches the 1,566 → 3 collapse a `> 0` check reports as healthy.
+      The gap was coverage of the manifest, not the mechanism: it listed 8 gates
+      and none of the 5 repaired above. Added `check_portability` (floor 1,200 /
+      1,566 measured), `check_references` (800 / 1,043) and
+      `lint_framework_leakage` (350 / 431), each emitting a `scanned:` line —
+      census now 8 → 11 enforced, all green. Note recorded in the manifest that
+      `lint_framework_leakage`'s human summary counts files WITH HITS (0 on a
+      clean run), which is exactly how a blind gate looks healthy
+- [x] Add CI ban on new `.agent-src.uncondensed` references — **already shipped**
+      by PR #1108 as `check_no_new_legacy_path` + the
+      `check_no_new_legacy_path:hardcoded-scan-roots` ratchet in
+      `src/config/gate-violation-baselines.json`; it runs in `ci` via `preflight`
+      (and now in `ci-strict` too, which previously skipped `preflight`
+      entirely). Verified live: it caught this run's own explanatory comments as
+      new references and was only satisfied after they were reworded. Baseline
+      lowered 56 → 51 by this phase's sweep, per its own "every repair is a
+      lowering commit" contract
 - [x] Deduplicate `ci` / `ci-strict` into ONE shared gate list with a strict
       flag — done via **delegation** (council 2026-08-02 decision A1, 2/2):
       `ci-strict` is now `- task: ci` + 4 strict-only entries, so the superset

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**101 / 216 steps done · 47%**
+**105 / 217 steps done · 48%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
 ```
 
 ## Open roadmaps
@@ -25,7 +25,7 @@
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 8 | [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md) | 2 | 9 | 3 | 6 | 0 | 0 | 0 | ███████░░░ 67% |
 | 9 | [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md) | 3 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-adr-hygiene) | ░░░░░░░░░░ 0% |
-| 10 | [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md) | 3 | 20 | 16 | 3 | 0 | 1 | [1](#blockers-road-to-renewal-foundation) | ██░░░░░░░░ 16% |
+| 10 | [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md) | 3 | 21 | 13 | 7 | 0 | 1 | [1](#blockers-road-to-renewal-foundation) | ████░░░░░░ 35% |
 | 11 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-leverage) | ░░░░░░░░░░ 0% |
 | 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
@@ -189,11 +189,11 @@ _1 blocker resolved._
 
 ### [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md)
 
-**Road to renewal — Foundation (CI oracle, dead tree, token quick wins)** — 3 / 19 done (16%)
+**Road to renewal — Foundation (CI oracle, dead tree, token quick wins)** — 7 / 20 done (35%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | CI becomes a trustworthy oracle | 🟡 in progress | 5 | 3 | 0 | 1 | 38% |
+| 1 | CI becomes a trustworthy oracle | 🟡 in progress | 2 | 7 | 0 | 1 | 78% |
 | 2 | token quick wins (no lock touched) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 3 | runtime activation spike (phase-gated; go/no-go recorded first) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 

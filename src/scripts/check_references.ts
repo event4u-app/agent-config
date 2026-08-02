@@ -782,6 +782,10 @@ function check_memory_yaml(filepath: string, artifacts: Artifacts, root: string)
 function scan_all(root: string): BrokenRef[] {
     const artifacts = collect_artifacts(root);
     const broken: BrokenRef[] = [];
+    // gate-coverage contract (src/config/gate-coverage.yml): a machine-readable
+    // count of files actually read, so `check_gate_coverage` can assert this
+    // gate saw a real corpus rather than a moved root.
+    let scannedFiles = 0;
     for (const scanDir of SCAN_DIRS) {
         const d = path.join(root, scanDir);
         if (!_exists(d)) {
@@ -793,18 +797,22 @@ function scan_all(root: string): BrokenRef[] {
             if (SKIP_DIRS.some((skip) => f.startsWith(path.join(root, skip)))) {
                 continue;
             }
+            scannedFiles += 1;
             broken.push(...check_file(f, artifacts, root));
         }
     }
     const memoryDir = path.join(root, MEMORY_YAML_ROOT);
     if (_isDir(memoryDir)) {
         for (const f of _rglob(memoryDir, '.yml').sort()) {
+            scannedFiles += 1;
             broken.push(...check_memory_yaml(f, artifacts, root));
         }
         for (const f of _rglob(memoryDir, '.yaml').sort()) {
+            scannedFiles += 1;
             broken.push(...check_memory_yaml(f, artifacts, root));
         }
     }
+    process.stderr.write(`scanned: ${String(scannedFiles)}\n`);
     return broken;
 }
 
