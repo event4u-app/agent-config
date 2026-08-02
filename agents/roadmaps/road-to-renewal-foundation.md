@@ -193,10 +193,22 @@ parent: road-to-package-renewal.md
       colon command for every command) to one naming scheme — respect the
       single-surface and install-path-convergence council locks when choosing
       which one survives
-- [ ] Finish the `condense.ts` thin-mode port so `lean_projection.mode: thin`
+- [x] Finish the `condense.ts` thin-mode port so `lean_projection.mode: thin`
       stops THROWING (dead-switch repair only — the default stays `eager-all`
-      per the thin-projection honest null; flipping remains parked in
-      `later/road-to-thin-flip-under-anchor-scoring.md`)
+      per the thin-projection honest null; flipping remains parked).
+      The port was smaller than the comment implied: `build_thin()` had been
+      ported and present the whole time; only the wiring was missing, and the
+      branch threw "requires project_thin_rules (not ported)". Wired via
+      `build_thin(RULES_SOURCE, _read_rule_workspaces())`.
+      Import-safety verified BEFORE wiring, not assumed — `condense.ts` is
+      bundled into the installer, so importing a module with a bare top-level
+      `process.exit` would fire at consumer runtime (the documented
+      bundled-CLI-entry-guard landmine). `project_thin_rules` guards its CLI
+      entry; `check_installer_import_purity` green after the change.
+      Verified the switch now produces output instead of throwing: 110 rules,
+      62,999 chars. `--measure` reads eager 85,880 → thin 15,106 GPT tok
+      (82.4% of the rule layer) — the number the parked flip decision would
+      act on, which could not even be re-measured while the mode crashed
 - [ ] Re-run `audit_initial_context` — including the `.windsurfrules`
       single-blob projection in the before/after — and record the new
       footprint in the central roadmap's Success criteria section
