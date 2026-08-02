@@ -89,6 +89,12 @@ jobs:
       - name: Leg manifest → job summary
         if: always()
         run: |
+          # shellcheck disable=SC2016
+          # The single quotes around the `node -e` program below are deliberate:
+          # the `${r.leg}` forms inside it are JS template literals, and letting
+          # the shell expand them would blank the whole table. Surfaced only now
+          # because actionlint lints CHANGED workflow files, and this one was
+          # untouched until the paths-trigger work in this branch.
           if [ -f leg-manifest.json ]; then
             {
               echo "### Consumer matrix legs · node ${{ matrix.node }}"

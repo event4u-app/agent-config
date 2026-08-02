@@ -109,28 +109,52 @@ describe('main() — a tampered safety-floor rule is actually blocked', () => {
         return { code: p.status ?? 1, out: `${p.stdout ?? ''}${p.stderr ?? ''}`.trim() };
     };
 
-    /** A dangling commit whose only delta vs HEAD is a gutted floor rule. */
-    const commitWithGuttedFloorRule = (rel: string): string | null => {
+    /**
+     * A dangling commit whose only delta vs HEAD is a gutted floor rule.
+     *
+     * Returns the sha, or a `failed:` string naming the step and git's own
+     * stderr. A bare `null` was the first shape and it cost a CI round-trip:
+     * ubuntu reported only "expected null not to be null", which says a commit
+     * was not produced but not which of five plumbing steps refused or why.
+     * A helper that cannot explain its own failure is the same shape as a gate
+     * that reports success without reading anything.
+     */
+    const commitWithGuttedFloorRule = (rel: string): string => {
         const idxDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sfidx-'));
         try {
-            const env = { GIT_INDEX_FILE: path.join(idxDir, 'index') };
-            if (git(['read-tree', 'HEAD'], env).code !== 0) return null;
+            // Identity via env: `commit-tree` refuses without a committer, and a
+            // CI runner may have no global `user.name`/`user.email` —
+            // `actions/checkout` does not set one. This writes nothing to the
+            // machine's git config.
+            const env = {
+                GIT_INDEX_FILE: path.join(idxDir, 'index'),
+                GIT_AUTHOR_NAME: 'safety-floor canary',
+                GIT_AUTHOR_EMAIL: 'canary@example.com',
+                GIT_COMMITTER_NAME: 'safety-floor canary',
+                GIT_COMMITTER_EMAIL: 'canary@example.com',
+            };
+            const step = (label: string, args: string[]): string => {
+                const r = git(args, env);
+                if (r.code !== 0) throw new Error(`${label} failed (exit ${r.code}): ${r.out}`);
+                return r.out;
+            };
+
+            step('read-tree HEAD', ['read-tree', 'HEAD']);
+
             const written = spawnSync('git', ['hash-object', '-w', '--stdin'], {
                 cwd: sf.REPO_ROOT,
                 encoding: 'utf-8',
                 input: '# gutted by the canary — every passage removed\n',
+                env: { ...process.env, ...env },
             });
             const sha = (written.stdout ?? '').trim();
-            if (written.status !== 0 || sha === '') return null;
-            if (
-                git(['update-index', '--add', '--cacheinfo', `100644,${sha},${rel}`], env).code !== 0
-            ) {
-                return null;
+            if (written.status !== 0 || sha === '') {
+                throw new Error(`hash-object failed (exit ${written.status}): ${written.stderr ?? ''}`);
             }
-            const tree = git(['write-tree'], env);
-            if (tree.code !== 0) return null;
-            const commit = git(['commit-tree', tree.out, '-p', 'HEAD', '-m', 'canary'], env);
-            return commit.code === 0 ? commit.out : null;
+
+            step('update-index', ['update-index', '--add', '--cacheinfo', `100644,${sha},${rel}`]);
+            const tree = step('write-tree', ['write-tree']);
+            return step('commit-tree', ['commit-tree', tree, '-p', 'HEAD', '-m', 'canary']);
         } finally {
             fs.rmSync(idxDir, { recursive: true, force: true });
         }
@@ -149,9 +173,12 @@ describe('main() — a tampered safety-floor rule is actually blocked', () => {
 
     it('REJECTS a range in which a floor rule lost its content (exit 1)', () => {
         const rel = `${sf.RULES_DIR_REL}/commit-policy.md`;
+        // Throws with the failing plumbing step and git's own stderr if it cannot
+        // build the breach, so a CI-only failure names its cause instead of
+        // asserting that something was not null.
         const head = commitWithGuttedFloorRule(rel);
-        expect(head, 'git plumbing must produce a dangling commit').not.toBeNull();
-        const r = runMain(['--baseline', 'HEAD', '--head', head as string]);
+        expect(head, 'git plumbing must produce a dangling commit').toMatch(/^[0-9a-f]{7,40}$/);
+        const r = runMain(['--baseline', 'HEAD', '--head', head]);
         expect(r.status, `${r.stdout}${r.stderr}`).toBe(1);
         expect(r.stderr).toContain('Substantive change to safety-floor rule(s)');
         expect(r.stderr).toContain(rel);
