@@ -6,9 +6,9 @@ alwaysApply: false
 load_context:
   - ../contexts/communication/rules-auto/think-before-action-mechanics.md
 triggers:
-  - intent: "before coding"
-  - intent: "before debugging"
-  - intent: "before modifying"
+  - phrase: "before coding"
+  - phrase: "before debugging"
+  - phrase: "before modifying"
   - keyword: "implement"
   - keyword: "debug"
   - keyword: "refactor"

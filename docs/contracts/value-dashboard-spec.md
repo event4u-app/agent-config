@@ -322,6 +322,14 @@ measure agent behaviour, not token footprint).
 
 **Pass outcome:** NET unchanged at **+8 254 tokens / request** (+103.2 % vs. baseline, +€22.78 per 1 000 requests). The pass's actual deliverable is the **structural categorisation** of the 20 previously-never-matched rules — future audits no longer need to re-debate why these rules don't fire in standard corpora. 5 state-bound + 5 intent-only are permanently classified as router-replay-unreachable. The Pass B (kernel-body refactor) deferral remains intact — no candidate qualifies under the tightened thresholds.
 
+> **Addendum 2026-08-02.** The `intent` trigger type was removed (see
+> [`rule-router`](rule-router.md) § Intent-trigger semantics — superseded by
+> removal). The "5 intent-only" structural class named above keeps its
+> conclusion — those rules remain router-replay-unreachable — but the reason is
+> now description/model-judgment activation rather than an intent trigger. The
+> historical narrative above is left as written; it records what pass-2
+> measured at the time.
+
 **Pass B status: deferred / closed for now.** Zero genuine candidates surfaced; the 4 raw-pareto flags are all false-positives. Reopen only when a tier-1 rule both activates frequently in the widened corpus AND has a body that exceeds the kernel-budget ceiling — current state has neither.
 
 

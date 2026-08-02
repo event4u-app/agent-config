@@ -3,8 +3,6 @@ type: "auto"
 tier: "2a"
 description: "Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default"
 triggers:
-  - intent: "drafting content from a source"
-  - intent: "summarizing an external document"
   - keyword: "quote"
   - keyword: "excerpt"
   - keyword: "verbatim"

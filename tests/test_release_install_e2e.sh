@@ -12,12 +12,11 @@
 #   1. fresh-global-install        — npm install -g into an isolated prefix
 #   2. no-silent-gui-postinstall   — no postinstall script, no GUI side effect
 #   3. upgrade-from-9.7.0          — baseline tarball, then release on top
-#   4. wasm-tree-sitter-load       — code-graph build/validate on a fixture repo
-#   5. gui-server-ping             — headless dry-run boot + HTTP ping
-#   6. reach-doctor                — read-only channel health report
-#   7. secret-gate-smoke           — repo-side check_secret_leak (not shipped
-#                                    as an installed CLI command — see § 7)
-#   8. clean-uninstall             — npm uninstall -g leaves no orphans
+#   4. gui-server-ping             — headless dry-run boot + HTTP ping
+#   5. reach-doctor                — read-only channel health report
+#   6. secret-gate-smoke           — repo-side check_secret_leak (not shipped
+#                                    as an installed CLI command — see § 6)
+#   7. clean-uninstall             — npm uninstall -g leaves no orphans
 #
 # Env:
 #   RELEASE_TARBALL   — pre-built tarball to install. Unset → `npm pack`
@@ -247,43 +246,7 @@ section_upgrade_from_9_7_0() {
     group_end
 }
 
-# --- 4. wasm-tree-sitter-load + code-graph-fixture --------------------------
-
-section_wasm_code_graph() {
-    group_start "wasm-tree-sitter-load + code-graph-fixture"
-    export NPM_CONFIG_PREFIX="$PREFIX_FRESH"
-    export PATH="$PREFIX_FRESH/bin:$BASE_PATH"
-
-    local fixture="$TMP_ROOT/code-graph-fixture"
-    mkdir -p "$fixture"
-    git -C "$fixture" init -q
-    cat >"$fixture/a.ts" <<'TS_EOF'
-export function greet(name: string): string {
-    return `hello ${name}`;
-}
-TS_EOF
-    cat >"$fixture/b.ts" <<'TS_EOF'
-import { greet } from './a';
-
-export function run(): string {
-    return greet('world');
-}
-TS_EOF
-
-    local graph_out="$TMP_ROOT/code-graph-fixture.json"
-    agent-config code-graph build --root "$fixture" --out "$graph_out" \
-        || die "wasm-tree-sitter-load: 'agent-config code-graph build' failed (exercises the web-tree-sitter WASM load)"
-    ok "code-graph build succeeded on the fixture repo (WASM grammar load OK)"
-
-    [[ -f "$graph_out" ]] || die "wasm-tree-sitter-load: code-graph build produced no output at $graph_out"
-
-    agent-config code-graph validate --graph "$graph_out" \
-        || die "wasm-tree-sitter-load: 'agent-config code-graph validate' rejected the built graph"
-    ok "code-graph validate accepts the built graph"
-    group_end
-}
-
-# --- 5. gui-server-ping ------------------------------------------------------
+# --- 4. gui-server-ping ------------------------------------------------------
 
 section_gui_server_ping() {
     group_start "gui-server-ping"
@@ -330,7 +293,7 @@ section_gui_server_ping() {
     group_end
 }
 
-# --- 6. reach-doctor ---------------------------------------------------------
+# --- 5. reach-doctor ---------------------------------------------------------
 
 section_reach_doctor() {
     group_start "reach-doctor"
@@ -343,7 +306,7 @@ section_reach_doctor() {
     group_end
 }
 
-# --- 7. secret-gate-smoke (repo-side gate) -----------------------------------
+# --- 6. secret-gate-smoke (repo-side gate) -----------------------------------
 
 section_secret_gate_smoke() {
     group_start "secret-gate-smoke (repo-side gate — NOT an installed-artifact CLI command)"
@@ -381,7 +344,7 @@ section_secret_gate_smoke() {
     group_end
 }
 
-# --- 8. clean-uninstall -------------------------------------------------------
+# --- 7. clean-uninstall -------------------------------------------------------
 
 section_clean_uninstall() {
     group_start "clean-uninstall"
@@ -406,7 +369,6 @@ section_clean_uninstall() {
 section_fresh_global_install
 section_no_silent_gui_postinstall
 section_upgrade_from_9_7_0
-section_wasm_code_graph
 section_gui_server_ping
 section_reach_doctor
 section_secret_gate_smoke

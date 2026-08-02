@@ -155,8 +155,8 @@ const _TRIGGER_HINT_LIMIT = 6;
 /** A short, comma-joined sample of the rule's trigger keywords/phrases. */
 function _trigger_hint(fm: string): string {
     const hits: string[] = [];
-    // re.finditer(r'^\s*-\s*(?:keyword|phrase|intent):\s*"?(.+?)"?\s*$', fm, re.MULTILINE)
-    const re = /^\s*-\s*(?:keyword|phrase|intent):\s*"?(.+?)"?\s*$/gm;
+    // re.finditer(r'^\s*-\s*(?:keyword|phrase):\s*"?(.+?)"?\s*$', fm, re.MULTILINE)
+    const re = /^\s*-\s*(?:keyword|phrase):\s*"?(.+?)"?\s*$/gm;
     let m: RegExpExecArray | null;
     while ((m = re.exec(fm)) !== null) {
         hits.push((m[1] as string).trim());

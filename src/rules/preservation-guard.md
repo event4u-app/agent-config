@@ -4,9 +4,6 @@ tier: "2b"
 alwaysApply: false
 description: "Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss"
 triggers:
-  - intent: "merge skill"
-  - intent: "condense rule"
-  - intent: "refactor artifact"
   - keyword: "Iron Law"
 validator_ignore:
   - type: "substring"

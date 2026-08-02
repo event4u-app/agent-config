@@ -3,11 +3,10 @@ type: "auto"
 tier: "2b"
 alwaysApply: false
 description: "Multi-step or continuation replies carry a red thread — goal once, each turn tied to it, name what changed, close with one end-summary"
-triggers:
-  - intent: "producing a multi-step or continuation reply"
-  - intent: "reporting progress on ongoing work"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+triggers:
+  - phrase: "reporting progress"
 ---
 
 # Communication Through-Line

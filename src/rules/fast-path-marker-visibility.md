@@ -7,7 +7,6 @@ triggers:
   - keyword: "fast-path"
   - keyword: "Resolved via low-impact council"
   - keyword: "low_impact"
-  - intent: "low-impact council dispatch"
 validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"

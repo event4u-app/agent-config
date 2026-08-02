@@ -7,7 +7,6 @@ triggers:
   - keyword: "controller"
   - keyword: "service"
   - keyword: "module"
-  - intent: "structural decision"
 routes_to:
   - "skill:module-detect-on-the-fly"
 workspaces: [agent-config-maintainer, engineering]

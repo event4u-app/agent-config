@@ -16,4 +16,3 @@ suggests:
 - frontend-design
 surface_tier: core
 trust_level_default: professional
-version: 9.12.0

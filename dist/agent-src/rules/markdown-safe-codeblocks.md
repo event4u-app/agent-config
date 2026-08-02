@@ -4,7 +4,6 @@ tier: "2b"
 description: "Generating markdown with code blocks — prevent broken nesting"
 alwaysApply: false
 triggers:
-  - intent: "markdown with code blocks"
   - keyword: "triple backticks"
   - file_pattern: "*.md"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]

@@ -1176,7 +1176,7 @@ function _yaml_scalar(value: string): string {
  * Derive host-native activation globs from a rule's `triggers:` frontmatter
  * (road-to-request-scoped-rule-load Phase 2). `file_pattern` triggers map
  * verbatim; `path_prefix` triggers map to `<prefix>**`. Keyword / phrase /
- * intent / command triggers produce no glob — those rules stay
+ * command triggers produce no glob — those rules stay
  * description-activated (Cursor Agent-Requested / Windsurf model_decision).
  */
 export function derive_trigger_globs(meta: Record<string, unknown>): string[] {
@@ -1224,7 +1224,7 @@ export function _emit_windsurf_rule(source: string, target: string): void {
     const description = _strip(String(meta['description'] ?? '').replace(/\n/g, ' '));
     const always_apply = Boolean(meta['alwaysApply'] || meta['type'] === 'always');
     // Path-shaped triggers activate host-natively via Windsurf's `glob`
-    // trigger; keyword/intent-only rules keep `model_decision`.
+    // trigger; keyword/phrase-only rules keep `model_decision`.
     const globs = always_apply ? [] : derive_trigger_globs(meta);
     const trigger = always_apply ? 'always_on' : globs.length > 0 ? 'glob' : 'model_decision';
     const lines = [

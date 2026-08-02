@@ -54,7 +54,7 @@ const _ALL_DIGITS = /^[0-9]+$/;
 interface RuleTriggers {
     path_prefixes: string[];
     keywords: string[];
-    intents: string[];
+    phrases: string[];
 }
 
 interface RuleEntry {
@@ -194,7 +194,7 @@ function analyse(rules: RuleEntry[]): Pair[] {
         for (const x of keyword_set(r.triggers.keywords.join(' '))) {
             kw.add(x);
         }
-        for (const x of keyword_set(r.triggers.intents.join(' '))) {
+        for (const x of keyword_set(r.triggers.phrases.join(' '))) {
             kw.add(x);
         }
         keywords.push(kw);

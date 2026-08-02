@@ -5,7 +5,6 @@
 Pipeline, MEDDIC, forecast accuracy.
 
 - **id**: `gtm-sales`
-- **version**: `9.12.0`
 - **owner**: gtm
 - **requires**: —
 - **artefacts**: 4

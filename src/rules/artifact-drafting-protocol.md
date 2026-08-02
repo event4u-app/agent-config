@@ -4,10 +4,6 @@ tier: "2a"
 alwaysApply: false
 description: "New or significantly rewritten skill/rule/command/guideline — mandatory Understand → Research → Draft first"
 triggers:
-  - intent: "create new skill"
-  - intent: "create new rule"
-  - intent: "create new command"
-  - intent: "create new guideline"
   - phrase: "new skill"
   - phrase: "new rule"
   - phrase: "new command"

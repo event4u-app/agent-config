@@ -127,7 +127,9 @@ already exists.
   settings knob; the locked refusal applies. Two sibling blocking gates already
   shipping is debt, not precedent.
 - **No `intent:` implementation.** The dead trigger type is *removed*, not built
-  — owned by [`road-to-dead-surface-removal`](road-to-dead-surface-removal.md).
+  — done by [`road-to-dead-surface-removal`](archive/road-to-dead-surface-removal.md)
+  (2026-08-02: 106 declarations across 44 rules deleted; the schema now rejects
+  the key).
 - **No learned activation** (confidence loops, instinct promotion). Both reference
   implementations ship the loop with zero published evaluation of the loop itself.
 - **No adoption-conditioned work.** Two of the four source documents make an

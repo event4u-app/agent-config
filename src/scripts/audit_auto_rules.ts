@@ -136,14 +136,14 @@ export function _split_frontmatter(text: string): [Record<string, Json>, string]
 interface TriggerSummary {
     path_prefixes: string[];
     keywords: string[];
-    intents: string[];
+    phrases: string[];
 }
 
 /** Mirror `_trigger_summary`. */
 export function _trigger_summary(triggers: Json): TriggerSummary {
     const paths: string[] = [];
     const keywords: string[] = [];
-    const intents: string[] = [];
+    const phrases: string[] = [];
     const list: Json[] = Array.isArray(triggers) ? triggers : [];
     for (const entry of list) {
         if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
@@ -156,11 +156,11 @@ export function _trigger_summary(triggers: Json): TriggerSummary {
         if ('keyword' in e) {
             keywords.push(String(e['keyword']));
         }
-        if ('intent' in e) {
-            intents.push(String(e['intent']));
+        if ('phrase' in e) {
+            phrases.push(String(e['phrase']));
         }
     }
-    return { path_prefixes: paths, keywords, intents };
+    return { path_prefixes: paths, keywords, phrases };
 }
 
 interface RuleEntry {
@@ -208,7 +208,7 @@ export function collect(): RuleEntry[] {
             description_chars: pyLen(desc),
             triggers,
             trigger_count:
-                triggers.path_prefixes.length + triggers.keywords.length + triggers.intents.length,
+                triggers.path_prefixes.length + triggers.keywords.length + triggers.phrases.length,
             routes_to,
             body_chars: pyLen(body),
             file_chars: pyLen(text),
@@ -292,7 +292,7 @@ export function render_markdown(rules: RuleEntry[]): string {
         const triggers =
             `${r.triggers.path_prefixes.length}p / ` +
             `${r.triggers.keywords.length}k / ` +
-            `${r.triggers.intents.length}i`;
+            `${r.triggers.phrases.length}ph`;
         const routes = r.routes_to.map((x) => String(x)).join(', ') || '—';
         lines.push(
             `| ${i} | \`${r.name}\` | ${_pyTruthy(r.tier) ? String(r.tier) : '—'} | ` +
@@ -302,7 +302,7 @@ export function render_markdown(rules: RuleEntry[]): string {
         i++;
     }
     lines.push('');
-    lines.push('Trigger key: `Np` = path-prefix, `Nk` = keyword, `Ni` = intent.');
+    lines.push('Trigger key: `Np` = path-prefix, `Nk` = keyword, `Nph` = phrase.');
     lines.push('');
     return lines.join('\n');
 }
@@ -393,7 +393,7 @@ function _ruleToJson(r: RuleEntry): Record<string, Json> {
         triggers: {
             path_prefixes: r.triggers.path_prefixes,
             keywords: r.triggers.keywords,
-            intents: r.triggers.intents,
+            phrases: r.triggers.phrases,
         },
         trigger_count: r.trigger_count,
         routes_to: r.routes_to,

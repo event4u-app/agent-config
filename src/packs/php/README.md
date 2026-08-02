@@ -5,7 +5,6 @@
 PHP-language patterns (framework-free).
 
 - **id**: `php`
-- **version**: `9.12.0`
 - **owner**: engineering
 - **requires**: engineering-base
 - **artefacts**: 6

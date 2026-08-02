@@ -168,10 +168,10 @@ const DOUBLE_BLANK_PATTERN = /\n{3,}/;
 const VALID_RULE_TYPES = new Set(['always', 'auto', 'manual']);
 const VALID_RULE_SOURCES = new Set(['package', 'project']);
 
+// `intent` was removed — see compile_router.ts's copy of this allowlist.
 const ROUTER_ALLOWED_TRIGGER_KEYS = new Set([
     'keyword',
     'phrase',
-    'intent',
     'file_pattern',
     'path_prefix',
     'command',

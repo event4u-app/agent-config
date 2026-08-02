@@ -3,7 +3,6 @@ type: "auto"
 tier: "2a"
 description: "No placeholder prose in generated code/UI — no truncation shorthands; on budget overflow emit a clean PAUSED breakpoint"
 triggers:
-  - intent: "generating code or multi-section output"
   - keyword: "// rest of component"
   - keyword: "for brevity"
   - keyword: "rest follows the same pattern"

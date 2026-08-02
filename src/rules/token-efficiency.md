@@ -6,9 +6,8 @@ alwaysApply: false
 load_context:
   - contexts/communication/rules-auto/token-efficiency-mechanics.md
 triggers:
-  - intent: "verbose CLI output"
-  - intent: "fetching logs"
   - keyword: "minimize tool calls"
+  - phrase: "fetching logs"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
 ---

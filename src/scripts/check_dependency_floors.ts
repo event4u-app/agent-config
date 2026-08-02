@@ -44,11 +44,14 @@ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..')
  * exact pin cannot suffer the freshest-patch failure (the version is either
  * cached or it is not), but it also forfeits patch fixes — so each one is
  * named here rather than silently tolerated.
+ *
+ * Empty since the code-graph parser pair (`web-tree-sitter` /
+ * `tree-sitter-wasms`) left `dependencies` — it was the only entry. The pair's
+ * ABI pin now lives in `code_graph/loader.ts`'s install hint, because that is
+ * the only place a re-enabler reads it; this gate scans `dependencies` and so
+ * no longer sees the pair at all.
  */
-export const EXACT_PIN_EXCEPTIONS: Readonly<Record<string, string>> = {
-    'web-tree-sitter': 'ABI-locked against tree-sitter-wasms; see code-graph engine pin',
-    'tree-sitter-wasms': 'ABI-locked against web-tree-sitter; see code-graph engine pin',
-};
+export const EXACT_PIN_EXCEPTIONS: Readonly<Record<string, string>> = {};
 
 /**
  * Floors that are non-settled ON PURPOSE, because every version below them is
@@ -74,8 +77,15 @@ const EXACT_VERSION = /^\d+\.\d+\.\d+$/;
 /**
  * Every violation in `dependencies`, as human-readable lines. Empty array
  * means the manifest cannot produce a freshest-patch `ETARGET` for a consumer.
+ *
+ * `exactPinExceptions` defaults to the module's list and is injectable so the
+ * allow-an-exact-pin branch stays covered now that the real list is empty —
+ * otherwise the only way to test it would be to add a fake production entry.
  */
-export function evaluate(dependencies: Readonly<Record<string, string>>): string[] {
+export function evaluate(
+    dependencies: Readonly<Record<string, string>>,
+    exactPinExceptions: Readonly<Record<string, string>> = EXACT_PIN_EXCEPTIONS,
+): string[] {
     const errors: string[] = [];
     for (const [name, range] of Object.entries(dependencies)) {
         const security = SECURITY_FLOOR_EXCEPTIONS[name];
@@ -89,7 +99,7 @@ export function evaluate(dependencies: Readonly<Record<string, string>>): string
             continue;
         }
         if (EXACT_VERSION.test(range)) {
-            if (!(name in EXACT_PIN_EXCEPTIONS)) {
+            if (!(name in exactPinExceptions)) {
                 errors.push(
                     `${name}@${range}: exact pin without an entry in EXACT_PIN_EXCEPTIONS — ` +
                         'add the reason there, or use a settled caret floor (^X.Y.0)',

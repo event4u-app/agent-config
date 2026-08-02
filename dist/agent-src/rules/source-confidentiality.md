@@ -10,9 +10,6 @@ triggers:
   - path_prefix: "docs/"
   - path_prefix: "agents/evidence/"
   - path_prefix: "agents/roadmaps/"
-  - intent: "adopt or harvest from an external repo"
-  - intent: "compare against another package"
-  - intent: "attribute an idea to an external source"
 validator_ignore:
   - type: "substring"
     pattern: "external_sources_denylist"

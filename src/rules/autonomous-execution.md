@@ -8,9 +8,8 @@ load_context:
   - contexts/execution/autonomy-mechanics.md
   - contexts/execution/autonomy-examples.md
 triggers:
-  - intent: "trivial workflow question"
-  - intent: "autonomy mode"
   - keyword: "personal.autonomy"
+  - phrase: "autonomy mode"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
 ---

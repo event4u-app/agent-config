@@ -6,8 +6,6 @@ alwaysApply: false
 load_context:
   - contexts/communication/rules-auto/guidelines-mechanics.md
 triggers:
-  - intent: "writing code"
-  - intent: "reviewing code"
   - keyword: "convention"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]

@@ -113,20 +113,6 @@ export function router_triggers(router: Json): Map<string, Array<Record<string, 
   return map;
 }
 
-// trigger_coverage.ts word semantics: lowercase alpha-led tokens, len > 2.
-const _WORD = /[a-z][a-z0-9_]+/g;
-
-function _tokens(text: string): Set<string> {
-  const out = new Set<string>();
-  const low = text.toLowerCase();
-  _WORD.lastIndex = 0;
-  let m: RegExpExecArray | null;
-  while ((m = _WORD.exec(low)) !== null) {
-    if (m[0].length > 2) out.add(m[0]);
-  }
-  return out;
-}
-
 /**
  * Whether a task exercises ≥1 trigger of the rule (prompt↔trigger
  * falsifiability, Phase 3). Kernel rules always fire.
@@ -140,16 +126,12 @@ export function task_fires_rule(
   if (kernel.has(ruleId)) return true;
   const triggers = router_triggers(router).get(ruleId) ?? [];
   const low = task.prompt.toLowerCase();
-  const toks = _tokens(task.prompt);
   const files = Array.isArray(task.context_files) ? task.context_files : [];
   const cmd = typeof task.command === 'string' ? task.command : '';
   for (const trig of triggers) {
     if ('keyword' in trig || 'phrase' in trig) {
       const needle = String(trig.keyword ?? trig.phrase).toLowerCase();
       if (needle && low.includes(needle)) return true;
-    } else if ('intent' in trig) {
-      const words = _tokens(String(trig.intent));
-      if (words.size > 0 && [...words].every((w) => toks.has(w))) return true;
     } else if ('path_prefix' in trig) {
       const prefix = String(trig.path_prefix);
       if (files.some((f) => f.startsWith(prefix))) return true;

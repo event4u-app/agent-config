@@ -65,7 +65,9 @@ describe('router_telemetry — trigger_matches', () => {
         expect(mod.trigger_matches({ file_pattern: 'src/*.ts' }, 'x', ['src/a.ts'])).toBe(true);
     });
 
-    it('intent: never auto-matches', () => {
+    it('a removed trigger type (intent) no longer matches anything', () => {
+        // `intent` was removed from the schema; a stale one must fall through
+        // to the unknown-shape path rather than resurrect a matcher.
         expect(mod.trigger_matches({ intent: 'structural decision' }, 'structural decision')).toBe(false);
     });
 

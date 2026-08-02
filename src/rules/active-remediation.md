@@ -4,8 +4,6 @@ tier: "2b"
 alwaysApply: false
 description: "Spotted an issue (security gap, missing test, bad code, duplication, stale idiom) — never ignore: small→fix inline, bigger→ask, many→follow-up PR"
 triggers:
-  - intent: "spotted an unrelated issue while working"
-  - intent: "found legacy or duplicated code"
   - keyword: "refactor"
   - keyword: "duplicate"
   - keyword: "legacy"

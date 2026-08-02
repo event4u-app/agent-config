@@ -4,8 +4,6 @@ tier: "2a"
 alwaysApply: false
 description: "Endpoint/query on user/tenant data — authenticated ≠ authorized: server-derived ownership/tenant/role + negative tests (401/non-owner/cross-tenant)"
 triggers:
-  - intent: "returning user or tenant data"
-  - intent: "adding an endpoint that reads a record by id"
   - keyword: "endpoint"
   - keyword: "route"
   - keyword: "authorization"

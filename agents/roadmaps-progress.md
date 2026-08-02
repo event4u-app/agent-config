@@ -89,16 +89,6 @@ _2 blockers resolved._
 | 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
 
-### [road-to-dead-surface-removal.md](roadmaps/road-to-dead-surface-removal.md)
-
-**Road to dead-surface removal — apply the package's own null rule to the package's own code** — 0 / 8 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Code-intelligence engine out of core | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Remove the `intent:` trigger type | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Per-pack `version:` removal | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
 **Follow-up to Road to gated reach — exercise the YouTube channel** — 0 / 12 done (0%)

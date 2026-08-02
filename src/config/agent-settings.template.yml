@@ -1115,6 +1115,14 @@ hooks:
   # is permanent; deprecation notice lands at the next major, removal the
   # major after — unless external evidence (a consumer case the graph answers
   # and grep cannot) appears first.
+  #
+  # The engine's parser pair is NO LONGER a runtime dependency (~51 MB that
+  # every consumer installed for a path none of them can reach); it is a
+  # devDependency, which npm does not install for consumers. Flipping this to
+  # `true` is therefore not sufficient — install the ABI-locked pair too:
+  #   npm i web-tree-sitter@0.24.7 tree-sitter-wasms@0.1.13
+  # Both versions are exact because the pair is ABI-coupled (grammar ABI 14).
+  # The loader raises this same hint if the pair is missing.
   code_graph:
     enabled: false
 

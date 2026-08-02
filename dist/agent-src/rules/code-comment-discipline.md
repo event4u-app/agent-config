@@ -4,9 +4,6 @@ tier: "2b"
 alwaysApply: false
 description: "Writing/editing code — a comment states a WHY or constraint the code cannot show; never restate what names/types say; no signature-mirroring docblocks"
 triggers:
-  - intent: "writing or generating code"
-  - intent: "adding a class / method / function"
-  - intent: "refactoring code"
   - keyword: "comment"
   - keyword: "docblock"
   - keyword: "phpdoc"

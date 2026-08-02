@@ -4,8 +4,6 @@ tier: "2a"
 alwaysApply: false
 description: "Writing a credential into a tracked file or committing one in any VCS (git/svn/hg) — STOP, show the match, ask, offer alternatives; never silently"
 triggers:
-  - intent: "writing a credential or API key into a file"
-  - intent: "committing or staging changes that may contain a secret"
   - keyword: "secret"
   - keyword: "password"
   - keyword: "credential"

@@ -130,7 +130,6 @@ function parseSince(since: string | null): number | null {
 export interface TriggerSpec {
     keyword?: string;
     phrase?: string;
-    intent?: string;
     file_pattern?: string;
     path_prefix?: string;
     command?: string;

@@ -30,7 +30,7 @@ prompts:
     language: en
     prompt: "Condense this rule body to telegraph grammar — drop articles and shorten phrasing where unambiguous."
     expected_skills: [condense-memory]
-    replay_opaque_triggers: [telegraph-speak]  # intent "any reply" — fires at runtime on every reply, never deterministically matchable
+    replay_opaque_triggers: [telegraph-speak]  # no lexical trigger — fires at runtime on every reply, never deterministically matchable
     open_files: [.agent-src.uncondensed/rules/some-rule.md]
 
   - id: agent-docs-edits-04
@@ -38,7 +38,7 @@ prompts:
     language: en
     prompt: "I'm not sure which approach to take here — should I refactor first or add the feature first? Help me decide."
     expected_skills: []
-    replay_opaque_triggers: [user-interaction]  # intent-only; ask-when-uncertain dropped (kernel — telemetry skips kernel, never attributable)
+    replay_opaque_triggers: [user-interaction]  # description-activated; ask-when-uncertain dropped (kernel — telemetry skips kernel, never attributable)
 
   - id: agent-docs-edits-05
     category: router-coverage
@@ -53,4 +53,4 @@ prompts:
     language: en
     prompt: "Two valid approaches exist here — caching with Redis vs in-process LRU. Which should we use?"
     expected_skills: []
-    replay_opaque_triggers: [user-interaction]  # intent-only; ask-when-uncertain dropped (kernel — telemetry skips kernel, never attributable)
+    replay_opaque_triggers: [user-interaction]  # description-activated; ask-when-uncertain dropped (kernel — telemetry skips kernel, never attributable)

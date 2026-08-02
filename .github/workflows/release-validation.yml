@@ -10,8 +10,8 @@ name: Release Validation
 #                            scripts/check_release_pr_shape.py
 #   2. changelog-entry     — CHANGELOG.md must carry a non-empty section
 #                            matching the version on the head branch
-#   3. version-consistency — package.json / marketplace.json / every
-#                            packages/*/pack.yaml agree on the version
+#   3. version-consistency — package.json / marketplace.json agree on the
+#                            version (pack manifests carry no version field)
 #
 # Four jobs total — the fourth closes the 9.8.0 skip-class (a release
 # shipped without src/install/ across two minors; caught only after
@@ -20,8 +20,8 @@ name: Release Validation
 #   4. release-install-e2e — packs the tarball, installs it into an
 #                            isolated global npm prefix, upgrades from a
 #                            cached 9.7.0 baseline, boots the GUI server
-#                            headless, exercises code-graph (WASM load),
-#                            reach:doctor, and the repo-side secret gate.
+#                            headless, runs reach:doctor, and the repo-side
+#                            secret gate.
 #
 # Trigger:
 #   * `pull_request` against main, head matching `release/*`. push: main
@@ -108,6 +108,10 @@ jobs:
           echo "Matched CHANGELOG headings:"
           cat /tmp/cl-match.txt
           # Assert the section under the first matching heading is non-empty.
+          # The single quotes below fence a JS program — `$&` and friends are
+          # JavaScript, and shell expansion would corrupt them. Directive must
+          # stay on the line directly above the command it covers.
+          # shellcheck disable=SC2016
           node -e '
           const fs = require("node:fs");
           const version = process.argv[1];
@@ -193,14 +197,10 @@ jobs:
             echo "::error::package.json ($pkg) and marketplace.json ($mp) disagree."
             fail=1
           fi
-          # Each pack manifest declares its own version that release.ts keeps in lockstep.
-          while IFS= read -r f; do
-            pack_ver=$(node -e "const yaml=require('yaml'),fs=require('node:fs');const d=yaml.parse(fs.readFileSync(process.argv[1],'utf8'))||{};console.log(d.version??'<missing>')" "$f")
-            if [ "$pack_ver" != "$pkg" ]; then
-              echo "::error::$f version ($pack_ver) does not match package.json ($pkg)."
-              fail=1
-            fi
-          done < <(find packages -mindepth 2 -maxdepth 2 -name pack.yaml)
+          # Pack manifests carry no `version:` field — the package version is the
+          # single version, so there is no per-pack pin to keep in lockstep. The
+          # loop removed here globbed `packages/`, a directory that does not
+          # exist, so it scanned zero files and passed vacuously.
           if [ "$fail" = "1" ]; then
             echo "Run \`task release\` from main; do not hand-edit version pins."
             exit 1
