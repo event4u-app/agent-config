@@ -134,14 +134,36 @@ tasks:
       Promotion path: add --strict once thresholds are confirmed stable.
     cmd: ./scripts-run src/scripts/lint_skill_originality {{.QUIET_FLAG}}
 
+  audit-skill-overlap:
+    silent: true
+    desc: |
+      BLOCKING gate (road-to-overlap-truth-and-skill-cut P6). Canonical
+      content cosine over src/skills/*/SKILL.md; prints the same-domain pair
+      table and rewrites agents/reports/skill-overlap.{json,md}.
+      Exit 1 = a same-pack pair at or above 0.70 with no reviewed
+      justification in src/scripts/audit_skill_overlap_allowlist.json
+      (capped 20 — crossing the cap means the threshold is wrong, not that the
+      corpus needs a 21st exception). Exit 3 = DEAD SCAN SCOPE, the defect this
+      task exists to make loud: the tool spent its whole life rooted at the
+      pre-ADR-051 source container and reported nothing for 287 skills.
+      Cross-pack pairs never block — that merge changes install shape.
+      --print-table survives --quiet on purpose; a report nobody sees is the
+      same silent green.
+    cmd: ./scripts-run src/scripts/audit_skill_overlap {{.QUIET_FLAG}} --print-table --strict
+
   lint-skill-descriptions:
     silent: true
     desc: |
       Description-quality gate (ecosystem-harvest skill-quality-gates P1).
-      Scans src/skills/*/SKILL.md for the four routing-breaking description
+      Scans src/skills/*/SKILL.md for four routing-breaking description
       defects: desc≡name, verbatim duplicated trigger phrase, triggers all
       substrings of the name, and no routing signal (no condition marker /
       imperative-verb lead / specifics enumeration / example query).
+      Plus two POSITIVE checks scoped to clustered skills only — a skill the
+      canonical overlap tool pairs with a same-pack sibling at >= threshold
+      must name that sibling and must carry a quoted user phrase. Dormant
+      while the cluster set is empty; that scoping is what keeps a
+      quoted-phrase mandate from becoming corpus-wide noise.
       Allowlist: src/scripts/lint_skill_descriptions_allowlist.json (capped 20).
     cmd: ./scripts-run src/scripts/lint_skill_descriptions {{.QUIET_FLAG}}
 

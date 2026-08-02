@@ -8,11 +8,12 @@ Catalog: docs/skills-catalog.md
 
 accessibility-auditor: Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
 activation-design: Use when defining or auditing the activation event — aha-moment selection, retention correlation, falsifiable definition. Triggers on 'what is our aha moment', 'redefine activation'.
-adr-create: Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
-adversarial-review: ONLY when user requests adversarial review, devil's advocate, stress-test, OR honest critique of finished work ('poke holes', 'be brutal', 'was hältst du davon') — NOT for routine code/design review.
+adr-create: Use when capturing an architectural decision — file naming, next ADR number, Status / Context / Decision / Consequences, index regen; fires even without saying 'ADR'.
+adversarial-review: ONLY on a request for adversarial review, devil's advocate, stress-test, or honest critique ('poke holes', 'be brutal', 'was hältst du davon') — NOT routine code/design review.
 agent-docs-writing: Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
 agent-security-review: Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit.
 agents-md-thin-root: Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: hard char ceilings, ≥40% pointer ratio, mandatory emergency-triage block.
+ai-code-blindspots: Before finishing any code (endpoint, query, migration, render, file, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with backstop greps
 ai-council: Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'.
 analysis-autonomous-mode: ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work.
 analysis-skill-router: Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'.
@@ -24,7 +25,7 @@ artisan-commands: Use when creating or modifying Artisan commands. Covers clear 
 async-python-patterns: Use when writing Python asyncio code — picking between gather / TaskGroup / wait, structured concurrency, timeouts, cancellation, sync-bridging — decision framework only, cookbook externalized.
 authz-review: Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows.
 aws-infrastructure: Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS.
-blade-ui: Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic.
+blade-ui: Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers views, components, partials, layouts, and view logic.
 blameless-post-mortem: Use after an incident or outage is resolved — blame-free facilitation, root cause, corrective actions, memory write-back — even for a near-miss. Consumes the incident-commander skeleton.
 blast-radius-analyzer: Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency.
 brand: Grounded brand decisions from a curated corpus — archetype, voice, naming, colour psychology, logo-style fit, messaging frameworks, archetype→type mapping. Use to ground brand strategy and identity.
@@ -32,13 +33,14 @@ brand-asset-generation: Generate brand assets — banners, social cards, CIP ele
 brand-audit: Audit how a brand is currently expressed across touchpoints and flag drift from its defined tokens, voice, and strategy. Use to inventory and critique an existing brand before changing it.
 brand-identity: Define a brand identity constraint set from a confirmed strategy — colour story, type story, logo direction, imagery direction. Defines the tokens that token emission and asset generation consume.
 brand-strategy: Ground a brand strategy from the corpus — archetype, opposable positioning, voice and tone, messaging framework. Use to decide who a brand is for, what it stands for, and how it sounds.
-brand-to-tokens: Derive a DTCG .tokens.json source of truth from confirmed brand decisions, emit CSS vars + Tailwind via design-tokens, and export locked brand deck templates. Use to turn a brand identity into tokens.
+brand-to-tokens: Turn a confirmed brand identity into a DTCG .tokens.json source of truth — emit CSS vars + Tailwind via design-tokens, export locked brand deck templates.
 bug-analyzer: Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
 build-buy-partner: Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'.
 canvas-design: Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'.
 character-consistency: Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'.
 check-refs: Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
 churn-prevention: Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'.
+code-intelligence: Route codebase-structure questions (who calls X, where used, what imports, change-impact) to a code-graph first, grep fallback. Triggers 'who calls', 'where is this used', 'call graph'.
 code-refactoring: Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
 code-review: Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
 command-routing: Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
@@ -48,10 +50,11 @@ competitive-moat-analysis: Use when mapping competitors, naming defensibility, a
 competitive-positioning: Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoption queue. Triggers on 'how do we compare to X', 'should we adopt their pattern'.
 complexity-first-planning: Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first.
 composer-packages: Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'.
-condense-memory: Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup.
+condense-memory: Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) exceeding ~150 lines or ~4,000 chars — telegraph grammar, refuses sensitive paths, .original.md round-trip.
 content-funnel-design: Use when mapping funnel-stage to content shape — conversion-pathway, content-as-system, leverage-point selection. Triggers on 'design our content funnel', 'why does mid-funnel leak'.
-context-authoring: Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel.
+context-authoring: Use when filling knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive template walkthrough.
 context-document: Use when the user says \"create context\", \"document this area\", or wants a structured snapshot of a codebase area for agent orientation.
+contract-review: Use when reviewing a contract clause-by-clause from your party's side — buyer/seller/vendor/licensee. Triggers on 'review this contract', 'redline this MSA', 'is this clause a problem'.
 contracts-cognition: Use when reading a contract for risk and constraint — clause shape, redline priority, what the contract actually binds. Triggers on 'review this contract', 'what does this MSA constrain'.
 conventional-commits-writing: Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits.
 copilot-agents-optimization: Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
@@ -64,7 +67,7 @@ data-handling-judgment: Use when classifying data, setting retention, judging cr
 database: Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'.
 dcf-modeling: Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'.
 deal-qualification-meddic: Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualification heuristic. Triggers on 'is this deal real', 'should we walk away'.
-decision-record: Use when choosing between alternatives with trade-offs — X-or-Y decisions (pattern vs pattern, strategy vs strategy) — frames options · trade-offs · consequences; ADR draft via `adr-create`.
+decision-record: Use when choosing between alternatives with trade-offs — X-or-Y decisions or a weighted decision matrix / gewichtete Entscheidungsmatrix ('score my options'); ADR via `adr-create`.
 decision-review: Use to audit a past architectural decision — did the chosen option hold up, what assumptions drifted, should the ADR be superseded? Backward review only; does not lock new choices.
 deep-reading-analyst: Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary.
 defense-in-depth: Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one.
@@ -72,35 +75,45 @@ dependency-upgrade: Use when upgrading dependencies — 'update framework X', 'b
 description-assist: Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'.
 design-intelligence: Grounded design brief from the adopted corpus — style, WCAG-checked color tokens, typography, layout pattern, anti-patterns. Use on ui-design-brief or any which-style/palette/font/chart decision.
 design-review: Use when the user says \"review the design\", \"check the UI\", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more.
+design-system-capture: Write and maintain DESIGN.md + PRODUCT.md — captures visual decisions and interaction patterns so design tasks stay consistent across sessions without re-scanning past work.
 design-tokens: Author a 3-layer DTCG token system (primitive → semantic → component) with light/dark theming; generate CSS vars + Tailwind colors and lint hardcoded values. Use on design tokens / CSS variables.
+design-variations: Produce 3+ substantively distinct hi-fi design variations — basic to bold, one file with tweak controls — when the user asks for options, alternatives, or \"show me a few takes\".
 devcontainer: Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features, port forwarding. NOT for tuning Copilot itself (use `copilot-config`).
 developer-like-execution: Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' without naming it.
 discovery-interview: Use when running discovery interviews — question-bank build, bias audit, insight extraction. Triggers on 'audit my guide', 'extract insights from transcript', 'is my hypothesis falsifiable'.
 doc-coauthoring: Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'.
 docker: Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'.
+docx-authoring: Use when generating or editing a Word .docx — create, fill a template, or edit body XML via a consumer library; round-trip validated. Triggers on 'generate a docx', 'fill this Word template'.
+dpa-review: Use when reviewing a DPA as controller or processor against GDPR Art. 28 — GREEN/YELLOW/RED gap frame, never a final call. Triggers on \"review this DPA\", \"check this DPA\".
 editorial-calendar: Use when shaping cadence — evergreen / campaign / reactive split, beat-mapping across channel stages, content-debt management. Triggers on 'plan our content cadence', 'what should we publish'.
 eloquent: Use when writing Eloquent models, relationships, scopes, or queries via Model:: — 'fetch users with their orders'. NOT for PHPStan output, non-Eloquent services, or raw SQL questions.
 emit-tickets: Use when materialising a roadmap into a ticket bundle — 'turn this roadmap into tickets', 'materialise tickets', 'mach Tickets aus der Roadmap', 'emit tickets for this plan'.
 error-handling-patterns: Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circuit-breaker / graceful degradation — decision framework only, catalogues externalized.
 "estimate-ticket": Estimate a Jira/Linear ticket — 'estimate PROJ-123', 'wie groß ist das?', 'should we split this?' — size + risk + split + uncertainty, sibling of /refine-ticket, close-prompt.
+evaluate-llm-feature: Black-box evaluation of a shipped LLM feature — adversarial probes for hallucination, prompt-injection, and cost-runaway vs stated expectations. Not RAG/embedding. Triggers 'review my chatbot'.
 existing-ui-audit: Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set.
 expansion-playbook: Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognition. Triggers on 'lift NRR', 'when do we upsell vs cross-sell'.
-fe-design: Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.py.
+fe-design: Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.ts.
 feature-planning: Use when the user says \"plan a feature\", \"brainstorm\", \"explore this idea\", or wants to go from idea to structured plan and roadmap.
 file-editor: Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled.
 finishing-a-development-branch: Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'.
-flux: Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`. Covers Flux components, slots, variants, and form primitives.
+flux: Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers Flux components, slots, variants, and form primitives.
 forecast-accuracy: Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence test, accuracy retro-loop. Triggers on 'build the forecast', 'why does our commit miss'.
 forecasting: Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'.
 form-handler: Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'.
+frontend-render-security: Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage
 fundraising-narrative: Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'.
 funnel-analysis: Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven.
+gated-reach: Read a Reddit thread or single tweet the host cannot fetch — 'what does this Reddit thread say', 'top comment on this post', 'what does this tweet say' — when reddit.com is refused or x.com 402s.
 git-workflow: Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git.
 github-ci: Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'.
 grafana: Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana.
 gtm-launch: Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'.
 guideline-writing: Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'.
 hiring-loop-design: Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'.
+history-design: Use when choosing HOW to record change history / audit trails — walks the tier matrix (columns → audit log → temporal → event sourcing). Triggers on 'wer hat was wann', 'audit log'.
+html-deck: Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests.
+humanizer: Use when removing AI-writing tells from deliverable prose — posts, articles, drafts. Triggers on 'make this sound less like AI', 'humanize this draft', 'this reads like ChatGPT wrote it'.
 iconography: Resolve an icon request to a concrete Iconify name and emit the embedding for the project's stack. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler.
 image-analyser: Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'.
 image-creator: Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'.
@@ -110,9 +123,12 @@ image-provider-routing: Select the right image-generation provider from job shap
 incident-commander: Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'.
 jira-integration: Use when the user says \"check Jira\", \"create ticket\", \"update issue\", or needs JQL queries, ticket transitions, or branch-to-ticket linking.
 jobs-events: Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling.
+judge-artifact-completeness: Use when scoring a roadmap, PR review, ADR, or ticket for completeness — risk, tests, migration, maintainability. Dispatched by /refine-ticket, /adr-create, /review-changes; never auto-gates.
 judge-bug-hunter: Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'.
 judge-code-quality: Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge.
+judge-injection-defense: Use when scoring whether an agent response defended against an injection — treated untrusted content as data, refused role-takeover, ignored fake boundaries. Inverted axis; never auto-gates.
 judge-security-auditor: Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge.
+judge-synthesis: Use to consolidate multiple already-run judge verdicts into one report — consensus, conflicts, must-fix/should-fix with per-judge provenance. Consume-only, no opaque score, never auto-gates.
 judge-test-coverage: Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'.
 laravel: Writes Laravel PHP — Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers. For Symfony / Doctrine use `symfony-workflow`. For framework-free PHP use `php-coder`.
 laravel-api-endpoint: Use when creating a new Laravel API endpoint — Controller, FormRequest, Resource, route, Policy, OpenAPI annotations — versioned route layout, single-action `__invoke` controllers.
@@ -130,13 +146,20 @@ laravel-validation: Use when writing validation — Form Requests, rules, custom
 laravel-websocket: Use when building Laravel real-time features — Broadcasting events, ShouldBroadcast, private/presence channels, Echo client. For non-Laravel WebSockets, use the stack-native skill.
 launch-readiness: Use before merging a release-shaped PR — pre-merge checklist, rollout plan, rollback criteria, ops handoff. Triggers on 'ready to ship', 'launch checklist', 'rollout plan for X'.
 learning-to-rule-or-skill: Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work.
+learning-tutor: Use when the user wants to learn a topic or verify real understanding — rapid-competence session, error drills, learning sprint, gap probe, Feynman check. Triggers 'teach me X', 'quiz me'.
+legal-intake-triage: Use when triaging the quick legal-question channel + intake; classifies and ROUTES, never reviews. Triggers on 'is this a legal problem', 'do we need a lawyer for this', 'quick legal question'.
+legal-practice-profile: Use when setting up the legal pack — captures jurisdiction, role, escalation, and playbook into a plain-prose profile every legal skill reads. Triggers on \"set up legal\", \"legal profile\".
+license-compliance-audit: Run the offline (jscpd) and online (scanoss-py) similarity scanners on demand against a diff or path — the ONLY home of this repo's detection capability; no CI gate exists or ever ran it automatically
+license-compliance-borrow-check: Paste a URL/snippet before you borrow it — detects its license, runs the derived compatibility policy, and drafts a provenance ledger entry — even before any code is written, not after
+license-compliance-credits: Regenerate docs/THIRD-PARTY-NOTICES.md from provenance/borrows.jsonl after any ledger change — even a single new entry — never hand-edit the notices file
 lint-skills: Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata.
-livewire: Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation.
+livewire: Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers reactive state, events, lifecycle hooks, and component/view separation.
 livewire-architect: Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'.
+llm-provider-knowledge: Before stating any specific fact about an LLM provider's product — models, pricing, limits, context windows, SDK/API — for OpenAI, Gemini, Claude & others, verify against official docs, not memory.
 logging-monitoring: Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers.
-logo-generation: Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path via a vector-native provider or LLM-authored SVG for simple marks. Use for logo or brand mark generation.
+logo-generation: Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path (vector-native provider or LLM-authored SVG). Use for logo or brand mark generation.
 market-entry-analysis: Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'.
-markitdown: Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstream markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
+markitdown: Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
 mcp: Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
 mcp-builder: Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness.
 md-language-check: Use BEFORE saving any .md under .augment/, dist/agent-src*/, or agents/ — scans umlauts, German function words, and German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone.
@@ -145,10 +168,11 @@ merge-conflicts: Use when the user has merge conflicts or says \"resolve conflic
 messaging-architecture: Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked positioning frame — before any copy or launch beat. Triggers on 'tighten the message stack'.
 migration-architect: Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked.
 mobile-e2e-strategy: Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps.
-module-detect-on-the-fly: Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config.
+module-detect-on-the-fly: Use when editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference.
 module-management: Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path.
 motion-choreographer: Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'.
 multi-tenancy: Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations.
+nda-triage: Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'.
 nextjs-patterns: Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture.
 okr-tree-modeling: Use when decomposing a company objective into team OKRs, auditing a draft OKR tree, or stress-testing an existing one for measurability and laddering.
 onboarding-design: Use when designing customer onboarding — time-to-first-value, milestone design, friction audit, drop-off diagnosis. Triggers on 'fix onboarding', 'why do new accounts churn fast'.
@@ -157,16 +181,18 @@ one-on-one-cadence: Use when designing engineering 1:1s — cadence, agenda mix,
 openapi: Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI.
 org-design: Use when shaping team structure — functional vs squad, span-of-control, reorg cost, Conway-aware boundaries. Triggers on 'should we reorg', 'how do we split this team'.
 override-management: Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/.
+pdf-tools: Use when creating, merging, splitting, filling, or extracting from a PDF — library-per-task, output validated. Triggers on 'merge these PDFs', 'fill this PDF form', 'split the PDF', 'create a PDF'.
 perf-feedback-craft: Use when shaping feedback — situation-behavior-impact, growth-vs-corrective split, cadence design, ladder-of-inference checks. Triggers on 'how do I give this feedback', 'perf review shape'.
 performance: Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design.
 performance-analysis: ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection. NOT for regular feature work.
+persona-improvement: ONLY when the user explicitly asks to refine a persona from recent corrections — persona analog of skill-improvement-pipeline; tightens a persona's Unique Questions, governance-gated.
 persona-writing: Use when creating or editing a persona in src/agent-src/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
 pest-testing: Use when writing, generating, or improving Pest tests for Laravel — clear intent, good coverage, maintainable structure, and alignment with project testing conventions.
 php-coder: Writes or edits PHP code — controllers, classes, type hints, SOLID refactors, modern idioms — even without naming PHP. NOT for writing tests (use pest-testing) or explaining PHP concepts.
 php-debugging: Use when debugging PHP with Xdebug — breakpoints, step-through, dual-container setup, IDE configuration, header-based routing — even when the user just says 'why does this blow up on request X'.
 php-service: Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage.
 pipeline-strategy: Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning, leak detection. Triggers on 'tighten our pipeline', 'where is the leak'.
-pixar-storyteller: Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored in emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'.
+pixar-storyteller: Use when an idea becomes a Pixar-style animation prompt — character sheet, scene, image, video; emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'. Live-action → video-director.
 playwright-architect: Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local split — even on 'design our E2E tests'.
 playwright-testing: Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns.
 po-discovery: Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'.
@@ -196,9 +222,10 @@ readme-writing: Use when creating, rewriting, or significantly improving a READM
 readme-writing-package: Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding.
 reasoning-orchestrator: Use for multi-step / ambiguous / end-to-end work — refactor a whole module, drive a vague ticket to a verified result, plan+build+verify a migration; coordinates the reasoning chain across skills.
 receiving-code-review: Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'.
+recursive-verification: Use to run a depth-bounded self-correction loop (attempt → critic verdict → re-attempt) as a tunable test-time compute knob — a do-and-judge specialisation, default off, capability-gated.
 "refine-prompt": Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work \"…\"', 'baue X', 'ist der Prompt klar genug für die Engine?'.
-"refine-ticket": Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?' — rewritten ticket, Top-5 risks, persona voices, sub-skills orchestrated, close-prompt.
-release-comms: Use when turning a shipped changelog into a release narrative — value-not-feature framing, audience-segmented surfaces, one source of truth. Triggers on 'announce the release', 'write changelog post'.
+"refine-ticket": Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?'; rewritten ticket, risks, persona voices, close-prompt.
+release-comms: Turn a shipped changelog into a release narrative — value-not-feature framing, audience-segmented surfaces. Triggers on 'announce the release', 'write changelog post'.
 repomix-packer: Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI.
 requesting-code-review: Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'.
 retention-loops: Use when designing product-led retention — habit formation, trigger-action-reward, network vs single-user loops. Triggers on 'why don't users come back', 'design a habit loop'.
@@ -206,18 +233,21 @@ review-routing: Use when preparing a PR description, suggesting reviewers, or fl
 rice-prioritization: Use when ranking competing initiatives for a roadmap, breaking a tie between two features, or auditing a backlog for hidden low-value work via Reach × Impact × Confidence ÷ Effort.
 risk-officer: Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'.
 roadmap-management: Use when the user says \"create roadmap\", \"show roadmap\", or \"execute roadmap\". Creates, reads, and manages roadmap files with phase tracking.
-roadmap-writing: Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'.
+roadmap-writing: Use when authoring or rewriting a roadmap in agents/roadmaps/ — phases, goal, acceptance criteria, council notes; fires even on 'write a plan for X' / 'draft a roadmap'.
 root-cause-frameworks: Use when tracing the root cause of a resolved incident or recurring bug — 5-whys chain, fishbone categorisation, contributing-factors split — even if the user says 'why does this keep breaking?'.
-rtk-output-filtering: Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
+rtk-output-filtering: Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer, third-party Apache-2.0; upstream reports 60-90% token savings). Covers installation, configuration, and usage patterns.
 rule-refactor: Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule.
 rule-writing: Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
 runway-cognition: Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'.
 scenario-modeling: Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'.
-scene-expander: Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'.
-script-writing: Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'.
+scene-expander: Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. 11-block refine → video-director.
+schema-review: Use when reviewing a migration diff or schema change for scale hazards — indexes, unsafe migrations, unbounded growth, N+1. Triggers on 'review this migration', 'will this scale'.
+screenshot-hygiene: Use when creating and embedding a documentation screenshot — detect and redact sensitive data, human-gate data-bearing shots before ship. Triggers 'screenshot for docs', 'screenshot admin panel'.
+script-writing: Use when adding or editing any script under `scripts/` — `--quiet`, `_lib/script_output`, silent Taskfile wiring, Iron-Law carve-outs; fires on 'add a check script for X'.
 secrets-management: Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized.
 security: Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic.
 security-audit: ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work.
+security-maturity-assessment: Use when the user wants a security-maturity scorecard / posture assessment of a module — category ratings with evidence, not a vulnerability hunt. Also on 'wie sicher ist dieses Modul aufgestellt?'
 sentry-integration: Use when the user shares a Sentry URL, says \"check Sentry\", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
 sequential-thinking: ONLY when user explicitly requests: step-by-step reasoning, structured problem decomposition, or iterative analysis. NOT for regular coding tasks.
 skill-improvement-pipeline: ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply.
@@ -226,25 +256,29 @@ skill-reviewer: Use when reviewing, auditing, or optimizing skills — validates
 skill-writing: Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'.
 song-to-script: Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood + lip-sync lines. Triggers 'music video', 'from the song', 'cut to the beat'.
 source-discovery: Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields.
-sql-writing: Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL.
+spreadsheet-authoring: Use when building or editing a spreadsheet or model — formulas over hardcoded values, read-back after writes, official-source data, pivot-first charts. Triggers on 'spreadsheet', 'build a model'.
+sql-writing: Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'.
 stakeholder-tradeoff: Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'.
 standards-from-config: Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim.
-subagent-orchestration: Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml.
+subagent-orchestration: Use when orchestrating implementer/judge subagents — form gate + nine modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge, adversarial-council).
+supply-chain-intake: Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned
 symfony-workflow: Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`.
-systematic-debugging: Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'.
+systematic-debugging: Use on a bug, test failure, crash, or unexpected behavior — enforce reproduce → isolate → hypothesize → verify before any fix; fires even on 'this is broken' / 'quick fix'.
 tailwind-engineer: Use when writing or reviewing Tailwind CSS — utility-first, design-token discipline, no inline-style drift, responsive variants, dark mode — even on 'style this' or 'mach das hübsch'.
 tech-debt-tracker: Use when surfacing tech debt as trackable items — interest-vs-principal framing, prioritisation by carrying cost, repayment plan — even if the user just says 'this codebase is a mess'.
 technical-specification: Use when the user says \"write a spec\", \"create RFC\", \"write a PRD\", or \"document this decision\". Writes technical specifications, PRDs, RFCs, and ADRs with clear structure.
 terraform: Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform.
 terragrunt: Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt.
+test-case-discovery: Use BEFORE writing any test — enumerate cases per behavior (happy / boundary / error / abuse), prioritize by likelihood × impact, cross-check via subagent — even if the user just says 'add tests'.
 test-driven-development: Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'.
 test-performance: Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives.
-testing-anti-patterns: Use BEFORE writing or changing tests, adding mocks, or putting test-only methods on production classes — five Iron Laws and gates against mocking-the-mock, production pollution, silent partial mocks.
+testing-anti-patterns: Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — vs mocking-the-mock, production pollution, partial mocks, and overfit/tautological assertions
 threat-modeling: Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation.
 throughput-vs-morale-tradeoff: Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'.
-token-optimizer: Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action.
+token-optimizer: Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset.
 traefik: Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing.
-typography-system: Derive a type system from a style constraint — query curated font pairings, set scale/line-height/weights, emit DTCG tokens via design-tokens. Use when choosing fonts or building a typographic scale.
+typography-system: Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale.
+ui-apply-generic: Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Carries the stack-independent contract; idiom comes from the stack corpus.
 ui-component-architect: Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'.
 unit-economics-modeling: Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, or transactional. Triggers on 'are we unit-economic', 'what is our LTV/CAC'.
 universal-project-analysis: ONLY when user asks for deep multi-pass codebase audit — orchestrator routing to `project-analysis-core` + framework-specific `project-analysis-*`. Single-pass scan → `project-analyzer`.
@@ -253,7 +287,9 @@ using-git-worktrees: Use when starting parallel work in isolation from the curre
 "validate-feature-fit": Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit
 verify-completion-evidence: Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs.
 verify-repair-loop: Use to iterate a change until tests/quality checks pass — bounded run→revise→re-run gated by a numeric threshold, then a judge confirms. Triggers 'iterate to green', 'keep fixing until tests pass'.
-video-director: Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives. Triggers 'cinematic prompt', 'film-grade scene'.
+video-director: Use when a live-action beat becomes the 11-block cinematic prompt — lens, lighting, negatives. Triggers 'cinematic prompt', 'film-grade scene'. Animated → pixar-storyteller; 12-block → scene-expander.
 vision-articulation: Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'.
 voc-extract: Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'.
 voice-and-tone-design: Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'.
+wireframe: Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure.
+worktree-lifecycle: Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist.

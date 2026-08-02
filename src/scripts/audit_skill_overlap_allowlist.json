@@ -1,0 +1,4 @@
+{
+  "_comment": "Reviewed same-pack overlaps at or above the canonical 0.70 threshold. Each entry needs a real reason — a pair is here because a human read both skills and decided the overlap is structural, not because the gate was noisy. Capped at 20 by audit_skill_overlap.ts: crossing the cap means the threshold is wrong, not that the corpus needs a twenty-first exception. Empty is the healthy state.",
+  "entries": []
+}
