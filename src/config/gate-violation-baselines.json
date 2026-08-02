@@ -1,0 +1,20 @@
+{
+  "$comment": "Violation ratchet for gates whose dead scan root was repaired. A repair REVEALS pre-existing debt; it does not create it. Each entry records the count revealed at repair time — the gate fails only when its count RISES. Lowering a count is a normal commit; raising one is a defect. Entries expire: a baseline that has not dropped within 56 days of `landed` (or of `reaffirmed.date`) fails its gate, because a number that never moves is suppression with extra steps. Mechanism + rationale: src/scripts/_lib/gate_baseline.ts. Decision: AI council 2026-08-02, roadmap road-to-gates-that-can-fail blocker `dead-gate-finding-triage`.",
+  "gates": {
+    "check_no_new_legacy_path:hardcoded-scan-roots": {
+      "count": 58,
+      "landed": "2026-08-02",
+      "note": "Lines under src/scripts/**/*.{ts,mts,mjs} that pass the retired `.agent-src.uncondensed` directory into `path.join(...)` — a filesystem path CONSTRUCTED against the tree ADR-051 abandoned, which is the exact shape of all 14 dead gates. Deliberately narrow so the number is signal, not noise: 236 raw mentions under src/scripts → 147 string-literal lines → 67 path-constructing lines when the pass was written, after exempting src/scripts/_lib/agent_src.ts (the shared resolver, whose job IS owning the constant — gates that route through it survived the move). Detectors holding the literal as data to match, strip, or print are not counted, and no prose, docs, tests or fixtures are read: that full-tree shape was measured at 44 files / 213 hits and rejected as the wrong lint (see the note in check_no_new_legacy_path.ts::find_offenders). Recorded at 58 rather than 67 because Phase 1's scan-root repairs were landing on this branch while the pass was being written and had already removed 9 — a baseline above the truth silently permits new violations. This count goes to ZERO as the remaining repairs land; every repair is a lowering commit."
+    },
+    "audit_user_type_axis": {
+      "count": 1,
+      "landed": "2026-08-02",
+      "note": "One orphan user-type value: `legal`. Five legal-review-prep skills (contract-review, dpa-review, nda-triage, legal-intake-triage, legal-practice-profile) declare `recommended_for_user_types: [legal]`, but there is no `user-types/legal.yml` — the pack shipped an axis value with no user-type definition behind it, and the dead scan root hid it (the audit reported used=0 orphans=0 while reading zero skills; it now reads 288 and reports used=8). Clearing this entry is a product call, not a copy edit: either author `user-types/legal.yml` (tagline, recommended packs, install-path hint) or drop `legal` from those five skills. Not decided here because both options change shipped pack behaviour."
+    },
+    "lint_handoffs": {
+      "count": 18,
+      "landed": "2026-08-02",
+      "note": "All 18 are `handoff_tier_mismatch`: a senior-tier skill links to a peer whose frontmatter carries no `tier` (reported as tier='unset') — e.g. build-buy-partner → adr-create, customer-research → po-discovery, gated-reach → threat-modeling. This is a tier-metadata backfill backlog on the LINKED-TO skills, not a broken link. The one genuinely dangling link revealed by the same repair (competitive-positioning → a non-existent ../analyze-reference-repo/SKILL.md; it is a command, not a skill) was FIXED in the repairing commit rather than baselined. Clearing this entry means backfilling `tier` on the linked-to skills, or deciding that `tier: unset` on a link target is not a violation and narrowing the rule."
+    }
+  }
+}
