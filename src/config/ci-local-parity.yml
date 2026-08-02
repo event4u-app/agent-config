@@ -66,7 +66,15 @@ pre_push_budget_seconds: 25
 #   artifact       needs something only CI builds (site, tarball, bundle)
 #   benchmark      it is a measurement, timing-sensitive or paid
 #   matrix         needs an OS or Node version this machine is not
+#   resolver       not a gate at all — a helper a workflow step calls to compute
+#                  something (a diff base, a scope); it decides and blocks nothing
 ci_only:
+  - id: check_evaluator_budgets
+    class: benchmark
+    reason: "asserts against a measurements JSON that only the nightly evaluator-umbrella run produces — with no artifact there is nothing local to compare against"
+  - id: resolve_lint_scope
+    class: resolver
+    reason: "not a gate — the diff-base resolver skill-lint.yml shell steps call so they scope from the same source as `skill_linter --changed`; it decides nothing and blocks nothing"
   - id: adoption_snapshot
     class: network
     reason: "live api.npmjs.org + api.github.com calls, reads GITHUB_TOKEN"
