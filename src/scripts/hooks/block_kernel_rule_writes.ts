@@ -40,6 +40,7 @@ import * as path from 'node:path';
 
 import { is_kernel_rule } from '../_lib/kernel_rules.js';
 import { EDIT_TOOLS } from '../minimal_safe_diff_hook.js';
+import { COMMAND_TOOLS } from '../verify_before_complete_hook.js';
 import { readHookStdin } from './hook_stdin.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -122,23 +123,157 @@ export function targets_kernel_rule(filePath: string): string | null {
     return basename.replace(/\.md$/, '');
 }
 
-/** Return (blocked, reason) for one PreToolUse envelope. Pure — no I/O beyond the arg. */
+/** In-place mutators that name their target as a plain argument. */
+const _MUTATOR_VERBS: ReadonlySet<string> = new Set([
+    'sed',
+    'tee',
+    'truncate',
+    'rm',
+    'shred',
+]);
+/** Verbs whose LAST positional argument is the destination. */
+const _DEST_LAST_VERBS: ReadonlySet<string> = new Set(['mv', 'cp', 'install', 'rsync']);
+
+/**
+ * Shell tokens that, in a command naming a kernel rule path, mean the path is
+ * being WRITTEN rather than read. Reads (`cat`, `grep`, `head`, `diff`,
+ * `git show`) carry none of these and stay allowed — a kernel rule is
+ * immutable, not secret.
+ */
+function _bash_targets_kernel_rule(command: string): string | null {
+    // Cheap reject first: no kernel-rule path in the string at all.
+    const tokens = command.split(/\s+/).filter((t) => t.length > 0);
+    const stripped = tokens.map((t) => t.replace(/^['"]|['"]$/g, ''));
+    const ruleOf = (t: string): string | null => targets_kernel_rule(t);
+    if (!stripped.some((t) => ruleOf(t) !== null)) {
+        return null;
+    }
+
+    // 1. Redirection into the path: `> p`, `>> p`, `>p`, `>>p`.
+    for (let i = 0; i < stripped.length; i += 1) {
+        const tok = stripped[i] as string;
+        const inline = /^>{1,2}(.+)$/.exec(tok);
+        if (inline) {
+            const r = ruleOf(inline[1] as string);
+            if (r !== null) {
+                return r;
+            }
+        }
+        if (tok === '>' || tok === '>>') {
+            const next = stripped[i + 1];
+            if (typeof next === 'string') {
+                const r = ruleOf(next);
+                if (r !== null) {
+                    return r;
+                }
+            }
+        }
+    }
+
+    // 2. A mutator verb anywhere in the pipeline, with the path as an argument.
+    //    `sed` only counts in its in-place form — `sed 's/x/y/' file` prints.
+    const verbs = new Set<string>();
+    let prevWasSeparator = true;
+    for (const tok of stripped) {
+        if (['&&', '||', ';', '|'].includes(tok)) {
+            prevWasSeparator = true;
+            continue;
+        }
+        if (prevWasSeparator && !tok.startsWith('-')) {
+            verbs.add(path.basename(tok));
+            prevWasSeparator = false;
+        }
+    }
+    const sedInPlace = verbs.has('sed') && stripped.some((t) => /^-i/.test(t));
+    for (const verb of verbs) {
+        if (verb === 'sed' && !sedInPlace) {
+            continue;
+        }
+        if (_MUTATOR_VERBS.has(verb)) {
+            const hit = stripped.map(ruleOf).find((r) => r !== null);
+            if (hit !== undefined && hit !== null) {
+                return hit;
+            }
+        }
+        if (_DEST_LAST_VERBS.has(verb)) {
+            const last = stripped[stripped.length - 1] as string;
+            const r = ruleOf(last);
+            if (r !== null) {
+                return r;
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * Return (blocked, reason) for one PreToolUse envelope. Pure — no I/O beyond
+ * the arg.
+ *
+ * Two surfaces, one effect. The Write/Edit branch is the original Layer-1
+ * guard. The Bash branch was added by road-to-governance-invariants Phase 1
+ * after the S0.2 spike measured the gap: this gate keyed on the TOOL NAME, so
+ * `Bash sed -i … src/rules/commit-policy.md` reached the immutable-rule
+ * outcome the Write branch refuses, and a two-step
+ * `Write docs/staging/<kernel>.md` → `Bash mv … src/rules/<kernel>.md`
+ * sequence did the same with every step individually allowed.
+ *
+ * The Bash branch is deliberately narrow (2026-08-02 council cut, option ii):
+ * only redirection into the path, an in-place `sed`, a `tee`/`truncate`/`rm`
+ * naming it, or a `mv`/`cp` whose DESTINATION it is. Reads stay allowed — a
+ * kernel rule is immutable, not secret — and no attempt is made to understand
+ * arbitrary shell. Recognising every conceivable write verb would make this a
+ * shell sandbox, which is the failure mode the council named.
+ */
 export function check_envelope(envelope: JsonObject): [boolean, string] {
     const { tool, paths } = _extract(envelope);
-    if (!tool || !EDIT_TOOLS.has(tool)) {
+    if (!tool) {
         return [false, ''];
     }
-    for (const p of paths) {
-        const ruleName = targets_kernel_rule(p);
-        if (ruleName !== null) {
-            return [
-                true,
-                `kernel rule ${ruleName} is immutable — tighten-only via the override ` +
-                    'exception registry; see docs/contracts/kernel-membership.md',
-            ];
+    const deny = (ruleName: string): [boolean, string] => [
+        true,
+        `kernel rule ${ruleName} is immutable — tighten-only via the override ` +
+            'exception registry; see docs/contracts/kernel-membership.md',
+    ];
+    if (EDIT_TOOLS.has(tool)) {
+        for (const p of paths) {
+            const ruleName = targets_kernel_rule(p);
+            if (ruleName !== null) {
+                return deny(ruleName);
+            }
+        }
+        return [false, ''];
+    }
+    if (COMMAND_TOOLS.has(tool)) {
+        const cmd = _extract_command(envelope);
+        if (cmd !== null) {
+            const ruleName = _bash_targets_kernel_rule(cmd);
+            if (ruleName !== null) {
+                return deny(ruleName);
+            }
         }
     }
     return [false, ''];
+}
+
+/** Best-effort read of a shell command off a PreToolUse envelope. */
+function _extract_command(envelope: JsonObject): string | null {
+    const payload = _isObject(envelope['payload']) ? envelope['payload'] : envelope;
+    const ti = _isObject(payload['tool_input'])
+        ? payload['tool_input']
+        : _isObject(envelope['tool_input'])
+          ? envelope['tool_input']
+          : null;
+    for (const src of [ti, payload]) {
+        if (src === null) {
+            continue;
+        }
+        const v = src['command'];
+        if (typeof v === 'string' && v) {
+            return v;
+        }
+    }
+    return null;
 }
 
 function _asObject(v: JsonValue | undefined): JsonObject | null {

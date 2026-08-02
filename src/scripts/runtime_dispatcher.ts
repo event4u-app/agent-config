@@ -34,6 +34,7 @@ import { build_registry } from './runtime_registry.js';
 import type { ExecutionResult} from './runtime_handler.js';
 import { HandlerError, execute_shell } from './runtime_handler.js';
 import { resolve_level } from './_lib/script_output.js';
+import { validate_tool_declarations } from './tool_registry.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -187,6 +188,45 @@ export function dispatch(skillName: string, registry: SkillRuntime[]): DispatchR
                 warnings: [],
             });
         }
+        // Gate integrity — the grant resolves against TRUSTED config, never
+        // against the skill's own frontmatter.
+        //
+        // road-to-governance-invariants Phase 4, property (b). Every field the
+        // three checks above read (`execution_type`, `handler`, `safety_mode`)
+        // comes out of the skill file's own YAML, so a skill that writes
+        // `safety_mode: strict` self-certifies past all of them. `tool-safety`
+        // states "Allowlist only — tool names must match the tool registry",
+        // and `validate_tool_declarations` implemented exactly that — but
+        // nothing called it. Measured before this branch existed: a skill
+        // declaring `allowed_tools: ["NotInRegistry", "Bash(*)"]` dispatched
+        // `ready`.
+        //
+        // Scoped to the automated path deliberately. That is where
+        // `runtime-safety` puts the hard requirement, and it is the path that
+        // would execute with no human in the loop. Assisted skills get a
+        // warning instead (below): blocking them would reject the scoped-grant
+        // syntax (`Bash(scripts-run:*)`) that `tool-safety` itself prefers and
+        // that this two-entry registry does not model.
+        const toolCheck = validate_tool_declarations(skill.allowed_tools);
+        if (!toolCheck.valid) {
+            return new DispatchResult({
+                request: new ExecutionRequest({
+                    skill_name: skill.name,
+                    execution_type: skill.execution_type,
+                    handler: skill.handler,
+                    timeout_seconds: skill.timeout_seconds,
+                    safety_mode: skill.safety_mode,
+                    allowed_tools: skill.allowed_tools,
+                    status: 'blocked',
+                    reason: `Automated skill declares an untrusted tool grant — ${toolCheck.errors.join('; ')}`,
+                }),
+                warnings: [],
+            });
+        }
+    } else if (skill.allowed_tools.length > 0) {
+        // Not silently ignored: an unregistered grant on a human-confirmed
+        // path is surfaced as a warning rather than a block.
+        warnings.push(...validate_tool_declarations(skill.allowed_tools).errors);
     }
 
     // Assisted/automated skill is ready
