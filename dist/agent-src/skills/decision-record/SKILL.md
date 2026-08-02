@@ -58,6 +58,14 @@ Do NOT use when:
   get a one-page record; one-way doors get the full options +
   consequences + supersession chain. The reversibility row of the
   matrix decides which template fires. See `mental-models.md` § 10.
+  **Corollary — a shortcut through a one-way door is a decision, not a
+  defer.** The cheap-and-simple option is *preferred* where the choice can
+  be walked back later. Where it cannot — a public API shape, a DB schema,
+  a migration, a wire format, a published identifier — "we can simplify
+  this later" is false, so it never ships as a deferred note; it lands
+  here as a recorded decision with its consequences named. The one-way
+  categories are enumerated so the call is not left to a judgement about
+  what feels important.
 - **Team context-spine slot.** Read the **team** slot of the
   [context-spine](../../../docs/contracts/context-spine.md) to
   capture who is bound by the decision (review groups, on-call

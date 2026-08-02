@@ -64,8 +64,15 @@ used once — inline it.
 
 ## Why this matters
 
-- **Smaller diffs.** Two lines (`$x = ...; f($x)`) become one (`f(...)`)
-  — fewer review points, less merge conflict surface.
+- **Smaller diffs — by removing indirection, never by compression.** Two lines
+  (`$x = ...; f($x)`) become one (`f(...)`) because the naming step carried no
+  information, not because one line is a goal in itself. **Simple is not the
+  same as short:** a flat form one line *longer* beats a dense clever one, and a
+  nested ternary or a long optional-call chain that shrinks the diff while
+  raising the cost of every future read is a regression here, not a win. The
+  shape axis in
+  [`agent-interaction-and-decision-quality` § 8b-shape](agent-infra/agent-interaction-and-decision-quality.md)
+  states the same distinction from the scope side.
 - **Less cognitive load.** Readers don't track an identifier whose
   whole purpose is "the next line".
 - **Honest signals.** A named variable says "this value is reusable

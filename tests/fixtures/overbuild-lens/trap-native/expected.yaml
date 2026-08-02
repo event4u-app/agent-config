@@ -1,0 +1,11 @@
+verdict: overbuilt
+must_tags: [native, delete]
+forbidden_tags: []
+must_be_null: false
+net_sign: negative
+requires_fence: true
+note: >-
+  Postgres ships tsvector / to_tsquery full-text search, so the whole in-memory
+  index is the native rung. dumpIndexStats has no caller — a delete, and it needs
+  its fence line because "nothing calls it" is exactly the claim that has to be
+  evidenced rather than eyeballed.

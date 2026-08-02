@@ -76,8 +76,15 @@ unrelated roadmap's S0.1 step; no roadmap follows from it.
    finding is what killed the largest slice of the drafted work.
 4. **`hooks/hooks.json` dispatches exactly six events**: SessionStart,
    SessionEnd, Stop, UserPromptSubmit, PreToolUse, PostToolUse. No
-   SubagentStart/SubagentStop entry exists anywhere in `src/`. Whether the host
-   exposes such an event is itself unverified.
+   SubagentStart/SubagentStop entry exists anywhere in `src/`. ~~Whether the host
+   exposes such an event is itself unverified.~~ **Corrected 2026-08-02 by the
+   solution-minimalism S0.2 spike: the host DOES expose `SubagentStart` and
+   `SubagentStop`** (Claude Code 2.1.220; `SubagentStart` carries an
+   `additionalContext` injection payload), **and projected rules already reach a
+   subagent's context without either** — a zero-tool-call probe reproduced two
+   Iron Laws verbatim. The `src/`-side half of the finding stands: this repo
+   still registers neither event. Evidence:
+   `agents/evidence/investigations/solution-minimalism-phase0-spikes.md`.
 5. **The license is already MIT** — the drafted AGPL→permissive relicensing
    side-note is moot.
 6. **`.github/FUNDING.yml` does not exist**, while the maintainer's stated

@@ -1,0 +1,9 @@
+verdict: overbuilt
+must_tags: [yagni]
+forbidden_tags: []
+must_be_null: false
+net_sign: negative
+note: >-
+  The ticket asks for one email. sms/push/webhook, retries, backoff, template
+  override, locale and dryRun are all capability nobody requested, and the
+  channel Map is an abstraction with one implementation.
