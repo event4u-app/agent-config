@@ -20,6 +20,13 @@
 - `status: unbacked` entries are **inventory** (documented debt): they record a
   claim that is not yet bound. They do NOT fail the build, but markering their
   claim in prose does (forces the binding first).
+- `status: resolved-null` entries are **closed, not debt**: the question was
+  asked, the pre-registered threshold was missed, and the answer is in. They are
+  not `backed` (nothing was demonstrated) and they are not inventory (there is
+  nothing left to bind). Filing a finished null as indefinite pending debt
+  overstates what is open and leaves the claim quietly available to be
+  re-argued; the honest lifecycle ends here. Same enforcement as `unbacked`:
+  a `resolved-null` claim may not carry a marker in public prose.
 
 ## Entry schema
 
@@ -28,7 +35,7 @@
 - claim: <the sentence, roughly as it appears publicly>
 - kind: quant | qual | comparative
 - evidence: <pointer>            # see grammar below
-- status: backed | unbacked
+- status: backed | unbacked | resolved-null
 - last_verified: <YYYY-MM-DD>
 ```
 
@@ -207,8 +214,9 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - claim: On the frozen synthetic provenance corpus (24 seeded samples across three transformation depths + 12 independently authored controls, 18 TS / 18 PHP), the offline deterministic layer (jscpd token-clone scan) detects verbatim and rename-only copies at the Phase-0 measured rate with a bounded false-positive rate on the independent controls. SCOPE BOUND, stated before any run: this measures TRANSFORMATION-DEPTH SENSITIVITY and FP behaviour only. It does NOT measure recall against SCANOSS's real-OSS knowledge base — the corpus is synthetic-canonical (independently authored algorithm shapes, never upstream copies), so no sample is indexed in any KB and a KB lookup would return zero hits for reasons that say nothing about the detector. Real-KB recall requires a second, real-snippet corpus and is explicitly unmeasured here.
 - kind: quant
 - evidence: PRE-REGISTERED 2026-07-28 BEFORE the S0.3 baseline run (road-to-provenance-and-license-governance Phase 0; corpus frozen at content-sha256 dbbc84a7325e4fa38483ba05d35d9c0c98fa822ae25d873bd5efbafaf2534bb3 over internal/bench/provenance/, 36 files). Thresholds fixed BEFORE data, per the roadmap's S0.2 and its denominator fix: (1) detector recall on the verbatim+rename-only subset >= 10/16 (8 verbatim + 8 rename-only); (2) false positives on the 12 independent controls <= 1/12; (3) rename-only samples MUST hit (principle 6 — laundering by rename cannot clear a hit); (4) structural-rewrite samples form the residual class and their recall feeds the Phase-5 drop gate (>= 21/24 on the full seeded corpus DROPS Phase 5). The floor is a GO/NO-GO gate for building the CI layer, never the marketed capability — the marketed capability is the measured rate published per S3.1/S3.3 with the scope bound above co-located. HONEST-NULL consequence (K1): thresholds missed => no deterministic-gate claim ever, the behavioural layer ships alone, null published; no silent threshold adjustment.
-- status: unbacked
-- last_verified:
+- status: resolved-null
+- last_verified: 2026-07-28
+- resolution: HONEST-NULL (resolved, not pending). K1 fired: the registered run measured verbatim+rename-only recall 12/16 (union) against a >= 10/16 floor that it met, but false positives 2/12 against a <= 1/12 ceiling that it missed, and SCANOSS alone recalled rename-only 0/8 against principle 6's must-hit requirement — so the gate thresholds were missed and the pre-registered consequence applies: no deterministic-gate claim ever, no `lint_code_provenance.ts` in CI in any form (council 2026-07-28, Option A). The measured rates are published with the run; the sibling entry `provenance-gate-effectiveness` carries the same numbers as its G0 context. Reclassified 2026-08-02 (road-to-release-shape-honesty Phase 3): the answer was in since 2026-07-28 and the entry stayed filed as pending debt, which overstated what is open.
 
 ### claim: provenance-gate-effectiveness
 - claim: AC's provenance system is a license policy derived from the target repo's own detected license (`detect_target_license.ts` + a closed compatibility matrix), a strict own-records ledger linter (`lint_provenance.ts`, wired into `ci`/`ci-strict` STRICT from day one) that fails a deny-class or unknown-license borrow entry, a missing transformation_note, or a rename-only-phrased transformation_note, and an on-demand `license-compliance-audit` skill a human invokes deliberately. It is NOT a similarity-detection gate: no scanner runs in CI against changed-file content, it does NOT and cannot certify absence of copying (no tool sees model training data), and it does NOT detect rename-only laundering — the ledger's transformation_note check is the anti-launder control on OUR OWN RECORDS, not a backstop to a detector that independently catches it.
@@ -298,7 +306,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - claim: On the residual defect pool (planted defects that survive a single strong cross-model judge), an adversarial panel of >=2 distinct-vendor skeptics finds materially more residual defects than that single judge — relative residual-recall lift >= +25% AND absolute >= +8 percentage points — at a false-positive rate on a controversial-but-correct control no worse than the single-judge baseline (within noise). Scope: finding coverage, NOT decision quality (the separate, unbacked council-vs-solo-baseline question). Pre-registered; honest-null (either threshold missed or FP worse) keeps the surface off by default permanently.
 - kind: quant
 - evidence: docs/benchmark.md#adversarial-verification-council
-- status: unbacked
+- status: resolved-null
 - last_verified: 2026-07-21
 - resolution: HONEST-NULL (resolved, not pending). Registered cross-vendor run 2026-07-21 on the curated judge-survivable corpus (internal/bench/adversarial-council/): on the judge-passed residual, the 2-vendor skeptic panel (anthropic+openai) matched the single skeptic exactly (residual recall 0.6 = 0.6, zero lift — the second vendor's residual catches were a strict subset of the first), at a 100% false-positive rate on the controversial-but-correct controls under the adversarial-skeptic posture. Both recall thresholds missed → honest-null → Mode 9 surface stays default-off permanently (like recursive-verification). Reproducible artifact: internal/bench/adversarial-council/runs/. Note: an initial run via `council_cli run` was REJECTED as a measurement artifact (that transport imposes multi-round peer-review + prose output, defeating the independent-skeptic + JSON-scoring protocol) — the valid run uses direct independent per-vendor client calls.
 
@@ -329,6 +337,13 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/benchmark.md#Default-install context cost
 - status: backed
 - last_verified: 2026-07-27
+
+### claim: scope-dedup-cold-start-reduction
+- claim: Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556 tokens) against a pre-registered 15% bar. CONDITION, inseparable from the number: that figure is FIXTURE-MEASURED on byte-identical global and project projections, and it is **currently unreachable for production installs** — the installer stamps ownership metadata (`package:` / `source_path:`) onto every installed rule unconditionally, so the two scopes are produced by two writers with deliberately different output, the byte-identity gate correctly refuses to dedup, and the recipient set is empty. The mechanism works; the saving is not realised by any consumer today.
+- kind: quant
+- evidence: agents/settings/contexts/cache-economy-refusals.md#Honest null — scope de-duplication is measured but
+- status: backed
+- last_verified: 2026-08-02
 
 ### claim: code-graph-retrieval-null
 - claim: On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos, ground truth hash-bound before the run, deterministic, zero model calls), the native code graph scored mean recall 0.365 vs grep 0.797 on the 15 graph-shaped questions (delta -43.2 pp against a pre-declared +10 pp win threshold) and 0.111 vs 0.833 on the negative controls. HONEST NULL — measured root cause: TS arrow-function exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed dynamic consumers have no static edge. Consequence bound: code_graph.enabled stays false permanently; deprecation at the next major, removal the major after unless external evidence appears.

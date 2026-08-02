@@ -46,6 +46,25 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
 - [ ] The release satisfies [`release-sizing.md`](contracts/release-sizing.md) —
       one primary product goal, and a `Rollback:` line for every new /
       substantially reworked subsystem (gate: `src/scripts/lint_changelog_rollback.ts`).
+- [ ] **One capability track this minor.** Not one commit and not one subsystem —
+      one *track* a reader can name in a sentence. A minor that carries two
+      unrelated capability tracks is two releases sharing a tag, and every
+      reviewer of 9.9.0 and 9.10.0 said so independently. This is a planning
+      judgement and stays one: a commit-counting gate would block work for a
+      preference, which [`release-sizing.md`](contracts/release-sizing.md) already
+      records as refused.
+- [ ] **Security and correctness fixes cut separately** from a capability minor.
+      A consumer deciding whether to take an urgent fix should not have to
+      evaluate a feature track at the same time. The release types are already
+      named in [`releases.md`](releases.md); this line says they do not ride
+      together.
+- [ ] **Dry-run the actual artifact before the version PR** — pack → install →
+      hooks → upgrade → uninstall, against a real global prefix
+      (`tests/test_release_install_e2e.sh`). This is a *pre*-PR step by
+      necessity: [`release-pr-gating.md`](contracts/release-pr-gating.md) skips
+      the heavy install matrices on release branches, so the release PR itself
+      is the one PR that never installs the thing it is releasing. 9.8.0 shipped
+      without `src/install/` across two minors and it was caught after publish.
 
 ## 2. The pipeline — what `release.ts` does (9 steps)
 

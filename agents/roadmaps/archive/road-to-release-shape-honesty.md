@@ -93,24 +93,32 @@ into an existing checklist rather than built.
 
 ## Phase 3 — Correct the standing claims
 
-- [ ] Amend the scope-dedup changelog and claim entries so the condition travels
+- [x] Amend the scope-dedup changelog and claim entries so the condition travels
       with the number: the 38 % is fixture-measured and **currently unreachable for
       production installs** because global and project projections are not
       byte-identical. The honest-null record already says this; the headline must
       not outrun it.
       *Verify:* the claims ledger and the changelog agree, and neither states an
       unconditioned 38 % win.
-- [ ] Give every claim whose backing trigger is outside maintainer control an
+      <!-- **Premise correction:** there was no scope-dedup entry in `docs/CLAIMS.md` to amend — the step assumed one existed. Created `scope-dedup-cold-start-reduction` with the condition bound INTO the claim sentence rather than appended as a caveat, following the `code-graph-retrieval-null` precedent (a measured null carried as `status: backed` with its consequence inside the text). -->
+      <!-- `CHANGELOG.md:369` was the single unconditioned statement in the tree; every other mention (`cache-economy-refusals`, `dedup-reachability-refusal`, the archived roadmap) already carried the condition. The correction had been sitting 76 lines BELOW the headline it corrects, in the same release's Documentation section. -->
+      <!-- Downstream: adding a backed entry drifted the published denominator in `internal/reports/exec-evidence-feasibility.json` (33 → 34), which `check_claims` caught — re-derived with its provenance note. `docs/proof.md` regenerated. -->
+- [x] Give every claim whose backing trigger is outside maintainer control an
       honest lifecycle status (`untestable without external adoption` or
       equivalent) instead of an indefinite `unbacked pending`. Debt that cannot
       structurally shrink is a misfiled blocker, not debt.
       *Verify:* no claim remains in a pending state whose precondition the
       maintainer cannot satisfy; the count of genuinely open items drops.
-- [ ] Fold the release-shape recommendations into the existing release checklist:
+      <!-- Added ONE status, `resolved-null`, and used it twice. `unbacked` inventory drops 8 → 6. `check_claims` treats status as a free string, so no code change was needed there; `build_proof` did need one — it filtered `=== 'unbacked'` and subtracted `length - backed`, so a third status would have been mislabelled as debt in the published proof page. -->
+      <!-- The two reclassified entries were resolved by their OWN recorded evidence and still filed as pending: `adversarial-council-finding-coverage` literally carried `resolution: HONEST-NULL (resolved, not pending)` next to `status: unbacked` — a contradiction inside one entry — and `provenance-detector-transformation-sensitivity`'s K1 consequence had fired on 2026-07-28 (FP 2/12 against a <= 1/12 ceiling, rename-only 0/8 against a must-hit principle). -->
+      <!-- **The step's own framing did not survive contact, and the phantom status was not created.** No remaining claim is purely adoption-blocked, so `untestable without external adoption` would have had zero members. The nearest candidate, `utilization-window-decidability`, was deliberately LEFT pending: its floor reads ">= 2 hosts **(or the documented degraded form)**", so the precondition is satisfiable, and its D4 pre-registers an honest null at window close (2026-08-26). Flipping it now would pre-empt a dated decision, which is the opposite of honesty. The other four unbacked entries are spend- or telemetry-gated, i.e. maintainer-satisfiable. -->
+- [x] Fold the release-shape recommendations into the existing release checklist:
       one capability track per minor, security/fix releases cut separately, and a
       pre-version-PR dry run of the actual artifact (pack → install → hooks →
       upgrade → uninstall).
       *Verify:* the checklist lines exist and no new gate was created.
+      <!-- Three bullets appended to `docs/release-runbook.md` § 1 Pre-flight, after the existing release-sizing bullet, which is the natural anchor. Prose only — no lint, no workflow, honouring the recorded refusal in `release-sizing.md` against a mechanical subsystem-count gate. -->
+      <!-- The dry-run line names the real script (`tests/test_release_install_e2e.sh`) and says WHY it must be pre-PR: `release-pr-gating.md` skips the heavy install matrices on release branches, so the release PR is the one PR that never installs what it releases. That is how 9.8.0 shipped without `src/install/` across two minors. -->
 
 ## Non-goals (recorded refusals)
 
