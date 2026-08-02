@@ -169,6 +169,8 @@ class CalledProcessError extends Error {
 // _lib/ and install.ts's REPO_ROOT computation).
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const PACKAGE_JSON = path.join(REPO_ROOT, 'package.json');
+// Bumped alongside package.json — see set_lockfile_version for why.
+const PACKAGE_LOCK_JSON = path.join(REPO_ROOT, 'package-lock.json');
 const MARKETPLACE_JSON = path.join(REPO_ROOT, '.claude-plugin', 'marketplace.json');
 // Source-of-truth project-settings template. Carries an `agent_config_version`
 // pin that check_template_pin_drift requires to equal package.json.version. We
@@ -1064,6 +1066,34 @@ function set_package_version(p: string, version: string): void {
     fs.writeFileSync(p, jsonDumpsIndent(data, 4) + '\n', 'utf-8');
 }
 
+/**
+ * Update BOTH version fields npm keeps in a lockfile — the top-level one and
+ * the root package entry (`packages[""]`).
+ *
+ * The bump previously touched package.json and left the lock behind, so every
+ * release shipped a `main` whose two files disagreed and every subsequent
+ * local `npm install` produced a spurious modification (measured 2026-08-02:
+ * package.json 9.13.0 vs package-lock.json 9.12.0). Rewriting the two fields
+ * rather than shelling out to `npm install --package-lock-only` keeps the bump
+ * offline and cannot re-resolve a dependency mid-release.
+ * road-to-gates-that-can-fail Phase 5.
+ */
+function set_lockfile_version(p: string, version: string): void {
+    if (!fs.existsSync(p)) {
+        return;
+    }
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
+    data['version'] = version;
+    const packages = data['packages'];
+    if (typeof packages === 'object' && packages !== null && !Array.isArray(packages)) {
+        const root = (packages as Record<string, unknown>)[''];
+        if (typeof root === 'object' && root !== null && !Array.isArray(root)) {
+            (root as Record<string, unknown>)['version'] = version;
+        }
+    }
+    fs.writeFileSync(p, jsonDumpsIndent(data, 4) + '\n', 'utf-8');
+}
+
 /** Update `metadata.version`; preserve 2-space indentation + UTF-8. */
 function set_marketplace_version(p: string, version: string): void {
     const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
@@ -1442,8 +1472,13 @@ function execute(
         if (resume && current_pkg === plan.target) {
             _step(2, total, `Files already at ${plan.target} — skip bump`);
         } else {
-            _step(2, total, 'Bump package.json + marketplace.json + template pin, prepend CHANGELOG');
+            _step(
+                2,
+                total,
+                'Bump package.json + package-lock.json + marketplace.json + template pin, prepend CHANGELOG',
+            );
             set_package_version(PACKAGE_JSON, plan.target);
+            set_lockfile_version(PACKAGE_LOCK_JSON, plan.target);
             set_marketplace_version(MARKETPLACE_JSON, plan.target);
             set_template_pin(PROJECT_TEMPLATE, plan.target);
             prepend_changelog(CHANGELOG, plan.changelog_entry);
@@ -2135,6 +2170,7 @@ export {
     _cap_body,
     prepend_changelog,
     set_package_version,
+    set_lockfile_version,
     set_marketplace_version,
     set_template_pin,
     resolve_bump,

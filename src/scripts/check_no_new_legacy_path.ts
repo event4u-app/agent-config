@@ -45,12 +45,20 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { checkRatchet } from './_lib/gate_baseline.js';
+
 const LEGACY = '.agent-src.uncondensed/';
 const EXEMPT: ReadonlySet<string> = new Set([
     'src/scripts/_lib/agent_src.py',
     'src/scripts/check_references.py',
     'src/scripts/check_condensed_paths.py',
     'src/scripts/check_no_new_legacy_path.py', // this file documents the literal
+    // The `.ts` twin needs its own entry now: the docstring above says the
+    // faithful-twin rule covers it, but that rule reads a `.py` sibling from
+    // disk and the py2ts final deletion removed every sibling — so since then
+    // ANY edit to this guard's own message strings flags the guard. Surfaced
+    // by the Phase-5 edit that added the existing-literal pass below.
+    'src/scripts/check_no_new_legacy_path.ts',
     'src/scripts/check_source_pointer_freshness.ts', // forbidden-substring detector for the legacy tree
 ]);
 
@@ -131,6 +139,154 @@ function find_offenders(diffText: string, twinCheck: TwinCheck = _is_faithful_tw
     return offenders;
 }
 
+// ---------------------------------------------------------------------------
+// Pass 2 — EXISTING hardcoded legacy scan roots (ratcheted).
+//
+// The diff pass above stops the debt from growing. It is structurally blind to
+// the debt that is already there — and every one of the 14 dead gates found in
+// 2026-07 was pre-existing, so a new-violations-only check could never have
+// seen them (road-to-gates-that-can-fail Phase 5).
+//
+// WHY THIS IS NOT THE FULL-TREE LINT THAT WAS ALREADY REJECTED. The note in
+// `find_offenders` records a measured rejection: a full-tree lint over `tests/`
+// hits 44 files / 213 lines, most of them legitimate (the legacy detectors'
+// own test data, `validator_ignore` substrings, synthetic tmpdir fixtures), so
+// the signal drowns. That measurement stands and this pass does not repeat it.
+// Three things make this scope different:
+//
+//   1. It reads EXECUTABLE code only — `src/scripts/**/*.{ts,mts,mjs}`. No
+//      prose, no docs, no tests, no fixtures.
+//   2. It counts only lines that CONSTRUCT A PATH — the literal must reach
+//      `path.join(...)` inside a string. A detector holding the literal as
+//      data to match, strip, or print is not a scan root and is not counted.
+//      Measured on 2026-08-02: 236 raw mentions in src/scripts → 147 string
+//      literals → 70 path-constructing lines. The narrowing is the point.
+//   3. It is a RATCHET, not a hard fail. The current count is committed to
+//      `src/config/gate-violation-baselines.json`; the gate goes red only when
+//      the count RISES. Every Phase-1 repair lowers it, and the baseline's
+//      56-day expiry (see `_lib/gate_baseline.ts`) stops a stalled number from
+//      hardening into configuration.
+// ---------------------------------------------------------------------------
+
+/** Gate key in `src/config/gate-violation-baselines.json`. */
+export const HARDCODED_ROOT_GATE = 'check_no_new_legacy_path:hardcoded-scan-roots';
+
+/** The executable-code root this pass reads. */
+export const HARDCODED_ROOT_SCAN_DIR = 'src/scripts';
+
+/** Bare directory name — the form that appears inside a `path.join(...)` call. */
+const LEGACY_DIRNAME = LEGACY.replace(/\/+$/, '');
+
+/**
+ * Files allowed to construct a legacy path forever.
+ *
+ * `_lib/agent_src.ts` is the shared resolver — owning the constant is its whole
+ * job, and every gate that routes through it survived the ADR-051 move. Exempting
+ * it is what makes the count mean "gates that bypassed the resolver".
+ */
+const HARDCODED_ROOT_EXEMPT: ReadonlySet<string> = new Set(['src/scripts/_lib/agent_src.ts']);
+
+const _STRING_LITERAL_LEGACY = new RegExp(
+    `['"\`][^'"\`]*${LEGACY_DIRNAME.replace(/\./g, '\\.')}`,
+);
+
+function _isCommentLine(trimmed: string): boolean {
+    return (
+        trimmed.startsWith('//') ||
+        trimmed.startsWith('*') ||
+        trimmed.startsWith('/*') ||
+        trimmed.startsWith('#')
+    );
+}
+
+function* _walkScripts(dir: string): Generator<string> {
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return;
+    }
+    for (const e of entries) {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) {
+            yield* _walkScripts(full);
+        } else if (/\.(ts|mts|mjs)$/.test(e.name) && !/\.d\.m?ts$/.test(e.name)) {
+            yield full;
+        }
+    }
+}
+
+/**
+ * Lines under `src/scripts/` that build a filesystem path against the retired
+ * tree. Returns `file:line: <source>` strings, sorted by path.
+ *
+ * `repoRoot` defaults to cwd (CI runs the guard at the repo root) and is
+ * injectable so tests can point at a fixture tree.
+ */
+export function find_hardcoded_scan_roots(
+    repoRoot: string = process.cwd(),
+    twinCheck: TwinCheck = _is_faithful_twin,
+): string[] {
+    const root = path.join(repoRoot, HARDCODED_ROOT_SCAN_DIR);
+    const findings: string[] = [];
+    for (const abs of _walkScripts(root)) {
+        const rel = path.relative(repoRoot, abs).split(path.sep).join('/');
+        if (EXEMPT.has(rel) || HARDCODED_ROOT_EXEMPT.has(rel) || twinCheck(rel)) {
+            continue;
+        }
+        let text: string;
+        try {
+            text = fs.readFileSync(abs, 'utf-8');
+        } catch {
+            continue;
+        }
+        if (!text.includes(LEGACY_DIRNAME)) {
+            continue;
+        }
+        text.split('\n').forEach((line, i) => {
+            if (!line.includes(LEGACY_DIRNAME)) return;
+            const trimmed = line.trim();
+            if (_isCommentLine(trimmed)) return;
+            if (!/path\.join\s*\(/.test(line)) return;
+            if (!_STRING_LITERAL_LEGACY.test(line)) return;
+            findings.push(`${rel}:${i + 1}: ${trimmed.slice(0, 100)}`);
+        });
+    }
+    findings.sort();
+    return findings;
+}
+
+/**
+ * Run the existing-literal pass and judge it against the committed baseline.
+ * Returns 0 when the count is at or below the baseline (and the baseline is
+ * fresh), 1 otherwise. Prints either way — a passing ratchet still reports the
+ * live number, which is the whole point of committing it.
+ */
+export function checkHardcodedScanRoots(repoRoot: string = process.cwd()): number {
+    const findings = find_hardcoded_scan_roots(repoRoot);
+    const verdict = checkRatchet({
+        gate: HARDCODED_ROOT_GATE,
+        actual: findings.length,
+        repoRoot,
+    });
+    if (verdict.ok) {
+        process.stdout.write(`✅  ${verdict.message}\n`);
+        return 0;
+    }
+    process.stdout.write(
+        `❌  Hardcoded \`${LEGACY}\` scan root(s) under ${HARDCODED_ROOT_SCAN_DIR}/ ` +
+            'above the recorded baseline:\n',
+    );
+    for (const f of findings.slice(0, 20)) {
+        process.stdout.write(`  🔴 ${f}\n`);
+    }
+    if (findings.length > 20) {
+        process.stdout.write(`  … and ${findings.length - 20} more\n`);
+    }
+    process.stdout.write(`\n${verdict.message}\n`);
+    return 1;
+}
+
 function main(): number {
     // --stdin: read a unified diff from stdin (CI pipes `gh pr diff` — auth-safe,
     // no `git fetch <base>` extraheader race on shallow PR-merge checkouts, the
@@ -170,6 +326,7 @@ function main(): number {
         offenders = find_offenders((proc.stdout as string | null) ?? '');
     }
 
+    let rc = 0;
     if (offenders.length) {
         process.stdout.write(
             '❌  New `.agent-src.uncondensed/` reference(s) added under src/ ' +
@@ -182,11 +339,18 @@ function main(): number {
             '\nFix: reference the real `src/` target. Existing stale prose is ' +
                 'migrated opportunistically; do not ADD new dead-path references.\n',
         );
-        return 1;
+        rc = 1;
+    } else {
+        process.stdout.write('✅  No new `.agent-src.uncondensed/` references added under src/.\n');
     }
 
-    process.stdout.write('✅  No new `.agent-src.uncondensed/` references added under src/.\n');
-    return 0;
+    // Pass 2 — the pre-existing hardcoded scan roots the diff pass cannot see.
+    // Skippable for the golden-parity harness, which compares this guard's
+    // diff behaviour against a pinned reference implementation.
+    if (!process.argv.includes('--no-existing')) {
+        rc = Math.max(rc, checkHardcodedScanRoots());
+    }
+    return rc;
 }
 
 const _HERE = fileURLToPath(import.meta.url);
