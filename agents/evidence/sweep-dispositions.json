@@ -1,0 +1,23 @@
+[
+  {
+    "script": "check_gate_paths.ts",
+    "rel": "packages",
+    "category": "path-as-predicate",
+    "reason": "membership allowlist for the _is_under_source_tree predicate, not a walk root; the gate is live and reports 4 enforced targets across 4 gates",
+    "date": "2026-08-02"
+  },
+  {
+    "script": "check_reply_consistency.ts",
+    "rel": ".agent-src.uncondensed",
+    "category": "path-as-sentinel",
+    "reason": "comparison sentinel inside an explicit legacy-root-absent branch that errors out; the literal exists to DETECT the dead path, not to walk it",
+    "date": "2026-08-02"
+  },
+  {
+    "script": "check_token_optimizer_freshness.ts",
+    "rel": ".agent-src.uncondensed/skills/token-optimizer/SKILL.md",
+    "category": "deliberate-legacy-handling",
+    "reason": "catalog rows still cite the legacy prefix by design and the script handles it; the gate is live and checks 6 internal targets with 0 drift",
+    "date": "2026-08-02"
+  }
+]

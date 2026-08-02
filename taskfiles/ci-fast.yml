@@ -151,6 +151,20 @@ tasks:
       same silent green.
     cmd: ./scripts-run src/scripts/audit_skill_overlap {{.QUIET_FLAG}} --print-table --strict
 
+  sweep-dead-scan-roots:
+    silent: true
+    desc: |
+      Full-population dead-scan-root sweep (road-to-gates-that-can-fail P1).
+      Scans every lint_*/audit_*/check_*/verify_* script for repo paths that do
+      not exist AND carry positive read evidence. Deliberately NOT in `task ci`:
+      it exits 1 on the 13 class-A findings currently in the tree, and a gate
+      that turns CI red on debt it did not create is the failure mode this track
+      exists to avoid. Wiring follows the dead-gate-finding-triage disposition.
+      Exit contract: 0 clean · 1 class-A findings · 2 self-test blind ·
+      3 ledger hygiene (stale/cap). Findings outrank hygiene.
+      Ledger: agents/evidence/sweep-dispositions.json (capped 15).
+    cmd: ./scripts-run src/scripts/sweep_dead_scan_roots {{.CLI_ARGS}}
+
   lint-skill-descriptions:
     silent: true
     desc: |
