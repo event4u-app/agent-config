@@ -443,7 +443,7 @@ export function dedupe_commit_lines(commits: readonly Commit[]): Commit[] {
     const seen = new Set<string>();
     const out: Commit[] = [];
     for (const c of commits) {
-        const key = `${c.breaking ? '!' : ''}${c.type}${c.scope ?? ''}${c.subject}`;
+        const key = [c.breaking ? '!' : '', c.type, c.scope ?? '', c.subject].join('\x1f');
         if (seen.has(key)) {
             continue;
         }
