@@ -1,10 +1,11 @@
 # Dead-scan-root sweep — full-population findings (2026-08-02)
 
-Companion to [`gate-scope-census`](gate-scope-census.md), which covers the **14**
-gates a manual audit confirmed dead. That report states its own limit: extending
-to the full population is `road-to-gates-that-can-fail` Phase 1's remaining work.
-This is the first measurement over that population, and it is **re-runnable** —
-`./scripts-run src/scripts/sweep_dead_scan_roots`.
+Companion to [`gate-scope-census`](gate-scope-census.md). The census began as a
+manual audit of the **14** gates confirmed dead; since 2026-08-02 the same script
+generates it over the **full population** via `--census`, so the two reports are
+now two views of one measurement: this file lists the roots that are DEAD, the
+census lists every root with its unit count. Both are **re-runnable** —
+`./scripts-run src/scripts/sweep_dead_scan_roots [--census <path>]`.
 
 **Measured on `main` @ `c1931bcde`.** Every number below comes from
 `--json`, not from prose.

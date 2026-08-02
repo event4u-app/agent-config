@@ -3,9 +3,9 @@
  * sweep_dead_scan_roots — which gate scripts walk a root that does not exist?
  *
  * Population expansion for `road-to-gates-that-can-fail` Phase 1. The committed
- * census (`agents/evidence/reports/gate-scope-census.md`) covers the 14 gates a
- * manual audit confirmed dead; extending it to the full population is that
- * step's stated remaining work. This is the deterministic instrument for it.
+ * census (`agents/evidence/reports/gate-scope-census.md`) began as a manual audit
+ * of 14 gates; since 2026-08-02 this script GENERATES it over the full population
+ * via `--census`, so it is re-runnable and a stale row shows up in a diff.
  *
  * WHY IT EXISTS: two more dead gates were found OUTSIDE the censused 14 while
  * doing thematically unrelated work — `audit_skill_overlap` (rooted at a
@@ -73,7 +73,9 @@
  * ── EXIT CONTRACT (one meaning per code, so red stays informative) ─────────
  *
  *   0  clean
- *   1  confirmed class-A finding(s) — real dead roots. Nothing else returns 1.
+ *   1  class-A finding(s) ABOVE the recorded ratchet baseline
+ *      (`src/config/gate-violation-baselines.json`). With no baseline entry this
+ *      is any class-A finding at all. Nothing else returns 1.
  *   2  self-test failure — the extractor is blind; output is not trustworthy.
  *   3  ledger hygiene — stale entry or over cap. The sweep ran fine; the LIST
  *      needs work.
@@ -85,13 +87,22 @@
  *
  * Usage:
  *   ./scripts-run src/scripts/sweep_dead_scan_roots [--quiet] [--json <path>]
- *                                                   [--root <dir>] [--ledger <path>]
+ *                                                   [--census <path>] [--root <dir>]
+ *                                                   [--ledger <path>]
+ *
+ * `--census` writes the full scan-scope census — every gate, every root it
+ * reads, and the unit count under that root today. The sweep answers "which
+ * roots are dead"; the census answers "what does each gate read, and how much",
+ * so the NEXT container move shows up as a count dropping in a diff.
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+
+import * as agentSrc from './_lib/agent_src.js';
+import { checkRatchet } from './_lib/gate_baseline.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -135,9 +146,24 @@ export interface Finding {
     evidence: string;
 }
 
+/** Every root the extractor saw for one gate, dead or alive — the census row source. */
+export interface RootRef {
+    rel: string;
+    /** Declaring identifier(s), or `(inline)` / `(array)` / `(spec-table)`. */
+    names: string;
+}
+
 export interface Analysis {
     confirmed: Finding[];
     unproven: Finding[];
+    /**
+     * Census input: ALL extracted roots, not only the missing ones the sweep
+     * reports as findings. The sweep answers "which roots are dead"; the census
+     * answers "what does every gate read, and how much" — a root+count pair per
+     * gate is what makes the NEXT container move visible in a diff instead of
+     * silently disarming a gate for weeks.
+     */
+    roots: RootRef[];
 }
 
 export interface Disposition {
@@ -345,9 +371,11 @@ export function analyze(src: string, repoRoot: string): Analysis {
 
     const confirmed: Finding[] = [];
     const unproven: Finding[] = [];
+    const roots = new Map<string, string>();
     const missing = (rel: string): boolean => !fs.existsSync(path.join(repoRoot, rel));
 
     for (const [rel, e] of found) {
+        roots.set(rel, [...e.names].join(',') || '(inline)');
         if (!missing(rel)) continue;
         let evidence: string | null =
             e.inlineRead ? 'inline-read' : (arrayHits.get(rel) ?? specHits.get(rel) ?? null);
@@ -376,7 +404,30 @@ export function analyze(src: string, repoRoot: string): Analysis {
     for (const [rel, ev] of arrayHits) push(confirmed, [], rel, '(array)', ev);
     for (const rel of arrayUnproven) push(unproven, unproven, rel, '(array)', '—');
 
-    return { confirmed, unproven };
+    // Resolver-reached roots: a gate calling `SRC_SKILLS()` reads `src/skills`
+    // just as surely as one joining the literal, and the census must see both.
+    for (const [getter, rel] of resolverRoots(repoRoot)) {
+        if (new RegExp(`\\b${getter}\\s*\\(\\s*\\)`).test(src) && !roots.has(rel)) {
+            roots.set(rel, `${getter}()`);
+        }
+    }
+
+    // Census-only permissive pass — see `censusOnlyRoots` for why it may never
+    // feed the finding path.
+    for (const [rel, name] of censusOnlyRoots(src, repoRoot)) {
+        if (!roots.has(rel)) roots.set(rel, name);
+    }
+
+    for (const rel of specHits.keys()) if (!roots.has(rel)) roots.set(rel, '(spec-table)');
+    for (const rel of specUnproven) if (!roots.has(rel)) roots.set(rel, '(spec-table)');
+    for (const rel of arrayHits.keys()) if (!roots.has(rel)) roots.set(rel, '(array)');
+    for (const rel of arrayUnproven) if (!roots.has(rel)) roots.set(rel, '(array)');
+
+    return {
+        confirmed,
+        unproven,
+        roots: [...roots].sort(([a], [b]) => a.localeCompare(b)).map(([rel, names]) => ({ rel, names })),
+    };
 }
 
 /**
@@ -411,19 +462,279 @@ export function loadLedger(file: string): Disposition[] {
     return Array.isArray(data) ? data : [];
 }
 
+/**
+ * Roots reached through the shared resolver rather than a path literal.
+ *
+ * Without this, the census is blind to exactly the gates that did the right
+ * thing: a gate repaired from `path.join(ROOT, '.agent-src.uncondensed')` to
+ * `SRC_SKILLS()` would VANISH from the census, so adopting the resolver — which
+ * the roadmap explicitly prefers over new literals — would look like losing
+ * coverage. The map is built by calling the real getters, not by copying their
+ * values, so it cannot drift from `_lib/agent_src.ts`.
+ */
+function resolverRoots(repoRoot: string): ReadonlyMap<string, string> {
+    const getters: Record<string, () => string> = {
+        SRC: agentSrc.SRC,
+        SRC_SKILLS: agentSrc.SRC_SKILLS,
+        SRC_RULES: agentSrc.SRC_RULES,
+        SRC_AGENT: agentSrc.SRC_AGENT,
+        SRC_DOMAINS: agentSrc.SRC_DOMAINS,
+        LEGACY_SRC: agentSrc.LEGACY_SRC,
+        PACKAGES: agentSrc.PACKAGES,
+    };
+    const out = new Map<string, string>();
+    for (const [name, fn] of Object.entries(getters)) {
+        let abs: string;
+        try {
+            abs = fn();
+        } catch {
+            continue;
+        }
+        const rel = path.relative(repoRoot, abs).split(path.sep).join('/');
+        if (rel && !rel.startsWith('..')) out.set(name, rel);
+    }
+    return out;
+}
+
+/**
+ * Permissive root extraction — CENSUS ONLY, never the finding path.
+ *
+ * The finding extractor is deliberately strict: it reports a dead root only
+ * with positive read evidence, because a false "this gate is dead" turns CI red
+ * on a lie. That precision costs recall — a gate writing
+ * `const SOURCE_DIR = 'src'` and later `path.join(REPO, SOURCE_DIR)` is
+ * invisible to it, and roughly half the population is shaped that way.
+ *
+ * The census has the opposite trade: a missed root is a coverage hole, and a
+ * spurious row is cheap. So this pass substitutes single-literal string consts
+ * into `path.join(...)` calls — and then keeps ONLY roots that EXIST on disk.
+ * That filter is what makes it safe: a pass that cannot yield a missing path
+ * cannot manufacture a dead-root finding, no matter how loose its parsing.
+ * Precision stays where red exits are decided; recall goes where the record is.
+ */
+export function censusOnlyRoots(src: string, repoRoot: string): Map<string, string> {
+    const consts = new Map<string, string>();
+    const cre = /(?:const|let)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*'([^'\n]+)'/g;
+    let cm: RegExpExecArray | null;
+    while ((cm = cre.exec(src)) !== null) {
+        const [, name, value] = cm;
+        if (value !== undefined && !value.includes(' ') && value !== '') consts.set(name as string, value);
+    }
+
+    const out = new Map<string, string>();
+    const jre = /path\.join\(([^)]*)\)/g;
+    let jm: RegExpExecArray | null;
+    while ((jm = jre.exec(src)) !== null) {
+        const parts = (jm[1] as string).split(',').map((p) => p.trim()).filter((p) => p !== '');
+        if (parts.length < 2) continue;
+        const base = parts[0] as string;
+        if (!BASE_IDS.has(base)) continue;
+
+        const segs: string[] = [];
+        for (const raw of parts.slice(1)) {
+            const lit = /^'([^']*)'$/.exec(raw);
+            if (lit) {
+                segs.push(lit[1] as string);
+                continue;
+            }
+            const viaConst = consts.get(raw);
+            if (viaConst !== undefined) {
+                segs.push(viaConst);
+                continue;
+            }
+            break; // a segment we cannot resolve ends the path — a prefix is still a real root
+        }
+        if (segs.length === 0) continue;
+        const rel = segs.join('/').replace(/\/+$/, '');
+        if (rel === '' || rel.startsWith('..')) continue;
+        // `node_modules/.bin/tsx` is a tool path a gate SPAWNS, not a corpus it reads.
+        if (rel === 'node_modules' || rel.startsWith('node_modules/')) continue;
+        if (!fs.existsSync(path.join(repoRoot, rel))) continue; // the safety filter — see the doc comment
+        if (!out.has(rel)) out.set(rel, '(census-only)');
+    }
+    return out;
+}
+
+/** Directories never worth walking for a unit count. */
+const COUNT_SKIP: ReadonlySet<string> = new Set(['node_modules', '.git', '.venv', '__pycache__']);
+
+/** Depth cap for the unit count — deep enough for every artefact tree here, cheap enough to re-run. */
+const COUNT_MAX_DEPTH = 12;
+
+export interface RootCount {
+    /** `dir` · `file` · `absent` — absent is the dead-root case the sweep reports separately. */
+    kind: 'dir' | 'file' | 'absent';
+    /** Files under the root (recursive), 1 for a file, 0 for absent. */
+    units: number;
+}
+
+/**
+ * Count what a root actually contains, on this tree, right now.
+ *
+ * The number is deliberately generic — files under the root — not the gate's
+ * own notion of a unit (rules, skills, declarers). A gate-specific count would
+ * mean reimplementing 200 gates' filters here and would rot the moment one
+ * changed. What the census needs is a value that MOVES when the tree moves, so
+ * a container migration shows up as a diff instead of as silence.
+ */
+export function countUnits(repoRoot: string, rel: string): RootCount {
+    const abs = path.join(repoRoot, rel);
+    let st: fs.Stats;
+    try {
+        st = fs.statSync(abs);
+    } catch {
+        return { kind: 'absent', units: 0 };
+    }
+    if (st.isFile()) return { kind: 'file', units: 1 };
+    if (!st.isDirectory()) return { kind: 'absent', units: 0 };
+
+    let units = 0;
+    const walk = (dir: string, depth: number): void => {
+        if (depth > COUNT_MAX_DEPTH) return;
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of entries) {
+            if (e.isDirectory()) {
+                if (!COUNT_SKIP.has(e.name)) walk(path.join(dir, e.name), depth + 1);
+            } else if (e.isFile()) {
+                units += 1;
+            }
+        }
+    };
+    walk(abs, 0);
+    return { kind: 'dir', units };
+}
+
+export interface CensusRow {
+    gate: string;
+    rel: string;
+    names: string;
+    kind: RootCount['kind'];
+    units: number;
+}
+
+/**
+ * Build the census: one row per (gate, extracted root), plus an explicit row
+ * for every gate the extractor found NO root in.
+ *
+ * The no-root rows are the honest half. A census that silently omits the gates
+ * it could not read would claim coverage it does not have — the same
+ * green-on-nothing shape this whole sweep exists to end.
+ */
+export function buildCensus(population: readonly string[], results: ReadonlyMap<string, Analysis>, repoRoot: string): CensusRow[] {
+    const rows: CensusRow[] = [];
+    for (const file of population) {
+        const gate = file.replace(/\.ts$/, '');
+        const analysis = results.get(file);
+        const refs = analysis?.roots ?? [];
+        if (refs.length === 0) {
+            rows.push({ gate, rel: '(no literal root extracted)', names: '—', kind: 'absent', units: 0 });
+            continue;
+        }
+        for (const ref of refs) {
+            const c = countUnits(repoRoot, ref.rel);
+            rows.push({ gate, rel: ref.rel, names: ref.names, kind: c.kind, units: c.units });
+        }
+    }
+    return rows;
+}
+
+export function renderCensus(rows: readonly CensusRow[], population: number, today: string): string {
+    const dead = rows.filter((r) => r.kind === 'absent' && r.rel !== '(no literal root extracted)');
+    const noRoot = rows.filter((r) => r.rel === '(no literal root extracted)');
+    const live = rows.filter((r) => r.kind !== 'absent');
+    const gatesWithRoots = new Set(live.map((r) => r.gate)).size;
+
+    const out: string[] = [];
+    out.push('# Gate scan-scope census');
+    out.push('');
+    out.push(`> Generated by \`./scripts-run src/scripts/sweep_dead_scan_roots --census <path>\` on ${today}.`);
+    out.push('> Do not hand-edit — re-run the command. A row that disagrees with a fresh');
+    out.push('> run is the signal this file exists to produce.');
+    out.push('');
+    out.push('## Why');
+    out.push('');
+    out.push('ADR-051 moved the source container. Gates carrying a hardcoded literal root');
+    out.push('kept exiting 0 while scanning zero files, for weeks, because nothing recorded');
+    out.push('what each gate was supposed to be reading. This census is that record: every');
+    out.push('gate, every root it reads, and how much is under that root **today**. The next');
+    out.push('container move shows up here as a count dropping to zero in a diff, instead of');
+    out.push('as a green checkmark over an empty directory.');
+    out.push('');
+    out.push('## Headline');
+    out.push('');
+    out.push('| Metric | Value |');
+    out.push('|---|---|');
+    out.push(`| Gate scripts in population | ${population} |`);
+    out.push(`| Gates with at least one resolvable root | ${gatesWithRoots} |`);
+    out.push(`| Gates with no literal root the extractor can see | ${noRoot.length} |`);
+    out.push(`| Roots resolved and counted | ${live.length} |`);
+    out.push(`| Roots that do not exist on this tree | ${dead.length} |`);
+    out.push('');
+    out.push('## Scope — what this census does NOT cover');
+    out.push('');
+    out.push('- **The unit count is files under the root, not the gate\'s own unit.** A gate');
+    out.push('  filtering to `*.md` reports fewer units than the row shows. The number is a');
+    out.push('  movement detector, not a gate-internal assertion — reimplementing 200 filters');
+    out.push('  here would rot on the first filter change.');
+    out.push('- **Roots the static extractor cannot see** are listed as');
+    out.push('  `(no literal root extracted)`, not omitted. Known blind spots: roots read from');
+    out.push('  a config file, bases outside the accepted repo-root identifier set, glob-library');
+    out.push('  walks, and template-literal paths. Those gates are uncovered, and the row says so.');
+    out.push('- **Nested helper directories** under `src/scripts/` are outside the population —');
+    out.push('  the sweep reads the top level only.');
+    out.push('- A dead root here is a *finding*, not a repair. Repairs are the roadmap\'s job;');
+    out.push('  this file only makes them visible.');
+    out.push('');
+    out.push('## Roots that do not exist on this tree');
+    out.push('');
+    if (dead.length === 0) {
+        out.push('None. Every extracted root resolves.');
+    } else {
+        out.push('| Gate | Declared root | Declared by |');
+        out.push('|---|---|---|');
+        for (const r of dead) out.push(`| \`${r.gate}\` | \`${r.rel}\` | \`${r.names}\` |`);
+    }
+    out.push('');
+    out.push('## Full census');
+    out.push('');
+    out.push('| Gate | Root | Kind | Units | Declared by |');
+    out.push('|---|---|---|---|---|');
+    for (const r of rows) {
+        const rootCell = r.rel === '(no literal root extracted)' ? '_(none extracted)_' : `\`${r.rel}\``;
+        const units = r.kind === 'absent' ? '**0**' : String(r.units);
+        out.push(`| \`${r.gate}\` | ${rootCell} | ${r.kind} | ${units} | \`${r.names}\` |`);
+    }
+    out.push('');
+    out.push('## Reproducing');
+    out.push('');
+    out.push('```bash');
+    out.push('./scripts-run src/scripts/sweep_dead_scan_roots --census agents/evidence/reports/gate-scope-census.md');
+    out.push('git diff --stat agents/evidence/reports/gate-scope-census.md   # empty = the tree has not moved');
+    out.push('```');
+    out.push('');
+    return `${out.join('\n')}\n`;
+}
+
 interface Args {
     quiet: boolean;
     json: string | null;
+    census: string | null;
     scripts: string;
     ledger: string;
 }
 
 export function parseArgs(argv: string[]): Args {
-    const a: Args = { quiet: false, json: null, scripts: DEFAULT_SCRIPTS, ledger: DEFAULT_LEDGER };
+    const a: Args = { quiet: false, json: null, census: null, scripts: DEFAULT_SCRIPTS, ledger: DEFAULT_LEDGER };
     for (let i = 0; i < argv.length; i += 1) {
         const arg = argv[i];
         if (arg === '--quiet') a.quiet = true;
         else if (arg === '--json') a.json = argv[(i += 1)] ?? '';
+        else if (arg === '--census') a.census = argv[(i += 1)] ?? '';
         else if (arg === '--root') a.scripts = path.resolve(REPO, argv[(i += 1)] ?? DEFAULT_SCRIPTS);
         else if (arg === '--ledger') a.ledger = path.resolve(REPO, argv[(i += 1)] ?? DEFAULT_LEDGER);
         else {
@@ -463,9 +774,14 @@ export function main(argv: string[]): number {
     const pop = fs.existsSync(args.scripts)
         ? fs.readdirSync(args.scripts).filter((f) => GATE_RE.test(f)).sort()
         : [];
+    // Census needs every gate's roots; the finding report needs only the ones
+    // with hits. Keep both, and filter at the point of use rather than dropping
+    // data here — `census` is the superset.
+    const census = new Map<string, Analysis>();
     const results = new Map<string, Analysis>();
     for (const f of pop) {
         const r = analyze(fs.readFileSync(path.join(args.scripts, f), 'utf-8'), repoRoot);
+        census.set(f, r);
         if (r.confirmed.length || r.unproven.length) results.set(f, r);
     }
 
@@ -514,12 +830,28 @@ export function main(argv: string[]): number {
                     unproven: unprovenCount,
                     class_a: classA,
                     stale: stale.map((s) => `${s.script}:${s.rel}`),
-                    findings: [...results].map(([script, r]) => ({ script, ...r })),
+                    findings: [...results].map(([script, r]) => ({
+                        script,
+                        confirmed: r.confirmed,
+                        unproven: r.unproven,
+                    })),
                 },
                 null,
                 2,
             )}\n`,
         );
+    }
+
+    if (args.census) {
+        const rows = buildCensus(pop, census, repoRoot);
+        const today = new Date().toISOString().slice(0, 10);
+        fs.mkdirSync(path.dirname(args.census), { recursive: true });
+        fs.writeFileSync(args.census, renderCensus(rows, pop.length, today));
+        if (!args.quiet) {
+            process.stdout.write(
+                `sweep_dead_scan_roots: census → ${args.census} (${rows.length} row(s) over ${pop.length} gate(s))\n`,
+            );
+        }
     }
 
     if (!args.quiet) {
@@ -534,13 +866,27 @@ export function main(argv: string[]): number {
         );
     }
 
-    // Real findings outrank ledger hygiene — never let bookkeeping mask a dead gate.
-    const exit = classA > 0 ? 1 : stale.length > 0 ? 3 : 0;
+    // Class-A findings are judged against the ratchet, not against zero.
+    //
+    // This gate shipped deliberately OUTSIDE `task ci` because it exits 1 on
+    // pre-existing class-A debt, and "a gate that turns CI red on debt it did
+    // not create" is the exact failure this track exists to avoid — its own
+    // Taskfile entry says so, and defers the wiring to the
+    // `dead-gate-finding-triage` disposition. That disposition is now decided
+    // (repair + ratchet, council 2026-08-02), so the deferral is spent: a count
+    // at or under the recorded baseline passes and the sweep can run in CI,
+    // while any RISE still exits 1. A tree with no baseline file behaves exactly
+    // as before — any class-A finding fails.
+    const ratchet = checkRatchet({ gate: 'sweep_dead_scan_roots', actual: classA, repoRoot });
+    const exit = !ratchet.ok ? 1 : stale.length > 0 ? 3 : 0;
     if (!args.quiet || exit !== 0) {
         process.stdout.write(
             `sweep_dead_scan_roots: ${confirmedCount} confirmed, ${unprovenCount} unproven, ` +
                 `${classA} class-A, ${stale.length} stale → exit ${exit}\n`,
         );
+    }
+    if (classA > 0 || ratchet.status !== 'unbaselined') {
+        (ratchet.ok ? process.stdout : process.stderr).write(`${ratchet.message}\n`);
     }
     return exit;
 }

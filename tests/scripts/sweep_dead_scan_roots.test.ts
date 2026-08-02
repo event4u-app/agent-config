@@ -21,7 +21,16 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { analyze, classify, main, selfTest } from '../../src/scripts/sweep_dead_scan_roots.js';
+import {
+    analyze,
+    buildCensus,
+    censusOnlyRoots,
+    classify,
+    countUnits,
+    main,
+    renderCensus,
+    selfTest,
+} from '../../src/scripts/sweep_dead_scan_roots.js';
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TSX = path.join(REPO, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
@@ -283,5 +292,88 @@ describe('sweep_dead_scan_roots — shipped ledger', () => {
     it('has no stale entries against the shipped corpus (every disposition still matches a finding)', () => {
         const r = spawnSync(TSX, [SCRIPT, '--quiet'], { cwd: REPO, encoding: 'utf8' });
         expect(r.stderr).not.toContain('STALE');
+    });
+});
+
+/**
+ * Census mode — added with the census itself (roadmap `road-to-gates-that-can-fail`
+ * Phase 1). The load-bearing property is not "a report is produced" but that the
+ * report keeps its safety split: the permissive census pass raises RECALL, and it
+ * must never be able to lower the finding path's PRECISION. The
+ * `censusOnlyRoots-cannot-invent-a-dead-root` case is the one that pins it.
+ */
+describe('sweep_dead_scan_roots — census', () => {
+    it('counts a directory recursively and a file as one unit', () => {
+        const root = mkTmp('census-count-');
+        fs.mkdirSync(path.join(root, 'a', 'b'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'a', 'one.md'), 'x');
+        fs.writeFileSync(path.join(root, 'a', 'b', 'two.md'), 'x');
+        fs.writeFileSync(path.join(root, 'solo.md'), 'x');
+
+        expect(countUnits(root, 'a')).toEqual({ kind: 'dir', units: 2 });
+        expect(countUnits(root, 'solo.md')).toEqual({ kind: 'file', units: 1 });
+        expect(countUnits(root, 'nope')).toEqual({ kind: 'absent', units: 0 });
+    });
+
+    it('skips node_modules when counting so a vendored tree cannot dominate the number', () => {
+        const root = mkTmp('census-skip-');
+        fs.mkdirSync(path.join(root, 'r', 'node_modules', 'pkg'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'r', 'real.md'), 'x');
+        fs.writeFileSync(path.join(root, 'r', 'node_modules', 'pkg', 'index.js'), 'x');
+
+        expect(countUnits(root, 'r')).toEqual({ kind: 'dir', units: 1 });
+    });
+
+    it('resolves a string-const path segment the strict finding extractor cannot see', () => {
+        const root = mkTmp('census-const-');
+        fs.mkdirSync(path.join(root, 'src', 'rules'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'src', 'rules', 'a.md'), 'x');
+
+        const src = "const SOURCE_DIR = 'src';\nconst D = path.join(ROOT, SOURCE_DIR, 'rules');\n";
+        expect([...censusOnlyRoots(src, root).keys()]).toContain('src/rules');
+    });
+
+    it('censusOnlyRoots cannot invent a dead root — the permissive pass is existence-filtered', () => {
+        const root = mkTmp('census-safety-');
+        const src = "const GONE = 'packages';\nconst D = path.join(ROOT, GONE, 'core');\n";
+        // The path does not exist under `root`, so the permissive pass must drop it
+        // rather than hand the finding path a fabricated dead root.
+        expect([...censusOnlyRoots(src, root).keys()]).toEqual([]);
+    });
+
+    it('lists a gate with no extractable root instead of omitting it', () => {
+        const rows = buildCensus(
+            ['check_nothing.ts'],
+            new Map([['check_nothing.ts', { confirmed: [], unproven: [], roots: [] }]]),
+            REPO,
+        );
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.gate).toBe('check_nothing');
+        expect(rows[0]?.rel).toBe('(no literal root extracted)');
+    });
+
+    it('renders a headline whose gate total matches the population it was given', () => {
+        const md = renderCensus(
+            [
+                { gate: 'g1', rel: 'src/rules', names: 'RULES', kind: 'dir', units: 7 },
+                { gate: 'g2', rel: '(no literal root extracted)', names: '—', kind: 'absent', units: 0 },
+            ],
+            2,
+            '2026-08-02',
+        );
+        expect(md).toContain('| Gate scripts in population | 2 |');
+        expect(md).toContain('| Gates with at least one resolvable root | 1 |');
+        expect(md).toContain('| Gates with no literal root the extractor can see | 1 |');
+        expect(md).toContain('| `g1` | `src/rules` | dir | 7 |');
+    });
+
+    it('writes the census file when --census is given, over the real population', () => {
+        const out = path.join(mkTmp('census-out-'), 'census.md');
+        const r = spawnSync(TSX, [SCRIPT, '--quiet', '--census', out], { cwd: REPO, encoding: 'utf8' });
+        expect(r.status === 0 || r.status === 1).toBe(true); // 1 = real class-A findings exist; not a census failure
+        const md = fs.readFileSync(out, 'utf-8');
+        expect(md).toContain('# Gate scan-scope census');
+        expect(md).toMatch(/\| Gate scripts in population \| \d{3} \|/);
+        expect(md).toContain('## Reproducing');
     });
 });
