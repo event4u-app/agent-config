@@ -9,12 +9,12 @@ routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agen
 replaces: []
 tier: 1
 visibility: advanced
-description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish)
+description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish), deep (autonomous deep-refactoring loop)
 cluster: optimize
 type: orchestrator
 suggestion:
   eligible: true
-  trigger_description: "optimize my skills, manage agents directory, tune augmentignore, optimize rtk filters, optimize this project, optimize this prompt"
+  trigger_description: "optimize my skills, manage agents directory, tune augmentignore, optimize rtk filters, optimize this project, optimize this prompt, run a deep optimization pass"
   trigger_context: "maintainer auditing/trimming the agent layer, running a project-wide optimization sweep, or polishing an AI prompt (NOT AGENTS.md — that's /agents)"
 workspaces:
   - agent-config-maintainer

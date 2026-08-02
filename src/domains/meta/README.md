@@ -79,7 +79,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`module`** — Module orchestrator — routes to create, explore
 - **`module-create`** — Create a new module from .module-template with interactive setup
 - **`module-explore`** — Explore a module — load its structure, docs, and context into the current conversation
-- **`optimize`** — Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish)
+- **`optimize`** — Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish), deep (autonomous deep-refactoring loop)
 - **`optimize-agents-dir`** — Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard.
 - **`optimize-augmentignore`** — Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
 - **`optimize-deep`** — Autonomous deep-refactoring loop — analyze the repo with parallel subagents, verify findings, council the cut, emit central + sub-roadmaps, open a PR, then N council-assisted refinement loops (default 3). E.g. 'run a deep optimization pass'.

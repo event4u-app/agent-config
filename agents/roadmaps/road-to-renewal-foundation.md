@@ -85,7 +85,7 @@ parent: road-to-package-renewal.md
 
 > Gate: run only after Phase 2's re-measure. If the footprint is already at
 > target, record no-go and close this phase as `[-]` with the measurement.
-> Optional input: the kernel/router value re-baseline (ADR-hygiene Phase 2)
+> Optional input: the kernel/router value re-baseline (ADR-hygiene § Blockers, blocker: kernel-router-value-rebaseline)
 > feeds this go/no-go if it has landed; the gate does NOT wait on it.
 > Scope line: semantic retrieval (embedding-based trigger matching) is OUT of
 > scope — the resolver uses keyword/phrase matching only. Reopen condition:

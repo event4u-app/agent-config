@@ -84,7 +84,7 @@ this central roadmap steering three sub-roadmaps.
   Council 2026-08-02 (loop 1, unanimous): split by pain — borrows that close a
   RECORDED internal failure (return-prevention) proceed with an inline lock
   note; purely additive capability stays frozen behind the freeze's own reopen
-  condition. Effect on Leverage: Phase 2 carries only the four
+  condition. Effect on Leverage: Phase 2 carries only the three
   documented-failure fixes; the additive borrows are listed under "Findings
   not carried forward" below.
 
@@ -123,7 +123,7 @@ this central roadmap steering three sub-roadmaps.
 | Sub-roadmap | Scope | Status |
 |---|---|---|
 | [`road-to-renewal-foundation.md`](road-to-renewal-foundation.md) | CI oracle repair, dead-tree sweep, token quick wins (pack-gated floors, MCP trim), runtime-activation spike (phase-gated) | active |
-| [`road-to-renewal-leverage.md`](road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, cadence flip, hub generation, hook-fan-out trim) + four documented-failure fixes with borrowed shape + tracker-convention docs | blocked on Foundation Phase 1 |
+| [`road-to-renewal-leverage.md`](road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, cadence flip, hub generation, hook-fan-out trim) + three documented-failure fixes with borrowed shape + tracker-convention docs | blocked on Foundation Phase 1 |
 | [`road-to-renewal-adr-hygiene.md`](road-to-renewal-adr-hygiene.md) | Drive-loop era batch disposition, ADR-085 amendment, perma-proposed sweep, ADR-201 resolution | chip-mode (attach to other PRs) |
 
 Ordering (council-locked): Foundation Phase 1 (CI oracle) gates everything —

@@ -79,7 +79,7 @@ parent: road-to-package-renewal.md
 ## Phase 3 — tracker clarification (docs-only)
 
 - [ ] Document the existing `## Blockers` section convention
-      (Status/Owner/Blocks/Resolved-when) as the canonical
+      (Status/Owner/Blocks/What to do/Resolved when) as the canonical
       "awaiting-evidence" signal in the roadmap-management skill — no new
       status glyph (the proposed `awaiting-evidence` state is frozen per the
       harvest-freeze split; the convention already carries the need)
