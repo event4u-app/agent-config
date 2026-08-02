@@ -128,6 +128,10 @@ jobs:
       - name: Generate PR summary
         if: github.event_name == 'pull_request' && always()
         run: |
+          # The single-quoted body below is JavaScript passed to `node -e`;
+          # shell expansion inside it would be a bug, not the fix SC2016
+          # suggests.
+          # shellcheck disable=SC2016
           ./scripts-run src/scripts/skill_linter --changed --format json > /tmp/changed-lint.json 2>/dev/null || true
           node -e '
           const fs = require("node:fs");
@@ -271,7 +275,9 @@ jobs:
             exit 0
           fi
           echo "Changed corpus files under review:"
-          echo "$CHANGED" | sed 's/^/  · /'
+          while IFS= read -r f; do
+            [ -n "$f" ] && printf '  · %s\n' "$f"
+          done <<< "$CHANGED"
           # shellcheck disable=SC2086
           ./scripts-run src/scripts/lint_originality --changed $CHANGED
 
