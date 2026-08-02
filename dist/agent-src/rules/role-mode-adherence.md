@@ -6,7 +6,6 @@ alwaysApply: false
 triggers:
   - keyword: "active_role"
   - keyword: "role-mode"
-  - intent: "mode marker"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
 ---

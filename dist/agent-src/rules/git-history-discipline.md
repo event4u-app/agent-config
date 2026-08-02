@@ -4,13 +4,6 @@ tier: "2a"
 alwaysApply: false
 description: "Git history — no unasked rebase/squash/amend; never drop foreign commits; pushed rewrite → re-push same turn"
 triggers:
-  - intent: "rebase the branch"
-  - intent: "squash commits"
-  - intent: "clean up commit history"
-  - intent: "fold this into the previous commit"
-  - intent: "tidy history after pushing"
-  - intent: "reseat the branch base"
-  - intent: "exclude these commits from the branch"
   - keyword: "git rebase"
   - keyword: "rebase --onto"
   - keyword: "reset --hard"

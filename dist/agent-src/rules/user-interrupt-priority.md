@@ -4,7 +4,6 @@ tier: "2a"
 description: "New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming"
 alwaysApply: false
 triggers:
-  - intent: "new instruction while a task is running"
   - keyword: "weiter"
   - keyword: "resume"
   - keyword: "continue"

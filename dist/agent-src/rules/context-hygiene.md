@@ -4,10 +4,8 @@ tier: "1"
 alwaysApply: false
 description: "Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers"
 triggers:
-  - intent: "long conversation"
-  - intent: "tool loop"
-  - intent: "fresh chat"
   - keyword: "3-failure"
+  - phrase: "long conversation"
 routes_to:
   - "guideline:agent-infra/context-hygiene-mechanics"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]

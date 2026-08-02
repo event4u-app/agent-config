@@ -5,8 +5,6 @@ description: "Beneficial change blocked by a lock (honest-null, don't-relitigate
 alwaysApply: false
 council_depth: deep
 triggers:
-  - intent: "blocked by prior decision"
-  - intent: "revisit past verdict"
   - keyword: "don't relitigate"
   - keyword: "honest null"
   - keyword: "already decided"

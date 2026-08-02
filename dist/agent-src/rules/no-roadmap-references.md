@@ -8,8 +8,6 @@ triggers:
   - path_prefix: "agents/runtime/council/questions/"
   - path_prefix: "agents/runtime/council/responses/"
   - path_prefix: "agents/runtime/council/sessions/"
-  - intent: "link from stable artifact"
-  - intent: "link to council artefact"
 routes_to:
   - "skill:ai-council"
   - "skill:agent-docs-writing"

@@ -4,8 +4,6 @@ tier: "2b"
 alwaysApply: false
 description: "Field with multiple non-boolean states — prefer an enum over string/numeric literals; old-style literals found → note, finish the task, ask after"
 triggers:
-  - intent: "modeling a field with multiple states"
-  - intent: "adding a status or type field"
   - keyword: "enum"
   - keyword: "status"
   - keyword: "kind"

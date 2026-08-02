@@ -4,11 +4,9 @@ tier: "2a"
 alwaysApply: false
 description: "PR comments — no unsolicited progress/status/CI narration unless personal.pr_progress_comments is true"
 triggers:
-  - intent: "post PR comment"
-  - intent: "PR status update"
-  - intent: "CI fix progress"
   - keyword: "gh pr comment"
   - keyword: "PullRequestComment"
+  - phrase: "status comment"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 ---
